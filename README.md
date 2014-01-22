@@ -169,7 +169,7 @@ soc cones etc.).
 Solving SDPs
 ---------- 
 In order to solve SDPs you must have BLAS and LAPACK installed.
-Point scs.mk to the location of these libraries. Without
+Point `scs.mk` to the location of these libraries. Without
 these you can still solve SOCPs, LPs, and EXPs.
 
 Scalability

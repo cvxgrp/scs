@@ -8,6 +8,15 @@ TARGETS = bin/demo_direct bin/demo_indirect
 
 .PHONY: default 
 default: lib/libscsdir.a lib/libscsindir.a bin/demo_direct bin/demo_indirect
+	@echo "**********************************************************************************"
+ifdef USE_LAPACK
+	@echo "Compiled with blas and lapack, can solve LPs, SOCPS, SDPs, and EXPs"
+else
+	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and EXPs)."
+	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to point to the library"
+	@echo "install locations, and recompile with 'make purge', 'make'."
+endif
+	@echo "**********************************************************************************"
 
 scs 	: src/scs.c src/scs.h src/linAlg.h
 util	: src/util.c src/util.h
