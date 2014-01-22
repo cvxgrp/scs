@@ -1,14 +1,13 @@
 scs 
 ====
 
-A C package for solving large-scale convex cone problems
-based on "Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding" by 
+scs = `splitting cone solver`
+
+scs is a C package for solving large-scale convex cone problems,
+based on ["Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding"](http://www.stanford.edu/~boyd/papers/scs.html) by 
 Brendan O’Donoghue, Eric Chu, Neal Parikh, and Stephen Boyd
 
-----------
-This code is in alpha, if you're having trouble running this, or getting
-erroneous results, please contact us.
-
+----
 This code provides a solver for convex cone problems. It is an implementation
 of the algorithm described in [this
 paper](http://www.stanford.edu/~boyd/papers/scs.html). It provides both a
@@ -32,6 +31,14 @@ This package uses the LDL and AMD packages numerical linear
 algebra packages by Tomothy Davis and others, the necessary files are included.
 See [here](http://www.cise.ufl.edu/research/sparse/) for more information about
 these packages.
+
+----
+This project was originally called `coneOS`; see previous version history
+[here](https://github.com/cvxgrp/coneos).
+
+This code is in alpha, if you're having trouble running this, or getting
+erroneous results, please contact us.
+
 
 Installing 
 ---------- 
