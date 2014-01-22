@@ -35,8 +35,23 @@ static inline int exactConverged(Data * d, Work * w, struct residuals * r, int i
 static inline int validate(Data * d, Cone * k);
 static inline void failureDefaultReturn(Data * d, Work * w, Cone * k, Sol * sol, Info * info);
 
+int privateInitWork(Data * d, Work * w);
+char * getLinSysSummary(Data * d, Info * info);
+// solves [I A';A -I] x = b, stores result in b, s contains warm-start
+void solveLinSys(Data * d, Work * w, double * b, const double * s, int iter);
+void freePriv(Work * w);
+
 #define PRINT_INTERVAL 100
 #define CONVERGED_INTERVAL 20
+
+/* scs returns one of the following integers: */
+/* (zero should never be returned) */
+#define FAILURE -4
+#define INDETERMINATE -3
+#define INFEASIBLE -2 // primal infeasible, dual unbounded
+#define UNBOUNDED -1 // primal unbounded, dual infeasible
+#define SOLVED 1
+
 int scs(Data * d, Cone * k, Sol * sol, Info * info)
 {
 	if(d == NULL || k == NULL) {

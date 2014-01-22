@@ -1,18 +1,13 @@
 scs 
-============================================================ 
-A C package for solving large-scale convex cone problems.
+====
 
-based on "Operator Splitting for Conic Optimization" by  
+A C package for solving large-scale convex cone problems
+based on "Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding" by 
 Brendan O’Donoghue, Eric Chu, Neal Parikh, and Stephen Boyd
 
 ----------
-This code is in alpha, it still has issues and very bad input sanitizing
-and error reporting. If you're having trouble running this please email us.
-
-This package uses the LDL and AMD packages numerical linear
-algebra packages by Davis et. al., the necessary files are included.
-See [here](http://www.cise.ufl.edu/research/sparse/) for more information about
-these packages.
+This code is in alpha, if you're having trouble running this, or getting
+erroneous results, please contact us.
 
 This code provides a solver for convex cone problems. It is an implementation
 of the algorithm described in [this
@@ -30,13 +25,13 @@ and its dual
 
 where `K` is a product cone of free cones, linear cones `{ x | x >= 0 }`, 
 second-order cones `{ (t,x) | ||x||_2 <= t }`, semi-definite cones `{ X | X psd }`,
-and exonential cones, `K^*` is its dual cone.
+and exponential cones `{(x,y,z) | y e^(x/y) <= z, y>0 }`.
+`K^*` denotes the dual cone to `K`.
 
-Solving SDPs
----------- 
-In order to solve SDPs you must have BLAS and LAPACK installed.
-Point scs.mk to the location of these libraries. Without
-these you can still solve SOCPs, LPs, and EXPs.
+This package uses the LDL and AMD packages numerical linear
+algebra packages by Tomothy Davis and others, the necessary files are included.
+See [here](http://www.cise.ufl.edu/research/sparse/) for more information about
+these packages.
 
 Installing 
 ---------- 
@@ -61,23 +56,43 @@ If `make_scs` fails and complains about an incompatible architecture, edit the
 Remember to include the `matlab` directory in your Matlab path if you wish to
 use the mex file in your Matlab code. The calling sequence is
 
-	[x,y,status] = scs_direct(data,cones,params)
+	[x,y,info] = scs_direct(data,cones,params)
 
-where data contains A, b, c  
-cones contains f (free/zero cone size), l (linear cone size), q (array of SOCs), s (array of SDCs),
-ep (num primal exponential cones) and ed (num dual exponential cones).
+where data contains `A`, `b`, `c`
+params contains various options (see matlab file, can be empty)
+cones contains one or more of:
++ `f` (num free/zero cones)
++ `l` (num linear cones)
++ `q` (array of SOCs sizes)
++ `s` (array of SDCs sizes)
++ `ep` (num primal exponential cones) 
++ `ed` (num dual exponential cones).
+
+Type `help scs_direct` at the Matlab prompt to see its documentation.
+
+### Installing a CVX solver
+For users familiar with [CVX](http://cvxr.com), we supply a CVX shim which can be easily installed by invoking the following in the Matlab command line under the `matlab` directory.
+
+    >> cvx_install_scs
+    
+You can select the scs solver with CVX as follows 
+    
+    >> cvx_solver 'scs'
+    >> cvx_begin
+    >> ... 
+    >> cvx_end
+
 
 Usage in C 
 ---------- 
-If `make` completes successfully, it will produce two
-static library files, `libscsdir.a` and `libscsindir.a` under the `lib`
-folder. To include the libraries in your own source code, compile with the
-linker option with `-L(PATH_TO_scs)\lib` and `-lscsdir` or `-lscsindir` (as
-needed).
+If `make` completes successfully, it will produce two static library files,
+`libscsdir.a` and `libscsindir.a` under the `lib` folder. To include the
+libraries in your own source code, compile with the linker option with
+`-L(PATH_TO_scs)\lib` and `-lscsdir` or `-lscsindir` (as needed).
 
 These libraries (and `scs.h`) expose only three API functions:
 
-* Sol * scs(Data \* d, Cone \* k, Info * info)
+* int scs(Data * d, Cone * k, Sol * sol, Info * info); 
     
 	This solves the problem specified in the `Data` and `Cone` structures,
     and returns the solution in the Sol struct and various information about the run in
@@ -93,19 +108,38 @@ These libraries (and `scs.h`) expose only three API functions:
     
 The four relevant data structures are:
 
+    
     /* struct that containing standard problem data */
     typedef struct PROBLEM_DATA {
       int n, m; /* problem dimensions */
       /* problem data, A, b, c: */
-      double * Ax; 
-      int * Ai, * Ap; 
+      double * Ax;
+      int * Ai, * Ap;
       int Anz;
       double * b, * c;
-      int MAX_ITERS, CG_MAX_ITS;
-      double EPS_ABS, ALPH, CG_TOL, UNDET_TOL, RHO_X;
+      int MAX_ITERS;
+      double EPS_ABS, ALPH, UNDET_TOL, RHO_X;
       int VERBOSE, NORMALIZE;  // boolean
     } Data;
-
+    
+    /* contains primal-dual solution vectors */
+    typedef struct SOL_VARS {
+      double * x, * y, *s;
+    } Sol;
+    
+    /* contains terminating information */
+    typedef struct INFO {
+    	int iter;
+    	char status[16];
+    	int stint; // status as int
+        double pobj;
+    	double dobj;
+    	double resPri;
+    	double resDual;
+    	double relGap;
+    	double time;
+    } Info;
+    
     typedef struct Cone_t {
         int f;          /* number of linear equality constraints */
         int l;          /* length of LP cone */
@@ -113,33 +147,23 @@ The four relevant data structures are:
         int qsize;      /* length of SOC array */
         int *s;         /* array of SD constraints */
         int ssize;      /* length of SD array */
+        int ep;         /* number of triples in exponential cone */
+        int ed;         /* number of triples in dual exponential cone */
     } Cone;
+        
+    
+The data matrix `A` is specified in column-compressed format, and the vectors
+`b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
+(slack), and `y` (dual) are returned as dense arrays. Cones are specified as
+the struct above, the rows of `A` must correspond to the cones in the
+exact order as specified by the cone struct (i.e. put linear cones before
+soc cones etc.).
 
-    /* contains primal-dual solution vectors */
-    typedef struct SOL_VARS {
-        double * x, * y, *s; 
-    } Sol;
-
-    /* contains terminating information */
-    typedef struct INFO {
-        int iter;
-        char status[16];
-        double pobj;
-        double dobj;
-        double presid;
-        double dresid;
-        double gap;
-        double time;
-    } Info;
-
-The data matrix `A` is specified in column-compressed format for scssparse or dense
-column major order for scsdense, and the vectors
-`b` and `c` are specified as dense arrays. The solutions `x` (primal) and `y`
-(dual) are returned as dense arrays. Cones are specified in terms of their
-lengths; the only special one is the second-order cone, where the lengths are
-provided as an array of second-order cone lengths (and a variable `qsize`
-giving its length).
-
+Solving SDPs
+---------- 
+In order to solve SDPs you must have BLAS and LAPACK installed.
+Point scs.mk to the location of these libraries. Without
+these you can still solve SOCPs, LPs, and EXPs.
 
 Scalability
 ----------- 

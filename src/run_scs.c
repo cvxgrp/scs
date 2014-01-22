@@ -1,5 +1,8 @@
 #include "scs.h"
-#include "run_scs.h"
+
+int main(int argc, char **argv);
+int read_in_data(FILE * fp,Data * d, Cone * k);
+int open_file(int argc, char ** argv, int idx, char * default_file, FILE ** fb);
 
 #ifndef DEMO_PATH
 #define DEMO_PATH "../data_sparse"

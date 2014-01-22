@@ -56,6 +56,7 @@ typedef struct INFO {
 	double time;
 } Info;
 
+/* not needed by user */
 typedef struct PRIVATE_DATA Priv;
 
 typedef struct WORK {
@@ -89,21 +90,7 @@ struct residuals {
 
 // these are actually library "api"'s
 int scs(Data * d, Cone * k, Sol * sol, Info * info);
+void freeData(Data *d, Cone *k);
+void freeSol(Sol *sol);
 void printSol(Data * d, Sol * sol, Info * info);
-
-// these are pulled in from private.o
-int privateInitWork(Data * d, Work * w);
-// solves [I A';A -I] x = b, stores result in b, s contains warm-start
-char * getLinSysSummary(Data * d, Info * info);
-void solveLinSys(Data * d, Work * w, double * b, const double * s, int iter);
-void freePriv(Work * w);
-
-/* scs returns one of the following integers: */
-/* (zero should never be returned) */
-#define FAILURE -4
-#define INDETERMINATE -3
-#define INFEASIBLE -2 // primal infeasible, dual unbounded
-#define UNBOUNDED -1 // primal unbounded, dual infeasible
-#define SOLVED 1
-
 #endif
