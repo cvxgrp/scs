@@ -65,9 +65,9 @@ use the mex file in your Matlab code. The calling sequence is
 
 	[x,y,info] = scs_direct(data,cones,params)
 
-where data contains `A`, `b`, `c`
-params contains various options (see matlab file, can be empty)
-cones contains one or more of:
+where data contains `A`, `b`, `c`  
+params contains various options (see matlab file, can be empty)  
+cones contains one or more of:  
 + `f` (num free/zero cones)
 + `l` (num linear cones)
 + `q` (array of SOCs sizes)

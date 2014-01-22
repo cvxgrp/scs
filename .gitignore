@@ -6,8 +6,6 @@ matlab_examples/kona_data/
 *DIMACS_lib.tar.gz
 experimental
 old_versions
-*data_scs
-*data_rome
 matlab_examples/data/*
 *dSYM
 *demo_direct

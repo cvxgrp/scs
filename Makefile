@@ -9,6 +9,9 @@ TARGETS = bin/demo_direct bin/demo_indirect
 .PHONY: default 
 default: lib/libscsdir.a lib/libscsindir.a bin/demo_direct bin/demo_indirect
 	@echo "**********************************************************************************"
+	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2014."
+	@echo "To test, run bin/demo_direct or bin/demo_indirect (uses demo_data file)."
+	@echo "**********************************************************************************"
 ifdef USE_LAPACK
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPS, SDPs, and EXPs"
 else
@@ -53,11 +56,11 @@ lib/libscsindir.a: $(OBJECTS) indirect/private.o
 
 bin/demo_direct: src/run_scs.c lib/libscsdir.a
 	mkdir -p bin
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/data_sparse\"" -o $@ $^ $(LDFLAGS) 
+	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/demo_data/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
 bin/demo_indirect: src/run_scs.c lib/libscsindir.a
 	mkdir -p bin
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/data_sparse\"" -o $@ $^ $(LDFLAGS) 
+	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/demo_data/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
 .PHONY: clean purge
 clean:
