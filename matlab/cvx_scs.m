@@ -263,8 +263,8 @@ end
 if (isfield(settings,'MAX_ITERS'))
     pars.MAX_ITERS = settings.MAX_ITERS;
 end
-if ~quiet
-    pars.VERBOSE = 1;
+if quiet
+    pars.VERBOSE = 0;
 end
 if (isfield(settings,'USE_INDIRECT'))
     pars.USE_INDIRECT = settings.USE_INDIRECT;
