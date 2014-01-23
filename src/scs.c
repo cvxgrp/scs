@@ -105,6 +105,10 @@ int scs(Data * d, Cone * k, Sol * sol, Info * info)
 
 static inline int validate(Data * d, Cone * k) {
     int i;
+    if (!d->Ax || !d->Ai || !d->Ap || !d->b || !d->c) {
+        scs_printf("data incompletely specified\n");
+        return -1;
+    }
     if (d->m <= 0 || d->n <= 0) {
         scs_printf("m and n must both be greater than 0\n");
         return -1;
@@ -113,8 +117,8 @@ static inline int validate(Data * d, Cone * k) {
         scs_printf("m must be greater than or equal to n\n");
         return -1;
     }
-    for (i = 0 ; i < d->n ; ++i){
-        if(d->Ap[i] >= d->Ap[i+1]){
+    for (i = 0 ; i < d->n ; ++i) {
+        if(d->Ap[i] >= d->Ap[i+1]) {
             scs_printf("Ap not strictly increasing\n");
             return -1;
         }
@@ -123,7 +127,7 @@ static inline int validate(Data * d, Cone * k) {
     for (i = 0 ; i < d->Anz ; ++i) {
         if(d->Ai[i] > rMax) rMax = d->Ai[i];
     }
-    if (rMax != d->m - 1) {
+    if (rMax > d->m - 1) {
         scs_printf("number of rows in A inconsistent with input m dimension\n");
         return -1;
     }
@@ -139,12 +143,8 @@ static inline int validate(Data * d, Cone * k) {
         scs_printf("cone dimensions not equal to num rows in A\n");
         return -1;
     }
-    if (d->Anz > d->m * d->n || d->Anz <= 0) {
-        scs_printf("Anz (nonzeros in A) incorrect\n");
-        return -1;
-    }
-    if (!d->Ax || !d->Ai || !d->Ap || !d->b || !d->c) {
-        scs_printf("data incompletely specified\n");
+    if (((float) d->Anz / d->m > d->n) || (d->Anz <= 0)) {
+        scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", d->Anz);
         return -1;
     }
     if (d->MAX_ITERS < 0) {
