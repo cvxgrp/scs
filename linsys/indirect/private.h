@@ -6,15 +6,15 @@
 #include <math.h>
 
 struct PRIVATE_DATA{
-  double *p;  // cg iterate
-  double *r;  // cg residual
-  double *x;
-  double * Ap;
-  double * tmp;
+  pfloat *p;  // cg iterate
+  pfloat *r;  // cg residual
+  pfloat *x;
+  pfloat * Ap;
+  pfloat * tmp;
 
-  double * Atx;
-  int * Ati;
-  int * Atp;
+  pfloat * Atx;
+  idxint * Ati;
+  idxint * Atp;
 };
 
 

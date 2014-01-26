@@ -25,7 +25,7 @@ catch err
     compile_indirect(flags);    
     
     disp('Compiled without lapack support - unable to solve SDPs (can solve LPs, QPs, SOCPs, EXPs)')
-    disp('To solve SDPs you must install cblas + lapacke and point the flags to the right locations')
+    disp('To solve SDPs you must install cblas + lapacke and poidxint the flags to the right locations')
 end
 
 %%

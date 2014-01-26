@@ -1,10 +1,10 @@
 #include "private.h"
 
 // forward declare
-int LDLInit(cs * A, int P[], double **info);
-int LDLFactor(cs * A, int P[], int Pinv[], cs ** L, double **D);
-void LDLSolve(double *x, double b[], cs * L, double D[], int P[], double * bp);
-int factorize(Data * d,Work * w);
+idxint LDLInit(cs * A, idxint P[], pfloat **info);
+idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs ** L, pfloat **D);
+void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp);
+idxint factorize(Data * d,Work * w);
 
 char * getLinSysSummary(Data * d, Info * info) {
     return NULL;
@@ -22,19 +22,19 @@ void freePriv(Work * w){
     }
 }
 
-void solveLinSys(Data *d, Work * w, double * b, const double * s, int iter){
+void solveLinSys(Data *d, Work * w, pfloat * b, const pfloat * s, idxint iter){
   // returns solution to linear system
   // Ax = b with solution stored in b
   LDLSolve(b, b, w->p->L, w->p->D, w->p->P, w->p->bp);
 }
 
-int privateInitWork(Data * d, Work * w){ 
+idxint privateInitWork(Data * d, Work * w){ 
 	w->method = strdup("sparse-direct");
-	int n_plus_m = d->n + d->m;
+	idxint n_plus_m = d->n + d->m;
 	w->p = scs_malloc(sizeof(Priv));
-	w->p->P = scs_malloc(sizeof(int)*n_plus_m);
+	w->p->P = scs_malloc(sizeof(idxint)*n_plus_m);
 	w->p->L = scs_malloc(sizeof (cs));
-	w->p->bp = scs_malloc(n_plus_m * sizeof(double));
+	w->p->bp = scs_malloc(n_plus_m * sizeof(pfloat));
 	w->p->L->m = n_plus_m;
 	w->p->L->n = n_plus_m;
 	w->p->L->nz = -1; 
@@ -48,10 +48,10 @@ cs * formKKT(Data * d, Work * w){
 	 *
 	 * forms upper triangular part of [I A'; A -I]
 	 */
-	int j, k, kk;
+	idxint j, k, kk;
 	/* I at top left */
-	const int Anz = d->Ap[d->n];
-	const int Knzmax = d->n + d->m + Anz;
+	const idxint Anz = d->Ap[d->n];
+	const idxint Knzmax = d->n + d->m + Anz;
 	cs * K = cs_spalloc(d->m + d->n, d->m + d->n, Knzmax, 1, 1);
 	if (!K)
     {
@@ -88,15 +88,15 @@ cs * formKKT(Data * d, Work * w){
 }
 
 
-int factorize(Data * d,Work * w){
+idxint factorize(Data * d,Work * w){
 	//tic();
 	cs * K = formKKT(d,w);
 	if (!K){
         return -7; //arbitrary int
     }
     //if(d->VERBOSE) scs_printf("KKT matrix factorization info:\n");
-	double *info;
-	int amd_status = LDLInit(K, w->p->P, &info);
+	pfloat *info;
+	idxint amd_status = LDLInit(K, w->p->P, &info);
 	if (amd_status < 0) return(amd_status);
 	/*
   if(d->VERBOSE) {
@@ -107,47 +107,47 @@ int factorize(Data * d,Work * w){
 #endif
 	}
   */
-	int * Pinv = cs_pinv(w->p->P, w->l-1);
+	idxint * Pinv = cs_pinv(w->p->P, w->l-1);
 	cs * C = cs_symperm(K, Pinv, 1); 
-	int ldl_status = LDLFactor(C, NULL, NULL, &w->p->L, &w->p->D);
+	idxint ldl_status = LDLFactor(C, NULL, NULL, &w->p->L, &w->p->D);
 	//if(d->VERBOSE) scs_printf("KKT matrix factorization took %4.8f ms\n",tocq());
 	cs_spfree(C);cs_spfree(K);scs_free(Pinv);scs_free(info);
 	return(ldl_status);
 }
 
-int LDLInit(cs * A, int P[], double **info) {
-	*info  = (double *) scs_malloc(AMD_INFO * sizeof(double));
+idxint LDLInit(cs * A, idxint P[], pfloat **info) {
+	*info  = (pfloat *) scs_malloc(AMD_INFO * sizeof(pfloat));
 #ifdef DLONG
-	return(amd_l_order(A->n, A->p, A->i, P, (double *) NULL, *info));
+	return(amd_l_order(A->n, A->p, A->i, P, (pfloat *) NULL, *info));
 #else
-	return(amd_order(A->n, A->p, A->i, P, (double *) NULL, *info));
+	return(amd_order(A->n, A->p, A->i, P, (pfloat *) NULL, *info));
 #endif
 }
 
-int LDLFactor(cs * A, int P[], int Pinv[], cs **L , double **D) 
+idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs **L , pfloat **D) 
 {
-	int n = A->n;
-	(*L)->p = (int *) scs_malloc((1 + n) * sizeof(int));
+	idxint n = A->n;
+	(*L)->p = (idxint *) scs_malloc((1 + n) * sizeof(idxint));
 	
-	//int Parent[n], Lnz[n], Flag[n], Pattern[n];
-	//double Y[n];
+	//idxint Parent[n], Lnz[n], Flag[n], Pattern[n];
+	//pfloat Y[n];
 
-	int * Parent = scs_malloc(n*sizeof(int));
-	int * Lnz = scs_malloc(n*sizeof(int));
-	int * Flag = scs_malloc(n*sizeof(int));
-	int * Pattern = scs_malloc(n*sizeof(int));
-	double * Y = scs_malloc(n*sizeof(double));
+	idxint * Parent = scs_malloc(n*sizeof(idxint));
+	idxint * Lnz = scs_malloc(n*sizeof(idxint));
+	idxint * Flag = scs_malloc(n*sizeof(idxint));
+	idxint * Pattern = scs_malloc(n*sizeof(idxint));
+	pfloat * Y = scs_malloc(n*sizeof(pfloat));
 
-	ldl_symbolic(n, A->p, A->i, (*L)->p, Parent, Lnz, Flag, P, Pinv);
+	LDL_symbolic(n, A->p, A->i, (*L)->p, Parent, Lnz, Flag, P, Pinv);
 
 	(*L)->nzmax = *((*L)->p + n);
-	(*L)->x = (double *) scs_malloc((*L)->nzmax * sizeof(double));
-	(*L)->i =    (int *) scs_malloc((*L)->nzmax * sizeof(int));
-	*D  = (double *) scs_malloc(n * sizeof(double));
+	(*L)->x = (pfloat *) scs_malloc((*L)->nzmax * sizeof(pfloat));
+	(*L)->i =    (idxint *) scs_malloc((*L)->nzmax * sizeof(idxint));
+	*D  = (pfloat *) scs_malloc(n * sizeof(pfloat));
 	
 	if(!(*D) || !(*L)->i || !(*L)->x || !Y || !Pattern || !Flag || !Lnz || !Parent) return -1;
 	
-	int kk = ldl_numeric(n, A->p, A->i, A->x, (*L)->p, Parent, Lnz, (*L)->i, (*L)->x, *D, Y, Pattern, Flag, P, Pinv);
+	idxint kk = LDL_numeric(n, A->p, A->i, A->x, (*L)->p, Parent, Lnz, (*L)->i, (*L)->x, *D, Y, Pattern, Flag, P, Pinv);
 
 	scs_free(Parent);
 	scs_free(Lnz);
@@ -157,21 +157,21 @@ int LDLFactor(cs * A, int P[], int Pinv[], cs **L , double **D)
 	return(n - kk);
 }
 
-void LDLSolve(double *x, double b[], cs * L, double D[], int P[], double * bp)
+void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp)
 {
   // solves PLDL'P' x = b for x
-  int n = L->n;
+  idxint n = L->n;
   if (P == NULL) {
     if (x != b) // if they're different addresses
-      memcpy(x,b, n*sizeof(double)); 
-    ldl_lsolve(n, x, L->p, L->i, L->x);
-    ldl_dsolve(n, x, D); 
-    ldl_ltsolve(n, x, L->p, L->i, L->x);
+      memcpy(x,b, n*sizeof(pfloat)); 
+    LDL_lsolve(n, x, L->p, L->i, L->x);
+    LDL_dsolve(n, x, D); 
+    LDL_ltsolve(n, x, L->p, L->i, L->x);
   } else {
-    ldl_perm(n, bp, b, P); 
-    ldl_lsolve(n, bp, L->p, L->i, L->x);
-    ldl_dsolve(n, bp, D); 
-    ldl_ltsolve(n, bp, L->p, L->i, L->x);
-    ldl_permt(n, x, bp, P); 
+    LDL_perm(n, bp, b, P); 
+    LDL_lsolve(n, bp, L->p, L->i, L->x);
+    LDL_dsolve(n, bp, D); 
+    LDL_ltsolve(n, bp, L->p, L->i, L->x);
+    LDL_permt(n, x, bp, P); 
 	}   
 }

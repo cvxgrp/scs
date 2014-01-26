@@ -23,7 +23,7 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 {
     void *p ;
     if (nitems < 1) nitems = 1 ;
-    if (nitems * size_of_item != ((double) nitems) * size_of_item)
+    if (nitems * size_of_item != ((pfloat) nitems) * size_of_item)
     {
         /* Int overflow */
         *ok = 0 ;
@@ -77,7 +77,7 @@ void *SuiteSparse_free      /* always returns NULL */
 
 /* Returns the number of seconds (tic [0]) and nanoseconds (tic [1]) since some
  * unspecified but fixed time in the past.  If no timer is installed, zero is
- * returned.  A scalar double precision value for 'tic' could be used, but this
+ * returned.  A scalar pfloat precision value for 'tic' could be used, but this
  * might cause loss of precision because clock_getttime returns the time from
  * some distant time in the past.  Thus, an array of size 2 is used.
  *
@@ -87,7 +87,7 @@ void *SuiteSparse_free      /* always returns NULL */
  *
  * example:
  *
- *      double tic [2], r, s, t ;
+ *      pfloat tic [2], r, s, t ;
  *      SuiteSparse_tic (tic) ;     // start the timer
  *      // do some work A
  *      t = SuiteSparse_toc (tic) ; // t is time for work A, in seconds
@@ -97,7 +97,7 @@ void *SuiteSparse_free      /* always returns NULL */
  *      // do some work C
  *      r = SuiteSparse_toc (tic) ; // s is time for work C, in seconds
  *
- * A double array of size 2 is used so that this routine can be more easily
+ * A pfloat array of size 2 is used so that this routine can be more easily
  * ported to non-POSIX systems.  The caller does not rely on the POSIX
  * <time.h> include file.
  */
@@ -108,21 +108,21 @@ void *SuiteSparse_free      /* always returns NULL */
 
 void SuiteSparse_tic
 (
-    double tic [2]      /* output, contents undefined on input */
+    pfloat tic [2]      /* output, contents undefined on input */
 )
 {
     /* POSIX C 1993 timer, requires -librt */
     struct timespec t ;
     clock_gettime (CLOCK_MONOTONIC, &t) ;
-    tic [0] = (double) (t.tv_sec) ;
-    tic [1] = (double) (t.tv_nsec) ;
+    tic [0] = (pfloat) (t.tv_sec) ;
+    tic [1] = (pfloat) (t.tv_nsec) ;
 }
 
 #else
 
 void SuiteSparse_tic
 (
-    double tic [2]      /* output, contents undefined on input */
+    pfloat tic [2]      /* output, contents undefined on input */
 )
 {
     /* no timer installed */
@@ -144,12 +144,12 @@ void SuiteSparse_tic
  * SuiteSparse_tic and do the calculations differently.
  */
 
-double SuiteSparse_toc  /* returns time in seconds since last tic */
+pfloat SuiteSparse_toc  /* returns time in seconds since last tic */
 (
-    double tic [2]  /* input, not modified from last call to SuiteSparse_tic */
+    pfloat tic [2]  /* input, not modified from last call to SuiteSparse_tic */
 )
 {
-    double toc [2] ;
+    pfloat toc [2] ;
     SuiteSparse_tic (toc) ;
     return ((toc [0] - tic [0]) + 1e-9 * (toc [1] - tic [1])) ;
 }
@@ -161,12 +161,12 @@ double SuiteSparse_toc  /* returns time in seconds since last tic */
 
 /* This function might not be accurate down to the nanosecond. */
 
-double SuiteSparse_time  /* returns current wall clock time in seconds */
+pfloat SuiteSparse_time  /* returns current wall clock time in seconds */
 (
     void
 )
 {
-    double toc [2] ;
+    pfloat toc [2] ;
     SuiteSparse_tic (toc) ;
     return (toc [0] + 1e-9 * toc [1]) ;
 }

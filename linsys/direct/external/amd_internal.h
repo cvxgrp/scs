@@ -120,7 +120,7 @@
 #define FLIP(i) (-(i)-2)
 #define UNFLIP(i) ((i < EMPTY) ? FLIP (i) : (i))
 
-/* for integer MAX/MIN, or for doubles when we don't care how NaN's behave: */
+/* for integer MAX/MIN, or for pfloats when we don't care how NaN's behave: */
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
@@ -229,7 +229,7 @@ GLOBAL size_t AMD_aat
     const Int Ai [ ],
     Int Len [ ],
     Int Tp [ ],
-    double Info [ ]
+    pfloat Info [ ]
 ) ;
 
 GLOBAL void AMD_1
@@ -242,8 +242,8 @@ GLOBAL void AMD_1
     Int Len [ ],
     Int slen,
     Int S [ ],
-    double Control [ ],
-    double Info [ ]
+    pfloat Control [ ],
+    pfloat Info [ ]
 ) ;
 
 GLOBAL void AMD_postorder

@@ -1,8 +1,8 @@
 #include "scs.h"
 
 int main(int argc, char **argv);
-int read_in_data(FILE * fp,Data * d, Cone * k);
-int open_file(int argc, char ** argv, int idx, char * default_file, FILE ** fb);
+idxint read_in_data(FILE * fp,Data * d, Cone * k);
+idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
 
 #ifndef DEMO_PATH
 #define DEMO_PATH "../data_sparse"
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 	fclose(fp);
 	Sol * sol = scs_malloc(sizeof(Sol));
 	Info * info = scs_malloc(sizeof(Info));
-	int i;
+	idxint i;
 	for (i=0;i<NUM_TRIALS;i++)
 	{
 		scs(d,k,sol,info);
@@ -36,85 +36,98 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int read_in_data(FILE * fp,Data * d, Cone * k){
+#ifdef DLONG
+    #define INTRW "%ld"
+#else
+    #define INTRW "%i"
+#endif
+
+#ifndef DFLOAT
+    #define FLOATRW "%lf"
+#else
+    #define FLOATRW "%f"
+#endif
+
+
+idxint read_in_data(FILE * fp,Data * d, Cone * k){
 	/* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
 	d->RHO_X = RHOX;
-    if(fscanf(fp, "%i", &(d->n)) != 1) return -1;
-	if(fscanf(fp, "%i", &(d->m))!= 1) return -1;
-    if(fscanf(fp, "%i", &(k->f))!= 1) return -1;
-	if(fscanf(fp, "%i", &(k->l))!= 1) return -1;
-    if(fscanf(fp, "%i", &(k->qsize))!= 1) return -1;
-	if(fscanf(fp, "%i", &(k->ssize))!= 1) return -1;
+    if(fscanf(fp, INTRW, &(d->n)) != 1) return -1;
+	if(fscanf(fp, INTRW, &(d->m))!= 1) return -1;
+    if(fscanf(fp, INTRW, &(k->f))!= 1) return -1;
+	if(fscanf(fp, INTRW, &(k->l))!= 1) return -1;
+    if(fscanf(fp, INTRW, &(k->qsize))!= 1) return -1;
+	if(fscanf(fp, INTRW, &(k->ssize))!= 1) return -1;
 
     // allow arbitrary additional cones, simply add to below:
-    int len = 32;
+    idxint len = 32;
     char s[len];
     if( fgets (s, len, fp) == NULL ) return -1;
     char* token = strtok(s, " ");
     if(token) k->ep = atoi(token); token = strtok(NULL, " ");
     if(token) k->ed = atoi(token); token = strtok(NULL, " ");
     
-	//if(fscanf(fp, "%i", &(k->ep))!= 1) return -1;
-	//if(fscanf(fp, "%i", &(k->ed))!= 1) return -1;
+	//if(fscanf(fp, INTRW, &(k->ep))!= 1) return -1;
+	//if(fscanf(fp, INTRW, &(k->ed))!= 1) return -1;
 	
-	if(fscanf(fp, "%i", &(d->MAX_ITERS))!= 1) return -1;
-	if(fscanf(fp, "%i", &(d->VERBOSE))!= 1) return -1;
-	if(fscanf(fp, "%i", &(d->NORMALIZE))!= 1) return -1;
-	if(fscanf(fp, "%lf", &(d->ALPH))!= 1) return -1;
-	if(fscanf(fp, "%lf", &(d->UNDET_TOL))!= 1) return -1;
-	if(fscanf(fp, "%lf", &(d->EPS_ABS))!= 1) return -1;
-	if(fscanf(fp, "%i", &(d->Anz))!= 1) return -1;
+	if(fscanf(fp, INTRW, &(d->MAX_ITERS))!= 1) return -1;
+	if(fscanf(fp, INTRW, &(d->VERBOSE))!= 1) return -1;
+	if(fscanf(fp, INTRW, &(d->NORMALIZE))!= 1) return -1;
+	if(fscanf(fp, FLOATRW, &(d->ALPH))!= 1) return -1;
+	if(fscanf(fp, FLOATRW, &(d->UNDET_TOL))!= 1) return -1;
+	if(fscanf(fp, FLOATRW, &(d->EPS_ABS))!= 1) return -1;
+	if(fscanf(fp, INTRW, &(d->Anz))!= 1) return -1;
 
-	k->q = malloc(sizeof(int)*k->qsize);
-	for(int i = 0; i < k->qsize; i++)
+	k->q = malloc(sizeof(idxint)*k->qsize);
+	for(idxint i = 0; i < k->qsize; i++)
 	{ 
-		if(fscanf(fp, "%i", &k->q[i])!= 1) return -1;
+		if(fscanf(fp, INTRW, &k->q[i])!= 1) return -1;
 	}
-    k->s = malloc(sizeof(int)*k->ssize);
-    for(int i = 0; i < k->ssize; i++)
+    k->s = malloc(sizeof(idxint)*k->ssize);
+    for(idxint i = 0; i < k->ssize; i++)
     {   
-        if(fscanf(fp, "%i", &k->s[i])!= 1) return -1;
+        if(fscanf(fp, INTRW, &k->s[i])!= 1) return -1;
     }   
-	d->b = malloc(sizeof(double)*d->m);
-	for(int i = 0; i < d->m; i++)
+	d->b = malloc(sizeof(pfloat)*d->m);
+	for(idxint i = 0; i < d->m; i++)
 	{ 
-		if(fscanf(fp, "%lf", &d->b[i])!= 1) return -1;
+		if(fscanf(fp, FLOATRW, &d->b[i])!= 1) return -1;
 	}
-	d->c = malloc(sizeof(double)*d->n);
-	for(int i = 0; i < d->n; i++)
+	d->c = malloc(sizeof(pfloat)*d->n);
+	for(idxint i = 0; i < d->n; i++)
 	{ 
-		if(fscanf(fp, "%lf", &d->c[i])!= 1) return -1;
+		if(fscanf(fp, FLOATRW, &d->c[i])!= 1) return -1;
 	}
-	d->Ai = malloc(sizeof(int)*(d->Anz));
-	for(int i = 0; i < d->Anz; i++)
+	d->Ai = malloc(sizeof(idxint)*(d->Anz));
+	for(idxint i = 0; i < d->Anz; i++)
 	{
-		if(fscanf(fp, "%i", &d->Ai[i])!= 1) return -1;
+		if(fscanf(fp, INTRW, &d->Ai[i])!= 1) return -1;
 	}
-	d->Ap = malloc(sizeof(int)*(d->n+1));
-	for(int i = 0; i < d->n+1; i++) 
+	d->Ap = malloc(sizeof(idxint)*(d->n+1));
+	for(idxint i = 0; i < d->n+1; i++) 
 	{
-		if(fscanf(fp, "%i", &d->Ap[i])!= 1) return -1;
+		if(fscanf(fp, INTRW, &d->Ap[i])!= 1) return -1;
 	}
-	d->Ax = malloc(sizeof(double)*(d->Anz));
-	for(int i = 0; i < (d->Anz); i++)
+	d->Ax = malloc(sizeof(pfloat)*(d->Anz));
+	for(idxint i = 0; i < (d->Anz); i++)
 	{
-		if(fscanf(fp, "%lf", &d->Ax[i])!= 1) return -1;
+		if(fscanf(fp, FLOATRW, &d->Ax[i])!= 1) return -1;
 	}
 	//		fscanf(fp, "%zu", &NNZ);
-	//		int *Kr = malloc(sizeof(int)*NNZ);
-	//		for(int i = 0; i < NNZ; i++)
+	//		idxint *Kr = malloc(sizeof(idxint)*NNZ);
+	//		for(idxint i = 0; i < NNZ; i++)
 	//		{
-	//		fscanf(fp, "%i", &Kr[i]);
+	//		fscanf(fp, INTRW, &Kr[i]);
 	//		}
-	//		int *Kp=malloc(sizeof(int)*(w->l+1));
-	//		for(int i = 0; i < w->l+1; i++)
+	//		idxint *Kp=malloc(sizeof(idxint)*(w->l+1));
+	//		for(idxint i = 0; i < w->l+1; i++)
 	//		{
-	//		fscanf(fp, "%i", &Kp[i]);
+	//		fscanf(fp, INTRW, &Kp[i]);
 	//		}
-	//		double *Kx=malloc(sizeof(double)*NNZ);
-	//		for(int i = 0; i < NNZ; i++)
+	//		pfloat *Kx=malloc(sizeof(pfloat)*NNZ);
+	//		for(idxint i = 0; i < NNZ; i++)
 	//		{
-	//		fscanf(fp, "%lf", &Kx[i]);
+	//		fscanf(fp, FLOATRW, &Kx[i]);
 	//		}
     return 0;
 }
@@ -147,7 +160,7 @@ void freeSol(Sol *sol){
 }
 
 
-int open_file(int argc, char ** argv, int idx, char * default_file, FILE ** fb) 
+idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb) 
 {
 	if (argc<idx+1){
 		printf("Not enough arguments supplied, using %s as default\n", default_file);

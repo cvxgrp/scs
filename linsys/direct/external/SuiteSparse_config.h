@@ -44,6 +44,7 @@ extern "C" {
 
 #include <limits.h>
 #include <stdlib.h>
+#include "glbopts.h"
 
 /* ========================================================================== */
 /* === SuiteSparse_long ===================================================== */
@@ -107,15 +108,15 @@ void *SuiteSparse_free      /* always returns NULL */
 
 void SuiteSparse_tic    /* start the timer */
 (
-    double tic [2]      /* output, contents undefined on input */
+    pfloat tic [2]      /* output, contents undefined on input */
 ) ;
 
-double SuiteSparse_toc  /* return time in seconds since last tic */
+pfloat SuiteSparse_toc  /* return time in seconds since last tic */
 (
-    double tic [2]      /* input: from last call to SuiteSparse_tic */
+    pfloat tic [2]      /* input: from last call to SuiteSparse_tic */
 ) ;
 
-double SuiteSparse_time  /* returns current wall clock time in seconds */
+pfloat SuiteSparse_time  /* returns current wall clock time in seconds */
 (
     void
 ) ;

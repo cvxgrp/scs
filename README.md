@@ -16,11 +16,19 @@ other projects.
 
 It simultaneously solves the primal cone program
 
-	minimize     c'*x subject to   A*x + s == b s in K 
-                 
+```
+minimize        c'*x 
+subject to      A*x + s = b 
+                s in K
+```
+
 and its dual
 
-	maximize     -b'*y subject to   -A'*y == c y in K^* 
+```
+maximize        -b'*y 
+subject to      -A'*y == c 
+                y in K^*
+```   
 
 where `K` is a product cone of free cones, linear cones `{ x | x >= 0 }`, 
 second-order cones `{ (t,x) | ||x||_2 <= t }`, semi-definite cones `{ X | X psd }`,
@@ -99,7 +107,7 @@ libraries in your own source code, compile with the linker option with
 
 These libraries (and `scs.h`) expose only three API functions:
 
-* int scs(Data * d, Cone * k, Sol * sol, Info * info); 
+* idxint scs(Data * d, Cone * k, Sol * sol, Info * info); 
     
 	This solves the problem specified in the `Data` and `Cone` structures,
     and returns the solution in the Sol struct and various information about the run in
@@ -118,44 +126,44 @@ The four relevant data structures are:
     
     /* struct that containing standard problem data */
     typedef struct PROBLEM_DATA {
-      int n, m; /* problem dimensions */
+      idxint n, m; /* problem dimensions */
       /* problem data, A, b, c: */
-      double * Ax;
-      int * Ai, * Ap;
-      int Anz;
-      double * b, * c;
-      int MAX_ITERS;
-      double EPS_ABS, ALPH, UNDET_TOL, RHO_X;
-      int VERBOSE, NORMALIZE;  // boolean
+      pfloat * Ax;
+      idxint * Ai, * Ap;
+      idxint Anz;
+      pfloat * b, * c;
+      idxint MAX_ITERS;
+      pfloat EPS_ABS, ALPH, UNDET_TOL, RHO_X;
+      idxint VERBOSE, NORMALIZE;  // boolean
     } Data;
     
     /* contains primal-dual solution vectors */
     typedef struct SOL_VARS {
-      double * x, * y, *s;
+      pfloat * x, * y, *s;
     } Sol;
     
     /* contains terminating information */
     typedef struct INFO {
-    	int iter;
+    	idxint iter;
     	char status[16];
-    	int stint; // status as int
-        double pobj;
-    	double dobj;
-    	double resPri;
-    	double resDual;
-    	double relGap;
-    	double time;
+    	idxint stint; // status as int
+        pfloat pobj;
+    	pfloat dobj;
+    	pfloat resPri;
+    	pfloat resDual;
+    	pfloat relGap;
+    	pfloat time;
     } Info;
     
     typedef struct Cone_t {
-        int f;          /* number of linear equality constraints */
-        int l;          /* length of LP cone */
-        int *q;         /* array of second-order cone constraints */
-        int qsize;      /* length of SOC array */
-        int *s;         /* array of SD constraints */
-        int ssize;      /* length of SD array */
-        int ep;         /* number of triples in exponential cone */
-        int ed;         /* number of triples in dual exponential cone */
+        idxint f;          /* number of linear equality constraints */
+        idxint l;          /* length of LP cone */
+        idxint *q;         /* array of second-order cone constraints */
+        idxint qsize;      /* length of SOC array */
+        idxint *s;         /* array of SD constraints */
+        idxint ssize;      /* length of SD array */
+        idxint ep;         /* number of triples in exponential cone */
+        idxint ed;         /* number of triples in dual exponential cone */
     } Cone;
         
     
@@ -169,7 +177,7 @@ soc cones etc.).
 Solving SDPs
 ---------- 
 In order to solve SDPs you must have BLAS and LAPACK installed.
-Point `scs.mk` to the location of these libraries. Without
+Poidxint `scs.mk` to the location of these libraries. Without
 these you can still solve SOCPs, LPs, and EXPs.
 
 Scalability

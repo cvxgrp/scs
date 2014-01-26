@@ -18,10 +18,10 @@
 
 GLOBAL void AMD_info
 (
-    double Info [ ]
+    pfloat Info [ ]
 )
 {
-    double n, ndiv, nmultsubs_ldl, nmultsubs_lu, lnz, lnzd ;
+    pfloat n, ndiv, nmultsubs_ldl, nmultsubs_lu, lnz, lnzd ;
 
     PRINTF (("\nAMD version %d.%d.%d, %s, results:\n",
 	AMD_MAIN_VERSION, AMD_SUB_VERSION, AMD_SUBSUB_VERSION, AMD_DATE)) ;

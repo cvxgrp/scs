@@ -6,14 +6,14 @@
 
 void normalize(Data * d, Work * w, Cone * k){
     
-	double * D = scs_calloc(d->m, sizeof(double));
-	double * E = scs_calloc(d->n, sizeof(double));
+	pfloat * D = scs_calloc(d->m, sizeof(pfloat));
+	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
 	
-	int i, j, count;
-	double wrk;
+	idxint i, j, count;
+	pfloat wrk;
 	
 	// heuristic rescaling, seems to do well with a scaling of about 4
-	w->scale =  4; //fmax( fmin( sqrt( d->n * d->m / d->Anz ) , MAX_SCALE) , 1);
+	w->scale =  4; //MAX( MIN( sqrt( d->n * d->m / d->Anz ) , MAX_SCALE) , 1);
 
 	// calculate row norms
 	for(i = 0; i < d->n; ++i){
@@ -32,7 +32,7 @@ void normalize(Data * d, Work * w, Cone * k){
 		wrk = 0;
 	    /*
         for (j = count; j < count + k->q[i]; ++j){
-        	wrk = fmax(wrk,D[j]);
+        	wrk = MAX(wrk,D[j]);
 		}
         */
         for (j = count; j < count + k->q[i]; ++j){
@@ -49,7 +49,7 @@ void normalize(Data * d, Work * w, Cone * k){
  		wrk = 0;
         /*
         for (j = count; j < count + (k->s[i])*(k->s[i]); ++j){
-        	wrk = fmax(wrk,D[j]);
+        	wrk = MAX(wrk,D[j]);
 		}
         */
 		for (j = count; j < count + (k->s[i])*(k->s[i]); ++j){
@@ -94,15 +94,15 @@ void normalize(Data * d, Work * w, Cone * k){
 	for (i = 0; i < d->m; ++i){
 		d->b[i] /= D[i];
 	}
-	w->sc_b = 1/fmax(calcNorm(d->b,d->m),MIN_SCALE);
+	w->sc_b = 1/MAX(calcNorm(d->b,d->m),MIN_SCALE);
 	scaleArray(d->b, w->sc_b, d->m);
 	// scale c
 	for (i = 0; i < d->n; ++i){
 		d->c[i] /= E[i];
 	}
 	
-	double meanNormRowA = 0.0;
-	double *nms = scs_calloc(d->m,sizeof(double));
+	pfloat meanNormRowA = 0.0;
+	pfloat *nms = scs_calloc(d->m,sizeof(pfloat));
 	for(i = 0; i < d->n; ++i){
 		for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
 			wrk = d->Ax[j];
@@ -112,7 +112,7 @@ void normalize(Data * d, Work * w, Cone * k){
 	for (i=0; i < d->m; ++i){
 		meanNormRowA += sqrt(nms[i])/d->m;
 	}
-	w->sc_c = meanNormRowA/fmax(calcNorm(d->c,d->n),MIN_SCALE);
+	w->sc_c = meanNormRowA/MAX(calcNorm(d->c,d->n),MIN_SCALE);
 	scaleArray(d->c, w->sc_c, d->n);
 
 	w->D = D;
@@ -134,13 +134,13 @@ void normalize(Data * d, Work * w, Cone * k){
 }
 
 void calcScaledResids(Data * d, Work * w, struct residuals * r) {
-    double * D = w->D;
-    double * E = w->E;
-    double * u = w->u;
-    double * u_t = w->u_t;
-    double * u_prev = w->u_prev;
-    double tmp;
-    int i;
+    pfloat * D = w->D;
+    pfloat * E = w->E;
+    pfloat * u = w->u;
+    pfloat * u_t = w->u_t;
+    pfloat * u_prev = w->u_prev;
+    pfloat tmp;
+    idxint i;
 
     r->resPri = 0;
     for (i = 0; i < d->n; ++i){
@@ -169,9 +169,9 @@ void calcScaledResids(Data * d, Work * w, struct residuals * r) {
     r->resDual = sqrt(r->resDual);
 }
 
-double calcScaledNormInf(const double *a, const double * s, int l){ 
-    double tmp, max = 0.0;
-    int i;
+pfloat calcScaledNormInf(const pfloat *a, const pfloat * s, idxint l){ 
+    pfloat tmp, max = 0.0;
+    idxint i;
     for ( i=0; i<l; ++i){
         tmp = fabs(s[i] * a[i]);
         if(tmp > max) max = tmp;
@@ -180,9 +180,9 @@ double calcScaledNormInf(const double *a, const double * s, int l){
 }
 
 void unNormalize(Data *d, Work * w, Sol * sol){
-	int i, j;
-	double * D = w->D;
-	double * E = w->E;
+	idxint i, j;
+	pfloat * D = w->D;
+	pfloat * E = w->E;
 	for (i = 0; i < d->n; ++i){
 		sol->x[i] /= (E[i] * w->sc_b);
 	}

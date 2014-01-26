@@ -52,8 +52,8 @@ int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
     const int Ap [ ],          /* column pointers for A, of size n+1 */
     const int Ai [ ],          /* row indices of A, of size nz = Ap [n] */
     int P [ ],                 /* output permutation, of size n */
-    double Control [ ],        /* input Control settings, of size AMD_CONTROL */
-    double Info [ ]            /* output Info statistics, of size AMD_INFO */
+    pfloat Control [ ],        /* input Control settings, of size AMD_CONTROL */
+    pfloat Info [ ]            /* output Info statistics, of size AMD_INFO */
 ) ;
 
 SuiteSparse_long amd_l_order    /* see above for description of arguments */
@@ -62,8 +62,8 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
     const SuiteSparse_long Ap [ ],
     const SuiteSparse_long Ai [ ],
     SuiteSparse_long P [ ],
-    double Control [ ],
-    double Info [ ]
+    pfloat Control [ ],
+    pfloat Info [ ]
 ) ;
 
 /* Input arguments (not modified):
@@ -73,7 +73,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *              pointers of A.
  *       Ai: an int/SuiteSparse_long array of size nz, containing the row
  *              indices of A, where nz = Ap [n].
- *       Control:  a double array of size AMD_CONTROL, containing control
+ *       Control:  a pfloat array of size AMD_CONTROL, containing control
  *           parameters.  Defaults are used if Control is NULL.
  *
  * Output arguments (not defined on input):
@@ -81,7 +81,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       P: an int/SuiteSparse_long array of size n, containing the output
  *           permutation. If row i is the kth pivot row, then P [k] = i.  In
  *           MATLAB notation, the reordered matrix is A (P,P).
- *       Info: a double array of size AMD_INFO, containing statistical
+ *       Info: a pfloat array of size AMD_INFO, containing statistical
  *           information.  Ignored if Info is NULL.
  *
  * On input, the matrix A is stored in column-oriented form.  The row indices
@@ -250,8 +250,8 @@ void amd_2
     int Elen [ ],
     int Degree [ ],
     int W [ ],
-    double Control [ ],
-    double Info [ ]
+    pfloat Control [ ],
+    pfloat Info [ ]
 ) ;
 
 void amd_l2
@@ -269,8 +269,8 @@ void amd_l2
     SuiteSparse_long Elen [ ],
     SuiteSparse_long Degree [ ],
     SuiteSparse_long W [ ],
-    double Control [ ],
-    double Info [ ]
+    pfloat Control [ ],
+    pfloat Info [ ]
 ) ;
 
 /* ------------------------------------------------------------------------- */
@@ -325,16 +325,16 @@ EXTERN int (*amd_printf) (const char *, ...) ;            /* pointer to printf *
 /* ------------------------------------------------------------------------- */
 
 /* amd_defaults:  sets the default control settings */
-void amd_defaults   (double Control [ ]) ;
-void amd_l_defaults (double Control [ ]) ;
+void amd_defaults   (pfloat Control [ ]) ;
+void amd_l_defaults (pfloat Control [ ]) ;
 
 /* amd_control: prints the control settings */
-void amd_control    (double Control [ ]) ;
-void amd_l_control  (double Control [ ]) ;
+void amd_control    (pfloat Control [ ]) ;
+void amd_l_control  (pfloat Control [ ]) ;
 
 /* amd_info: prints the statistics */
-void amd_info       (double Info [ ]) ;
-void amd_l_info     (double Info [ ]) ;
+void amd_info       (pfloat Info [ ]) ;
+void amd_l_info     (pfloat Info [ ]) ;
 
 #define AMD_CONTROL 5          /* size of Control array */
 #define AMD_INFO 20            /* size of Info array */

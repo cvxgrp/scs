@@ -5,25 +5,25 @@
  * compiler. If compiling without optimization, causes code bloat.
  */
 
-inline void _accumByAtrans(int n, double * Ax, int * Ai, int * Ap, const double *x, double *y);
-inline void _accumByA(int n, double * Ax, int * Ai, int * Ap, const double *x, double *y);
+inline void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y);
+inline void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y);
 
 // x = b*a
-inline void setAsScaledArray(double *x, const double * a,const double b,int len) {
-  int i;
+inline void setAsScaledArray(pfloat *x, const pfloat * a,const pfloat b,idxint len) {
+  idxint i;
   for( i=0;i<len;++i ) x[i] = b*a[i];
 }
 
 // a*= b
-inline void scaleArray(double * a,const double b,int len){
-  int i;
+inline void scaleArray(pfloat * a,const pfloat b,idxint len){
+  idxint i;
   for( i=0;i<len;++i) a[i]*=b;
 }
 
 // x'*y
-inline double innerProd(const double * x, const double * y, int len){
-  int i;
-  double ip = 0.0;
+inline pfloat innerProd(const pfloat * x, const pfloat * y, idxint len){
+  idxint i;
+  pfloat ip = 0.0;
   for ( i=0;i<len;++i){
     ip += x[i]*y[i];
   }
@@ -31,9 +31,9 @@ inline double innerProd(const double * x, const double * y, int len){
 }
 
 // ||v||_2^2
-inline double calcNormSq(const double * v,int len){
-  int i;
-  double nmsq = 0.0;
+inline pfloat calcNormSq(const pfloat * v,idxint len){
+  idxint i;
+  pfloat nmsq = 0.0;
   for ( i=0;i<len;++i){
     nmsq += v[i]*v[i];
   }
@@ -41,13 +41,13 @@ inline double calcNormSq(const double * v,int len){
 }
 
 // ||v||_2
-inline double calcNorm(const double * v,int len){
+inline pfloat calcNorm(const pfloat * v,idxint len){
   return sqrt(calcNormSq(v, len));
 }
 
-inline double calcNormInf(const double *a, int l){
-	double tmp, max = 0.0;
-	int i;
+inline pfloat calcNormInf(const pfloat *a, idxint l){
+	pfloat tmp, max = 0.0;
+	idxint i;
 	for (i=0; i<l; ++i){
 		tmp = fabs(a[i]);
 		if(tmp > max) max = tmp;
@@ -56,16 +56,16 @@ inline double calcNormInf(const double *a, int l){
 }
 
 // saxpy a += sc*b
-inline void addScaledArray(double * a, const double * b, int n, const double sc){
-  int i;
+inline void addScaledArray(pfloat * a, const pfloat * b, idxint n, const pfloat sc){
+  idxint i;
   for (i=0;i<n;++i){
     a[i] += sc*b[i];
   }
 }
 
-inline double calcNormDiff(const double *a, const double *b, int l) {
-    double nmDiff = 0.0, tmp;
-    int i;
+inline pfloat calcNormDiff(const pfloat *a, const pfloat *b, idxint l) {
+    pfloat nmDiff = 0.0, tmp;
+    idxint i;
     for ( i=0; i<l; ++i){
         tmp = (a[i] - b[i]);
 		nmDiff += tmp * tmp;
@@ -73,9 +73,9 @@ inline double calcNormDiff(const double *a, const double *b, int l) {
     return sqrt(nmDiff);
 }
 
-inline double calcNormInfDiff(const double *a, const double *b, int l) {
-	double tmp, max = 0.0;
-	int i;
+inline pfloat calcNormInfDiff(const pfloat *a, const pfloat *b, idxint l) {
+	pfloat tmp, max = 0.0;
+	idxint i;
 	for ( i=0; i<l; ++i){
 		tmp = fabs(a[i] - b[i]);
 		if(tmp > max) max = tmp;
@@ -83,24 +83,24 @@ inline double calcNormInfDiff(const double *a, const double *b, int l) {
 	return max;
 }
 
-inline void accumByAtrans(Data * d, const double *x, double *y) 
+inline void accumByAtrans(Data * d, const pfloat *x, pfloat *y) 
 {
 	_accumByAtrans(d->n, d->Ax, d->Ai, d->Ap, x, y); 
 }
-inline void accumByA(Data * d, const double *x, double *y) 
+inline void accumByA(Data * d, const pfloat *x, pfloat *y) 
 {
 	_accumByA(d->n, d->Ax, d->Ai, d->Ap, x, y);
 }
 
-inline void _accumByAtrans(int n, double * Ax, int * Ai, int * Ap, const double *x, double *y) 
+inline void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
 {
     /* y  = A'*x 
     A in column compressed format 
     parallelizes over columns (rows of A')
     */
-    int p, j;
-    int c1, c2; 
-    double yj; 
+    idxint p, j;
+    idxint c1, c2; 
+    pfloat yj; 
 #pragma omp parallel for private(p,c1,c2,yj) 
     for (j = 0 ; j < n ; j++)
     {   
@@ -114,16 +114,16 @@ inline void _accumByAtrans(int n, double * Ax, int * Ai, int * Ap, const double 
     }   
 }
 
-inline void _accumByA(int n, double * Ax, int * Ai, int * Ap, const double *x, double *y) 
+inline void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
 {
 /*y  = A*x 
   A in column compressed format  
   this parallelizes over columns and uses
   pragma atomic to prevent concurrent writes to y 
  */
-  int p, j;
-  int c1, c2;
-  double xj;
+  idxint p, j;
+  idxint c1, c2;
+  pfloat xj;
 //#pragma omp parallel for private(p,c1,c2,xj) 
   for (j = 0 ; j < n ; j++)
   {
