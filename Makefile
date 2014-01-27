@@ -67,5 +67,8 @@ clean:
 	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(DIRSRC)/private.o $(INDIRSRC)/private.o 
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
+	@rm -rf .idea
+	@rm -rf python/*.pyc
+	@rm -rf python/build
 purge: clean 
 	@rm -rf $(OUT)

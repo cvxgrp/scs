@@ -30,9 +30,9 @@ static inline void printFooter(Data * d, Info * info, Work * w);
 static inline void freeWork(Work * w);
 static inline void projectLinSys(Data * d,Work * w, idxint iter);
 static inline Work * initWork(Data * d, Cone * k);
-static inline idxint converged(Data * d, Work * w, struct residuals * r, idxint iter);
-static inline idxint exactConverged(Data * d, Work * w, struct residuals * r, idxint iter);
-static inline idxint validate(Data * d, Cone * k);
+static inline int converged(Data * d, Work * w, struct residuals * r, idxint iter);
+static inline int exactConverged(Data * d, Work * w, struct residuals * r, idxint iter);
+static inline int validate(Data * d, Cone * k);
 static inline void failureDefaultReturn(Data * d, Work * w, Cone * k, Sol * sol, Info * info);
 
 idxint privateInitWork(Data * d, Work * w);
@@ -58,14 +58,13 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info)
 		failureDefaultReturn(d, NULL, k, sol, info);
         return FAILURE;
 	}
-    tic();
-	info->statusVal = 0; // not yet converged
-    idxint i;
-	struct residuals r = {-1, -1, -1, -1, -1, -1, -1};
     if (validate(d,k) < 0) {
         failureDefaultReturn(d, NULL, k, sol, info);
         return FAILURE;
-    }
+    } 
+    tic();
+	info->statusVal = 0; // not yet converged
+   	struct residuals r = {-1, -1, -1, -1, -1, -1, -1};
     Work * w = initWork(d,k);
 	if (!w) {
         failureDefaultReturn(d, NULL, k, sol, info);
@@ -73,7 +72,8 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info)
     }
     if(d->VERBOSE) {
 		printHeader(d, w, k);
-	} 
+	}
+    idxint i;
     /* scs: */
 	for (i=0; i < d->MAX_ITERS; ++i){
 		memcpy(w->u_prev, w->u, w->l*sizeof(pfloat));
@@ -103,7 +103,7 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info)
 	return info->statusVal;
 }
 
-static inline idxint validate(Data * d, Cone * k) {
+static inline int validate(Data * d, Cone * k) {
     idxint i;
     if (!d->Ax || !d->Ai || !d->Ap || !d->b || !d->c) {
         scs_printf("data incompletely specified\n");
@@ -140,7 +140,7 @@ static inline idxint validate(Data * d, Cone * k) {
         return -1;
     }
     if (getFullConeDims(k) != d->m) {
-        scs_printf("cone dimensions not equal to num rows in A\n");
+        scs_printf("cone dimensions %i not equal to num rows in A = m = %i\n", (int) getFullConeDims(k), (int) d->m );
         return -1;
     }
     if (((float) d->Anz / d->m > d->n) || (d->Anz <= 0)) {
@@ -186,7 +186,7 @@ static inline void failureDefaultReturn(Data * d, Work * w, Cone * k, Sol * sol,
     freeWork(w);
 }
 
-static inline idxint converged(Data * d, Work * w, struct residuals * r, idxint iter){
+static inline int converged(Data * d, Work * w, struct residuals * r, idxint iter){
     /* approximate convergence check:
     pfloat tau = fabs(w->u[w->l-1]); // abs to prevent negative stopping tol
     pfloat kap = fabs(w->v[w->l-1]);
@@ -204,7 +204,7 @@ static inline idxint converged(Data * d, Work * w, struct residuals * r, idxint 
     return 0;
 }
 
-static inline idxint exactConverged(Data * d, Work * w, struct residuals * r, idxint iter){
+static inline int exactConverged(Data * d, Work * w, struct residuals * r, idxint iter){
     pfloat * pr = scs_calloc(d->m,sizeof(pfloat));
     pfloat * dr = scs_calloc(d->n,sizeof(pfloat));
     pfloat * Axs = scs_calloc(d->m,sizeof(pfloat));
@@ -275,7 +275,7 @@ static inline idxint exactConverged(Data * d, Work * w, struct residuals * r, id
     }
     r->relGap = NAN;
 
-    idxint status = 0;
+    int status = 0;
     if (tau > kap) {
         pfloat rpri = calcNorm(pr,d->m) / (1+w->nm_b) / tau;
         pfloat rdua = calcNorm(dr,d->n) / (1+w->nm_c) / tau;

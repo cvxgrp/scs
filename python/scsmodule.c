@@ -1,23 +1,25 @@
 #include <Python.h>
-#include "ecos.h"
+#include "glbopts.h"
+#include "scs.h"
+#include "cones.h"
 #include "numpy/arrayobject.h"
 
 /* IMPORTANT: This code now uses numpy array types. It is a private C module
  * in the sense that end users only see the front-facing Python code in
- * "ecos.py"; hence, we can get away with the inputs being numpy arrays of
+ * "scs.py"; hence, we can get away with the inputs being numpy arrays of
  * the CSR data structures.
  *
  * WARNING: This code also does not check that the data for the sparse 
  * matrices are *actually* in column compressed storage for a sparse matrix. 
  * The C module is not designed to be used stand-alone. If the data provided
  * does not correspond to a CSR matrix, this code will just crash inelegantly.
- * Please use the "solve" interface in ecos.py.
+ * Please use the "solve" interface in scs.py.
  */
 //#include "cvxopt.h"
 
-/* ECHU: Note, Python3.x may require special handling for the idxint and pfloat
+/* Note, Python3.x may require special handling for the idxint and pfloat
  * types. */
-static inline idxint getIntType() {
+static inline int getIntType() {
   switch(sizeof(idxint)) {
     case 1: return NPY_INT8;
     case 2: return NPY_INT16;
@@ -27,12 +29,12 @@ static inline idxint getIntType() {
   }
 }
 
-static inline idxint getDoubleType() {
-  // ECHU: known bug, if pfloat isn't "pfloat", will cause aliasing in memory
+static inline int getDoubleType() {
+  // known bug, if pfloat isn't "pfloat", will cause aliasing in memory
   return NPY_DOUBLE;
 }
 
-static inline PyArrayObject *getContiguous(PyArrayObject *array, idxint typenum) {
+static inline PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
   // gets the pointer to the block of contiguous C memory
   // the overhead should be small unless the numpy array has been
   // reordered in some way or the data type doesn't quite match
@@ -48,39 +50,100 @@ static inline PyArrayObject *getContiguous(PyArrayObject *array, idxint typenum)
   return new_owner;
 }
 
-static idxint getConeIntDim(char * key, idxint * v, PyObject * cone) {
-    /* get dims['l'] */
+static int printErr(char * key) {
+    char str[80];
+    sprintf(str, "error parsing '%s'", key);
+    PyErr_SetString(PyExc_TypeError, str);
+    return -1; 
+}
+
+static int getConeIntDim(char * key, idxint * v, PyObject * cone) {
+    /* get cone['l'] */
     *v = 0;
     PyObject *obj = PyDict_GetItemString(cone, key);
     if(obj) {
         if(!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) >= 0)) {
-            PyErr_SetString(PyExc_TypeError, "dims ought to be a nonnegative integer");
-            return -1;
+            return printErr(key);
         }
     }
     return 0;
 }
 
-static idxint getConeArrDim(char * key, idxint ** v, idxint * vsize, PyObject * cone) {
-    /* get dims['q'] */
-    idxint n = 0;
+static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * cone) {
+    /* get cone['key'] */
+    idxint i, n = 0;
     idxint * q = NULL;
     PyObject *obj = PyDict_GetItemString(cone, key);
     if(obj) {
-        if (PyList_Check(obj)) {
+        if(PyList_Check(obj)) {
             n = PyList_Size(obj);
-            q = calloc(ncones, sizeof(idxint));
-            for (i = 0; i < ncones; ++i) {
+            q = calloc(n, sizeof(idxint));
+            for (i = 0; i < n; ++i) {
                 PyObject *qi = PyList_GetItem(obj, i);
-                if(!PyInt_Check(qi) || !((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
-                    PyErr_SetString(PyExc_TypeError, "dims['q'] ought to be a list of positive integers");
-                    return -1;
+                if (!PyInt_Check(qi) || !((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
+                    return printErr(key);
                 }
             }
-        } 
-    }
+        } else if (PyInt_Check(obj)) {
+            n = 1;
+            q = malloc(sizeof(idxint));
+            if (!PyInt_Check(obj) || !((*q = (idxint) PyInt_AsLong(obj)) > 0)) {
+                return printErr(key);
+            }
+        } else {
+            return printErr(key);
+        }
+    } 
     *vsize = n;
-    *v = q;
+    *varr = q;
+    return 0;
+}
+
+static int getOptIntParam(char * key, idxint * v, idxint defVal, PyObject * opts){
+    *v = defVal;
+    if (opts) {
+        PyObject *obj = PyDict_GetItemString(opts, key);
+        if (obj) {
+            if(!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) >= 0)) {
+                return printErr(key);
+            }
+        }
+    }
+    return 0;
+}
+
+static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * opts){
+    *v = defVal;
+    if (opts) {
+        PyObject *obj = PyDict_GetItemString(opts, key);
+        if (obj) {
+            if(!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
+                char str[80];
+                sprintf(str, "'%s' ought to be a nonnegative float", key);
+                PyErr_SetString(PyExc_TypeError, str);
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+static int parseOpts(Data *d, PyObject * opts) {
+    if (getOptIntParam("MAX_ITERS", &(d->MAX_ITERS), 2500, opts) < 0)
+        return -1;
+    if (getOptIntParam("VERBOSE", &(d->VERBOSE), 1, opts) < 0)
+        return -1;
+    if (getOptIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
+        return -1;
+    if (getOptFloatParam("EPS", &(d->EPS_ABS), 1e-3, opts) < 0)
+        return -1;
+    if (getOptFloatParam("ALPHA", &(d->ALPH), 1.8, opts) < 0)
+        return -1;
+    if (getOptFloatParam("UNDET_TOL", &(d->UNDET_TOL), 1e-6, opts) < 0)
+        return -1;
+    if (getOptFloatParam("RHO_X", &(d->RHO_X), 1e-3, opts) < 0)
+        return -1;
     return 0;
 }
 
@@ -157,59 +220,45 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   //spmatrix *G, *A = NULL;
   
   PyArrayObject *Ax, *Ai, *Ap, *c, *b;
-  PyObject *dims, *verbose = NULL;
-  idxidxint n;      // number or variables
-  idxidxint m;      // number of conic variables
-  idxidxint ncones = 0; // number of cones
-  idxidxint numConicVariables = 0;
+  PyObject *cone, *opts;
 
-  /* ECOS data structures */
-  idxidxint f = 0;
-  idxidxint l = 0;
-  idxidxint *q = NULL;
+  /* scs data structures */
+  
+  Data * d = calloc(sizeof(Data),1); 
+  Cone * k = calloc(sizeof(Cone),1); 
 
-  pfloat *Apr = NULL;
-  idxidxint *Ajc = NULL;
-  idxidxint *Air = NULL;
-
-  pfloat *cpr = NULL;
-  pfloat *bpr = NULL;
-
-  pwork* mywork;
-
-  idxidxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "verbose", NULL};
+  static char *kwlist[] = {"shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", NULL};
   // parse the arguments and ensure they are the correct type
 #ifdef DLONG
-  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
+  static char *argparse_string = "(ll)O!O!O!O!O!O!|O!";
 #else
-  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!";
+  static char *argparse_string = "(ii)O!O!O!O!O!O!|O!";
 #endif
     
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
-      &m, &n,
+      &(d->m), &(d->n),
       &PyArray_Type, &Ax,
       &PyArray_Type, &Ai,
       &PyArray_Type, &Ap,
       &PyArray_Type, &b,
       &PyArray_Type, &c,
-      &PyDict_Type, &dims,
+      &PyDict_Type, &cone,
       &PyDict_Type, &opts)
     ) { return NULL; }
   
-  if (m < 0) {
+  if (d->m < 0) {
     PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
     return NULL;
   }
 
-  if (n < 0) {
+  if (d->n < 0) {
     PyErr_SetString(PyExc_ValueError, "n must be a positive integer");
     return NULL;
   }
   
   /* get the typenum for the primitive idxint and pfloat types */
-  idxint intType = getIntType();
-  idxint pfloatType = getDoubleType();
+  int intType = getIntType();
+  int pfloatType = getDoubleType();
 
   /* set G */
   if( !PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
@@ -227,60 +276,53 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *Ax_arr = getContiguous(Ax, pfloatType);
   PyArrayObject *Ai_arr = getContiguous(Ai, intType);
   PyArrayObject *Ap_arr = getContiguous(Ap, intType);
-  Apr = (pfloat *) PyArray_DATA(Ax_arr);
-  Air = (idxidxint *) PyArray_DATA(Ai_arr);
-  Ajc = (idxidxint *) PyArray_DATA(Ap_arr);
-
+  d->Ax = (pfloat *) PyArray_DATA(Ax_arr);
+  d->Ai = (idxint *) PyArray_DATA(Ai_arr);
+  d->Ap = (idxint *) PyArray_DATA(Ap_arr);
+  //d->Anz = d->Ap[d->n];
+  d->Anz = PyArray_DIM(Ai,0);
   /* set c */
   if (!PyArray_ISFLOAT(c) || PyArray_NDIM(c) != 1) {
       PyErr_SetString(PyExc_TypeError, "c must be a dense numpy array with one dimension");
-      Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
       return NULL;
   }
-  
-  if (PyArray_DIM(c,0) != n){
+  if (PyArray_DIM(c,0) != d->n){
       PyErr_SetString(PyExc_ValueError, "c has incompatible dimension with A");
-      Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
       return NULL;
   }
   PyArrayObject *c_arr = getContiguous(c, pfloatType);
-  cpr = (pfloat *) PyArray_DATA(c_arr);
+  d->c = (pfloat *) PyArray_DATA(c_arr);
 
   /* set b */
   if (!PyArray_ISFLOAT(b) || PyArray_NDIM(b) != 1) {
       PyErr_SetString(PyExc_TypeError, "b must be a dense numpy array with one dimension");
-      Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
       Py_DECREF(c_arr);
       return NULL;
   }
-
-
-  if (PyArray_DIM(b,0) != m){
+  if (PyArray_DIM(b,0) != d->m){
       PyErr_SetString(PyExc_ValueError, "b has incompatible dimension with A");
-      Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
       Py_DECREF(c_arr);
       return NULL;
   }
   PyArrayObject *b_arr = getContiguous(b, pfloatType);
-  bpr = (pfloat *) PyArray_DATA(b_arr);
+  d->b = (pfloat *) PyArray_DATA(b_arr);
 
-  getConeIntDim("f", &(k->l), cone);
+  getConeIntDim("f", &(k->f), cone);
   getConeIntDim("l", &(k->l), cone);
   getConeArrDim("q", &(k->q), &(k->qsize), cone);
   getConeArrDim("s", &(k->s), &(k->ssize), cone);
   getConeIntDim("ep", &(k->ep), cone);
   getConeIntDim("ed", &(k->ed), cone);
- 
-  /* This calls ECOS setup function. */
-  mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
-  
-  /* Set settings for ECOS. */
-  if(verbose) {
-    mywork->stgs->verbose = (idxint) PyObject_IsTrue(verbose);
-  }
+  parseOpts(d,opts);
   
   /* Solve! */
-  idxidxint exitcode = ECOS_solve(mywork);
+  Sol sol;
+  Info info;
+  scs(d, k, &sol, &info);
 
   /* create output (all data is *deep copied*) */
   // TODO: request CVXOPT API for constructing from existing pointer
@@ -290,147 +332,62 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   //   return PyErr_NoMemory();
   // memcpy(MAT_BUFD(x), mywork->x, n*sizeof(pfloat));
   npy_intp veclen[1];
-  veclen[0] = n;
-  PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
+  veclen[0] = d->n;
+  PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
 
   /* y */
   // matrix *y;
   // if(!(y = Matrix_New(p,1,DOUBLE)))
   //   return PyErr_NoMemory();
   // memcpy(MAT_BUFD(y), mywork->y, p*sizeof(pfloat));
-  veclen[0] = p;
-  PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
-  
-  
-  /* info dict */
-  // infostring
-  const char* infostring;
-  switch( exitcode ){
-      case ECOS_OPTIMAL:
-          infostring = "Optimal solution found";
-          break;
-      case ECOS_MAXIT:
-          infostring = "Maximum number of iterations reached";
-          break;
-      case ECOS_PINF:
-          infostring = "Primal infeasible";
-          break;
-      case ECOS_DINF:
-          infostring = "Dual infeasible";
-          break;
-      case ECOS_NUMERICS:
-          infostring = "Run into numerical problems";
-          break;
-      case ECOS_OUTCONE:
-          infostring = "PROBLEM: Multipliers leaving the cone";
-          break;
-      default:
-          infostring = "UNKNOWN PROBLEM IN SOLVER";
-  }
-
-  // numerical errors
-  idxidxint numerr = 0;
-  if( (exitcode == ECOS_NUMERICS) || (exitcode == ECOS_OUTCONE) || (exitcode == ECOS_FATAL) ){
-      numerr = 1;
-  }
-
-  // timings
-#if PROFILING > 0
-	PyObject *tinfos = Py_BuildValue(
-#if PROFILING > 1
-    "{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d}",
-#else
-    "{s:d,s:d,s:d}",
-#endif
-#if PROFILING > 1
-    "tkktcreate",pfloatmywork->info->tkktcreate,
-    "tkktsolve",pfloatmywork->info->tkktsolve,
-    "tkktfactor",pfloatmywork->info->tfactor,
-    "torder",pfloatmywork->info->torder,
-    "ttranspose",pfloatmywork->info->ttranspose,
-#endif
-    "runtime",pfloatmywork->info->tsolve + pfloatmywork->info->tsetup,
-    "tsetup",pfloatmywork->info->tsetup,
-    "tsolve",pfloatmywork->info->tsolve);
-#endif
-
-  PyObject *infoDict = Py_BuildValue(
-#if PROFILING > 0
-    "{s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:l,s:s,s:O,s:l}",
-#else
-    "{s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:l,s:s,s:l}",
-#endif
-    "exitFlag", exitcode,
-    "pcost", pfloatmywork->info->pcost,
-    "dcost", pfloatmywork->info->dcost,
-    "pres", pfloatmywork->info->pres,
-    "dres", pfloatmywork->info->dres,
-    "pinf", pfloatmywork->info->pinf,
-    "dinf", pfloatmywork->info->dinf,
-    "pinfres",pfloatmywork->info->pinfres,
-    "dinfres",pfloatmywork->info->dinfres,
-    "gap",pfloatmywork->info->gap,
-    "relgap",pfloatmywork->info->relgap,
-    "r0",pfloatmywork->stgs->feastol,
-    "iter",mywork->info->iter,
-    "infostring",infostring,
-#if PROFILING > 0
-    "timing", tinfos,
-#endif
-    "numerr",numerr);
-
-#if PROFILING > 0
-  // give reference to infoDict
-  Py_DECREF(tinfos);
-#endif
+  veclen[0] = d->m;
+  PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
 
   /* s */
   // matrix *s;
   // if(!(s = Matrix_New(m,1,DOUBLE)))
   //   return PyErr_NoMemory();
   // memcpy(MAT_BUFD(s), mywork->s, m*sizeof(pfloat));
-  veclen[0] = m;
-  PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
+  veclen[0] = d->m;
+  PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
   
-  /* z */
-  // matrix *z;
-  // if(!(z = Matrix_New(m,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(z), mywork->z, m*sizeof(pfloat));
-  veclen[0] = m;
-  PyObject *z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
-  
-
-
-  /* cleanup */
-  ECOS_cleanup(mywork, 4);
+    PyObject *infoDict = Py_BuildValue(
+    "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
+    "statusVal", (idxint)info.statusVal,
+    "iter", (idxint)info.iter,
+    "pobj", (pfloat)info.pobj,
+    "dobj", (pfloat)info.dobj,
+    "resPri", (pfloat)info.resPri,
+    "resDual", (pfloat)info.resDual,
+    "relGap", (pfloat)info.relGap,
+    "time",(pfloat)(info.time/1e3),
+    "status",info.status);
 
   PyObject *returnDict = Py_BuildValue(
-    "{s:O,s:O,s:O,s:O,s:O}",
+    "{s:O,s:O,s:O,s:O}",
     "x",x,
     "y",y,
-    "z",z,
     "s",s,
     "info",infoDict);
   // give up ownership to the return dictionary
-  Py_DECREF(x); Py_DECREF(y); Py_DECREF(z); Py_DECREF(s); Py_DECREF(infoDict);
-  
-  // no longer need pointers to arrays that held primitives
-  if(q) free(q);
-  Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
-  Py_DECREF(c_arr); Py_DECREF(h_arr);
-  if (b_arr) Py_DECREF(b_arr);
-  if (Ax_arr) Py_DECREF(Ax_arr); 
-  if (Ai_arr) Py_DECREF(Ai_arr); 
-  if (Ap_arr) Py_DECREF(Ap_arr);
+  Py_DECREF(x); Py_DECREF(y); Py_DECREF(s); Py_DECREF(infoDict);
 
+  // no longer need pointers to arrays that held primitives
+  if(k) {
+      if(k->q) scs_free(k->q);
+      if(k->s) scs_free(k->s);
+      scs_free(k);
+  }   
+  Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
+  Py_DECREF(c_arr); Py_DECREF(b_arr);
+  scs_free(d);
   return returnDict;
 }
 
-static PyMethodDef ECOSMethods[] =
+static PyMethodDef scsMethods[] =
 {
   {"csolve", (PyCFunction)csolve, METH_VARARGS | METH_KEYWORDS,
-    "Solve an SOCP using ECOS."},
+    "Solve a convex cone problem using scs."},
   {NULL, NULL, 0, NULL} // sentinel
 };
 
@@ -438,10 +395,10 @@ static PyMethodDef ECOSMethods[] =
 #if PY_MAJOR_VERSION >= 3
   static struct PyModuleDef moduledef = {
           PyModuleDef_HEAD_INIT,
-          "_ecos",             /* m_name */
-          "Solve an SOCP using ECOS.",  /* m_doc */
+          "_scs",             /* m_name */
+          "Solve a convex cone problem using scs.",  /* m_doc */
           -1,                  /* m_size */
-          ECOSMethods,         /* m_methods */
+          scsMethods,         /* m_methods */
           NULL,                /* m_reload */
           NULL,                /* m_traverse */
           NULL,                /* m_clear */
@@ -456,7 +413,11 @@ static PyObject* moduleinit(void)
 #if PY_MAJOR_VERSION >= 3
   m = PyModule_Create(&moduledef);
 #else
-  m = Py_InitModule("_ecos", ECOSMethods);
+  #ifdef INDIRECT
+    m = Py_InitModule("_scs_indirect", scsMethods);
+  #else
+    m = Py_InitModule("_scs_direct", scsMethods);
+  #endif
 #endif
   
   //if (import_array() < 0) return NULL; // for numpy arrays
@@ -469,13 +430,23 @@ static PyObject* moduleinit(void)
 };
 
 #if PY_MAJOR_VERSION >= 3
-  PyMODINIT_FUNC PyInit__ecos(void)
+  PyMODINIT_FUNC
+  #ifdef INDIRECT
+    PyInit__scs_indirect(void)
+  #else
+    PyInit__scs_direct(void)
+  #endif
   {
     import_array(); // for numpy arrays
     return moduleinit();
   }
 #else
-  PyMODINIT_FUNC init_ecos(void)
+  PyMODINIT_FUNC 
+  #ifdef INDIRECT
+    init_scs_indirect(void)
+  #else
+    init_scs_direct(void)
+  #endif
   {
     import_array(); // for numpy arrays
     moduleinit();

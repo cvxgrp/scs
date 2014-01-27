@@ -1,12 +1,6 @@
-matlab_examples/probs.zip
-matlab_examples/DIMACS_mat_files.zip
-matlab_examples/DIMACS_results/
-matlab_examples/DIMACS/
-matlab_examples/kona_data/
-*DIMACS_lib.tar.gz
-experimental
-old_versions
-matlab_examples/data/*
+python/build/ 
+.idea
+*.pyc
 *dSYM
 *demo_direct
 *demo_indirect

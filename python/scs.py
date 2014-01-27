@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import _scs
+import _scs_direct
+import _scs_indirect
 from warnings import warn
 from scipy import sparse
 
 
-def solve(probdata, cone, opts):
+def solve(probdata, cone, opts=None, USE_INDIRECT=False):
     """ This Python routine "unpacks" scipy sparse matrix A into the
         data structures that we need for calling scs routine.
         
@@ -36,5 +37,13 @@ def solve(probdata, cone, opts):
     m, n = A.shape
 
     Adata, Aindices, Acolptr = A.data, A.indices, A.indptr
-
-    return _scs.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts)
+    if USE_INDIRECT:
+        if opts is not None:
+            return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts)
+        else:
+            return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone)
+    else:
+        if opts is not None:
+            return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts)
+        else:
+            return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone)

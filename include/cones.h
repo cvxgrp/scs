@@ -17,10 +17,10 @@ struct CONE {
     idxint ed;          /* number of dual exponential cone triples */
 };
 
-idxint initCone(Cone * k);
+int initCone(Cone * k);
 void finishCone();
 void projCone(pfloat *x, Cone *k, Work * w, idxint iter);
 idxint getFullConeDims(Cone * k);
 char * getConeHeader(Cone * k);
-idxint validateCones(Cone * k);
+int validateCones(Cone * k);
 #endif

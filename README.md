@@ -97,6 +97,33 @@ You can select the scs solver with CVX as follows
     >> ... 
     >> cvx_end
 
+### Using scs in Python
+
+To create the Python interface, the following lines of code should work:
+```
+cd <scs-directory>/python
+python setup.py install
+```
+You may need `sudo` privileges for a global installation. 
+
+After installing the scs interface, you must import the module with
+```
+import scs
+```
+This module provides a single function `scs` with the following calling sequences:
+```
+sol = scs(data, cone, opts = None, USE_INDIRECT = False)
+```
+The argument `data` is a python dictionary with three elements `A`, `b`, and `c` where `c` and `b` are NUMPY arrays (i.e., matrices with a single column).  and `A` is a SCIPY *sparse* matrix in CSC format; if they are not of the proper format, scs will attempt to convert them. 
+
+The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and `ed` (any of which are optional) corresponding to the supported cone types.
+
+The argument `opts` is optional and is a dictionary with fields `MAX_ITERS`, `EPS`, `ALPHA`, `UNDET_TOL`, `VERBOSE`, and `NORMALIZE`. If `opts` is missing, then the algorithm uses default settings.
+
+Finally set `USE_INDIRECT = True` to use the indirect linear equation solver.
+
+The returned object is a dictionary containing the fields `sol['x']`, `sol['y']`, `sol['s']`, and `sol['info']`. 
+The first four are NUMPY arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
 
 Usage in C 
 ---------- 

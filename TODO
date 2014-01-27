@@ -1,4 +1,3 @@
-fix python bindings
 add profiling
 connect matlab blas, lapack libs
-allow platform dependent idxint and long types
+connect numpy blas, lapack libs

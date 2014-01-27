@@ -147,6 +147,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     d->Ap[i] = (idxint)A_p[i];
   }
   */
+
+  /* XXX: 
+  * these return (mwSize *), equivalent to (size_t *)
+  * casting as (idxint *), when idxint = long seems to work
+  * although maybe not on all machines:
+  */
   d->Ap = (idxint *)mxGetJc(A_mex);
   d->Ai = (idxint *)mxGetIr(A_mex);
 

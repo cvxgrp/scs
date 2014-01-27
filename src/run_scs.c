@@ -60,7 +60,7 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
 	if(fscanf(fp, INTRW, &(k->ssize))!= 1) return -1;
 
     // allow arbitrary additional cones, simply add to below:
-    idxint len = 32;
+    int len = 32;
     char s[len];
     if( fgets (s, len, fp) == NULL ) return -1;
     char* token = strtok(s, " ");

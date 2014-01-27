@@ -13,7 +13,7 @@ static struct ConeData_t {
 void projectsdc(pfloat * X, int n, Work * w); 
 void projExpCone(pfloat * v);
 
-idxint initCone(Cone * k) {
+int initCone(Cone * k) {
     if (k->ssize && k->s){
         /* eigenvector decomp workspace */
         idxint i, nMax = 0;
@@ -32,22 +32,40 @@ idxint initCone(Cone * k) {
     return 0;
 }
 
-idxint validateCones(Cone * k) {
+int validateCones(Cone * k) {
     idxint i;
-    if(k->f && k->f < 0) return -1;
-    if(k->l && k->l < 0) return -1;
+    if(k->f && k->f < 0) {
+        scs_printf("free cone error\n");
+        return -1;
+    }
+    if(k->l && k->l < 0) {
+        scs_printf("lp cone error\n");
+        return -1;
+    }
     if(k->qsize && k->q){
         for (i=0; i < k->qsize; ++i){
-            if (k->q[i] <=0) return -1;
+            if (k->q[i] <=0) {
+                scs_printf("soc cone error\n");
+                return -1;
+            }
         }
     }
     if (k->ssize && k->s){
         for (i=0; i < k->ssize; ++i){
-            if (k->s[i] <=0) return -1;
+            if (k->s[i] <=0) {
+                scs_printf("sd cone error\n");
+                return -1;
+            }
         }   
     }
-    if (k->ed && k->ed < 0) return -1;
-    if (k->ep && k->ep < 0) return -1;
+    if (k->ed && k->ed < 0)  {
+        scs_printf("ep cone error\n");
+        return -1;
+    }
+    if (k->ep && k->ep < 0) {
+        scs_printf("ed cone error\n");
+        return -1;
+    }
     return 0;
 }
 
@@ -102,7 +120,7 @@ char * getConeHeader(Cone * k) {
     if (k->ed) {
         expDvars = 3 * k->ed;
     }   
-    idxint len = sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i\n\tdual exp vars: %i\n", (int) (k->f ? k->f : 0),(int) (k->l ? k->l : 0), (int) socVars, (int) socBlks, (int) sdVars, (int) sdBlks, (int) expPvars, (int) expDvars);
+    int len = sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i\n\tdual exp vars: %i\n", (int) (k->f ? k->f : 0),(int) (k->l ? k->l : 0), (int) socVars, (int) socBlks, (int) sdVars, (int) sdBlks, (int) expPvars, (int) expDvars);
     return strndup(tmp, len);
 }
 
@@ -149,13 +167,17 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
         #ifdef LAPACK_LIB_FOUND
         /* project onto PSD cone */
         for (i=0; i < k->ssize; ++i){
-            projectsdc(&(x[count]), (int) k->s[i],w);
+            projectsdc(&(x[count]), (int) k->s[i], w);
             count += (k->s[i])*(k->s[i]);
         }
         #else
-        if(k->ssize > 0){
-            scs_printf("WARNING: solving SDP, no lapack library specified in makefile!\n");
-            scs_printf("ConeOS will return a wrong answer!\n");
+        if(k->ssize > 0) {
+            scs_printf("WARNING: solving SDP, but no blas/lapack libraries were linked!\n");
+            scs_printf("scs will return nonsense!\n");
+            for (i=0; i < k->ssize; ++i){
+                scaleArray(&(x[count]), NAN, k->s[i]*k->s[i]);
+                count += (k->s[i])*(k->s[i]);
+            }   
         }
         #endif
     }

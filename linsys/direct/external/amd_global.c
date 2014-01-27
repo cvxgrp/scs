@@ -9,6 +9,7 @@
 /* ------------------------------------------------------------------------- */
 
 #include <stdlib.h>
+#include "glbopts.h"
 
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -72,15 +73,7 @@ void *(*amd_calloc) (size_t, size_t) = NULL ;
  */
 
 #ifndef NPRINT
-#ifdef MATLAB_MEX_FILE
-int (*amd_printf) (const char *, ...) = mexPrintf ;
-#elif defined PYTHON
-#include <Python.h>
-int (*amd_printf) (const char *, ...) = PySys_WriteStdout ;
-#else
-#include <stdio.h>
-int (*amd_printf) (const char *, ...) = printf ;
-#endif
+int (*amd_printf) (const char *, ...) = scs_printf ;
 #else
 int (*amd_printf) (const char *, ...) = NULL ;
 #endif
