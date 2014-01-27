@@ -58,10 +58,12 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info)
 		failureDefaultReturn(d, NULL, k, sol, info);
         return FAILURE;
 	}
+    #ifndef DNOVALIDATE
     if (validate(d,k) < 0) {
         failureDefaultReturn(d, NULL, k, sol, info);
         return FAILURE;
-    } 
+    }
+    #endif
     tic();
 	info->statusVal = 0; // not yet converged
    	struct residuals r = {-1, -1, -1, -1, -1, -1, -1};
@@ -132,7 +134,7 @@ static inline int validate(Data * d, Cone * k) {
         return -1;
     }
     if (d->Anz != d->Ap[d->n]) {
-        scs_printf("inconsistent Anz and Ap[n]\n");
+        scs_printf("inconsistent Anz %i and Ap[n] = %i\n", (int) d->Anz, (int) d->Ap[d->n]);
         return -1;
     }
     if (validateCones(k) < 0) {

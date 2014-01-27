@@ -47,8 +47,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   const mxArray *cone = prhs[1];
   const mxArray *params = prhs[2];
-  d->n = *(mxGetDimensions(c_mex));
-  d->m = *(mxGetDimensions(b_mex));
+  d->n = (idxint)*(mxGetDimensions(c_mex));
+  d->m = (idxint)*(mxGetDimensions(b_mex));
  
   d->b = mxGetPr(b_mex);
   d->c = mxGetPr(c_mex);
@@ -133,7 +133,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       k->s = NULL;
   }
 
-  d->Anz = mxGetNzmax(A_mex);
+  //d->Anz = (idxint)mxGetNzmax(A_mex);
   d->Ax = (pfloat *)mxGetPr(A_mex);
   /*
   d->Ap = (idxint *)mxMalloc(sizeof(int)*d->Anz);
@@ -155,7 +155,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   */
   d->Ap = (idxint *)mxGetJc(A_mex);
   d->Ai = (idxint *)mxGetIr(A_mex);
-
+  d->Anz = d->Ap[d->n];
   Sol sol;
   Info info;
 

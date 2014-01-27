@@ -30,7 +30,7 @@ static inline int getIntType() {
 }
 
 static inline int getDoubleType() {
-  // known bug, if pfloat isn't "pfloat", will cause aliasing in memory
+  // known bug, if pfloat isn't "double", will cause aliasing in memory
   return NPY_DOUBLE;
 }
 
@@ -128,9 +128,8 @@ static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * op
     return 0;
 }
 
-
 static int parseOpts(Data *d, PyObject * opts) {
-    if (getOptIntParam("MAX_ITERS", &(d->MAX_ITERS), 2500, opts) < 0)
+    if (getOptIntParam("MAX_ITERS", &(d->MAX_ITERS), 2000, opts) < 0)
         return -1;
     if (getOptIntParam("VERBOSE", &(d->VERBOSE), 1, opts) < 0)
         return -1;
@@ -140,7 +139,7 @@ static int parseOpts(Data *d, PyObject * opts) {
         return -1;
     if (getOptFloatParam("ALPHA", &(d->ALPHA), 1.8, opts) < 0)
         return -1;
-    if (getOptFloatParam("UNDET_TOL", &(d->UNDET_TOL), 1e-6, opts) < 0)
+    if (getOptFloatParam("UNDET_TOL", &(d->UNDET_TOL), 1e-9, opts) < 0)
         return -1;
     if (getOptFloatParam("RHO_X", &(d->RHO_X), 1e-3, opts) < 0)
         return -1;
