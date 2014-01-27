@@ -53,9 +53,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   d->b = mxGetPr(b_mex);
   d->c = mxGetPr(c_mex);
  
-  const mxArray *ALPH_mex = mxGetField(params,0,"ALPHA");
-  if (ALPH_mex == NULL) d->ALPH = 1.8;
-  else d->ALPH = (pfloat)*mxGetPr(ALPH_mex);
+  const mxArray *ALPHA_mex = mxGetField(params,0,"ALPHA");
+  if (ALPHA_mex == NULL) d->ALPHA = 1.8;
+  else d->ALPHA = (pfloat)*mxGetPr(ALPHA_mex);
   
   const mxArray *RHO_X_mex = mxGetField(params,0,"RHO_X");
   if (RHO_X_mex == NULL) d->RHO_X = 1e-3;
@@ -65,9 +65,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (MAX_ITERS_mex == NULL) d->MAX_ITERS = 2500;
   else d->MAX_ITERS = (idxint)*mxGetPr(MAX_ITERS_mex);
 
-  const mxArray *EPS_ABS_mex = mxGetField(params,0,"EPS_ABS");
-  if (EPS_ABS_mex == NULL) d->EPS_ABS = 1e-3;
-  else d->EPS_ABS = (pfloat)*mxGetPr(EPS_ABS_mex);
+  const mxArray *EPS_mex = mxGetField(params,0,"EPS");
+  if (EPS_mex == NULL) d->EPS = 1e-3;
+  else d->EPS = (pfloat)*mxGetPr(EPS_mex);
 
   const mxArray *UNDET_TOL_mex = mxGetField(params,0,"UNDET_TOL");
   if (UNDET_TOL_mex == NULL) d->UNDET_TOL = 1e-9;

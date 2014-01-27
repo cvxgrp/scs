@@ -49,9 +49,9 @@ void printData(Data * d){
 	scs_printf("d->MAX_ITERS is %i\n",(int) d->MAX_ITERS);
  	scs_printf("d->VERBOSE is %i\n",(int) d->VERBOSE);
  	scs_printf("d->NORMALIZE is %i\n",(int) d->VERBOSE);
-	scs_printf("d->ALPH is %6f\n",d->ALPH);
-	scs_printf("d->EPS_ABS is %6f\n",d->EPS_ABS);
-	scs_printf("d->EPS_ABS is %6f\n",d->EPS_ABS);
+	scs_printf("d->ALPHA is %6f\n",d->ALPHA);
+	scs_printf("d->EPS is %6f\n",d->EPS);
+	scs_printf("d->EPS is %6f\n",d->EPS);
 	scs_printf("d->UNDET_TOL is %6f\n",d->UNDET_TOL);
 }
 

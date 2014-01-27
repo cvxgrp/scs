@@ -73,9 +73,9 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
 	if(fscanf(fp, INTRW, &(d->MAX_ITERS))!= 1) return -1;
 	if(fscanf(fp, INTRW, &(d->VERBOSE))!= 1) return -1;
 	if(fscanf(fp, INTRW, &(d->NORMALIZE))!= 1) return -1;
-	if(fscanf(fp, FLOATRW, &(d->ALPH))!= 1) return -1;
+	if(fscanf(fp, FLOATRW, &(d->ALPHA))!= 1) return -1;
 	if(fscanf(fp, FLOATRW, &(d->UNDET_TOL))!= 1) return -1;
-	if(fscanf(fp, FLOATRW, &(d->EPS_ABS))!= 1) return -1;
+	if(fscanf(fp, FLOATRW, &(d->EPS))!= 1) return -1;
 	if(fscanf(fp, INTRW, &(d->Anz))!= 1) return -1;
 
 	k->q = malloc(sizeof(idxint)*k->qsize);

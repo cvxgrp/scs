@@ -255,10 +255,10 @@ if (isfield(settings,'UNDET_TOL'))
 end
 if prec(1)==0
     % just run until MAX_ITERS
-    pars.EPS_ABS = 0;
+    pars.EPS = 0;
 end
 if (isfield(settings,'EPS'))
-    pars.EPS_ABS = settings.EPS;
+    pars.EPS = settings.EPS;
 end
 if (isfield(settings,'MAX_ITERS'))
     pars.MAX_ITERS = settings.MAX_ITERS;

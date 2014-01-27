@@ -32,7 +32,7 @@ function [x, y, info] = scs_direct(data, cone, params)
 %   ALPHA       : over-relaxation parameter, between (0,2).
 %   RHO_X       : momentum of x term (1e-3 works well)
 %   MAX_ITERS   : maximum number of ADMM iterations.
-%   EPS_ABS     : accuracy of solution
+%   EPS     : accuracy of solution
 %   VERBOSE     : verbosity level (0 or 1)
 %   NORMALIZE   : heuristic data rescaling (0 or 1, off or on)
 error ('scs_direct mexFunction not found') ;

@@ -160,7 +160,7 @@ The four relevant data structures are:
       idxint Anz;
       pfloat * b, * c;
       idxint MAX_ITERS;
-      pfloat EPS_ABS, ALPH, UNDET_TOL, RHO_X;
+      pfloat EPS, ALPHA, UNDET_TOL, RHO_X;
       idxint VERBOSE, NORMALIZE;  // boolean
     } Data;
     

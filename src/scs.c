@@ -151,12 +151,12 @@ static inline int validate(Data * d, Cone * k) {
         scs_printf("MAX_ITERS must be positive\n");
         return -1;
     }
-    if (d->EPS_ABS < 0) {
-        scs_printf("EPS_ABS tolerance must be positive\n");
+    if (d->EPS < 0) {
+        scs_printf("EPS tolerance must be positive\n");
         return -1;
     }
-    if (d->ALPH <= 0 || d->ALPH >= 2) {
-        scs_printf("ALPH must be in (0,2)\n");
+    if (d->ALPHA <= 0 || d->ALPHA >= 2) {
+        scs_printf("ALPHA must be in (0,2)\n");
         return -1;
     }
     if (d->RHO_X < 0) {
@@ -194,7 +194,7 @@ static inline int converged(Data * d, Work * w, struct residuals * r, idxint ite
     r->resDual = calcNormDiff(w->u, w->u_prev, w->l);
     r->tau = tau;
     r->kap = kap;
-    if (MIN(tau,kap)/MAX(tau,kap) < 1e-6 && MAX(r->resPri, r->resDual) < d->EPS_ABS*(tau+kap)){
+    if (MIN(tau,kap)/MAX(tau,kap) < 1e-6 && MAX(r->resPri, r->resDual) < d->EPS*(tau+kap)){
         return 1;
     }
     */
@@ -227,8 +227,8 @@ static inline int exactConverged(Data * d, Work * w, struct residuals * r, idxin
 
     // does not require mult by A:
     memcpy(pr,&(w->u[d->n]),d->m * sizeof(pfloat));
-    addScaledArray(pr,&(w->u_prev[d->n]),d->m,d->ALPH-2);
-    addScaledArray(pr,&(w->u_t[d->n]),d->m,1-d->ALPH);
+    addScaledArray(pr,&(w->u_prev[d->n]),d->m,d->ALPHA-2);
+    addScaledArray(pr,&(w->u_t[d->n]),d->m,1-d->ALPHA);
     addScaledArray(pr,d->b, d->m, w->u_t[w->l-1] - tau) ; // pr = Ax + s - b * tau
     memcpy(Axs, pr, d->m * sizeof(pfloat));
     addScaledArray(Axs, d->b, d->m, tau); // Axs = Ax + s
@@ -249,7 +249,7 @@ static inline int exactConverged(Data * d, Work * w, struct residuals * r, idxin
     pfloat nmAxs = calcNorm(Axs,d->m);
     r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : NAN;
     //scs_printf("unbounded cert: %4e\n", w->nm_c * nmAxs / (1+w->nm_b) / -cTx);
-    if (r->resPri < d->EPS_ABS) {
+    if (r->resPri < d->EPS) {
         return UNBOUNDED;
     }
 
@@ -270,7 +270,7 @@ static inline int exactConverged(Data * d, Work * w, struct residuals * r, idxin
     pfloat nmATy = calcNorm(ATy,d->n);
     r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : NAN;
     //scs_printf("infeas cert: %4e\n", w->nm_b * nmATy / (1+w->nm_c) /  - bTy );
-    if (r->resDual < d->EPS_ABS) {
+    if (r->resDual < d->EPS) {
         return INFEASIBLE;
     }
     r->relGap = NAN;
@@ -288,7 +288,7 @@ static inline int exactConverged(Data * d, Work * w, struct residuals * r, idxin
         r->bTy = bTy / tau;
         // scs_printf("primal resid: %4e, dual resid %4e, pobj %4e, dobj %4e, gap %4e\n", rpri,rdua,cTx,-bTy,gap);
         // scs_printf("primal resid: %4e, dual resid %4e, gap %4e\n",rpri,rdua,gap);
-        if (MAX(MAX(rpri,rdua),gap) < d->EPS_ABS) {
+        if (MAX(MAX(rpri,rdua),gap) < d->EPS) {
             status = SOLVED;
         }
     } else {
@@ -454,7 +454,7 @@ static inline void updateDualVars(Data * d, Work * w){
 	   }
 	 */
 	//for(i = 0; i < w->l; ++i) { 
-	if (fabs(d->ALPH - 1.0) < 1e-9) {
+	if (fabs(d->ALPHA - 1.0) < 1e-9) {
 		// this is over-step parameter:
 		//pfloat sig = (1+sqrt(5))/2;
 		pfloat sig = 1.0;
@@ -465,7 +465,7 @@ static inline void updateDualVars(Data * d, Work * w){
 	else {
 		// this does not relax 'x' variable
 		for(i = d->n; i < w->l; ++i) { 
-			w->v[i] += (w->u[i] - d->ALPH*w->u_t[i] - (1.0 - d->ALPH)*w->u_prev[i]); 
+			w->v[i] += (w->u[i] - d->ALPHA*w->u_t[i] - (1.0 - d->ALPHA)*w->u_prev[i]); 
 		}
 	}
 }
@@ -478,7 +478,7 @@ static inline void projectCones(Data *d,Work * w,Cone * k, idxint iter){
 	}
 	//for(i = 0; i < w->l; ++i){
 	for(i = d->n; i < w->l; ++i){
-		w->u[i] = d->ALPH*w->u_t[i] + (1-d->ALPH)*w->u_prev[i] - w->v[i];
+		w->u[i] = d->ALPHA*w->u_t[i] + (1-d->ALPHA)*w->u_prev[i] - w->v[i];
 	}
 	/* u = [x;y;tau] */
 	projCone(&(w->u[d->n]),k,w,iter);
@@ -601,7 +601,7 @@ static inline void printHeader(Data * d, Work * w, Cone * k) {
 		scs_printf("-");
 	}
     scs_printf("\nmethod: %s\n", w->method);
-    scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS_ABS, d->ALPH, (int) d->MAX_ITERS, (int) d->NORMALIZE);
+    scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS, (int) d->NORMALIZE);
 	scs_printf("variables n = %i, constraints m = %i, non-zeros in A = %li\n", (int) d->n, (int) d->m, (long) d->Anz);
 
     char * coneStr = getConeHeader(k);
