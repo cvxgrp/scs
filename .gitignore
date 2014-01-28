@@ -1,10 +1,10 @@
-python/build/ 
 .idea
 *.pyc
 *dSYM
 *demo_direct
 *demo_indirect
-*.swo
+python/build/
+.swo
 *.o
 *.a
 *.DS_Store

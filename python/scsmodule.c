@@ -7,7 +7,7 @@
 /* IMPORTANT: This code now uses numpy array types. It is a private C module
  * in the sense that end users only see the front-facing Python code in
  * "scs.py"; hence, we can get away with the inputs being numpy arrays of
- * the CSR data structures.
+ * the CSC data structures.
  *
  * WARNING: This code also does not check that the data for the sparse 
  * matrices are *actually* in column compressed storage for a sparse matrix. 
@@ -15,7 +15,14 @@
  * does not correspond to a CSR matrix, this code will just crash inelegantly.
  * Please use the "solve" interface in scs.py.
  */
-//#include "cvxopt.h"
+
+struct ScsPyData {
+    PyArrayObject * Ax;
+    PyArrayObject * Ai;
+    PyArrayObject * Ap;
+    PyArrayObject * b;
+    PyArrayObject * c;
+};
 
 /* Note, Python3.x may require special handling for the idxint and pfloat
  * types. */
@@ -146,83 +153,72 @@ static int parseOpts(Data *d, PyObject * opts) {
     return 0;
 }
 
+static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
+    if(ps->Ax) Py_DECREF(ps->Ax); 
+    if(ps->Ai) Py_DECREF(ps->Ai); 
+    if(ps->Ap) Py_DECREF(ps->Ap);
+    if(ps->c) Py_DECREF(ps->c);
+    if(ps->b) Py_DECREF(ps->b);
+    if(k) {
+        if(k->q) scs_free(k->q);
+        if(k->s) scs_free(k->s);
+        scs_free(k);
+    }
+    if(d) scs_free(d);
+}
+
+static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char * str) {
+    PyErr_SetString(PyExc_ValueError, str);
+    freePyData(d,k,ps);
+    return NULL;
+}
+
 /* The PyInt variable is a PyLong in Python3.x.
  */
 #if PY_MAJOR_VERSION >= 3
 #define PyInt_AsLong PyLong_AsLong
 #define PyInt_Check PyLong_Check
 #endif
-
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
-   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,verbose)
+   *     sol = csolve((m,n),Ax,Ai,Ap,b,c,cone,opts)
    * where
    *
-   * the triple (m,n,p) corresponds to:
-   *    `m`: the rows of G
-   *    `n`: the cols of G and A, must agree with the length of c
-   *    `p`: the rows of A
-   * `c` is a Numpy array of pfloats
-   * "G" is a sparse matrix in column compressed storage. "Gx" are the values,
-   * "Gi" are the rows, and "Gp" are the column pointers.
-   * `Gx` is a Numpy array of pfloats
-   * `Gi` is a Numpy array of ints
-   * `Gp` is a Numpy array of ints
-   * `h` is a Numpy array
-   * `dims` is a dictionary with
-   *    `dims['l']` an integer specifying the dimension of positive orthant cone
-   *    `dims['q']` an *list* specifying dimensions of second-order cones
-   *
-   * "A" is an optional sparse matrix in column compressed storage. "Ax" are 
-   * the values, "Ai" are the rows, and "Ap" are the column pointers.
-   * `Ax` is a Numpy array of pfloats
+   * the pair (m,n) corresponds to:
+   *    `m`: the rows of A, must agree with the length of b
+   *    `n`: the cols of A, must agree with the length of c
+   * `c` is a Numpy array of doubles
+   * "A" is a sparse matrix in column compressed storage. "Ax" are the values,
+   * "Ai" are the rows, and "Ap" are the column pointers.
+   * `Ax` is a Numpy array of doubles
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
-   * `b` is an optional argument, which is a Numpy array of pfloats
-   * `verbose` is an optional bool signaling whether to print info
-   *
+   * `b` is a Numpy array of doubles
+   * `cone` is a dictionary with
+   *    `cone['l']` an integer specifying the dimension of positive orthant cone
+   *    `cone['q']` a *list* specifying dimensions of second-order cones
+   *    
    * This call will solve the problem
    *
    *    minimize     c'*x
-   *    subject to   A*x = b
-   *                 h - G*x \in K
+   *    subject to   A*x + s = b
+   *                 s \in K
    *
-   * The code returns a Python dictionary with five keys, 'x', 'y', 'info', 's',
-   * and 'z'. These correspond to the following:
+   * The code returns a Python dictionary with keys 'x', 'y', 's' and 'info'. 
+   * These correspond to the following:
    *
    * `x`: primal variables
-   * `y`: dual variables for equality constraints
-   * `s`: slacks for Gx + s <= h, s \in K
-   * `z`: dual variables for inequality constraints s \in K
+   * `y`: dual variables for conic constraints
+   * `s`: slacks for Ax + s = b, s \in K
    * `info`: another dictionary with the following fields:
-   *    exitflag: 0=OPTIMAL, 1=PRIMAL INFEASIBLE, 2=DUAL INFEASIBLE, -1=MAXIT REACHED
-   *  infostring: gives information about the status of solution
-   *       pcost: value of primal objective
-   *       dcost: value of dual objective
-   *        pres: primal residual on inequalities and equalities
-   *        dres: dual residual
-   *        pinf: primal infeasibility measure
-   *        dinf: dual infeasibility measure
-   *     pinfres: NaN
-   *     dinfres: 3.9666e+15
-   *         gap: duality gap
-   *      relgap: relative duality gap
-   *          r0: ???
-   *      numerr: numerical error?
-   *        iter: number of iterations
-   *      timing: dictionary with timing information
-   */
+      */
 
   /* data structures for arguments */
-  //matrix *c, *h, *b = NULL;
-  //spmatrix *G, *A = NULL;
-  
   PyArrayObject *Ax, *Ai, *Ap, *c, *b;
   PyObject *cone, *opts;
-
+  struct ScsPyData ps = {NULL, NULL, NULL, NULL, NULL};
   /* scs data structures */
-  
   Data * d = calloc(sizeof(Data),1); 
   Cone * k = calloc(sizeof(Cone),1); 
 
@@ -261,62 +257,62 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 
   /* set G */
   if( !PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
-    PyErr_SetString(PyExc_TypeError, "Ax must be a numpy array of floats");
-    return NULL;
+    return finishWithErr(d,k,&ps,"Ax must be a numpy array of floats");
   }
   if( !PyArray_ISINTEGER(Ai) || PyArray_NDIM(Ai) != 1) {
-    PyErr_SetString(PyExc_TypeError, "Ai must be a numpy array of ints");
-    return NULL;
+    return finishWithErr(d,k,&ps,"Ai must be a numpy array of ints");
   }
   if( !PyArray_ISINTEGER(Ap) || PyArray_NDIM(Ap) != 1) {
-    PyErr_SetString(PyExc_TypeError, "Ap must be a numpy array of ints");
-    return NULL;
+    return finishWithErr(d,k,&ps, "Ap must be a numpy array of ints");
   }
-  PyArrayObject *Ax_arr = getContiguous(Ax, pfloatType);
-  PyArrayObject *Ai_arr = getContiguous(Ai, intType);
-  PyArrayObject *Ap_arr = getContiguous(Ap, intType);
-  d->Ax = (pfloat *) PyArray_DATA(Ax_arr);
-  d->Ai = (idxint *) PyArray_DATA(Ai_arr);
-  d->Ap = (idxint *) PyArray_DATA(Ap_arr);
-  //d->Anz = d->Ap[d->n];
-  d->Anz = PyArray_DIM(Ai,0);
+  ps.Ax = getContiguous(Ax, pfloatType);
+  ps.Ai = getContiguous(Ai, intType);
+  ps.Ap = getContiguous(Ap, intType);
+  d->Ax = (pfloat *) PyArray_DATA(ps.Ax);
+  d->Ai = (idxint *) PyArray_DATA(ps.Ai);
+  d->Ap = (idxint *) PyArray_DATA(ps.Ap);
+  d->Anz = d->Ap[d->n];
+  //d->Anz = PyArray_DIM(Ai,0);
   /* set c */
   if (!PyArray_ISFLOAT(c) || PyArray_NDIM(c) != 1) {
-      PyErr_SetString(PyExc_TypeError, "c must be a dense numpy array with one dimension");
-      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
-      return NULL;
+      return finishWithErr(d,k,&ps,"c must be a dense numpy array with one dimension");
   }
   if (PyArray_DIM(c,0) != d->n){
-      PyErr_SetString(PyExc_ValueError, "c has incompatible dimension with A");
-      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
-      return NULL;
+      return finishWithErr(d,k,&ps, "c has incompatible dimension with A");
   }
-  PyArrayObject *c_arr = getContiguous(c, pfloatType);
-  d->c = (pfloat *) PyArray_DATA(c_arr);
-
+  ps.c = getContiguous(c, pfloatType);
+  d->c = (pfloat *) PyArray_DATA(ps.c);
   /* set b */
   if (!PyArray_ISFLOAT(b) || PyArray_NDIM(b) != 1) {
-      PyErr_SetString(PyExc_TypeError, "b must be a dense numpy array with one dimension");
-      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
-      Py_DECREF(c_arr);
-      return NULL;
+      return finishWithErr(d,k,&ps,"b must be a dense numpy array with one dimension");
   }
   if (PyArray_DIM(b,0) != d->m){
-      PyErr_SetString(PyExc_ValueError, "b has incompatible dimension with A");
-      Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
-      Py_DECREF(c_arr);
-      return NULL;
+      return finishWithErr(d,k,&ps,"b has incompatible dimension with A");
   }
-  PyArrayObject *b_arr = getContiguous(b, pfloatType);
-  d->b = (pfloat *) PyArray_DATA(b_arr);
+  ps.b = getContiguous(b, pfloatType);
+  d->b = (pfloat *) PyArray_DATA(ps.b);
 
-  getConeIntDim("f", &(k->f), cone);
-  getConeIntDim("l", &(k->l), cone);
-  getConeArrDim("q", &(k->q), &(k->qsize), cone);
-  getConeArrDim("s", &(k->s), &(k->ssize), cone);
-  getConeIntDim("ep", &(k->ep), cone);
-  getConeIntDim("ed", &(k->ed), cone);
-  parseOpts(d,opts);
+  if(getConeIntDim("f", &(k->f), cone) < 0) {
+      return finishWithErr(d,k,&ps,"failed to parse cone field f");
+  }
+  if(getConeIntDim("l", &(k->l), cone) < 0) {
+      return finishWithErr(d,k,&ps,"failed to parse cone field l");
+  }
+  if(getConeArrDim("q", &(k->q), &(k->qsize), cone) < 0) {
+      return finishWithErr(d,k,&ps,"failed to parse cone field q");
+  }
+  if(getConeArrDim("s", &(k->s), &(k->ssize), cone) < 0) {
+      return finishWithErr(d,k,&ps,"failed to parse cone field s");
+  }
+  if(getConeIntDim("ep", &(k->ep), cone) < 0) {
+      return finishWithErr(d,k,&ps,"failed to parse cone field ep");
+  }
+  if(getConeIntDim("ed", &(k->ed), cone) < 0) {
+      return finishWithErr(d,k,&ps,"failed to parse cone field ed");
+  }
+  if(parseOpts(d,opts) < 0) {
+      return finishWithErr(d,k,&ps,"failed to get parse opts");
+  }
   
   /* Solve! */
   Sol sol;
@@ -372,14 +368,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   Py_DECREF(x); Py_DECREF(y); Py_DECREF(s); Py_DECREF(infoDict);
 
   // no longer need pointers to arrays that held primitives
-  if(k) {
-      if(k->q) scs_free(k->q);
-      if(k->s) scs_free(k->s);
-      scs_free(k);
-  }   
-  Py_DECREF(Ax_arr); Py_DECREF(Ai_arr); Py_DECREF(Ap_arr);
-  Py_DECREF(c_arr); Py_DECREF(b_arr);
-  scs_free(d);
+  freePyData(d,k,&ps);
   return returnDict;
 }
 
