@@ -13,7 +13,7 @@ void normalize(Data * d, Work * w, Cone * k){
 	pfloat wrk;
 	
 	// heuristic rescaling, seems to do well with a scaling of about 4
-	w->scale =  4; //MAX( MIN( sqrt( d->n * d->m / d->Anz ) , MAX_SCALE) , 1);
+	w->scale =  4; //MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1);
 
 	// calculate row norms
 	for(i = 0; i < d->n; ++i){
@@ -121,13 +121,13 @@ void normalize(Data * d, Work * w, Cone * k){
 	scs_free(nms);
 
     // heuristic scaling factor
-    scaleArray(d->Ax,w->scale,d->Anz);
+    scaleArray(d->Ax,w->scale, d->Ap[d->n]);
     scaleArray(d->b,w->scale,d->m);
     scaleArray(d->c,w->scale,d->n);
     /*
        scs_printf("norm D is %4f\n", calcNorm(D,d->m));
        scs_printf("norm E is %4f\n", calcNorm(E,d->n));
-       scs_printf("norm A is %4f\n", calcNorm(d->Ax,d->Anz));
+       scs_printf("norm A is %4f\n", calcNorm(d->Ax, d->Ap[d->n]));
        scs_printf("norm b is %4f\n", calcNorm(d->b,d->m));
        scs_printf("norm c is %4f\n", calcNorm(d->c,d->n));
      */
@@ -206,7 +206,7 @@ void unNormalize(Data *d, Work * w, Sol * sol){
             d->Ax[j] *= D[d->Ai[j]];
         }   
     }
-    scaleArray(d->Ax,1.0/w->scale,d->Anz);
+    scaleArray(d->Ax,1.0/w->scale, d->Ap[d->n]);
 }
 
 #endif

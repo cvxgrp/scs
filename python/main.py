@@ -22,7 +22,7 @@ print sol
 sol = scs.solve(data,cone, USE_INDIRECT = True)
 print sol
 
-opts = {'MAX_ITERS': 10}
+opts = {'MAX_ITERS': 500, 'EPS': 1e-6}
 
 sol = scs.solve(data,cone, opts)
 print sol

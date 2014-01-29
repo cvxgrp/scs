@@ -125,16 +125,16 @@ static inline int validate(Data * d, Cone * k) {
             return -1;
         }
     }
-    idxint rMax = 0;
-    for (i = 0 ; i < d->Anz ; ++i) {
+    idxint rMax = 0, Anz = d->Ap[d->n];
+    if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
+        scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) Anz);
+        return -1;
+    }
+    for (i = 0 ; i < Anz ; ++i) {
         if(d->Ai[i] > rMax) rMax = d->Ai[i];
     }
     if (rMax > d->m - 1) {
         scs_printf("number of rows in A inconsistent with input dimension\n");
-        return -1;
-    }
-    if (d->Anz != d->Ap[d->n]) {
-        scs_printf("inconsistent Anz %i and Ap[n] = %i\n", (int) d->Anz, (int) d->Ap[d->n]);
         return -1;
     }
     if (validateCones(k) < 0) {
@@ -143,10 +143,6 @@ static inline int validate(Data * d, Cone * k) {
     }
     if (getFullConeDims(k) != d->m) {
         scs_printf("cone dimensions %i not equal to num rows in A = m = %i\n", (int) getFullConeDims(k), (int) d->m );
-        return -1;
-    }
-    if (((float) d->Anz / d->m > d->n) || (d->Anz <= 0)) {
-        scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) d->Anz);
         return -1;
     }
     if (d->MAX_ITERS < 0) {
@@ -604,7 +600,7 @@ static inline void printHeader(Data * d, Work * w, Cone * k) {
 	}
     scs_printf("\nmethod: %s\n", w->method);
     scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS, (int) d->NORMALIZE);
-	scs_printf("variables n = %i, constraints m = %i, non-zeros in A = %li\n", (int) d->n, (int) d->m, (long) d->Anz);
+	scs_printf("variables n = %i, constraints m = %i, non-zeros in A = %li\n", (int) d->n, (int) d->m, (long) d->Ap[d->n]);
 
     char * coneStr = getConeHeader(k);
     scs_printf("%s",coneStr);

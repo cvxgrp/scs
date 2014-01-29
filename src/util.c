@@ -45,7 +45,7 @@ void printData(Data * d){
 	scs_printf("d->b[0] is %4f\n",d->b[0]);
 	scs_printf("d->c[0] is %4f\n",d->c[0]);
 	scs_printf("d->Ax[0] is %4f\n",d->Ax[0]);
-    scs_printf("d->Anz is %li\n", (long) d->Anz);
+    scs_printf("Anz is %li\n", (long) d->Ap[d->n]);
 	scs_printf("d->MAX_ITERS is %i\n",(int) d->MAX_ITERS);
  	scs_printf("d->VERBOSE is %i\n",(int) d->VERBOSE);
  	scs_printf("d->NORMALIZE is %i\n",(int) d->VERBOSE);

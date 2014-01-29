@@ -76,8 +76,6 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
 	if(fscanf(fp, FLOATRW, &(d->ALPHA))!= 1) return -1;
 	if(fscanf(fp, FLOATRW, &(d->UNDET_TOL))!= 1) return -1;
 	if(fscanf(fp, FLOATRW, &(d->EPS))!= 1) return -1;
-	if(fscanf(fp, INTRW, &(d->Anz))!= 1) return -1;
-
 	k->q = malloc(sizeof(idxint)*k->qsize);
 	for(idxint i = 0; i < k->qsize; i++)
 	{ 
@@ -98,18 +96,19 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
 	{ 
 		if(fscanf(fp, FLOATRW, &d->c[i])!= 1) return -1;
 	}
-	d->Ai = malloc(sizeof(idxint)*(d->Anz));
-	for(idxint i = 0; i < d->Anz; i++)
-	{
-		if(fscanf(fp, INTRW, &d->Ai[i])!= 1) return -1;
-	}
-	d->Ap = malloc(sizeof(idxint)*(d->n+1));
+    d->Ap = malloc(sizeof(idxint)*(d->n+1));
 	for(idxint i = 0; i < d->n+1; i++) 
 	{
 		if(fscanf(fp, INTRW, &d->Ap[i])!= 1) return -1;
 	}
-	d->Ax = malloc(sizeof(pfloat)*(d->Anz));
-	for(idxint i = 0; i < (d->Anz); i++)
+    idxint Anz = d->Ap[d->n];
+	d->Ai = malloc(sizeof(idxint)*Anz);
+	for(idxint i = 0; i < Anz; i++)
+	{
+		if(fscanf(fp, INTRW, &d->Ai[i])!= 1) return -1;
+	}
+	d->Ax = malloc(sizeof(pfloat)*Anz);
+	for(idxint i = 0; i < Anz; i++)
 	{
 		if(fscanf(fp, FLOATRW, &d->Ax[i])!= 1) return -1;
 	}

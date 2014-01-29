@@ -155,7 +155,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   */
   d->Ap = (idxint *)mxGetJc(A_mex);
   d->Ai = (idxint *)mxGetIr(A_mex);
-  d->Anz = d->Ap[d->n];
   Sol sol;
   Info info;
 

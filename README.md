@@ -157,7 +157,6 @@ The four relevant data structures are:
       /* problem data, A, b, c: */
       pfloat * Ax;
       idxint * Ai, * Ap;
-      idxint Anz;
       pfloat * b, * c;
       idxint MAX_ITERS;
       pfloat EPS, ALPHA, UNDET_TOL, RHO_X;

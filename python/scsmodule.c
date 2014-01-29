@@ -271,7 +271,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   d->Ax = (pfloat *) PyArray_DATA(ps.Ax);
   d->Ai = (idxint *) PyArray_DATA(ps.Ai);
   d->Ap = (idxint *) PyArray_DATA(ps.Ap);
-  d->Anz = d->Ap[d->n];
+  //d->Anz = d->Ap[d->n];
   //d->Anz = PyArray_DIM(Ai,0);
   /* set c */
   if (!PyArray_ISFLOAT(c) || PyArray_NDIM(c) != 1) {
