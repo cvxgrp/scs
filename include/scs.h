@@ -18,7 +18,7 @@ struct PROBLEM_DATA {
   pfloat * b, * c;
   idxint MAX_ITERS;
   pfloat EPS, ALPHA, UNDET_TOL, RHO_X;
-  idxint VERBOSE, NORMALIZE;  // boolean
+  idxint VERBOSE, NORMALIZE;  /* boolean */
 };
 
 /* contains primal-dual solution vectors */
@@ -30,7 +30,7 @@ struct SOL_VARS {
 struct INFO {
 	idxint iter;
 	char status[16];
-	idxint statusVal; // status as idxint
+	idxint statusVal; /* status as idxint */
     pfloat pobj;
 	pfloat dobj;
 	pfloat resPri;
@@ -51,7 +51,7 @@ struct WORK {
   Priv * p;
 };
 
-// to hold residual information
+/* to hold residual information */
 struct residuals {
 	pfloat resDual;
 	pfloat resPri;
@@ -62,7 +62,7 @@ struct residuals {
 	pfloat kap;
 };
 
-// these are actually library "api"'s
+/* these are actually library "api"'s */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info);
 void freeData(Data *d, Cone *k);
 void freeSol(Sol *sol);

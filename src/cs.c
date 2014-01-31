@@ -9,19 +9,19 @@
 #define CS_MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 /* wrapper for malloc */
-static inline void *cs_malloc (idxint n, idxint size)
+static void *cs_malloc (idxint n, idxint size)
 {
     return (scs_malloc (n * size)) ;
 }
 
 /* wrapper for calloc */
-static inline void *cs_calloc (idxint n, idxint size)
+static void *cs_calloc (idxint n, idxint size)
 {
     return (scs_calloc (n, size)) ;
 }
 
 /* wrapper for free */
-static inline void *cs_free (void *p)
+static void *cs_free (void *p)
 {
     if (p) scs_free (p) ;       /* free p if it is not already NULL */
     return (NULL) ;         /* return NULL to simplify the use of cs_free */

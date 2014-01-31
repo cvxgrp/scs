@@ -4,7 +4,6 @@ flags.COMPILE_WITH_OPENMP = false;
 
 % try to use blas libs; if not available then scs cannot solve SDPs:
 try
-    
     % EDIT THESE TO POINT TO YOUR BLAS + LAPACK LIBS:
     flags.BLASLIB = '-lopenblas -llapack -llapacke';
     flags.INCS = '-I/opt/local/include -I/usr/local/include';
@@ -25,7 +24,7 @@ catch err
     compile_indirect(flags);    
     
     disp('Compiled without lapack support - unable to solve SDPs (can solve LPs, QPs, SOCPs, EXPs)')
-    disp('To solve SDPs you must install cblas + lapacke and poidxint the flags to the right locations')
+    disp('To solve SDPs you must install cblas + lapacke and point the flags to the right locations')
 end
 
 %%

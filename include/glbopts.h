@@ -1,7 +1,7 @@
 #ifndef GLB_H_GUARD    
 #define GLB_H_GUARD
 
-// redefine printfs and memory allocators as needed
+/* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
   #include "mex.h"
   #define scs_printf   mexPrintf
@@ -34,7 +34,7 @@
     typedef int idxint;
 #endif
 
-#ifndef DFLOAT
+#ifndef FLOAT
     typedef double pfloat;
     #ifndef NAN
         #define NAN ((pfloat)0x7ff8000000000000)
@@ -52,6 +52,10 @@
 
 #ifndef MIN
 #define MIN(a,b) ((a) > (b) ? (b) : (a))
+#endif
+
+#ifndef ABS
+#define ABS(x) ((x) < 0 ? -(x) : (x))
 #endif
 
 typedef struct PROBLEM_DATA Data;

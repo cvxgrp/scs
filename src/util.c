@@ -10,9 +10,8 @@ void tic(void) {
 pfloat tocq(void) {
 	struct timeval tic_timestop;
 	gettimeofday(&tic_timestop, NULL);
-	//scs_printf("time: %8.4f seconds.\n", (float)(tic_timestop - tic_timestart));
-	pfloat time = tic_timestop.tv_sec*1e3 + tic_timestop.tv_usec/1e3 - tic_timestart.tv_sec*1e3 - tic_timestart.tv_usec/1e3;
-	return time;
+	/* scs_printf("time: %8.4f seconds.\n", (float)(tic_timestop - tic_timestart)); */
+	return tic_timestop.tv_sec*1e3 + tic_timestop.tv_usec/1e3 - tic_timestart.tv_sec*1e3 - tic_timestart.tv_usec/1e3;
 }
 
 pfloat toc(void) {
@@ -55,7 +54,7 @@ void printData(Data * d){
 	scs_printf("d->UNDET_TOL is %6f\n",d->UNDET_TOL);
 }
 
-void printAll(Data * d, Work * w){
+void printWork(Work * w){
 	idxint i;
 	scs_printf("\n u_t is \n");
 	for( i=0;i<w->l;i++){

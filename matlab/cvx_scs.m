@@ -279,8 +279,8 @@ if (isfield(settings,'ALPHA'))
     pars.ALPHA = settings.ALPHA;
 end
 
-% write_scs_data_sparse(data,K,scs_set_default_params())
-[ yy, xx, info ] = cvx_run_solver( @scs, data, K, pars, 'xx', 'yy', 'info', settings, 5 );
+% write_scs_data(data,K,pars)
+[ yy, xx, s, info ] = cvx_run_solver( @scs, data, K, pars, 'xx', 'yy', 'info', settings, 3 );
 
 if add_row,
     xx = xx(2:end);

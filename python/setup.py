@@ -20,7 +20,7 @@ _scs_direct = Extension('_scs_direct', libraries = lib,
                     ] + glob('../linsys/direct/*.c')
                       + glob('../linsys/direct/external/*.c')
                       + glob('../src/*.c'),
-                    extra_compile_args=['-std=c99'])
+                    extra_compile_args=[])
 
 _scs_indirect = Extension('_scs_indirect', libraries = lib,
                     # define LDL and AMD to use long ints
@@ -34,7 +34,7 @@ _scs_indirect = Extension('_scs_indirect', libraries = lib,
                     sources = ['scsmodule.c',
                     ] + glob('../linsys/indirect/*.c')
                       + glob('../src/*.c'),
-                    extra_compile_args=['-std=c99'])
+                    extra_compile_args=[])
 
 setup(  name = 'scs',
         version = '1.0',

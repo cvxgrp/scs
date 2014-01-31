@@ -10,12 +10,12 @@ void normalize(Data * d, Work * w, Cone * k){
 	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
 	
 	idxint i, j, count;
-	pfloat wrk;
-	
-	// heuristic rescaling, seems to do well with a scaling of about 4
-	w->scale =  4; //MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1);
+	pfloat wrk, meanNormRowA, *nms;
 
-	// calculate row norms
+	/* heuristic rescaling, seems to do well with a scaling of about 4 */
+	w->scale =  4; /*MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1); */
+
+	/* calculate row norms */
 	for(i = 0; i < d->n; ++i){
 		for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
 			wrk = d->Ax[j];
@@ -23,9 +23,9 @@ void normalize(Data * d, Work * w, Cone * k){
 		}
 	}
 	for (i=0; i < d->m; ++i){
-		D[i] = sqrt(D[i]); // just the norms
+		D[i] = sqrt(D[i]); /* just the norms */
 	}
-    // mean of norms of rows across each cone 
+    /* mean of norms of rows across each cone  */
     count = k->l+k->f;
 	for(i = 0; i < k->qsize; ++i)
     {
@@ -77,38 +77,38 @@ void normalize(Data * d, Work * w, Cone * k){
         else if (D[i] > MAX_SCALE) D[i] = MAX_SCALE;
 
     }
-	// scale the rows with D
+	/* scale the rows with D */
 	for(i = 0; i < d->n; ++i){
 		for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
 			d->Ax[j] /= D[d->Ai[j]];
 		}
 	}
-	// calculate and scale by col norms, E
+	/* calculate and scale by col norms, E */
 	for (i = 0; i < d->n; ++i){
 		E[i] = calcNorm(&(d->Ax[d->Ap[i]]),d->Ap[i+1] - d->Ap[i]);
         if (E[i] < MIN_SCALE) E[i] = MIN_SCALE;
 		else if (E[i] > MAX_SCALE) E[i] = MAX_SCALE;
         scaleArray(&(d->Ax[d->Ap[i]]), 1.0/E[i], d->Ap[i+1] - d->Ap[i]);
 	}
-	// scale b
+	/* scale b */
 	for (i = 0; i < d->m; ++i){
 		d->b[i] /= D[i];
 	}
 	w->sc_b = 1/MAX(calcNorm(d->b,d->m),MIN_SCALE);
 	scaleArray(d->b, w->sc_b, d->m);
-	// scale c
+	/* scale c */
 	for (i = 0; i < d->n; ++i){
 		d->c[i] /= E[i];
 	}
 	
-	pfloat meanNormRowA = 0.0;
-	pfloat *nms = scs_calloc(d->m,sizeof(pfloat));
+	nms = scs_calloc(d->m,sizeof(pfloat));
 	for(i = 0; i < d->n; ++i){
 		for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
 			wrk = d->Ax[j];
 			nms[d->Ai[j]] += wrk*wrk;
 		}
 	}
+    meanNormRowA = 0.0;
 	for (i=0; i < d->m; ++i){
 		meanNormRowA += sqrt(nms[i])/d->m;
 	}
@@ -120,7 +120,7 @@ void normalize(Data * d, Work * w, Cone * k){
 
 	scs_free(nms);
 
-    // heuristic scaling factor
+    /* heuristic scaling factor */
     scaleArray(d->Ax,w->scale, d->Ap[d->n]);
     scaleArray(d->b,w->scale,d->m);
     scaleArray(d->c,w->scale,d->n);
@@ -173,7 +173,7 @@ pfloat calcScaledNormInf(const pfloat *a, const pfloat * s, idxint l){
     pfloat tmp, max = 0.0;
     idxint i;
     for ( i=0; i<l; ++i){
-        tmp = fabs(s[i] * a[i]);
+        tmp = ABS(s[i] * a[i]);
         if(tmp > max) max = tmp;
     }   
     return max;

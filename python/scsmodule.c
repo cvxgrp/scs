@@ -26,29 +26,29 @@ struct ScsPyData {
 
 /* Note, Python3.x may require special handling for the idxint and pfloat
  * types. */
-static inline int getIntType() {
+static int getIntType() {
   switch(sizeof(idxint)) {
     case 1: return NPY_INT8;
     case 2: return NPY_INT16;
     case 4: return NPY_INT32;
     case 8: return NPY_INT64;
-    default: return NPY_INT32;  // defaults to 4 byte int
+    default: return NPY_INT32;  /* defaults to 4 byte int */
   }
 }
 
-static inline int getDoubleType() {
-  // known bug, if pfloat isn't "double", will cause aliasing in memory
+static int getDoubleType() {
+  /* known bug, if pfloat isn't "double", will cause aliasing in memory */
   return NPY_DOUBLE;
 }
 
-static inline PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
-  // gets the pointer to the block of contiguous C memory
-  // the overhead should be small unless the numpy array has been
-  // reordered in some way or the data type doesn't quite match
-  //
-  // the "new_owner" pointer has to have Py_DECREF called on it; it owns
-  // the "new" array object created by PyArray_Cast
-  //
+static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
+  /* gets the pointer to the block of contiguous C memory */
+  /* the overhead should be small unless the numpy array has been */
+  /* reordered in some way or the data type doesn't quite match */
+  /* */
+  /* the "new_owner" pointer has to have Py_DECREF called on it; it owns */
+  /* the "new" array object created by PyArray_Cast */
+  /* */
   static PyArrayObject *tmp_arr;
   PyArrayObject *new_owner;
   tmp_arr = PyArray_GETCONTIGUOUS(array);
@@ -223,7 +223,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   Cone * k = calloc(sizeof(Cone),1); 
 
   static char *kwlist[] = {"shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", NULL};
-  // parse the arguments and ensure they are the correct type
+  /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
   static char *argparse_string = "(ll)O!O!O!O!O!O!|O!";
 #else
@@ -271,8 +271,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   d->Ax = (pfloat *) PyArray_DATA(ps.Ax);
   d->Ai = (idxint *) PyArray_DATA(ps.Ai);
   d->Ap = (idxint *) PyArray_DATA(ps.Ap);
-  //d->Anz = d->Ap[d->n];
-  //d->Anz = PyArray_DIM(Ai,0);
+  /*d->Anz = d->Ap[d->n]; */
+  /*d->Anz = PyArray_DIM(Ai,0); */
   /* set c */
   if (!PyArray_ISFLOAT(c) || PyArray_NDIM(c) != 1) {
       return finishWithErr(d,k,&ps,"c must be a dense numpy array with one dimension");
@@ -320,29 +320,29 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   scs(d, k, &sol, &info);
 
   /* create output (all data is *deep copied*) */
-  // TODO: request CVXOPT API for constructing from existing pointer
+  /* TODO: request CVXOPT API for constructing from existing pointer */
   /* x */
-  // matrix *x;
-  // if(!(x = Matrix_New(n,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(x), mywork->x, n*sizeof(pfloat));
+  /* matrix *x; */
+  /* if(!(x = Matrix_New(n,1,DOUBLE))) */
+  /*   return PyErr_NoMemory(); */
+  /* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(pfloat)); */
   npy_intp veclen[1];
   veclen[0] = d->n;
   PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
 
   /* y */
-  // matrix *y;
-  // if(!(y = Matrix_New(p,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(y), mywork->y, p*sizeof(pfloat));
+  /* matrix *y; */
+  /* if(!(y = Matrix_New(p,1,DOUBLE))) */
+  /*   return PyErr_NoMemory(); */
+  /* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(pfloat)); */
   veclen[0] = d->m;
   PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
 
   /* s */
-  // matrix *s;
-  // if(!(s = Matrix_New(m,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(s), mywork->s, m*sizeof(pfloat));
+  /* matrix *s; */
+  /* if(!(s = Matrix_New(m,1,DOUBLE))) */
+  /*   return PyErr_NoMemory(); */
+  /* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(pfloat)); */
   veclen[0] = d->m;
   PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
   
@@ -364,10 +364,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "y",y,
     "s",s,
     "info",infoDict);
-  // give up ownership to the return dictionary
+  /* give up ownership to the return dictionary */
   Py_DECREF(x); Py_DECREF(y); Py_DECREF(s); Py_DECREF(infoDict);
 
-  // no longer need pointers to arrays that held primitives
+  /* no longer need pointers to arrays that held primitives */
   freePyData(d,k,&ps);
   return returnDict;
 }
@@ -376,7 +376,7 @@ static PyMethodDef scsMethods[] =
 {
   {"csolve", (PyCFunction)csolve, METH_VARARGS | METH_KEYWORDS,
     "Solve a convex cone problem using scs."},
-  {NULL, NULL, 0, NULL} // sentinel
+  {NULL, NULL, 0, NULL} /* sentinel */
 };
 
 /* Module initialization */
@@ -408,8 +408,8 @@ static PyObject* moduleinit(void)
   #endif
 #endif
   
-  //if (import_array() < 0) return NULL; // for numpy arrays
-  //if (import_cvxopt() < 0) return NULL; // for cvxopt support
+  /*if (import_array() < 0) return NULL; // for numpy arrays */
+  /*if (import_cvxopt() < 0) return NULL; // for cvxopt support */
 
   if (m == NULL)
     return NULL;
@@ -425,7 +425,7 @@ static PyObject* moduleinit(void)
     PyInit__scs_direct(void)
   #endif
   {
-    import_array(); // for numpy arrays
+    import_array(); /* for numpy arrays */
     return moduleinit();
   }
 #else
@@ -436,7 +436,7 @@ static PyObject* moduleinit(void)
     init_scs_direct(void)
   #endif
   {
-    import_array(); // for numpy arrays
+    import_array(); /* for numpy arrays */
     moduleinit();
   }
 #endif

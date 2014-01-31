@@ -3,27 +3,26 @@
 
 #define CG_BEST_TOL 1e-9
 #define CG_EXPONENT 1.5
-#define CG_VERBOSE 0
 #define PRINT_INTERVAL 100
 
-static inline void calcAx(Data * d, Work * w, const pfloat * x, pfloat * y);
+static void calcAx(Data * d, Work * w, const pfloat * x, pfloat * y);
 static idxint cgCustom(Data *d, Work *w, const pfloat *s, pfloat * b, idxint max_its, pfloat tol);
-static inline void CGaccumByA(Data * d, Work * w, const pfloat *x, pfloat *y);
-static inline void CGaccumByAtrans(Data *d, Work * w, const pfloat *x, pfloat *y);
-static inline void transpose (Data * d, Work * w);
+static void CGaccumByA(Data * d, Priv * p, const pfloat *x, pfloat *y);
+static void CGaccumByAtrans(Data *d, const pfloat *x, pfloat *y);
+static void transpose (Data * d, Work * w);
 
 static idxint totCgIts = 0;
 static idxint lastNCgIts = 0;
 
-char * getLinSysSummary(Data * d, Info * info) {
+char * getLinSysSummary(Info * info) {
     char str[80];
-    idxint len = sprintf(str, "Average CG iterations: %2.2f\n", (float) totCgIts / info->iter );
+    idxint len = sprintf(str, "Average CG iterations: %2.2f\n", (pfloat) totCgIts / info->iter );
     return strndup(str, len);
 }
 
 idxint privateInitWork(Data * d, Work * w){
   char str[80];
-  idxint len = sprintf(str,"sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (float) CG_EXPONENT);
+  idxint len = sprintf(str,"sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
   w->method = strndup(str, len);
   w->p = scs_malloc(sizeof(Priv));
   w->p->p = scs_malloc((d->n)*sizeof(pfloat));
@@ -38,7 +37,7 @@ idxint privateInitWork(Data * d, Work * w){
   return(0);
 }
 
-static inline void transpose (Data * d, Work * w)
+static void transpose (Data * d, Work * w)
 {
   idxint * Ci = w->p->Ati;
   idxint * Cp = w->p->Atp;
@@ -81,22 +80,25 @@ void freePriv(Work * w){
 }
 
 void solveLinSys(Data *d, Work * w, pfloat * b, const pfloat * s, idxint iter){
-    pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b,d->n) / pow(iter + 1, (float) CG_EXPONENT);
-	// solves Mx = b, for x but stores result in b
-	// s contains warm-start (if available)
-	CGaccumByAtrans(d,w, &(b[d->n]), b);
-   	// solves (I+A'A)x = b, s warm start, solution stored in b
-	idxint cgIts = cgCustom(d, w, s, b, d->n, cgTol);
+    idxint cgIts;
+    pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b,d->n) / POWF(iter + 1, (pfloat) CG_EXPONENT);
+	/* solves Mx = b, for x but stores result in b */
+	/* s contains warm-start (if available) */
+	CGaccumByAtrans(d, &(b[d->n]), b);
+   	/* solves (I+A'A)x = b, s warm start, solution stored in b */
+	cgIts = cgCustom(d, w, s, b, d->n, cgTol);
     scaleArray(&(b[d->n]),-1,d->m);
-	CGaccumByA(d, w, b, &(b[d->n]));
+	CGaccumByA(d, w->p, b, &(b[d->n]));
 	
     if(iter >= 0) {
         totCgIts += cgIts;
         lastNCgIts += cgIts;
-        if (CG_VERBOSE && d->VERBOSE && (iter + 1) % PRINT_INTERVAL == 0) {
+        #ifdef EXTRAVERBOSE
+        if (d->VERBOSE && (iter + 1) % PRINT_INTERVAL == 0) {
             scs_printf("\taverage CG iterations for last %i scs iters: %2.2f\n", (int) PRINT_INTERVAL, (pfloat) lastNCgIts / PRINT_INTERVAL);
             lastNCgIts = 0;
         }
+        #endif
     }
 }
 
@@ -104,9 +106,10 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
 	/* solves (I+A'A)x = b */
 	/* warm start cg with s */  
 	idxint i = 0, n = d->n;
-	pfloat *p = w->p->p; // cg direction
-	pfloat *Ap = w->p->Ap; // updated CG direction
-	pfloat *r = w->p->r; // cg residual
+	pfloat rsold;
+    pfloat *p = w->p->p; /* cg direction */
+	pfloat *Ap = w->p->Ap; /* updated CG direction */
+	pfloat *r = w->p->r; /* cg residual */
 
 	pfloat alpha, rsnew=0;
 	if (s==NULL){
@@ -120,7 +123,7 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
 		memcpy(b,s,n*sizeof(pfloat));
 	}
 	memcpy(p,r,n*sizeof(pfloat));
-	pfloat rsold=calcNorm(r,n);
+	rsold=calcNorm(r,n);
 
 	for (i=0; i < max_its; ++i){
 		calcAx(d,w,p,Ap);
@@ -131,7 +134,7 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
 
         rsnew=calcNorm(r,n);
         if (rsnew < tol){
-            //scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, rsnew, i+1);
+            /*scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, rsnew, i+1); */
             return i+1;
         }   
         scaleArray(p,(rsnew*rsnew)/(rsold*rsold),n);
@@ -141,20 +144,20 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
     return i;
 }
 
-static inline void calcAx(Data * d, Work * w, const pfloat * x, pfloat * y){
+static void calcAx(Data * d, Work * w, const pfloat * x, pfloat * y){
 	pfloat * tmp = w->p->tmp;
 	memset(tmp,0,d->m*sizeof(pfloat));
-	CGaccumByA(d,w,x,tmp);
+	CGaccumByA(d,w->p,x,tmp);
 	memset(y,0,d->n*sizeof(pfloat));
-	CGaccumByAtrans(d,w,tmp,y);
+	CGaccumByAtrans(d, tmp, y);
 	addScaledArray(y,x,d->n,d->RHO_X);
 }
 
-static inline void CGaccumByA(Data * d, Work * w, const pfloat *x, pfloat *y)
+static void CGaccumByA(Data * d, Priv * p, const pfloat *x, pfloat *y)
 {
-  _accumByAtrans(d->m,w->p->Atx,w->p->Ati,w->p->Atp,x,y);
+  _accumByAtrans(d->m,p->Atx,p->Ati,p->Atp,x,y);
 }
-static inline void CGaccumByAtrans(Data *d, Work * w, const pfloat *x, pfloat *y)
+static void CGaccumByAtrans(Data *d, const pfloat *x, pfloat *y)
 {
   _accumByAtrans(d->n,d->Ax,d->Ai,d->Ap,x,y);
 }

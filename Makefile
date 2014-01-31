@@ -16,7 +16,7 @@ ifdef USE_LAPACK
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPS, SDPs, and EXPs"
 else
 	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and EXPs)."
-	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to poidxint to the library"
+	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to point to the library"
 	@echo "install locations, and recompile with 'make purge', 'make'."
 endif
 	@echo "**********************************************************************************"

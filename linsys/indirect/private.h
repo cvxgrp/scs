@@ -6,8 +6,8 @@
 #include <math.h>
 
 struct PRIVATE_DATA{
-  pfloat *p;  // cg iterate
-  pfloat *r;  // cg residual
+  pfloat *p;  /* cg iterate  */
+  pfloat *r;  /* cg residual */
   pfloat *x;
   pfloat * Ap;
   pfloat * tmp;
@@ -17,5 +17,12 @@ struct PRIVATE_DATA{
   idxint * Atp;
 };
 
+#ifndef POWF
+    #ifndef FLOAT
+        #define POWF powf
+    #else
+        #define POWF pow
+    #endif
+#endif
 
 #endif

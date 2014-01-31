@@ -10,10 +10,10 @@ static struct ConeData_t {
   pfloat * Xs, *Z, *e; 
 } c;
 
-void projectsdc(pfloat * X, int n, Work * w); 
+void projectsdc(pfloat * X, idxint n); 
 void projExpCone(pfloat * v);
 
-int initCone(Cone * k) {
+idxint initCone(Cone * k) {
     if (k->ssize && k->s){
         /* eigenvector decomp workspace */
         idxint i, nMax = 0;
@@ -32,7 +32,7 @@ int initCone(Cone * k) {
     return 0;
 }
 
-int validateCones(Cone * k) {
+idxint validateCones(Cone * k) {
     idxint i;
     if(k->f && k->f < 0) {
         scs_printf("free cone error\n");
@@ -96,36 +96,37 @@ void finishCone() {
 
 char * getConeHeader(Cone * k) {
     char tmp[150];    
-    idxint socVars = 0;
-    idxint socBlks = 0;
+    idxint i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars, len;
+    socVars = 0;
+    socBlks = 0;
     if (k->qsize && k->q) {
         socBlks = k->qsize;
-        for (idxint i=0;i<k->qsize;i++){
+        for (i = 0; i<k->qsize; i++) {
             socVars += k->q[i];
         }   
     }   
-    idxint sdVars = 0;
-    idxint sdBlks = 0;
+    sdVars = 0;
+    sdBlks = 0;
     if (k->ssize && k->s) {
         sdBlks = k->ssize;
-        for (idxint i=0;i<k->ssize;i++){
+        for (i = 0; i<k->ssize; i++) {
             sdVars += k->s[i]*k->s[i];
         }   
     }   
-    idxint expPvars = 0;
+    expPvars = 0;
     if (k->ep) {
         expPvars = 3 * k->ep;
     }   
-    idxint expDvars = 0;
+    expDvars = 0;
     if (k->ed) {
         expDvars = 3 * k->ed;
     }   
-    int len = sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n", (int) (k->f ? k->f : 0),(int) (k->l ? k->l : 0), (int) socVars, (int) socBlks, (int) sdVars, (int) sdBlks, (int) expPvars, (int) expDvars);
+    len = sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n", (int) (k->f ? k->f : 0),(int) (k->l ? k->l : 0), (int) socVars, (int) socBlks, (int) sdVars, (int) sdBlks, (int) expPvars, (int) expDvars);
     return strndup(tmp, len);
 }
 
 /* in place projection (with branches) */
-void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
+void projCone(pfloat *x, Cone * k, idxint iter)
 {
     idxint i;
     idxint count = (k->f ? k->f : 0);
@@ -135,7 +136,7 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
         for(i = count; i < count + k->l; ++i)
         {
             if(x[i] < 0.0) x[i] = 0.0;
-            //x[i] = (x[i] < 0.0) ? 0.0 : x[i];
+            /*x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
         }
         count += k->l;
     }
@@ -156,7 +157,7 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
                 } else {    
                     x[count] = alpha;
                     scaleArray(&(x[count+1]), alpha/s, k->q[i]-1);
-                    //cblas_dscal(k->q[i]-1, alpha/s, &(x[count+1]),1);
+                    /*cblas_dscal(k->q[i]-1, alpha/s, &(x[count+1]),1); */
                 }
             }
             count += k->q[i];
@@ -167,7 +168,7 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
         #ifdef LAPACK_LIB_FOUND
         /* project onto PSD cone */
         for (i=0; i < k->ssize; ++i){
-            projectsdc(&(x[count]), (int) k->s[i], w);
+            projectsdc(&(x[count]), k->s[i]);
             count += (k->s[i])*(k->s[i]);
         }
         #else
@@ -183,14 +184,14 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
     }
 
     if (k->ep) {
+        pfloat r, s, t;
+        idxint idx;
         /*
          * exponential cone is not self dual, if s \in K
          * then y \in K^* and so if K is the primal cone
          * here we project onto K^*, via Moreau
          */
-        scaleArray(&(x[count]), -1, 3*k->ep); // x = -x;
-        pfloat r,s,t;
-        idxint idx;
+        scaleArray(&(x[count]), -1, 3*k->ep); /* x = -x; */
         #pragma omp parallel for private(r,s,t,idx)
         for (i=0; i < k->ep; ++i) {
             idx = count + 3*i;
@@ -208,7 +209,7 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
     }
 
     if (k->ed) {
-        // exponential cone:
+        /* exponential cone: */
         #pragma omp parallel for
         for (i=0; i < k->ed; ++i) {
             projExpCone(&(x[count + 3*i]));
@@ -221,7 +222,8 @@ void projCone(pfloat *x, Cone * k, Work * w, idxint iter)
 pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
     pfloat t = MAX( -z_hat , 1e-6);
     pfloat f, fp;
-    for (idxint i=0; i<100; ++i){
+    idxint i;
+    for (i=0; i<100; ++i){
         
         f = t * (t + z_hat) / rho / rho - y_hat/rho + log(t/rho) + 1;
         fp = (2 * t + z_hat) / rho / rho + 1/t;
@@ -232,7 +234,7 @@ pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
             return 0;
         } else if (t <= 0) {
             return z_hat;
-        } else if ( fabs(f) < 1e-9 ) {
+        } else if ( ABS(f) < 1e-9 ) {
             break;
         }
     }
@@ -263,31 +265,31 @@ void expGetRhoUb(pfloat * v, pfloat * x, pfloat * ub, pfloat * lb) {
     }
 }
 
-// project onto the exponential cone, v has dimension *exactly* 3
+/* project onto the exponential cone, v has dimension *exactly* 3 */
 void projExpCone(pfloat * v) {
-
+    idxint i;
+    pfloat ub, lb, rho, g, x[3];
     pfloat r = v[0], s = v[1], t = v[2];
-    // v in cl(Kexp)
+    
+    /* v in cl(Kexp) */
     if( (s*exp(r/s) <= t && s > 0) || (r <= 0 && s == 0 && t >= 0) ) {
         return;
     }
 
-    // -v in Kexp^*
+    /* -v in Kexp^* */
     if ( (-r < 0 && r*exp(s/r) <= -exp(1)*t) || (-r == 0 && -s >= 0 && -t >= 0) ) {
         memset(v, 0, 3*sizeof(pfloat));
         return;
     }
 
-    // special case with analytical solution
+    /* special case with analytical solution */
     if(r < 0 && s < 0) {
         v[1] = 0.0;
         v[2] = MAX(v[2],0);
         return;
     }
-
-    pfloat ub, lb, rho, g, x[3];
     expGetRhoUb(v, x, &ub, &lb);
-    for(idxint i = 0; i < 100; ++i){
+    for(i = 0; i < 100; ++i){
         rho = (ub + lb)/2;
         g = expCalcGrad(v, x, rho);
         if (g > 0) {
@@ -305,36 +307,38 @@ void projExpCone(pfloat * v) {
 }
 
 #ifdef LAPACK_LIB_FOUND
-void projectsdc(pfloat *X, int n, Work * w)
+void projectsdc(pfloat *X, idxint n)
 { /* project onto the positive semi-definite cone */
   if (n == 1) {
     if(X[0] < 0.0) X[0] = 0.0; 
     return;
   }
 
-  int i, j, m=0;
+  idxint i, j;
+  int m;
   pfloat * Xs = c.Xs;
   pfloat * Z = c.Z;
   pfloat * e = c.e;
   memcpy(Xs,X,n*n*sizeof(pfloat));
 
-  // Xs = X + X', save div by 2 for eigen-recomp
+  /* Xs = X + X', save div by 2 for eigen-recomp */
   for (i = 0; i < n; ++i){
     cblas_daxpy(n, 1, &(X[i]), n, &(Xs[i*n]), 1);
-    //b_daxpy(n, 1, &(X[i]), n, &(Xs[i*n]), 1);
+    /*b_daxpy(n, 1, &(X[i]), n, &(Xs[i*n]), 1); */
   }
  
   pfloat EIG_TOL = 1e-8;
   pfloat vupper = calcNorm(Xs,n*n);
+  m = 0;
   LAPACKE_dsyevr( LAPACK_COL_MAJOR, 'V', 'V', 'U', n, Xs, n, 0.0, vupper, -1, -1, EIG_TOL, &m, e, Z, n , NULL);
-  //printf("m is %i, n is %i\n", m ,n);
-  //printf("vupper is %f, max eig is %f\n",vupper, e[m>0 ? m-1:0]/2);
+  /*printf("m is %i, n is %i\n", m ,n); */
+  /*printf("vupper is %f, max eig is %f\n",vupper, e[m>0 ? m-1:0]/2); */
   memset(X, 0, n*n*sizeof(pfloat));
   for (i = 0; i < m; ++i) {
     cblas_dsyr(CblasColMajor, CblasLower, n, e[i]/2, &(Z[i*n]), 1, X, n);
-    //b_dsyr('L', n, -e[i]/2, &(Z[i*n]), 1, Xs, n);
+    /* b_dsyr('L', n, -e[i]/2, &(Z[i*n]), 1, Xs, n); */
   }
-  // fill in upper half 
+  /* fill in upper half  */
   for (i = 0; i < n; ++i){   
     for (j = i+1; j < n; ++j){   
       X[i + j*n] = X[j + i*n];    

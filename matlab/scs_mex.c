@@ -133,7 +133,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       k->s = NULL;
   }
 
-  //d->Anz = (idxint)mxGetNzmax(A_mex);
+  /*d->Anz = (idxint)mxGetNzmax(A_mex); */
   d->Ax = (pfloat *)mxGetPr(A_mex);
   /*
   d->Ap = (idxint *)mxMalloc(sizeof(int)*d->Anz);
@@ -170,41 +170,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   mxSetM(plhs[1], d->m); 
   mxSetN(plhs[1], 1); 
 
+  plhs[2] = mxCreateDoubleMatrix(0, 0, mxREAL);
+  mxSetPr(plhs[2], sol.s);
+  mxSetM(plhs[2], d->m); 
+  mxSetN(plhs[2], 1); 
+
   const char * infoFields[] = {"iter","status","pobj","dobj","resPri","resDual","relGap","time"}; 
   const idxint numInfoFields = 8;
   mwSize one[1] = {1};
   mxArray * xm;
-  plhs[2] = mxCreateStructArray(1,one,numInfoFields,infoFields);
+  plhs[3] = mxCreateStructArray(1,one,numInfoFields,infoFields);
 
-  mxSetField(plhs[2], 0, "status", mxCreateString(info.status));
+  mxSetField(plhs[3], 0, "status", mxCreateString(info.status));
    
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "iter", xm);
+  mxSetField(plhs[3], 0, "iter", xm);
   *mxGetPr(xm) = info.iter;
   
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "pobj", xm);
+  mxSetField(plhs[3], 0, "pobj", xm);
   *mxGetPr(xm) = info.pobj;
 
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "dobj", xm);
+  mxSetField(plhs[3], 0, "dobj", xm);
   *mxGetPr(xm) = info.dobj;
   
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "resPri", xm);
+  mxSetField(plhs[3], 0, "resPri", xm);
   *mxGetPr(xm) = info.resPri;
   
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "resDual", xm);
+  mxSetField(plhs[3], 0, "resDual", xm);
   *mxGetPr(xm) = info.resDual;
   
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "relGap", xm);
+  mxSetField(plhs[3], 0, "relGap", xm);
   *mxGetPr(xm) = info.relGap;
 
-  //info.time is millisecs - return value in secs
+  /*info.time is millisecs - return value in secs */
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[2], 0, "time", xm);
+  mxSetField(plhs[3], 0, "time", xm);
   *mxGetPr(xm) = info.time/1e3; 
 
   freeMex(d, k);
@@ -215,8 +220,8 @@ void freeMex(Data * d, Cone * k) {
   if(k->q) scs_free(k->q);
   if(k->s) scs_free(k->s);
   /* only needed if this data malloc-ed here */
-  //if(d->Ap) scs_free(d->Ap);
-  //if(d->Ai) scs_free(d->Ai);
+  /*if(d->Ap) scs_free(d->Ap); */
+  /*if(d->Ai) scs_free(d->Ai); */
   if(d) scs_free(d);
   if(k) scs_free(k);
 }
