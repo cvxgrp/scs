@@ -114,9 +114,9 @@ This module provides a single function `scs` with the following calling sequence
 ```
 sol = scs(data, cone, opts = None, USE_INDIRECT = False)
 ```
-The argument `data` is a python dictionary with three elements `A`, `b`, and `c` where `c` and `b` are NUMPY arrays (i.e., matrices with a single column).  and `A` is a SCIPY *sparse* matrix in CSC format; if they are not of the proper format, scs will attempt to convert them. 
+The argument `data` is a python dictionary with three elements `A`, `b`, and `c` where `b` and `c` are NUMPY arrays (i.e., matrices with a single column)  and `A` is a SCIPY *sparse* matrix in CSC format; if they are not of the proper format, scs will attempt to convert them. 
 
-The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and `ed` (any of which are optional) corresponding to the supported cone types.
+The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and `ed` (all of which are optional) corresponding to the supported cone types.
 
 The argument `opts` is optional and is a dictionary with fields `MAX_ITERS`, `EPS`, `ALPHA`, `UNDET_TOL`, `VERBOSE`, and `NORMALIZE`. If `opts` is missing, then the algorithm uses default settings.
 
