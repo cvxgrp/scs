@@ -16,12 +16,18 @@
  * Please use the "solve" interface in scs.py.
  */
 
+static int intType;
+static int pfloatType;
+
 struct ScsPyData {
     PyArrayObject * Ax;
     PyArrayObject * Ai;
     PyArrayObject * Ap;
     PyArrayObject * b;
     PyArrayObject * c;
+    PyArrayObject * x0;
+    PyArrayObject * y0;
+    PyArrayObject * s0;
 };
 
 /* Note, Python3.x may require special handling for the idxint and pfloat
@@ -64,6 +70,21 @@ static int printErr(char * key) {
     return -1; 
 }
 
+static idxint parseWarmStart(PyArrayObject *x0, pfloat ** x, PyArrayObject ** px0, idxint l){
+    *x = scs_calloc(l, sizeof(pfloat));
+    if(x0){
+        if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l){
+            scs_printf("Error parsing warm-start input\n");
+            return 0;
+        } else {
+            *px0 = getContiguous(x0, pfloatType);
+            *x = (pfloat *) PyArray_DATA(*px0);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int getConeIntDim(char * key, idxint * v, PyObject * cone) {
     /* get cone['l'] */
     *v = 0;
@@ -84,7 +105,7 @@ static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * 
     if(obj) {
         if(PyList_Check(obj)) {
             n = PyList_Size(obj);
-            q = calloc(n, sizeof(idxint));
+            q = scs_calloc(n, sizeof(idxint));
             for (i = 0; i < n; ++i) {
                 PyObject *qi = PyList_GetItem(obj, i);
                 if (!PyInt_Check(qi) || !((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
@@ -93,7 +114,7 @@ static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * 
             }
         } else if (PyInt_Check(obj)) {
             n = 1;
-            q = malloc(sizeof(idxint));
+            q = scs_malloc(sizeof(idxint));
             if (!PyInt_Check(obj) || !((*q = (idxint) PyInt_AsLong(obj)) > 0)) {
                 return printErr(key);
             }
@@ -157,8 +178,11 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
     if(ps->Ax) Py_DECREF(ps->Ax); 
     if(ps->Ai) Py_DECREF(ps->Ai); 
     if(ps->Ap) Py_DECREF(ps->Ap);
-    if(ps->c) Py_DECREF(ps->c);
     if(ps->b) Py_DECREF(ps->b);
+    if(ps->c) Py_DECREF(ps->c);
+    if(ps->x0) Py_DECREF(ps->x0);
+    if(ps->y0) Py_DECREF(ps->y0);
+    if(ps->s0) Py_DECREF(ps->s0);
     if(k) {
         if(k->q) scs_free(k->q);
         if(k->s) scs_free(k->s);
@@ -215,19 +239,19 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       */
 
   /* data structures for arguments */
-  PyArrayObject *Ax, *Ai, *Ap, *c, *b;
+  PyArrayObject *Ax, *Ai, *Ap, *c, *b, *x0 = NULL, *y0 = NULL, *s0 = NULL;
   PyObject *cone, *opts;
-  struct ScsPyData ps = {NULL, NULL, NULL, NULL, NULL};
+  struct ScsPyData ps = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
   /* scs data structures */
-  Data * d = calloc(sizeof(Data),1); 
-  Cone * k = calloc(sizeof(Cone),1); 
+  Data * d = scs_calloc(sizeof(Data),1); 
+  Cone * k = scs_calloc(sizeof(Cone),1); 
 
-  static char *kwlist[] = {"shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", NULL};
+  static char *kwlist[] = {"shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", "x0", "y0", "s0", NULL};
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-  static char *argparse_string = "(ll)O!O!O!O!O!O!|O!";
+  static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!O!";
 #else
-  static char *argparse_string = "(ii)O!O!O!O!O!O!|O!";
+  static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!O!";
 #endif
     
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
@@ -238,7 +262,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &b,
       &PyArray_Type, &c,
       &PyDict_Type, &cone,
-      &PyDict_Type, &opts)
+      &PyDict_Type, &opts,
+      &PyArray_Type, &x0,
+      &PyArray_Type, &y0,
+      &PyArray_Type, &s0)
     ) { return NULL; }
   
   if (d->m < 0) {
@@ -252,10 +279,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
   
   /* get the typenum for the primitive idxint and pfloat types */
-  int intType = getIntType();
-  int pfloatType = getDoubleType();
+  intType = getIntType();
+  pfloatType = getDoubleType();
 
-  /* set G */
+  /* set A */
   if( !PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
     return finishWithErr(d,k,&ps,"Ax must be a numpy array of floats");
   }
@@ -291,7 +318,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
   ps.b = getContiguous(b, pfloatType);
   d->b = (pfloat *) PyArray_DATA(ps.b);
-
+ 
   if(getConeIntDim("f", &(k->f), cone) < 0) {
       return finishWithErr(d,k,&ps,"failed to parse cone field f");
   }
@@ -315,7 +342,11 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
   
   /* Solve! */
-  Sol sol;
+  Sol sol = { 0 };
+  d->WARM_START = parseWarmStart(x0, &(sol.x), &(ps.x0), d->n);
+  d->WARM_START |= parseWarmStart(y0, &(sol.y), &(ps.y0), d->m);
+  d->WARM_START |= parseWarmStart(s0, &(sol.s), &(ps.s0), d->m);
+
   Info info;
   scs(d, k, &sol, &info);
 

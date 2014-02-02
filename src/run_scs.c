@@ -3,13 +3,17 @@
 int main(int argc, char **argv);
 idxint read_in_data(FILE * fp,Data * d, Cone * k);
 idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
+void freeData(Data *d, Cone *k);
+void freeSol(Sol *sol);
+void printSol(Data * d, Sol * sol, Info * info);
 
 #ifndef DEMO_PATH
 #define DEMO_PATH "../data_sparse"
 #endif 
 
-#define NUM_TRIALS 1 
+#define NUM_TRIALS 10
 #define RHOX 1e-3
+#define TEST_WARM_START 1
 
 int main(int argc, char **argv)
 {
@@ -17,8 +21,9 @@ int main(int argc, char **argv)
     idxint i;
     Cone * k;
     Data * d;
-    Sol * sol;
-    Info * info;
+    Work * w;
+    Sol sol = { 0 };
+    Info info = { 0 };
     
     if(open_file(argc, argv, 1, DEMO_PATH, &fp)==-1) return -1;
 	k = scs_calloc(1,sizeof(Cone));
@@ -28,17 +33,23 @@ int main(int argc, char **argv)
         return -1;
     }
 	fclose(fp);
-	sol = scs_malloc(sizeof(Sol));
-	info = scs_malloc(sizeof(Info));
-	for (i=0;i<NUM_TRIALS;i++)
-	{
-		scs(d,k,sol,info);
-	}
-	/*printSol(d,sol,info); */
+    scs_printf("solve once using scs\n");
+    scs(d,k,&sol,&info);
+
+    if(TEST_WARM_START) {
+        scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
+        freeSol(&sol); /* clear solution */
+        w =  scs_init(d, k, &sol, &info);
+        for (i=0;i<NUM_TRIALS;i++)
+        {
+          scs_solve(w, d, k, &sol, &info);
+        }
+        scs_finish(d, w);
+    }
+    
     freeData(d,k);
-	freeSol(sol);
-	scs_free(info);
-	return 0;
+    freeSol(&sol);
+    return 0;
 }
 
 #ifdef DLONG
@@ -60,6 +71,7 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
     char s[LEN64], * token;
     idxint i, Anz;
 	d->RHO_X = RHOX;
+    d->WARM_START = 0;
     if(fscanf(fp, INTRW, &(d->n)) != 1) return -1;
 	if(fscanf(fp, INTRW, &(d->m))!= 1) return -1;
     if(fscanf(fp, INTRW, &(k->f))!= 1) return -1;
@@ -156,12 +168,19 @@ void freeData(Data * d, Cone * k){
 
 void freeSol(Sol *sol){
 	if(sol) {
-		if(sol->x) scs_free(sol->x);
-		if(sol->y) scs_free(sol->y);
-		if(sol->s) scs_free(sol->s);
-    scs_free(sol);
-	}
-	sol = NULL;
+		if(sol->x) { 
+            scs_free(sol->x);
+            sol->x = NULL;
+        }
+		if(sol->y) { 
+            scs_free(sol->y);
+            sol->y = NULL;
+        }
+		if(sol->s) {
+            scs_free(sol->s);
+	        sol->s = NULL;
+        }
+    }
 }
 
 

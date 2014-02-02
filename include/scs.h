@@ -18,7 +18,7 @@ struct PROBLEM_DATA {
   pfloat * b, * c;
   idxint MAX_ITERS;
   pfloat EPS, ALPHA, UNDET_TOL, RHO_X;
-  idxint VERBOSE, NORMALIZE;  /* boolean */
+  idxint VERBOSE, NORMALIZE, WARM_START;  /* boolean */
 };
 
 /* contains primal-dual solution vectors */
@@ -42,9 +42,9 @@ struct INFO {
 /* the following structs do not need to be exposed */
 struct WORK {
   pfloat *u, *v, *u_t, *u_prev;
-  pfloat *h, *g;  
+  pfloat *h, *g, *pr, *dr; 
   pfloat gTh, sc_b, sc_c, scale;
-  pfloat nm_b, nm_c, nm_Q;
+  pfloat nm_b, nm_c, nm_Q, meanNormRowA;
   pfloat *D, *E;
   idxint l;
   char * method;
@@ -62,10 +62,15 @@ struct residuals {
 	pfloat kap;
 };
 
-/* these are actually library "api"'s */
+/* main library api's:
+scs_init: allocates memory (direct factorizes matrix [I A; A^T -I])
+scs_solve: can be called many times with different b,c data for one init call
+scs_finish: cleans up the memory (one per init call)
+*/
+Work * scs_init(Data * d, Cone * k, Sol * sol, Info * info);
+idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
+void scs_finish(Data * d, Work * w);
+/* scs calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info);
-void freeData(Data *d, Cone *k);
-void freeSol(Sol *sol);
-void printSol(Data * d, Sol * sol, Info * info);
 
 #endif

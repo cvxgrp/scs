@@ -13,16 +13,31 @@ static void transpose (Data * d, Work * w);
 
 static idxint totCgIts = 0;
 static idxint lastNCgIts = 0;
+static struct timeval tic_linsys_start;
+static pfloat totalSolveTime;
+
+void lTic(void) {
+    gettimeofday(&tic_linsys_start, NULL);
+}
+pfloat lTocq(void) {
+    struct timeval tic_timestop;
+    gettimeofday(&tic_timestop, NULL);
+    return tic_timestop.tv_sec*1e3 + tic_timestop.tv_usec/1e3 - tic_linsys_start.tv_sec*1e3 - tic_linsys_start.tv_usec/1e3;
+}
 
 char * getLinSysSummary(Info * info) {
     char str[80];
-    idxint len = sprintf(str, "Average CG iterations: %2.2f\n", (pfloat) totCgIts / info->iter );
+    idxint len = sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %2.2f ms\n", (pfloat) totCgIts / info->iter, totalSolveTime / info->iter);
+    totCgIts = 0;
+    lastNCgIts = 0;
+    totalSolveTime = 0;
     return strndup(str, len);
 }
 
 idxint privateInitWork(Data * d, Work * w){
   char str[80];
   idxint len = sprintf(str,"sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
+  totalSolveTime = 0.0;
   w->method = strndup(str, len);
   w->p = scs_malloc(sizeof(Priv));
   w->p->p = scs_malloc((d->n)*sizeof(pfloat));
@@ -82,7 +97,8 @@ void freePriv(Work * w){
 void solveLinSys(Data *d, Work * w, pfloat * b, const pfloat * s, idxint iter){
     idxint cgIts;
     pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b,d->n) / POWF(iter + 1, (pfloat) CG_EXPONENT);
-	/* solves Mx = b, for x but stores result in b */
+	lTic();
+    /* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
 	CGaccumByAtrans(d, &(b[d->n]), b);
    	/* solves (I+A'A)x = b, s warm start, solution stored in b */
@@ -100,6 +116,7 @@ void solveLinSys(Data *d, Work * w, pfloat * b, const pfloat * s, idxint iter){
         }
         #endif
     }
+    totalSolveTime += lTocq();
 }
 
 static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint max_its, pfloat tol){

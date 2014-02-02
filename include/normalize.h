@@ -4,13 +4,13 @@
 #define MIN_SCALE 1e-2
 #define MAX_SCALE 1e3
 
-void normalize(Data * d, Work * w, Cone * k){
+void normalizeA(Data * d, Work * w, Cone * k){
     
 	pfloat * D = scs_calloc(d->m, sizeof(pfloat));
 	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
 	
 	idxint i, j, count;
-	pfloat wrk, meanNormRowA, *nms;
+	pfloat wrk, *nms;
 
 	/* heuristic rescaling, seems to do well with a scaling of about 4 */
 	w->scale =  4; /*MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1); */
@@ -90,40 +90,24 @@ void normalize(Data * d, Work * w, Cone * k){
 		else if (E[i] > MAX_SCALE) E[i] = MAX_SCALE;
         scaleArray(&(d->Ax[d->Ap[i]]), 1.0/E[i], d->Ap[i+1] - d->Ap[i]);
 	}
-	/* scale b */
-	for (i = 0; i < d->m; ++i){
-		d->b[i] /= D[i];
-	}
-	w->sc_b = 1/MAX(calcNorm(d->b,d->m),MIN_SCALE);
-	scaleArray(d->b, w->sc_b, d->m);
-	/* scale c */
-	for (i = 0; i < d->n; ++i){
-		d->c[i] /= E[i];
-	}
-	
-	nms = scs_calloc(d->m,sizeof(pfloat));
-	for(i = 0; i < d->n; ++i){
-		for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
-			wrk = d->Ax[j];
-			nms[d->Ai[j]] += wrk*wrk;
-		}
-	}
-    meanNormRowA = 0.0;
-	for (i=0; i < d->m; ++i){
-		meanNormRowA += sqrt(nms[i])/d->m;
-	}
-	w->sc_c = meanNormRowA/MAX(calcNorm(d->c,d->n),MIN_SCALE);
-	scaleArray(d->c, w->sc_c, d->n);
 
-	w->D = D;
-	w->E = E;
+    nms = scs_calloc(d->m,sizeof(pfloat));
+    for(i = 0; i < d->n; ++i){
+        for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
+            wrk = d->Ax[j];
+            nms[d->Ai[j]] += wrk*wrk;
+        }
+    }
+    w->meanNormRowA = 0.0;
+    for (i=0; i < d->m; ++i){
+        w->meanNormRowA += sqrt(nms[i])/d->m;
+    }
+    scs_free(nms);
+    
+    w->D = D;
+    w->E = E;
+    scaleArray(d->Ax, w->scale, d->Ap[d->n]);
 
-	scs_free(nms);
-
-    /* heuristic scaling factor */
-    scaleArray(d->Ax,w->scale, d->Ap[d->n]);
-    scaleArray(d->b,w->scale,d->m);
-    scaleArray(d->c,w->scale,d->n);
     /*
        scs_printf("norm D is %4f\n", calcNorm(D,d->m));
        scs_printf("norm E is %4f\n", calcNorm(E,d->n));
@@ -131,6 +115,24 @@ void normalize(Data * d, Work * w, Cone * k){
        scs_printf("norm b is %4f\n", calcNorm(d->b,d->m));
        scs_printf("norm c is %4f\n", calcNorm(d->c,d->n));
      */
+}
+
+void normalizeBC(Data * d, Work * w) {
+	idxint i;
+	pfloat *D = w->D, *E = w->E;
+    /* scale b */
+    for (i = 0; i < d->m; ++i){
+        d->b[i] /= D[i];
+    }
+    w->sc_b = 1/MAX(calcNorm(d->b,d->m),MIN_SCALE);
+    /* scale c */
+    for (i = 0; i < d->n; ++i){
+        d->c[i] /= E[i];
+    }
+    w->sc_c = w->meanNormRowA/MAX(calcNorm(d->c,d->n),MIN_SCALE);
+    
+    scaleArray(d->b, w->sc_b * w->scale, d->m);
+    scaleArray(d->c, w->sc_c * w->scale, d->n);
 }
 
 void calcScaledResids(Data * d, Work * w, struct residuals * r) {
@@ -179,34 +181,59 @@ pfloat calcScaledNormInf(const pfloat *a, const pfloat * s, idxint l){
     return max;
 }
 
-void unNormalize(Data *d, Work * w, Sol * sol){
-	idxint i, j;
+void normalizeWarmStart(Data *d, Work * w){
+	idxint i;
 	pfloat * D = w->D;
 	pfloat * E = w->E;
+    pfloat * x = w->u;
+    pfloat * y = &(w->u[d->n]);
+    pfloat * s = &(w->v[d->n]);
 	for (i = 0; i < d->n; ++i){
-		sol->x[i] /= (E[i] * w->sc_b);
+		x[i] *= (E[i] * w->sc_b);
 	}
 	for (i = 0; i < d->m; ++i){
-		sol->y[i] /= (D[i] * w->sc_c);
+		y[i] *= (D[i] * w->sc_c);
 	}
 	for (i = 0; i < d->m; ++i){
-		sol->s[i] *= D[i]/(w->sc_b * w->scale);
+		s[i] /= D[i]/(w->sc_b * w->scale);
 	}
-    for (i = 0; i < d->n; ++i){
-		d->c[i] *= E[i]/(w->sc_c * w->scale);
-	}
-	for (i = 0; i < d->m; ++i){
-		d->b[i] *= D[i]/(w->sc_b * w->scale);
-	}
+}
+
+void unNormalizeA(Data *d, Work * w) {
+    idxint i, j;
+    pfloat * D = w->D;
+    pfloat * E = w->E;
+    scaleArray(d->Ax, 1.0/w->scale, d->Ap[d->n]);
     for (i = 0; i < d->n; ++i){
         scaleArray(&(d->Ax[d->Ap[i]]), E[i], d->Ap[i+1] - d->Ap[i]);
     }   
     for(i = 0; i < d->n; ++i){
         for(j = d->Ap[i]; j < d->Ap[i+1]; ++j) {
             d->Ax[j] *= D[d->Ai[j]];
-        }   
+        } 
     }
-    scaleArray(d->Ax,1.0/w->scale, d->Ap[d->n]);
+}
+
+
+void unNormalizeSolBC(Data *d, Work * w, Sol * sol){
+    idxint i;
+    pfloat * D = w->D;
+    pfloat * E = w->E;
+    for (i = 0; i < d->n; ++i){
+        sol->x[i] /= (E[i] * w->sc_b);
+    }
+    for (i = 0; i < d->m; ++i){
+        sol->y[i] /= (D[i] * w->sc_c);
+    }
+    for (i = 0; i < d->m; ++i){
+        sol->s[i] *= D[i]/(w->sc_b * w->scale);
+    }
+    for (i = 0; i < d->n; ++i){
+        d->c[i] *= E[i]/(w->sc_c * w->scale);
+    }
+    for (i = 0; i < d->m; ++i){
+        d->b[i] *= D[i]/(w->sc_b * w->scale);
+    }
 }
 
 #endif

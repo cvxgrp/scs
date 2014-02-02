@@ -1,4 +1,5 @@
 #include "private.h"
+#include <sys/time.h>
 
 /* forward declare */
 idxint LDLInit(cs * A, idxint P[], pfloat **info);
@@ -6,8 +7,25 @@ idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs ** L, pfloat **D);
 void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp);
 idxint factorize(Data * d,Work * w);
 
+static struct timeval tic_linsys_start;
+static pfloat factorizeTime;
+static pfloat totalSolveTime;
+
+void lTic(void) {
+    gettimeofday(&tic_linsys_start, NULL);
+}
+
+pfloat lTocq(void) {
+    struct timeval tic_timestop;
+    gettimeofday(&tic_timestop, NULL);
+    return tic_timestop.tv_sec*1e3 + tic_timestop.tv_usec/1e3 - tic_linsys_start.tv_sec*1e3 - tic_linsys_start.tv_usec/1e3;
+}
+
 char * getLinSysSummary(Info * info) {
-    return NULL;
+    char str[80];
+    idxint len = sprintf(str, "Factorization time: %2.2f s, avg solve time: %2.2f ms\n", factorizeTime / 1e3, totalSolveTime / info->iter );
+    totalSolveTime = 0;
+    return strndup(str, len);
 }
 
 void freePriv(Work * w){
@@ -25,7 +43,9 @@ void freePriv(Work * w){
 void solveLinSys(Data * d, Work * w, pfloat * b, const pfloat * s, idxint iter){
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
+  lTic();
   LDLSolve(b, b, w->p->L, w->p->D, w->p->P, w->p->bp);
+  totalSolveTime += lTocq();
 }
 
 idxint privateInitWork(Data * d, Work * w){ 
@@ -90,18 +110,18 @@ cs * formKKT(Data * d){
 
 
 idxint factorize(Data * d,Work * w){
-	/*tic(); */
 	pfloat *info;
     idxint *Pinv, amd_status, ldl_status;
     cs *C, * K = formKKT(d);
 	if (!K){
         return -1;
     }
-	amd_status = LDLInit(K, w->p->P, &info);
+	lTic();
+    amd_status = LDLInit(K, w->p->P, &info);
 	if (amd_status < 0) return(amd_status);
 	#ifdef EXTRAVERBOSE
         if(d->VERBOSE) {
-            scs_printf("KKT matrix factorization info:\n");
+            scs_printf("Matrix factorization info:\n");
         #ifdef DLONG
 		    amd_l_info(info);
         #else
@@ -113,6 +133,8 @@ idxint factorize(Data * d,Work * w){
 	C = cs_symperm(K, Pinv, 1); 
 	ldl_status = LDLFactor(C, NULL, NULL, &w->p->L, &w->p->D);
     cs_spfree(C);cs_spfree(K);scs_free(Pinv);scs_free(info);
+    factorizeTime = lTocq();
+    totalSolveTime = 0.0;
 	return(ldl_status);
 }
 

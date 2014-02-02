@@ -280,7 +280,7 @@ if (isfield(settings,'ALPHA'))
 end
 
 % write_scs_data(data,K,pars)
-[ yy, xx, s, info ] = cvx_run_solver( @scs, data, K, pars, 'xx', 'yy', 'info', settings, 3 );
+[ yy, xx, info ] = cvx_run_solver( @scs, data, K, pars, 'xx', 'yy', 'info', settings, 3 );
 
 if add_row,
     xx = xx(2:end);

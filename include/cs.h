@@ -10,7 +10,7 @@ typedef struct cs_sparse    /* matrix in compressed-column or triplet form */
     idxint n ;         /* number of columns */
     idxint *p ;        /* column pointers (size n+1) or col indices (size nzmax) */
     idxint *i ;        /* row indices, size nzmax */
-    pfloat *x ;     /* numerical values, size nzmax */
+    pfloat *x ;        /* numerical values, size nzmax */
     idxint nz ;        /* # of entries in triplet matrix, -1 for compressed-col */
 } cs ;
 

@@ -6,6 +6,19 @@
 
 void freeMex(Data * d, Cone * k);
 
+idxint parseWarmStart(const mxArray * p_mex, pfloat ** p, idxint l) {
+    *p = scs_calloc(l, sizeof(pfloat));
+    if (p_mex == NULL){
+        return 0;
+    } else if (mxIsSparse(p_mex) || (idxint)*mxGetDimensions(p_mex) != l) {
+        scs_printf("Error parsing warm start input (make sure vectors are not sparse and of correct size), running without full warm-start");
+        return 0;
+    } else {
+        memcpy(*p, mxGetPr(p_mex), l*sizeof(pfloat));
+        return 1;
+    }
+}
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   /* matlab usage: scs(data,cone,params); */
@@ -44,7 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     scs_free(d); scs_free(k);
     mexErrMsgTxt("Input vector c must be in dense format (pass in full(c))");
   }
-
+  
   const mxArray *cone = prhs[1];
   const mxArray *params = prhs[2];
   d->n = (idxint)*(mxGetDimensions(c_mex));
@@ -155,9 +168,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   */
   d->Ap = (idxint *)mxGetJc(A_mex);
   d->Ai = (idxint *)mxGetIr(A_mex);
-  Sol sol;
+  
+  /* warm-start inputs */
+  Sol sol = { 0 };
+  d->WARM_START = parseWarmStart((mxArray *) mxGetField(data,0,"x"), &(sol.x), d->n);
+  d->WARM_START |= parseWarmStart((mxArray *) mxGetField(data,0,"y"), &(sol.y), d->m);
+  d->WARM_START |= parseWarmStart((mxArray *) mxGetField(data,0,"s"), &(sol.s), d->m);
+  
   Info info;
-
   idxint status = scs(d,k,&sol,&info);
 
   plhs[0] = mxCreateDoubleMatrix(0, 0, mxREAL);
