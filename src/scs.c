@@ -110,9 +110,9 @@ void updateWork(Data * d, Work * w, Sol * sol) {
 
 idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info)
 {
-    tic();
     idxint i;
     struct residuals r;
+    tic();
     info->statusVal = 0; /* not yet converged */
     updateWork(d, w, sol);
     if(d->VERBOSE) printHeader(d, w, k);
@@ -245,6 +245,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter){
 static pfloat calcPrimalResid(Data * d, Work * w, pfloat * x, pfloat * s, pfloat tau, pfloat *nmAxs) {
     idxint i;
     pfloat pres = 0, scale, * pr = w->pr, *D = w->D;
+    *nmAxs = 0;
     memset(pr, 0, d->m * sizeof(pfloat));
     accumByA(d,x,pr);
     addScaledArray(pr,s,d->m,1.0);  /* pr = Ax + s */
@@ -277,6 +278,7 @@ static pfloat calcDualResid(Data * d, Work * w, pfloat * y, pfloat tau, pfloat *
 static pfloat fastCalcPrimalResid(Data * d, Work * w, pfloat * nmAxs) {
     idxint i;
     pfloat pres = 0, scale, * pr = w->pr, *D = w->D, tau = ABS(w->u[w->l-1]);
+    *nmAxs = 0;
     memcpy(pr, &(w->u[d->n]), d->m * sizeof(pfloat)); /* overwrite pr */
     addScaledArray(pr, &(w->u_prev[d->n]), d->m, d->ALPHA-2);
     addScaledArray(pr, &(w->u_t[d->n]), d->m, 1-d->ALPHA);
