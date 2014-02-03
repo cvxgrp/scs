@@ -1,6 +1,3 @@
 add profiling
 connect matlab blas, lapack libs
 connect numpy blas, lapack libs
-add warm-starting ability to matlab + python interfaces
-add ability to return+reuse factorization
-add solved/inaccurate token

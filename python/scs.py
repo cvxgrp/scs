@@ -5,7 +5,7 @@ from warnings import warn
 from scipy import sparse
 
 
-def solve(probdata, cone, opts=None, USE_INDIRECT=False):
+def solve(probdata, cone, opts={}, USE_INDIRECT=False):
     """ This Python routine "unpacks" scipy sparse matrix A into the
         data structures that we need for calling scs routine.
         
@@ -19,6 +19,14 @@ def solve(probdata, cone, opts=None, USE_INDIRECT=False):
     A = probdata['A']
     b = probdata['b']
     c = probdata['c']
+
+    warm = {}
+    if 'x' in probdata:
+        warm['x'] = probdata['x']
+    if 'y' in probdata:
+        warm['y'] = probdata['y']
+    if 's' in probdata:
+        warm['s'] = probdata['s']
 
     if A is None or b is None or c is None:
         raise TypeError("Incomplete data specification")
@@ -38,12 +46,6 @@ def solve(probdata, cone, opts=None, USE_INDIRECT=False):
 
     Adata, Aindices, Acolptr = A.data, A.indices, A.indptr
     if USE_INDIRECT:
-        if opts is not None:
-            return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts)
-        else:
-            return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone)
+        return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts, warm)
     else:
-        if opts is not None:
-            return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts)
-        else:
-            return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone)
+        return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts, warm)

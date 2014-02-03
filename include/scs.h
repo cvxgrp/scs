@@ -29,7 +29,7 @@ struct SOL_VARS {
 /* contains terminating information */
 struct INFO {
 	idxint iter;
-	char status[16];
+	char status[32];
 	idxint statusVal; /* status as idxint */
     pfloat pobj;
 	pfloat dobj;
@@ -67,7 +67,7 @@ scs_init: allocates memory (direct factorizes matrix [I A; A^T -I])
 scs_solve: can be called many times with different b,c data for one init call
 scs_finish: cleans up the memory (one per init call)
 */
-Work * scs_init(Data * d, Cone * k, Sol * sol, Info * info);
+Work * scs_init(Data * d, Cone * k);
 idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
 void scs_finish(Data * d, Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */

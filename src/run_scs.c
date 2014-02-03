@@ -15,6 +15,33 @@ void printSol(Data * d, Sol * sol, Info * info);
 #define RHOX 1e-3
 #define TEST_WARM_START 1
 
+static pfloat U, V;
+static idxint phase = 0;
+
+#define PI 3.141592654
+double rand_gauss()
+{
+    pfloat Z;
+
+    if(phase == 0) {
+        U = (rand() + 1.) / (RAND_MAX + 2.);
+        V = rand() / (RAND_MAX + 1.);
+        Z = sqrt(-2 * log(U)) * sin(2 * PI * V); 
+    } else
+        Z = sqrt(-2 * log(U)) * cos(2 * PI * V); 
+
+    phase = 1 - phase;
+
+    return Z;
+}
+
+void perturbVector(pfloat * v, idxint l){
+    idxint i;
+    for(i=0;i<l;i++){
+        v[i] += 0.01*rand_gauss();
+    }   
+}
+
 int main(int argc, char **argv)
 {
 	FILE * fp;
@@ -35,13 +62,16 @@ int main(int argc, char **argv)
 	fclose(fp);
     scs_printf("solve once using scs\n");
     scs(d,k,&sol,&info);
-
     if(TEST_WARM_START) {
         scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
-        freeSol(&sol); /* clear solution */
-        w =  scs_init(d, k, &sol, &info);
+        /* warm starts stored in Sol */
+        d->WARM_START = 1;
+        w =  scs_init(d, k);
         for (i=0;i<NUM_TRIALS;i++)
         {
+          /* perturb b and c */
+          perturbVector(d->b, d->m);
+          perturbVector(d->c, d->n);
           scs_solve(w, d, k, &sol, &info);
         }
         scs_finish(d, w);

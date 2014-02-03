@@ -8,7 +8,7 @@ ij = np.array([[0,1,2,3],[0,1,2,3]])
 A = sparse.csc_matrix(([-1.,-1.,1.,1.], ij), (4,4))
 b = np.array([0.,0.,1,1])
 c = np.array([1.,1.,-1,-1])
-cone = {'l': 1,'ep': 1}
+cone = {'l': 4}
 
 print c
 print b
@@ -30,6 +30,13 @@ print sol
 sol = scs.solve(data,cone, opts, USE_INDIRECT = True)
 print sol
 
-print getrefcount(sol['x'])
-h = hpy()
-print h.heap()
+#print getrefcount(sol['x'])
+#h = hpy()
+#print h.heap()
+
+data['x'] = sol['x']
+data['y'] = sol['y']
+data['s'] = sol['s']
+sol = scs.solve(data,cone, opts)
+sol = scs.solve(data,cone, opts, USE_INDIRECT = True)
+

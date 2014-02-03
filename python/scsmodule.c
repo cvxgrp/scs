@@ -70,10 +70,11 @@ static int printErr(char * key) {
     return -1; 
 }
 
-static idxint parseWarmStart(PyArrayObject *x0, pfloat ** x, PyArrayObject ** px0, idxint l){
+static idxint getWarmStart(char * key, pfloat ** x, PyArrayObject ** px0, idxint l, PyObject * warm) {
     *x = scs_calloc(l, sizeof(pfloat));
-    if(x0){
-        if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l){
+    PyArrayObject *x0 = (PyArrayObject *) PyDict_GetItemString(warm, key);
+    if(x0) {
+        if(!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l) {
             scs_printf("Error parsing warm-start input\n");
             return 0;
         } else {
@@ -239,19 +240,19 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       */
 
   /* data structures for arguments */
-  PyArrayObject *Ax, *Ai, *Ap, *c, *b, *x0 = NULL, *y0 = NULL, *s0 = NULL;
-  PyObject *cone, *opts;
+  PyArrayObject *Ax, *Ai, *Ap, *c, *b;
+  PyObject *cone, *opts, *warm = NULL;
   struct ScsPyData ps = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
   /* scs data structures */
   Data * d = scs_calloc(sizeof(Data),1); 
   Cone * k = scs_calloc(sizeof(Cone),1); 
 
-  static char *kwlist[] = {"shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", "x0", "y0", "s0", NULL};
+  static char *kwlist[] = {"shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", "warm", NULL};
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-  static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!O!";
+  static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!";
 #else
-  static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!O!";
+  static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!";
 #endif
     
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
@@ -263,9 +264,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &c,
       &PyDict_Type, &cone,
       &PyDict_Type, &opts,
-      &PyArray_Type, &x0,
-      &PyArray_Type, &y0,
-      &PyArray_Type, &s0)
+      &PyDict_Type, &warm)
     ) { return NULL; }
   
   if (d->m < 0) {
@@ -343,10 +342,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   
   /* Solve! */
   Sol sol = { 0 };
-  d->WARM_START = parseWarmStart(x0, &(sol.x), &(ps.x0), d->n);
-  d->WARM_START |= parseWarmStart(y0, &(sol.y), &(ps.y0), d->m);
-  d->WARM_START |= parseWarmStart(s0, &(sol.s), &(ps.s0), d->m);
-
+  d->WARM_START = 0;
+  if (warm) {
+    d->WARM_START = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm); 
+    d->WARM_START |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
+    d->WARM_START |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+  }
   Info info;
   scs(d, k, &sol, &info);
 

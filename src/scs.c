@@ -39,7 +39,7 @@ static void printHeader(Data * d, Work * w, Cone * k);
 static void printFooter(Data * d, Info * info); 
 static void freeWork(Work * w);
 static void projectLinSys(Data * d,Work * w, idxint iter);
-static Work * initWork(Data * d, Cone * k, Sol * sol);
+static Work * initWork(Data * d, Cone * k);
 static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter);
 static idxint exactConverged(Data * d, Work * w, struct residuals * r);
 static idxint validate(Data * d, Cone * k);
@@ -54,8 +54,9 @@ void solveLinSys(Data * d, Work * w, pfloat * b, const pfloat * s, idxint iter);
 void freePriv(Work * w);
 
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
-    Work * w = scs_init(d, k, sol, info);
+    Work * w = scs_init(d, k);
     if (!w) {
+        failureDefaultReturn(d, sol, info);
         return FAILURE; /* scs_finish called in initWork */
     }
     scs_solve(w, d, k, sol, info);
@@ -63,21 +64,18 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
     return info->statusVal;
 }
 
-Work * scs_init(Data * d, Cone * k, Sol * sol, Info * info) {
+Work * scs_init(Data * d, Cone * k) {
     Work * w;
     if(d == NULL || k == NULL) {
-		failureDefaultReturn(d, sol, info);
         return NULL;
 	}
     #ifndef NOVALIDATE
     if (validate(d,k) < 0) {
-        failureDefaultReturn(d, sol, info);
         return NULL;
     }
     #endif
-   	w = initWork(d,k,sol); /* pass in sol for warm-starting */
+   	w = initWork(d,k); /* pass in sol for warm-starting */
 	if (!w) {
-        failureDefaultReturn(d, sol, info);
         return NULL;
     }
     return w;
@@ -124,8 +122,7 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info)
 		projectCones(d,w,k,i);
 		updateDualVars(d,w);
 	    
-        info->statusVal = converged(d,w,&r,i);
-		if (info->statusVal != 0) break;
+		if ((info->statusVal = converged(d,w,&r,i)) != 0) break;
 
 		if (i % PRINT_INTERVAL == 0){
 			if (d->VERBOSE) printSummary(i,&r);
@@ -398,12 +395,19 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info){
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
+    idxint i;
     memset(w->v, 0, d->n*sizeof(pfloat));
     memcpy(w->u,sol->x,d->n*sizeof(pfloat));
     memcpy(&(w->u[d->n]),sol->y,d->m*sizeof(pfloat));
     memcpy(&(w->v[d->n]),sol->s,d->m*sizeof(pfloat));
     w->u[w->l-1] = 1.0;
     w->v[w->l-1] = 0.0;
+    #ifndef NOVALIDATE
+    for (i = 0; i < w->l; ++i) {
+        if(isnan(w->u[i]) || isinf(w->u[i])) w->u[i] = 0;
+        if(isnan(w->v[i]) || isinf(w->v[i])) w->v[i] = 0;
+    }
+    #endif
     if (d->NORMALIZE) normalizeWarmStart(d, w);
 }
 
@@ -415,7 +419,7 @@ static void coldStartVars(Data * d, Work * w) {
 }
 
 /* pass in sol for warm-starting */
-static Work * initWork(Data *d, Cone * k, Sol * sol) {
+static Work * initWork(Data *d, Cone * k) {
     idxint status;
 	Work * w = scs_malloc(sizeof(Work));
     if(d->NORMALIZE) {
@@ -543,7 +547,7 @@ static void projectCones(Data *d,Work * w,Cone * k, idxint iter){
 }
 
 static idxint solved(Data * d, Sol * sol, Info * info, pfloat tau){
-    strcpy(info->status,"Solved");
+    strcpy(info->status, info->statusVal != 0 ? "Solved" : "Solved/Inaccurate");
     scaleArray(sol->x,1.0/tau,d->n);
     scaleArray(sol->y,1.0/tau,d->m);
     scaleArray(sol->s,1.0/tau,d->m);
@@ -559,7 +563,7 @@ static idxint indeterminate(Data * d, Sol * sol, Info * info){
 }
 
 static idxint infeasible(Data * d, Sol * sol, Info * info){
-    strcpy(info->status,"Infeasible");
+    strcpy(info->status, info->statusVal != 0 ? "Infeasible" : "Infeasible/Inaccurate");
     /*scaleArray(sol->y,-1/ip_y,d->m); */
     scaleArray(sol->x,NAN,d->n);
     scaleArray(sol->s,NAN,d->m);
@@ -567,7 +571,7 @@ static idxint infeasible(Data * d, Sol * sol, Info * info){
 }
 
 static idxint unbounded(Data * d, Sol * sol, Info * info){
-    strcpy(info->status,"Unbounded");
+    strcpy(info->status, info->statusVal != 0 ? "Unbounded" : "Unbounded/Inaccurate");
     /*scaleArray(sol->x,-1/ip_x,d->n); */
     scaleArray(sol->y,NAN,d->m);
     return UNBOUNDED;
@@ -690,7 +694,7 @@ static void printFooter(Data * d, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n"); 
 	}
-    scs_printf("Time taken: %.4f seconds\n",info->time/1e3);
+    scs_printf("Time taken: %.4f seconds (not including setup)\n",info->time/1e3);
 
     if (linSysStr) {
         scs_printf("%s",linSysStr);
