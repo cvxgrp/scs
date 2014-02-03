@@ -352,7 +352,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   scs(d, k, &sol, &info);
 
   /* create output (all data is *deep copied*) */
-  /* TODO: request CVXOPT API for constructing from existing pointer */
   /* x */
   /* matrix *x; */
   /* if(!(x = Matrix_New(n,1,DOUBLE))) */

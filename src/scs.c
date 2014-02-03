@@ -208,11 +208,11 @@ static void failureDefaultReturn(Data * d, Sol * sol, Info * info){
     info->statusVal = FAILURE;
     info->time = NAN;
     strcpy(info->status,"Failure");
-    sol->x = scs_malloc(sizeof(pfloat)*d->n);
+    if(!sol->x) sol->x = scs_malloc(sizeof(pfloat)*d->n);
     scaleArray(sol->x,NAN,d->n);
-    sol->y = scs_malloc(sizeof(pfloat)*d->m);
+    if(!sol->y) sol->y = scs_malloc(sizeof(pfloat)*d->m);
     scaleArray(sol->y,NAN,d->m);
-    sol->s = scs_malloc(sizeof(pfloat)*d->m);
+    if(!sol->s) sol->s = scs_malloc(sizeof(pfloat)*d->m);
     scaleArray(sol->s,NAN,d->m);
     scs_printf("FAILURE\n");
 }
@@ -694,7 +694,7 @@ static void printFooter(Data * d, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n"); 
 	}
-    scs_printf("Time taken: %.4f seconds (not including setup)\n",info->time/1e3);
+    scs_printf("Solve time: %1.2es (post-setup)\n",info->time/1e3);
 
     if (linSysStr) {
         scs_printf("%s",linSysStr);

@@ -23,7 +23,7 @@ pfloat lTocq(void) {
 
 char * getLinSysSummary(Info * info) {
     char str[80];
-    idxint len = sprintf(str, "Factorization time: %2.2f s, avg solve time: %2.2f ms\n", factorizeTime / 1e3, totalSolveTime / (info->iter + 1));
+    idxint len = sprintf(str, "Factorization time: %1.2es, avg solve time: %1.2es\n", factorizeTime / 1e3, totalSolveTime / (info->iter + 1) / 1e3);
     totalSolveTime = 0;
     return strndup(str, len);
 }

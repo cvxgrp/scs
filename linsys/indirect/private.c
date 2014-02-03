@@ -27,7 +27,7 @@ pfloat lTocq(void) {
 
 char * getLinSysSummary(Info * info) {
     char str[80];
-    idxint len = sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %2.2f ms\n", (pfloat) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1));
+    idxint len = sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %1.2es\n", (pfloat) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
     totCgIts = 0;
     lastNCgIts = 0;
     totalSolveTime = 0;
