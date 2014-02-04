@@ -22,7 +22,7 @@ RANLIB = ranlib
 
 ############ OPENMP: ############
 # uncomment below to allow openmp (multi-threaded matrix multiplies):
-# set the number of threads to, for example, 4 using:
+# set the number of threads to, for example, 4 by entering the command:
 # export OMP_NUM_THREADS=4
 
 # CFLAGS += -fopenmp

@@ -23,7 +23,7 @@ idxint initCone(Cone * k) {
         c.Xs = scs_calloc(nMax*nMax,sizeof(pfloat));
         c.Z = scs_calloc(nMax*nMax,sizeof(pfloat));
         c.e = scs_calloc(nMax,sizeof(pfloat));
-        return(c.Xs && c.Z && c.e);
+        if(!c.Xs || !c.Z || !c.e) return -1;
     } else {
         c.Xs = NULL;
         c.Z = NULL;

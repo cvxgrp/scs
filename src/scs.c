@@ -53,11 +53,13 @@ char * getLinSysSummary(Info * info);
 void solveLinSys(Data * d, Work * w, pfloat * b, const pfloat * s, idxint iter);
 void freePriv(Work * w);
 
+/* this just calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
     Work * w = scs_init(d, k);
     if (!w) {
+        scs_printf("ERROR: Could not initialize work\n");
         failureDefaultReturn(d, sol, info);
-        return FAILURE; /* scs_finish called in initWork */
+        return FAILURE; 
     }
     scs_solve(w, d, k, sol, info);
     scs_finish(d, w);
@@ -65,27 +67,26 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
 }
 
 Work * scs_init(Data * d, Cone * k) {
-    Work * w;
-    if(d == NULL || k == NULL) {
+    if(!d || !k) {
+        scs_printf("ERROR: Missing Data or Cone input\n");
         return NULL;
-	}
+    }
     #ifndef NOVALIDATE
     if (validate(d,k) < 0) {
+        scs_printf("ERROR: Validation returned failure\n");
         return NULL;
     }
     #endif
-   	w = initWork(d,k); /* pass in sol for warm-starting */
-	if (!w) {
-        return NULL;
-    }
-    return w;
+    return initWork(d,k);
 }
 
 void scs_finish(Data * d, Work * w){
-    if(d->NORMALIZE) unNormalizeA(d,w);
     finishCone();
-    freePriv(w);
-    freeWork(w);
+    if(w) {
+        if(d && d->NORMALIZE) unNormalizeA(d,w);
+        freePriv(w);
+        freeWork(w);
+    }
 }
 
 void updateWork(Data * d, Work * w, Sol * sol) {
@@ -98,9 +99,9 @@ void updateWork(Data * d, Work * w, Sol * sol) {
     } else {
         coldStartVars(d,w);
     }
-    memcpy(w->h,d->c,d->n*sizeof(pfloat));
-	memcpy(&(w->h[d->n]),d->b,d->m*sizeof(pfloat));
-	memcpy(w->g,w->h,(w->l-1)*sizeof(pfloat));
+    memcpy(w->h,d->c,d->n * sizeof(pfloat));
+	memcpy(&(w->h[d->n]),d->b,d->m * sizeof(pfloat));
+	memcpy(w->g,w->h,(d->n + d->m) * sizeof(pfloat));
     solveLinSys(d,w,w->g, NULL, -1);
     scaleArray(&(w->g[d->n]),-1,d->m);
 	w->gTh = innerProd(w->h, w->g, w->l-1); 
@@ -110,19 +111,23 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info)
 {
     idxint i;
     struct residuals r;
+    if(!d || !k || !sol || !info || !w || !d->b || !d->c) {
+        scs_printf("ERROR: NULL input\n");
+        return FAILURE;
+    }
     tic();
     info->statusVal = 0; /* not yet converged */
     updateWork(d, w, sol);
     if(d->VERBOSE) printHeader(d, w, k);
     /* scs: */
-	for (i=0; i < d->MAX_ITERS; ++i) {
-		memcpy(w->u_prev, w->u, w->l*sizeof(pfloat));
-		
-		projectLinSys(d,w,i);
-		projectCones(d,w,k,i);
-		updateDualVars(d,w);
-	    
-		if ((info->statusVal = converged(d,w,&r,i)) != 0) break;
+    for (i=0; i < d->MAX_ITERS; ++i) {
+        memcpy(w->u_prev, w->u, w->l*sizeof(pfloat));
+
+        projectLinSys(d,w,i);
+        projectCones(d,w,k,i);
+        updateDualVars(d,w);
+
+        if ((info->statusVal = converged(d,w,&r,i)) != 0) break;
 
 		if (i % PRINT_INTERVAL == 0){
 			if (d->VERBOSE) printSummary(i,&r);
@@ -140,7 +145,7 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info)
 
 static idxint validate(Data * d, Cone * k) {
     idxint i, rMax, Anz;
-    if (!d->Ax || !d->Ai || !d->Ap || !d->b || !d->c) {
+    if (!d->Ax || !d->Ai || !d->Ap) {
         scs_printf("data incompletely specified\n");
         return -1;
     }
@@ -420,51 +425,52 @@ static void coldStartVars(Data * d, Work * w) {
 
 /* pass in sol for warm-starting */
 static Work * initWork(Data *d, Cone * k) {
-    idxint status;
-	Work * w = scs_malloc(sizeof(Work));
-    if(d->NORMALIZE) {
-		normalizeA(d,w,k);
-	}
-	else {
-		w->D = NULL;
-		w->E = NULL;
-		w->meanNormRowA = 0.0; /* unused */
-        w->sc_c = 1.0;
-		w->sc_b = 1.0;
-		w->scale = 1.0;
-	}
-	w->l = d->n+d->m+1;
-	/* allocate workspace: */
+    Work * w = scs_malloc(sizeof(Work));
+    if (!w) {
+        scs_printf("ERROR: allocating work failure\n");
+        return NULL;
+    }
+    w->l = d->n+d->m+1;
+    /* allocate workspace: */
     w->u = scs_malloc(w->l * sizeof(pfloat));
     w->v = scs_malloc(w->l * sizeof(pfloat));
-	w->u_t = scs_malloc(w->l * sizeof(pfloat));
-	w->u_prev = scs_malloc(w->l * sizeof(pfloat));
-	w->h = scs_malloc((w->l-1) * sizeof(pfloat));
+    w->u_t = scs_malloc(w->l * sizeof(pfloat));
+    w->u_prev = scs_malloc(w->l * sizeof(pfloat));
+    w->h = scs_malloc((w->l-1) * sizeof(pfloat));
     w->g = scs_malloc((w->l-1) * sizeof(pfloat));
     w->pr = scs_malloc(d->m * sizeof(pfloat));
     w->dr = scs_malloc(d->n * sizeof(pfloat));
-
-    status = privateInitWork(d, w);
-    if (status < 0){
-		scs_printf("privateInitWork failure: %i\n",(int) status);
-        scs_finish(d, w);
+    if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr || !w->dr){
+        scs_printf("ERROR: work memory allocation failure\n");
+        scs_finish(d,w);
         return NULL;
     }
-    status = initCone(k);
-    if (status < 0){
-        scs_printf("initCone failure: %i\n",(int) status);
-        scs_finish(d, w);
+    if(d->NORMALIZE) {
+        normalizeA(d,w,k);
+    }
+    else {
+        w->D = NULL;
+        w->E = NULL;
+    }
+    if (initCone(k) < 0){
+        scs_printf("ERROR: initCone failure\n");
+        scs_finish(d,w);
+        return NULL;
+    }
+    if (privateInitWork(d, w) < 0) {
+        scs_printf("ERROR: privateInitWork failure\n");
+        scs_finish(d,w);
         return NULL;
     }
     return w;
 }
 
-static void projectLinSys(Data * d,Work * w, idxint iter){
-	/* ut = u + v */
-	memcpy(w->u_t,w->u,w->l*sizeof(pfloat));
-	addScaledArray(w->u_t,w->v,w->l,1.0);
-	
-	scaleArray(w->u_t,d->RHO_X,d->n);
+static void projectLinSys(Data * d,Work * w, idxint iter) {
+    /* ut = u + v */
+    memcpy(w->u_t,w->u,w->l*sizeof(pfloat));
+    addScaledArray(w->u_t,w->v,w->l,1.0);
+
+    scaleArray(w->u_t,d->RHO_X,d->n);
 
 	addScaledArray(w->u_t,w->h,w->l-1,-w->u_t[w->l-1]);
 	addScaledArray(w->u_t, w->h, w->l-1, -innerProd(w->u_t,w->g,w->l-1)/(w->gTh+1));

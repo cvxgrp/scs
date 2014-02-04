@@ -15,11 +15,69 @@ void printSol(Data * d, Sol * sol, Info * info);
 #define RHOX 1e-3
 #define TEST_WARM_START 1
 
+#define PI 3.141592654
+
 static pfloat U, V;
 static idxint phase = 0;
 
-#define PI 3.141592654
-double rand_gauss()
+pfloat rand_gauss();
+void perturbVector(pfloat * v, idxint l);
+
+int main(int argc, char **argv)
+{
+    FILE * fp;
+    idxint i;
+    Cone * k;
+    Data * d;
+    Work * w;
+    Sol sol = { 0 };
+    Info info = { 0 };
+
+    if(open_file(argc, argv, 1, DEMO_PATH, &fp)==-1) return -1;
+    k = scs_calloc(1,sizeof(Cone));
+    d = scs_calloc(1,sizeof(Data));
+    if (read_in_data(fp,d,k) == -1){
+        printf("Error reading in data, aborting.\n");
+        return -1;
+    }
+    fclose(fp);
+    scs_printf("solve once using scs\n");
+    scs(d,k,&sol,&info);
+    if(TEST_WARM_START) {
+        scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
+        /* warm starts stored in Sol */
+        d->WARM_START = 1;
+        w = scs_init(d, k);
+        if (w) {
+            for (i=0;i<NUM_TRIALS;i++)
+            {
+                /* perturb b and c */
+                perturbVector(d->b, d->m);
+                perturbVector(d->c, d->n);
+                scs_solve(w, d, k, &sol, &info);
+            }
+        }
+        scs_printf("finished\n");
+        scs_finish(d, w);
+    }
+    freeData(d,k);
+    freeSol(&sol);
+    return 0;
+}
+
+#ifdef DLONG
+    #define INTRW "%ld"
+#else
+    #define INTRW "%i"
+#endif
+
+#ifndef FLOAT
+    #define FLOATRW "%lf"
+#else
+    #define FLOATRW "%f"
+#endif
+
+pfloat rand_gauss()
 {
     pfloat Z;
     if(phase == 0) {
@@ -39,58 +97,6 @@ void perturbVector(pfloat * v, idxint l){
         v[i] += 0.01*rand_gauss();
     }   
 }
-
-int main(int argc, char **argv)
-{
-	FILE * fp;
-    idxint i;
-    Cone * k;
-    Data * d;
-    Work * w;
-    Sol sol = { 0 };
-    Info info = { 0 };
-    
-    if(open_file(argc, argv, 1, DEMO_PATH, &fp)==-1) return -1;
-	k = scs_calloc(1,sizeof(Cone));
-	d = scs_calloc(1,sizeof(Data));
-	if (read_in_data(fp,d,k) == -1){
-        printf("Error reading in data, aborting.\n");
-        return -1;
-    }
-	fclose(fp);
-    scs_printf("solve once using scs\n");
-    scs(d,k,&sol,&info);
-    if(TEST_WARM_START) {
-        scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
-        /* warm starts stored in Sol */
-        d->WARM_START = 1;
-        w =  scs_init(d, k);
-        for (i=0;i<NUM_TRIALS;i++)
-        {
-          /* perturb b and c */
-          perturbVector(d->b, d->m);
-          perturbVector(d->c, d->n);
-          scs_solve(w, d, k, &sol, &info);
-        }
-        scs_finish(d, w);
-    }
-    
-    freeData(d,k);
-    freeSol(&sol);
-    return 0;
-}
-
-#ifdef DLONG
-    #define INTRW "%ld"
-#else
-    #define INTRW "%i"
-#endif
-
-#ifndef FLOAT
-    #define FLOATRW "%lf"
-#else
-    #define FLOATRW "%f"
-#endif
 
 
 idxint read_in_data(FILE * fp,Data * d, Cone * k){

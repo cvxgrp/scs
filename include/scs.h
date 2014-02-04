@@ -44,7 +44,7 @@ struct WORK {
   pfloat *u, *v, *u_t, *u_prev;
   pfloat *h, *g, *pr, *dr; 
   pfloat gTh, sc_b, sc_c, scale;
-  pfloat nm_b, nm_c, nm_Q, meanNormRowA;
+  pfloat nm_b, nm_c, meanNormRowA;
   pfloat *D, *E;
   idxint l;
   char * method;
