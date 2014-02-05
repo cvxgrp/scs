@@ -9,8 +9,8 @@ static void calcAx(Data * d, Priv * p, const pfloat * x, pfloat * y);
 static idxint cgCustom(Data *d, Priv * p, const pfloat *s, pfloat * b, idxint max_its, pfloat tol);
 static void transpose (Data * d, Priv * p);
 
-static idxint totCgIts = 0;
-static idxint lastNCgIts = 0;
+static idxint totCgIts;
+static idxint lastNCgIts;
 static struct timeval tic_linsys_start;
 static pfloat totalSolveTime;
 
@@ -50,6 +50,8 @@ Priv * initPriv(Data * d) {
   p->Atx = scs_malloc((d->Ap[d->n])*sizeof(pfloat));
   transpose(d,p);
   totalSolveTime = 0;
+  totCgIts = 0;
+  lastNCgIts = 0;
   if (!p->p || !p->r || !p->Ap || !p->tmp || !p->Ati || !p->Atp || !p->Atx){
     freePriv(p);
     return NULL;
@@ -124,7 +126,7 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter){
 static idxint cgCustom(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_its, pfloat tol){
 	/* solves (I+A'A)x = b */
 	/* warm start cg with s */  
-	idxint i = 0, n = d->n;
+	idxint i, n = d->n;
 	pfloat rsold;
     pfloat *p = pr->p; /* cg direction */
 	pfloat *Ap = pr->Ap; /* updated CG direction */
@@ -144,7 +146,7 @@ static idxint cgCustom(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint 
 	memcpy(p,r,n*sizeof(pfloat));
 	rsold=calcNorm(r,n);
 
-	for (i=0; i < max_its; ++i){
+	for (i=0; i < max_its; ++i) {
 		calcAx(d,pr,p,Ap);
 		
 		alpha=(rsold*rsold)/innerProd(p,Ap,n);
@@ -155,7 +157,7 @@ static idxint cgCustom(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint 
         if (rsnew < tol){
             /*scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, rsnew, i+1); */
             return i+1;
-        }   
+        } 
         scaleArray(p,(rsnew*rsnew)/(rsold*rsold),n);
         addScaledArray(p,r,n,1);
         rsold=rsnew;
