@@ -193,8 +193,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   mxSetM(plhs[2], d->m); 
   mxSetN(plhs[2], 1); 
 
-  const char * infoFields[] = {"iter","status","pobj","dobj","resPri","resDual","relGap","time"}; 
-  const idxint numInfoFields = 8;
+  const char * infoFields[] = {"iter","status","pobj","dobj","resPri","resDual","relGap","setupTime","solveTime"}; 
+  const idxint numInfoFields = 9;
   mwSize one[1] = {1};
   mxArray * xm;
   plhs[3] = mxCreateStructArray(1,one,numInfoFields,infoFields);
@@ -227,8 +227,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   /*info.time is millisecs - return value in secs */
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[3], 0, "time", xm);
-  *mxGetPr(xm) = info.time/1e3; 
+  mxSetField(plhs[3], 0, "setupTime", xm);
+  *mxGetPr(xm) = info.setupTime/1e3; 
+
+  /*info.time is millisecs - return value in secs */
+  xm = mxCreateDoubleMatrix(1, 1, mxREAL);
+  mxSetField(plhs[3], 0, "solveTime", xm);
+  *mxGetPr(xm) = info.solveTime/1e3; 
 
   freeMex(d, k);
   return; 

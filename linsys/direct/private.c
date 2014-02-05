@@ -8,7 +8,6 @@ void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp
 idxint factorize(Data * d,Priv * p);
 
 static struct timeval tic_linsys_start;
-static pfloat factorizeTime;
 static pfloat totalSolveTime;
 
 void lTic(void) {
@@ -23,9 +22,10 @@ pfloat lTocq(void) {
 
 char * getLinSysMethod() {return strndup("sparse-direct", 32);}
 
-char * getLinSysSummary(Info * info) {
+char * getLinSysSummary(Priv * p, Info * info) {
     char str[64];
-    idxint len = sprintf(str, "Factorization time: %1.2es, avg solve time: %1.2es\n", factorizeTime / 1e3, totalSolveTime / (info->iter + 1) / 1e3);
+    idxint n = p->L->n;
+    idxint len = sprintf(str, "NNZs in L factor: %li, avg solve time: %1.2es\n", (long) p->L->p[n] + n, totalSolveTime / (info->iter + 1) / 1e3);
     totalSolveTime = 0;
     return strndup(str, len);
 }
@@ -120,7 +120,6 @@ idxint factorize(Data * d, Priv * p){
 	if (!K){
         return -1;
     }
-	lTic();
     amd_status = LDLInit(K, p->P, &info);
 	if (amd_status < 0) return(amd_status);
 	#ifdef EXTRAVERBOSE
@@ -137,7 +136,6 @@ idxint factorize(Data * d, Priv * p){
 	C = cs_symperm(K, Pinv, 1); 
 	ldl_status = LDLFactor(C, NULL, NULL, &p->L, &p->D);
     cs_spfree(C);cs_spfree(K);scs_free(Pinv);scs_free(info);
-    factorizeTime = lTocq();
 	return(ldl_status);
 }
 

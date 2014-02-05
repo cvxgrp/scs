@@ -36,7 +36,7 @@ static void setSolution(Data * d, Work * w, Sol * sol, Info * info);
 static void getInfo(Data * d, Work * w, Sol * sol, Info * info);
 static void printSummary(idxint i, struct residuals *r);
 static void printHeader(Data * d, Work * w, Cone * k);
-static void printFooter(Data * d, Info * info); 
+static void printFooter(Data * d, Work * w, Info * info); 
 static void freeWork(Work * w);
 static void projectLinSys(Data * d,Work * w, idxint iter);
 static Work * initWork(Data * d, Cone * k);
@@ -49,7 +49,7 @@ static void coldStartVars(Data * d, Work * w);
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
-    Work * w = scs_init(d, k);
+    Work * w = scs_init(d, k, info);
     if (!w) {
         scs_printf("ERROR: Could not initialize work\n");
         failureDefaultReturn(d, sol, info);
@@ -60,9 +60,10 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
     return info->statusVal;
 }
 
-Work * scs_init(Data * d, Cone * k) {
-    if(!d || !k) {
-        scs_printf("ERROR: Missing Data or Cone input\n");
+Work * scs_init(Data * d, Cone * k, Info * info) {
+    Work * w;
+    if(!d || !k || !info) {
+        scs_printf("ERROR: Missing Data, Cone or Info input\n");
         return NULL;
     }
     #ifndef NOVALIDATE
@@ -71,7 +72,10 @@ Work * scs_init(Data * d, Cone * k) {
         return NULL;
     }
     #endif
-    return initWork(d,k);
+    tic();
+    w = initWork(d,k);
+    info->setupTime = tocq();
+    return w;
 }
 
 void scs_finish(Data * d, Work * w){
@@ -133,7 +137,7 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info)
 	setSolution(d,w,sol,info);
     info->iter = i;
 	getInfo(d,w,sol,info);
-    if(d->VERBOSE) printFooter(d, info);
+    if(d->VERBOSE) printFooter(d, w, info);
     /* un-normalize sol, b, c but not A */
     if(d->NORMALIZE) unNormalizeSolBC(d,w,sol);
     return info->statusVal;
@@ -207,7 +211,7 @@ static void failureDefaultReturn(Data * d, Sol * sol, Info * info){
     info->dobj = NAN;
     info->iter = -1;
     info->statusVal = FAILURE;
-    info->time = NAN;
+    info->solveTime = NAN;
     strcpy(info->status,"Failure");
     if(!sol->x) sol->x = scs_malloc(sizeof(pfloat)*d->n);
     scaleArray(sol->x,NAN,d->n);
@@ -393,7 +397,7 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info){
             info->dobj = -1;
         }
     }
-    info->time = tocq();
+    info->solveTime = tocq();
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
@@ -695,9 +699,9 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	scs_printf("\n");
 }
 
-static void printFooter(Data * d, Info * info) {
+static void printFooter(Data * d, Work * w, Info * info) {
 	idxint i;
-	char * linSysStr = getLinSysSummary(info);
+	char * linSysStr = getLinSysSummary(w->p, info);
     for(i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
@@ -705,7 +709,7 @@ static void printFooter(Data * d, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n"); 
 	}
-    scs_printf("Solve time: %1.2es (post-setup)\n",info->time/1e3);
+    scs_printf("Solve time: %1.2es, setup time: %1.2es\n",info->solveTime/1e3, info->setupTime/1e3);
 
     if (linSysStr) {
         scs_printf("%s",linSysStr);

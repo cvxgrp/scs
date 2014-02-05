@@ -134,7 +134,7 @@ libraries in your own source code, compile with the linker option with
 
 These libraries (and `scs.h`) expose only four API functions:
 
-* `Work * scs_init(Data * d, Cone * k);`
+* `Work * scs_init(Data * d, Cone * k, Info * info);`
     
     This initializes the Work struct containing the workspace that scs will use, and performs the necessary preprocessing (e.g. matrix factorization).
 
@@ -179,7 +179,8 @@ The four relevant data structures are:
     	pfloat resPri;
     	pfloat resDual;
     	pfloat relGap;
-    	pfloat time;
+        pfloat setupTime;
+    	pfloat solveTime;
     };
     
     struct CONE {

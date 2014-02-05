@@ -37,7 +37,8 @@ struct INFO {
 	pfloat resPri;
 	pfloat resDual;
 	pfloat relGap;
-	pfloat time;
+    pfloat setupTime;
+	pfloat solveTime;
 };
 
 /* the following structs do not need to be exposed */
@@ -65,7 +66,7 @@ scs_init: allocates memory (direct version factorizes matrix [I A; A^T -I])
 scs_solve: can be called many times with different b,c data for one init call
 scs_finish: cleans up the memory (one per init call)
 */
-Work * scs_init(Data * d, Cone * k);
+Work * scs_init(Data * d, Cone * k, Info * info);
 idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
 void scs_finish(Data * d, Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */

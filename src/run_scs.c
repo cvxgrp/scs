@@ -47,7 +47,7 @@ int main(int argc, char **argv)
         scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
         /* warm starts stored in Sol */
         d->WARM_START = 1;
-        w = scs_init(d, k);
+        w = scs_init(d, k, &info);
         if (w) {
             for (i=0;i<NUM_TRIALS;i++)
             {

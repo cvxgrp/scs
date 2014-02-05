@@ -1,7 +1,7 @@
 #ifndef LINSYS_H_GUARD 
 #define LINSYS_H_GUARD
 
-/* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND STRUCTS */
+/* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND PRIVATE_DATA STRUCT */
 
 /* private data struct (that you define) containing any necessary data to solve linear system, etc. */
 typedef struct PRIVATE_DATA Priv;
@@ -21,6 +21,6 @@ void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y);
 /* returns string describing method, can return null, if not null free will be called on output */
 char * getLinSysMethod();
 /* returns string containing summary information about linear system solves, can return null, if not null free will be called on output */
-char * getLinSysSummary(Info * info);
+char * getLinSysSummary(Priv * p, Info * info);
 
 #endif

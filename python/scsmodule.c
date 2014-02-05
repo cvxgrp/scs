@@ -158,7 +158,7 @@ static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * op
 }
 
 static int parseOpts(Data *d, PyObject * opts) {
-    if (getOptIntParam("MAX_ITERS", &(d->MAX_ITERS), 2000, opts) < 0)
+    if (getOptIntParam("MAX_ITERS", &(d->MAX_ITERS), 2500, opts) < 0)
         return -1;
     if (getOptIntParam("VERBOSE", &(d->VERBOSE), 1, opts) < 0)
         return -1;
@@ -378,7 +378,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
   
     PyObject *infoDict = Py_BuildValue(
-    "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
+    "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
     "statusVal", (idxint)info.statusVal,
     "iter", (idxint)info.iter,
     "pobj", (pfloat)info.pobj,
@@ -386,7 +386,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "resPri", (pfloat)info.resPri,
     "resDual", (pfloat)info.resDual,
     "relGap", (pfloat)info.relGap,
-    "time",(pfloat)(info.time/1e3),
+    "solveTime",(pfloat)(info.solveTime/1e3),
+    "setupTime",(pfloat)(info.setupTime/1e3),
     "status",info.status);
 
   PyObject *returnDict = Py_BuildValue(
