@@ -54,18 +54,18 @@ void printData(Data * d){
 	scs_printf("d->UNDET_TOL is %6f\n",d->UNDET_TOL);
 }
 
-void printWork(Work * w){
-	idxint i;
+void printWork(Data * d, Work * w){
+	idxint i, l = d->n + d->m;
 	scs_printf("\n u_t is \n");
-	for( i=0;i<w->l;i++){
+	for( i=0;i<l;i++){
 		scs_printf("%f\n",w->u_t[i]);
 	}
 	scs_printf("\n u is \n");
-	for( i=0;i<w->l;i++){
+	for( i=0;i<l;i++){
 		scs_printf("%f\n",w->u[i]);
 	}
 	scs_printf("\n v is \n");
-	for( i=0;i<w->l;i++){
+	for( i=0;i<l;i++){
 		scs_printf("%f\n",w->v[i]);
 	}
 }

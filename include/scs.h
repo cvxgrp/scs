@@ -7,6 +7,7 @@
 #include "glbopts.h"
 #include "cones.h"
 #include "linAlg.h"
+#include "linsys.h"
 #include "util.h"
 
 /* struct that containing standard problem data */
@@ -43,11 +44,8 @@ struct INFO {
 struct WORK {
   pfloat *u, *v, *u_t, *u_prev;
   pfloat *h, *g, *pr, *dr; 
-  pfloat gTh, sc_b, sc_c, scale;
-  pfloat nm_b, nm_c, meanNormRowA;
-  pfloat *D, *E;
-  idxint l;
-  char * method;
+  pfloat gTh, sc_b, sc_c, scale, nm_b, nm_c, meanNormRowA;
+  pfloat *D, *E; /* for normalization */
   Priv * p;
 };
 
@@ -63,7 +61,7 @@ struct residuals {
 };
 
 /* main library api's:
-scs_init: allocates memory (direct factorizes matrix [I A; A^T -I])
+scs_init: allocates memory (direct version factorizes matrix [I A; A^T -I])
 scs_solve: can be called many times with different b,c data for one init call
 scs_finish: cleans up the memory (one per init call)
 */

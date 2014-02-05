@@ -61,7 +61,6 @@
 typedef struct PROBLEM_DATA Data;
 typedef struct SOL_VARS Sol;
 typedef struct INFO Info;
-typedef struct PRIVATE_DATA Priv;
 typedef struct WORK Work;
 typedef struct CONE Cone;
 

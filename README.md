@@ -132,27 +132,28 @@ If `make` completes successfully, it will produce two static library files,
 libraries in your own source code, compile with the linker option with
 `-L(PATH_TO_scs)\lib` and `-lscsdir` or `-lscsindir` (as needed).
 
-These libraries (and `scs.h`) expose only three API functions:
+These libraries (and `scs.h`) expose only four API functions:
 
-* idxint scs(Data * d, Cone * k, Sol * sol, Info * info); 
+* `Work * scs_init(Data * d, Cone * k);`
     
-	This solves the problem specified in the `Data` and `Cone` structures,
-    and returns the solution in the Sol struct and various information about the run in
-    the Info struct.
+    This initializes the Work struct containing the workspace that scs will use, and performs the necessary preprocessing (e.g. matrix factorization).
 
-* void freeData(Data \* d, Cone \* k)
+* `idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);`
     
-	This frees the `Data` and `Cone` structures.
-    
-* void freeSol(Sol \* sol)
+    This solves the problem as defined by Data and Cone using workspace in w. The solution is returned in sol and information about the solve is retu.rned in info. None of the inputs can be NULL. You can call scs_solve many times for one call to scs_init, so long as the matrix A does not change (b and c can change).
 
-	This frees the `Sol` structure.
+* `void scs_finish(Data * d, Work * w);`
+    
+    Called after all solves completed, to free data and cleanup.
+
+* `idxint scs(Data * d, Cone * k, Sol * sol, Info * info);`
+    
+    Simply calls all the above routines, so can't use reuse the workspace (for, e.g., factorization caching).
     
 The four relevant data structures are:
-
     
     /* struct that containing standard problem data */
-    typedef struct PROBLEM_DATA {
+    struct PROBLEM_DATA {
       idxint n, m; /* problem dimensions */
       /* problem data, A, b, c: */
       pfloat * Ax;
@@ -160,39 +161,38 @@ The four relevant data structures are:
       pfloat * b, * c;
       idxint MAX_ITERS;
       pfloat EPS, ALPHA, UNDET_TOL, RHO_X;
-      idxint VERBOSE, NORMALIZE;  // boolean
-    } Data;
+      idxint VERBOSE, NORMALIZE, WARM_START;  /* boolean */
+    };
     
     /* contains primal-dual solution vectors */
-    typedef struct SOL_VARS {
+    struct SOL_VARS {
       pfloat * x, * y, *s;
-    } Sol;
-    
+    };
+        
     /* contains terminating information */
-    typedef struct INFO {
+    struct INFO {
     	idxint iter;
-    	char status[16];
-    	idxint stint; // status as int
+    	char status[32];
+    	idxint statusVal; /* status as idxint */
         pfloat pobj;
     	pfloat dobj;
     	pfloat resPri;
     	pfloat resDual;
     	pfloat relGap;
     	pfloat time;
-    } Info;
+    };
     
-    typedef struct Cone_t {
-        idxint f;          /* number of linear equality constraints */
-        idxint l;          /* length of LP cone */
-        idxint *q;         /* array of second-order cone constraints */
-        idxint qsize;      /* length of SOC array */
-        idxint *s;         /* array of SD constraints */
-        idxint ssize;      /* length of SD array */
-        idxint ep;         /* number of triples in exponential cone */
-        idxint ed;         /* number of triples in dual exponential cone */
-    } Cone;
+    struct CONE {
+        idxint f;           /* number of linear equality constraints */
+        idxint l;           /* length of LP cone */
+        idxint *q;   	    /* array of second-order cone constraints */
+        idxint qsize;       /* length of SOC array */
+    	idxint *s;			/* array of SD constraints */
+    	idxint ssize;		/* length of SD array */
+        idxint ep;          /* number of primal exponential cone triples */
+        idxint ed;          /* number of dual exponential cone triples */
+    };
         
-    
 The data matrix `A` is specified in column-compressed format, and the vectors
 `b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
 (slack), and `y` (dual) are returned as dense arrays. Cones are specified as
@@ -200,10 +200,19 @@ the struct above, the rows of `A` must correspond to the cones in the
 exact order as specified by the cone struct (i.e. put linear cones before
 soc cones etc.).
 
+### Warm Start
+You can warm-start (supply a guess of the solution) by setting WARM_START in Data to 1 and supplying the warm-starts in the Sol struct (x,y and s). These are used to initialize the iterates in scs_solve.
+ 
+### Re-using matrix factorization
+To factorize the matrix once and solve many times, simply call scs_init once, and use scs_solve many times with the same workspace, changing the input data (and optionally warm-starts) for each iteration. See run_scs.c for an example.
+
+### Using your own linear system solver
+Simply implement all the methods in `include/linsys.h` and plug it in.
+
 Solving SDPs
 ---------- 
 In order to solve SDPs you must have BLAS and LAPACK installed.
-Poidxint `scs.mk` to the location of these libraries. Without
+Point `scs.mk` to the location of these libraries. Without
 these you can still solve SOCPs, LPs, and EXPs.
 
 Scalability

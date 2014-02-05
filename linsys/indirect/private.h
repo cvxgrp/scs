@@ -11,7 +11,6 @@ struct PRIVATE_DATA{
   pfloat *x;
   pfloat * Ap;
   pfloat * tmp;
-
   pfloat * Atx;
   idxint * Ati;
   idxint * Atp;

@@ -1,12 +1,5 @@
 #include "linAlg.h"
 #include <math.h> 
-/*
- * All basic linear operations are inlined (and further optimized) by the 
- * compiler. If compiling without optimization, causes code bloat.
- */
-
-void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y);
-void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y);
 
 /* x = b*a */
 void setAsScaledArray(pfloat *x, const pfloat * a,const pfloat b,idxint len) {
@@ -81,58 +74,4 @@ pfloat calcNormInfDiff(const pfloat *a, const pfloat *b, idxint l) {
 		if(tmp > max) max = tmp;
 	}
 	return max;
-}
-
-void accumByAtrans(Data * d, const pfloat *x, pfloat *y) 
-{
-	_accumByAtrans(d->n, d->Ax, d->Ai, d->Ap, x, y); 
-}
-void accumByA(Data * d, const pfloat *x, pfloat *y) 
-{
-	_accumByA(d->n, d->Ax, d->Ai, d->Ap, x, y);
-}
-
-void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
-{
-    /* y  = A'*x 
-    A in column compressed format 
-    parallelizes over columns (rows of A')
-    */
-    idxint p, j;
-    idxint c1, c2; 
-    pfloat yj; 
-#pragma omp parallel for private(p,c1,c2,yj) 
-    for (j = 0 ; j < n ; j++)
-    {   
-        yj = y[j];
-        c1 = Ap[j]; c2 = Ap[j+1];
-        for (p = c1 ; p < c2 ; p++)    
-        {   
-            yj += Ax[p] * x[ Ai[p] ] ; 
-        }   
-        y[j] = yj; 
-    }   
-}
-
-void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
-{
-/*y  = A*x 
-  A in column compressed format  
-  this parallelizes over columns and uses
-  pragma atomic to prevent concurrent writes to y 
- */
-  idxint p, j;
-  idxint c1, c2;
-  pfloat xj;
-/*#pragma omp parallel for private(p,c1,c2,xj)  */
-  for (j = 0 ; j < n ; j++)
-  {
-      xj = x[j];
-      c1 = Ap[j]; c2 = Ap[j+1];
-      for (p = c1 ; p < c2 ; p++)        
-      {
-/*#pragma omp atomic */
-          y [Ai[p]] += Ax [p] * xj ;
-      }
-  }
 }

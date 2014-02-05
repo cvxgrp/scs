@@ -5,7 +5,7 @@
 idxint LDLInit(cs * A, idxint P[], pfloat **info);
 idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs ** L, pfloat **D);
 void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp);
-idxint factorize(Data * d,Work * w);
+idxint factorize(Data * d,Priv * p);
 
 static struct timeval tic_linsys_start;
 static pfloat factorizeTime;
@@ -21,44 +21,49 @@ pfloat lTocq(void) {
     return tic_timestop.tv_sec*1e3 + tic_timestop.tv_usec/1e3 - tic_linsys_start.tv_sec*1e3 - tic_linsys_start.tv_usec/1e3;
 }
 
+char * getLinSysMethod() {return strndup("sparse-direct", 32);}
+
 char * getLinSysSummary(Info * info) {
-    char str[80];
+    char str[64];
     idxint len = sprintf(str, "Factorization time: %1.2es, avg solve time: %1.2es\n", factorizeTime / 1e3, totalSolveTime / (info->iter + 1) / 1e3);
     totalSolveTime = 0;
     return strndup(str, len);
 }
 
-void freePriv(Work * w){
-	if(w) {
-        if(w->p) {
-            if (w->p->L) cs_spfree(w->p->L);
-            if (w->p->P) scs_free(w->p->P);
-            if (w->p->D) scs_free(w->p->D);
-            if (w->p->bp) scs_free(w->p->bp);
-            scs_free(w->p);
-	    }
+void freePriv(Priv * p){
+    if(p) {
+        if (p->L) cs_spfree(p->L);
+        if (p->P) scs_free(p->P);
+        if (p->D) scs_free(p->D);
+        if (p->bp) scs_free(p->bp);
+        scs_free(p);
     }
 }
 
-void solveLinSys(Data * d, Work * w, pfloat * b, const pfloat * s, idxint iter){
+void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter){
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   lTic();
-  LDLSolve(b, b, w->p->L, w->p->D, w->p->P, w->p->bp);
+  LDLSolve(b, b, p->L, p->D, p->P, p->bp);
   totalSolveTime += lTocq();
 }
 
-idxint privateInitWork(Data * d, Work * w){ 
-	idxint n_plus_m = d->n + d->m;
-    w->method = strdup("sparse-direct");
-	w->p = scs_malloc(sizeof(Priv));
-	w->p->P = scs_malloc(sizeof(idxint)*n_plus_m);
-	w->p->L = scs_malloc(sizeof (cs));
-	w->p->bp = scs_malloc(n_plus_m * sizeof(pfloat));
-	w->p->L->m = n_plus_m;
-	w->p->L->n = n_plus_m;
-	w->p->L->nz = -1; 
-	return(factorize(d,w));
+Priv * initPriv(Data * d){ 
+	Priv * p = scs_calloc(1, sizeof(Priv));
+    idxint n_plus_m = d->n + d->m;
+	p->P = scs_malloc(sizeof(idxint)*n_plus_m);
+	p->L = scs_malloc(sizeof (cs));
+	p->bp = scs_malloc(n_plus_m * sizeof(pfloat));
+	p->L->m = n_plus_m;
+	p->L->n = n_plus_m;
+	p->L->nz = -1; 
+
+    if (factorize(d,p) < 0) {
+        freePriv(p);
+        return NULL;
+    }
+    totalSolveTime = 0.0;
+    return p;
 }
 
 cs * formKKT(Data * d){
@@ -108,8 +113,7 @@ cs * formKKT(Data * d){
 	return(K_cs);
 }
 
-
-idxint factorize(Data * d,Work * w){
+idxint factorize(Data * d, Priv * p){
 	pfloat *info;
     idxint *Pinv, amd_status, ldl_status;
     cs *C, * K = formKKT(d);
@@ -117,7 +121,7 @@ idxint factorize(Data * d,Work * w){
         return -1;
     }
 	lTic();
-    amd_status = LDLInit(K, w->p->P, &info);
+    amd_status = LDLInit(K, p->P, &info);
 	if (amd_status < 0) return(amd_status);
 	#ifdef EXTRAVERBOSE
         if(d->VERBOSE) {
@@ -129,12 +133,11 @@ idxint factorize(Data * d,Work * w){
         #endif
 	    }
     #endif
-	Pinv = cs_pinv(w->p->P, w->l-1);
+	Pinv = cs_pinv(p->P, d->n + d->m);
 	C = cs_symperm(K, Pinv, 1); 
-	ldl_status = LDLFactor(C, NULL, NULL, &w->p->L, &w->p->D);
+	ldl_status = LDLFactor(C, NULL, NULL, &p->L, &p->D);
     cs_spfree(C);cs_spfree(K);scs_free(Pinv);scs_free(info);
     factorizeTime = lTocq();
-    totalSolveTime = 0.0;
 	return(ldl_status);
 }
 
@@ -197,4 +200,58 @@ void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp
     LDL_ltsolve(n, bp, L->p, L->i, L->x);
     LDL_permt(n, x, bp, P); 
 	}   
+}
+
+void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
+{
+    /* y  = A'*x 
+    A in column compressed format 
+    parallelizes over columns (rows of A')
+    */
+    idxint p, j;
+    idxint c1, c2; 
+    pfloat yj; 
+#pragma omp parallel for private(p,c1,c2,yj) 
+    for (j = 0 ; j < n ; j++)
+    {   
+        yj = y[j];
+        c1 = Ap[j]; c2 = Ap[j+1];
+        for (p = c1 ; p < c2 ; p++)    
+        {   
+            yj += Ax[p] * x[ Ai[p] ] ; 
+        }   
+        y[j] = yj; 
+    }   
+}
+
+void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
+{
+/*y  = A*x 
+  A in column compressed format  
+  this parallelizes over columns and uses
+  pragma atomic to prevent concurrent writes to y 
+ */
+  idxint p, j;
+  idxint c1, c2;
+  pfloat xj;
+/*#pragma omp parallel for private(p,c1,c2,xj)  */
+  for (j = 0 ; j < n ; j++)
+  {
+      xj = x[j];
+      c1 = Ap[j]; c2 = Ap[j+1];
+      for (p = c1 ; p < c2 ; p++)        
+      {
+/*#pragma omp atomic */
+          y [Ai[p]] += Ax [p] * xj ;
+      }
+  }
+}
+
+void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) 
+{
+	_accumByAtrans(d->n, d->Ax, d->Ai, d->Ap, x, y); 
+}
+void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) 
+{
+	_accumByA(d->n, d->Ax, d->Ai, d->Ap, x, y);
 }

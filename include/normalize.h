@@ -142,31 +142,31 @@ void calcScaledResids(Data * d, Work * w, struct residuals * r) {
     pfloat * u_t = w->u_t;
     pfloat * u_prev = w->u_prev;
     pfloat tmp;
-    idxint i;
+    idxint i, n = d->n, m = d->m;
 
     r->resPri = 0;
-    for (i = 0; i < d->n; ++i){
+    for (i = 0; i < n; ++i){
         tmp = (u[i] - u_t[i])/(E[i] * w->sc_b);
         r->resPri += tmp * tmp;        
     }
-    for (i = 0; i < d->m; ++i){
-        tmp = (u[i + d->n] - u_t[i + d->n])/(D[i] * w->sc_c);
+    for (i = 0; i < m; ++i){
+        tmp = (u[i + n] - u_t[i + n])/(D[i] * w->sc_c);
         r->resPri += tmp * tmp;
     }
-    tmp = u[w->l-1] - u_t[w->l-1];
+    tmp = u[n + m] - u_t[n + m];
     r->resPri += tmp * tmp;
     r->resPri = sqrt(r->resPri);
 
     r->resDual = 0;
-    for (i = 0; i < d->n; ++i){
+    for (i = 0; i < n; ++i){
         tmp = (u[i] - u_prev[i]) * E[i] / w->sc_b;
         r->resDual += tmp * tmp;        
     }
-    for (i = 0; i < d->m; ++i){
-        tmp = (u[i + d->n] - u_prev[i + d->n]) * D[i] / w->sc_c;
+    for (i = 0; i < m; ++i){
+        tmp = (u[i + n] - u_prev[i + n]) * D[i] / w->sc_c;
         r->resDual += tmp * tmp;
     }
-    tmp = u[w->l-1] - u_t[w->l-1];
+    tmp = u[n + m] - u_t[n + m];
     r->resDual += tmp * tmp;
     r->resDual = sqrt(r->resDual);
 }

@@ -5,11 +5,9 @@
 #define CG_EXPONENT 1.5
 #define PRINT_INTERVAL 100
 
-static void calcAx(Data * d, Work * w, const pfloat * x, pfloat * y);
-static idxint cgCustom(Data *d, Work *w, const pfloat *s, pfloat * b, idxint max_its, pfloat tol);
-static void CGaccumByA(Data * d, Priv * p, const pfloat *x, pfloat *y);
-static void CGaccumByAtrans(Data *d, const pfloat *x, pfloat *y);
-static void transpose (Data * d, Work * w);
+static void calcAx(Data * d, Priv * p, const pfloat * x, pfloat * y);
+static idxint cgCustom(Data *d, Priv * p, const pfloat *s, pfloat * b, idxint max_its, pfloat tol);
+static void transpose (Data * d, Priv * p);
 
 static idxint totCgIts = 0;
 static idxint lastNCgIts = 0;
@@ -25,8 +23,14 @@ pfloat lTocq(void) {
     return tic_timestop.tv_sec*1e3 + tic_timestop.tv_usec/1e3 - tic_linsys_start.tv_sec*1e3 - tic_linsys_start.tv_usec/1e3;
 }
 
+char * getLinSysMethod() {
+    char str[64];
+    idxint len = sprintf(str,"sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
+    return strndup(str, len); 
+}
+
 char * getLinSysSummary(Info * info) {
-    char str[80];
+    char str[64];
     idxint len = sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %1.2es\n", (pfloat) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
     totCgIts = 0;
     lastNCgIts = 0;
@@ -34,29 +38,29 @@ char * getLinSysSummary(Info * info) {
     return strndup(str, len);
 }
 
-idxint privateInitWork(Data * d, Work * w){
-  char str[80];
-  idxint len = sprintf(str,"sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
-  totalSolveTime = 0.0;
-  w->method = strndup(str, len);
-  w->p = scs_malloc(sizeof(Priv));
-  w->p->p = scs_malloc((d->n)*sizeof(pfloat));
-  w->p->r = scs_malloc((d->n)*sizeof(pfloat));
-  w->p->Ap = scs_malloc((d->n)*sizeof(pfloat));
-  w->p->tmp = scs_malloc((d->m)*sizeof(pfloat));
+Priv * initPriv(Data * d) {
+  Priv * p = scs_calloc(1,sizeof(Priv));
+  p->p = scs_malloc((d->n)*sizeof(pfloat));
+  p->r = scs_malloc((d->n)*sizeof(pfloat));
+  p->Ap = scs_malloc((d->n)*sizeof(pfloat));
+  p->tmp = scs_malloc((d->m)*sizeof(pfloat));
 
-  w->p->Ati = scs_malloc((d->Ap[d->n])*sizeof(idxint));
-  w->p->Atp = scs_malloc((d->m+1)*sizeof(idxint));
-  w->p->Atx = scs_malloc((d->Ap[d->n])*sizeof(pfloat));
-  transpose(d,w);
-  return(0);
+  p->Ati = scs_malloc((d->Ap[d->n])*sizeof(idxint));
+  p->Atp = scs_malloc((d->m+1)*sizeof(idxint));
+  p->Atx = scs_malloc((d->Ap[d->n])*sizeof(pfloat));
+  transpose(d,p);
+  totalSolveTime = 0;
+  if (!p->p || !p->r || !p->Ap || !p->tmp || !p->Ati || !p->Atp || !p->Atx){
+    freePriv(p);
+    return NULL;
+  }
+  return p;
 }
 
-static void transpose (Data * d, Work * w)
-{
-  idxint * Ci = w->p->Ati;
-  idxint * Cp = w->p->Atp;
-  pfloat * Cx = w->p->Atx;
+static void transpose (Data * d, Priv * p) {
+  idxint * Ci = p->Ati;
+  idxint * Cp = p->Atp;
+  pfloat * Cx = p->Atx;
   idxint m = d->m;
   idxint n = d->n;
 
@@ -64,47 +68,45 @@ static void transpose (Data * d, Work * w)
   idxint * Ai = d->Ai;
   pfloat * Ax = d->Ax;
 
-  idxint p, j, q, *z;
+  idxint i, j, q, *z;
   z = scs_calloc(m,sizeof(idxint));
-  for (p = 0 ; p < Ap [n] ; p++) z [Ai [p]]++ ;          /* row counts */
+  for (i = 0 ; i < Ap [n] ; i++) z [Ai [i]]++ ;          /* row counts */
   cs_cumsum (Cp, z, m) ;                                 /* row pointers */
   for (j = 0 ; j < n ; j++)
   {
-    for (p = Ap [j] ; p < Ap [j+1] ; p++)
+    for (i = Ap [j] ; i < Ap [j+1] ; i++)
     {
-      Ci [q = z [Ai [p]]++] = j ; /* place A(i,j) as entry C(j,i) */
-      if (Cx) Cx [q] = Ax [p] ;
+      Ci [q = z [Ai [i]]++] = j ; /* place A(i,j) as entry C(j,i) */
+      if (Cx) Cx [q] = Ax [i] ;
     }
   }
   scs_free(z);
 }
 
-void freePriv(Work * w){
-    if (w) {
-        if (w->p){
-            if(w->p->p) scs_free(w->p->p);
-            if(w->p->r) scs_free(w->p->r);
-            if(w->p->Ap) scs_free(w->p->Ap);
-            if(w->p->tmp) scs_free(w->p->tmp);
-            if(w->p->Ati) scs_free(w->p->Ati);
-            if(w->p->Atx) scs_free(w->p->Atx);
-            if(w->p->Atp) scs_free(w->p->Atp);
-            scs_free(w->p);
-        }
+void freePriv(Priv * p){
+    if (p){
+        if(p->p) scs_free(p->p);
+        if(p->r) scs_free(p->r);
+        if(p->Ap) scs_free(p->Ap);
+        if(p->tmp) scs_free(p->tmp);
+        if(p->Ati) scs_free(p->Ati);
+        if(p->Atx) scs_free(p->Atx);
+        if(p->Atp) scs_free(p->Atp);
+        scs_free(p);
     }
 }
 
-void solveLinSys(Data *d, Work * w, pfloat * b, const pfloat * s, idxint iter){
+void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter){
     idxint cgIts;
     pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b,d->n) / POWF(iter + 1, (pfloat) CG_EXPONENT);
 	lTic();
     /* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
-	CGaccumByAtrans(d, &(b[d->n]), b);
+	accumByAtrans(d, p, &(b[d->n]), b);
    	/* solves (I+A'A)x = b, s warm start, solution stored in b */
-	cgIts = cgCustom(d, w, s, b, d->n, cgTol);
+	cgIts = cgCustom(d, p, s, b, d->n, cgTol);
     scaleArray(&(b[d->n]),-1,d->m);
-	CGaccumByA(d, w->p, b, &(b[d->n]));
+	accumByA(d, p, b, &(b[d->n]));
 	
     if(iter >= 0) {
         totCgIts += cgIts;
@@ -119,14 +121,14 @@ void solveLinSys(Data *d, Work * w, pfloat * b, const pfloat * s, idxint iter){
     totalSolveTime += lTocq();
 }
 
-static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint max_its, pfloat tol){
+static idxint cgCustom(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_its, pfloat tol){
 	/* solves (I+A'A)x = b */
 	/* warm start cg with s */  
 	idxint i = 0, n = d->n;
 	pfloat rsold;
-    pfloat *p = w->p->p; /* cg direction */
-	pfloat *Ap = w->p->Ap; /* updated CG direction */
-	pfloat *r = w->p->r; /* cg residual */
+    pfloat *p = pr->p; /* cg direction */
+	pfloat *Ap = pr->Ap; /* updated CG direction */
+	pfloat *r = pr->r; /* cg residual */
 
 	pfloat alpha, rsnew=0;
 	if (s==NULL){
@@ -134,7 +136,7 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
 		memset(b,0.0,n*sizeof(pfloat));
 	}
 	else{
-		calcAx(d,w,s,r);
+		calcAx(d,pr,s,r);
 		addScaledArray(r,b,n,-1);
 		scaleArray(r,-1,n);
 		memcpy(b,s,n*sizeof(pfloat));
@@ -143,7 +145,7 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
 	rsold=calcNorm(r,n);
 
 	for (i=0; i < max_its; ++i){
-		calcAx(d,w,p,Ap);
+		calcAx(d,pr,p,Ap);
 		
 		alpha=(rsold*rsold)/innerProd(p,Ap,n);
 		addScaledArray(b,p,n,alpha);
@@ -161,20 +163,65 @@ static idxint cgCustom(Data *d, Work *w, const pfloat * s, pfloat * b, idxint ma
     return i;
 }
 
-static void calcAx(Data * d, Work * w, const pfloat * x, pfloat * y){
-	pfloat * tmp = w->p->tmp;
+static void calcAx(Data * d, Priv * p, const pfloat * x, pfloat * y){
+	pfloat * tmp = p->tmp;
 	memset(tmp,0,d->m*sizeof(pfloat));
-	CGaccumByA(d,w->p,x,tmp);
+	accumByA(d,p,x,tmp);
 	memset(y,0,d->n*sizeof(pfloat));
-	CGaccumByAtrans(d, tmp, y);
+	accumByAtrans(d, p, tmp, y);
 	addScaledArray(y,x,d->n,d->RHO_X);
 }
 
-static void CGaccumByA(Data * d, Priv * p, const pfloat *x, pfloat *y)
+void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
 {
-  _accumByAtrans(d->m,p->Atx,p->Ati,p->Atp,x,y);
+    /* y  = A'*x 
+    A in column compressed format 
+    parallelizes over columns (rows of A')
+    */
+    idxint p, j;
+    idxint c1, c2; 
+    pfloat yj; 
+#pragma omp parallel for private(p,c1,c2,yj) 
+    for (j = 0 ; j < n ; j++)
+    {   
+        yj = y[j];
+        c1 = Ap[j]; c2 = Ap[j+1];
+        for (p = c1 ; p < c2 ; p++)    
+        {   
+            yj += Ax[p] * x[ Ai[p] ] ; 
+        }   
+        y[j] = yj; 
+    }   
 }
-static void CGaccumByAtrans(Data *d, const pfloat *x, pfloat *y)
+
+void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) 
 {
-  _accumByAtrans(d->n,d->Ax,d->Ai,d->Ap,x,y);
+/*y  = A*x 
+  A in column compressed format  
+  this parallelizes over columns and uses
+  pragma atomic to prevent concurrent writes to y 
+ */
+  idxint p, j;
+  idxint c1, c2;
+  pfloat xj;
+/*#pragma omp parallel for private(p,c1,c2,xj)  */
+  for (j = 0 ; j < n ; j++)
+  {
+      xj = x[j];
+      c1 = Ap[j]; c2 = Ap[j+1];
+      for (p = c1 ; p < c2 ; p++)        
+      {
+/*#pragma omp atomic */
+          y [Ai[p]] += Ax [p] * xj ;
+      }
+  }
+}
+
+void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) 
+{
+	_accumByAtrans(d->n, d->Ax, d->Ai, d->Ap, x, y); 
+}
+void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) 
+{
+	_accumByAtrans(d->m, p->Atx, p->Ati, p->Atp, x, y);
 }

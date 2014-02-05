@@ -11,6 +11,6 @@ pfloat toc(void);
 pfloat tocq(void); 
 void printConeData(Cone * k);
 void printData(Data * d);
-void printWork(Work * w);
+void printWork(Data * d, Work * w);
 
 #endif

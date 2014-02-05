@@ -164,22 +164,6 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
 	{
 		if(fscanf(fp, FLOATRW, &d->Ax[i])!= 1) return -1;
 	}
-	/*		fscanf(fp, "%zu", &NNZ); */
-	/*		idxint *Kr = malloc(sizeof(idxint)*NNZ); */
-	/*		for(i = 0; i < NNZ; i++) */
-	/*		{ */
-	/*		fscanf(fp, INTRW, &Kr[i]); */
-	/*		} */
-	/*		idxint *Kp=malloc(sizeof(idxint)*(w->l+1)); */
-	/*		for(i = 0; i < w->l+1; i++) */
-	/*		{ */
-	/*		fscanf(fp, INTRW, &Kp[i]); */
-	/*		} */
-	/*		pfloat *Kx=malloc(sizeof(pfloat)*NNZ); */
-	/*		for(i = 0; i < NNZ; i++) */
-	/*		{ */
-	/*		fscanf(fp, FLOATRW, &Kx[i]); */
-	/*		} */
     return 0;
 }
 

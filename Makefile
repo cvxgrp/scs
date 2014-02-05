@@ -21,11 +21,11 @@ else
 endif
 	@echo "**********************************************************************************"
 
-scs 	: src/scs.c src/scs.h src/linAlg.h
-util	: src/util.c src/util.h
-cones	: src/cones.c src/cones.h
-cs		: src/cs.c src/cs.h
-linAlg  : src/linAlg.c src/linAlh.h
+scs 	: src/scs.c include/scs.h include/linsys.h include/normalize.h
+util	: src/util.c include/util.h
+cones	: src/cones.c include/cones.h
+cs		: src/cs.c include/cs.h
+linAlg  : src/linAlg.c include/linAlg.h
 
 $(DIRSRCEXT)/private.o		    : $(DIRSRC)/private.h
 $(DIRSRCEXT)/ldl.o			    : $(DIRSRCEXT)/ldl.h
