@@ -12,8 +12,8 @@ void normalizeA(Data * d, Work * w, Cone * k){
 	idxint i, j, count;
 	pfloat wrk, *nms;
 
-	/* heuristic rescaling, seems to do well with a scaling of about 4 */
-	w->scale =  4; /*MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1); */
+	/* heuristic rescaling, seems to do well with a scaling of about 1 */
+	w->scale = 1; /*MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1); */
 
 	/* calculate row norms */
 	for(i = 0; i < d->n; ++i){

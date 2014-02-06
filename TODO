@@ -1,3 +1,5 @@
 add profiling
 connect matlab blas, lapack libs
 connect numpy blas, lapack libs
+
+higher w->scale makes pri resid go down faster, lower makes dual resid go down faster

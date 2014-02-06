@@ -11,7 +11,7 @@ void printSol(Data * d, Sol * sol, Info * info);
 #define DEMO_PATH "../data_sparse"
 #endif 
 
-#define NUM_TRIALS 10
+#define NUM_TRIALS 5
 #define RHOX 1e-3
 #define TEST_WARM_START 1
 
@@ -46,7 +46,6 @@ int main(int argc, char **argv)
     if(TEST_WARM_START) {
         scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
         /* warm starts stored in Sol */
-        d->WARM_START = 1;
         w = scs_init(d, k, &info);
         if (w) {
             for (i=0;i<NUM_TRIALS;i++)
@@ -54,8 +53,11 @@ int main(int argc, char **argv)
                 /* perturb b and c */
                 perturbVector(d->b, d->m);
                 perturbVector(d->c, d->n);
+                d->WARM_START = 1;
                 scs_solve(w, d, k, &sol, &info);
-            }
+                d->WARM_START = 0;
+                scs_solve(w, d, k, &sol, &info);
+            }       
         }
         scs_printf("finished\n");
         scs_finish(d, w);

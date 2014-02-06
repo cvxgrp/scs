@@ -14,6 +14,9 @@ struct PRIVATE_DATA{
   pfloat * Atx;
   idxint * Ati;
   idxint * Atp;
+  /* preconditioning */
+  pfloat * z;
+  pfloat * M;
 };
 
 #ifndef POWF
