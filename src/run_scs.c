@@ -108,6 +108,7 @@ idxint read_in_data(FILE * fp,Data * d, Cone * k){
     idxint i, Anz;
 	d->RHO_X = RHOX;
     d->WARM_START = 0;
+    d->SCALE = 1;
     if(fscanf(fp, INTRW, &(d->n)) != 1) return -1;
 	if(fscanf(fp, INTRW, &(d->m))!= 1) return -1;
     if(fscanf(fp, INTRW, &(k->f))!= 1) return -1;

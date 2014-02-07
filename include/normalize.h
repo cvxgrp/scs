@@ -13,7 +13,7 @@ void normalizeA(Data * d, Work * w, Cone * k){
 	pfloat wrk, *nms;
 
 	/* heuristic rescaling, seems to do well with a scaling of about 1 */
-	w->scale = 1; /*MAX( MIN( sqrt( d->n * ((pfloat) d->m / d->Ap[d->n] ) , MAX_SCALE) , 1); */
+    w->scale = d->SCALE > 0 ? d->SCALE : 1;
 
 	/* calculate row norms */
 	for(i = 0; i < d->n; ++i){
@@ -73,7 +73,7 @@ void normalizeA(Data * d, Work * w, Cone * k){
     }
 
     for (i=0; i<d->m; ++i){
-        if (D[i] < MIN_SCALE) D[i] = MIN_SCALE;
+        if (D[i] < MIN_SCALE) D[i] = 1;
         else if (D[i] > MAX_SCALE) D[i] = MAX_SCALE;
 
     }
@@ -86,7 +86,7 @@ void normalizeA(Data * d, Work * w, Cone * k){
 	/* calculate and scale by col norms, E */
 	for (i = 0; i < d->n; ++i){
 		E[i] = calcNorm(&(d->Ax[d->Ap[i]]),d->Ap[i+1] - d->Ap[i]);
-        if (E[i] < MIN_SCALE) E[i] = MIN_SCALE;
+        if (E[i] < MIN_SCALE) E[i] = 1;
 		else if (E[i] > MAX_SCALE) E[i] = MAX_SCALE;
         scaleArray(&(d->Ax[d->Ap[i]]), 1.0/E[i], d->Ap[i+1] - d->Ap[i]);
 	}
@@ -107,7 +107,6 @@ void normalizeA(Data * d, Work * w, Cone * k){
     w->D = D;
     w->E = E;
     scaleArray(d->Ax, w->scale, d->Ap[d->n]);
-
     /*
        scs_printf("norm D is %4f\n", calcNorm(D,d->m));
        scs_printf("norm E is %4f\n", calcNorm(E,d->n));
@@ -130,7 +129,6 @@ void normalizeBC(Data * d, Work * w) {
         d->c[i] /= E[i];
     }
     w->sc_c = w->meanNormRowA/MAX(calcNorm(d->c,d->n),MIN_SCALE);
-    
     scaleArray(d->b, w->sc_b * w->scale, d->m);
     scaleArray(d->c, w->sc_c * w->scale, d->n);
 }

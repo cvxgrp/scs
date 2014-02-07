@@ -5,7 +5,7 @@
 #define CG_EXPONENT 1.5
 #define PRINT_INTERVAL 100
 
-/*y = (I + A'A)x */
+/*y = (RHO_X * I + A'A)x */
 static void matVec(Data * d, Priv * p, const pfloat * x, pfloat * y);
 static idxint pcg(Data *d, Priv * p, const pfloat *s, pfloat * b, idxint max_its, pfloat tol);
 static void transpose (Data * d, Priv * p);
@@ -39,16 +39,13 @@ char * getLinSysSummary(Priv * p, Info * info) {
     return strndup(str, len);
 }
 
-/* M = inv ( diag ( I + A'A ) ) */
+/* M = inv ( diag ( RHO_X * I + A'A ) ) */
 void getPreconditioner(Data *d, Priv *p){
     idxint i;
     pfloat * M = p->M;
     for (i = 0; i < d->n; ++i){
-        M[i] = 1/(1+calcNormSq(&(d->Ax[d->Ap[i]]),d->Ap[i+1] - d->Ap[i])); 
-        /*  
-            M[i] = 1;
-            scs_printf("M[%i] = %4f\n",i,M[i]);
-        */
+        M[i] = 1/(d->RHO_X + calcNormSq(&(d->Ax[d->Ap[i]]),d->Ap[i+1] - d->Ap[i])); 
+        /* M[i] = 1; */
     }   
 }
 
@@ -196,7 +193,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
     return i;
 }
 
-/*y = (I + A'A)x */
+/*y = (RHO_X * I + A'A)x */
 static void matVec(Data * d, Priv * p, const pfloat * x, pfloat * y){
 	pfloat * tmp = p->tmp;
 	memset(tmp,0,d->m*sizeof(pfloat));

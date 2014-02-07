@@ -263,6 +263,9 @@ end
 if (isfield(settings,'MAX_ITERS'))
     pars.MAX_ITERS = settings.MAX_ITERS;
 end
+if (isfield(settings,'SCALE'))
+    pars.SCALE = settings.SCALE;
+end
 if quiet
     pars.VERBOSE = 0;
 end
@@ -301,9 +304,9 @@ tol = max(info.resPri,info.resDual);
 iters = info.iter;
 status = info.status;
 % scs targets the dual to sedumi formulation:
-if (strcmp(status,'Unbounded'))
+if (strcmp(status,'Unbounded') || strcmp(status,'Unbounded/Inaccurate'))
     status = 'Infeasible';
-elseif (strcmp(status,'Infeasible'))
+elseif (strcmp(status,'Infeasible') || strcmp(status,'Infeasible/Inaccurate'))
     status = 'Unbounded';
 end
 

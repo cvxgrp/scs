@@ -374,10 +374,10 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info){
     }
     info->pobj = cTx;
     info->dobj = -bTy;
-    if (info->statusVal == SOLVED){
+    if (info->statusVal == SOLVED) {
         info->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
         info->resPri = nmpr / (1 + w->nm_b);
-        info->resDual = nmdr / (1+ w->nm_c);
+        info->resDual = nmdr / (1 + w->nm_c);
     } else {
         if (info->statusVal == UNBOUNDED) {    
             info->dobj = NAN;

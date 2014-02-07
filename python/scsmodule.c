@@ -164,6 +164,8 @@ static int parseOpts(Data *d, PyObject * opts) {
         return -1;
     if (getOptIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
         return -1;
+    if (getOptFloatParam("SCALE", &(d->EPS), 1, opts) < 0)
+        return -1;
     if (getOptFloatParam("EPS", &(d->EPS), 1e-3, opts) < 0)
         return -1;
     if (getOptFloatParam("ALPHA", &(d->ALPHA), 1.8, opts) < 0)

@@ -78,6 +78,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (MAX_ITERS_mex == NULL) d->MAX_ITERS = 2500;
   else d->MAX_ITERS = (idxint)*mxGetPr(MAX_ITERS_mex);
 
+  const mxArray *SCALE_mex = mxGetField(params,0,"SCALE");
+  if (SCALE_mex == NULL) d->SCALE = 1;
+  else d->SCALE = (pfloat)*mxGetPr(SCALE_mex);
+
   const mxArray *EPS_mex = mxGetField(params,0,"EPS");
   if (EPS_mex == NULL) d->EPS = 1e-3;
   else d->EPS = (pfloat)*mxGetPr(EPS_mex);

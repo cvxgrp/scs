@@ -18,7 +18,7 @@ struct PROBLEM_DATA {
   idxint * Ai, * Ap;
   pfloat * b, * c;
   idxint MAX_ITERS;
-  pfloat EPS, ALPHA, UNDET_TOL, RHO_X;
+  pfloat EPS, ALPHA, UNDET_TOL, RHO_X, SCALE;
   idxint VERBOSE, NORMALIZE, WARM_START;  /* boolean */
 };
 
