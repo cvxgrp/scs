@@ -29,7 +29,7 @@ for i=1:size(sizes,1)
     
     w_true = sprandn(p,1,0.2);
     
-    X_tmp = 5*sprandn(p, q, density);
+    X_tmp = 3*sprandn(p, q, density);
     ips = -w_true'*X_tmp;
     ps = (exp(ips)./(1 + exp(ips)))';
     labels = 2*(rand(q,1) < ps) - 1;

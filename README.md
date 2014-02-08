@@ -1,4 +1,4 @@
-scs 
+scs [![Build Status](https://travis-ci.org/cvxgrp/scs.png?branch=master)](https://travis-ci.org/cvxgrp/scs) 
 ====
 
 scs = `splitting cone solver`
