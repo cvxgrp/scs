@@ -104,7 +104,7 @@ void finishCone() {
 
 char * getConeHeader(Cone * k) {
 	char * tmp = scs_malloc(sizeof(char) * 256);
-	idxint i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars, len;
+	idxint i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars;
 	socVars = 0;
 	socBlks = 0;
 	if (k->qsize && k->q) {
@@ -129,7 +129,7 @@ char * getConeHeader(Cone * k) {
 	if (k->ed) {
 		expDvars = 3 * k->ed;
 	}
-	len = sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
+	sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
 					(int) (k->f ? k->f : 0), (int) (k->l ? k->l : 0), (int) socVars, (int) socBlks, (int) sdVars,
 					(int) sdBlks, (int) expPvars, (int) expDvars);
 	return tmp;

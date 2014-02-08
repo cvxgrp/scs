@@ -27,13 +27,13 @@ pfloat lTocq(void) {
 
 char * getLinSysMethod() {
 	char * str = scs_malloc(sizeof(char) * 64);
-	idxint len = sprintf(str, "sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
+	sprintf(str, "sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
 	return str;
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
-	idxint len = sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %1.2es\n",
+	sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %1.2es\n",
 			(pfloat) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
 	totCgIts = 0;
 	lastNCgIts = 0;
