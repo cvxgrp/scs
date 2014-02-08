@@ -9,7 +9,7 @@ else
     arr = '';
 end
 
-cmd = sprintf ('mex -O %s CFLAGS="-std=gnu99 -O3 -DMATLAB_MEX_FILE %s %s" -I"../include" %s', arr, d, flags.LCFLAG, flags.INCS) ;
+cmd = sprintf ('mex -O %s CFLAGS="-std=c99 -O3 -DMATLAB_MEX_FILE %s %s" -I"../include" %s', arr, d, flags.LCFLAG, flags.INCS) ;
 amd_files = {'amd_order', 'amd_dump', 'amd_postorder', 'amd_post_tree', ...
     'amd_aat', 'amd_2', 'amd_1', 'amd_defaults', 'amd_control', ...
     'amd_info', 'amd_valid', 'amd_global', 'amd_preprocess' } ;
