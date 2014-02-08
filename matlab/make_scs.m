@@ -38,3 +38,5 @@ data.c = randn(n,1);
 cones.l = m;
 [x,y,info] = scs_direct(data,cones,[]);
 [x,y,info] = scs_indirect(data,cones,[]);
+disp('SUCCESSFULLY INSTALLED SCS')
+

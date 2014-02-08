@@ -250,9 +250,6 @@ if m1 == 1,
     K.s = K.s';
 end
 
-if (isfield(settings,'UNDET_TOL'))
-    pars.UNDET_TOL = settings.UNDET_TOL;
-end
 if prec(1)==0
     % just run until MAX_ITERS
     pars.EPS = 0;

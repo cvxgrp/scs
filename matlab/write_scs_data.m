@@ -8,13 +8,11 @@ function write_scs_data(data,K,params,name)
 % set default params if not present:
 MAX_ITERS = 2500; % maximum num iterations for admm
 EPS   = 1e-3; % quitting tolerances
-UNDET_TOL = 1e-9; % tol for undetermined solution (tau = kappa = 0)
 ALPHA=1.8;        % relaxation parameter (alpha = 1 is unrelaxed)
 NORMALIZE = 1; % 1 = true
 VERBOSE = 1; % 1 = true
 if ~isfield(params,'MAX_ITERS');params.MAX_ITERS = MAX_ITERS;end
 if ~isfield(params,'EPS');params.EPS = EPS;end
-if ~isfield(params,'UNDET_TOL');params.UNDET_TOL = UNDET_TOL;end
 if ~isfield(params,'ALPHA');params.ALPHA = ALPHA;end
 if ~isfield(params,'NORMALIZE');params.NORMALIZE = NORMALIZE;end
 if ~isfield(params,'VERBOSE');params.VERBOSE = VERBOSE;end
@@ -80,8 +78,6 @@ fprintf(fi,'\n');
 fprintf(fi,'%u ',params.VERBOSE); fprintf(fi,'%u ',params.NORMALIZE);
 fprintf(fi,'\n');
 fprintf(fi,'%6.18f ',params.ALPHA);
-fprintf(fi,'\n');
-fprintf(fi,'%6.18f ',params.UNDET_TOL);
 fprintf(fi,'\n');
 fprintf(fi,'%6.18f ',params.EPS);
 fprintf(fi,'\n');

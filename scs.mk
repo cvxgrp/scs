@@ -8,6 +8,9 @@ DIRSRC = linsys/direct
 DIRSRCEXT = $(DIRSRC)/external
 INDIRSRC = linsys/indirect
 
+CFLAGS += -I/opt/local/include -I/usr/local/include
+LDFLAGS += -L/opt/local/lib -L/usr/local/lib
+
 OUT = out
 AR = ar
 ARFLAGS = rv
@@ -36,8 +39,6 @@ RANLIB = ranlib
 
 ifdef USE_LAPACK
   # edit these for your setup:
-  CFLAGS += -I/opt/local/include -I/usr/local/include
-  LDFLAGS += -L/opt/local/lib -L/usr/local/lib
   LDFLAGS += -lopenblas -llapack -llapacke 
   CFLAGS += -DLAPACK_LIB_FOUND
   # lapacke + cblas are not ansi c90 compliant:

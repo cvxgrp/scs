@@ -6,9 +6,9 @@
 /* private data struct (that you define) containing any necessary data to solve linear system, etc. */
 typedef struct PRIVATE_DATA Priv;
 
-/* initialize Priv strucutre and perform any necessary preprocessing */
+/* initialize Priv structure and perform any necessary preprocessing */
 Priv * initPriv(Data * d);
-/* solves [I A';A -I] x = b for x, stores result in b, s contains warm-start, iter is current scs iteration count */
+/* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains warm-start, iter is current scs iteration count */
 void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter);
 /* frees Priv structure and allocated memory in Priv */
 void freePriv(Priv * p);

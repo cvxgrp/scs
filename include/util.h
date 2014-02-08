@@ -6,9 +6,9 @@
 #include "scs.h"
 #include "cones.h"
 
-void tic(void); 
-pfloat toc(void); 
-pfloat tocq(void); 
+void tic(void);
+pfloat toc(void);
+pfloat tocq(void);
 void printConeData(Cone * k);
 void printData(Data * d);
 void printWork(Data * d, Work * w);

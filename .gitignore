@@ -1,3 +1,7 @@
+.settings
+.cproject
+.project
+.pydevproject
 .idea
 *.pyc
 *dSYM

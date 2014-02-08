@@ -1,49 +1,49 @@
-#ifndef GLB_H_GUARD    
+#ifndef GLB_H_GUARD
 #define GLB_H_GUARD
 
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
-  #include "mex.h"
-  #define scs_printf   mexPrintf
-  #define scs_free     mxFree
-  #define scs_malloc   mxMalloc
-  #define scs_calloc   mxCalloc
+#include "mex.h"
+#define scs_printf   mexPrintf
+#define scs_free     mxFree
+#define scs_malloc   mxMalloc
+#define scs_calloc   mxCalloc
 #elif defined PYTHON
-  #include <Python.h>
-  #include <stdlib.h>
-  #define scs_printf   PySys_WriteStdout
-  #define scs_free     free
-  #define scs_malloc   malloc
-  #define scs_calloc   calloc
+#include <Python.h>
+#include <stdlib.h>
+#define scs_printf   PySys_WriteStdout
+#define scs_free     free
+#define scs_malloc   malloc
+#define scs_calloc   calloc
 #else
-  #include <stdio.h>
-  #include <stdlib.h>
-  #define scs_printf   printf
-  #define scs_free     free
-  #define scs_malloc   malloc
-  #define scs_calloc   calloc
+#include <stdio.h>
+#include <stdlib.h>
+#define scs_printf   printf
+#define scs_free     free
+#define scs_malloc   malloc
+#define scs_calloc   calloc
 #endif
 
 #ifdef DLONG
-    #ifdef _WIN64
-        typedef __int64 idxint;
-    #else
-        typedef long idxint;
-    #endif
+#ifdef _WIN64
+typedef __int64 idxint;
 #else
-    typedef int idxint;
+typedef long idxint;
+#endif
+#else
+typedef int idxint;
 #endif
 
 #ifndef FLOAT
-    typedef double pfloat;
-    #ifndef NAN
-        #define NAN ((pfloat)0x7ff8000000000000)
-    #endif
+typedef double pfloat;
+#ifndef NAN
+#define NAN ((pfloat)0x7ff8000000000000)
+#endif
 #else
-    typedef float pfloat;
-    #ifndef NAN
-        #define NAN ((float)0x7fc00000)
-    #endif
+typedef float pfloat;
+#ifndef NAN
+#define NAN ((float)0x7fc00000)
+#endif
 #endif
 
 #ifndef MAX
