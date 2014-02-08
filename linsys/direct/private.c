@@ -22,16 +22,18 @@ pfloat lTocq(void) {
 }
 
 char * getLinSysMethod() {
-	return strndup("sparse-direct", 32);
+	char * tmp = scs_malloc(sizeof(char) * 32);
+	sprintf(tmp,"sparse-direct");
+	return tmp;
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
-	char str[64];
+	char * str = scs_malloc(sizeof(char) * 64);
 	idxint n = p->L->n;
 	idxint len = sprintf(str, "NNZs in L factor: %li, avg solve time: %1.2es\n", (long) p->L->p[n] + n,
 			totalSolveTime / (info->iter + 1) / 1e3);
 	totalSolveTime = 0;
-	return strndup(str, len);
+	return str;
 }
 
 void freePriv(Priv * p) {

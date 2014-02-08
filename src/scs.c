@@ -650,7 +650,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	scs_printf("\n");
 	if (linSysMethod) {
 		scs_printf("method: %s\n", linSysMethod);
-		free(linSysMethod);
+		scs_free(linSysMethod);
 	}
 	scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
 			(int) d->NORMALIZE);
@@ -660,7 +660,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 		scs_printf("using variable warm-starting!\n");
 
 	scs_printf("%s", coneStr);
-	free(coneStr);
+	scs_free(coneStr);
 
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
@@ -690,7 +690,7 @@ static void printFooter(Data * d, Work * w, Info * info) {
 
 	if (linSysStr) {
 		scs_printf("%s", linSysStr);
-		free(linSysStr);
+		scs_free(linSysStr);
 	}
 
 	for (i = 0; i < _lineLen_; ++i) {

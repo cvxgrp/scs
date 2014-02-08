@@ -1,4 +1,4 @@
-#ifndef PRIV_H_GUARD                                                              
+#ifndef PRIV_H_GUARD
 #define PRIV_H_GUARD
 
 #include "glbopts.h"
