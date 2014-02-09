@@ -28,7 +28,7 @@ struct PROBLEM_DATA {
 	pfloat RHO_X; /* x equality constraint scaling: 1e-3 */
 	pfloat SCALE; /* if normalized, rescales by this factor: 1 */
 	idxint VERBOSE; /* boolean, write out progress: 1 */
-	idxint NORMALIZE; /* boolean, hueristic data rescaling: 1 */
+	idxint NORMALIZE; /* boolean, heuristic data rescaling: 1 */
 	idxint WARM_START; /* boolean, warm start with guess in Sol struct: 0 */
 };
 

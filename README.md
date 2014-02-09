@@ -69,9 +69,9 @@ If `make_scs` fails and complains about an incompatible architecture, edit the
 `make_scs` file according to the comments.
 
 Remember to include the `matlab` directory in your Matlab path if you wish to
-use the mex file in your Matlab code. The calling sequence is
+use the mex file in your Matlab code. The calling sequence is (for the direct version):
 
-	[x,y,info] = scs_direct(data,cones,params)
+	[x,y,s,info] = scs_direct(data,cones,params)
 
 where data contains `A`, `b`, `c`  
 params contains various options (see matlab file, can be empty)  
@@ -170,7 +170,7 @@ The four relevant data structures are:
     	pfloat RHO_X;       /* x equality constraint scaling: 1e-3 */
     	pfloat SCALE;       /* if normalized, rescales by this factor: 1 */
     	idxint VERBOSE;     /* boolean, write out progress: 1 */
-    	idxint NORMALIZE;   /* boolean, hueristic data rescaling: 1 */
+    	idxint NORMALIZE;   /* boolean, heuristic data rescaling: 1 */
     	idxint WARM_START;  /* boolean, warm start with guess in Sol struct: 0 */
     };
     
