@@ -11,6 +11,9 @@ static struct ConeData_t {
 } c;
 
 void projExpCone(pfloat * v);
+#ifdef LAPACK_LIB_FOUND
+void projectsdc(pfloat *X, idxint n);
+#endif
 
 idxint initCone(Cone * k) {
 	if (k->ssize && k->s) {
@@ -129,9 +132,10 @@ char * getConeHeader(Cone * k) {
 	if (k->ed) {
 		expDvars = 3 * k->ed;
 	}
-	sprintf(tmp, "cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
-					(int) (k->f ? k->f : 0), (int) (k->l ? k->l : 0), (int) socVars, (int) socBlks, (int) sdVars,
-					(int) sdBlks, (int) expPvars, (int) expDvars);
+	sprintf(tmp,
+			"cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
+			(int ) (k->f ? k->f : 0), (int ) (k->l ? k->l : 0), (int ) socVars, (int ) socBlks, (int ) sdVars,
+			(int ) sdBlks, (int ) expPvars, (int ) expDvars);
 	return tmp;
 }
 
@@ -202,7 +206,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 		 * here we project onto K^*, via Moreau
 		 */
 		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
-		#pragma omp parallel for private(r,s,t,idx)
+#pragma omp parallel for private(r,s,t,idx)
 		for (i = 0; i < k->ep; ++i) {
 			idx = count + 3 * i;
 			r = x[idx];
@@ -220,7 +224,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 
 	if (k->ed) {
 		/* exponential cone: */
-		#pragma omp parallel for
+#pragma omp parallel for
 		for (i = 0; i < k->ed; ++i) {
 			projExpCone(&(x[count + 3 * i]));
 		}
