@@ -151,38 +151,48 @@ These libraries (and `scs.h`) expose only four API functions:
     Simply calls all the above routines, so can't use reuse the workspace (for, e.g., factorization caching).
     
 The four relevant data structures are:
-    
+              
     /* struct that containing standard problem data */
     struct PROBLEM_DATA {
-      idxint n, m; /* problem dimensions */
-      /* problem data, A, b, c: */
-      pfloat * Ax;
-      idxint * Ai, * Ap;
-      pfloat * b, * c;
-      idxint MAX_ITERS;
-      pfloat EPS, ALPHA, UNDET_TOL, RHO_X;
-      idxint VERBOSE, NORMALIZE, WARM_START;  /* boolean */
+    	/* problem dimensions */
+    	idxint m, n;        /* A has m rows, n cols*/
+    
+    	/* NB: A must be supplied in column compressed format */
+    	pfloat * Ax;        /* A values, size: NNZ A */
+    	idxint * Ai;        /* A row index, size: NNZ A */
+    	idxint * Ap;        /* A column pointer, size: n+1 */
+    	pfloat * b, *c;     /* dense arrays for b (size m), c (size n) */
+    
+    	/* other input parameters: default suggested input */
+    	idxint MAX_ITERS;   /* maximum iterations to take: 2500 */
+    	pfloat EPS;         /* convergence tolerance: 1e-3 */
+    	pfloat ALPHA;       /* relaxation parameter: 1.8 */
+    	pfloat RHO_X;       /* x equality constraint scaling: 1e-3 */
+    	pfloat SCALE;       /* if normalized, rescales by this factor: 1 */
+    	idxint VERBOSE;     /* boolean, write out progress: 1 */
+    	idxint NORMALIZE;   /* boolean, hueristic data rescaling: 1 */
+    	idxint WARM_START;  /* boolean, warm start with guess in Sol struct: 0 */
     };
     
-    /* contains primal-dual solution vectors */
+    /* contains primal-dual solution arrays */
     struct SOL_VARS {
-      pfloat * x, * y, *s;
+    	pfloat * x, *y, *s;
     };
-        
+    
     /* contains terminating information */
     struct INFO {
-    	idxint iter;
-    	char status[32];
-    	idxint statusVal; /* status as idxint */
-        pfloat pobj;
-    	pfloat dobj;
-    	pfloat resPri;
-    	pfloat resDual;
-    	pfloat relGap;
-        pfloat setupTime;
-    	pfloat solveTime;
+    	idxint iter;        /* number of iterations taken */
+    	char status[32];    /* status string, e.g. Solved */
+    	idxint statusVal;   /* status as idxint, defined below */
+    	pfloat pobj;        /* primal objective */
+    	pfloat dobj;        /* dual objective */
+    	pfloat resPri;      /* primal equality residual */
+    	pfloat resDual;     /* dual equality residual */
+    	pfloat relGap;      /* relative duality gap */
+    	pfloat setupTime;   /* time taken for setup phase */
+    	pfloat solveTime;   /* time taken for solve phase */
     };
-    
+   
     struct CONE {
         idxint f;           /* number of linear equality constraints */
         idxint l;           /* length of LP cone */
