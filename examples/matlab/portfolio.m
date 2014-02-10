@@ -66,7 +66,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('USE_INDIRECT',1,'CG_MAX_ITS',2)
+        cvx_solver_settings('USE_INDIRECT',1)
         cvx_solver_settings('GEN_PLOTS',1) % only works if 'cvx_solver scs_matlab'
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))

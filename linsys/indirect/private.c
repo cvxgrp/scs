@@ -25,9 +25,9 @@ pfloat lTocq(void) {
 			- tic_linsys_start.tv_usec / 1e3;
 }
 
-char * getLinSysMethod() {
+char * getLinSysMethod(Data * d, Priv * p) {
 	char * str = scs_malloc(sizeof(char) * 64);
-	sprintf(str, "sparse-indirect, CG tol ~ 1/iter^(%2.2f)", (pfloat) CG_EXPONENT);
+	sprintf(str, "sparse-indirect, CG tol ~ 1/iter^(%2.2f)", d->CG_RATE);
 	return str;
 }
 
@@ -129,7 +129,7 @@ void freePriv(Priv * p) {
 
 void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
-	pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b, d->n) / POWF(iter + 1, (pfloat) CG_EXPONENT);
+	pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b, d->n) / POWF(iter + 1, d->CG_RATE);
 	lTic();
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */

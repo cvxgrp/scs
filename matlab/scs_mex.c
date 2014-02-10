@@ -102,6 +102,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	else
 		d->EPS = (pfloat) *mxGetPr(EPS_mex);
 
+	const mxArray *CG_RATE = mxGetField(params, 0, "CG_RATE");
+	if (EPS_mex == NULL)
+		d->CG_RATE = 1.5;
+	else
+		d->CG_RATE = (pfloat) *mxGetPr(CG_RATE);
+
 	const mxArray *VERBOSE_mex = mxGetField(params, 0, "VERBOSE");
 	if (VERBOSE_mex == NULL)
 		d->VERBOSE = 1;

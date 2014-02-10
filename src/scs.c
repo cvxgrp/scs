@@ -634,7 +634,7 @@ static void printSummary(idxint i, struct residuals *r) {
 static void printHeader(Data * d, Work * w, Cone * k) {
 	idxint i;
 	char * coneStr = getConeHeader(k);
-	char * linSysMethod = getLinSysMethod();
+	char * linSysMethod = getLinSysMethod(d, w->p);
 	_lineLen_ = -1;
 	/* scs_printf("size of idxint %lu, size of pfloat %lu\n", sizeof(idxint), sizeof(pfloat)); */
 	for (i = 0; i < HEADER_LEN; ++i) {

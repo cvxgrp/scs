@@ -21,7 +21,7 @@ pfloat lTocq(void) {
 			- tic_linsys_start.tv_usec / 1e3;
 }
 
-char * getLinSysMethod() {
+char * getLinSysMethod(Data * d, Priv * p) {
 	char * tmp = scs_malloc(sizeof(char) * 32);
 	sprintf(tmp,"sparse-direct");
 	return tmp;

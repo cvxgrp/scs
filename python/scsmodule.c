@@ -69,9 +69,7 @@ static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 }
 
 static int printErr(char * key) {
-	char str[80];
-	sprintf(str, "error parsing '%s'", key);
-	PyErr_SetString(PyExc_TypeError, str);
+	scs_printf("error parsing '%s'", key);
 	return -1;
 }
 
@@ -151,10 +149,13 @@ static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * op
 	if (opts) {
 		PyObject *obj = PyDict_GetItemString(opts, key);
 		if (obj) {
-			if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
-				char str[80];
-				sprintf(str, "'%s' ought to be a nonnegative float", key);
-				PyErr_SetString(PyExc_TypeError, str);
+			if (PyInt_Check(obj)) {
+				if ((*v = (pfloat) PyInt_AsLong(obj)) < 0) {
+					scs_printf("ERROR: '%s' ought to be a nonnegative float\n", key);
+					return -1;
+				}
+			} else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
+				scs_printf("ERROR: '%s' ought to be a nonnegative float\n", key);
 				return -1;
 			}
 		}
@@ -172,6 +173,8 @@ static int parseOpts(Data *d, PyObject * opts) {
 	if (getOptFloatParam("SCALE", &(d->EPS), 1, opts) < 0)
 		return -1;
 	if (getOptFloatParam("EPS", &(d->EPS), 1e-3, opts) < 0)
+		return -1;
+	if (getOptFloatParam("CG_RATE", &(d->CG_RATE), 1.5, opts) < 0)
 		return -1;
 	if (getOptFloatParam("ALPHA", &(d->ALPHA), 1.8, opts) < 0)
 		return -1;
@@ -346,7 +349,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
 	if (parseOpts(d, opts) < 0) {
-		return finishWithErr(d, k, &ps, "failed to get parse opts");
+		return finishWithErr(d, k, &ps, "failed to parse opts");
 	}
 
 	/* Solve! */

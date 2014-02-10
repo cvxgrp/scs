@@ -51,6 +51,7 @@ data['x'] = sol_i['x']
 data['y'] = sol_i['y']
 data['s'] = sol_i['s']
 # indirect solver, warm start:
+opts['CG_RATE'] = 2
 sol_i_warm = scs.solve(data, cone, opts=opts, USE_INDIRECT=True)
 # direct solver, warm start:
 sol_d_warm = scs.solve(data, cone, opts=opts)

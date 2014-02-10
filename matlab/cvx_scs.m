@@ -250,6 +250,9 @@ if m1 == 1,
     K.s = K.s';
 end
 
+if quiet
+    pars.VERBOSE = 0;
+end
 if prec(1)==0
     % just run until MAX_ITERS
     pars.EPS = 0;
@@ -263,8 +266,8 @@ end
 if (isfield(settings,'SCALE'))
     pars.SCALE = settings.SCALE;
 end
-if quiet
-    pars.VERBOSE = 0;
+if (isfield(settings,'CG_RATE'))
+    pars.CG_RATE = settings.CG_RATE;
 end
 if (isfield(settings,'USE_INDIRECT'))
     pars.USE_INDIRECT = settings.USE_INDIRECT;

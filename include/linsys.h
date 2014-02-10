@@ -1,4 +1,4 @@
-#ifndef LINSYS_H_GUARD 
+#ifndef LINSYS_H_GUARD
 #define LINSYS_H_GUARD
 
 /* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND PRIVATE_DATA STRUCT */
@@ -19,7 +19,7 @@ void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y);
 void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y);
 
 /* returns string describing method, can return null, if not null free will be called on output */
-char * getLinSysMethod();
+char * getLinSysMethod(Data * d, Priv * p);
 /* returns string containing summary information about linear system solves, can return null, if not null free will be called on output */
 char * getLinSysSummary(Priv * p, Info * info);
 
