@@ -15,10 +15,7 @@ struct PROBLEM_DATA {
 	/* problem dimensions */
 	idxint m, n; /* A has m rows, n cols*/
 
-	/* NB: A must be supplied in column compressed format */
-	pfloat * Ax; /* A values, size: NNZ A */
-	idxint * Ai; /* A row index, size: NNZ A */
-	idxint * Ap; /* A column pointer, size: n+1 */
+	AMatrix * A; /* A is supplied in data format specified by linsys solver */
 	pfloat * b, *c; /* dense arrays for b (size m), c (size n) */
 
 	/* other input parameters: default suggested input */
@@ -41,7 +38,7 @@ struct SOL_VARS {
 /* contains terminating information */
 struct INFO {
 	idxint iter; /* number of iterations taken */
-	char status[32]; /* status string, e.g. Solved */
+	char status[32]; /* status string, e.g. 'Solved' */
 	idxint statusVal; /* status as idxint, defined below */
 	pfloat pobj; /* primal objective */
 	pfloat dobj; /* dual objective */
@@ -74,7 +71,7 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info);
 struct WORK {
 	pfloat *u, *v, *u_t, *u_prev;
 	pfloat *h, *g, *pr, *dr;
-	pfloat gTh, sc_b, sc_c, scale, nm_b, nm_c, meanNormRowA;
+	pfloat gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA;
 	pfloat *D, *E; /* for normalization */
 	Priv * p;
 };

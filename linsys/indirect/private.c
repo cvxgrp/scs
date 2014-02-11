@@ -1,4 +1,5 @@
 #include "private.h"
+#include "../common.h"
 #include "linAlg.h"
 
 #define CG_BEST_TOL 1e-9
@@ -26,15 +27,15 @@ pfloat lTocq(void) {
 }
 
 char * getLinSysMethod(Data * d, Priv * p) {
-	char * str = scs_malloc(sizeof(char) * 64);
-	sprintf(str, "sparse-indirect, CG tol ~ 1/iter^(%2.2f)", d->CG_RATE);
+	char * str = scs_malloc(sizeof(char) * 128);
+	sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) d->A->p[d->n], d->CG_RATE);
 	return str;
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
-	sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %1.2es\n",
-			(pfloat) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
+	sprintf(str, "Avg num CG iterations: %2.2f, avg solve time %1.2es\n", (pfloat ) totCgIts / (info->iter + 1),
+			totalSolveTime / (info->iter + 1) / 1e3);
 	totCgIts = 0;
 	lastNCgIts = 0;
 	totalSolveTime = 0;
@@ -45,13 +46,15 @@ char * getLinSysSummary(Priv * p, Info * info) {
 void getPreconditioner(Data *d, Priv *p) {
 	idxint i;
 	pfloat * M = p->M;
+	AMatrix * A = d->A;
 	for (i = 0; i < d->n; ++i) {
-		M[i] = 1 / (d->RHO_X + calcNormSq(&(d->Ax[d->Ap[i]]), d->Ap[i + 1] - d->Ap[i]));
+		M[i] = 1 / (d->RHO_X + calcNormSq(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
 		/* M[i] = 1; */
 	}
 }
 
 Priv * initPriv(Data * d) {
+	AMatrix * A = d->A;
 	Priv * p = scs_calloc(1, sizeof(Priv));
 	p->p = scs_malloc((d->n) * sizeof(pfloat));
 	p->r = scs_malloc((d->n) * sizeof(pfloat));
@@ -62,9 +65,9 @@ Priv * initPriv(Data * d) {
 	p->z = scs_malloc((d->n) * sizeof(pfloat));
 	p->M = scs_malloc((d->n) * sizeof(pfloat));
 
-	p->Ati = scs_malloc((d->Ap[d->n]) * sizeof(idxint));
+	p->Ati = scs_malloc((A->p[d->n]) * sizeof(idxint));
 	p->Atp = scs_malloc((d->m + 1) * sizeof(idxint));
-	p->Atx = scs_malloc((d->Ap[d->n]) * sizeof(pfloat));
+	p->Atx = scs_malloc((A->p[d->n]) * sizeof(pfloat));
 	transpose(d, p);
 	getPreconditioner(d, p);
 	totalSolveTime = 0;
@@ -84,9 +87,9 @@ static void transpose(Data * d, Priv * p) {
 	idxint m = d->m;
 	idxint n = d->n;
 
-	idxint * Ap = d->Ap;
-	idxint * Ai = d->Ai;
-	pfloat * Ax = d->Ax;
+	idxint * Ap = d->A->p;
+	idxint * Ai = d->A->i;
+	pfloat * Ax = d->A->x;
 
 	idxint i, j, q, *z;
 	z = scs_calloc(m, sizeof(idxint));
@@ -255,7 +258,8 @@ void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x,
 }
 
 void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) {
-	_accumByAtrans(d->n, d->Ax, d->Ai, d->Ap, x, y);
+	AMatrix * A = d->A;
+	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
 }
 void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) {
 	_accumByAtrans(d->m, p->Atx, p->Ati, p->Atp, x, y);

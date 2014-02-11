@@ -2,6 +2,7 @@
 #include "glbopts.h"
 #include "scs.h"
 #include "cones.h"
+#include "../linsys/amatrix.h"
 #include "numpy/arrayobject.h"
 
 /* IMPORTANT: This code now uses numpy array types. It is a private C module
@@ -170,7 +171,7 @@ static int parseOpts(Data *d, PyObject * opts) {
 		return -1;
 	if (getOptIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
 		return -1;
-	if (getOptFloatParam("SCALE", &(d->EPS), 1, opts) < 0)
+	if (getOptFloatParam("SCALE", &(d->SCALE), 1, opts) < 0)
 		return -1;
 	if (getOptFloatParam("EPS", &(d->EPS), 1e-3, opts) < 0)
 		return -1;
@@ -207,8 +208,10 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
 			scs_free(k->s);
 		scs_free(k);
 	}
-	if (d)
+	if (d) {
+		if(d->A) scs_free(d->A);
 		scs_free(d);
+	}
 }
 
 static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char * str) {
@@ -306,9 +309,11 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.Ax = getContiguous(Ax, pfloatType);
 	ps.Ai = getContiguous(Ai, intType);
 	ps.Ap = getContiguous(Ap, intType);
-	d->Ax = (pfloat *) PyArray_DATA(ps.Ax);
-	d->Ai = (idxint *) PyArray_DATA(ps.Ai);
-	d->Ap = (idxint *) PyArray_DATA(ps.Ap);
+	AMatrix * A = scs_malloc(sizeof(AMatrix));
+	A->x = (pfloat *) PyArray_DATA(ps.Ax);
+	A->i = (idxint *) PyArray_DATA(ps.Ai);
+	A->p = (idxint *) PyArray_DATA(ps.Ap);
+	d->A = A;
 	/*d->Anz = d->Ap[d->n]; */
 	/*d->Anz = PyArray_DIM(Ai,0); */
 	/* set c */

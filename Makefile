@@ -27,7 +27,7 @@ cones	: src/cones.c include/cones.h
 cs		: src/cs.c include/cs.h
 linAlg  : src/linAlg.c include/linAlg.h
 
-$(DIRSRCEXT)/private.o		    : $(DIRSRC)/private.h
+$(DIRSRCEXT)/private.o		    : $(DIRSRC)/private.h $(LINSYS)/common.h $(LINSYS)/amatrix.h
 $(DIRSRCEXT)/ldl.o			    : $(DIRSRCEXT)/ldl.h
 $(DIRSRCEXT)/amd_1.o			: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_2.o			: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
@@ -42,7 +42,7 @@ $(DIRSRCEXT)/amd_post_tree.o	: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_postorder.o	: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_preprocess.o	: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_valid.o		: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
-$(INDIRSRC)/private.o	        : $(INDIRSRC)/private.h
+$(INDIRSRC)/private.o	        : $(INDIRSRC)/private.h $(LINSYS)/common.h $(LINSYS)/amatrix.h
 
 $(OUT)/libscsdir.a: $(OBJECTS) $(DIRSRC)/private.o  $(DIRECT_OBJECTS)
 	mkdir -p $(OUT)

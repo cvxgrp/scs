@@ -36,7 +36,30 @@ idxint initCone(Cone * k) {
 	return 0;
 }
 
-idxint validateCones(Cone * k) {
+idxint getFullConeDims(Cone * k) {
+	idxint i, c = 0;
+	if (k->f)
+		c += k->f;
+	if (k->l)
+		c += k->l;
+	if (k->qsize && k->q) {
+		for (i = 0; i < k->qsize; ++i) {
+			c += k->q[i];
+		}
+	}
+	if (k->ssize && k->s) {
+		for (i = 0; i < k->ssize; ++i) {
+			c += k->s[i] * k->s[i];
+		}
+	}
+	if (k->ed)
+		c += 3 * k->ed;
+	if (k->ep)
+		c += 3 * k->ep;
+	return c;
+}
+
+idxint validateCones(Data * d, Cone * k) {
 	idxint i;
 	if (k->f && k->f < 0) {
 		scs_printf("free cone error\n");
@@ -70,30 +93,11 @@ idxint validateCones(Cone * k) {
 		scs_printf("ed cone error\n");
 		return -1;
 	}
+	if (getFullConeDims(k) != d->m) {
+		scs_printf("cone dimensions %i not equal to num rows in A = m = %i\n", (int) getFullConeDims(k), (int) d->m);
+		return -1;
+	}
 	return 0;
-}
-
-idxint getFullConeDims(Cone * k) {
-	idxint i, c = 0;
-	if (k->f)
-		c += k->f;
-	if (k->l)
-		c += k->l;
-	if (k->qsize && k->q) {
-		for (i = 0; i < k->qsize; ++i) {
-			c += k->q[i];
-		}
-	}
-	if (k->ssize && k->s) {
-		for (i = 0; i < k->ssize; ++i) {
-			c += k->s[i] * k->s[i];
-		}
-	}
-	if (k->ed)
-		c += 3 * k->ed;
-	if (k->ep)
-		c += 3 * k->ep;
-	return c;
 }
 
 void finishCone() {

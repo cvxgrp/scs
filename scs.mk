@@ -4,9 +4,10 @@ LDFLAGS = -lm
 
 CFLAGS = -g -Wall -pedantic -O3 -Iinclude -funroll-loops 
 
-DIRSRC = linsys/direct
+LINSYS = linsys
+DIRSRC = $(LINSYS)/direct
 DIRSRCEXT = $(DIRSRC)/external
-INDIRSRC = linsys/indirect
+INDIRSRC = $(LINSYS)/indirect
 
 CFLAGS += -I/opt/local/include -I/usr/local/include
 LDFLAGS += -L/opt/local/lib -L/usr/local/lib

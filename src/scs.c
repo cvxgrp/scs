@@ -140,11 +140,6 @@ static void updateWork(Data * d, Work * w, Sol * sol) {
 }
 
 static idxint validate(Data * d, Cone * k) {
-	idxint i, rMax, Anz;
-	if (!d->Ax || !d->Ai || !d->Ap) {
-		scs_printf("data incompletely specified\n");
-		return -1;
-	}
 	if (d->m <= 0 || d->n <= 0) {
 		scs_printf("m and n must both be greater than 0\n");
 		return -1;
@@ -153,39 +148,19 @@ static idxint validate(Data * d, Cone * k) {
 		scs_printf("m must be greater than or equal to n\n");
 		return -1;
 	}
-	for (i = 0; i < d->n; ++i) {
-		if (d->Ap[i] >= d->Ap[i + 1]) {
-			scs_printf("Ap not strictly increasing\n");
-			return -1;
-		}
-	}
-	Anz = d->Ap[d->n];
-	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
-		scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) Anz);
+	if (validateLinSys(d) < 0) {
+		scs_printf("invalid linear system input data\n");
 		return -1;
 	}
-	rMax = 0;
-	for (i = 0; i < Anz; ++i) {
-		if (d->Ai[i] > rMax)
-			rMax = d->Ai[i];
-	}
-	if (rMax > d->m - 1) {
-		scs_printf("number of rows in A inconsistent with input dimension\n");
-		return -1;
-	}
-	if (validateCones(k) < 0) {
+	if (validateCones(d, k) < 0) {
 		scs_printf("invalid cone dimensions\n");
 		return -1;
 	}
-	if (getFullConeDims(k) != d->m) {
-		scs_printf("cone dimensions %i not equal to num rows in A = m = %i\n", (int) getFullConeDims(k), (int) d->m);
-		return -1;
-	}
-	if (d->MAX_ITERS < 0) {
+	if (d->MAX_ITERS <= 0) {
 		scs_printf("MAX_ITERS must be positive\n");
 		return -1;
 	}
-	if (d->EPS < 0) {
+	if (d->EPS <= 0) {
 		scs_printf("EPS tolerance must be positive\n");
 		return -1;
 	}
@@ -193,10 +168,15 @@ static idxint validate(Data * d, Cone * k) {
 		scs_printf("ALPHA must be in (0,2)\n");
 		return -1;
 	}
-	if (d->RHO_X < 0) {
+	if (d->RHO_X <= 0) {
 		scs_printf("RHO_X must be positive (1e-3 works well).\n");
 		return -1;
 	}
+	if (d->SCALE <= 0) {
+		scs_printf("SCALE must be positive (1 works well).\n");
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -242,8 +222,8 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	nmpr = fastCalcPrimalResid(d, w, &nmAxs);
 	cTx = innerProd(x, d->c, n);
 	if (d->NORMALIZE) {
-		kap /= (w->scale * w->sc_c * w->sc_b);
-		cTx /= (w->scale * w->sc_c * w->sc_b);
+		kap /= (d->SCALE * w->sc_c * w->sc_b);
+		cTx /= (d->SCALE * w->sc_c * w->sc_b);
 	}
 	r->kap = kap;
 
@@ -255,7 +235,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	nmdr = calcDualResid(d, w, y, tau, &nmATy);
 	bTy = innerProd(y, d->b, m);
 	if (d->NORMALIZE) {
-		bTy /= (w->scale * w->sc_c * w->sc_b);
+		bTy /= (d->SCALE * w->sc_c * w->sc_b);
 	}
 
 	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : NAN;
@@ -293,7 +273,7 @@ static pfloat calcPrimalResid(Data * d, Work * w, pfloat * x, pfloat * s, pfloat
 	accumByA(d, w->p, x, pr);
 	addScaledArray(pr, s, d->m, 1.0); /* pr = Ax + s */
 	for (i = 0; i < d->m; ++i) {
-		scale = d->NORMALIZE ? D[i] / (w->sc_b * w->scale) : 1;
+		scale = d->NORMALIZE ? D[i] / (w->sc_b * d->SCALE) : 1;
 		scale = scale * scale;
 		*nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - d->b[i] * tau) * (pr[i] - d->b[i] * tau) * scale;
@@ -309,7 +289,7 @@ static pfloat calcDualResid(Data * d, Work * w, pfloat * y, pfloat tau, pfloat *
 	memset(dr, 0, d->n * sizeof(pfloat));
 	accumByAtrans(d, w->p, y, dr); /* dr = A'y */
 	for (i = 0; i < d->n; ++i) {
-		scale = d->NORMALIZE ? E[i] / (w->sc_c * w->scale) : 1;
+		scale = d->NORMALIZE ? E[i] / (w->sc_c * d->SCALE) : 1;
 		scale = scale * scale;
 		*nmATy += (dr[i] * dr[i]) * scale;
 		dres += (dr[i] + d->c[i] * tau) * (dr[i] + d->c[i] * tau) * scale;
@@ -327,7 +307,7 @@ static pfloat fastCalcPrimalResid(Data * d, Work * w, pfloat * nmAxs) {
 	addScaledArray(pr, &(w->u_t[n]), m, 1 - d->ALPHA);
 	addScaledArray(pr, d->b, m, w->u_t[n + m]); /* pr = Ax + s */
 	for (i = 0; i < m; ++i) {
-		scale = d->NORMALIZE ? D[i] / (w->sc_b * w->scale) : 1;
+		scale = d->NORMALIZE ? D[i] / (w->sc_b * d->SCALE) : 1;
 		scale = scale * scale;
 		*nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - d->b[i] * tau) * (pr[i] - d->b[i] * tau) * scale;
@@ -347,8 +327,8 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
 	cTx = innerProd(x, d->c, d->n);
 	bTy = innerProd(y, d->b, d->m);
 	if (d->NORMALIZE) {
-		cTx /= (w->scale * w->sc_c * w->sc_b);
-		bTy /= (w->scale * w->sc_c * w->sc_b);
+		cTx /= (d->SCALE * w->sc_c * w->sc_b);
+		bTy /= (d->SCALE * w->sc_c * w->sc_b);
 	}
 	info->pobj = cTx;
 	info->dobj = -bTy;
@@ -654,8 +634,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	}
 	scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
 			(int) d->NORMALIZE);
-	scs_printf("variables n = %i, constraints m = %i, non-zeros in A = %li\n", (int) d->n, (int) d->m,
-			(long) d->Ap[d->n]);
+	scs_printf("variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
 	if (d->WARM_START)
 		scs_printf("using variable warm-starting!\n");
 

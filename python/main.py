@@ -30,9 +30,9 @@ print sol
 sol = scs.solve(data,cone, opts, USE_INDIRECT = True)
 print sol
 
-#print getrefcount(sol['x'])
-#h = hpy()
-#print h.heap()
+print getrefcount(sol['x'])
+h = hpy()
+print h.heap()
 
 data['x'] = sol['x']
 data['y'] = sol['y']

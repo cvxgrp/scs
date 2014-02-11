@@ -1,4 +1,5 @@
 #include "scs.h"
+#include "../linsys/amatrix.h"
 
 int main(int argc, char **argv);
 idxint read_in_data(FILE * fp, Data * d, Cone * k);
@@ -104,6 +105,7 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 #define LEN64 64 /* variable-size arrays not allowed in ansi */
 	char s[LEN64], *token;
 	idxint i, Anz;
+	AMatrix * A;
 	d->RHO_X = RHOX;
 	d->WARM_START = 0;
 	d->SCALE = 1;
@@ -164,22 +166,24 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 		if (fscanf(fp, FLOATRW, &d->c[i]) != 1)
 			return -1;
 	}
-	d->Ap = malloc(sizeof(idxint) * (d->n + 1));
+	A = malloc(sizeof(AMatrix));
+	A->p = malloc(sizeof(idxint) * (d->n + 1));
 	for (i = 0; i < d->n + 1; i++) {
-		if (fscanf(fp, INTRW, &d->Ap[i]) != 1)
+		if (fscanf(fp, INTRW, &A->p[i]) != 1)
 			return -1;
 	}
-	Anz = d->Ap[d->n];
-	d->Ai = malloc(sizeof(idxint) * Anz);
+	Anz = A->p[d->n];
+	A->i = malloc(sizeof(idxint) * Anz);
 	for (i = 0; i < Anz; i++) {
-		if (fscanf(fp, INTRW, &d->Ai[i]) != 1)
+		if (fscanf(fp, INTRW, &A->i[i]) != 1)
 			return -1;
 	}
-	d->Ax = malloc(sizeof(pfloat) * Anz);
+	A->x = malloc(sizeof(pfloat) * Anz);
 	for (i = 0; i < Anz; i++) {
-		if (fscanf(fp, FLOATRW, &d->Ax[i]) != 1)
+		if (fscanf(fp, FLOATRW, &A->x[i]) != 1)
 			return -1;
 	}
+	d->A = A;
 	return 0;
 }
 
@@ -189,12 +193,15 @@ void freeData(Data * d, Cone * k) {
 			scs_free(d->b);
 		if (d->c)
 			scs_free(d->c);
-		if (d->Ax)
-			scs_free(d->Ax);
-		if (d->Ai)
-			scs_free(d->Ai);
-		if (d->Ap)
-			scs_free(d->Ap);
+		if (d->A){
+			if (d->A->x)
+				scs_free(d->A->x);
+			if (d->A->i)
+				scs_free(d->A->i);
+			if (d->A->p)
+				scs_free(d->A->p);
+			scs_free(d->A);
+		}
 		scs_free(d);
 	}
 	if (k) {

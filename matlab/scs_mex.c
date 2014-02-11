@@ -3,6 +3,7 @@
 #include "glbopts.h"
 #include "scs.h"
 #include "linAlg.h"
+#include "../linsys/amatrix.h"
 
 void freeMex(Data * d, Cone * k);
 
@@ -102,11 +103,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	else
 		d->EPS = (pfloat) *mxGetPr(EPS_mex);
 
-	const mxArray *CG_RATE = mxGetField(params, 0, "CG_RATE");
-	if (EPS_mex == NULL)
+	const mxArray *CG_RATE_mex = mxGetField(params, 0, "CG_RATE");
+	if (CG_RATE_mex == NULL)
 		d->CG_RATE = 1.5;
 	else
-		d->CG_RATE = (pfloat) *mxGetPr(CG_RATE);
+		d->CG_RATE = (pfloat) *mxGetPr(CG_RATE_mex);
 
 	const mxArray *VERBOSE_mex = mxGetField(params, 0, "VERBOSE");
 	if (VERBOSE_mex == NULL)
@@ -179,16 +180,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		k->ssize = 0;
 		k->s = NULL;
 	}
-
-	d->Ax = (pfloat *) mxGetPr(A_mex);
+	AMatrix * A = scs_malloc(sizeof(AMatrix));
+	A->x = (pfloat *) mxGetPr(A_mex);
 	/* XXX:
 	 * these return (mwSize *), equivalent to (size_t *)
 	 * casting as (idxint *), when idxint = long seems to work
 	 * although maybe not on all machines:
 	 */
-	d->Ap = (idxint *) mxGetJc(A_mex);
-	d->Ai = (idxint *) mxGetIr(A_mex);
-
+	A->p = (idxint *) mxGetJc(A_mex);
+	A->i = (idxint *) mxGetIr(A_mex);
+	d->A = A;
 	/* warm-start inputs */
 	Sol sol = { 0 };
 	d->WARM_START = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
@@ -265,8 +266,10 @@ void freeMex(Data * d, Cone * k) {
 		scs_free(k->q);
 	if (k->s)
 		scs_free(k->s);
-	if (d)
+	if (d) {
+		if(d->A) scs_free(d->A);
 		scs_free(d);
+	}
 	if (k)
 		scs_free(k);
 }

@@ -1,4 +1,5 @@
 #include "private.h"
+#include "../common.h"
 #include <sys/time.h>
 
 /* forward declare */
@@ -23,14 +24,14 @@ pfloat lTocq(void) {
 
 char * getLinSysMethod(Data * d, Priv * p) {
 	char * tmp = scs_malloc(sizeof(char) * 32);
-	sprintf(tmp,"sparse-direct");
+	sprintf(tmp, "sparse-direct, nnz in A = %li", (long ) d->A->p[d->n]);
 	return tmp;
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
 	idxint n = p->L->n;
-	sprintf(str, "NNZs in L factor: %li, avg solve time: %1.2es\n", (long) p->L->p[n] + n,
+	sprintf(str, "NNZs in L factor: %li, avg solve time: %1.2es\n", (long ) p->L->p[n] + n,
 			totalSolveTime / (info->iter + 1) / 1e3);
 	totalSolveTime = 0;
 	return str;
@@ -85,8 +86,9 @@ cs * formKKT(Data * d) {
 	 */
 	idxint j, k, kk;
 	cs * K_cs;
+	AMatrix * A = d->A;
 	/* I at top left */
-	const idxint Anz = d->Ap[d->n];
+	const idxint Anz = A->p[d->n];
 	const idxint Knzmax = d->n + d->m + Anz;
 	cs * K = cs_spalloc(d->m + d->n, d->m + d->n, Knzmax, 1, 1);
 	if (!K) {
@@ -101,10 +103,10 @@ cs * formKKT(Data * d) {
 	}
 	/* A^T at top right : CCS: */
 	for (j = 0; j < d->n; j++) {
-		for (k = d->Ap[j]; k < d->Ap[j + 1]; k++) {
-			K->p[kk] = d->Ai[k] + d->n;
+		for (k = A->p[j]; k < A->p[j + 1]; k++) {
+			K->p[kk] = A->i[k] + d->n;
 			K->i[kk] = j;
-			K->x[kk] = d->Ax[k];
+			K->x[kk] = A->x[k];
 			kk++;
 		}
 	}
@@ -253,8 +255,10 @@ void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x,
 }
 
 void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) {
-	_accumByAtrans(d->n, d->Ax, d->Ai, d->Ap, x, y);
+	AMatrix * A = d->A;
+	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
 }
 void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) {
-	_accumByA(d->n, d->Ax, d->Ai, d->Ap, x, y);
+	AMatrix * A = d->A;
+	_accumByA(d->n, A->x, A->i, A->p, x, y);
 }

@@ -18,7 +18,6 @@ struct CONE {
 idxint initCone(Cone * k);
 void finishCone();
 void projCone(pfloat *x, Cone *k, idxint iter);
-idxint getFullConeDims(Cone * k);
 char * getConeHeader(Cone * k);
-idxint validateCones(Cone * k);
+idxint validateCones(Data * d, Cone * k);
 #endif
