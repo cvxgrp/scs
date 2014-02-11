@@ -7,7 +7,7 @@
 #include "glbopts.h"
 #include "cones.h"
 #include "linAlg.h"
-#include "linsys.h"
+#include "linSys.h"
 #include "util.h"
 
 /* struct that containing standard problem data */

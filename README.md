@@ -219,7 +219,7 @@ You can warm-start (supply a guess of the solution) by setting WARM_START in Dat
 To factorize the matrix once and solve many times, simply call scs_init once, and use scs_solve many times with the same workspace, changing the input data (and optionally warm-starts) for each iteration. See run_scs.c for an example.
 
 ### Using your own linear system solver
-Simply implement all the methods in `include/linsys.h` and plug it in.
+Simply implement all the methods and the two structs in `include/linSys.h` and plug it in.
 
 Solving SDPs
 ---------- 

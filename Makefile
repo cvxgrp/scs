@@ -21,7 +21,7 @@ else
 endif
 	@echo "**********************************************************************************"
 
-scs 	: src/scs.c include/scs.h include/linsys.h include/normalize.h
+scs 	: src/scs.c include/scs.h include/linSys.h include/normalize.h
 util	: src/util.c include/util.h
 cones	: src/cones.c include/cones.h
 cs		: src/cs.c include/cs.h
