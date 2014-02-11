@@ -23,8 +23,8 @@ pfloat lTocq(void) {
 }
 
 char * getLinSysMethod(Data * d, Priv * p) {
-	char * tmp = scs_malloc(sizeof(char) * 32);
-	sprintf(tmp, "sparse-direct, nnz in A = %li", (long ) d->A->p[d->n]);
+	char * tmp = scs_malloc(sizeof(char) * 64);
+	sprintf(tmp, "sparse-direct, nnz in A = %li", (long) d->A->p[d->n]);
 	return tmp;
 }
 
