@@ -1,6 +1,7 @@
 #ifndef COMMON_H_GUARD
 #define COMMON_H_GUARD
 
+#include "cones.h"
 #include "amatrix.h"
 
 /* contains routines common to direct and indirect sparse solvers */
@@ -42,9 +43,9 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	AMatrix * A = d->A;
 	pfloat * D = scs_calloc(d->m, sizeof(pfloat));
 	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
-
-	idxint i, j, count;
+	idxint i, j, count, delta, *boundaries;
 	pfloat wrk, *nms;
+	idxint numBoundaries = getConeBoundaries(k, &boundaries);
 
 	/* calculate row norms */
 	for (i = 0; i < d->n; ++i) {
@@ -56,49 +57,22 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < d->m; ++i) {
 		D[i] = sqrt(D[i]); /* just the norms */
 	}
+
 	/* mean of norms of rows across each cone  */
-	count = k->l + k->f;
-	for (i = 0; i < k->qsize; ++i) {
+	count = boundaries[0];
+	for (i = 1; i < numBoundaries; ++i) {
 		wrk = 0;
-		/*
-		 for (j = count; j < count + k->q[i]; ++j){
-		 wrk = MAX(wrk,D[j]);
-		 }
-		 */
-		for (j = count; j < count + k->q[i]; ++j) {
+		delta = boundaries[i];
+		for (j = count; j < count + delta; ++j) {
 			wrk += D[j];
 		}
-		wrk /= k->q[i];
-		for (j = count; j < count + k->q[i]; ++j) {
+		wrk /= delta;
+		for (j = count; j < count + delta; ++j) {
 			D[j] = wrk;
 		}
-		count += k->q[i];
+		count += delta;
 	}
-	for (i = 0; i < k->ssize; ++i) {
-		wrk = 0;
-		/*
-		 for (j = count; j < count + (k->s[i])*(k->s[i]); ++j){
-		 wrk = MAX(wrk,D[j]);
-		 }
-		 */
-		for (j = count; j < count + (k->s[i]) * (k->s[i]); ++j) {
-			wrk += D[j] * D[j];
-		}
-		wrk = sqrt(wrk);
-		wrk /= k->s[i];
-		for (j = count; j < count + (k->s[i]) * (k->s[i]); ++j) {
-			D[j] = wrk;
-		}
-		count += (k->s[i]) * (k->s[i]);
-	}
-
-	for (i = 0; i < k->ep + k->ed; ++i) {
-		wrk = D[count] / 3 + D[count + 1] / 3 + D[count + 2] / 3;
-		D[count] = wrk;
-		D[count + 1] = wrk;
-		D[count + 2] = wrk;
-		count += 3;
-	}
+	scs_free(boundaries);
 
 	for (i = 0; i < d->m; ++i) {
 		if (D[i] < MIN_SCALE)

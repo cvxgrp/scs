@@ -36,6 +36,28 @@ idxint initCone(Cone * k) {
 	return 0;
 }
 
+idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
+	idxint i, count = 0;
+	idxint len = 1 + k->qsize + k->ssize + k->ed + k->ep;
+	idxint * b = scs_malloc(sizeof(idxint) * len);
+	b[count] = k->f + k->l;
+	count += 1;
+	if (k->qsize > 0) {
+		memcpy(&b[count], k->q, k->qsize * sizeof(idxint));
+	}
+	count += k->qsize;
+	for (i = 0; i < k->ssize; ++i) {
+		b[count + i] = k->s[i] * k->s[i];
+	}
+	count += k->ssize;
+	for (i = 0; i < k->ep + k->ed; ++i) {
+		b[count + i] = 3;
+	}
+	count += k->ep + k->ed;
+	*boundaries = b;
+	return len;
+}
+
 idxint getFullConeDims(Cone * k) {
 	idxint i, c = 0;
 	if (k->f)

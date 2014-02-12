@@ -5,7 +5,7 @@ disp('WARNING: this can take a very long time to run.')
 disp('It may also crash/run out of memory.')
 disp('------------------------------------------------------------')
 
-save_results = true;
+save_results = false;
 
 run '../../matlab/make_scs.m'
 addpath('../../matlab/')

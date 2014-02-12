@@ -15,9 +15,17 @@ struct CONE {
 	idxint ed; /* number of dual exponential cone triples */
 };
 
+/*
+ * boundaries will contain array of indices of rows of A corresponding to
+ * cone boundaries, boundaries[0] is starting index for cones of size larger than 1
+ * returns length of boundaries array, boundaries malloc-ed here so should be freed
+ */
+idxint getConeBoundaries(Cone * k, idxint ** boundaries);
+
 idxint initCone(Cone * k);
-void finishCone();
-void projCone(pfloat *x, Cone *k, idxint iter);
 char * getConeHeader(Cone * k);
 idxint validateCones(Data * d, Cone * k);
+void projCone(pfloat *x, Cone *k, idxint iter);
+void finishCone();
+
 #endif
