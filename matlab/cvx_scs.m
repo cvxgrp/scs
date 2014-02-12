@@ -9,7 +9,7 @@ if ~isempty( shim.solve ),
 end
 if isempty( shim.name ),
     fname = 'scs.m';
-    [ fs, ps, int_path ] = cvx_version;
+    [ fs, ~, int_path ] = cvx_version;
     int_path(end+1) = fs;
     int_plen = length( int_path );
     shim.name = 'scs';
@@ -49,7 +49,7 @@ if isempty( shim.name ),
             tshim.check = @check;
             tshim.solve = @solve;
             if k ~= 2,
-                tshim.path = [ new_dir, ps ];
+                tshim.path = [ new_dir, pathsep ];
             end
         end
         shim = [ shim, tshim ]; %#ok
@@ -107,46 +107,72 @@ for k = 1 : length( nonls ),
             K.q = [ K.q, nn * ones( 1, nv ) ];
         end
     elseif isequal( tt, 'semidefinite' ),
-        nn = 0.5 * ( sqrt( 8 * nn + 1 ) - 1 );
-        str = cvx_create_structure( [ nn, nn, nv ], 'symmetric' );
-        K.s = [ K.s, nn * ones( 1, nv ) ];
-        [ cc, rr, vv ] = find( cvx_invert_structure( str, 'compact' ) );
-        rr = temp( rr );
-        reord.s.r = [ reord.s.r; rr( : ) ];
-        reord.s.c = [ reord.s.c; cc( : ) + reord.s.n ];
-        reord.s.v = [ reord.s.v; vv( : ) ];
-        reord.s.n = reord.s.n + nn * nn * nv;
+        if nn == 3,
+            temp = temp( [1,1,3,3,2], : );
+            tempv = [1;1;1;-1;1] * ones(1,nv);
+            tempc = bsxfun(@plus,[1;2;1;2;3],3*(0:nv-1));
+            reord.q.r = [ reord.r.r ; temp(:) ];
+            reord.q.c = [ reord.r.c ; reord.r.n + tempc(:) ];
+            reord.q.v = [ reord.r.v ; tempv(:) ];
+            reord.q.n = reord.r.n + nnv;
+            K.q = [ K.q, 3 * ones( 1, nv ) ];
+            temp = temp([1,3],:);
+            zinv = [ zinv ; temp(:) ]; %#ok
+        else
+            nn = 0.5 * ( sqrt( 8 * nn + 1 ) - 1 );
+            str = cvx_create_structure( [ nn, nn, nv ], 'symmetric' );
+            K.s = [ K.s, nn * ones( 1, nv ) ];
+            [ cc, rr, vv ] = find( cvx_invert_structure( str, 'compact' ) );
+            rr = temp( rr );
+            reord.s.r = [ reord.s.r; rr( : ) ];
+            reord.s.c = [ reord.s.c; cc( : ) + reord.s.n ];
+            reord.s.v = [ reord.s.v; vv( : ) ];
+            reord.s.n = reord.s.n + nn * nn * nv;
+        end
     elseif isequal( tt, 'hermitian-semidefinite' ) && 1,
-        % SeDuMi's complex SDP support was broken with the 1.3 update. It
-        % simply applies a conversion to real SDP, however, which we can
-        % reproduce here.
-        %   X >= 0 <==> exists [ Y1, Y2^T ; Y2, Y3 ] >= 0 s.t.
-        %               Y1 + Y3 == real(X), Y2 - Y2^T == imag(X)
-        nsq = nn; nn = sqrt( nn );
-        str = cvx_create_structure( [ nn, nn, nv ], 'hermitian' );
-        [ cc, rr, vv ] = find( cvx_invert_structure( str, 'compact' ) );
-        cc = cc - 1;
-        mm = floor( cc / nsq );
-        cc = cc - mm * nsq;
-        jj = floor( cc / nn );
-        ii = cc - jj * nn + 1;
-        jj = jj + 1;
-        mm = mm + 1;
-        vr = real( vv );
-        vi = imag( vv );
-        ii = [ ii + nn * ~vr ; ii + nn * ~vi ];
-        jj = [ jj ; jj + nn ]; %#ok
-        vv = sqrt( 0.5 ) * [ vr + vi ; vr - vi ];
-        rr = [ rr ; rr ]; %#ok
-        mm = [ mm ; mm ]; %#ok
-        [ jj, ii ] = deal( min( ii, jj ), max( ii, jj ) );
-        cc = ii + ( jj - 1 ) * ( 2 * nn ) + ( mm - 1 ) * ( 4 * nsq );
-        K.s = [ K.s, 2 * nn * ones( 1, nv ) ];
-        rr = temp( rr );
-        reord.s.r = [ reord.s.r; rr( : ) ];
-        reord.s.c = [ reord.s.c; cc( : ) + reord.s.n ];
-        reord.s.v = [ reord.s.v; vv( : ) ];
-        reord.s.n = reord.s.n + 4 * nsq * nv;
+        if nn == 4,
+            temp = temp( [1,1,4,4,2,3], : );
+            tempv = [1;1;1;-1;1;1] * ones(1,nv);
+            tempc = bsxfun(@plus,[1;2;1;2;3;4],4*(0:nv-1));
+            reord.q.r = [ reord.r.r ; temp(:) ];
+            reord.q.c = [ reord.r.c ; reord.r.n + tempc(:) ];
+            reord.q.v = [ reord.r.v ; tempv(:) ];
+            reord.q.n = reord.r.n + nnv;
+            K.q = [ K.r, q * ones( 1, nv ) ];
+            temp = temp([1,3],:);
+            zinv = [ zinv ; temp(:) ]; %#ok
+        else
+            % SeDuMi's complex SDP support was broken with the 1.3 update. It
+            % simply applies a conversion to real SDP, however, which we can
+            % reproduce here.
+            %   X >= 0 <==> exists [ Y1, Y2^T ; Y2, Y3 ] >= 0 s.t.
+            %               Y1 + Y3 == real(X), Y2 - Y2^T == imag(X)
+            nsq = nn; nn = sqrt( nn );
+            str = cvx_create_structure( [ nn, nn, nv ], 'hermitian' );
+            [ cc, rr, vv ] = find( cvx_invert_structure( str, 'compact' ) );
+            cc = cc - 1;
+            mm = floor( cc / nsq );
+            cc = cc - mm * nsq;
+            jj = floor( cc / nn );
+            ii = cc - jj * nn + 1;
+            jj = jj + 1;
+            mm = mm + 1;
+            vr = real( vv );
+            vi = imag( vv );
+            ii = [ ii + nn * ~vr ; ii + nn * ~vi ];
+            jj = [ jj ; jj + nn ]; %#ok
+            vv = sqrt( 0.5 ) * [ vr + vi ; vr - vi ];
+            rr = [ rr ; rr ]; %#ok
+            mm = [ mm ; mm ]; %#ok
+            [ jj, ii ] = deal( min( ii, jj ), max( ii, jj ) );
+            cc = ii + ( jj - 1 ) * ( 2 * nn ) + ( mm - 1 ) * ( 4 * nsq );
+            K.s = [ K.s, 2 * nn * ones( 1, nv ) ];
+            rr = temp( rr );
+            reord.s.r = [ reord.s.r; rr( : ) ];
+            reord.s.c = [ reord.s.c; cc( : ) + reord.s.n ];
+            reord.s.v = [ reord.s.v; vv( : ) ];
+            reord.s.n = reord.s.n + 4 * nsq * nv;
+        end
     elseif isequal( tt, 'hermitian-semidefinite' ),
         % If SeDuMi's complex SDP support is restored, we can usse this
         % simpler mapping instead, if we choose.
