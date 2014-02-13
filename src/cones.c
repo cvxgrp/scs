@@ -230,6 +230,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 		 * exponential cone is not self dual, if s \in K
 		 * then y \in K^* and so if K is the primal cone
 		 * here we project onto K^*, via Moreau
+         * \Pi_C^*(y) = y + \Pi_C(-y)
 		 */
 		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
 #pragma omp parallel for private(r,s,t,idx)

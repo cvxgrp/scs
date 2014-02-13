@@ -16,12 +16,14 @@ idxint validateLinSys(Data *d) {
 		scs_printf("data incompletely specified\n");
 		return -1;
 	}
+    /* detects degenerate problems, sometimes not wanted:
 	for (i = 0; i < d->n; ++i) {
 		if (A->p[i] >= A->p[i + 1]) {
 			scs_printf("A->p not strictly increasing\n");
 			return -1;
 		}
 	}
+    */
 	Anz = A->p[d->n];
 	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
 		scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) Anz);
