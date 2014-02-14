@@ -4,7 +4,7 @@ addpath('../../matlab')
 %% generate random cone problem (solution NOT necessariy unique):
 
 % Doesn't generate valid random SDPs, turn off 's' for now:
-K = struct('f',500,'l',15000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000],'s',[],'ep',100,'ed',200)
+K = struct('f',10000,'l',30000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;15000;5000],'s',[],'ep',100,'ed',20)
 density = 0.1; % A matrix density
 
 m = getConeDims(K);
@@ -19,21 +19,27 @@ A = sprandn(m,n,density);
 x = randn(n,1);
 c = -A'*y;
 b = A*x + s;
+nnz(A)
 %%
 data.A = A;
 data.b = b;
 data.c = c;
-params = struct('EPS',1e-4, 'NORMALIZE',1);
-
-% direct:
-[xd,yd,sd,infod] = scs_direct(data,K,params);
+params = struct('EPS',1e-4, 'NORMALIZE',1,'SCALE',10,'CG_RATE',2);
 
 %indirect
 [xi,yi,si,infoi] = scs_indirect(data,K,params);
+c'*x
+(c'*xi - c'*x) / (c'*x)
+b'*y
+(b'*yi - b'*y) / (b'*y)
 
-% compare to true value of opt:
-[c'*xd c'*xi c'*x]
-[b'*yd b'*yi b'*y]
+% direct:
+[xd,yd,sd,infod] = scs_direct(data,K,params);
+c'*x
+(c'*xd - c'*x) / c'*x
+b'*y
+(b'*yd - b'*y) / b'*y
+
 end
 
 function l = getConeDims(K)
