@@ -1,5 +1,5 @@
-function [x, y, info] = scs_indirect(data, cone, params)			    
-%scs_direct Operator-splitting method for solving cone problems (indirect)
+function [x, y, s, info] = scs_indirect(data, cone, params)			    
+% Operator-splitting method for solving cone problems (indirect)
 %
 % This implements a cone solver. It solves:
 %

@@ -1,6 +1,5 @@
 #include "private.h"
 #include "../common.h"
-#include <sys/time.h>
 
 /* forward declare */
 idxint LDLInit(cs * A, idxint P[], pfloat **info);

@@ -2,7 +2,6 @@
 #define SCS_H_GUARD
 
 #include <string.h>
-#include <sys/time.h>
 #include <math.h>
 #include "glbopts.h"
 #include "cones.h"
