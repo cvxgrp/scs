@@ -362,21 +362,23 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
-	idxint i, n = d->n, m = d->m;
+	idxint n = d->n, m = d->m;
 	memset(w->v, 0, n * sizeof(pfloat));
 	memcpy(w->u, sol->x, n * sizeof(pfloat));
 	memcpy(&(w->u[n]), sol->y, m * sizeof(pfloat));
 	memcpy(&(w->v[n]), sol->s, m * sizeof(pfloat));
 	w->u[n + m] = 1.0;
 	w->v[n + m] = 0.0;
-#ifndef NOVALIDATE
+	/*
+	#ifndef NOVALIDATE
 	for (i = 0; i < n + m + 1; ++i) {
 		if (isnan(w->u[i]) || isinf(w->u[i]))
 			w->u[i] = 0;
 		if (isnan(w->v[i]) || isinf(w->v[i]))
 			w->v[i] = 0;
 	}
-#endif
+	#endif
+	 */
 	if (d->NORMALIZE)
 		normalizeWarmStart(d, w);
 }
@@ -635,11 +637,16 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	if (linSysMethod) {
 		scs_printf("method: %s\n", linSysMethod);
 		scs_free(linSysMethod);
-	}
-	scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
-			(int) d->NORMALIZE);
-	scs_printf("variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
-	if (d->WARM_START)
+    }
+    if(d->NORMALIZE) {
+        scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i, SCALE = %2.1f\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
+                (int) d->NORMALIZE, d->SCALE);
+    } else {
+        scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
+                (int) d->NORMALIZE);
+    }
+    scs_printf("variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
+    if (d->WARM_START)
 		scs_printf("using variable warm-starting!\n");
 
 	scs_printf("%s", coneStr);

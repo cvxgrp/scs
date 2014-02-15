@@ -10,7 +10,7 @@ K = struct('f',100,'l',300,'q',[2;3;4;5;6;7;8;9;10;5;6],'s',[],'ep',3,'ed',5)
 density = 0.1; % A matrix density
 
 m = getConeDims(K);
-n = round(m/4);
+n = round(m/3);
 
 z = randn(m,1);
 %z = symmetrizeZ(z,K); % for SD cones (still doesn't really work)
