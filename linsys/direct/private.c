@@ -8,19 +8,8 @@ idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs ** L, pfloat **D);
 void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp);
 idxint factorize(Data * d, Priv * p);
 
-static struct timeval tic_linsys_start;
+static timer linsysTimer;
 static pfloat totalSolveTime;
-
-void lTic(void) {
-	gettimeofday(&tic_linsys_start, NULL);
-}
-
-pfloat lTocq(void) {
-	struct timeval tic_timestop;
-	gettimeofday(&tic_timestop, NULL);
-	return tic_timestop.tv_sec * 1e3 + tic_timestop.tv_usec / 1e3 - tic_linsys_start.tv_sec * 1e3
-			- tic_linsys_start.tv_usec / 1e3;
-}
 
 char * getLinSysMethod(Data * d, Priv * p) {
 	char * tmp = scs_malloc(sizeof(char) * 64);
@@ -54,9 +43,9 @@ void freePriv(Priv * p) {
 void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
-	lTic();
+	tic(&linsysTimer);
 	LDLSolve(b, b, p->L, p->D, p->P, p->bp);
-	totalSolveTime += lTocq();
+	totalSolveTime += tocq(&linsysTimer);
 }
 
 Priv * initPriv(Data * d) {

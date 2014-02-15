@@ -350,16 +350,17 @@ void projExpCone(pfloat * v) {
 #ifdef LAPACK_LIB_FOUND
 void projectsdc(pfloat *X, idxint n)
 { /* project onto the positive semi-definite cone */
+	idxint i, j;
+	int m = 0;
+	pfloat * Xs = c.Xs;
+	pfloat * Z = c.Z;
+	pfloat * e = c.e;
+	pfloat EIG_TOL = 1e-8;
+	pfloat vupper;
 	if (n == 1) {
 		if(X[0] < 0.0) X[0] = 0.0;
 		return;
 	}
-
-	idxint i, j;
-	int m;
-	pfloat * Xs = c.Xs;
-	pfloat * Z = c.Z;
-	pfloat * e = c.e;
 	memcpy(Xs,X,n*n*sizeof(pfloat));
 
 	/* Xs = X + X', save div by 2 for eigen-recomp */
@@ -368,9 +369,7 @@ void projectsdc(pfloat *X, idxint n)
 		/*b_daxpy(n, 1, &(X[i]), n, &(Xs[i*n]), 1); */
 	}
 
-	pfloat EIG_TOL = 1e-8;
-	pfloat vupper = calcNorm(Xs,n*n);
-	m = 0;
+	vupper = calcNorm(Xs,n*n);
 	LAPACKE_dsyevr( LAPACK_COL_MAJOR, 'V', 'V', 'U', n, Xs, n, 0.0, vupper, -1, -1, EIG_TOL, &m, e, Z, n , NULL);
 	memset(X, 0, n*n*sizeof(pfloat));
 	for (i = 0; i < m; ++i) {

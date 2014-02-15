@@ -24,7 +24,7 @@ static void setx(Data * d, Work * w, Sol * sol);
 static void sets(Data * d, Work * w, Sol * sol);
 static void setSolution(Data * d, Work * w, Sol * sol, Info * info);
 static void getInfo(Data * d, Work * w, Sol * sol, Info * info);
-static void printSummary(idxint i, struct residuals *r);
+static void printSummary(idxint i, struct residuals *r, timer * solveTimer);
 static void printHeader(Data * d, Work * w, Cone * k);
 static void printFooter(Data * d, Work * w, Info * info);
 static void freeWork(Work * w);
@@ -51,7 +51,8 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
 
 Work * scs_init(Data * d, Cone * k, Info * info) {
 	Work * w;
-	if (!d || !k || !info) {
+	timer initTimer;
+    if (!d || !k || !info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
 		return NULL;
 	}
@@ -61,9 +62,9 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 		return NULL;
 	}
 #endif
-	tic();
+	tic(&initTimer);
 	w = initWork(d, k);
-	info->setupTime = tocq();
+	info->setupTime = tocq(&initTimer);
 	return w;
 }
 
@@ -79,12 +80,13 @@ void scs_finish(Data * d, Work * w) {
 
 idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	idxint i;
-	struct residuals r;
+	timer solveTimer;
+    struct residuals r;
 	if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
 		scs_printf("ERROR: NULL input\n");
 		return FAILURE;
 	}
-	tic();
+	tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
 	updateWork(d, w, sol);
 	if (d->VERBOSE)
@@ -102,15 +104,18 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 
 		if (i % PRINT_INTERVAL == 0) {
 			if (d->VERBOSE)
-				printSummary(i, &r);
+				printSummary(i, &r,&solveTimer);
 		}
 	}
 	if (d->VERBOSE)
-		printSummary(i, &r);
+		printSummary(i, &r, &solveTimer);
 	setSolution(d, w, sol, info);
-	info->iter = i;
+	/* populate info */
+    info->iter = i;
 	getInfo(d, w, sol, info);
-	if (d->VERBOSE)
+	info->solveTime = tocq(&solveTimer);
+
+    if (d->VERBOSE)
 		printFooter(d, w, info);
 	/* un-normalize sol, b, c but not A */
 	if (d->NORMALIZE)
@@ -354,7 +359,6 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
 			info->dobj = -1;
 		}
 	}
-	info->solveTime = tocq();
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
@@ -588,7 +592,7 @@ static void setx(Data * d, Work * w, Sol * sol) {
 	memcpy(sol->x, w->u, d->n * sizeof(pfloat));
 }
 
-static void printSummary(idxint i, struct residuals *r) {
+static void printSummary(idxint i, struct residuals *r, timer * solveTimer) {
 	scs_printf("%*i|", (int) strlen(HEADER[0]), (int) i);
 	scs_printf(" %*.2e ", (int) strlen(HEADER[1]) - 1, r->resPri);
 	scs_printf(" %*.2e ", (int) strlen(HEADER[2]) - 1, r->resDual);
@@ -604,7 +608,7 @@ static void printSummary(idxint i, struct residuals *r) {
 		scs_printf(" %*.2e ", (int) strlen(HEADER[5]) - 1, -r->bTy);
 	}
 	scs_printf(" %*.2e ", (int) strlen(HEADER[6]) - 1, r->kap);
-	scs_printf(" %*.2e ", (int) strlen(HEADER[7]) - 1, tocq() / 1e3);
+	scs_printf(" %*.2e ", (int) strlen(HEADER[7]) - 1, tocq(solveTimer) / 1e3);
 	scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
 	mexEvalString("drawnow;");
@@ -623,7 +627,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-	scs_printf("\n\n\tscs v1.0 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2014\n\n");
+	scs_printf("\n\tscs v1.0 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2014\n");
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}

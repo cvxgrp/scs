@@ -13,18 +13,8 @@ static void transpose(Data * d, Priv * p);
 
 static idxint totCgIts;
 static idxint lastNCgIts;
-static struct timeval tic_linsys_start;
+static timer linsysTimer;
 static pfloat totalSolveTime;
-
-void lTic(void) {
-	gettimeofday(&tic_linsys_start, NULL);
-}
-pfloat lTocq(void) {
-	struct timeval tic_timestop;
-	gettimeofday(&tic_timestop, NULL);
-	return tic_timestop.tv_sec * 1e3 + tic_timestop.tv_usec / 1e3 - tic_linsys_start.tv_sec * 1e3
-			- tic_linsys_start.tv_usec / 1e3;
-}
 
 char * getLinSysMethod(Data * d, Priv * p) {
 	char * str = scs_malloc(sizeof(char) * 128);
@@ -133,7 +123,7 @@ void freePriv(Priv * p) {
 void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
 	pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b, d->n) / POWF(iter + 1, d->CG_RATE);
-	lTic();
+	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
 	accumByAtrans(d, p, &(b[d->n]), b);
@@ -152,7 +142,7 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 		}
 #endif
 	}
-	totalSolveTime += lTocq();
+	totalSolveTime += tocq(&linsysTimer);
 }
 static void applyPreConditioner(pfloat * M, pfloat * z, pfloat * r, idxint n, pfloat *ipzr) {
 	idxint i;

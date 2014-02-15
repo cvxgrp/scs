@@ -1,6 +1,13 @@
 UNAME = $(shell uname -s)
 CC = gcc
+
+ifeq ($(UNAME), Linux)
+# we're on a linux system, use accurate timer provided by clock_gettime()
+LDFLAGS = -lm -lrt
+else
+# we're on apple, no need to link rt library
 LDFLAGS = -lm 
+endif
 
 CFLAGS = -g -Wall -pedantic -O3 -Iinclude -funroll-loops 
 
