@@ -31,7 +31,7 @@ typedef struct timer {
 typedef struct timer {
 	struct timespec tic;
 	struct timespec toc;
-}timer;
+} timer;
 
 #endif
 

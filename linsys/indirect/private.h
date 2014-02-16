@@ -1,8 +1,9 @@
 #ifndef PRIV_H_GUARD
 #define PRIV_H_GUARD
 
-#include "cs.h"
+#include "glbopts.h"
 #include "scs.h"
+#include "cs.h"
 #include <math.h>
 
 struct PRIVATE_DATA {
