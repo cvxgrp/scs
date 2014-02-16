@@ -1,7 +1,7 @@
 function compile_indirect(flags)
 
 common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c scs_mex.c';
-d = '-DDLONG';
+d = '-fPIC -DDLONG';
 if (~isempty (strfind (computer, '64')))
     arr = '-largeArrayDims';
 else
@@ -10,7 +10,7 @@ end
 if ( isunix && ~ismac ) 
     link = '-lm -lrt';
 else
-    link = '-lm';                                                                                                                                                                                           
+    link = '-lm';
 end
 
 

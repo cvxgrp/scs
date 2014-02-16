@@ -10,7 +10,7 @@
 #if (defined WIN32 || defined _WIN64 || defined _WINDLL)
 /* Use Windows QueryPerformanceCounter for timing */
 #include <Windows.h>
-typedef struct timer{
+typedef struct timer {
 	LARGE_INTEGER tic;
 	LARGE_INTEGER toc;
 	LARGE_INTEGER freq;
@@ -19,7 +19,7 @@ typedef struct timer{
 #elif (defined __APPLE__)
 /* Use MAC OSX mach_time for timing */
 #include <mach/mach_time.h>
-typedef struct timer{
+typedef struct timer {
 	uint64_t tic;
 	uint64_t toc;
 	mach_timebase_info_data_t tinfo;
@@ -28,10 +28,10 @@ typedef struct timer{
 #else
 /* Use POSIX clock_gettime() for timing on other machines */
 #include <time.h>
-typedef struct timer{
+typedef struct timer {
 	struct timespec tic;
 	struct timespec toc;
-} timer;
+}timer;
 
 #endif
 

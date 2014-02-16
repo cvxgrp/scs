@@ -13,26 +13,24 @@ double tocq(timer* t)
 	return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) / (double) t->freq.QuadPart);
 }
 #elif (defined __APPLE__)
-void tic(timer* t)
-{
-    /* read current clock cycles */
-    t->tic = mach_absolute_time();
+void tic(timer* t) {
+	/* read current clock cycles */
+	t->tic = mach_absolute_time();
 }
 
-double tocq(timer* t)
-{
+double tocq(timer* t) {
 
-    uint64_t duration; /* elapsed time in clock cycles*/
+	uint64_t duration; /* elapsed time in clock cycles*/
 
-    t->toc = mach_absolute_time();
-    duration = t->toc - t->tic;
+	t->toc = mach_absolute_time();
+	duration = t->toc - t->tic;
 
-    /*conversion from clock cycles to nanoseconds*/
-    mach_timebase_info(&(t->tinfo));
-    duration *= t->tinfo.numer;
-    duration /= t->tinfo.denom;
+	/*conversion from clock cycles to nanoseconds*/
+	mach_timebase_info(&(t->tinfo));
+	duration *= t->tinfo.numer;
+	duration /= t->tinfo.denom;
 
-    return (double)duration / 1e6;
+	return (double) duration / 1e6;
 }
 #else
 void tic(timer* t)
