@@ -214,7 +214,9 @@ void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloa
 	idxint p, j;
 	idxint c1, c2;
 	pfloat yj;
+#ifdef USE_OPENMP
 #pragma omp parallel for private(p,c1,c2,yj)
+#endif
 	for (j = 0; j < n; j++) {
 		yj = y[j];
 		c1 = Ap[j];

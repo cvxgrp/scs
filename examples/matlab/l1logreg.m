@@ -5,7 +5,7 @@ disp('WARNING: this can take a very long time to run.')
 disp('It may also crash/run out of memory.')
 disp('------------------------------------------------------------')
 
-save_results = false;
+save_results = true;
 
 run '../../matlab/make_scs.m'
 addpath('../../matlab/')
@@ -25,7 +25,7 @@ for i=1:size(sizes,1)
     
     p = sizes(i,1); % features
     q = sizes(i,2); % total samples
-    density = 0.01;
+    density = 0.1;
     
     w_true = sprandn(p,1,0.2);
     
@@ -85,6 +85,7 @@ for i=1:size(sizes,1)
     K.ed = 0;
     
     params.VERBOSE = 1;
+    params.SCALE = 5;
     %write_scs_data_sparse(data,K,params,str)
     direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
     direct_data.output{i}

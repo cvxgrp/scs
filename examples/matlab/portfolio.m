@@ -8,14 +8,14 @@ disp('------------------------------------------------------------')
 
 run ../../matlab/cvx_install_scs.m
 
-save_results = false;
+save_results = true;
 run_sdpt3 = false;
 run_scs = true;
 
 ns = [5000, 50000, 100000];
 ms = [50, 500, 1000];
 
-density = 0.01;
+density = 0.1;
 
 time_pat_cvx = 'Total CPU time \(secs\)\s*=\s*(?<total>[\d\.]+)';
 
@@ -30,23 +30,14 @@ for i = 1:length(ns)
     D = sqrt(2*rand(n,1));
     F = sprandn(n,m,density);
     gamma = 10;
-    
-    portfolio_prob.F{i} = F;
-    portfolio_prob.D{i} = D;
-    portfolio_prob.mu{i} = mu;
-    portfolio_prob.n{i} = n;
-    portfolio_prob.m{i} = m;
-    portfolio_prob.gamma{i} = gamma;
-    
-    if (save_results); save('data/portfolio_prob', 'portfolio_prob','-v7.3'); end
-    
+        
     %%
     if run_scs
         
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('GEN_PLOTS',1) % only works if 'cvx_solver scs_matlab'
+        cvx_solver_settings('SCALE',5)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
@@ -66,8 +57,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('USE_INDIRECT',1)
-        cvx_solver_settings('GEN_PLOTS',1) % only works if 'cvx_solver scs_matlab'
+        cvx_solver_settings('USE_INDIRECT',1,'SCALE',5)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1

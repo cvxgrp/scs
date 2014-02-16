@@ -8,7 +8,7 @@ disp('------------------------------------------------------------')
 
 run ../../matlab/cvx_install_scs.m
 
-save_results = false;
+save_results = true;
 run_sdpt3 = false;
 run_scs = true;
 
@@ -20,7 +20,7 @@ time_pat_cvx = 'Total CPU time \(secs\)\s*=\s*(?<total>[\d\.]+)';
 for i = 1:length(ns)
     seedstr = sprintf('scs_rpca_ex_%i',i);
     randn('seed',sum(seedstr));rand('seed',sum(seedstr))
-
+    
     n = ns(i);
     m = ms(i);
     r = 10; % rank
@@ -28,18 +28,9 @@ for i = 1:length(ns)
     L1 = randn(m,r);
     L2 = randn(r,n);
     L = L1*L2;
-    S = sprandn(m,n,0.05);
+    S = 10*sprandn(m,n,0.1);
     M = L + S;
     kap = sum(norms(S,1));
-    
-    rpca_prob.L{i} = L;
-    rpca_prob.S{i} = S;
-    rpca_prob.M{i} = M;
-    rpca_prob.kap{i} = kap;
-    rpca_prob.r{i} = r;
-    rpca_prob.n{i} = n;
-    rpca_prob.m{i} = m;
-    if (save_results); save('data/rpca_prob', 'rpca_prob','-v7.3'); end
     
     %%
     if run_scs
@@ -47,7 +38,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('GEN_PLOTS',1) % only works if 'cvx_solver scs_matlab'
+        cvx_solver_settings('SCALE',5)
         variables Lc(m,n) Sc(m,n)
         dual variable Yc
         minimize(norm_nuc(Lc))
@@ -68,8 +59,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('USE_INDIRECT',1)
-        cvx_solver_settings('GEN_PLOTS',1) % only works if 'cvx_solver scs_matlab'
+        cvx_solver_settings('USE_INDIRECT',1,'SCALE',5)
         variables Lc(m,n) Sc(m,n)
         dual variable Yc
         minimize(norm_nuc(Lc))

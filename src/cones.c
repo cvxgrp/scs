@@ -233,7 +233,9 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
          * \Pi_C^*(y) = y + \Pi_C(-y)
 		 */
 		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
+#ifdef USE_OPENMP
 #pragma omp parallel for private(r,s,t,idx)
+#endif
 		for (i = 0; i < k->ep; ++i) {
 			idx = count + 3 * i;
 			r = x[idx];
@@ -251,7 +253,9 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 
 	if (k->ed) {
 		/* exponential cone: */
+#ifdef USE_OPENMP
 #pragma omp parallel for
+#endif
 		for (i = 0; i < k->ed; ++i) {
 			projExpCone(&(x[count + 3 * i]));
 		}

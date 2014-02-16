@@ -4,8 +4,8 @@ addpath('../../matlab')
 %% generate random cone problem (solution NOT necessariy unique):
 
 % Doesn't generate valid random SDPs, turn off 's' for now:
-%K = struct('f',10000,'l',30000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;15000;5000],'s',[],'ep',100,'ed',20)
-K = struct('f',100,'l',300,'q',[2;3;4;5;6;7;8;9;10;5;6],'s',[],'ep',3,'ed',5)
+K = struct('f',10000,'l',30000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;15000;5000],'s',[],'ep',100,'ed',20)
+%K = struct('f',100,'l',300,'q',[2;3;4;5;6;7;8;9;10;5;6;100;200],'s',[],'ep',3,'ed',5)
 
 density = 0.1; % A matrix density
 
@@ -26,7 +26,7 @@ nnz(A)
 data.A = A;
 data.b = b;
 data.c = c;
-params = struct('EPS',1e-4, 'NORMALIZE',1,'SCALE',10,'CG_RATE',2);
+params = struct('EPS',1e-4, 'NORMALIZE',1,'SCALE',5,'CG_RATE',2);
 
 %indirect
 [xi,yi,si,infoi] = scs_indirect(data,K,params);

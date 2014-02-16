@@ -36,6 +36,7 @@ RANLIB = ranlib
 # set the number of threads to, for example, 4 by entering the command:
 # export OMP_NUM_THREADS=4
 
+# USE_OPENMP = 1
 # CFLAGS += -fopenmp
 
 ############ SDPS: BLAS + LAPACK ############
