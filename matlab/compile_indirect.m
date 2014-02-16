@@ -1,11 +1,10 @@
 function compile_indirect(flags)
 
 common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c scs_mex.c';
+d = '-DDLONG';
 if (~isempty (strfind (computer, '64')))
-    d = '-fPIC -DDLONG';
     arr = '-largeArrayDims';
 else
-    d = '-fPIC -m32';
     arr = '';
 end
 if ( isunix && ~ismac ) 

@@ -220,7 +220,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	A = scs_malloc(sizeof(AMatrix));
 	A->x = (pfloat *) mxGetPr(A_mex);
 	/* XXX:
-	 * these return (mwSize *), equivalent to (size_t *)
+	 * these return (mwIndex *), equivalent to (size_t *)
 	 * casting as (idxint *), when idxint = long seems to work
 	 * although maybe not on all machines:
 	 */
