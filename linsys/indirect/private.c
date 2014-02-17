@@ -228,27 +228,6 @@ void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloa
 	}
 }
 
-void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) {
-	/*y  = A*x
-	 A in column compressed format
-	 this parallelizes over columns and uses
-	 pragma atomic to prevent concurrent writes to y
-	 */
-	idxint p, j;
-	idxint c1, c2;
-	pfloat xj;
-	/*#pragma omp parallel for private(p,c1,c2,xj)  */
-	for (j = 0; j < n; j++) {
-		xj = x[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			/*#pragma omp atomic */
-			y[Ai[p]] += Ax[p] * xj;
-		}
-	}
-}
-
 void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) {
 	AMatrix * A = d->A;
 	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);

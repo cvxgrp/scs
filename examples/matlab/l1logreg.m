@@ -5,7 +5,7 @@ disp('WARNING: this can take a very long time to run.')
 disp('It may also crash/run out of memory.')
 disp('------------------------------------------------------------')
 
-save_results = true;
+save_results = false;
 
 run '../../matlab/make_scs.m'
 addpath('../../matlab/')
@@ -85,25 +85,25 @@ for i=1:size(sizes,1)
     K.ed = 0;
     
     params.VERBOSE = 1;
-    params.SCALE = 5;
+    params.SCALE = 1;
     %write_scs_data_sparse(data,K,params,str)
     direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
     direct_data.output{i}
     direct_data.x{i} = xd;
     direct_data.y{i} = yd;
     direct_data.s{i} = sd;
-    direct_data.info{i} = infod;    
-
+    direct_data.info{i} = infod;
+    
     indirect_data.output{i} = evalc('[xi,yi,si,infoi]=scs_indirect(data,K,params);');
     indirect_data.output{i}
     indirect_data.x{i} = xi;
     indirect_data.y{i} = yi;
     indirect_data.s{i} = si;
-    indirect_data.info{i} = infoi;    
+    indirect_data.info{i} = infoi;
     
     if (save_results);
         save('data/l1logreg_direct', 'direct_data');
-        save('data/l1logreg_indirect', 'indirect_data'); 
+        save('data/l1logreg_indirect', 'indirect_data');
     end
     
     
@@ -111,6 +111,7 @@ end
 
 %{
 %% cvx can solve these problems via approximation, but it's very, very slow:
+tic
 cvx_begin
 variables x(2*p + 3*q) s(2*p + q + 6*q)
 minimize(c'*x)
@@ -121,5 +122,9 @@ for i=1:K.ep
     -s(idx+1) >= rel_entr(s(idx+2),s(idx+3));
     idx = idx + 3;
 end
-cvx_end
+output = evalc('cvx_end')
+cvx.output{i} = output;        
+
+if (save_results); save('data/l1logreg_cvx', 'cvx'); end
+toc
 %}

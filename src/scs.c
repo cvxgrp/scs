@@ -38,7 +38,11 @@ static pfloat calcDualResid(Data * d, Work * w, pfloat * y, pfloat tau, pfloat *
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
-	Work * w = scs_init(d, k, info);
+    #if (defined _WIN32 || defined _WIN64 )
+    /* sets width of exponent for floating point numbers to 2 instead of 3 */
+    unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+    #endif
+    Work * w = scs_init(d, k, info);
 	if (!w) {
 		scs_printf("ERROR: Could not initialize work\n");
 		failureDefaultReturn(d, sol, info);

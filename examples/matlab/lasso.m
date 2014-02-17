@@ -8,7 +8,7 @@ disp('------------------------------------------------------------')
 
 run ../../matlab/cvx_install_scs.m
 
-save_results = true;
+save_results = false;
 run_sdpt3 = false;
 run_scs = true;
 
