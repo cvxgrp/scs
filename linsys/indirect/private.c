@@ -3,7 +3,6 @@
 #include "linAlg.h"
 
 #define CG_BEST_TOL 1e-9
-#define CG_EXPONENT 1.5
 #define PRINT_INTERVAL 100
 
 /*y = (RHO_X * I + A'A)x */

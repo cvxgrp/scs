@@ -1,47 +1,152 @@
 function randomConeProb()
 clear all;close all;
 addpath('../../matlab')
+cd '../../matlab'; make_scs; cd '../examples/matlab';
 %% generate random cone problem (solution NOT necessariy unique):
 
-% Doesn't generate valid random SDPs, turn off 's' for now:
-%K = struct('f',10000,'l',30000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;15000;5000],'s',[],'ep',100,'ed',20)
-K = struct('f',100,'l',300,'q',[2;3;4;5;6;7;8;9;10;5;6;100;200],'s',[],'ep',3,'ed',5)
+%%% types of probs to solve:
+gen_feasible = true;
+gen_infeasible = true;
+gen_unbounded = true;
+%%% solvers to test:
+run_direct = true;
+run_indirect = true;
+run_cvx = true; % won't work if ep or ed > 0
+cvx_solver = 'sdpt3';
+
+% set cone sizes (ep = ed = 0 if you want to compare against cvx):
+%K = struct('f',10000,'l',20000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;15000;5000],'s',[10;10;10],'ep',100,'ed',20)
+%K = struct('f',1000,'l',2000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;1500],'s',[10;10;10],'ep',10,'ed',20)
+K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100],'s',[],'ep',0,'ed',0)
 
 density = 0.1; % A matrix density
 
 m = getConeDims(K);
 n = round(m/3);
-
-z = randn(m,1);
-%z = symmetrizeZ(z,K); % for SD cones (still doesn't really work)
-s = proj_cone(z,K);
-y = s - z;
-
-A = sprandn(m,n,density);
-x = randn(n,1);
-c = -A'*y;
-b = A*x + s;
-nnz(A)
-%%
-data.A = A;
-data.b = b;
-data.c = c;
 params = struct('EPS',1e-4, 'NORMALIZE',1,'SCALE',5,'CG_RATE',2);
 
-%indirect
-[xi,yi,si,infoi] = scs_indirect(data,K,params);
-c'*x
-(c'*xi - c'*x) / (c'*x)
-b'*y
-(b'*yi - b'*y) / (b'*y)
+%% generate primal-dual feasible cone prob:
+% Ax + s = b, s \in K, A'y + c = 0, y \in K*, s'y = 0
+if (gen_feasible)
+    z = randn(m,1);
+    z = symmetrizeSDP(z,K); % for SD cones
+    y = proj_dual_cone(z,K); % y = s - z;
+    s = y - z; %s = proj_cone(z,K);
+    
+    
+    A = sprandn(m,n,density);
+    x = randn(n,1);
+    c = -A'*y;
+    b = A*x + s;
+    nnz(A)
+    
+    data.A = A;
+    data.b = b;
+    data.c = c;
+    
+    %indirect
+    if (run_indirect)
+        [xi,yi,si,infoi] = scs_indirect(data,K,params);
+        c'*x
+        (c'*xi - c'*x) / (c'*x)
+        b'*y
+        (b'*yi - b'*y) / (b'*y)
+    end
+    if (run_direct)
+        % direct:
+        [xd,yd,sd,infod] = scs_direct(data,K,params);
+        c'*x
+        (c'*xd - c'*x) / (c'*x)
+        b'*y
+        (b'*yd - b'*y) / (b'*y)
+    end
+    if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+end
 
-% direct:
-[xd,yd,sd,infod] = scs_direct(data,K,params);
-c'*x
-(c'*xd - c'*x) / (c'*x)
-b'*y
-(b'*yd - b'*y) / (b'*y)
+%% generate infeasible (NOT SPARSE,SLOW AS A RESULT)
+% A'y = 0, y \in K*, b'*y = -1
+if (gen_infeasible)
+    z = randn(m,1);
+    z = symmetrizeSDP(z,K); % for SD cones
+    y = proj_dual_cone(z,K); % y = s - z;
+    A = randn(m,n);
+    
+    A = A - ((A'*y)*y'/norm(y)^2)'; % dense...
+    
+    b = randn(m,1);
+    b = -b / (b'*y);
+    
+    data.A = sparse(A);
+    data.b = b;
+    data.c = randn(n,1);
+    
+    params.SCALE = 0.5;
+    %indirect
+    if(run_indirect) [xi,yi,si,infoi] = scs_indirect(data,K,params); end
+    % direct:
+    if (run_direct) [xd,yd,sd,infod] = scs_direct(data,K,params); end
+    
+    % cvx:
+    if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+    
+end
+%% generate unbounded (NOT SPARSE,SLOW AS A RESULT)
+% Ax + s = 0, s \in K, c'*x = -1
+if(gen_unbounded)
+    z = randn(m,1);
+    z = symmetrizeSDP(z,K); % for SD cones
+    s = proj_cone(z,K);
+    A = randn(m,n);
+    x = randn(n,1);
+    A = A - (s + A*x)*x'/(norm(x)^2); % dense...
+    c = randn(n,1);
+    c = - c / (c'*x);
+    
+    data.A = sparse(A);
+    data.b = randn(m,1);
+    data.c = c;
+    
+    params.SCALE = 0.5;
+    %indirect
+    if(run_indirect) [xi,yi,si,infoi] = scs_indirect(data,K,params); end
+    % direct:
+    if (run_direct) [xd,yd,sd,infod] = scs_direct(data,K,params); end
+    
+    if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+end
 
+end
+
+function [x,y,s]=solveConeCvx(data,K,cs)
+if (K.ep>0 || K.ed>0)
+    x = nan;
+    y = nan;
+    s = nan;
+    disp('cvx cannot solve EXPs');
+    return;
+end
+n = length(data.c);
+m = length(data.b);
+% can NOT solve EXPs
+cvx_begin
+cvx_solver(cs)
+variables x(n) s(m)
+dual variable y
+minimize(data.c'*x)
+y:data.A*x + s == data.b
+s(1:K.f)==0
+l = K.f;
+s(l+1:l+K.l) >= 0
+l = l + K.l;
+for i=1:length(K.q)
+    s(l+1) >= norm(s(l+2:l + K.q(i)));
+    l = l + K.q(i);
+end
+for i=1:length(K.s)
+    reshape(s(l+1:l + (K.s(i))^2),K.s(i),K.s(i)) == semidefinite(K.s(i));
+    l = l + (K.s(i))^2;
+end
+cvx_end
 end
 
 function l = getConeDims(K)
@@ -56,6 +161,9 @@ l = l + K.ep*3;
 l = l + K.ed*3;
 end
 
+function z = proj_dual_cone(z,c)
+z = z + proj_cone(-z,c);
+end
 
 function z = proj_cone(z,c)
 free_len = c.f;
@@ -223,8 +331,7 @@ end
 z = t + z_hat;
 end
 
-%{
-function z = symmetrizeZ(z,K)
+function z = symmetrizeSDP(z,K)
 l = K.f + K.l;
 for i=1:length(K.q)
     l = l + K.q(i);
@@ -236,4 +343,3 @@ for i=1:length(K.s)
     l=l+K.s(i)^2;
 end
 end
-%}

@@ -105,8 +105,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	d->n = (idxint) *(mxGetDimensions(c_mex));
 	d->m = (idxint) *(mxGetDimensions(b_mex));
 
-	d->b = mxGetPr(b_mex);
-	d->c = mxGetPr(c_mex);
+	d->b = (pfloat *)mxGetPr(b_mex);
+	d->c = (pfloat *)mxGetPr(c_mex);
 
 	/* params */
 	tmp = mxGetField(params, 0, "ALPHA");

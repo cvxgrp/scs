@@ -633,7 +633,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-	scs_printf("\n\tscs v1.0 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2014\n");
+	scs_printf("\n\tscs v1.0 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n");
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}

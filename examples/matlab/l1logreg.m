@@ -123,8 +123,9 @@ for i=1:K.ep
     idx = idx + 3;
 end
 output = evalc('cvx_end')
-cvx.output{i} = output;        
-
+cvx.output{i} = output;
+cvx.x{i} = x;
+cvx.s{i} = s;
 if (save_results); save('data/l1logreg_cvx', 'cvx'); end
 toc
 %}
