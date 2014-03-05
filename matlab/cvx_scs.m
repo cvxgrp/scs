@@ -9,13 +9,12 @@ if ~isempty( shim.solve ),
 end
 if isempty( shim.name ),
     fname = 'scs.m';
-    [ fs, ~, int_path ] = cvx_version;
-    int_path(end+1) = fs;
+    int_path = cvx_where;
     int_plen = length( int_path );
     shim.name = 'scs';
     shim.dualize = true;
     flen = length(fname);
-    fpaths = { [ int_path, 'scs', fs, fname ] };
+    fpaths = { [ int_path, 'scs/', fname ] };
     fpaths = [ fpaths ; which( fname, '-all' ) ];
     old_dir = pwd;
     oshim = shim;
