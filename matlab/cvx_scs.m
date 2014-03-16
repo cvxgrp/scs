@@ -275,38 +275,14 @@ if m1 == 1,
 end
 
 if quiet
-    pars.VERBOSE = 0;
+    settings.VERBOSE = 0;
 end
 if prec(1)==0
     % just run until MAX_ITERS
-    pars.EPS = 0;
-end
-if (isfield(settings,'EPS'))
-    pars.EPS = settings.EPS;
-end
-if (isfield(settings,'MAX_ITERS'))
-    pars.MAX_ITERS = settings.MAX_ITERS;
-end
-if (isfield(settings,'SCALE'))
-    pars.SCALE = settings.SCALE;
-end
-if (isfield(settings,'CG_RATE'))
-    pars.CG_RATE = settings.CG_RATE;
-end
-if (isfield(settings,'USE_INDIRECT'))
-    pars.USE_INDIRECT = settings.USE_INDIRECT;
-end
-if (isfield(settings,'NORMALIZE'))
-    pars.NORMALIZE = settings.NORMALIZE;
-end
-if (isfield(settings,'RHO_X'))
-    pars.RHO_X = settings.RHO_X;
-end
-if (isfield(settings,'ALPHA'))
-    pars.ALPHA = settings.ALPHA;
+    settings.EPS = 0;
 end
 
-% write_scs_data(data,K,pars)
+% write_scs_data(data,K,settings)
 [ yy, xx, info ] = cvx_run_solver( @scs, data, K, pars, 'xx', 'yy', 'info', settings, 3 );
 
 if add_row,
