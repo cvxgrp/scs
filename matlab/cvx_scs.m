@@ -74,6 +74,7 @@ K = struct( 'f', 0, 'l', 0, 'q', [], 's', [], 'scomplex', [], 'ycomplex', [] );
 reord = struct( 'n', 0, 'r', [], 'c', [], 'v', [] );
 reord = struct( 'f', reord, 'l', reord, 'a', reord, 'q', reord, 's', reord, 'h', reord );
 reord.f.n = n;
+zinv = [];
 for k = 1 : length( nonls ),
     temp = nonls( k ).indices;
     nn = size( temp, 1 );
