@@ -13,7 +13,7 @@ def main():
     
 def solveFeasible():
     # cone:
-    K = {'f':10, 'l':15, 'q':[5, 10], 's':[3, 4], 'ep':10, 'ed':10}
+    K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10}
     K = validateCone(K)
     
     density = 0.01  # A matrix density
@@ -153,8 +153,7 @@ def proj_soc(tt):
     if len(tt) == 0:
         return
     elif len(tt) == 1:
-        tt = pos(tt)
-        return
+        return pos(tt)
     
     v1 = tt[0]
     v2 = tt[1:];
