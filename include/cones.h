@@ -1,7 +1,6 @@
 #ifndef CONES_H_GUARD
 #define CONES_H_GUARD
 
-#include "glbopts.h"
 #include "scs.h"
 
 struct CONE {

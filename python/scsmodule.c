@@ -33,7 +33,7 @@ struct ScsPyData {
 
 /* Note, Python3.x may require special handling for the idxint and pfloat
  * types. */
-static int getIntType() {
+static int getIntType(void) {
 	switch (sizeof(idxint)) {
 	case 1:
 		return NPY_INT8;
@@ -48,7 +48,7 @@ static int getIntType() {
 	}
 }
 
-static int getDoubleType() {
+static int getDoubleType(void) {
 	/* known bug, if pfloat isn't "double", will cause aliasing in memory */
 	return NPY_DOUBLE;
 }

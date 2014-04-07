@@ -1,13 +1,6 @@
 #include "scs.h"
 #include "../linsys/amatrix.h"
 
-int main(int argc, char **argv);
-idxint read_in_data(FILE * fp, Data * d, Cone * k);
-idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
-void freeData(Data *d, Cone *k);
-void freeSol(Sol *sol);
-void printSol(Data * d, Sol * sol, Info * info);
-
 #ifndef DEMO_PATH
 #define DEMO_PATH "../data_sparse"
 #endif
@@ -18,10 +11,17 @@ void printSol(Data * d, Sol * sol, Info * info);
 
 #define PI 3.141592654
 
+int main(int argc, char **argv);
+idxint read_in_data(FILE * fp, Data * d, Cone * k);
+idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
+void freeData(Data *d, Cone *k);
+void freeSol(Sol *sol);
+void printSol(Data * d, Sol * sol, Info * info);
+
 static pfloat U, V;
 static idxint phase = 0;
 
-pfloat rand_gauss();
+pfloat rand_gauss(void);
 void perturbVector(pfloat * v, idxint l);
 
 int main(int argc, char **argv) {
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 #define FLOATRW "%f"
 #endif
 
-pfloat rand_gauss() {
+pfloat rand_gauss(void) {
 	pfloat Z;
 	if (phase == 0) {
 		U = (rand() + 1.) / (RAND_MAX + 2.);

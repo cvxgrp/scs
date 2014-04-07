@@ -1,9 +1,9 @@
 #ifndef UTIL_H_GUARD
 #define UTIL_H_GUARD
 
+#include "scs.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "scs.h"
 #include "cones.h"
 
 /* timing code courtesty of A. Domahidi */

@@ -78,6 +78,9 @@ _scs_indirect = Extension(
 
 setup(name='scs',
         version='1.0',
+        author = 'Brendan O\'Donoghue',
+        author_email = 'bodonoghue85@gmail.com',
+        url = 'http://github.com/cvxgrp/scs',
         description='This is the Python package for scs: splittling cone solver. See Github page for more information.',
         py_modules=['scs'],
         ext_modules=[_scs_direct, _scs_indirect],

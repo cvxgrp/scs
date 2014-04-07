@@ -1,5 +1,6 @@
 #ifndef LINALG_H_GUARD
 #define LINALG_H_GUARD
+
 #include "scs.h"
 #include <math.h>
 
