@@ -6,16 +6,17 @@ from scipy import sparse
 
 
 def solve(probdata, cone, opts={}, USE_INDIRECT=False):
-    """ This Python routine "unpacks" scipy sparse matrix A into the
-        data structures that we need for calling scs routine.
-        
-        It is *not* compatible with CVXOPT spmatrix and matrix, although
-        it would not be very difficult to make it compatible. We put the
-        onus on the user to convert CVXOPT matrix types into numpy, scipy
-        array types.
+    """
+    solves convex cone problems
+     
+    @return dictionary with solution with keys:
+         'x' - primal solution
+         's' - primal slack solution
+         'y' - dual solution
+         'info' - information dictionary
     """
     if not 'A' in probdata or not 'b' in probdata or not 'c' in probdata:
-        raise TypeError("Missing A, b, c from data dictionary")
+        raise TypeError("Missing one or more of A, b, c from data dictionary")
     A = probdata['A']
     b = probdata['b']
     c = probdata['c']

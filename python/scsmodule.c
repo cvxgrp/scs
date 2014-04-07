@@ -113,14 +113,14 @@ static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * 
 			q = scs_calloc(n, sizeof(idxint));
 			for (i = 0; i < n; ++i) {
 				PyObject *qi = PyList_GetItem(obj, i);
-				if (!PyInt_Check(qi) || !((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
+				if (!PyInt_Check(qi) || !((q[i] = (idxint) PyInt_AsLong(qi)) >= 0)) {
 					return printErr(key);
 				}
 			}
 		} else if (PyInt_Check(obj)) {
 			n = 1;
 			q = scs_malloc(sizeof(idxint));
-			if (!PyInt_Check(obj) || !((*q = (idxint) PyInt_AsLong(obj)) > 0)) {
+			if (!PyInt_Check(obj) || !((*q = (idxint) PyInt_AsLong(obj)) >= 0)) {
 				return printErr(key);
 			}
 		} else {
@@ -171,7 +171,7 @@ static int parseOpts(Data *d, PyObject * opts) {
 		return -1;
 	if (getOptIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
 		return -1;
-	if (getOptFloatParam("SCALE", &(d->SCALE), 1, opts) < 0)
+	if (getOptFloatParam("SCALE", &(d->SCALE), 5, opts) < 0)
 		return -1;
 	if (getOptFloatParam("EPS", &(d->EPS), 1e-3, opts) < 0)
 		return -1;
@@ -209,7 +209,8 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
 		scs_free(k);
 	}
 	if (d) {
-		if(d->A) scs_free(d->A);
+		if (d->A)
+			scs_free(d->A);
 		scs_free(d);
 	}
 }

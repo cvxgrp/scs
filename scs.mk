@@ -48,7 +48,7 @@ RANLIB = ranlib
 
 ifdef USE_LAPACK
   # edit these for your setup:
-  LDFLAGS += -lopenblas -llapack -llapacke 
+  LDFLAGS += -lblas -llapack -lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
   # lapacke + cblas are not ansi c90 compliant:
   ifeq ($(UNAME), Darwin)

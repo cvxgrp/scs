@@ -2,30 +2,13 @@
 % openmp parallelizes the matrix multiply for the indirect solver (using CG):
 flags.COMPILE_WITH_OPENMP = false;
 
-% try to use blas libs; if not available then scs cannot solve SDPs:
-try
-    % EDIT THESE TO POINT TO YOUR BLAS + LAPACK LIBS:
-    flags.BLASLIB = '-lopenblas -llapack -llapacke';
-    flags.INCS = '-I/opt/local/include -I/usr/local/include';
-    flags.LOCS = '-L/opt/local/lib -L/usr/local/lib -L/usr/lib';
-    flags.LCFLAG = '-DLAPACK_LIB_FOUND';
-    
-    compile_direct(flags);
-    compile_indirect(flags);
-    
-catch err
-    
-    flags.BLASLIB = '';
-    flags.INCS = '';
-    flags.LOCS = '';
-    flags.LCFLAG = '';
-    
-    compile_direct(flags);
-    compile_indirect(flags);    
-    
-    disp('Compiled without lapack support - unable to solve SDPs (can solve LPs, QPs, SOCPs, EXPs)')
-    disp('To solve SDPs you must install cblas + lapacke and point the flags to the right locations')
-end
+flags.BLASLIB = '-lmwblas -lmwlapack';
+flags.LCFLAG = '-DLAPACK_LIB_FOUND';
+flags.INCS = '';
+flags.LOCS = '';
+
+compile_direct(flags);
+compile_indirect(flags);
 
 %%
 clear data cones

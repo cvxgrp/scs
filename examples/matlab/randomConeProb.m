@@ -17,7 +17,7 @@ cvx_solver = 'sdpt3';
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
 %K = struct('f',10000,'l',20000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;15000;5000],'s',[10;10;10],'ep',100,'ed',20)
 %K = struct('f',1000,'l',2000,'q',[2;3;4;5;6;7;8;9;10;5;6;100;1000;500;5000;1500],'s',[10;10;10],'ep',10,'ed',20)
-K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100],'s',[],'ep',0,'ed',0)
+K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100],'s',[5;5],'ep',5,'ed',5)
 
 density = 0.1; % A matrix density
 
@@ -44,6 +44,8 @@ if (gen_feasible)
     data.b = b;
     data.c = c;
     
+    %cd '../../matlab'; write_scs_data(data,K,params,'randomConeFeasible'); cd '../examples/matlab';
+
     %indirect
     if (run_indirect)
         [xi,yi,si,infoi] = scs_indirect(data,K,params);
@@ -203,8 +205,9 @@ end
 function z = proj_soc(tt)
 v1=tt(1);v2=tt(2:end);
 if norm(v2)<=-v1
-    v2=zeros(length(v2),1);v1=0;
-elseif norm(v2)> abs(v1)
+    v2=zeros(length(v2),1);
+    v1=0;
+elseif norm(v2) > abs(v1)
     v2=0.5*(1+v1/norm(v2))*v2;
     v1=norm(v2);
 end

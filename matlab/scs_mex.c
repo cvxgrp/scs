@@ -129,7 +129,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	tmp = mxGetField(params, 0, "SCALE");
 	if (tmp == NULL)
-		d->SCALE = 1;
+		d->SCALE = 5;
 	else
 		d->SCALE = (pfloat) *mxGetPr(tmp);
 

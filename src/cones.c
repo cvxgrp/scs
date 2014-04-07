@@ -1,40 +1,25 @@
 #include "cones.h"
 #ifdef LAPACK_LIB_FOUND
-#include <cblas.h>
-#include <lapacke.h>
+void projectsdc(pfloat *X, idxint n);
+/* forward declare blas/lapack methods */
+void dsyevr_(char* jobz, char* range, char* uplo, idxint* n, pfloat* a,
+		idxint* lda, pfloat* vl, pfloat* vu, idxint* il, idxint* iu, pfloat* abstol,
+		idxint* m, pfloat* w, pfloat* z, idxint* ldz, idxint* isuppz, pfloat* work,
+		idxint* lwork, idxint* iwork, idxint* liwork, idxint* info );
+void dsyr_(const char *uplo, const idxint *n, const pfloat *alpha, const pfloat *x,
+		const idxint *incx, pfloat *a, const idxint *lda);
+void daxpy_(const idxint *n, const pfloat *alpha,const pfloat *dx, const idxint *incx,
+		pfloat *dy, const idxint *incy);
 #endif
 
 /* private data to help cone projection step */
 static struct ConeData_t {
 	/* workspace for eigenvector decompositions: */
-	pfloat * Xs, *Z, *e;
+	pfloat * Xs, *Z, *e, *work;
+	idxint *isuppz, *iwork, lwork, liwork;
 } c;
 
 void projExpCone(pfloat * v);
-#ifdef LAPACK_LIB_FOUND
-void projectsdc(pfloat *X, idxint n);
-#endif
-
-idxint initCone(Cone * k) {
-	if (k->ssize && k->s) {
-		/* eigenvector decomp workspace */
-		idxint i, nMax = 0;
-		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] > nMax)
-				nMax = k->s[i];
-		}
-		c.Xs = scs_calloc(nMax * nMax, sizeof(pfloat));
-		c.Z = scs_calloc(nMax * nMax, sizeof(pfloat));
-		c.e = scs_calloc(nMax, sizeof(pfloat));
-		if (!c.Xs || !c.Z || !c.e)
-			return -1;
-	} else {
-		c.Xs = NULL;
-		c.Z = NULL;
-		c.e = NULL;
-	}
-	return 0;
-}
 
 idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
 	idxint i, count = 0;
@@ -93,7 +78,7 @@ idxint validateCones(Data * d, Cone * k) {
 	}
 	if (k->qsize && k->q) {
 		for (i = 0; i < k->qsize; ++i) {
-			if (k->q[i] <= 0) {
+			if (k->q[i] < 0) {
 				scs_printf("soc cone error\n");
 				return -1;
 			}
@@ -101,7 +86,7 @@ idxint validateCones(Data * d, Cone * k) {
 	}
 	if (k->ssize && k->s) {
 		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] <= 0) {
+			if (k->s[i] < 0) {
 				scs_printf("sd cone error\n");
 				return -1;
 			}
@@ -129,6 +114,12 @@ void finishCone() {
 		scs_free(c.Z);
 	if (c.e)
 		scs_free(c.e);
+	if (c.work)
+		scs_free(c.work);
+	if (c.iwork)
+		scs_free(c.iwork);
+	if (c.isuppz)
+		scs_free(c.isuppz);
 }
 
 char * getConeHeader(Cone * k) {
@@ -183,6 +174,9 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 	if (k->qsize && k->q) {
 		/* project onto SOC */
 		for (i = 0; i < k->qsize; ++i) {
+			if (k->q[i] == 0) {
+				continue;
+			}
 			if (k->q[i] == 1) {
 				if (x[count] < 0.0)
 					x[count] = 0.0;
@@ -197,7 +191,6 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 				} else {
 					x[count] = alpha;
 					scaleArray(&(x[count + 1]), alpha / s, k->q[i] - 1);
-					/*cblas_dscal(k->q[i]-1, alpha/s, &(x[count+1]),1); */
 				}
 			}
 			count += k->q[i];
@@ -208,11 +201,14 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 #ifdef LAPACK_LIB_FOUND
 		/* project onto PSD cone */
 		for (i=0; i < k->ssize; ++i) {
+			if (k->s[i] == 0) {
+				continue;
+			}
 			projectsdc(&(x[count]), k->s[i]);
 			count += (k->s[i])*(k->s[i]);
 		}
 #else
-		if (k->ssize > 0) {
+		if (k->ssize > 0 && !(k->ssize == 1 && k->s[0]==0)) {
 			scs_printf("WARNING: solving SDP, but no blas/lapack libraries were linked!\n");
 			scs_printf("scs will return nonsense!\n");
 			for (i = 0; i < k->ssize; ++i) {
@@ -230,7 +226,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 		 * exponential cone is not self dual, if s \in K
 		 * then y \in K^* and so if K is the primal cone
 		 * here we project onto K^*, via Moreau
-         * \Pi_C^*(y) = y + \Pi_C(-y)
+		 * \Pi_C^*(y) = y + \Pi_C(-y)
 		 */
 		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
 #ifdef USE_OPENMP
@@ -351,16 +347,76 @@ void projExpCone(pfloat * v) {
 	v[2] = x[2];
 }
 
+idxint initCone(Cone * k) {
+	c.Xs = NULL;
+	c.Z = NULL;
+	c.e = NULL;
+	c.isuppz = NULL;
+	c.work = NULL;
+	c.iwork = NULL;
+	if (k->ssize && k->s) {
+		if (k->ssize == 1 && k->s[0]==0) {
+			return 0;
+		}
+#ifdef LAPACK_LIB_FOUND
+		/* eigenvector decomp workspace */
+		idxint i, nMax = 0;
+		pfloat eigTol = 1e-8;
+		idxint negOne = -1;
+		idxint info;
+		pfloat wkopt;
+
+		for (i = 0; i < k->ssize; ++i) {
+			if (k->s[i] > nMax)
+				nMax = k->s[i];
+		}
+		c.Xs = scs_calloc(nMax * nMax, sizeof(pfloat));
+		c.Z = scs_calloc(nMax * nMax, sizeof(pfloat));
+		c.e = scs_calloc(nMax, sizeof(pfloat));
+		dsyevr_("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL,
+				NULL, NULL, &eigTol, NULL, NULL, NULL, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
+
+		c.lwork = (idxint)(wkopt + 0.01); /* 0.01 for int casting safety */
+		c.work = scs_malloc( c.lwork*sizeof(pfloat) );
+		c.iwork = scs_malloc( c.liwork*sizeof(idxint) );
+		c.isuppz = scs_malloc( nMax*sizeof(idxint) );
+		if (!c.Xs || !c.Z || !c.e || !c.isuppz || !c.work || !c.iwork) {
+            return -1;
+        }
+#else
+        scs_printf("FAIL: Cannot solve SDPs without linked blas+lapack libraries\n");
+        scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
+        return -1;
+#endif
+	}
+	return 0;
+}
+
 #ifdef LAPACK_LIB_FOUND
 void projectsdc(pfloat *X, idxint n)
 { /* project onto the positive semi-definite cone */
 	idxint i, j;
-	int m = 0;
+	idxint one = 1;
+	idxint m = 0;
+
 	pfloat * Xs = c.Xs;
 	pfloat * Z = c.Z;
 	pfloat * e = c.e;
-	pfloat EIG_TOL = 1e-8;
+	pfloat * work = c.work;
+	idxint * isuppz = c.isuppz;
+	idxint * iwork = c.iwork;
+	idxint lwork = c.lwork;
+	idxint liwork = c.liwork;
+
+	pfloat eigTol = 1e-8;
+	pfloat oned = 1;
+	pfloat zero = 0.0;
+	idxint info;
 	pfloat vupper;
+
+	if (n == 0) {
+		return;
+	}
 	if (n == 1) {
 		if(X[0] < 0.0) X[0] = 0.0;
 		return;
@@ -369,16 +425,18 @@ void projectsdc(pfloat *X, idxint n)
 
 	/* Xs = X + X', save div by 2 for eigen-recomp */
 	for (i = 0; i < n; ++i) {
-		cblas_daxpy(n, 1, &(X[i]), n, &(Xs[i*n]), 1);
-		/*b_daxpy(n, 1, &(X[i]), n, &(Xs[i*n]), 1); */
+		daxpy_(&n, &oned, &(X[i]), &n, &(Xs[i*n]), &one);
 	}
 
 	vupper = calcNorm(Xs,n*n);
-	LAPACKE_dsyevr( LAPACK_COL_MAJOR, 'V', 'V', 'U', n, Xs, n, 0.0, vupper, -1, -1, EIG_TOL, &m, e, Z, n , NULL);
+	/* Solve eigenproblem, reuse workspaces */
+	dsyevr_("Vectors", "VInterval", "Upper", &n, Xs, &n, &zero, &vupper,
+			NULL, NULL, &eigTol, &m, e, Z, &n, isuppz, work, &lwork, iwork, &liwork, &info);
+
 	memset(X, 0, n*n*sizeof(pfloat));
 	for (i = 0; i < m; ++i) {
-		cblas_dsyr(CblasColMajor, CblasLower, n, e[i]/2, &(Z[i*n]), 1, X, n);
-		/* b_dsyr('L', n, -e[i]/2, &(Z[i*n]), 1, Xs, n); */
+		pfloat a = e[i]/2;
+		dsyr_("Lower", &n, &a, &(Z[i*n]), &one, X, &n);
 	}
 	/* fill in upper half  */
 	for (i = 0; i < n; ++i) {
