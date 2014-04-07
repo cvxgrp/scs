@@ -42,9 +42,9 @@
 extern "C" {
 #endif
 
+#include "glbopts.h"
 #include <limits.h>
 #include <stdlib.h>
-#include "glbopts.h"
 
 /* ========================================================================== */
 /* === SuiteSparse_long ===================================================== */
