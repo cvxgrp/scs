@@ -26,6 +26,6 @@ idxint initCone(Cone * k);
 char * getConeHeader(Cone * k);
 idxint validateCones(Data * d, Cone * k);
 void projCone(pfloat *x, Cone *k, idxint iter);
-void finishCone();
+void finishCone(void);
 
 #endif

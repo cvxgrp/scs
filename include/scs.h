@@ -1,9 +1,9 @@
 #ifndef SCS_H_GUARD
 #define SCS_H_GUARD
 
+#include "glbopts.h"
 #include <string.h>
 #include <math.h>
-#include "glbopts.h"
 #include "cones.h"
 #include "linAlg.h"
 #include "linSys.h"
