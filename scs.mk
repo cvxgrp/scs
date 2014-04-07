@@ -50,10 +50,4 @@ ifdef USE_LAPACK
   # edit these for your setup:
   LDFLAGS += -lblas -llapack -lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
-  # lapacke + cblas are not ansi c90 compliant:
-  ifeq ($(UNAME), Darwin)
-      CFLAGS   += -std=c99
-  else
-      CFLAGS   += -std=gnu99
-  endif
 endif

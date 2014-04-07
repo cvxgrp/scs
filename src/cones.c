@@ -348,24 +348,25 @@ void projExpCone(pfloat * v) {
 }
 
 idxint initCone(Cone * k) {
-	c.Xs = NULL;
-	c.Z = NULL;
-	c.e = NULL;
-	c.isuppz = NULL;
-	c.work = NULL;
-	c.iwork = NULL;
-	if (k->ssize && k->s) {
-		if (k->ssize == 1 && k->s[0]==0) {
-			return 0;
-		}
 #ifdef LAPACK_LIB_FOUND
-		/* eigenvector decomp workspace */
-		idxint i, nMax = 0;
-		pfloat eigTol = 1e-8;
-		idxint negOne = -1;
-		idxint info;
-		pfloat wkopt;
-
+    idxint i, nMax = 0;
+    pfloat eigTol = 1e-8;
+    idxint negOne = -1;
+    idxint info;
+    pfloat wkopt;
+    c.Xs = NULL;
+    c.Z = NULL;
+    c.e = NULL;
+    c.isuppz = NULL;
+    c.work = NULL;
+    c.iwork = NULL;
+#endif
+    if (k->ssize && k->s) {
+        if (k->ssize == 1 && k->s[0]==0) {
+            return 0;
+        }
+#ifdef LAPACK_LIB_FOUND
+        /* eigenvector decomp workspace */
 		for (i = 0; i < k->ssize; ++i) {
 			if (k->s[i] > nMax)
 				nMax = k->s[i];
@@ -384,7 +385,7 @@ idxint initCone(Cone * k) {
             return -1;
         }
 #else
-        scs_printf("FAIL: Cannot solve SDPs without linked blas+lapack libraries\n");
+        scs_printf("FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
         scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
         return -1;
 #endif
