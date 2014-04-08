@@ -673,6 +673,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 static void printFooter(Data * d, Work * w, Info * info) {
 	idxint i;
 	char * linSysStr = getLinSysSummary(w->p, info);
+	char * coneStr = getConeSummary(info);
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
@@ -680,11 +681,15 @@ static void printFooter(Data * d, Work * w, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n");
 	}
-	scs_printf("Solve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
+	scs_printf("Timings:\n\tsolve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
 
 	if (linSysStr) {
 		scs_printf("%s", linSysStr);
 		scs_free(linSysStr);
+	}
+	if (coneStr) {
+		scs_printf("%s", coneStr);
+		scs_free(coneStr);
 	}
 
 	for (i = 0; i < _lineLen_; ++i) {

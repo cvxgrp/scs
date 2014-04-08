@@ -39,6 +39,9 @@ static struct ConeData_t {
 }c;
 #endif
 
+static timer coneTimer;
+static pfloat totalConeTime;
+
 void projExpCone(pfloat * v);
 
 idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
@@ -127,6 +130,14 @@ idxint validateCones(Data * d, Cone * k) {
 	return 0;
 }
 
+char * getConeSummary(Info * info) {
+	char * str = scs_malloc(sizeof(char) * 64);
+	sprintf(str, "\tcones: avg projection time: %1.2es\n", totalConeTime / (info->iter + 1) / 1e3);
+	totalConeTime = 0.0;
+	return str;
+}
+
+
 void finishCone() {
 #ifdef LAPACK_LIB_FOUND
 	if (c.Xs)
@@ -180,6 +191,7 @@ char * getConeHeader(Cone * k) {
 void projCone(pfloat *x, Cone * k, idxint iter) {
 	idxint i;
 	idxint count = (k->f ? k->f : 0);
+	tic(&coneTimer);
 
 	if (k->l) {
 		/* project onto positive orthant */
@@ -278,6 +290,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 		count += 3 * k->ed;
 	}
 	/* project onto OTHER cones */
+	totalConeTime += tocq(&coneTimer);
 }
 
 pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
@@ -416,6 +429,7 @@ idxint initCone(Cone * k) {
 		return -1;
 #endif
 	}
+	totalConeTime = 0.0;
 	return 0;
 }
 

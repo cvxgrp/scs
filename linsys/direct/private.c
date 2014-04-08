@@ -19,7 +19,7 @@ char * getLinSysMethod(Data * d, Priv * p) {
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
 	idxint n = p->L->n;
-	sprintf(str, "NNZs in L factor: %li, avg solve time: %1.2es\n", (long ) p->L->p[n] + n,
+	sprintf(str, "\tlin-sys: nnz in L factor: %li, avg solve time: %1.2es\n", (long ) p->L->p[n] + n,
 			totalSolveTime / (info->iter + 1) / 1e3);
 	totalSolveTime = 0;
 	return str;
