@@ -16,9 +16,6 @@ DIRSRC = $(LINSYS)/direct
 DIRSRCEXT = $(DIRSRC)/external
 INDIRSRC = $(LINSYS)/indirect
 
-CFLAGS += -I/opt/local/include -I/usr/local/include
-LDFLAGS += -L/opt/local/lib -L/usr/local/lib
-
 OUT = out
 AR = ar
 ARFLAGS = rv
@@ -50,4 +47,5 @@ ifdef USE_LAPACK
   # edit these for your setup:
   LDFLAGS += -lblas -llapack -lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
+# CFLAGS += -DBLAS64 # if blas/lapack lib uses long rather than int
 endif

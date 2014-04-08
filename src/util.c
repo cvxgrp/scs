@@ -7,10 +7,10 @@ void tic(timer* t)
 	QueryPerformanceCounter(&t->tic);
 }
 
-double tocq(timer* t)
+pfloat tocq(timer* t)
 {
 	QueryPerformanceCounter(&t->toc);
-	return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) / (double) t->freq.QuadPart);
+	return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) / (pfloat) t->freq.QuadPart);
 }
 #elif (defined __APPLE__)
 void tic(timer* t) {
@@ -18,7 +18,7 @@ void tic(timer* t) {
 	t->tic = mach_absolute_time();
 }
 
-double tocq(timer* t) {
+pfloat tocq(timer* t) {
 
 	uint64_t duration; /* elapsed time in clock cycles*/
 
@@ -30,7 +30,7 @@ double tocq(timer* t) {
 	duration *= t->tinfo.numer;
 	duration /= t->tinfo.denom;
 
-	return (double) duration / 1e6;
+	return (pfloat) duration / 1e6;
 }
 #else
 void tic(timer* t)
@@ -38,7 +38,7 @@ void tic(timer* t)
 	clock_gettime(CLOCK_MONOTONIC, &t->tic);
 }
 
-double tocq(timer* t)
+pfloat tocq(timer* t)
 {
 	struct timespec temp;
 
@@ -51,7 +51,7 @@ double tocq(timer* t)
 		temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec;
 		temp.tv_nsec = t->toc.tv_nsec - t->tic.tv_nsec;
 	}
-	return (double)temp.tv_sec * 1e3 + (double)temp.tv_nsec / 1e6;
+	return (pfloat)temp.tv_sec * 1e3 + (pfloat)temp.tv_nsec / 1e6;
 }
 #endif
 
@@ -93,5 +93,23 @@ void printWork(Data * d, Work * w) {
 	for (i = 0; i < l; i++) {
 		scs_printf("%f\n", w->v[i]);
 	}
+}
+
+void printData(Data * d) {
+	scs_printf("m = %i\n", (int) d->m);
+	scs_printf("n = %i\n", (int) d->n);
+
+	scs_printf("b[0] = %4f\n", d->b[0]);
+	scs_printf("c[0] = %4f\n", d->c[0]);
+
+	scs_printf("MAX_ITERS = %i\n", (int) d->MAX_ITERS);
+	scs_printf("VERBOSE = %i\n", (int) d->VERBOSE);
+	scs_printf("NORMALIZE = %i\n", (int) d->NORMALIZE);
+	scs_printf("WARM_START = %i\n", (int) d->WARM_START);
+	scs_printf("EPS = %4f\n", d->EPS);
+	scs_printf("ALPHA = %4f\n",  d->ALPHA);
+	scs_printf("RHO_X = %4f\n", d->RHO_X);
+	scs_printf("CG_RATE = %4f\n", d->CG_RATE);
+	scs_printf("SCALE = %4f\n", d->SCALE);
 }
 

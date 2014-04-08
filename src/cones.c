@@ -1,23 +1,43 @@
 #include "cones.h"
+
 #ifdef LAPACK_LIB_FOUND
 void projectsdc(pfloat *X, idxint n);
-/* forward declare blas/lapack methods */
-void dsyevr_(char* jobz, char* range, char* uplo, idxint* n, pfloat* a,
-		idxint* lda, pfloat* vl, pfloat* vu, idxint* il, idxint* iu, pfloat* abstol,
-		idxint* m, pfloat* w, pfloat* z, idxint* ldz, idxint* isuppz, pfloat* work,
-		idxint* lwork, idxint* iwork, idxint* liwork, idxint* info );
-void dsyr_(const char *uplo, const idxint *n, const pfloat *alpha, const pfloat *x,
-		const idxint *incx, pfloat *a, const idxint *lda);
-void daxpy_(const idxint *n, const pfloat *alpha,const pfloat *dx, const idxint *incx,
-		pfloat *dy, const idxint *incy);
+/* underscore for blas / lapack, single or double precision */
+#if defined(_WIN32) || defined(__hpux)
+#ifndef FLOAT
+#define BLAS(x) d ## x
+#else
+#define BLAS(x) s ## x
+#endif
+#else
+#ifndef FLOAT
+#define BLAS(x) d ## x ## _
+#else
+#define BLAS(x) s ## x ## _
+#endif
 #endif
 
+#ifdef BLAS64
+typedef long blasint;
+#else
+typedef int blasint;
+#endif
+
+extern void BLAS(syevr) (char* jobz, char* range, char* uplo, blasint* n, pfloat* a,
+		blasint* lda, pfloat* vl, pfloat* vu, blasint* il, blasint* iu, pfloat* abstol,
+		blasint* m, pfloat* w, pfloat* z, blasint* ldz, blasint* isuppz, pfloat* work,
+		blasint* lwork, blasint* iwork, blasint* liwork, blasint* info );
+extern void BLAS(syr) (const char *uplo, const blasint *n, const pfloat *alpha, const pfloat *x,
+		const blasint *incx, pfloat *a, const blasint *lda);
+extern void BLAS(axpy) (const blasint *n, const pfloat *alpha,const pfloat *dx, const blasint *incx,
+		pfloat *dy, const blasint *incy);
 /* private data to help cone projection step */
 static struct ConeData_t {
 	/* workspace for eigenvector decompositions: */
 	pfloat * Xs, *Z, *e, *work;
-	idxint *isuppz, *iwork, lwork, liwork;
-} c;
+	blasint *iwork, lwork, liwork;
+}c;
+#endif
 
 void projExpCone(pfloat * v);
 
@@ -108,6 +128,7 @@ idxint validateCones(Data * d, Cone * k) {
 }
 
 void finishCone() {
+#ifdef LAPACK_LIB_FOUND
 	if (c.Xs)
 		scs_free(c.Xs);
 	if (c.Z)
@@ -118,8 +139,7 @@ void finishCone() {
 		scs_free(c.work);
 	if (c.iwork)
 		scs_free(c.iwork);
-	if (c.isuppz)
-		scs_free(c.isuppz);
+#endif
 }
 
 char * getConeHeader(Cone * k) {
@@ -208,7 +228,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 			count += (k->s[i])*(k->s[i]);
 		}
 #else
-		if (k->ssize > 0 && !(k->ssize == 1 && k->s[0]==0)) {
+		if (k->ssize > 0 && !(k->ssize == 1 && k->s[0] == 0)) {
 			scs_printf("WARNING: solving SDP, but no blas/lapack libraries were linked!\n");
 			scs_printf("scs will return nonsense!\n");
 			for (i = 0; i < k->ssize; ++i) {
@@ -349,45 +369,51 @@ void projExpCone(pfloat * v) {
 
 idxint initCone(Cone * k) {
 #ifdef LAPACK_LIB_FOUND
-    idxint i, nMax = 0;
-    pfloat eigTol = 1e-8;
-    idxint negOne = -1;
-    idxint info;
-    pfloat wkopt;
-    c.Xs = NULL;
-    c.Z = NULL;
-    c.e = NULL;
-    c.isuppz = NULL;
-    c.work = NULL;
-    c.iwork = NULL;
+	idxint i;
+	blasint nMax = 0;
+	pfloat eigTol = 1e-8;
+	blasint negOne = -1;
+	blasint info;
+	pfloat wkopt;
+	c.Xs = NULL;
+	c.Z = NULL;
+	c.e = NULL;
+	c.work = NULL;
+	c.iwork = NULL;
 #endif
-    if (k->ssize && k->s) {
-        if (k->ssize == 1 && k->s[0]==0) {
-            return 0;
-        }
+	if (k->ssize && k->s) {
+		if (k->ssize == 1 && k->s[0] == 0) {
+			return 0;
+		}
 #ifdef LAPACK_LIB_FOUND
-        /* eigenvector decomp workspace */
+		/* eigenvector decomp workspace */
 		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] > nMax)
+			if (k->s[i] > nMax) {
 				nMax = k->s[i];
+			}
 		}
 		c.Xs = scs_calloc(nMax * nMax, sizeof(pfloat));
 		c.Z = scs_calloc(nMax * nMax, sizeof(pfloat));
 		c.e = scs_calloc(nMax, sizeof(pfloat));
-		dsyevr_("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL,
+
+		BLAS(syevr) ("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL,
 				NULL, NULL, &eigTol, NULL, NULL, NULL, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
 
-		c.lwork = (idxint)(wkopt + 0.01); /* 0.01 for int casting safety */
+		if (info!=0) {
+			scs_printf("FATAL: syevr failure\n");
+			return -1;
+		}
+		c.lwork = (blasint)(wkopt + 0.01); /* 0.01 for int casting safety */
 		c.work = scs_malloc( c.lwork*sizeof(pfloat) );
-		c.iwork = scs_malloc( c.liwork*sizeof(idxint) );
-		c.isuppz = scs_malloc( nMax*sizeof(idxint) );
-		if (!c.Xs || !c.Z || !c.e || !c.isuppz || !c.work || !c.iwork) {
-            return -1;
-        }
+		c.iwork = scs_malloc( c.liwork*sizeof(blasint) );
+
+		if (!c.Xs || !c.Z || !c.e || !c.work || !c.iwork) {
+			return -1;
+		}
 #else
-        scs_printf("FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
-        scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
-        return -1;
+		scs_printf("FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
+		scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
+		return -1;
 #endif
 	}
 	return 0;
@@ -395,56 +421,58 @@ idxint initCone(Cone * k) {
 
 #ifdef LAPACK_LIB_FOUND
 void projectsdc(pfloat *X, idxint n)
-{ /* project onto the positive semi-definite cone */
+{
+	/* project onto the positive semi-definite cone */
 	idxint i, j;
-	idxint one = 1;
-	idxint m = 0;
-
+	blasint one = 1;
+	blasint m = 0;
+	blasint nb = (blasint) n;
 	pfloat * Xs = c.Xs;
 	pfloat * Z = c.Z;
 	pfloat * e = c.e;
 	pfloat * work = c.work;
-	idxint * isuppz = c.isuppz;
-	idxint * iwork = c.iwork;
-	idxint lwork = c.lwork;
-	idxint liwork = c.liwork;
+	blasint * iwork = c.iwork;
+	blasint lwork = c.lwork;
+	blasint liwork = c.liwork;
 
 	pfloat eigTol = 1e-8;
-	pfloat oned = 1;
+	pfloat oned = 1.0;
 	pfloat zero = 0.0;
-	idxint info;
+	blasint info;
 	pfloat vupper;
 
-	if (n == 0) {
+	if (nb == 0) {
 		return;
 	}
-	if (n == 1) {
+	if (nb == 1) {
 		if(X[0] < 0.0) X[0] = 0.0;
 		return;
 	}
-	memcpy(Xs,X,n*n*sizeof(pfloat));
+	memcpy(Xs,X,nb*nb*sizeof(pfloat));
 
 	/* Xs = X + X', save div by 2 for eigen-recomp */
-	for (i = 0; i < n; ++i) {
-		daxpy_(&n, &oned, &(X[i]), &n, &(Xs[i*n]), &one);
+	for (i = 0; i < nb; ++i) {
+		BLAS(axpy) (&nb, &oned, &(X[i]), &nb, &(Xs[i*n]), &one);
 	}
-
-	vupper = calcNorm(Xs,n*n);
+	vupper = calcNorm(Xs,nb*nb);
 	/* Solve eigenproblem, reuse workspaces */
-	dsyevr_("Vectors", "VInterval", "Upper", &n, Xs, &n, &zero, &vupper,
-			NULL, NULL, &eigTol, &m, e, Z, &n, isuppz, work, &lwork, iwork, &liwork, &info);
+	BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
+			NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
+	if (info!=0) {
+		scs_printf("FATAL: syevr failure\n");
+		exit(-1);
+	}
 
 	memset(X, 0, n*n*sizeof(pfloat));
 	for (i = 0; i < m; ++i) {
 		pfloat a = e[i]/2;
-		dsyr_("Lower", &n, &a, &(Z[i*n]), &one, X, &n);
+		BLAS(syr) ("Lower", &nb, &a, &(Z[i*nb]), &one, X, &nb);
 	}
-	/* fill in upper half  */
-	for (i = 0; i < n; ++i) {
-		for (j = i+1; j < n; ++j) {
-			X[i + j*n] = X[j + i*n];
+	/* fill in upper half */
+	for (i = 0; i < nb; ++i) {
+		for (j = i+1; j < nb; ++j) {
+			X[i + j*nb] = X[j + i*nb];
 		}
 	}
 }
 #endif
-

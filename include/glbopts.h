@@ -26,15 +26,15 @@
 
 #ifdef DLONG
     #ifdef _WIN64
-        /*typedef __int64 idxint; */
-        #define idxint __int64
+        typedef __int64 idxint;
+        /* #define idxint __int64 */
     #else
-        /*typedef long idxint; */
-        #define idxint long
+        typedef long idxint;
+        /* #define idxint long */
     #endif
 #else
-    /* typedef int idxint; */
-    #define idxint int
+    typedef int idxint;
+    /* #define idxint int */
 #endif
 
 #ifndef FLOAT

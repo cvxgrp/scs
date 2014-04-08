@@ -39,6 +39,7 @@ typedef struct timer {
 void tic(timer * t);
 pfloat toc(timer * t);
 pfloat tocq(timer * t);
+
 void printConeData(Cone * k);
 void printData(Data * d);
 void printWork(Data * d, Work * w);

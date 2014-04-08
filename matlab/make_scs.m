@@ -3,7 +3,7 @@
 flags.COMPILE_WITH_OPENMP = false;
 
 flags.BLASLIB = '-lmwblas -lmwlapack';
-flags.LCFLAG = '-DLAPACK_LIB_FOUND';
+flags.LCFLAG = '-DLAPACK_LIB_FOUND -DBLAS64';
 flags.INCS = '';
 flags.LOCS = '';
 

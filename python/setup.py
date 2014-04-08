@@ -12,7 +12,7 @@ if system() == 'Linux':
     lib += ['rt']
 
 sources = ['scsmodule.c', ] + glob('../src/*.c')
-define_macros = [('PYTHON', None), ('DLONG', None)]
+define_macros = [('PYTHON', None), ('DLONG', None)] # add ('BLAS64', None) for 64 bit blas libs
 include_dirs = ['../include', get_include()]
 libraries = lib
 extra_link_args = []
