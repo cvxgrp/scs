@@ -681,7 +681,7 @@ static void printFooter(Data * d, Work * w, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n");
 	}
-	scs_printf("Timings:\n\tsolve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
+	scs_printf("Timing: solve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
 
 	if (linSysStr) {
 		scs_printf("%s", linSysStr);
