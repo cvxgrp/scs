@@ -10,7 +10,7 @@ static idxint _lineLen_;
 /* constants and data structures */
 static const char* HEADER[] = { " Iter ", " pri res ", " dua res ", " rel gap ", " pri obj ", " dua obj ", "  kappa  ",
 		" time (s)", };
-
+static const idxint HSPACE = 9; /* = strlen(HEADER[1]) */
 static const idxint HEADER_LEN = 8;
 
 static Work * initWork(Data * d, Cone * k);
@@ -38,11 +38,11 @@ static pfloat calcDualResid(Data * d, Work * w, pfloat * y, pfloat tau, pfloat *
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
-    #if (defined _WIN32 || defined _WIN64 )
-    /* sets width of exponent for floating point numbers to 2 instead of 3 */
-    unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    #endif
-    Work * w = scs_init(d, k, info);
+#if (defined _WIN32 || defined _WIN64 )
+	/* sets width of exponent for floating point numbers to 2 instead of 3 */
+	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
+	Work * w = scs_init(d, k, info);
 	if (!w) {
 		scs_printf("ERROR: Could not initialize work\n");
 		failureDefaultReturn(d, sol, info);
@@ -56,7 +56,7 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
 Work * scs_init(Data * d, Cone * k, Info * info) {
 	Work * w;
 	timer initTimer;
-    if (!d || !k || !info) {
+	if (!d || !k || !info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
 		return NULL;
 	}
@@ -85,7 +85,7 @@ void scs_finish(Data * d, Work * w) {
 idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	idxint i;
 	timer solveTimer;
-    struct residuals r;
+	struct residuals r;
 	if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
 		scs_printf("ERROR: NULL input\n");
 		return FAILURE;
@@ -108,18 +108,18 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 
 		if (i % PRINT_INTERVAL == 0) {
 			if (d->VERBOSE)
-				printSummary(i, &r,&solveTimer);
+				printSummary(i, &r, &solveTimer);
 		}
 	}
 	if (d->VERBOSE)
 		printSummary(i, &r, &solveTimer);
 	setSolution(d, w, sol, info);
 	/* populate info */
-    info->iter = i;
+	info->iter = i;
 	getInfo(d, w, sol, info);
 	info->solveTime = tocq(&solveTimer);
 
-    if (d->VERBOSE)
+	if (d->VERBOSE)
 		printFooter(d, w, info);
 	/* un-normalize sol, b, c but not A */
 	if (d->NORMALIZE)
@@ -211,8 +211,24 @@ static void failureDefaultReturn(Data * d, Sol * sol, Info * info) {
 	scs_printf("FAILURE\n");
 }
 
+/* TODO: re-integrate this eventually
+ *  approximate convergence check:
+ *  abs to prevent negative stopping tol */
+/*
+ pfloat tau = ABS(w->u[w->l-1]);
+ pfloat kap = ABS(w->v[w->l-1]);
+ r->resPri = calcNormDiff(w->u, w->u_t, w->l);
+ r->resDual = calcNormDiff(w->u, w->u_prev, w->l);
+ r->tau = tau;
+ r->kap = kap;
+ if (MIN(tau,kap)/MAX(tau,kap) < 1e-6 && MAX(r->resPri, r->resDual) < d->EPS*(tau+kap)){
+ return 1;
+ }
+ return 0
+ */
+
 static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
-	pfloat nmpr, nmdr, tau, kap, *x, *y, cTx, nmAxs, bTy, nmATy;
+	pfloat nmpr, nmdr, tau, kap, *x, *y, cTx, nmAxs, bTy, nmATy, rpri, rdua, gap;
 	idxint n = d->n, m = d->m;
 	if (iter % CONVERGED_INTERVAL != 0) {
 		return 0;
@@ -236,7 +252,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	}
 	r->kap = kap;
 
-	r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : NAN;
+	r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : INFINITY;
 	if (r->resPri < d->EPS) {
 		return UNBOUNDED;
 	}
@@ -247,31 +263,35 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 		bTy /= (d->SCALE * w->sc_c * w->sc_b);
 	}
 
-	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : NAN;
+	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : INFINITY;
 	if (r->resDual < d->EPS) {
 		return INFEASIBLE;
 	}
-	r->relGap = NAN;
 
-	if (tau > kap) {
-		pfloat rpri = nmpr / (1 + w->nm_b) / tau;
-		pfloat rdua = nmdr / (1 + w->nm_c) / tau;
-		pfloat gap = ABS(cTx + bTy) / (tau + ABS(cTx) + ABS(bTy));
-
+	rpri = nmpr / (1 + w->nm_b) / tau;
+	rdua = nmdr / (1 + w->nm_c) / tau;
+	gap = ABS(cTx + bTy) / (tau + ABS(cTx) + ABS(bTy));
+	if (MAX(MAX(rpri,rdua),gap) < d->EPS) {
 		r->resPri = rpri;
 		r->resDual = rdua;
 		r->relGap = gap;
 		r->cTx = cTx / tau;
 		r->bTy = bTy / tau;
-		if (MAX(MAX(rpri,rdua),gap) < d->EPS) {
-			return SOLVED;
-		}
+		return SOLVED;
+	}
+
+	if (tau > kap) {
+		r->resPri = rpri;
+		r->resDual = rdua;
+		r->relGap = gap;
+		r->cTx = cTx / tau;
+		r->bTy = bTy / tau;
 	} else {
-		r->cTx = NAN;
-		r->bTy = NAN;
+		r->relGap = INFINITY;
+		r->cTx = INFINITY;
+		r->bTy = INFINITY;
 	}
 	return 0;
-
 }
 
 static pfloat calcPrimalResid(Data * d, Work * w, pfloat * x, pfloat * s, pfloat tau, pfloat *nmAxs) {
@@ -374,14 +394,14 @@ static void warmStartVars(Data * d, Work * w, Sol * sol) {
 	w->u[n + m] = 1.0;
 	w->v[n + m] = 0.0;
 	/*
-	#ifndef NOVALIDATE
-	for (i = 0; i < n + m + 1; ++i) {
-		if (isnan(w->u[i]) || isinf(w->u[i]))
-			w->u[i] = 0;
-		if (isnan(w->v[i]) || isinf(w->v[i]))
-			w->v[i] = 0;
-	}
-	#endif
+	 #ifndef NOVALIDATE
+	 for (i = 0; i < n + m + 1; ++i) {
+	 if (isnan(w->u[i]) || isinf(w->u[i]))
+	 w->u[i] = 0;
+	 if (isnan(w->v[i]) || isinf(w->v[i]))
+	 w->v[i] = 0;
+	 }
+	 #endif
 	 */
 	if (d->NORMALIZE)
 		normalizeWarmStart(d, w);
@@ -600,21 +620,13 @@ static void setx(Data * d, Work * w, Sol * sol) {
 
 static void printSummary(idxint i, struct residuals *r, timer * solveTimer) {
 	scs_printf("%*i|", (int) strlen(HEADER[0]), (int) i);
-	scs_printf(" %*.2e ", (int) strlen(HEADER[1]) - 1, r->resPri);
-	scs_printf(" %*.2e ", (int) strlen(HEADER[2]) - 1, r->resDual);
-	scs_printf(" %*.2e ", (int) strlen(HEADER[3]) - 1, r->relGap);
-	if (r->cTx < 0) {
-		scs_printf("%*.2e ", (int) strlen(HEADER[4]) - 1, r->cTx);
-	} else {
-		scs_printf(" %*.2e ", (int) strlen(HEADER[4]) - 1, r->cTx);
-	}
-	if (r->bTy >= 0) {
-		scs_printf("%*.2e ", (int) strlen(HEADER[5]) - 1, -r->bTy);
-	} else {
-		scs_printf(" %*.2e ", (int) strlen(HEADER[5]) - 1, -r->bTy);
-	}
-	scs_printf(" %*.2e ", (int) strlen(HEADER[6]) - 1, r->kap);
-	scs_printf(" %*.2e ", (int) strlen(HEADER[7]) - 1, tocq(solveTimer) / 1e3);
+	scs_printf("%*.2e ", (int) HSPACE, r->resPri);
+	scs_printf("%*.2e ", (int) HSPACE, r->resDual);
+	scs_printf("%*.2e ", (int) HSPACE, r->relGap);
+	scs_printf("%*.2e ", (int) HSPACE, r->cTx);
+	scs_printf("%*.2e ", (int) HSPACE, -r->bTy);
+	scs_printf("%*.2e ", (int) HSPACE, r->kap);
+	scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
 	scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
 	mexEvalString("drawnow;");
@@ -641,16 +653,16 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	if (linSysMethod) {
 		scs_printf("method: %s\n", linSysMethod);
 		scs_free(linSysMethod);
-    }
-    if(d->NORMALIZE) {
-        scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i, SCALE = %2.1f\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
-                (int) d->NORMALIZE, d->SCALE);
-    } else {
-        scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
-                (int) d->NORMALIZE);
-    }
-    scs_printf("variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
-    if (d->WARM_START)
+	}
+	if (d->NORMALIZE) {
+		scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i, SCALE = %2.1f\n", d->EPS, d->ALPHA,
+				(int) d->MAX_ITERS, (int) d->NORMALIZE, d->SCALE);
+	} else {
+		scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
+				(int) d->NORMALIZE);
+	}
+	scs_printf("variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
+	if (d->WARM_START)
 		scs_printf("using variable warm-starting!\n");
 
 	scs_printf("%s", coneStr);
