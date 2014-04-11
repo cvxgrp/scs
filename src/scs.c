@@ -268,30 +268,19 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 		return INFEASIBLE;
 	}
 
+	r->cTx = cTx / tau;
+	r->bTy = bTy / tau;
+	r->relGap = NAN;
+
 	rpri = nmpr / (1 + w->nm_b) / tau;
 	rdua = nmdr / (1 + w->nm_c) / tau;
 	gap = ABS(cTx + bTy) / (tau + ABS(cTx) + ABS(bTy));
-	if (MAX(MAX(rpri,rdua),gap) < d->EPS) {
-		r->resPri = rpri;
-		r->resDual = rdua;
-		r->relGap = gap;
-		r->cTx = cTx / tau;
-		r->bTy = bTy / tau;
-		return SOLVED;
-	}
-
 	if (tau > kap) {
 		r->resPri = rpri;
 		r->resDual = rdua;
 		r->relGap = gap;
-		r->cTx = cTx / tau;
-		r->bTy = bTy / tau;
-	} else {
-		r->relGap = INFINITY;
-		r->cTx = INFINITY;
-		r->bTy = INFINITY;
 	}
-	return 0;
+	return (MAX(MAX(rpri,rdua),gap) < d->EPS ? SOLVED : 0);
 }
 
 static pfloat calcPrimalResid(Data * d, Work * w, pfloat * x, pfloat * s, pfloat tau, pfloat *nmAxs) {
