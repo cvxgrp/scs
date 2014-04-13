@@ -22,7 +22,7 @@ char * getLinSysMethod(Data * d, Priv * p) {
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
-	char * str = scs_malloc(sizeof(char) * 64);
+	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tlin-sys: avg # CG iterations: %2.2f, avg solve time %1.2es\n", (pfloat ) totCgIts / (info->iter + 1),
 			totalSolveTime / (info->iter + 1) / 1e3);
 	totCgIts = 0;
