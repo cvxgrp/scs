@@ -375,25 +375,23 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
-	idxint n = d->n, m = d->m;
-	memset(w->v, 0, n * sizeof(pfloat));
-	memcpy(w->u, sol->x, n * sizeof(pfloat));
-	memcpy(&(w->u[n]), sol->y, m * sizeof(pfloat));
-	memcpy(&(w->v[n]), sol->s, m * sizeof(pfloat));
-	w->u[n + m] = 1.0;
-	w->v[n + m] = 0.0;
-	/*
-	 #ifndef NOVALIDATE
-	 for (i = 0; i < n + m + 1; ++i) {
-	 if (isnan(w->u[i]) || isinf(w->u[i]))
-	 w->u[i] = 0;
-	 if (isnan(w->v[i]) || isinf(w->v[i]))
-	 w->v[i] = 0;
-	 }
-	 #endif
-	 */
-	if (d->NORMALIZE)
-		normalizeWarmStart(d, w);
+    idxint i, n = d->n, m = d->m;
+    memset(w->v, 0, n * sizeof(pfloat));
+    memcpy(w->u, sol->x, n * sizeof(pfloat));
+    memcpy(&(w->u[n]), sol->y, m * sizeof(pfloat));
+    memcpy(&(w->v[n]), sol->s, m * sizeof(pfloat));
+    w->u[n + m] = 1.0;
+    w->v[n + m] = 0.0;
+#ifndef NOVALIDATE
+    for (i = 0; i < n + m + 1; ++i) {
+        if (isnan(w->u[i]) || isinf(w->u[i]))
+            w->u[i] = 0;
+        if (isnan(w->v[i]) || isinf(w->v[i]))
+            w->v[i] = 0;
+    }
+#endif
+    if (d->NORMALIZE)
+        normalizeWarmStart(d, w);
 }
 
 static void coldStartVars(Data * d, Work * w) {

@@ -19,7 +19,7 @@ def solveFeasible():
     density = 0.01  # A matrix density
     m = getConeDims(K)
     n = round(m / 3)
-    params = {'EPS':1e-4, 'NORMALIZE':1, 'SCALE':5, 'CG_RATE':1.5}
+    params = {'EPS':1e-3, 'NORMALIZE':1, 'SCALE':5, 'CG_RATE':1.5}
       
     z = randn(m,)
     z = symmetrizeSDP(z, K)  # for SD cones
