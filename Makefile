@@ -4,10 +4,10 @@ include scs.mk
 OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) 
-TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect
+TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect
 
 .PHONY: default 
-default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/demo_direct $(OUT)/demo_indirect
+default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect
 	@echo "**********************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2014."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect'."
@@ -62,6 +62,10 @@ $(OUT)/demo_indirect: src/run_scs.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
+$(OUT)/demo_LP_indirect: examples/c/randomLPProb.c $(OUT)/libscsindir.a
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
 .PHONY: clean purge
 clean:
 	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(DIRSRC)/private.o $(INDIRSRC)/private.o 
@@ -72,3 +76,6 @@ clean:
 	@rm -rf python/build
 purge: clean 
 	@rm -rf $(OUT)
+
+up:
+	rsync -trzvv -e ssh . ajfriend@kona64.stanford.edu:/home/ajfriend/scs --exclude 'sftp-config.json'
