@@ -132,7 +132,7 @@ idxint validateCones(Data * d, Cone * k) {
 
 char * getConeSummary(Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
-	sprintf(str, "\tcones: avg projection time: %1.2es\n", totalConeTime / (info->iter + 1) / 1e3);
+	sprintf(str, "\tCones: avg projection time: %1.2es\n", totalConeTime / (info->iter + 1) / 1e3);
 	totalConeTime = 0.0;
 	return str;
 }
@@ -180,7 +180,7 @@ char * getConeHeader(Cone * k) {
 		expDvars = 3 * k->ed;
 	}
 	sprintf(tmp,
-			"cones:\tzero/free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
+			"Cones:\tprimal zero / dual free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
 			(int ) (k->f ? k->f : 0), (int ) (k->l ? k->l : 0), (int ) socVars, (int ) socBlks, (int ) sdVars,
 			(int ) sdBlks, (int ) expPvars, (int ) expDvars);
 	return tmp;

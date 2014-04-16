@@ -638,7 +638,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	}
 	scs_printf("\n");
 	if (linSysMethod) {
-		scs_printf("method: %s\n", linSysMethod);
+		scs_printf("Method: %s\n", linSysMethod);
 		scs_free(linSysMethod);
 	}
 	if (d->NORMALIZE) {
@@ -648,9 +648,9 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 		scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
 				(int) d->NORMALIZE);
 	}
-	scs_printf("variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
+	scs_printf("Variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
 	if (d->WARM_START)
-		scs_printf("using variable warm-starting!\n");
+		scs_printf("Using variable warm-starting!\n");
 
 	scs_printf("%s", coneStr);
 	scs_free(coneStr);
@@ -680,7 +680,7 @@ static void printFooter(Data * d, Work * w, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n");
 	}
-	scs_printf("Timing: solve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
+	scs_printf("Timing: Solve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
 
 	if (linSysStr) {
 		scs_printf("%s", linSysStr);
