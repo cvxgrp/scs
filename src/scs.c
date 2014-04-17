@@ -252,7 +252,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	}
 	r->kap = kap;
 
-	r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : INFINITY;
+	r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : NAN;
 	if (r->resPri < d->EPS) {
 		return UNBOUNDED;
 	}
@@ -263,7 +263,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 		bTy /= (d->SCALE * w->sc_c * w->sc_b);
 	}
 
-	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : INFINITY;
+	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : NAN;
 	if (r->resDual < d->EPS) {
 		return INFEASIBLE;
 	}
@@ -374,6 +374,10 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
 	}
 }
 
+static idxint scs_isnan(pfloat x) {
+	return (x == NAN || x != x);
+}
+
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
     idxint i, n = d->n, m = d->m;
     memset(w->v, 0, n * sizeof(pfloat));
@@ -384,9 +388,9 @@ static void warmStartVars(Data * d, Work * w, Sol * sol) {
     w->v[n + m] = 0.0;
 #ifndef NOVALIDATE
     for (i = 0; i < n + m + 1; ++i) {
-        if (isnan(w->u[i]) || isinf(w->u[i]))
+        if (scs_isnan(w->u[i]))
             w->u[i] = 0;
-        if (isnan(w->v[i]) || isinf(w->v[i]))
+        if (scs_isnan(w->v[i]))
             w->v[i] = 0;
     }
 #endif
