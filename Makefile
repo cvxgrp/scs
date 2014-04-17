@@ -1,5 +1,6 @@
 # MAKEFILE for scs
 include scs.mk
+-include local.mk
 
 OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
@@ -76,6 +77,3 @@ clean:
 	@rm -rf python/build
 purge: clean 
 	@rm -rf $(OUT)
-
-up:
-	rsync -trzvv -e ssh . ajfriend@kona64.stanford.edu:/home/ajfriend/scs --exclude 'sftp-config.json'

@@ -1,4 +1,6 @@
 examples/DIMACS/
+local.mk
+sftp-config.json
 .settings
 .cproject
 .project
