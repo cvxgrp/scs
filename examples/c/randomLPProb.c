@@ -32,10 +32,10 @@ int main(int argc, char **argv) {
 	Info info = { 0 };
 
 	if(argc < 2){
-		printf("usage: \"%s [n]\", where n is the number of columns in the matrix A."\
-			"Will seed the random number generator with the system time.\n",
-			argv[0]);
-		printf("\"%s [n] [s]\" will form A with n columns and seed the RNG with s.\n",argv[0]);
+		printf("usage:\t%s n\n\t%s n [s]\nn is the number of columns in the matrix A.\n"\
+			"s is the seed for the random number generator.\n(if left out, "
+			"will seed with the system time)\n",
+			argv[0],argv[0]);
 
 		return 0;
 	}else if(argc == 2){
@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
 	nnz = n*col_nnz;
 
 
-	printf("\n\nA is %d by %d, with %d nonzeros per column.\n", m,n, col_nnz);
-	printf("A has %d nonzeros (%f %% dense).\n", nnz, 100*(pfloat)col_nnz/m);
+	printf("\nA is %d by %d, with %d nonzeros per column.\n", m,n, col_nnz);
+	printf("A has %d nonzeros (%f%% dense).\n", nnz, 100*(pfloat)col_nnz/m);
 	printf("Nonzeros of A take %f GB of storage.\n\n", ((pfloat)nnz*sizeof(pfloat))/pow(2,30));
 
 	A.i = scs_malloc( nnz * sizeof(idxint));
