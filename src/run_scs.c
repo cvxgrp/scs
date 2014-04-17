@@ -2,7 +2,7 @@
 #include "../linsys/amatrix.h"
 
 #ifndef DEMO_PATH
-#define DEMO_PATH "../data_sparse"
+#define DEMO_PATH "examples/raw/demo_data"
 #endif
 
 #define NUM_TRIALS 5
@@ -16,7 +16,7 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k);
 idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
 void freeData(Data *d, Cone *k);
 void freeSol(Sol *sol);
-void printSol(Data * d, Sol * sol, Info * info);
+/* void printSol(Data * d, Sol * sol, Info * info); */
 
 static pfloat U, V;
 static idxint phase = 0;
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	Sol sol = { 0 };
 	Info info = { 0 };
 
-	if (open_file(argc, argv, 1, DEMO_PATH, &fp) == -1)
+	if (open_file(argc, argv, 1, DEMO_PATH, &fp) < 0)
 		return -1;
 	k = scs_calloc(1, sizeof(Cone));
 	d = scs_calloc(1, sizeof(Data));

@@ -37,7 +37,7 @@ static struct ConeData_t {
 } c;
 #endif
 
-void projectsdc(pfloat *X, idxint n);
+void projectsdc(pfloat *X, idxint n, idxint iter);
 
 static timer coneTimer;
 static pfloat totalConeTime;
@@ -244,7 +244,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 			if (k->s[i] == 0) {
 				continue;
 			}
-			projectsdc(&(x[count]), k->s[i]);
+			projectsdc(&(x[count]), k->s[i], iter);
 			count += (k->s[i]) * (k->s[i]);
 		}
 	}
@@ -259,7 +259,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 		 * \Pi_C^*(y) = y + \Pi_C(-y)
 		 */
 		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
-#ifdef USE_OPENMP
+#ifdef OPENMP
 #pragma omp parallel for private(r,s,t,idx)
 #endif
 		for (i = 0; i < k->ep; ++i) {
@@ -279,7 +279,7 @@ void projCone(pfloat *x, Cone * k, idxint iter) {
 
 	if (k->ed) {
 		/* exponential cone: */
-#ifdef USE_OPENMP
+#ifdef OPENMP
 #pragma omp parallel for
 #endif
 		for (i = 0; i < k->ed; ++i) {
@@ -465,7 +465,7 @@ void project2by2sdc(pfloat *X) {
 	return;
 }
 
-void projectsdc(pfloat *X, idxint n) {
+void projectsdc(pfloat *X, idxint n, idxint iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	idxint i, j;
@@ -480,7 +480,7 @@ void projectsdc(pfloat *X, idxint n) {
 	blasint lwork = c.lwork;
 	blasint liwork = c.liwork;
 
-	pfloat eigTol = 1e-8;
+	pfloat eigTol = 0; /* 1 / POWF(iter + 1, 1.5); */
 	pfloat oned = 1.0;
 	pfloat zero = 0.0;
 	blasint info;

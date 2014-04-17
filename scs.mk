@@ -9,7 +9,7 @@ else
 LDFLAGS = -lm 
 endif
 
-CFLAGS = -g -Wall -pedantic -O3 -Iinclude -funroll-loops -Wstrict-prototypes
+CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -std=c89 -Wstrict-prototypes -Iinclude
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct
@@ -34,7 +34,10 @@ RANLIB = ranlib
 # export OMP_NUM_THREADS=4
 
 # USE_OPENMP = 1
-# CFLAGS += -fopenmp
+
+ifdef USE_OPENMP
+    CFLAGS += -fopenmp -DOPENMP
+endif
 
 ############ SDPS: BLAS + LAPACK ############
 # uncomment the line below to enable solving SDPs

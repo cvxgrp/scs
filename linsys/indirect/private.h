@@ -20,12 +20,4 @@ struct PRIVATE_DATA {
 	pfloat * M;
 };
 
-#ifndef POWF
-#ifndef FLOAT
-#define POWF powf
-#else
-#define POWF pow
-#endif
-#endif
-
 #endif

@@ -7,7 +7,7 @@ DIRECT_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect
 
 .PHONY: default 
-default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect
+default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(TARGETS)
 	@echo "**********************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2014."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect'."
@@ -77,4 +77,3 @@ clean:
 purge: clean 
 	@rm -rf $(OUT)
 
--include local.mk

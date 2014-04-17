@@ -9,92 +9,87 @@ pfloat rand_pfloat(void);
 pfloat pos(pfloat x);
 
 /*
-create data for problem:
+ create data for problem:
 
-minimize 	c'*x
-subject to 	Ax <= b
+ minimize 	c'*x
+ subject to 	Ax <= b
 
-where the constraints are linear inequalities. A is a sparse matrix in
-CSC format. A is 3n by n with about sqrt(n) nonzeros per column.
+ where the constraints are linear inequalities. A is a sparse matrix in
+ CSC format. A is 3n by n with about sqrt(n) nonzeros per column.
 
-Construct data in such a way that the problem is primal and dual
-feasible and thus bounded.
-*/
+ Construct data in such a way that the problem is primal and dual
+ feasible and thus bounded.
+ */
 
 int main(int argc, char **argv) {
 	idxint n, m, col_nnz, nnz, i, j, r;
 	AMatrix A;
-	pfloat * c, * b;
-	pfloat * z, * s, * y, * x;
+	pfloat * c, *b;
+	pfloat * z, *s, *y, *x;
 	Cone k;
 	Data d;
 	Sol sol = { 0 };
 	Info info = { 0 };
 
-	if(argc < 2){
-		printf("usage:\t%s n\n\t%s n [s]\nn is the number of columns in the matrix A.\n"\
-			"s is the seed for the random number generator.\n(if left out, "
-			"will seed with the system time)\n",
-			argv[0],argv[0]);
+	if (argc < 2) {
+		printf("usage:\t%s n\n\t%s n [s]\nn is the number of columns in the matrix A.\n"
+				"s is the seed for the random number generator.\n(if left out, "
+				"will seed with the system time)\n", argv[0], argv[0]);
 
 		return 0;
-	}else if(argc == 2){
+	} else if (argc == 2) {
 		srand(time(NULL));
-	}else if(argc == 3){
+	} else if (argc == 3) {
 		srand(atoi(argv[2]));
 	}
 
 	n = atoi(argv[1]);
-	m = 3*n;
-	col_nnz = (int)ceil(sqrt(n));
-	nnz = n*col_nnz;
+	m = 3 * n;
+	col_nnz = (int) ceil(sqrt(n));
+	nnz = n * col_nnz;
 
+	printf("\nA is %d by %d, with %d nonzeros per column.\n", m, n, col_nnz);
+	printf("A has %d nonzeros (%f%% dense).\n", nnz, 100 * (pfloat) col_nnz / m);
+	printf("Nonzeros of A take %f GB of storage.\n\n", ((pfloat) nnz * sizeof(pfloat)) / pow(2, 30));
 
-	printf("\nA is %d by %d, with %d nonzeros per column.\n", m,n, col_nnz);
-	printf("A has %d nonzeros (%f%% dense).\n", nnz, 100*(pfloat)col_nnz/m);
-	printf("Nonzeros of A take %f GB of storage.\n\n", ((pfloat)nnz*sizeof(pfloat))/pow(2,30));
-
-	A.i = scs_malloc( nnz * sizeof(idxint));
-	A.p = scs_malloc( (n+1)* sizeof(idxint));
-	A.x = scs_malloc( nnz * sizeof(pfloat));
-	c = scs_malloc( n * sizeof(pfloat));
-	b = scs_malloc( m * sizeof(pfloat));
-	z = scs_malloc( m * sizeof(pfloat));
-	y = scs_malloc( m * sizeof(pfloat));
-	s = scs_malloc( m * sizeof(pfloat));
-	x = scs_malloc( n * sizeof(pfloat));
-
+	A.i = scs_malloc(nnz * sizeof(idxint));
+	A.p = scs_malloc((n + 1) * sizeof(idxint));
+	A.x = scs_malloc(nnz * sizeof(pfloat));
+	c = scs_malloc(n * sizeof(pfloat));
+	b = scs_malloc(m * sizeof(pfloat));
+	z = scs_malloc(m * sizeof(pfloat));
+	y = scs_malloc(m * sizeof(pfloat));
+	s = scs_malloc(m * sizeof(pfloat));
+	x = scs_malloc(n * sizeof(pfloat));
 
 	/* y, s >= 0 and y'*s = 0 */
-	for(i=0;i<m;i++){
+	for (i = 0; i < m; i++) {
 		z[i] = rand_pfloat();
 		y[i] = pos(z[i]);
 		s[i] = y[i] - z[i];
 		b[i] = 0.0;
 	}
-	for(i=0;i<n;i++){
+	for (i = 0; i < n; i++) {
 		x[i] = rand_pfloat();
 		c[i] = 0.0;
 	}
 
-
 	/* 	c = -A'*y
-		b = A*x + s
-	*/
+	 b = A*x + s
+	 */
 	A.p[0] = 0;
-	for(j=0;j<n;j++){
-		for(r=0;r<col_nnz;r++){
+	for (j = 0; j < n; j++) {
+		for (r = 0; r < col_nnz; r++) {
 			i = rand() % m;
-			A.x[r+j*col_nnz] = rand_pfloat();
-			A.i[r+j*col_nnz] = i;
+			A.x[r + j * col_nnz] = rand_pfloat();
+			A.i[r + j * col_nnz] = i;
 
-			b[i] += A.x[r+j*col_nnz]*x[j] + s[i];
+			b[i] += A.x[r + j * col_nnz] * x[j] + s[i];
 
-			c[j] -= A.x[r+j*col_nnz]*y[i];
+			c[j] -= A.x[r + j * col_nnz] * y[i];
 		}
-		A.p[j+1] = (j+1)*col_nnz;
+		A.p[j + 1] = (j + 1) * col_nnz;
 	}
-
 
 	/* set up SCS structures */
 	k.f = 0;
@@ -137,10 +132,10 @@ int main(int argc, char **argv) {
 }
 
 /* uniform random number in [-1,1] */
-pfloat rand_pfloat(void){
-	return 2*(((pfloat)rand())/RAND_MAX) - 1;
+pfloat rand_pfloat(void) {
+	return 2 * (((pfloat) rand()) / RAND_MAX) - 1;
 }
 
-pfloat pos(pfloat x){
+pfloat pos(pfloat x) {
 	return x > 0 ? x : 0;
 }

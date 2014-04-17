@@ -2,6 +2,9 @@ function randomConeProb()
 clear all;close all;
 addpath('../../matlab')
 cd '../../matlab'; make_scs; cd '../examples/matlab';
+
+randn('seed',0);rand('seed',0);
+
 %% generate random cone problem (solution NOT necessariy unique):
 
 %%% types of probs to solve:
@@ -9,8 +12,8 @@ gen_feasible = true;
 gen_infeasible = true;
 gen_unbounded = true;
 %%% solvers to test:
-run_direct = true;
 run_indirect = true;
+run_direct = true;
 run_cvx = true; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
 

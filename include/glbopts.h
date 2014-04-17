@@ -61,6 +61,14 @@ typedef float pfloat;
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 #endif
 
+#ifndef POWF
+#ifndef FLOAT
+#define POWF powf
+#else
+#define POWF pow
+#endif
+#endif
+
 typedef struct PROBLEM_DATA Data;
 typedef struct SOL_VARS Sol;
 typedef struct INFO Info;
