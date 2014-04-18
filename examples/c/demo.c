@@ -54,9 +54,11 @@ int main(int argc, char **argv) {
 				/* perturb b and c */
 				perturbVector(d->b, d->m);
 				perturbVector(d->c, d->n);
-				d->WARM_START = 1;	d->CG_RATE = 2;
+				d->WARM_START = 1;
+				d->CG_RATE = 2;
 				scs_solve(w, d, k, &sol, &info);
-				d->WARM_START = 0; 	d->CG_RATE = 1.5;
+				d->WARM_START = 0;
+				d->CG_RATE = 1.5;
 				scs_solve(w, d, k, &sol, &info);
 			}
 		}
@@ -193,7 +195,7 @@ void freeData(Data * d, Cone * k) {
 			scs_free(d->b);
 		if (d->c)
 			scs_free(d->c);
-		if (d->A){
+		if (d->A) {
 			if (d->A->x)
 				scs_free(d->A->x);
 			if (d->A->i)

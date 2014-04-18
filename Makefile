@@ -4,7 +4,7 @@ include scs.mk
 OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) 
-TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect
+TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect $(OUT)/demo_LP_direct
 
 .PHONY: default 
 default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(TARGETS)
@@ -54,15 +54,19 @@ $(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
 
-$(OUT)/demo_direct: src/run_scs.c $(OUT)/libscsdir.a
+$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
-$(OUT)/demo_indirect: src/run_scs.c $(OUT)/libscsindir.a
+$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
 $(OUT)/demo_LP_indirect: examples/c/randomLPProb.c $(OUT)/libscsindir.a
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OUT)/demo_LP_direct: examples/c/randomLPProb.c $(OUT)/libscsdir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 

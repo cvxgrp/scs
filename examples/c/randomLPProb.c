@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h> /* pow function */
 #include <time.h> /* to seed random */
+#include "linAlg.h"
 
 pfloat rand_pfloat(void);
 pfloat pos(pfloat x);
@@ -11,7 +12,7 @@ pfloat pos(pfloat x);
 /*
  create data for problem:
 
- minimize 	c'*x
+ minimize 	    c'*x
  subject to 	Ax <= b
 
  where the constraints are linear inequalities. A is a sparse matrix in
@@ -23,6 +24,7 @@ pfloat pos(pfloat x);
 
 int main(int argc, char **argv) {
 	idxint n, m, col_nnz, nnz, i, j, r;
+	int seed;
 	AMatrix A;
 	pfloat * c, *b;
 	pfloat * z, *s, *y, *x;
@@ -32,15 +34,18 @@ int main(int argc, char **argv) {
 	Info info = { 0 };
 
 	if (argc < 2) {
-		printf("usage:\t%s n\n\t%s n [s]\nn is the number of columns in the matrix A.\n"
+		scs_printf("usage:\t%s n\n\t%s n [s]\nn is the number of columns in the matrix A.\n"
 				"s is the seed for the random number generator.\n(if left out, "
 				"will seed with the system time)\n", argv[0], argv[0]);
-
 		return 0;
 	} else if (argc == 2) {
-		srand(time(NULL));
+		seed = time(NULL);
+		scs_printf("seed : %i\n", seed);
+		srand(seed);
 	} else if (argc == 3) {
-		srand(atoi(argv[2]));
+		seed = atoi(argv[2]);
+		scs_printf("seed : %i\n", seed);
+		srand(seed);
 	}
 
 	n = atoi(argv[1]);
@@ -48,9 +53,9 @@ int main(int argc, char **argv) {
 	col_nnz = (int) ceil(sqrt(n));
 	nnz = n * col_nnz;
 
-	printf("\nA is %d by %d, with %d nonzeros per column.\n", m, n, col_nnz);
-	printf("A has %d nonzeros (%f%% dense).\n", nnz, 100 * (pfloat) col_nnz / m);
-	printf("Nonzeros of A take %f GB of storage.\n\n", ((pfloat) nnz * sizeof(pfloat)) / pow(2, 30));
+	scs_printf("\nA is %d by %d, with %d nonzeros per column.\n", m, n, col_nnz);
+	scs_printf("A has %d nonzeros (%f%% dense).\n", nnz, 100 * (pfloat) col_nnz / m);
+	scs_printf("Nonzeros of A take %f GB of storage.\n\n", ((pfloat) nnz * sizeof(pfloat)) / pow(2, 30));
 
 	A.i = scs_malloc(nnz * sizeof(idxint));
 	A.p = scs_malloc((n + 1) * sizeof(idxint));
@@ -118,6 +123,9 @@ int main(int argc, char **argv) {
 
 	scs(&d, &k, &sol, &info);
 
+	scs_printf("true pri opt = %4f\n", innerProd(d.c, x, d.n));
+	scs_printf("true dua opt = %4f\n", -innerProd(d.b, y, d.m));
+
 	scs_free(A.i);
 	scs_free(A.p);
 	scs_free(A.x);
@@ -127,6 +135,10 @@ int main(int argc, char **argv) {
 	scs_free(y);
 	scs_free(s);
 	scs_free(x);
+
+	scs_free(sol.x);
+	scs_free(sol.y);
+	scs_free(sol.s);
 
 	return 0;
 }

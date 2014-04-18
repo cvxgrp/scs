@@ -34,7 +34,7 @@ static struct ConeData_t {
 	/* workspace for eigenvector decompositions: */
 	pfloat * Xs, *Z, *e, *work;
 	blasint *iwork, lwork, liwork;
-} c;
+}c;
 #endif
 
 void projectsdc(pfloat *X, idxint n, idxint iter);
@@ -140,15 +140,15 @@ char * getConeSummary(Info * info) {
 void finishCone() {
 #ifdef LAPACK_LIB_FOUND
 	if (c.Xs)
-		scs_free(c.Xs);
+	scs_free(c.Xs);
 	if (c.Z)
-		scs_free(c.Z);
+	scs_free(c.Z);
 	if (c.e)
-		scs_free(c.e);
+	scs_free(c.e);
 	if (c.work)
-		scs_free(c.work);
+	scs_free(c.work);
 	if (c.iwork)
-		scs_free(c.iwork);
+	scs_free(c.iwork);
 #endif
 }
 
@@ -432,36 +432,36 @@ idxint initCone(Cone * k) {
 }
 
 void project2by2sdc(pfloat *X) {
-	pfloat a, b, d, l1, l2, x1, x2, rad, lam;
+	pfloat a, b, d, l1, l2, x1, x2, rad;
 	a = X[0];
 	b = 0.5 * (X[1] + X[2]);
 	d = X[3];
 
 	rad = sqrt((a - d) * (a - d) + 4 * b * b);
+	/* l1 >= l2 always, since rad >= 0 */
 	l1 = 0.5 * (a + d + rad);
 	l2 = 0.5 * (a + d - rad);
 
-	if (l1 >= 0 && l2 >= 0) {
+	if (l2 >= 0) { /* both positive, just symmetrize */
 		X[1] = b;
 		X[2] = b;
 		return;
 	}
-	if (l1 < 0 && l2 < 0) {
+	if (l1 <= 0) { /* both negative, set to 0 */
 		X[0] = 0;
 		X[1] = 0;
 		X[2] = 0;
 		X[3] = 0;
 		return;
 	}
+	/* l1 pos, l2 neg */
+	x1 = 1 / sqrt(1 + (l1 - a) * (l1 - a) / b / b);
+	x2 = x1 * (l1 - a) / b;
 
-	lam = MAX(l1, l2);
-	x1 = 1 / sqrt(1 + (lam - a) * (lam - a) / b / b);
-	x2 = x1 * (lam - a) / b;
-
-	X[0] = lam * x1 * x1;
-	X[1] = lam * x1 * x2;
-	X[2] = lam * x1 * x2;
-	X[3] = lam * x2 * x2;
+	X[0] = l1 * x1 * x1;
+	X[1] = l1 * x1 * x2;
+	X[2] = X[1];
+	X[3] = l1 * x2 * x2;
 	return;
 }
 

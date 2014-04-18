@@ -10,7 +10,10 @@ sftp-config.json
 *dSYM
 *demo_direct
 *demo_indirect
+python/flags.tmp
 python/build/
+python_dist
+out
 .swo
 *.o
 *.a
@@ -32,5 +35,4 @@ python/build/
 *.mexmaci
 *.mexa64
 *.mexmaci64
-*.out
 *.dependencies
