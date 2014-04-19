@@ -2,7 +2,7 @@
 #include "../common.h"
 #include "linAlg.h"
 
-#define CG_BEST_TOL 1e-9
+#define CG_BEST_TOL 1e-7
 #define PRINT_INTERVAL 100
 
 /*y = (RHO_X * I + A'A)x */
@@ -121,8 +121,9 @@ void freePriv(Priv * p) {
 
 void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
-	pfloat cgTol = iter < 0 ? CG_BEST_TOL : calcNorm(b, d->n) / POWF(iter + 1, d->CG_RATE);
-	tic(&linsysTimer);
+	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
+    cgTol = MAX(cgTol, CG_BEST_TOL);
+    tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
 	accumByAtrans(d, p, &(b[d->n]), b);

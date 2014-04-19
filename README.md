@@ -30,7 +30,7 @@ subject to      -A'*y == c
                 y in K^*
 ```   
 
-where `K` is a product cone of free cones, linear cones `{ x | x >= 0 }`, 
+where `K` is a product cone of zero cones, linear cones `{ x | x >= 0 }`, 
 second-order cones `{ (t,x) | ||x||_2 <= t }`, semi-definite cones `{ X | X psd }`,
 and exponential cones `{(x,y,z) | y e^(x/y) <= z, y>0 }`.
 `K^*` denotes the dual cone to `K`.
@@ -76,7 +76,7 @@ use the mex file in your Matlab code. The calling sequence is (for the direct ve
 where data contains `A`, `b`, `c`  
 params contains various options (see matlab file, can be empty)  
 cones contains one or more of:  
-+ `f` (num free/zero cones)
++ `f` (num primal zero / dual free cones, i.e. primal equality constraints)
 + `l` (num linear cones)
 + `q` (array of SOCs sizes)
 + `s` (array of SDCs sizes)
@@ -145,22 +145,35 @@ These libraries (and `scs.h`) expose only four API functions:
 * `void scs_finish(Data * d, Work * w);`
     
     Called after all solves completed, to free data and cleanup.
-
 * `idxint scs(Data * d, Cone * k, Sol * sol, Info * info);`
-    
+
     Simply calls all the above routines, so can't use reuse the workspace (for, e.g., factorization caching).
-    
-The four relevant data structures are:
-              
+
+The five relevant data structures are:
+```
+    typedef struct PROBLEM_DATA Data;
+    typedef struct SOL_VARS Sol;
+    typedef struct INFO Info;
+    typedef struct CONE Cone;
+
+    /* defined in linSys.h, can be overriden by user */
+    typedef struct A_DATA_MATRIX AMatrix;
+
+
+    /* this struct defines the data matrix A */
+    struct A_DATA_MATRIX {
+        /* A is supplied in column compressed format */
+        pfloat * x; /* A values, size: NNZ A */
+        idxint * i; /* A row index, size: NNZ A */
+        idxint * p; /* A column pointer, size: n+1 */
+    };
+
     /* struct that containing standard problem data */
     struct PROBLEM_DATA {
     	/* problem dimensions */
     	idxint m, n;        /* A has m rows, n cols*/
-    
-    	/* NB: A must be supplied in column compressed format */
-    	pfloat * Ax;        /* A values, size: NNZ A */
-    	idxint * Ai;        /* A row index, size: NNZ A */
-    	idxint * Ap;        /* A column pointer, size: n+1 */
+   
+        AMatrix * A;        /* A is supplied in data format specified by linsys solver */
     	pfloat * b, *c;     /* dense arrays for b (size m), c (size n) */
     
     	/* other input parameters: default suggested input */
@@ -195,7 +208,7 @@ The four relevant data structures are:
     };
    
     struct CONE {
-        idxint f;           /* number of linear equality constraints */
+        idxint f;           /* number of primal linear equality constraints */
         idxint l;           /* length of LP cone */
         idxint *q;   	    /* array of second-order cone constraints */
         idxint qsize;       /* length of SOC array */
@@ -204,7 +217,7 @@ The four relevant data structures are:
         idxint ep;          /* number of primal exponential cone triples */
         idxint ed;          /* number of dual exponential cone triples */
     };
-        
+```        
 The data matrix `A` is specified in column-compressed format, and the vectors
 `b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
 (slack), and `y` (dual) are returned as dense arrays. Cones are specified as
