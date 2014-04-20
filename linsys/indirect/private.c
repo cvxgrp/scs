@@ -144,6 +144,7 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	}
 	totalSolveTime += tocq(&linsysTimer);
 }
+
 static void applyPreConditioner(pfloat * M, pfloat * z, pfloat * r, idxint n, pfloat *ipzr) {
 	idxint i;
 	*ipzr = 0;

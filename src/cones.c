@@ -197,7 +197,7 @@ idxint easysdc(idxint * s, idxint ssize) {
 }
 
 /* in place projection (with branches) */
-void projCone(pfloat *x, Cone * k, idxint iter) {
+void projDualCone(pfloat *x, Cone * k, idxint iter) {
 	idxint i;
 	idxint count = (k->f ? k->f : 0);
 	tic(&coneTimer);

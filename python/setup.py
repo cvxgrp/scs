@@ -59,7 +59,7 @@ _scs_indirect = Extension(
                     extra_compile_args=extra_compile_args
                      )
 setup(name='scs',
-        version='1.0',
+        version='1.0.1',
         author = 'Brendan O\'Donoghue',
         author_email = 'bodonoghue85@gmail.com',
         url = 'http://github.com/cvxgrp/scs',

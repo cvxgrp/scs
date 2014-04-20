@@ -26,7 +26,7 @@ char * getConeHeader(Cone * k);
 idxint validateCones(Data * d, Cone * k);
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter = -1 for exact projection */
-void projCone(pfloat *x, Cone *k, idxint iter);
+void projDualCone(pfloat *x, Cone *k, idxint iter);
 void finishCone(void);
 char * getConeSummary(Info * info);
 

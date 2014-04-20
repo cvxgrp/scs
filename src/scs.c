@@ -525,7 +525,7 @@ static void projectCones(Data *d, Work * w, Cone * k, idxint iter) {
 		w->u[i] = d->ALPHA * w->u_t[i] + (1 - d->ALPHA) * w->u_prev[i] - w->v[i];
 	}
 	/* u = [x;y;tau] */
-	projCone(&(w->u[n]), k, iter);
+	projDualCone(&(w->u[n]), k, iter);
 	if (w->u[l - 1] < 0.0)
 		w->u[l - 1] = 0.0;
 }
