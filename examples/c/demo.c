@@ -1,5 +1,6 @@
 #include "scs.h"
 #include "../linsys/amatrix.h"
+#include "problemUtils.h"
 
 #ifndef DEMO_PATH
 #define DEMO_PATH "examples/raw/demo_data"
@@ -8,67 +9,6 @@
 #define NUM_TRIALS 5
 #define RHOX 1e-3
 #define TEST_WARM_START 1
-
-#define PI 3.141592654
-
-int main(int argc, char **argv);
-idxint read_in_data(FILE * fp, Data * d, Cone * k);
-idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
-void freeData(Data *d, Cone *k);
-void freeSol(Sol *sol);
-/* void printSol(Data * d, Sol * sol, Info * info); */
-
-static pfloat U, V;
-static idxint phase = 0;
-
-pfloat rand_gauss(void);
-void perturbVector(pfloat * v, idxint l);
-
-int main(int argc, char **argv) {
-	FILE * fp;
-	idxint i;
-	Cone * k;
-	Data * d;
-	Work * w;
-	Sol sol = { 0 };
-	Info info = { 0 };
-
-	if (open_file(argc, argv, 1, DEMO_PATH, &fp) < 0)
-		return -1;
-	k = scs_calloc(1, sizeof(Cone));
-	d = scs_calloc(1, sizeof(Data));
-	if (read_in_data(fp, d, k) == -1) {
-		printf("Error reading in data, aborting.\n");
-		return -1;
-	}
-	fclose(fp);
-	scs_printf("solve once using scs\n");
-	d->CG_RATE = 1.5;
-	scs(d, k, &sol, &info);
-	if (TEST_WARM_START) {
-		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
-		/* warm starts stored in Sol */
-		w = scs_init(d, k, &info);
-		if (w) {
-			for (i = 0; i < NUM_TRIALS; i++) {
-				/* perturb b and c */
-				perturbVector(d->b, d->m);
-				perturbVector(d->c, d->n);
-				d->WARM_START = 1;
-				d->CG_RATE = 2;
-				scs_solve(w, d, k, &sol, &info);
-				d->WARM_START = 0;
-				d->CG_RATE = 1.5;
-				scs_solve(w, d, k, &sol, &info);
-			}
-		}
-		scs_printf("finished\n");
-		scs_finish(d, w);
-	}
-	freeData(d, k);
-	freeSol(&sol);
-	return 0;
-}
 
 #ifdef DLONG
 #define INTRW "%ld"
@@ -82,24 +22,57 @@ int main(int argc, char **argv) {
 #define FLOATRW "%f"
 #endif
 
-pfloat rand_gauss(void) {
-	pfloat Z;
-	if (phase == 0) {
-		U = (rand() + 1.) / (RAND_MAX + 2.);
-		V = rand() / (RAND_MAX + 1.);
-		Z = sqrt(-2 * log(U)) * sin(2 * PI * V);
-	} else
-		Z = sqrt(-2 * log(U)) * cos(2 * PI * V);
+idxint read_in_data(FILE * fp, Data * d, Cone * k);
+idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
+/* void printSol(Data * d, Sol * sol, Info * info); */
 
-	phase = 1 - phase;
-	return Z;
-}
-
-void perturbVector(pfloat * v, idxint l) {
+int main(int argc, char **argv) {
+	FILE * fp;
+	Cone * k;
+	Data * d;
+	Work * w;
+	Sol * sol;
+	Info info = { 0 };
 	idxint i;
-	for (i = 0; i < l; i++) {
-		v[i] += 0.01 * rand_gauss();
+
+	if (open_file(argc, argv, 1, DEMO_PATH, &fp) < 0)
+		return -1;
+
+	k = scs_calloc(1, sizeof(Cone));
+	d = scs_calloc(1, sizeof(Data));
+	sol = scs_calloc(1, sizeof(Sol));
+
+	if (read_in_data(fp, d, k) == -1) {
+		printf("Error reading in data, aborting.\n");
+		return -1;
 	}
+	fclose(fp);
+	scs_printf("solve once using scs\n");
+	d->CG_RATE = 1.5;
+	scs(d, k, sol, &info);
+	if (TEST_WARM_START) {
+		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
+		/* warm starts stored in Sol */
+		w = scs_init(d, k, &info);
+		if (w) {
+			for (i = 0; i < NUM_TRIALS; i++) {
+				/* perturb b and c */
+				perturbVector(d->b, d->m);
+				perturbVector(d->c, d->n);
+				d->WARM_START = 1;
+				d->CG_RATE = 2;
+				scs_solve(w, d, k, sol, &info);
+				d->WARM_START = 0;
+				d->CG_RATE = 1.5;
+				scs_solve(w, d, k, sol, &info);
+			}
+		}
+		scs_printf("finished\n");
+		scs_finish(d, w);
+	}
+	freeData(d, k);
+	freeSol(sol);
+	return 0;
 }
 
 idxint read_in_data(FILE * fp, Data * d, Cone * k) {
@@ -187,51 +160,6 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 	}
 	d->A = A;
 	return 0;
-}
-
-void freeData(Data * d, Cone * k) {
-	if (d) {
-		if (d->b)
-			scs_free(d->b);
-		if (d->c)
-			scs_free(d->c);
-		if (d->A) {
-			if (d->A->x)
-				scs_free(d->A->x);
-			if (d->A->i)
-				scs_free(d->A->i);
-			if (d->A->p)
-				scs_free(d->A->p);
-			scs_free(d->A);
-		}
-		scs_free(d);
-	}
-	if (k) {
-		if (k->q)
-			scs_free(k->q);
-		if (k->s)
-			scs_free(k->s);
-		scs_free(k);
-	}
-	d = NULL;
-	k = NULL;
-}
-
-void freeSol(Sol *sol) {
-	if (sol) {
-		if (sol->x) {
-			scs_free(sol->x);
-			sol->x = NULL;
-		}
-		if (sol->y) {
-			scs_free(sol->y);
-			sol->y = NULL;
-		}
-		if (sol->s) {
-			scs_free(sol->s);
-			sol->s = NULL;
-		}
-	}
 }
 
 idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb) {

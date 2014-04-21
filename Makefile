@@ -4,7 +4,7 @@ include scs.mk
 OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) 
-TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect $(OUT)/demo_LP_direct $(OUT)/demo_SOCP_indirect
+TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
 
 .PHONY: default 
 default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(TARGETS)
@@ -13,7 +13,7 @@ default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(TARGETS)
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect'."
 	@echo "**********************************************************************************"
 ifdef USE_LAPACK
-	@echo "Compiled with blas and lapack, can solve LPs, SOCPS, SDPs, and EXPs"
+	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, and EXPs"
 else
 	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and EXPs)."
 	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to point to the library"
@@ -54,23 +54,19 @@ $(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
 
-$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
+$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
-$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
+$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" -o $@ $^ $(LDFLAGS) 
 
-$(OUT)/demo_LP_indirect: examples/c/randomLPProb.c $(OUT)/libscsindir.a
+$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/demo_LP_direct: examples/c/randomLPProb.c $(OUT)/libscsdir.a
-	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
+$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
