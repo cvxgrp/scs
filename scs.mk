@@ -29,25 +29,25 @@ RANLIB = ranlib
 # CFLAGS += -DEXTRAVERBOSE # extra verbosity level
 
 ############ OPENMP: ############
-# uncomment below to allow openmp (multi-threaded matrix multiplies):
+# set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):
 # set the number of threads to, for example, 4 by entering the command:
 # export OMP_NUM_THREADS=4
 
-USE_OPENMP = 1
+USE_OPENMP = 0
 
-ifdef USE_OPENMP
+ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp -DOPENMP
 # LDFLAGS += -lgomp
 endif
 
 ############ SDPS: BLAS + LAPACK ############
-# uncomment the line below to enable solving SDPs
+# set USE_LAPACK = 1 below to enable solving SDPs
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
-# USE_LAPACK = 1
+USE_LAPACK = 0
 
-ifdef USE_LAPACK
+ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   LDFLAGS += -lblas -llapack -lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
