@@ -4,7 +4,7 @@ include scs.mk
 OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) 
-TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect $(OUT)/demo_LP_direct
+TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_LP_indirect $(OUT)/demo_LP_direct $(OUT)/demo_SOCP_indirect
 
 .PHONY: default 
 default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(TARGETS)
@@ -67,6 +67,10 @@ $(OUT)/demo_LP_indirect: examples/c/randomLPProb.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_LP_direct: examples/c/randomLPProb.c $(OUT)/libscsdir.a
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
