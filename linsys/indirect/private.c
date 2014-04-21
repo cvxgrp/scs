@@ -36,10 +36,20 @@ void getPreconditioner(Data *d, Priv *p) {
 	idxint i;
 	pfloat * M = p->M;
 	AMatrix * A = d->A;
+
+#ifdef EXTRAVERBOSE
+	scs_printf("getting pre-conditioner\n");
+#endif
+
 	for (i = 0; i < d->n; ++i) {
 		M[i] = 1 / (d->RHO_X + calcNormSq(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
 		/* M[i] = 1; */
 	}
+
+#ifdef EXTRAVERBOSE
+	scs_printf("finished getting pre-conditioner\n");
+#endif
+
 }
 
 Priv * initPriv(Data * d) {
@@ -81,6 +91,11 @@ static void transpose(Data * d, Priv * p) {
 	pfloat * Ax = d->A->x;
 
 	idxint i, j, q, *z;
+
+#ifdef EXTRAVERBOSE
+	scs_printf("transposing A\n");
+#endif
+
 	z = scs_calloc(m, sizeof(idxint));
 	for (i = 0; i < Ap[n]; i++)
 		z[Ai[i]]++; /* row counts */
@@ -93,6 +108,11 @@ static void transpose(Data * d, Priv * p) {
 		}
 	}
 	scs_free(z);
+
+#ifdef EXTRAVERBOSE
+	scs_printf("finished transposing A\n");
+#endif
+
 }
 
 void freePriv(Priv * p) {
@@ -122,6 +142,10 @@ void freePriv(Priv * p) {
 void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
 	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
+#ifdef EXTRAVERBOSE
+	scs_printf("solving lin sys\n");
+#endif
+
     cgTol = MAX(cgTol, CG_BEST_TOL);
     tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */

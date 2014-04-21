@@ -49,6 +49,10 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	pfloat wrk, *nms;
 	idxint numBoundaries = getConeBoundaries(k, &boundaries);
 
+#ifdef EXTRAVERBOSE
+	scs_printf("normalizing A\n");
+#endif
+
 	/* calculate row norms */
 	for (i = 0; i < d->n; ++i) {
 		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
@@ -118,6 +122,10 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 
 	w->D = D;
 	w->E = E;
+
+#ifdef EXTRAVERBOSE
+	scs_printf("finished normalizing A\n");
+#endif
 }
 
 void unNormalizeA(Data *d, Work * w) {
