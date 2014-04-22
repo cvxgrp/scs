@@ -16,6 +16,18 @@
  feasible and thus bounded.
  */
 
+void setScsParams(Data * d) {
+	d->MAX_ITERS = 2500; /* maximum iterations to take: 2500 */
+	d->EPS = 1e-3; /* convergence tolerance: 1e-3 */
+	d->ALPHA = 1.8; /* relaxation parameter: 1.8 */
+	d->RHO_X = 1e-3; /* x equality constraint scaling: 1e-3 */
+	d->SCALE = 5; /* if normalized, rescales by this factor: 1 */
+	d->CG_RATE = 1.5; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 1.5 */
+	d->VERBOSE = 1; /* boolean, write out progress: 1 */
+	d->NORMALIZE = 1; /* boolean, heuristic data rescaling: 1 */
+	d->WARM_START = 0;
+}
+
 int main(int argc, char **argv) {
 	idxint n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
 	Cone * k;
@@ -106,7 +118,10 @@ int main(int argc, char **argv) {
 
 	scs_printf("\nA is %d by %d, with %d nonzeros per column.\n", m, n, col_nnz);
 	scs_printf("A has %d nonzeros (%f%% dense).\n", nnz, 100 * (pfloat) col_nnz / m);
-	scs_printf("Nonzeros of A take %f GB of storage.\n\n", ((pfloat) nnz * sizeof(pfloat)) / POWF(2, 30));
+	scs_printf("Nonzeros of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(pfloat)) / POWF(2, 30));
+	scs_printf("Row idxs of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(idxint)) / POWF(2, 30));
+	scs_printf("Col ptrs of A take %f GB of storage.\n\n", ((pfloat) n * sizeof(idxint)) / POWF(2, 30));
+
 
 	printf("Cone information:\n");
 	printf("Zero cone rows: %d\n", k->f);
@@ -122,6 +137,7 @@ int main(int argc, char **argv) {
 	d->m = m;
 	d->n = n;
 	genRandomProbData(nnz, col_nnz, d, k, opt_sol);
+	setScsParams(d);
 	/* solve! */
 	scs(d, k, sol, &info);
 

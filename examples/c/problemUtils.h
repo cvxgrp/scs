@@ -79,18 +79,6 @@ void freeSol(Sol *sol) {
 	}
 }
 
-void setScsParams(Data * d) {
-	d->MAX_ITERS = 2500; /* maximum iterations to take: 2500 */
-	d->EPS = 1e-3; /* convergence tolerance: 1e-3 */
-	d->ALPHA = 1.8; /* relaxation parameter: 1.8 */
-	d->RHO_X = 1e-3; /* x equality constraint scaling: 1e-3 */
-	d->SCALE = 1; /* if normalized, rescales by this factor: 1 */
-	d->CG_RATE = 1.5; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 1.5 */
-	d->VERBOSE = 1; /* boolean, write out progress: 1 */
-	d->NORMALIZE = 1; /* boolean, heuristic data rescaling: 1 */
-	d->WARM_START = 0;
-}
-
 void genRandomProbData(idxint nnz, idxint col_nnz, Data * d, Cone * k, Sol * opt_sol) {
 	idxint n = d->n;
 	idxint m = d->m;
@@ -145,7 +133,6 @@ void genRandomProbData(idxint nnz, idxint col_nnz, Data * d, Cone * k, Sol * opt
 	}
 	scs_printf("done\n");
 	scs_free(z);
-	setScsParams(d);
 }
 
 #endif
