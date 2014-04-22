@@ -55,9 +55,6 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 #endif
 
 	/* calculate row norms */
-#ifdef OPENMP
-#pragma omp parallel for private(j,c1,c2,wrk)
-#endif
 	for (i = 0; i < d->n; ++i) {
 		c1 = A->p[i];
 		c2 = A->p[i + 1];
@@ -100,9 +97,6 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 		}
 	}
 	/* calculate and scale by col norms, E */
-#ifdef OPENMP
-#pragma omp parallel for private(e, c1)
-#endif
 	for (i = 0; i < d->n; ++i) {
 		c1 =  A->p[i + 1] - A->p[i];
 		e = calcNorm(&(A->x[A->p[i]]), c1);

@@ -99,15 +99,14 @@ static void transpose(Data * d, Priv * p) {
 		z[Ai[i]]++; /* row counts */
 	cs_cumsum(Cp, z, m); /* row pointers */
 
-#ifdef OPENMP
-#pragma omp parallel for private(i,c1,c2,q)
-#endif
 	for (j = 0; j < n; j++) {
 		c1 = Ap[j];
 		c2 = Ap[j + 1];
 		for (i = c1; i < c2; i++) {
-			Ci[q = z[Ai[i]]++] = j; /* place A(i,j) as entry C(j,i) */
+			q = z[Ai[i]];
+			Ci[q] = j; /* place A(i,j) as entry C(j,i) */
 			Cx[q] = Ax[i];
+			z[Ai[i]]++;
 		}
 	}
 	scs_free(z);
