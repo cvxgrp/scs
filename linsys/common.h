@@ -45,17 +45,23 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	AMatrix * A = d->A;
 	pfloat * D = scs_calloc(d->m, sizeof(pfloat));
 	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
-	idxint i, j, count, delta, *boundaries;
-	pfloat wrk, *nms;
+	idxint i, j, count, delta, *boundaries, c1, c2;
+	pfloat wrk, *nms, e;
 	idxint numBoundaries = getConeBoundaries(k, &boundaries);
-
 #ifdef EXTRAVERBOSE
+	timer normalizeTimer;
 	scs_printf("normalizing A\n");
+	tic(&normalizeTimer);
 #endif
 
 	/* calculate row norms */
+#ifdef OPENMP
+#pragma omp parallel for private(j,c1,c2,wrk)
+#endif
 	for (i = 0; i < d->n; ++i) {
-		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+		c1 = A->p[i];
+		c2 = A->p[i + 1];
+		for (j = c1; j < c2; ++j) {
 			wrk = A->x[j];
 			D[A->i[j]] += wrk * wrk;
 		}
@@ -94,13 +100,18 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 		}
 	}
 	/* calculate and scale by col norms, E */
+#ifdef OPENMP
+#pragma omp parallel for private(e, c1)
+#endif
 	for (i = 0; i < d->n; ++i) {
-		E[i] = calcNorm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
-		if (E[i] < MIN_SCALE)
-			E[i] = 1;
-		else if (E[i] > MAX_SCALE)
-			E[i] = MAX_SCALE;
-		scaleArray(&(A->x[A->p[i]]), 1.0 / E[i], A->p[i + 1] - A->p[i]);
+		c1 =  A->p[i + 1] - A->p[i];
+		e = calcNorm(&(A->x[A->p[i]]), c1);
+		if (e < MIN_SCALE)
+			e = 1;
+		else if (e > MAX_SCALE)
+			e = MAX_SCALE;
+		scaleArray(&(A->x[A->p[i]]), 1.0 / e, c1);
+		E[i] = e;
 	}
 
 	nms = scs_calloc(d->m, sizeof(pfloat));
@@ -124,7 +135,7 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	w->E = E;
 
 #ifdef EXTRAVERBOSE
-	scs_printf("finished normalizing A\n");
+	scs_printf("finished normalizing A, time: %6f s\n", tocq(&normalizeTimer) / 1e3);
 #endif
 }
 

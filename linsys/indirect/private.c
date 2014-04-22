@@ -11,7 +11,6 @@ static idxint pcg(Data *d, Priv * p, const pfloat *s, pfloat * b, idxint max_its
 static void transpose(Data * d, Priv * p);
 
 static idxint totCgIts;
-static idxint lastNCgIts;
 static timer linsysTimer;
 static pfloat totalSolveTime;
 
@@ -23,10 +22,9 @@ char * getLinSysMethod(Data * d, Priv * p) {
 
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
-	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n", (pfloat ) totCgIts / (info->iter + 1),
-			totalSolveTime / (info->iter + 1) / 1e3);
+	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
+			(pfloat ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
 	totCgIts = 0;
-	lastNCgIts = 0;
 	totalSolveTime = 0;
 	return str;
 }
@@ -71,7 +69,6 @@ Priv * initPriv(Data * d) {
 	getPreconditioner(d, p);
 	totalSolveTime = 0;
 	totCgIts = 0;
-	lastNCgIts = 0;
 	if (!p->p || !p->r || !p->Ap || !p->tmp || !p->Ati || !p->Atp || !p->Atx) {
 		freePriv(p);
 		return NULL;
@@ -90,27 +87,33 @@ static void transpose(Data * d, Priv * p) {
 	idxint * Ai = d->A->i;
 	pfloat * Ax = d->A->x;
 
-	idxint i, j, q, *z;
-
+	idxint i, j, q, *z, c1, c2;
 #ifdef EXTRAVERBOSE
+	timer transposeTimer;
 	scs_printf("transposing A\n");
+	tic(&transposeTimer);
 #endif
 
 	z = scs_calloc(m, sizeof(idxint));
 	for (i = 0; i < Ap[n]; i++)
 		z[Ai[i]]++; /* row counts */
 	cs_cumsum(Cp, z, m); /* row pointers */
+
+#ifdef OPENMP
+#pragma omp parallel for private(i,c1,c2,q)
+#endif
 	for (j = 0; j < n; j++) {
-		for (i = Ap[j]; i < Ap[j + 1]; i++) {
+		c1 = Ap[j];
+		c2 = Ap[j + 1];
+		for (i = c1; i < c2; i++) {
 			Ci[q = z[Ai[i]]++] = j; /* place A(i,j) as entry C(j,i) */
-			if (Cx)
-				Cx[q] = Ax[i];
+			Cx[q] = Ax[i];
 		}
 	}
 	scs_free(z);
 
 #ifdef EXTRAVERBOSE
-	scs_printf("finished transposing A\n");
+	scs_printf("finished transposing A, time: %6f s\n", tocq(&transposeTimer) / 1e3);
 #endif
 
 }
@@ -142,12 +145,13 @@ void freePriv(Priv * p) {
 void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
 	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
+
 #ifdef EXTRAVERBOSE
 	scs_printf("solving lin sys\n");
 #endif
 
-    cgTol = MAX(cgTol, CG_BEST_TOL);
-    tic(&linsysTimer);
+	cgTol = MAX(cgTol, CG_BEST_TOL);
+	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
 	accumByAtrans(d, p, &(b[d->n]), b);
@@ -156,16 +160,13 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	scaleArray(&(b[d->n]), -1, d->m);
 	accumByA(d, p, b, &(b[d->n]));
 
+#ifdef EXTRAVERBOSE
+	scs_printf("\tCG iterations: %i\n", (int) cgIts);
+#endif
 	if (iter >= 0) {
 		totCgIts += cgIts;
-		lastNCgIts += cgIts;
-#ifdef EXTRAVERBOSE
-		if (d->VERBOSE && (iter + 1) % PRINT_INTERVAL == 0) {
-			scs_printf("\taverage CG iterations for last %i scs iters: %2.2f\n", (int) PRINT_INTERVAL, (pfloat) lastNCgIts / PRINT_INTERVAL);
-			lastNCgIts = 0;
-		}
-#endif
 	}
+
 	totalSolveTime += tocq(&linsysTimer);
 }
 
