@@ -5,6 +5,17 @@
 #include "../linsys/amatrix.h"
 
 #define PI 3.141592654
+#ifdef DLONG
+#define INTRW "%ld"
+#else
+#define INTRW "%i"
+#endif
+
+#ifndef FLOAT
+#define FLOATRW "%lf"
+#else
+#define FLOATRW "%f"
+#endif
 
 /* uniform random number in [-1,1] */
 pfloat rand_pfloat(void) {
@@ -118,7 +129,7 @@ void genRandomProbData(idxint nnz, idxint col_nnz, Data * d, Cone * k, Sol * opt
 	scs_printf("Generating random matrix:\n");
 	for (j = 0; j < n; j++) { /* column */
 		if (j * 100 % n == 0 && (j * 100 / n) % 10 == 0) {
-			scs_printf("%i%%\n", j * 100 / n);
+			scs_printf("%ld%%\n", (long) j * 100 / n);
 		}
 		for (r = 0; r < col_nnz; r++) { /* row index */
 			i = rand() % m; /* row */

@@ -43,6 +43,9 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif
 	Work * w = scs_init(d, k, info);
+#ifdef EXTRAVERBOSE
+	scs_printf("size of idxint = %lu, size of pfloat = %lu\n", sizeof(idxint), sizeof(pfloat));
+#endif
 	if (!w) {
 		scs_printf("ERROR: Could not initialize work\n");
 		failureDefaultReturn(d, sol, info);
@@ -379,23 +382,23 @@ static idxint scs_isnan(pfloat x) {
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
-    idxint i, n = d->n, m = d->m;
-    memset(w->v, 0, n * sizeof(pfloat));
-    memcpy(w->u, sol->x, n * sizeof(pfloat));
-    memcpy(&(w->u[n]), sol->y, m * sizeof(pfloat));
-    memcpy(&(w->v[n]), sol->s, m * sizeof(pfloat));
-    w->u[n + m] = 1.0;
-    w->v[n + m] = 0.0;
+	idxint i, n = d->n, m = d->m;
+	memset(w->v, 0, n * sizeof(pfloat));
+	memcpy(w->u, sol->x, n * sizeof(pfloat));
+	memcpy(&(w->u[n]), sol->y, m * sizeof(pfloat));
+	memcpy(&(w->v[n]), sol->s, m * sizeof(pfloat));
+	w->u[n + m] = 1.0;
+	w->v[n + m] = 0.0;
 #ifndef NOVALIDATE
-    for (i = 0; i < n + m + 1; ++i) {
-        if (scs_isnan(w->u[i]))
-            w->u[i] = 0;
-        if (scs_isnan(w->v[i]))
-            w->v[i] = 0;
-    }
+	for (i = 0; i < n + m + 1; ++i) {
+		if (scs_isnan(w->u[i]))
+			w->u[i] = 0;
+		if (scs_isnan(w->v[i]))
+			w->v[i] = 0;
+	}
 #endif
-    if (d->NORMALIZE)
-        normalizeWarmStart(d, w);
+	if (d->NORMALIZE)
+		normalizeWarmStart(d, w);
 }
 
 static void coldStartVars(Data * d, Work * w) {

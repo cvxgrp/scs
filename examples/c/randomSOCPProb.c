@@ -116,22 +116,22 @@ int main(int argc, char **argv) {
 	k->ep = 0;
 	k->ed = 0;
 
-	scs_printf("\nA is %d by %d, with %d nonzeros per column.\n", m, n, col_nnz);
-	scs_printf("A has %d nonzeros (%f%% dense).\n", nnz, 100 * (pfloat) col_nnz / m);
+	scs_printf("\nA is %ld by %ld, with %ld nonzeros per column.\n", (long) m, (long) n, (long) col_nnz);
+	scs_printf("A has %ld nonzeros (%f%% dense).\n", (long) nnz, 100 * (pfloat) col_nnz / m);
 	scs_printf("Nonzeros of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(pfloat)) / POWF(2, 30));
 	scs_printf("Row idxs of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(idxint)) / POWF(2, 30));
 	scs_printf("Col ptrs of A take %f GB of storage.\n\n", ((pfloat) n * sizeof(idxint)) / POWF(2, 30));
 
 
 	printf("Cone information:\n");
-	printf("Zero cone rows: %d\n", k->f);
-	printf("LP cone rows: %d\n", k->l);
-	printf("Number of second-order cones: %d, covering %d rows, with sizes\n[", k->qsize, q_total);
+	printf("Zero cone rows: %ld\n", (long) k->f);
+	printf("LP cone rows: %ld\n", (long) k->l);
+	printf("Number of second-order cones: %ld, covering %ld rows, with sizes\n[", (long) k->qsize, (long) q_total);
 	for (i = 0; i < k->qsize; i++) {
-		printf("%d, ", k->q[i]);
+		printf("%ld, ", (long) k->q[i]);
 	}
 	printf("]\n");
-	printf("Number of rows covered is %d out of %d.\n\n", q_total + k->f + k->l, m);
+	printf("Number of rows covered is %ld out of %ld.\n\n", (long) q_total + k->f + k->l, (long) m);
 
 	/* set up SCS structures */
 	d->m = m;

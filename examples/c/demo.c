@@ -10,18 +10,6 @@
 #define RHOX 1e-3
 #define TEST_WARM_START 1
 
-#ifdef DLONG
-#define INTRW "%ld"
-#else
-#define INTRW "%i"
-#endif
-
-#ifndef FLOAT
-#define FLOATRW "%lf"
-#else
-#define FLOATRW "%f"
-#endif
-
 idxint read_in_data(FILE * fp, Data * d, Cone * k);
 idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
 /* void printSol(Data * d, Sol * sol, Info * info); */
