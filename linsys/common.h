@@ -16,14 +16,14 @@ idxint validateLinSys(Data *d) {
 		scs_printf("data incompletely specified\n");
 		return -1;
 	}
-    /* detects degenerate problems, sometimes not wanted:
-	for (i = 0; i < d->n; ++i) {
-		if (A->p[i] >= A->p[i + 1]) {
-			scs_printf("A->p not strictly increasing\n");
-			return -1;
-		}
-	}
-    */
+	/* detects degenerate problems, sometimes not wanted:
+	 for (i = 0; i < d->n; ++i) {
+	 	 if (A->p[i] >= A->p[i + 1]) {
+	 	 	 scs_printf("A->p not strictly increasing\n");
+	 	 	 return -1;
+	 	 }
+	 }
+	*/
 	Anz = A->p[d->n];
 	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
 		scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) Anz);
@@ -88,8 +88,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 			D[i] = 1;
 		else if (D[i] > MAX_SCALE)
 			D[i] = MAX_SCALE;
-
 	}
+
 	/* scale the rows with D */
 	for (i = 0; i < d->n; ++i) {
 		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
@@ -98,7 +98,7 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	}
 	/* calculate and scale by col norms, E */
 	for (i = 0; i < d->n; ++i) {
-		c1 =  A->p[i + 1] - A->p[i];
+		c1 = A->p[i + 1] - A->p[i];
 		e = calcNorm(&(A->x[A->p[i]]), c1);
 		if (e < MIN_SCALE)
 			e = 1;

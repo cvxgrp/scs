@@ -178,9 +178,8 @@ static void applyPreConditioner(pfloat * M, pfloat * z, pfloat * r, idxint n, pf
 	}
 }
 
+/* solves (I+A'A)x = b, s warm start, solution stored in b */
 static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_its, pfloat tol) {
-	/* solves (I+A'A)x = b */
-	/* warm start cg with s */
 	idxint i, n = d->n;
 	pfloat ipzr, ipzrOld, alpha;
 	pfloat *p = pr->p; /* cg direction */

@@ -9,26 +9,31 @@ from numpy.distutils.system_info import get_info, BlasNotFoundError
 USE_LAPACK = True
 
 # set to True to enable openmp parallelism, only works with gcc and icc currently
-# use 'export OPENMP_NUM_THREADS=16' to control num of threads (e.g. 16)
+# use 'export OMP_NUM_THREADS=16' to control num of threads (in that case use 16)
 USE_OPENMP = False
+
+# set to true if linking against 64 bit blas/lapack libraries (rare):
+USE_64_BIT_BLAS = False
 
 rootDir = '../'
 
-lib = ['m']
+libraries = ['m']
 if system() == 'Linux':
-    lib += ['rt']
+    libraries += ['rt']
 
 sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c')
-define_macros = [('PYTHON', None), ('DLONG', None)] # add ('BLAS64', None) for 64 bit blas libs
+define_macros = [('PYTHON', None), ('DLONG', None)]
 include_dirs = [rootDir + 'include', get_include()]
-libraries = lib
 extra_link_args = []
 extra_compile_args = ["-O3"]
 
 if USE_OPENMP:
     define_macros += [('OPENMP', None)]
     extra_compile_args += ['-fopenmp']
-    #libraries += ['gomp']
+    extra_link_args += ['-lgomp']
+
+if USE_64_BIT_BLAS:
+    define_macros += [('BLAS64', None)]
 
 blas_info = get_info('blas_opt')
 lapack_info = get_info('lapack_opt')
