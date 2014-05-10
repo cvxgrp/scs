@@ -408,8 +408,7 @@ idxint initCone(Cone * k) {
 		c.Z = scs_calloc(nMax * nMax, sizeof(pfloat));
 		c.e = scs_calloc(nMax, sizeof(pfloat));
 
-		BLAS(syevr)("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL,
-				NULL, NULL, &eigTol, NULL, NULL, NULL, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
+        BLAS(syevr)("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL, NULL, NULL, &eigTol, NULL, NULL, NULL, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
 
 		if (info != 0) {
 			scs_printf("FATAL: syevr failure\n");
@@ -506,9 +505,9 @@ void projectsdc(pfloat *X, idxint n, idxint iter) {
 	for (i = 0; i < nb; ++i) {
 		BLAS(axpy)(&nb, &oned, &(X[i]), &nb, &(Xs[i * n]), &one);
 	}
-	vupper = calcNorm(Xs, nb * nb);
+	vupper = MAX(calcNorm(Xs, nb * nb), 0.001);
 	/* Solve eigenproblem, reuse workspaces */
-	BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
+    BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
 			NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
 	if (info != 0) {
 		scs_printf("FATAL: syevr failure\n");

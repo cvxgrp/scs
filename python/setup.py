@@ -12,7 +12,7 @@ USE_LAPACK = True
 # use 'export OMP_NUM_THREADS=16' to control num of threads (in that case use 16)
 USE_OPENMP = False
 
-# set to true if linking against 64 bit blas/lapack libraries (rare):
+# set to true if linking against blas/lapack libraries that use longs instead of ints for indices:
 USE_64_BIT_BLAS = False
 
 rootDir = '../'
