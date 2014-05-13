@@ -8,7 +8,7 @@
 
 static idxint _lineLen_;
 /* constants and data structures */
-static const char* HEADER[] = { " Iter ", " pri res ", " dua res ", " rel gap ", " pri obj ", " dua obj ", "  kappa  ",
+static const char* HEADER[] = { " Iter ", " pri res ", " dua res ", " rel gap ", " pri obj ", " dua obj ", " kap/tau ",
 		" time (s)", };
 static const idxint HSPACE = 9; /* = strlen(HEADER[1]) */
 static const idxint HEADER_LEN = 8;
@@ -619,7 +619,7 @@ static void printSummary(idxint i, struct residuals *r, timer * solveTimer) {
 	scs_printf("%*.2e ", (int) HSPACE, r->relGap);
 	scs_printf("%*.2e ", (int) HSPACE, r->cTx);
 	scs_printf("%*.2e ", (int) HSPACE, -r->bTy);
-	scs_printf("%*.2e ", (int) HSPACE, r->kap);
+	scs_printf("%*.2e ", (int) HSPACE, r->kap / r->tau);
 	scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
 	scs_printf("\n");
 #ifdef MATLAB_MEX_FILE

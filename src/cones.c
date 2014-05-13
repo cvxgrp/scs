@@ -153,8 +153,15 @@ void finishCone() {
 }
 
 char * getConeHeader(Cone * k) {
-	char * tmp = scs_malloc(sizeof(char) * 256);
+	char * tmp = scs_malloc(sizeof(char) * 512);
 	idxint i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars;
+    sprintf(tmp, "Cones:");
+    if (k->f) {
+        sprintf(tmp + strlen(tmp), "\tprimal zero / dual free vars: %i\n", (int) k->f);
+    }
+    if (k->l) {
+        sprintf(tmp + strlen(tmp), "\tlinear vars: %i\n", (int) k->l);
+    }
 	socVars = 0;
 	socBlks = 0;
 	if (k->qsize && k->q) {
@@ -162,6 +169,7 @@ char * getConeHeader(Cone * k) {
 		for (i = 0; i < k->qsize; i++) {
 			socVars += k->q[i];
 		}
+        sprintf(tmp + strlen(tmp), "\tsoc vars: %i, soc blks: %i\n", (int) socVars, (int) socBlks);
 	}
 	sdVars = 0;
 	sdBlks = 0;
@@ -170,19 +178,13 @@ char * getConeHeader(Cone * k) {
 		for (i = 0; i < k->ssize; i++) {
 			sdVars += k->s[i] * k->s[i];
 		}
+        sprintf(tmp + strlen(tmp), "\tsd vars: %i, sd blks: %i\n", (int) sdVars, (int) sdBlks);
 	}
-	expPvars = 0;
-	if (k->ep) {
-		expPvars = 3 * k->ep;
-	}
-	expDvars = 0;
-	if (k->ed) {
-		expDvars = 3 * k->ed;
-	}
-	sprintf(tmp,
-			"Cones:\tprimal zero / dual free vars: %i\n\tlinear vars: %i\n\tsoc vars: %i, soc blks: %i\n\tsd vars: %i, sd blks: %i\n\texp vars: %i, dual exp vars: %i\n",
-			(int ) (k->f ? k->f : 0), (int ) (k->l ? k->l : 0), (int ) socVars, (int ) socBlks, (int ) sdVars,
-			(int ) sdBlks, (int ) expPvars, (int ) expDvars);
+    if (k->ep || k->ed) {
+	    expPvars = k->ep ? 3 * k->ep : 0;
+	    expDvars = k->ed ? 3 * k->ed : 0;
+        sprintf(tmp + strlen(tmp), "\texp vars: %i, dual exp vars: %i\n", (int) expPvars, (int) expDvars);
+    }
 	return tmp;
 }
 
