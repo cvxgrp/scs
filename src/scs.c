@@ -649,7 +649,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 		scs_free(linSysMethod);
 	}
 	if (d->NORMALIZE) {
-		scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i, SCALE = %2.1f\n", d->EPS, d->ALPHA,
+		scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i, SCALE = %2.2f\n", d->EPS, d->ALPHA,
 				(int) d->MAX_ITERS, (int) d->NORMALIZE, d->SCALE);
 	} else {
 		scs_printf("EPS = %.2e, ALPHA = %.2f, MAX_ITERS = %i, NORMALIZE = %i\n", d->EPS, d->ALPHA, (int) d->MAX_ITERS,
