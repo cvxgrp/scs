@@ -299,8 +299,8 @@ static pfloat calcPrimalResid(Data * d, Work * w, pfloat * x, pfloat * s, pfloat
 		*nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - d->b[i] * tau) * (pr[i] - d->b[i] * tau) * scale;
 	}
-	*nmAxs = sqrt(*nmAxs);
-	return sqrt(pres); /* norm(Ax + s - b * tau) */
+	*nmAxs = SQRTF(*nmAxs);
+	return SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
 static pfloat calcDualResid(Data * d, Work * w, pfloat * y, pfloat tau, pfloat *nmATy) {
@@ -315,8 +315,8 @@ static pfloat calcDualResid(Data * d, Work * w, pfloat * y, pfloat tau, pfloat *
 		*nmATy += (dr[i] * dr[i]) * scale;
 		dres += (dr[i] + d->c[i] * tau) * (dr[i] + d->c[i] * tau) * scale;
 	}
-	*nmATy = sqrt(*nmATy);
-	return sqrt(dres); /* norm(A'y + c * tau) */
+	*nmATy = SQRTF(*nmATy);
+	return SQRTF(dres); /* norm(A'y + c * tau) */
 }
 
 static pfloat fastCalcPrimalResid(Data * d, Work * w, pfloat * nmAxs) {
@@ -333,8 +333,8 @@ static pfloat fastCalcPrimalResid(Data * d, Work * w, pfloat * nmAxs) {
 		*nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - d->b[i] * tau) * (pr[i] - d->b[i] * tau) * scale;
 	}
-	*nmAxs = sqrt(*nmAxs);
-	return sqrt(pres); /* norm(Ax + s - b * tau) */
+	*nmAxs = SQRTF(*nmAxs);
+	return SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
 static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
@@ -405,8 +405,8 @@ static void coldStartVars(Data * d, Work * w) {
 	idxint l = d->n + d->m + 1;
 	memset(w->u, 0, l * sizeof(pfloat));
 	memset(w->v, 0, l * sizeof(pfloat));
-	w->u[l - 1] = sqrt(l);
-	w->v[l - 1] = sqrt(l);
+	w->u[l - 1] = SQRTF(l);
+	w->v[l - 1] = SQRTF(l);
 }
 
 /* pass in sol for warm-starting */
@@ -575,7 +575,7 @@ static void setSolution(Data * d, Work * w, Sol * sol, Info * info) {
 		if (tau > UNDET_TOL && tau > kap) {
 			info->statusVal = solved(d, sol, info, tau);
 		} else {
-			if (calcNorm(w->u, l) < UNDET_TOL * sqrt(l)) {
+			if (calcNorm(w->u, l) < UNDET_TOL * SQRTF(l)) {
 				info->statusVal = indeterminate(d, sol, info);
 			} else {
 				pfloat bTy = innerProd(d->b, sol->y, d->m);

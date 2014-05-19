@@ -21,7 +21,7 @@ char * getLinSysSummary(Priv * p, Info * info) {
 
 Priv * initPriv(Data * d) {
 	blasint n = (blasint) d->n, m = (blasint) d->m, info;
-	pfloat zero = 0, onef = 1;
+	pfloat zero = 0.0, onef = 1.0;
 	idxint k, j;
 	pfloat * A = d->A->x;
 	Priv * p = scs_malloc(sizeof(Priv));

@@ -69,6 +69,14 @@ typedef float pfloat;
 #endif
 #endif
 
+#ifndef SQRTF
+#ifdef FLOAT
+#define SQRTF sqrtf
+#else
+#define SQRTF sqrt
+#endif
+#endif
+
 typedef struct PROBLEM_DATA Data;
 typedef struct SOL_VARS Sol;
 typedef struct INFO Info;

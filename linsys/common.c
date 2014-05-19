@@ -59,7 +59,7 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 		}
 	}
 	for (i = 0; i < d->m; ++i) {
-		D[i] = sqrt(D[i]); /* just the norms */
+		D[i] = SQRTF(D[i]); /* just the norms */
 	}
 
 	/* mean of norms of rows across each cone  */
@@ -112,7 +112,7 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	}
 	w->meanNormRowA = 0.0;
 	for (i = 0; i < d->m; ++i) {
-		w->meanNormRowA += sqrt(nms[i]) / d->m;
+		w->meanNormRowA += SQRTF(nms[i]) / d->m;
 	}
 	scs_free(nms);
 

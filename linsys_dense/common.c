@@ -92,7 +92,6 @@ void accumByAtrans(Data * d, Priv * p, const pfloat * x, pfloat * y) {
 	pfloat * A = d->A->x;
 	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
 	pfloat onef = 1.0;
-	idxint i;
 	BLAS(gemv)("Transpose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
 }
 void accumByA(Data * d, Priv * p, const pfloat * x, pfloat * y) {

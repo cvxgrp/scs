@@ -438,7 +438,7 @@ void project2by2sdc(pfloat *X) {
 	b = 0.5 * (X[1] + X[2]);
 	d = X[3];
 
-	rad = sqrt((a - d) * (a - d) + 4 * b * b);
+	rad = SQRTF((a - d) * (a - d) + 4 * b * b);
 	/* l1 >= l2 always, since rad >= 0 */
 	l1 = 0.5 * (a + d + rad);
 	l2 = 0.5 * (a + d - rad);
@@ -456,7 +456,7 @@ void project2by2sdc(pfloat *X) {
 		return;
 	}
 	/* l1 pos, l2 neg */
-	x1 = 1 / sqrt(1 + (l1 - a) * (l1 - a) / b / b);
+	x1 = 1 / SQRTF(1 + (l1 - a) * (l1 - a) / b / b);
 	x2 = x1 * (l1 - a) / b;
 
 	X[0] = l1 * x1 * x1;

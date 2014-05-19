@@ -37,7 +37,7 @@ pfloat calcNormSq(const pfloat * v, idxint len) {
 
 /* ||v||_2 */
 pfloat calcNorm(const pfloat * v, idxint len) {
-	return sqrt(calcNormSq(v, len));
+	return SQRTF(calcNormSq(v, len));
 }
 
 pfloat calcNormInf(const pfloat *a, idxint l) {
@@ -66,7 +66,7 @@ pfloat calcNormDiff(const pfloat *a, const pfloat *b, idxint l) {
 		tmp = (a[i] - b[i]);
 		nmDiff += tmp * tmp;
 	}
-	return sqrt(nmDiff);
+	return SQRTF(nmDiff);
 }
 
 pfloat calcNormInfDiff(const pfloat *a, const pfloat *b, idxint l) {
