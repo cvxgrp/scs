@@ -33,7 +33,7 @@ RANLIB = ranlib
 # set the number of threads to, for example, 4 by entering the command:
 # export OMP_NUM_THREADS=4
 
-USE_OPENMP = 1
+USE_OPENMP = 0
 
 ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp -DOPENMP
@@ -45,7 +45,7 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
-USE_LAPACK = 1
+USE_LAPACK = 0
 
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
