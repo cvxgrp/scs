@@ -13,6 +13,7 @@ sftp-config.json
 python/flags.tmp
 python/build/
 python_dist
+linsys_dense/out
 out
 .swo
 *.o

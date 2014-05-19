@@ -75,7 +75,8 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a exam
 ## Need to connect to blas lib (set USE_LAPACK = 1 in scs.mk)
 
 DENSE=linsys_dense
-DENSE_TARGETS=$(DENSE)/direct/private.o $(DENSE)/indirect/private.o $(DENSE)/libscsdir.a $(DENSE)/libscsindir.a $(DENSE)/demo_SOCP_direct $(DENSE)/demo_SOCP_indirect
+DENSE_OUT=$(DENSE)/out
+DENSE_TARGETS=$(DENSE)/direct/private.o $(DENSE)/indirect/private.o $(DENSE)/libscsdir.a $(DENSE)/libscsindir.a $(DENSE_OUT)/demo_SOCP_direct $(DENSE_OUT)/demo_SOCP_indirect
 
 dense: $(DENSE_TARGETS)
 
@@ -91,10 +92,12 @@ $(DENSE)/libscsindir.a: $(OBJECTS) $(DENSE)/indirect/private.o $(DENSE)/common.o
 	$(ARCHIVE) $(DENSE)/libscsindir.a $^
 	- $(RANLIB) $(DENSE)/libscsindir.a
 
-$(DENSE)/demo_SOCP_direct: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsdir.a $(DENSE)/problemUtils.h
+$(DENSE_OUT)/demo_SOCP_direct: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsdir.a $(DENSE)/problemUtils.h
+	mkdir -p $(DENSE_OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(DENSE)/demo_SOCP_indirect: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsindir.a $(DENSE)/problemUtils.h
+$(DENSE_OUT)/demo_SOCP_indirect: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsindir.a $(DENSE)/problemUtils.h
+	mkdir -p $(DENSE_OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean purge
