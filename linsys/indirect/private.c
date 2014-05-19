@@ -1,6 +1,4 @@
 #include "private.h"
-#include "../common.h"
-#include "linAlg.h"
 
 #define CG_BEST_TOL 1e-7
 #define PRINT_INTERVAL 100
@@ -55,7 +53,7 @@ Priv * initPriv(Data * d) {
 	Priv * p = scs_calloc(1, sizeof(Priv));
 	p->p = scs_malloc((d->n) * sizeof(pfloat));
 	p->r = scs_malloc((d->n) * sizeof(pfloat));
-	p->Ap = scs_malloc((d->n) * sizeof(pfloat));
+	p->Gp = scs_malloc((d->n) * sizeof(pfloat));
 	p->tmp = scs_malloc((d->m) * sizeof(pfloat));
 
 	/* preconditioner memory */
@@ -69,7 +67,7 @@ Priv * initPriv(Data * d) {
 	getPreconditioner(d, p);
 	totalSolveTime = 0;
 	totCgIts = 0;
-	if (!p->p || !p->r || !p->Ap || !p->tmp || !p->Ati || !p->Atp || !p->Atx) {
+	if (!p->p || !p->r || !p->Gp || !p->tmp || !p->Ati || !p->Atp || !p->Atx) {
 		freePriv(p);
 		return NULL;
 	}
@@ -123,8 +121,8 @@ void freePriv(Priv * p) {
 			scs_free(p->p);
 		if (p->r)
 			scs_free(p->r);
-		if (p->Ap)
-			scs_free(p->Ap);
+		if (p->Gp)
+			scs_free(p->Gp);
 		if (p->tmp)
 			scs_free(p->tmp);
 		if (p->Ati)
@@ -149,13 +147,12 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	scs_printf("solving lin sys\n");
 #endif
 
-	cgTol = MAX(cgTol, CG_BEST_TOL);
 	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
 	accumByAtrans(d, p, &(b[d->n]), b);
 	/* solves (I+A'A)x = b, s warm start, solution stored in b */
-	cgIts = pcg(d, p, s, b, d->n, cgTol);
+	cgIts = pcg(d, p, s, b, d->n, MAX(cgTol, CG_BEST_TOL));
 	scaleArray(&(b[d->n]), -1, d->m);
 	accumByA(d, p, b, &(b[d->n]));
 
@@ -183,7 +180,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 	idxint i, n = d->n;
 	pfloat ipzr, ipzrOld, alpha;
 	pfloat *p = pr->p; /* cg direction */
-	pfloat *Ap = pr->Ap; /* updated CG direction */
+	pfloat *Gp = pr->Gp; /* updated CG direction */
 	pfloat *r = pr->r; /* cg residual */
 	pfloat *z = pr->z; /* for preconditioning */
 	pfloat *M = pr->M; /* inverse diagonal preconditioner */
@@ -201,11 +198,11 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 	memcpy(p, z, n * sizeof(pfloat));
 
 	for (i = 0; i < max_its; ++i) {
-		matVec(d, pr, p, Ap);
+		matVec(d, pr, p, Gp);
 
-		alpha = ipzr / innerProd(p, Ap, n);
+		alpha = ipzr / innerProd(p, Gp, n);
 		addScaledArray(b, p, n, alpha);
-		addScaledArray(r, Ap, n, -alpha);
+		addScaledArray(r, Gp, n, -alpha);
 
 		if (calcNorm(r, n) < tol) {
 			/*scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, rsnew, i+1); */

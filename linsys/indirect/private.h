@@ -5,12 +5,13 @@
 #include "scs.h"
 #include "cs.h"
 #include <math.h>
+#include "linsys/common.h"
+#include "linAlg.h"
 
 struct PRIVATE_DATA {
-	pfloat *p; /* cg iterate  */
-	pfloat *r; /* cg residual */
-	pfloat *x;
-	pfloat * Ap;
+	pfloat * p; /* cg iterate  */
+	pfloat * r; /* cg residual */
+	pfloat * Gp;
 	pfloat * tmp;
 	pfloat * Atx;
 	idxint * Ati;

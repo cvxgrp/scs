@@ -1,5 +1,5 @@
 #include "scs.h"
-#include "../linsys/amatrix.h"
+#include "linsys/amatrix.h"
 #include "problemUtils.h"
 
 #ifndef DEMO_PATH

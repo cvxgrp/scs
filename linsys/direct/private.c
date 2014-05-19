@@ -1,5 +1,4 @@
 #include "private.h"
-#include "../common.h"
 
 /* forward declare */
 idxint LDLInit(cs * A, idxint P[], pfloat **info);

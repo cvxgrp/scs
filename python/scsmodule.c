@@ -2,7 +2,7 @@
 #include "glbopts.h"
 #include "scs.h"
 #include "cones.h"
-#include "../linsys/amatrix.h"
+#include "linsys/amatrix.h"
 #include "numpy/arrayobject.h"
 
 /* IMPORTANT: This code now uses numpy array types. It is a private C module

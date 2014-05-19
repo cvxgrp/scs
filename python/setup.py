@@ -23,7 +23,7 @@ if system() == 'Linux':
 
 sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c')
 define_macros = [('PYTHON', None), ('DLONG', None)]
-include_dirs = [rootDir + 'include', get_include()]
+include_dirs = [rootDir, rootDir + 'include', get_include()]
 extra_compile_args = ["-O3"]
 library_dirs = []
 extra_link_args = []

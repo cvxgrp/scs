@@ -22,12 +22,12 @@ typedef long blasint;
 typedef int blasint;
 #endif
 
-extern void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, pfloat* a, blasint* lda, pfloat* vl,
+void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, pfloat* a, blasint* lda, pfloat* vl,
 		pfloat* vu, blasint* il, blasint* iu, pfloat* abstol, blasint* m, pfloat* w, pfloat* z, blasint* ldz,
 		blasint* isuppz, pfloat* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
-extern void BLAS(syr)(const char *uplo, const blasint *n, const pfloat *alpha, const pfloat *x, const blasint *incx,
+void BLAS(syr)(const char *uplo, const blasint *n, const pfloat *alpha, const pfloat *x, const blasint *incx,
 		pfloat *a, const blasint *lda);
-extern void BLAS(axpy)(const blasint *n, const pfloat *alpha, const pfloat *dx, const blasint *incx, pfloat *dy,
+void BLAS(axpy)(const blasint *n, const pfloat *alpha, const pfloat *dx, const blasint *incx, pfloat *dy,
 		const blasint *incy);
 /* private data to help cone projection step */
 static struct ConeData_t {
@@ -482,7 +482,7 @@ void projectsdc(pfloat *X, idxint n, idxint iter) {
 	blasint liwork = c.liwork;
 
 	pfloat eigTol = 0; /* 1 / POWF(iter + 1, 1.5); */
-	pfloat oned = 1.0;
+	pfloat onef = 1.0;
 	pfloat zero = 0.0;
 	blasint info;
 	pfloat vupper;
@@ -505,7 +505,7 @@ void projectsdc(pfloat *X, idxint n, idxint iter) {
 
 	/* Xs = X + X', save div by 2 for eigen-recomp */
 	for (i = 0; i < nb; ++i) {
-		BLAS(axpy)(&nb, &oned, &(X[i]), &nb, &(Xs[i * n]), &one);
+		BLAS(axpy)(&nb, &onef, &(X[i]), &nb, &(Xs[i * n]), &one);
 	}
 	vupper = MAX(calcNorm(Xs, nb * nb), 0.001);
 	/* Solve eigenproblem, reuse workspaces */

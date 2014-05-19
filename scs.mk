@@ -9,7 +9,7 @@ else
 LDFLAGS = -lm 
 endif
 
-CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -Iinclude
+CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct
@@ -33,7 +33,7 @@ RANLIB = ranlib
 # set the number of threads to, for example, 4 by entering the command:
 # export OMP_NUM_THREADS=4
 
-USE_OPENMP = 0
+USE_OPENMP = 1
 
 ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp -DOPENMP
@@ -45,11 +45,11 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
-USE_LAPACK = 0
+USE_LAPACK = 1
 
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   LDFLAGS += -lblas -llapack -lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
-# CFLAGS += -DBLAS64 # if blas/lapack lib uses long rather than int
+  # CFLAGS += -DBLAS64 # if blas/lapack lib uses long rather than int
 endif

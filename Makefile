@@ -27,7 +27,7 @@ cones	: src/cones.c include/cones.h
 cs		: src/cs.c include/cs.h
 linAlg  : src/linAlg.c include/linAlg.h
 
-$(DIRSRCEXT)/private.o		    : $(DIRSRC)/private.h $(LINSYS)/common.h $(LINSYS)/amatrix.h
+$(DIRSRCEXT)/private.o		    : $(DIRSRC)/private.h $(LINSYS)/common.h
 $(DIRSRCEXT)/ldl.o			    : $(DIRSRCEXT)/ldl.h
 $(DIRSRCEXT)/amd_1.o			: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_2.o			: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
@@ -42,14 +42,15 @@ $(DIRSRCEXT)/amd_post_tree.o	: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_postorder.o	: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_preprocess.o	: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
 $(DIRSRCEXT)/amd_valid.o		: $(DIRSRCEXT)/amd_internal.h $(DIRSRCEXT)/amd.h
-$(INDIRSRC)/private.o	        : $(INDIRSRC)/private.h $(LINSYS)/common.h $(LINSYS)/amatrix.h
+$(INDIRSRC)/private.o	        : $(INDIRSRC)/private.h $(LINSYS)/common.h
+$(LINSYS)/common.o              : $(LINSYS)/common.h
 
-$(OUT)/libscsdir.a: $(OBJECTS) $(DIRSRC)/private.o  $(DIRECT_OBJECTS)
+$(OUT)/libscsdir.a: $(OBJECTS) $(DIRSRC)/private.o $(DIRECT_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $(OUT)/libscsdir.a $^
 	- $(RANLIB) $(OUT)/libscsdir.a
 
-$(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o
+$(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
@@ -70,9 +71,35 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a exam
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+## To compile dense versions: make dense
+## Need to connect to blas lib (set USE_LAPACK = 1 in scs.mk)
+
+DENSE=linsys_dense
+DENSE_TARGETS=$(DENSE)/direct/private.o $(DENSE)/indirect/private.o $(DENSE)/libscsdir.a $(DENSE)/libscsindir.a $(DENSE)/demo_SOCP_direct $(DENSE)/demo_SOCP_indirect
+
+dense: $(DENSE_TARGETS)
+
+$(DENSE)/direct/private.o: $(DENSE)/direct/private.h
+$(DENSE)/indirect/private.o: $(DENSE)/indirect/private.h
+$(DENSE)/common.o: $(DENSE)/common.h
+
+$(DENSE)/libscsdir.a: $(OBJECTS) $(DENSE)/direct/private.o $(DENSE)/common.o
+	$(ARCHIVE) $(DENSE)/libscsdir.a $^
+	- $(RANLIB) $(DENSE)/libscsdir.a
+
+$(DENSE)/libscsindir.a: $(OBJECTS) $(DENSE)/indirect/private.o $(DENSE)/common.o
+	$(ARCHIVE) $(DENSE)/libscsindir.a $^
+	- $(RANLIB) $(DENSE)/libscsindir.a
+
+$(DENSE)/demo_SOCP_direct: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsdir.a $(DENSE)/problemUtils.h
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(DENSE)/demo_SOCP_indirect: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsindir.a $(DENSE)/problemUtils.h
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(DIRSRC)/private.o $(INDIRSRC)/private.o 
+	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(DIRSRC)/private.o $(INDIRSRC)/private.o $(DENSE_TARGETS)
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea

@@ -3,7 +3,7 @@
 #include "glbopts.h"
 #include "scs.h"
 #include "linAlg.h"
-#include "../linsys/amatrix.h"
+#include "linsys/amatrix.h"
 
 void freeMex(Data * d, Cone * k);
 
