@@ -645,7 +645,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	}
 	scs_printf("\n");
 	if (linSysMethod) {
-		scs_printf("Method: %s\n", linSysMethod);
+		scs_printf("Lin-sys: %s\n", linSysMethod);
 		scs_free(linSysMethod);
 	}
 	if (d->NORMALIZE) {

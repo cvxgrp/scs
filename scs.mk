@@ -49,7 +49,7 @@ USE_LAPACK = 0
 
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
-  LDFLAGS += -lblas -llapack -lgfortran
+  LDFLAGS += -lblas -llapack #-lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
   # CFLAGS += -DBLAS64 # if blas/lapack lib uses long rather than int
 endif

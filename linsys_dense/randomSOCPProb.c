@@ -115,9 +115,7 @@ int main(int argc, char **argv) {
 	k->ed = 0;
 
 	scs_printf("\nA is %ld by %ld.\n", (long) m, (long) n);
-	scs_printf("Nonzeros of A take %f GB of storage.\n", ((pfloat) n * m * sizeof(pfloat)) / POWF(2, 30));
-	scs_printf("Row idxs of A take %f GB of storage.\n", ((pfloat) n * m * sizeof(idxint)) / POWF(2, 30));
-	scs_printf("Col ptrs of A take %f GB of storage.\n\n", ((pfloat) n * sizeof(idxint)) / POWF(2, 30));
+	scs_printf("Data matrix A takes %f GB of storage.\n", ((pfloat) n * m * sizeof(pfloat)) / POWF(2, 30));
 
 	printf("Cone information:\n");
 	printf("Zero cone rows: %ld\n", (long) k->f);

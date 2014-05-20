@@ -1,2 +1,7 @@
-add profiling
+add profiling, more verbose with DVERBOSE
+compile dynamic libs
+write out something for init phase
+use correct license - amd ldl etc
+work on conda recipe
+test on windows
 NOTE: higher d->SCALE makes pri resid go down faster, lower makes dual resid go down faster
