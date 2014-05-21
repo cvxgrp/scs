@@ -46,21 +46,21 @@ $(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
 
-$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
+$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $< -o $@ $(LDFLAGS) -lscsdir
 
-$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
+$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $< -o $@ $(LDFLAGS) -lscsindir
 
-$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.a
+$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -lscsdir
 
-$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
+$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a examples/c/problemUtils.h
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -lscsindir
 
 ## To compile dense versions: make dense
 ## Need to connect to blas lib (set USE_LAPACK = 1 in scs.mk)
