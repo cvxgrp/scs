@@ -25,6 +25,7 @@ static void sets(Data * d, Work * w, Sol * sol);
 static void setSolution(Data * d, Work * w, Sol * sol, Info * info);
 static void getInfo(Data * d, Work * w, Sol * sol, Info * info);
 static void printSummary(idxint i, struct residuals *r, timer * solveTimer);
+static void printInitHeader(Data * d, Work * w, Cone * k);
 static void printHeader(Data * d, Work * w, Cone * k);
 static void printFooter(Data * d, Work * w, Info * info);
 static void freeWork(Work * w);
@@ -70,7 +71,8 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 	}
 #endif
 	tic(&initTimer);
-	w = initWork(d, k);
+	strtoc("init", &initTimer);
+    w = initWork(d, k);
 	info->setupTime = tocq(&initTimer);
 	return w;
 }
@@ -413,6 +415,8 @@ static void coldStartVars(Data * d, Work * w) {
 static Work * initWork(Data *d, Cone * k) {
 	Work * w = scs_calloc(1, sizeof(Work));
 	idxint l = d->n + d->m + 1;
+	if (d->VERBOSE)
+		printInitHeader(d, w, k);
 	if (!w) {
 		scs_printf("ERROR: allocating work failure\n");
 		return NULL;
@@ -627,7 +631,7 @@ static void printSummary(idxint i, struct residuals *r, timer * solveTimer) {
 #endif
 }
 
-static void printHeader(Data * d, Work * w, Cone * k) {
+static void printInitHeader(Data * d, Work * w, Cone * k) {
 	idxint i;
 	char * coneStr = getConeHeader(k);
 	char * linSysMethod = getLinSysMethod(d, w->p);
@@ -639,7 +643,11 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-	scs_printf("\n\tscs v1.0 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n");
+	scs_printf("\n\tSCS v1.0.4 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n");
+	for (i = 0; i < _lineLen_; ++i) {
+		scs_printf("-");
+	}
+	scs_printf("\nSCS setup phase:\n");
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
@@ -656,12 +664,19 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 				(int) d->NORMALIZE);
 	}
 	scs_printf("Variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
-	if (d->WARM_START)
-		scs_printf("Using variable warm-starting!\n");
-
 	scs_printf("%s", coneStr);
 	scs_free(coneStr);
-
+	for (i = 0; i < _lineLen_; ++i) {
+		scs_printf("-");
+	}
+	scs_printf("\n");
+}
+static void printHeader(Data * d, Work * w, Cone * k) {
+	idxint i;
+	scs_printf("SCS solve phase: ");
+	if (d->WARM_START)
+		scs_printf("using variable warm-starting");
+	scs_printf("\n");
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
@@ -671,7 +686,7 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 	}
 	scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
 	for (i = 0; i < _lineLen_; ++i) {
-		scs_printf("=");
+		scs_printf("-");
 	}
 	scs_printf("\n");
 }

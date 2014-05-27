@@ -12,12 +12,12 @@ TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OU
 
 .PHONY: default 
 
-default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(TARGETS)
+default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.so $(OUT)/libscsindir.so $(TARGETS)
 	@echo "**********************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2014."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect'."
 	@echo "**********************************************************************************"
-ifdef USE_LAPACK
+ifneq ($(USE_LAPACK), 0)
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, and EXPs"
 else
 	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and EXPs)."
@@ -46,19 +46,27 @@ $(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
 
-$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
+$(OUT)/libscsdir.so: $(OBJECTS) $(DIRSRC)/private.o $(DIRECT_OBJECTS) $(LINSYS)/common.o
+	mkdir -p $(OUT)
+	$(CC) -shared -o $@ $^ $(LDFLAGS)
+
+$(OUT)/libscsindir.so: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
+	mkdir -p $(OUT)
+	$(CC) -shared -o $@ $^ $(LDFLAGS)
+
+$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.so
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
 
-$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
+$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.so
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS)
 
-$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.a
+$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.so
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
+$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.so
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 

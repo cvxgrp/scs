@@ -5,7 +5,7 @@ from platform import system
 from numpy import get_include
 from numpy.distutils.system_info import get_info, BlasNotFoundError 
 
-# if you're having errors linking blas/lapack, set this to false:
+# if you're having errors linking blas/lapack, set this to false (but SCS won't be able to solve SDPs):
 USE_LAPACK = True
 
 # set to True to enable openmp parallelism, only works with gcc and icc currently
@@ -21,9 +21,10 @@ libraries = ['m']
 if system() == 'Linux':
     libraries += ['rt']
 
-sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c')
+sources = ['scsmodule.c', ] + glob(rootDir + 'src/.c') + glob(rootDir + 'linsys/.c')
+include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
+
 define_macros = [('PYTHON', None), ('DLONG', None)]
-include_dirs = [rootDir, rootDir + 'include', get_include()]
 extra_compile_args = ["-O3"]
 library_dirs = []
 extra_link_args = []

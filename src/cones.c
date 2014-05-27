@@ -37,13 +37,18 @@ static struct ConeData_t {
 }c;
 #endif
 
-void projectsdc(pfloat *X, idxint n, idxint iter);
 
 static timer coneTimer;
 static pfloat totalConeTime;
 
-void projExpCone(pfloat * v);
+static void projExpCone(pfloat * v);
+static void projectsdc(pfloat *X, idxint n, idxint iter);
 
+ /*
+ * boundaries will contain array of indices of rows of A corresponding to
+ * cone boundaries, boundaries[0] is starting index for cones of size larger than 1
+ * returns length of boundaries array, boundaries malloc-ed here so should be freed
+ */
 idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
 	idxint i, count = 0;
 	idxint len = 1 + k->qsize + k->ssize + k->ed + k->ep;
@@ -340,7 +345,7 @@ void expGetRhoUb(pfloat * v, pfloat * x, pfloat * ub, pfloat * lb) {
 }
 
 /* project onto the exponential cone, v has dimension *exactly* 3 */
-void projExpCone(pfloat * v) {
+static void projExpCone(pfloat * v) {
 	idxint i;
 	pfloat ub, lb, rho, g, x[3];
 	pfloat r = v[0], s = v[1], t = v[2];
@@ -466,7 +471,7 @@ void project2by2sdc(pfloat *X) {
 	return;
 }
 
-void projectsdc(pfloat *X, idxint n, idxint iter) {
+static void projectsdc(pfloat *X, idxint n, idxint iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	idxint i, j;

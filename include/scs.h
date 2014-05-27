@@ -70,7 +70,7 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info);
 struct WORK {
 	pfloat *u, *v, *u_t, *u_prev;
 	pfloat *h, *g, *pr, *dr;
-	pfloat gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA;
+	pfloat gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA, meanNormColA;
 	pfloat *D, *E; /* for normalization */
 	Priv * p;
 };

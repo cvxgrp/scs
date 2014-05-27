@@ -1,9 +1,9 @@
-scs [![Build Status](https://travis-ci.org/cvxgrp/scs.png?branch=master)](https://travis-ci.org/cvxgrp/scs) 
+SCS [![Build Status](https://travis-ci.org/cvxgrp/scs.png?branch=master)](https://travis-ci.org/cvxgrp/scs)
 ====
 
-scs = `splitting cone solver`
+SCS = `splitting cone solver`
 
-scs is a C package for solving large-scale convex cone problems,
+SCS is a C package for solving large-scale convex cone problems,
 based on ["Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding"](http://www.stanford.edu/~boyd/papers/scs.html) by 
 Brendan O’Donoghue, Eric Chu, Neal Parikh, and Stephen Boyd
 

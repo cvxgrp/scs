@@ -304,8 +304,11 @@ if add_row, y = zeros( 0, 1 ); end
 tol = max(info.resPri,info.resDual);
 iters = info.iter;
 status = info.status;
+if (strcmp(status,'Solved') || strcmp(status,'Solved/Inaccurate'))
+% cvx will overwrite with NAN if this is not checked here:
+    status = 'Solved';
 % scs targets the dual to sedumi formulation:
-if (strcmp(status,'Unbounded') || strcmp(status,'Unbounded/Inaccurate'))
+elseif (strcmp(status,'Unbounded') || strcmp(status,'Unbounded/Inaccurate'))
     status = 'Infeasible';
 elseif (strcmp(status,'Infeasible') || strcmp(status,'Infeasible/Inaccurate'))
     status = 'Unbounded';

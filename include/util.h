@@ -38,6 +38,7 @@ typedef struct timer {
 /* these all return milli-seconds */
 void tic(timer * t);
 pfloat toc(timer * t);
+pfloat strtoc(char * str, timer * t);
 pfloat tocq(timer * t);
 
 void printConeData(Cone * k);

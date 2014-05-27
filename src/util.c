@@ -61,6 +61,12 @@ pfloat toc(timer * t) {
 	return time;
 }
 
+pfloat strtoc(char * str, timer * t) {
+	pfloat time = tocq(t);
+	scs_printf("%s - time: %8.4f milli-seconds.\n", str, time);
+	return time;
+}
+
 void printConeData(Cone * k) {
 	idxint i;
 	scs_printf("num zeros = %i\n", (int) k->f);

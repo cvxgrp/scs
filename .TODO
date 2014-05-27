@@ -1,7 +1,9 @@
-add profiling, more verbose with DVERBOSE
-compile dynamic libs
-write out something for init phase
-use correct license - amd ldl etc
+add profiling
+more verbose with DVERBOSE
+add static to methods
+compile dynamic libs - fPIC
 work on conda recipe
 test on windows
+fic D, E to be inverse
+re-add approximate convergence check
 NOTE: higher d->SCALE makes pri resid go down faster, lower makes dual resid go down faster

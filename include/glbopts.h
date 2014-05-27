@@ -24,6 +24,9 @@
 #define scs_calloc   calloc
 #endif
 
+/* SCS VERSION NUMBER --------------------------------------- */
+#define SCS_VERSION ("1.0.4")
+
 #ifdef DLONG
     #ifdef _WIN64
         typedef __int64 idxint;

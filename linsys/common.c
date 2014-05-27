@@ -1,7 +1,7 @@
 #include "common.h"
 /* contains routines common to direct and indirect sparse solvers */
 
-#define MIN_SCALE 1e-2
+#define MIN_SCALE 1e-3
 #define MAX_SCALE 1e3
 
 idxint validateLinSys(Data *d) {
@@ -40,6 +40,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	AMatrix * A = d->A;
 	pfloat * D = scs_calloc(d->m, sizeof(pfloat));
 	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
+    pfloat minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
+    pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
 	idxint i, j, count, delta, *boundaries, c1, c2;
 	pfloat wrk, *nms, e;
 	idxint numBoundaries = getConeBoundaries(k, &boundaries);
@@ -79,10 +81,10 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	scs_free(boundaries);
 
 	for (i = 0; i < d->m; ++i) {
-		if (D[i] < MIN_SCALE)
+		if (D[i] < minRowScale)
 			D[i] = 1;
-		else if (D[i] > MAX_SCALE)
-			D[i] = MAX_SCALE;
+		else if (D[i] > maxRowScale)
+			D[i] = maxRowScale;
 	}
 
 	/* scale the rows with D */
@@ -95,10 +97,10 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < d->n; ++i) {
 		c1 = A->p[i + 1] - A->p[i];
 		e = calcNorm(&(A->x[A->p[i]]), c1);
-		if (e < MIN_SCALE)
+		if (e < minColScale)
 			e = 1;
-		else if (e > MAX_SCALE)
-			e = MAX_SCALE;
+		else if (e > maxColScale)
+			e = maxColScale;
 		scaleArray(&(A->x[A->p[i]]), 1.0 / e, c1);
 		E[i] = e;
 	}
@@ -110,13 +112,19 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 			nms[A->i[j]] += wrk * wrk;
 		}
 	}
-	w->meanNormRowA = 0.0;
+    w->meanNormRowA = 0.0;
 	for (i = 0; i < d->m; ++i) {
 		w->meanNormRowA += SQRTF(nms[i]) / d->m;
 	}
-	scs_free(nms);
+    scs_free(nms);
 
-	if (d->SCALE != 1) {
+    w->meanNormColA = 0.0;
+    for (i = 0; i < d->n; ++i) {
+		c1 = A->p[i + 1] - A->p[i];
+		w->meanNormColA += calcNorm(&(A->x[A->p[i]]), c1) / d->n;
+    }
+	
+    if (d->SCALE != 1) {
 		scaleArray(A->x, d->SCALE, A->p[d->n]);
 	}
 

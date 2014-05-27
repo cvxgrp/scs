@@ -1,6 +1,6 @@
 function compile_direct(flags)
 
-common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c scs_mex.c';
+common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c ../linsys/common.c scs_mex.c';
 d = '-fPIC -DDLONG';
 if (~isempty (strfind (computer, '64')))
     arr = '-largeArrayDims';

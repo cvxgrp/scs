@@ -70,7 +70,7 @@ static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 }
 
 static int printErr(char * key) {
-	scs_printf("error parsing '%s'", key);
+	PySys_WriteStderr("error parsing '%s'", key);
 	return -1;
 }
 
@@ -79,7 +79,7 @@ static idxint getWarmStart(char * key, pfloat ** x, PyArrayObject ** px0, idxint
 	PyArrayObject *x0 = (PyArrayObject *) PyDict_GetItemString(warm, key);
 	if (x0) {
 		if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l) {
-			scs_printf("Error parsing warm-start input\n");
+			PySys_WriteStderr("Error parsing warm-start input\n");
 			return 0;
 		} else {
 			*px0 = getContiguous(x0, pfloatType);
@@ -152,11 +152,11 @@ static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * op
 		if (obj) {
 			if (PyInt_Check(obj)) {
 				if ((*v = (pfloat) PyInt_AsLong(obj)) < 0) {
-					scs_printf("ERROR: '%s' ought to be a nonnegative float\n", key);
+					PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
 					return -1;
 				}
 			} else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
-				scs_printf("ERROR: '%s' ought to be a nonnegative float\n", key);
+				PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
 				return -1;
 			}
 		}
