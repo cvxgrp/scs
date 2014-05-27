@@ -4,6 +4,6 @@ add static to methods
 compile dynamic libs - fPIC
 work on conda recipe
 test on windows
-fic D, E to be inverse
+fix D, E to be inverse
 re-add approximate convergence check
 NOTE: higher d->SCALE makes pri resid go down faster, lower makes dual resid go down faster

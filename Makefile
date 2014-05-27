@@ -12,7 +12,8 @@ TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OU
 
 .PHONY: default 
 
-default: $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.so $(OUT)/libscsindir.so $(TARGETS)
+default: $(TARGETS) $(OUT)/libscsdir.a $(OUT)/libscsindir.a 
+    #$(OUT)/libscsdir.so $(OUT)/libscsindir.so 	
 	@echo "**********************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2014."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect'."
@@ -46,27 +47,27 @@ $(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
 
-$(OUT)/libscsdir.so: $(OBJECTS) $(DIRSRC)/private.o $(DIRECT_OBJECTS) $(LINSYS)/common.o
-	mkdir -p $(OUT)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+#$(OUT)/libscsdir.so: $(OBJECTS) $(DIRSRC)/private.o $(DIRECT_OBJECTS) $(LINSYS)/common.o
+#	mkdir -p $(OUT)
+#	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libscsindir.so: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
-	mkdir -p $(OUT)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+#$(OUT)/libscsindir.so: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
+#	mkdir -p $(OUT)
+#	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.so
+$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
 
-$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.so
+$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS)
 
-$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.so
+$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.so
+$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
