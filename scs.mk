@@ -45,7 +45,7 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
-USE_LAPACK = 1
+USE_LAPACK = 0
 
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
