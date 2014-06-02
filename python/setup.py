@@ -21,7 +21,7 @@ libraries = ['m']
 if system() == 'Linux':
     libraries += ['rt']
 
-sources = ['scsmodule.c', ] + glob(rootDir + 'src/.c') + glob(rootDir + 'linsys/.c')
+sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
 include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
 
 define_macros = [('PYTHON', None), ('DLONG', None)]

@@ -408,7 +408,7 @@ idxint initCone(Cone * k) {
 		/* eigenvector decomp workspace */
 		for (i = 0; i < k->ssize; ++i) {
 			if (k->s[i] > nMax) {
-				nMax = k->s[i];
+				nMax = (blasint) k->s[i];
 			}
 		}
 		c.Xs = scs_calloc(nMax * nMax, sizeof(pfloat));

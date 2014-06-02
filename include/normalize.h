@@ -1,17 +1,21 @@
 #ifndef NORMALIZE_H_GUARD
 #define NORMALIZE_H_GUARD
 
-#define MIN_SCALE 1e-2
+#define MIN_SCALE 1e-3
 #define MAX_SCALE 1e3
 
 void normalizeBC(Data * d, Work * w) {
 	idxint i;
 	pfloat *D = w->D, *E = w->E;
-	/* scale b */
+	/*
+    scs_printf("norm b = %4f\n", calcNorm(d->b, d->m));
+    scs_printf("norm c = %4f\n", calcNorm(d->b, d->n));
+    */
+    /* scale b */
 	for (i = 0; i < d->m; ++i) {
 		d->b[i] /= D[i];
 	}
-	w->sc_b = 1 / MAX(calcNorm(d->b, d->m), MIN_SCALE);
+	w->sc_b = w->meanNormColA / MAX(calcNorm(d->b, d->m), MIN_SCALE);
 	/* scale c */
 	for (i = 0; i < d->n; ++i) {
 		d->c[i] /= E[i];

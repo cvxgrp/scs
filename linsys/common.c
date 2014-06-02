@@ -3,6 +3,7 @@
 
 #define MIN_SCALE 1e-3
 #define MAX_SCALE 1e3
+#define NUM_SCALE_PASSES 1
 
 idxint validateLinSys(Data *d) {
 	AMatrix * A = d->A;
@@ -13,12 +14,12 @@ idxint validateLinSys(Data *d) {
 	}
 	/* detects degenerate problems, typically this check is not wanted:
 	 for (i = 0; i < d->n; ++i) {
-	 	 if (A->p[i] >= A->p[i + 1]) {
-	 	 	 scs_printf("A->p not strictly increasing\n");
-	 	 	 return -1;
-	 	 }
+	 if (A->p[i] >= A->p[i + 1]) {
+	 scs_printf("A->p not strictly increasing\n");
+	 return -1;
 	 }
-	*/
+	 }
+	 */
 	Anz = A->p[d->n];
 	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
 		scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) Anz);
@@ -38,98 +39,117 @@ idxint validateLinSys(Data *d) {
 
 void normalizeA(Data * d, Work * w, Cone * k) {
 	AMatrix * A = d->A;
-	pfloat * D = scs_calloc(d->m, sizeof(pfloat));
-	pfloat * E = scs_calloc(d->n, sizeof(pfloat));
-    pfloat minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
-    pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
-	idxint i, j, count, delta, *boundaries, c1, c2;
-	pfloat wrk, *nms, e;
+	pfloat * D = scs_malloc(d->m * sizeof(pfloat));
+	pfloat * E = scs_malloc(d->n * sizeof(pfloat));
+	pfloat * Dt = scs_malloc(d->m * sizeof(pfloat));
+	pfloat * Et = scs_malloc(d->n * sizeof(pfloat));
+	pfloat * nms = scs_calloc(d->m, sizeof(pfloat));
+	pfloat minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
+	pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
+	idxint i, j, l, count, delta, *boundaries, c1, c2;
+	pfloat wrk, e;
 	idxint numBoundaries = getConeBoundaries(k, &boundaries);
+
 #ifdef EXTRAVERBOSE
 	timer normalizeTimer;
 	scs_printf("normalizing A\n");
 	tic(&normalizeTimer);
 #endif
 
-	/* calculate row norms */
-	for (i = 0; i < d->n; ++i) {
-		c1 = A->p[i];
-		c2 = A->p[i + 1];
-		for (j = c1; j < c2; ++j) {
-			wrk = A->x[j];
-			D[A->i[j]] += wrk * wrk;
+	for (l = 0; l < NUM_SCALE_PASSES; ++l) {
+		memset(D, 0, d->m * sizeof(pfloat));
+		memset(E, 0, d->n * sizeof(pfloat));
+		/* calculate row norms */
+		for (i = 0; i < d->n; ++i) {
+			c1 = A->p[i];
+			c2 = A->p[i + 1];
+			for (j = c1; j < c2; ++j) {
+				wrk = A->x[j];
+				D[A->i[j]] += wrk * wrk;
+			}
 		}
-	}
-	for (i = 0; i < d->m; ++i) {
-		D[i] = SQRTF(D[i]); /* just the norms */
-	}
+		for (i = 0; i < d->m; ++i) {
+			D[i] = SQRTF(D[i]); /* just the norms */
+		}
 
-	/* mean of norms of rows across each cone  */
-	count = boundaries[0];
-	for (i = 1; i < numBoundaries; ++i) {
-		wrk = 0;
-		delta = boundaries[i];
-		for (j = count; j < count + delta; ++j) {
-			wrk += D[j];
+		/* mean of norms of rows across each cone  */
+		count = boundaries[0];
+		for (i = 1; i < numBoundaries; ++i) {
+			wrk = 0;
+			delta = boundaries[i];
+			for (j = count; j < count + delta; ++j) {
+				wrk += D[j];
+			}
+			wrk /= delta;
+			for (j = count; j < count + delta; ++j) {
+				D[j] = wrk;
+			}
+			count += delta;
 		}
-		wrk /= delta;
-		for (j = count; j < count + delta; ++j) {
-			D[j] = wrk;
+
+		for (i = 0; i < d->m; ++i) {
+			if (D[i] < minRowScale)
+				D[i] = 1;
+			else if (D[i] > maxRowScale)
+				D[i] = maxRowScale;
 		}
-		count += delta;
+
+		/* scale the rows with D */
+		for (i = 0; i < d->n; ++i) {
+			for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+				A->x[j] /= D[A->i[j]];
+			}
+		}
+		/* calculate and scale by col norms, E */
+		for (i = 0; i < d->n; ++i) {
+			c1 = A->p[i + 1] - A->p[i];
+			e = calcNorm(&(A->x[A->p[i]]), c1);
+			if (e < minColScale)
+				e = 1;
+			else if (e > maxColScale)
+				e = maxColScale;
+			scaleArray(&(A->x[A->p[i]]), 1.0 / e, c1);
+			E[i] = e;
+		}
+
+		for (i = 0; i < d->m; ++i) {
+			Dt[i] = (l == 0) ? D[i] : Dt[i] * D[i];
+		}
+		for (i = 0; i < d->n; ++i) {
+			Et[i] = (l == 0) ? E[i] : Et[i] * E[i];
+		}
 	}
 	scs_free(boundaries);
+	scs_free(D);
+	scs_free(E);
 
-	for (i = 0; i < d->m; ++i) {
-		if (D[i] < minRowScale)
-			D[i] = 1;
-		else if (D[i] > maxRowScale)
-			D[i] = maxRowScale;
-	}
-
-	/* scale the rows with D */
-	for (i = 0; i < d->n; ++i) {
-		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-			A->x[j] /= D[A->i[j]];
-		}
-	}
-	/* calculate and scale by col norms, E */
-	for (i = 0; i < d->n; ++i) {
-		c1 = A->p[i + 1] - A->p[i];
-		e = calcNorm(&(A->x[A->p[i]]), c1);
-		if (e < minColScale)
-			e = 1;
-		else if (e > maxColScale)
-			e = maxColScale;
-		scaleArray(&(A->x[A->p[i]]), 1.0 / e, c1);
-		E[i] = e;
-	}
-
-	nms = scs_calloc(d->m, sizeof(pfloat));
+	/* calculate mean of row norms of A */
 	for (i = 0; i < d->n; ++i) {
 		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
 			wrk = A->x[j];
 			nms[A->i[j]] += wrk * wrk;
 		}
 	}
-    w->meanNormRowA = 0.0;
+	w->meanNormRowA = 0.0;
 	for (i = 0; i < d->m; ++i) {
 		w->meanNormRowA += SQRTF(nms[i]) / d->m;
 	}
-    scs_free(nms);
+	scs_free(nms);
 
-    w->meanNormColA = 0.0;
-    for (i = 0; i < d->n; ++i) {
+	/* calculate mean of col norms of A */
+	w->meanNormColA = 0.0;
+	for (i = 0; i < d->n; ++i) {
 		c1 = A->p[i + 1] - A->p[i];
 		w->meanNormColA += calcNorm(&(A->x[A->p[i]]), c1) / d->n;
-    }
-	
-    if (d->SCALE != 1) {
+	}
+
+	/* scale up by d->SCALE if not equal to 1 */
+	if (d->SCALE != 1) {
 		scaleArray(A->x, d->SCALE, A->p[d->n]);
 	}
 
-	w->D = D;
-	w->E = E;
+	w->D = Dt;
+	w->E = Et;
 
 #ifdef EXTRAVERBOSE
 	scs_printf("finished normalizing A, time: %6f s\n", tocq(&normalizeTimer) / 1e3);
