@@ -71,7 +71,7 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 	}
 #endif
 	tic(&initTimer);
-	strtoc("init", &initTimer);
+	/* strtoc("init", &initTimer); */
     w = initWork(d, k);
 	info->setupTime = tocq(&initTimer);
 	return w;
@@ -670,7 +670,11 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 		scs_printf("-");
 	}
 	scs_printf("\n");
+#ifdef MATLAB_MEX_FILE
+	mexEvalString("drawnow;");
+#endif
 }
+
 static void printHeader(Data * d, Work * w, Cone * k) {
 	idxint i;
 	scs_printf("SCS solve phase: ");
@@ -689,6 +693,9 @@ static void printHeader(Data * d, Work * w, Cone * k) {
 		scs_printf("-");
 	}
 	scs_printf("\n");
+#ifdef MATLAB_MEX_FILE
+	mexEvalString("drawnow;");
+#endif
 }
 
 static void printFooter(Data * d, Work * w, Info * info) {
@@ -744,4 +751,7 @@ static void printFooter(Data * d, Work * w, Info * info) {
 		scs_printf("=");
 	}
 	scs_printf("\n");
+#ifdef MATLAB_MEX_FILE
+	mexEvalString("drawnow;");
+#endif
 }

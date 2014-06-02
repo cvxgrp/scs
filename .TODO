@@ -1,4 +1,5 @@
 add profiling, debug outputs
+correct versioning
 more verbose with DVERBOSE
 add static to methods
 compile dynamic libs - fPIC
