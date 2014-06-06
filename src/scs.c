@@ -112,12 +112,23 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 			break;
 
 		if (i % PRINT_INTERVAL == 0) {
-			if (d->VERBOSE)
+			if (d->VERBOSE) {
 				printSummary(i, &r, &solveTimer);
+				/*
+			    scs_printf("Norm u = %4f\n", calcNorm(w->u, d->n + d->m + 1));
+			    scs_printf("Norm u_t = %4f\n", calcNorm(w->u_t, d->n + d->m + 1));
+			    scs_printf("Norm v = %4f\n", calcNorm(w->v, d->n + d->m + 1));
+			    scs_printf("tau = %4f\n", w->u[d->n + d->m]);
+			    scs_printf("kappa = %4f\n", w->v[d->n + d->m]);
+			    scs_printf("|u - u_prev| = %4f\n", calcNormDiff(w->u, w->u_prev, d->n + d->m + 1));
+			    scs_printf("|u - u_t| = %4f\n", calcNormDiff(w->u, w->u_t, d->n + d->m + 1));
+			    */
+			}
 		}
 	}
-	if (d->VERBOSE)
+	if (d->VERBOSE) {
 		printSummary(i, &r, &solveTimer);
+	}
 	setSolution(d, w, sol, info);
 	/* populate info */
 	info->iter = i;
