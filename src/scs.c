@@ -70,9 +70,9 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 		return NULL;
 	}
 #endif
-	/* tic(&initTimer); */
-	/* strtoc("init", &initTimer); */
+	tic(&initTimer);
     w = initWork(d, k);
+	/* strtoc("init", &initTimer); */
 	info->setupTime = tocq(&initTimer);
 	return w;
 }

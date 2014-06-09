@@ -1,4 +1,5 @@
 add profiling, debug outputs
+cleanup, refactor and comment code
 fix weird timer overflow bug - setup phase
 correct versioning
 more verbose with DVERBOSE
@@ -10,4 +11,5 @@ multiple passes normalization
 adaptive b,c rescaling
 fix D, E to be inverse
 re-add approximate convergence check
+
 NOTE: higher d->SCALE makes pri resid go down faster, lower makes dual resid go down faster
