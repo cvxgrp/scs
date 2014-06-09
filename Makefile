@@ -102,7 +102,7 @@ $(DENSE_OUT)/demo_SOCP_indirect: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsindir.
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(DIRSRC)/private.o $(INDIRSRC)/private.o $(DENSE_TARGETS)
+	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o $(DENSE_TARGETS)
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
