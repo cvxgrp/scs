@@ -3,12 +3,12 @@ if (K.ep>0 || K.ed>0)
     x = nan;
     y = nan;
     s = nan;
-    disp('cvx cannot solve EXPs');
+    disp('cvx cannot solve ECPs');
     return;
 end
 n = length(data.c);
 m = length(data.b);
-% can NOT solve EXPs
+% can NOT solve ECPs
 cvx_begin
 cvx_solver(cs)
 variables x(n) s(m)

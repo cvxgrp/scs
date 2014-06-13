@@ -95,7 +95,15 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		scs_printf("ERROR: NULL input\n");
 		return FAILURE;
 	}
-	tic(&solveTimer);
+    /*
+	for (i=0;i<d->n;i++){
+        scs_printf("c[%li] = %4f\n", (long) i, d->c[i]);
+    }
+    for (i=0;i<d->m;i++){
+        scs_printf("b[%li] = %4f\n", (long) i, d->b[i]);
+    }
+    */
+    tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
 	updateWork(d, w, sol);
 	if (d->VERBOSE)

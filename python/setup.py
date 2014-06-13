@@ -79,5 +79,5 @@ setup(name='scs',
         ext_modules=[_scs_direct, _scs_indirect],
         requires=["numpy (>= 1.7)","scipy (>= 0.13.2)"],
         license = "GPLv3",
-        long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (EXPs). See http://github.com/cvxgrp/scs for more details."
+        long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (ECPs). See http://github.com/cvxgrp/scs for more details."
         )

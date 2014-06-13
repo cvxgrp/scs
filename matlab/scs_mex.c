@@ -159,31 +159,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	/* cones */
 	kf = mxGetField(cone, 0, "f");
-	if (kf)
+	if (kf && !mxIsEmpty(kf))
 		k->f = (idxint) *mxGetPr(kf);
 	else
 		k->f = 0;
 
 	kl = mxGetField(cone, 0, "l");
-	if (kl)
+	if (kl && !mxIsEmpty(kl))
 		k->l = (idxint) *mxGetPr(kl);
 	else
 		k->l = 0;
 
 	kep = mxGetField(cone, 0, "ep");
-	if (kep)
+	if (kep && !mxIsEmpty(kep))
 		k->ep = (idxint) *mxGetPr(kep);
 	else
 		k->ep = 0;
 
 	ked = mxGetField(cone, 0, "ed");
-	if (ked)
+	if (ked && !mxIsEmpty(ked))
 		k->ed = (idxint) *mxGetPr(ked);
 	else
 		k->ed = 0;
 
 	kq = mxGetField(cone, 0, "q");
-	if (kq) {
+	if (kq && !mxIsEmpty(kq)) {
 		q_mex = mxGetPr(kq);
 		ns = mxGetNumberOfDimensions(kq);
 		q_dims = mxGetDimensions(kq);
@@ -201,7 +201,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	}
 
 	ks = mxGetField(cone, 0, "s");
-	if (ks) {
+	if (ks && !mxIsEmpty(ks)) {
 		s_mex = mxGetPr(ks);
 		ns = mxGetNumberOfDimensions(ks);
 		s_dims = mxGetDimensions(ks);

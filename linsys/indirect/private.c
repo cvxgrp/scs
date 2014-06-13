@@ -1,6 +1,6 @@
 #include "private.h"
 
-#define CG_BEST_TOL 1e-7
+#define CG_BEST_TOL 1e-8
 #define PRINT_INTERVAL 100
 
 /*y = (RHO_X * I + A'A)x */
@@ -205,7 +205,9 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 		addScaledArray(r, Gp, n, -alpha);
 
 		if (calcNorm(r, n) < tol) {
-			/*scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, rsnew, i+1); */
+            #ifdef EXTRAVERBOSE
+            scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, calcNorm(r, n), i+1);
+            #endif
 			return i + 1;
 		}
 		ipzrOld = ipzr;

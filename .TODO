@@ -1,15 +1,16 @@
 add profiling, debug outputs
 cleanup, refactor and comment code
-fix weird timer overflow bug - setup phase
 correct versioning
 more verbose with DVERBOSE
-add static to methods
+add static, inline to methods
 compile dynamic libs - fPIC
 work on conda recipe
-test on windows
+test on windows, add appveyor
 multiple passes normalization
 adaptive b,c rescaling
 fix D, E to be inverse
 re-add approximate convergence check
+move setup time output higher
+add WARM_START iteration bump so approximate convergence works better in those cases
 
 NOTE: higher d->SCALE makes pri resid go down faster, lower makes dual resid go down faster
