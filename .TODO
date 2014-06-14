@@ -1,4 +1,5 @@
 add profiling, debug outputs
+reduce unneccessary forward declares
 cleanup, refactor and comment code
 correct versioning
 more verbose with DVERBOSE
