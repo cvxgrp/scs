@@ -717,6 +717,7 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 	}
 #ifdef EXTRAVERBOSE
 	printData(d);
+	printConeData(k);
 #endif
 #ifndef NOVALIDATE
 	if (validate(d, k) < 0) {

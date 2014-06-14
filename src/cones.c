@@ -1,5 +1,8 @@
 #include "cones.h"
 
+#define CONE_RATE 1.5
+#define CONE_TOL 1e-7
+
 #ifdef LAPACK_LIB_FOUND
 /* underscore for blas / lapack, single or double precision */
 #if defined(_WIN32) || defined(__hpux)
@@ -36,7 +39,6 @@ static struct ConeData_t {
 	blasint *iwork, lwork, liwork;
 }c;
 #endif
-
 
 static timer coneTimer;
 static pfloat totalConeTime;
@@ -248,10 +250,11 @@ void expGetRhoUb(pfloat * v, pfloat * x, pfloat * ub, pfloat * lb) {
 }
 
 /* project onto the exponential cone, v has dimension *exactly* 3 */
-static void projExpCone(pfloat * v) {
+static void projExpCone(pfloat * v, idxint iter) {
 	idxint i;
 	pfloat ub, lb, rho, g, x[3];
 	pfloat r = v[0], s = v[1], t = v[2];
+	pfloat tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF((iter + 1), CONE_RATE)); */
 
 	/* v in cl(Kexp) */
 	if ((s * exp(r / s) <= t && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
@@ -279,10 +282,15 @@ static void projExpCone(pfloat * v) {
 		} else {
 			ub = rho;
 		}
-		if (ub - lb < 1e-9) {
+		if (ub - lb < tol) {
 			break;
 		}
 	}
+	/*
+#ifdef EXTRAVERBOSE
+	scs_printf("exponential cone proj iters %i\n", i);
+#endif
+	 */
 	v[0] = x[0];
 	v[1] = x[1];
 	v[2] = x[2];
@@ -389,7 +397,7 @@ static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 	blasint lwork = c.lwork;
 	blasint liwork = c.liwork;
 
-	pfloat eigTol = 0; /* 1 / POWF(iter + 1, 1.5); */
+	pfloat eigTol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF(iter + 1, CONE_RATE)); */
 	pfloat onef = 1.0;
 	pfloat zero = 0.0;
 	blasint info;
@@ -531,7 +539,7 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 			s = x[idx + 1];
 			t = x[idx + 2];
 
-			projExpCone(&(x[idx]));
+			projExpCone(&(x[idx]), iter);
 
 			x[idx] -= r;
 			x[idx + 1] -= s;
@@ -551,7 +559,7 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 #pragma omp parallel for
 #endif
 		for (i = 0; i < k->ed; ++i) {
-			projExpCone(&(x[count + 3 * i]));
+			projExpCone(&(x[count + 3 * i]), iter);
 		}
 		count += 3 * k->ed;
 #ifdef EXTRAVERBOSE
