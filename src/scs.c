@@ -2,17 +2,23 @@
 #include "scs.h"
 #include "normalize.h"
 
+#ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
 #define PRINT_INTERVAL 100
 /* check for convergence every this num iterations */
 #define CONVERGED_INTERVAL 20
+#else
+#define PRINT_INTERVAL 1
+#define CONVERGED_INTERVAL 1
+#endif
+
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
 /* printing header */
 static const char* HEADER[] = { " Iter ", " pri res ", " dua res ", " rel gap ", " pri obj ", " dua obj ", " kap/tau ",
 		" time (s)", };
-static const idxint HSPACE = 9; /* = strlen(HEADER[1]) */
+static const idxint HSPACE = 9;
 static const idxint HEADER_LEN = 8;
 static idxint _lineLen_;
 
@@ -25,22 +31,18 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 	char * coneStr = getConeHeader(k);
 	char * linSysMethod = getLinSysMethod(d, w->p);
 	_lineLen_ = -1;
-	/* scs_printf("size of idxint %lu, size of pfloat %lu\n", sizeof(idxint), sizeof(pfloat)); */
 	for (i = 0; i < HEADER_LEN; ++i) {
 		_lineLen_ += strlen(HEADER[i]) + 1;
 	}
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-	scs_printf("\n\tSCS v1.0.4 - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n");
+	scs_printf("\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n",
+			SCS_VERSION);
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\nSCS setup phase:\n");
-	for (i = 0; i < _lineLen_; ++i) {
-		scs_printf("-");
-	}
-	scs_printf("\n");
 	if (linSysMethod) {
 		scs_printf("Lin-sys: %s\n", linSysMethod);
 		scs_free(linSysMethod);
@@ -55,10 +57,6 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 	scs_printf("Variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
 	scs_printf("%s", coneStr);
 	scs_free(coneStr);
-	for (i = 0; i < _lineLen_; ++i) {
-		scs_printf("-");
-	}
-	scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
 	mexEvalString("drawnow;");
 #endif
@@ -86,8 +84,6 @@ static void failureDefaultReturn(Data * d, Sol * sol, Info * info) {
 	scs_printf("FAILURE\n");
 }
 
-
-/* this just calls scs_init, scs_solve, and scs_finish */
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
 	idxint i, n = d->n, m = d->m;
 	memset(w->v, 0, n * sizeof(pfloat));
@@ -416,7 +412,7 @@ static void printFooter(Data * d, Work * w, Info * info) {
 	if (info->iter == d->MAX_ITERS) {
 		scs_printf("Hit MAX_ITERS, solution may be inaccurate\n");
 	}
-	scs_printf("Timing: Solve time: %1.2es, setup time: %1.2es\n", info->solveTime / 1e3, info->setupTime / 1e3);
+	scs_printf("Timing: Total solve time: %1.2es\n", info->solveTime / 1e3);
 
 	if (linSysStr) {
 		scs_printf("%s", linSysStr);
@@ -462,7 +458,6 @@ static void printFooter(Data * d, Work * w, Info * info) {
 	mexEvalString("drawnow;");
 #endif
 }
-
 
 static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	pfloat nmpr, nmdr, tau, kap, *x, *y, cTx, nmAxs, bTy, nmATy, rpri, rdua, gap;
@@ -563,13 +558,13 @@ static idxint validate(Data * d, Cone * k) {
 static Work * initWork(Data *d, Cone * k) {
 	Work * w = scs_calloc(1, sizeof(Work));
 	idxint l = d->n + d->m + 1;
-	if (d->VERBOSE)
+	if (d->VERBOSE) {
 		printInitHeader(d, w, k);
+	}
 	if (!w) {
 		scs_printf("ERROR: allocating work failure\n");
 		return NULL;
 	}
-
 	/* allocate workspace: */
 	w->u = scs_malloc(l * sizeof(pfloat));
 	w->v = scs_malloc(l * sizeof(pfloat));
@@ -586,6 +581,12 @@ static Work * initWork(Data *d, Cone * k) {
 	}
 	if (d->NORMALIZE) {
 		normalizeA(d, w, k);
+#ifdef EXTRAVERBOSE
+	printArray(w->D, d->m, "D");
+	scs_printf("norm D = %4f\n", calcNorm(w->D, d->m));
+	printArray(w->E, d->n, "E");
+	scs_printf("norm E = %4f\n", calcNorm(w->E, d->n));
+#endif
 	} else {
 		w->D = NULL;
 		w->E = NULL;
@@ -610,8 +611,23 @@ static void updateWork(Data * d, Work * w, Sol * sol) {
 	idxint m = d->m;
 	w->nm_b = calcNorm(d->b, m);
 	w->nm_c = calcNorm(d->c, n);
-	if (d->NORMALIZE)
+#ifdef EXTRAVERBOSE
+	printArray(d->b, d->m, "b");
+	scs_printf("pre-normalized norm b = %4f\n", calcNorm(d->b, d->m));
+	printArray(d->c, d->n, "c");
+	scs_printf("pre-normalized norm c = %4f\n", calcNorm(d->c, d->n));
+#endif
+	if (d->NORMALIZE) {
 		normalizeBC(d, w);
+#ifdef EXTRAVERBOSE
+		printArray(d->b, d->m, "bn");
+		scs_printf("sc_b = %4f\n", w->sc_b);
+		scs_printf("post-normalized norm b = %4f\n", calcNorm(d->b, d->m));
+		printArray(d->c, d->n, "cn");
+		scs_printf("sc_c = %4f\n", w->sc_c);
+		scs_printf("post-normalized norm c = %4f\n", calcNorm(d->c, d->n));
+#endif
+	}
 	if (d->WARM_START) {
 		warmStartVars(d, w, sol);
 	} else {
@@ -633,15 +649,7 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		scs_printf("ERROR: NULL input\n");
 		return FAILURE;
 	}
-    /*
-	for (i=0;i<d->n;i++){
-        scs_printf("c[%li] = %4f\n", (long) i, d->c[i]);
-    }
-    for (i=0;i<d->m;i++){
-        scs_printf("b[%li] = %4f\n", (long) i, d->b[i]);
-    }
-    */
-    tic(&solveTimer);
+	tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
 	updateWork(d, w, sol);
 	if (d->VERBOSE)
@@ -660,15 +668,15 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		if (i % PRINT_INTERVAL == 0) {
 			if (d->VERBOSE) {
 				printSummary(i, &r, &solveTimer);
-				/*
-			    scs_printf("Norm u = %4f\n", calcNorm(w->u, d->n + d->m + 1));
-			    scs_printf("Norm u_t = %4f\n", calcNorm(w->u_t, d->n + d->m + 1));
-			    scs_printf("Norm v = %4f\n", calcNorm(w->v, d->n + d->m + 1));
-			    scs_printf("tau = %4f\n", w->u[d->n + d->m]);
-			    scs_printf("kappa = %4f\n", w->v[d->n + d->m]);
-			    scs_printf("|u - u_prev| = %4f\n", calcNormDiff(w->u, w->u_prev, d->n + d->m + 1));
-			    scs_printf("|u - u_t| = %4f\n", calcNormDiff(w->u, w->u_t, d->n + d->m + 1));
-			    */
+#ifdef EXTRAVERBOSE
+				 scs_printf("Norm u = %4f, ", calcNorm(w->u, d->n + d->m + 1));
+				 scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, d->n + d->m + 1));
+				 scs_printf("Norm v = %4f, ", calcNorm(w->v, d->n + d->m + 1));
+				 scs_printf("tau = %4f, ", w->u[d->n + d->m]);
+				 scs_printf("kappa = %4f, ", w->v[d->n + d->m]);
+				 scs_printf("|u - u_prev| = %4f, ", calcNormDiff(w->u, w->u_prev, d->n + d->m + 1));
+				 scs_printf("|u - u_t| = %4f\n", calcNormDiff(w->u, w->u_t, d->n + d->m + 1));
+#endif
 			}
 		}
 	}
@@ -702,10 +710,14 @@ void scs_finish(Data * d, Work * w) {
 Work * scs_init(Data * d, Cone * k, Info * info) {
 	Work * w;
 	timer initTimer;
+	idxint i;
 	if (!d || !k || !info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
 		return NULL;
 	}
+#ifdef EXTRAVERBOSE
+	printData(d);
+#endif
 #ifndef NOVALIDATE
 	if (validate(d, k) < 0) {
 		scs_printf("ERROR: Validation returned failure\n");
@@ -713,12 +725,20 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 	}
 #endif
 	tic(&initTimer);
-    w = initWork(d, k);
+	w = initWork(d, k);
 	/* strtoc("init", &initTimer); */
 	info->setupTime = tocq(&initTimer);
+	if (d->VERBOSE) {
+		scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3);
+		for (i = 0; i < _lineLen_; ++i) {
+			scs_printf("-");
+		}
+		scs_printf("\n");
+	}
 	return w;
 }
 
+/* this just calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
 #if (defined _WIN32 || defined _WIN64 )
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */

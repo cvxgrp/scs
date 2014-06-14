@@ -44,5 +44,6 @@ pfloat tocq(timer * t);
 void printConeData(Cone * k);
 void printData(Data * d);
 void printWork(Data * d, Work * w);
+void printArray(pfloat * arr, idxint n, char * name);
 
 #endif

@@ -3,7 +3,7 @@
 
 #define MIN_SCALE 1e-3
 #define MAX_SCALE 1e3
-#define NUM_SCALE_PASSES 1
+#define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
 idxint validateLinSys(Data *d) {
 	AMatrix * A = d->A;
@@ -37,6 +37,23 @@ idxint validateLinSys(Data *d) {
 	return 0;
 }
 
+void printAMatrix(Data * d) {
+	idxint i, j;
+	AMatrix * A = d->A;
+	/* TODO: this is to prevent clogging stdout */
+	if (A->p[d->n] < 2500) {
+		scs_printf("\n");
+		for (i = 0; i < d->n; ++i) {
+			scs_printf("Col %i: ", i);
+			for (j = A->p[i]; j < A->p[i + 1]; j++) {
+				scs_printf("A[%i,%i] = %4f, ", A->i[j], i, A->x[j]);
+			}
+			scs_printf("norm col = %4f\n", calcNorm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+		}
+		scs_printf("norm A = %4f\n", calcNorm(A->x, A->p[d->n]));
+	}
+}
+
 void normalizeA(Data * d, Work * w, Cone * k) {
 	AMatrix * A = d->A;
 	pfloat * D = scs_malloc(d->m * sizeof(pfloat));
@@ -52,8 +69,9 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 
 #ifdef EXTRAVERBOSE
 	timer normalizeTimer;
-	scs_printf("normalizing A\n");
 	tic(&normalizeTimer);
+	scs_printf("normalizing A\n");
+	printAMatrix(d);
 #endif
 
 	for (l = 0; l < NUM_SCALE_PASSES; ++l) {
@@ -152,7 +170,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	w->E = Et;
 
 #ifdef EXTRAVERBOSE
-	scs_printf("finished normalizing A, time: %6f s\n", tocq(&normalizeTimer) / 1e3);
+	scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
+	printAMatrix(d);
 #endif
 }
 

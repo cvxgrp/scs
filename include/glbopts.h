@@ -25,7 +25,7 @@
 #endif
 
 /* SCS VERSION NUMBER --------------------------------------- */
-#define SCS_VERSION ("1.0.4")
+#define SCS_VERSION ("1.0.5")
 
 #ifdef DLONG
     #ifdef _WIN64

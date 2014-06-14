@@ -105,17 +105,31 @@ void printData(Data * d) {
 	scs_printf("m = %i\n", (int) d->m);
 	scs_printf("n = %i\n", (int) d->n);
 
-	scs_printf("b[0] = %4f\n", d->b[0]);
-	scs_printf("c[0] = %4f\n", d->c[0]);
-
 	scs_printf("MAX_ITERS = %i\n", (int) d->MAX_ITERS);
 	scs_printf("VERBOSE = %i\n", (int) d->VERBOSE);
 	scs_printf("NORMALIZE = %i\n", (int) d->NORMALIZE);
 	scs_printf("WARM_START = %i\n", (int) d->WARM_START);
 	scs_printf("EPS = %4f\n", d->EPS);
-	scs_printf("ALPHA = %4f\n",  d->ALPHA);
+	scs_printf("ALPHA = %4f\n", d->ALPHA);
 	scs_printf("RHO_X = %4f\n", d->RHO_X);
 	scs_printf("CG_RATE = %4f\n", d->CG_RATE);
 	scs_printf("SCALE = %4f\n", d->SCALE);
+}
+
+void printArray(pfloat * arr, idxint n, char * name) {
+	idxint i, j, k = 0;
+	idxint numOnOneLine = 10;
+	scs_printf("\n");
+	for (i = 0; i < n / numOnOneLine; ++i) {
+		for (j = 0; j < numOnOneLine; ++j) {
+			scs_printf("%s[%i] = %4f, ", name, k, arr[k]);
+			k++;
+		}
+		scs_printf("\n");
+	}
+	for (j = k; j < n; ++j) {
+		scs_printf("%s[%i] = %4f, ", name, j, arr[j]);
+	}
+	scs_printf("\n");
 }
 

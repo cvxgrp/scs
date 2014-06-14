@@ -79,7 +79,7 @@ static void transpose(Data * d, Priv * p) {
 	scs_free(z);
 
 #ifdef EXTRAVERBOSE
-	scs_printf("finished transposing A, time: %6f s\n", tocq(&transposeTimer) / 1e3);
+	scs_printf("finished transposing A, time: %1.2es\n", tocq(&transposeTimer) / 1e3);
 #endif
 
 }
@@ -230,10 +230,6 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
 	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
 
-#ifdef EXTRAVERBOSE
-	scs_printf("solving lin sys\n");
-#endif
-
 	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */
@@ -243,13 +239,14 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	scaleArray(&(b[d->n]), -1, d->m);
 	accumByA(d, p, b, &(b[d->n]));
 
-#ifdef EXTRAVERBOSE
-	scs_printf("\tCG iterations: %i\n", (int) cgIts);
-#endif
 	if (iter >= 0) {
 		totCgIts += cgIts;
 	}
 
 	totalSolveTime += tocq(&linsysTimer);
+#ifdef EXTRAVERBOSE
+	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
+#endif
+
 }
 

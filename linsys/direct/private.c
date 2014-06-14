@@ -251,14 +251,11 @@ Priv * initPriv(Data * d) {
 void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
-#ifdef EXTRAVERBOSE
-	scs_printf("solving lin sys\n");
-#endif
 	tic(&linsysTimer);
 	LDLSolve(b, b, p->L, p->D, p->P, p->bp);
 	totalSolveTime += tocq(&linsysTimer);
 #ifdef EXTRAVERBOSE
-	scs_printf("finished solving lin sys\n");
+	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif
 
 }

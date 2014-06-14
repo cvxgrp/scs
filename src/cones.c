@@ -446,7 +446,12 @@ static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 void projDualCone(pfloat *x, Cone * k, idxint iter) {
 	idxint i;
 	idxint count = (k->f ? k->f : 0);
+#ifdef EXTRAVERBOSE
+	timer projTimer;
+	tic(&projTimer);
+#endif
 	tic(&coneTimer);
+
 
 	if (k->l) {
 		/* project onto positive orthant */
@@ -456,6 +461,10 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 			/*x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
 		}
 		count += k->l;
+#ifdef EXTRAVERBOSE
+	scs_printf("pos orthant proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+	tic(&projTimer);
+#endif
 	}
 
 	if (k->qsize && k->q) {
@@ -482,6 +491,10 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 			}
 			count += k->q[i];
 		}
+#ifdef EXTRAVERBOSE
+	scs_printf("SOC proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+	tic(&projTimer);
+#endif
 	}
 
 	if (k->ssize && k->s) {
@@ -493,6 +506,10 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 			projSemiDefiniteCone(&(x[count]), k->s[i], iter);
 			count += (k->s[i]) * (k->s[i]);
 		}
+#ifdef EXTRAVERBOSE
+	scs_printf("SD proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+	tic(&projTimer);
+#endif
 	}
 
 	if (k->ep) {
@@ -521,7 +538,12 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 			x[idx + 2] -= t;
 		}
 		count += 3 * k->ep;
+#ifdef EXTRAVERBOSE
+	scs_printf("EP proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+	tic(&projTimer);
+#endif
 	}
+
 
 	if (k->ed) {
 		/* exponential cone: */
@@ -532,6 +554,10 @@ void projDualCone(pfloat *x, Cone * k, idxint iter) {
 			projExpCone(&(x[count + 3 * i]));
 		}
 		count += 3 * k->ed;
+#ifdef EXTRAVERBOSE
+	scs_printf("ED proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+	tic(&projTimer);
+#endif
 	}
 	/* project onto OTHER cones */
 	totalConeTime += tocq(&coneTimer);
