@@ -3,11 +3,6 @@
 #define CG_BEST_TOL 1e-8
 #define PRINT_INTERVAL 100
 
-/*y = (RHO_X * I + A'A)x */
-static void matVec(Data * d, Priv * p, const pfloat * x, pfloat * y);
-static idxint pcg(Data *d, Priv * p, const pfloat *s, pfloat * b, idxint max_its, pfloat tol);
-static void transpose(Data * d, Priv * p);
-
 static idxint totCgIts;
 static timer linsysTimer;
 static pfloat totalSolveTime;
@@ -46,32 +41,6 @@ void getPreconditioner(Data *d, Priv *p) {
 	scs_printf("finished getting pre-conditioner\n");
 #endif
 
-}
-
-Priv * initPriv(Data * d) {
-	AMatrix * A = d->A;
-	Priv * p = scs_calloc(1, sizeof(Priv));
-	p->p = scs_malloc((d->n) * sizeof(pfloat));
-	p->r = scs_malloc((d->n) * sizeof(pfloat));
-	p->Gp = scs_malloc((d->n) * sizeof(pfloat));
-	p->tmp = scs_malloc((d->m) * sizeof(pfloat));
-
-	/* preconditioner memory */
-	p->z = scs_malloc((d->n) * sizeof(pfloat));
-	p->M = scs_malloc((d->n) * sizeof(pfloat));
-
-	p->Ati = scs_malloc((A->p[d->n]) * sizeof(idxint));
-	p->Atp = scs_malloc((d->m + 1) * sizeof(idxint));
-	p->Atx = scs_malloc((A->p[d->n]) * sizeof(pfloat));
-	transpose(d, p);
-	getPreconditioner(d, p);
-	totalSolveTime = 0;
-	totCgIts = 0;
-	if (!p->p || !p->r || !p->Gp || !p->tmp || !p->Ati || !p->Atp || !p->Atx) {
-		freePriv(p);
-		return NULL;
-	}
-	return p;
 }
 
 static void transpose(Data * d, Priv * p) {
@@ -139,33 +108,46 @@ void freePriv(Priv * p) {
 	}
 }
 
-void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
-	idxint cgIts;
-	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
-
-#ifdef EXTRAVERBOSE
-	scs_printf("solving lin sys\n");
-#endif
-
-	tic(&linsysTimer);
-	/* solves Mx = b, for x but stores result in b */
-	/* s contains warm-start (if available) */
-	accumByAtrans(d, p, &(b[d->n]), b);
-	/* solves (I+A'A)x = b, s warm start, solution stored in b */
-	cgIts = pcg(d, p, s, b, d->n, MAX(cgTol, CG_BEST_TOL));
-	scaleArray(&(b[d->n]), -1, d->m);
-	accumByA(d, p, b, &(b[d->n]));
-
-#ifdef EXTRAVERBOSE
-	scs_printf("\tCG iterations: %i\n", (int) cgIts);
-#endif
-	if (iter >= 0) {
-		totCgIts += cgIts;
-	}
-
-	totalSolveTime += tocq(&linsysTimer);
+/* solves (I+A'A)x = b, s warm start, solution stored in b */
+/*y = (RHO_X * I + A'A)x */
+static void matVec(Data * d, Priv * p, const pfloat * x, pfloat * y) {
+	pfloat * tmp = p->tmp;
+	memset(tmp, 0, d->m * sizeof(pfloat));
+	accumByA(d, p, x, tmp);
+	memset(y, 0, d->n * sizeof(pfloat));
+	accumByAtrans(d, p, tmp, y);
+	addScaledArray(y, x, d->n, d->RHO_X);
 }
 
+void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) {
+	/* y  = A'*x
+	 A in column compressed format
+	 parallelizes over columns (rows of A')
+	 */
+	idxint p, j;
+	idxint c1, c2;
+	pfloat yj;
+#ifdef OPENMP
+#pragma omp parallel for private(p,c1,c2,yj)
+#endif
+	for (j = 0; j < n; j++) {
+		yj = y[j];
+		c1 = Ap[j];
+		c2 = Ap[j + 1];
+		for (p = c1; p < c2; p++) {
+			yj += Ax[p] * x[Ai[p]];
+		}
+		y[j] = yj;
+	}
+}
+
+void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) {
+	AMatrix * A = d->A;
+	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
+}
+void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) {
+	_accumByAtrans(d->m, p->Atx, p->Ati, p->Atp, x, y);
+}
 static void applyPreConditioner(pfloat * M, pfloat * z, pfloat * r, idxint n, pfloat *ipzr) {
 	idxint i;
 	*ipzr = 0;
@@ -175,7 +157,32 @@ static void applyPreConditioner(pfloat * M, pfloat * z, pfloat * r, idxint n, pf
 	}
 }
 
-/* solves (I+A'A)x = b, s warm start, solution stored in b */
+Priv * initPriv(Data * d) {
+	AMatrix * A = d->A;
+	Priv * p = scs_calloc(1, sizeof(Priv));
+	p->p = scs_malloc((d->n) * sizeof(pfloat));
+	p->r = scs_malloc((d->n) * sizeof(pfloat));
+	p->Gp = scs_malloc((d->n) * sizeof(pfloat));
+	p->tmp = scs_malloc((d->m) * sizeof(pfloat));
+
+	/* preconditioner memory */
+	p->z = scs_malloc((d->n) * sizeof(pfloat));
+	p->M = scs_malloc((d->n) * sizeof(pfloat));
+
+	p->Ati = scs_malloc((A->p[d->n]) * sizeof(idxint));
+	p->Atp = scs_malloc((d->m + 1) * sizeof(idxint));
+	p->Atx = scs_malloc((A->p[d->n]) * sizeof(pfloat));
+	transpose(d, p);
+	getPreconditioner(d, p);
+	totalSolveTime = 0;
+	totCgIts = 0;
+	if (!p->p || !p->r || !p->Gp || !p->tmp || !p->Ati || !p->Atp || !p->Atx) {
+		freePriv(p);
+		return NULL;
+	}
+	return p;
+}
+
 static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_its, pfloat tol) {
 	idxint i, n = d->n;
 	pfloat ipzr, ipzrOld, alpha;
@@ -219,42 +226,30 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 	return i;
 }
 
-/*y = (RHO_X * I + A'A)x */
-static void matVec(Data * d, Priv * p, const pfloat * x, pfloat * y) {
-	pfloat * tmp = p->tmp;
-	memset(tmp, 0, d->m * sizeof(pfloat));
-	accumByA(d, p, x, tmp);
-	memset(y, 0, d->n * sizeof(pfloat));
-	accumByAtrans(d, p, tmp, y);
-	addScaledArray(y, x, d->n, d->RHO_X);
-}
+void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+	idxint cgIts;
+	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
 
-void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) {
-	/* y  = A'*x
-	 A in column compressed format
-	 parallelizes over columns (rows of A')
-	 */
-	idxint p, j;
-	idxint c1, c2;
-	pfloat yj;
-#ifdef OPENMP
-#pragma omp parallel for private(p,c1,c2,yj)
+#ifdef EXTRAVERBOSE
+	scs_printf("solving lin sys\n");
 #endif
-	for (j = 0; j < n; j++) {
-		yj = y[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			yj += Ax[p] * x[Ai[p]];
-		}
-		y[j] = yj;
+
+	tic(&linsysTimer);
+	/* solves Mx = b, for x but stores result in b */
+	/* s contains warm-start (if available) */
+	accumByAtrans(d, p, &(b[d->n]), b);
+	/* solves (I+A'A)x = b, s warm start, solution stored in b */
+	cgIts = pcg(d, p, s, b, d->n, MAX(cgTol, CG_BEST_TOL));
+	scaleArray(&(b[d->n]), -1, d->m);
+	accumByA(d, p, b, &(b[d->n]));
+
+#ifdef EXTRAVERBOSE
+	scs_printf("\tCG iterations: %i\n", (int) cgIts);
+#endif
+	if (iter >= 0) {
+		totCgIts += cgIts;
 	}
+
+	totalSolveTime += tocq(&linsysTimer);
 }
 
-void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) {
-	AMatrix * A = d->A;
-	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
-}
-void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) {
-	_accumByAtrans(d->m, p->Atx, p->Ati, p->Atp, x, y);
-}

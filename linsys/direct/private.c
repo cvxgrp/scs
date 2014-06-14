@@ -1,11 +1,5 @@
 #include "private.h"
 
-/* forward declare */
-idxint LDLInit(cs * A, idxint P[], pfloat **info);
-idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs ** L, pfloat **D);
-void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp);
-idxint factorize(Data * d, Priv * p);
-
 static timer linsysTimer;
 static pfloat totalSolveTime;
 
@@ -36,39 +30,6 @@ void freePriv(Priv * p) {
 			scs_free(p->bp);
 		scs_free(p);
 	}
-}
-
-void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
-	/* returns solution to linear system */
-	/* Ax = b with solution stored in b */
-#ifdef EXTRAVERBOSE
-	scs_printf("solving lin sys\n");
-#endif
-	tic(&linsysTimer);
-	LDLSolve(b, b, p->L, p->D, p->P, p->bp);
-	totalSolveTime += tocq(&linsysTimer);
-#ifdef EXTRAVERBOSE
-	scs_printf("finished solving lin sys\n");
-#endif
-
-}
-
-Priv * initPriv(Data * d) {
-	Priv * p = scs_calloc(1, sizeof(Priv));
-	idxint n_plus_m = d->n + d->m;
-	p->P = scs_malloc(sizeof(idxint) * n_plus_m);
-	p->L = scs_malloc(sizeof(cs));
-	p->bp = scs_malloc(n_plus_m * sizeof(pfloat));
-	p->L->m = n_plus_m;
-	p->L->n = n_plus_m;
-	p->L->nz = -1;
-
-	if (factorize(d, p) < 0) {
-		freePriv(p);
-		return NULL;
-	}
-	totalSolveTime = 0.0;
-	return p;
 }
 
 cs * formKKT(Data * d) {
@@ -121,36 +82,6 @@ cs * formKKT(Data * d) {
 	K_cs = cs_compress(K);
 	cs_spfree(K);
 	return (K_cs);
-}
-
-idxint factorize(Data * d, Priv * p) {
-	pfloat *info;
-	idxint *Pinv, amd_status, ldl_status;
-	cs *C, *K = formKKT(d);
-	if (!K) {
-		return -1;
-	}
-	amd_status = LDLInit(K, p->P, &info);
-	if (amd_status < 0)
-		return (amd_status);
-#ifdef EXTRAVERBOSE
-	if(d->VERBOSE) {
-		scs_printf("Matrix factorization info:\n");
-#ifdef DLONG
-		amd_l_info(info);
-#else
-		amd_info(info);
-#endif
-	}
-#endif
-	Pinv = cs_pinv(p->P, d->n + d->m);
-	C = cs_symperm(K, Pinv, 1);
-	ldl_status = LDLFactor(C, NULL, NULL, &p->L, &p->D);
-	cs_spfree(C);
-	cs_spfree(K);
-	scs_free(Pinv);
-	scs_free(info);
-	return (ldl_status);
 }
 
 idxint LDLInit(cs * A, idxint P[], pfloat **info) {
@@ -269,3 +200,66 @@ void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) {
 	AMatrix * A = d->A;
 	_accumByA(d->n, A->x, A->i, A->p, x, y);
 }
+idxint factorize(Data * d, Priv * p) {
+	pfloat *info;
+	idxint *Pinv, amd_status, ldl_status;
+	cs *C, *K = formKKT(d);
+	if (!K) {
+		return -1;
+	}
+	amd_status = LDLInit(K, p->P, &info);
+	if (amd_status < 0)
+		return (amd_status);
+#ifdef EXTRAVERBOSE
+	if(d->VERBOSE) {
+		scs_printf("Matrix factorization info:\n");
+#ifdef DLONG
+		amd_l_info(info);
+#else
+		amd_info(info);
+#endif
+	}
+#endif
+	Pinv = cs_pinv(p->P, d->n + d->m);
+	C = cs_symperm(K, Pinv, 1);
+	ldl_status = LDLFactor(C, NULL, NULL, &p->L, &p->D);
+	cs_spfree(C);
+	cs_spfree(K);
+	scs_free(Pinv);
+	scs_free(info);
+	return (ldl_status);
+}
+
+Priv * initPriv(Data * d) {
+	Priv * p = scs_calloc(1, sizeof(Priv));
+	idxint n_plus_m = d->n + d->m;
+	p->P = scs_malloc(sizeof(idxint) * n_plus_m);
+	p->L = scs_malloc(sizeof(cs));
+	p->bp = scs_malloc(n_plus_m * sizeof(pfloat));
+	p->L->m = n_plus_m;
+	p->L->n = n_plus_m;
+	p->L->nz = -1;
+
+	if (factorize(d, p) < 0) {
+		freePriv(p);
+		return NULL;
+	}
+	totalSolveTime = 0.0;
+	return p;
+}
+
+void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+	/* returns solution to linear system */
+	/* Ax = b with solution stored in b */
+#ifdef EXTRAVERBOSE
+	scs_printf("solving lin sys\n");
+#endif
+	tic(&linsysTimer);
+	LDLSolve(b, b, p->L, p->D, p->P, p->bp);
+	totalSolveTime += tocq(&linsysTimer);
+#ifdef EXTRAVERBOSE
+	scs_printf("finished solving lin sys\n");
+#endif
+
+}
+
