@@ -41,12 +41,9 @@ static struct ConeData_t {
 static timer coneTimer;
 static pfloat totalConeTime;
 
-static void projExpCone(pfloat * v);
-static void projectsdc(pfloat *X, idxint n, idxint iter);
-
  /*
  * boundaries will contain array of indices of rows of A corresponding to
- * cone boundaries, boundaries[0] is starting index for cones of size larger than 1
+ * cone boundaries, boundaries[0] is starting index for cones of size strictly larger than 1
  * returns length of boundaries array, boundaries malloc-ed here so should be freed
  */
 idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
@@ -193,7 +190,7 @@ char * getConeHeader(Cone * k) {
 	return tmp;
 }
 
-idxint easysdc(idxint * s, idxint ssize) {
+idxint isSimpleSemiDefiniteCone(idxint * s, idxint ssize) {
 	idxint i;
 	for (i = 0; i < ssize; i++) {
 		if (s[i] >= 3) {
@@ -204,100 +201,6 @@ idxint easysdc(idxint * s, idxint ssize) {
 }
 
 /* in place projection (with branches) */
-void projDualCone(pfloat *x, Cone * k, idxint iter) {
-	idxint i;
-	idxint count = (k->f ? k->f : 0);
-	tic(&coneTimer);
-
-	if (k->l) {
-		/* project onto positive orthant */
-		for (i = count; i < count + k->l; ++i) {
-			if (x[i] < 0.0)
-				x[i] = 0.0;
-			/*x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
-		}
-		count += k->l;
-	}
-
-	if (k->qsize && k->q) {
-		/* project onto SOC */
-		for (i = 0; i < k->qsize; ++i) {
-			if (k->q[i] == 0) {
-				continue;
-			}
-			if (k->q[i] == 1) {
-				if (x[count] < 0.0)
-					x[count] = 0.0;
-			} else {
-				pfloat v1 = x[count];
-				pfloat s = calcNorm(&(x[count + 1]), k->q[i] - 1);
-				pfloat alpha = (s + v1) / 2.0;
-
-				if (s <= v1) { /* do nothing */
-				} else if (s <= -v1) {
-					memset(&(x[count]), 0, k->q[i] * sizeof(pfloat));
-				} else {
-					x[count] = alpha;
-					scaleArray(&(x[count + 1]), alpha / s, k->q[i] - 1);
-				}
-			}
-			count += k->q[i];
-		}
-	}
-
-	if (k->ssize && k->s) {
-		/* project onto PSD cone */
-		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] == 0) {
-				continue;
-			}
-			projectsdc(&(x[count]), k->s[i], iter);
-			count += (k->s[i]) * (k->s[i]);
-		}
-	}
-
-	if (k->ep) {
-		pfloat r, s, t;
-		idxint idx;
-		/*
-		 * exponential cone is not self dual, if s \in K
-		 * then y \in K^* and so if K is the primal cone
-		 * here we project onto K^*, via Moreau
-		 * \Pi_C^*(y) = y + \Pi_C(-y)
-		 */
-		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
-#ifdef OPENMP
-#pragma omp parallel for private(r,s,t,idx)
-#endif
-		for (i = 0; i < k->ep; ++i) {
-			idx = count + 3 * i;
-			r = x[idx];
-			s = x[idx + 1];
-			t = x[idx + 2];
-
-			projExpCone(&(x[idx]));
-
-			x[idx] -= r;
-			x[idx + 1] -= s;
-			x[idx + 2] -= t;
-		}
-		count += 3 * k->ep;
-	}
-
-	if (k->ed) {
-		/* exponential cone: */
-#ifdef OPENMP
-#pragma omp parallel for
-#endif
-		for (i = 0; i < k->ed; ++i) {
-			projExpCone(&(x[count + 3 * i]));
-		}
-		count += 3 * k->ed;
-	}
-	/* project onto OTHER cones */
-	totalConeTime += tocq(&coneTimer);
-}
-
 pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
 	pfloat t = MAX(-z_hat, 1e-6);
 	pfloat f, fp;
@@ -401,7 +304,7 @@ idxint initCone(Cone * k) {
 #endif
 	totalConeTime = 0.0;
 	if (k->ssize && k->s) {
-		if (easysdc(k->s, k->ssize)) {
+		if (isSimpleSemiDefiniteCone(k->s, k->ssize)) {
 			return 0;
 		}
 #ifdef LAPACK_LIB_FOUND
@@ -437,7 +340,7 @@ idxint initCone(Cone * k) {
 	return 0;
 }
 
-void project2by2sdc(pfloat *X) {
+void project2By2Sdc(pfloat *X) {
 	pfloat a, b, d, l1, l2, x1, x2, rad;
 	a = X[0];
 	b = 0.5 * (X[1] + X[2]);
@@ -471,7 +374,7 @@ void project2by2sdc(pfloat *X) {
 	return;
 }
 
-static void projectsdc(pfloat *X, idxint n, idxint iter) {
+static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	idxint i, j;
@@ -502,7 +405,7 @@ static void projectsdc(pfloat *X, idxint n, idxint iter) {
 		return;
 	}
 	if (n == 2) {
-		project2by2sdc(X);
+		project2By2Sdc(X);
 		return;
 	}
 #ifdef LAPACK_LIB_FOUND
@@ -537,4 +440,99 @@ static void projectsdc(pfloat *X, idxint n, idxint iter) {
 	scs_printf("scs will return nonsense!\n");
 	scaleArray(X, NAN, n);
 #endif
+}
+
+/* outward facing cone projection routine */
+void projDualCone(pfloat *x, Cone * k, idxint iter) {
+	idxint i;
+	idxint count = (k->f ? k->f : 0);
+	tic(&coneTimer);
+
+	if (k->l) {
+		/* project onto positive orthant */
+		for (i = count; i < count + k->l; ++i) {
+			if (x[i] < 0.0)
+				x[i] = 0.0;
+			/*x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
+		}
+		count += k->l;
+	}
+
+	if (k->qsize && k->q) {
+		/* project onto SOC */
+		for (i = 0; i < k->qsize; ++i) {
+			if (k->q[i] == 0) {
+				continue;
+			}
+			if (k->q[i] == 1) {
+				if (x[count] < 0.0)
+					x[count] = 0.0;
+			} else {
+				pfloat v1 = x[count];
+				pfloat s = calcNorm(&(x[count + 1]), k->q[i] - 1);
+				pfloat alpha = (s + v1) / 2.0;
+
+				if (s <= v1) { /* do nothing */
+				} else if (s <= -v1) {
+					memset(&(x[count]), 0, k->q[i] * sizeof(pfloat));
+				} else {
+					x[count] = alpha;
+					scaleArray(&(x[count + 1]), alpha / s, k->q[i] - 1);
+				}
+			}
+			count += k->q[i];
+		}
+	}
+
+	if (k->ssize && k->s) {
+		/* project onto PSD cone */
+		for (i = 0; i < k->ssize; ++i) {
+			if (k->s[i] == 0) {
+				continue;
+			}
+			projSemiDefiniteCone(&(x[count]), k->s[i], iter);
+			count += (k->s[i]) * (k->s[i]);
+		}
+	}
+
+	if (k->ep) {
+		pfloat r, s, t;
+		idxint idx;
+		/*
+		 * exponential cone is not self dual, if s \in K
+		 * then y \in K^* and so if K is the primal cone
+		 * here we project onto K^*, via Moreau
+		 * \Pi_C^*(y) = y + \Pi_C(-y)
+		 */
+		scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
+#ifdef OPENMP
+#pragma omp parallel for private(r,s,t,idx)
+#endif
+		for (i = 0; i < k->ep; ++i) {
+			idx = count + 3 * i;
+			r = x[idx];
+			s = x[idx + 1];
+			t = x[idx + 2];
+
+			projExpCone(&(x[idx]));
+
+			x[idx] -= r;
+			x[idx + 1] -= s;
+			x[idx + 2] -= t;
+		}
+		count += 3 * k->ep;
+	}
+
+	if (k->ed) {
+		/* exponential cone: */
+#ifdef OPENMP
+#pragma omp parallel for
+#endif
+		for (i = 0; i < k->ed; ++i) {
+			projExpCone(&(x[count + 3 * i]));
+		}
+		count += 3 * k->ed;
+	}
+	/* project onto OTHER cones */
+	totalConeTime += tocq(&coneTimer);
 }
