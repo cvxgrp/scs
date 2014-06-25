@@ -1,6 +1,7 @@
 #include "private.h"
 
-#define CG_BEST_TOL 1e-8
+#define CG_BEST_TOL 1e-9
+#define CG_MIN_TOL 1e-1
 #define PRINT_INTERVAL 100
 
 static idxint totCgIts;
@@ -213,7 +214,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 
 		if (calcNorm(r, n) < tol) {
             #ifdef EXTRAVERBOSE
-            scs_printf("tol: %.4e, resid: %.4e, iters: %i\n", tol, calcNorm(r, n), i+1);
+            scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, calcNorm(r, n), (long) i+1);
             #endif
 			return i + 1;
 		}
@@ -228,8 +229,8 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 
 void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
-	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, d->CG_RATE));
-
+	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF(iter + 1, d->CG_RATE));
+ 
 	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */
 	/* s contains warm-start (if available) */

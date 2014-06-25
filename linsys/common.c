@@ -22,7 +22,7 @@ idxint validateLinSys(Data *d) {
 	 */
 	Anz = A->p[d->n];
 	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
-		scs_printf("Anz (nonzeros in A) = %i, outside of valid range\n", (int) Anz);
+		scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
 		return -1;
 	}
 	rMax = 0;
@@ -44,9 +44,9 @@ void printAMatrix(Data * d) {
 	if (A->p[d->n] < 2500) {
 		scs_printf("\n");
 		for (i = 0; i < d->n; ++i) {
-			scs_printf("Col %i: ", i);
+			scs_printf("Col %li: ", (long) i);
 			for (j = A->p[i]; j < A->p[i + 1]; j++) {
-				scs_printf("A[%i,%i] = %4f, ", A->i[j], i, A->x[j]);
+				scs_printf("A[%li,%li] = %4f, ", (long) A->i[j], (long) i, A->x[j]);
 			}
 			scs_printf("norm col = %4f\n", calcNorm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
 		}

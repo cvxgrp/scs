@@ -42,7 +42,7 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-	scs_printf("\nSCS setup phase:\n");
+    scs_printf("\n");
 	if (linSysMethod) {
 		scs_printf("Lin-sys: %s\n", linSysMethod);
 		scs_free(linSysMethod);
@@ -279,7 +279,7 @@ static void projectCones(Data *d, Work * w, Cone * k, idxint iter) {
 		w->u[i] = d->ALPHA * w->u_t[i] + (1 - d->ALPHA) * w->u_prev[i] - w->v[i];
 	}
 	/* u = [x;y;tau] */
-	projDualCone(&(w->u[n]), k, iter);
+	projDualCone(&(w->u[n]), k, &(w->u_prev[n]), iter);
 	if (w->u[l - 1] < 0.0)
 		w->u[l - 1] = 0.0;
 }
@@ -380,24 +380,22 @@ static void printSummary(idxint i, struct residuals *r, timer * solveTimer) {
 
 static void printHeader(Data * d, Work * w, Cone * k) {
 	idxint i;
-	scs_printf("SCS solve phase: ");
-	if (d->WARM_START)
-		scs_printf("using variable warm-starting");
-	scs_printf("\n");
-	for (i = 0; i < _lineLen_; ++i) {
-		scs_printf("-");
-	}
-	scs_printf("\n");
-	for (i = 0; i < HEADER_LEN - 1; ++i) {
-		scs_printf("%s|", HEADER[i]);
-	}
-	scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
-	for (i = 0; i < _lineLen_; ++i) {
-		scs_printf("-");
-	}
-	scs_printf("\n");
+    if (d->WARM_START)
+        scs_printf("SCS using variable warm-starting\n");
+    for (i = 0; i < _lineLen_; ++i) {
+        scs_printf("-");
+    }
+    scs_printf("\n");
+    for (i = 0; i < HEADER_LEN - 1; ++i) {
+        scs_printf("%s|", HEADER[i]);
+    }
+    scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
+    for (i = 0; i < _lineLen_; ++i) {
+        scs_printf("-");
+    }
+    scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
-	mexEvalString("drawnow;");
+    mexEvalString("drawnow;");
 #endif
 }
 
@@ -710,7 +708,6 @@ void scs_finish(Data * d, Work * w) {
 Work * scs_init(Data * d, Cone * k, Info * info) {
 	Work * w;
 	timer initTimer;
-	idxint i;
 	if (!d || !k || !info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
 		return NULL;
@@ -731,10 +728,6 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 	info->setupTime = tocq(&initTimer);
 	if (d->VERBOSE) {
 		scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3);
-		for (i = 0; i < _lineLen_; ++i) {
-			scs_printf("-");
-		}
-		scs_printf("\n");
 	}
 	return w;
 }

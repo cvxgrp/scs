@@ -1,7 +1,8 @@
 #include "cones.h"
 
-#define CONE_RATE 1.5
-#define CONE_TOL 1e-7
+#define CONE_RATE 2
+#define CONE_TOL 1e-8
+#define EXP_CONE_MAX_ITERS 100
 
 #ifdef LAPACK_LIB_FOUND
 /* underscore for blas / lapack, single or double precision */
@@ -202,12 +203,11 @@ idxint isSimpleSemiDefiniteCone(idxint * s, idxint ssize) {
 	return 1; /* true */
 }
 
-/* in place projection (with branches) */
 pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
 	pfloat t = MAX(-z_hat, 1e-6);
 	pfloat f, fp;
 	idxint i;
-	for (i = 0; i < 100; ++i) {
+	for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
 
 		f = t * (t + z_hat) / rho / rho - y_hat / rho + log(t / rho) + 1;
 		fp = (2 * t + z_hat) / rho / rho + 1 / t;
@@ -218,7 +218,7 @@ pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
 			return 0;
 		} else if (t <= 0) {
 			return z_hat;
-		} else if ( ABS(f) < 1e-9) {
+		} else if ( ABS(f) < CONE_TOL) {
 			break;
 		}
 	}
@@ -273,10 +273,12 @@ static void projExpCone(pfloat * v, idxint iter) {
 		v[2] = MAX(v[2], 0);
 		return;
 	}
-	expGetRhoUb(v, x, &ub, &lb);
-	for (i = 0; i < 100; ++i) {
-		rho = (ub + lb) / 2;
-		g = expCalcGrad(v, x, rho);
+
+    /* iterative procedure to find projection, bisects on dual variable: */
+	expGetRhoUb(v, x, &ub, &lb); /* get starting upper and lower bounds */
+	for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
+		rho = (ub + lb) / 2; /* halfway between upper and lower bounds */
+		g = expCalcGrad(v, x, rho); /* calculates gradient wrt dual var */
 		if (g > 0) {
 			lb = rho;
 		} else {
@@ -450,8 +452,9 @@ static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 #endif
 }
 
-/* outward facing cone projection routine */
-void projDualCone(pfloat *x, Cone * k, idxint iter) {
+/* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
+    warm_start contains guess of projection (can be set to NULL) */
+void projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  {
 	idxint i;
 	idxint count = (k->f ? k->f : 0);
 #ifdef EXTRAVERBOSE

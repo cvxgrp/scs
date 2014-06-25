@@ -175,7 +175,7 @@ static int parseOpts(Data *d, PyObject * opts) {
 		return -1;
 	if (getOptFloatParam("EPS", &(d->EPS), 1e-3, opts) < 0)
 		return -1;
-	if (getOptFloatParam("CG_RATE", &(d->CG_RATE), 1.5, opts) < 0)
+	if (getOptFloatParam("CG_RATE", &(d->CG_RATE), 2, opts) < 0)
 		return -1;
 	if (getOptFloatParam("ALPHA", &(d->ALPHA), 1.8, opts) < 0)
 		return -1;

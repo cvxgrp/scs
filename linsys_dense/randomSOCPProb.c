@@ -22,7 +22,7 @@ void setScsParams(Data * d) {
 	d->ALPHA = 1.8; /* relaxation parameter: 1.8 */
 	d->RHO_X = 1e-3; /* x equality constraint scaling: 1e-3 */
 	d->SCALE = 5; /* if normalized, rescales by this factor: 1 */
-	d->CG_RATE = 1.5; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 1.5 */
+	d->CG_RATE = 2; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
 	d->VERBOSE = 1; /* boolean, write out progress: 1 */
 	d->NORMALIZE = 1; /* boolean, heuristic data rescaling: 1 */
 	d->WARM_START = 0;

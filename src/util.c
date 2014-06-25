@@ -122,13 +122,13 @@ void printArray(pfloat * arr, idxint n, char * name) {
 	scs_printf("\n");
 	for (i = 0; i < n / numOnOneLine; ++i) {
 		for (j = 0; j < numOnOneLine; ++j) {
-			scs_printf("%s[%i] = %4f, ", name, k, arr[k]);
+			scs_printf("%s[%li] = %4f, ", name, (long) k, arr[k]);
 			k++;
 		}
 		scs_printf("\n");
 	}
 	for (j = k; j < n; ++j) {
-		scs_printf("%s[%i] = %4f, ", name, j, arr[j]);
+		scs_printf("%s[%li] = %4f, ", name, (long) j, arr[j]);
 	}
 	scs_printf("\n");
 }

@@ -8,12 +8,11 @@
 void freeMex(Data * d, Cone * k);
 
 idxint parseWarmStart(const mxArray * p_mex, pfloat ** p, idxint l) {
-	*p = scs_calloc(l, sizeof(pfloat));
+	*p = scs_calloc(l, sizeof(pfloat)); /* this allocates memory used for Sol */
 	if (p_mex == NULL) {
 		return 0;
 	} else if (mxIsSparse(p_mex) || (idxint) *mxGetDimensions(p_mex) != l) {
-		scs_printf(
-				"Error parsing warm start input (make sure vectors are not sparse and of correct size), running without full warm-start");
+		scs_printf("Error parsing warm start input (make sure vectors are not sparse and of correct size), running without full warm-start");
 		return 0;
 	} else {
 		memcpy(*p, mxGetPr(p_mex), l * sizeof(pfloat));
@@ -141,7 +140,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	tmp = mxGetField(params, 0, "CG_RATE");
 	if (tmp == NULL)
-		d->CG_RATE = 1.5;
+		d->CG_RATE = 2;
 	else
 		d->CG_RATE = (pfloat) *mxGetPr(tmp);
 
@@ -227,7 +226,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	A->p = (idxint *) mxGetJc(A_mex);
 	A->i = (idxint *) mxGetIr(A_mex);
 	d->A = A;
-	/* warm-start inputs */
+	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
 	d->WARM_START = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
 	d->WARM_START |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
 	d->WARM_START |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);

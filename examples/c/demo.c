@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 	}
 	fclose(fp);
 	scs_printf("solve once using scs\n");
-	d->CG_RATE = 1.5;
+	d->CG_RATE = 2;
 	scs(d, k, sol, &info);
 	if (TEST_WARM_START) {
 		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
@@ -48,10 +48,10 @@ int main(int argc, char **argv) {
 				perturbVector(d->b, d->m);
 				perturbVector(d->c, d->n);
 				d->WARM_START = 1;
-				d->CG_RATE = 2;
+				d->CG_RATE = 4;
 				scs_solve(w, d, k, sol, &info);
 				d->WARM_START = 0;
-				d->CG_RATE = 1.5;
+				d->CG_RATE = 2;
 				scs_solve(w, d, k, sol, &info);
 			}
 		}

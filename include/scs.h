@@ -23,7 +23,7 @@ struct PROBLEM_DATA {
 	pfloat ALPHA; /* relaxation parameter: 1.8 */
 	pfloat RHO_X; /* x equality constraint scaling: 1e-3 */
 	pfloat SCALE; /* if normalized, rescales by this factor: 5 */
-	pfloat CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 1.5 */
+	pfloat CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
 	idxint VERBOSE; /* boolean, write out progress: 1 */
 	idxint NORMALIZE; /* boolean, heuristic data rescaling: 1 */
 	idxint WARM_START; /* boolean, warm start (put initial guess in Sol struct): 0 */
@@ -68,7 +68,7 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info);
 
 /* the following structs do not need to be exposed */
 struct WORK {
-	pfloat *u, *v, *u_t, *u_prev;
+	pfloat *u, *v, *u_t, *u_prev; /* u_prev = u from previous iteration */
 	pfloat *h, *g, *pr, *dr;
 	pfloat gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA, meanNormColA;
 	pfloat *D, *E; /* for normalization */
