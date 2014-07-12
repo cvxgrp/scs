@@ -2,9 +2,9 @@
 # (copied from appveyor.yml in ECOS project)
 environment:
     matrix:
-        - PYVER: 3.4
-          PYLOC: python27
         - PYVER: 2.7
+          PYLOC: python27
+        - PYVER: 3.4
           PYLOC: python34
 
 platform:
