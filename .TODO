@@ -1,4 +1,3 @@
-surround python install try catch for blas/lapack
 cleanup, refactor and comment code
 add static, inline to methods
 compile dynamic libs - fPIC
