@@ -27,6 +27,7 @@ RANLIB = ranlib
 # CFLAGS += -DFLOAT # use floats rather than doubles
 # CFLAGS += -DNOVALIDATE # remove data validation step
 # CFLAGS += -DEXTRAVERBOSE # extra verbosity level
+# CFLAGS += -DNOBLASUNDERSCORE # if your blas install does not use underscores in function names 
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):

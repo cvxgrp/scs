@@ -1,6 +1,6 @@
 #include "util.h"
 /* return milli-seconds */
-#if (defined WIN32 || _WIN64 || defined _WINDLL)
+#if (defined _WIN32 || _WIN64 || defined _WINDLL)
 void tic(timer* t)
 {
 	QueryPerformanceFrequency(&t->freq);

@@ -466,8 +466,9 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	x = w->u;
 	y = &(w->u[n]);
 	tau = ABS(w->u[n + m]);
-	kap = ABS(w->v[n + m]);
-	r->tau = tau;
+	kap = ABS(w->v[n + m]) / (d->NORMALIZE ? (d->SCALE * w->sc_c * w->sc_b) : 1);
+    r->tau = tau;
+	r->kap = kap;
 
 	/* requires mult by A:
 	 nmpr = calcPrimalResid(d, w, w->u, &(w->v[n]), ABS(w->u[n + m]), &nmAxs);
@@ -475,12 +476,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 
 	/* does not require mult by A: */
 	nmpr = fastCalcPrimalResid(d, w, &nmAxs);
-	cTx = innerProd(x, d->c, n);
-	if (d->NORMALIZE) {
-		kap /= (d->SCALE * w->sc_c * w->sc_b);
-		cTx /= (d->SCALE * w->sc_c * w->sc_b);
-	}
-	r->kap = kap;
+	cTx = innerProd(x, d->c, n) / (d->NORMALIZE ? (d->SCALE * w->sc_c * w->sc_b) : 1);
 
 	r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : NAN;
 	if (r->resPri < d->EPS) {
@@ -488,10 +484,7 @@ static idxint converged(Data * d, Work * w, struct residuals * r, idxint iter) {
 	}
 
 	nmdr = calcDualResid(d, w, y, tau, &nmATy);
-	bTy = innerProd(y, d->b, m);
-	if (d->NORMALIZE) {
-		bTy /= (d->SCALE * w->sc_c * w->sc_b);
-	}
+	bTy = innerProd(y, d->b, m) / (d->NORMALIZE ? (d->SCALE * w->sc_c * w->sc_b) : 1);
 
 	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : NAN;
 	if (r->resDual < d->EPS) {

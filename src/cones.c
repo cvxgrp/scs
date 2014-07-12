@@ -6,7 +6,7 @@
 
 #ifdef LAPACK_LIB_FOUND
 /* underscore for blas / lapack, single or double precision */
-#if defined(_WIN32) || defined(__hpux)
+#ifdef NOBLASUNDERSCORE
 #ifndef FLOAT
 #define BLAS(x) d ## x
 #else
