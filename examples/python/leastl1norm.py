@@ -43,7 +43,7 @@ sol_d = scs.solve(data, cone, opts=opts)
 # dims = {'l': 2 * p}
 # sol_e = ecos.solve(c, G, h, dims, Ae, b)
 # # calculate relative error:
-# print np.linalg.norm(sol_i['x'] - sol_e['x'])/np.linalg.norm(sol_e['x'])
+# print(np.linalg.norm(sol_i['x'] - sol_e['x'])/np.linalg.norm(sol_e['x']))
 
 # perturb input data, test warm-starting:
 data['b'] = np.hstack([b + 0.005 * random.randn(q), h])

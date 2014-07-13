@@ -38,18 +38,18 @@ def solveFeasible():
     sol_i = scs.solve(data, K, params, USE_INDIRECT=True)
     xi = sol_i['x']
     yi = sol_i['y']
-    print 'c\'x*  = ', dot(c, x)
-    print '% error = ', (dot(c, xi) - dot(c, x)) / dot(c, x)
-    print 'b\'y*  = ', dot(b, y)
-    print '% error = ', (dot(b, yi) - dot(b, y)) / dot(b, y)
+    print('c\'x*  = ', dot(c, x))
+    print('% error = ', (dot(c, xi) - dot(c, x)) / dot(c, x))
+    print('b\'y*  = ', dot(b, y))
+    print('% error = ', (dot(b, yi) - dot(b, y)) / dot(b, y))
     # direct:
     sol_d = scs.solve(data, K, params)
     xd = sol_d['x']
     yd = sol_d['y']
-    print 'c\'x*  = ', dot(c, x)
-    print '% error = ', (dot(c, xd) - dot(c, x)) / dot(c, x)
-    print 'b\'y*  = ', dot(b, y)
-    print '% error = ', (dot(b, yd) - dot(b, y)) / dot(b, y)
+    print('c\'x*  = ', dot(c, x))
+    print('% error = ', (dot(c, xd) - dot(c, x)) / dot(c, x))
+    print('b\'y*  = ', dot(b, y))
+    print('% error = ', (dot(b, yd) - dot(b, y)) / dot(b, y))
     
 def solveInfeasible():
     K = {'f':10, 'l':15, 'q':[5, 10], 's':[3, 4], 'ep':10, 'ed':10}

@@ -17,6 +17,14 @@
  * Please use the "solve" interface in scs.py.
  */
 
+/* The PyInt variable is a PyLong in Python3.x.
+ */
+#if PY_MAJOR_VERSION >= 3
+#define PyInt_AsLong PyLong_AsLong
+#define PyInt_Check PyLong_Check
+#endif
+
+
 static int intType;
 static int pfloatType;
 
@@ -75,9 +83,9 @@ static int printErr(char * key) {
 }
 
 static idxint getWarmStart(char * key, pfloat ** x, PyArrayObject ** px0, idxint l, PyObject * warm) {
+    PyArrayObject *x0 = (PyArrayObject *) PyDict_GetItemString(warm, key);
 	*x = scs_calloc(l, sizeof(pfloat));
-	PyArrayObject *x0 = (PyArrayObject *) PyDict_GetItemString(warm, key);
-	if (x0) {
+    if (x0) {
 		if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l) {
 			PySys_WriteStderr("Error parsing warm-start input\n");
 			return 0;
@@ -221,12 +229,6 @@ static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char 
 	return NULL;
 }
 
-/* The PyInt variable is a PyLong in Python3.x.
- */
-#if PY_MAJOR_VERSION >= 3
-#define PyInt_AsLong PyLong_AsLong
-#define PyInt_Check PyLong_Check
-#endif
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* Expects a function call
 	 *     sol = csolve((m,n),Ax,Ai,Ap,b,c,cone,opts)

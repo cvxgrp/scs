@@ -89,8 +89,8 @@ except:
         install_scs(USE_LAPACK=True, USE_64_BIT_BLAS=USE_64_BIT_BLAS, BLAS_STR='blas', LAPACK_STR='lapack', USE_OPENMP=USE_OPENMP, rootDir=rootDir)
     except:
         install_scs(USE_LAPACK=False, USE_64_BIT_BLAS=USE_64_BIT_BLAS, BLAS_STR='', LAPACK_STR='', USE_OPENMP=USE_OPENMP, rootDir=rootDir)
-        print "#############################################################################################"
-        print "# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, and ECPs #"
-        print "# install blas/lapack and run this install script again to allow SCS to solve SDPs          #"
-        print "#############################################################################################"
+        print("#############################################################################################")
+        print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, and ECPs #")
+        print("# install blas/lapack and run this install script again to allow SCS to solve SDPs          #")
+        print("#############################################################################################")
 
