@@ -100,9 +100,9 @@ static idxint getWarmStart(char * key, pfloat ** x, PyArrayObject ** px0, idxint
 
 static int getConeIntDim(char * key, idxint * v, PyObject * cone) {
 	/* get cone['l'] */
-	*v = 0;
 	PyObject *obj = PyDict_GetItemString(cone, key);
-	if (obj) {
+	*v = 0;
+    if (obj) {
 		if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) >= 0)) {
 			return printErr(key);
 		}
@@ -270,7 +270,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* scs data structures */
 	Data * d = scs_calloc(sizeof(Data), 1);
 	Cone * k = scs_calloc(sizeof(Cone), 1);
-
+    AMatrix * A;
+	Sol sol = { 0 };
+	Info info;
 	static char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", "warm", NULL };
 	/* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
@@ -278,6 +280,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 #else
 	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!";
 #endif
+    npy_intp veclen[1];
+    PyObject *y, *s, *returnDict, *infoDict;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, &(d->m), &(d->n), &PyArray_Type, &Ax,
 			&PyArray_Type, &Ai, &PyArray_Type, &Ap, &PyArray_Type, &b, &PyArray_Type, &c, &PyDict_Type, &cone,
@@ -312,7 +316,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.Ax = getContiguous(Ax, pfloatType);
 	ps.Ai = getContiguous(Ai, intType);
 	ps.Ap = getContiguous(Ap, intType);
-	AMatrix * A = scs_malloc(sizeof(AMatrix));
+	
+    A = scs_malloc(sizeof(AMatrix));
 	A->x = (pfloat *) PyArray_DATA(ps.Ax);
 	A->i = (idxint *) PyArray_DATA(ps.Ai);
 	A->p = (idxint *) PyArray_DATA(ps.Ap);
@@ -361,14 +366,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	}
 
 	/* Solve! */
-	Sol sol = { 0 };
 	d->WARM_START = 0;
 	if (warm) {
 		d->WARM_START = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
 		d->WARM_START |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
 		d->WARM_START |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
 	}
-	Info info;
 	scs(d, k, &sol, &info);
 
 	/* create output (all data is *deep copied*) */
@@ -377,7 +380,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* if(!(x = Matrix_New(n,1,DOUBLE))) */
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(pfloat)); */
-	npy_intp veclen[1];
 	veclen[0] = d->n;
 	PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
 
@@ -387,7 +389,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(pfloat)); */
 	veclen[0] = d->m;
-	PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
+	y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
 
 	/* s */
 	/* matrix *s; */
@@ -395,15 +397,15 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(pfloat)); */
 	veclen[0] = d->m;
-	PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
+	s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
 
-	PyObject *infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}", "statusVal",
+	infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}", "statusVal",
 			(idxint) info.statusVal, "iter", (idxint) info.iter, "pobj", (pfloat) info.pobj, "dobj", (pfloat) info.dobj,
 			"resPri", (pfloat) info.resPri, "resDual", (pfloat) info.resDual, "relGap", (pfloat) info.relGap,
 			"solveTime", (pfloat) (info.solveTime / 1e3), "setupTime", (pfloat) (info.setupTime / 1e3), "status",
 			info.status);
 
-	PyObject *returnDict = Py_BuildValue("{s:O,s:O,s:O,s:O}", "x", x, "y", y, "s", s, "info", infoDict);
+    returnDict = Py_BuildValue("{s:O,s:O,s:O,s:O}", "x", x, "y", y, "s", s, "info", infoDict);
 	/* give up ownership to the return dictionary */
 	Py_DECREF(x);
 	Py_DECREF(y);
