@@ -1,7 +1,7 @@
 SCS
 ====
 
-[![Build Status](https://travis-ci.org/cvxgrp/scs.png?branch=master)](https://travis-ci.org/cvxgrp/scs)
+[![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
 
 SCS = `splitting cone solver`
