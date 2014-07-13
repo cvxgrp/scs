@@ -2,7 +2,6 @@ cleanup, refactor and comment code
 add static, inline to methods
 compile dynamic libs - fPIC
 work on conda recipe
-test on windows, add appveyor
 multiple passes normalization
 adaptive b,c rescaling
 fix D, E to be inverse
