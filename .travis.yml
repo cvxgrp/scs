@@ -6,7 +6,6 @@ python:
   - "3.4"
 install:
   - sudo apt-get update
-  - sudo apt-get install liblapack-dev 
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget http://repo.continuum.io/miniconda/Miniconda-3.4.2-Linux-x86_64.sh -O miniconda.sh;
     else
@@ -24,7 +23,7 @@ install:
   - cd python; python setup.py install; cd ..
 
 script:
-  - cd examples/python; python randomConeProb.py; cd ..
+  - cd examples/python; python leastl1norm.py; cd ..
 
 notifications:
   email:
