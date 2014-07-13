@@ -281,7 +281,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!";
 #endif
     npy_intp veclen[1];
-    PyObject *y, *s, *returnDict, *infoDict;
+    PyObject *x, *y, *s, *returnDict, *infoDict;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, &(d->m), &(d->n), &PyArray_Type, &Ax,
 			&PyArray_Type, &Ai, &PyArray_Type, &Ap, &PyArray_Type, &b, &PyArray_Type, &c, &PyDict_Type, &cone,
@@ -381,7 +381,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(pfloat)); */
 	veclen[0] = d->n;
-	PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
+	x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
 
 	/* y */
 	/* matrix *y; */
