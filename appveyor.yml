@@ -25,5 +25,5 @@ build_script:
 
 test_script:
     - cd examples\python
-    - C:\%PYLOC%\envs\testenv\python.exe randomConeProb.py
+    - C:\%PYLOC%\envs\testenv\python.exe leastl1norm.py
     - cd ..\..

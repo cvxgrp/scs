@@ -1,12 +1,12 @@
 language: python
 python:
     - "2.7"
-    - "3.4"
+    - "3.2"
 virtualenv:
     system_site_packages: true
 # install scipy and numpy
 before_install:
-    - sudo apt-get install python-numpy python-scipy
+    - sudo apt-get install liblapack-dev python-numpy python-scipy
 # install dependencies
 install:
     - cd python; sudo python setup.py install; cd ..
