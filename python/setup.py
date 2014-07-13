@@ -7,7 +7,7 @@ from numpy import get_include
 from numpy.distutils.system_info import get_info, BlasNotFoundError 
 
 def install_scs(USE_LAPACK, USE_64_BIT_BLAS, BLAS_STR, LAPACK_STR, USE_OPENMP, rootDir): 
-    libraries = ['m']
+    libraries = []
     if system() == 'Linux':
         libraries += ['rt']
     
