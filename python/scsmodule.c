@@ -193,22 +193,30 @@ static int parseOpts(Data *d, PyObject * opts) {
 }
 
 static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
-	if (ps->Ax)
+	if (ps->Ax) {
 		Py_DECREF(ps->Ax);
-	if (ps->Ai)
+	}
+	if (ps->Ai) {
 		Py_DECREF(ps->Ai);
-	if (ps->Ap)
+	}
+	if (ps->Ap) {
 		Py_DECREF(ps->Ap);
-	if (ps->b)
+	}
+	if (ps->b) {
 		Py_DECREF(ps->b);
-	if (ps->c)
+	}
+	if (ps->c) {
 		Py_DECREF(ps->c);
-	if (ps->x0)
+	}
+	if (ps->x0) {
 		Py_DECREF(ps->x0);
-	if (ps->y0)
+	}
+	if (ps->y0) {
 		Py_DECREF(ps->y0);
-	if (ps->s0)
+	}
+	if (ps->s0) {
 		Py_DECREF(ps->s0);
+	}
 	if (k) {
 		if (k->q)
 			scs_free(k->q);
@@ -316,7 +324,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.Ax = getContiguous(Ax, pfloatType);
 	ps.Ai = getContiguous(Ai, intType);
 	ps.Ap = getContiguous(Ap, intType);
-	
+
     A = scs_malloc(sizeof(AMatrix));
 	A->x = (pfloat *) PyArray_DATA(ps.Ax);
 	A->i = (idxint *) PyArray_DATA(ps.Ai);
