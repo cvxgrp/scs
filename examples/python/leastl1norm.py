@@ -1,3 +1,4 @@
+from __future__ import print_function
 import scs
 import numpy as np
 from numpy import random

@@ -1,0 +1,81 @@
+from __future__ import print_function
+import platform
+## import utilities to generate random cone probs:
+import sys
+sys.path.insert(0, '../examples/python')
+from genRandomConeProb import *
+
+
+def import_error(msg):
+  print()
+  print("## IMPORT ERROR:" + msg)
+  print()
+
+try:
+  from nose.tools import assert_raises, assert_almost_equals
+except ImportError:
+  import_error("Please install nose to run tests.")
+  raise
+
+try:
+  import scs
+except ImportError:
+  import_error("You must install the scs module before running tests.")
+  raise
+
+try:
+  import numpy as np
+except ImportError:
+  import_error("Please install numpy.")
+  raise
+
+try:
+  import scipy.sparse as sp
+except ImportError:
+  import_error("Please install scipy.")
+  raise
+
+def check_solution(solution, expected):
+  assert_almost_equals(solution, expected, places=3)
+
+def check_infeasible(sol):
+  assert sol['info']['status'] == 'Infeasible'
+
+def check_unbounded(sol):
+  assert sol['info']['status'] == 'Unbounded'
+
+random.seed(0)
+num_feas = 10
+num_unb = 10
+num_infeas = 10
+
+opts={'MAX_ITERS':100000,'EPS':1e-5} # better accuracy than default to ensure test pass
+K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[2, 1, 2, 0, 1, 10], 'ep':10, 'ed':10}
+m = getConeDims(K)
+
+def test_feasible():
+    for i in range(num_feas):
+        data, p_star = genFeasible(K, n = round(m/3), density = 0.01)
+        
+        sol = scs.solve(data, K, opts)
+        yield check_solution, dot(data['c'],sol['x']), p_star
+        yield check_solution, dot(-data['b'],sol['y']), p_star
+
+        sol = scs.solve(data, K, opts=dict({'USE_INDIRECT':True}, **opts))
+        yield check_solution, dot(data['c'],sol['x']), p_star
+        yield check_solution, dot(-data['b'],sol['y']), p_star
+
+def test_infeasible():
+    for i in range(num_infeas):
+        data = genInfeasible(K, n = round(m/3))
+        
+        yield check_infeasible, scs.solve(data, K, opts)
+        yield check_infeasible, scs.solve(data, K, opts=dict({'USE_INDIRECT':True}, **opts))
+
+def test_unbounded():
+    for i in range(num_unb):
+        data = genUnbounded(K, n = round(m/3))
+        
+        yield check_unbounded, scs.solve(data, K, opts)
+        yield check_unbounded, scs.solve(data, K, opts=dict({'USE_INDIRECT':True}, **opts))
+

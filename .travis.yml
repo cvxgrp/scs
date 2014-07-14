@@ -18,12 +18,12 @@ install:
   - conda update -q conda
   - conda info -a
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy nose coverage
   - source activate test-environment
   - cd python; python setup.py install; cd ..
 
 script:
-  - cd examples/python; python leastl1norm.py; cd ..
+  - cd python; nosetests --with-cover --cover-package=scs test_scs_basic.py test_scs_rand.py; cd ..
 
 notifications:
   email:

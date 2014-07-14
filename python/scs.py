@@ -15,6 +15,9 @@ def solve(probdata, cone, opts={}, USE_INDIRECT=False):
          'y' - dual solution
          'info' - information dictionary
     """
+    if not probdata or not cone:
+        raise TypeError("Missing data or cone information")
+
     if not 'A' in probdata or not 'b' in probdata or not 'c' in probdata:
         raise TypeError("Missing one or more of A, b, c from data dictionary")
     A = probdata['A']

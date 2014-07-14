@@ -3,24 +3,12 @@ from numpy import *
 from scipy import sparse, randn
 
 #############################################
-#  Uses scs to solve a random cone problem  #
+#      Generate random cone problems        #
 #############################################
 
-def main():
-    solveFeasible()
-    solveInfeasible()
-    solveUnbounded()
-    
-def solveFeasible():
-    # cone:
-    K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10}
-    K = validateCone(K)
-    
-    density = 0.01  # A matrix density
+def genFeasible(K, n, density):
     m = getConeDims(K)
-    n = round(m / 3)
-    params = {'EPS':1e-3, 'NORMALIZE':1, 'SCALE':5, 'CG_RATE':2}
-      
+    
     z = randn(m,)
     z = symmetrizeSDP(z, K)  # for SD cones
     y = proj_dual_cone(z, K)  # y = s - z;
@@ -33,30 +21,11 @@ def solveFeasible():
     b = A.dot(x) + s
     
     data = {'A': A, 'b': b, 'c': c}
-    
-    # indirect
-    sol_i = scs.solve(data, K, params, USE_INDIRECT=True)
-    xi = sol_i['x']
-    yi = sol_i['y']
-    print('c\'x*  = ', dot(c, x))
-    print('% error = ', (dot(c, xi) - dot(c, x)) / dot(c, x))
-    print('b\'y*  = ', dot(b, y))
-    print('% error = ', (dot(b, yi) - dot(b, y)) / dot(b, y))
-    # direct:
-    sol_d = scs.solve(data, K, params)
-    xd = sol_d['x']
-    yd = sol_d['y']
-    print('c\'x*  = ', dot(c, x))
-    print('% error = ', (dot(c, xd) - dot(c, x)) / dot(c, x))
-    print('b\'y*  = ', dot(b, y))
-    print('% error = ', (dot(b, yd) - dot(b, y)) / dot(b, y))
-    
-def solveInfeasible():
-    K = {'f':10, 'l':15, 'q':[5, 10], 's':[3, 4], 'ep':10, 'ed':10}
-    K = validateCone(K)
+    return data, dot(c, x)
+
+
+def genInfeasible(K, n):
     m = getConeDims(K)
-    n = round(m / 3)
-    params = {'EPS':1e-4, 'NORMALIZE':1, 'SCALE':0.5, 'CG_RATE':2}
     
     z = randn(m,)
     z = symmetrizeSDP(z, K)  # for SD cones
@@ -68,16 +37,10 @@ def solveInfeasible():
     b = -b / dot(b, y);
     
     data = {'A':sparse.csc_matrix(A), 'b':b, 'c':randn(n)}
-    
-    sol_i = scs.solve(data, K, params, USE_INDIRECT=True)
-    sol_d = scs.solve(data, K, params)
-    
-def solveUnbounded():
-    K = {'f':10, 'l':15, 'q':[5, 10], 's':[3, 4], 'ep':10, 'ed':10}
-    K = validateCone(K)
+    return data
+
+def genUnbounded(K, n):
     m = getConeDims(K)
-    n = round(m / 3)
-    params = {'EPS':1e-4, 'NORMALIZE':1, 'SCALE':0.5, 'CG_RATE':2}
     
     z = randn(m);
     z = symmetrizeSDP(z, K);  # for SD cones
@@ -89,18 +52,8 @@ def solveUnbounded():
     c = -c / dot(c, x);
     
     data = {'A':sparse.csc_matrix(A), 'b':randn(m), 'c':c}
-    
-    sol_i = scs.solve(data, K, params, USE_INDIRECT=True)
-    sol_d = scs.solve(data, K, params)
+    return data    
 
-
-def validateCone(K):
-    if (type(K['q']) == type(0)):
-        K['q'] = [K['q']]
-    if (type(K['s']) == type(0)):
-        K['s'] = [K['s']]
-    return K
-    
 def pos(x):
     return (x + abs(x)) / 2
 
@@ -246,7 +199,6 @@ def solve_with_rho(v, rho, w):
     x[1] = (1 / rho) * (x[2] - v[2]) * x[2]
     x[0] = v[0] - rho
     return x
-
 
 def newton_exp_onz(rho, y_hat, z_hat, w):
     t = max(max(w - z_hat, -z_hat), 1e-6)

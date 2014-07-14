@@ -16,7 +16,7 @@ install:
     - C:\%PYLOC%\python C:\get-pip.py
     - C:\%PYLOC%\Scripts\pip.exe install conda
     - C:\%PYLOC%\Scripts\conda.exe init
-    - C:\%PYLOC%\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy
+    - C:\%PYLOC%\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy nose
 
 build_script:
     - cd python
@@ -24,6 +24,6 @@ build_script:
     - cd ..
 
 test_script:
-    - cd examples\python
-    - C:\%PYLOC%\envs\testenv\python.exe leastl1norm.py
-    - cd ..\..
+    - cd python
+    - C:\%PYLOC%\envs\testenv\Scipts\nosetests.exe test_scs_basic.py test_scs_rand.py
+    - cd ..

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from distutils.core import setup, Extension
 from distutils.errors import *
 #import os

@@ -12,7 +12,9 @@ sftp-config.json
 *demo_direct
 *demo_indirect
 python/flags.tmp
+python/.coverage
 python/build/
+python/cover/
 python_dist
 linsys_dense/out
 out

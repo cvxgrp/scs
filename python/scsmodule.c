@@ -98,18 +98,6 @@ static idxint getWarmStart(char * key, pfloat ** x, PyArrayObject ** px0, idxint
 	return 0;
 }
 
-static int getConeIntDim(char * key, idxint * v, PyObject * cone) {
-	/* get cone['l'] */
-	PyObject *obj = PyDict_GetItemString(cone, key);
-	*v = 0;
-    if (obj) {
-		if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) >= 0)) {
-			return printErr(key);
-		}
-	}
-	return 0;
-}
-
 static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * cone) {
 	/* get cone['key'] */
 	idxint i, n = 0;
@@ -121,14 +109,16 @@ static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * 
 			q = scs_calloc(n, sizeof(idxint));
 			for (i = 0; i < n; ++i) {
 				PyObject *qi = PyList_GetItem(obj, i);
-				if (!PyInt_Check(qi) || !((q[i] = (idxint) PyInt_AsLong(qi)) >= 0)) {
+	            if ( !( (PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) >= 0)) ||
+	                        (PyLong_Check(qi) && ((q[i] = (idxint) PyLong_AsLong(qi)) >= 0))) ) {
 					return printErr(key);
-				}
+	            }
 			}
-		} else if (PyInt_Check(obj)) {
+		} else if (PyInt_Check(obj) || PyLong_Check(obj)) {
 			n = 1;
 			q = scs_malloc(sizeof(idxint));
-			if (!PyInt_Check(obj) || !((*q = (idxint) PyInt_AsLong(obj)) >= 0)) {
+            if ( !( (PyInt_Check(obj) && ((*q = (idxint) PyInt_AsLong(obj)) >= 0)) ||
+                        (PyLong_Check(obj) && ((*q = (idxint) PyLong_AsLong(obj)) >= 0))) ) {
 				return printErr(key);
 			}
 		} else {
@@ -140,17 +130,18 @@ static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * 
 	return 0;
 }
 
-static int getOptIntParam(char * key, idxint * v, idxint defVal, PyObject * opts) {
-	*v = defVal;
-	if (opts) {
-		PyObject *obj = PyDict_GetItemString(opts, key);
-		if (obj) {
-			if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) >= 0)) {
-				return printErr(key);
-			}
-		}
-	}
-	return 0;
+static int getPosIntParam(char * key, idxint * v, idxint defVal, PyObject * opts) {
+    *v = defVal;
+    if (opts) {
+        PyObject *obj = PyDict_GetItemString(opts, key);
+        if (obj) {
+            if ( !( (PyInt_Check(obj) && ((*v = (idxint) PyInt_AsLong(obj)) >= 0)) ||
+                        (PyLong_Check(obj) && ((*v = (idxint) PyLong_AsLong(obj)) >= 0))) ) {
+                return printErr(key);
+            }
+        }
+    }
+    return 0;
 }
 
 static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * opts) {
@@ -173,11 +164,11 @@ static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * op
 }
 
 static int parseOpts(Data *d, PyObject * opts) {
-	if (getOptIntParam("MAX_ITERS", &(d->MAX_ITERS), 2500, opts) < 0)
+	if (getPosIntParam("MAX_ITERS", &(d->MAX_ITERS), 2500, opts) < 0)
 		return -1;
-	if (getOptIntParam("VERBOSE", &(d->VERBOSE), 1, opts) < 0)
+	if (getPosIntParam("VERBOSE", &(d->VERBOSE), 1, opts) < 0)
 		return -1;
-	if (getOptIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
+	if (getPosIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
 		return -1;
 	if (getOptFloatParam("SCALE", &(d->SCALE), 5, opts) < 0)
 		return -1;
@@ -351,10 +342,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.b = getContiguous(b, pfloatType);
 	d->b = (pfloat *) PyArray_DATA(ps.b);
 
-	if (getConeIntDim("f", &(k->f), cone) < 0) {
+	if (getPosIntParam("f", &(k->f), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field f");
 	}
-	if (getConeIntDim("l", &(k->l), cone) < 0) {
+	if (getPosIntParam("l", &(k->l), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field l");
 	}
 	if (getConeArrDim("q", &(k->q), &(k->qsize), cone) < 0) {
@@ -363,10 +354,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (getConeArrDim("s", &(k->s), &(k->ssize), cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field s");
 	}
-	if (getConeIntDim("ep", &(k->ep), cone) < 0) {
+	if (getPosIntParam("ep", &(k->ep), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ep");
 	}
-	if (getConeIntDim("ed", &(k->ed), cone) < 0) {
+	if (getPosIntParam("ed", &(k->ed), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
 	if (parseOpts(d, opts) < 0) {
