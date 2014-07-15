@@ -12,7 +12,7 @@ typedef struct PRIVATE_DATA Priv;
 /* initialize Priv structure and perform any necessary preprocessing */
 Priv * initPriv(Data * d);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains warm-start, iter is current scs iteration count */
-void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter);
+idxint solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter);
 /* frees Priv structure and allocated memory in Priv */
 void freePriv(Priv * p);
 

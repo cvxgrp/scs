@@ -248,7 +248,7 @@ Priv * initPriv(Data * d) {
 	return p;
 }
 
-void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+idxint solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
 	tic(&linsysTimer);
@@ -257,6 +257,6 @@ void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) 
 #ifdef EXTRAVERBOSE
 	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif
-
+	return 0;
 }
 

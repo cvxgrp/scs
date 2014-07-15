@@ -120,7 +120,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 	return i;
 }
 
-void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+idxint solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	/* solves Mx = b, for x but stores result in b
 	 s contains warm-start (if available)	p->r = b; */
 	pfloat * A = d->A->x;
@@ -143,5 +143,6 @@ void solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	}
 
 	totalSolveTime += tocq(&linsysTimer);
+	return 0;
 }
 

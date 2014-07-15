@@ -27,7 +27,7 @@ idxint validateCones(Data * d, Cone * k);
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter < 0 for exact projection, warm_start contains guess
  of solution, can be NULL*/
-void projDualCone(pfloat *x, Cone *k, const pfloat * warm_start, idxint iter);
+idxint projDualCone(pfloat *x, Cone *k, const pfloat * warm_start, idxint iter);
 void finishCone(void);
 char * getConeSummary(Info * info);
 

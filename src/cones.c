@@ -250,7 +250,7 @@ void expGetRhoUb(pfloat * v, pfloat * x, pfloat * ub, pfloat * lb) {
 }
 
 /* project onto the exponential cone, v has dimension *exactly* 3 */
-static void projExpCone(pfloat * v, idxint iter) {
+static idxint projExpCone(pfloat * v, idxint iter) {
 	idxint i;
 	pfloat ub, lb, rho, g, x[3];
 	pfloat r = v[0], s = v[1], t = v[2];
@@ -258,20 +258,20 @@ static void projExpCone(pfloat * v, idxint iter) {
 
 	/* v in cl(Kexp) */
 	if ((s * exp(r / s) <= t && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
-		return;
+		return 0;
 	}
 
 	/* -v in Kexp^* */
 	if ((-r < 0 && r * exp(s / r) <= -exp(1) * t) || (-r == 0 && -s >= 0 && -t >= 0)) {
 		memset(v, 0, 3 * sizeof(pfloat));
-		return;
+		return 0;
 	}
 
 	/* special case with analytical solution */
 	if (r < 0 && s < 0) {
 		v[1] = 0.0;
 		v[2] = MAX(v[2], 0);
-		return;
+		return 0;
 	}
 
     /* iterative procedure to find projection, bisects on dual variable: */
@@ -296,6 +296,7 @@ static void projExpCone(pfloat * v, idxint iter) {
 	v[0] = x[0];
 	v[1] = x[1];
 	v[2] = x[2];
+	return 0;
 }
 
 idxint initCone(Cone * k) {
@@ -330,13 +331,13 @@ idxint initCone(Cone * k) {
 
         BLAS(syevr)("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL, NULL, NULL, &eigTol, NULL, NULL, NULL, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
 
-		if (info != 0) {
-			scs_printf("FATAL: syevr failure\n");
-			return -1;
-		}
-		c.lwork = (blasint) (wkopt + 0.01); /* 0.01 for int casting safety */
-		c.work = scs_malloc(c.lwork * sizeof(pfloat));
-		c.iwork = scs_malloc(c.liwork * sizeof(blasint));
+        if (info != 0) {
+            scs_printf("FATAL: syevr failure, info = %i\n", info);
+            return -1;
+        }
+        c.lwork = (blasint) (wkopt + 0.01); /* 0.01 for int casting safety */
+        c.work = scs_malloc(c.lwork * sizeof(pfloat));
+        c.iwork = scs_malloc(c.liwork * sizeof(blasint));
 
 		if (!c.Xs || !c.Z || !c.e || !c.work || !c.iwork) {
 			return -1;
@@ -350,7 +351,7 @@ idxint initCone(Cone * k) {
 	return 0;
 }
 
-void project2By2Sdc(pfloat *X) {
+idxint project2By2Sdc(pfloat *X) {
 	pfloat a, b, d, l1, l2, x1, x2, rad;
 	a = X[0];
 	b = 0.5 * (X[1] + X[2]);
@@ -364,14 +365,14 @@ void project2By2Sdc(pfloat *X) {
 	if (l2 >= 0) { /* both positive, just symmetrize */
 		X[1] = b;
 		X[2] = b;
-		return;
+		return 0;
 	}
 	if (l1 <= 0) { /* both negative, set to 0 */
 		X[0] = 0;
 		X[1] = 0;
 		X[2] = 0;
 		X[3] = 0;
-		return;
+		return 0;
 	}
 	/* l1 pos, l2 neg */
 	x1 = 1 / SQRTF(1 + (l1 - a) * (l1 - a) / b / b);
@@ -381,10 +382,10 @@ void project2By2Sdc(pfloat *X) {
 	X[1] = l1 * x1 * x2;
 	X[2] = X[1];
 	X[3] = l1 * x2 * x2;
-	return;
+	return 0;
 }
 
-static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
+static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	idxint i, j;
@@ -406,17 +407,16 @@ static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 	pfloat vupper;
 #endif
 	if (n == 0) {
-		return;
+		return 0;
 	}
 	if (n == 1) {
 		if (X[0] < 0.0) {
 			X[0] = 0.0;
 		}
-		return;
+		return 0;
 	}
 	if (n == 2) {
-		project2By2Sdc(X);
-		return;
+		return project2By2Sdc(X);
 	}
 #ifdef LAPACK_LIB_FOUND
 	memcpy(Xs, X, nb * nb * sizeof(pfloat));
@@ -429,10 +429,10 @@ static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 	/* Solve eigenproblem, reuse workspaces */
     BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
 			NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
-	if (info != 0) {
-		scs_printf("FATAL: syevr failure\n");
-		exit(-1);
-	}
+    if (info != 0) {
+        scs_printf("FATAL: syevr failure, info = %i\n", info);
+        return -1;
+    }
 
 	memset(X, 0, n * n * sizeof(pfloat));
 	for (i = 0; i < m; ++i) {
@@ -449,12 +449,14 @@ static void projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 	scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack libraries were linked!\n");
 	scs_printf("scs will return nonsense!\n");
 	scaleArray(X, NAN, n);
+	return -1;
 #endif
+	return 0;
 }
 
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to NULL) */
-void projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  {
+idxint projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  {
 	idxint i;
 	idxint count = (k->f ? k->f : 0);
 #ifdef EXTRAVERBOSE
@@ -514,7 +516,7 @@ void projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  
 			if (k->s[i] == 0) {
 				continue;
 			}
-			projSemiDefiniteCone(&(x[count]), k->s[i], iter);
+			if (projSemiDefiniteCone(&(x[count]), k->s[i], iter) < 0) return -1;
 			count += (k->s[i]) * (k->s[i]);
 		}
 #ifdef EXTRAVERBOSE
@@ -542,7 +544,7 @@ void projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  
 			s = x[idx + 1];
 			t = x[idx + 2];
 
-			projExpCone(&(x[idx]), iter);
+			if (projExpCone(&(x[idx]), iter) < 0) return -1;
 
 			x[idx] -= r;
 			x[idx + 1] -= s;
@@ -562,7 +564,7 @@ void projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  
 #pragma omp parallel for
 #endif
 		for (i = 0; i < k->ed; ++i) {
-			projExpCone(&(x[count + 3 * i]), iter);
+			if (projExpCone(&(x[count + 3 * i]), iter) < 0) return -1;
 		}
 		count += 3 * k->ed;
 #ifdef EXTRAVERBOSE
@@ -572,4 +574,5 @@ void projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  
 	}
 	/* project onto OTHER cones */
 	totalConeTime += tocq(&coneTimer);
+	return 0;
 }

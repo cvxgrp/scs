@@ -62,7 +62,7 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 #endif
 }
 
-static void failureDefaultReturn(Data * d, Sol * sol, Info * info) {
+static idxint failureDefaultReturn(Data * d, Work * w, Sol * sol, Info * info, char * msg) {
 	info->relGap = NAN;
 	info->resPri = NAN;
 	info->resDual = NAN;
@@ -81,7 +81,8 @@ static void failureDefaultReturn(Data * d, Sol * sol, Info * info) {
 	if (!sol->s)
 		sol->s = scs_malloc(sizeof(pfloat) * d->m);
 	scaleArray(sol->s, NAN, d->m);
-	scs_printf("FAILURE\n");
+	scs_printf("FAILURE:%s\n", msg);
+	return FAILURE;
 }
 
 static void warmStartVars(Data * d, Work * w, Sol * sol) {
@@ -203,9 +204,10 @@ static void coldStartVars(Data * d, Work * w) {
 	w->v[l - 1] = SQRTF(l);
 }
 
-static void projectLinSys(Data * d, Work * w, idxint iter) {
+/* status < 0 indicates failure */
+static idxint projectLinSys(Data * d, Work * w, idxint iter) {
 	/* ut = u + v */
-	idxint n = d->n, m = d->m, l = n + m + 1;
+	idxint n = d->n, m = d->m, l = n + m + 1, status;
 	memcpy(w->u_t, w->u, l * sizeof(pfloat));
 	addScaledArray(w->u_t, w->v, l, 1.0);
 
@@ -215,9 +217,11 @@ static void projectLinSys(Data * d, Work * w, idxint iter) {
 	addScaledArray(w->u_t, w->h, l - 1, -innerProd(w->u_t, w->g, l - 1) / (w->gTh + 1));
 	scaleArray(&(w->u_t[n]), -1, m);
 
-	solveLinSys(d, w->p, w->u_t, w->u, iter);
+	status = solveLinSys(d, w->p, w->u_t, w->u, iter);
 
 	w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
+
+	return status;
 }
 
 static void freeWork(Work * w) {
@@ -269,8 +273,9 @@ static void updateDualVars(Data * d, Work * w) {
 	}
 }
 
-static void projectCones(Data *d, Work * w, Cone * k, idxint iter) {
-	idxint i, n = d->n, l = n + d->m + 1;
+/* status < 0 indicates failure */
+static idxint projectCones(Data *d, Work * w, Cone * k, idxint iter) {
+	idxint i, n = d->n, l = n + d->m + 1, status;
 	/* this does not relax 'x' variable */
 	for (i = 0; i < n; ++i) {
 		w->u[i] = w->u_t[i] - w->v[i];
@@ -279,9 +284,11 @@ static void projectCones(Data *d, Work * w, Cone * k, idxint iter) {
 		w->u[i] = d->ALPHA * w->u_t[i] + (1 - d->ALPHA) * w->u_prev[i] - w->v[i];
 	}
 	/* u = [x;y;tau] */
-	projDualCone(&(w->u[n]), k, &(w->u_prev[n]), iter);
+	status = projDualCone(&(w->u[n]), k, &(w->u_prev[n]), iter);
 	if (w->u[l - 1] < 0.0)
 		w->u[l - 1] = 0.0;
+
+	return status;
 }
 
 static idxint solved(Data * d, Sol * sol, Info * info, pfloat tau) {
@@ -649,8 +656,8 @@ idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	for (i = 0; i < d->MAX_ITERS; ++i) {
 		memcpy(w->u_prev, w->u, (d->n + d->m + 1) * sizeof(pfloat));
 
-		projectLinSys(d, w, i);
-		projectCones(d, w, k, i);
+		if (projectLinSys(d, w, i) < 0) return failureDefaultReturn(d, w, sol, info, "error in projectLinSys");
+		if (projectCones(d, w, k, i) < 0) return failureDefaultReturn(d, w, sol, info, "error in projectCones");
 		updateDualVars(d, w);
 
 		if ((info->statusVal = converged(d, w, &r, i)) != 0)
@@ -736,9 +743,7 @@ idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
 	scs_printf("size of idxint = %lu, size of pfloat = %lu\n", sizeof(idxint), sizeof(pfloat));
 #endif
 	if (!w) {
-		scs_printf("ERROR: Could not initialize work\n");
-		failureDefaultReturn(d, sol, info);
-		return FAILURE;
+		return failureDefaultReturn(d, NULL, sol, info, "could not initialize work");
 	}
 	scs_solve(w, d, k, sol, info);
 	scs_finish(d, w);

@@ -53,7 +53,7 @@ void freePriv(Priv * p) {
 	scs_free(p);
 }
 
-void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+idxint solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
 	pfloat * A = d->A->x;
@@ -77,4 +77,5 @@ void solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) 
 #ifdef EXTRAVERBOSE
 	scs_printf("finished solving lin sys\n");
 #endif
+	return 0;
 }
