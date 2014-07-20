@@ -1,23 +1,9 @@
-function compile_indirect(flags)
-
-common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c ../linsys/common.c scs_mex.c';
-d = '-fPIC -DDLONG';
-if (~isempty (strfind (computer, '64')))
-    arr = '-largeArrayDims';
-else
-    arr = '';
-end
-if ( isunix && ~ismac ) 
-    link = '-lm -lrt';
-else
-    link = '-lm';
-end
-
+function compile_indirect(flags, common_scs)
 
 % compile indirect
 if (flags.COMPILE_WITH_OPENMP)
-    cmd = sprintf('mex -O %s COMPFLAGS="/openmp \\$COMPFLAGS" CFLAGS="\\$CFLAGS -O3 -fopenmp -DOPENMP -DMATLAB_MEX_FILE %s %s" ../linsys/indirect/private.c %s -I.. -I../include %s %s %s %s -output scs_indirect',  arr, d, flags.LCFLAG, common_scs, flags.INCS, link, flags.LOCS, flags.BLASLIB);
+    cmd = sprintf('mex -O %s %s %s -DOPENMP COMPFLAGS="/openmp \\$COMPFLAGS" CFLAGS="\\$CFLAGS -fopenmp" ../linsys/indirect/private.c %s -I.. -I../include %s %s %s -output scs_indirect',  flags.arr, flags.LCFLAG, common_scs, flags.INCS, flags.link, flags.LOCS, flags.BLASLIB);
 else
-    cmd = sprintf('mex -O %s CFLAGS="-O3 -DMATLAB_MEX_FILE %s %s" ../linsys/indirect/private.c %s -I.. -I../include %s %s %s %s -output scs_indirect',  arr, d, flags.LCFLAG, common_scs, flags.INCS, link, flags.LOCS, flags.BLASLIB);
+    cmd = sprintf('mex -O %s %s %s ../linsys/indirect/private.c %s -I.. -I../include %s %s %s -output scs_indirect',  flags.arr, flags.LCFLAG, common_scs, flags.INCS, flags.link, flags.LOCS, flags.BLASLIB);
 end
 eval(cmd);

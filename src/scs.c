@@ -1,4 +1,3 @@
-/* scs 1.0 */
 #include "scs.h"
 #include "normalize.h"
 
@@ -32,7 +31,7 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 	char * linSysMethod = getLinSysMethod(d, w->p);
 	_lineLen_ = -1;
 	for (i = 0; i < HEADER_LEN; ++i) {
-		_lineLen_ += strlen(HEADER[i]) + 1;
+		_lineLen_ += (idxint) strlen(HEADER[i]) + 1;
 	}
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
@@ -200,8 +199,8 @@ static void coldStartVars(Data * d, Work * w) {
 	idxint l = d->n + d->m + 1;
 	memset(w->u, 0, l * sizeof(pfloat));
 	memset(w->v, 0, l * sizeof(pfloat));
-	w->u[l - 1] = SQRTF(l);
-	w->v[l - 1] = SQRTF(l);
+	w->u[l - 1] = SQRTF((pfloat) l);
+	w->v[l - 1] = SQRTF((pfloat) l);
 }
 
 /* status < 0 indicates failure */
@@ -351,7 +350,7 @@ static void setSolution(Data * d, Work * w, Sol * sol, Info * info) {
 		if (tau > INDETERMINATE_TOL && tau > kap) {
 			info->statusVal = solved(d, sol, info, tau);
 		} else {
-			if (calcNorm(w->u, l) < INDETERMINATE_TOL * SQRTF(l)) {
+			if (calcNorm(w->u, l) < INDETERMINATE_TOL * SQRTF((pfloat) l)) {
 				info->statusVal = indeterminate(d, sol, info);
 			} else {
 				pfloat bTy = innerProd(d->b, sol->y, d->m);
@@ -734,7 +733,7 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 idxint scs(Data * d, Cone * k, Sol * sol, Info * info) {
-#if (defined _WIN32 || defined _WIN64 )
+#if (defined _WIN32 || defined _WIN64 ) && !defined MATLAB_MEX_FILE && !defined PYTHON
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif

@@ -8,7 +8,7 @@ ssize = length(c.s);
 % free/zero cone
 z(1:free_len) = 0;
 % lp cone
-z(free_len+1:lp_len+free_len) = pos(z(free_len+1:lp_len+free_len));
+z(free_len+1:lp_len+free_len) = max(z(free_len+1:lp_len+free_len),0);
 % SOCs
 idx=lp_len+free_len;
 for i=1:k_soc
@@ -38,7 +38,7 @@ if isempty(tt)
     z=[];
     return;
 elseif length(tt)==1
-    z = pos(tt);
+    z = max(tt,0);
     return;
 end
 v1=tt(1);v2=tt(2:end);
@@ -57,7 +57,7 @@ if isempty(z)
     z=[];
     return;
 elseif length(z)==1
-    z = pos(z);
+    z = max(z,0);
     return;
 end
 

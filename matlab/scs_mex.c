@@ -49,7 +49,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mxArray *params;
 
 	const mwSize one[1] = { 1 };
-	const idxint numInfoFields = 9;
+	const int numInfoFields = 9;
 	const char * infoFields[] = { "iter", "status", "pobj", "dobj", "resPri", "resDual", "relGap", "setupTime",
 			"solveTime" };
 	mxArray *tmp;
@@ -184,11 +184,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	kq = mxGetField(cone, 0, "q");
 	if (kq && !mxIsEmpty(kq)) {
 		q_mex = mxGetPr(kq);
-		ns = mxGetNumberOfDimensions(kq);
+		ns = (idxint) mxGetNumberOfDimensions(kq);
 		q_dims = mxGetDimensions(kq);
-		k->qsize = q_dims[0];
+		k->qsize = (idxint) q_dims[0];
 		if (ns > 1 && q_dims[0] == 1) {
-			k->qsize = q_dims[1];
+			k->qsize = (idxint) q_dims[1];
 		}
 		k->q = mxMalloc(sizeof(idxint) * k->qsize);
 		for (i = 0; i < k->qsize; i++) {
@@ -202,11 +202,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	ks = mxGetField(cone, 0, "s");
 	if (ks && !mxIsEmpty(ks)) {
 		s_mex = mxGetPr(ks);
-		ns = mxGetNumberOfDimensions(ks);
+		ns = (idxint) mxGetNumberOfDimensions(ks);
 		s_dims = mxGetDimensions(ks);
-		k->ssize = s_dims[0];
+		k->ssize = (idxint) s_dims[0];
 		if (ns > 1 && s_dims[0] == 1) {
-			k->ssize = s_dims[1];
+			k->ssize = (idxint) s_dims[1];
 		}
 		k->s = mxMalloc(sizeof(idxint) * k->ssize);
 		for (i = 0; i < k->ssize; i++) {
@@ -254,7 +254,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "iter", tmp);
-	*mxGetPr(tmp) = info.iter;
+	*mxGetPr(tmp) = (pfloat) info.iter;
 
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "pobj", tmp);

@@ -195,7 +195,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 
 	if (s == NULL) {
 		memcpy(r, b, n * sizeof(pfloat));
-		memset(b, 0.0, n * sizeof(pfloat));
+		memset(b, 0, n * sizeof(pfloat));
 	} else {
 		matVec(d, pr, s, r);
 		addScaledArray(r, b, n, -1);
@@ -229,7 +229,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 
 idxint solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
-	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF(iter + 1, d->CG_RATE));
+	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((pfloat) iter + 1, d->CG_RATE));
 
 	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */

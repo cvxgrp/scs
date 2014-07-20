@@ -3,12 +3,28 @@
 flags.COMPILE_WITH_OPENMP = false;
 
 flags.BLASLIB = '-lmwblas -lmwlapack';
-flags.LCFLAG = '-DLAPACK_LIB_FOUND -DBLAS64';
+flags.LCFLAG = '-DMATLAB_MEX_FILE -DLAPACK_LIB_FOUND -DDLONG';
 flags.INCS = '';
 flags.LOCS = '';
 
-compile_direct(flags);
-compile_indirect(flags);
+common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c ../linsys/common.c scs_mex.c';
+if (~isempty (strfind (computer, '64')))
+    flags.arr = '-largeArrayDims';
+else
+    flags.arr = '';
+end
+
+if ( isunix && ~ismac )
+    flags.link = '-lm -lrt';
+elseif  ( ismac )
+    flags.link = '-lm';
+else
+    flags.link = '';
+    flags.LCFLAG = sprintf('-DNOBLASUNDERSCORE %s', flags.LCFLAG);
+end
+
+compile_direct(flags, common_scs);
+compile_indirect(flags, common_scs);
 
 %%
 clear data cones

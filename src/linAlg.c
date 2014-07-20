@@ -8,7 +8,7 @@ void setAsScaledArray(pfloat *x, const pfloat * a, const pfloat b, idxint len) {
 		x[i] = b * a[i];
 }
 
-/* a*= b */
+/* a *= b */
 void scaleArray(pfloat * a, const pfloat b, idxint len) {
 	idxint i;
 	for (i = 0; i < len; ++i)

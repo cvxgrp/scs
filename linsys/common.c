@@ -61,8 +61,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	pfloat * Dt = scs_malloc(d->m * sizeof(pfloat));
 	pfloat * Et = scs_malloc(d->n * sizeof(pfloat));
 	pfloat * nms = scs_calloc(d->m, sizeof(pfloat));
-	pfloat minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
-	pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
+	pfloat minRowScale = MIN_SCALE * SQRTF((pfloat) d->n), maxRowScale = MAX_SCALE * SQRTF((pfloat) d->n);
+	pfloat minColScale = MIN_SCALE * SQRTF((pfloat) d->m), maxColScale = MAX_SCALE * SQRTF((pfloat) d->m);
 	idxint i, j, l, count, delta, *boundaries, c1, c2;
 	pfloat wrk, e;
 	idxint numBoundaries = getConeBoundaries(k, &boundaries);

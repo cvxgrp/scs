@@ -20,7 +20,9 @@
 #endif
 #endif
 
-#ifdef BLAS64
+#ifdef MATLAB_MEX_FILE
+typedef ptrdiff_t blasint;
+#elif definded BLAS64
 typedef long blasint;
 #else
 typedef int blasint;
@@ -305,7 +307,8 @@ idxint initCone(Cone * k) {
 	blasint nMax = 0;
 	pfloat eigTol = 1e-8;
 	blasint negOne = -1;
-	blasint info;
+	blasint m = 0;
+    blasint info;
 	pfloat wkopt;
 	c.Xs = NULL;
 	c.Z = NULL;
@@ -314,7 +317,14 @@ idxint initCone(Cone * k) {
 	c.iwork = NULL;
 #endif
 	totalConeTime = 0.0;
-	if (k->ssize && k->s) {
+#ifdef EXTRAVERBOSE
+    scs_printf("initCone\n");
+#ifdef MATLAB_MEX_FILE
+    mexEvalString("drawnow;");
+#endif
+#endif
+
+if (k->ssize && k->s) {
 		if (isSimpleSemiDefiniteCone(k->s, k->ssize)) {
 			return 0;
 		}
@@ -329,7 +339,8 @@ idxint initCone(Cone * k) {
 		c.Z = scs_calloc(nMax * nMax, sizeof(pfloat));
 		c.e = scs_calloc(nMax, sizeof(pfloat));
 
-        BLAS(syevr)("Vectors", "All", "Upper", &nMax, NULL, &nMax, NULL, NULL, NULL, NULL, &eigTol, NULL, NULL, NULL, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
+        BLAS(syevr)("Vectors", "All", "Upper", &nMax, c.Xs, &nMax, NULL, NULL, NULL, NULL,
+            &eigTol, &m, c.e, c.Z, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
 
         if (info != 0) {
             scs_printf("FATAL: syevr failure, info = %i\n", info);
@@ -348,6 +359,12 @@ idxint initCone(Cone * k) {
 		return -1;
 #endif
 	}
+#ifdef EXTRAVERBOSE
+    scs_printf("initCone complete\n");
+#ifdef MATLAB_MEX_FILE
+    mexEvalString("drawnow;");
+#endif
+#endif
 	return 0;
 }
 

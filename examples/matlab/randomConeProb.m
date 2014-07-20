@@ -13,11 +13,11 @@ gen_unbounded = true;
 %%% solvers to test:
 run_indirect = true;
 run_direct = true;
-run_cvx = true; % won't work if ep or ed > 0
+run_cvx = false; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
-K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100;0;1],'s',[5;5;0;1;2],'ep',5,'ed',5)
+K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100;0;1],'s',[0,1,2,3,4,5],'ep',5,'ed',5)
 density = 0.01; % A matrix density
 
 m = getConeDims(K);
