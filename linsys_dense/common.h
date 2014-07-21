@@ -23,10 +23,12 @@
 	#endif
 #endif
 
-#ifdef BLAS64
-	typedef long blasint;
+#ifdef MATLAB_MEX_FILE
+typedef ptrdiff_t blasint;
+#elif defined BLAS64
+typedef long blasint;
 #else
-	typedef int blasint;
+typedef int blasint;
 #endif
 
 void BLAS(scal)(blasint *n, pfloat *da, pfloat *dx, blasint *incx);
