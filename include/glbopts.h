@@ -65,7 +65,7 @@ typedef float pfloat;
 #endif
 
 #ifndef POWF
-#ifndef FLOAT
+#ifdef FLOAT
 #define POWF powf
 #else
 #define POWF pow
