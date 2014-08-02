@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 	idxint n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
 	Cone * k;
 	Data * d;
-	Sol * sol, *opt_sol;
+	Sol * sol, * opt_sol;
 	Info info = { 0 };
 	pfloat p_f, p_l;
 	int seed = 0;
@@ -147,8 +147,8 @@ int main(int argc, char **argv) {
 
     freeData(d, k);
 	freeSol(sol);
-	freeSol(opt_sol);
+    freeSol(opt_sol);
 
-	return 0;
+    return 0;
 }
 
