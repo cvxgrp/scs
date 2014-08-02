@@ -71,35 +71,6 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-## To compile dense versions: make dense
-## Need to connect to blas lib (set USE_LAPACK = 1 in scs.mk)
-
-DENSE=linsys_dense
-DENSE_OUT=$(DENSE)/out
-DENSE_TARGETS=$(DENSE)/direct/private.o $(DENSE)/indirect/private.o $(DENSE)/common.o $(DENSE)/libscsdir.a $(DENSE)/libscsindir.a $(DENSE_OUT)/demo_SOCP_direct $(DENSE_OUT)/demo_SOCP_indirect
-
-dense: $(DENSE_TARGETS)
-
-$(DENSE)/direct/private.o: $(DENSE)/direct/private.c  $(DENSE)/direct/private.h
-$(DENSE)/indirect/private.o: $(DENSE)/indirect/private.c $(DENSE)/indirect/private.h
-$(DENSE)/common.o: $(DENSE)/common.c $(DENSE)/common.h
-
-$(DENSE)/libscsdir.a: $(OBJECTS) $(DENSE)/direct/private.o $(DENSE)/common.o
-	$(ARCHIVE) $(DENSE)/libscsdir.a $^
-	- $(RANLIB) $(DENSE)/libscsdir.a
-
-$(DENSE)/libscsindir.a: $(OBJECTS) $(DENSE)/indirect/private.o $(DENSE)/common.o
-	$(ARCHIVE) $(DENSE)/libscsindir.a $^
-	- $(RANLIB) $(DENSE)/libscsindir.a
-
-$(DENSE_OUT)/demo_SOCP_direct: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsdir.a
-	mkdir -p $(DENSE_OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-$(DENSE_OUT)/demo_SOCP_indirect: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsindir.a
-	mkdir -p $(DENSE_OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
 .PHONY: clean purge
 clean:
 	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o $(DENSE_TARGETS)
