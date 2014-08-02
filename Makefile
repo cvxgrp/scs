@@ -6,25 +6,16 @@ OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
-DIRECT_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) 
 TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
 
 .PHONY: default 
 
 default: $(TARGETS) $(OUT)/libscsdir.a $(OUT)/libscsindir.a 
-    #$(OUT)/libscsdir.so $(OUT)/libscsindir.so 	
 	@echo "**********************************************************************************"
-	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2014."
+	@echo "Successfully compiled dense scs, copyright Brendan O'Donoghue 2014."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect'."
 	@echo "**********************************************************************************"
-ifneq ($(USE_LAPACK), 0)
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, and ECPs"
-else
-	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and ECPs)."
-	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to point to the library"
-	@echo "install locations, and recompile with 'make purge', 'make'."
-endif
 	@echo "**********************************************************************************"
 
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
@@ -71,35 +62,9 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-DENSE=linsys_dense
-DENSE_OUT=$(DENSE)/out
-DENSE_TARGETS=$(DENSE)/direct/private.o $(DENSE)/indirect/private.o $(DENSE)/common.o $(DENSE)/libscsdir.a $(DENSE)/libscsindir.a $(DENSE_OUT)/demo_SOCP_direct $(DENSE_OUT)/demo_SOCP_indirect
-
-dense: $(DENSE_TARGETS)
-
-$(DENSE)/direct/private.o: $(DENSE)/direct/private.c  $(DENSE)/direct/private.h
-$(DENSE)/indirect/private.o: $(DENSE)/indirect/private.c $(DENSE)/indirect/private.h
-$(DENSE)/common.o: $(DENSE)/common.c $(DENSE)/common.h
-
-$(DENSE)/libscsdir.a: $(OBJECTS) $(DENSE)/direct/private.o $(DENSE)/common.o
-	$(ARCHIVE) $(DENSE)/libscsdir.a $^
-	- $(RANLIB) $(DENSE)/libscsdir.a
-
-$(DENSE)/libscsindir.a: $(OBJECTS) $(DENSE)/indirect/private.o $(DENSE)/common.o
-	$(ARCHIVE) $(DENSE)/libscsindir.a $^
-	- $(RANLIB) $(DENSE)/libscsindir.a
-
-$(DENSE_OUT)/demo_SOCP_direct: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsdir.a
-	mkdir -p $(DENSE_OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-$(DENSE_OUT)/demo_SOCP_indirect: $(DENSE)/randomSOCPProb.c $(DENSE)/libscsindir.a
-	mkdir -p $(DENSE_OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o $(DENSE_TARGETS)
+	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea

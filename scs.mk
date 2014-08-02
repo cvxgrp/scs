@@ -13,7 +13,6 @@ CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct
-DIRSRCEXT = $(DIRSRC)/external
 INDIRSRC = $(LINSYS)/indirect
 
 OUT = out
