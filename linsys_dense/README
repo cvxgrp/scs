@@ -1,5 +1,0 @@
-Dense linear system version of SCS
-To compile libs + SOCP example: 
-    edit scs.mk so that USE_LAPACK = 1
-    make sure correct blas/lapack libs are pointed to
-    command line type: make dense

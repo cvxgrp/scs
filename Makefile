@@ -71,9 +71,6 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-## To compile dense versions: make dense
-## Need to connect to blas lib (set USE_LAPACK = 1 in scs.mk)
-
 DENSE=linsys_dense
 DENSE_OUT=$(DENSE)/out
 DENSE_TARGETS=$(DENSE)/direct/private.o $(DENSE)/indirect/private.o $(DENSE)/common.o $(DENSE)/libscsdir.a $(DENSE)/libscsindir.a $(DENSE_OUT)/demo_SOCP_direct $(DENSE_OUT)/demo_SOCP_indirect

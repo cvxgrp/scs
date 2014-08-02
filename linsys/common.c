@@ -1,191 +1,106 @@
 #include "common.h"
-/* contains routines common to direct and indirect sparse solvers */
-
-#define MIN_SCALE 1e-3
-#define MAX_SCALE 1e3
-#define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
 idxint validateLinSys(Data *d) {
-	AMatrix * A = d->A;
-	idxint i, rMax, Anz;
-	if (!A->x || !A->i || !A->p) {
-		scs_printf("data incompletely specified\n");
-		return -1;
-	}
-	/* detects degenerate problems, typically this check is not wanted:
-	 for (i = 0; i < d->n; ++i) {
-	 if (A->p[i] >= A->p[i + 1]) {
-	 scs_printf("A->p not strictly increasing\n");
-	 return -1;
-	 }
-	 }
-	 */
-	Anz = A->p[d->n];
-	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
-		scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
-		return -1;
-	}
-	rMax = 0;
-	for (i = 0; i < Anz; ++i) {
-		if (A->i[i] > rMax)
-			rMax = A->i[i];
-	}
-	if (rMax > d->m - 1) {
-		scs_printf("number of rows in A inconsistent with input dimension\n");
-		return -1;
-	}
-	return 0;
-}
-
-void printAMatrix(Data * d) {
-	idxint i, j;
-	AMatrix * A = d->A;
-	/* TODO: this is to prevent clogging stdout */
-	if (A->p[d->n] < 2500) {
-		scs_printf("\n");
-		for (i = 0; i < d->n; ++i) {
-			scs_printf("Col %li: ", (long) i);
-			for (j = A->p[i]; j < A->p[i + 1]; j++) {
-				scs_printf("A[%li,%li] = %4f, ", (long) A->i[j], (long) i, A->x[j]);
-			}
-			scs_printf("norm col = %4f\n", calcNorm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
-		}
-		scs_printf("norm A = %4f\n", calcNorm(A->x, A->p[d->n]));
-	}
+	return (d->A && d->A->x);
 }
 
 void normalizeA(Data * d, Work * w, Cone * k) {
-	AMatrix * A = d->A;
-	pfloat * D = scs_malloc(d->m * sizeof(pfloat));
-	pfloat * E = scs_malloc(d->n * sizeof(pfloat));
-	pfloat * Dt = scs_malloc(d->m * sizeof(pfloat));
-	pfloat * Et = scs_malloc(d->n * sizeof(pfloat));
-	pfloat * nms = scs_calloc(d->m, sizeof(pfloat));
-	pfloat minRowScale = MIN_SCALE * SQRTF((pfloat) d->n), maxRowScale = MAX_SCALE * SQRTF((pfloat) d->n);
-	pfloat minColScale = MIN_SCALE * SQRTF((pfloat) d->m), maxColScale = MAX_SCALE * SQRTF((pfloat) d->m);
-	idxint i, j, l, count, delta, *boundaries, c1, c2;
-	pfloat wrk, e;
-	idxint numBoundaries = getConeBoundaries(k, &boundaries);
+	idxint i, j, count, delta;
+	pfloat wrk;
+    pfloat * D = scs_calloc(d->m, sizeof(pfloat));
+    pfloat * E = scs_calloc(d->n, sizeof(pfloat));
+    pfloat minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
+    pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
+    idxint *boundaries, numBoundaries = getConeBoundaries(k, &boundaries);
+    blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
 
-#ifdef EXTRAVERBOSE
-	timer normalizeTimer;
-	tic(&normalizeTimer);
-	scs_printf("normalizing A\n");
-	printAMatrix(d);
-#endif
+	/* calculate row norms */
+	for (i = 0; i < d->m; ++i) {
+		D[i] = BLAS(nrm2)(&n, &(d->A->x[i]), &m);
+	}
 
-	for (l = 0; l < NUM_SCALE_PASSES; ++l) {
-		memset(D, 0, d->m * sizeof(pfloat));
-		memset(E, 0, d->n * sizeof(pfloat));
-		/* calculate row norms */
-		for (i = 0; i < d->n; ++i) {
-			c1 = A->p[i];
-			c2 = A->p[i + 1];
-			for (j = c1; j < c2; ++j) {
-				wrk = A->x[j];
-				D[A->i[j]] += wrk * wrk;
-			}
+	/* mean of norms of rows across each cone  */
+	count = boundaries[0];
+	for (i = 1; i < numBoundaries; ++i) {
+		wrk = 0;
+		delta = boundaries[i];
+		for (j = count; j < count + delta; ++j) {
+			wrk += D[j];
 		}
-		for (i = 0; i < d->m; ++i) {
-			D[i] = SQRTF(D[i]); /* just the norms */
+		wrk /= delta;
+		for (j = count; j < count + delta; ++j) {
+			D[j] = wrk;
 		}
-
-		/* mean of norms of rows across each cone  */
-		count = boundaries[0];
-		for (i = 1; i < numBoundaries; ++i) {
-			wrk = 0;
-			delta = boundaries[i];
-			for (j = count; j < count + delta; ++j) {
-				wrk += D[j];
-			}
-			wrk /= delta;
-			for (j = count; j < count + delta; ++j) {
-				D[j] = wrk;
-			}
-			count += delta;
-		}
-
-		for (i = 0; i < d->m; ++i) {
-			if (D[i] < minRowScale)
-				D[i] = 1;
-			else if (D[i] > maxRowScale)
-				D[i] = maxRowScale;
-		}
-
-		/* scale the rows with D */
-		for (i = 0; i < d->n; ++i) {
-			for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-				A->x[j] /= D[A->i[j]];
-			}
-		}
-		/* calculate and scale by col norms, E */
-		for (i = 0; i < d->n; ++i) {
-			c1 = A->p[i + 1] - A->p[i];
-			e = calcNorm(&(A->x[A->p[i]]), c1);
-			if (e < minColScale)
-				e = 1;
-			else if (e > maxColScale)
-				e = maxColScale;
-			scaleArray(&(A->x[A->p[i]]), 1.0 / e, c1);
-			E[i] = e;
-		}
-
-		for (i = 0; i < d->m; ++i) {
-			Dt[i] = (l == 0) ? D[i] : Dt[i] * D[i];
-		}
-		for (i = 0; i < d->n; ++i) {
-			Et[i] = (l == 0) ? E[i] : Et[i] * E[i];
-		}
+		count += delta;
 	}
 	scs_free(boundaries);
-	scs_free(D);
-	scs_free(E);
 
-	/* calculate mean of row norms of A */
-	for (i = 0; i < d->n; ++i) {
-		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-			wrk = A->x[j];
-			nms[A->i[j]] += wrk * wrk;
-		}
+    for (i = 0; i < d->m; ++i) {
+        if (D[i] < minRowScale)
+            D[i] = 1;
+        else if (D[i] > maxRowScale)
+            D[i] = maxRowScale;
+    }
+
+    /* scale the rows with D */
+	for (i = 0; i < d->m; ++i) {
+		wrk = 1.0 / D[i];
+		BLAS(scal)(&n, &wrk, &(d->A->x[i]), &m);
 	}
+
+	/* calculate and scale by col norms, E */
+	for (i = 0; i < d->n; ++i) {
+        E[i] = BLAS(nrm2)(&m, &(d->A->x[i * d->m]), &one);
+        if (E[i] < minColScale)
+            E[i] = 1;
+        else if (E[i] > maxColScale)
+            E[i] = maxColScale;
+        wrk = 1.0 / E[i];
+        BLAS(scal)(&m, &wrk, &(d->A->x[i * d->m]), &one);
+    }
+
 	w->meanNormRowA = 0.0;
 	for (i = 0; i < d->m; ++i) {
-		w->meanNormRowA += SQRTF(nms[i]) / d->m;
+		w->meanNormRowA += BLAS(nrm2)(&n, &(d->A->x[i]), &m) / d->m;
 	}
-	scs_free(nms);
 
-	/* calculate mean of col norms of A */
-	w->meanNormColA = 0.0;
+    w->meanNormColA = 0.0;
 	for (i = 0; i < d->n; ++i) {
-		c1 = A->p[i + 1] - A->p[i];
-		w->meanNormColA += calcNorm(&(A->x[A->p[i]]), c1) / d->n;
+		w->meanNormColA += BLAS(nrm2)(&m, &(d->A->x[i * d->m]), &one) / d->n;
 	}
 
-	/* scale up by d->SCALE if not equal to 1 */
 	if (d->SCALE != 1) {
-		scaleArray(A->x, d->SCALE, A->p[d->n]);
+		BLAS(scal)(&nm, &d->SCALE, d->A->x, &one);
 	}
 
-	w->D = Dt;
-	w->E = Et;
-
-#ifdef EXTRAVERBOSE
-	scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
-	printAMatrix(d);
-#endif
+	w->D = D;
+	w->E = E;
 }
 
 void unNormalizeA(Data *d, Work * w) {
-	idxint i, j;
+	idxint i;
 	pfloat * D = w->D;
 	pfloat * E = w->E;
-	AMatrix * A = d->A;
+	pfloat invScale = 1.0 / d->SCALE;
+	blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
 	for (i = 0; i < d->n; ++i) {
-		scaleArray(&(A->x[A->p[i]]), E[i] / d->SCALE, A->p[i + 1] - A->p[i]);
+		BLAS(scal)(&m, &(E[i]), &(d->A->x[i * d->m]), &one);
 	}
-	for (i = 0; i < d->n; ++i) {
-		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-			A->x[j] *= D[A->i[j]];
-		}
+	for (i = 0; i < d->m; ++i) {
+		BLAS(scal)(&n, &(D[i]), &(d->A->x[i]), &m);
 	}
+	BLAS(scal)(&nm, &invScale, d->A->x, &one);
+}
+
+void accumByAtrans(Data * d, Priv * p, const pfloat * x, pfloat * y) {
+	pfloat * A = d->A->x;
+	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
+	pfloat onef = 1.0;
+	BLAS(gemv)("Transpose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
+}
+void accumByA(Data * d, Priv * p, const pfloat * x, pfloat * y) {
+	pfloat * A = d->A->x;
+	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
+	pfloat onef = 1.0;
+	BLAS(gemv)("NoTranspose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
 }

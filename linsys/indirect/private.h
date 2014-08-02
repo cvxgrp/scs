@@ -3,22 +3,16 @@
 
 #include "glbopts.h"
 #include "scs.h"
-#include "cs.h"
-#include <math.h>
-#include "linsys/common.h"
-#include "linAlg.h"
+#include "../common.h"
 
-struct PRIVATE_DATA {
-	pfloat * p; /* cg iterate  */
-	pfloat * r; /* cg residual */
+struct PRIVATE_DATA{
+	pfloat * p;
+	pfloat * r;
 	pfloat * Gp;
-	pfloat * tmp;
-	pfloat * Atx;
-	idxint * Ati;
-	idxint * Atp;
-	/* preconditioning */
+	pfloat * M; /* pre-conditioner */
 	pfloat * z;
-	pfloat * M;
+  /* Gram matrix */
+	pfloat * G;
 };
 
 #endif

@@ -1,5 +1,5 @@
 #include "scs.h"
-#include "linsys/amatrix.h"
+#include "amatrix.h"
 #include "problemUtils.h"
 #include <time.h> /* to seed random */
 
@@ -9,8 +9,8 @@
  minimize 	    c'*x
  subject to 	Ax <=_K b
 
- where K is a product of zero, linear, and second-order cones. A is a sparse matrix in
- CSC format. A is 3n by n with about sqrt(n) nonzeros per column.
+ where K is a product of zero, linear, and second-order cones.
+ A is a dense matrix in column major order
 
  Construct data in such a way that the problem is primal and dual
  feasible and thus bounded.
@@ -29,10 +29,10 @@ void setScsParams(Data * d) {
 }
 
 int main(int argc, char **argv) {
-	idxint n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
+	idxint n, m, i, q_total, q_num_rows, max_q;
 	Cone * k;
 	Data * d;
-	Sol * sol, * opt_sol;
+	Sol * sol, *opt_sol;
 	Info info = { 0 };
 	pfloat p_f, p_l;
 	int seed = 0;
@@ -77,8 +77,6 @@ int main(int argc, char **argv) {
 	opt_sol = scs_calloc(1, sizeof(Sol));
 
 	m = 3 * n;
-	col_nnz = (int) ceil(sqrt(n));
-	nnz = n * col_nnz;
 
 	max_q = (idxint) ceil(3 * n / log(3 * n));
 
@@ -116,11 +114,8 @@ int main(int argc, char **argv) {
 	k->ep = 0;
 	k->ed = 0;
 
-	scs_printf("\nA is %ld by %ld, with %ld nonzeros per column.\n", (long) m, (long) n, (long) col_nnz);
-	scs_printf("A has %ld nonzeros (%f%% dense).\n", (long) nnz, 100 * (pfloat) col_nnz / m);
-	scs_printf("Nonzeros of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(pfloat)) / POWF(2, 30));
-	scs_printf("Row idxs of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(idxint)) / POWF(2, 30));
-	scs_printf("Col ptrs of A take %f GB of storage.\n\n", ((pfloat) n * sizeof(idxint)) / POWF(2, 30));
+	scs_printf("\nA is %ld by %ld.\n", (long) m, (long) n);
+	scs_printf("Data matrix A takes %f GB of storage.\n", ((pfloat) n * m * sizeof(pfloat)) / POWF(2, 30));
 
 	printf("Cone information:\n");
 	printf("Zero cone rows: %ld\n", (long) k->f);
@@ -135,20 +130,18 @@ int main(int argc, char **argv) {
 	/* set up SCS structures */
 	d->m = m;
 	d->n = n;
-	genRandomProbData(nnz, col_nnz, d, k, opt_sol);
+	genRandomProbData(d, k, opt_sol);
 	setScsParams(d);
-
-	scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
-	scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));
-    /* solve! */
+	/* solve! */
 	scs(d, k, sol, &info);
+
 	scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
 	scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));
 
-    freeData(d, k);
+	freeData(d, k);
 	freeSol(sol);
-    freeSol(opt_sol);
+	freeSol(opt_sol);
 
-    return 0;
+	return 0;
 }
 
