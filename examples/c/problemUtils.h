@@ -84,7 +84,9 @@ void freeSol(Sol *sol) {
 			scs_free(sol->s);
 			sol->s = NULL;
 		}
+        scs_free(sol);
 	}
+    sol = NULL;
 }
 
 void genRandomProbData(Data * d, Cone * k, Sol * opt_sol) {
