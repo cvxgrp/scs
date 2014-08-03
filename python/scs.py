@@ -2,8 +2,8 @@
 import _scs_direct
 import _scs_indirect
 from warnings import warn
+from numpy import transpose 
 from scipy import sparse
-
 
 def solve(probdata, cone, opts={}, USE_INDIRECT=False):
     """
@@ -34,22 +34,20 @@ def solve(probdata, cone, opts={}, USE_INDIRECT=False):
 
     if A is None or b is None or c is None:
         raise TypeError("Incomplete data specification")
-    if not sparse.issparse(A):
-        raise TypeError("A is required to be a sparse matrix")
-    if not sparse.isspmatrix_csc(A):
-        warn("Converting A to a CSC (compressed sparse column) matrix; may take a while.")
-        A = A.tocsc()
+    if sparse.issparse(A):
+        warn("Converting A to a dense matrix")
+        A = A.todense()
 
     if sparse.issparse(b):
-        b = b.toDense()
+        b = b.todense()
 
     if sparse.issparse(c):
-        c = c.toDense()
+        c = c.todense()
 
     m, n = A.shape
 
-    Adata, Aindices, Acolptr = A.data, A.indices, A.indptr
+    # A is stored in ROW MAJOR order, so we need to transpose:
     if USE_INDIRECT:
-        return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts, warm)
+        return _scs_indirect.csolve((m, n), A.T, b, c, cone, opts, warm)
     else:
-        return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, opts, warm)
+        return _scs_direct.csolve((m, n), A.T, b, c, cone, opts, warm)

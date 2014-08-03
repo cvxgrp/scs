@@ -15,24 +15,24 @@ def main():
     
 def solveFeasible():
     # cone:
-    K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10}
+    K = {'f':10, 'l':15, 'q':[5 ,1], 's':[2, 1, 0, 3], 'ep':5, 'ed':5}
     m = getConeDims(K) 
-    data, p_star = genFeasible(K, n = m/3, density = 0.01)
-    params = {'EPS':1e-3, 'NORMALIZE':1, 'SCALE':5, 'CG_RATE':2}
+    data, p_star = genFeasible(K, n = m/3, density = 1.00)
+    params = {'EPS':1e-3, 'NORMALIZE':1, 'SCALE':5, 'CG_RATE':2, 'MAX_ITERS': 2500}
     
     sol_i = scs.solve(data, K, params, USE_INDIRECT=True)
     xi = sol_i['x']
     yi = sol_i['y']
     print('p*  = ', p_star)
     print('pri % error = ', (dot(data['c'], xi) - p_star) / p_star)
-    print('dual % error = ', (dot(data['b'], yi) - p_star) / p_star)
+    print('dual % error = ', (-dot(data['b'], yi) - p_star) / p_star)
     # direct:
     sol_d = scs.solve(data, K, params)
     xd = sol_d['x']
     yd = sol_d['y']
     print('p*  = ', p_star)
     print('pri % error = ', (dot(data['c'], xd) - p_star) / p_star)
-    print('dual % error = ', (dot(data['b'], yd) - p_star) / p_star)
+    print('dual % error = ', (-dot(data['b'], yd) - p_star) / p_star)
     
 def solveInfeasible():
     K = {'f':10, 'l':15, 'q':[5, 10], 's':[3, 4], 'ep':10, 'ed':10}

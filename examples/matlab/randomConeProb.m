@@ -18,7 +18,6 @@ cvx_solver = 'sdpt3';
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
 K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100;0;1],'s',[0,1,2,3,4,5],'ep',5,'ed',5)
-density = 0.01; % A matrix density
 
 m = getConeDims(K);
 n = round(m/3);
@@ -33,7 +32,7 @@ if (gen_feasible)
     s = y - z; %s = proj_cone(z,K);
     
     
-    A = sprandn(m,n,density);
+    A = randn(m,n);
     x = randn(n,1);
     c = -A'*y;
     b = A*x + s;
@@ -77,7 +76,7 @@ if (gen_infeasible)
     b = randn(m,1);
     b = -b / (b'*y);
     
-    data.A = sparse(A);
+    data.A = A;
     data.b = b;
     data.c = randn(n,1);
     
@@ -103,7 +102,7 @@ if(gen_unbounded)
     c = randn(n,1);
     c = - c / (c'*x);
     
-    data.A = sparse(A);
+    data.A = A;
     data.b = randn(m,1);
     data.c = c;
     

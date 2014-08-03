@@ -31,7 +31,7 @@ clear data cones
 disp('Example run:');
 m = 9;
 n = 3;
-data.A = sparse(randn(m,n));
+data.A = randn(m,n);
 data.b = randn(m,1);
 data.c = randn(n,1);
 cones.l = m;

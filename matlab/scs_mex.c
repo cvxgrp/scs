@@ -71,10 +71,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		scs_free(k);
 		mexErrMsgTxt("Data struct must contain a `A` entry.");
 	}
-	if (!mxIsSparse(A_mex)) {
+	if (mxIsSparse(A_mex)) {
 		scs_free(d);
 		scs_free(k);
-		mexErrMsgTxt("Input matrix A must be in sparse format (pass in sparse(A))");
+		mexErrMsgTxt("Input matrix A must be in dense format (pass in full(A))");
 	}
 	b_mex = (mxArray *) mxGetField(data, 0, "b");
 	if (b_mex == NULL) {

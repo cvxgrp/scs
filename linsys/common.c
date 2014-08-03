@@ -4,6 +4,24 @@ idxint validateLinSys(Data *d) {
 	return (d->A && d->A->x);
 }
 
+void printAMatrix(Data * d) {
+    idxint i, j;
+    AMatrix * A = d->A;
+    /* TODO: this is to prevent clogging stdout */
+    if (d->n * d->m < 2500) {
+        scs_printf("\n");
+        for (i = 0; i < d->n; ++i) {
+            scs_printf("Col %li: ", (long) i);
+            for (j = 0; j < d->m; ++j) {
+                scs_printf("A[%li,%li] = %4f, ", (long) j, (long) i, A->x[i * d->m + j]);
+            }
+            scs_printf("norm col = %4f\n", calcNorm(&(A->x[i * d->m]), d->m));
+        }
+        scs_printf("norm A = %4f\n", calcNorm(A->x, d->n * d->m));
+    }
+
+}
+
 void normalizeA(Data * d, Work * w, Cone * k) {
 	idxint i, j, count, delta;
 	pfloat wrk;
@@ -13,6 +31,13 @@ void normalizeA(Data * d, Work * w, Cone * k) {
     pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
     idxint *boundaries, numBoundaries = getConeBoundaries(k, &boundaries);
     blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
+
+#ifdef EXTRAVERBOSE
+    timer normalizeTimer;
+    tic(&normalizeTimer);
+    scs_printf("normalizing A\n");
+    printAMatrix(d);
+#endif
 
 	/* calculate row norms */
 	for (i = 0; i < d->m; ++i) {
@@ -75,6 +100,12 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 
 	w->D = D;
 	w->E = E;
+
+#ifdef EXTRAVERBOSE
+    scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
+    printAMatrix(d);
+#endif
+
 }
 
 void unNormalizeA(Data *d, Work * w) {

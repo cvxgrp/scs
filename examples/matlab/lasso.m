@@ -6,7 +6,7 @@ disp('It may also crash/run out of memory.')
 disp('Set run_sdpt3 = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
-run ../../matlab/cvx_install_scs.m
+%run ../../matlab/cvx_install_scs.m
 
 save_results = false;
 run_sdpt3 = false;

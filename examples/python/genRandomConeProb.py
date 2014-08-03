@@ -19,7 +19,6 @@ def genFeasible(K, n, density):
     x = randn(n)
     c = -transpose(A).dot(y)
     b = A.dot(x) + s
-    
     data = {'A': A, 'b': b, 'c': c}
     return data, dot(c, x)
 

@@ -30,8 +30,6 @@ static int pfloatType;
 
 struct ScsPyData {
 	PyArrayObject * Ax;
-	PyArrayObject * Ai;
-	PyArrayObject * Ap;
 	PyArrayObject * b;
 	PyArrayObject * c;
 	PyArrayObject * x0;
@@ -187,12 +185,6 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
 	if (ps->Ax) {
 		Py_DECREF(ps->Ax);
 	}
-	if (ps->Ai) {
-		Py_DECREF(ps->Ai);
-	}
-	if (ps->Ap) {
-		Py_DECREF(ps->Ap);
-	}
 	if (ps->b) {
 		Py_DECREF(ps->b);
 	}
@@ -230,7 +222,7 @@ static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char 
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* Expects a function call
-	 *     sol = csolve((m,n),Ax,Ai,Ap,b,c,cone,opts)
+	 *     sol = csolve((m,n),Ax,b,c,cone,opts)
 	 * where
 	 *
 	 * the pair (m,n) corresponds to:
@@ -238,10 +230,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	 *    `n`: the cols of A, must agree with the length of c
 	 * `c` is a Numpy array of doubles
 	 * "A" is a sparse matrix in column compressed storage. "Ax" are the values,
-	 * "Ai" are the rows, and "Ap" are the column pointers.
 	 * `Ax` is a Numpy array of doubles
-	 * `Ai` is a Numpy array of ints
-	 * `Ap` is a Numpy array of ints
 	 * `b` is a Numpy array of doubles
 	 * `cone` is a dictionary with
 	 *    `cone['l']` an integer specifying the dimension of positive orthant cone
@@ -263,16 +252,16 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	 */
 
 	/* data structures for arguments */
-	PyArrayObject *Ax, *Ai, *Ap, *c, *b;
+	PyArrayObject *Ax, *c, *b;
 	PyObject *cone, *opts, *warm = NULL;
-	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL };
 	/* scs data structures */
 	Data * d = scs_calloc(sizeof(Data), 1);
 	Cone * k = scs_calloc(sizeof(Cone), 1);
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
-	static char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", "warm", NULL };
+	static char *kwlist[] = { "shape", "Ax", "b", "c", "cone", "opts", "warm", NULL };
 	/* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
 	static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!";
@@ -283,7 +272,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyObject *x, *y, *s, *returnDict, *infoDict;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, &(d->m), &(d->n), &PyArray_Type, &Ax,
-			&PyArray_Type, &Ai, &PyArray_Type, &Ap, &PyArray_Type, &b, &PyArray_Type, &c, &PyDict_Type, &cone,
+			&PyArray_Type, &b, &PyArray_Type, &c, &PyDict_Type, &cone,
 			&PyDict_Type, &opts, &PyDict_Type, &warm)) {
 		return NULL;
 	}
@@ -303,23 +292,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	pfloatType = getDoubleType();
 
 	/* set A */
-	if (!PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
-		return finishWithErr(d, k, &ps, "Ax must be a numpy array of floats");
-	}
-	if (!PyArray_ISINTEGER(Ai) || PyArray_NDIM(Ai) != 1) {
-		return finishWithErr(d, k, &ps, "Ai must be a numpy array of ints");
-	}
-	if (!PyArray_ISINTEGER(Ap) || PyArray_NDIM(Ap) != 1) {
-		return finishWithErr(d, k, &ps, "Ap must be a numpy array of ints");
+	if (!PyArray_ISFLOAT(Ax) || PyArray_DIM(Ax,1) != d->m || PyArray_DIM(Ax,0) != d->n ) {
+		return finishWithErr(d, k, &ps, "Ax must be a numpy array of floats of dim m times n (is this a row-major vs col-major order issue?)");
 	}
 	ps.Ax = getContiguous(Ax, pfloatType);
-	ps.Ai = getContiguous(Ai, intType);
-	ps.Ap = getContiguous(Ap, intType);
-
     A = scs_malloc(sizeof(AMatrix));
 	A->x = (pfloat *) PyArray_DATA(ps.Ax);
-	A->i = (idxint *) PyArray_DATA(ps.Ai);
-	A->p = (idxint *) PyArray_DATA(ps.Ap);
 	d->A = A;
 	/*d->Anz = d->Ap[d->n]; */
 	/*d->Anz = PyArray_DIM(Ai,0); */

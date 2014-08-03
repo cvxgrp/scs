@@ -15,7 +15,7 @@ def install_scs(USE_LAPACK, USE_64_BIT_BLAS, BLAS_STR, LAPACK_STR, USE_OPENMP, r
     sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
     include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
     
-    define_macros = [('PYTHON', None), ('DLONG', None)]
+    define_macros = [('PYTHON', None), ('DLONG', None)] 
     extra_compile_args = ["-O3"]
     library_dirs = []
     extra_link_args = []
@@ -40,9 +40,9 @@ def install_scs(USE_LAPACK, USE_64_BIT_BLAS, BLAS_STR, LAPACK_STR, USE_OPENMP, r
     
     _scs_direct = Extension(
                         name='_scs_direct',
-                        sources=sources + glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c'),
+                        sources=sources + glob(rootDir + 'linsys/direct/*.c'),
                         define_macros=define_macros,
-                        include_dirs=include_dirs + [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/'],
+                        include_dirs=include_dirs + [rootDir + 'linsys/direct/'],
                         library_dirs=library_dirs,
                         libraries=libraries,
                         extra_link_args=extra_link_args,

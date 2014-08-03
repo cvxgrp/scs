@@ -14,6 +14,7 @@ copyfile(strcat('scs_indirect.',mexext),scs_install_path);
 copyfile('scs.m', scs_install_path);
 cvx_setup
 
+%{
 n = 10;m = 20;
 A = randn(m,n);
 b = randn(m,1);
@@ -24,3 +25,4 @@ cvx_solver 'scs'
 variable x(n)
 minimize(norm(A*x - b))
 cvx_end
+%}
