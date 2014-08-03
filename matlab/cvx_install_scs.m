@@ -10,7 +10,7 @@ mkdir(scs_install_path);
 copyfile(strcat('scs_direct.',mexext),scs_install_path);
 copyfile(strcat('scs_indirect.',mexext),scs_install_path);
 
-copyfile('cvx_scs.m', strcat(fs,filesep,'shims',filesep,'cvx_scs.m'));
+%copyfile('cvx_scs.m', strcat(fs,filesep,'shims',filesep,'cvx_scs.m'));
 copyfile('scs.m', scs_install_path);
 cvx_setup
 
