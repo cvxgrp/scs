@@ -234,7 +234,7 @@ if( ~isreal(At) || ~isreal(c) || ~isreal(b) )
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-data.A = sparse(At);
+data.A = full(At);
 data.b = full(c);
 data.c = -full(b);
 %{

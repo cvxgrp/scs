@@ -2,8 +2,8 @@
 #define PUTILS_H_GUARD
 
 #include "scs.h"
-#include "amatrix.h"
-#include "common.h"
+#include "linsys/amatrix.h"
+#include "linsys/common.h"
 
 #define PI 3.141592654
 #ifdef DLONG

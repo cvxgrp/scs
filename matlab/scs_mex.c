@@ -218,13 +218,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	}
 	A = scs_malloc(sizeof(AMatrix));
 	A->x = (pfloat *) mxGetPr(A_mex);
-	/* XXX:
-	 * these return (mwIndex *), equivalent to (size_t *)
-	 * casting as (idxint *), when idxint = long seems to work
-	 * although maybe not on all machines:
-	 */
-	A->p = (idxint *) mxGetJc(A_mex);
-	A->i = (idxint *) mxGetIr(A_mex);
 	d->A = A;
 	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
 	d->WARM_START = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);

@@ -67,7 +67,7 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 	/* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
 #define LEN64 64 /* variable-size arrays not allowed in ansi */
 	char s[LEN64], *token;
-	idxint i, Anz;
+	idxint i;
 	AMatrix * A;
 	d->RHO_X = RHOX;
 	d->WARM_START = 0;
@@ -130,19 +130,8 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 			return -1;
 	}
 	A = malloc(sizeof(AMatrix));
-	A->p = malloc(sizeof(idxint) * (d->n + 1));
-	for (i = 0; i < d->n + 1; i++) {
-		if (fscanf(fp, INTRW, &A->p[i]) != 1)
-			return -1;
-	}
-	Anz = A->p[d->n];
-	A->i = malloc(sizeof(idxint) * Anz);
-	for (i = 0; i < Anz; i++) {
-		if (fscanf(fp, INTRW, &A->i[i]) != 1)
-			return -1;
-	}
-	A->x = malloc(sizeof(pfloat) * Anz);
-	for (i = 0; i < Anz; i++) {
+	A->x = malloc(sizeof(pfloat) * d->n * d->m);
+	for (i = 0; i < d->n * d->m; i++) {
 		if (fscanf(fp, FLOATRW, &A->x[i]) != 1)
 			return -1;
 	}

@@ -1,5 +1,5 @@
 #include "scs.h"
-#include "amatrix.h"
+#include "linsys/amatrix.h"
 #include "problemUtils.h"
 #include <time.h> /* to seed random */
 
