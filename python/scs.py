@@ -41,10 +41,10 @@ def solve(probdata, cone, opts={}, USE_INDIRECT=False):
         A = A.tocsc()
 
     if sparse.issparse(b):
-        b = b.toDense()
+        b = b.todense()
 
     if sparse.issparse(c):
-        c = c.toDense()
+        c = c.todense()
 
     m, n = A.shape
 
