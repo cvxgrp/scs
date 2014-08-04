@@ -4,12 +4,14 @@ CC = gcc
 ifeq ($(UNAME), Linux)
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS = -lm -lrt
+SHARED = so
 else
 # we're on apple, no need to link rt library
-LDFLAGS = -lm 
+LDFLAGS = -lm
+SHARED = dylib
 endif
 
-CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
+CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -fPIC -I. -Iinclude #-Wextra
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct

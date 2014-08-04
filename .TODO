@@ -1,7 +1,6 @@
 move dense to another branch
 cleanup, refactor and comment code
 add static, inline to methods
-compile dynamic libs - fPIC
 work on conda recipe
 multiple passes normalization
 adaptive b,c rescaling
