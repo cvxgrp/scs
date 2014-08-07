@@ -45,9 +45,10 @@ Priv * initPriv(Data * d) {
 	p->Gp = scs_malloc(d->n * sizeof(pfloat));
 	p->M = scs_malloc(d->n * sizeof(pfloat));
 	/* form Gram matrix (RHO_X * I+A'A) */
-	p->G = scs_malloc(d->n * d->n * sizeof(pfloat));
-	BLAS(gemm)("Transpose", "NoTranspose", &n, &n, &m, &onef, A, &m, A, &m, &zerof, p->G, &n);
-	for (j = 0; j < d->n; j++) {
+	p->G = scs_calloc(d->n * d->n, sizeof(pfloat));
+	/* BLAS(gemm)("Transpose", "NoTranspose", &n, &n, &m, &onef, A, &m, A, &m, &zerof, p->G, &n); */
+	BLAS(syrk)("Upper", "Transpose", &n, &m, &onef, A, &m, &zerof, p->G, &n);
+    for (j = 0; j < d->n; j++) {
 		p->G[j * d->n + j] += d->RHO_X;
 	}
 	getPreconditioner(d, p);

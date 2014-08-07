@@ -36,8 +36,11 @@ pfloat BLAS(nrm2)(blasint *n, pfloat *x, blasint *incx);
 void BLAS(gemv)(char *trans, blasint *m, blasint *n, pfloat * alpha, pfloat *a, blasint *lda, const pfloat *x, blasint *incx,
 		pfloat *beta, pfloat *y, blasint *incy);
 void BLAS(axpy)(blasint *n, pfloat *da, pfloat *dx, blasint *incx, pfloat *dy, blasint *incy_);
-void BLAS(gemm)(char *transa, char *transb, blasint *m, blasint * n, blasint *k, pfloat *alpha, pfloat *a, blasint *lda,
-		pfloat *b, blasint *ldb, pfloat *beta, pfloat *c, blasint *ldc);
+void BLAS(syrk)(char *uplo, char *trans, blasint *n, blasint *k, pfloat *alpha, pfloat *a, blasint *lda, pfloat *beta, 
+        pfloat *c, blasint *ldc);
+
+/* void BLAS(gemm)(char *transa, char *transb, blasint *m, blasint * n, blasint *k, pfloat *alpha, pfloat *a, blasint *lda,
+        pfloat *b, blasint *ldb, pfloat *beta, pfloat *c, blasint *ldc); */
 
 idxint validateLinSys(Data *d);
 void normalizeA(Data * d, Work * w, Cone * k);

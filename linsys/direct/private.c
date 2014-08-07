@@ -21,14 +21,14 @@ char * getLinSysSummary(Priv * p, Info * info) {
 
 Priv * initPriv(Data * d) {
 	blasint n = (blasint) d->n, m = (blasint) d->m, info;
-	pfloat zero = 0.0, onef = 1.0;
+	pfloat zerof = 0.0, onef = 1.0;
 	idxint k, j;
 	pfloat * A = d->A->x;
 	Priv * p = scs_malloc(sizeof(Priv));
 	p->L = scs_calloc(n * n, sizeof(pfloat));
 
-	BLAS(gemm)("Transpose", "NoTranspose", &n, &n, &m, &onef, A, &m, A, &m, &zero, p->L, &n);
-
+	/* BLAS(gemm)("Transpose", "NoTranspose", &n, &n, &m, &onef, A, &m, A, &m, &zerof, p->L, &n); */
+    BLAS(syrk)("Lower", "Transpose", &n, &m, &onef, A, &m, &zerof, p->L, &n);
 	for (j = 0; j < n; j++) {
 		p->L[j * n + j] += d->RHO_X;
 	}
