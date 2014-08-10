@@ -23,7 +23,8 @@
 #ifdef MATLAB_MEX_FILE
 typedef ptrdiff_t blasint;
 #elif defined BLAS64
-typedef long blasint;
+#include <stdint.h>
+typedef int64_t blasint;
 #else
 typedef int blasint;
 #endif
