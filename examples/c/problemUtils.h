@@ -6,7 +6,12 @@
 
 #define PI 3.141592654
 #ifdef DLONG
+#ifdef _WIN64
+/* this is a Microsoft extension, but also works with MinGW-w64 */
+#define INTRW "%I64d"
+#else
 #define INTRW "%ld"
+#endif
 #else
 #define INTRW "%i"
 #endif
@@ -131,7 +136,7 @@ void genRandomProbData(idxint nnz, idxint col_nnz, Data * d, Cone * k, Sol * opt
 	scs_printf("Generating random matrix:\n");
 	for (j = 0; j < n; j++) { /* column */
 		if (j * 100 % n == 0 && (j * 100 / n) % 10 == 0) {
-			scs_printf("%ld%%\n", (long) j * 100 / n);
+			scs_printf("%ld%%\n", (long) (j * 100 / n));
 		}
 		for (r = 0; r < col_nnz; r++) { /* row index */
 			i = rand() % m; /* row */
