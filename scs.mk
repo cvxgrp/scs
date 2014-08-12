@@ -71,5 +71,5 @@ ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   LDFLAGS += -lblas -llapack #-lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
-  # CFLAGS += -DBLAS64 # if blas/lapack lib uses long rather than int
+  # CFLAGS += -DBLAS64 # if blas/lapack lib uses 64 bit ints
 endif
