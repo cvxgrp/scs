@@ -344,7 +344,7 @@ if (k->ssize && k->s) {
             &eigTol, &m, c.e, c.Z, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
 
         if (info != 0) {
-            scs_printf("FATAL: syevr failure, info = %i\n", info);
+            scs_printf("FATAL: syevr failure, info = %i\n", (int) info);
             return -1;
         }
         c.lwork = (blasint) (wkopt + 0.01); /* 0.01 for int casting safety */
