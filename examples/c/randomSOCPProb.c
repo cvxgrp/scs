@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 		printf("%ld, ", (long) k->q[i]);
 	}
 	printf("]\n");
-	printf("Number of rows covered is %ld out of %ld.\n\n", (long) q_total + k->f + k->l, (long) m);
+	printf("Number of rows covered is %ld out of %ld.\n\n", (long) (q_total + k->f + k->l), (long) m);
 
 	/* set up SCS structures */
 	d->m = m;

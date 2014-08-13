@@ -7,7 +7,12 @@
 
 #define PI 3.141592654
 #ifdef DLONG
+#ifdef _WIN64
+/* this is a Microsoft extension, but also works with MinGW-w64 */
+#define INTRW "%I64d"
+#else
 #define INTRW "%ld"
+#endif
 #else
 #define INTRW "%i"
 #endif

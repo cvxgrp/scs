@@ -1,17 +1,34 @@
 UNAME = $(shell uname -s)
 CC = gcc
 
-ifeq ($(UNAME), Linux)
-# we're on a linux system, use accurate timer provided by clock_gettime()
-LDFLAGS = -lm -lrt
-SHARED = so
+ifneq (, $(findstring CYGWIN, $(UNAME)))
+ISWINDOWS := 1
+else ifneq (, $(findstring MINGW, $(UNAME)))
+ISWINDOWS := 1
+else ifneq (, $(findstring MSYS, $(UNAME)))
+ISWINDOWS := 1
 else
+ISWINDOWS := 0
+endif
+
+ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
 LDFLAGS = -lm
 SHARED = dylib
+else ifeq ($(ISWINDOWS), 1)
+# we're on windows (cygwin or msys)
+LDFLAGS = -lm
+SHARED = dll
+else
+# we're on a linux system, use accurate timer provided by clock_gettime()
+LDFLAGS = -lm -lrt
+SHARED = so
 endif
 
-CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -fPIC -I. -Iinclude #-Wextra
+CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude #-Wextra
+ifneq ($(ISWINDOWS), 1)
+CFLAGS += -fPIC
+endif
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct
@@ -53,5 +70,5 @@ ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   LDFLAGS += -lblas -llapack #-lgfortran
   CFLAGS += -DLAPACK_LIB_FOUND
-  # CFLAGS += -DBLAS64 # if blas/lapack lib uses long rather than int
+  # CFLAGS += -DBLAS64 # if blas/lapack lib uses 64 bit ints
 endif
