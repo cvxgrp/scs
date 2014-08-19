@@ -110,51 +110,51 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	/* params */
 	tmp = mxGetField(params, 0, "ALPHA");
 	if (tmp == NULL)
-		d->ALPHA = 1.8;
+		d->alpha = 1.8;
 	else
-		d->ALPHA = (pfloat) *mxGetPr(tmp);
+		d->alpha = (pfloat) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "RHO_X");
 	if (tmp == NULL)
-		d->RHO_X = 1e-3;
+		d->rhoX = 1e-3;
 	else
-		d->RHO_X = (pfloat) *mxGetPr(tmp);
+		d->rhoX = (pfloat) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "MAX_ITERS");
 	if (tmp == NULL)
-		d->MAX_ITERS = 2500;
+		d->maxIters = 2500;
 	else
-		d->MAX_ITERS = (idxint) *mxGetPr(tmp);
+		d->maxIters = (idxint) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "SCALE");
 	if (tmp == NULL)
-		d->SCALE = 5;
+		d->scale = 5;
 	else
-		d->SCALE = (pfloat) *mxGetPr(tmp);
+		d->scale = (pfloat) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "EPS");
 	if (tmp == NULL)
-		d->EPS = 1e-3;
+		d->eps = 1e-3;
 	else
-		d->EPS = (pfloat) *mxGetPr(tmp);
+		d->eps = (pfloat) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "CG_RATE");
 	if (tmp == NULL)
-		d->CG_RATE = 2;
+		d->cgRate = 2;
 	else
-		d->CG_RATE = (pfloat) *mxGetPr(tmp);
+		d->cgRate = (pfloat) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "VERBOSE");
 	if (tmp == NULL)
-		d->VERBOSE = 1;
+		d->verbose = 1;
 	else
-		d->VERBOSE = (idxint) *mxGetPr(tmp);
+		d->verbose = (idxint) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "NORMALIZE");
 	if (tmp == NULL)
-		d->NORMALIZE = 1;
+		d->normalize = 1;
 	else
-		d->NORMALIZE = (idxint) *mxGetPr(tmp);
+		d->normalize = (idxint) *mxGetPr(tmp);
 
 	/* cones */
 	kf = mxGetField(cone, 0, "f");
@@ -227,9 +227,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	A->i = (idxint *) mxGetIr(A_mex);
 	d->A = A;
 	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
-	d->WARM_START = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
-	d->WARM_START |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
-	d->WARM_START |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
+	d->warmStart = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
+	d->warmStart |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
+	d->warmStart |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
 
 	status = scs(d, k, &sol, &info);
 

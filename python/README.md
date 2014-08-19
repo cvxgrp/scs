@@ -1,16 +1,12 @@
-Quick install:
-
-To install the python scs extension, enter
-
-python setup.py install
-
-at the command line (you might need sudo privileges).
-
+SCS
 ====
 
-scs = `splitting cone solver`
+[![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
+[![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
 
-scs is a C package for solving large-scale convex cone problems,
+SCS = `splitting cone solver`
+
+SCS is a C package for solving large-scale convex cone problems,
 based on ["Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding"](http://www.stanford.edu/~boyd/papers/scs.html) by 
 Brendan O’Donoghue, Eric Chu, Neal Parikh, and Stephen Boyd
 
@@ -37,7 +33,7 @@ subject to      -A'*y == c
                 y in K^*
 ```   
 
-where `K` is a product cone of free cones, linear cones `{ x | x >= 0 }`, 
+where `K` is a product cone of zero cones, linear cones `{ x | x >= 0 }`, 
 second-order cones `{ (t,x) | ||x||_2 <= t }`, semi-definite cones `{ X | X psd }`,
 and exponential cones `{(x,y,z) | y e^(x/y) <= z, y>0 }`.
 `K^*` denotes the dual cone to `K`.
@@ -83,7 +79,7 @@ use the mex file in your Matlab code. The calling sequence is (for the direct ve
 where data contains `A`, `b`, `c`  
 params contains various options (see matlab file, can be empty)  
 cones contains one or more of:  
-+ `f` (num free/zero cones)
++ `f` (num primal zero / dual free cones, i.e. primal equality constraints)
 + `l` (num linear cones)
 + `q` (array of SOCs sizes)
 + `s` (array of SDCs sizes)
@@ -125,7 +121,7 @@ The argument `data` is a python dictionary with three elements `A`, `b`, and `c`
 
 The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and `ed` (all of which are optional) corresponding to the supported cone types.
 
-The argument `opts` is optional and is a dictionary with fields `MAX_ITERS`, `EPS`, `ALPHA`, `UNDET_TOL`, `VERBOSE`, and `NORMALIZE`. If `opts` is missing, then the algorithm uses default settings.
+The argument `opts` is optional and is a dictionary with fields `MAX_ITERS`, `EPS`, `ALPHA`, `VERBOSE`, and `NORMALIZE`. If `opts` is missing, then the algorithm uses default settings.
 
 Finally set `USE_INDIRECT = True` to use the indirect linear equation solver.
 
@@ -152,22 +148,35 @@ These libraries (and `scs.h`) expose only four API functions:
 * `void scs_finish(Data * d, Work * w);`
     
     Called after all solves completed, to free data and cleanup.
-
 * `idxint scs(Data * d, Cone * k, Sol * sol, Info * info);`
-    
+
     Simply calls all the above routines, so can't use reuse the workspace (for, e.g., factorization caching).
-    
-The four relevant data structures are:
-              
+
+The five relevant data structures are:
+```
+    typedef struct PROBLEM_DATA Data;
+    typedef struct SOL_VARS Sol;
+    typedef struct INFO Info;
+    typedef struct CONE Cone;
+
+    /* defined in linSys.h, can be overriden by user */
+    typedef struct A_DATA_MATRIX AMatrix;
+
+
+    /* this struct defines the data matrix A */
+    struct A_DATA_MATRIX {
+        /* A is supplied in column compressed format */
+        pfloat * x; /* A values, size: NNZ A */
+        idxint * i; /* A row index, size: NNZ A */
+        idxint * p; /* A column pointer, size: n+1 */
+    };
+
     /* struct that containing standard problem data */
     struct PROBLEM_DATA {
     	/* problem dimensions */
     	idxint m, n;        /* A has m rows, n cols*/
-    
-    	/* NB: A must be supplied in column compressed format */
-    	pfloat * Ax;        /* A values, size: NNZ A */
-    	idxint * Ai;        /* A row index, size: NNZ A */
-    	idxint * Ap;        /* A column pointer, size: n+1 */
+   
+        AMatrix * A;        /* A is supplied in data format specified by linsys solver */
     	pfloat * b, *c;     /* dense arrays for b (size m), c (size n) */
     
     	/* other input parameters: default suggested input */
@@ -202,7 +211,7 @@ The four relevant data structures are:
     };
    
     struct CONE {
-        idxint f;           /* number of linear equality constraints */
+        idxint f;           /* number of primal linear equality constraints */
         idxint l;           /* length of LP cone */
         idxint *q;   	    /* array of second-order cone constraints */
         idxint qsize;       /* length of SOC array */
@@ -211,7 +220,7 @@ The four relevant data structures are:
         idxint ep;          /* number of primal exponential cone triples */
         idxint ed;          /* number of dual exponential cone triples */
     };
-        
+```        
 The data matrix `A` is specified in column-compressed format, and the vectors
 `b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
 (slack), and `y` (dual) are returned as dense arrays. Cones are specified as

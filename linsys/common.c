@@ -162,8 +162,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	}
 
 	/* scale up by d->SCALE if not equal to 1 */
-	if (d->SCALE != 1) {
-		scaleArray(A->x, d->SCALE, A->p[d->n]);
+	if (d->scale != 1) {
+		scaleArray(A->x, d->scale, A->p[d->n]);
 	}
 
 	w->D = Dt;
@@ -181,7 +181,7 @@ void unNormalizeA(Data *d, Work * w) {
 	pfloat * E = w->E;
 	AMatrix * A = d->A;
 	for (i = 0; i < d->n; ++i) {
-		scaleArray(&(A->x[A->p[i]]), E[i] / d->SCALE, A->p[i + 1] - A->p[i]);
+		scaleArray(&(A->x[A->p[i]]), E[i] / d->scale, A->p[i + 1] - A->p[i]);
 	}
 	for (i = 0; i < d->n; ++i) {
 		for (j = A->p[i]; j < A->p[i + 1]; ++j) {

@@ -105,15 +105,15 @@ void printData(Data * d) {
 	scs_printf("m = %i\n", (int) d->m);
 	scs_printf("n = %i\n", (int) d->n);
 
-	scs_printf("MAX_ITERS = %i\n", (int) d->MAX_ITERS);
-	scs_printf("VERBOSE = %i\n", (int) d->VERBOSE);
-	scs_printf("NORMALIZE = %i\n", (int) d->NORMALIZE);
-	scs_printf("WARM_START = %i\n", (int) d->WARM_START);
-	scs_printf("EPS = %4f\n", d->EPS);
-	scs_printf("ALPHA = %4f\n", d->ALPHA);
-	scs_printf("RHO_X = %4f\n", d->RHO_X);
-	scs_printf("CG_RATE = %4f\n", d->CG_RATE);
-	scs_printf("SCALE = %4f\n", d->SCALE);
+	scs_printf("MAX_ITERS = %i\n", (int) d->maxIters);
+	scs_printf("VERBOSE = %i\n", (int) d->verbose);
+	scs_printf("NORMALIZE = %i\n", (int) d->normalize);
+	scs_printf("WARM_START = %i\n", (int) d->warmStart);
+	scs_printf("EPS = %4f\n", d->eps);
+	scs_printf("ALPHA = %4f\n", d->alpha);
+	scs_printf("RHO_X = %4f\n", d->rhoX);
+	scs_printf("CG_RATE = %4f\n", d->cgRate);
+	scs_printf("SCALE = %4f\n", d->scale);
 }
 
 void printArray(pfloat * arr, idxint n, char * name) {

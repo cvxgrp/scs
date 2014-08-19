@@ -144,45 +144,6 @@ static int getPosIntParam(char * key, idxint * v, idxint defVal, PyObject * opts
     return 0;
 }
 
-static int getOptFloatParam(char * key, pfloat * v, pfloat defVal, PyObject * opts) {
-	*v = defVal;
-	if (opts) {
-		PyObject *obj = PyDict_GetItemString(opts, key);
-		if (obj) {
-			if (PyInt_Check(obj)) {
-				if ((*v = (pfloat) PyInt_AsLong(obj)) < 0) {
-					PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
-					return -1;
-				}
-			} else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
-				PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
-				return -1;
-			}
-		}
-	}
-	return 0;
-}
-
-static int parseOpts(Data *d, PyObject * opts) {
-	if (getPosIntParam("MAX_ITERS", &(d->MAX_ITERS), 2500, opts) < 0)
-		return -1;
-	if (getPosIntParam("VERBOSE", &(d->VERBOSE), 1, opts) < 0)
-		return -1;
-	if (getPosIntParam("NORMALIZE", &(d->NORMALIZE), 1, opts))
-		return -1;
-	if (getOptFloatParam("SCALE", &(d->SCALE), 5, opts) < 0)
-		return -1;
-	if (getOptFloatParam("EPS", &(d->EPS), 1e-3, opts) < 0)
-		return -1;
-	if (getOptFloatParam("CG_RATE", &(d->CG_RATE), 2, opts) < 0)
-		return -1;
-	if (getOptFloatParam("ALPHA", &(d->ALPHA), 1.8, opts) < 0)
-		return -1;
-	if (getOptFloatParam("RHO_X", &(d->RHO_X), 1e-3, opts) < 0)
-		return -1;
-	return 0;
-}
-
 static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
 	if (ps->Ax) {
 		Py_DECREF(ps->Ax);
@@ -229,42 +190,11 @@ static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char 
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
-	/* Expects a function call
-	 *     sol = csolve((m,n),Ax,Ai,Ap,b,c,cone,opts)
-	 * where
-	 *
-	 * the pair (m,n) corresponds to:
-	 *    `m`: the rows of A, must agree with the length of b
-	 *    `n`: the cols of A, must agree with the length of c
-	 * `c` is a Numpy array of doubles
-	 * "A" is a sparse matrix in column compressed storage. "Ax" are the values,
-	 * "Ai" are the rows, and "Ap" are the column pointers.
-	 * `Ax` is a Numpy array of doubles
-	 * `Ai` is a Numpy array of ints
-	 * `Ap` is a Numpy array of ints
-	 * `b` is a Numpy array of doubles
-	 * `cone` is a dictionary with
-	 *    `cone['l']` an integer specifying the dimension of positive orthant cone
-	 *    `cone['q']` a *list* specifying dimensions of second-order cones
-	 *
-	 * This call will solve the problem
-	 *
-	 *    minimize     c'*x
-	 *    subject to   A*x + s = b
-	 *                 s \in K
-	 *
-	 * The code returns a Python dictionary with keys 'x', 'y', 's' and 'info'.
-	 * These correspond to the following:
-	 *
-	 * `x`: primal variables
-	 * `y`: dual variables for conic constraints
-	 * `s`: slacks for Ax + s = b, s \in K
-	 * `info`: another dictionary with the following fields:
-	 */
-
 	/* data structures for arguments */
 	PyArrayObject *Ax, *Ai, *Ap, *c, *b;
-	PyObject *cone, *opts, *warm = NULL;
+	PyObject *cone, *warm = NULL;
+    PyObject *verbose = NULL;
+    PyObject *normalize = NULL;
 	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 	/* scs data structures */
 	Data * d = scs_calloc(sizeof(Data), 1);
@@ -272,21 +202,47 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
-	static char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "opts", "warm", NULL };
-	/* parse the arguments and ensure they are the correct type */
+	static char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "warm",
+        "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", NULL };
+	
+    /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-	static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!";
+	static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!O!lddddd";
 #else
-	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!";
+	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!O!iddddd";
 #endif
     npy_intp veclen[1];
     PyObject *x, *y, *s, *returnDict, *infoDict;
+    
+    /* set defaults */
+    d->maxIters = MAX_ITERS;
+    d->scale = SCALE;
+    d->eps = EPS;
+    d->cgRate = CG_RATE;
+    d->alpha = ALPHA;
+    d->rhoX = RHO_X;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, &(d->m), &(d->n), &PyArray_Type, &Ax,
-			&PyArray_Type, &Ai, &PyArray_Type, &Ap, &PyArray_Type, &b, &PyArray_Type, &c, &PyDict_Type, &cone,
-			&PyDict_Type, &opts, &PyDict_Type, &warm)) {
-		return NULL;
-	}
+	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, 
+        &(d->m), 
+        &(d->n), 
+        &PyArray_Type, &Ax,
+		&PyArray_Type, &Ai, 
+        &PyArray_Type, &Ap, 
+        &PyArray_Type, &b, 
+        &PyArray_Type, &c, 
+        &PyDict_Type, &cone,
+        &PyDict_Type, &warm,
+        &PyBool_Type, &verbose,
+        &PyBool_Type, &normalize,
+        &(d->maxIters),
+        &(d->scale),
+        &(d->eps),
+        &(d->cgRate),
+        &(d->alpha),
+        &(d->rhoX)) ) { 
+        PySys_WriteStderr("error parsing inputs");
+        return NULL; 
+    }
 
 	if (d->m < 0) {
 		PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
@@ -342,7 +298,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.b = getContiguous(b, pfloatType);
 	d->b = (pfloat *) PyArray_DATA(ps.b);
 
-	if (getPosIntParam("f", &(k->f), 0, cone) < 0) {
+    d->verbose = verbose ? (idxint) PyObject_IsTrue(verbose) : 0;
+    d->normalize = normalize ? (idxint) PyObject_IsTrue(normalize) : 0;
+
+    if (getPosIntParam("f", &(k->f), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field f");
 	}
 	if (getPosIntParam("l", &(k->l), 0, cone) < 0) {
@@ -360,18 +319,37 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (getPosIntParam("ed", &(k->ed), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
-	if (parseOpts(d, opts) < 0) {
-		return finishWithErr(d, k, &ps, "failed to parse opts");
-	}
 
-	/* Solve! */
-	d->WARM_START = 0;
-	if (warm) {
-		d->WARM_START = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
-		d->WARM_START |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
-		d->WARM_START |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+    d->verbose = verbose ? (idxint) PyObject_IsTrue(verbose) : 0;
+    d->normalize = normalize ? (idxint) PyObject_IsTrue(normalize) : 0;
+    if(d->maxIters < 0) {
+		return finishWithErr(d, k, &ps, "max_iters must be positive");
 	}
-	scs(d, k, &sol, &info);
+    if(d->scale < 0) {
+		return finishWithErr(d, k, &ps, "scale must be positive");
+	}
+    if(d->eps < 0) {
+		return finishWithErr(d, k, &ps, "eps must be positive");
+	}
+    if(d->cgRate < 0) {
+		return finishWithErr(d, k, &ps, "cg_rate must be positive");
+	}
+    if(d->alpha < 0) {
+		return finishWithErr(d, k, &ps, "alpha must be positive");
+	}
+    if(d->rhoX < 0) {
+		return finishWithErr(d, k, &ps, "rho_x must be positive");
+	}
+	/* parse warm start if set */
+    d->warmStart = WARM_START;
+	if (warm) {
+		d->warmStart = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
+		d->warmStart |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
+		d->warmStart |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+	}
+	
+    /* Solve! */
+    scs(d, k, &sol, &info);
 
 	/* create output (all data is *deep copied*) */
 	/* x */

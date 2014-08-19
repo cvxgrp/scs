@@ -10,7 +10,7 @@ static pfloat totalSolveTime;
 
 char * getLinSysMethod(Data * d, Priv * p) {
 	char * str = scs_malloc(sizeof(char) * 128);
-	sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) d->A->p[d->n], d->CG_RATE);
+	sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) d->A->p[d->n], d->cgRate);
 	return str;
 }
 
@@ -34,7 +34,7 @@ void getPreconditioner(Data *d, Priv *p) {
 #endif
 
 	for (i = 0; i < d->n; ++i) {
-		M[i] = 1 / (d->RHO_X + calcNormSq(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+		M[i] = 1 / (d->rhoX + calcNormSq(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
 		/* M[i] = 1; */
 	}
 
@@ -117,7 +117,7 @@ static void matVec(Data * d, Priv * p, const pfloat * x, pfloat * y) {
 	accumByA(d, p, x, tmp);
 	memset(y, 0, d->n * sizeof(pfloat));
 	accumByAtrans(d, p, tmp, y);
-	addScaledArray(y, x, d->n, d->RHO_X);
+	addScaledArray(y, x, d->n, d->rhoX);
 }
 
 void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) {
@@ -229,7 +229,7 @@ static idxint pcg(Data *d, Priv * pr, const pfloat * s, pfloat * b, idxint max_i
 
 idxint solveLinSys(Data *d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
 	idxint cgIts;
-	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((pfloat) iter + 1, d->CG_RATE));
+	pfloat cgTol = calcNorm(b, d->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((pfloat) iter + 1, d->cgRate));
 
 	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */

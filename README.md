@@ -121,7 +121,7 @@ The argument `data` is a python dictionary with three elements `A`, `b`, and `c`
 
 The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and `ed` (all of which are optional) corresponding to the supported cone types.
 
-The argument `opts` is optional and is a dictionary with fields `MAX_ITERS`, `EPS`, `ALPHA`, `UNDET_TOL`, `VERBOSE`, and `NORMALIZE`. If `opts` is missing, then the algorithm uses default settings.
+The argument `opts` is optional and is a dictionary with fields `MAX_ITERS`, `EPS`, `ALPHA`, `VERBOSE`, and `NORMALIZE`. If `opts` is missing, then the algorithm uses default settings.
 
 Finally set `USE_INDIRECT = True` to use the indirect linear equation solver.
 

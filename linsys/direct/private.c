@@ -58,7 +58,7 @@ cs * formKKT(Data * d) {
 	for (k = 0; k < d->n; k++) {
 		K->i[kk] = k;
 		K->p[kk] = k;
-		K->x[kk] = d->RHO_X;
+		K->x[kk] = d->rhoX;
 		kk++;
 	}
 	/* A^T at top right : CCS: */
