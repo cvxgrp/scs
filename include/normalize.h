@@ -21,8 +21,8 @@ void normalizeBC(Data * d, Work * w) {
 		d->c[i] /= E[i];
 	}
 	w->sc_c = w->meanNormRowA / MAX(calcNorm(d->c, d->n), MIN_SCALE);
-	scaleArray(d->b, w->sc_b * d->SCALE, d->m);
-	scaleArray(d->c, w->sc_c * d->SCALE, d->n);
+	scaleArray(d->b, w->sc_b * d->scale, d->m);
+	scaleArray(d->c, w->sc_c * d->scale, d->n);
 }
 
 void calcScaledResids(Data * d, Work * w, struct residuals * r) {
@@ -75,7 +75,7 @@ void normalizeWarmStart(Data *d, Work * w) {
 		y[i] *= (D[i] * w->sc_c);
 	}
 	for (i = 0; i < d->m; ++i) {
-		s[i] /= D[i] / (w->sc_b * d->SCALE);
+		s[i] /= D[i] / (w->sc_b * d->scale);
 	}
 }
 
@@ -90,13 +90,13 @@ void unNormalizeSolBC(Data *d, Work * w, Sol * sol) {
 		sol->y[i] /= (D[i] * w->sc_c);
 	}
 	for (i = 0; i < d->m; ++i) {
-		sol->s[i] *= D[i] / (w->sc_b * d->SCALE);
+		sol->s[i] *= D[i] / (w->sc_b * d->scale);
 	}
 	for (i = 0; i < d->n; ++i) {
-		d->c[i] *= E[i] / (w->sc_c * d->SCALE);
+		d->c[i] *= E[i] / (w->sc_c * d->scale);
 	}
 	for (i = 0; i < d->m; ++i) {
-		d->b[i] *= D[i] / (w->sc_b * d->SCALE);
+		d->b[i] *= D[i] / (w->sc_b * d->scale);
 	}
 }
 

@@ -9,6 +9,28 @@
 #include "linSys.h"
 #include "util.h"
 
+
+/* SCS VERSION NUMBER ----------------------------------------------    */
+#define SCS_VERSION ("1.0.6")
+
+/* SCS returns one of the following integers: (zero never returned)     */
+#define FAILURE         (-4)
+#define INDETERMINATE   (-3)
+#define INFEASIBLE      (-2)    /* primal infeasible, dual unbounded    */
+#define UNBOUNDED       (-1)    /* primal unbounded, dual infeasible    */
+#define SOLVED          (1)
+
+/* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
+#define MAX_ITERS       (2500)
+#define EPS             (1E-3)
+#define ALPHA           (1.5)
+#define RHO_X           (1E-3)
+#define SCALE           (5)
+#define CG_RATE         (2.0)
+#define VERBOSE         (1)
+#define NORMALIZE       (1)
+#define WARM_START      (0)
+
 /* struct that containing standard problem data */
 struct PROBLEM_DATA {
 	/* problem dimensions */
@@ -18,15 +40,15 @@ struct PROBLEM_DATA {
 	pfloat * b, *c; /* dense arrays for b (size m), c (size n) */
 
 	/* other input parameters: default suggested input */
-	idxint MAX_ITERS; /* maximum iterations to take: 2500 */
-	pfloat EPS; /* convergence tolerance: 1e-3 */
-	pfloat ALPHA; /* relaxation parameter: 1.8 */
-	pfloat RHO_X; /* x equality constraint scaling: 1e-3 */
-	pfloat SCALE; /* if normalized, rescales by this factor: 5 */
-	pfloat CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-	idxint VERBOSE; /* boolean, write out progress: 1 */
-	idxint NORMALIZE; /* boolean, heuristic data rescaling: 1 */
-	idxint WARM_START; /* boolean, warm start (put initial guess in Sol struct): 0 */
+	idxint maxIters; /* maximum iterations to take: 2500 */
+	pfloat eps; /* convergence tolerance: 1e-3 */
+	pfloat alpha; /* relaxation parameter: 1.8 */
+	pfloat rhoX; /* x equality constraint scaling: 1e-3 */
+	pfloat scale; /* if normalized, rescales by this factor: 5 */
+	pfloat cgRate; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+	idxint verbose; /* boolean, write out progress: 1 */
+	idxint normalize; /* boolean, heuristic data rescaling: 1 */
+	idxint warmStart; /* boolean, warm start (put initial guess in Sol struct): 0 */
 };
 
 /* contains primal-dual solution arrays */
@@ -47,13 +69,6 @@ struct INFO {
 	pfloat setupTime; /* time taken for setup phase */
 	pfloat solveTime; /* time taken for solve phase */
 };
-
-/* scs returns one of the following integers: (zero should never be returned) */
-#define FAILURE -4
-#define INDETERMINATE -3
-#define INFEASIBLE -2 /* primal infeasible, dual unbounded */
-#define UNBOUNDED -1 /* primal unbounded, dual infeasible */
-#define SOLVED 1
 
 /* main library api's:
  scs_init: allocates memory (direct version factorizes matrix [I A; A^T -I])

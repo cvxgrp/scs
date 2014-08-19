@@ -30,7 +30,7 @@ Priv * initPriv(Data * d) {
 	/* BLAS(gemm)("Transpose", "NoTranspose", &n, &n, &m, &onef, A, &m, A, &m, &zerof, p->L, &n); */
     BLAS(syrk)("Lower", "Transpose", &n, &m, &onef, A, &m, &zerof, p->L, &n);
 	for (j = 0; j < n; j++) {
-		p->L[j * n + j] += d->RHO_X;
+		p->L[j * n + j] += d->rhoX;
 	}
 	BLAS(potrf)("Lower", &n, p->L, &n, &info);
 	if (info != 0) {
@@ -42,7 +42,7 @@ Priv * initPriv(Data * d) {
 	for (k = 0; k < n; ++k) {
 		for (j = k + 1; j < n; ++j) {
 			p->L[k + j * n] = p->L[j + k * n];
-		}
+        }
 	}
 	totalSolveTime = 0.0;
 	return p;

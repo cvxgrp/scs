@@ -94,8 +94,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 		w->meanNormColA += BLAS(nrm2)(&m, &(d->A->x[i * d->m]), &one) / d->n;
 	}
 
-	if (d->SCALE != 1) {
-		BLAS(scal)(&nm, &d->SCALE, d->A->x, &one);
+	if (d->scale != 1) {
+		BLAS(scal)(&nm, &d->scale, d->A->x, &one);
 	}
 
 	w->D = D;
@@ -112,7 +112,7 @@ void unNormalizeA(Data *d, Work * w) {
 	idxint i;
 	pfloat * D = w->D;
 	pfloat * E = w->E;
-	pfloat invScale = 1.0 / d->SCALE;
+	pfloat invScale = 1.0 / d->scale;
 	blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
 	for (i = 0; i < d->n; ++i) {
 		BLAS(scal)(&m, &(E[i]), &(d->A->x[i * d->m]), &one);
@@ -129,6 +129,7 @@ void accumByAtrans(Data * d, Priv * p, const pfloat * x, pfloat * y) {
 	pfloat onef = 1.0;
 	BLAS(gemv)("Transpose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
 }
+
 void accumByA(Data * d, Priv * p, const pfloat * x, pfloat * y) {
 	pfloat * A = d->A->x;
 	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;

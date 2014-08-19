@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 	}
 	fclose(fp);
 	scs_printf("solve once using scs\n");
-	d->CG_RATE = 2;
+	d->cgRate = 2;
 	scs(d, k, sol, &info);
 	if (TEST_WARM_START) {
 		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
@@ -47,11 +47,11 @@ int main(int argc, char **argv) {
 				/* perturb b and c */
 				perturbVector(d->b, d->m);
 				perturbVector(d->c, d->n);
-				d->WARM_START = 1;
-				d->CG_RATE = 4;
+				d->warmStart = 1;
+				d->cgRate = 4;
 				scs_solve(w, d, k, sol, &info);
-				d->WARM_START = 0;
-				d->CG_RATE = 2;
+				d->warmStart = 0;
+				d->cgRate = 2;
 				scs_solve(w, d, k, sol, &info);
 			}
 		}
@@ -69,9 +69,9 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 	char s[LEN64], *token;
 	idxint i;
 	AMatrix * A;
-	d->RHO_X = RHOX;
-	d->WARM_START = 0;
-	d->SCALE = 1;
+	d->rhoX = RHOX;
+	d->warmStart = 0;
+	d->scale = 1;
 	if (fscanf(fp, INTRW, &(d->n)) != 1)
 		return -1;
 	if (fscanf(fp, INTRW, &(d->m)) != 1)
@@ -99,15 +99,15 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 	/*if(fscanf(fp, INTRW, &(k->ep))!= 1) return -1; */
 	/*if(fscanf(fp, INTRW, &(k->ed))!= 1) return -1; */
 
-	if (fscanf(fp, INTRW, &(d->MAX_ITERS)) != 1)
+	if (fscanf(fp, INTRW, &(d->maxIters)) != 1)
 		return -1;
-	if (fscanf(fp, INTRW, &(d->VERBOSE)) != 1)
+	if (fscanf(fp, INTRW, &(d->verbose)) != 1)
 		return -1;
-	if (fscanf(fp, INTRW, &(d->NORMALIZE)) != 1)
+	if (fscanf(fp, INTRW, &(d->normalize)) != 1)
 		return -1;
-	if (fscanf(fp, FLOATRW, &(d->ALPHA)) != 1)
+	if (fscanf(fp, FLOATRW, &(d->alpha)) != 1)
 		return -1;
-	if (fscanf(fp, FLOATRW, &(d->EPS)) != 1)
+	if (fscanf(fp, FLOATRW, &(d->eps)) != 1)
 		return -1;
 	k->q = malloc(sizeof(idxint) * k->qsize);
 	for (i = 0; i < k->qsize; i++) {

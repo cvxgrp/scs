@@ -5,7 +5,7 @@ from warnings import warn
 from numpy import transpose 
 from scipy import sparse
 
-def solve(probdata, cone, opts={}, USE_INDIRECT=False):
+def solve(probdata, cone, **kwargs):
     """
     solves convex cone problems
      
@@ -47,7 +47,7 @@ def solve(probdata, cone, opts={}, USE_INDIRECT=False):
     m, n = A.shape
 
     # A is stored in ROW MAJOR order, so we need to transpose:
-    if USE_INDIRECT:
-        return _scs_indirect.csolve((m, n), A.T, b, c, cone, opts, warm)
+    if kwargs.get('use_indirect', False):
+        return _scs_indirect.csolve((m, n), A.T, b, c, cone, warm, **kwargs)
     else:
-        return _scs_direct.csolve((m, n), A.T, b, c, cone, opts, warm)
+        return _scs_direct.csolve((m, n), A.T, b, c, cone, warm, **kwargs)

@@ -17,15 +17,15 @@
  */
 
 void setScsParams(Data * d) {
-	d->MAX_ITERS = 2500; /* maximum iterations to take: 2500 */
-	d->EPS = 1e-3; /* convergence tolerance: 1e-3 */
-	d->ALPHA = 1.8; /* relaxation parameter: 1.8 */
-	d->RHO_X = 1e-3; /* x equality constraint scaling: 1e-3 */
-	d->SCALE = 5; /* if normalized, rescales by this factor: 1 */
-	d->CG_RATE = 2; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-	d->VERBOSE = 1; /* boolean, write out progress: 1 */
-	d->NORMALIZE = 1; /* boolean, heuristic data rescaling: 1 */
-	d->WARM_START = 0;
+	d->maxIters = MAX_ITERS; /* maximum iterations to take: 2500 */
+	d->eps = EPS; /* convergence tolerance: 1e-3 */
+	d->alpha = ALPHA; /* relaxation parameter: 1.8 */
+	d->rhoX = RHO_X; /* x equality constraint scaling: 1e-3 */
+	d->scale = SCALE; /* if normalized, rescales by this factor: 1 */
+	d->cgRate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+	d->verbose = VERBOSE; /* boolean, write out progress: 1 */
+	d->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
+	d->warmStart = WARM_START;
 }
 
 int main(int argc, char **argv) {
