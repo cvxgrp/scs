@@ -47,9 +47,9 @@ def solve(probdata, cone, **kwargs):
         c = c.todense()
 
     m, n = A.shape
-
+    
     Adata, Aindices, Acolptr = A.data, A.indices, A.indptr
-    if kwargs.get('use_indirect', False):
+    if kwargs.pop('use_indirect', False):
         return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, warm, **kwargs)
     else:
         return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, warm, **kwargs)

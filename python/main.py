@@ -22,7 +22,7 @@ print sol
 sol = scs.solve(data,cone, use_indirect = True)
 print sol
 
-sol = scs.solve(data,cone, max_iters = 500, eps = 1e-6)
+sol = scs.solve(data,cone, max_iters = 500, eps = 1e-6, normalize = False)
 print sol
 
 sol = scs.solve(data,cone, max_iters = 500, eps = 1e-6, use_indirect = True)

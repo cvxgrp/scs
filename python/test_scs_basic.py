@@ -82,7 +82,7 @@ def test_failures():
   yield assert_raises, TypeError, scs.solve
   yield assert_raises, ValueError, scs.solve, data, {'q':[4], 'l':-2}
   yield check_keyword, ValueError, 'max_iters', -1
-  yield check_keyword, ValueError, 'max_iters', 1.1
+  yield check_keyword, TypeError, 'max_iters', 1.1
 
   yield check_failure, scs.solve( data, {'q':[1], 'l': 0} )
 

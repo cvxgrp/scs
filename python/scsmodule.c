@@ -78,7 +78,7 @@ static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 }
 
 static int printErr(char * key) {
-	PySys_WriteStderr("error parsing '%s'", key);
+	PySys_WriteStderr("error parsing '%s'\n", key);
 	return -1;
 }
 
@@ -207,9 +207,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-	static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!O!lddddd";
+	static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
 #else
-	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!O!iddddd";
+	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
 #endif
     npy_intp veclen[1];
     PyObject *x, *y, *s, *returnDict, *infoDict;
@@ -240,7 +240,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
         &(d->cg_rate),
         &(d->alpha),
         &(d->rho_x)) ) { 
-        PySys_WriteStderr("error parsing inputs");
+        PySys_WriteStderr("error parsing inputs\n");
         return NULL; 
     }
 
@@ -257,8 +257,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* get the typenum for the primitive scs_int and scs_float types */
 	intType = getIntType();
 	scs_floatType = getDoubleType();
-
-	/* set A */
+	
+    /* set A */
 	if (!PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
 		return finishWithErr(d, k, &ps, "Ax must be a numpy array of floats");
 	}
@@ -297,10 +297,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	}
 	ps.b = getContiguous(b, scs_floatType);
 	d->b = (scs_float *) PyArray_DATA(ps.b);
-
-    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : 0;
-    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : 0;
-
+    
     if (getPosIntParam("f", &(k->f), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field f");
 	}
@@ -320,8 +317,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
 
-    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : 0;
-    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : 0;
+    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : VERBOSE;
+    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : NORMALIZE;
     if(d->max_iters < 0) {
 		return finishWithErr(d, k, &ps, "max_iters must be positive");
 	}
