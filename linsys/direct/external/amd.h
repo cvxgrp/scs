@@ -73,7 +73,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *              pointers of A.
  *       Ai: an int/SuiteSparse_long array of size nz, containing the row
  *              indices of A, where nz = Ap [n].
- *       Control:  a pfloat array of size AMD_CONTROL, containing control
+ *       Control:  a scs_float array of size AMD_CONTROL, containing control
  *           parameters.  Defaults are used if Control is NULL.
  *
  * Output arguments (not defined on input):
@@ -81,7 +81,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       P: an int/SuiteSparse_long array of size n, containing the output
  *           permutation. If row i is the kth pivot row, then P [k] = i.  In
  *           MATLAB notation, the reordered matrix is A (P,P).
- *       Info: a pfloat array of size AMD_INFO, containing statistical
+ *       Info: a scs_float array of size AMD_INFO, containing statistical
  *           information.  Ignored if Info is NULL.
  *
  * On input, the matrix A is stored in column-oriented form.  The row indices

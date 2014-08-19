@@ -755,8 +755,8 @@ scs_int scs(Data * d, Cone * k, Sol * sol, Info * info) {
  *  approximate convergence check:
  *  abs to prevent negative stopping tol */
 /*
- pfloat tau = ABS(w->u[w->l-1]);
- pfloat kap = ABS(w->v[w->l-1]);
+ scs_float tau = ABS(w->u[w->l-1]);
+ scs_float kap = ABS(w->v[w->l-1]);
  r->resPri = calcNormDiff(w->u, w->u_t, w->l);
  r->resDual = calcNormDiff(w->u, w->u_prev, w->l);
  r->tau = tau;

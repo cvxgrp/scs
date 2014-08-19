@@ -89,7 +89,7 @@ scs_float cs_cumsum(scs_int *p, scs_int *c, scs_int n) {
 	for (i = 0; i < n; i++) {
 		p[i] = nz;
 		nz += c[i];
-		nz2 += c[i]; /* also in pfloat to avoid scs_int overflow */
+		nz2 += c[i]; /* also in scs_float to avoid scs_int overflow */
 		c[i] = p[i]; /* also copy p[0..n-1] back into c[0..n-1]*/
 	}
 	p[n] = nz;

@@ -103,7 +103,7 @@ scs_int LDLFactor(cs * A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
 	(*L)->p = (scs_int *) scs_malloc((1 + n) * sizeof(scs_int));
 
 	/*scs_int Parent[n], Lnz[n], Flag[n], Pattern[n]; */
-	/*pfloat Y[n]; */
+	/*scs_float Y[n]; */
 
 	LDL_symbolic(n, A->p, A->i, (*L)->p, Parent, Lnz, Flag, P, Pinv);
 

@@ -214,7 +214,7 @@ GLOBAL void AMD_2
  *	additional data is placed in Iw, and pfree is modified so that
  *	Iw [pfree..iwlen-1] is always the unused part of Iw.
  *
- * Control:  A pfloat array of size AMD_CONTROL containing input parameters
+ * Control:  A scs_float array of size AMD_CONTROL containing input parameters
  *	that affect how the ordering is computed.  If NULL, then default
  *	settings are used.
  *
@@ -277,7 +277,7 @@ GLOBAL void AMD_2
  *	assembly tree.  Note that i refers to a row/column in the original
  *	matrix, not the permuted matrix.
  *
- * Info:  A pfloat array of size AMD_INFO.  If present, (that is, not NULL),
+ * Info:  A scs_float array of size AMD_INFO.  If present, (that is, not NULL),
  *	then statistics about the ordering are returned in the Info array.
  *	See amd.h for a description.
 

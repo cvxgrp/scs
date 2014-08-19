@@ -77,7 +77,7 @@ void *SuiteSparse_free      /* always returns NULL */
 
 /* Returns the number of seconds (tic [0]) and nanoseconds (tic [1]) since some
  * unspecified but fixed time in the past.  If no timer is installed, zero is
- * returned.  A scalar pfloat precision value for 'tic' could be used, but this
+ * returned.  A scalar scs_float precision value for 'tic' could be used, but this
  * might cause loss of precision because clock_getttime returns the time from
  * some distant time in the past.  Thus, an array of size 2 is used.
  *
@@ -87,7 +87,7 @@ void *SuiteSparse_free      /* always returns NULL */
  *
  * example:
  *
- *      pfloat tic [2], r, s, t ;
+ *      scs_float tic [2], r, s, t ;
  *      SuiteSparse_tic (tic) ;     // start the timer
  *      // do some work A
  *      t = SuiteSparse_toc (tic) ; // t is time for work A, in seconds
@@ -97,7 +97,7 @@ void *SuiteSparse_free      /* always returns NULL */
  *      // do some work C
  *      r = SuiteSparse_toc (tic) ; // s is time for work C, in seconds
  *
- * A pfloat array of size 2 is used so that this routine can be more easily
+ * A scs_float array of size 2 is used so that this routine can be more easily
  * ported to non-POSIX systems.  The caller does not rely on the POSIX
  * <time.h> include file.
  */

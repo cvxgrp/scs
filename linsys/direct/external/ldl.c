@@ -21,7 +21,7 @@
  * in column j are stored in Ax [Ap [j] ... Ap [j+1]-1], with corresponding row
  * indices in Ai [Ap [j] ... Ap [j+1]-1].  Ap [0] = 0 is required, and thus
  * nz = Ap [n] is the number of nonzeros in A.  Ap is an int array of size n+1.
- * The int array Ai and the pfloat array Ax are of size nz.  This data structure
+ * The int array Ai and the scs_float array Ax are of size nz.  This data structure
  * is identical to the one used by MATLAB, except for the following
  * generalizations.  The row indices in each column of A need not be in any
  * particular order, although they must be in the range 0 to n-1.  Duplicate
@@ -43,7 +43,7 @@
  *
  * The lower triangular matrix L is stored in the same compressed-column
  * form (an int Lp array of size n+1, an int Li array of size Lp [n], and a
- * pfloat array Lx of the same size as Li).  It has a unit diagonal, which is
+ * scs_float array Lx of the same size as Li).  It has a unit diagonal, which is
  * not stored.  The row indices in each column of L are always returned in
  * ascending order, with no duplicate entries.  This format is compatible with
  * MATLAB, except that it would be more convenient for MATLAB to include the
