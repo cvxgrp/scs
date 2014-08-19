@@ -8,12 +8,12 @@
 #define CS_MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 /* wrapper for malloc */
-static void *cs_malloc(idxint n, idxint size) {
+static void *cs_malloc(scs_int n, scs_int size) {
 	return (scs_malloc(n * size));
 }
 
 /* wrapper for calloc */
-static void *cs_calloc(idxint n, idxint size) {
+static void *cs_calloc(scs_int n, scs_int size) {
 	return (scs_calloc(n, size));
 }
 
@@ -25,8 +25,8 @@ static void *cs_free(void *p) {
 
 /* C = compressed-column form of a triplet matrix T */
 cs *cs_compress(const cs *T) {
-	idxint m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
-	pfloat *Cx, *Tx;
+	scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
+	scs_float *Cx, *Tx;
 	cs *C;
 	m = T->m;
 	n = T->n;
@@ -35,7 +35,7 @@ cs *cs_compress(const cs *T) {
 	Tx = T->x;
 	nz = T->nz;
 	C = cs_spalloc(m, n, nz, Tx != NULL, 0); /* allocate result */
-	w = cs_calloc(n, sizeof(idxint)); /* get workspace */
+	w = cs_calloc(n, sizeof(scs_int)); /* get workspace */
 	if (!C || !w)
 		return (cs_done(C, w, NULL, 0)); /* out of memory */
 	Cp = C->p;
@@ -52,13 +52,13 @@ cs *cs_compress(const cs *T) {
 	return (cs_done(C, w, NULL, 1)); /* success; free w and return C */
 }
 
-cs *cs_done(cs *C, void *w, void *x, idxint ok) {
+cs *cs_done(cs *C, void *w, void *x, scs_int ok) {
 	cs_free(w); /* free workspace */
 	cs_free(x);
 	return (ok ? C : cs_spfree(C)); /* return result if OK, else free it */
 }
 
-cs *cs_spalloc(idxint m, idxint n, idxint nzmax, idxint values, idxint triplet) {
+cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values, scs_int triplet) {
 	cs *A = cs_calloc(1, sizeof(cs)); /* allocate the cs struct */
 	if (!A)
 		return (NULL); /* out of memory */
@@ -66,9 +66,9 @@ cs *cs_spalloc(idxint m, idxint n, idxint nzmax, idxint values, idxint triplet) 
 	A->n = n;
 	A->nzmax = nzmax = CS_MAX(nzmax, 1);
 	A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
-	A->p = cs_malloc(triplet ? nzmax : n + 1, sizeof(idxint));
-	A->i = cs_malloc(nzmax, sizeof(idxint));
-	A->x = values ? cs_malloc(nzmax, sizeof(pfloat)) : NULL;
+	A->p = cs_malloc(triplet ? nzmax : n + 1, sizeof(scs_int));
+	A->i = cs_malloc(nzmax, sizeof(scs_int));
+	A->x = values ? cs_malloc(nzmax, sizeof(scs_float)) : NULL;
 	return ((!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A);
 }
 
@@ -81,26 +81,26 @@ cs *cs_spfree(cs *A) {
 	return ((cs *) cs_free(A)); /* free the cs struct and return NULL */
 }
 
-pfloat cs_cumsum(idxint *p, idxint *c, idxint n) {
-	idxint i, nz = 0;
-	pfloat nz2 = 0;
+scs_float cs_cumsum(scs_int *p, scs_int *c, scs_int n) {
+	scs_int i, nz = 0;
+	scs_float nz2 = 0;
 	if (!p || !c)
 		return (-1); /* check inputs */
 	for (i = 0; i < n; i++) {
 		p[i] = nz;
 		nz += c[i];
-		nz2 += c[i]; /* also in pfloat to avoid idxint overflow */
+		nz2 += c[i]; /* also in pfloat to avoid scs_int overflow */
 		c[i] = p[i]; /* also copy p[0..n-1] back into c[0..n-1]*/
 	}
 	p[n] = nz;
 	return (nz2); /* return sum (c [0..n-1]) */
 }
 
-idxint *cs_pinv(idxint const *p, idxint n) {
-	idxint k, *pinv;
+scs_int *cs_pinv(scs_int const *p, scs_int n) {
+	scs_int k, *pinv;
 	if (!p)
 		return (NULL); /* p = NULL denotes identity */
-	pinv = cs_malloc(n, sizeof(idxint)); /* allocate result */
+	pinv = cs_malloc(n, sizeof(scs_int)); /* allocate result */
 	if (!pinv)
 		return (NULL); /* out of memory */
 	for (k = 0; k < n; k++)
@@ -108,16 +108,16 @@ idxint *cs_pinv(idxint const *p, idxint n) {
 	return (pinv); /* return result */
 }
 
-cs *cs_symperm(const cs *A, const idxint *pinv, idxint values) {
-	idxint i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
-	pfloat *Cx, *Ax;
+cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
+	scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
+	scs_float *Cx, *Ax;
 	cs *C;
 	n = A->n;
 	Ap = A->p;
 	Ai = A->i;
 	Ax = A->x;
 	C = cs_spalloc(n, n, Ap[n], values && (Ax != NULL), 0); /* alloc result*/
-	w = cs_calloc(n, sizeof(idxint)); /* get workspace */
+	w = cs_calloc(n, sizeof(scs_int)); /* get workspace */
 	if (!C || !w)
 		return (cs_done(C, w, NULL, 0)); /* out of memory */
 	Cp = C->p;

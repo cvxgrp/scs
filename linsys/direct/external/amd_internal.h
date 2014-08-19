@@ -229,7 +229,7 @@ GLOBAL size_t AMD_aat
     const Int Ai [ ],
     Int Len [ ],
     Int Tp [ ],
-    pfloat Info [ ]
+    scs_float Info [ ]
 ) ;
 
 GLOBAL void AMD_1
@@ -242,8 +242,8 @@ GLOBAL void AMD_1
     Int Len [ ],
     Int slen,
     Int S [ ],
-    pfloat Control [ ],
-    pfloat Info [ ]
+    scs_float Control [ ],
+    scs_float Info [ ]
 ) ;
 
 GLOBAL void AMD_postorder

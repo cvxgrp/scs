@@ -10,8 +10,8 @@
 #define RHOX 1e-3
 #define TEST_WARM_START 1
 
-idxint read_in_data(FILE * fp, Data * d, Cone * k);
-idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
+scs_int read_in_data(FILE * fp, Data * d, Cone * k);
+scs_int open_file(scs_int argc, char ** argv, scs_int idx, char * default_file, FILE ** fb);
 /* void printSol(Data * d, Sol * sol, Info * info); */
 
 int main(int argc, char **argv) {
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	Work * w;
 	Sol * sol;
 	Info info = { 0 };
-	idxint i;
+	scs_int i;
 
 	if (open_file(argc, argv, 1, DEMO_PATH, &fp) < 0)
 		return -1;
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 	}
 	fclose(fp);
 	scs_printf("solve once using scs\n");
-	d->cgRate = 2;
+	d->cg_rate = 2;
 	scs(d, k, sol, &info);
 	if (TEST_WARM_START) {
 		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
@@ -47,11 +47,11 @@ int main(int argc, char **argv) {
 				/* perturb b and c */
 				perturbVector(d->b, d->m);
 				perturbVector(d->c, d->n);
-				d->warmStart = 1;
-				d->cgRate = 4;
+				d->warm_start = 1;
+				d->cg_rate = 4;
 				scs_solve(w, d, k, sol, &info);
-				d->warmStart = 0;
-				d->cgRate = 2;
+				d->warm_start = 0;
+				d->cg_rate = 2;
 				scs_solve(w, d, k, sol, &info);
 			}
 		}
@@ -63,14 +63,14 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-idxint read_in_data(FILE * fp, Data * d, Cone * k) {
+scs_int read_in_data(FILE * fp, Data * d, Cone * k) {
 	/* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
 #define LEN64 64 /* variable-size arrays not allowed in ansi */
 	char s[LEN64], *token;
-	idxint i, Anz;
+	scs_int i, Anz;
 	AMatrix * A;
-	d->rhoX = RHOX;
-	d->warmStart = 0;
+	d->rho_x = RHOX;
+	d->warm_start = 0;
 	d->scale = 1;
 	if (fscanf(fp, INTRW, &(d->n)) != 1)
 		return -1;
@@ -99,7 +99,7 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 	/*if(fscanf(fp, INTRW, &(k->ep))!= 1) return -1; */
 	/*if(fscanf(fp, INTRW, &(k->ed))!= 1) return -1; */
 
-	if (fscanf(fp, INTRW, &(d->maxIters)) != 1)
+	if (fscanf(fp, INTRW, &(d->max_iters)) != 1)
 		return -1;
 	if (fscanf(fp, INTRW, &(d->verbose)) != 1)
 		return -1;
@@ -109,39 +109,39 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 		return -1;
 	if (fscanf(fp, FLOATRW, &(d->eps)) != 1)
 		return -1;
-	k->q = malloc(sizeof(idxint) * k->qsize);
+	k->q = malloc(sizeof(scs_int) * k->qsize);
 	for (i = 0; i < k->qsize; i++) {
 		if (fscanf(fp, INTRW, &k->q[i]) != 1)
 			return -1;
 	}
-	k->s = malloc(sizeof(idxint) * k->ssize);
+	k->s = malloc(sizeof(scs_int) * k->ssize);
 	for (i = 0; i < k->ssize; i++) {
 		if (fscanf(fp, INTRW, &k->s[i]) != 1)
 			return -1;
 	}
-	d->b = malloc(sizeof(pfloat) * d->m);
+	d->b = malloc(sizeof(scs_float) * d->m);
 	for (i = 0; i < d->m; i++) {
 		if (fscanf(fp, FLOATRW, &d->b[i]) != 1)
 			return -1;
 	}
-	d->c = malloc(sizeof(pfloat) * d->n);
+	d->c = malloc(sizeof(scs_float) * d->n);
 	for (i = 0; i < d->n; i++) {
 		if (fscanf(fp, FLOATRW, &d->c[i]) != 1)
 			return -1;
 	}
 	A = malloc(sizeof(AMatrix));
-	A->p = malloc(sizeof(idxint) * (d->n + 1));
+	A->p = malloc(sizeof(scs_int) * (d->n + 1));
 	for (i = 0; i < d->n + 1; i++) {
 		if (fscanf(fp, INTRW, &A->p[i]) != 1)
 			return -1;
 	}
 	Anz = A->p[d->n];
-	A->i = malloc(sizeof(idxint) * Anz);
+	A->i = malloc(sizeof(scs_int) * Anz);
 	for (i = 0; i < Anz; i++) {
 		if (fscanf(fp, INTRW, &A->i[i]) != 1)
 			return -1;
 	}
-	A->x = malloc(sizeof(pfloat) * Anz);
+	A->x = malloc(sizeof(scs_float) * Anz);
 	for (i = 0; i < Anz; i++) {
 		if (fscanf(fp, FLOATRW, &A->x[i]) != 1)
 			return -1;
@@ -150,7 +150,7 @@ idxint read_in_data(FILE * fp, Data * d, Cone * k) {
 	return 0;
 }
 
-idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb) {
+scs_int open_file(scs_int argc, char ** argv, scs_int idx, char * default_file, FILE ** fb) {
 	if (argc < idx + 1) {
 		printf("Not enough arguments supplied, using %s as default\n", default_file);
 	} else {

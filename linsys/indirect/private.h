@@ -9,16 +9,16 @@
 #include "linAlg.h"
 
 struct PRIVATE_DATA {
-	pfloat * p; /* cg iterate  */
-	pfloat * r; /* cg residual */
-	pfloat * Gp;
-	pfloat * tmp;
-	pfloat * Atx;
-	idxint * Ati;
-	idxint * Atp;
+	scs_float * p; /* cg iterate  */
+	scs_float * r; /* cg residual */
+	scs_float * Gp;
+	scs_float * tmp;
+	scs_float * Atx;
+	scs_int * Ati;
+	scs_int * Atp;
 	/* preconditioning */
-	pfloat * z;
-	pfloat * M;
+	scs_float * z;
+	scs_float * M;
 };
 
 #endif

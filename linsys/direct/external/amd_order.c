@@ -24,20 +24,20 @@ GLOBAL Int AMD_order
     const Int Ap [ ],
     const Int Ai [ ],
     Int P [ ],
-    pfloat Control [ ],
-    pfloat Info [ ]
+    scs_float Control [ ],
+    scs_float Info [ ]
 )
 {
     Int *Len, *S, nz, i, *Pinv, info, status, *Rp, *Ri, *Cp, *Ci, ok ;
     size_t nzaat, slen ;
-    pfloat mem = 0 ;
+    scs_float mem = 0 ;
 
 #ifndef NDEBUG
     AMD_debug_init ("amd") ;
 #endif
 
     /* clear the Info array, if it exists */
-    info = Info != (pfloat *) NULL ;
+    info = Info != (scs_float *) NULL ;
     if (info)
     {
 	for (i = 0 ; i < AMD_INFO ; i++)
@@ -139,7 +139,7 @@ GLOBAL Int AMD_order
     /* --------------------------------------------------------------------- */
 
     nzaat = AMD_aat (n, Cp, Ci, Len, P, Info) ;
-    AMD_DEBUG1 (("nzaat: %g\n", (pfloat) nzaat)) ;
+    AMD_DEBUG1 (("nzaat: %g\n", (scs_float) nzaat)) ;
     ASSERT ((MAX (nz-n, 0) <= nzaat) && (nzaat <= 2 * (size_t) nz)) ;
 
     /* --------------------------------------------------------------------- */
@@ -162,7 +162,7 @@ GLOBAL Int AMD_order
     {
 	S = amd_malloc (slen * sizeof (Int)) ;
     }
-    AMD_DEBUG1 (("slen %g\n", (pfloat) slen)) ;
+    AMD_DEBUG1 (("slen %g\n", (scs_float) slen)) ;
     if (!S)
     {
 	/* :: out of memory :: (or problem too large) */

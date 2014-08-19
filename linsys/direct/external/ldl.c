@@ -255,21 +255,21 @@ LDL_int LDL_numeric	/* returns n if successful, k if D (k,k) is zero */
     LDL_int n,		/* A and L are n-by-n, where n >= 0 */
     LDL_int Ap [ ],	/* input of size n+1, not modified */
     LDL_int Ai [ ],	/* input of size nz=Ap[n], not modified */
-    pfloat Ax [ ],	/* input of size nz=Ap[n], not modified */
+    scs_float Ax [ ],	/* input of size nz=Ap[n], not modified */
     LDL_int Lp [ ],	/* input of size n+1, not modified */
     LDL_int Parent [ ],	/* input of size n, not modified */
     LDL_int Lnz [ ],	/* output of size n, not defn. on input */
     LDL_int Li [ ],	/* output of size lnz=Lp[n], not defined on input */
-    pfloat Lx [ ],	/* output of size lnz=Lp[n], not defined on input */
-    pfloat D [ ],	/* output of size n, not defined on input */
-    pfloat Y [ ],	/* workspace of size n, not defn. on input or output */
+    scs_float Lx [ ],	/* output of size lnz=Lp[n], not defined on input */
+    scs_float D [ ],	/* output of size n, not defined on input */
+    scs_float Y [ ],	/* workspace of size n, not defn. on input or output */
     LDL_int Pattern [ ],/* workspace of size n, not defn. on input or output */
     LDL_int Flag [ ],	/* workspace of size n, not defn. on input or output */
     LDL_int P [ ],	/* optional input of size n */
     LDL_int Pinv [ ]	/* optional input of size n */
 )
 {
-    pfloat yi, l_ki ;
+    scs_float yi, l_ki ;
     LDL_int i, k, p, kk, p2, len, top ;
     for (k = 0 ; k < n ; k++)
     {
@@ -326,10 +326,10 @@ LDL_int LDL_numeric	/* returns n if successful, k if D (k,k) is zero */
 void LDL_lsolve
 (
  LDL_int n,		/* L is n-by-n, where n >= 0 */
- pfloat X [ ],	/* size n.  right-hand-side on input, soln. on output */
+ scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
  LDL_int Lp [ ],	/* input of size n+1, not modified */
  LDL_int Li [ ],	/* input of size lnz=Lp[n], not modified */
- pfloat Lx [ ]	/* input of size lnz=Lp[n], not modified */
+ scs_float Lx [ ]	/* input of size lnz=Lp[n], not modified */
  )
 {
   LDL_int j, p, p2 ;
@@ -351,8 +351,8 @@ void LDL_lsolve
 void LDL_dsolve
 (
     LDL_int n,		/* D is n-by-n, where n >= 0 */
-    pfloat X [ ],	/* size n.  right-hand-side on input, soln. on output */
-    pfloat D [ ]	/* input of size n, not modified */
+    scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
+    scs_float D [ ]	/* input of size n, not modified */
 )
 {
     LDL_int j ;
@@ -370,10 +370,10 @@ void LDL_dsolve
 void LDL_ltsolve
 (
  LDL_int n,		/* L is n-by-n, where n >= 0 */
- pfloat X [ ],	/* size n.  right-hand-side on input, soln. on output */
+ scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
  LDL_int Lp [ ],	/* input of size n+1, not modified */
  LDL_int Li [ ],	/* input of size lnz=Lp[n], not modified */
- pfloat Lx [ ]	/* input of size lnz=Lp[n], not modified */
+ scs_float Lx [ ]	/* input of size lnz=Lp[n], not modified */
  )
 {
   LDL_int j, p, p2 ;
@@ -395,8 +395,8 @@ void LDL_ltsolve
 void LDL_perm
 (
     LDL_int n,		/* size of X, B, and P */
-    pfloat X [ ],	/* output of size n. */
-    pfloat B [ ],	/* input of size n. */
+    scs_float X [ ],	/* output of size n. */
+    scs_float B [ ],	/* input of size n. */
     LDL_int P [ ]	/* input permutation array of size n. */
 )
 {
@@ -415,8 +415,8 @@ void LDL_perm
 void LDL_permt
 (
     LDL_int n,		/* size of X, B, and P */
-    pfloat X [ ],	/* output of size n. */
-    pfloat B [ ],	/* input of size n. */
+    scs_float X [ ],	/* output of size n. */
+    scs_float B [ ],	/* input of size n. */
     LDL_int P [ ]	/* input permutation array of size n. */
 )
 {

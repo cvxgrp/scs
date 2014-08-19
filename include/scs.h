@@ -25,7 +25,7 @@
 #define EPS             (1E-3)
 #define ALPHA           (1.5)
 #define RHO_X           (1E-3)
-#define SCALE           (5)
+#define SCALE           (5.0)
 #define CG_RATE         (2.0)
 #define VERBOSE         (1)
 #define NORMALIZE       (1)
@@ -34,40 +34,40 @@
 /* struct that containing standard problem data */
 struct PROBLEM_DATA {
 	/* problem dimensions */
-	idxint m, n; /* A has m rows, n cols*/
+	scs_int m, n; /* A has m rows, n cols*/
 
 	AMatrix * A; /* A is supplied in data format specified by linsys solver */
-	pfloat * b, *c; /* dense arrays for b (size m), c (size n) */
+	scs_float * b, *c; /* dense arrays for b (size m), c (size n) */
 
 	/* other input parameters: default suggested input */
-	idxint maxIters; /* maximum iterations to take: 2500 */
-	pfloat eps; /* convergence tolerance: 1e-3 */
-	pfloat alpha; /* relaxation parameter: 1.8 */
-	pfloat rhoX; /* x equality constraint scaling: 1e-3 */
-	pfloat scale; /* if normalized, rescales by this factor: 5 */
-	pfloat cgRate; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-	idxint verbose; /* boolean, write out progress: 1 */
-	idxint normalize; /* boolean, heuristic data rescaling: 1 */
-	idxint warmStart; /* boolean, warm start (put initial guess in Sol struct): 0 */
+	scs_int max_iters; /* maximum iterations to take: 2500 */
+	scs_float eps; /* convergence tolerance: 1e-3 */
+	scs_float alpha; /* relaxation parameter: 1.8 */
+	scs_float rho_x; /* x equality constraint scaling: 1e-3 */
+	scs_float scale; /* if normalized, rescales by this factor: 5 */
+	scs_float cg_rate; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+	scs_int verbose; /* boolean, write out progress: 1 */
+	scs_int normalize; /* boolean, heuristic data rescaling: 1 */
+	scs_int warm_start; /* boolean, warm start (put initial guess in Sol struct): 0 */
 };
 
 /* contains primal-dual solution arrays */
 struct SOL_VARS {
-	pfloat * x, *y, *s;
+	scs_float * x, *y, *s;
 };
 
 /* contains terminating information */
 struct INFO {
-	idxint iter; /* number of iterations taken */
+	scs_int iter; /* number of iterations taken */
 	char status[32]; /* status string, e.g. 'Solved' */
-	idxint statusVal; /* status as idxint, defined below */
-	pfloat pobj; /* primal objective */
-	pfloat dobj; /* dual objective */
-	pfloat resPri; /* primal equality residual */
-	pfloat resDual; /* dual equality residual */
-	pfloat relGap; /* relative duality gap */
-	pfloat setupTime; /* time taken for setup phase */
-	pfloat solveTime; /* time taken for solve phase */
+	scs_int statusVal; /* status as scs_int, defined below */
+	scs_float pobj; /* primal objective */
+	scs_float dobj; /* dual objective */
+	scs_float resPri; /* primal equality residual */
+	scs_float resDual; /* dual equality residual */
+	scs_float relGap; /* relative duality gap */
+	scs_float setupTime; /* time taken for setup phase */
+	scs_float solveTime; /* time taken for solve phase */
 };
 
 /* main library api's:
@@ -76,29 +76,29 @@ struct INFO {
  scs_finish: cleans up the memory (one per init call)
  */
 Work * scs_init(Data * d, Cone * k, Info * info);
-idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
+scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
 void scs_finish(Data * d, Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */
-idxint scs(Data * d, Cone * k, Sol * sol, Info * info);
+scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);
 
 /* the following structs do not need to be exposed */
 struct WORK {
-	pfloat *u, *v, *u_t, *u_prev; /* u_prev = u from previous iteration */
-	pfloat *h, *g, *pr, *dr;
-	pfloat gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA, meanNormColA;
-	pfloat *D, *E; /* for normalization */
+	scs_float *u, *v, *u_t, *u_prev; /* u_prev = u from previous iteration */
+	scs_float *h, *g, *pr, *dr;
+	scs_float gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA, meanNormColA;
+	scs_float *D, *E; /* for normalization */
 	Priv * p;
 };
 
 /* to hold residual information */
 struct residuals {
-	pfloat resDual;
-	pfloat resPri;
-	pfloat relGap;
-	pfloat cTx;
-	pfloat bTy;
-	pfloat tau;
-	pfloat kap;
+	scs_float resDual;
+	scs_float resPri;
+	scs_float relGap;
+	scs_float cTx;
+	scs_float bTy;
+	scs_float tau;
+	scs_float kap;
 };
 
 #endif

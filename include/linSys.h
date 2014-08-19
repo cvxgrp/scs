@@ -12,17 +12,17 @@ typedef struct PRIVATE_DATA Priv;
 /* initialize Priv structure and perform any necessary preprocessing */
 Priv * initPriv(Data * d);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains warm-start, iter is current scs iteration count */
-idxint solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter);
+scs_int solveLinSys(Data * d, Priv * p, scs_float * b, const scs_float * s, scs_int iter);
 /* frees Priv structure and allocated memory in Priv */
 void freePriv(Priv * p);
 
 /* forms y += A'*x */
-void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y);
+void accumByAtrans(Data * d, Priv * p, const scs_float *x, scs_float *y);
 /* forms y += A*x */
-void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y);
+void accumByA(Data * d, Priv * p, const scs_float *x, scs_float *y);
 
 /* returns negative num if input data is invalid */
-idxint validateLinSys(Data *d);
+scs_int validateLinSys(Data *d);
 
 /* returns string describing method, can return null, if not null free will be called on output */
 char * getLinSysMethod(Data * d, Priv * p);

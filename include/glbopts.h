@@ -26,24 +26,24 @@
 
 #ifdef DLONG
     #ifdef _WIN64
-        typedef __int64 idxint;
-        /* #define idxint __int64 */
+        typedef __int64 scs_int;
+        /* #define scs_int __int64 */
     #else
-        typedef long idxint;
-        /* #define idxint long */
+        typedef long scs_int;
+        /* #define scs_int long */
     #endif
 #else
-    typedef int idxint;
-    /* #define idxint int */
+    typedef int scs_int;
+    /* #define scs_int int */
 #endif
 
 #ifndef FLOAT
-typedef double pfloat;
+typedef double scs_float;
 #ifndef NAN
-#define NAN ((pfloat)0x7ff8000000000000)
+#define NAN ((scs_float)0x7ff8000000000000)
 #endif
 #else
-typedef float pfloat;
+typedef float scs_float;
 #ifndef NAN
 #define NAN ((float)0x7fc00000)
 #endif

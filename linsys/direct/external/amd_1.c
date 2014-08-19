@@ -37,8 +37,8 @@ GLOBAL void AMD_1
     Int slen,		/* slen >= sum (Len [0..n-1]) + 7n,
 			 * ideally slen = 1.2 * sum (Len) + 8n */
     Int S [ ],		/* size slen workspace */
-    pfloat Control [ ],	/* input array of size AMD_CONTROL */
-    pfloat Info [ ]	/* output array of size AMD_INFO */
+    scs_float Control [ ],	/* input array of size AMD_CONTROL */
+    scs_float Info [ ]	/* output array of size AMD_INFO */
 )
 {
     Int i, j, k, p, pfree, iwlen, pj, p1, p2, pj2, *Iw, *Pe, *Nv, *Head,

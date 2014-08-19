@@ -108,15 +108,15 @@ void *SuiteSparse_free      /* always returns NULL */
 
 void SuiteSparse_tic    /* start the timer */
 (
-    pfloat tic [2]      /* output, contents undefined on input */
+    scs_float tic [2]      /* output, contents undefined on input */
 ) ;
 
-pfloat SuiteSparse_toc  /* return time in seconds since last tic */
+scs_float SuiteSparse_toc  /* return time in seconds since last tic */
 (
-    pfloat tic [2]      /* input: from last call to SuiteSparse_tic */
+    scs_float tic [2]      /* input: from last call to SuiteSparse_tic */
 ) ;
 
-pfloat SuiteSparse_time  /* returns current wall clock time in seconds */
+scs_float SuiteSparse_time  /* returns current wall clock time in seconds */
 (
     void
 ) ;

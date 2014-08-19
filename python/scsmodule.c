@@ -26,7 +26,7 @@
 
 
 static int intType;
-static int pfloatType;
+static int scs_floatType;
 
 struct ScsPyData {
 	PyArrayObject * Ax;
@@ -39,10 +39,10 @@ struct ScsPyData {
 	PyArrayObject * s0;
 };
 
-/* Note, Python3.x may require special handling for the idxint and pfloat
+/* Note, Python3.x may require special handling for the scs_int and scs_float
  * types. */
 static int getIntType(void) {
-	switch (sizeof(idxint)) {
+	switch (sizeof(scs_int)) {
 	case 1:
 		return NPY_INT8;
 	case 2:
@@ -57,7 +57,7 @@ static int getIntType(void) {
 }
 
 static int getDoubleType(void) {
-	/* known bug, if pfloat isn't "double", will cause aliasing in memory */
+	/* known bug, if scs_float isn't "double", will cause aliasing in memory */
 	return NPY_DOUBLE;
 }
 
@@ -82,43 +82,43 @@ static int printErr(char * key) {
 	return -1;
 }
 
-static idxint getWarmStart(char * key, pfloat ** x, PyArrayObject ** px0, idxint l, PyObject * warm) {
+static scs_int getWarmStart(char * key, scs_float ** x, PyArrayObject ** px0, scs_int l, PyObject * warm) {
     PyArrayObject *x0 = (PyArrayObject *) PyDict_GetItemString(warm, key);
-	*x = scs_calloc(l, sizeof(pfloat));
+	*x = scs_calloc(l, sizeof(scs_float));
     if (x0) {
 		if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l) {
 			PySys_WriteStderr("Error parsing warm-start input\n");
 			return 0;
 		} else {
-			*px0 = getContiguous(x0, pfloatType);
-			*x = (pfloat *) PyArray_DATA(*px0);
+			*px0 = getContiguous(x0, scs_floatType);
+			*x = (scs_float *) PyArray_DATA(*px0);
 			return 1;
 		}
 	}
 	return 0;
 }
 
-static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * cone) {
+static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject * cone) {
 	/* get cone['key'] */
-	idxint i, n = 0;
-	idxint * q = NULL;
+	scs_int i, n = 0;
+	scs_int * q = NULL;
 	PyObject *obj = PyDict_GetItemString(cone, key);
 	if (obj) {
 		if (PyList_Check(obj)) {
 			n = PyList_Size(obj);
-			q = scs_calloc(n, sizeof(idxint));
+			q = scs_calloc(n, sizeof(scs_int));
 			for (i = 0; i < n; ++i) {
 				PyObject *qi = PyList_GetItem(obj, i);
-	            if ( !( (PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) >= 0)) ||
-	                        (PyLong_Check(qi) && ((q[i] = (idxint) PyLong_AsLong(qi)) >= 0))) ) {
+	            if ( !( (PyInt_Check(qi) && ((q[i] = (scs_int) PyInt_AsLong(qi)) >= 0)) ||
+	                        (PyLong_Check(qi) && ((q[i] = (scs_int) PyLong_AsLong(qi)) >= 0))) ) {
 					return printErr(key);
 	            }
 			}
 		} else if (PyInt_Check(obj) || PyLong_Check(obj)) {
 			n = 1;
-			q = scs_malloc(sizeof(idxint));
-            if ( !( (PyInt_Check(obj) && ((*q = (idxint) PyInt_AsLong(obj)) >= 0)) ||
-                        (PyLong_Check(obj) && ((*q = (idxint) PyLong_AsLong(obj)) >= 0))) ) {
+			q = scs_malloc(sizeof(scs_int));
+            if ( !( (PyInt_Check(obj) && ((*q = (scs_int) PyInt_AsLong(obj)) >= 0)) ||
+                        (PyLong_Check(obj) && ((*q = (scs_int) PyLong_AsLong(obj)) >= 0))) ) {
 				return printErr(key);
 			}
 		} else {
@@ -130,13 +130,13 @@ static int getConeArrDim(char * key, idxint ** varr, idxint * vsize, PyObject * 
 	return 0;
 }
 
-static int getPosIntParam(char * key, idxint * v, idxint defVal, PyObject * opts) {
+static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * opts) {
     *v = defVal;
     if (opts) {
         PyObject *obj = PyDict_GetItemString(opts, key);
         if (obj) {
-            if ( !( (PyInt_Check(obj) && ((*v = (idxint) PyInt_AsLong(obj)) >= 0)) ||
-                        (PyLong_Check(obj) && ((*v = (idxint) PyLong_AsLong(obj)) >= 0))) ) {
+            if ( !( (PyInt_Check(obj) && ((*v = (scs_int) PyInt_AsLong(obj)) >= 0)) ||
+                        (PyLong_Check(obj) && ((*v = (scs_int) PyLong_AsLong(obj)) >= 0))) ) {
                 return printErr(key);
             }
         }
@@ -215,12 +215,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyObject *x, *y, *s, *returnDict, *infoDict;
     
     /* set defaults */
-    d->maxIters = MAX_ITERS;
+    d->max_iters = MAX_ITERS;
     d->scale = SCALE;
     d->eps = EPS;
-    d->cgRate = CG_RATE;
+    d->cg_rate = CG_RATE;
     d->alpha = ALPHA;
-    d->rhoX = RHO_X;
+    d->rho_x = RHO_X;
 
 	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, 
         &(d->m), 
@@ -234,12 +234,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
         &PyDict_Type, &warm,
         &PyBool_Type, &verbose,
         &PyBool_Type, &normalize,
-        &(d->maxIters),
+        &(d->max_iters),
         &(d->scale),
         &(d->eps),
-        &(d->cgRate),
+        &(d->cg_rate),
         &(d->alpha),
-        &(d->rhoX)) ) { 
+        &(d->rho_x)) ) { 
         PySys_WriteStderr("error parsing inputs");
         return NULL; 
     }
@@ -254,9 +254,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return NULL;
 	}
 
-	/* get the typenum for the primitive idxint and pfloat types */
+	/* get the typenum for the primitive scs_int and scs_float types */
 	intType = getIntType();
-	pfloatType = getDoubleType();
+	scs_floatType = getDoubleType();
 
 	/* set A */
 	if (!PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
@@ -268,14 +268,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (!PyArray_ISINTEGER(Ap) || PyArray_NDIM(Ap) != 1) {
 		return finishWithErr(d, k, &ps, "Ap must be a numpy array of ints");
 	}
-	ps.Ax = getContiguous(Ax, pfloatType);
+	ps.Ax = getContiguous(Ax, scs_floatType);
 	ps.Ai = getContiguous(Ai, intType);
 	ps.Ap = getContiguous(Ap, intType);
 
     A = scs_malloc(sizeof(AMatrix));
-	A->x = (pfloat *) PyArray_DATA(ps.Ax);
-	A->i = (idxint *) PyArray_DATA(ps.Ai);
-	A->p = (idxint *) PyArray_DATA(ps.Ap);
+	A->x = (scs_float *) PyArray_DATA(ps.Ax);
+	A->i = (scs_int *) PyArray_DATA(ps.Ai);
+	A->p = (scs_int *) PyArray_DATA(ps.Ap);
 	d->A = A;
 	/*d->Anz = d->Ap[d->n]; */
 	/*d->Anz = PyArray_DIM(Ai,0); */
@@ -286,8 +286,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (PyArray_DIM(c,0) != d->n) {
 		return finishWithErr(d, k, &ps, "c has incompatible dimension with A");
 	}
-	ps.c = getContiguous(c, pfloatType);
-	d->c = (pfloat *) PyArray_DATA(ps.c);
+	ps.c = getContiguous(c, scs_floatType);
+	d->c = (scs_float *) PyArray_DATA(ps.c);
 	/* set b */
 	if (!PyArray_ISFLOAT(b) || PyArray_NDIM(b) != 1) {
 		return finishWithErr(d, k, &ps, "b must be a dense numpy array with one dimension");
@@ -295,11 +295,11 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (PyArray_DIM(b,0) != d->m) {
 		return finishWithErr(d, k, &ps, "b has incompatible dimension with A");
 	}
-	ps.b = getContiguous(b, pfloatType);
-	d->b = (pfloat *) PyArray_DATA(ps.b);
+	ps.b = getContiguous(b, scs_floatType);
+	d->b = (scs_float *) PyArray_DATA(ps.b);
 
-    d->verbose = verbose ? (idxint) PyObject_IsTrue(verbose) : 0;
-    d->normalize = normalize ? (idxint) PyObject_IsTrue(normalize) : 0;
+    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : 0;
+    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : 0;
 
     if (getPosIntParam("f", &(k->f), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field f");
@@ -320,9 +320,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
 
-    d->verbose = verbose ? (idxint) PyObject_IsTrue(verbose) : 0;
-    d->normalize = normalize ? (idxint) PyObject_IsTrue(normalize) : 0;
-    if(d->maxIters < 0) {
+    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : 0;
+    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : 0;
+    if(d->max_iters < 0) {
 		return finishWithErr(d, k, &ps, "max_iters must be positive");
 	}
     if(d->scale < 0) {
@@ -331,21 +331,21 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     if(d->eps < 0) {
 		return finishWithErr(d, k, &ps, "eps must be positive");
 	}
-    if(d->cgRate < 0) {
+    if(d->cg_rate < 0) {
 		return finishWithErr(d, k, &ps, "cg_rate must be positive");
 	}
     if(d->alpha < 0) {
 		return finishWithErr(d, k, &ps, "alpha must be positive");
 	}
-    if(d->rhoX < 0) {
+    if(d->rho_x < 0) {
 		return finishWithErr(d, k, &ps, "rho_x must be positive");
 	}
 	/* parse warm start if set */
-    d->warmStart = WARM_START;
+    d->warm_start = WARM_START;
 	if (warm) {
-		d->warmStart = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
-		d->warmStart |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
-		d->warmStart |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+		d->warm_start = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
+		d->warm_start |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
+		d->warm_start |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
 	}
 	
     /* Solve! */
@@ -356,7 +356,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* matrix *x; */
 	/* if(!(x = Matrix_New(n,1,DOUBLE))) */
 	/*   return PyErr_NoMemory(); */
-	/* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(pfloat)); */
+	/* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(scs_float)); */
 	veclen[0] = d->n;
 	x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
 
@@ -364,7 +364,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* matrix *y; */
 	/* if(!(y = Matrix_New(p,1,DOUBLE))) */
 	/*   return PyErr_NoMemory(); */
-	/* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(pfloat)); */
+	/* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(scs_float)); */
 	veclen[0] = d->m;
 	y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
 
@@ -372,14 +372,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* matrix *s; */
 	/* if(!(s = Matrix_New(m,1,DOUBLE))) */
 	/*   return PyErr_NoMemory(); */
-	/* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(pfloat)); */
+	/* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(scs_float)); */
 	veclen[0] = d->m;
 	s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
 
 	infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}", "statusVal",
-			(idxint) info.statusVal, "iter", (idxint) info.iter, "pobj", (pfloat) info.pobj, "dobj", (pfloat) info.dobj,
-			"resPri", (pfloat) info.resPri, "resDual", (pfloat) info.resDual, "relGap", (pfloat) info.relGap,
-			"solveTime", (pfloat) (info.solveTime / 1e3), "setupTime", (pfloat) (info.setupTime / 1e3), "status",
+			(scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj, "dobj", (scs_float) info.dobj,
+			"resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual, "relGap", (scs_float) info.relGap,
+			"solveTime", (scs_float) (info.solveTime / 1e3), "setupTime", (scs_float) (info.setupTime / 1e3), "status",
 			info.status);
 
     returnDict = Py_BuildValue("{s:O,s:O,s:O,s:O}", "x", x, "y", y, "s", s, "info", infoDict);

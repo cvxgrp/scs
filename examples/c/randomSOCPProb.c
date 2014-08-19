@@ -17,24 +17,24 @@
  */
 
 void setScsParams(Data * d) {
-	d->maxIters = MAX_ITERS; /* maximum iterations to take: 2500 */
+	d->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
 	d->eps = EPS; /* convergence tolerance: 1e-3 */
 	d->alpha = ALPHA; /* relaxation parameter: 1.8 */
-	d->rhoX = RHO_X; /* x equality constraint scaling: 1e-3 */
+	d->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */
 	d->scale = SCALE; /* if normalized, rescales by this factor: 1 */
-	d->cgRate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+	d->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
 	d->verbose = VERBOSE; /* boolean, write out progress: 1 */
 	d->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
-	d->warmStart = WARM_START;
+	d->warm_start = WARM_START;
 }
 
 int main(int argc, char **argv) {
-	idxint n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
+	scs_int n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
 	Cone * k;
 	Data * d;
 	Sol * sol, * opt_sol;
 	Info info = { 0 };
-	pfloat p_f, p_l;
+	scs_float p_f, p_l;
 	int seed = 0;
 
 	/* default parameters */
@@ -80,19 +80,19 @@ int main(int argc, char **argv) {
 	col_nnz = (int) ceil(sqrt(n));
 	nnz = n * col_nnz;
 
-	max_q = (idxint) ceil(3 * n / log(3 * n));
+	max_q = (scs_int) ceil(3 * n / log(3 * n));
 
 	if (p_f + p_l > 1.0) {
 		printf("error: p_f + p_l > 1.0!\n");
 		return 1;
 	}
 
-	k->f = (idxint) floor(3 * n * p_f);
-	k->l = (idxint) floor(3 * n * p_l);
+	k->f = (scs_int) floor(3 * n * p_f);
+	k->l = (scs_int) floor(3 * n * p_l);
 
 	k->qsize = 0;
 	q_num_rows = 3 * n - k->f - k->l;
-	k->q = scs_malloc(q_num_rows * sizeof(idxint));
+	k->q = scs_malloc(q_num_rows * sizeof(scs_int));
 
 	while (q_num_rows > max_q) {
 		int size;
@@ -117,10 +117,10 @@ int main(int argc, char **argv) {
 	k->ed = 0;
 
 	scs_printf("\nA is %ld by %ld, with %ld nonzeros per column.\n", (long) m, (long) n, (long) col_nnz);
-	scs_printf("A has %ld nonzeros (%f%% dense).\n", (long) nnz, 100 * (pfloat) col_nnz / m);
-	scs_printf("Nonzeros of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(pfloat)) / POWF(2, 30));
-	scs_printf("Row idxs of A take %f GB of storage.\n", ((pfloat) nnz * sizeof(idxint)) / POWF(2, 30));
-	scs_printf("Col ptrs of A take %f GB of storage.\n\n", ((pfloat) n * sizeof(idxint)) / POWF(2, 30));
+	scs_printf("A has %ld nonzeros (%f%% dense).\n", (long) nnz, 100 * (scs_float) col_nnz / m);
+	scs_printf("Nonzeros of A take %f GB of storage.\n", ((scs_float) nnz * sizeof(scs_float)) / POWF(2, 30));
+	scs_printf("Row idxs of A take %f GB of storage.\n", ((scs_float) nnz * sizeof(scs_int)) / POWF(2, 30));
+	scs_printf("Col ptrs of A take %f GB of storage.\n\n", ((scs_float) n * sizeof(scs_int)) / POWF(2, 30));
 
 	printf("Cone information:\n");
 	printf("Zero cone rows: %ld\n", (long) k->f);

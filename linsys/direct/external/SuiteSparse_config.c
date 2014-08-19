@@ -23,7 +23,7 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 {
     void *p ;
     if (nitems < 1) nitems = 1 ;
-    if (nitems * size_of_item != ((pfloat) nitems) * size_of_item)
+    if (nitems * size_of_item != ((scs_float) nitems) * size_of_item)
     {
         /* Int overflow */
         *ok = 0 ;
@@ -108,21 +108,21 @@ void *SuiteSparse_free      /* always returns NULL */
 
 void SuiteSparse_tic
 (
-    pfloat tic [2]      /* output, contents undefined on input */
+    scs_float tic [2]      /* output, contents undefined on input */
 )
 {
     /* POSIX C 1993 timer, requires -librt */
     struct timespec t ;
     clock_gettime (CLOCK_MONOTONIC, &t) ;
-    tic [0] = (pfloat) (t.tv_sec) ;
-    tic [1] = (pfloat) (t.tv_nsec) ;
+    tic [0] = (scs_float) (t.tv_sec) ;
+    tic [1] = (scs_float) (t.tv_nsec) ;
 }
 
 #else
 
 void SuiteSparse_tic
 (
-    pfloat tic [2]      /* output, contents undefined on input */
+    scs_float tic [2]      /* output, contents undefined on input */
 )
 {
     /* no timer installed */
@@ -144,12 +144,12 @@ void SuiteSparse_tic
  * SuiteSparse_tic and do the calculations differently.
  */
 
-pfloat SuiteSparse_toc  /* returns time in seconds since last tic */
+scs_float SuiteSparse_toc  /* returns time in seconds since last tic */
 (
-    pfloat tic [2]  /* input, not modified from last call to SuiteSparse_tic */
+    scs_float tic [2]  /* input, not modified from last call to SuiteSparse_tic */
 )
 {
-    pfloat toc [2] ;
+    scs_float toc [2] ;
     SuiteSparse_tic (toc) ;
     return ((toc [0] - tic [0]) + 1e-9 * (toc [1] - tic [1])) ;
 }
@@ -161,12 +161,12 @@ pfloat SuiteSparse_toc  /* returns time in seconds since last tic */
 
 /* This function might not be accurate down to the nanosecond. */
 
-pfloat SuiteSparse_time  /* returns current wall clock time in seconds */
+scs_float SuiteSparse_time  /* returns current wall clock time in seconds */
 (
     void
 )
 {
-    pfloat toc [2] ;
+    scs_float toc [2] ;
     SuiteSparse_tic (toc) ;
     return (toc [0] + 1e-9 * toc [1]) ;
 }

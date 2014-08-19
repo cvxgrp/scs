@@ -52,8 +52,8 @@ int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
     const int Ap [ ],          /* column pointers for A, of size n+1 */
     const int Ai [ ],          /* row indices of A, of size nz = Ap [n] */
     int P [ ],                 /* output permutation, of size n */
-    pfloat Control [ ],        /* input Control settings, of size AMD_CONTROL */
-    pfloat Info [ ]            /* output Info statistics, of size AMD_INFO */
+    scs_float Control [ ],        /* input Control settings, of size AMD_CONTROL */
+    scs_float Info [ ]            /* output Info statistics, of size AMD_INFO */
 ) ;
 
 SuiteSparse_long amd_l_order    /* see above for description of arguments */
@@ -62,8 +62,8 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
     const SuiteSparse_long Ap [ ],
     const SuiteSparse_long Ai [ ],
     SuiteSparse_long P [ ],
-    pfloat Control [ ],
-    pfloat Info [ ]
+    scs_float Control [ ],
+    scs_float Info [ ]
 ) ;
 
 /* Input arguments (not modified):
@@ -250,8 +250,8 @@ void amd_2
     int Elen [ ],
     int Degree [ ],
     int W [ ],
-    pfloat Control [ ],
-    pfloat Info [ ]
+    scs_float Control [ ],
+    scs_float Info [ ]
 ) ;
 
 void amd_l2
@@ -269,8 +269,8 @@ void amd_l2
     SuiteSparse_long Elen [ ],
     SuiteSparse_long Degree [ ],
     SuiteSparse_long W [ ],
-    pfloat Control [ ],
-    pfloat Info [ ]
+    scs_float Control [ ],
+    scs_float Info [ ]
 ) ;
 
 /* ------------------------------------------------------------------------- */
@@ -325,16 +325,16 @@ EXTERN int (*amd_printf) (const char *, ...) ;            /* pointer to printf *
 /* ------------------------------------------------------------------------- */
 
 /* amd_defaults:  sets the default control settings */
-void amd_defaults   (pfloat Control [ ]) ;
-void amd_l_defaults (pfloat Control [ ]) ;
+void amd_defaults   (scs_float Control [ ]) ;
+void amd_l_defaults (scs_float Control [ ]) ;
 
 /* amd_control: prints the control settings */
-void amd_control    (pfloat Control [ ]) ;
-void amd_l_control  (pfloat Control [ ]) ;
+void amd_control    (scs_float Control [ ]) ;
+void amd_l_control  (scs_float Control [ ]) ;
 
 /* amd_info: prints the statistics */
-void amd_info       (pfloat Info [ ]) ;
-void amd_l_info     (pfloat Info [ ]) ;
+void amd_info       (scs_float Info [ ]) ;
+void amd_l_info     (scs_float Info [ ]) ;
 
 #define AMD_CONTROL 5          /* size of Control array */
 #define AMD_INFO 20            /* size of Info array */

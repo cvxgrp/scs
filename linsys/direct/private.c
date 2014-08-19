@@ -1,7 +1,7 @@
 #include "private.h"
 
 static timer linsysTimer;
-static pfloat totalSolveTime;
+static scs_float totalSolveTime;
 
 char * getLinSysMethod(Data * d, Priv * p) {
 	char * tmp = scs_malloc(sizeof(char) * 64);
@@ -11,7 +11,7 @@ char * getLinSysMethod(Data * d, Priv * p) {
 
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
-	idxint n = p->L->n;
+	scs_int n = p->L->n;
 	sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n", (long ) (p->L->p[n] + n),
 			totalSolveTime / (info->iter + 1) / 1e3);
 	totalSolveTime = 0;
@@ -39,12 +39,12 @@ cs * formKKT(Data * d) {
 	 *
 	 * forms upper triangular part of [I A'; A -I]
 	 */
-	idxint j, k, kk;
+	scs_int j, k, kk;
 	cs * K_cs;
 	AMatrix * A = d->A;
 	/* I at top left */
-	const idxint Anz = A->p[d->n];
-	const idxint Knzmax = d->n + d->m + Anz;
+	const scs_int Anz = A->p[d->n];
+	const scs_int Knzmax = d->n + d->m + Anz;
 	cs * K = cs_spalloc(d->m + d->n, d->m + d->n, Knzmax, 1, 1);
 
 #ifdef EXTRAVERBOSE
@@ -58,7 +58,7 @@ cs * formKKT(Data * d) {
 	for (k = 0; k < d->n; k++) {
 		K->i[kk] = k;
 		K->p[kk] = k;
-		K->x[kk] = d->rhoX;
+		K->x[kk] = d->rho_x;
 		kk++;
 	}
 	/* A^T at top right : CCS: */
@@ -84,33 +84,33 @@ cs * formKKT(Data * d) {
 	return (K_cs);
 }
 
-idxint LDLInit(cs * A, idxint P[], pfloat **info) {
-	*info = (pfloat *) scs_malloc(AMD_INFO * sizeof(pfloat));
+scs_int LDLInit(cs * A, scs_int P[], scs_float **info) {
+	*info = (scs_float *) scs_malloc(AMD_INFO * sizeof(scs_float));
 #ifdef DLONG
-	return(amd_l_order(A->n, A->p, A->i, P, (pfloat *) NULL, *info));
+	return(amd_l_order(A->n, A->p, A->i, P, (scs_float *) NULL, *info));
 #else
-	return (amd_order(A->n, A->p, A->i, P, (pfloat *) NULL, *info));
+	return (amd_order(A->n, A->p, A->i, P, (scs_float *) NULL, *info));
 #endif
 }
 
-idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs **L, pfloat **D) {
-	idxint kk, n = A->n;
-	idxint * Parent = scs_malloc(n * sizeof(idxint));
-	idxint * Lnz = scs_malloc(n * sizeof(idxint));
-	idxint * Flag = scs_malloc(n * sizeof(idxint));
-	idxint * Pattern = scs_malloc(n * sizeof(idxint));
-	pfloat * Y = scs_malloc(n * sizeof(pfloat));
-	(*L)->p = (idxint *) scs_malloc((1 + n) * sizeof(idxint));
+scs_int LDLFactor(cs * A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
+	scs_int kk, n = A->n;
+	scs_int * Parent = scs_malloc(n * sizeof(scs_int));
+	scs_int * Lnz = scs_malloc(n * sizeof(scs_int));
+	scs_int * Flag = scs_malloc(n * sizeof(scs_int));
+	scs_int * Pattern = scs_malloc(n * sizeof(scs_int));
+	scs_float * Y = scs_malloc(n * sizeof(scs_float));
+	(*L)->p = (scs_int *) scs_malloc((1 + n) * sizeof(scs_int));
 
-	/*idxint Parent[n], Lnz[n], Flag[n], Pattern[n]; */
+	/*scs_int Parent[n], Lnz[n], Flag[n], Pattern[n]; */
 	/*pfloat Y[n]; */
 
 	LDL_symbolic(n, A->p, A->i, (*L)->p, Parent, Lnz, Flag, P, Pinv);
 
 	(*L)->nzmax = *((*L)->p + n);
-	(*L)->x = (pfloat *) scs_malloc((*L)->nzmax * sizeof(pfloat));
-	(*L)->i = (idxint *) scs_malloc((*L)->nzmax * sizeof(idxint));
-	*D = (pfloat *) scs_malloc(n * sizeof(pfloat));
+	(*L)->x = (scs_float *) scs_malloc((*L)->nzmax * sizeof(scs_float));
+	(*L)->i = (scs_int *) scs_malloc((*L)->nzmax * sizeof(scs_int));
+	*D = (scs_float *) scs_malloc(n * sizeof(scs_float));
 
 	if (!(*D) || !(*L)->i || !(*L)->x || !Y || !Pattern || !Flag || !Lnz || !Parent)
 		return -1;
@@ -131,12 +131,12 @@ idxint LDLFactor(cs * A, idxint P[], idxint Pinv[], cs **L, pfloat **D) {
 	return (n - kk);
 }
 
-void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp) {
+void LDLSolve(scs_float *x, scs_float b[], cs * L, scs_float D[], scs_int P[], scs_float * bp) {
 	/* solves PLDL'P' x = b for x */
-	idxint n = L->n;
+	scs_int n = L->n;
 	if (P == NULL) {
 		if (x != b) /* if they're different addresses */
-			memcpy(x, b, n * sizeof(pfloat));
+			memcpy(x, b, n * sizeof(scs_float));
 		LDL_lsolve(n, x, L->p, L->i, L->x);
 		LDL_dsolve(n, x, D);
 		LDL_ltsolve(n, x, L->p, L->i, L->x);
@@ -149,14 +149,14 @@ void LDLSolve(pfloat *x, pfloat b[], cs * L, pfloat D[], idxint P[], pfloat * bp
 	}
 }
 
-void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) {
+void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
 	/* y  = A'*x
 	 A in column compressed format
 	 parallelizes over columns (rows of A')
 	 */
-	idxint p, j;
-	idxint c1, c2;
-	pfloat yj;
+	scs_int p, j;
+	scs_int c1, c2;
+	scs_float yj;
 #ifdef OPENMP
 #pragma omp parallel for private(p,c1,c2,yj)
 #endif
@@ -171,15 +171,15 @@ void _accumByAtrans(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloa
 	}
 }
 
-void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x, pfloat *y) {
+void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
 	/*y  = A*x
 	 A in column compressed format
 	 this parallelizes over columns and uses
 	 pragma atomic to prevent concurrent writes to y
 	 */
-	idxint p, j;
-	idxint c1, c2;
-	pfloat xj;
+	scs_int p, j;
+	scs_int c1, c2;
+	scs_float xj;
 	/*#pragma omp parallel for private(p,c1,c2,xj)  */
 	for (j = 0; j < n; j++) {
 		xj = x[j];
@@ -192,17 +192,17 @@ void _accumByA(idxint n, pfloat * Ax, idxint * Ai, idxint * Ap, const pfloat *x,
 	}
 }
 
-void accumByAtrans(Data * d, Priv * p, const pfloat *x, pfloat *y) {
+void accumByAtrans(Data * d, Priv * p, const scs_float *x, scs_float *y) {
 	AMatrix * A = d->A;
 	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
 }
-void accumByA(Data * d, Priv * p, const pfloat *x, pfloat *y) {
+void accumByA(Data * d, Priv * p, const scs_float *x, scs_float *y) {
 	AMatrix * A = d->A;
 	_accumByA(d->n, A->x, A->i, A->p, x, y);
 }
-idxint factorize(Data * d, Priv * p) {
-	pfloat *info;
-	idxint *Pinv, amd_status, ldl_status;
+scs_int factorize(Data * d, Priv * p) {
+	scs_float *info;
+	scs_int *Pinv, amd_status, ldl_status;
 	cs *C, *K = formKKT(d);
 	if (!K) {
 		return -1;
@@ -232,10 +232,10 @@ idxint factorize(Data * d, Priv * p) {
 
 Priv * initPriv(Data * d) {
 	Priv * p = scs_calloc(1, sizeof(Priv));
-	idxint n_plus_m = d->n + d->m;
-	p->P = scs_malloc(sizeof(idxint) * n_plus_m);
+	scs_int n_plus_m = d->n + d->m;
+	p->P = scs_malloc(sizeof(scs_int) * n_plus_m);
 	p->L = scs_malloc(sizeof(cs));
-	p->bp = scs_malloc(n_plus_m * sizeof(pfloat));
+	p->bp = scs_malloc(n_plus_m * sizeof(scs_float));
 	p->L->m = n_plus_m;
 	p->L->n = n_plus_m;
 	p->L->nz = -1;
@@ -248,7 +248,7 @@ Priv * initPriv(Data * d) {
 	return p;
 }
 
-idxint solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+scs_int solveLinSys(Data * d, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
 	tic(&linsysTimer);

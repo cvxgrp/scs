@@ -59,8 +59,8 @@ GLOBAL void AMD_2
     Int W [ ],
 
     /* control parameters and output statistics */
-    pfloat Control [ ],	/* array of size AMD_CONTROL */
-    pfloat Info [ ]	/* array of size AMD_INFO */
+    scs_float Control [ ],	/* array of size AMD_CONTROL */
+    scs_float Info [ ]	/* array of size AMD_INFO */
 )
 {
 
@@ -513,7 +513,7 @@ GLOBAL void AMD_2
  * ----------------------------------------------------------------------------
  */
 
-    pfloat f, r, ndiv, s, nms_lu, nms_ldl, dmax, alpha, lnz, lnzme ;
+    scs_float f, r, ndiv, s, nms_lu, nms_ldl, dmax, alpha, lnz, lnzme ;
 
 /*
  * f:		nvpiv
@@ -582,7 +582,7 @@ GLOBAL void AMD_2
     lemax = 0 ;
 
     /* get control parameters */
-    if (Control != (pfloat *) NULL)
+    if (Control != (scs_float *) NULL)
     {
 	alpha = Control [AMD_DENSE] ;
 	aggressive = (Control [AMD_AGGRESSIVE] != 0) ;
@@ -600,7 +600,7 @@ GLOBAL void AMD_2
     }
     else
     {
-	dense = alpha * sqrt ((pfloat) n) ;
+	dense = alpha * sqrt ((scs_float) n) ;
     }
     dense = MAX (16, dense) ;
     dense = MIN (n,  dense) ;
@@ -1520,7 +1520,7 @@ GLOBAL void AMD_2
 	 * (degme+ndense)-by-(degme+ndense).
 	 */
 
-	if (Info != (pfloat *) NULL)
+	if (Info != (scs_float *) NULL)
 	{
 	    f = nvpiv ;
 	    r = degme + ndense ;
@@ -1556,12 +1556,12 @@ GLOBAL void AMD_2
 /* DONE SELECTING PIVOTS */
 /* ========================================================================= */
 
-    if (Info != (pfloat *) NULL)
+    if (Info != (scs_float *) NULL)
     {
 
 	/* count the work to factorize the ndense-by-ndense submatrix */
 	f = ndense ;
-	dmax = MAX (dmax, (pfloat) ndense) ;
+	dmax = MAX (dmax, (scs_float) ndense) ;
 
 	/* number of nonzeros in L (excluding the diagonal) */
 	lnzme = (f-1)*f/2 ;

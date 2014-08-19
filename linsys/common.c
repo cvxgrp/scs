@@ -5,9 +5,9 @@
 #define MAX_SCALE 1e3
 #define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
-idxint validateLinSys(Data *d) {
+scs_int validateLinSys(Data *d) {
 	AMatrix * A = d->A;
-	idxint i, rMax, Anz;
+	scs_int i, rMax, Anz;
 	if (!A->x || !A->i || !A->p) {
 		scs_printf("data incompletely specified\n");
 		return -1;
@@ -21,7 +21,7 @@ idxint validateLinSys(Data *d) {
 	 }
 	 */
 	Anz = A->p[d->n];
-	if (((pfloat) Anz / d->m > d->n) || (Anz <= 0)) {
+	if (((scs_float) Anz / d->m > d->n) || (Anz <= 0)) {
 		scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
 		return -1;
 	}
@@ -38,7 +38,7 @@ idxint validateLinSys(Data *d) {
 }
 
 void printAMatrix(Data * d) {
-	idxint i, j;
+	scs_int i, j;
 	AMatrix * A = d->A;
 	/* TODO: this is to prevent clogging stdout */
 	if (A->p[d->n] < 2500) {
@@ -56,16 +56,16 @@ void printAMatrix(Data * d) {
 
 void normalizeA(Data * d, Work * w, Cone * k) {
 	AMatrix * A = d->A;
-	pfloat * D = scs_malloc(d->m * sizeof(pfloat));
-	pfloat * E = scs_malloc(d->n * sizeof(pfloat));
-	pfloat * Dt = scs_malloc(d->m * sizeof(pfloat));
-	pfloat * Et = scs_malloc(d->n * sizeof(pfloat));
-	pfloat * nms = scs_calloc(d->m, sizeof(pfloat));
-	pfloat minRowScale = MIN_SCALE * SQRTF((pfloat) d->n), maxRowScale = MAX_SCALE * SQRTF((pfloat) d->n);
-	pfloat minColScale = MIN_SCALE * SQRTF((pfloat) d->m), maxColScale = MAX_SCALE * SQRTF((pfloat) d->m);
-	idxint i, j, l, count, delta, *boundaries, c1, c2;
-	pfloat wrk, e;
-	idxint numBoundaries = getConeBoundaries(k, &boundaries);
+	scs_float * D = scs_malloc(d->m * sizeof(scs_float));
+	scs_float * E = scs_malloc(d->n * sizeof(scs_float));
+	scs_float * Dt = scs_malloc(d->m * sizeof(scs_float));
+	scs_float * Et = scs_malloc(d->n * sizeof(scs_float));
+	scs_float * nms = scs_calloc(d->m, sizeof(scs_float));
+	scs_float minRowScale = MIN_SCALE * SQRTF((scs_float) d->n), maxRowScale = MAX_SCALE * SQRTF((scs_float) d->n);
+	scs_float minColScale = MIN_SCALE * SQRTF((scs_float) d->m), maxColScale = MAX_SCALE * SQRTF((scs_float) d->m);
+	scs_int i, j, l, count, delta, *boundaries, c1, c2;
+	scs_float wrk, e;
+	scs_int numBoundaries = getConeBoundaries(k, &boundaries);
 
 #ifdef EXTRAVERBOSE
 	timer normalizeTimer;
@@ -75,8 +75,8 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 #endif
 
 	for (l = 0; l < NUM_SCALE_PASSES; ++l) {
-		memset(D, 0, d->m * sizeof(pfloat));
-		memset(E, 0, d->n * sizeof(pfloat));
+		memset(D, 0, d->m * sizeof(scs_float));
+		memset(E, 0, d->n * sizeof(scs_float));
 		/* calculate row norms */
 		for (i = 0; i < d->n; ++i) {
 			c1 = A->p[i];
@@ -176,9 +176,9 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 }
 
 void unNormalizeA(Data *d, Work * w) {
-	idxint i, j;
-	pfloat * D = w->D;
-	pfloat * E = w->E;
+	scs_int i, j;
+	scs_float * D = w->D;
+	scs_float * E = w->E;
 	AMatrix * A = d->A;
 	for (i = 0; i < d->n; ++i) {
 		scaleArray(&(A->x[A->p[i]]), E[i] / d->scale, A->p[i + 1] - A->p[i]);
