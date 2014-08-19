@@ -4,7 +4,7 @@
 /* this struct defines the data matrix A */
 struct A_DATA_MATRIX {
 	/* A is supplied in dense format, COLUMN major order */
-	pfloat * x; /* A values, size: n*m */
+	scs_float * x; /* A values, size: n*m */
 };
 
 #endif

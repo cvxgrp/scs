@@ -6,7 +6,7 @@
 #include "../common.h"
 
 struct PRIVATE_DATA{
-	pfloat * L;
+	scs_float * L;
 };
 
 #endif

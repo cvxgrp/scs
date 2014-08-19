@@ -54,10 +54,10 @@ def test_problems():
   sol = scs.solve(data, new_cone)
   yield check_solution, sol['x'][0], 0.5
 
-  sol = scs.solve(data, cone, opts={'USE_INDIRECT':True})
+  sol = scs.solve(data, cone, use_indirect = True )
   yield check_solution, sol['x'][0], 1
 
-  sol = scs.solve(data, new_cone, opts={'USE_INDIRECT':True})
+  sol = scs.solve(data, new_cone, use_indirect = True )
   yield check_solution, sol['x'][0], 0.5
 
 
@@ -66,23 +66,23 @@ if platform.python_version_tuple() < ('3','0','0'):
     new_cone = {'q': [], 'l': long(2)}
     sol = scs.solve(data, new_cone)
     yield check_solution, sol['x'][0], 1
-    sol = scs.solve(data, new_cone, opts={'USE_INDIRECT':True})
+    sol = scs.solve(data, new_cone, use_indirect=True )
     yield check_solution, sol['x'][0], 1
 
     new_cone = {'q':[long(2)], 'l': 0}
     sol = scs.solve(data, new_cone)
     yield check_solution, sol['x'][0], 0.5
-    sol = scs.solve(data, new_cone, opts={'USE_INDIRECT':True})
+    sol = scs.solve(data, new_cone, use_indirect=True )
     yield check_solution, sol['x'][0], 0.5
 
 def check_keyword(error_type, keyword, value):
-  assert_raises(error_type, scs.solve, data, cone, opts={keyword: value})
+  assert_raises(error_type, scs.solve, data, cone, **{keyword: value})
 
 def test_failures():
   yield assert_raises, TypeError, scs.solve
   yield assert_raises, ValueError, scs.solve, data, {'q':[4], 'l':-2}
-  yield check_keyword, ValueError, 'MAX_ITERS', -1
-  yield check_keyword, ValueError, 'MAX_ITERS', 1.1
+  yield check_keyword, ValueError, 'max_iters', -1
+  yield check_keyword, TypeError, 'max_iters', 1.1
 
   yield check_failure, scs.solve( data, {'q':[1], 'l': 0} )
 

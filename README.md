@@ -138,14 +138,14 @@ These libraries (and `scs.h`) expose only four API functions:
     
     This initializes the Work struct containing the workspace that scs will use, and performs the necessary preprocessing (e.g. matrix factorization).
 
-* `idxint scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);`
+* `scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);`
     
     This solves the problem as defined by Data and Cone using workspace in w. The solution is returned in sol and information about the solve is retu.rned in info. None of the inputs can be NULL. You can call scs_solve many times for one call to scs_init, so long as the matrix A does not change (b and c can change).
 
 * `void scs_finish(Data * d, Work * w);`
     
     Called after all solves completed, to free data and cleanup.
-* `idxint scs(Data * d, Cone * k, Sol * sol, Info * info);`
+* `scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);`
 
     Simply calls all the above routines, so can't use reuse the workspace (for, e.g., factorization caching).
 
@@ -163,59 +163,59 @@ The five relevant data structures are:
     /* this struct defines the data matrix A */
     struct A_DATA_MATRIX {
         /* A is supplied in column compressed format */
-        pfloat * x; /* A values, size: NNZ A */
-        idxint * i; /* A row index, size: NNZ A */
-        idxint * p; /* A column pointer, size: n+1 */
+        scs_float * x; /* A values, size: NNZ A */
+        scs_int * i; /* A row index, size: NNZ A */
+        scs_int * p; /* A column pointer, size: n+1 */
     };
 
     /* struct that containing standard problem data */
     struct PROBLEM_DATA {
     	/* problem dimensions */
-    	idxint m, n;        /* A has m rows, n cols*/
+    	scs_int m, n;        /* A has m rows, n cols*/
    
         AMatrix * A;        /* A is supplied in data format specified by linsys solver */
-    	pfloat * b, *c;     /* dense arrays for b (size m), c (size n) */
+    	scs_float * b, *c;     /* dense arrays for b (size m), c (size n) */
     
     	/* other input parameters: default suggested input */
-    	idxint MAX_ITERS;   /* maximum iterations to take: 2500 */
-    	pfloat EPS;         /* convergence tolerance: 1e-3 */
-    	pfloat ALPHA;       /* relaxation parameter: 1.8 */
-    	pfloat RHO_X;       /* x equality constraint scaling: 1e-3 */
-    	pfloat SCALE;       /* if normalized, rescales by this factor: 1 */
-        pfloat CG_RATE;     /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-        idxint VERBOSE;     /* boolean, write out progress: 1 */
-    	idxint NORMALIZE;   /* boolean, heuristic data rescaling: 1 */
-    	idxint WARM_START;  /* boolean, warm start with guess in Sol struct: 0 */
+    	scs_int MAX_ITERS;   /* maximum iterations to take: 2500 */
+    	scs_float EPS;         /* convergence tolerance: 1e-3 */
+    	scs_float ALPHA;       /* relaxation parameter: 1.8 */
+    	scs_float RHO_X;       /* x equality constraint scaling: 1e-3 */
+    	scs_float SCALE;       /* if normalized, rescales by this factor: 1 */
+        scs_float CG_RATE;     /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+        scs_int VERBOSE;     /* boolean, write out progress: 1 */
+    	scs_int NORMALIZE;   /* boolean, heuristic data rescaling: 1 */
+    	scs_int WARM_START;  /* boolean, warm start with guess in Sol struct: 0 */
     };
     
     /* contains primal-dual solution arrays */
     struct SOL_VARS {
-    	pfloat * x, *y, *s;
+    	scs_float * x, *y, *s;
     };
     
     /* contains terminating information */
     struct INFO {
-    	idxint iter;        /* number of iterations taken */
+    	scs_int iter;        /* number of iterations taken */
     	char status[32];    /* status string, e.g. Solved */
-    	idxint statusVal;   /* status as idxint, defined below */
-    	pfloat pobj;        /* primal objective */
-    	pfloat dobj;        /* dual objective */
-    	pfloat resPri;      /* primal equality residual */
-    	pfloat resDual;     /* dual equality residual */
-    	pfloat relGap;      /* relative duality gap */
-    	pfloat setupTime;   /* time taken for setup phase */
-    	pfloat solveTime;   /* time taken for solve phase */
+    	scs_int statusVal;   /* status as scs_int, defined below */
+    	scs_float pobj;        /* primal objective */
+    	scs_float dobj;        /* dual objective */
+    	scs_float resPri;      /* primal equality residual */
+    	scs_float resDual;     /* dual equality residual */
+    	scs_float relGap;      /* relative duality gap */
+    	scs_float setupTime;   /* time taken for setup phase */
+    	scs_float solveTime;   /* time taken for solve phase */
     };
    
     struct CONE {
-        idxint f;           /* number of primal linear equality constraints */
-        idxint l;           /* length of LP cone */
-        idxint *q;   	    /* array of second-order cone constraints */
-        idxint qsize;       /* length of SOC array */
-    	idxint *s;			/* array of SD constraints */
-    	idxint ssize;		/* length of SD array */
-        idxint ep;          /* number of primal exponential cone triples */
-        idxint ed;          /* number of dual exponential cone triples */
+        scs_int f;           /* number of primal linear equality constraints */
+        scs_int l;           /* length of LP cone */
+        scs_int *q;   	    /* array of second-order cone constraints */
+        scs_int qsize;       /* length of SOC array */
+    	scs_int *s;			/* array of SD constraints */
+    	scs_int ssize;		/* length of SD array */
+        scs_int ep;          /* number of primal exponential cone triples */
+        scs_int ed;          /* number of dual exponential cone triples */
     };
 ```        
 The data matrix `A` is specified in column-compressed format, and the vectors

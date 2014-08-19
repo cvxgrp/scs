@@ -1,10 +1,10 @@
 #include "private.h"
 
 static timer linsysTimer;
-static pfloat totalSolveTime;
+static scs_float totalSolveTime;
 
-void BLAS(potrf)(char *uplo, blasint *n, pfloat *a, blasint * lda, blasint *info);
-void BLAS(trsv)(char *uplo, char *trans, char *diag, blasint *n, pfloat *a, blasint *lda, pfloat *x, blasint *incx);
+void BLAS(potrf)(char *uplo, blasint *n, scs_float *a, blasint * lda, blasint *info);
+void BLAS(trsv)(char *uplo, char *trans, char *diag, blasint *n, scs_float *a, blasint *lda, scs_float *x, blasint *incx);
 
 char * getLinSysMethod(Data * d, Priv * p) {
 	char * tmp = scs_malloc(sizeof(char) * 32);
@@ -21,16 +21,16 @@ char * getLinSysSummary(Priv * p, Info * info) {
 
 Priv * initPriv(Data * d) {
 	blasint n = (blasint) d->n, m = (blasint) d->m, info;
-	pfloat zerof = 0.0, onef = 1.0;
-	idxint k, j;
-	pfloat * A = d->A->x;
+	scs_float zerof = 0.0, onef = 1.0;
+	scs_int k, j;
+	scs_float * A = d->A->x;
 	Priv * p = scs_malloc(sizeof(Priv));
-	p->L = scs_calloc(n * n, sizeof(pfloat));
+	p->L = scs_calloc(n * n, sizeof(scs_float));
 
 	/* BLAS(gemm)("Transpose", "NoTranspose", &n, &n, &m, &onef, A, &m, A, &m, &zerof, p->L, &n); */
     BLAS(syrk)("Lower", "Transpose", &n, &m, &onef, A, &m, &zerof, p->L, &n);
 	for (j = 0; j < n; j++) {
-		p->L[j * n + j] += d->rhoX;
+		p->L[j * n + j] += d->rho_x;
 	}
 	BLAS(potrf)("Lower", &n, p->L, &n, &info);
 	if (info != 0) {
@@ -53,13 +53,13 @@ void freePriv(Priv * p) {
 	scs_free(p);
 }
 
-idxint solveLinSys(Data * d, Priv * p, pfloat * b, const pfloat * s, idxint iter) {
+scs_int solveLinSys(Data * d, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
-	pfloat * A = d->A->x;
-	pfloat * L = p->L;
+	scs_float * A = d->A->x;
+	scs_float * L = p->L;
 	blasint m = (blasint) d->m, n = (blasint) d->n, one = 1;
-	pfloat onef = 1.0, negOnef = -1.0;
+	scs_float onef = 1.0, negOnef = -1.0;
 #ifdef EXTRAVERBOSE
 	scs_printf("solving lin sys\n");
 #endif

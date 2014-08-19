@@ -1,11 +1,11 @@
 #include "common.h"
 
-idxint validateLinSys(Data *d) {
+scs_int validateLinSys(Data *d) {
 	return (d->A && d->A->x);
 }
 
 void printAMatrix(Data * d) {
-    idxint i, j;
+    scs_int i, j;
     AMatrix * A = d->A;
     /* TODO: this is to prevent clogging stdout */
     if (d->n * d->m < 2500) {
@@ -23,13 +23,13 @@ void printAMatrix(Data * d) {
 }
 
 void normalizeA(Data * d, Work * w, Cone * k) {
-	idxint i, j, count, delta;
-	pfloat wrk;
-    pfloat * D = scs_calloc(d->m, sizeof(pfloat));
-    pfloat * E = scs_calloc(d->n, sizeof(pfloat));
-    pfloat minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
-    pfloat minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
-    idxint *boundaries, numBoundaries = getConeBoundaries(k, &boundaries);
+	scs_int i, j, count, delta;
+	scs_float wrk;
+    scs_float * D = scs_calloc(d->m, sizeof(scs_float));
+    scs_float * E = scs_calloc(d->n, sizeof(scs_float));
+    scs_float minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
+    scs_float minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
+    scs_int *boundaries, numBoundaries = getConeBoundaries(k, &boundaries);
     blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
 
 #ifdef EXTRAVERBOSE
@@ -109,10 +109,10 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 }
 
 void unNormalizeA(Data *d, Work * w) {
-	idxint i;
-	pfloat * D = w->D;
-	pfloat * E = w->E;
-	pfloat invScale = 1.0 / d->scale;
+	scs_int i;
+	scs_float * D = w->D;
+	scs_float * E = w->E;
+	scs_float invScale = 1.0 / d->scale;
 	blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
 	for (i = 0; i < d->n; ++i) {
 		BLAS(scal)(&m, &(E[i]), &(d->A->x[i * d->m]), &one);
@@ -123,16 +123,16 @@ void unNormalizeA(Data *d, Work * w) {
 	BLAS(scal)(&nm, &invScale, d->A->x, &one);
 }
 
-void accumByAtrans(Data * d, Priv * p, const pfloat * x, pfloat * y) {
-	pfloat * A = d->A->x;
+void accumByAtrans(Data * d, Priv * p, const scs_float * x, scs_float * y) {
+	scs_float * A = d->A->x;
 	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
-	pfloat onef = 1.0;
+	scs_float onef = 1.0;
 	BLAS(gemv)("Transpose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
 }
 
-void accumByA(Data * d, Priv * p, const pfloat * x, pfloat * y) {
-	pfloat * A = d->A->x;
+void accumByA(Data * d, Priv * p, const scs_float * x, scs_float * y) {
+	scs_float * A = d->A->x;
 	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
-	pfloat onef = 1.0;
+	scs_float onef = 1.0;
 	BLAS(gemv)("NoTranspose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
 }

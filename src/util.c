@@ -7,10 +7,10 @@ void tic(timer* t)
 	QueryPerformanceCounter(&t->tic);
 }
 
-pfloat tocq(timer* t)
+scs_float tocq(timer* t)
 {
 	QueryPerformanceCounter(&t->toc);
-	return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) / (pfloat) t->freq.QuadPart);
+	return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) / (scs_float) t->freq.QuadPart);
 }
 #elif (defined __APPLE__)
 void tic(timer* t) {
@@ -18,7 +18,7 @@ void tic(timer* t) {
 	t->tic = mach_absolute_time();
 }
 
-pfloat tocq(timer* t) {
+scs_float tocq(timer* t) {
 
 	uint64_t duration; /* elapsed time in clock cycles*/
 
@@ -30,7 +30,7 @@ pfloat tocq(timer* t) {
 	duration *= t->tinfo.numer;
 	duration /= t->tinfo.denom;
 
-	return (pfloat) duration / 1e6;
+	return (scs_float) duration / 1e6;
 }
 #else
 void tic(timer* t)
@@ -38,7 +38,7 @@ void tic(timer* t)
 	clock_gettime(CLOCK_MONOTONIC, &t->tic);
 }
 
-pfloat tocq(timer* t)
+scs_float tocq(timer* t)
 {
 	struct timespec temp;
 
@@ -51,24 +51,24 @@ pfloat tocq(timer* t)
 		temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec;
 		temp.tv_nsec = t->toc.tv_nsec - t->tic.tv_nsec;
 	}
-	return (pfloat)temp.tv_sec * 1e3 + (pfloat)temp.tv_nsec / 1e6;
+	return (scs_float)temp.tv_sec * 1e3 + (scs_float)temp.tv_nsec / 1e6;
 }
 #endif
 
-pfloat toc(timer * t) {
-	pfloat time = tocq(t);
+scs_float toc(timer * t) {
+	scs_float time = tocq(t);
 	scs_printf("time: %8.4f milli-seconds.\n", time);
 	return time;
 }
 
-pfloat strtoc(char * str, timer * t) {
-	pfloat time = tocq(t);
+scs_float strtoc(char * str, timer * t) {
+	scs_float time = tocq(t);
 	scs_printf("%s - time: %8.4f milli-seconds.\n", str, time);
 	return time;
 }
 
 void printConeData(Cone * k) {
-	idxint i;
+	scs_int i;
 	scs_printf("num zeros = %i\n", (int) k->f);
 	scs_printf("num LP = %i\n", (int) k->l);
 	scs_printf("num SOCs = %i\n", (int) k->qsize);
@@ -86,7 +86,7 @@ void printConeData(Cone * k) {
 }
 
 void printWork(Data * d, Work * w) {
-	idxint i, l = d->n + d->m;
+	scs_int i, l = d->n + d->m;
 	scs_printf("\n u_t is \n");
 	for (i = 0; i < l; i++) {
 		scs_printf("%f\n", w->u_t[i]);
@@ -105,20 +105,20 @@ void printData(Data * d) {
 	scs_printf("m = %i\n", (int) d->m);
 	scs_printf("n = %i\n", (int) d->n);
 
-	scs_printf("MAX_ITERS = %i\n", (int) d->maxIters);
-	scs_printf("VERBOSE = %i\n", (int) d->verbose);
-	scs_printf("NORMALIZE = %i\n", (int) d->normalize);
-	scs_printf("WARM_START = %i\n", (int) d->warmStart);
-	scs_printf("EPS = %4f\n", d->eps);
-	scs_printf("ALPHA = %4f\n", d->alpha);
-	scs_printf("RHO_X = %4f\n", d->rhoX);
-	scs_printf("CG_RATE = %4f\n", d->cgRate);
-	scs_printf("SCALE = %4f\n", d->scale);
+	scs_printf("max_iters = %i\n", (int) d->max_iters);
+	scs_printf("verbose = %i\n", (int) d->verbose);
+	scs_printf("normalize = %i\n", (int) d->normalize);
+	scs_printf("warmStart = %i\n", (int) d->warm_start);
+	scs_printf("eps = %4f\n", d->eps);
+	scs_printf("alpha = %4f\n", d->alpha);
+	scs_printf("rhoX = %4f\n", d->rho_x);
+	scs_printf("cg_rate = %4f\n", d->cg_rate);
+	scs_printf("scale = %4f\n", d->scale);
 }
 
-void printArray(pfloat * arr, idxint n, char * name) {
-	idxint i, j, k = 0;
-	idxint numOnOneLine = 10;
+void printArray(scs_float * arr, scs_int n, char * name) {
+	scs_int i, j, k = 0;
+	scs_int numOnOneLine = 10;
 	scs_printf("\n");
 	for (i = 0; i < n / numOnOneLine; ++i) {
 		for (j = 0; j < numOnOneLine; ++j) {

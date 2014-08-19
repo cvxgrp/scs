@@ -6,13 +6,13 @@
 #include "../common.h"
 
 struct PRIVATE_DATA{
-	pfloat * p;
-	pfloat * r;
-	pfloat * Gp;
-	pfloat * M; /* pre-conditioner */
-	pfloat * z;
+	scs_float * p;
+	scs_float * r;
+	scs_float * Gp;
+	scs_float * M; /* pre-conditioner */
+	scs_float * z;
   /* Gram matrix */
-	pfloat * G;
+	scs_float * G;
 };
 
 #endif

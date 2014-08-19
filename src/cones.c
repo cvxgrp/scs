@@ -29,37 +29,37 @@ typedef int64_t blasint;
 typedef int blasint;
 #endif
 
-void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, pfloat* a, blasint* lda, pfloat* vl,
-		pfloat* vu, blasint* il, blasint* iu, pfloat* abstol, blasint* m, pfloat* w, pfloat* z, blasint* ldz,
-		blasint* isuppz, pfloat* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
-void BLAS(syr)(const char *uplo, const blasint *n, const pfloat *alpha, const pfloat *x, const blasint *incx,
-		pfloat *a, const blasint *lda);
-void BLAS(axpy)(const blasint *n, const pfloat *alpha, const pfloat *dx, const blasint *incx, pfloat *dy,
+void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, scs_float* a, blasint* lda, scs_float* vl,
+		scs_float* vu, blasint* il, blasint* iu, scs_float* abstol, blasint* m, scs_float* w, scs_float* z, blasint* ldz,
+		blasint* isuppz, scs_float* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
+void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha, const scs_float *x, const blasint *incx,
+		scs_float *a, const blasint *lda);
+void BLAS(axpy)(const blasint *n, const scs_float *alpha, const scs_float *dx, const blasint *incx, scs_float *dy,
 		const blasint *incy);
 /* private data to help cone projection step */
 static struct ConeData_t {
 	/* workspace for eigenvector decompositions: */
-	pfloat * Xs, *Z, *e, *work;
+	scs_float * Xs, *Z, *e, *work;
 	blasint *iwork, lwork, liwork;
 }c;
 #endif
 
 static timer coneTimer;
-static pfloat totalConeTime;
+static scs_float totalConeTime;
 
  /*
  * boundaries will contain array of indices of rows of A corresponding to
  * cone boundaries, boundaries[0] is starting index for cones of size strictly larger than 1
  * returns length of boundaries array, boundaries malloc-ed here so should be freed
  */
-idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
-	idxint i, count = 0;
-	idxint len = 1 + k->qsize + k->ssize + k->ed + k->ep;
-	idxint * b = scs_malloc(sizeof(idxint) * len);
+scs_int getConeBoundaries(Cone * k, scs_int ** boundaries) {
+	scs_int i, count = 0;
+	scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep;
+	scs_int * b = scs_malloc(sizeof(scs_int) * len);
 	b[count] = k->f + k->l;
 	count += 1;
 	if (k->qsize > 0) {
-		memcpy(&b[count], k->q, k->qsize * sizeof(idxint));
+		memcpy(&b[count], k->q, k->qsize * sizeof(scs_int));
 	}
 	count += k->qsize;
 	for (i = 0; i < k->ssize; ++i) {
@@ -74,8 +74,8 @@ idxint getConeBoundaries(Cone * k, idxint ** boundaries) {
 	return len;
 }
 
-idxint getFullConeDims(Cone * k) {
-	idxint i, c = 0;
+scs_int getFullConeDims(Cone * k) {
+	scs_int i, c = 0;
 	if (k->f)
 		c += k->f;
 	if (k->l)
@@ -97,8 +97,8 @@ idxint getFullConeDims(Cone * k) {
 	return c;
 }
 
-idxint validateCones(Data * d, Cone * k) {
-	idxint i;
+scs_int validateCones(Data * d, Cone * k) {
+	scs_int i;
 	if (k->f && k->f < 0) {
 		scs_printf("free cone error\n");
 		return -1;
@@ -162,7 +162,7 @@ void finishCone() {
 
 char * getConeHeader(Cone * k) {
 	char * tmp = scs_malloc(sizeof(char) * 512);
-	idxint i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars;
+	scs_int i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars;
     sprintf(tmp, "Cones:");
     if (k->f) {
         sprintf(tmp + strlen(tmp), "\tprimal zero / dual free vars: %i\n", (int) k->f);
@@ -196,8 +196,8 @@ char * getConeHeader(Cone * k) {
 	return tmp;
 }
 
-idxint isSimpleSemiDefiniteCone(idxint * s, idxint ssize) {
-	idxint i;
+scs_int isSimpleSemiDefiniteCone(scs_int * s, scs_int ssize) {
+	scs_int i;
 	for (i = 0; i < ssize; i++) {
 		if (s[i] >= 3) {
 			return 0; /* false */
@@ -206,10 +206,10 @@ idxint isSimpleSemiDefiniteCone(idxint * s, idxint ssize) {
 	return 1; /* true */
 }
 
-pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
-	pfloat t = MAX(-z_hat, 1e-6);
-	pfloat f, fp;
-	idxint i;
+scs_float expNewtonOneD(scs_float rho, scs_float y_hat, scs_float z_hat) {
+	scs_float t = MAX(-z_hat, 1e-6);
+	scs_float f, fp;
+	scs_int i;
 	for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
 
 		f = t * (t + z_hat) / rho / rho - y_hat / rho + log(t / rho) + 1;
@@ -228,13 +228,13 @@ pfloat expNewtonOneD(pfloat rho, pfloat y_hat, pfloat z_hat) {
 	return t + z_hat;
 }
 
-void expSolveForXWithRho(pfloat * v, pfloat * x, pfloat rho) {
+void expSolveForXWithRho(scs_float * v, scs_float * x, scs_float rho) {
 	x[2] = expNewtonOneD(rho, v[1], v[2]);
 	x[1] = (x[2] - v[2]) * x[2] / rho;
 	x[0] = v[0] - rho;
 }
 
-pfloat expCalcGrad(pfloat * v, pfloat * x, pfloat rho) {
+scs_float expCalcGrad(scs_float * v, scs_float * x, scs_float rho) {
 	expSolveForXWithRho(v, x, rho);
 	if (x[1] <= 1e-12) {
 		return x[0];
@@ -243,7 +243,7 @@ pfloat expCalcGrad(pfloat * v, pfloat * x, pfloat rho) {
 	}
 }
 
-void expGetRhoUb(pfloat * v, pfloat * x, pfloat * ub, pfloat * lb) {
+void expGetRhoUb(scs_float * v, scs_float * x, scs_float * ub, scs_float * lb) {
 	*lb = 0;
 	*ub = 0.125;
 	while (expCalcGrad(v, x, *ub) > 0) {
@@ -253,11 +253,11 @@ void expGetRhoUb(pfloat * v, pfloat * x, pfloat * ub, pfloat * lb) {
 }
 
 /* project onto the exponential cone, v has dimension *exactly* 3 */
-static idxint projExpCone(pfloat * v, idxint iter) {
-	idxint i;
-	pfloat ub, lb, rho, g, x[3];
-	pfloat r = v[0], s = v[1], t = v[2];
-	pfloat tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF((iter + 1), CONE_RATE)); */
+static scs_int projExpCone(scs_float * v, scs_int iter) {
+	scs_int i;
+	scs_float ub, lb, rho, g, x[3];
+	scs_float r = v[0], s = v[1], t = v[2];
+	scs_float tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF((iter + 1), CONE_RATE)); */
 
 	/* v in cl(Kexp) */
 	if ((s * exp(r / s) <= t && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
@@ -266,7 +266,7 @@ static idxint projExpCone(pfloat * v, idxint iter) {
 
 	/* -v in Kexp^* */
 	if ((-r < 0 && r * exp(s / r) <= -exp(1) * t) || (-r == 0 && -s >= 0 && -t >= 0)) {
-		memset(v, 0, 3 * sizeof(pfloat));
+		memset(v, 0, 3 * sizeof(scs_float));
 		return 0;
 	}
 
@@ -302,15 +302,15 @@ static idxint projExpCone(pfloat * v, idxint iter) {
 	return 0;
 }
 
-idxint initCone(Cone * k) {
+scs_int initCone(Cone * k) {
 #ifdef LAPACK_LIB_FOUND
-	idxint i;
+	scs_int i;
 	blasint nMax = 0;
-	pfloat eigTol = 1e-8;
+	scs_float eigTol = 1e-8;
 	blasint negOne = -1;
 	blasint m = 0;
     blasint info;
-	pfloat wkopt;
+	scs_float wkopt;
 	c.Xs = NULL;
 	c.Z = NULL;
 	c.e = NULL;
@@ -336,9 +336,9 @@ if (k->ssize && k->s) {
 				nMax = (blasint) k->s[i];
 			}
 		}
-		c.Xs = scs_calloc(nMax * nMax, sizeof(pfloat));
-		c.Z = scs_calloc(nMax * nMax, sizeof(pfloat));
-		c.e = scs_calloc(nMax, sizeof(pfloat));
+		c.Xs = scs_calloc(nMax * nMax, sizeof(scs_float));
+		c.Z = scs_calloc(nMax * nMax, sizeof(scs_float));
+		c.e = scs_calloc(nMax, sizeof(scs_float));
 
         BLAS(syevr)("Vectors", "All", "Upper", &nMax, c.Xs, &nMax, NULL, NULL, NULL, NULL,
             &eigTol, &m, c.e, c.Z, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
@@ -348,7 +348,7 @@ if (k->ssize && k->s) {
             return -1;
         }
         c.lwork = (blasint) (wkopt + 0.01); /* 0.01 for int casting safety */
-        c.work = scs_malloc(c.lwork * sizeof(pfloat));
+        c.work = scs_malloc(c.lwork * sizeof(scs_float));
         c.iwork = scs_malloc(c.liwork * sizeof(blasint));
 
 		if (!c.Xs || !c.Z || !c.e || !c.work || !c.iwork) {
@@ -369,8 +369,8 @@ if (k->ssize && k->s) {
 	return 0;
 }
 
-idxint project2By2Sdc(pfloat *X) {
-	pfloat a, b, d, l1, l2, x1, x2, rad;
+scs_int project2By2Sdc(scs_float *X) {
+	scs_float a, b, d, l1, l2, x1, x2, rad;
 	a = X[0];
 	b = 0.5 * (X[1] + X[2]);
 	d = X[3];
@@ -403,26 +403,26 @@ idxint project2By2Sdc(pfloat *X) {
 	return 0;
 }
 
-static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
+static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
-	idxint i, j;
+	scs_int i, j;
 	blasint one = 1;
 	blasint m = 0;
 	blasint nb = (blasint) n;
-	pfloat * Xs = c.Xs;
-	pfloat * Z = c.Z;
-	pfloat * e = c.e;
-	pfloat * work = c.work;
+	scs_float * Xs = c.Xs;
+	scs_float * Z = c.Z;
+	scs_float * e = c.e;
+	scs_float * work = c.work;
 	blasint * iwork = c.iwork;
 	blasint lwork = c.lwork;
 	blasint liwork = c.liwork;
 
-	pfloat eigTol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF(iter + 1, CONE_RATE)); */
-	pfloat onef = 1.0;
-	pfloat zero = 0.0;
+	scs_float eigTol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF(iter + 1, CONE_RATE)); */
+	scs_float onef = 1.0;
+	scs_float zero = 0.0;
 	blasint info;
-	pfloat vupper;
+	scs_float vupper;
 #endif
 	if (n == 0) {
 		return 0;
@@ -437,7 +437,7 @@ static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 		return project2By2Sdc(X);
 	}
 #ifdef LAPACK_LIB_FOUND
-	memcpy(Xs, X, nb * nb * sizeof(pfloat));
+	memcpy(Xs, X, nb * nb * sizeof(scs_float));
 
 	/* Xs = X + X', save div by 2 for eigen-recomp */
 	for (i = 0; i < nb; ++i) {
@@ -452,9 +452,9 @@ static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
         return -1;
     }
 
-	memset(X, 0, n * n * sizeof(pfloat));
+	memset(X, 0, n * n * sizeof(scs_float));
 	for (i = 0; i < m; ++i) {
-		pfloat a = e[i] / 2;
+		scs_float a = e[i] / 2;
 		BLAS(syr)("Lower", &nb, &a, &(Z[i * nb]), &one, X, &nb);
 	}
 	/* fill in upper half */
@@ -474,9 +474,9 @@ static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to NULL) */
-idxint projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)  {
-	idxint i;
-	idxint count = (k->f ? k->f : 0);
+scs_int projDualCone(scs_float *x, Cone * k, const scs_float * warm_start, scs_int iter)  {
+	scs_int i;
+	scs_int count = (k->f ? k->f : 0);
 #ifdef EXTRAVERBOSE
 	timer projTimer;
 	tic(&projTimer);
@@ -508,13 +508,13 @@ idxint projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)
 				if (x[count] < 0.0)
 					x[count] = 0.0;
 			} else {
-				pfloat v1 = x[count];
-				pfloat s = calcNorm(&(x[count + 1]), k->q[i] - 1);
-				pfloat alpha = (s + v1) / 2.0;
+				scs_float v1 = x[count];
+				scs_float s = calcNorm(&(x[count + 1]), k->q[i] - 1);
+				scs_float alpha = (s + v1) / 2.0;
 
 				if (s <= v1) { /* do nothing */
 				} else if (s <= -v1) {
-					memset(&(x[count]), 0, k->q[i] * sizeof(pfloat));
+					memset(&(x[count]), 0, k->q[i] * sizeof(scs_float));
 				} else {
 					x[count] = alpha;
 					scaleArray(&(x[count + 1]), alpha / s, k->q[i] - 1);
@@ -544,8 +544,8 @@ idxint projDualCone(pfloat *x, Cone * k, const pfloat * warm_start, idxint iter)
 	}
 
 	if (k->ep) {
-		pfloat r, s, t;
-		idxint idx;
+		scs_float r, s, t;
+		scs_int idx;
 		/*
 		 * exponential cone is not self dual, if s \in K
 		 * then y \in K^* and so if K is the primal cone

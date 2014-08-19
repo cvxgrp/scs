@@ -37,13 +37,13 @@ typedef struct timer {
 
 /* these all return milli-seconds */
 void tic(timer * t);
-pfloat toc(timer * t);
-pfloat strtoc(char * str, timer * t);
-pfloat tocq(timer * t);
+scs_float toc(timer * t);
+scs_float strtoc(char * str, timer * t);
+scs_float tocq(timer * t);
 
 void printConeData(Cone * k);
 void printData(Data * d);
 void printWork(Data * d, Work * w);
-void printArray(pfloat * arr, idxint n, char * name);
+void printArray(scs_float * arr, scs_int n, char * name);
 
 #endif

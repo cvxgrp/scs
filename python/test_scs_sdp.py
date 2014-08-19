@@ -49,7 +49,7 @@ num_feas = 10
 num_unb = 10
 num_infeas = 10
 
-opts={'MAX_ITERS':100000,'EPS':1e-5} # better accuracy than default to ensure test pass
+opts={'max_iters':100000,'eps':1e-5} # better accuracy than default to ensure test pass
 K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[2, 1, 2, 0, 1, 10], 'ep':10, 'ed':10}
 m = getConeDims(K)
 
@@ -57,11 +57,11 @@ def test_feasible():
     for i in range(num_feas):
         data, p_star = genFeasible(K, n = m/3, density = 0.01)
         
-        sol = scs.solve(data, K, opts)
+        sol = scs.solve(data, K, **opts)
         yield check_solution, dot(data['c'],sol['x']), p_star
         yield check_solution, dot(-data['b'],sol['y']), p_star
 
-        sol = scs.solve(data, K, opts=dict({'USE_INDIRECT':True}, **opts))
+        sol = scs.solve(data, K, use_indirect=True, **opts)
         yield check_solution, dot(data['c'],sol['x']), p_star
         yield check_solution, dot(-data['b'],sol['y']), p_star
 
@@ -69,13 +69,13 @@ def test_infeasible():
     for i in range(num_infeas):
         data = genInfeasible(K, n = m/3)
         
-        yield check_infeasible, scs.solve(data, K, opts)
-        yield check_infeasible, scs.solve(data, K, opts=dict({'USE_INDIRECT':True}, **opts))
+        yield check_infeasible, scs.solve(data, K, **opts)
+        yield check_infeasible, scs.solve(data, K, use_indirect=True, **opts)
 
 def test_unbounded():
     for i in range(num_unb):
         data = genUnbounded(K, n = m/3)
         
-        yield check_unbounded, scs.solve(data, K, opts)
-        yield check_unbounded, scs.solve(data, K, opts=dict({'USE_INDIRECT':True}, **opts))
+        yield check_unbounded, scs.solve(data, K, **opts)
+        yield check_unbounded, scs.solve(data, K, use_indirect=True, **opts)
 

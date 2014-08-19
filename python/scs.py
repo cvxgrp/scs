@@ -47,7 +47,7 @@ def solve(probdata, cone, **kwargs):
     m, n = A.shape
 
     # A is stored in ROW MAJOR order, so we need to transpose:
-    if kwargs.get('use_indirect', False):
+    if kwargs.pop('use_indirect', False):
         return _scs_indirect.csolve((m, n), A.T, b, c, cone, warm, **kwargs)
     else:
         return _scs_direct.csolve((m, n), A.T, b, c, cone, warm, **kwargs)

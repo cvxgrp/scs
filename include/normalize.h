@@ -5,8 +5,8 @@
 #define MAX_SCALE 1e3
 
 void normalizeBC(Data * d, Work * w) {
-	idxint i;
-	pfloat *D = w->D, *E = w->E;
+	scs_int i;
+	scs_float *D = w->D, *E = w->E;
 	/*
     scs_printf("norm b = %4f\n", calcNorm(d->b, d->m));
     scs_printf("norm c = %4f\n", calcNorm(d->b, d->n));
@@ -26,13 +26,13 @@ void normalizeBC(Data * d, Work * w) {
 }
 
 void calcScaledResids(Data * d, Work * w, struct residuals * r) {
-	pfloat * D = w->D;
-	pfloat * E = w->E;
-	pfloat * u = w->u;
-	pfloat * u_t = w->u_t;
-	pfloat * u_prev = w->u_prev;
-	pfloat tmp;
-	idxint i, n = d->n, m = d->m;
+	scs_float * D = w->D;
+	scs_float * E = w->E;
+	scs_float * u = w->u;
+	scs_float * u_t = w->u_t;
+	scs_float * u_prev = w->u_prev;
+	scs_float tmp;
+	scs_int i, n = d->n, m = d->m;
 
 	r->resPri = 0;
 	for (i = 0; i < n; ++i) {
@@ -62,12 +62,12 @@ void calcScaledResids(Data * d, Work * w, struct residuals * r) {
 }
 
 void normalizeWarmStart(Data *d, Work * w) {
-	idxint i;
-	pfloat * D = w->D;
-	pfloat * E = w->E;
-	pfloat * x = w->u;
-	pfloat * y = &(w->u[d->n]);
-	pfloat * s = &(w->v[d->n]);
+	scs_int i;
+	scs_float * D = w->D;
+	scs_float * E = w->E;
+	scs_float * x = w->u;
+	scs_float * y = &(w->u[d->n]);
+	scs_float * s = &(w->v[d->n]);
 	for (i = 0; i < d->n; ++i) {
 		x[i] *= (E[i] * w->sc_b);
 	}
@@ -80,9 +80,9 @@ void normalizeWarmStart(Data *d, Work * w) {
 }
 
 void unNormalizeSolBC(Data *d, Work * w, Sol * sol) {
-	idxint i;
-	pfloat * D = w->D;
-	pfloat * E = w->E;
+	scs_int i;
+	scs_float * D = w->D;
+	scs_float * E = w->E;
 	for (i = 0; i < d->n; ++i) {
 		sol->x[i] /= (E[i] * w->sc_b);
 	}
