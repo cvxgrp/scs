@@ -6,9 +6,9 @@
 #define DEMO_PATH "examples/raw/demo_data"
 #endif
 
-#define NUM_TRIALS 5
-#define RHOX 1e-3
-#define TEST_WARM_START 1
+#define NUM_TRIALS (5)
+#define RHOX (1e-3)
+#define TEST_WARM_START (1)
 
 scs_int read_in_data(FILE * fp, Data * d, Cone * k);
 scs_int open_file(scs_int argc, char ** argv, scs_int idx, char * default_file, FILE ** fb);

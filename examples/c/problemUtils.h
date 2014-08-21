@@ -4,7 +4,7 @@
 #include "scs.h"
 #include "linsys/amatrix.h"
 
-#define PI 3.141592654
+#define PI (3.141592654)
 #ifdef DLONG
 #ifdef _WIN64
 /* this is a Microsoft extension, but also works with MinGW-w64 */
