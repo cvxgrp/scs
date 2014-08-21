@@ -1,7 +1,7 @@
 #include "cones.h"
 
 #define CONE_RATE 2
-#define CONE_TOL 1e-8
+#define CONE_TOL 5e-7
 #define EXP_CONE_MAX_ITERS 100
 
 #ifdef LAPACK_LIB_FOUND
@@ -439,16 +439,24 @@ static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
 #ifdef LAPACK_LIB_FOUND
 	memcpy(Xs, X, nb * nb * sizeof(pfloat));
 
-	/* Xs = X + X', save div by 2 for eigen-recomp */
-	for (i = 0; i < nb; ++i) {
-		BLAS(axpy)(&nb, &onef, &(X[i]), &nb, &(Xs[i * n]), &one);
-	}
-	vupper = MAX(calcNorm(Xs, nb * nb), 0.001);
-	/* Solve eigenproblem, reuse workspaces */
+    /* Xs = X + X', save div by 2 for eigen-recomp */
+    for (i = 0; i < nb; ++i) {
+        BLAS(axpy)(&nb, &onef, &(X[i]), &nb, &(Xs[i * n]), &one);
+    }
+    vupper = MAX(calcNorm(Xs, nb * nb), 0.001);
+    /* Solve eigenproblem, reuse workspaces */
     BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
-			NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
+            NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
     if (info != 0) {
         scs_printf("FATAL: syevr failure, info = %i\n", info);
+        scs_printf("syevr input parameter dump:\n");
+        scs_printf("nb = %li\n", (long) nb);
+        scs_printf("lwork = %li\n", (long) lwork);
+        scs_printf("liwork = %li\n", (long) liwork);
+        scs_printf("vupper = %f\n", vupper);
+        scs_printf("eigTol = %e\n", eigTol);
+        printArray(Xs, n * n, "Xs");
+        printArray(X, n * n, "X");
         return -1;
     }
 
