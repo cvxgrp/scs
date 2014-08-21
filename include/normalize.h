@@ -1,8 +1,8 @@
 #ifndef NORMALIZE_H_GUARD
 #define NORMALIZE_H_GUARD
 
-#define MIN_SCALE 1e-3
-#define MAX_SCALE 1e3
+#define MIN_SCALE (1e-3)
+#define MAX_SCALE (1e3)
 
 void normalizeBC(Data * d, Work * w) {
 	idxint i;

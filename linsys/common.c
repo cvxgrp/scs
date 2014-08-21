@@ -1,8 +1,8 @@
 #include "common.h"
 /* contains routines common to direct and indirect sparse solvers */
 
-#define MIN_SCALE 1e-3
-#define MAX_SCALE 1e3
+#define MIN_SCALE (1e-3)
+#define MAX_SCALE (1e3)
 #define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
 idxint validateLinSys(Data *d) {

@@ -6,9 +6,9 @@
 #define DEMO_PATH "examples/raw/demo_data"
 #endif
 
-#define NUM_TRIALS 5
-#define RHOX 1e-3
-#define TEST_WARM_START 1
+#define NUM_TRIALS (5)
+#define RHOX (1e-3)
+#define TEST_WARM_START (1)
 
 idxint read_in_data(FILE * fp, Data * d, Cone * k);
 idxint open_file(idxint argc, char ** argv, idxint idx, char * default_file, FILE ** fb);
