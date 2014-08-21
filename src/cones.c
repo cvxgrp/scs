@@ -437,13 +437,13 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 		return project2By2Sdc(X);
 	}
 #ifdef LAPACK_LIB_FOUND
-	memcpy(Xs, X, nb * nb * sizeof(scs_float));
+	memcpy(Xs, X, n * n * sizeof(pfloat));
 
     /* Xs = X + X', save div by 2 for eigen-recomp */
-    for (i = 0; i < nb; ++i) {
+    for (i = 0; i < n; ++i) {
         BLAS(axpy)(&nb, &onef, &(X[i]), &nb, &(Xs[i * n]), &one);
     }
-    vupper = MAX(calcNorm(Xs, nb * nb), 0.001);
+    vupper = MAX(calcNorm(Xs, n * n), 0.001);
     /* Solve eigenproblem, reuse workspaces */
     BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
             NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
@@ -462,13 +462,13 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 
 	memset(X, 0, n * n * sizeof(scs_float));
 	for (i = 0; i < m; ++i) {
-		scs_float a = e[i] / 2;
-		BLAS(syr)("Lower", &nb, &a, &(Z[i * nb]), &one, X, &nb);
+		pfloat a = e[i] / 2;
+		BLAS(syr)("Lower", &nb, &a, &(Z[i * n]), &one, X, &nb);
 	}
 	/* fill in upper half */
-	for (i = 0; i < nb; ++i) {
-		for (j = i + 1; j < nb; ++j) {
-			X[i + j * nb] = X[j + i * nb];
+	for (i = 0; i < n; ++i) {
+		for (j = i + 1; j < n; ++j) {
+			X[i + j * n] = X[j + i * n];
 		}
 	}
 #else
