@@ -1,8 +1,8 @@
 #include "cones.h"
 
-#define CONE_RATE 2
-#define CONE_TOL 5e-7
-#define EXP_CONE_MAX_ITERS 100
+#define CONE_RATE (2)
+#define CONE_TOL (1e-6)
+#define EXP_CONE_MAX_ITERS (100)
 
 #ifdef LAPACK_LIB_FOUND
 /* underscore for blas / lapack, single or double precision */

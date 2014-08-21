@@ -5,8 +5,8 @@
 #include "cones.h"
 #include "amatrix.h"
 
-#define MIN_SCALE 1e-3
-#define MAX_SCALE 1e3
+#define MIN_SCALE (1e-3)
+#define MAX_SCALE (1e3)
 
 /* underscore for blas / lapack, single or double precision */
 #ifdef NOBLASUNDERSCORE
