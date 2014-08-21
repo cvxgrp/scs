@@ -1,7 +1,7 @@
 #include "cones.h"
 
 #define CONE_RATE (2)
-#define CONE_TOL (1e-6)
+#define CONE_TOL (1e-7)
 #define EXP_CONE_MAX_ITERS (100)
 
 #ifdef LAPACK_LIB_FOUND
@@ -448,7 +448,8 @@ static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
     BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
             NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
     if (info != 0) {
-        scs_printf("FATAL: syevr failure, info = %i\n", info);
+        scs_printf("WARN: LAPACK syevr error, info = %i, attempting to continue...\n", info);
+#ifdef EXTRAVERBOSE
         scs_printf("syevr input parameter dump:\n");
         scs_printf("nb = %li\n", (long) nb);
         scs_printf("lwork = %li\n", (long) lwork);
@@ -457,7 +458,10 @@ static idxint projSemiDefiniteCone(pfloat *X, idxint n, idxint iter) {
         scs_printf("eigTol = %e\n", eigTol);
         printArray(Xs, n * n, "Xs");
         printArray(X, n * n, "X");
-        return -1;
+        printArray(e, m, "e");
+        printArray(Z, m * n, "Z");
+#endif
+    /*  return -1; */
     }
 
 	memset(X, 0, n * n * sizeof(pfloat));
