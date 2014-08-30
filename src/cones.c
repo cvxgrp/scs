@@ -448,8 +448,8 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
     BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
             NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
     if (info != 0) {
-        scs_printf("WARN: LAPACK syevr error, info = %i, attempting to continue...\n", info);
 #ifdef EXTRAVERBOSE
+        scs_printf("WARN: LAPACK syevr error, info = %i\n", info);
         scs_printf("syevr input parameter dump:\n");
         scs_printf("nb = %li\n", (long) nb);
         scs_printf("lwork = %li\n", (long) lwork);
@@ -461,7 +461,7 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
         printArray(e, m, "e");
         printArray(Z, m * n, "Z");
 #endif
-    /*  return -1; */
+    if (info < 0) return -1;
     }
 
 	memset(X, 0, n * n * sizeof(scs_float));
