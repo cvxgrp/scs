@@ -1,4 +1,4 @@
-function write_scs_data(data,K,params,name)
+write_scs_data(data,K,params,name)
 % this function takes in problem data and writes out an
 % uncompressed file that can be read by demo_direct and
 % demo_indirect (compiled scs binary files)
@@ -6,16 +6,16 @@ function write_scs_data(data,K,params,name)
 % for large problems can be prohbitively large
 
 % set default params if not present:
-MAX_ITERS = 2500; % maximum num iterations for admm
-EPS   = 1e-3; % quitting tolerances
-ALPHA=1.8;        % relaxation parameter (alpha = 1 is unrelaxed)
-NORMALIZE = 1; % 1 = true
-VERBOSE = 1; % 1 = true
-if ~isfield(params,'MAX_ITERS');params.MAX_ITERS = MAX_ITERS;end
-if ~isfield(params,'EPS');params.EPS = EPS;end
-if ~isfield(params,'ALPHA');params.ALPHA = ALPHA;end
-if ~isfield(params,'NORMALIZE');params.NORMALIZE = NORMALIZE;end
-if ~isfield(params,'VERBOSE');params.VERBOSE = VERBOSE;end
+max_iters = 2500; % maximum num iterations for admm
+eps = 1e-3; % quitting tolerances
+alpha = 1.8;        % relaxation parameter (alpha = 1 is unrelaxed)
+normalize = 1; % 1 = true
+verbose = 1; % 1 = true
+if ~isfield(params,'max_iters');params.max_iters = max_iters;end
+if ~isfield(params,'eps');params.eps = eps;end
+if ~isfield(params,'alpha');params.alpha = alpha;end
+if ~isfield(params,'normalize');params.normalize = normalize;end
+if ~isfield(params,'verbose');params.VERBOSE = VERBOSE;end
 
 %% set cone data if not present:
 if ~isfield(K,'f');K.f = 0;end
@@ -73,13 +73,13 @@ fprintf(fi,'%u ',n);fprintf(fi,'%u ',m);
 fprintf(fi,'\n');
 fprintf(fi,'%u ',K.f);fprintf(fi,'%u ',K.l);fprintf(fi,'%u ',length(K.q));fprintf(fi,'%u ',length(K.s));fprintf(fi,'%u ',K.ep);fprintf(fi,'%u ',K.ed);
 fprintf(fi,'\n');
-fprintf(fi,'%u ',params.MAX_ITERS);
+fprintf(fi,'%u ',params.max_iters);
 fprintf(fi,'\n');
-fprintf(fi,'%u ',params.VERBOSE); fprintf(fi,'%u ',params.NORMALIZE);
+fprintf(fi,'%u ',params.verbose); fprintf(fi,'%u ',params.normalize);
 fprintf(fi,'\n');
-fprintf(fi,'%6.18f ',params.ALPHA);
+fprintf(fi,'%6.18f ',params.alpha);
 fprintf(fi,'\n');
-fprintf(fi,'%6.18f ',params.EPS);
+fprintf(fi,'%6.18f ',params.eps);
 fprintf(fi,'\n');
 fprintf(fi,'%u ',K.q');
 fprintf(fi,'\n');
