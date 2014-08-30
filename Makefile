@@ -21,8 +21,8 @@ ifneq ($(USE_LAPACK), 0)
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, and ECPs"
 else
 	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and ECPs)."
-	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to point to the library"
-	@echo "install locations, and recompile with 'make purge', 'make'."
+	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to set USE_LAPACK=1"
+	@echo "and point to the library install locations, and recompile with 'make purge', 'make'."
 endif
 	@echo "**********************************************************************************"
 
