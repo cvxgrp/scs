@@ -33,12 +33,12 @@ data = {'A': At, 'b': bt, 'c': c}
 m = np.shape(data['A'])[0]
 n = np.shape(data['A'])[1]
 cone = {'l': 2 * p, 'f': q}
-opts = {'NORMALIZE': 1}
+opts = {'normalize': True}
 
 # indirect solver:
-sol_i = scs.solve(data, cone, opts=opts, USE_INDIRECT=True)
+sol_i = scs.solve(data, cone, use_indirect=True, **opts)
 # direct solver:
-sol_d = scs.solve(data, cone, opts=opts)
+sol_d = scs.solve(data, cone, **opts)
 
 # use ECOS to verify result (if installed)
 # dims = {'l': 2 * p}
@@ -53,7 +53,7 @@ data['x'] = sol_i['x']
 data['y'] = sol_i['y']
 data['s'] = sol_i['s']
 # indirect solver, warm start:
-opts['CG_RATE'] = 2
-sol_i_warm = scs.solve(data, cone, opts=opts, USE_INDIRECT=True)
+opts['cg_rate'] = 2
+sol_i_warm = scs.solve(data, cone, use_indirect=True, **opts)
 # direct solver, warm start:
-sol_d_warm = scs.solve(data, cone, opts=opts)
+sol_d_warm = scs.solve(data, cone, **opts)
