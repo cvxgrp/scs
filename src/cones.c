@@ -437,7 +437,7 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 		return project2By2Sdc(X);
 	}
 #ifdef LAPACK_LIB_FOUND
-	memcpy(Xs, X, n * n * sizeof(pfloat));
+	memcpy(Xs, X, n * n * sizeof(scs_float));
 
     /* Xs = X + X', save div by 2 for eigen-recomp */
     for (i = 0; i < n; ++i) {
@@ -466,7 +466,7 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 
 	memset(X, 0, n * n * sizeof(scs_float));
 	for (i = 0; i < m; ++i) {
-		pfloat a = e[i] / 2;
+		scs_float a = e[i] / 2;
 		BLAS(syr)("Lower", &nb, &a, &(Z[i * n]), &one, X, &nb);
 	}
 	/* fill in upper half */
