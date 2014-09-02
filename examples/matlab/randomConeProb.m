@@ -21,7 +21,7 @@ K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100;0;1],'s',[0,1,2,3,4,5
 
 m = getConeDims(K);
 n = round(m/3);
-params = struct('EPS',1e-3, 'NORMALIZE',1,'SCALE',5,'CG_RATE',2);
+params = struct('eps',1e-3, 'normalize',1,'scale',5,'cg_rate',2);
 
 %% generate primal-dual feasible cone prob:
 % Ax + s = b, s \in K, A'y + c = 0, y \in K*, s'y = 0
@@ -80,7 +80,7 @@ if (gen_infeasible)
     data.b = b;
     data.c = randn(n,1);
     
-    params.SCALE = 0.5;
+    params.scale = 0.5;
     %indirect
     if(run_indirect) [xi,yi,si,infoi] = scs_indirect(data,K,params); end
     % direct:
@@ -106,7 +106,7 @@ if(gen_unbounded)
     data.b = randn(m,1);
     data.c = c;
     
-    params.SCALE = 0.5;
+    params.scale = 0.5;
     %indirect
     if(run_indirect) [xi,yi,si,infoi] = scs_indirect(data,K,params); end
     % direct:

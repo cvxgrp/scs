@@ -108,51 +108,51 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	d->c = (scs_float *)mxGetPr(c_mex);
 
 	/* params */
-	tmp = mxGetField(params, 0, "ALPHA");
+	tmp = mxGetField(params, 0, "alpha");
 	if (tmp == NULL)
-		d->alpha = 1.8;
+		d->alpha = ALPHA;
 	else
 		d->alpha = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "RHO_X");
+	tmp = mxGetField(params, 0, "rho_x");
 	if (tmp == NULL)
-		d->rho_x = 1e-3;
+		d->rho_x = RHO_X;
 	else
 		d->rho_x = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "MAX_ITERS");
+	tmp = mxGetField(params, 0, "max_iters");
 	if (tmp == NULL)
-		d->max_iters = 2500;
+		d->max_iters = MAX_ITERS;
 	else
 		d->max_iters = (scs_int) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "SCALE");
+	tmp = mxGetField(params, 0, "scale");
 	if (tmp == NULL)
-		d->scale = 5;
+		d->scale = SCALE;
 	else
 		d->scale = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "EPS");
+	tmp = mxGetField(params, 0, "eps");
 	if (tmp == NULL)
-		d->eps = 1e-3;
+		d->eps = EPS;
 	else
 		d->eps = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "CG_RATE");
+	tmp = mxGetField(params, 0, "cg_rate");
 	if (tmp == NULL)
-		d->cg_rate = 2;
+		d->cg_rate = CG_RATE;
 	else
 		d->cg_rate = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "VERBOSE");
+	tmp = mxGetField(params, 0, "verbose");
 	if (tmp == NULL)
-		d->verbose = 1;
+		d->verbose = VERBOSE;
 	else
 		d->verbose = (scs_int) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "NORMALIZE");
+	tmp = mxGetField(params, 0, "normalize");
 	if (tmp == NULL)
-		d->normalize = 1;
+		d->normalize = NORMALIZE;
 	else
 		d->normalize = (scs_int) *mxGetPr(tmp);
 

@@ -3,6 +3,7 @@
 
 #include "scs.h"
 
+/* NB: rows of data matrix A must be specified in this exact order */
 struct CONE {
 	scs_int f; /* number of linear equality constraints */
 	scs_int l; /* length of LP cone */
