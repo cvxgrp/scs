@@ -8,14 +8,14 @@ SCS = `splitting cone solver`
 
 SCS is a C package for solving large-scale convex cone problems,
 based on our paper [Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html).
-It can be called from other C/C++ packages by linking against the SCS library, or XXX 
+
+SCS can be used in other C/C++ programs, or through the included Python or Matlab interfaces. 
 
 ----
 SCS numerically solves convex cone programs using the alternating direction
-method of multipliers (ADMM), see [this
-paper](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html) for more on
-ADMM. It returns solutions to both the primal and dual problems if the problem
-is feasible or returns a certificate of infeasibility otherwise.  SCS solves
+method of multipliers [ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html).
+It returns solutions to both the primal and dual problems if the problem
+is feasible or returns a certificate of infeasibility otherwise. SCS solves
 the following primal cone problem:
 
 ```
@@ -40,43 +40,38 @@ The cone `K` can be any Cartesian product of the following primitive cones:
 + exponential cone `{(x,y,z) | y e^(x/y) <= z, y>0 }`
 + dual exponential cone `{(u,v,w) | −u e^(v/u) <= e w, u<0}`
 
-**The rows of the data matrix `A` correspond to the cones in `K`.
-The rows of `A` must be laid out exactly in the order given above (i.e., first come the
+The rows of the data matrix `A` correspond to the cones in `K`.
+**The rows of `A` must be in the order of the cones given above, i.e., first come the
 rows that correspond to the zero/free cones, then those that correspond to the
-positive orthants, then SOCs, etc.).** For a `k` dimensional semidefinite cone
+positive orthants, then SOCs, etc.** For a `k` dimensional semidefinite cone
 when interpreting the rows of the data matrix `A`
 SCS assumes that the `k x k` matrix variable has been vectorized by stacking the
 columns to create a vector of length `k^2`.
 
-At termination SCS returns solution `(x, s, y)` if the problem is feasible,
-or a certificate of infeasibility otherwise. See [this book](http://web.stanford.edu/~boyd/cvxbook/)
-for more details about cone programming and certificates of infeasibility.
+At termination SCS returns solution `(x*, s*, y*)` if the problem is feasible,
+or a certificate of infeasibility otherwise. See [here](http://web.stanford.edu/~boyd/cvxbook/)
+for (much) more details about cone programming and certificates of infeasibility.
 
 **Linear equation solvers**
 
 Each iteration of SCS requires the solution of a set of linear equations.
-This package includes two implementations for solving linear equations,
+This package includes two implementations for solving linear equations:
 a direct solver which uses
 a cached LDL factorization and an indirect solver based on conjugate gradients.
 
 The direct solver uses the LDL and AMD packages numerical linear
-algebra packages by Tomothy Davis and others, the necessary files are included.
+algebra packages by Timothy Davis and others, the necessary files are included.
 See [here](http://www.cise.ufl.edu/research/sparse/) for more information about
 these packages.
 
-Installing 
----------- 
-Typing `make` at the command line
-will produce one static and one dynamic libary for the direct version named `libscsdir.*`
-and one static and one dynamic library for the indirect version named `libscsindir.*`,
-all in the
-`out` folder. It will also produce four demo binaries in the
+### Using SCS in C
+Typing `make` at the command line will compile the code and create
+SCS libraries in the `out` folder. It will also produce four demo binaries in the
 `out` folder named `demo_direct`, `demo_indirect`, `demo_SOCP_direct` and
 `demo_SOCP_indirect`.
 
-### Using SCS in C
 If `make` completes successfully, it will produce two static library files,
-`libscsdir.a` and `libscsindir.a` under the `lib` folder and two dynamic
+`libscsdir.a` and `libscsindir.a` under the `out` folder and two dynamic
 library files `libscsdir.ext` and `libscsindir.ext` (where `.ext` extension is
 platform dependent) in the same folder. To include the
 libraries in your own source code, compile with the linker option with
@@ -88,13 +83,13 @@ These libraries (and `scs.h`) expose only four API functions:
     
     This initializes the Work struct containing the workspace that scs will
     use, and performs the necessary preprocessing (e.g. matrix factorization).
-    Inputs are `d` and `k`, `info` is output.
+    All inputs `d`, `k`, and `info` must be memory allocated before calling.
 
 * `scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);`
     
     This solves the problem as defined by Data `d` and Cone `k` using the workspace
     in `w`. The solution is returned in `sol` and information about the solve
-    is returned in `info` (outputs must have memory allocated before-hand).
+    is returned in `info` (outputs must have memory allocated before calling).
     None of the inputs can be NULL. You can call scs_solve many times for one
     call to scs_init, so long as the matrix A
     does not change (b and c can change).
@@ -106,7 +101,7 @@ These libraries (and `scs.h`) expose only four API functions:
 * `scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);`
 
     Simply calls all the above routines, so can't use reuse the workspace (for,
-    e.g., factorization caching), `sol` and `info` must have memory allocated
+    e.g., factorization caching), all inputs must have memory allocated
     before this call.
 
 The five relevant data structures are:
@@ -186,20 +181,27 @@ the struct above, the rows of `A` must correspond to the cones in the
 exact order as specified by the cone struct (i.e. put linear cones before
 soc cones etc.).
 
-**Warm Start**
+**Warm-start**
+
 You can warm-start SCS (supply a guess of the solution) by setting warm_start in
-Data to 1 and supplying the warm-starts in the Sol struct (x,y and s). These
+Data to 1 and supplying the warm-starts in the Sol struct (x,y and s). All
+inputs must be warm-started if any one is. These
 are used to initialize the iterates in scs_solve.
  
 **Re-using matrix factorization**
-To factorize the matrix once and solve many times, simply call scs_init once,
-and use scs_solve many times with the same workspace, changing the input data
-(and optionally warm-starts) for each iteration. See run_scs.c for an example.
+
+To factorize the matrix once (if using the direct version) and solve many
+times, simply call scs_init once, and use scs_solve many times with the same
+workspace, changing the input data `b` and `c` (and optionally warm-starts) for
+each iteration. See run_scs.c for an example.
 
 **Using your own linear system solver**
-Simply implement all the methods and the two structs in `include/linSys.h` and plug it in.
+
+To use your own linear system solver simply implement all the methods and the
+two structs in `include/linSys.h` and plug it in.
 
 **Solving SDPs**
+
 In order to solve SDPs you must have BLAS and LAPACK installed.
 Point `scs.mk` to the location of these libraries. Without
 these you can still solve SOCPs, LPs, and ECPs.
@@ -213,8 +215,9 @@ use the mex file in your Matlab code. The calling sequence is (for the direct ve
 
 	[x,y,s,info] = scs_direct(data,cones,params)
 
-where data contains `A`, `b`, `c`, params contains various options (see matlab file, can be empty),
-and cones contains one or more of:
+where data is a struct containing `A`, `b`, and `c`, params is a struct containing 
+solver options (see matlab file, can be empty),
+and cones is a struct that contains one or more of:
 + `f` (num primal zero / dual free cones, i.e. primal equality constraints)
 + `l` (num linear cones)
 + `q` (array of SOCs sizes)
@@ -225,7 +228,7 @@ and cones contains one or more of:
 Type `help scs_direct` at the Matlab prompt to see its documentation.
 
 SCS can be used in conjunction with [CVX](http://cvxr.com).
-You can select the scs solver with CVX as follows:
+You can use SCS with CVX as follows:
  
     >> cvx_solver 'scs'
     >> cvx_begin
@@ -239,10 +242,10 @@ To install SCS as a python package type:
 cd <scs-directory>/python
 python setup.py install
 ```
-You may need `sudo` privileges for a global installation. SCS requires numpy and
+You may need `sudo` privileges for a global installation. Running SCS requires numpy and
 scipy to be installed.
 
-After installing the scs interface, you import SCS using
+After installing the SCS interface, you import SCS using
 ```
 import scs
 ```
@@ -254,7 +257,7 @@ Arguments in the square brackets are optional, and default to the values on the 
 The argument `data` is a python dictionary with three elements `A`, `b`, and
 `c` where `b` and `c` are NUMPY arrays (i.e., matrices with a single column)
 and `A` is a SCIPY **sparse matrix in CSC format**; if they are not of the proper
-format, scs will attempt to convert them.
+format, SCS will attempt to convert them.
 
 The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and
 `ed` (all of which are optional) corresponding to the supported cone types.
