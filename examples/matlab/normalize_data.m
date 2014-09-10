@@ -1,0 +1,77 @@
+function [data, w] = normalize_data(data, K, scale, w)
+[m,n] = size(data.A);
+
+MIN_SCALE = 1e-3;
+MAX_SCALE = 1e3;
+minRowScale = MIN_SCALE * sqrt(n);
+maxRowScale = MAX_SCALE * sqrt(n);
+minColScale = MIN_SCALE * sqrt(m);
+maxColScale = MAX_SCALE * sqrt(m);
+
+D = ones(m,1);
+E = ones(n,1);
+NN = 1; % NN = 1, other choices bad
+for j=1:NN
+    %% D scale:
+    Dt = norms(data.A(1:K.f,:)')';
+    idx = K.f;
+    Dt = [Dt;norms(data.A(idx+1:idx+K.l,:)')'];
+    idx = idx + K.l;
+    for i=1:length(K.q)
+        if (K.q(i) > 0)
+            nmA = mean(norms(data.A(idx+1:idx+K.q(i),:)'));
+            Dt = [Dt;nmA*ones(K.q(i),1)];
+            idx = idx + K.q(i);
+        end
+    end
+    for i=1:length(K.s)
+        if (K.s(i) > 0)
+            nmA = mean(norms(data.A(idx+1:idx+K.s(i)^2,:)'));
+            Dt = [Dt;nmA*ones(K.s(i)^2,1)];
+            idx = idx + K.s(i)^2;
+        end
+    end
+    for i=1:K.ep
+        nmA = mean(norms(data.A(idx+1:idx+3,:)'));
+        Dt = [Dt;nmA*ones(3,1)];
+        idx = idx + 3;
+    end
+    for i=1:K.ed
+        nmA = mean(norms(data.A(idx+1:idx+3,:)'));
+        Dt = [Dt;nmA*ones(3,1)];
+        idx = idx + 3;
+    end
+    
+    Dt(Dt < minRowScale) = 1;
+    Dt(Dt > maxRowScale) = maxRowScale;
+    data.A = sparse(diag(1./Dt))*data.A;
+    
+    %% E Scale
+    Et = norms(data.A)';
+    Et(Et < minColScale) = 1;
+    Et(Et > maxColScale) = maxColScale;
+    data.A = data.A*sparse(diag(1./Et));
+    
+    %%
+    D = D.*Dt;
+    E = E.*Et;
+end
+
+nmrowA = mean(norms(data.A'));
+nmcolA = mean(norms(data.A));
+
+data.A = data.A*scale;
+
+data.b = data.b./D;
+sc_b = nmcolA/ max(norm(data.b), MIN_SCALE);
+data.b = data.b * sc_b * scale;
+
+data.c = data.c./E;
+sc_c = nmrowA/max(norm(data.c), MIN_SCALE);
+data.c = data.c * sc_c * scale;
+
+w.D = D;
+w.E = E;
+w.sc_b = sc_b;
+w.sc_c = sc_c;
+end

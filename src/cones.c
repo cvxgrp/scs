@@ -1,7 +1,7 @@
 #include "cones.h"
 
 #define CONE_RATE (2)
-#define CONE_TOL (1e-7)
+#define CONE_TOL (1e-8)
 #define EXP_CONE_MAX_ITERS (100)
 
 #ifdef LAPACK_LIB_FOUND

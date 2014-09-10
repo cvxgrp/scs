@@ -65,6 +65,8 @@ struct INFO {
 	scs_float dobj; /* dual objective */
 	scs_float resPri; /* primal equality residual */
 	scs_float resDual; /* dual equality residual */
+	scs_float resInfeas; /* infeasibility cert residual */
+	scs_float resUnbdd; /* unbounded cert residual */
 	scs_float relGap; /* relative duality gap */
 	scs_float setupTime; /* time taken for setup phase */
 	scs_float solveTime; /* time taken for solve phase */
@@ -90,13 +92,15 @@ struct WORK {
 	Priv * p;
 };
 
-/* to hold residual information */
+/* to hold residual information (unnormalized) */
 struct residuals {
 	scs_float resDual;
 	scs_float resPri;
+	scs_float resInfeas;
+	scs_float resUnbdd;
 	scs_float relGap;
-	scs_float cTx;
-	scs_float bTy;
+	scs_float cTx_tau; /* not divided by tau */
+	scs_float bTy_tau; /* not divided by tau */
 	scs_float tau;
 	scs_float kap;
 };
