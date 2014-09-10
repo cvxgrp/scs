@@ -49,9 +49,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mxArray *params;
 
 	const mwSize one[1] = { 1 };
-	const int numInfoFields = 9;
-	const char * infoFields[] = { "iter", "status", "pobj", "dobj", "resPri", "resDual", "relGap", "setupTime",
-			"solveTime" };
+	const int numInfoFields = 11;
+	const char * infoFields[] = { "iter", "status", "pobj", "dobj", "resPri", "resDual", "resInfeas", "resUnbdd",
+		"relGap", "setupTime", "solveTime" };
 	mxArray *tmp;
 
 
@@ -271,6 +271,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "resDual", tmp);
 	*mxGetPr(tmp) = info.resDual;
+
+	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
+	mxSetField(plhs[3], 0, "resInfeas", tmp);
+	*mxGetPr(tmp) = info.resInfeas;
+
+	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
+	mxSetField(plhs[3], 0, "resUnbdd", tmp);
+	*mxGetPr(tmp) = info.resUnbdd;
 
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "relGap", tmp);
