@@ -75,11 +75,11 @@ void normalizeWarmStart(Data *d, Work * w) {
 		y[i] *= (D[i] * w->sc_c);
 	}
 	for (i = 0; i < d->m; ++i) {
-		s[i] /= D[i] / (w->sc_b * d->scale);
+		s[i] /= (D[i] / (w->sc_b * d->scale));
 	}
 }
 
-void unNormalizeSolBC(Data *d, Work * w, Sol * sol) {
+void unNormalizeSol(Data *d, Work * w, Sol * sol) {
 	scs_int i;
 	scs_float * D = w->D;
 	scs_float * E = w->E;
@@ -92,6 +92,12 @@ void unNormalizeSolBC(Data *d, Work * w, Sol * sol) {
 	for (i = 0; i < d->m; ++i) {
 		sol->s[i] *= D[i] / (w->sc_b * d->scale);
 	}
+}
+
+void unNormalizeBC(Data *d, Work * w, Sol * sol) {
+	scs_int i;
+	scs_float * D = w->D;
+	scs_float * E = w->E;
 	for (i = 0; i < d->n; ++i) {
 		d->c[i] *= E[i] / (w->sc_c * d->scale);
 	}

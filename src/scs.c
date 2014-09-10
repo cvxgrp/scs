@@ -137,14 +137,15 @@ static scs_float calcDualResid(Data * d, Work * w, scs_float * y, scs_float tau,
 	return SQRTF(dres); /* norm(A'y + c * tau) */
 }
 
+/*
 static scs_float fastCalcPrimalResid(Data * d, Work * w, scs_float * nmAxs) {
 	scs_int i, n = d->n, m = d->m;
 	scs_float pres = 0, scale, *pr = w->pr, *D = w->D, tau = ABS(w->u[n + m]);
 	*nmAxs = 0;
-	memcpy(pr, &(w->u[n]), m * sizeof(scs_float)); /* overwrite pr */
+	memcpy(pr, &(w->u[n]), m * sizeof(scs_float)); // overwrite pr
 	addScaledArray(pr, &(w->u_prev[n]), m, d->alpha - 2);
 	addScaledArray(pr, &(w->u_t[n]), m, 1 - d->alpha);
-	addScaledArray(pr, d->b, m, w->u_t[n + m]); /* pr = Ax + s */
+	addScaledArray(pr, d->b, m, w->u_t[n + m]); // pr = Ax + s
 	for (i = 0; i < m; ++i) {
 		scale = d->normalize ? D[i] / (w->sc_b * d->scale) : 1;
 		scale = scale * scale;
@@ -152,47 +153,33 @@ static scs_float fastCalcPrimalResid(Data * d, Work * w, scs_float * nmAxs) {
 		pres += (pr[i] - d->b[i] * tau) * (pr[i] - d->b[i] * tau) * scale;
 	}
 	*nmAxs = SQRTF(*nmAxs);
-	return SQRTF(pres); /* norm(Ax + s - b * tau) */
+	return SQRTF(pres); // norm(Ax + s - b * tau)
 }
+*/
 
-static void getInfo(Data * d, Work * w, Sol * sol, Info * info) {
-	scs_float cTx, bTy, nmAxs, nmATy, nmpr, nmdr;
-	scs_float * x = sol->x, *y = sol->y, *s = sol->s;
+/* calculates un-normalized quantities */
+static void calcResiduals(Data * d, Work * w, struct residuals * r) {
+	scs_float * x = w->u, * y = &(w->u[d->n]), * s = &(w->v[d->n]);
+	scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
+	scs_int n = d->n, m = d->m;
+	r->tau = ABS(w->u[n + m]);
+	r->kap = ABS(w->v[n + m]) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
 
-	/* unNomalized */
-	nmpr = calcPrimalResid(d, w, x, s, 1, &nmAxs); /* pr = Ax + s - b */
-	nmdr = calcDualResid(d, w, y, 1, &nmATy); /* dr = A'y + c */
+	nmpr_tau = calcPrimalResid(d, w, x, s, r->tau, &nmAxs_tau);
+	nmdr_tau = calcDualResid(d, w, y, r->tau, &nmATy_tau);
 
-	cTx = innerProd(x, d->c, d->n);
-	bTy = innerProd(y, d->b, d->m);
-	if (d->normalize) {
-		cTx /= (d->scale * w->sc_c * w->sc_b);
-		bTy /= (d->scale * w->sc_c * w->sc_b);
-	}
-	info->pobj = cTx;
-	info->dobj = -bTy;
-	if (info->statusVal == SOLVED) {
-		info->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
-		info->resPri = nmpr / (1 + w->nm_b);
-		info->resDual = nmdr / (1 + w->nm_c);
-	} else {
-		if (info->statusVal == UNBOUNDED) {
-			info->dobj = NAN;
-			info->relGap = NAN;
-			info->resPri = w->nm_c * nmAxs / -cTx;
-			info->resDual = NAN;
-			scaleArray(x, -1 / cTx, d->n);
-			scaleArray(s, -1 / cTx, d->m);
-			info->pobj = -1;
-		} else {
-			info->pobj = NAN;
-			info->relGap = NAN;
-			info->resPri = NAN;
-			info->resDual = w->nm_b * nmATy / -bTy;
-			scaleArray(y, -1 / bTy, d->m);
-			info->dobj = -1;
-		}
-	}
+	r->bTy_tau = innerProd(y, d->b, m) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
+	r->cTx_tau = innerProd(x, d->c, n) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
+
+	r->resInfeas = r->bTy_tau < 0 ? w->nm_b * nmATy_tau / -r->bTy_tau : NAN;
+	r->resUnbdd = r->cTx_tau < 0 ? w->nm_c * nmAxs_tau / -r->cTx_tau : NAN;
+
+	bTy = r->bTy_tau / r->tau;
+	cTx = r->cTx_tau / r->tau;
+
+	r->resPri = nmpr_tau / (1 + w->nm_b) / r->tau;
+	r->resDual = nmdr_tau / (1 + w->nm_c) / r->tau;
+	r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
 }
 
 static void coldStartVars(Data * d, Work * w) {
@@ -306,17 +293,18 @@ static scs_int indeterminate(Data * d, Sol * sol, Info * info) {
 	return INDETERMINATE;
 }
 
-static scs_int infeasible(Data * d, Sol * sol, Info * info) {
+static scs_int infeasible(Data * d, Sol * sol, Info * info, scs_float bTy) {
 	strcpy(info->status, info->statusVal != 0 ? "Infeasible" : "Infeasible/Inaccurate");
-	/*scaleArray(sol->y,-1/ip_y,d->m); */
+	scaleArray(sol->y, -1 / bTy, d->m);
 	scaleArray(sol->x, NAN, d->n);
 	scaleArray(sol->s, NAN, d->m);
 	return INFEASIBLE;
 }
 
-static scs_int unbounded(Data * d, Sol * sol, Info * info) {
+static scs_int unbounded(Data * d, Sol * sol, Info * info, scs_float cTx) {
 	strcpy(info->status, info->statusVal != 0 ? "Unbounded" : "Unbounded/Inaccurate");
-	/*scaleArray(sol->x,-1/ip_x,d->n); */
+	scaleArray(sol->x, -1 / cTx, d->n);
+	scaleArray(sol->s, -1 / cTx, d->m);
 	scaleArray(sol->y, NAN, d->m);
 	return UNBOUNDED;
 }
@@ -339,34 +327,66 @@ static void setx(Data * d, Work * w, Sol * sol) {
 	memcpy(sol->x, w->u, d->n * sizeof(scs_float));
 }
 
-static void setSolution(Data * d, Work * w, Sol * sol, Info * info) {
+static void getInfo(Data * d, Work * w, Sol * sol, Info * info, struct residuals * r, scs_int iter) {
+	info->iter = iter;
+	if (info->statusVal == SOLVED) {
+		info->relGap = r->relGap;
+		info->resPri = r->resPri;
+		info->resDual = r->resDual;
+		info->resInfeas = r->resInfeas;
+		info->resUnbdd = r->resUnbdd;
+		info->pobj = r->cTx_tau / r->tau;
+		info->dobj = -r->bTy_tau / r->tau;
+	} else if (info->statusVal == UNBOUNDED) {
+		info->dobj = NAN;
+		info->relGap = NAN;
+		info->resPri = NAN;
+		info->resDual = NAN;
+		info->resInfeas = r->resInfeas;
+		info->resUnbdd = r->resUnbdd;
+		info->pobj = -1;
+		info->dobj = NAN;
+	} else if (info->statusVal == INFEASIBLE) {
+		info->pobj = NAN;
+		info->relGap = NAN;
+		info->resPri = NAN;
+		info->resDual = NAN;
+		info->resInfeas = r->resInfeas;
+		info->resUnbdd = r->resUnbdd;
+		info->pobj = NAN;
+		info->dobj = -1;
+	}
+}
+
+/* sets solutions, re-scales by inner prods if infeasible or unbounded */
+static void getSolution(Data * d, Work * w, Sol * sol, Info * info, struct residuals * r, scs_int iter) {
 	scs_int l = d->n + d->m + 1;
+	calcResiduals(d, w, r);
 	setx(d, w, sol);
 	sety(d, w, sol);
 	sets(d, w, sol);
-	if (info->statusVal == 0 || info->statusVal == SOLVED) {
-		scs_float tau = w->u[l - 1];
-		scs_float kap = ABS(w->v[l - 1]);
-		if (tau > INDETERMINATE_TOL && tau > kap) {
-			info->statusVal = solved(d, sol, info, tau);
+	if (info->statusVal == 0) {
+		/* not yet converged, take best guess */
+		if (r->tau > INDETERMINATE_TOL && r->tau > r->kap) {
+			info->statusVal = solved(d, sol, info, r->tau);
+		} else if (calcNorm(w->u, l) < INDETERMINATE_TOL * SQRTF((scs_float) l)) {
+			info->statusVal = indeterminate(d, sol, info);
+		} else if (r->bTy_tau < r->cTx_tau) {
+			info->statusVal = infeasible(d, sol, info, r->bTy_tau);
 		} else {
-			if (calcNorm(w->u, l) < INDETERMINATE_TOL * SQRTF((scs_float) l)) {
-				info->statusVal = indeterminate(d, sol, info);
-			} else {
-				scs_float bTy = innerProd(d->b, sol->y, d->m);
-				scs_float cTx = innerProd(d->c, sol->x, d->n);
-				if (bTy < cTx) {
-					info->statusVal = infeasible(d, sol, info);
-				} else {
-					info->statusVal = unbounded(d, sol, info);
-				}
-			}
+			info->statusVal = unbounded(d, sol, info, r->cTx_tau);
 		}
+	} else if (info->statusVal == SOLVED) {
+		info->statusVal = solved(d, sol, info, r->tau);
 	} else if (info->statusVal == INFEASIBLE) {
-		info->statusVal = infeasible(d, sol, info);
+		info->statusVal = infeasible(d, sol, info, r->bTy_tau);
 	} else {
-		info->statusVal = unbounded(d, sol, info);
+		info->statusVal = unbounded(d, sol, info, r->cTx_tau);
 	}
+	if (d->normalize) {
+		unNormalizeSol(d, w, sol);
+	}
+	getInfo(d, w, sol, info, r, iter);
 }
 
 static void printSummary(scs_int i, struct residuals *r, timer * solveTimer) {
@@ -374,8 +394,8 @@ static void printSummary(scs_int i, struct residuals *r, timer * solveTimer) {
 	scs_printf("%*.2e ", (int) HSPACE, r->resPri);
 	scs_printf("%*.2e ", (int) HSPACE, r->resDual);
 	scs_printf("%*.2e ", (int) HSPACE, r->relGap);
-	scs_printf("%*.2e ", (int) HSPACE, r->cTx);
-	scs_printf("%*.2e ", (int) HSPACE, -r->bTy);
+	scs_printf("%*.2e ", (int) HSPACE, r->cTx_tau / r->tau);
+	scs_printf("%*.2e ", (int) HSPACE, -r->bTy_tau / r->tau);
 	scs_printf("%*.2e ", (int) HSPACE, r->kap / r->tau);
 	scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
 	scs_printf("\n");
@@ -434,12 +454,12 @@ static void printFooter(Data * d, Work * w, Info * info) {
 
 	if (info->statusVal == INFEASIBLE) {
 		scs_printf("Certificate of primal infeasibility:\n");
-		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resDual);
+		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resInfeas);
 		scs_printf("dist(y, K*) = 0\n");
 		scs_printf("b'y = %.4f\n", info->dobj);
 	} else if (info->statusVal == UNBOUNDED) {
 		scs_printf("Certificate of dual infeasibility:\n");
-		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resPri);
+		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resUnbdd);
 		scs_printf("dist(s, K) = 0\n");
 		scs_printf("c'x = %.4f\n", info->pobj);
 	} else {
@@ -463,53 +483,21 @@ static void printFooter(Data * d, Work * w, Info * info) {
 #endif
 }
 
-static scs_int converged(Data * d, Work * w, struct residuals * r, scs_int iter) {
-	scs_float nmpr, nmdr, tau, kap, *x, *y, cTx, nmAxs, bTy, nmATy, rpri, rdua, gap;
-	scs_int n = d->n, m = d->m;
-	if (iter % CONVERGED_INTERVAL != 0) {
+static scs_int hasConverged(Data * d, Work * w, struct residuals * r, scs_int iter) {
+	if (iter % CONVERGED_INTERVAL != 0 && iter + 1 != d->max_iters) {
 		return 0;
 	}
-	x = w->u;
-	y = &(w->u[n]);
-	tau = ABS(w->u[n + m]);
-	kap = ABS(w->v[n + m]) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
-    r->tau = tau;
-	r->kap = kap;
-
-	/* requires mult by A:
-	 nmpr = calcPrimalResid(d, w, w->u, &(w->v[n]), ABS(w->u[n + m]), &nmAxs);
-	 */
-
-	/* does not require mult by A: */
-	nmpr = fastCalcPrimalResid(d, w, &nmAxs);
-	cTx = innerProd(x, d->c, n) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
-
-	r->resPri = cTx < 0 ? w->nm_c * nmAxs / -cTx : NAN;
-	if (r->resPri < d->eps) {
+	calcResiduals(d, w, r);
+	if (r->resPri < d->eps && r->resDual < d->eps && r->relGap < d->eps) {
+		return SOLVED;
+	}
+	if (r->resUnbdd < d->eps) {
 		return UNBOUNDED;
 	}
-
-	nmdr = calcDualResid(d, w, y, tau, &nmATy);
-	bTy = innerProd(y, d->b, m) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
-
-	r->resDual = bTy < 0 ? w->nm_b * nmATy / -bTy : NAN;
-	if (r->resDual < d->eps) {
+	if (r->resInfeas < d->eps) {
 		return INFEASIBLE;
 	}
-
-	r->cTx = cTx / tau;
-	r->bTy = bTy / tau;
-	r->relGap = NAN;
-
-	rpri = nmpr / (1 + w->nm_b) / tau;
-	rdua = nmdr / (1 + w->nm_c) / tau;
-	gap = ABS(cTx + bTy) / (tau + ABS(cTx) + ABS(bTy));
-	if (tau > kap) {
-		r->resPri = rpri;
-		r->resDual = rdua;
-		r->relGap = gap;
-	}
-	return (MAX(MAX(rpri,rdua),gap) < d->eps ? SOLVED : 0);
+	return 0;
 }
 
 static scs_int validate(Data * d, Cone * k) {
@@ -661,7 +649,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		if (projectCones(d, w, k, i) < 0) return failureDefaultReturn(d, w, sol, info, "error in projectCones");
 		updateDualVars(d, w);
 
-		if ((info->statusVal = converged(d, w, &r, i)) != 0)
+		if ((info->statusVal = hasConverged(d, w, &r, i)) != 0)
 			break;
 
 		if (i % PRINT_INTERVAL == 0) {
@@ -682,17 +670,16 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	if (d->verbose) {
 		printSummary(i, &r, &solveTimer);
 	}
-	setSolution(d, w, sol, info);
-	/* populate info */
-	info->iter = i;
-	getInfo(d, w, sol, info);
+	/* populate solution vectors (unnormalized) and info */
+	getSolution(d, w, sol, info, &r, i);
 	info->solveTime = tocq(&solveTimer);
 
 	if (d->verbose)
 		printFooter(d, w, info);
 	/* un-normalize sol, b, c but not A */
 	if (d->normalize)
-		unNormalizeSolBC(d, w, sol);
+		unNormalizeBC(d, w, sol);
+
 	return info->statusVal;
 }
 

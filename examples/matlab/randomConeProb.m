@@ -15,13 +15,14 @@ run_indirect = true;
 run_direct = true;
 run_cvx = false; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
+run_scs_matlab = true; %% SCS implemented in MATLAB
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
-K = struct('f',100,'l',150,'q',[2;3;4;5;6;7;8;9;10;5;6;100;0;1],'s',[0,1,2,3,4,5],'ep',5,'ed',5)
+K = struct('f',50,'l',50,'q',[0;1;2;3;4;5;6;7;60],'s',[0;1;2;3;10],'ep',5,'ed',3);
 
 m = getConeDims(K);
 n = round(m/3);
-params = struct('eps',1e-3, 'normalize',1,'scale',5,'cg_rate',2);
+params = struct('eps', 1e-3, 'normalize', 1, 'scale',5, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5);
 
 %% generate primal-dual feasible cone prob:
 % Ax + s = b, s \in K, A'y + c = 0, y \in K*, s'y = 0
@@ -31,19 +32,17 @@ if (gen_feasible)
     y = proj_dual_cone(z,K); % y = s - z;
     s = y - z; %s = proj_cone(z,K);
     
-    
     A = randn(m,n);
     x = randn(n,1);
     c = -A'*y;
     b = A*x + s;
-    nnz(A)
     
     data.A = A;
     data.b = b;
     data.c = c;
     
     %cd '../../matlab'; write_scs_data(data,K,params,'randomConeFeasible'); cd '../examples/matlab';
-
+    
     %indirect
     if (run_indirect)
         [xi,yi,si,infoi] = scs_indirect(data,K,params);
@@ -61,6 +60,12 @@ if (gen_feasible)
         (b'*yd - b'*y) / (b'*y)
     end
     if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+    if (run_scs_matlab)
+        params.use_indirect = true;
+        [xi_m,yi_m,si_m,infoi_m] = scs_matlab(data,K,params);
+        params.use_indirect = false;
+        [xd_m,yd_m,sd_m,infod_m] = scs_matlab(data,K,params);        
+    end
 end
 
 %% generate infeasible (NOT SPARSE,SLOW AS A RESULT)
@@ -89,11 +94,19 @@ if (gen_infeasible)
     % cvx:
     if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
     
+    if(run_scs_matlab)
+        params.use_indirect = true;
+        [xi_m,yi_m,si_m,infoi_m] = scs_matlab(data,K,params);
+        params.use_indirect = false;
+        [xd_m,yd_m,sd_m,infod_m] = scs_matlab(data,K,params);
+    end
+    
 end
 %% generate unbounded (NOT SPARSE,SLOW AS A RESULT)
 % Ax + s = 0, s \in K, c'*x = -1
 if(gen_unbounded)
     z = randn(m,1);
+    z(1) = 5000;
     z = symmetrizeSDP(z,K); % for SD cones
     s = proj_cone(z,K);
     A = randn(m,n);
@@ -113,4 +126,11 @@ if(gen_unbounded)
     if (run_direct) [xd,yd,sd,infod] = scs_direct(data,K,params); end
     
     if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+    
+    if(run_scs_matlab)
+        params.use_indirect = true;
+        [xi_m,yi_m,si_m,infoi_m] = scs_matlab(data,K,params);
+        params.use_indirect = false;
+        [xd_m,yd_m,sd_m,infod_m] = scs_matlab(data,K,params);
+    end
 end
