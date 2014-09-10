@@ -353,11 +353,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	veclen[0] = d->m;
 	s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
 
-	infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}", "statusVal",
-			(scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj, "dobj", (scs_float) info.dobj,
-			"resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual, "relGap", (scs_float) info.relGap,
-			"solveTime", (scs_float) (info.solveTime / 1e3), "setupTime", (scs_float) (info.setupTime / 1e3), "status",
-			info.status);
+	infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
+			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
+			"dobj", (scs_float) info.dobj, "resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual,
+			"relGap", (scs_float) info.relGap, "resInfeas", (scs_float) info.resInfeas, "resUnbdd", (scs_float) info.resUnbdd,
+			"solveTime", (scs_float) (info.solveTime / 1e3), "setupTime", (scs_float) (info.setupTime / 1e3),
+			"status", info.status);
 
     returnDict = Py_BuildValue("{s:O,s:O,s:O,s:O}", "x", x, "y", y, "s", s, "info", infoDict);
 	/* give up ownership to the return dictionary */

@@ -44,10 +44,10 @@ struct PROBLEM_DATA {
 	scs_float eps; /* convergence tolerance: 1e-3 */
 	scs_float alpha; /* relaxation parameter: 1.8 */
 	scs_float rho_x; /* x equality constraint scaling: 1e-3 */
-	scs_float scale; /* if normalized, rescales by this factor: 5 */
 	scs_float cg_rate; /* for indirect, tolerance goes down like (1/iter)^cg_rate: 2 */
 	scs_int verbose; /* boolean, write out progress: 1 */
 	scs_int normalize; /* boolean, heuristic data rescaling: 1 */
+	scs_float scale; /* if normalized, rescales by this factor: 5 */
 	scs_int warm_start; /* boolean, warm start (put initial guess in Sol struct): 0 */
 };
 
