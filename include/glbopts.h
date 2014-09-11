@@ -1,6 +1,8 @@
 #ifndef GLB_H_GUARD
 #define GLB_H_GUARD
 
+#include <math.h>
+
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -42,10 +44,16 @@ typedef double scs_float;
 #ifndef NAN
 #define NAN ((scs_float)0x7ff8000000000000)
 #endif
+#ifndef INFINITY
+#define INFINITY NAN
+#endif
 #else
 typedef float scs_float;
 #ifndef NAN
 #define NAN ((float)0x7fc00000)
+#endif
+#ifndef INFINITY
+#define INFINITY NAN
 #endif
 #endif
 

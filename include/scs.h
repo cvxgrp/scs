@@ -3,7 +3,6 @@
 
 #include "glbopts.h"
 #include <string.h>
-#include <math.h>
 #include "cones.h"
 #include "linAlg.h"
 #include "linSys.h"
@@ -94,6 +93,7 @@ struct WORK {
 
 /* to hold residual information (unnormalized) */
 struct residuals {
+	scs_int lastIter;
 	scs_float resDual;
 	scs_float resPri;
 	scs_float resInfeas;
