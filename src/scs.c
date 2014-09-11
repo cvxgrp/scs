@@ -338,23 +338,21 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info, struct residuals
 		info->pobj = r->cTx_tau / r->tau;
 		info->dobj = -r->bTy_tau / r->tau;
 	} else if (info->statusVal == UNBOUNDED) {
-		info->dobj = NAN;
 		info->relGap = NAN;
 		info->resPri = NAN;
 		info->resDual = NAN;
 		info->resInfeas = r->resInfeas;
 		info->resUnbdd = r->resUnbdd;
-		info->pobj = -1;
-		info->dobj = NAN;
+		info->pobj = - 1.0 / 0.0;
+		info->dobj = - 1.0 / 0.0;
 	} else if (info->statusVal == INFEASIBLE) {
-		info->pobj = NAN;
 		info->relGap = NAN;
 		info->resPri = NAN;
 		info->resDual = NAN;
 		info->resInfeas = r->resInfeas;
 		info->resUnbdd = r->resUnbdd;
-		info->pobj = NAN;
-		info->dobj = -1;
+		info->pobj = 1.0 / 0.0;
+		info->dobj = 1.0 / 0.0;
 	}
 }
 
@@ -456,12 +454,12 @@ static void printFooter(Data * d, Work * w, Info * info) {
 		scs_printf("Certificate of primal infeasibility:\n");
 		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resInfeas);
 		scs_printf("dist(y, K*) = 0\n");
-		scs_printf("b'y = %.4f\n", info->dobj);
+		scs_printf("b'y = %.4f\n", -1.0);
 	} else if (info->statusVal == UNBOUNDED) {
 		scs_printf("Certificate of dual infeasibility:\n");
 		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resUnbdd);
 		scs_printf("dist(s, K) = 0\n");
-		scs_printf("c'x = %.4f\n", info->pobj);
+		scs_printf("c'x = %.4f\n", -1.0);
 	} else {
 		scs_printf("Error metrics:\n");
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
