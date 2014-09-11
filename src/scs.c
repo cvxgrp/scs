@@ -41,7 +41,7 @@ static void printInitHeader(Data * d, Work * w, Cone * k) {
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-    scs_printf("\n");
+	scs_printf("\n");
 	if (linSysMethod) {
 		scs_printf("Lin-sys: %s\n", linSysMethod);
 		scs_free(linSysMethod);
@@ -141,7 +141,7 @@ static scs_float calcDualResid(Data * d, Work * w, scs_float * y, scs_float tau,
 static scs_float fastCalcPrimalResid(Data * d, Work * w, scs_float * nmAxs) {
 	scs_int i, n = d->n, m = d->m;
 	scs_float pres = 0, scale, *pr = w->pr, *D = w->D, tau = ABS(w->u[n + m]);
-	*nmAxs = 0;
+ *nmAxs = 0;
 	memcpy(pr, &(w->u[n]), m * sizeof(scs_float)); // overwrite pr
 	addScaledArray(pr, &(w->u_prev[n]), m, d->alpha - 2);
 	addScaledArray(pr, &(w->u_t[n]), m, 1 - d->alpha);
@@ -149,19 +149,26 @@ static scs_float fastCalcPrimalResid(Data * d, Work * w, scs_float * nmAxs) {
 	for (i = 0; i < m; ++i) {
 		scale = d->normalize ? D[i] / (w->sc_b * d->scale) : 1;
 		scale = scale * scale;
-		*nmAxs += (pr[i] * pr[i]) * scale;
+ *nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - d->b[i] * tau) * (pr[i] - d->b[i] * tau) * scale;
 	}
-	*nmAxs = SQRTF(*nmAxs);
+ *nmAxs = SQRTF(*nmAxs);
 	return SQRTF(pres); // norm(Ax + s - b * tau)
 }
-*/
+ */
 
 /* calculates un-normalized quantities */
-static void calcResiduals(Data * d, Work * w, struct residuals * r) {
+static void calcResiduals(Data * d, Work * w, struct residuals * r, scs_int iter) {
 	scs_float * x = w->u, * y = &(w->u[d->n]), * s = &(w->v[d->n]);
 	scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
 	scs_int n = d->n, m = d->m;
+
+	/* checks if the residuals are unchanged by checking iteration */
+	if (r->lastIter == iter) {
+		return;
+	}
+	r->lastIter = iter;
+
 	r->tau = ABS(w->u[n + m]);
 	r->kap = ABS(w->v[n + m]) / (d->normalize ? (d->scale * w->sc_c * w->sc_b) : 1);
 
@@ -343,23 +350,23 @@ static void getInfo(Data * d, Work * w, Sol * sol, Info * info, struct residuals
 		info->resDual = NAN;
 		info->resInfeas = r->resInfeas;
 		info->resUnbdd = r->resUnbdd;
-		info->pobj = - 1.0 / 0.0;
-		info->dobj = - 1.0 / 0.0;
+		info->pobj = -INFINITY;
+		info->dobj = -INFINITY;
 	} else if (info->statusVal == INFEASIBLE) {
 		info->relGap = NAN;
 		info->resPri = NAN;
 		info->resDual = NAN;
 		info->resInfeas = r->resInfeas;
 		info->resUnbdd = r->resUnbdd;
-		info->pobj = 1.0 / 0.0;
-		info->dobj = 1.0 / 0.0;
+		info->pobj = INFINITY;
+		info->dobj = INFINITY;
 	}
 }
 
 /* sets solutions, re-scales by inner prods if infeasible or unbounded */
 static void getSolution(Data * d, Work * w, Sol * sol, Info * info, struct residuals * r, scs_int iter) {
 	scs_int l = d->n + d->m + 1;
-	calcResiduals(d, w, r);
+	calcResiduals(d, w, r, iter);
 	setx(d, w, sol);
 	sety(d, w, sol);
 	sets(d, w, sol);
@@ -404,22 +411,22 @@ static void printSummary(scs_int i, struct residuals *r, timer * solveTimer) {
 
 static void printHeader(Data * d, Work * w, Cone * k) {
 	scs_int i;
-    if (d->warm_start)
-        scs_printf("SCS using variable warm-starting\n");
-    for (i = 0; i < _lineLen_; ++i) {
-        scs_printf("-");
-    }
-    scs_printf("\n");
-    for (i = 0; i < HEADER_LEN - 1; ++i) {
-        scs_printf("%s|", HEADER[i]);
-    }
-    scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
-    for (i = 0; i < _lineLen_; ++i) {
-        scs_printf("-");
-    }
-    scs_printf("\n");
+	if (d->warm_start)
+		scs_printf("SCS using variable warm-starting\n");
+	for (i = 0; i < _lineLen_; ++i) {
+		scs_printf("-");
+	}
+	scs_printf("\n");
+	for (i = 0; i < HEADER_LEN - 1; ++i) {
+		scs_printf("%s|", HEADER[i]);
+	}
+	scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
+	for (i = 0; i < _lineLen_; ++i) {
+		scs_printf("-");
+	}
+	scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
-    mexEvalString("drawnow;");
+	mexEvalString("drawnow;");
 #endif
 }
 
@@ -482,10 +489,6 @@ static void printFooter(Data * d, Work * w, Info * info) {
 }
 
 static scs_int hasConverged(Data * d, Work * w, struct residuals * r, scs_int iter) {
-	if (iter % CONVERGED_INTERVAL != 0 && iter + 1 != d->max_iters) {
-		return 0;
-	}
-	calcResiduals(d, w, r);
 	if (r->resPri < d->eps && r->resDual < d->eps && r->relGap < d->eps) {
 		return SOLVED;
 	}
@@ -503,12 +506,12 @@ static scs_int validate(Data * d, Cone * k) {
 		scs_printf("m and n must both be greater than 0\n");
 		return -1;
 	}
-    /*
+	/*
 	if (d->m < d->n) {
 		scs_printf("m must be greater than or equal to n\n");
 		return -1;
 	}
-    */
+	 */
 	if (validateLinSys(d) < 0) {
 		scs_printf("invalid linear system input data\n");
 		return -1;
@@ -567,10 +570,10 @@ static Work * initWork(Data *d, Cone * k) {
 	if (d->normalize) {
 		normalizeA(d, w, k);
 #ifdef EXTRAVERBOSE
-	printArray(w->D, d->m, "D");
-	scs_printf("norm D = %4f\n", calcNorm(w->D, d->m));
-	printArray(w->E, d->n, "E");
-	scs_printf("norm E = %4f\n", calcNorm(w->E, d->n));
+		printArray(w->D, d->m, "D");
+		scs_printf("norm D = %4f\n", calcNorm(w->D, d->m));
+		printArray(w->E, d->n, "E");
+		scs_printf("norm E = %4f\n", calcNorm(w->E, d->n));
 #endif
 	} else {
 		w->D = NULL;
@@ -636,6 +639,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	}
 	tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
+	r.lastIter = -1;
 	updateWork(d, w, sol);
 	if (d->verbose)
 		printHeader(d, w, k);
@@ -647,25 +651,29 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		if (projectCones(d, w, k, i) < 0) return failureDefaultReturn(d, w, sol, info, "error in projectCones");
 		updateDualVars(d, w);
 
-		if ((info->statusVal = hasConverged(d, w, &r, i)) != 0)
-			break;
+		if (i % CONVERGED_INTERVAL == 0) {
+			calcResiduals(d, w, &r, i);
+			if ((info->statusVal = hasConverged(d, w, &r, i)) != 0) { break; }
+		}
 
-		if (i % PRINT_INTERVAL == 0) {
-			if (d->verbose) {
+		if (d->verbose) {
+			if (i % PRINT_INTERVAL == 0) {
+				calcResiduals(d, w, &r, i);
 				printSummary(i, &r, &solveTimer);
 #ifdef EXTRAVERBOSE
-				 scs_printf("Norm u = %4f, ", calcNorm(w->u, d->n + d->m + 1));
-				 scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, d->n + d->m + 1));
-				 scs_printf("Norm v = %4f, ", calcNorm(w->v, d->n + d->m + 1));
-				 scs_printf("tau = %4f, ", w->u[d->n + d->m]);
-				 scs_printf("kappa = %4f, ", w->v[d->n + d->m]);
-				 scs_printf("|u - u_prev| = %4f, ", calcNormDiff(w->u, w->u_prev, d->n + d->m + 1));
-				 scs_printf("|u - u_t| = %4f\n", calcNormDiff(w->u, w->u_t, d->n + d->m + 1));
+				scs_printf("Norm u = %4f, ", calcNorm(w->u, d->n + d->m + 1));
+				scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, d->n + d->m + 1));
+				scs_printf("Norm v = %4f, ", calcNorm(w->v, d->n + d->m + 1));
+				scs_printf("tau = %4f, ", w->u[d->n + d->m]);
+				scs_printf("kappa = %4f, ", w->v[d->n + d->m]);
+				scs_printf("|u - u_prev| = %4f, ", calcNormDiff(w->u, w->u_prev, d->n + d->m + 1));
+				scs_printf("|u - u_t| = %4f\n", calcNormDiff(w->u, w->u_t, d->n + d->m + 1));
 #endif
 			}
 		}
 	}
 	if (d->verbose) {
+		calcResiduals(d, w, &r, i);
 		printSummary(i, &r, &solveTimer);
 	}
 	/* populate solution vectors (unnormalized) and info */
