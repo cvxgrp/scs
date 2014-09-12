@@ -574,7 +574,7 @@ scs_int projDualCone(scs_float *x, Cone * k, const scs_float * warm_start, scs_i
 			s = x[idx + 1];
 			t = x[idx + 2];
 
-			if (projExpCone(&(x[idx]), iter) < 0) return -1;
+			projExpCone(&(x[idx]), iter);
 
 			x[idx] -= r;
 			x[idx + 1] -= s;
@@ -594,7 +594,7 @@ scs_int projDualCone(scs_float *x, Cone * k, const scs_float * warm_start, scs_i
 #pragma omp parallel for
 #endif
 		for (i = 0; i < k->ed; ++i) {
-			if (projExpCone(&(x[count + 3 * i]), iter) < 0) return -1;
+			projExpCone(&(x[count + 3 * i]), iter);
 		}
 		count += 3 * k->ed;
 #ifdef EXTRAVERBOSE
