@@ -57,7 +57,7 @@ USE_OPENMP = 0
 
 ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp -DOPENMP
-# LDFLAGS += -lgomp
+  LDFLAGS += -lgomp
 endif
 
 ############ SDPS: BLAS + LAPACK ############
