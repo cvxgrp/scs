@@ -135,6 +135,10 @@ else
     v = zeros(l,1);v(end) = sqrt(l);
 end
 
+u_bar = u;
+ut_bar = u;
+v_bar = v;
+
 tic
 for i=0:max_iters-1
     % solve linear system
@@ -158,6 +162,11 @@ for i=0:max_iters-1
     %% dual update:
     v = v + (u - rel_ut);
     
+    % ergodic behavior
+    u_bar = (u + u_bar * i) / (i+1);
+    ut_bar = (ut + ut_bar * i) / (i+1);
+    v_bar = (v + v_bar * i) / (i+1);
+
     %% convergence checking:
     tau = abs(u(end));
     kap = abs(v(end)) / (sc_b * sc_c * scale);
@@ -221,6 +230,13 @@ ttime = toc;
 fprintf('%i:\t%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e\n',i,err_pri,err_dual,gap,pobji,dobji,unb_res,inf_res,kap/tau,ttime);
 fprintf('\tc*x = %4f, -b*y = %4f\n', pobji, dobji);
 %%
+tau = abs(u(end));
+kap = abs(v(end)) / (sc_b * sc_c * scale);
+
+x = u(1:n) / tau;
+y = u(n+1:n+m) / tau;
+s = v(n+1:n+m) / tau;
+
 if (tau > UNDET_TOL && tau > kap) % this is different to Lieven
     status = 'Solved'
 else

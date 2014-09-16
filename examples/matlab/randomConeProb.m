@@ -15,7 +15,7 @@ run_indirect = true;
 run_direct = true;
 run_cvx = false; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
-run_scs_matlab = true; %% SCS implemented in MATLAB
+run_scs_matlab = true; % SCS implemented in MATLAB
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
 K = struct('f',50,'l',50,'q',[0;1;2;3;4;5;6;7;60],'s',[0;1;2;3;10],'ep',5,'ed',3);

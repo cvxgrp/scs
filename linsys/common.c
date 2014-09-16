@@ -12,29 +12,31 @@ scs_int validateLinSys(Data *d) {
 		scs_printf("data incompletely specified\n");
 		return -1;
 	}
-	/* detects degenerate problems, typically this check is not wanted:
-	 for (i = 0; i < d->n; ++i) {
-	 if (A->p[i] >= A->p[i + 1]) {
-	 scs_printf("A->p not strictly increasing\n");
-	 return -1;
-	 }
-	 }
-	 */
-	Anz = A->p[d->n];
-	if (((scs_float) Anz / d->m > d->n) || (Anz <= 0)) {
-		scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
-		return -1;
-	}
-	rMax = 0;
-	for (i = 0; i < Anz; ++i) {
-		if (A->i[i] > rMax)
-			rMax = A->i[i];
-	}
-	if (rMax > d->m - 1) {
-		scs_printf("number of rows in A inconsistent with input dimension\n");
-		return -1;
-	}
-	return 0;
+    /*  detects errors in A col ptrs: */
+    for (i = 0; i < d->n; ++i) {
+        if (A->p[i] == A->p[i + 1]) {
+            scs_printf("WARN: A->p (column pointers) not strictly increasing, A contains empty column\n");
+            break;
+        } else if (A->p[i] > A->p[i + 1]) {
+            scs_printf("ERROR: A->p (column pointers) decreasing\n");
+            return -1;
+        }
+    }
+    Anz = A->p[d->n];
+    if (((scs_float) Anz / d->m > d->n) || (Anz <= 0)) {
+        scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
+        return -1;
+    }
+    rMax = 0;
+    for (i = 0; i < Anz; ++i) {
+        if (A->i[i] > rMax)
+            rMax = A->i[i];
+    }
+    if (rMax > d->m - 1) {
+        scs_printf("number of rows in A inconsistent with input dimension\n");
+        return -1;
+    }
+    return 0;
 }
 
 void printAMatrix(Data * d) {
