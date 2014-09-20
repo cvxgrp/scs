@@ -135,13 +135,13 @@ The five relevant data structures are:
         scs_float cg_rate;      /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
         scs_int verbose;        /* boolean, write out progress: 1 */
         scs_int normalize;      /* boolean, heuristic data rescaling: 1 */
-        scs_float scale;        /* if normalized, rescales by this factor: 1 */
+        scs_float scale;        /* if normalized, rescales data by this factor: 5 */
         scs_int warm_start;     /* boolean, warm start with guess in Sol struct: 0 */
     };
     
     /* contains primal-dual solution arrays */
     struct SOL_VARS {
-    	scs_float * x, *y, *s;
+		scs_float *x, *y, *s;
     };
     
     /* contains terminating information */

@@ -19,7 +19,6 @@ void printAMatrix(Data * d) {
         }
         scs_printf("norm A = %4f\n", calcNorm(A->x, d->n * d->m));
     }
-
 }
 
 void normalizeA(Data * d, Work * w, Cone * k) {
@@ -105,7 +104,6 @@ void normalizeA(Data * d, Work * w, Cone * k) {
     scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
     printAMatrix(d);
 #endif
-
 }
 
 void unNormalizeA(Data *d, Work * w) {
