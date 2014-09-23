@@ -265,7 +265,7 @@ The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and
 `ed` (all of which are optional) corresponding to the supported cone types.
 
 The returned object is a dictionary containing the fields `sol['x']`, `sol['y']`, `sol['s']`, and `sol['info']`.
-The first four are NUMPY arrays containing the relevant solution. The last field contains a dictionary with solver information.
+The first three are NUMPY arrays containing the relevant solution. The last field contains a dictionary with solver information.
 
 SCS is one of the deafult solvers in [CVXPY](http://www.github.com/cvxgrp/cvxpy). Follow the CVXPY instructions
 for information on how to change solvers.
