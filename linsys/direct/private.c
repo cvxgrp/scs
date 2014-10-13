@@ -211,7 +211,7 @@ scs_int factorize(Data * d, Priv * p) {
 	if (amd_status < 0)
 		return (amd_status);
 #ifdef EXTRAVERBOSE
-	if(d->VERBOSE) {
+	if(d->verbose) {
 		scs_printf("Matrix factorization info:\n");
 #ifdef DLONG
 		amd_l_info(info);
