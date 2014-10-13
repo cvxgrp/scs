@@ -375,10 +375,22 @@ scs_int project2By2Sdc(scs_float *X) {
 	b = 0.5 * (X[1] + X[2]);
 	d = X[3];
 
+    if (ABS(b) < 1e-6) { /* diagonal matrix */
+        X[0] = MAX(a, 0);
+        X[1] = 0;
+        X[2] = 0;
+        X[3] = MAX(d, 0);
+        return 0;
+    }
+
 	rad = SQRTF((a - d) * (a - d) + 4 * b * b);
 	/* l1 >= l2 always, since rad >= 0 */
 	l1 = 0.5 * (a + d + rad);
 	l2 = 0.5 * (a + d - rad);
+
+#ifdef EXTRAVERBOSE
+    scs_printf("2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, rad = %4f, l1 = %4f, l2 = %4f\n", a, b, X[1], X[2], d, rad, l1, l2);
+#endif
 
 	if (l2 >= 0) { /* both positive, just symmetrize */
 		X[1] = b;
@@ -461,7 +473,7 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
         printArray(e, m, "e");
         printArray(Z, m * n, "Z");
 #endif
-    if (info < 0) return -1;
+        if (info < 0) return -1;
     }
 
 	memset(X, 0, n * n * sizeof(scs_float));
