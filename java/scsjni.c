@@ -115,11 +115,11 @@ void setSol(JNIEnv * env, jobject solJava, Data * d, Sol * sol) {
 
 #ifdef INDIRECTJ
 JNIEXPORT jobject JNICALL Java_scs_IndirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava) 
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
 #else
 JNIEXPORT jobject JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava) 
-#endif   
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
+#endif
 {
     /* Parse out the data into C form, then pass to SCS, the convert solution back to java object */
     /* Assume AJava contains matrix in column compressed sparse format */
@@ -129,13 +129,12 @@ JNIEXPORT jobject JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass claz
     Sol * sol = scs_calloc(1, sizeof(Sol));
     Info * info = scs_calloc(1, sizeof(Info));
     scs(d, k, sol, info);
-   
+
     setSol(env, solJava, d, sol);
 
     //freeAll();
-    
-    // Don't forget to release it 
-    //env->ReleaseDoubleArrayElements(*arr, data, 0); 
+    // Don't forget to release it
+    //env->ReleaseDoubleArrayElements(*arr, data, 0);
 
     //return solJava;
     return NULL;
