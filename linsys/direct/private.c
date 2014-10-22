@@ -196,10 +196,12 @@ void accumByAtrans(Data * d, Priv * p, const scs_float *x, scs_float *y) {
 	AMatrix * A = d->A;
 	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
 }
+
 void accumByA(Data * d, Priv * p, const scs_float *x, scs_float *y) {
 	AMatrix * A = d->A;
 	_accumByA(d->n, A->x, A->i, A->p, x, y);
 }
+
 scs_int factorize(Data * d, Priv * p) {
 	scs_float *info;
 	scs_int *Pinv, amd_status, ldl_status;

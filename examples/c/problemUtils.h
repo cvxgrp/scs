@@ -134,6 +134,9 @@ void genRandomProbData(scs_int nnz, scs_int col_nnz, Data * d, Cone * k, Sol * o
 	 */
 	A->p[0] = 0;
 	scs_printf("Generating random matrix:\n");
+    /*
+    TODO: this only works probabilistically, ok for low density matrices
+    */
 	for (j = 0; j < n; j++) { /* column */
 		if (j * 100 % n == 0 && (j * 100 / n) % 10 == 0) {
 			scs_printf("%ld%%\n", (long) (j * 100 / n));

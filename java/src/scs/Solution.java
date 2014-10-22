@@ -1,9 +1,19 @@
 package scs;
 
 public class Solution {
-    public double[] x;
-    public double[] y;
-    public double[] s;
+    private double[] x;
+    private double[] y;
+    private double[] s;
+
+    public double[] getX() {
+        return x;
+    }
+    public double[] getY() {
+        return y;
+    }
+    public double[] getS() {
+        return s;
+    }
 
     public void setX(double[] x) {
         this.x = x;

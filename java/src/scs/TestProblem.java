@@ -1,44 +1,34 @@
 package scs;
 
-import java.util.Random;
 
 public class TestProblem {
     public static void main(String [] args) {
         int m = 50; // rows
-        int n = 50; // cols
+        int n = 30; // cols
 
-        AMatrix A = AMatrix.generateRandomMatrix(m, n, 1f);
-        double[] b = generateRandomDoubleArray(m);
-        double[] c = generateRandomDoubleArray(n);
+        AMatrix A = AMatrix.generateRandomMatrix(m, n);
+        double[] b = Utils.generateRandomDoubleArray(m);
+        double[] c = Utils.generateRandomDoubleArray(n);
+        Cone k = new Cone();
+        k.setL(m); // random LP
 
         Data d = new Data(A, b, c);
-        Cone k = new Cone();
-        k.setF(m);
         Params p = new Params();
+        ConeProgram cp;
+        Solution sol;
 
-        ConeProgram cp = new ConeProgram(d, k, p);
-        Solution sol = cp.solve();
+        cp = new ConeProgram(d, k, p, new DirectSolver());
+        sol = cp.solve();
+        System.out.println("c'x = " + Utils.ip(sol.getX(), c));
+        System.out.println("b'y = " + Utils.ip(sol.getY(), b));
+        System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(A, b, sol));
+        System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(A, c, sol));
 
-        double sum = 0;
-        for (int i=0; i < n; i++) {
-            sum += sol.x[i] * c[i];
-        }
-        System.out.println(sum);
-
-        sum = 0;
-        for (int i=0; i < m; i++) {
-            sum += sol.y[i] * b[i];
-        }
-        System.out.println(-sum);
-
-    }
-
-    private static double[] generateRandomDoubleArray(int l) {
-        Random rng = new Random();
-        double[] a = new double[l];
-        for (int i=0; i<l; i++) {
-            a[i] = rng.nextDouble();
-        }
-        return a;
+        cp = new ConeProgram(d, k, p, new IndirectSolver());
+        sol = cp.solve();
+        System.out.println("c'x = " + Utils.ip(sol.getX(), c));
+        System.out.println("b'y = " + Utils.ip(sol.getY(), b));
+        System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(A, b, sol));
+        System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(A, c, sol));
     }
 }

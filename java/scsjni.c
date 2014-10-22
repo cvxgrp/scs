@@ -1,8 +1,13 @@
-#include "scs_ConeProgram.h"
 #include "glbopts.h"
 #include "scs.h"
 #include "cones.h"
 #include "linsys/amatrix.h"
+
+#ifdef INDIRECTJ
+#include "scs_IndirectSolver.h"
+#else
+#include "scs_DirectSolver.h"
+#endif
 
 jobject getObjUsingGetter(JNIEnv * env, jobject obj, char * method, char * signature) {
     // Get method ID for method getSomeArray that returns an array
@@ -108,8 +113,14 @@ void setSol(JNIEnv * env, jobject solJava, Data * d, Sol * sol) {
     setFloatArrayUsingSetter(env, solJava, sol->s, d->m, "setS");
 }
 
-JNIEXPORT jobject JNICALL Java_scs_ConeProgram_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava) {
+#ifdef INDIRECTJ
+JNIEXPORT jobject JNICALL Java_scs_IndirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava) 
+#else
+JNIEXPORT jobject JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava) 
+#endif   
+{
     /* Parse out the data into C form, then pass to SCS, the convert solution back to java object */
     /* Assume AJava contains matrix in column compressed sparse format */
     Data * d = getDataStruct(env, AJava, bJava, cJava, paramsJava);

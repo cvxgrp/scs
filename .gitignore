@@ -42,3 +42,4 @@ out
 *.dependencies
 *.classpath
 *.class
+*.dylib

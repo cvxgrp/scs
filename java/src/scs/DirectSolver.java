@@ -1,0 +1,13 @@
+package scs;
+
+public class DirectSolver implements IConeSolver {
+    static {
+        System.loadLibrary("jscsdir"); // Load native library at runtime
+    }
+    private static native Solution csolve(AMatrix A, double[] b, double[] c, Cone k, Params p, Solution s);
+    public Solution solve(Data d, Cone k, Params p) {
+        Solution sol = new Solution();
+        csolve(d.getA(), d.getB(), d.getC(), k, p, sol);
+        return sol;
+    }
+}
