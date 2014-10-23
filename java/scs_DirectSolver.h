@@ -10,9 +10,9 @@ extern "C" {
 /*
  * Class:     scs_DirectSolver
  * Method:    csolve
- * Signature: (Lscs/AMatrix;[D[DLscs/Cone;Lscs/Params;Lscs/Solution;)Lscs/Solution;
+ * Signature: (Lscs/AMatrix;[D[DLscs/Cone;Lscs/Params;Lscs/Solution;)V
  */
-JNIEXPORT jobject JNICALL Java_scs_DirectSolver_csolve
+JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve
   (JNIEnv *, jclass, jobject, jdoubleArray, jdoubleArray, jobject, jobject, jobject);
 
 #ifdef __cplusplus

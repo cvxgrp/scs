@@ -13,7 +13,13 @@ public class Utils {
 
     public static void addScaledArray(double[] a, double[] b, double scale) {
         for (int i = 0; i < a.length; i++) {
-            b[i] += scale* a[i];
+            b[i] += scale * a[i];
+        }
+    }
+
+    public static void scaleArray(double[] a, double scale) {
+        for (int i = 0; i < a.length; i++) {
+            a[i] *= scale;
         }
     }
 
@@ -28,8 +34,8 @@ public class Utils {
     public static double[] generateRandomDoubleArray(int l) {
         Random rng = new Random();
         double[] a = new double[l];
-        for (int i=0; i<l; i++) {
-            a[i] = rng.nextDouble();
+        for (int i = 0; i < l; i++) {
+            a[i] = 10 * (rng.nextDouble() - 0.5);
         }
         return a;
     }

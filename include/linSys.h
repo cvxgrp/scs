@@ -36,5 +36,6 @@ char * getLinSysSummary(Priv * p, Info * info);
 void normalizeA(Data * d, Work * w, Cone * k);
 /* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
 void unNormalizeA(Data *d, Work * w);
-
+/* to free the memory allocated in AMatrix */
+void freeAMatrix(AMatrix * A);
 #endif

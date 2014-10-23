@@ -46,5 +46,7 @@ void printData(Data * d);
 void printWork(Data * d, Work * w);
 void printArray(scs_float * arr, scs_int n, char * name);
 void setDefaultParams(Data * d);
+void freeSol(Sol * sol);
+void freeData(Data * d, Cone * k);
 
 #endif

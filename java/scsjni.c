@@ -36,23 +36,29 @@ scs_int getBooleanUsingGetter(JNIEnv * env, jobject obj, char * method) {
 }
 
 scs_int * getIntArrayUsingGetter(JNIEnv * env, jobject obj, char * method, scs_int * length) {
+    scs_int * out;
     jintArray arr = (jintArray) getObjUsingGetter(env, obj, method, "()[I");
     if (!arr) {
         *length = 0;
         return NULL;
     }
-    *length = (*env)->GetArrayLength(env, &arr);
-    return (*env)->GetIntArrayElements(env, arr, NULL);
+    *length = (*env)->GetArrayLength(env, arr);
+    out = scs_malloc(sizeof(scs_int) * (*length));
+    (*env)->GetIntArrayRegion( env, arr, 0, *length, out);
+    return out;
 }
 
 scs_float * getFloatArrayUsingGetter(JNIEnv * env, jobject obj, char * method, scs_int * length) {
+    scs_float * out;
     jdoubleArray arr = (jdoubleArray) getObjUsingGetter(env, obj, method, "()[D");
     if (!arr) {
         *length = 0;
         return NULL;
     }
-    *length = (*env)->GetArrayLength(env, &arr);
-    return (*env)->GetDoubleArrayElements(env, arr, NULL);
+    *length = (*env)->GetArrayLength(env, arr);
+    out = scs_malloc(sizeof(scs_float) * (*length));
+    (*env)->GetDoubleArrayRegion( env, arr, 0, *length, out);
+    return out;
 }
 
 Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
@@ -114,10 +120,10 @@ void setSol(JNIEnv * env, jobject solJava, Data * d, Sol * sol) {
 }
 
 #ifdef INDIRECTJ
-JNIEXPORT jobject JNICALL Java_scs_IndirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
+JNIEXPORT void JNICALL Java_scs_IndirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
         jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
 #else
-JNIEXPORT jobject JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
+JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
         jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
 #endif
 {
@@ -132,11 +138,7 @@ JNIEXPORT jobject JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass claz
 
     setSol(env, solJava, d, sol);
 
-    //freeAll();
-    // Don't forget to release it
-    //env->ReleaseDoubleArrayElements(*arr, data, 0);
-
-    //return solJava;
-    return NULL;
+    freeData(d,k);
+    freeSol(sol);
 }
 

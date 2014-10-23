@@ -1,10 +1,12 @@
 package scs;
 
 public class ConeProgram {
-    private Data d;
-    private Cone k;
-    private Params p;
-    private IConeSolver solver;
+    protected Data d;
+    protected Cone k;
+    protected Params p;
+    protected IConeSolver solver;
+
+    ConeProgram() {};
 
     public ConeProgram(Data d, Cone k, Params p, IConeSolver solver) {
         this.d = d;

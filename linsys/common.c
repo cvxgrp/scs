@@ -38,6 +38,15 @@ scs_int validateLinSys(Data *d) {
     return 0;
 }
 
+void freeAMatrix(AMatrix * A) {
+    if (A->x)
+        scs_free(A->x);
+    if (A->i)
+        scs_free(A->i);
+    if (A->p)
+        scs_free(A->p);
+}
+
 void printAMatrix(Data * d) {
 	scs_int i, j;
 	AMatrix * A = d->A;

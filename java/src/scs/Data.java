@@ -5,6 +5,8 @@ public class Data {
     private double[] b;
     private double[] c;
 
+    public Data() {};
+
     public Data(AMatrix A, double[] b, double[] c) {
         this.A = A;
         this.b = b;
