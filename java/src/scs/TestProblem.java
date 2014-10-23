@@ -3,8 +3,15 @@ package scs;
 
 public class TestProblem {
     public static void main(String [] args) {
-        int m = 50; // rows
-        int n = 30; // cols
+        int m;
+        int n;
+        if (args.length < 2) {
+            m = 50; // rows
+            n = 30; // cols
+        } else {
+            m = Integer.parseInt(args[0]);
+            n = Integer.parseInt(args[1]);
+        }
 
         Params p = new Params();
         RandomLinearProgram cp;
