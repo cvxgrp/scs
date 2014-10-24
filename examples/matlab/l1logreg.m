@@ -110,7 +110,14 @@ for i=1:size(sizes,1)
 end
 
 %{
-%% cvx can solve these problems via approximation, but it's very, very slow:
+%% cvx can solve:
+cvx_begin
+variable w(p)
+minimize(sum(log_sum_exp([zeros(1,q);w'*full(X)])) + lam * norm(w,1))
+cvx_end
+%}
+%{
+%% cvx cone formulation:
 tic
 cvx_begin
 variables x(2*p + 3*q) s(2*p + q + 6*q)

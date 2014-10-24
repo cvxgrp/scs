@@ -4,6 +4,11 @@ scs_int validateLinSys(Data *d) {
 	return (d->A && d->A->x);
 }
 
+void freeAMatrix(AMatrix * A) {
+    if (A->x)
+        scs_free(A->x);
+}
+
 void printAMatrix(Data * d) {
     scs_int i, j;
     AMatrix * A = d->A;

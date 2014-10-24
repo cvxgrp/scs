@@ -40,3 +40,6 @@ out
 *.mexa64
 *.mexmaci64
 *.dependencies
+*.classpath
+*.class
+*.dylib

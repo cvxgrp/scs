@@ -207,12 +207,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyObject *x, *y, *s, *returnDict, *infoDict;
     
     /* set defaults */
-    d->max_iters = MAX_ITERS;
-    d->scale = SCALE;
-    d->eps = EPS;
-    d->cg_rate = CG_RATE;
-    d->alpha = ALPHA;
-    d->rho_x = RHO_X;
+	setDefaultParams(d);
 
 	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, 
         &(d->m), 

@@ -16,18 +16,6 @@
  feasible and thus bounded.
  */
 
-void setScsParams(Data * d) {
-	d->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
-	d->eps = EPS; /* convergence tolerance: 1e-3 */
-	d->alpha = ALPHA; /* relaxation parameter: 1.8 */
-	d->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */
-	d->scale = SCALE; /* if normalized, rescales by this factor: 1 */
-	d->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-	d->verbose = VERBOSE; /* boolean, write out progress: 1 */
-	d->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
-	d->warm_start = WARM_START;
-}
-
 int main(int argc, char **argv) {
 	scs_int n, m, i, q_total, q_num_rows, max_q;
 	Cone * k;
@@ -131,7 +119,7 @@ int main(int argc, char **argv) {
 	d->m = m;
 	d->n = n;
 	genRandomProbData(d, k, opt_sol);
-	setScsParams(d);
+	setDefaultParams(d);
 	/* solve! */
 	scs(d, k, sol, &info);
 

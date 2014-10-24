@@ -133,3 +133,44 @@ void printArray(scs_float * arr, scs_int n, char * name) {
 	scs_printf("\n");
 }
 
+void freeData(Data * d, Cone * k) {
+    if (d) {
+        if (d->b)
+            scs_free(d->b);
+        if (d->c)
+            scs_free(d->c);
+        if (d->A) {
+            freeAMatrix(d->A);
+            scs_free(d->A);
+        }
+        scs_free(d);
+    }
+    if (k) {
+        if (k->q)
+            scs_free(k->q);
+        if (k->s)
+            scs_free(k->s);
+        scs_free(k);
+    }
+    d = NULL;
+    k = NULL;
+}
+
+void freeSol(Sol *sol) {
+    if (sol) {
+        if (sol->x) {
+            scs_free(sol->x);
+            sol->x = NULL;
+        }
+        if (sol->y) {
+            scs_free(sol->y);
+            sol->y = NULL;
+        }
+        if (sol->s) {
+            scs_free(sol->s);
+            sol->s = NULL;
+        }
+        scs_free(sol);
+    }
+    sol = NULL;
+}

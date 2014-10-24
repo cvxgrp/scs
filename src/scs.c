@@ -25,6 +25,18 @@ static scs_int scs_isnan(scs_float x) {
 	return (x == NAN || x != x);
 }
 
+void setDefaultParams(Data * d) {
+    d->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
+    d->eps = EPS; /* convergence tolerance: 1e-3 */
+    d->alpha = ALPHA; /* relaxation parameter: 1.8 */
+    d->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */
+    d->scale = SCALE; /* if normalized, rescales by this factor: 1 */
+    d->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+    d->verbose = VERBOSE; /* boolean, write out progress: 1 */
+    d->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
+    d->warm_start = WARM_START;
+}
+
 static void printInitHeader(Data * d, Work * w, Cone * k) {
 	scs_int i;
 	char * coneStr = getConeHeader(k);

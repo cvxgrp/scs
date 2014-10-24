@@ -33,7 +33,7 @@ The cone `K` can be any Cartesian product of the following primitive cones:
 + zero cone `{x | x = 0 }` (dual to the free cone `{x | x in R}`)
 + positive orthant `{x | x >= 0}`
 + second-order cone `{(t,x) | ||x||_2 <= t}`
-+ positive semidefinite cone `{ X | X psd }`
++ positive semidefinite cone `{ X | min(eig(X)) >= 0, X = X^T }`
 + exponential cone `{(x,y,z) | y e^(x/y) <= z, y>0 }`
 + dual exponential cone `{(u,v,w) | −u e^(v/u) <= e w, u<0}`
 

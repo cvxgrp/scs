@@ -1,4 +1,6 @@
-move dense to another branch
+add JNI interface
+add integer programming on x
+add ability to make copies of data
 cleanup, refactor and comment code
 add static, inline to methods
 work on conda recipe

@@ -47,4 +47,5 @@ scs_int validateLinSys(Data *d);
 void normalizeA(Data * d, Work * w, Cone * k);
 void unNormalizeA(Data *d, Work * w);
 void accumByAtrans(Data * d, Priv * p, const scs_float * x, scs_float * y);
+void freeAMatrix(AMatrix * A);
 #endif
