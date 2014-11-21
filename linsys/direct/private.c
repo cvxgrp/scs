@@ -4,13 +4,13 @@ static timer linsysTimer;
 static scs_float totalSolveTime;
 
 char * getLinSysMethod(Data * d, Priv * p) {
-	char * tmp = scs_malloc(sizeof(char) * 64);
+	char * tmp = scs_malloc(sizeof(char) * 128);
 	sprintf(tmp, "sparse-direct, nnz in A = %li", (long) d->A->p[d->n]);
 	return tmp;
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
-	char * str = scs_malloc(sizeof(char) * 64);
+	char * str = scs_malloc(sizeof(char) * 128);
 	scs_int n = p->L->n;
 	sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n", (long ) (p->L->p[n] + n),
 			totalSolveTime / (info->iter + 1) / 1e3);
