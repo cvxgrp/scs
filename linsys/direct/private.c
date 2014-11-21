@@ -13,7 +13,7 @@ char * getLinSysMethod(Data * d, Priv * p) {
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
-	char * str = scs_malloc(sizeof(char) * 64);
+	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tLin-sys: avg solve time: %1.2es\n", totalSolveTime / (info->iter + 1) / 1e3);
 	totalSolveTime = 0;
 	return str;
