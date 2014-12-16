@@ -4,20 +4,19 @@
 #define CONE_TOL (1e-8)
 #define EXP_CONE_MAX_ITERS (100)
 
+/* Default to underscore for blas / lapack */
+#ifndef BLASSUFFIX
+#define BLASSUFFIX _
+#endif
+
 #ifdef LAPACK_LIB_FOUND
-/* underscore for blas / lapack, single or double precision */
-#ifdef NOBLASUNDERSCORE
+#define paste(pre,x,post) pre ## x ## post
+#define paste_(pre,x,post) paste(pre,x,post)
+/* single or double precision */
 #ifndef FLOAT
-#define BLAS(x) d ## x
+#define BLAS(x) paste_(d,x,BLASSUFFIX)
 #else
-#define BLAS(x) s ## x
-#endif
-#else
-#ifndef FLOAT
-#define BLAS(x) d ## x ## _
-#else
-#define BLAS(x) s ## x ## _
-#endif
+#define BLAS(x) paste_(s,x,BLASSUFFIX)
 #endif
 
 #ifdef MATLAB_MEX_FILE
