@@ -10,13 +10,14 @@
 #endif
 
 #ifdef LAPACK_LIB_FOUND
-#define paste(pre,x,post) pre ## x ## post
-#define paste_(pre,x,post) paste(pre,x,post)
+/* this extra indirection is needed for BLASSUFFIX to work correctly as a variable */
+#define stitch_(pre,x,post) pre ## x ## post
+#define stitch__(pre,x,post) stitch_(pre,x,post)
 /* single or double precision */
 #ifndef FLOAT
-#define BLAS(x) paste_(d,x,BLASSUFFIX)
+#define BLAS(x) stitch__(d,x,BLASSUFFIX)
 #else
-#define BLAS(x) paste_(s,x,BLASSUFFIX)
+#define BLAS(x) stitch__(s,x,BLASSUFFIX)
 #endif
 
 #ifdef MATLAB_MEX_FILE
@@ -319,6 +320,11 @@ scs_int initCone(Cone * k) {
 	totalConeTime = 0.0;
 #ifdef EXTRAVERBOSE
     scs_printf("initCone\n");
+#ifdef LAPACK_LIB_FOUND
+    #define _STR_EXPAND(tok) #tok
+    #define _STR(tok) _STR_EXPAND(tok)
+    scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
+#endif
 #ifdef MATLAB_MEX_FILE
     mexEvalString("drawnow;");
 #endif

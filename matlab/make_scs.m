@@ -20,7 +20,7 @@ elseif  ( ismac )
     flags.link = '-lm';
 else
     flags.link = '';
-    flags.LCFLAG = sprintf('-DNOBLASUNDERSCORE %s', flags.LCFLAG);
+    flags.LCFLAG = sprintf('-DBLASSUFFIX="" %s', flags.LCFLAG);
 end
 
 compile_direct(flags, common_scs);
