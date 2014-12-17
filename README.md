@@ -87,18 +87,18 @@ These libraries (and `scs.h`) expose only four API functions:
     This solves the problem as defined by Data `d` and Cone `k` using the workspace
     in `w`. The solution is returned in `sol` and information about the solve
     is returned in `info` (outputs must have memory allocated before calling).
-    None of the inputs can be NULL. You can call scs_solve many times for one
-    call to scs_init, so long as the matrix A
+    None of the inputs can be NULL. You can call `scs_solve` many times for one
+    call to `scs_init`, so long as the matrix A
     does not change (b and c can change).
 
 * `void scs_finish(Data * d, Work * w);`
     
-    Called after all solves completed, to free data and cleanup.
+    Called after all solves completed to free allocated memory and other cleanup.
 
 * `scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);`
 
-    Simply calls all the above routines, so can't use reuse the workspace (for,
-    e.g., factorization caching), all inputs must have memory allocated
+    Convenience method that simply calls all the above routines in order, for cases where
+    the workspace does not need to be reused. All inputs must have memory allocated
     before this call.
 
 The five relevant data structures are:
@@ -173,6 +173,10 @@ The five relevant data structures are:
         scs_int ed;             /* number of dual exponential cone triples */
     };
 ```
+
+The types `scs_float` and `scs_int` can be specified by the user, they default
+to `double` and `int` respectively.
+
 The data matrix `A` is specified in column-compressed format and the vectors
 `b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
 (slack), and `y` (dual) are returned as dense arrays. Cones are specified as
@@ -183,14 +187,14 @@ soc cones etc.).
 **Warm-start**
 
 You can warm-start SCS (supply a guess of the solution) by setting warm_start in
-Data to 1 and supplying the warm-starts in the Sol struct (x,y and s). All
+Data to `1` and supplying the warm-starts in the Sol struct (x,y and s). All
 inputs must be warm-started if any one is. These
-are used to initialize the iterates in scs_solve.
+are used to initialize the iterates in `scs_solve`.
  
 **Re-using matrix factorization**
 
 To factorize the matrix once (if using the direct version) and solve many
-times, simply call scs_init once, and use scs_solve many times with the same
+times, simply call scs_init once, and use `scs_solve` many times with the same
 workspace, changing the input data `b` and `c` (and optionally warm-starts) for
 each iteration. See run_scs.c for an example.
 

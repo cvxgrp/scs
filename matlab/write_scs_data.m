@@ -8,7 +8,7 @@ write_scs_data(data,K,params,name)
 % set default params if not present:
 max_iters = 2500; % maximum num iterations for admm
 eps = 1e-3; % quitting tolerances
-alpha = 1.8;        % relaxation parameter (alpha = 1 is unrelaxed)
+alpha = 1.8; % relaxation parameter (alpha = 1 is unrelaxed)
 normalize = 1; % 1 = true
 verbose = 1; % 1 = true
 if ~isfield(params,'max_iters');params.max_iters = max_iters;end

@@ -4,20 +4,20 @@
 #define CONE_TOL (1e-8)
 #define EXP_CONE_MAX_ITERS (100)
 
+/* Default to underscore for blas / lapack */
+#ifndef BLASSUFFIX
+#define BLASSUFFIX _
+#endif
+
 #ifdef LAPACK_LIB_FOUND
-/* underscore for blas / lapack, single or double precision */
-#ifdef NOBLASUNDERSCORE
+/* this extra indirection is needed for BLASSUFFIX to work correctly as a variable */
+#define stitch_(pre,x,post) pre ## x ## post
+#define stitch__(pre,x,post) stitch_(pre,x,post)
+/* single or double precision */
 #ifndef FLOAT
-#define BLAS(x) d ## x
+#define BLAS(x) stitch__(d,x,BLASSUFFIX)
 #else
-#define BLAS(x) s ## x
-#endif
-#else
-#ifndef FLOAT
-#define BLAS(x) d ## x ## _
-#else
-#define BLAS(x) s ## x ## _
-#endif
+#define BLAS(x) stitch__(s,x,BLASSUFFIX)
 #endif
 
 #ifdef MATLAB_MEX_FILE
@@ -320,6 +320,11 @@ scs_int initCone(Cone * k) {
 	totalConeTime = 0.0;
 #ifdef EXTRAVERBOSE
     scs_printf("initCone\n");
+#ifdef LAPACK_LIB_FOUND
+    #define _STR_EXPAND(tok) #tok
+    #define _STR(tok) _STR_EXPAND(tok)
+    scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
+#endif
 #ifdef MATLAB_MEX_FILE
     mexEvalString("drawnow;");
 #endif

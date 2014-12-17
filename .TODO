@@ -1,4 +1,5 @@
-add integer programming on x
+power cone
+add integer programming on x - NB not easy due to tau scaling
 add ability to make copies of data vs in-place modifications
 cleanup, refactor and comment code
 add static, inline to methods
