@@ -8,19 +8,19 @@
 #define MIN_SCALE (1e-3)
 #define MAX_SCALE (1e3)
 
-/* underscore for blas / lapack, single or double precision */
-#ifdef NOBLASUNDERSCORE
-	#ifndef FLOAT
-		#define BLAS(x) d ## x
-	#else
-		#define BLAS(x) s ## x
-	#endif
+/* Default to underscore for blas / lapack */
+#ifndef BLASSUFFIX
+#define BLASSUFFIX _
+#endif
+
+/* this extra indirection is needed for BLASSUFFIX to work correctly as a variable */
+#define stitch_(pre,x,post) pre ## x ## post
+#define stitch__(pre,x,post) stitch_(pre,x,post)
+/* single or double precision */
+#ifndef FLOAT
+#define BLAS(x) stitch__(d,x,BLASSUFFIX)
 #else
-	#ifndef FLOAT
-		#define BLAS(x) d ## x ## _
-	#else
-		#define BLAS(x) s ## x ## _
-	#endif
+#define BLAS(x) stitch__(s,x,BLASSUFFIX)
 #endif
 
 #ifdef MATLAB_MEX_FILE
