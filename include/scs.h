@@ -10,7 +10,7 @@
 
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
-#define SCS_VERSION ("1.0.6")
+#define SCS_VERSION ("1.0.7")
 
 /* SCS returns one of the following integers: (zero never returned)     */
 #define FAILURE         (-4)
