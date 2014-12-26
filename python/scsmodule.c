@@ -189,6 +189,10 @@ static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char 
 	return NULL;
 }
 
+static PyObject *version(PyObject* self) {
+  return Py_BuildValue("s", SCS_VERSION);
+}
+
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* data structures for arguments */
 	PyArrayObject *Ax, *Ai, *Ap, *c, *b;
@@ -387,8 +391,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	return returnDict;
 }
 
-static PyMethodDef scsMethods[] = { { "csolve", (PyCFunction) csolve, METH_VARARGS | METH_KEYWORDS,
-		"Solve a convex cone problem using scs." }, { NULL, NULL, 0, NULL } /* sentinel */
+static PyMethodDef scsMethods[] = {
+    { "csolve", (PyCFunction) csolve, METH_VARARGS | METH_KEYWORDS, "Solve a convex cone problem using scs."},
+    { "version", (PyCFunction)version, METH_NOARGS, "Version number for SCS."},
+    { NULL, NULL, 0, NULL } /* sentinel */
 };
 
 /* Module initialization */
@@ -422,12 +428,11 @@ static PyObject* moduleinit(void) {
 	/*if (import_array() < 0) return NULL; // for numpy arrays */
 	/*if (import_cvxopt() < 0) return NULL; // for cvxopt support */
 
-	if (m == NULL)
+	if (m == NULL) {
 		return NULL;
-
+    }
 	return m;
-}
-;
+};
 
 #if PY_MAJOR_VERSION >= 3
 PyMODINIT_FUNC

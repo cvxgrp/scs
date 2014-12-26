@@ -4,6 +4,7 @@ import _scs_indirect
 from warnings import warn
 from scipy import sparse
 
+__version__ = _scs_direct.version()
 
 def solve(probdata, cone, **kwargs):
     """
