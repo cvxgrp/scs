@@ -5,6 +5,8 @@ from warnings import warn
 from numpy import transpose 
 from scipy import sparse
 
+__version__ = _scs_direct.version()
+
 def solve(probdata, cone, **kwargs):
     """
     solves convex cone problems

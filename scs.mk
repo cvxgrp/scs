@@ -13,19 +13,20 @@ endif
 
 ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
-LDFLAGS = -lm
+LDFLAGS += -lm
 SHARED = dylib
 else ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
-LDFLAGS = -lm
+LDFLAGS += -lm
 SHARED = dll
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
-LDFLAGS = -lm -lrt
+LDFLAGS += -lm -lrt
 SHARED = so
 endif
 
-CFLAGS = -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude #-Wextra
+# Add on default CFLAGS
+CFLAGS += -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
