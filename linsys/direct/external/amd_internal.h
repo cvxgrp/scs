@@ -92,14 +92,6 @@
 #undef FLIP
 #endif
 
-#ifdef MAX
-#undef MAX
-#endif
-
-#ifdef MIN
-#undef MIN
-#endif
-
 #ifdef EMPTY
 #undef EMPTY
 #endif
@@ -119,10 +111,6 @@
 #define EMPTY (-1)
 #define FLIP(i) (-(i)-2)
 #define UNFLIP(i) ((i < EMPTY) ? FLIP (i) : (i))
-
-/* for integer MAX/MIN, or for scs_floats when we don't care how NaN's behave: */
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 /* logical expression of p implies q: */
 #define IMPLIES(p,q) (!(p) || (q))
