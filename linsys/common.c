@@ -15,7 +15,7 @@ scs_int validateLinSys(Data *d) {
     /* detects some errors in A col ptrs: */
     for (i = 0; i < d->n; ++i) {
         if (A->p[i] == A->p[i + 1]) {
-            scs_printf("WARN: A->p (column pointers) not strictly increasing, A contains empty column\n");
+            scs_printf("WARN: A->p (column pointers) not strictly increasing, column %li empty\n", (long) i);
         } else if (A->p[i] > A->p[i + 1]) {
             scs_printf("ERROR: A->p (column pointers) decreasing\n");
             return -1;
