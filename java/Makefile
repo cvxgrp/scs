@@ -3,7 +3,7 @@ ROOT = ..
 include $(ROOT)/scs.mk
 
 JAVA_OUT = src
-OBJECTS = $(ROOT)/src/scs.o $(ROOT)/src/util.o $(ROOT)/src/cones.o $(ROOT)/src/cs.o $(ROOT)/src/linAlg.o $(ROOT)/$(LINSYS)/common.o
+OBJECTS = $(ROOT)/src/scs.o $(ROOT)/src/util.o $(ROOT)/src/cones.o $(ROOT)/src/cs.o $(ROOT)/src/linAlg.o $(ROOT)/src/ctrlc.o $(ROOT)/$(LINSYS)/common.o
 
 AMD_SOURCE = $(wildcard $(ROOT)/$(DIRSRCEXT)/amd_*.c)
 DIRECT_OBJECTS = $(ROOT)/$(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) $(ROOT)/$(DIRSRC)/private.o
@@ -12,6 +12,9 @@ INDIRECT_OBJECTS = $(ROOT)/$(INDIRSRC)/private.o
 .PHONY: default
 
 default: scs $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED)
+
+scs_purge:
+	( cd $(ROOT) && $(MAKE) purge )
 
 scs:
 	( cd $(ROOT) && $(MAKE) )
@@ -34,6 +37,6 @@ testproblem: default
 
 .PHONY: clean purge
 clean:
-	rm -rf $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED) *.o
-purge: clean
+	rm -rf $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED) *.o $(JAVA_OUT)/scs/*.class
+purge: scs_purge clean
 

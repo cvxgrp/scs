@@ -18,7 +18,7 @@ public class TestProblem {
         Solution sol;
         Data d = new Data();
 
-        cp = new RandomLinearProgram(m, n, d, p, new DirectSolver());
+        cp = new RandomLinearProgram(m, n, d, p, new IndirectSolver());
         System.out.println("true opt = " + cp.getOpt());
         sol = cp.solve();
 
@@ -27,7 +27,7 @@ public class TestProblem {
         System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), sol));
         System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), sol));
 
-        cp.setSolver(new IndirectSolver());
+        cp.setSolver(new DirectSolver());
         sol = cp.solve();
 
         System.out.println("c'x = " + Utils.ip(sol.getX(), d.getC()));

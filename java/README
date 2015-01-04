@@ -1,3 +1,6 @@
-cd scs/java/src/scs/
-javac scs/TestProblem.java
-java -Djava.library.path=. scs.TestProblem
+to make the java libs, in this dir:
+make purge
+make
+
+to test:
+make testproblem
