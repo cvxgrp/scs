@@ -146,3 +146,4 @@ cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
 	}
 	return (cs_done(C, w, NULL, 1)); /* success; free workspace, return C */
 }
+

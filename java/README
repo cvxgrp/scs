@@ -1,2 +1,3 @@
+cd scs/java/src/scs/
 javac scs/TestProblem.java
 java -Djava.library.path=. scs.TestProblem

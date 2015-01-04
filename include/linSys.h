@@ -39,3 +39,4 @@ void unNormalizeA(Data *d, Work * w);
 /* to free the memory allocated in AMatrix */
 void freeAMatrix(AMatrix * A);
 #endif
+

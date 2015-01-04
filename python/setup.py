@@ -15,8 +15,8 @@ def install_scs(USE_LAPACK, USE_64_BIT_BLAS, BLAS_STR, LAPACK_STR, USE_OPENMP, r
     sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
     include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
     
-    define_macros = [('PYTHON', None), ('DLONG', None)]
-    # define_macros = [('PYTHON', None), ('DLONG', None), ('EXTRAVERBOSE', None)] # for debugging
+    define_macros = [('PYTHON', None), ('DLONG', None), ('CTRLC', 1)]
+    # define_macros += [('EXTRAVERBOSE', None)] # for debugging
     extra_compile_args = ["-O3"]
     library_dirs = []
     extra_link_args = []

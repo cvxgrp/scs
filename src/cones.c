@@ -623,3 +623,4 @@ scs_int projDualCone(scs_float *x, Cone * k, const scs_float * warm_start, scs_i
 	totalConeTime += tocq(&coneTimer);
 	return 0;
 }
+

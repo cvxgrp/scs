@@ -22,3 +22,4 @@ scs_float cs_cumsum(scs_int *p, scs_int *c, scs_int n);
 scs_int *cs_pinv(scs_int const *p, scs_int n);
 cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values);
 #endif
+

@@ -79,3 +79,4 @@ scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l) {
 	}
 	return max;
 }
+

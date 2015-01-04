@@ -50,3 +50,4 @@ void freeSol(Sol * sol);
 void freeData(Data * d, Cone * k);
 
 #endif
+

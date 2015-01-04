@@ -7,17 +7,18 @@
 #include "linAlg.h"
 #include "linSys.h"
 #include "util.h"
-
+#include "ctrlc.h"
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION ("1.0.7")
 
 /* SCS returns one of the following integers: (zero never returned)     */
-#define FAILURE         (-4)
-#define INDETERMINATE   (-3)
-#define INFEASIBLE      (-2)    /* primal infeasible, dual unbounded    */
-#define UNBOUNDED       (-1)    /* primal unbounded, dual infeasible    */
-#define SOLVED          (1)
+#define SCS_SIGINT          (-5)
+#define SCS_FAILURE         (-4)
+#define SCS_INDETERMINATE   (-3)
+#define SCS_INFEASIBLE      (-2)    /* primal infeasible, dual unbounded    */
+#define SCS_UNBOUNDED       (-1)    /* primal unbounded, dual infeasible    */
+#define SCS_SOLVED          (1)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
 #define MAX_ITERS       (2500)
@@ -106,3 +107,4 @@ struct residuals {
 };
 
 #endif
+

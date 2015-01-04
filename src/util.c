@@ -174,3 +174,4 @@ void freeSol(Sol *sol) {
     }
     sol = NULL;
 }
+
