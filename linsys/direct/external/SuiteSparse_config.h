@@ -43,6 +43,7 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
+#include "ctrlc.h"
 #include <limits.h>
 #include <stdlib.h>
 

@@ -2,8 +2,8 @@
  * Interface for SCS signal handling.
  */
 
-#ifndef __CTRLC_H__
-#define __CTRLC_H__
+#ifndef CTRLC_H_GUARD
+#define CTRLC_H_GUARD
 
 #if CTRLC > 0
 
@@ -26,18 +26,17 @@ extern int utSetInterruptEnabled(int);
 #endif
 
 /* METHODS are the same for both */
-void init_ctrlc(void);
-void remove_ctrlc(void);
-int check_ctrlc(void);
+void startInterruptListener(void);
+void endInterruptListener(void);
+int isInterrupted(void);
 
 #else /* CTRLC = 0 */
 
 /* No signal handling. */
-#define init_ctrlc()
-#define remove_ctrlc()
-#define check_ctrlc() 0
+#define startInterruptListener()
+#define endInterruptListener()
+#define isInterrupted() 0
 
 #endif /* END IF CTRLC > 0 */
 
 #endif /* END IFDEF __TIMER_H__ */
-
