@@ -85,18 +85,18 @@ static void populateOnFailure(Work * w, Sol * sol, Info * info, scs_int statusVa
 
 static scs_int failureDefaultReturn(Work * w, Sol * sol, Info * info, char * msg) {
     scs_int status = SCS_FAILURE;
-    populateOnFailure(w, sol, info, status, "failure");
+    populateOnFailure(w, sol, info, status, "Failure");
     scs_printf("FAILURE:%s\n", msg);
-    removeCtrlC();
+    endInterruptListener();
     // TODO clear mem?
     return status;
 }
 
 static scs_int interrupt(Work * w, Sol * sol, Info * info) {
     scs_int status = SCS_SIGINT;
-    populateOnFailure(w, sol, info, status, "interrupted");
+    populateOnFailure(w, sol, info, status, "Interrupted");
     scs_printf("interrupt detected\n");
-    removeCtrlC();
+    endInterruptListener();
     return status;
 }
 
@@ -677,7 +677,6 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	}
 	/* initialize ctrl-c support */
 	startInterruptListener();
-
     tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
 	r.lastIter = -1;
@@ -697,7 +696,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 
         if (isInterrupted()) return interrupt(w, sol, info);
 
-        if (i % CONVERGED_INTERVAL == 0) {
+		if (i % CONVERGED_INTERVAL == 0) {
 			calcResiduals(d, w, &r, i);
 			if ((info->statusVal = hasConverged(w, &r, i)) != 0) { break; }
 		}
@@ -728,7 +727,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 
 	if (w->stgs->verbose)
 		printFooter(w, info);
-    removeCtrlC();
+	endInterruptListener();
 	return info->statusVal;
 }
 
