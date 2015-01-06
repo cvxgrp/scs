@@ -100,7 +100,7 @@ static scs_int failureDefaultReturn(Data * d, Work * w, Sol * sol, Info * info, 
     scs_int status = SCS_FAILURE;
     populateOnFailure(d, w, sol, info, status, "failure");
     scs_printf("FAILURE:%s\n", msg);
-    remove_ctrlc();
+    endInterruptListener();
     return status;
 }
 
@@ -108,7 +108,7 @@ static scs_int interrupt(Data * d, Work * w, Sol * sol, Info * info) {
     scs_int status = SCS_SIGINT;
     populateOnFailure(d, w, sol, info, status, "interrupted");
     scs_printf("interrupt detected\n");
-    remove_ctrlc();
+    endInterruptListener();
     return status;
 }
 
@@ -664,7 +664,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		return SCS_FAILURE;
 	}
 	/* initialize ctrl-c support */
-    init_ctrlc();
+	startInterruptListener();
     tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
 	r.lastIter = -1;
@@ -679,7 +679,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 		if (projectCones(d, w, k, i) < 0) return failureDefaultReturn(d, w, sol, info, "error in projectCones");
 		updateDualVars(d, w);
 
-        if (check_ctrlc()) return interrupt(d, w, sol, info);
+        if (isInterrupted()) return interrupt(d, w, sol, info);
 
         if (i % CONVERGED_INTERVAL == 0) {
 			calcResiduals(d, w, &r, i);
@@ -715,7 +715,7 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 	/* un-normalize sol, b, c but not A */
 	if (d->normalize)
 		unNormalizeBC(d, w, sol);
-    remove_ctrlc();
+	endInterruptListener();
 	return info->statusVal;
 }
 
