@@ -86,6 +86,7 @@ typedef float scs_float;
 #endif
 
 typedef struct PROBLEM_DATA Data;
+typedef struct SETTINGS Settings;
 typedef struct SOL_VARS Sol;
 typedef struct INFO Info;
 typedef struct WORK Work;

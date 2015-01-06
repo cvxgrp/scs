@@ -8,16 +8,16 @@ static scs_int totCgIts;
 static timer linsysTimer;
 static scs_float totalSolveTime;
 
-char * getLinSysMethod(Data * d, Priv * p) {
+char * getLinSysMethod(AMatrix * A, Priv * p) {
 	char * str = scs_malloc(sizeof(char) * 128);
-	sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) d->A->p[d->n], d->cg_rate);
+	sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) A->p[A->n], d->cg_rate);
 	return str;
 }
 
 char * getLinSysSummary(Priv * p, Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
-			(scs_float ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
+			(scs_float) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
 	totCgIts = 0;
 	totalSolveTime = 0;
 	return str;

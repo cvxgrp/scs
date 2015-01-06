@@ -3,9 +3,9 @@
 static timer linsysTimer;
 static scs_float totalSolveTime;
 
-char * getLinSysMethod(Data * d, Priv * p) {
+char * getLinSysMethod(AMatrix * A, Priv * p) {
 	char * tmp = scs_malloc(sizeof(char) * 128);
-	sprintf(tmp, "sparse-direct, nnz in A = %li", (long) d->A->p[d->n]);
+	sprintf(tmp, "sparse-direct, nnz in A = %li", (long) A->p[A->n]);
 	return tmp;
 }
 
