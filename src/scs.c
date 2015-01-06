@@ -525,7 +525,7 @@ static scs_int hasConverged(Work * w, struct residuals * r, scs_int iter) {
 static scs_int validate(Data * d, Cone * k) {
 	Settings * stgs = d->stgs;
 	if (d->m <= 0 || d->n <= 0) {
-		scs_printf("m and n must both be greater than 0\n");
+		scs_printf("m and n must both be greater than 0; m = %li, n = %li\n", d->m, d->n);
 		return -1;
 	}
 	if (d->m < d->n) {
