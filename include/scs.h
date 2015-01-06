@@ -81,10 +81,10 @@ struct WORK {
 	scs_float gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA, meanNormColA;
 	scs_float *D, *E; /* for normalization */
 	scs_float *b, *c; /* (possibly normalized) b and c vectors */
-    AMatrix * A; /* (possibly normalized) A matrix */
+	scs_int m, n; /* A has m rows, n cols*/
+	AMatrix * A; /* (possibly normalized) A matrix */
     Priv * p; /* struct populated by linear system solver */
 	Settings * stgs; /* contains solver settings specified by user */
-	scs_int m, n; /* A has m rows, n cols*/
 };
 
 /* to hold residual information (unnormalized) */
