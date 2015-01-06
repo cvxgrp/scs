@@ -92,13 +92,11 @@ static void populateOnFailure(Data * d, Work * w, Sol * sol, Info * info, scs_in
 	if (!sol->s)
 		sol->s = scs_malloc(sizeof(scs_float) * d->m);
 	scaleArray(sol->s, NAN, d->m);
-	if (d->normalize)
-		unNormalizeBC(d, w, sol);
 }
 
 static scs_int failureDefaultReturn(Data * d, Work * w, Sol * sol, Info * info, char * msg) {
     scs_int status = SCS_FAILURE;
-    populateOnFailure(d, w, sol, info, status, "failure");
+    populateOnFailure(d, w, sol, info, status, "Failure");
     scs_printf("FAILURE:%s\n", msg);
     endInterruptListener();
     return status;
@@ -106,7 +104,7 @@ static scs_int failureDefaultReturn(Data * d, Work * w, Sol * sol, Info * info, 
 
 static scs_int interrupt(Data * d, Work * w, Sol * sol, Info * info) {
     scs_int status = SCS_SIGINT;
-    populateOnFailure(d, w, sol, info, status, "interrupted");
+    populateOnFailure(d, w, sol, info, status, "Interrupted");
     scs_printf("interrupt detected\n");
     endInterruptListener();
     return status;
