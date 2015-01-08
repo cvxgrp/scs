@@ -60,6 +60,8 @@ void handle_ctrlc(int dummy) {
 void startInterruptListener(void) {
 	struct sigaction act;
 	int_detected = 0;
+	act.sa_flags = 0;
+	sigemptyset(&act.sa_mask);
 	act.sa_handler = handle_ctrlc;
 	sigaction(SIGINT, &act, &oact);
 }
