@@ -19,7 +19,7 @@ struct PROBLEM_DATA {
 	/* these can change for multiple runs for the same call to scs_init */
 	scs_float * b, *c; /* dense arrays for b (size m), c (size n) */
 
-	const Settings * stgs; /* contains solver settings specified by user */
+	Settings * stgs; /* contains solver settings specified by user */
 };
 
 /* Settings struct */
