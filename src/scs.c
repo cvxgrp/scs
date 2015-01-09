@@ -25,11 +25,15 @@ static scs_int scs_isnan(scs_float x) {
 	return (x == NAN || x != x);
 }
 
-static void printInitHeader(Work * w, Cone * k) {
+char * scsVersion(void) {
+	return SCS_VERSION;
+}
+
+static void printInitHeader(Data * d, Cone * k) {
 	scs_int i;
-	Settings * stgs = w->stgs;
+	const Settings * stgs = d->stgs;
 	char * coneStr = getConeHeader(k);
-	char * linSysMethod = getLinSysMethod(w);
+	char * linSysMethod = getLinSysMethod(d->A, d->stgs);
 	_lineLen_ = -1;
 	for (i = 0; i < HEADER_LEN; ++i) {
 		_lineLen_ += (scs_int) strlen(HEADER[i]) + 1;
@@ -38,7 +42,7 @@ static void printInitHeader(Work * w, Cone * k) {
 		scs_printf("-");
 	}
 	scs_printf("\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n",
-			SCS_VERSION);
+			scsVersion());
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
@@ -54,7 +58,7 @@ static void printInitHeader(Work * w, Cone * k) {
 		scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n", stgs->eps, stgs->alpha, (int) stgs->max_iters,
 				(int) stgs->normalize);
 	}
-	scs_printf("Variables n = %i, constraints m = %i\n", (int) w->n, (int) w->m);
+	scs_printf("Variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
 	scs_printf("%s", coneStr);
 	scs_free(coneStr);
 #ifdef MATLAB_MEX_FILE
@@ -88,7 +92,7 @@ static scs_int failureDefaultReturn(Work * w, Sol * sol, Info * info, char * msg
     populateOnFailure(w, sol, info, status, "Failure");
     scs_printf("FAILURE:%s\n", msg);
     endInterruptListener();
-    // TODO clear mem?
+    /* TODO clear mem? */
     return status;
 }
 
@@ -97,6 +101,7 @@ static scs_int interrupt(Work * w, Sol * sol, Info * info) {
     populateOnFailure(w, sol, info, status, "Interrupted");
     scs_printf("interrupt detected\n");
     endInterruptListener();
+    /* TODO clear mem? */
     return status;
 }
 
@@ -122,10 +127,10 @@ static void warmStartVars(Work * w, Sol * sol) {
 
 static scs_float calcPrimalResid(Work * w, scs_float * x, scs_float * s, scs_float tau, scs_float *nmAxs) {
 	scs_int i;
-	scs_float pres = 0, scale, *pr = w->pr, *D = w->D;
+	scs_float pres = 0, scale, *pr = w->pr, *D = w->scal->D;
 	*nmAxs = 0;
 	memset(pr, 0, w->m * sizeof(scs_float));
-	accumByA(w, x, pr);
+	accumByA(w->A, w->p, x, pr);
 	addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
 	for (i = 0; i < w->m; ++i) {
 		scale = w->stgs->normalize ? D[i] / (w->sc_b * w->stgs->scale) : 1;
@@ -139,10 +144,10 @@ static scs_float calcPrimalResid(Work * w, scs_float * x, scs_float * s, scs_flo
 
 static scs_float calcDualResid(Work * w, scs_float * y, scs_float tau, scs_float *nmATy) {
 	scs_int i;
-	scs_float dres = 0, scale, *dr = w->dr, *E = w->E;
+	scs_float dres = 0, scale, *dr = w->dr, *E = w->scal->E;
 	*nmATy = 0;
 	memset(dr, 0, w->n * sizeof(scs_float));
-	accumByAtrans(w, y, dr); /* dr = A'y */
+	accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
 	for (i = 0; i < w->n; ++i) {
 		scale = w->stgs->normalize ? E[i] / (w->sc_c * w->stgs->scale) : 1;
 		scale = scale * scale;
@@ -226,7 +231,7 @@ static scs_int projectLinSys(Work * w, scs_int iter) {
 	addScaledArray(w->u_t, w->h, l - 1, -innerProd(w->u_t, w->g, l - 1) / (w->gTh + 1));
 	scaleArray(&(w->u_t[n]), -1, m);
 
-	status = solveLinSys(w, w->u_t, w->u, iter);
+	status = solveLinSys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
 
 	w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
 
@@ -247,10 +252,6 @@ static void freeWork(Work * w) {
 			scs_free(w->h);
 		if (w->g)
 			scs_free(w->g);
-		if (w->D)
-			scs_free(w->D);
-		if (w->E)
-			scs_free(w->E);
 		if (w->b)
 			scs_free(w->b);
 		if (w->c)
@@ -259,6 +260,13 @@ static void freeWork(Work * w) {
 			scs_free(w->pr);
 		if (w->dr)
 			scs_free(w->dr);
+		if (w->scal) {
+			if (w->scal->D)
+				scs_free(w->scal->D);
+			if (w->scal->E)
+				scs_free(w->scal->E);
+			scs_free(w->scal);
+		}
 		scs_free(w);
 	}
 }
@@ -452,7 +460,7 @@ static void printHeader(Work * w, Cone * k) {
 
 static void printFooter(Work * w, Info * info) {
 	scs_int i;
-	char * linSysStr = getLinSysSummary(w, info);
+	char * linSysStr = getLinSysSummary(w->p, info);
 	char * coneStr = getConeSummary(info);
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
@@ -467,6 +475,7 @@ static void printFooter(Work * w, Info * info) {
 		scs_printf("%s", linSysStr);
 		scs_free(linSysStr);
 	}
+
 	if (coneStr) {
 		scs_printf("%s", coneStr);
 		scs_free(coneStr);
@@ -523,16 +532,16 @@ static scs_int hasConverged(Work * w, struct residuals * r, scs_int iter) {
 }
 
 static scs_int validate(Data * d, Cone * k) {
-	Settings * stgs = d->stgs;
+	const Settings * stgs = d->stgs;
 	if (d->m <= 0 || d->n <= 0) {
-		scs_printf("m and n must both be greater than 0; m = %li, n = %li\n", d->m, d->n);
+		scs_printf("m and n must both be greater than 0; m = %li, n = %li\n", (long) d->m, (long) d->n);
 		return -1;
 	}
 	if (d->m < d->n) {
 		scs_printf("WARN: m less than n, problem likely degenerate\n");
 		/* return -1; */
 	}
-	if (validateLinSys(d) < 0) {
+	if (validateLinSys(d->A) < 0) {
 		scs_printf("invalid linear system input data\n");
 		return -1;
 	}
@@ -567,7 +576,7 @@ static Work * initWork(Data *d, Cone * k) {
 	Work * w = scs_calloc(1, sizeof(Work));
 	scs_int l = d->n + d->m + 1;
 	if (d->stgs->verbose) {
-		printInitHeader(d, w, k);
+		printInitHeader(d, k);
 	}
 	if (!w) {
 		scs_printf("ERROR: allocating work failure\n");
@@ -590,35 +599,35 @@ static Work * initWork(Data *d, Cone * k) {
     w->c = scs_malloc(d->n * sizeof(scs_float));
 	if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr || !w->dr || !w->b || !w->c) {
 		scs_printf("ERROR: work memory allocation failure\n");
-		scs_finish(d, w);
+		scs_finish(w);
 		return NULL;
 	}
 #ifndef COPYAMATRIX
     w->A = d->A;
 #else
-    /* TODO */
+    copyAMatrix(d->A, w->A);
 #endif
 	if (w->stgs->normalize) {
-		normalizeA(w, k);
+		w->scal = scs_malloc(sizeof(Scaling));
+		normalizeA(w->A, w->stgs, k, w->scal);
 #ifdef EXTRAVERBOSE
-		printArray(w->D, d->m, "D");
-		scs_printf("norm D = %4f\n", calcNorm(w->D, d->m));
-		printArray(w->E, d->n, "E");
-		scs_printf("norm E = %4f\n", calcNorm(w->E, d->n));
+		printArray(w->scal->D, d->m, "D");
+		scs_printf("norm D = %4f\n", calcNorm(w->scal->D, d->m));
+		printArray(w->scal->E, d->n, "E");
+		scs_printf("norm E = %4f\n", calcNorm(w->scal->E, d->n));
 #endif
 	} else {
-		w->D = NULL;
-		w->E = NULL;
+		w->scal = NULL;
 	}
 	if (initCone(k) < 0) {
 		scs_printf("ERROR: initCone failure\n");
-		scs_finish(d, w);
+		scs_finish(w);
 		return NULL;
 	}
-	w->p = initPriv(d);
+	w->p = initPriv(w->A, w->stgs);
 	if (!w->p) {
 		scs_printf("ERROR: initPriv failure\n");
-		scs_finish(d, w);
+		scs_finish(w);
 		return NULL;
 	}
 	return w;
@@ -659,10 +668,10 @@ static scs_int updateWork(Data * d, Work * w, Sol * sol) {
 		coldStartVars(w);
 	}
 	memcpy(w->h, w->c, n * sizeof(scs_float));
-	memcpy(&(w->h[w->n]), w->b, m * sizeof(scs_float));
+	memcpy(&(w->h[n]), w->b, m * sizeof(scs_float));
 	memcpy(w->g, w->h, (n + m) * sizeof(scs_float));
-	solveLinSys(w->A, w->p, w->g, NULL, -1);
-	scaleArray(&(w->g[d->n]), -1, m);
+	solveLinSys(w->A, w->stgs, w->p, w->g, NULL, -1);
+	scaleArray(&(w->g[n]), -1, m);
 	w->gTh = innerProd(w->h, w->g, n + m);
 	return 0;
 }
@@ -692,12 +701,13 @@ scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
 
 		if (projectLinSys(w, i) < 0) return failureDefaultReturn(w, sol, info, "error in projectLinSys");
 		if (projectCones(w, k, i) < 0) return failureDefaultReturn(w, sol, info, "error in projectCones");
+
 		updateDualVars(w);
 
         if (isInterrupted()) return interrupt(w, sol, info);
 
 		if (i % CONVERGED_INTERVAL == 0) {
-			calcResiduals(d, w, &r, i);
+			calcResiduals(w, &r, i);
 			if ((info->statusVal = hasConverged(w, &r, i)) != 0) { break; }
 		}
 
@@ -736,8 +746,8 @@ void scs_finish(Work * w) {
 	if (w) {
 		if (w->stgs) {
 			if (w->stgs->normalize) {
-				// TODO:
-				unNormalizeA(w);
+				/* TODO: unnormalize vs free if copied */
+				unNormalizeA(w->A, w->stgs, w->scal);
 			}
 		}
 		freePriv(w->p);
@@ -785,10 +795,10 @@ scs_int scs(Data * d, Cone * k, Sol * sol, Info * info) {
 	scs_printf("size of scs_int = %lu, size of scs_float = %lu\n", sizeof(scs_int), sizeof(scs_float));
 #endif
 	if (!w) {
-		return failureDefaultReturn(d, NULL, sol, info, "could not initialize work");
+		return failureDefaultReturn(NULL, sol, info, "could not initialize work");
 	}
 	scs_solve(w, d, k, sol, info);
-	scs_finish(d, w);
+	scs_finish(w);
 	return info->statusVal;
 }
 

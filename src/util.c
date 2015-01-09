@@ -107,15 +107,15 @@ void printData(Data * d) {
 	scs_printf("m = %i\n", (int) d->m);
 	scs_printf("n = %i\n", (int) d->n);
 
-	scs_printf("max_iters = %i\n", (int) d->max_iters);
-	scs_printf("verbose = %i\n", (int) d->verbose);
-	scs_printf("normalize = %i\n", (int) d->normalize);
-	scs_printf("warmStart = %i\n", (int) d->warm_start);
-	scs_printf("eps = %4f\n", d->eps);
-	scs_printf("alpha = %4f\n", d->alpha);
-	scs_printf("rhoX = %4f\n", d->rho_x);
-	scs_printf("cg_rate = %4f\n", d->cg_rate);
-	scs_printf("scale = %4f\n", d->scale);
+	scs_printf("max_iters = %i\n", (int) d->stgs->max_iters);
+	scs_printf("verbose = %i\n", (int) d->stgs->verbose);
+	scs_printf("normalize = %i\n", (int) d->stgs->normalize);
+	scs_printf("warmStart = %i\n", (int) d->stgs->warm_start);
+	scs_printf("eps = %4f\n", d->stgs->eps);
+	scs_printf("alpha = %4f\n", d->stgs->alpha);
+	scs_printf("rhoX = %4f\n", d->stgs->rho_x);
+	scs_printf("cg_rate = %4f\n", d->stgs->cg_rate);
+	scs_printf("scale = %4f\n", d->stgs->scale);
 }
 
 void printArray(scs_float * arr, scs_int n, char * name) {
@@ -143,8 +143,10 @@ void freeData(Data * d, Cone * k) {
             scs_free(d->c);
         if (d->A) {
             freeAMatrix(d->A);
-            scs_free(d->A);
+            scs_free((AMatrix *) d->A);
         }
+        if (d->stgs)
+        	scs_free((Settings *) d->stgs);
         scs_free(d);
     }
     if (k) {
@@ -178,14 +180,16 @@ void freeSol(Sol *sol) {
 }
 
 void setDefaultParams(Data * d) {
-    d->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
-    d->eps = EPS; /* convergence tolerance: 1e-3 */
-    d->alpha = ALPHA; /* relaxation parameter: 1.8 */
-    d->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */
-    d->scale = SCALE; /* if normalized, rescales by this factor: 1 */
-    d->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-    d->verbose = VERBOSE; /* boolean, write out progress: 1 */
-    d->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
-    d->warm_start = WARM_START;
+	Settings * stgs = scs_malloc(sizeof(Settings));
+    stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
+    stgs->eps = EPS; /* convergence tolerance: 1e-3 */
+    stgs->alpha = ALPHA; /* relaxation parameter: 1.8 */
+    *((scs_float *) &(stgs->rho_x)) = RHO_X; /* x equality constraint scaling: 1e-3 */
+    *((scs_float *) &(stgs->scale)) = SCALE; /* if normalized, rescales by this factor: 1 */
+    stgs->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+    stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
+    *((scs_int *) &(stgs->normalize)) = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
+    stgs->warm_start = WARM_START;
+    *((Settings **) &(d->stgs)) = stgs;
 }
 

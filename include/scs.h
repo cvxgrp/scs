@@ -15,6 +15,8 @@ struct PROBLEM_DATA {
 	/* problem dimensions */
 	const scs_int m, n; /* A has m rows, n cols*/
 	const AMatrix * A; /* A is supplied in data format specified by linsys solver */
+
+	/* these can change for multiple runs for the same call to scs_init */
 	scs_float * b, *c; /* dense arrays for b (size m), c (size n) */
 
 	const Settings * stgs; /* contains solver settings specified by user */
@@ -24,12 +26,12 @@ struct PROBLEM_DATA {
 struct SETTINGS {
 	/* settings parameters: default suggested input */
 
-	/* these *cannot* change for multiple runs with one call to scs_init */
-	const scs_int normalize; /* boolean, heuristic data rescaling: 1 */
-	const scs_float scale; /* if normalized, rescales by this factor: 5 */
-	const scs_float rho_x; /* x equality constraint scaling: 1e-3 */
+	/* these *cannot* change for multiple runs with the same call to scs_init */
+	scs_int normalize; /* boolean, heuristic data rescaling: 1 */
+	scs_float scale; /* if normalized, rescales by this factor: 5 */
+	scs_float rho_x; /* x equality constraint scaling: 1e-3 */
 
-	/* these can change for multiple runs with one call to scs_init */
+	/* these can change for multiple runs with the same call to scs_init */
 	scs_int max_iters; /* maximum iterations to take: 2500 */
 	scs_float eps; /* convergence tolerance: 1e-3 */
 	scs_float alpha; /* relaxation parameter: 1.8 */
@@ -59,6 +61,14 @@ struct INFO {
 	scs_float solveTime; /* time taken for solve phase */
 };
 
+
+/* contains normalization variables */
+struct SCALING {
+	scs_float *D, *E; /* for normalization */
+	scs_float meanNormRowA, meanNormColA;
+};
+
+
 /*
  * main library api's:
  * scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T -I])
@@ -67,7 +77,7 @@ struct INFO {
  */
 Work * scs_init(Data * d, Cone * k, Info * info);
 scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
-void scs_finish(Data * d, Work * w);
+void scs_finish(Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */
 scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);
 
@@ -78,13 +88,13 @@ scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);
 struct WORK {
 	scs_float *u, *v, *u_t, *u_prev; /* u_prev = u from previous iteration */
 	scs_float *h, *g, *pr, *dr;
-	scs_float gTh, sc_b, sc_c, nm_b, nm_c, meanNormRowA, meanNormColA;
-	scs_float *D, *E; /* for normalization */
+	scs_float gTh, sc_b, sc_c, nm_b, nm_c;
 	scs_float *b, *c; /* (possibly normalized) b and c vectors */
 	scs_int m, n; /* A has m rows, n cols*/
-	AMatrix * A; /* (possibly normalized) A matrix */
+	const AMatrix * A; /* (possibly normalized) A matrix */
     Priv * p; /* struct populated by linear system solver */
-	Settings * stgs; /* contains solver settings specified by user */
+	const Settings * stgs; /* contains solver settings specified by user */
+	Scaling * scal;
 };
 
 /* to hold residual information (unnormalized) */

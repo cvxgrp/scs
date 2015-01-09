@@ -121,8 +121,8 @@ int main(int argc, char **argv) {
 	printf("Number of rows covered is %ld out of %ld.\n\n", (long) (q_total + k->f + k->l), (long) m);
 
 	/* set up SCS structures */
-	d->m = m;
-	d->n = n;
+	*((scs_int *) &(d->m)) = m;
+	*((scs_int *) &(d->n)) = n;
 	genRandomProbData(nnz, col_nnz, d, k, opt_sol);
 	setDefaultParams(d);
 

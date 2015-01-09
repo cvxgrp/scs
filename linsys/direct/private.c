@@ -3,7 +3,7 @@
 static timer linsysTimer;
 static scs_float totalSolveTime;
 
-char * getLinSysMethod(AMatrix * A, Priv * p) {
+char * getLinSysMethod(const AMatrix * A, const Settings * s) {
 	char * tmp = scs_malloc(sizeof(char) * 128);
 	sprintf(tmp, "sparse-direct, nnz in A = %li", (long) A->p[A->n]);
 	return tmp;
@@ -32,7 +32,7 @@ void freePriv(Priv * p) {
 	}
 }
 
-cs * formKKT(Data * d) {
+cs * formKKT(const AMatrix * A, Settings * s) {
 	/* ONLY UPPER TRIANGULAR PART IS STUFFED
 	 * forms column compressed KKT matrix
 	 * assumes column compressed form A matrix
@@ -41,11 +41,10 @@ cs * formKKT(Data * d) {
 	 */
 	scs_int j, k, kk;
 	cs * K_cs;
-	AMatrix * A = d->A;
 	/* I at top left */
-	const scs_int Anz = A->p[d->n];
-	const scs_int Knzmax = d->n + d->m + Anz;
-	cs * K = cs_spalloc(d->m + d->n, d->m + d->n, Knzmax, 1, 1);
+	const scs_int Anz = A->p[A->n];
+	const scs_int Knzmax = A->n + A->m + Anz;
+	cs * K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
 
 #ifdef EXTRAVERBOSE
 	scs_printf("forming KKT\n");
@@ -55,25 +54,25 @@ cs * formKKT(Data * d) {
 		return NULL;
 	}
 	kk = 0;
-	for (k = 0; k < d->n; k++) {
+	for (k = 0; k < A->n; k++) {
 		K->i[kk] = k;
 		K->p[kk] = k;
-		K->x[kk] = d->rho_x;
+		K->x[kk] = s->rho_x;
 		kk++;
 	}
 	/* A^T at top right : CCS: */
-	for (j = 0; j < d->n; j++) {
+	for (j = 0; j < A->n; j++) {
 		for (k = A->p[j]; k < A->p[j + 1]; k++) {
-			K->p[kk] = A->i[k] + d->n;
+			K->p[kk] = A->i[k] + A->n;
 			K->i[kk] = j;
 			K->x[kk] = A->x[k];
 			kk++;
 		}
 	}
 	/* -I at bottom right */
-	for (k = 0; k < d->m; k++) {
-		K->i[kk] = k + d->n;
-		K->p[kk] = k + d->n;
+	for (k = 0; k < A->m; k++) {
+		K->i[kk] = k + A->n;
+		K->p[kk] = k + A->n;
 		K->x[kk] = -1;
 		kk++;
 	}
@@ -192,20 +191,18 @@ void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_
 	}
 }
 
-void accumByAtrans(Data * d, Priv * p, const scs_float *x, scs_float *y) {
-	AMatrix * A = d->A;
-	_accumByAtrans(d->n, A->x, A->i, A->p, x, y);
+void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+	_accumByAtrans(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accumByA(Data * d, Priv * p, const scs_float *x, scs_float *y) {
-	AMatrix * A = d->A;
-	_accumByA(d->n, A->x, A->i, A->p, x, y);
+void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+	_accumByA(A->n, A->x, A->i, A->p, x, y);
 }
 
-scs_int factorize(Data * d, Priv * p) {
+scs_int factorize(const AMatrix * A, Settings * stgs, Priv * p) {
 	scs_float *info;
 	scs_int *Pinv, amd_status, ldl_status;
-	cs *C, *K = formKKT(d);
+	cs *C, *K = formKKT(A, stgs);
 	if (!K) {
 		return -1;
 	}
@@ -213,7 +210,7 @@ scs_int factorize(Data * d, Priv * p) {
 	if (amd_status < 0)
 		return (amd_status);
 #ifdef EXTRAVERBOSE
-	if(d->verbose) {
+	if(stgs->verbose) {
 		scs_printf("Matrix factorization info:\n");
 #ifdef DLONG
 		amd_l_info(info);
@@ -222,7 +219,7 @@ scs_int factorize(Data * d, Priv * p) {
 #endif
 	}
 #endif
-	Pinv = cs_pinv(p->P, d->n + d->m);
+	Pinv = cs_pinv(p->P, A->n + A->m);
 	C = cs_symperm(K, Pinv, 1);
 	ldl_status = LDLFactor(C, NULL, NULL, &p->L, &p->D);
 	cs_spfree(C);
@@ -232,9 +229,9 @@ scs_int factorize(Data * d, Priv * p) {
 	return (ldl_status);
 }
 
-Priv * initPriv(Data * d) {
+Priv *  initPriv(const AMatrix * A,const Settings * stgs) {
 	Priv * p = scs_calloc(1, sizeof(Priv));
-	scs_int n_plus_m = d->n + d->m;
+	scs_int n_plus_m = A->n + A->m;
 	p->P = scs_malloc(sizeof(scs_int) * n_plus_m);
 	p->L = scs_malloc(sizeof(cs));
 	p->bp = scs_malloc(n_plus_m * sizeof(scs_float));
@@ -242,7 +239,7 @@ Priv * initPriv(Data * d) {
 	p->L->n = n_plus_m;
 	p->L->nz = -1;
 
-	if (factorize(d, p) < 0) {
+	if (factorize(A, stgs, p) < 0) {
 		freePriv(p);
 		return NULL;
 	}
@@ -250,7 +247,7 @@ Priv * initPriv(Data * d) {
 	return p;
 }
 
-scs_int solveLinSys(Data * d, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
+scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
 	tic(&linsysTimer);

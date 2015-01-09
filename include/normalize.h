@@ -6,24 +6,24 @@
 
 void normalizeBC(Work * w) {
 	scs_int i;
-	scs_float *D = w->D, *E = w->E, *b = w->b, *c = w->c;
+	scs_float *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
     /* scale b */
     for (i = 0; i < w->m; ++i) {
         b[i] /= D[i];
     }
-    w->sc_b = w->meanNormColA / MAX(calcNorm(b, w->m), MIN_SCALE);
+    w->sc_b = w->scal->meanNormColA / MAX(calcNorm(b, w->m), MIN_SCALE);
     /* scale c */
     for (i = 0; i < w->n; ++i) {
         c[i] /= E[i];
     }
-    w->sc_c = w->meanNormRowA / MAX(calcNorm(c, w->n), MIN_SCALE);
-    scaleArray(b, w->sc_b * w->scale, w->m);
-    scaleArray(c, w->sc_c * w->scale, w->n);
+    w->sc_c = w->scal->meanNormRowA / MAX(calcNorm(c, w->n), MIN_SCALE);
+    scaleArray(b, w->sc_b * w->stgs->scale, w->m);
+    scaleArray(c, w->sc_c * w->stgs->scale, w->n);
 }
 
 void calcScaledResids(Work * w, struct residuals * r) {
-	scs_float * D = w->D;
-	scs_float * E = w->E;
+	scs_float * D = w->scal->D;
+	scs_float * E = w->scal->E;
 	scs_float * u = w->u;
 	scs_float * u_t = w->u_t;
 	scs_float * u_prev = w->u_prev;
@@ -59,8 +59,8 @@ void calcScaledResids(Work * w, struct residuals * r) {
 
 void normalizeWarmStart(Work * w) {
 	scs_int i;
-	scs_float * D = w->D;
-	scs_float * E = w->E;
+	scs_float * D = w->scal->D;
+	scs_float * E = w->scal->E;
 	scs_float * x = w->u;
 	scs_float * y = &(w->u[w->n]);
 	scs_float * s = &(w->v[w->n]);
@@ -71,14 +71,14 @@ void normalizeWarmStart(Work * w) {
 		y[i] *= (D[i] * w->sc_c);
 	}
 	for (i = 0; i < w->m; ++i) {
-		s[i] /= (D[i] / (w->sc_b * w->scale));
+		s[i] /= (D[i] / (w->sc_b * w->stgs->scale));
 	}
 }
 
 void unNormalizeSol(Work * w, Sol * sol) {
 	scs_int i;
-	scs_float * D = w->D;
-	scs_float * E = w->E;
+	scs_float * D = w->scal->D;
+	scs_float * E = w->scal->E;
 	for (i = 0; i < w->n; ++i) {
 		sol->x[i] /= (E[i] * w->sc_b);
 	}
@@ -86,7 +86,7 @@ void unNormalizeSol(Work * w, Sol * sol) {
 		sol->y[i] /= (D[i] * w->sc_c);
 	}
 	for (i = 0; i < w->m; ++i) {
-		sol->s[i] *= D[i] / (w->sc_b * w->scale);
+		sol->s[i] *= D[i] / (w->sc_b * w->stgs->scale);
 	}
 }
 

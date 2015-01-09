@@ -5,9 +5,4 @@
 #include "cones.h"
 #include "amatrix.h"
 
-/* contains routines common to direct and indirect sparse solvers */
-scs_int validateLinSys(Data *d);
-void normalizeA(Data * d, Work * w, Cone * k);
-void unNormalizeA(Data *d, Work * w);
-void freeAMatrix(AMatrix * A);
 #endif

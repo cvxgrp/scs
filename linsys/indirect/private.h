@@ -13,9 +13,7 @@ struct PRIVATE_DATA {
 	scs_float * r; /* cg residual */
 	scs_float * Gp;
 	scs_float * tmp;
-	scs_float * Atx;
-	scs_int * Ati;
-	scs_int * Atp;
+	AMatrix * At;
 	/* preconditioning */
 	scs_float * z;
 	scs_float * M;

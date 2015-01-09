@@ -10,22 +10,22 @@ typedef struct A_DATA_MATRIX AMatrix;
 typedef struct PRIVATE_DATA Priv;
 
 /* initialize Priv structure and perform any necessary preprocessing */
-Priv * initPriv(AMatrix * A, Settings * stgs);
+Priv * initPriv(const AMatrix * A,const Settings * stgs);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains warm-start, iter is current scs iteration count */
-scs_int solveLinSys(AMatrix * A, Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter);
+scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter);
 /* frees Priv structure and allocated memory in Priv */
 void freePriv(Priv * p);
 
 /* forms y += A'*x */
-void accumByAtrans(AMatrix * A, Priv * p, const scs_float *x, scs_float *y);
+void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y);
 /* forms y += A*x */
-void accumByA(AMatrix * A, Priv * p, const scs_float *x, scs_float *y);
+void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y);
 
 /* returns negative num if input data is invalid */
-scs_int validateLinSys(AMatrix * A);
+scs_int validateLinSys(const AMatrix * A);
 
 /* returns string describing method, can return null, if not null free will be called on output */
-char * getLinSysMethod(AMatrix * A, Settings * stgs, Priv * p);
+char * getLinSysMethod(const AMatrix * A, const Settings * stgs);
 /* returns string containing summary information about linear system solves, can return null, if not null free will be called on output */
 char * getLinSysSummary(Priv * p, Info * info);
 
@@ -33,10 +33,10 @@ char * getLinSysSummary(Priv * p, Info * info);
 /* normalizes A matrix, sets w->E and w->D diagonal scaling matrices, Anew = d->SCALE * (D^-1)*A*(E^-1) (different to paper which is D*A*E)
  * D and E must be all positive entries, D must satisfy cone boundaries
  * must set (w->meanNormRowA = mean of norms of rows of normalized A) THEN scale resulting A by d->SCALE */
-void normalizeA(AMatrix * A, Settings * stgs, Cone * k);
+void normalizeA(const AMatrix * A, const Settings * stgs, Cone * k, Scaling * scal);
 /* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
-void unNormalizeA(AMatrix * A, Settings * stgs);
+void unNormalizeA(const AMatrix * A, const Settings * stgs, Scaling * scal);
 /* to free the memory allocated in AMatrix */
-void freeAMatrix(AMatrix * A);
+void freeAMatrix(const AMatrix * A);
 #endif
 

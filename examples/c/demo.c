@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
 
 	k = scs_calloc(1, sizeof(Cone));
 	d = scs_calloc(1, sizeof(Data));
+	Settings * stgs = scs_calloc(1, sizeof(Settings));
 	sol = scs_calloc(1, sizeof(Sol));
 
 	if (read_in_data(fp, d, k) == -1) {
@@ -36,7 +37,8 @@ int main(int argc, char **argv) {
 	}
 	fclose(fp);
 	scs_printf("solve once using scs\n");
-	d->cg_rate = 2;
+	stgs->cg_rate = 2;
+	d->stgs = stgs;
 	scs(d, k, sol, &info);
 	if (TEST_WARM_START) {
 		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
@@ -47,16 +49,16 @@ int main(int argc, char **argv) {
 				/* perturb b and c */
 				perturbVector(d->b, d->m);
 				perturbVector(d->c, d->n);
-				d->warm_start = 1;
-				d->cg_rate = 4;
+				stgs->warm_start = 1;
+				stgs->cg_rate = 4;
 				scs_solve(w, d, k, sol, &info);
-				d->warm_start = 0;
-				d->cg_rate = 2;
+				stgs->warm_start = 0;
+				stgs->cg_rate = 2;
 				scs_solve(w, d, k, sol, &info);
 			}
 		}
 		scs_printf("finished\n");
-		scs_finish(d, w);
+		scs_finish(w);
 	}
 	freeData(d, k);
 	freeSol(sol);
@@ -69,9 +71,10 @@ scs_int read_in_data(FILE * fp, Data * d, Cone * k) {
 	char s[LEN64], *token;
 	scs_int i, Anz;
 	AMatrix * A;
-	d->rho_x = RHOX;
-	d->warm_start = 0;
-	d->scale = 1;
+	Settings * stgs = (Settings *) d->stgs;
+	stgs->rho_x = RHOX;
+	stgs->warm_start = 0;
+	stgs->scale = 1;
 	if (fscanf(fp, INTRW, &(d->n)) != 1)
 		return -1;
 	if (fscanf(fp, INTRW, &(d->m)) != 1)
@@ -99,15 +102,15 @@ scs_int read_in_data(FILE * fp, Data * d, Cone * k) {
 	/*if(fscanf(fp, INTRW, &(k->ep))!= 1) return -1; */
 	/*if(fscanf(fp, INTRW, &(k->ed))!= 1) return -1; */
 
-	if (fscanf(fp, INTRW, &(d->max_iters)) != 1)
+	if (fscanf(fp, INTRW, &(stgs->max_iters)) != 1)
 		return -1;
-	if (fscanf(fp, INTRW, &(d->verbose)) != 1)
+	if (fscanf(fp, INTRW, &(stgs->verbose)) != 1)
 		return -1;
-	if (fscanf(fp, INTRW, &(d->normalize)) != 1)
+	if (fscanf(fp, INTRW, &(stgs->normalize)) != 1)
 		return -1;
-	if (fscanf(fp, FLOATRW, &(d->alpha)) != 1)
+	if (fscanf(fp, FLOATRW, &(stgs->alpha)) != 1)
 		return -1;
-	if (fscanf(fp, FLOATRW, &(d->eps)) != 1)
+	if (fscanf(fp, FLOATRW, &(stgs->eps)) != 1)
 		return -1;
 	k->q = malloc(sizeof(scs_int) * k->qsize);
 	for (i = 0; i < k->qsize; i++) {
