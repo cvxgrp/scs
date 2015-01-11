@@ -8,17 +8,17 @@ randn('seed',0);rand('seed',0);
 
 %%% types of probs to solve:
 gen_feasible = true;
-gen_infeasible = false;
-gen_unbounded = false;
+gen_infeasible = true;
+gen_unbounded = true;
 %%% solvers to test:
 run_indirect = true;
-run_direct = false;
+run_direct = true;
 run_cvx = false; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
-run_scs_matlab = true; % SCS implemented in MATLAB
+run_scs_matlab = false; % SCS implemented in MATLAB
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
-K = struct('f',0,'l',1,'q',[0],'s',[0;1;3],'ep',5,'ed',3);
+K = struct('f',50,'l',60,'q',[0;1;0;2;100;20],'s',[0;2;1;2;20],'ep',10,'ed',15);
 
 density = 0.1; % A matrix density
 
