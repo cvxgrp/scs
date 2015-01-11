@@ -34,7 +34,7 @@ void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, scs_float* a, 
 		blasint* isuppz, scs_float* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
 void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha, const scs_float *x, const blasint *incx,
 		scs_float *a, const blasint *lda);
-void BLAS(scal)(const scs_int *n, const scs_float *sa, scs_float *sx, const scs_int *incx);
+void BLAS(scal)(const blasint *n, const scs_float *sa, scs_float *sx, const blasint *incx);
 scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
 
 /* private data to help cone projection step */

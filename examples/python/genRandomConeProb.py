@@ -10,10 +10,9 @@ def genFeasible(K, n, density):
     m = getConeDims(K)
     
     z = randn(m,)
-    z = symmetrizeSDP(z, K)  # for SD cones
     y = proj_dual_cone(z, K)  # y = s - z;
     s = y - z  # s = proj_cone(z,K)
-    
+
     A = sparse.rand(m, n, density, format='csc')
     A.data = randn(A.nnz)
     x = randn(n)
@@ -28,7 +27,6 @@ def genInfeasible(K, n):
     m = getConeDims(K)
     
     z = randn(m,)
-    z = symmetrizeSDP(z, K)  # for SD cones
     y = proj_dual_cone(z, K)  # y = s - z;
     A = randn(m, n)
     A = A - outer(y, transpose(A).dot(y)) / linalg.norm(y) ** 2  # dense...
@@ -43,7 +41,6 @@ def genUnbounded(K, n):
     m = getConeDims(K)
     
     z = randn(m);
-    z = symmetrizeSDP(z, K);  # for SD cones
     s = proj_cone(z, K);
     A = randn(m, n);
     x = randn(n);
@@ -63,7 +60,7 @@ def getConeDims(K):
         l = l + K['q'][i];
     
     for i in range(0, len(K['s'])):
-        l = l + K['s'][i] ** 2;
+        l = l + get_sd_cone_size(K['s'][i]);
 
     l = l + K['ep'] * 3;
     l = l + K['ed'] * 3;
@@ -71,6 +68,9 @@ def getConeDims(K):
 
 def proj_dual_cone(z, c):
     return z + proj_cone(-z, c)
+
+def get_sd_cone_size(n):
+    return (n * (n + 1)) / 2
 
 def proj_cone(z, c):
     z = copy(z)
@@ -89,8 +89,9 @@ def proj_cone(z, c):
         idx = idx + q[i]
     # SDCs
     for i in range(0, len(s)):
-        z[idx:idx + s[i] ** 2] = proj_sdp(z[idx:idx + s[i] ** 2], s[i])
-        idx = idx + s[i] ** 2
+        sz = get_sd_cone_size(s[i])
+        z[idx:idx + sz] = proj_sdp(z[idx:idx + sz], s[i])
+        idx = idx + sz
     # Exp primal
     for i in range(0, c['ep']):
         z[idx:idx + 3] = project_exp_bisection(z[idx:idx + 3])
@@ -126,24 +127,20 @@ def proj_sdp(z, n):
         return
     elif n == 1:
         return pos(z)
-    z = reshape(z, (n, n), order='F')
-    zs = (z + transpose(z)) / 2
+    tidx = triu_indices(n)
+    tidx = (tidx[1], tidx[0])
+    didx = diag_indices(n)
     
-    w, v = linalg.eig(zs)  # cols of v are eignvectors
-    w = pos(w)
-    z = dot(v, dot(diag(w), transpose(v)))
-    return reshape(z, (n * n,))
+    a = zeros((n, n))
+    a[tidx] = z
+    a = (a + transpose(a))
+    a[didx] = a[didx] / sqrt(2.)
 
-def symmetrizeSDP(z, K):
-    l = K['f'] + K['l']
-    for i in range(0, len(K['q'])):
-        l = l + K['q'][i]
-    for i in range(0, len(K['s'])):
-        n = K['s'][i]
-        V = reshape(z[l:l + n * n], (n, n), order='F')
-        V = (V + transpose(V)) / 2
-        z[l:l + n * n] = reshape(V, (n * n,))
-        l = l + n * n
+    w, v = linalg.eig(a)  # cols of v are eigenvectors
+    w = pos(w)
+    a = dot(v, dot(diag(w), transpose(v)))
+    a[didx] = a[didx] / sqrt(2.)
+    z = a[tidx]
     return z
 
 def project_exp_bisection(v):
