@@ -8,17 +8,17 @@ randn('seed',0);rand('seed',0);
 
 %%% types of probs to solve:
 gen_feasible = true;
-gen_infeasible = true;
-gen_unbounded = true;
+gen_infeasible = false;
+gen_unbounded = false;
 %%% solvers to test:
 run_indirect = true;
-run_direct = true;
+run_direct = false;
 run_cvx = false; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
 run_scs_matlab = true; % SCS implemented in MATLAB
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
-K = struct('f',50,'l',50,'q',[0;1;2;3;4;5;6;7;60],'s',[0;1;2;3;10],'ep',5,'ed',3);
+K = struct('f',0,'l',1,'q',[0],'s',[0;1;3],'ep',5,'ed',3);
 
 density = 0.1; % A matrix density
 
@@ -30,7 +30,6 @@ params = struct('eps', 1e-3, 'normalize', 1, 'scale',5, 'cg_rate',2, 'max_iters'
 % Ax + s = b, s \in K, A'y + c = 0, y \in K*, s'y = 0
 if (gen_feasible)
     z = randn(m,1);
-    z = symmetrizeSDP(z,K); % for SD cones
     y = proj_dual_cone(z,K); % y = s - z;
     s = y - z; %s = proj_cone(z,K);
     
@@ -74,7 +73,6 @@ end
 % A'y = 0, y \in K*, b'*y = -1
 if (gen_infeasible)
     z = randn(m,1);
-    z = symmetrizeSDP(z,K); % for SD cones
     y = proj_dual_cone(z,K); % y = s - z;
     A = randn(m,n);
     
@@ -108,8 +106,6 @@ end
 % Ax + s = 0, s \in K, c'*x = -1
 if(gen_unbounded)
     z = randn(m,1);
-    z(1) = 5000;
-    z = symmetrizeSDP(z,K); % for SD cones
     s = proj_cone(z,K);
     A = randn(m,n);
     x = randn(n,1);

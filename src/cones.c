@@ -104,6 +104,10 @@ scs_int getFullConeDims(Cone * k) {
 
 scs_int validateCones(Data * d, Cone * k) {
 	scs_int i;
+	if (getFullConeDims(k) != d->m) {
+		scs_printf("cone dimensions %i not equal to num rows in A = m = %i\n", (int) getFullConeDims(k), (int) d->m);
+		return -1;
+	}
 	if (k->f && k->f < 0) {
 		scs_printf("free cone error\n");
 		return -1;
@@ -134,10 +138,6 @@ scs_int validateCones(Data * d, Cone * k) {
 	}
 	if (k->ep && k->ep < 0) {
 		scs_printf("ed cone error\n");
-		return -1;
-	}
-	if (getFullConeDims(k) != d->m) {
-		scs_printf("cone dimensions %i not equal to num rows in A = m = %i\n", (int) getFullConeDims(k), (int) d->m);
 		return -1;
 	}
 	return 0;
@@ -204,7 +204,7 @@ char * getConeHeader(Cone * k) {
 scs_int isSimpleSemiDefiniteCone(scs_int * s, scs_int ssize) {
 	scs_int i;
 	for (i = 0; i < ssize; i++) {
-		if (s[i] >= 3) {
+		if (s[i] >= 2) {
 			return 0; /* false */
 		}
 	}
