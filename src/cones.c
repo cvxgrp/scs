@@ -34,18 +34,23 @@ void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, scs_float* a, 
 		blasint* isuppz, scs_float* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
 void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha, const scs_float *x, const blasint *incx,
 		scs_float *a, const blasint *lda);
-void BLAS(axpy)(const blasint *n, const scs_float *alpha, const scs_float *dx, const blasint *incx, scs_float *dy,
-		const blasint *incy);
+scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
+
 /* private data to help cone projection step */
 static struct ConeData_t {
 	/* workspace for eigenvector decompositions: */
 	scs_float * Xs, *Z, *e, *work;
 	blasint *iwork, lwork, liwork;
-}c;
+} c;
 #endif
 
 static timer coneTimer;
 static scs_float totalConeTime;
+
+
+scs_int getSdConeSize(scs_int s) {
+	return (s * (s + 1)) / 2;
+}
 
  /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -63,7 +68,7 @@ scs_int getConeBoundaries(Cone * k, scs_int ** boundaries) {
 	}
 	count += k->qsize;
 	for (i = 0; i < k->ssize; ++i) {
-		b[count + i] = k->s[i] * k->s[i];
+		b[count + i] = getSdConeSize(k->s[i]);
 	}
 	count += k->ssize;
 	for (i = 0; i < k->ep + k->ed; ++i) {
@@ -87,7 +92,7 @@ scs_int getFullConeDims(Cone * k) {
 	}
 	if (k->ssize && k->s) {
 		for (i = 0; i < k->ssize; ++i) {
-			c += k->s[i] * k->s[i];
+			c += getSdConeSize(k->s[i]);
 		}
 	}
 	if (k->ed)
@@ -184,7 +189,7 @@ char * getConeHeader(Cone * k) {
 	if (k->ssize && k->s) {
 		sdBlks = k->ssize;
 		for (i = 0; i < k->ssize; i++) {
-			sdVars += k->s[i] * k->s[i];
+			sdVars += getSdConeSize(k->s[i]);
 		}
         sprintf(tmp + strlen(tmp), "\tsd vars: %i, sd blks: %i\n", (int) sdVars, (int) sdBlks);
 	}
@@ -345,7 +350,7 @@ if (k->ssize && k->s) {
 		c.Z = scs_calloc(nMax * nMax, sizeof(scs_float));
 		c.e = scs_calloc(nMax, sizeof(scs_float));
 
-        BLAS(syevr)("Vectors", "All", "Upper", &nMax, c.Xs, &nMax, NULL, NULL, NULL, NULL,
+        BLAS(syevr)("Vectors", "All", "Lower", &nMax, c.Xs, &nMax, NULL, NULL, NULL, NULL,
             &eigTol, &m, c.e, c.Z, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
 
         if (info != 0) {
@@ -377,14 +382,13 @@ if (k->ssize && k->s) {
 scs_int project2By2Sdc(scs_float *X) {
 	scs_float a, b, d, l1, l2, x1, x2, rad;
 	a = X[0];
-	b = 0.5 * (X[1] + X[2]);
-	d = X[3];
+	b = X[1];
+	d = X[2];
 
     if (ABS(b) < 1e-6) { /* diagonal matrix */
         X[0] = MAX(a, 0);
         X[1] = 0;
-        X[2] = 0;
-        X[3] = MAX(d, 0);
+        X[2] = MAX(d, 0);
         return 0;
     }
 
@@ -397,36 +401,36 @@ scs_int project2By2Sdc(scs_float *X) {
     scs_printf("2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, rad = %4f, l1 = %4f, l2 = %4f\n", a, b, X[1], X[2], d, rad, l1, l2);
 #endif
 
-	if (l2 >= 0) { /* both positive, just symmetrize */
-		X[1] = b;
-		X[2] = b;
+	if (l2 >= 0) { /* both eigs positive already */
 		return 0;
 	}
-	if (l1 <= 0) { /* both negative, set to 0 */
+	if (l1 <= 0) { /* both eigs negative, set to 0 */
 		X[0] = 0;
 		X[1] = 0;
 		X[2] = 0;
-		X[3] = 0;
 		return 0;
 	}
+
 	/* l1 pos, l2 neg */
 	x1 = 1 / SQRTF(1 + (l1 - a) * (l1 - a) / b / b);
 	x2 = x1 * (l1 - a) / b;
 
 	X[0] = l1 * x1 * x1;
 	X[1] = l1 * x1 * x2;
-	X[2] = X[1];
-	X[3] = l1 * x2 * x2;
+	X[2] = l1 * x2 * x2;
 	return 0;
 }
 
-static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
+/* size of X is getSdConeSize(n) */
+static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
-	scs_int i, j;
+	scs_int i;
 	blasint one = 1;
 	blasint m = 0;
 	blasint nb = (blasint) n;
+	blasint coneSz = (blasint) (getSdConeSize(n));
+
 	scs_float * Xs = c.Xs;
 	scs_float * Z = c.Z;
 	scs_float * e = c.e;
@@ -436,7 +440,6 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 	blasint liwork = c.liwork;
 
 	scs_float eigTol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF(iter + 1, CONE_RATE)); */
-	scs_float onef = 1.0;
 	scs_float zero = 0.0;
 	blasint info;
 	scs_float vupper;
@@ -454,15 +457,13 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 		return project2By2Sdc(X);
 	}
 #ifdef LAPACK_LIB_FOUND
-	memcpy(Xs, X, n * n * sizeof(scs_float));
-
-    /* Xs = X + X', save div by 2 for eigen-recomp */
+	/* expand lower triangular matrix to full matrix */
     for (i = 0; i < n; ++i) {
-        BLAS(axpy)(&nb, &onef, &(X[i]), &nb, &(Xs[i * n]), &one);
+    	memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]), (n - i) * sizeof(scs_float));
     }
-    vupper = MAX(calcNorm(Xs, n * n), 0.001);
+    vupper = MAX(SQRTF(2) * BLAS(nrm2)(&coneSz, Xs, &one), 0.001);
     /* Solve eigenproblem, reuse workspaces */
-    BLAS(syevr)("Vectors", "VInterval", "Upper", &nb, Xs, &nb, &zero, &vupper,
+    BLAS(syevr)("Vectors", "VInterval", "Lower", &nb, Xs, &nb, &zero, &vupper,
             NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
     if (info != 0) {
 #ifdef EXTRAVERBOSE
@@ -474,27 +475,25 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
         scs_printf("vupper = %f\n", vupper);
         scs_printf("eigTol = %e\n", eigTol);
         printArray(Xs, n * n, "Xs");
-        printArray(X, n * n, "X");
+        printArray(X, getSdConeSize(n), "X");
         printArray(e, m, "e");
         printArray(Z, m * n, "Z");
 #endif
         if (info < 0) return -1;
     }
 
-	memset(X, 0, n * n * sizeof(scs_float));
+	memset(Xs, 0, n * n * sizeof(scs_float));
 	for (i = 0; i < m; ++i) {
-		scs_float a = e[i] / 2;
-		BLAS(syr)("Lower", &nb, &a, &(Z[i * n]), &one, X, &nb);
+		scs_float a = e[i];
+		BLAS(syr)("Lower", &nb, &a, &(Z[i * n]), &one, Xs, &nb);
 	}
-	/* fill in upper half */
-	for (i = 0; i < n; ++i) {
-		for (j = i + 1; j < n; ++j) {
-			X[i + j * n] = X[j + i * n];
-		}
-	}
+	/* extract just lower triangular matrix */
+    for (i = 0; i < n; ++i) {
+    	memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Xs[i * (n + 1)]),  (n - i) * sizeof(scs_float));
+    }
 #else
 	scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack libraries were linked!\n");
-	scs_printf("scs will return nonsense!\n");
+	scs_printf("SCS will return nonsense!\n");
 	scaleArray(X, NAN, n);
 	return -1;
 #endif
