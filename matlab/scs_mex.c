@@ -62,6 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mexErrMsgTxt("scs returns up to 4 output arguments only.");
 	}
 	d = mxMalloc(sizeof(Data));
+    d->stgs = mxMalloc(sizeof(Settings));
 	k = mxMalloc(sizeof(Cone));
 	data = prhs[0];
 
@@ -111,35 +112,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	/* params */
 	tmp = mxGetField(params, 0, "alpha");
 	if (tmp != NULL)
-		d->alpha = (scs_float) *mxGetPr(tmp);
+		d->stgs->alpha = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "rho_x");
 	if (tmp != NULL)
-		d->rho_x = (scs_float) *mxGetPr(tmp);
+		d->stgs->rho_x = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "max_iters");
 	if (tmp != NULL)
-		d->max_iters = (scs_int) *mxGetPr(tmp);
+		d->stgs->max_iters = (scs_int) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "scale");
 	if (tmp != NULL)
-		d->scale = (scs_float) *mxGetPr(tmp);
+		d->stgs->scale = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "eps");
 	if (tmp != NULL)
-		d->eps = (scs_float) *mxGetPr(tmp);
+		d->stgs->eps = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "cg_rate");
 	if (tmp != NULL)
-		d->cg_rate = (scs_float) *mxGetPr(tmp);
+		d->stgs->cg_rate = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "verbose");
 	if (tmp != NULL)
-		d->verbose = (scs_int) *mxGetPr(tmp);
+		d->stgs->verbose = (scs_int) *mxGetPr(tmp);
 
 	tmp = mxGetField(params, 0, "normalize");
 	if (tmp != NULL)
-		d->normalize = (scs_int) *mxGetPr(tmp);
+		d->stgs->normalize = (scs_int) *mxGetPr(tmp);
 
 	/* cones */
 	kf = mxGetField(cone, 0, "f");
@@ -201,20 +202,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		k->ssize = 0;
 		k->s = NULL;
 	}
-	A = scs_malloc(sizeof(AMatrix));
-	A->x = (scs_float *) mxGetPr(A_mex);
-	/* XXX:
-	 * these return (mwIndex *), equivalent to (size_t *)
-	 * casting as (scs_int *), when scs_int = long seems to work
-	 * although maybe not on all machines:
-	 */
-	A->p = (scs_int *) mxGetJc(A_mex);
-	A->i = (scs_int *) mxGetIr(A_mex);
-	d->A = A;
-	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
-	d->warm_start = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
-	d->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
-	d->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
+    A = scs_malloc(sizeof(AMatrix));
+    A->n = d->n;
+    A->m = d->m;
+    A->x = (scs_float *) mxGetPr(A_mex);
+    /* XXX:
+     * these return (mwIndex *), equivalent to (size_t *)
+     * casting as (scs_int *), when scs_int = long seems to work
+     * although maybe not on all machines:
+     */
+    A->p = (scs_int *) mxGetJc(A_mex);
+    A->i = (scs_int *) mxGetIr(A_mex);
+    d->A = A;
+    /* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
+    d->stgs->warm_start = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
+    d->stgs->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
+    d->stgs->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
 
 	status = scs(d, k, &sol, &info);
 
@@ -290,6 +293,7 @@ void freeMex(Data * d, Cone * k) {
 		scs_free(k->s);
 	if (d) {
 		if(d->A) scs_free(d->A);
+        if(d->stgs) scs_free(d->stgs);
 		scs_free(d);
 	}
 	if (k)
