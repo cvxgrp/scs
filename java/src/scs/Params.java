@@ -10,7 +10,7 @@ public class Params {
     private boolean verbose = true;     /* boolean, write out progress: 1 */
     private boolean normalize = true;   /* boolean, heuristic data rescaling: 1 */
     private double scale = 5;           /* if normalized, rescales by this factor: 5 */
-    private boolean warmStart = false;  /* boolean, warm start (put initial guess in Sol struct): 0 */    // TODO: other fields
+    private boolean warmStart = false;  /* boolean, warm start (put initial guess in Sol struct): 0 */
 
     // getters:
     public int getMaxIters() {

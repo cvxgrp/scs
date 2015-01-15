@@ -72,35 +72,38 @@ Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
     return k;
 }
 
-AMatrix * getAMatrix(JNIEnv *env, jobject AJava) {
+AMatrix * getAMatrix(JNIEnv *env, jobject AJava, scs_int m, scs_int n) {
     scs_int leni, lenp, lenx;
     AMatrix * A = scs_calloc(1, sizeof(AMatrix));
     // populate A
     A->i = getIntArrayUsingGetter(env, AJava, "getRowIdxs", &leni);
     A->p = getIntArrayUsingGetter(env, AJava, "getColIdxs", &lenp);
     A->x = getFloatArrayUsingGetter(env, AJava, "getValues", &lenx);
+    A->m = m;
+    A->n = n;
     return A;
 }
 
 void populateParams(JNIEnv * env, jobject paramsJava, Data * d) {
-    d->max_iters = getIntUsingGetter(env, paramsJava, "getMaxIters");
-    d->eps = getFloatUsingGetter(env, paramsJava, "getEps");
-    d->alpha = getFloatUsingGetter(env, paramsJava, "getAlpha");
-    d->rho_x = getFloatUsingGetter(env, paramsJava, "getRhoX");
-    d->cg_rate = getFloatUsingGetter(env, paramsJava, "getCgRate");
-    d->verbose = getBooleanUsingGetter(env, paramsJava, "isVerbose");
-    d->normalize = getBooleanUsingGetter(env, paramsJava, "isNormalize");
-    d->scale = getFloatUsingGetter(env, paramsJava, "getScale");
-    d->warm_start = getBooleanUsingGetter(env, paramsJava, "isWarmStart");
+    d->stgs = scs_malloc(sizeof(Settings));
+    d->stgs->max_iters = getIntUsingGetter(env, paramsJava, "getMaxIters");
+    d->stgs->eps = getFloatUsingGetter(env, paramsJava, "getEps");
+    d->stgs->alpha = getFloatUsingGetter(env, paramsJava, "getAlpha");
+    d->stgs->rho_x = getFloatUsingGetter(env, paramsJava, "getRhoX");
+    d->stgs->cg_rate = getFloatUsingGetter(env, paramsJava, "getCgRate");
+    d->stgs->verbose = getBooleanUsingGetter(env, paramsJava, "isVerbose");
+    d->stgs->normalize = getBooleanUsingGetter(env, paramsJava, "isNormalize");
+    d->stgs->scale = getFloatUsingGetter(env, paramsJava, "getScale");
+    d->stgs->warm_start = getBooleanUsingGetter(env, paramsJava, "isWarmStart");
 }
 
 Data * getDataStruct(JNIEnv * env, jobject AJava, jdoubleArray bJava, jdoubleArray cJava, jobject paramsJava) {
     Data * d = scs_calloc(1, sizeof(Data));
-    d->A = getAMatrix(env, AJava);
     d->b = (*env)->GetDoubleArrayElements(env, bJava, NULL);
     d->m = (*env)->GetArrayLength(env, bJava);
     d->c = (*env)->GetDoubleArrayElements(env, cJava, NULL);
     d->n = (*env)->GetArrayLength(env, cJava);
+    d->A = getAMatrix(env, AJava, d->m, d->n);
     populateParams(env, paramsJava, d);
     return d;
 }
