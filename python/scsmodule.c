@@ -145,42 +145,44 @@ static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * op
 }
 
 static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
-	if (ps->Ax) {
-		Py_DECREF(ps->Ax);
-	}
-	if (ps->Ai) {
-		Py_DECREF(ps->Ai);
-	}
-	if (ps->Ap) {
-		Py_DECREF(ps->Ap);
-	}
-	if (ps->b) {
-		Py_DECREF(ps->b);
-	}
-	if (ps->c) {
-		Py_DECREF(ps->c);
-	}
-	if (ps->x0) {
-		Py_DECREF(ps->x0);
-	}
-	if (ps->y0) {
-		Py_DECREF(ps->y0);
-	}
-	if (ps->s0) {
-		Py_DECREF(ps->s0);
-	}
-	if (k) {
-		if (k->q)
-			scs_free(k->q);
-		if (k->s)
-			scs_free(k->s);
-		scs_free(k);
-	}
-	if (d) {
-		if (d->A)
-			scs_free(d->A);
-		scs_free(d);
-	}
+    if (ps->Ax) {
+        Py_DECREF(ps->Ax);
+    }
+    if (ps->Ai) {
+        Py_DECREF(ps->Ai);
+    }
+    if (ps->Ap) {
+        Py_DECREF(ps->Ap);
+    }
+    if (ps->b) {
+        Py_DECREF(ps->b);
+    }
+    if (ps->c) {
+        Py_DECREF(ps->c);
+    }
+    if (ps->x0) {
+        Py_DECREF(ps->x0);
+    }
+    if (ps->y0) {
+        Py_DECREF(ps->y0);
+    }
+    if (ps->s0) {
+        Py_DECREF(ps->s0);
+    }
+    if (k) {
+        if (k->q)
+            scs_free(k->q);
+        if (k->s)
+            scs_free(k->s);
+        scs_free(k);
+    }
+    if (d) {
+        if (d->A)
+            scs_free(d->A);
+        if (d->stgs)
+            scs_free(d->stgs);
+        scs_free(d);
+    }
 }
 
 static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char * str) {
@@ -201,8 +203,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyObject *normalize = NULL;
 	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 	/* scs data structures */
-	Data * d = scs_calloc(sizeof(Data), 1);
-	Cone * k = scs_calloc(sizeof(Cone), 1);
+	Data * d = scs_calloc(1, sizeof(Data));
+    Cone * k = scs_calloc(1, sizeof(Cone));
+    d->stgs = scs_malloc(sizeof(Settings));
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
@@ -219,7 +222,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyObject *x, *y, *s, *returnDict, *infoDict;
     
     /* set defaults */
-	setDefaultParams(d);
+	setDefaultSettings(d);
 
 	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, 
         &(d->m), 
@@ -233,12 +236,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
         &PyDict_Type, &warm,
         &PyBool_Type, &verbose,
         &PyBool_Type, &normalize,
-        &(d->max_iters),
-        &(d->scale),
-        &(d->eps),
-        &(d->cg_rate),
-        &(d->alpha),
-        &(d->rho_x)) ) { 
+        &(d->stgs->max_iters),
+        &(d->stgs->scale),
+        &(d->stgs->eps),
+        &(d->stgs->cg_rate),
+        &(d->stgs->alpha),
+        &(d->stgs->rho_x)) ) {
         PySys_WriteStderr("error parsing inputs\n");
         return NULL; 
     }
@@ -272,7 +275,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.Ap = getContiguous(Ap, intType);
 
     A = scs_malloc(sizeof(AMatrix));
-	A->x = (scs_float *) PyArray_DATA(ps.Ax);
+	A->n = d->n;
+    A->m = d->m;
+    A->x = (scs_float *) PyArray_DATA(ps.Ax);
 	A->i = (scs_int *) PyArray_DATA(ps.Ai);
 	A->p = (scs_int *) PyArray_DATA(ps.Ap);
 	d->A = A;
@@ -316,32 +321,32 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
 
-    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : VERBOSE;
-    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : NORMALIZE;
-    if(d->max_iters < 0) {
+    d->stgs->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : VERBOSE;
+    d->stgs->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : NORMALIZE;
+    if(d->stgs->max_iters < 0) {
 		return finishWithErr(d, k, &ps, "max_iters must be positive");
 	}
-    if(d->scale < 0) {
+    if(d->stgs->scale < 0) {
 		return finishWithErr(d, k, &ps, "scale must be positive");
 	}
-    if(d->eps < 0) {
+    if(d->stgs->eps < 0) {
 		return finishWithErr(d, k, &ps, "eps must be positive");
 	}
-    if(d->cg_rate < 0) {
+    if(d->stgs->cg_rate < 0) {
 		return finishWithErr(d, k, &ps, "cg_rate must be positive");
 	}
-    if(d->alpha < 0) {
+    if(d->stgs->alpha < 0) {
 		return finishWithErr(d, k, &ps, "alpha must be positive");
 	}
-    if(d->rho_x < 0) {
+    if(d->stgs->rho_x < 0) {
 		return finishWithErr(d, k, &ps, "rho_x must be positive");
 	}
 	/* parse warm start if set */
-    d->warm_start = WARM_START;
+    d->stgs->warm_start = WARM_START;
 	if (warm) {
-		d->warm_start = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
-		d->warm_start |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
-		d->warm_start |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+		d->stgs->warm_start = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
+		d->stgs->warm_start |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
+		d->stgs->warm_start |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
 	}
 	
     /* Solve! */

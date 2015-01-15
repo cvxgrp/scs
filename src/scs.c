@@ -66,43 +66,51 @@ static void printInitHeader(const Data * d, const Cone * k) {
 #endif
 }
 
-static void populateOnFailure(Work * w, Sol * sol, Info * info, scs_int statusVal, const char * msg) {
-	info->relGap = NAN;
-	info->resPri = NAN;
-	info->resDual = NAN;
-	info->pobj = NAN;
-	info->dobj = NAN;
-	info->iter = -1;
-	info->statusVal = statusVal;
-	info->solveTime = NAN;
-	strcpy(info->status, msg);
-	if (!sol->x)
-		sol->x = scs_malloc(sizeof(scs_float) * w->n);
-	scaleArray(sol->x, NAN, w->n);
-	if (!sol->y)
-		sol->y = scs_malloc(sizeof(scs_float) * w->m);
-	scaleArray(sol->y, NAN, w->m);
-	if (!sol->s)
-		sol->s = scs_malloc(sizeof(scs_float) * w->m);
-	scaleArray(sol->s, NAN, w->m);
+static void populateOnFailure(scs_int m, scs_int n, Sol * sol, Info * info, scs_int statusVal, const char * msg) {
+	if (info) {
+		info->relGap = NAN;
+		info->resPri = NAN;
+		info->resDual = NAN;
+		info->pobj = NAN;
+		info->dobj = NAN;
+		info->iter = -1;
+		info->statusVal = statusVal;
+		info->solveTime = NAN;
+		strcpy(info->status, msg);
+	}
+	if (sol) {
+		if (n > 0) {
+			if (!sol->x)
+				sol->x = scs_malloc(sizeof(scs_float) * n);
+			scaleArray(sol->x, NAN, n);
+		}
+		if (m > 0) {
+			if (!sol->y)
+				sol->y = scs_malloc(sizeof(scs_float) * m);
+			scaleArray(sol->y, NAN, m);
+			if (!sol->s)
+				sol->s = scs_malloc(sizeof(scs_float) * m);
+			scaleArray(sol->s, NAN, m);
+		}
+	}
 }
 
-static scs_int failureDefaultReturn(Work * w, Sol * sol, Info * info, const char * msg) {
-    scs_int status = SCS_FAILURE;
-    populateOnFailure(w, sol, info, status, "Failure");
-    scs_printf("FAILURE:%s\n", msg);
-    endInterruptListener();
-    /* TODO clear mem? */
-    return status;
+static scs_int failureDefaultReturn(scs_int m, scs_int n, Sol * sol, Info * info, const char * msg) {
+	scs_int status = SCS_FAILURE;
+	populateOnFailure(m, n, sol, info, status, "Failure");
+	scs_printf("FAILURE:%s\n", msg);
+	endInterruptListener();
+	/* TODO clear mem? */
+	return status;
 }
 
-static scs_int interrupt(Work * w, Sol * sol, Info * info) {
-    scs_int status = SCS_SIGINT;
-    populateOnFailure(w, sol, info, status, "Interrupted");
-    scs_printf("interrupt detected\n");
-    endInterruptListener();
-    /* TODO clear mem? */
-    return status;
+static scs_int interrupt(scs_int m, scs_int n, Sol * sol, Info * info) {
+	scs_int status = SCS_SIGINT;
+	populateOnFailure(m, n, sol, info, status, "Interrupted");
+	scs_printf("interrupt detected\n");
+	endInterruptListener();
+	/* TODO clear mem? */
+	return status;
 }
 
 static void warmStartVars(Work * w, const Sol * sol) {
@@ -575,17 +583,17 @@ static Work * initWork(const Data *d, const Cone * k) {
 	w->g = scs_malloc((l - 1) * sizeof(scs_float));
 	w->pr = scs_malloc(d->m * sizeof(scs_float));
 	w->dr = scs_malloc(d->n * sizeof(scs_float));
-    w->b = scs_malloc(d->m * sizeof(scs_float));
-    w->c = scs_malloc(d->n * sizeof(scs_float));
+	w->b = scs_malloc(d->m * sizeof(scs_float));
+	w->c = scs_malloc(d->n * sizeof(scs_float));
 	if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr || !w->dr || !w->b || !w->c) {
 		scs_printf("ERROR: work memory allocation failure\n");
 		scs_finish(w);
 		return NULL;
 	}
 #ifndef COPYAMATRIX
-    w->A = d->A;
+	w->A = d->A;
 #else
-    copyAMatrix(d->A, w->A);
+	copyAMatrix(d->A, w->A);
 #endif
 	if (w->stgs->normalize) {
 		w->scal = scs_malloc(sizeof(Scaling));
@@ -620,8 +628,8 @@ static scs_int updateWork(const Data * d, Work * w, const Sol * sol) {
 
 	w->nm_b = calcNorm(d->b, m);
 	w->nm_c = calcNorm(d->c, n);
-    memcpy(w->b, d->b, d->m * sizeof(scs_float));
-    memcpy(w->c, d->c, d->n * sizeof(scs_float));
+	memcpy(w->b, d->b, d->m * sizeof(scs_float));
+	memcpy(w->c, d->c, d->n * sizeof(scs_float));
 
 	d = NULL; /* no longer needed */
 
@@ -666,7 +674,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 	}
 	/* initialize ctrl-c support */
 	startInterruptListener();
-    tic(&solveTimer);
+	tic(&solveTimer);
 	info->statusVal = 0; /* not yet converged */
 	r.lastIter = -1;
 	updateWork(d, w, sol);
@@ -677,14 +685,14 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 		printHeader(w, k);
 	/* scs: */
 	for (i = 0; i < w->stgs->max_iters; ++i) {
-        memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
+		memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
 
-		if (projectLinSys(w, i) < 0) return failureDefaultReturn(w, sol, info, "error in projectLinSys");
-		if (projectCones(w, k, i) < 0) return failureDefaultReturn(w, sol, info, "error in projectCones");
+		if (projectLinSys(w, i) < 0) return failureDefaultReturn(w->m, w->n, sol, info, "error in projectLinSys");
+		if (projectCones(w, k, i) < 0) return failureDefaultReturn(w->m, w->n, sol, info, "error in projectCones");
 
 		updateDualVars(w);
 
-        if (isInterrupted()) return interrupt(w, sol, info);
+		if (isInterrupted()) return interrupt(w->m, w->n, sol, info);
 
 		if (i % CONVERGED_INTERVAL == 0) {
 			calcResiduals(w, &r, i);
@@ -739,7 +747,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 	Work * w;
 	timer initTimer;
 	startInterruptListener();
-    if (!d || !k || !info) {
+	if (!d || !k || !info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
 		return NULL;
 	}
@@ -753,7 +761,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 		return NULL;
 	}
 #endif
-    tic(&initTimer);
+	tic(&initTimer);
 	w = initWork(d, k);
 	/* strtoc("init", &initTimer); */
 	info->setupTime = tocq(&initTimer);
@@ -775,7 +783,7 @@ scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
 	scs_printf("size of scs_int = %lu, size of scs_float = %lu\n", sizeof(scs_int), sizeof(scs_float));
 #endif
 	if (!w) {
-		return failureDefaultReturn(NULL, sol, info, "could not initialize work");
+		return failureDefaultReturn(d ? d->m : -1, d ? d->n : -1, sol, info, "could not initialize work");
 	}
 	scs_solve(w, d, k, sol, info);
 	scs_finish(w);

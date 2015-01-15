@@ -59,10 +59,11 @@ int main(int argc, char **argv) {
 	srand(seed);
 	scs_printf("seed : %i\n", seed);
 
-	k = scs_calloc(1, sizeof(Cone));
-	d = scs_calloc(1, sizeof(Data));
-	sol = scs_calloc(1, sizeof(Sol));
-	opt_sol = scs_calloc(1, sizeof(Sol));
+    k = scs_calloc(1, sizeof(Cone));
+    d = scs_calloc(1, sizeof(Data));
+    d->stgs = scs_calloc(1, sizeof(Settings));
+    sol = scs_calloc(1, sizeof(Sol));
+    opt_sol = scs_calloc(1, sizeof(Sol));
 
 	m = 3 * n;
 	col_nnz = (int) ceil(sqrt(n));
@@ -121,10 +122,10 @@ int main(int argc, char **argv) {
 	printf("Number of rows covered is %ld out of %ld.\n\n", (long) (q_total + k->f + k->l), (long) m);
 
 	/* set up SCS structures */
-	*((scs_int *) &(d->m)) = m;
-	*((scs_int *) &(d->n)) = n;
+	d->m = m;
+	d->n = n;
 	genRandomProbData(nnz, col_nnz, d, k, opt_sol);
-	setDefaultParams(d);
+	setDefaultSettings(d);
 
 	scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
 	scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));

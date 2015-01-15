@@ -107,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	d->b = (scs_float *)mxGetPr(b_mex);
 	d->c = (scs_float *)mxGetPr(c_mex);
-	setDefaultParams(d);
+	setDefaultSettings(d);
 
 	/* params */
 	tmp = mxGetField(params, 0, "alpha");
