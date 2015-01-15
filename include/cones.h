@@ -20,17 +20,18 @@ struct CONE {
  * cone boundaries, boundaries[0] is starting index for cones of size larger than 1
  * returns length of boundaries array, boundaries malloc-ed here so should be freed
  */
-scs_int getConeBoundaries(Cone * k, scs_int ** boundaries);
+scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries);
 
-scs_int initCone(Cone * k);
-char * getConeHeader(Cone * k);
-scs_int validateCones(Data * d, Cone * k);
+scs_int initCone(const Cone * k);
+char * getConeHeader(const Cone * k);
+scs_int validateCones(const Data * d, const Cone * k);
+
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter < 0 for exact projection, warm_start contains guess
  of solution, can be NULL*/
-scs_int projDualCone(scs_float *x, Cone *k, const scs_float * warm_start, scs_int iter);
+scs_int projDualCone(scs_float * x, const Cone *k, const scs_float * warm_start, scs_int iter);
 void finishCone(void);
-char * getConeSummary(Info * info);
+char * getConeSummary(const Info * info);
 
 #endif
 

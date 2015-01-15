@@ -130,15 +130,6 @@
 #define GLOBAL
 #define EMPTY (-1)
 
-/* Note that Linux's gcc 2.96 defines NULL as ((void *) 0), but other */
-/* compilers (even gcc 2.95.2 on Solaris) define NULL as 0 or (0).  We */
-/* need to use the ANSI standard value of 0. */
-#ifdef NULL
-#undef NULL
-#endif
-
-#define NULL 0
-
 /* largest value of size_t */
 #ifndef SIZE_T_MAX
 #ifdef SIZE_MAX

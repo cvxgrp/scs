@@ -87,6 +87,7 @@ USE_64_BIT_BLAS = False
 try:
     install_scs(USE_LAPACK=True, USE_64_BIT_BLAS=USE_64_BIT_BLAS, BLAS_STR='blas_opt', LAPACK_STR='lapack_opt', USE_OPENMP=USE_OPENMP, rootDir=rootDir)
 except:
+    print("blas_opt / lapack_opt install failed, trying blas / lapack")
     try:
         install_scs(USE_LAPACK=True, USE_64_BIT_BLAS=USE_64_BIT_BLAS, BLAS_STR='blas', LAPACK_STR='lapack', USE_OPENMP=USE_OPENMP, rootDir=rootDir)
     except:

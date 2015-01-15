@@ -52,7 +52,7 @@ static scs_float totalConeTime;
  * cone boundaries, boundaries[0] is starting index for cones of size strictly larger than 1
  * returns length of boundaries array, boundaries malloc-ed here so should be freed
  */
-scs_int getConeBoundaries(Cone * k, scs_int ** boundaries) {
+scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries) {
 	scs_int i, count = 0;
 	scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep;
 	scs_int * b = scs_malloc(sizeof(scs_int) * len);
@@ -74,7 +74,7 @@ scs_int getConeBoundaries(Cone * k, scs_int ** boundaries) {
 	return len;
 }
 
-scs_int getFullConeDims(Cone * k) {
+scs_int getFullConeDims(const Cone * k) {
 	scs_int i, c = 0;
 	if (k->f)
 		c += k->f;
@@ -97,7 +97,7 @@ scs_int getFullConeDims(Cone * k) {
 	return c;
 }
 
-scs_int validateCones(Data * d, Cone * k) {
+scs_int validateCones(const Data * d, const Cone * k) {
 	scs_int i;
 	if (k->f && k->f < 0) {
 		scs_printf("free cone error\n");
@@ -138,7 +138,7 @@ scs_int validateCones(Data * d, Cone * k) {
 	return 0;
 }
 
-char * getConeSummary(Info * info) {
+char * getConeSummary(const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 64);
 	sprintf(str, "\tCones: avg projection time: %1.2es\n", totalConeTime / (info->iter + 1) / 1e3);
 	totalConeTime = 0.0;
@@ -160,7 +160,7 @@ void finishCone() {
 #endif
 }
 
-char * getConeHeader(Cone * k) {
+char * getConeHeader(const Cone * k) {
 	char * tmp = scs_malloc(sizeof(char) * 512);
 	scs_int i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars;
     sprintf(tmp, "Cones:");
@@ -302,7 +302,7 @@ static scs_int projExpCone(scs_float * v, scs_int iter) {
 	return 0;
 }
 
-scs_int initCone(Cone * k) {
+scs_int initCone(const Cone * k) {
 #ifdef LAPACK_LIB_FOUND
 	scs_int i;
 	blasint nMax = 0;
@@ -503,7 +503,7 @@ static scs_int projSemiDefiniteCone(scs_float *X, scs_int n, scs_int iter) {
 
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to NULL) */
-scs_int projDualCone(scs_float *x, Cone * k, const scs_float * warm_start, scs_int iter)  {
+scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start, scs_int iter)  {
 	scs_int i;
 	scs_int count = (k->f ? k->f : 0);
 #ifdef EXTRAVERBOSE

@@ -10,7 +10,7 @@ typedef struct A_DATA_MATRIX AMatrix;
 typedef struct PRIVATE_DATA Priv;
 
 /* initialize Priv structure and perform any necessary preprocessing */
-Priv * initPriv(const AMatrix * A,const Settings * stgs);
+Priv * initPriv(const AMatrix * A, const Settings * stgs);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains warm-start, iter is current scs iteration count */
 scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter);
 /* frees Priv structure and allocated memory in Priv */
@@ -27,16 +27,16 @@ scs_int validateLinSys(const AMatrix * A);
 /* returns string describing method, can return null, if not null free will be called on output */
 char * getLinSysMethod(const AMatrix * A, const Settings * stgs);
 /* returns string containing summary information about linear system solves, can return null, if not null free will be called on output */
-char * getLinSysSummary(Priv * p, Info * info);
+char * getLinSysSummary(Priv * p, const Info * info);
 
 /* Normalization routines, used if d->NORMALIZE is true */
 /* normalizes A matrix, sets w->E and w->D diagonal scaling matrices, Anew = d->SCALE * (D^-1)*A*(E^-1) (different to paper which is D*A*E)
  * D and E must be all positive entries, D must satisfy cone boundaries
  * must set (w->meanNormRowA = mean of norms of rows of normalized A) THEN scale resulting A by d->SCALE */
-void normalizeA(const AMatrix * A, const Settings * stgs, Cone * k, Scaling * scal);
+void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * scal);
 /* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
-void unNormalizeA(const AMatrix * A, const Settings * stgs, Scaling * scal);
+void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal);
 /* to free the memory allocated in AMatrix */
-void freeAMatrix(const AMatrix * A);
+void freeAMatrix(AMatrix * A);
 #endif
 

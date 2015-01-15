@@ -14,17 +14,17 @@ char * getLinSysMethod(const AMatrix * A, const Settings * s) {
 	return str;
 }
 
-char * getLinSysSummary(Priv * p, Info * info) {
+char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
-			(scs_float) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
+			(scs_float ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
 	totCgIts = 0;
 	totalSolveTime = 0;
 	return str;
 }
 
 /* M = inv ( diag ( RHO_X * I + A'A ) ) */
-void getPreconditioner(AMatrix * A, Settings * stgs, Priv * p) {
+void getPreconditioner(const AMatrix * A, const Settings * stgs, Priv * p) {
 	scs_int i;
 	scs_float * M = p->M;
 
@@ -43,7 +43,7 @@ void getPreconditioner(AMatrix * A, Settings * stgs, Priv * p) {
 
 }
 
-static void transpose(AMatrix * A, Priv * p) {
+static void transpose(const AMatrix * A, Priv * p) {
 	scs_int * Ci = p->At->i;
 	scs_int * Cp = p->At->p;
 	scs_float * Cx = p->At->x;
@@ -114,35 +114,13 @@ void freePriv(Priv * p) {
 
 /* solves (I+A'A)x = b, s warm start, solution stored in b */
 /*y = (RHO_X * I + A'A)x */
-static void matVec(AMatrix * A, Settings * s, Priv * p, const scs_float * x, scs_float * y) {
+static void matVec(const AMatrix * A, const Settings * s, Priv * p, const scs_float * x, scs_float * y) {
 	scs_float * tmp = p->tmp;
 	memset(tmp, 0, A->m * sizeof(scs_float));
 	accumByA(A, p, x, tmp);
 	memset(y, 0, A->n * sizeof(scs_float));
 	accumByAtrans(A, p, tmp, y);
 	addScaledArray(y, x, A->n, s->rho_x);
-}
-
-void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/* y  = A'*x
-	 A in column compressed format
-	 parallelizes over columns (rows of A')
-	 */
-	scs_int p, j;
-	scs_int c1, c2;
-	scs_float yj;
-#ifdef OPENMP
-#pragma omp parallel for private(p,c1,c2,yj)
-#endif
-	for (j = 0; j < n; j++) {
-		yj = y[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			yj += Ax[p] * x[Ai[p]];
-		}
-		y[j] = yj;
-	}
 }
 
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
@@ -160,7 +138,7 @@ static void applyPreConditioner(scs_float * M, scs_float * z, scs_float * r, scs
 	}
 }
 
-Priv * initPriv(const AMatrix * A,const Settings * stgs) {
+Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	Priv * p = scs_calloc(1, sizeof(Priv));
 	p->p = scs_malloc((A->n) * sizeof(scs_float));
 	p->r = scs_malloc((A->n) * sizeof(scs_float));
@@ -190,7 +168,8 @@ Priv * initPriv(const AMatrix * A,const Settings * stgs) {
 	return p;
 }
 
-static scs_int pcg(AMatrix * A, Settings * stgs, Priv * pr, const scs_float * s, scs_float * b, scs_int max_its, scs_float tol) {
+static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const scs_float * s, scs_float * b, scs_int max_its,
+		scs_float tol) {
 	scs_int i, n = A->n;
 	scs_float ipzr, ipzrOld, alpha;
 	scs_float *p = pr->p; /* cg direction */
@@ -219,9 +198,9 @@ static scs_int pcg(AMatrix * A, Settings * stgs, Priv * pr, const scs_float * s,
 		addScaledArray(r, Gp, n, -alpha);
 
 		if (calcNorm(r, n) < tol) {
-            #ifdef EXTRAVERBOSE
-            scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, calcNorm(r, n), (long) i+1);
-            #endif
+#ifdef EXTRAVERBOSE
+			scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, calcNorm(r, n), (long) i+1);
+#endif
 			return i + 1;
 		}
 		ipzrOld = ipzr;
@@ -235,7 +214,8 @@ static scs_int pcg(AMatrix * A, Settings * stgs, Priv * pr, const scs_float * s,
 
 scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
 	scs_int cgIts;
-	scs_float cgTol = calcNorm(b, A->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
+	scs_float cgTol = calcNorm(b, A->n)
+			* (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
 
 	tic(&linsysTimer);
 	/* solves Mx = b, for x but stores result in b */

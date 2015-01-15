@@ -12,9 +12,9 @@
 
 /* struct that containing standard problem data */
 struct PROBLEM_DATA {
-	/* problem dimensions */
-	const scs_int m, n; /* A has m rows, n cols*/
-	const AMatrix * A; /* A is supplied in data format specified by linsys solver */
+	/* these cannot change for multiple runs for the same call to scs_init */
+	scs_int m, n; /* A has m rows, n cols*/
+	AMatrix * A; /* A is supplied in data format specified by linsys solver */
 
 	/* these can change for multiple runs for the same call to scs_init */
 	scs_float * b, *c; /* dense arrays for b (size m), c (size n) */
@@ -75,11 +75,11 @@ struct SCALING {
  * scs_solve: can be called many times with different b,c data for one init call
  * scs_finish: cleans up the memory (one per init call)
  */
-Work * scs_init(Data * d, Cone * k, Info * info);
-scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);
+Work * scs_init(const Data * d, const Cone * k, Info * info);
+scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info);
 void scs_finish(Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */
-scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);
+scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info);
 
 
 /* the following structs are not exposed to user */
@@ -91,9 +91,9 @@ struct WORK {
 	scs_float gTh, sc_b, sc_c, nm_b, nm_c;
 	scs_float *b, *c; /* (possibly normalized) b and c vectors */
 	scs_int m, n; /* A has m rows, n cols*/
-	const AMatrix * A; /* (possibly normalized) A matrix */
+	AMatrix * A; /* (possibly normalized) A matrix */
     Priv * p; /* struct populated by linear system solver */
-	const Settings * stgs; /* contains solver settings specified by user */
+	Settings * stgs; /* contains solver settings specified by user */
 	Scaling * scal;
 };
 

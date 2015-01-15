@@ -11,39 +11,39 @@ scs_int validateLinSys(const AMatrix * A) {
 		scs_printf("data incompletely specified\n");
 		return -1;
 	}
-    /* detects some errors in A col ptrs: */
-    for (i = 0; i < A->n; ++i) {
-        if (A->p[i] == A->p[i + 1]) {
-            scs_printf("WARN: A->p (column pointers) not strictly increasing, column %li empty\n", (long) i);
-        } else if (A->p[i] > A->p[i + 1]) {
-            scs_printf("ERROR: A->p (column pointers) decreasing\n");
-            return -1;
-        }
-    }
-    Anz = A->p[A->n];
-    if (((scs_float) Anz / A->m > A->n) || (Anz <= 0)) {
-        scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
-        return -1;
-    }
-    rMax = 0;
-    for (i = 0; i < Anz; ++i) {
-        if (A->i[i] > rMax)
-            rMax = A->i[i];
-    }
-    if (rMax > A->m - 1) {
-        scs_printf("number of rows in A inconsistent with input dimension\n");
-        return -1;
-    }
-    return 0;
+	/* detects some errors in A col ptrs: */
+	for (i = 0; i < A->n; ++i) {
+		if (A->p[i] == A->p[i + 1]) {
+			scs_printf("WARN: A->p (column pointers) not strictly increasing, column %li empty\n", (long) i);
+		} else if (A->p[i] > A->p[i + 1]) {
+			scs_printf("ERROR: A->p (column pointers) decreasing\n");
+			return -1;
+		}
+	}
+	Anz = A->p[A->n];
+	if (((scs_float) Anz / A->m > A->n) || (Anz <= 0)) {
+		scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n", (long) Anz);
+		return -1;
+	}
+	rMax = 0;
+	for (i = 0; i < Anz; ++i) {
+		if (A->i[i] > rMax)
+			rMax = A->i[i];
+	}
+	if (rMax > A->m - 1) {
+		scs_printf("number of rows in A inconsistent with input dimension\n");
+		return -1;
+	}
+	return 0;
 }
 
-void freeAMatrix(const AMatrix * A) {
-    if (A->x)
-        scs_free(A->x);
-    if (A->i)
-        scs_free(A->i);
-    if (A->p)
-        scs_free(A->p);
+void freeAMatrix(AMatrix * A) {
+	if (A->x)
+		scs_free(A->x);
+	if (A->i)
+		scs_free(A->i);
+	if (A->p)
+		scs_free(A->p);
 }
 
 void printAMatrix(const AMatrix * A) {
@@ -62,7 +62,7 @@ void printAMatrix(const AMatrix * A) {
 	}
 }
 
-void normalizeA(const AMatrix * A, const Settings * stgs, Cone * k, Scaling * scal) {
+void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * scal) {
 	/* TODO: fix */
 	scs_float * D = scs_malloc(A->m * sizeof(scs_float));
 	scs_float * E = scs_malloc(A->n * sizeof(scs_float));
@@ -183,7 +183,7 @@ void normalizeA(const AMatrix * A, const Settings * stgs, Cone * k, Scaling * sc
 #endif
 }
 
-void unNormalizeA(const AMatrix * A, const Settings * stgs, Scaling * scal) {
+void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal) {
 	scs_int i, j;
 	scs_float * D = scal->D;
 	scs_float * E = scal->E;
@@ -193,6 +193,49 @@ void unNormalizeA(const AMatrix * A, const Settings * stgs, Scaling * scal) {
 	for (i = 0; i < A->n; ++i) {
 		for (j = A->p[i]; j < A->p[i + 1]; ++j) {
 			A->x[j] *= D[A->i[j]];
+		}
+	}
+}
+
+void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
+	/* y  = A'*x
+	 A in column compressed format
+	 parallelizes over columns (rows of A')
+	 */
+	scs_int p, j;
+	scs_int c1, c2;
+	scs_float yj;
+#ifdef OPENMP
+#pragma omp parallel for private(p,c1,c2,yj)
+#endif
+	for (j = 0; j < n; j++) {
+		yj = y[j];
+		c1 = Ap[j];
+		c2 = Ap[j + 1];
+		for (p = c1; p < c2; p++) {
+			yj += Ax[p] * x[Ai[p]];
+		}
+		y[j] = yj;
+	}
+}
+
+void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
+	/*y = A*x
+	 A in column compressed format
+	 this parallelizes over columns and uses
+	 pragma atomic to prevent concurrent writes to y
+	 */
+	scs_int p, j;
+	scs_int c1, c2;
+	scs_float xj;
+	/*#pragma omp parallel for private(p,c1,c2,xj)  */
+	for (j = 0; j < n; j++) {
+		xj = x[j];
+		c1 = Ap[j];
+		c2 = Ap[j + 1];
+		for (p = c1; p < c2; p++) {
+			/*#pragma omp atomic */
+			y[Ai[p]] += Ax[p] * xj;
 		}
 	}
 }

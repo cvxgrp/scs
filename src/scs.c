@@ -25,13 +25,13 @@ static scs_int scs_isnan(scs_float x) {
 	return (x == NAN || x != x);
 }
 
-char * scsVersion(void) {
+const char * scsVersion(void) {
 	return SCS_VERSION;
 }
 
-static void printInitHeader(Data * d, Cone * k) {
+static void printInitHeader(const Data * d, const Cone * k) {
 	scs_int i;
-	const Settings * stgs = d->stgs;
+	Settings * stgs = d->stgs;
 	char * coneStr = getConeHeader(k);
 	char * linSysMethod = getLinSysMethod(d->A, d->stgs);
 	_lineLen_ = -1;
@@ -66,7 +66,7 @@ static void printInitHeader(Data * d, Cone * k) {
 #endif
 }
 
-static void populateOnFailure(Work * w, Sol * sol, Info * info, scs_int statusVal, char * msg) {
+static void populateOnFailure(Work * w, Sol * sol, Info * info, scs_int statusVal, const char * msg) {
 	info->relGap = NAN;
 	info->resPri = NAN;
 	info->resDual = NAN;
@@ -87,7 +87,7 @@ static void populateOnFailure(Work * w, Sol * sol, Info * info, scs_int statusVa
 	scaleArray(sol->s, NAN, w->m);
 }
 
-static scs_int failureDefaultReturn(Work * w, Sol * sol, Info * info, char * msg) {
+static scs_int failureDefaultReturn(Work * w, Sol * sol, Info * info, const char * msg) {
     scs_int status = SCS_FAILURE;
     populateOnFailure(w, sol, info, status, "Failure");
     scs_printf("FAILURE:%s\n", msg);
@@ -105,7 +105,7 @@ static scs_int interrupt(Work * w, Sol * sol, Info * info) {
     return status;
 }
 
-static void warmStartVars(Work * w, Sol * sol) {
+static void warmStartVars(Work * w, const Sol * sol) {
 	scs_int i, n = w->n, m = w->m;
 	memset(w->v, 0, n * sizeof(scs_float));
 	memcpy(w->u, sol->x, n * sizeof(scs_float));
@@ -125,7 +125,7 @@ static void warmStartVars(Work * w, Sol * sol) {
 		normalizeWarmStart(w);
 }
 
-static scs_float calcPrimalResid(Work * w, scs_float * x, scs_float * s, scs_float tau, scs_float *nmAxs) {
+static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float * s, const scs_float tau, scs_float *nmAxs) {
 	scs_int i;
 	scs_float pres = 0, scale, *pr = w->pr, *D = w->scal->D;
 	*nmAxs = 0;
@@ -142,7 +142,7 @@ static scs_float calcPrimalResid(Work * w, scs_float * x, scs_float * s, scs_flo
 	return SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
-static scs_float calcDualResid(Work * w, scs_float * y, scs_float tau, scs_float *nmATy) {
+static scs_float calcDualResid(Work * w, const scs_float * y, const scs_float tau, scs_float *nmATy) {
 	scs_int i;
 	scs_float dres = 0, scale, *dr = w->dr, *E = w->scal->E;
 	*nmATy = 0;
@@ -157,26 +157,6 @@ static scs_float calcDualResid(Work * w, scs_float * y, scs_float tau, scs_float
 	*nmATy = SQRTF(*nmATy);
 	return SQRTF(dres); /* norm(A'y + c * tau) */
 }
-
-/*
-static scs_float fastCalcPrimalResid(Work * w, scs_float * nmAxs) {
-	scs_int i, n = d->n, m = d->m;
-	scs_float pres = 0, scale, *pr = w->pr, *D = w->D, tau = ABS(w->u[n + m]);
- *nmAxs = 0;
-	memcpy(pr, &(w->u[n]), m * sizeof(scs_float)); // overwrite pr
-	addScaledArray(pr, &(w->u_prev[n]), m, d->alpha - 2);
-	addScaledArray(pr, &(w->u_t[n]), m, 1 - d->alpha);
-	addScaledArray(pr, w->b, m, w->u_t[n + m]); // pr = Ax + s
-	for (i = 0; i < m; ++i) {
-		scale = d->normalize ? D[i] / (w->sc_b * d->scale) : 1;
-		scale = scale * scale;
- *nmAxs += (pr[i] * pr[i]) * scale;
-		pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
-	}
- *nmAxs = SQRTF(*nmAxs);
-	return SQRTF(pres); // norm(Ax + s - b * tau)
-}
- */
 
 /* calculates un-normalized quantities */
 static void calcResiduals(Work * w, struct residuals * r, scs_int iter) {
@@ -295,7 +275,7 @@ static void updateDualVars(Work * w) {
 }
 
 /* status < 0 indicates failure */
-static scs_int projectCones(Work * w, Cone * k, scs_int iter) {
+static scs_int projectCones(Work * w, const Cone * k, scs_int iter) {
 	scs_int i, n = w->n, l = n + w->m + 1, status;
 	/* this does not relax 'x' variable */
 	for (i = 0; i < n; ++i) {
@@ -437,7 +417,7 @@ static void printSummary(scs_int i, struct residuals *r, timer * solveTimer) {
 #endif
 }
 
-static void printHeader(Work * w, Cone * k) {
+static void printHeader(Work * w, const Cone * k) {
 	scs_int i;
 	if (w->stgs->warm_start)
 		scs_printf("SCS using variable warm-starting\n");
@@ -531,8 +511,8 @@ static scs_int hasConverged(Work * w, struct residuals * r, scs_int iter) {
 	return 0;
 }
 
-static scs_int validate(Data * d, Cone * k) {
-	const Settings * stgs = d->stgs;
+static scs_int validate(const Data * d, const Cone * k) {
+	Settings * stgs = d->stgs;
 	if (d->m <= 0 || d->n <= 0) {
 		scs_printf("m and n must both be greater than 0; m = %li, n = %li\n", (long) d->m, (long) d->n);
 		return -1;
@@ -572,7 +552,7 @@ static scs_int validate(Data * d, Cone * k) {
 	return 0;
 }
 
-static Work * initWork(Data *d, Cone * k) {
+static Work * initWork(const Data *d, const Cone * k) {
 	Work * w = scs_calloc(1, sizeof(Work));
 	scs_int l = d->n + d->m + 1;
 	if (d->stgs->verbose) {
@@ -633,7 +613,7 @@ static Work * initWork(Data *d, Cone * k) {
 	return w;
 }
 
-static scs_int updateWork(Data * d, Work * w, Sol * sol) {
+static scs_int updateWork(const Data * d, Work * w, const Sol * sol) {
 	/* before normalization */
 	scs_int n = d->n;
 	scs_int m = d->m;
@@ -676,7 +656,7 @@ static scs_int updateWork(Data * d, Work * w, Sol * sol) {
 	return 0;
 }
 
-scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info) {
+scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info) {
 	scs_int i;
 	timer solveTimer;
 	struct residuals r;
@@ -755,7 +735,7 @@ void scs_finish(Work * w) {
 	}
 }
 
-Work * scs_init(Data * d, Cone * k, Info * info) {
+Work * scs_init(const Data * d, const Cone * k, Info * info) {
 	Work * w;
 	timer initTimer;
 	startInterruptListener();
@@ -785,7 +765,7 @@ Work * scs_init(Data * d, Cone * k, Info * info) {
 }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
-scs_int scs(Data * d, Cone * k, Sol * sol, Info * info) {
+scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
 #if ( defined _WIN32 || defined _WIN64 ) && !defined MATLAB_MEX_FILE && !defined PYTHON
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);

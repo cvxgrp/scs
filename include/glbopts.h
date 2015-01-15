@@ -57,6 +57,11 @@ typedef float scs_float;
 #endif
 #endif
 
+#ifdef NULL
+#undef NULL
+#endif
+#define NULL 0
+
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif

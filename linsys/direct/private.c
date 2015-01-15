@@ -9,10 +9,10 @@ char * getLinSysMethod(const AMatrix * A, const Settings * s) {
 	return tmp;
 }
 
-char * getLinSysSummary(Priv * p, Info * info) {
+char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	scs_int n = p->L->n;
-	sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n", (long ) (p->L->p[n] + n),
+	sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n", (long) (p->L->p[n] + n),
 			totalSolveTime / (info->iter + 1) / 1e3);
 	totalSolveTime = 0;
 	return str;
@@ -32,7 +32,7 @@ void freePriv(Priv * p) {
 	}
 }
 
-cs * formKKT(const AMatrix * A, Settings * s) {
+cs * formKKT(const AMatrix * A, const Settings * s) {
 	/* ONLY UPPER TRIANGULAR PART IS STUFFED
 	 * forms column compressed KKT matrix
 	 * assumes column compressed form A matrix
@@ -148,49 +148,6 @@ void LDLSolve(scs_float *x, scs_float b[], cs * L, scs_float D[], scs_int P[], s
 	}
 }
 
-void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/* y  = A'*x
-	 A in column compressed format
-	 parallelizes over columns (rows of A')
-	 */
-	scs_int p, j;
-	scs_int c1, c2;
-	scs_float yj;
-#ifdef OPENMP
-#pragma omp parallel for private(p,c1,c2,yj)
-#endif
-	for (j = 0; j < n; j++) {
-		yj = y[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			yj += Ax[p] * x[Ai[p]];
-		}
-		y[j] = yj;
-	}
-}
-
-void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/*y  = A*x
-	 A in column compressed format
-	 this parallelizes over columns and uses
-	 pragma atomic to prevent concurrent writes to y
-	 */
-	scs_int p, j;
-	scs_int c1, c2;
-	scs_float xj;
-	/*#pragma omp parallel for private(p,c1,c2,xj)  */
-	for (j = 0; j < n; j++) {
-		xj = x[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			/*#pragma omp atomic */
-			y[Ai[p]] += Ax[p] * xj;
-		}
-	}
-}
-
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
 	_accumByAtrans(A->n, A->x, A->i, A->p, x, y);
 }
@@ -199,7 +156,7 @@ void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
 	_accumByA(A->n, A->x, A->i, A->p, x, y);
 }
 
-scs_int factorize(const AMatrix * A, Settings * stgs, Priv * p) {
+scs_int factorize(const AMatrix * A, const Settings * stgs, Priv * p) {
 	scs_float *info;
 	scs_int *Pinv, amd_status, ldl_status;
 	cs *C, *K = formKKT(A, stgs);
@@ -229,7 +186,7 @@ scs_int factorize(const AMatrix * A, Settings * stgs, Priv * p) {
 	return (ldl_status);
 }
 
-Priv *  initPriv(const AMatrix * A,const Settings * stgs) {
+Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	Priv * p = scs_calloc(1, sizeof(Priv));
 	scs_int n_plus_m = A->n + A->m;
 	p->P = scs_malloc(sizeof(scs_int) * n_plus_m);
