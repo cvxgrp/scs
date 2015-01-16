@@ -116,18 +116,51 @@ void setFloatArrayUsingSetter(JNIEnv * env, jobject obj, scs_float * arr, scs_in
     (*env)->CallVoidMethod(env, obj, mid, out);
 }
 
+void setStringUsingSetter(JNIEnv * env, jobject obj, char * str, char * method) {
+    jclass clazz = (*env)->GetObjectClass(env, obj);
+    jmethodID mid = (*env)->GetMethodID(env, clazz, method, "(Ljava/lang/String;)V");
+    (*env)->CallVoidMethod(env, obj, mid, (*env)->NewStringUTF(env, str));
+}
+
+void setIntUsingSetter(JNIEnv * env, jobject obj, scs_int i, char * method) {
+    jclass clazz = (*env)->GetObjectClass(env, obj);
+    jmethodID mid = (*env)->GetMethodID(env, clazz, method, "(I)V");
+    (*env)->CallVoidMethod(env, obj, mid, i);
+}
+
+void setFloatUsingSetter(JNIEnv * env, jobject obj, scs_float f, char * method) {
+    jclass clazz = (*env)->GetObjectClass(env, obj);
+    jmethodID mid = (*env)->GetMethodID(env, clazz, method, "(D)V");
+    (*env)->CallVoidMethod(env, obj, mid, f);
+}
+
 void setSol(JNIEnv * env, jobject solJava, Data * d, Sol * sol) {
     setFloatArrayUsingSetter(env, solJava, sol->x, d->n, "setX");
     setFloatArrayUsingSetter(env, solJava, sol->y, d->m, "setY");
     setFloatArrayUsingSetter(env, solJava, sol->s, d->m, "setS");
 }
 
+void setInfo(JNIEnv * env, jobject infoJava, Info * info) {
+    setIntUsingSetter(env, infoJava, info->iter, "setIter");
+    setIntUsingSetter(env, infoJava, info->statusVal, "setStatusVal");
+    setStringUsingSetter(env, infoJava, info->status, "setStatus");
+    setFloatUsingSetter(env, infoJava, info->pobj, "setPobj");
+    setFloatUsingSetter(env, infoJava, info->dobj, "setDobj");
+    setFloatUsingSetter(env, infoJava, info->resPri, "setResPri");
+    setFloatUsingSetter(env, infoJava, info->resDual, "setResDual");
+    setFloatUsingSetter(env, infoJava, info->resInfeas, "setResInfeas");
+    setFloatUsingSetter(env, infoJava, info->resUnbdd, "setResUnbdd");
+    setFloatUsingSetter(env, infoJava, info->relGap, "setRelGap");
+    setFloatUsingSetter(env, infoJava, info->setupTime, "setSetupTime");
+    setFloatUsingSetter(env, infoJava, info->solveTime, "setSolveTime");
+}
+
 #ifdef INDIRECTJ
 JNIEXPORT void JNICALL Java_scs_IndirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava, jobject infoJava)
 #else
 JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava, jobject infoJava)
 #endif
 {
     /* Parse out the data into C form, then pass to SCS, the convert solution back to java object */
@@ -140,8 +173,10 @@ JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, 
     scs(d, k, sol, info);
 
     setSol(env, solJava, d, sol);
+    setInfo(env, infoJava, info);
 
     freeData(d,k);
     freeSol(sol);
+    scs_free(info);
 }
 

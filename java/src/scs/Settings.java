@@ -1,6 +1,6 @@
 package scs;
 
-public class Params {
+public class Settings {
     // set to defaults:
     private int maxIters = 2500;        /* maximum iterations to take: 2500 */
     private double eps = 1e-3;          /* convergence tolerance: 1e-3 */

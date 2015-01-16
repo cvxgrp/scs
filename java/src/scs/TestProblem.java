@@ -13,26 +13,35 @@ public class TestProblem {
             n = Integer.parseInt(args[1]);
         }
 
-        Params p = new Params();
+        Settings p = new Settings();
         RandomLinearProgram cp;
-        Solution sol;
+        SolutionWithInfo si;
         Data d = new Data();
 
         cp = new RandomLinearProgram(m, n, d, p, new IndirectSolver());
         System.out.println("true opt = " + cp.getOpt());
-        sol = cp.solve();
+        si = cp.solve();
 
-        System.out.println("c'x = " + Utils.ip(sol.getX(), d.getC()));
-        System.out.println("b'y = " + Utils.ip(sol.getY(), d.getB()));
-        System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), sol));
-        System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), sol));
+        System.out.println("c'x = " + Utils.ip(si.getSol().getX(), d.getC()));
+        System.out.println("b'y = " + Utils.ip(si.getSol().getY(), d.getB()));
+        System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), si.getSol()));
+        System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), si.getSol()));
 
         cp.setSolver(new DirectSolver());
-        sol = cp.solve();
+        si = cp.solve();
 
-        System.out.println("c'x = " + Utils.ip(sol.getX(), d.getC()));
-        System.out.println("b'y = " + Utils.ip(sol.getY(), d.getB()));
-        System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), sol));
-        System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), sol));
+        System.out.println("c'x = " + Utils.ip(si.getSol().getX(), d.getC()));
+        System.out.println("b'y = " + Utils.ip(si.getSol().getY(), d.getB()));
+        System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), si.getSol()));
+        System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), si.getSol()));
+
+        System.out.println("iters " + si.getInfo().getIter());
+        System.out.println("status " + si.getInfo().getStatus());
+        System.out.println("pobj " + si.getInfo().getPobj());
+        System.out.println("dobj " + si.getInfo().getDobj());
+        System.out.println("resPri " + si.getInfo().getResPri());
+        System.out.println("resDual " + si.getInfo().getResDual());
+        System.out.println("relGap " + si.getInfo().getRelGap());
+        System.out.println("setup time " + si.getInfo().getSetupTime());
     }
 }

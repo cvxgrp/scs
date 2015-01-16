@@ -37,6 +37,6 @@ testproblem: default
 
 .PHONY: clean purge
 clean:
-	rm -rf $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED) *.o $(JAVA_OUT)/scs/*.class
+	rm -rf bin $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED) *.o $(JAVA_OUT)/scs/*.class
 purge: scs_purge clean
 
