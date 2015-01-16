@@ -49,7 +49,7 @@ num_feas = 10
 num_unb = 10
 num_infeas = 10
 
-opts={'max_iters':100000,'eps':1e-4} # better accuracy than default to ensure test pass
+opts={'max_iters':100000,'eps':1e-5} # better accuracy than default to ensure test pass
 K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[2, 1, 2, 0, 1], 'ep':10, 'ed':10}
 m = getConeDims(K)
 

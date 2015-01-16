@@ -13,31 +13,31 @@ E = ones(n,1);
 NN = 1; % NN = 1, other choices bad
 for j=1:NN
     %% D scale:
-    Dt = norms(data.A(1:K.f,:)')';
+    Dt = twonorms(data.A(1:K.f,:)')';
     idx = K.f;
-    Dt = [Dt;norms(data.A(idx+1:idx+K.l,:)')'];
+    Dt = [Dt;twonorms(data.A(idx+1:idx+K.l,:)')'];
     idx = idx + K.l;
     for i=1:length(K.q)
         if (K.q(i) > 0)
-            nmA = mean(norms(data.A(idx+1:idx+K.q(i),:)'));
+            nmA = mean(twonorms(data.A(idx+1:idx+K.q(i),:)'));
             Dt = [Dt;nmA*ones(K.q(i),1)];
             idx = idx + K.q(i);
         end
     end
     for i=1:length(K.s)
         if (K.s(i) > 0)
-            nmA = mean(norms(data.A(idx+1:idx+K.s(i)^2,:)'));
-            Dt = [Dt;nmA*ones(K.s(i)^2,1)];
-            idx = idx + K.s(i)^2;
+            nmA = mean(twonorms(data.A(idx+1:idx+getSdConeSize(K.s(i)),:)'));
+            Dt = [Dt;nmA*ones(getSdConeSize(K.s(i)),1)];
+            idx = idx + getSdConeSize(K.s(i));
         end
     end
     for i=1:K.ep
-        nmA = mean(norms(data.A(idx+1:idx+3,:)'));
+        nmA = mean(twonorms(data.A(idx+1:idx+3,:)'));
         Dt = [Dt;nmA*ones(3,1)];
         idx = idx + 3;
     end
     for i=1:K.ed
-        nmA = mean(norms(data.A(idx+1:idx+3,:)'));
+        nmA = mean(twonorms(data.A(idx+1:idx+3,:)'));
         Dt = [Dt;nmA*ones(3,1)];
         idx = idx + 3;
     end
@@ -47,7 +47,7 @@ for j=1:NN
     data.A = sparse(diag(1./Dt))*data.A;
     
     %% E Scale
-    Et = norms(data.A)';
+    Et = twonorms(data.A)';
     Et(Et < minColScale) = 1;
     Et(Et > maxColScale) = maxColScale;
     data.A = data.A*sparse(diag(1./Et));
@@ -57,8 +57,8 @@ for j=1:NN
     E = E.*Et;
 end
 
-nmrowA = mean(norms(data.A'));
-nmcolA = mean(norms(data.A));
+nmrowA = mean(twonorms(data.A'));
+nmcolA = mean(twonorms(data.A));
 
 data.A = data.A*scale;
 
@@ -74,4 +74,9 @@ w.D = D;
 w.E = E;
 w.sc_b = sc_b;
 w.sc_c = sc_c;
+
+    function twoNorms = twonorms(A)
+        twoNorms = sqrt(sum(A.^2,1));
+    end
+
 end

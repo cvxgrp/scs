@@ -9,8 +9,8 @@ for i=1:length(K.q)
 end
 % SDCs
 for i=1:length(K.s)
-    z(idx+1:idx+K.s(i)^2) = proj_sdp(z(idx+1:idx+K.s(i)^2),K.s(i));
-    idx=idx+K.s(i)^2;
+    z(idx+1:idx+getSdConeSize(K.s(i))) = proj_sdp(z(idx+1:idx+getSdConeSize(K.s(i))),K.s(i));
+    idx=idx+getSdConeSize(K.s(i));
 end
 % EXP cones
 for i=1:K.ep

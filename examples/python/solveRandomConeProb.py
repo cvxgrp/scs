@@ -3,6 +3,7 @@ import scs
 from numpy import *
 from scipy import sparse, randn
 from genRandomConeProb import *
+
 #############################################
 #  Uses scs to solve a random cone problem  #
 #############################################
