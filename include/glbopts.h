@@ -71,7 +71,7 @@ typedef float scs_float;
 #endif
 
 #ifndef ABS
-#define ABS(x) ((x) < 0 ? -(x) : (x))
+#define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
 
 #ifndef POWF
