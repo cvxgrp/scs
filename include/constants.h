@@ -6,7 +6,7 @@
 
 /* SCS returns one of the following integers: (zero never returned)     */
 #define SCS_SIGINT          (-5)
-#define SCS_FAILURE         (-4)
+#define SCS_FAILED          (-4)
 #define SCS_INDETERMINATE   (-3)
 #define SCS_INFEASIBLE      (-2) /* primal infeasible, dual unbounded   */
 #define SCS_UNBOUNDED       (-1) /* primal unbounded, dual infeasible   */

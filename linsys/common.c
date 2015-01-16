@@ -63,7 +63,6 @@ void printAMatrix(const AMatrix * A) {
 }
 
 void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * scal) {
-	/* TODO: fix */
 	scs_float * D = scs_malloc(A->m * sizeof(scs_float));
 	scs_float * E = scs_malloc(A->n * sizeof(scs_float));
 	scs_float * Dt = scs_malloc(A->m * sizeof(scs_float));

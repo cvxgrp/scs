@@ -134,8 +134,8 @@ int main(int argc, char **argv) {
 	scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
 	scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));
 
-    scs_printf("scs pri obj= %4f\n", innerProd(d->c, sol->x, d->n));
-    scs_printf("scs dua obj = %4f\n", -innerProd(d->b, sol->y, d->m));
+    if (sol->x) { scs_printf("scs pri obj= %4f\n", innerProd(d->c, sol->x, d->n)); }
+    if (sol->y) { scs_printf("scs dua obj = %4f\n", -innerProd(d->b, sol->y, d->m)); }
 
     freeData(d, k);
 	freeSol(sol);

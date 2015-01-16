@@ -42,7 +42,7 @@ static struct ConeData_t {
 	/* workspace for eigenvector decompositions: */
 	scs_float * Xs, *Z, *e, *work;
 	blasint *iwork, lwork, liwork;
-} c;
+} c = {0};
 #endif
 
 static timer coneTimer;
