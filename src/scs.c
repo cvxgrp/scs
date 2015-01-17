@@ -88,8 +88,8 @@ static void printInitHeader(const Data * d, const Cone * k) {
 		scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i, scale = %2.2f\n", stgs->eps, stgs->alpha,
 				(int) stgs->max_iters, (int) stgs->normalize, stgs->scale);
 	} else {
-		scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n", stgs->eps, stgs->alpha, (int) stgs->max_iters,
-				(int) stgs->normalize);
+		scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n", stgs->eps, stgs->alpha,
+				(int) stgs->max_iters, (int) stgs->normalize);
 	}
 	scs_printf("Variables n = %i, constraints m = %i\n", (int) d->n, (int) d->m);
 	scs_printf("%s", coneStr);
@@ -128,7 +128,8 @@ static void populateOnFailure(scs_int m, scs_int n, Sol * sol, Info * info, scs_
 	}
 }
 
-static scs_int failure(Work * w, scs_int m, scs_int n, Sol * sol, Info * info, scs_int stint, const char * msg, const char * ststr) {
+static scs_int failure(Work * w, scs_int m, scs_int n, Sol * sol, Info * info, scs_int stint, const char * msg,
+		const char * ststr) {
 	scs_int status = stint;
 	populateOnFailure(m, n, sol, info, status, ststr);
 	scs_printf("Failure:%s\n", msg);
@@ -157,7 +158,8 @@ static void warmStartVars(Work * w, const Sol * sol) {
 		normalizeWarmStart(w);
 }
 
-static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float * s, const scs_float tau, scs_float *nmAxs) {
+static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float * s, const scs_float tau,
+		scs_float *nmAxs) {
 	scs_int i;
 	scs_float pres = 0, scale, *pr = w->pr, *D = w->scal->D;
 	*nmAxs = 0;
@@ -192,7 +194,7 @@ static scs_float calcDualResid(Work * w, const scs_float * y, const scs_float ta
 
 /* calculates un-normalized quantities */
 static void calcResiduals(Work * w, struct residuals * r, scs_int iter) {
-	scs_float * x = w->u, * y = &(w->u[w->n]), * s = &(w->v[w->n]);
+	scs_float * x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
 	scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
 	scs_int n = w->n, m = w->m;
 
@@ -580,12 +582,14 @@ static Work * initWork(const Data *d, const Cone * k) {
 		scs_printf("ERROR: work memory allocation failure\n");
 		return NULL;
 	}
-#ifndef COPYAMATRIX
 	w->A = d->A;
-#else
-	copyAMatrix(d->A, w->A);
-#endif
 	if (w->stgs->normalize) {
+#ifdef COPYAMATRIX
+		if (!copyAMatrix(&(w->A), d->A)) {
+			scs_printf("ERROR: copy A matrix failed\n");
+			return NULL;
+		}
+#endif
 		w->scal = scs_malloc(sizeof(Scaling));
 		normalizeA(w->A, w->stgs, k, w->scal);
 #ifdef EXTRAVERBOSE
@@ -675,16 +679,21 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 	for (i = 0; i < w->stgs->max_iters; ++i) {
 		memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
 
-		if (projectLinSys(w, i) < 0) return failure(w, w->m, w->n, sol, info, SCS_FAILED, "error in projectLinSys", "Failed");
-		if (projectCones(w, k, i) < 0) return failure(w, w->m, w->n, sol, info, SCS_FAILED, "error in projectCones", "Failed");
+		if (projectLinSys(w, i) < 0)
+			return failure(w, w->m, w->n, sol, info, SCS_FAILED, "error in projectLinSys", "Failure");
+		if (projectCones(w, k, i) < 0)
+			return failure(w, w->m, w->n, sol, info, SCS_FAILED, "error in projectCones", "Failure");
 
 		updateDualVars(w);
 
-		if (isInterrupted()) return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted", "Interrupted");
+		if (isInterrupted())
+			return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted", "Interrupted");
 
 		if (i % CONVERGED_INTERVAL == 0) {
 			calcResiduals(w, &r, i);
-			if ((info->statusVal = hasConverged(w, &r, i)) != 0) { break; }
+			if ((info->statusVal = hasConverged(w, &r, i)) != 0) {
+				break;
+			}
 		}
 
 		if (w->stgs->verbose) {
@@ -722,8 +731,11 @@ void scs_finish(Work * w) {
 	if (w) {
 		if (w->stgs) {
 			if (w->stgs->normalize) {
-				/* TODO: unnormalize vs free if copied */
+#ifndef COPYAMATRIX
 				unNormalizeA(w->A, w->stgs, w->scal);
+#else
+				freeAMatrix(w->A);
+#endif
 			}
 		}
 		freePriv(w->p);
@@ -755,8 +767,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 	info->setupTime = tocq(&initTimer);
 	if (d->stgs->verbose) {
 		scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3);
-	}
-	endInterruptListener();
+	} endInterruptListener();
 	return w;
 }
 
@@ -771,7 +782,8 @@ scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
 	scs_printf("size of scs_int = %lu, size of scs_float = %lu\n", sizeof(scs_int), sizeof(scs_float));
 #endif
 	if (!w) {
-		return failure(NULL, d ? d->m : -1, d ? d->n : -1, sol, info, SCS_FAILED, "could not initialize work", "Failed");
+		return failure(NULL, d ? d->m : -1, d ? d->n : -1, sol, info, SCS_FAILED, "could not initialize work",
+				"Failure");
 	}
 	scs_solve(w, d, k, sol, info);
 	scs_finish(w);

@@ -141,12 +141,11 @@ void freeData(Data * d, Cone * k) {
             scs_free(d->b);
         if (d->c)
             scs_free(d->c);
+        if (d->stgs)
+            scs_free(d->stgs);
         if (d->A) {
             freeAMatrix(d->A);
-            scs_free((AMatrix *) d->A);
         }
-        if (d->stgs)
-        	scs_free((Settings *) d->stgs);
         scs_free(d);
     }
     if (k) {

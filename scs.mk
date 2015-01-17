@@ -48,6 +48,7 @@ RANLIB = ranlib
 # CFLAGS += -DNOVALIDATE # remove data validation step
 # CFLAGS += -DBLASSUFFIX="" # blas suffix no underscore
 # CFLAGS += -DEXTRAVERBOSE # extra verbosity level
+CFLAGS += -DCOPYAMATRIX # if normalize, copy A
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):

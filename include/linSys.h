@@ -38,5 +38,11 @@ void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * sc
 void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal);
 /* to free the memory allocated in AMatrix */
 void freeAMatrix(AMatrix * A);
+
+#ifdef COPYAMATRIX
+/* copies A (instead of in-place normalization), returns 0 for failure, allocates memory for dstp	*/
+scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src);
+#endif
+
 #endif
 

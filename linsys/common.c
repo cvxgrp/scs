@@ -5,6 +5,23 @@
 #define MAX_SCALE (1e3)
 #define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
+scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src) {
+	scs_int Anz = src->p[src->n];
+	AMatrix * A = scs_calloc(1, sizeof(AMatrix));
+	if (!A) return 0;
+	A->n = src->n;
+	A->m = src->m;
+	A->x = scs_malloc(sizeof(scs_float) * Anz); /* A values, size: NNZ A */
+	A->i = scs_malloc(sizeof(scs_int) * Anz); /* A row index, size: NNZ A */
+	A->p = scs_malloc(sizeof(scs_int) * (src->n + 1)); /* A column pointer, size: n+1 */
+	if (!A || !A->x || !A->i || !A->p) return 0;
+	memcpy(A->x, src->x, sizeof(scs_float) * Anz);
+	memcpy(A->i, src->i, sizeof(scs_int) * Anz);
+	memcpy(A->p, src->p, sizeof(scs_int) * (src->n + 1));
+	*dstp = A;
+	return 1;
+}
+
 scs_int validateLinSys(const AMatrix * A) {
 	scs_int i, rMax, Anz;
 	if (!A->x || !A->i || !A->p) {
@@ -44,6 +61,7 @@ void freeAMatrix(AMatrix * A) {
 		scs_free(A->i);
 	if (A->p)
 		scs_free(A->p);
+	scs_free(A);
 }
 
 void printAMatrix(const AMatrix * A) {
