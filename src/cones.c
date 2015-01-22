@@ -3,6 +3,7 @@
 #define CONE_RATE (2)
 #define CONE_TOL (1e-8)
 #define EXP_CONE_MAX_ITERS (100)
+#define POW_CONE_MAX_ITERS (20)
 
 /* Default to underscore for blas / lapack */
 #ifndef BLASSUFFIX
@@ -517,6 +518,55 @@ static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
 	return 0;
 }
 
+scs_float powCalcX(scs_float r, scs_float xh, scs_float rh, scs_float a) {
+    return MAX(0.5 * (xh + SQRTF(xh*xh + 4 * a * (rh - r) * r)), 1e-12);
+}
+
+scs_float powCalcdxdr(scs_float x,scs_float xh,scs_float rh,scs_float r, scs_float a) {
+    return a * (rh - 2*r) / (2*x - xh);
+}
+
+scs_float powCalcF(scs_float x,scs_float y,scs_float r,scs_float a) {
+    return POWF(x,a) * POWF(y,(1-a)) - r;
+}
+
+scs_float powCalcFp(scs_float x,scs_float y,scs_float dxdr,scs_float dydr,scs_float a) {
+    return POWF(x,a) * POWF(y,(1-a)) * (a * dxdr / x + (1-a) * dydr / y) - 1;
+}
+
+void projPowerCone(scs_float * v, scs_float a) {
+    scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
+    scs_float x, y, r;
+    scs_int i;
+    /* v in K_a */
+    if (xh >=0 && yh >= 0 && POWF(xh, a) * POWF(yh, (1-a)) >= rh) return;
+
+    /* -v in K_a^* */
+    if (xh <= 0 && yh <= 0 && POWF(-xh/a, a) * POWF(-yh/(1-a), 1-a) >= rh) {
+        v[0] = v[1] = v[2] = 0;
+        return;
+    }
+
+    r = rh / 2;
+    for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
+        scs_float f, fp, dxdr, dydr;
+        x = powCalcX(r, xh, rh, a);
+        y = powCalcX(r, yh, rh, 1-a);
+
+        f = powCalcF(x,y,r,a);
+        if (ABS(f) < CONE_TOL) break;
+
+        dxdr = powCalcdxdr(x,xh,rh,r,a);
+        dydr = powCalcdxdr(y,yh,rh,r,(1-a));
+        fp = powCalcFp(x,y,dxdr,dydr,a);
+
+        r = MIN(MAX(r - f/fp,0), rh);
+    }
+    v[0] = x;
+    v[1] = y;
+    v[2] = (v[2] < 0) ? -(r) : (r);
+}
+
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to NULL) */
 scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start, scs_int iter)  {
@@ -534,7 +584,7 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 		for (i = count; i < count + k->l; ++i) {
 			if (x[i] < 0.0)
 				x[i] = 0.0;
-			/*x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
+			/* x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
 		}
 		count += k->l;
 #ifdef EXTRAVERBOSE
@@ -632,6 +682,47 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 		count += 3 * k->ed;
 #ifdef EXTRAVERBOSE
 		scs_printf("ED proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+		tic(&projTimer);
+#endif
+	}
+
+	if (k->powpsize > 0 && k->powp) {
+		scs_float r, s, t;
+		scs_int idx;
+		scaleArray(&(x[count]), -1, 3 * k->powpsize); /* x = -x; */
+#ifdef OPENMP
+#pragma omp parallel for private(r,s,t,idx)
+#endif
+		for (i = 0; i < k->powpsize; ++i) {
+			idx = count + 3 * i;
+			r = x[idx];
+			s = x[idx + 1];
+			t = x[idx + 2];
+
+			projPowerCone(&(x[idx]), k->powp[i]);
+
+			x[idx] -= r;
+			x[idx + 1] -= s;
+			x[idx + 2] -= t;
+		}
+		count += 3 * k->powpsize;
+#ifdef EXTRAVERBOSE
+		scs_printf("Power primal proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+		tic(&projTimer);
+#endif
+	}
+
+	if (k->powdsize > 0 && k->powd) {
+		/* power cone: */
+#ifdef OPENMP
+#pragma omp parallel for
+#endif
+		for (i = 0; i < k->powdsize; ++i) {
+			projPowerCone(&(x[count + 3 * i]), k->powd[i]);
+		}
+		count += 3 * k->powdsize;
+#ifdef EXTRAVERBOSE
+		scs_printf("Power dual proj time: %1.2es\n", tocq(&projTimer) / 1e3);
 		tic(&projTimer);
 #endif
 	}

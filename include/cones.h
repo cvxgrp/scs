@@ -13,6 +13,10 @@ struct CONE {
 	scs_int ssize; /* length of SD array */
 	scs_int ep; /* number of primal exponential cone triples */
 	scs_int ed; /* number of dual exponential cone triples */
+    scs_int powpsize;
+    scs_float * powp;
+    scs_int powdsize;
+    scs_float * powd;
 };
 
 /*
