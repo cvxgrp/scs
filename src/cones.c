@@ -60,7 +60,7 @@ scs_int getSdConeSize(scs_int s) {
  */
 scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries) {
 	scs_int i, count = 0;
-	scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep;
+	scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->powpsize + k->powdsize;
 	scs_int * b = scs_malloc(sizeof(scs_int) * len);
 	b[count] = k->f + k->l;
 	count += 1;
@@ -76,6 +76,10 @@ scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries) {
 		b[count + i] = 3;
 	}
 	count += k->ep + k->ed;
+	for (i = 0; i < k->powpsize + k->powdsize; ++i) {
+        b[count + i] = 3;
+    }
+	count += k->powpsize + k->powdsize;
 	*boundaries = b;
 	return len;
 }
@@ -116,32 +120,64 @@ scs_int validateCones(const Data * d, const Cone * k) {
 	if (k->l && k->l < 0) {
 		scs_printf("lp cone error\n");
 		return -1;
-	}
-	if (k->qsize && k->q) {
-		for (i = 0; i < k->qsize; ++i) {
-			if (k->q[i] < 0) {
-				scs_printf("soc cone error\n");
-				return -1;
-			}
-		}
-	}
-	if (k->ssize && k->s) {
-		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] < 0) {
-				scs_printf("sd cone error\n");
-				return -1;
-			}
-		}
-	}
-	if (k->ed && k->ed < 0) {
-		scs_printf("ep cone error\n");
-		return -1;
-	}
-	if (k->ep && k->ep < 0) {
-		scs_printf("ed cone error\n");
-		return -1;
-	}
-	return 0;
+    }
+    if (k->qsize && k->q) {
+        if (k->qsize < 0) {
+            scs_printf("soc cone error\n");
+            return -1;
+        }
+        for (i = 0; i < k->qsize; ++i) {
+            if (k->q[i] < 0) {
+                scs_printf("soc cone error\n");
+                return -1;
+            }
+        }
+    }
+    if (k->ssize && k->s) {
+        if (k->ssize < 0) {
+            scs_printf("sd cone error\n");
+            return -1;
+        }
+        for (i = 0; i < k->ssize; ++i) {
+            if (k->s[i] < 0) {
+                scs_printf("sd cone error\n");
+                return -1;
+            }
+        }
+    }
+    if (k->ed && k->ed < 0) {
+        scs_printf("ep cone error\n");
+        return -1;
+    }
+    if (k->ep && k->ep < 0) {
+        scs_printf("ed cone error\n");
+        return -1;
+    }
+    if (k->powpsize && k->powp) {
+        if (k->powpsize < 0) {
+            scs_printf("primal power cone error\n");
+            return -1;
+        }
+        for (i = 0; i<k->powpsize; ++i) {
+            if (k->powp[i] < 0 || k->powp[i] > 1) {
+                scs_printf("primal power cone error, values must be in [0,1]\n");
+                return -1;
+            }
+        }
+    }
+    if (k->powdsize && k->powd) {
+        if (k->powdsize < 0) {
+            scs_printf("dual power cone error\n");
+            return -1;
+        }
+        for (i = 0; i<k->powdsize; ++i) {
+            if (k->powd[i] < 0 || k->powd[i] > 1) {
+                scs_printf("dual power cone error, values must be in [0,1]\n");
+                return -1;
+            }
+        }
+    }
+   return 0;
 }
 
 char * getConeSummary(const Info * info) {
@@ -168,7 +204,7 @@ void finishCone() {
 
 char * getConeHeader(const Cone * k) {
 	char * tmp = scs_malloc(sizeof(char) * 512);
-	scs_int i, socVars, socBlks, sdVars, sdBlks, expPvars, expDvars;
+	scs_int i, socVars, socBlks, sdVars, sdBlks;
 	sprintf(tmp, "Cones:");
 	if (k->f) {
 		sprintf(tmp + strlen(tmp), "\tprimal zero / dual free vars: %li\n", (long) k->f);
@@ -195,11 +231,12 @@ char * getConeHeader(const Cone * k) {
 		sprintf(tmp + strlen(tmp), "\tsd vars: %li, sd blks: %li\n", (long) sdVars, (long) sdBlks);
 	}
 	if (k->ep || k->ed) {
-		expPvars = k->ep ? 3 * k->ep : 0;
-		expDvars = k->ed ? 3 * k->ed : 0;
-		sprintf(tmp + strlen(tmp), "\texp vars: %li, dual exp vars: %li\n", (long) expPvars, (long) expDvars);
+		sprintf(tmp + strlen(tmp), "\texp vars: %li, dual exp vars: %li\n", (long) 3 * k->ep, (long) 3 * k->ed);
 	}
-	return tmp;
+	if (k->powpsize || k->powp) {
+		sprintf(tmp + strlen(tmp), "\tpow vars: %li, dual pow vars: %li\n", (long) 3 * k->powpsize, (long) 3 * k->powdsize);
+	}
+    return tmp;
 }
 
 scs_int isSimpleSemiDefiniteCone(scs_int * s, scs_int ssize) {
@@ -686,7 +723,7 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 #endif
 	}
 
-	if (k->powpsize > 0 && k->powp) {
+	if (k->powpsize && k->powp) {
 		scs_float r, s, t;
 		scs_int idx;
 		scaleArray(&(x[count]), -1, 3 * k->powpsize); /* x = -x; */
@@ -712,7 +749,7 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 #endif
 	}
 
-	if (k->powdsize > 0 && k->powd) {
+	if (k->powdsize && k->powd) {
 		/* power cone: */
 #ifdef OPENMP
 #pragma omp parallel for
