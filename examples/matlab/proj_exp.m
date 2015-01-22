@@ -1,8 +1,5 @@
 function x = proj_exp(v)
 
-global CONE_MAX_ITERS;
-global CONE_TOL;
-
 CONE_MAX_ITERS = 100;
 CONE_TOL = 1e-8;
 
@@ -74,8 +71,6 @@ end
 
 
 function z = newton_exp_onz(rho, y_hat, z_hat,w)
-global CONE_MAX_ITERS;
-global CONE_TOL;
 t = max(max(w - z_hat, -z_hat),CONE_TOL);
 for iter=1:CONE_MAX_ITERS;
     f = (1/rho^2)*t*(t + z_hat) - y_hat/rho + log(t/rho) + 1;
