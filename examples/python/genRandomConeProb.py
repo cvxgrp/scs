@@ -64,6 +64,7 @@ def getConeDims(K):
 
     l = l + K['ep'] * 3;
     l = l + K['ed'] * 3;
+    l = l + len(K['p']) * 3;
     return l
 
 def proj_dual_cone(z, c):
@@ -78,6 +79,7 @@ def proj_cone(z, c):
     lp_len = c['l']
     q = c['q']
     s = c['s']
+    p = c['p']
     # free/zero cone
     z[0:free_len] = 0;
     # lp cone
@@ -99,6 +101,13 @@ def proj_cone(z, c):
     # Exp dual
     for i in range(0, c['ed']):
         z[idx:idx + 3] = z[idx:idx + 3] + project_exp_bisection(-z[idx:idx + 3])
+        idx = idx + 3
+    # Power
+    for i in range(0, len(p)):
+        if (p[i] >= 0): # primal
+            z[idx:idx + 3] = proj_pow(z[idx:idx + 3], p[i])
+        else: # dual
+            z[idx:idx + 3] = z[idx:idx + 3] + proj_pow(-z[idx:idx + 3], -p[i])
         idx = idx + 3
     return z
 
@@ -142,6 +151,53 @@ def proj_sdp(z, n):
     a[didx] = a[didx] / sqrt(2.)
     z = a[tidx]
     return z
+
+def proj_pow(v, a):
+    CONE_MAX_ITERS = 20;
+    CONE_TOL = 1e-8;
+    
+    if (v[0]>=0 and v[1]>=0 and (v[0]**a) * (v[1]**(1-a)) >= abs(v[2])):
+        return v
+    
+    if (v[0]<=0 and v[1]<=0 and ((-v[0]/a)**a)*((-v[1]/(1-a))**(1-a)) >= abs(v[2])):
+        return zeros(3,)
+    
+    xh = v[0];
+    yh = v[1];
+    zh = v[2];
+    rh = abs(zh);
+    r = rh / 2;
+    for iter in range(0, CONE_MAX_ITERS):
+        x = calcX(r, xh, rh, a);
+        y = calcX(r, yh, rh, 1-a);
+        
+        f = calcF(x,y,r,a);
+        if abs(f) < CONE_TOL:
+            break
+        
+        dxdr = calcdxdr(x,xh,rh,r,a);
+        dydr = calcdxdr(y,yh,rh,r, (1-a));
+        fp = calcFp(x,y,dxdr,dydr,a);
+        
+        r = min(max(r - f/fp,0), rh);
+    
+    z = sign(zh) * r;
+    v[0] = x
+    v[1] = y
+    v[2] = z
+    return v
+ 
+def calcX(r, xh, rh, a):
+    return max(0.5 * (xh + sqrt(xh*xh + 4 * a * (rh - r) * r)), 1e-12)
+
+def calcdxdr(x,xh,rh,r, a):
+    return  a * (rh - 2*r) / (2 * x - xh)
+
+def calcF(x,y,r,a):
+    return (x**a) * (y**(1-a)) - r
+
+def calcFp(x,y,dxdr,dydr,a):
+    return (x**a) * (y**(1-a)) * (a * dxdr / x + (1-a) * dydr / y) - 1
 
 def project_exp_bisection(v):
     v = copy(v)

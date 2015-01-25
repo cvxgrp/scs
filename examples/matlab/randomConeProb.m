@@ -15,10 +15,10 @@ run_indirect = true;
 run_direct = true;
 run_cvx = false; % won't work if ep or ed > 0
 cvx_solver = 'sdpt3';
-run_scs_matlab = false; % SCS implemented in MATLAB
+run_scs_matlab = true; % SCS implemented in MATLAB
 
 % set cone sizes (ep = ed = 0 if you want to compare against cvx):
-K = struct('f',50,'l',60,'q',[0;1;0;2;100;20],'s',[0;2;1;2;20],'ep',10,'ed',15);
+K = struct('f',50,'l',60,'q',[0;1;0;2;100;20],'s',[0;2;1;2;20],'ep',10,'ed',15,'p',[-0.3, 0.25, 0.75, -0.4]);
 
 density = 0.1; % A matrix density
 

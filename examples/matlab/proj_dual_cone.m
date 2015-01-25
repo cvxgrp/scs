@@ -22,4 +22,15 @@ for i=1:K.ed
     z(idx+1:idx+3) = proj_exp(z(idx+1:idx+3));
     idx=idx+3;
 end
+% power cone
+for i=1:length(K.p)
+    if (K.p(i) > 0)
+        % primal
+        z(idx+1:idx+3) = z(idx+1:idx+3) + proj_pow(-z(idx+1:idx+3), K.p(i));
+    else
+        % dual
+        z(idx+1:idx+3) = proj_pow(z(idx+1:idx+3), -K.p(i));
+    end
+    idx=idx+3;
+end
 end

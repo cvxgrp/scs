@@ -60,7 +60,7 @@ scs_int getSdConeSize(scs_int s) {
  */
 scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries) {
 	scs_int i, count = 0;
-	scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->powpsize + k->powdsize;
+	scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
 	scs_int * b = scs_malloc(sizeof(scs_int) * len);
 	b[count] = k->f + k->l;
 	count += 1;
@@ -76,10 +76,10 @@ scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries) {
 		b[count + i] = 3;
 	}
 	count += k->ep + k->ed;
-	for (i = 0; i < k->powpsize + k->powdsize; ++i) {
+	for (i = 0; i < k->psize; ++i) {
         b[count + i] = 3;
     }
-	count += k->powpsize + k->powdsize;
+	count += k->psize;
 	*boundaries = b;
 	return len;
 }
@@ -102,9 +102,11 @@ scs_int getFullConeDims(const Cone * k) {
 	}
 	if (k->ed)
 		c += 3 * k->ed;
-	if (k->ep)
-		c += 3 * k->ep;
-	return c;
+    if (k->ep)
+        c += 3 * k->ep;
+    if (k->p)
+        c += 3 * k->psize;
+    return c;
 }
 
 scs_int validateCones(const Data * d, const Cone * k) {
@@ -153,26 +155,14 @@ scs_int validateCones(const Data * d, const Cone * k) {
         scs_printf("ed cone error\n");
         return -1;
     }
-    if (k->powpsize && k->powp) {
-        if (k->powpsize < 0) {
+    if (k->psize && k->p) {
+        if (k->psize < 0) {
             scs_printf("primal power cone error\n");
             return -1;
         }
-        for (i = 0; i<k->powpsize; ++i) {
-            if (k->powp[i] < 0 || k->powp[i] > 1) {
-                scs_printf("primal power cone error, values must be in [0,1]\n");
-                return -1;
-            }
-        }
-    }
-    if (k->powdsize && k->powd) {
-        if (k->powdsize < 0) {
-            scs_printf("dual power cone error\n");
-            return -1;
-        }
-        for (i = 0; i<k->powdsize; ++i) {
-            if (k->powd[i] < 0 || k->powd[i] > 1) {
-                scs_printf("dual power cone error, values must be in [0,1]\n");
+        for (i = 0; i<k->psize; ++i) {
+            if (k->p[i] < -1 || k->p[i] > 1) {
+                scs_printf("power cone error, values must be in [-1,1]\n");
                 return -1;
             }
         }
@@ -233,8 +223,8 @@ char * getConeHeader(const Cone * k) {
 	if (k->ep || k->ed) {
 		sprintf(tmp + strlen(tmp), "\texp vars: %li, dual exp vars: %li\n", (long) 3 * k->ep, (long) 3 * k->ed);
 	}
-	if (k->powpsize || k->powp) {
-		sprintf(tmp + strlen(tmp), "\tpow vars: %li, dual pow vars: %li\n", (long) 3 * k->powpsize, (long) 3 * k->powdsize);
+	if (k->psize && k->p) {
+		sprintf(tmp + strlen(tmp), "\tprimal + dual power vars: %li\n", (long) 3 * k->psize);
 	}
     return tmp;
 }
@@ -723,48 +713,36 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 #endif
 	}
 
-	if (k->powpsize && k->powp) {
-		scs_float r, s, t;
-		scs_int idx;
-		scaleArray(&(x[count]), -1, 3 * k->powpsize); /* x = -x; */
+	if (k->psize && k->p) {
+		scs_float v[3];
 #ifdef OPENMP
-#pragma omp parallel for private(r,s,t,idx)
+#pragma omp parallel for private(v,idx)
 #endif
-		for (i = 0; i < k->powpsize; ++i) {
-			idx = count + 3 * i;
-			r = x[idx];
-			s = x[idx + 1];
-			t = x[idx + 2];
+        for (i = 0; i < k->psize; ++i) {
+           if (k->p[i] <= 0) {
+                /* dual power cone */
+                projPowerCone(&(x[count]), -k->p[i]);
+            } else {
+                /* primal power cone, using Moreau */
+                v[0] = -x[count];
+                v[1] = -x[count + 1];
+                v[2] = -x[count + 2];
 
-			projPowerCone(&(x[idx]), k->powp[i]);
+                projPowerCone(v, k->p[i]);
 
-			x[idx] -= r;
-			x[idx + 1] -= s;
-			x[idx + 2] -= t;
-		}
-		count += 3 * k->powpsize;
+                x[count] += v[0];
+                x[count + 1] += v[1];
+                x[count + 2] += v[2];
+            }
+           count += 3;
+        }
 #ifdef EXTRAVERBOSE
-		scs_printf("Power primal proj time: %1.2es\n", tocq(&projTimer) / 1e3);
-		tic(&projTimer);
+        scs_printf("Power cone proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+        tic(&projTimer);
 #endif
-	}
-
-	if (k->powdsize && k->powd) {
-		/* power cone: */
-#ifdef OPENMP
-#pragma omp parallel for
-#endif
-		for (i = 0; i < k->powdsize; ++i) {
-			projPowerCone(&(x[count + 3 * i]), k->powd[i]);
-		}
-		count += 3 * k->powdsize;
-#ifdef EXTRAVERBOSE
-		scs_printf("Power dual proj time: %1.2es\n", tocq(&projTimer) / 1e3);
-		tic(&projTimer);
-#endif
-	}
-	/* project onto OTHER cones */
-	totalConeTime += tocq(&coneTimer);
-	return 0;
+    }
+    /* project onto OTHER cones */
+    totalConeTime += tocq(&coneTimer);
+    return 0;
 }
 

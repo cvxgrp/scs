@@ -153,6 +153,8 @@ void freeData(Data * d, Cone * k) {
             scs_free(k->q);
         if (k->s)
             scs_free(k->s);
+        if (k->p)
+            scs_free(k->p);
         scs_free(k);
     }
     d = NULL;

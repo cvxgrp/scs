@@ -69,6 +69,7 @@ Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
     k->f = getIntUsingGetter(env, coneJava, "getF");
     k->ep = getIntUsingGetter(env, coneJava, "getEp");
     k->ed = getIntUsingGetter(env, coneJava, "getEd");
+    k->p = getFloatArrayUsingGetter(env, coneJava, "getP", &(k->psize));
     return k;
 }
 
@@ -175,7 +176,7 @@ JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, 
     setSol(env, solJava, d, sol);
     setInfo(env, infoJava, info);
 
-    freeData(d,k);
+    freeData(d, k);
     freeSol(sol);
     scs_free(info);
 }

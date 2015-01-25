@@ -7,6 +7,7 @@ public class Cone {
     private int[] s;
     private int ep;
     private int ed;
+    private double[] p;
 
     // getters:
     public int getF() {
@@ -27,6 +28,9 @@ public class Cone {
     public int getEd() {
         return ed;
     }
+    public double[] getP() {
+        return p;
+    }
 
     // setters:
     public void setF(int f) {
@@ -46,6 +50,9 @@ public class Cone {
     }
     public void setEd(int ed) {
         this.ed = ed;
+    }
+    public void setP(double[] p) {
+        this.p = p;
     }
 
 }

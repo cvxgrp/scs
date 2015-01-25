@@ -40,10 +40,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mxArray *ks;
 	const mxArray *kep;
 	const mxArray *ked;
+	const mxArray *kp;
 	const scs_float *q_mex;
-	const scs_float *s_mex;
-	const size_t *q_dims;
-	const size_t *s_dims;
+    const scs_float *s_mex;
+    const scs_float *p_mex;
+    const size_t *q_dims;
+    const size_t *s_dims;
+    const size_t *p_dims;
 
 	const mxArray *cone;
 	const mxArray *params;
@@ -202,6 +205,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		k->ssize = 0;
 		k->s = NULL;
 	}
+
+    kp = mxGetField(cone, 0, "p");
+    if (kp && !mxIsEmpty(kp)) {
+        p_mex = mxGetPr(kp);
+        ns = (scs_int) mxGetNumberOfDimensions(kp);
+        p_dims = mxGetDimensions(kp);
+        k->psize = (scs_int) p_dims[0];
+        if (ns > 1 && p_dims[0] == 1) {
+            k->psize = (scs_int) p_dims[1];
+        }
+        k->p = mxMalloc(sizeof(scs_float) * k->psize);
+        for (i = 0; i < k->psize; i++) {
+            k->p[i] = (scs_float) p_mex[i];
+        }
+    } else {
+        k->psize = 0;
+        k->p = NULL;
+    }
+
     A = scs_malloc(sizeof(AMatrix));
     A->n = d->n;
     A->m = d->m;
@@ -275,12 +297,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	/*info.time is millisecs - return value in secs */
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "setupTime", tmp);
-	*mxGetPr(tmp) = info.setupTime / 1e3;
+	*mxGetPr(tmp) = info.setupTime;
 
 	/*info.time is millisecs - return value in secs */
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "solveTime", tmp);
-	*mxGetPr(tmp) = info.solveTime / 1e3;
+	*mxGetPr(tmp) = info.solveTime;
 
 	freeMex(d, k);
 	return;
@@ -290,12 +312,14 @@ void freeMex(Data * d, Cone * k) {
 	if (k->q)
 		scs_free(k->q);
 	if (k->s)
-		scs_free(k->s);
-	if (d) {
-		if(d->A) scs_free(d->A);
+        scs_free(k->s);
+    if (k->p)
+        scs_free(k->p);
+    if (d) {
+        if(d->A) scs_free(d->A);
         if(d->stgs) scs_free(d->stgs);
-		scs_free(d);
-	}
-	if (k)
-		scs_free(k);
+        scs_free(d);
+    }
+    if (k)
+        scs_free(k);
 }

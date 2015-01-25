@@ -41,6 +41,11 @@ for j=1:NN
         Dt = [Dt;nmA*ones(3,1)];
         idx = idx + 3;
     end
+    for i=1:length(K.p)
+        nmA = mean(twonorms(data.A(idx+1:idx+3,:)'));
+        Dt = [Dt;nmA*ones(3,1)];
+        idx = idx + 3;
+    end
     
     Dt(Dt < minRowScale) = 1;
     Dt(Dt > maxRowScale) = maxRowScale;

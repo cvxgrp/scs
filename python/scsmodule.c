@@ -123,12 +123,47 @@ static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject 
 			}
 		} else {
 			return printErr(key);
-		}
-	}
-	*vsize = n;
-	*varr = q;
-	return 0;
+        }
+        if (PyErr_Occurred()) {
+            /* potentially could have been triggered before */
+            return printErr(key);
+        }
+    }
+    *vsize = n;
+    *varr = q;
+    return 0;
 }
+
+static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObject * cone) {
+    /* get cone['key'] */
+    scs_int i, n = 0;
+    scs_float * q = NULL;
+    PyObject *obj = PyDict_GetItemString(cone, key);
+    if (obj) {
+        if (PyList_Check(obj)) {
+            n = PyList_Size(obj);
+            q = scs_calloc(n, sizeof(scs_float));
+            for (i = 0; i < n; ++i) {
+                PyObject *qi = PyList_GetItem(obj, i);
+                q[i] = (scs_float) PyFloat_AsDouble(qi);
+            }
+        } else if (PyInt_Check(obj) || PyLong_Check(obj) || PyFloat_Check(obj)) {
+            n = 1;
+            q = scs_malloc(sizeof(scs_float));
+            q[0] = (scs_float) PyFloat_AsDouble(obj);
+        } else {
+            return printErr(key);
+        }
+        if (PyErr_Occurred()) {
+            /* potentially could have been triggered before */
+            return printErr(key);
+        }
+    }
+    *vsize = n;
+    *varr = q;
+    return 0;
+}
+
 
 static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * opts) {
     *v = defVal;
@@ -174,6 +209,8 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
             scs_free(k->q);
         if (k->s)
             scs_free(k->s);
+        if (k->p)
+            scs_free(k->p);
         scs_free(k);
     }
     if (d) {
@@ -314,6 +351,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (getConeArrDim("s", &(k->s), &(k->ssize), cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field s");
 	}
+	if (getConeFloatArr("p", &(k->p), &(k->psize), cone) < 0) {
+		return finishWithErr(d, k, &ps, "failed to parse cone field p");
+	}
 	if (getPosIntParam("ep", &(k->ep), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ep");
 	}
@@ -381,7 +421,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
 			"dobj", (scs_float) info.dobj, "resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual,
 			"relGap", (scs_float) info.relGap, "resInfeas", (scs_float) info.resInfeas, "resUnbdd", (scs_float) info.resUnbdd,
-			"solveTime", (scs_float) (info.solveTime / 1e3), "setupTime", (scs_float) (info.setupTime / 1e3),
+			"solveTime", (scs_float) (info.solveTime), "setupTime", (scs_float) (info.setupTime),
 			"status", info.status);
 
     returnDict = Py_BuildValue("{s:O,s:O,s:O,s:O}", "x", x, "y", y, "s", s, "info", infoDict);
