@@ -527,7 +527,7 @@ static scs_int validate(const Data * d, const Cone * k) {
 		return -1;
 	}
 	if (validateCones(d, k) < 0) {
-		scs_printf("invalid cone dimensions\n");
+		scs_printf("cone validation error\n");
 		return -1;
 	}
 	if (stgs->max_iters <= 0) {

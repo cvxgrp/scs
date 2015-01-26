@@ -13,7 +13,7 @@ end
 
 % -v in K_a^*
 u = -in(1); v = -in(2); w = -in(3);
-if (u>=0 && v>=0 && ((u/a)^a)*((v/(1-a))^(1-a)) >= abs(w));
+if (u>=0 && v>=0 && (u^a) * (v^(1-a)) >= abs(w) * (a^a) * ((1-a)^(1-a)));
     x = zeros(3,1);
     return
 end
@@ -33,7 +33,7 @@ for iter=1:CONE_MAX_ITERS;
     end
     
     dxdr = calcdxdr(x,xh,rh,r,a);
-    dydr = calcdxdr(y,yh,rh,r, (1-a));
+    dydr = calcdxdr(y,yh,rh,r,(1-a));
     fp = calcFp(x,y,dxdr,dydr,a);
     
     r = min(max(r - f/fp,0), rh);

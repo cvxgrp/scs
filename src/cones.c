@@ -569,7 +569,7 @@ void projPowerCone(scs_float * v, scs_float a) {
     if (xh >=0 && yh >= 0 && POWF(xh, a) * POWF(yh, (1-a)) >= rh) return;
 
     /* -v in K_a^* */
-    if (xh <= 0 && yh <= 0 && POWF(-xh/a, a) * POWF(-yh/(1-a), 1-a) >= rh) {
+    if (xh <= 0 && yh <= 0 && POWF(-xh, a) * POWF(-yh, 1-a) >= rh * POWF(a, a) * POWF(1-a, 1-a)) {
         v[0] = v[1] = v[2] = 0;
         return;
     }
