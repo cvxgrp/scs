@@ -44,7 +44,7 @@ def check_infeasible(sol):
 def check_unbounded(sol):
   assert sol['info']['status'] == 'Unbounded'
 
-random.seed(0)
+random.seed(1)
 num_feas = 10
 num_unb = 10
 num_infeas = 10
