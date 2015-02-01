@@ -10,7 +10,7 @@
 #include "ctrlc.h"
 #include "constants.h"
 
-/* struct that containing standard problem data */
+/* struct containing problem data */
 struct PROBLEM_DATA {
 	/* these cannot change for multiple runs for the same call to scs_init */
 	scs_int m, n; /* A has m rows, n cols*/
@@ -49,7 +49,7 @@ struct SOL_VARS {
 struct INFO {
 	scs_int iter; /* number of iterations taken */
 	char status[32]; /* status string, e.g. 'Solved' */
-	scs_int statusVal; /* status as scs_int, defined below */
+	scs_int statusVal; /* status as scs_int, defined in constants.h */
 	scs_float pobj; /* primal objective */
 	scs_float dobj; /* dual objective */
 	scs_float resPri; /* primal equality residual */
@@ -90,7 +90,7 @@ struct WORK {
 	scs_float *h, *g, *pr, *dr;
 	scs_float gTh, sc_b, sc_c, nm_b, nm_c;
 	scs_float *b, *c; /* (possibly normalized) b and c vectors */
-	scs_int m, n; /* A has m rows, n cols*/
+	scs_int m, n; /* A has m rows, n cols */
 	AMatrix * A; /* (possibly normalized) A matrix */
     Priv * p; /* struct populated by linear system solver */
 	Settings * stgs; /* contains solver settings specified by user */

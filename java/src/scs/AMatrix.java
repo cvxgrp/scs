@@ -7,7 +7,6 @@ public class AMatrix {
     /**
      * A matrix, column compressed sparse format, size m by n
      */
-    private static final double DEFAULT_DENSITY = 0.25;
     private double[] v;  /* A values, size: NNZ A */
     private int[] i;     /* A row index, size: NNZ A */
     private int[] p;     /* A col ptr, size: n+1 */
@@ -60,6 +59,9 @@ public class AMatrix {
             }
         }
     }
+    
+    /* used for generating random instances */
+    private static final double DEFAULT_DENSITY = 0.25;
 
     public static AMatrix generateRandomMatrix(int m, int n) {
         return generateRandomMatrix(m, n, DEFAULT_DENSITY);

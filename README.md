@@ -6,16 +6,24 @@ SCS
 
 SCS = `splitting cone solver`
 
-SCS is a C package for solving large-scale convex cone problems,
-based on our paper [Operator Splitting for Conic Optimization via Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html).
+SCS is a numerical optimization package for solving large-scale convex cone problems, written in C,
+based on our paper [Operator Splitting for Conic Optimization via Homogeneous
+Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html).
 
-SCS can be used in other C/C++ programs, or through the included Python or Matlab interfaces. 
+SCS can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
+programs via included interfaces. (Julia interface available
+[here](https://github.com/JuliaOpt/SCS.jl).)
+
+SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
+[CVXPY](https://github.com/cvxgrp/cvxpy),
+[Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
+[Yalmip](https://github.com/johanlofberg/YALMIP).
 
 ----
 SCS numerically solves convex cone programs using the alternating direction
 method of multipliers [ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html).
 It returns solutions to both the primal and dual problems if the problem
-is feasible or returns a certificate of infeasibility otherwise. SCS solves
+is feasible, or returns a certificate of infeasibility otherwise. SCS solves
 the following primal cone problem:
 
 ```
@@ -39,6 +47,8 @@ The cone `K` can be any Cartesian product of the following primitive cones:
 + positive semidefinite cone `{ X | min(eig(X)) >= 0, X = X^T }`
 + exponential cone `{(x,y,z) | y e^(x/y) <= z, y>0 }`
 + dual exponential cone `{(u,v,w) | −u e^(v/u) <= e w, u<0}`
++ power cone `{(x,y,z) | x^a * y^(1-a) >= |z|, x>=0, y>=0}`
++ dual power cone `{(u,v,w) | (-u/a)^a * (-v/(1-a))^(1-a) >= |w|, u<=0, v<=0}`
 
 The rows of the data matrix `A` correspond to the cones in `K`.
 **The rows of `A` must be in the order of the cones given above, i.e., first come the
@@ -46,7 +56,7 @@ rows that correspond to the zero/free cones, then those that correspond to the
 positive orthants, then SOCs, etc.** For a `k` dimensional semidefinite cone
 when interpreting the rows of the data matrix `A`
 SCS assumes that the `k x k` matrix variable has been vectorized by stacking the
-columns to create a vector of length `k^2`.
+**lower triangular elements column-wise** to create a vector of length `k(k+1)/2`.
 
 At termination SCS returns solution `(x*, s*, y*)` if the problem is feasible,
 or a certificate of infeasibility otherwise. See [here](http://web.stanford.edu/~boyd/cvxbook/)
@@ -79,13 +89,13 @@ libraries in your own source code, compile with the linker option with
 
 These libraries (and `scs.h`) expose only four API functions:
 
-* `Work * scs_init(Data * d, Cone * k, Info * info);`
+* `Work * scs_init(const Data * d, const Cone * k, Info * info);`
     
     This initializes the Work struct containing the workspace that scs will
     use, and performs the necessary preprocessing (e.g. matrix factorization).
     All inputs `d`, `k`, and `info` must be memory allocated before calling.
 
-* `scs_int scs_solve(Work * w, Data * d, Cone * k, Sol * sol, Info * info);`
+* `scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info);`
     
     This solves the problem as defined by Data `d` and Cone `k` using the workspace
     in `w`. The solution is returned in `sol` and information about the solve
@@ -98,17 +108,21 @@ These libraries (and `scs.h`) expose only four API functions:
     
     Called after all solves completed to free allocated memory and other cleanup.
 
-* `scs_int scs(Data * d, Cone * k, Sol * sol, Info * info);`
+* `scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info);`
 
     Convenience method that simply calls all the above routines in order, for cases where
     the workspace does not need to be reused. All inputs must have memory allocated
     before this call.
 
-The five relevant data structures are:
+The relevant data structures are:
 ```
+
     typedef struct PROBLEM_DATA Data;
+    typedef struct SETTINGS Settings;
     typedef struct SOL_VARS Sol;
     typedef struct INFO Info;
+    typedef struct SCALING Scaling;
+    typedef struct WORK Work;
     typedef struct CONE Cone;
 
     /* defined in linSys.h, can be overriden by user */
@@ -117,64 +131,92 @@ The five relevant data structures are:
     /* this struct defines the data matrix A */
     struct A_DATA_MATRIX {
         /* A is supplied in column compressed format */
-        scs_float * x;          /* A values, size: NNZ A */
-        scs_int * i;            /* A row index, size: NNZ A */
-        scs_int * p;            /* A column pointer, size: n+1 */
+        scs_float * x;      /* A values, size: NNZ A */
+        scs_int * i;        /* A row index, size: NNZ A */
+        scs_int * p;        /* A column pointer, size: n+1 */
+        scs_int m, n;       /* m rows, n cols */
     };
-
-    /* struct that containing standard problem data */
+    
+    /* struct containing problem data */
     struct PROBLEM_DATA {
-    	/* problem dimensions */
-        scs_int m, n;           /* A has m rows, n cols*/
+        /* these cannot change for multiple runs for the same call to scs_init */
+        scs_int m, n;       /* A has m rows, n cols */
+        AMatrix * A;        /* A is supplied in data format specified by linsys solver */
 
-        AMatrix * A;            /* A is supplied in data format specified by linsys solver */
-        scs_float *b, *c;       /* dense arrays for b (size m), c (size n) */
-    
-    	/* other input parameters: default suggested input */
-        scs_int max_iters;      /* maximum iterations to take: 2500 */
-        scs_float eps;          /* convergence tolerance: 1e-3 */
-        scs_float alpha;        /* relaxation parameter: 1.8 */
-        scs_float rho_x;        /* x equality constraint scaling: 1e-3 */
-        scs_float cg_rate;      /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
-        scs_int verbose;        /* boolean, write out progress: 1 */
-        scs_int normalize;      /* boolean, heuristic data rescaling: 1 */
-        scs_float scale;        /* if normalized, rescales data by this factor: 5 */
-        scs_int warm_start;     /* boolean, warm start with guess in Sol struct: 0 */
+        /* these can change for multiple runs for the same call to scs_init */
+        scs_float * b, *c;  /* dense arrays for b (size m), c (size n) */
+
+        Settings * stgs;    /* contains solver settings specified by user */
     };
-    
+
+    /* struct containing solver settings */
+    struct SETTINGS {
+        /* settings parameters: default suggested input */
+
+        /* these *cannot* change for multiple runs with the same call to scs_init */
+        scs_int normalize;  /* boolean, heuristic data rescaling: 1 */
+        scs_float scale;    /* if normalized, rescales by this factor: 5 */
+        scs_float rho_x;    /* x equality constraint scaling: 1e-3 */
+
+        /* these can change for multiple runs with the same call to scs_init */
+        scs_int max_iters;  /* maximum iterations to take: 2500 */
+        scs_float eps;      /* convergence tolerance: 1e-3 */
+        scs_float alpha;    /* relaxation parameter: 1.8 */
+        scs_float cg_rate;  /* for indirect, tolerance goes down like (1/iter)^cg_rate: 2 */
+        scs_int verbose;    /* boolean, write out progress: 1 */
+        scs_int warm_start; /* boolean, warm start (put initial guess in Sol struct): 0 */
+    };   
+
     /* contains primal-dual solution arrays */
     struct SOL_VARS {
-		scs_float *x, *y, *s;
+        scs_float * x, *y, *s;
     };
-    
+
     /* contains terminating information */
     struct INFO {
-        scs_int iter;           /* number of iterations taken */
-        char status[32];        /* status string, e.g. Solved */
-        scs_int statusVal;      /* status as scs_int, defined below */
-        scs_float pobj;         /* primal objective */
-        scs_float dobj;         /* dual objective */
-        scs_float resPri;       /* primal equality residual */
-        scs_float resDual;      /* dual equality residual */
-        scs_float resInfeas;    /* infeasibility cert residual */
-        scs_float resUnbdd;     /* unbounded cert residual */
-        scs_float relGap;       /* relative duality gap */
-        scs_float setupTime;    /* time (ms) taken for setup phase */
-        scs_float solveTime;    /* time (ms) taken for solve phase */
+        scs_int iter;       /* number of iterations taken */
+        char status[32];    /* status string, e.g. 'Solved' */
+        scs_int statusVal;  /* status as scs_int, defined below */
+        scs_float pobj;     /* primal objective */
+        scs_float dobj;     /* dual objective */
+        scs_float resPri;   /* primal equality residual */
+        scs_float resDual;  /* dual equality residual */
+        scs_float resInfeas;/* infeasibility cert residual */
+        scs_float resUnbdd; /* unbounded cert residual */
+        scs_float relGap;   /* relative duality gap */
+        scs_float setupTime;/* time taken for setup phase */
+        scs_float solveTime;/* time taken for solve phase */
     };
-   
-    /* contains information about the problem cone
-       NB: row of data matrix A must be specified in this exact order */
+
+
+    /* contains normalization variables */
+    struct SCALING {
+        scs_float *D, *E; /* for normalization */
+        scs_float meanNormRowA, meanNormColA;
+    };
+
+    /* NB: rows of data matrix A must be specified in this exact order */
     struct CONE {
-        scs_int f;              /* number of primal linear equality constraints */
-        scs_int l;              /* length of LP cone */
-        scs_int *q;   	        /* array of second-order cone constraints */
-        scs_int qsize;          /* length of SOC array */
-        scs_int *s;			    /* array of SD constraints */
-        scs_int ssize;		    /* length of SD array */
-        scs_int ep;             /* number of primal exponential cone triples */
-        scs_int ed;             /* number of dual exponential cone triples */
+        scs_int f;          /* number of linear equality constraints */
+        scs_int l;          /* length of LP cone */
+        scs_int *q;         /* array of second-order cone constraints */
+        scs_int qsize;      /* length of SOC array */
+        scs_int *s;         /* array of SD constraints */
+        scs_int ssize;      /* length of SD array */
+        scs_int ep;         /* number of primal exponential cone triples */
+        scs_int ed;         /* number of dual exponential cone triples */
+        scs_int psize;      /* number of (primal and dual) power cone triples */
+        scs_float * p;      /* array of power cone params, must be \in [-1, 1],
+                               negative values are interpreted as specifying the dual cone */
     };
+
+    /* SCS returns one of the following integers: (zero never returned)     */
+    #define SCS_SIGINT          (-5)
+    #define SCS_FAILED          (-4)
+    #define SCS_INDETERMINATE   (-3)
+    #define SCS_INFEASIBLE      (-2) /* primal infeasible, dual unbounded   */
+    #define SCS_UNBOUNDED       (-1) /* primal unbounded, dual infeasible   */
+    #define SCS_SOLVED          (1)
 ```
 
 The types `scs_float` and `scs_int` can be specified by the user, they default
@@ -210,7 +252,7 @@ two structs in `include/linSys.h` and plug it in.
 
 In order to solve SDPs you must have BLAS and LAPACK installed.
 Point `scs.mk` to the location of these libraries. Without
-these you can still solve SOCPs, LPs, and ECPs.
+these you can still solve problems using the other cones.
 
 ### Using SCS in Matlab
 Running `make_scs` in Matlab under the `matlab` folder will produce two mex
@@ -219,27 +261,19 @@ files, one for each of the direct and indirect solvers.
 Remember to include the `matlab` directory in your Matlab path if you wish to
 use the mex file in your Matlab code. The calling sequence is (for the direct version):
 
-	[x,y,s,info] = scs_direct(data,cones,params)
+	[x,y,s,info] = scs_direct(data,cones,settings)
 
-where data is a struct containing `A`, `b`, and `c`, params is a struct containing 
+where data is a struct containing `A`, `b`, and `c`, settings is a struct containing 
 solver options (see matlab file, can be empty),
 and cones is a struct that contains one or more of:
-+ `f` (num primal zero / dual free cones, i.e. primal equality constraints)
-+ `l` (num linear cones)
-+ `q` (array of SOCs sizes)
-+ `s` (array of SDCs sizes)
++ `f`  (num primal zero / dual free cones, i.e. primal equality constraints)
++ `l`  (num linear cones)
++ `q`  (array of SOCs sizes)
++ `s`  (array of SDCs sizes)
 + `ep` (num primal exponential cones)
-+ `ed` (num dual exponential cones).
-
++ `ed` (num dual exponential cones)
++ `p`  (array of primal/dual power params).
 Type `help scs_direct` at the Matlab prompt to see its documentation.
-
-SCS can be used in conjunction with [CVX](http://cvxr.com).
-You can use SCS with CVX as follows:
- 
-    >> cvx_solver 'scs'
-    >> cvx_begin
-    >> ...
-    >> cvx_end
 
 ### Using SCS in Python
 
@@ -271,5 +305,18 @@ The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and
 The returned object is a dictionary containing the fields `sol['x']`, `sol['y']`, `sol['s']`, and `sol['info']`.
 The first three are NUMPY arrays containing the relevant solution. The last field contains a dictionary with solver information.
 
-SCS is one of the deafult solvers in [CVXPY](http://www.github.com/cvxgrp/cvxpy). Follow the CVXPY instructions
-for information on how to change solvers.
+### Using SCS in Java / Scala
+
+SCS can be called from Java and Scala via the Java native interface (JNI).
+To compile the necessary libraries, `cd` into the `java` directory and type
+`make`. To test a random cone program type `make testproblem`.
+
+To solve a problem: create a new instance of `ConeProgram` with constructor
+
+```public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);```
+
+where the `IConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
+
+### Using SCS in Julia
+See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
+

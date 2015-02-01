@@ -21,7 +21,7 @@ scs_int parseWarmStart(const mxArray * p_mex, scs_float ** p, scs_int l) {
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-	/* matlab usage: scs(data,cone,params); */
+	/* matlab usage: scs(data,cone,settings); */
 	scs_int i, ns, status;
 	Data *d;
 	Cone *k;
@@ -49,7 +49,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const size_t *p_dims;
 
 	const mxArray *cone;
-	const mxArray *params;
+	const mxArray *settings;
 
 	const mwSize one[1] = { 1 };
 	const int numInfoFields = 11;
@@ -59,7 +59,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 
 	if (nrhs != 3) {
-		mexErrMsgTxt("Three arguments are required in this order: data struct, cone struct, params struct");
+		mexErrMsgTxt("Three arguments are required in this order: data struct, cone struct, settings struct");
 	}
 	if (nlhs > 4) {
 		mexErrMsgTxt("scs returns up to 4 output arguments only.");
@@ -104,7 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	}
 
 	cone = prhs[1];
-	params = prhs[2];
+	settings = prhs[2];
 	d->n = (scs_int) *(mxGetDimensions(c_mex));
 	d->m = (scs_int) *(mxGetDimensions(b_mex));
 
@@ -112,36 +112,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	d->c = (scs_float *)mxGetPr(c_mex);
 	setDefaultSettings(d);
 
-	/* params */
-	tmp = mxGetField(params, 0, "alpha");
+	/* settings */
+	tmp = mxGetField(settings, 0, "alpha");
 	if (tmp != NULL)
 		d->stgs->alpha = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "rho_x");
+	tmp = mxGetField(settings, 0, "rho_x");
 	if (tmp != NULL)
 		d->stgs->rho_x = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "max_iters");
+	tmp = mxGetField(settings, 0, "max_iters");
 	if (tmp != NULL)
 		d->stgs->max_iters = (scs_int) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "scale");
+	tmp = mxGetField(settings, 0, "scale");
 	if (tmp != NULL)
 		d->stgs->scale = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "eps");
+	tmp = mxGetField(settings, 0, "eps");
 	if (tmp != NULL)
 		d->stgs->eps = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "cg_rate");
+	tmp = mxGetField(settings, 0, "cg_rate");
 	if (tmp != NULL)
 		d->stgs->cg_rate = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "verbose");
+	tmp = mxGetField(settings, 0, "verbose");
 	if (tmp != NULL)
 		d->stgs->verbose = (scs_int) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "normalize");
+	tmp = mxGetField(settings, 0, "normalize");
 	if (tmp != NULL)
 		d->stgs->normalize = (scs_int) *mxGetPr(tmp);
 

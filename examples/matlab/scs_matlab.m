@@ -74,6 +74,8 @@ Q = sparse([zeros(n) data.A' data.c;
            -data.c' -data.b' 0]);
 %}
 
+K = validateCone(K);
+
 n = length(data.c);
 m = length(data.b);
 l=n+m+1;
