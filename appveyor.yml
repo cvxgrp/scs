@@ -25,5 +25,5 @@ build_script:
 
 test_script:
     - cd python
-    - C:\%PYLOC%\envs\testenv\Scripts\nosetests.exe test_scs_basic.py test_scs_rand.py
+    - C:\%PYLOC%\envs\testenv\Scripts\nosetests.exe -s test_scs_basic.py test_scs_rand.py
     - cd ..

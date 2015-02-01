@@ -100,7 +100,10 @@ static void printInitHeader(const Data * d, const Cone * k) {
 }
 
 static void populateOnFailure(scs_int m, scs_int n, Sol * sol, Info * info, scs_int statusVal, const char * msg) {
-	if (info) {
+	#ifdef EXTRAVERBOSE
+    scs_printf("populate on failure\n");
+    #endif
+    if (info) {
 		info->relGap = NAN;
 		info->resPri = NAN;
 		info->resDual = NAN;
@@ -134,7 +137,6 @@ static scs_int failure(Work * w, scs_int m, scs_int n, Sol * sol, Info * info, s
 	populateOnFailure(m, n, sol, info, status, ststr);
 	scs_printf("Failure:%s\n", msg);
 	endInterruptListener();
-	scs_finish(w);
 	return status;
 }
 
@@ -727,7 +729,10 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 }
 
 void scs_finish(Work * w) {
-	finishCone();
+	#ifdef EXTRAVERBOSE
+    scs_printf("enter finish\n");
+    #endif
+    finishCone();
 	if (w) {
 		if (w->stgs) {
 			if (w->stgs->normalize) {
@@ -741,6 +746,9 @@ void scs_finish(Work * w) {
 		freePriv(w->p);
 		freeWork(w);
 	}
+	#ifdef EXTRAVERBOSE
+    scs_printf("exit finish\n");
+    #endif
 }
 
 Work * scs_init(const Data * d, const Cone * k, Info * info) {
