@@ -242,7 +242,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* scs data structures */
 	Data * d = scs_calloc(1, sizeof(Data));
     Cone * k = scs_calloc(1, sizeof(Cone));
-    d->stgs = scs_malloc(sizeof(Settings));
+
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
@@ -258,6 +258,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     npy_intp veclen[1];
     PyObject *x, *y, *s, *returnDict, *infoDict;
     
+    d->stgs = scs_malloc(sizeof(Settings));
+
     /* set defaults */
 	setDefaultSettings(d);
 
