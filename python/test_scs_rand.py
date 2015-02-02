@@ -38,19 +38,24 @@ except ImportError:
 def check_solution(solution, expected):
   assert_almost_equals(solution, expected, places=2)
 
+def assert_(str1, str2):
+  if (str1 != str2):
+    print("assert failure: %s != %s" % (str1, str2))
+  assert str1 == str2
+
 def check_infeasible(sol):
-  assert sol['info']['status'] == 'Infeasible'
+  assert_(sol['info']['status'], 'Infeasible')
 
 def check_unbounded(sol):
-  assert sol['info']['status'] == 'Unbounded'
+  assert_(sol['info']['status'], 'Unbounded')
 
-random.seed(1)
-num_feas = 10
+random.seed(0)
+num_feas = 50
 num_unb = 10
 num_infeas = 10
 
 opts={'max_iters':100000,'eps':1e-4} # better accuracy than default to ensure test pass
-K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[2, 1, 2, 0, 1], 'ep':10, 'ed':10, 'p':[0.25, -0.75, 0.33, -0.33, 0.2]}
+K = {'f':10, 'l':25, 'q':[5, 10, 0 ,1], 's':[2, 1, 2, 0, 1], 'ep':0, 'ed':0, 'p':[0.25, -0.75, 0.33, -0.33, 0.2]}
 m = getConeDims(K)
 
 def test_feasible():
@@ -74,7 +79,7 @@ def test_infeasible():
 
 def test_unbounded():
     for i in range(num_unb):
-        data = genUnbounded(K, n = m/3)
+        data = genUnbounded(K, n = m / 2)
         
         yield check_unbounded, scs.solve(data, K, **opts)
         yield check_unbounded, scs.solve(data, K, use_indirect=True, **opts)

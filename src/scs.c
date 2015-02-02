@@ -346,32 +346,28 @@ static void setx(Work * w, Sol * sol) {
 }
 
 static void getInfo(Work * w, Sol * sol, Info * info, struct residuals * r, scs_int iter) {
-	info->iter = iter;
-	if (info->statusVal == SCS_SOLVED) {
-		info->relGap = r->relGap;
-		info->resPri = r->resPri;
-		info->resDual = r->resDual;
-		info->resInfeas = r->resInfeas;
-		info->resUnbdd = r->resUnbdd;
-		info->pobj = r->cTx_by_tau / r->tau;
-		info->dobj = -r->bTy_by_tau / r->tau;
-	} else if (info->statusVal == SCS_UNBOUNDED) {
-		info->relGap = NAN;
-		info->resPri = NAN;
-		info->resDual = NAN;
-		info->resInfeas = r->resInfeas;
-		info->resUnbdd = r->resUnbdd;
-		info->pobj = -INFINITY;
-		info->dobj = -INFINITY;
-	} else if (info->statusVal == SCS_INFEASIBLE) {
-		info->relGap = NAN;
-		info->resPri = NAN;
-		info->resDual = NAN;
-		info->resInfeas = r->resInfeas;
-		info->resUnbdd = r->resUnbdd;
-		info->pobj = INFINITY;
-		info->dobj = INFINITY;
-	}
+    info->iter = iter;
+    info->resInfeas = r->resInfeas;
+    info->resUnbdd = r->resUnbdd;
+    if (info->statusVal == SCS_SOLVED) {
+        info->relGap = r->relGap;
+        info->resPri = r->resPri;
+        info->resDual = r->resDual;
+        info->pobj = r->cTx_by_tau / r->tau;
+        info->dobj = -r->bTy_by_tau / r->tau;
+    } else if (info->statusVal == SCS_UNBOUNDED) {
+        info->relGap = NAN;
+        info->resPri = NAN;
+        info->resDual = NAN;
+        info->pobj = -INFINITY;
+        info->dobj = -INFINITY;
+    } else if (info->statusVal == SCS_INFEASIBLE) {
+        info->relGap = NAN;
+        info->resPri = NAN;
+        info->resDual = NAN;
+        info->pobj = INFINITY;
+        info->dobj = INFINITY;
+    }
 }
 
 /* sets solutions, re-scales by inner prods if infeasible or unbounded */
@@ -405,7 +401,7 @@ static void getSolution(Work * w, Sol * sol, Info * info, struct residuals * r, 
 	getInfo(w, sol, info, r, iter);
 }
 
-static void printSummary(scs_int i, struct residuals *r, timer * solveTimer) {
+static void printSummary(Work * w, scs_int i, struct residuals *r, timer * solveTimer) {
 	scs_printf("%*i|", (int) strlen(HEADER[0]), (int) i);
 	scs_printf("%*.2e ", (int) HSPACE, r->resPri);
 	scs_printf("%*.2e ", (int) HSPACE, r->resDual);
@@ -413,8 +409,21 @@ static void printSummary(scs_int i, struct residuals *r, timer * solveTimer) {
 	scs_printf("%*.2e ", (int) HSPACE, r->cTx_by_tau / r->tau);
 	scs_printf("%*.2e ", (int) HSPACE, -r->bTy_by_tau / r->tau);
 	scs_printf("%*.2e ", (int) HSPACE, r->kap / r->tau);
-	scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
-	scs_printf("\n");
+    scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
+    scs_printf("\n");
+
+#ifdef EXTRAVERBOSE
+    scs_printf("Norm u = %4f, ", calcNorm(w->u, w->n + w->m + 1));
+    scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, w->n + w->m + 1));
+    scs_printf("Norm v = %4f, ", calcNorm(w->v, w->n + w->m + 1));
+    scs_printf("tau = %4f, ", w->u[w->n + w->m]);
+    scs_printf("kappa = %4f, ", w->v[w->n + w->m]);
+    scs_printf("|u - u_prev| = %1.2e, ", calcNormDiff(w->u, w->u_prev, w->n + w->m + 1));
+    scs_printf("|u - u_t| = %1.2e, ", calcNormDiff(w->u, w->u_t, w->n + w->m + 1));
+    scs_printf("resInfeas = %1.2e, ", r->resInfeas);
+    scs_printf("resUnbdd = %1.2e\n", r->resUnbdd);
+#endif
+
 #ifdef MATLAB_MEX_FILE
 	mexEvalString("drawnow;");
 #endif
@@ -441,7 +450,7 @@ static void printHeader(Work * w, const Cone * k) {
 #endif
 }
 
-static void printFooter(Work * w, Info * info) {
+static void printFooter(const Data * d, Sol * sol, Work * w, Info * info) {
 	scs_int i;
 	char * linSysStr = getLinSysSummary(w->p, info);
 	char * coneStr = getConeSummary(info);
@@ -473,12 +482,12 @@ static void printFooter(Work * w, Info * info) {
 		scs_printf("Certificate of primal infeasibility:\n");
 		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resInfeas);
 		scs_printf("dist(y, K*) = 0\n");
-		scs_printf("b'y = %.4f\n", -1.0);
+		scs_printf("b'y = %.4f\n", innerProd(d->b, sol->y, d->m));
 	} else if (info->statusVal == SCS_UNBOUNDED) {
 		scs_printf("Certificate of dual infeasibility:\n");
 		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resUnbdd);
 		scs_printf("dist(s, K) = 0\n");
-		scs_printf("c'x = %.4f\n", -1.0);
+		scs_printf("c'x = %.4f\n", innerProd(d->c, sol->x, d->n));
 	} else {
 		scs_printf("Error metrics:\n");
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
@@ -625,8 +634,6 @@ static scs_int updateWork(const Data * d, Work * w, const Sol * sol) {
 	memcpy(w->b, d->b, d->m * sizeof(scs_float));
 	memcpy(w->c, d->c, d->n * sizeof(scs_float));
 
-	d = NULL; /* no longer needed */
-
 #ifdef EXTRAVERBOSE
 	printArray(w->b, m, "b");
 	scs_printf("pre-normalized norm b = %4f\n", calcNorm(w->b, m));
@@ -673,8 +680,6 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 	r.lastIter = -1;
 	updateWork(d, w, sol);
 
-	d = NULL; /* no longer need input data, everything in work */
-
 	if (w->stgs->verbose)
 		printHeader(w, k);
 	/* scs: */
@@ -701,29 +706,20 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 		if (w->stgs->verbose) {
 			if (i % PRINT_INTERVAL == 0) {
 				calcResiduals(w, &r, i);
-				printSummary(i, &r, &solveTimer);
-#ifdef EXTRAVERBOSE
-				scs_printf("Norm u = %4f, ", calcNorm(w->u, w->n + w->m + 1));
-				scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, w->n + w->m + 1));
-				scs_printf("Norm v = %4f, ", calcNorm(w->v, w->n + w->m + 1));
-				scs_printf("tau = %4f, ", w->u[w->n + w->m]);
-				scs_printf("kappa = %4f, ", w->v[w->n + w->m]);
-				scs_printf("|u - u_prev| = %4f, ", calcNormDiff(w->u, w->u_prev, w->n + w->m + 1));
-				scs_printf("|u - u_t| = %4f\n", calcNormDiff(w->u, w->u_t, w->n + w->m + 1));
-#endif
+				printSummary(w, i, &r, &solveTimer);
 			}
 		}
 	}
 	if (w->stgs->verbose) {
 		calcResiduals(w, &r, i);
-		printSummary(i, &r, &solveTimer);
+		printSummary(w, i, &r, &solveTimer);
 	}
 	/* populate solution vectors (unnormalized) and info */
 	getSolution(w, sol, info, &r, i);
 	info->solveTime = tocq(&solveTimer);
 
 	if (w->stgs->verbose)
-		printFooter(w, info);
+		printFooter(d, sol, w, info);
 	endInterruptListener();
 	return info->statusVal;
 }
