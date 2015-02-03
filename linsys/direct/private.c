@@ -127,7 +127,7 @@ scs_int LDLFactor(cs * A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
 	scs_free(Flag);
 	scs_free(Pattern);
 	scs_free(Y);
-	return (n - kk);
+	return (kk - n);
 }
 
 void LDLSolve(scs_float *x, scs_float b[], cs * L, scs_float D[], scs_int P[], scs_float * bp) {
