@@ -22,7 +22,6 @@ def genFeasible(K, n, density):
     data = {'A': A, 'b': b, 'c': c}
     return data, dot(c, x)
 
-
 def genInfeasible(K, n):
     m = getConeDims(K)
     
