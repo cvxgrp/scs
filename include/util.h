@@ -7,7 +7,9 @@
 #include "cones.h"
 
 /* timing code courtesty of A. Domahidi */
-#if (defined _WIN32 || defined _WIN64 || defined _WINDLL)
+#if (defined NOTIMER)
+typedef void* timer;
+#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 /* Use Windows QueryPerformanceCounter for timing */
 #include <Windows.h>
 typedef struct timer {

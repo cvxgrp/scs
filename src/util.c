@@ -2,7 +2,10 @@
 #include "constants.h"
 
 /* return milli-seconds */
-#if (defined _WIN32 || _WIN64 || defined _WINDLL)
+#if (defined NOTIMER)
+void tic(timer* t) {}
+scs_float tocq(timer* t) { return NAN; }
+#elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 void tic(timer* t)
 {
 	QueryPerformanceFrequency(&t->freq);

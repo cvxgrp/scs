@@ -48,6 +48,7 @@ RANLIB = ranlib
 # CFLAGS += -DNOVALIDATE # remove data validation step
 # CFLAGS += -DBLASSUFFIX="" # blas suffix no underscore
 # CFLAGS += -DEXTRAVERBOSE # extra verbosity level
+# CFLAGS += -DNOTIMER # no timing, times reported as nan
 CFLAGS += -DCOPYAMATRIX # if normalize, copy A
 
 ############ OPENMP: ############
