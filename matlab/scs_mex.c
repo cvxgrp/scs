@@ -228,7 +228,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     A->n = d->n;
     A->m = d->m;
     A->x = (scs_float *) mxGetPr(A_mex);
-    /* XXX:
+    /* TODO:
      * these return (mwIndex *), equivalent to (size_t *)
      * casting as (scs_int *), when scs_int = long seems to work
      * although maybe not on all machines:
