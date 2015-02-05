@@ -739,7 +739,7 @@ void scs_finish(Work * w) {
 #endif
 			}
 		}
-		freePriv(w->p);
+		if (w->p) freePriv(w->p);
 		freeWork(w);
 	}
 	#ifdef EXTRAVERBOSE
@@ -769,14 +769,14 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 	w = initWork(d, k);
 	/* strtoc("init", &initTimer); */
 	info->setupTime = tocq(&initTimer);
-	if (d->stgs->verbose) {
-		scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3);
-	} endInterruptListener();
+	if (d->stgs->verbose) { scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3); } 
+    endInterruptListener();
 	return w;
 }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
+    scs_int status;
 #if ( defined _WIN32 || defined _WIN64 ) && !defined MATLAB_MEX_FILE && !defined PYTHON
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
@@ -785,13 +785,14 @@ scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
 #ifdef EXTRAVERBOSE
 	scs_printf("size of scs_int = %lu, size of scs_float = %lu\n", sizeof(scs_int), sizeof(scs_float));
 #endif
-	if (!w) {
-		return failure(NULL, d ? d->m : -1, d ? d->n : -1, sol, info, SCS_FAILED, "could not initialize work",
-				"Failure");
+	if (w) {
+        scs_solve(w, d, k, sol, info); 
+        status = info->statusVal;
+    } else { 
+        status = failure(NULL, d ? d->m : -1, d ? d->n : -1, sol, info, SCS_FAILED, "could not initialize work", "Failure");
 	}
-	scs_solve(w, d, k, sol, info);
 	scs_finish(w);
-	return info->statusVal;
+	return status;
 }
 
 /* TODO: re-integrate this eventually
