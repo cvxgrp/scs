@@ -88,6 +88,11 @@ void printConeData(const Cone * k) {
 	}
 	scs_printf("num ep = %i\n", (int) k->ep);
 	scs_printf("num ed = %i\n", (int) k->ed);
+	scs_printf("num POW = %i\n", (int) k->psize);
+	scs_printf("pow array:\n");
+	for (i = 0; i < k->psize; i++) {
+		scs_printf("%d\n", (double) k->p[i]);
+	}
 }
 
 void printWork(const Work * w) {

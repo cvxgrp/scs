@@ -163,13 +163,13 @@ static void warmStartVars(Work * w, const Sol * sol) {
 static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float * s, const scs_float tau,
 		scs_float *nmAxs) {
 	scs_int i;
-	scs_float pres = 0, scale, *pr = w->pr, *D = w->scal->D;
+	scs_float pres = 0, scale, *pr = w->pr;
 	*nmAxs = 0;
 	memset(pr, 0, w->m * sizeof(scs_float));
 	accumByA(w->A, w->p, x, pr);
 	addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
 	for (i = 0; i < w->m; ++i) {
-		scale = w->stgs->normalize ? D[i] / (w->sc_b * w->stgs->scale) : 1;
+		scale = w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1;
 		scale = scale * scale;
 		*nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
@@ -180,12 +180,12 @@ static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float 
 
 static scs_float calcDualResid(Work * w, const scs_float * y, const scs_float tau, scs_float *nmATy) {
 	scs_int i;
-	scs_float dres = 0, scale, *dr = w->dr, *E = w->scal->E;
+	scs_float dres = 0, scale, *dr = w->dr;
 	*nmATy = 0;
 	memset(dr, 0, w->n * sizeof(scs_float));
 	accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
 	for (i = 0; i < w->n; ++i) {
-		scale = w->stgs->normalize ? E[i] / (w->sc_c * w->stgs->scale) : 1;
+		scale = w->stgs->normalize ? w->scal->E[i] / (w->sc_c * w->stgs->scale) : 1;
 		scale = scale * scale;
 		*nmATy += (dr[i] * dr[i]) * scale;
 		dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
@@ -196,7 +196,10 @@ static scs_float calcDualResid(Work * w, const scs_float * y, const scs_float ta
 
 /* calculates un-normalized quantities */
 static void calcResiduals(Work * w, struct residuals * r, scs_int iter) {
-	scs_float * x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
+#ifdef EXTRAVERBOSE
+    scs_printf("enter calc resids\n");
+#endif
+    scs_float * x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
 	scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
 	scs_int n = w->n, m = w->m;
 
@@ -209,7 +212,7 @@ static void calcResiduals(Work * w, struct residuals * r, scs_int iter) {
 	r->tau = ABS(w->u[n + m]);
 	r->kap = ABS(w->v[n + m]) / (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
 
-	nmpr_tau = calcPrimalResid(w, x, s, r->tau, &nmAxs_tau);
+    nmpr_tau = calcPrimalResid(w, x, s, r->tau, &nmAxs_tau);
 	nmdr_tau = calcDualResid(w, y, r->tau, &nmATy_tau);
 
 	r->bTy_by_tau = innerProd(y, w->b, m) / (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
@@ -224,6 +227,9 @@ static void calcResiduals(Work * w, struct residuals * r, scs_int iter) {
 	r->resPri = nmpr_tau / (1 + w->nm_b) / r->tau;
 	r->resDual = nmdr_tau / (1 + w->nm_c) / r->tau;
 	r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
+#ifdef EXTRAVERBOSE
+    scs_printf("exit calc resids\n");
+#endif
 }
 
 static void coldStartVars(Work * w) {
@@ -594,7 +600,7 @@ static Work * initWork(const Data *d, const Cone * k) {
 		return NULL;
 	}
 	w->A = d->A;
-	if (w->stgs->normalize) {
+    if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
 		if (!copyAMatrix(&(w->A), d->A)) {
 			scs_printf("ERROR: copy A matrix failed\n");

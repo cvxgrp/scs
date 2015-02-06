@@ -224,15 +224,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         k->p = NULL;
     }
 
-	A = scs_malloc(sizeof(AMatrix));
+	A = scs_calloc(1, sizeof(AMatrix));
 	A->x = (scs_float *) mxGetPr(A_mex);
 	A->n = d->n;
     A->m = d->m;
 	d->A = A;
 	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
-	d->warm_start = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
-	d->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
-	d->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
+	d->stgs->warm_start = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
+	d->stgs->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
+	d->stgs->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
 
 	status = scs(d, k, &sol, &info);
 
