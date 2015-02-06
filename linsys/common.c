@@ -14,7 +14,7 @@ scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src) {
 	A->x = scs_malloc(sizeof(scs_float) * Anz); /* A values, size: NNZ A */
 	A->i = scs_malloc(sizeof(scs_int) * Anz); /* A row index, size: NNZ A */
 	A->p = scs_malloc(sizeof(scs_int) * (src->n + 1)); /* A column pointer, size: n+1 */
-	if (!A || !A->x || !A->i || !A->p) return 0;
+	if (!A->x || !A->i || !A->p) return 0;
 	memcpy(A->x, src->x, sizeof(scs_float) * Anz);
 	memcpy(A->i, src->i, sizeof(scs_int) * Anz);
 	memcpy(A->p, src->p, sizeof(scs_int) * (src->n + 1));
