@@ -3,7 +3,7 @@ package scs;
 public class RandomLinearProgram extends ConeProgram {
     private double opt;
 
-    public RandomLinearProgram(int m, int n, Data d, Params p, IConeSolver solver) {
+    public RandomLinearProgram(int m, int n, Data d, Settings p, IConeSolver solver) {
         this.p = p;
         this.d = d;
         this.solver = solver;

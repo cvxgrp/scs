@@ -47,7 +47,7 @@ public class AMatrix {
             }
         }
     }
-
+    
     public static AMatrix generateRandomMatrix(int m, int n) {
         AMatrix A = new AMatrix(m, n, new double[n * m]);
         Random rng = new Random();

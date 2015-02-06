@@ -4,8 +4,9 @@ for i=1:length(K.q)
     l = l + K.q(i);
 end
 for i=1:length(K.s)
-    l = l + (K.s(i))^2;
+    l = l + getSdConeSize(K.s(i));
 end
-l = l + K.ep*3;
-l = l + K.ed*3;
+l = l + K.ep * 3;
+l = l + K.ed * 3;
+l = l + length(K.p) * 3;
 end

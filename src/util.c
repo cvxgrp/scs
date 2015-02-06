@@ -1,6 +1,11 @@
 #include "util.h"
+#include "constants.h"
+
 /* return milli-seconds */
-#if (defined _WIN32 || _WIN64 || defined _WINDLL)
+#if (defined NOTIMER)
+void tic(timer* t) {}
+scs_float tocq(timer* t) { return NAN; }
+#elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 void tic(timer* t)
 {
 	QueryPerformanceFrequency(&t->freq);
@@ -67,7 +72,7 @@ scs_float strtoc(char * str, timer * t) {
 	return time;
 }
 
-void printConeData(Cone * k) {
+void printConeData(const Cone * k) {
 	scs_int i;
 	scs_printf("num zeros = %i\n", (int) k->f);
 	scs_printf("num LP = %i\n", (int) k->l);
@@ -85,8 +90,8 @@ void printConeData(Cone * k) {
 	scs_printf("num ed = %i\n", (int) k->ed);
 }
 
-void printWork(Data * d, Work * w) {
-	scs_int i, l = d->n + d->m;
+void printWork(const Work * w) {
+	scs_int i, l = w->n + w->m;
 	scs_printf("\n u_t is \n");
 	for (i = 0; i < l; i++) {
 		scs_printf("%f\n", w->u_t[i]);
@@ -101,22 +106,22 @@ void printWork(Data * d, Work * w) {
 	}
 }
 
-void printData(Data * d) {
+void printData(const Data * d) {
 	scs_printf("m = %i\n", (int) d->m);
 	scs_printf("n = %i\n", (int) d->n);
 
-	scs_printf("max_iters = %i\n", (int) d->max_iters);
-	scs_printf("verbose = %i\n", (int) d->verbose);
-	scs_printf("normalize = %i\n", (int) d->normalize);
-	scs_printf("warmStart = %i\n", (int) d->warm_start);
-	scs_printf("eps = %4f\n", d->eps);
-	scs_printf("alpha = %4f\n", d->alpha);
-	scs_printf("rhoX = %4f\n", d->rho_x);
-	scs_printf("cg_rate = %4f\n", d->cg_rate);
-	scs_printf("scale = %4f\n", d->scale);
+	scs_printf("max_iters = %i\n", (int) d->stgs->max_iters);
+	scs_printf("verbose = %i\n", (int) d->stgs->verbose);
+	scs_printf("normalize = %i\n", (int) d->stgs->normalize);
+	scs_printf("warmStart = %i\n", (int) d->stgs->warm_start);
+	scs_printf("eps = %4f\n", d->stgs->eps);
+	scs_printf("alpha = %4f\n", d->stgs->alpha);
+	scs_printf("rhoX = %4f\n", d->stgs->rho_x);
+	scs_printf("cg_rate = %4f\n", d->stgs->cg_rate);
+	scs_printf("scale = %4f\n", d->stgs->scale);
 }
 
-void printArray(scs_float * arr, scs_int n, char * name) {
+void printArray(const scs_float * arr, scs_int n, char * name) {
 	scs_int i, j, k = 0;
 	scs_int numOnOneLine = 10;
 	scs_printf("\n");
@@ -139,9 +144,10 @@ void freeData(Data * d, Cone * k) {
             scs_free(d->b);
         if (d->c)
             scs_free(d->c);
+        if (d->stgs)
+            scs_free(d->stgs);
         if (d->A) {
             freeAMatrix(d->A);
-            scs_free(d->A);
         }
         scs_free(d);
     }
@@ -150,6 +156,8 @@ void freeData(Data * d, Cone * k) {
             scs_free(k->q);
         if (k->s)
             scs_free(k->s);
+        if (k->p)
+            scs_free(k->p);
         scs_free(k);
     }
     d = NULL;
@@ -174,3 +182,17 @@ void freeSol(Sol *sol) {
     }
     sol = NULL;
 }
+
+/* assumes d->stgs already allocated memory */
+void setDefaultSettings(Data * d) {
+    d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
+    d->stgs->eps = EPS; /* convergence tolerance: 1e-3 */
+    d->stgs->alpha = ALPHA; /* relaxation parameter: 1.8 */
+    d->stgs->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */
+    d->stgs->scale = SCALE; /* if normalized, rescales by this factor: 1 */
+    d->stgs->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
+    d->stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
+    d->stgs->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
+    d->stgs->warm_start = WARM_START;
+}
+

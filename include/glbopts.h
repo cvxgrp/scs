@@ -57,16 +57,21 @@ typedef float scs_float;
 #endif
 #endif
 
+#ifdef NULL
+#undef NULL
+#endif
+#define NULL 0
+
 #ifndef MAX
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
 #ifndef MIN
-#define MIN(a,b) ((a) > (b) ? (b) : (a))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef ABS
-#define ABS(x) ((x) < 0 ? -(x) : (x))
+#define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
 
 #ifndef POWF
@@ -86,9 +91,12 @@ typedef float scs_float;
 #endif
 
 typedef struct PROBLEM_DATA Data;
+typedef struct SETTINGS Settings;
 typedef struct SOL_VARS Sol;
 typedef struct INFO Info;
+typedef struct SCALING Scaling;
 typedef struct WORK Work;
 typedef struct CONE Cone;
 
 #endif
+

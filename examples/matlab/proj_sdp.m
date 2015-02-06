@@ -1,17 +1,24 @@
 function z = proj_sdp(z,n)
-if isempty(z)
+if n==0
     return;
-elseif length(z)==1
+elseif n==1
     z = max(z,0);
     return;
-elseif length(z)==2
-    z = proj_sdp2(z);
-    return;
 end
-z = reshape(z,n,n);
-zs=(z+z')/2;
 
-[V,S] = eig(zs);
+% expand to full size matrix
+b = tril(ones(n));
+b(b == 1) = z;
+z = b;
+z = (z + z');
+z = z - diag(diag(z)) / 2;
+
+% rescale so projection works, and matrix norm preserved
+% see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
+% scale diags by sqrt(2)
+z(eye(n) == 1) = z(eye(n) == 1) .* sqrt(2);
+
+[V,S] = eig(z);
 S = diag(S);
 
 idx = find(S>0);
@@ -19,5 +26,8 @@ V = V(:,idx);
 S = S(idx);
 z = V*diag(S)*V';
 
-z = z(:);
+% scale diags by 1/sqrt(2)
+z(eye(n) == 1) = z(eye(n) == 1) ./ sqrt(2);
+
+z = z(tril(ones(n)) == 1);
 end

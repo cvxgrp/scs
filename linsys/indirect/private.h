@@ -11,8 +11,7 @@ struct PRIVATE_DATA{
 	scs_float * Gp;
 	scs_float * M; /* pre-conditioner */
 	scs_float * z;
-  /* Gram matrix */
-	scs_float * G;
+   	scs_float * G; /* Gram matrix */
 };
 
 #endif

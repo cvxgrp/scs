@@ -63,8 +63,9 @@ void genRandomProbData(Data * d, Cone * k, Sol * opt_sol) {
 	/* temporary variables */
 	scs_float * z = scs_calloc(m, sizeof(scs_float));
 	scs_int i;
-
 	A->x = scs_calloc(n * m, sizeof(scs_float));
+	A->n = d->n;
+	A->m = d->m;
 	/* y, s >= 0 and y'*s = 0 */
 	for (i = 0; i < m; i++) {
 		y[i] = z[i] = rand_scs_float();

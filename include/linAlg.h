@@ -14,3 +14,4 @@ void addScaledArray(scs_float * a, const scs_float * b, scs_int n, const scs_flo
 scs_float calcNormDiff(const scs_float *a, const scs_float *b, scs_int l);
 scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l);
 #endif
+

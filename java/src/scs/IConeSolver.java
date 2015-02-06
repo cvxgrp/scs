@@ -1,5 +1,5 @@
 package scs;
 
 public interface IConeSolver {
-    public Solution solve(Data d, Cone k, Params p);
+    public void solve(Data d, Cone k, Settings p, Solution sol, Info info);
 }

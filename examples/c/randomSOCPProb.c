@@ -59,10 +59,11 @@ int main(int argc, char **argv) {
 	srand(seed);
 	scs_printf("seed : %i\n", seed);
 
-	k = scs_calloc(1, sizeof(Cone));
-	d = scs_calloc(1, sizeof(Data));
-	sol = scs_calloc(1, sizeof(Sol));
-	opt_sol = scs_calloc(1, sizeof(Sol));
+    k = scs_calloc(1, sizeof(Cone));
+    d = scs_calloc(1, sizeof(Data));
+    d->stgs = scs_calloc(1, sizeof(Settings));
+    sol = scs_calloc(1, sizeof(Sol));
+    opt_sol = scs_calloc(1, sizeof(Sol));
 
 	m = 3 * n;
 
@@ -119,14 +120,17 @@ int main(int argc, char **argv) {
 	d->m = m;
 	d->n = n;
 	genRandomProbData(d, k, opt_sol);
-	setDefaultParams(d);
+	setDefaultSettings(d);
 	/* solve! */
 	scs(d, k, sol, &info);
 
 	scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
 	scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));
+    if (sol->x) { scs_printf("scs pri obj= %4f\n", innerProd(d->c, sol->x, d->n)); }
+    if (sol->y) { scs_printf("scs dua obj = %4f\n", -innerProd(d->b, sol->y, d->m)); }
 
 	freeData(d, k);
+    
 	freeSol(sol);
 	freeSol(opt_sol);
 

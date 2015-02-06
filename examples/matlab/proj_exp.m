@@ -1,10 +1,9 @@
 function x = proj_exp(v)
+global EXP_CONE_MAX_ITERS;
+global EXP_CONE_TOL;
 
-global CONE_MAX_ITERS;
-global CONE_TOL;
-
-CONE_MAX_ITERS = 100;
-CONE_TOL = 1e-8;
+EXP_CONE_MAX_ITERS = 100;
+EXP_CONE_TOL = 1e-8;
 
 r = v(1); s = v(2); t = v(3);
 % v in cl(Kexp)
@@ -29,7 +28,7 @@ end
 
 x = v;
 [ub,lb] = getRhoUb(v);
-for iter=1:CONE_MAX_ITERS;
+for iter=1:EXP_CONE_MAX_ITERS;
     rho = (ub + lb)/2;
     [g,x] = calcGrad(v,rho,x);
     if (g > 0)
@@ -37,7 +36,7 @@ for iter=1:CONE_MAX_ITERS;
     else
         ub = rho;
     end
-    if (ub - lb < CONE_TOL)
+    if (ub - lb < EXP_CONE_TOL)
         break
     end
 end
@@ -74,10 +73,11 @@ end
 
 
 function z = newton_exp_onz(rho, y_hat, z_hat,w)
-global CONE_MAX_ITERS;
-global CONE_TOL;
-t = max(max(w - z_hat, -z_hat),CONE_TOL);
-for iter=1:CONE_MAX_ITERS;
+global EXP_CONE_MAX_ITERS;
+global EXP_CONE_TOL;
+
+t = max(max(w - z_hat, -z_hat),EXP_CONE_TOL);
+for iter=1:EXP_CONE_MAX_ITERS;
     f = (1/rho^2)*t*(t + z_hat) - y_hat/rho + log(t/rho) + 1;
     fp = (1/rho^2)*(2*t + z_hat) + 1/t;
     
@@ -88,7 +88,7 @@ for iter=1:CONE_MAX_ITERS;
     elseif (t <= 0)
         t = 0;
         break;
-    elseif (abs(f)<CONE_TOL)
+    elseif (abs(f)<EXP_CONE_TOL)
         break;
     end
 end

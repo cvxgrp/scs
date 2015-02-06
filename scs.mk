@@ -26,7 +26,7 @@ SHARED = so
 endif
 
 # Add on default CFLAGS
-CFLAGS += -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
+CFLAGS += -g -DCTRLC=1 -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
@@ -47,6 +47,8 @@ RANLIB = ranlib
 # CFLAGS += -DNOVALIDATE # remove data validation step
 # CFLAGS += -DBLASSUFFIX="" # blas suffix no underscore
 # CFLAGS += -DEXTRAVERBOSE # extra verbosity level
+# CFLAGS += -DNOTIMER # no timing, times reported as nan
+CFLAGS += -DCOPYAMATRIX # if normalize, copy A
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):

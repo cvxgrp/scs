@@ -121,12 +121,47 @@ static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject 
 			}
 		} else {
 			return printErr(key);
-		}
-	}
-	*vsize = n;
-	*varr = q;
-	return 0;
+        }
+        if (PyErr_Occurred()) {
+            /* potentially could have been triggered before */
+            return printErr(key);
+        }
+    }
+    *vsize = n;
+    *varr = q;
+    return 0;
 }
+
+static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObject * cone) {
+    /* get cone['key'] */
+    scs_int i, n = 0;
+    scs_float * q = NULL;
+    PyObject *obj = PyDict_GetItemString(cone, key);
+    if (obj) {
+        if (PyList_Check(obj)) {
+            n = PyList_Size(obj);
+            q = scs_calloc(n, sizeof(scs_float));
+            for (i = 0; i < n; ++i) {
+                PyObject *qi = PyList_GetItem(obj, i);
+                q[i] = (scs_float) PyFloat_AsDouble(qi);
+            }
+        } else if (PyInt_Check(obj) || PyLong_Check(obj) || PyFloat_Check(obj)) {
+            n = 1;
+            q = scs_malloc(sizeof(scs_float));
+            q[0] = (scs_float) PyFloat_AsDouble(obj);
+        } else {
+            return printErr(key);
+        }
+        if (PyErr_Occurred()) {
+            /* potentially could have been triggered before */
+            return printErr(key);
+        }
+    }
+    *vsize = n;
+    *varr = q;
+    return 0;
+}
+
 
 static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * opts) {
     *v = defVal;
@@ -143,36 +178,40 @@ static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * op
 }
 
 static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
-	if (ps->Ax) {
-		Py_DECREF(ps->Ax);
-	}
-	if (ps->b) {
-		Py_DECREF(ps->b);
-	}
-	if (ps->c) {
-		Py_DECREF(ps->c);
-	}
-	if (ps->x0) {
-		Py_DECREF(ps->x0);
-	}
-	if (ps->y0) {
-		Py_DECREF(ps->y0);
-	}
-	if (ps->s0) {
-		Py_DECREF(ps->s0);
-	}
-	if (k) {
-		if (k->q)
-			scs_free(k->q);
-		if (k->s)
-			scs_free(k->s);
-		scs_free(k);
-	}
-	if (d) {
-		if (d->A)
-			scs_free(d->A);
-		scs_free(d);
-	}
+    if (ps->Ax) {
+        Py_DECREF(ps->Ax);
+    }
+    if (ps->b) {
+        Py_DECREF(ps->b);
+    }
+    if (ps->c) {
+        Py_DECREF(ps->c);
+    }
+    if (ps->x0) {
+        Py_DECREF(ps->x0);
+    }
+    if (ps->y0) {
+        Py_DECREF(ps->y0);
+    }
+    if (ps->s0) {
+        Py_DECREF(ps->s0);
+    }
+    if (k) {
+        if (k->q)
+            scs_free(k->q);
+        if (k->s)
+            scs_free(k->s);
+        if (k->p)
+            scs_free(k->p);
+        scs_free(k);
+    }
+    if (d) {
+        if (d->A)
+            scs_free(d->A);
+        if (d->stgs)
+            scs_free(d->stgs);
+        scs_free(d);
+    }
 }
 
 static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char * str) {
@@ -193,14 +232,15 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyObject *normalize = NULL;
     struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL };
 	/* scs data structures */
-	Data * d = scs_calloc(sizeof(Data), 1);
-	Cone * k = scs_calloc(sizeof(Cone), 1);
+	Data * d = scs_calloc(1, sizeof(Data));
+    Cone * k = scs_calloc(1, sizeof(Cone));
+
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
 	static char *kwlist[] = { "shape", "Ax", "b", "c", "cone", "warm",
         "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", NULL };
-	
+
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
 	static char *argparse_string = "(ll)O!O!O!O!|O!O!O!lddddd";
@@ -209,28 +249,30 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 #endif
     npy_intp veclen[1];
     PyObject *x, *y, *s, *returnDict, *infoDict;
-    
-    /* set defaults */
-	setDefaultParams(d);
 
-	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist, 
-        &(d->m), 
-        &(d->n), 
+    d->stgs = scs_malloc(sizeof(Settings));
+
+    /* set defaults */
+	setDefaultSettings(d);
+
+	if ( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
+        &(d->m),
+        &(d->n),
         &PyArray_Type, &Ax,
-        &PyArray_Type, &b, 
-        &PyArray_Type, &c, 
+        &PyArray_Type, &b,
+        &PyArray_Type, &c,
         &PyDict_Type, &cone,
         &PyDict_Type, &warm,
         &PyBool_Type, &verbose,
         &PyBool_Type, &normalize,
-        &(d->max_iters),
-        &(d->scale),
-        &(d->eps),
-        &(d->cg_rate),
-        &(d->alpha),
-        &(d->rho_x)) ) { 
+        &(d->stgs->max_iters),
+        &(d->stgs->scale),
+        &(d->stgs->eps),
+        &(d->stgs->cg_rate),
+        &(d->stgs->alpha),
+        &(d->stgs->rho_x)) ) {
         PySys_WriteStderr("error parsing inputs\n");
-        return NULL; 
+        return NULL;
     }
 
 	if (d->m < 0) {
@@ -254,8 +296,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	ps.Ax = getContiguous(Ax, scs_floatType);
     A = scs_malloc(sizeof(AMatrix));
 	A->x = (scs_float *) PyArray_DATA(ps.Ax);
+	A->n = d->n;
+    A->m = d->m;
 	d->A = A;
-	
+
     /*d->Anz = d->Ap[d->n]; */
 	/*d->Anz = PyArray_DIM(Ai,0); */
 	/* set c */
@@ -276,7 +320,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	}
 	ps.b = getContiguous(b, scs_floatType);
 	d->b = (scs_float *) PyArray_DATA(ps.b);
-    
+
     if (getPosIntParam("f", &(k->f), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field f");
 	}
@@ -289,6 +333,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	if (getConeArrDim("s", &(k->s), &(k->ssize), cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field s");
 	}
+	if (getConeFloatArr("p", &(k->p), &(k->psize), cone) < 0) {
+		return finishWithErr(d, k, &ps, "failed to parse cone field p");
+	}
 	if (getPosIntParam("ep", &(k->ep), 0, cone) < 0) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ep");
 	}
@@ -296,34 +343,34 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return finishWithErr(d, k, &ps, "failed to parse cone field ed");
 	}
 
-    d->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : VERBOSE;
-    d->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : NORMALIZE;
-    if(d->max_iters < 0) {
+    d->stgs->verbose = verbose ? (scs_int) PyObject_IsTrue(verbose) : VERBOSE;
+    d->stgs->normalize = normalize ? (scs_int) PyObject_IsTrue(normalize) : NORMALIZE;
+    if(d->stgs->max_iters < 0) {
 		return finishWithErr(d, k, &ps, "max_iters must be positive");
 	}
-    if(d->scale < 0) {
+    if(d->stgs->scale < 0) {
 		return finishWithErr(d, k, &ps, "scale must be positive");
 	}
-    if(d->eps < 0) {
+    if(d->stgs->eps < 0) {
 		return finishWithErr(d, k, &ps, "eps must be positive");
 	}
-    if(d->cg_rate < 0) {
+    if(d->stgs->cg_rate < 0) {
 		return finishWithErr(d, k, &ps, "cg_rate must be positive");
 	}
-    if(d->alpha < 0) {
+    if(d->stgs->alpha < 0) {
 		return finishWithErr(d, k, &ps, "alpha must be positive");
 	}
-    if(d->rho_x < 0) {
+    if(d->stgs->rho_x < 0) {
 		return finishWithErr(d, k, &ps, "rho_x must be positive");
 	}
 	/* parse warm start if set */
-    d->warm_start = WARM_START;
+    d->stgs->warm_start = WARM_START;
 	if (warm) {
-		d->warm_start = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
-		d->warm_start |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
-		d->warm_start |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+		d->stgs->warm_start = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
+		d->stgs->warm_start |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
+		d->stgs->warm_start |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
 	}
-	
+
     /* Solve! */
     scs(d, k, &sol, &info);
 
@@ -356,7 +403,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
 			"dobj", (scs_float) info.dobj, "resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual,
 			"relGap", (scs_float) info.relGap, "resInfeas", (scs_float) info.resInfeas, "resUnbdd", (scs_float) info.resUnbdd,
-			"solveTime", (scs_float) (info.solveTime / 1e3), "setupTime", (scs_float) (info.setupTime / 1e3),
+			"solveTime", (scs_float) (info.solveTime), "setupTime", (scs_float) (info.setupTime),
 			"status", info.status);
 
     returnDict = Py_BuildValue("{s:O,s:O,s:O,s:O}", "x", x, "y", y, "s", s, "info", infoDict);

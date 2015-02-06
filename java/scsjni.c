@@ -69,36 +69,40 @@ Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
     k->f = getIntUsingGetter(env, coneJava, "getF");
     k->ep = getIntUsingGetter(env, coneJava, "getEp");
     k->ed = getIntUsingGetter(env, coneJava, "getEd");
+    k->p = getFloatArrayUsingGetter(env, coneJava, "getP", &(k->psize));
     return k;
 }
 
-AMatrix * getAMatrix(JNIEnv *env, jobject AJava) {
+AMatrix * getAMatrix(JNIEnv *env, jobject AJava, scs_int m, scs_int n) {
     scs_int leni, lenp, lenx;
     AMatrix * A = scs_calloc(1, sizeof(AMatrix));
     // populate A
     A->x = getFloatArrayUsingGetter(env, AJava, "getValues", &lenx);
+    A->m = m;
+    A->n = n;
     return A;
 }
 
 void populateParams(JNIEnv * env, jobject paramsJava, Data * d) {
-    d->max_iters = getIntUsingGetter(env, paramsJava, "getMaxIters");
-    d->eps = getFloatUsingGetter(env, paramsJava, "getEps");
-    d->alpha = getFloatUsingGetter(env, paramsJava, "getAlpha");
-    d->rho_x = getFloatUsingGetter(env, paramsJava, "getRhoX");
-    d->cg_rate = getFloatUsingGetter(env, paramsJava, "getCgRate");
-    d->verbose = getBooleanUsingGetter(env, paramsJava, "isVerbose");
-    d->normalize = getBooleanUsingGetter(env, paramsJava, "isNormalize");
-    d->scale = getFloatUsingGetter(env, paramsJava, "getScale");
-    d->warm_start = getBooleanUsingGetter(env, paramsJava, "isWarmStart");
+    d->stgs = scs_malloc(sizeof(Settings));
+    d->stgs->max_iters = getIntUsingGetter(env, paramsJava, "getMaxIters");
+    d->stgs->eps = getFloatUsingGetter(env, paramsJava, "getEps");
+    d->stgs->alpha = getFloatUsingGetter(env, paramsJava, "getAlpha");
+    d->stgs->rho_x = getFloatUsingGetter(env, paramsJava, "getRhoX");
+    d->stgs->cg_rate = getFloatUsingGetter(env, paramsJava, "getCgRate");
+    d->stgs->verbose = getBooleanUsingGetter(env, paramsJava, "isVerbose");
+    d->stgs->normalize = getBooleanUsingGetter(env, paramsJava, "isNormalize");
+    d->stgs->scale = getFloatUsingGetter(env, paramsJava, "getScale");
+    d->stgs->warm_start = getBooleanUsingGetter(env, paramsJava, "isWarmStart");
 }
 
 Data * getDataStruct(JNIEnv * env, jobject AJava, jdoubleArray bJava, jdoubleArray cJava, jobject paramsJava) {
     Data * d = scs_calloc(1, sizeof(Data));
-    d->A = getAMatrix(env, AJava);
     d->b = (*env)->GetDoubleArrayElements(env, bJava, NULL);
     d->m = (*env)->GetArrayLength(env, bJava);
     d->c = (*env)->GetDoubleArrayElements(env, cJava, NULL);
     d->n = (*env)->GetArrayLength(env, cJava);
+    d->A = getAMatrix(env, AJava, d->m, d->n);
     populateParams(env, paramsJava, d);
     return d;
 }
@@ -111,18 +115,51 @@ void setFloatArrayUsingSetter(JNIEnv * env, jobject obj, scs_float * arr, scs_in
     (*env)->CallVoidMethod(env, obj, mid, out);
 }
 
+void setStringUsingSetter(JNIEnv * env, jobject obj, char * str, char * method) {
+    jclass clazz = (*env)->GetObjectClass(env, obj);
+    jmethodID mid = (*env)->GetMethodID(env, clazz, method, "(Ljava/lang/String;)V");
+    (*env)->CallVoidMethod(env, obj, mid, (*env)->NewStringUTF(env, str));
+}
+
+void setIntUsingSetter(JNIEnv * env, jobject obj, scs_int i, char * method) {
+    jclass clazz = (*env)->GetObjectClass(env, obj);
+    jmethodID mid = (*env)->GetMethodID(env, clazz, method, "(I)V");
+    (*env)->CallVoidMethod(env, obj, mid, i);
+}
+
+void setFloatUsingSetter(JNIEnv * env, jobject obj, scs_float f, char * method) {
+    jclass clazz = (*env)->GetObjectClass(env, obj);
+    jmethodID mid = (*env)->GetMethodID(env, clazz, method, "(D)V");
+    (*env)->CallVoidMethod(env, obj, mid, f);
+}
+
 void setSol(JNIEnv * env, jobject solJava, Data * d, Sol * sol) {
     setFloatArrayUsingSetter(env, solJava, sol->x, d->n, "setX");
     setFloatArrayUsingSetter(env, solJava, sol->y, d->m, "setY");
     setFloatArrayUsingSetter(env, solJava, sol->s, d->m, "setS");
 }
 
+void setInfo(JNIEnv * env, jobject infoJava, Info * info) {
+    setIntUsingSetter(env, infoJava, info->iter, "setIter");
+    setIntUsingSetter(env, infoJava, info->statusVal, "setStatusVal");
+    setStringUsingSetter(env, infoJava, info->status, "setStatus");
+    setFloatUsingSetter(env, infoJava, info->pobj, "setPobj");
+    setFloatUsingSetter(env, infoJava, info->dobj, "setDobj");
+    setFloatUsingSetter(env, infoJava, info->resPri, "setResPri");
+    setFloatUsingSetter(env, infoJava, info->resDual, "setResDual");
+    setFloatUsingSetter(env, infoJava, info->resInfeas, "setResInfeas");
+    setFloatUsingSetter(env, infoJava, info->resUnbdd, "setResUnbdd");
+    setFloatUsingSetter(env, infoJava, info->relGap, "setRelGap");
+    setFloatUsingSetter(env, infoJava, info->setupTime, "setSetupTime");
+    setFloatUsingSetter(env, infoJava, info->solveTime, "setSolveTime");
+}
+
 #ifdef INDIRECTJ
 JNIEXPORT void JNICALL Java_scs_IndirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava, jobject infoJava)
 #else
 JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, jobject AJava,
-        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava)
+        jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava, jobject infoJava)
 #endif
 {
     /* Parse out the data into C form, then pass to SCS, the convert solution back to java object */
@@ -135,8 +172,10 @@ JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve (JNIEnv *env, jclass clazz, 
     scs(d, k, sol, info);
 
     setSol(env, solJava, d, sol);
+    setInfo(env, infoJava, info);
 
-    freeData(d,k);
+    freeData(d, k);
     freeSol(sol);
+    scs_free(info);
 }
 

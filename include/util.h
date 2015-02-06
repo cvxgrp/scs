@@ -7,7 +7,9 @@
 #include "cones.h"
 
 /* timing code courtesty of A. Domahidi */
-#if (defined _WIN32 || defined _WIN64 || defined _WINDLL)
+#if (defined NOTIMER)
+typedef void* timer;
+#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 /* Use Windows QueryPerformanceCounter for timing */
 #include <Windows.h>
 typedef struct timer {
@@ -41,12 +43,13 @@ scs_float toc(timer * t);
 scs_float strtoc(char * str, timer * t);
 scs_float tocq(timer * t);
 
-void printConeData(Cone * k);
-void printData(Data * d);
-void printWork(Data * d, Work * w);
-void printArray(scs_float * arr, scs_int n, char * name);
-void setDefaultParams(Data * d);
+void printConeData(const Cone * k);
+void printData(const Data * d);
+void printWork(const Work * w);
+void printArray(const scs_float * arr, scs_int n, char * name);
+void setDefaultSettings(Data * d);
 void freeSol(Sol * sol);
 void freeData(Data * d, Cone * k);
 
 #endif
+

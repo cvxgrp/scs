@@ -10,10 +10,9 @@ def genFeasible(K, n, density):
     m = getConeDims(K)
     
     z = randn(m,)
-    z = symmetrizeSDP(z, K)  # for SD cones
     y = proj_dual_cone(z, K)  # y = s - z;
     s = y - z  # s = proj_cone(z,K)
-    
+
     A = sparse.rand(m, n, density, format='csc')
     A.data = randn(A.nnz)
     x = randn(n)
@@ -22,12 +21,10 @@ def genFeasible(K, n, density):
     data = {'A': A, 'b': b, 'c': c}
     return data, dot(c, x)
 
-
 def genInfeasible(K, n):
     m = getConeDims(K)
     
     z = randn(m,)
-    z = symmetrizeSDP(z, K)  # for SD cones
     y = proj_dual_cone(z, K)  # y = s - z;
     A = randn(m, n)
     A = A - outer(y, transpose(A).dot(y)) / linalg.norm(y) ** 2  # dense...
@@ -42,7 +39,6 @@ def genUnbounded(K, n):
     m = getConeDims(K)
     
     z = randn(m);
-    z = symmetrizeSDP(z, K);  # for SD cones
     s = proj_cone(z, K);
     A = randn(m, n);
     x = randn(n);
@@ -62,14 +58,18 @@ def getConeDims(K):
         l = l + K['q'][i];
     
     for i in range(0, len(K['s'])):
-        l = l + K['s'][i] ** 2;
+        l = l + get_sd_cone_size(K['s'][i]);
 
     l = l + K['ep'] * 3;
     l = l + K['ed'] * 3;
+    l = l + len(K['p']) * 3;
     return l
 
 def proj_dual_cone(z, c):
     return z + proj_cone(-z, c)
+
+def get_sd_cone_size(n):
+    return (n * (n + 1)) / 2
 
 def proj_cone(z, c):
     z = copy(z)
@@ -77,6 +77,7 @@ def proj_cone(z, c):
     lp_len = c['l']
     q = c['q']
     s = c['s']
+    p = c['p']
     # free/zero cone
     z[0:free_len] = 0;
     # lp cone
@@ -88,8 +89,9 @@ def proj_cone(z, c):
         idx = idx + q[i]
     # SDCs
     for i in range(0, len(s)):
-        z[idx:idx + s[i] ** 2] = proj_sdp(z[idx:idx + s[i] ** 2], s[i])
-        idx = idx + s[i] ** 2
+        sz = get_sd_cone_size(s[i])
+        z[idx:idx + sz] = proj_sdp(z[idx:idx + sz], s[i])
+        idx = idx + sz
     # Exp primal
     for i in range(0, c['ep']):
         z[idx:idx + 3] = project_exp_bisection(z[idx:idx + 3])
@@ -97,6 +99,13 @@ def proj_cone(z, c):
     # Exp dual
     for i in range(0, c['ed']):
         z[idx:idx + 3] = z[idx:idx + 3] + project_exp_bisection(-z[idx:idx + 3])
+        idx = idx + 3
+    # Power
+    for i in range(0, len(p)):
+        if (p[i] >= 0): # primal
+            z[idx:idx + 3] = proj_pow(z[idx:idx + 3], p[i])
+        else: # dual
+            z[idx:idx + 3] = z[idx:idx + 3] + proj_pow(-z[idx:idx + 3], -p[i])
         idx = idx + 3
     return z
 
@@ -125,25 +134,68 @@ def proj_sdp(z, n):
         return
     elif n == 1:
         return pos(z)
-    z = reshape(z, (n, n), order='F')
-    zs = (z + transpose(z)) / 2
+    tidx = triu_indices(n)
+    tidx = (tidx[1], tidx[0])
+    didx = diag_indices(n)
     
-    w, v = linalg.eig(zs)  # cols of v are eignvectors
-    w = pos(w)
-    z = dot(v, dot(diag(w), transpose(v)))
-    return reshape(z, (n * n,))
+    a = zeros((n, n))
+    a[tidx] = z
+    a = (a + transpose(a))
+    a[didx] = a[didx] / sqrt(2.)
 
-def symmetrizeSDP(z, K):
-    l = K['f'] + K['l']
-    for i in range(0, len(K['q'])):
-        l = l + K['q'][i]
-    for i in range(0, len(K['s'])):
-        n = K['s'][i]
-        V = reshape(z[l:l + n * n], (n, n), order='F')
-        V = (V + transpose(V)) / 2
-        z[l:l + n * n] = reshape(V, (n * n,))
-        l = l + n * n
+    w, v = linalg.eig(a)  # cols of v are eigenvectors
+    w = pos(w)
+    a = dot(v, dot(diag(w), transpose(v)))
+    a[didx] = a[didx] / sqrt(2.)
+    z = a[tidx]
     return z
+
+def proj_pow(v, a):
+    CONE_MAX_ITERS = 20;
+    CONE_TOL = 1e-8;
+    
+    if (v[0]>=0 and v[1]>=0 and (v[0]**a) * (v[1]**(1-a)) >= abs(v[2])):
+        return v
+    
+    if (v[0]<=0 and v[1]<=0 and ((-v[0]/a)**a)*((-v[1]/(1-a))**(1-a)) >= abs(v[2])):
+        return zeros(3,)
+    
+    xh = v[0];
+    yh = v[1];
+    zh = v[2];
+    rh = abs(zh);
+    r = rh / 2;
+    for iter in range(0, CONE_MAX_ITERS):
+        x = calcX(r, xh, rh, a);
+        y = calcX(r, yh, rh, 1-a);
+        
+        f = calcF(x,y,r,a);
+        if abs(f) < CONE_TOL:
+            break
+        
+        dxdr = calcdxdr(x,xh,rh,r,a);
+        dydr = calcdxdr(y,yh,rh,r, (1-a));
+        fp = calcFp(x,y,dxdr,dydr,a);
+        
+        r = min(max(r - f/fp,0), rh);
+    
+    z = sign(zh) * r;
+    v[0] = x
+    v[1] = y
+    v[2] = z
+    return v
+ 
+def calcX(r, xh, rh, a):
+    return max(0.5 * (xh + sqrt(xh*xh + 4 * a * (rh - r) * r)), 1e-12)
+
+def calcdxdr(x,xh,rh,r, a):
+    return  a * (rh - 2*r) / (2 * x - xh)
+
+def calcF(x,y,r,a):
+    return (x**a) * (y**(1-a)) - r
+
+def calcFp(x,y,dxdr,dydr,a):
+    return (x**a) * (y**(1-a)) * (a * dxdr / x + (1-a) * dydr / y) - 1
 
 def project_exp_bisection(v):
     v = copy(v)

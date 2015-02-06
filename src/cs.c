@@ -4,9 +4,6 @@
  Tim Davis et. al., for the full package please visit
  http://www.cise.ufl.edu/research/sparse/CSparse/ */
 
-#define CS_MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define CS_MIN(a,b) (((a) < (b)) ? (a) : (b))
-
 /* wrapper for malloc */
 static void *cs_malloc(scs_int n, scs_int size) {
 	return (scs_malloc(n * size));
@@ -64,7 +61,7 @@ cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values, scs_int trip
 		return (NULL); /* out of memory */
 	A->m = m; /* define dimensions and nzmax */
 	A->n = n;
-	A->nzmax = nzmax = CS_MAX(nzmax, 1);
+	A->nzmax = nzmax = MAX(nzmax, 1);
 	A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
 	A->p = cs_malloc(triplet ? nzmax : n + 1, sizeof(scs_int));
 	A->i = cs_malloc(nzmax, sizeof(scs_int));
@@ -131,7 +128,7 @@ cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
 			if (i > j)
 				continue; /* skip lower triangular part of A */
 			i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
-			w[CS_MAX(i2, j2)]++; /* column count of C */
+			w[MAX(i2, j2)]++; /* column count of C */
 		}
 	}
 	cs_cumsum(Cp, w, n); /* compute column pointers of C */
@@ -142,10 +139,11 @@ cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
 			if (i > j)
 				continue; /* skip lower triangular part of A*/
 			i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
-			Ci[q = w[CS_MAX(i2, j2)]++] = CS_MIN(i2, j2);
+			Ci[q = w[MAX(i2, j2)]++] = MIN(i2, j2);
 			if (Cx)
 				Cx[q] = Ax[p];
 		}
 	}
 	return (cs_done(C, w, NULL, 1)); /* success; free workspace, return C */
 }
+

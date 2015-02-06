@@ -4,35 +4,31 @@
 #define MIN_SCALE (1e-3)
 #define MAX_SCALE (1e3)
 
-void normalizeBC(Data * d, Work * w) {
+void normalizeBC(Work * w) {
 	scs_int i;
-	scs_float *D = w->D, *E = w->E;
-	/*
-    scs_printf("norm b = %4f\n", calcNorm(d->b, d->m));
-    scs_printf("norm c = %4f\n", calcNorm(d->b, d->n));
-    */
+	scs_float *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
     /* scale b */
-	for (i = 0; i < d->m; ++i) {
-		d->b[i] /= D[i];
-	}
-	w->sc_b = w->meanNormColA / MAX(calcNorm(d->b, d->m), MIN_SCALE);
-	/* scale c */
-	for (i = 0; i < d->n; ++i) {
-		d->c[i] /= E[i];
-	}
-	w->sc_c = w->meanNormRowA / MAX(calcNorm(d->c, d->n), MIN_SCALE);
-	scaleArray(d->b, w->sc_b * d->scale, d->m);
-	scaleArray(d->c, w->sc_c * d->scale, d->n);
+    for (i = 0; i < w->m; ++i) {
+        b[i] /= D[i];
+    }
+    w->sc_b = w->scal->meanNormColA / MAX(calcNorm(b, w->m), MIN_SCALE);
+    /* scale c */
+    for (i = 0; i < w->n; ++i) {
+        c[i] /= E[i];
+    }
+    w->sc_c = w->scal->meanNormRowA / MAX(calcNorm(c, w->n), MIN_SCALE);
+    scaleArray(b, w->sc_b * w->stgs->scale, w->m);
+    scaleArray(c, w->sc_c * w->stgs->scale, w->n);
 }
 
-void calcScaledResids(Data * d, Work * w, struct residuals * r) {
-	scs_float * D = w->D;
-	scs_float * E = w->E;
+void calcScaledResids(Work * w, struct residuals * r) {
+	scs_float * D = w->scal->D;
+	scs_float * E = w->scal->E;
 	scs_float * u = w->u;
 	scs_float * u_t = w->u_t;
 	scs_float * u_prev = w->u_prev;
 	scs_float tmp;
-	scs_int i, n = d->n, m = d->m;
+	scs_int i, n = w->n, m = w->m;
 
 	r->resPri = 0;
 	for (i = 0; i < n; ++i) {
@@ -61,49 +57,51 @@ void calcScaledResids(Data * d, Work * w, struct residuals * r) {
 	r->resDual = sqrt(r->resDual);
 }
 
-void normalizeWarmStart(Data *d, Work * w) {
+void normalizeWarmStart(Work * w) {
 	scs_int i;
-	scs_float * D = w->D;
-	scs_float * E = w->E;
+	scs_float * D = w->scal->D;
+	scs_float * E = w->scal->E;
 	scs_float * x = w->u;
-	scs_float * y = &(w->u[d->n]);
-	scs_float * s = &(w->v[d->n]);
-	for (i = 0; i < d->n; ++i) {
+	scs_float * y = &(w->u[w->n]);
+	scs_float * s = &(w->v[w->n]);
+	for (i = 0; i < w->n; ++i) {
 		x[i] *= (E[i] * w->sc_b);
 	}
-	for (i = 0; i < d->m; ++i) {
+	for (i = 0; i < w->m; ++i) {
 		y[i] *= (D[i] * w->sc_c);
 	}
-	for (i = 0; i < d->m; ++i) {
-		s[i] /= (D[i] / (w->sc_b * d->scale));
+	for (i = 0; i < w->m; ++i) {
+		s[i] /= (D[i] / (w->sc_b * w->stgs->scale));
 	}
 }
 
-void unNormalizeSol(Data *d, Work * w, Sol * sol) {
+void unNormalizeSol(Work * w, Sol * sol) {
 	scs_int i;
-	scs_float * D = w->D;
-	scs_float * E = w->E;
-	for (i = 0; i < d->n; ++i) {
+	scs_float * D = w->scal->D;
+	scs_float * E = w->scal->E;
+	for (i = 0; i < w->n; ++i) {
 		sol->x[i] /= (E[i] * w->sc_b);
 	}
-	for (i = 0; i < d->m; ++i) {
+	for (i = 0; i < w->m; ++i) {
 		sol->y[i] /= (D[i] * w->sc_c);
 	}
-	for (i = 0; i < d->m; ++i) {
-		sol->s[i] *= D[i] / (w->sc_b * d->scale);
+	for (i = 0; i < w->m; ++i) {
+		sol->s[i] *= D[i] / (w->sc_b * w->stgs->scale);
 	}
 }
 
-void unNormalizeBC(Data *d, Work * w, Sol * sol) {
+/* unused:
+void unNormalizeBC(Work * w, Sol * sol) {
 	scs_int i;
 	scs_float * D = w->D;
 	scs_float * E = w->E;
-	for (i = 0; i < d->n; ++i) {
-		d->c[i] *= E[i] / (w->sc_c * d->scale);
+	for (i = 0; i < w->n; ++i) {
+		w->c[i] *= E[i] / (w->sc_c * w->scale);
 	}
-	for (i = 0; i < d->m; ++i) {
-		d->b[i] *= D[i] / (w->sc_b * d->scale);
+	for (i = 0; i < w->m; ++i) {
+		w->b[i] *= D[i] / (w->sc_b * w->scale);
 	}
 }
-
+*/
 #endif
+

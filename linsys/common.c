@@ -1,7 +1,19 @@
 #include "common.h"
 
-scs_int validateLinSys(Data *d) {
-	return (d->A && d->A->x);
+scs_int validateLinSys(const AMatrix * A) {
+	return (A && A->x);
+}
+
+scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src) {
+   AMatrix * A = scs_calloc(1, sizeof(AMatrix));
+   if (!A) return 0;
+   A->n = src->n;
+   A->m = src->m;
+   A->x = scs_malloc(sizeof(scs_float) * src->n * src->m);
+   if (!A->x) return 0;
+   memcpy(A->x, src->x, sizeof(scs_float) * src->n * src->m);
+   *dstp = A;
+   return 1; 
 }
 
 void freeAMatrix(AMatrix * A) {
@@ -9,32 +21,31 @@ void freeAMatrix(AMatrix * A) {
         scs_free(A->x);
 }
 
-void printAMatrix(Data * d) {
+void printAMatrix(AMatrix * A) {
     scs_int i, j;
-    AMatrix * A = d->A;
     /* TODO: this is to prevent clogging stdout */
-    if (d->n * d->m < 2500) {
+    if (A->n * A->m < 2500) {
         scs_printf("\n");
-        for (i = 0; i < d->n; ++i) {
+        for (i = 0; i < A->n; ++i) {
             scs_printf("Col %li: ", (long) i);
-            for (j = 0; j < d->m; ++j) {
-                scs_printf("A[%li,%li] = %4f, ", (long) j, (long) i, A->x[i * d->m + j]);
+            for (j = 0; j < A->m; ++j) {
+                scs_printf("A[%li,%li] = %4f, ", (long) j, (long) i, A->x[i * A->m + j]);
             }
-            scs_printf("norm col = %4f\n", calcNorm(&(A->x[i * d->m]), d->m));
+            scs_printf("norm col = %4f\n", calcNorm(&(A->x[i * A->m]), A->m));
         }
-        scs_printf("norm A = %4f\n", calcNorm(A->x, d->n * d->m));
+        scs_printf("norm A = %4f\n", calcNorm(A->x, A->n * A->m));
     }
 }
 
-void normalizeA(Data * d, Work * w, Cone * k) {
+void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * scal) {
 	scs_int i, j, count, delta;
 	scs_float wrk;
-    scs_float * D = scs_calloc(d->m, sizeof(scs_float));
-    scs_float * E = scs_calloc(d->n, sizeof(scs_float));
-    scs_float minRowScale = MIN_SCALE * SQRTF(d->n), maxRowScale = MAX_SCALE * SQRTF(d->n);
-    scs_float minColScale = MIN_SCALE * SQRTF(d->m), maxColScale = MAX_SCALE * SQRTF(d->m);
+    scs_float * D = scs_calloc(A->m, sizeof(scs_float));
+    scs_float * E = scs_calloc(A->n, sizeof(scs_float));
+    scs_float minRowScale = MIN_SCALE * SQRTF(A->n), maxRowScale = MAX_SCALE * SQRTF(A->n);
+    scs_float minColScale = MIN_SCALE * SQRTF(A->m), maxColScale = MAX_SCALE * SQRTF(A->m);
     scs_int *boundaries, numBoundaries = getConeBoundaries(k, &boundaries);
-    blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
+    blasint n = (blasint) A->n, m = (blasint) A->m, one = 1, nm = n * m;
 
 #ifdef EXTRAVERBOSE
     timer normalizeTimer;
@@ -44,10 +55,9 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 #endif
 
 	/* calculate row norms */
-	for (i = 0; i < d->m; ++i) {
-		D[i] = BLAS(nrm2)(&n, &(d->A->x[i]), &m);
+	for (i = 0; i < A->m; ++i) {
+		D[i] = BLAS(nrm2)(&n, &(A->x[i]), &m);
 	}
-
 	/* mean of norms of rows across each cone  */
 	count = boundaries[0];
 	for (i = 1; i < numBoundaries; ++i) {
@@ -64,7 +74,7 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 	}
 	scs_free(boundaries);
 
-    for (i = 0; i < d->m; ++i) {
+    for (i = 0; i < A->m; ++i) {
         if (D[i] < minRowScale)
             D[i] = 1;
         else if (D[i] > maxRowScale)
@@ -72,38 +82,38 @@ void normalizeA(Data * d, Work * w, Cone * k) {
     }
 
     /* scale the rows with D */
-	for (i = 0; i < d->m; ++i) {
+	for (i = 0; i < A->m; ++i) {
 		wrk = 1.0 / D[i];
-		BLAS(scal)(&n, &wrk, &(d->A->x[i]), &m);
+		BLAS(scal)(&n, &wrk, &(A->x[i]), &m);
 	}
 
 	/* calculate and scale by col norms, E */
-	for (i = 0; i < d->n; ++i) {
-        E[i] = BLAS(nrm2)(&m, &(d->A->x[i * d->m]), &one);
+	for (i = 0; i < A->n; ++i) {
+        E[i] = BLAS(nrm2)(&m, &(A->x[i * A->m]), &one);
         if (E[i] < minColScale)
             E[i] = 1;
         else if (E[i] > maxColScale)
             E[i] = maxColScale;
         wrk = 1.0 / E[i];
-        BLAS(scal)(&m, &wrk, &(d->A->x[i * d->m]), &one);
+        BLAS(scal)(&m, &wrk, &(A->x[i * A->m]), &one);
     }
 
-	w->meanNormRowA = 0.0;
-	for (i = 0; i < d->m; ++i) {
-		w->meanNormRowA += BLAS(nrm2)(&n, &(d->A->x[i]), &m) / d->m;
+	scal->meanNormRowA = 0.0;
+	for (i = 0; i < A->m; ++i) {
+		scal->meanNormRowA += BLAS(nrm2)(&n, &(A->x[i]), &m) / A->m;
 	}
 
-    w->meanNormColA = 0.0;
-	for (i = 0; i < d->n; ++i) {
-		w->meanNormColA += BLAS(nrm2)(&m, &(d->A->x[i * d->m]), &one) / d->n;
+    scal->meanNormColA = 0.0;
+	for (i = 0; i < A->n; ++i) {
+		scal->meanNormColA += BLAS(nrm2)(&m, &(A->x[i * A->m]), &one) / A->n;
 	}
 
-	if (d->scale != 1) {
-		BLAS(scal)(&nm, &d->scale, d->A->x, &one);
+	if (stgs->scale != 1) {
+		BLAS(scal)(&nm, &stgs->scale, A->x, &one);
 	}
 
-	w->D = D;
-	w->E = E;
+	scal->D = D;
+	scal->E = E;
 
 #ifdef EXTRAVERBOSE
     scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
@@ -111,31 +121,73 @@ void normalizeA(Data * d, Work * w, Cone * k) {
 #endif
 }
 
-void unNormalizeA(Data *d, Work * w) {
+void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal) {
 	scs_int i;
-	scs_float * D = w->D;
-	scs_float * E = w->E;
-	scs_float invScale = 1.0 / d->scale;
-	blasint n = (blasint) d->n, m = (blasint) d->m, one = 1, nm = n * m;
-	for (i = 0; i < d->n; ++i) {
-		BLAS(scal)(&m, &(E[i]), &(d->A->x[i * d->m]), &one);
+	scs_float * D = scal->D;
+	scs_float * E = scal->E;
+	scs_float invScale = 1.0 / stgs->scale;
+	blasint n = (blasint) A->n, m = (blasint) A->m, one = 1, nm = n * m;
+	for (i = 0; i < A->n; ++i) {
+		BLAS(scal)(&m, &(E[i]), &(A->x[i * A->m]), &one);
 	}
-	for (i = 0; i < d->m; ++i) {
-		BLAS(scal)(&n, &(D[i]), &(d->A->x[i]), &m);
+	for (i = 0; i < A->m; ++i) {
+		BLAS(scal)(&n, &(D[i]), &(A->x[i]), &m);
 	}
-	BLAS(scal)(&nm, &invScale, d->A->x, &one);
+	BLAS(scal)(&nm, &invScale, A->x, &one);
 }
 
-void accumByAtrans(Data * d, Priv * p, const scs_float * x, scs_float * y) {
-	scs_float * A = d->A->x;
-	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
+void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+	blasint one = 1, n = (blasint) A->n, m = (blasint) A->m;
 	scs_float onef = 1.0;
-	BLAS(gemv)("Transpose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
+	BLAS(gemv)("Transpose", &m, &n, &onef, A->x, &m, x, &one, &onef, y, &one);
 }
 
-void accumByA(Data * d, Priv * p, const scs_float * x, scs_float * y) {
-	scs_float * A = d->A->x;
-	blasint one = 1, n = (blasint) d->n, m = (blasint) d->m;
+void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+	blasint one = 1, n = (blasint) A->n, m = (blasint) A->m;
 	scs_float onef = 1.0;
-	BLAS(gemv)("NoTranspose", &m, &n, &onef, A, &m, x, &one, &onef, y, &one);
+	BLAS(gemv)("NoTranspose", &m, &n, &onef, A->x, &m, x, &one, &onef, y, &one);
 }
+
+void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
+	/* y  = A'*x
+	 A in column compressed format
+	 parallelizes over columns (rows of A')
+	 */
+	scs_int p, j;
+	scs_int c1, c2;
+	scs_float yj;
+#ifdef OPENMP
+#pragma omp parallel for private(p,c1,c2,yj)
+#endif
+	for (j = 0; j < n; j++) {
+		yj = y[j];
+		c1 = Ap[j];
+		c2 = Ap[j + 1];
+		for (p = c1; p < c2; p++) {
+			yj += Ax[p] * x[Ai[p]];
+		}
+		y[j] = yj;
+	}
+}
+
+void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
+	/*y = A*x
+	 A in column compressed format
+	 this parallelizes over columns and uses
+	 pragma atomic to prevent concurrent writes to y
+	 */
+	scs_int p, j;
+	scs_int c1, c2;
+	scs_float xj;
+	/*#pragma omp parallel for private(p,c1,c2,xj)  */
+	for (j = 0; j < n; j++) {
+		xj = x[j];
+		c1 = Ap[j];
+		c2 = Ap[j + 1];
+		for (p = c1; p < c2; p++) {
+			/*#pragma omp atomic */
+			y[Ai[p]] += Ax[p] * xj;
+		}
+	}
+}
+

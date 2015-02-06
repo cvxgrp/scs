@@ -21,7 +21,7 @@ scs_int parseWarmStart(const mxArray * p_mex, scs_float ** p, scs_int l) {
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-	/* matlab usage: scs(data,cone,params); */
+	/* matlab usage: scs(data,cone,settings); */
 	scs_int i, ns, status;
 	Data *d;
 	Cone *k;
@@ -40,13 +40,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mxArray *ks;
 	const mxArray *kep;
 	const mxArray *ked;
+	const mxArray *kp;
 	const scs_float *q_mex;
-	const scs_float *s_mex;
-	const size_t *q_dims;
-	const size_t *s_dims;
+    const scs_float *s_mex;
+    const scs_float *p_mex;
+    const size_t *q_dims;
+    const size_t *s_dims;
+    const size_t *p_dims;
 
 	const mxArray *cone;
-	const mxArray *params;
+	const mxArray *settings;
 
 	const mwSize one[1] = { 1 };
 	const int numInfoFields = 11;
@@ -56,12 +59,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 
 	if (nrhs != 3) {
-		mexErrMsgTxt("Three arguments are required in this order: data struct, cone struct, params struct");
+		mexErrMsgTxt("Three arguments are required in this order: data struct, cone struct, settings struct");
 	}
 	if (nlhs > 4) {
 		mexErrMsgTxt("scs returns up to 4 output arguments only.");
 	}
 	d = mxMalloc(sizeof(Data));
+    d->stgs = mxMalloc(sizeof(Settings));
 	k = mxMalloc(sizeof(Cone));
 	data = prhs[0];
 
@@ -100,46 +104,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	}
 
 	cone = prhs[1];
-	params = prhs[2];
+	settings = prhs[2];
 	d->n = (scs_int) *(mxGetDimensions(c_mex));
 	d->m = (scs_int) *(mxGetDimensions(b_mex));
 
 	d->b = (scs_float *)mxGetPr(b_mex);
 	d->c = (scs_float *)mxGetPr(c_mex);
-	setDefaultParams(d);
+	setDefaultSettings(d);
 
-	/* params */
-	tmp = mxGetField(params, 0, "alpha");
+	/* settings */
+	tmp = mxGetField(settings, 0, "alpha");
 	if (tmp != NULL)
-		d->alpha = (scs_float) *mxGetPr(tmp);
+		d->stgs->alpha = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "rho_x");
+	tmp = mxGetField(settings, 0, "rho_x");
 	if (tmp != NULL)
-		d->rho_x = (scs_float) *mxGetPr(tmp);
+		d->stgs->rho_x = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "max_iters");
+	tmp = mxGetField(settings, 0, "max_iters");
 	if (tmp != NULL)
-		d->max_iters = (scs_int) *mxGetPr(tmp);
+		d->stgs->max_iters = (scs_int) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "scale");
+	tmp = mxGetField(settings, 0, "scale");
 	if (tmp != NULL)
-		d->scale = (scs_float) *mxGetPr(tmp);
+		d->stgs->scale = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "eps");
+	tmp = mxGetField(settings, 0, "eps");
 	if (tmp != NULL)
-		d->eps = (scs_float) *mxGetPr(tmp);
+		d->stgs->eps = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "cg_rate");
+	tmp = mxGetField(settings, 0, "cg_rate");
 	if (tmp != NULL)
-		d->cg_rate = (scs_float) *mxGetPr(tmp);
+		d->stgs->cg_rate = (scs_float) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "verbose");
+	tmp = mxGetField(settings, 0, "verbose");
 	if (tmp != NULL)
-		d->verbose = (scs_int) *mxGetPr(tmp);
+		d->stgs->verbose = (scs_int) *mxGetPr(tmp);
 
-	tmp = mxGetField(params, 0, "normalize");
+	tmp = mxGetField(settings, 0, "normalize");
 	if (tmp != NULL)
-		d->normalize = (scs_int) *mxGetPr(tmp);
+		d->stgs->normalize = (scs_int) *mxGetPr(tmp);
 
 	/* cones */
 	kf = mxGetField(cone, 0, "f");
@@ -201,8 +205,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		k->ssize = 0;
 		k->s = NULL;
 	}
+
+    kp = mxGetField(cone, 0, "p");
+    if (kp && !mxIsEmpty(kp)) {
+        p_mex = mxGetPr(kp);
+        ns = (scs_int) mxGetNumberOfDimensions(kp);
+        p_dims = mxGetDimensions(kp);
+        k->psize = (scs_int) p_dims[0];
+        if (ns > 1 && p_dims[0] == 1) {
+            k->psize = (scs_int) p_dims[1];
+        }
+        k->p = mxMalloc(sizeof(scs_float) * k->psize);
+        for (i = 0; i < k->psize; i++) {
+            k->p[i] = (scs_float) p_mex[i];
+        }
+    } else {
+        k->psize = 0;
+        k->p = NULL;
+    }
+
 	A = scs_malloc(sizeof(AMatrix));
 	A->x = (scs_float *) mxGetPr(A_mex);
+	A->n = d->n;
+    A->m = d->m;
 	d->A = A;
 	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
 	d->warm_start = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
@@ -265,12 +290,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	/*info.time is millisecs - return value in secs */
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "setupTime", tmp);
-	*mxGetPr(tmp) = info.setupTime / 1e3;
+	*mxGetPr(tmp) = info.setupTime;
 
 	/*info.time is millisecs - return value in secs */
 	tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
 	mxSetField(plhs[3], 0, "solveTime", tmp);
-	*mxGetPr(tmp) = info.solveTime / 1e3;
+	*mxGetPr(tmp) = info.solveTime;
 
 	freeMex(d, k);
 	return;
@@ -280,11 +305,14 @@ void freeMex(Data * d, Cone * k) {
 	if (k->q)
 		scs_free(k->q);
 	if (k->s)
-		scs_free(k->s);
-	if (d) {
-		if(d->A) scs_free(d->A);
-		scs_free(d);
-	}
-	if (k)
-		scs_free(k);
+        scs_free(k->s);
+    if (k->p)
+        scs_free(k->p);
+    if (d) {
+        if(d->A) scs_free(d->A);
+        if(d->stgs) scs_free(d->stgs);
+        scs_free(d);
+    }
+    if (k)
+        scs_free(k);
 }
