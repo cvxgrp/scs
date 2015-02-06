@@ -19,6 +19,7 @@ scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src) {
 void freeAMatrix(AMatrix * A) {
     if (A->x)
         scs_free(A->x);
+    scs_free(A);
 }
 
 void printAMatrix(AMatrix * A) {
@@ -51,7 +52,7 @@ void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * sc
     timer normalizeTimer;
     tic(&normalizeTimer);
     scs_printf("normalizing A\n");
-    printAMatrix(d);
+    printAMatrix(A);
 #endif
 
 	/* calculate row norms */
@@ -117,7 +118,7 @@ void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * sc
 
 #ifdef EXTRAVERBOSE
     scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
-    printAMatrix(d);
+    printAMatrix(A);
 #endif
 }
 

@@ -74,7 +74,7 @@ Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
 }
 
 AMatrix * getAMatrix(JNIEnv *env, jobject AJava, scs_int m, scs_int n) {
-    scs_int leni, lenp, lenx;
+    scs_int lenx;
     AMatrix * A = scs_calloc(1, sizeof(AMatrix));
     // populate A
     A->x = getFloatArrayUsingGetter(env, AJava, "getValues", &lenx);
