@@ -91,7 +91,7 @@ void printConeData(const Cone * k) {
 	scs_printf("num POW = %i\n", (int) k->psize);
 	scs_printf("pow array:\n");
 	for (i = 0; i < k->psize; i++) {
-		scs_printf("%d\n", (double) k->p[i]);
+		scs_printf("%f\n", (double) k->p[i]);
 	}
 }
 
