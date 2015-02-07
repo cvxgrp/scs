@@ -6,7 +6,7 @@ static scs_int totCgIts;
 static timer linsysTimer;
 static scs_float totalSolveTime;
 
-/* TODO: dsymv appears to be broken in MATLAB: */
+/* TODO: dsymv appears to be broken in MATLAB (R2014b at least): */
 void BLAS(symv)(char *uplo, blasint *n, scs_float *alpha, scs_float *a, blasint *lda, const scs_float *x, blasint *incx,
 		scs_float *beta, scs_float *y, blasint *incy);
 
