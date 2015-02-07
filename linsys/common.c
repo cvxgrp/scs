@@ -2,7 +2,6 @@
 
 scs_int validateLinSys(const AMatrix * A) {
 	return (A && A->x);
-}
 
 scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src) {
    AMatrix * A = scs_calloc(1, sizeof(AMatrix));
