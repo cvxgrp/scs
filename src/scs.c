@@ -163,13 +163,13 @@ static void warmStartVars(Work * w, const Sol * sol) {
 static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float * s, const scs_float tau,
 		scs_float *nmAxs) {
 	scs_int i;
-	scs_float pres = 0, scale, *pr = w->pr, *D = w->scal->D;
+	scs_float pres = 0, scale, *pr = w->pr;
 	*nmAxs = 0;
 	memset(pr, 0, w->m * sizeof(scs_float));
 	accumByA(w->A, w->p, x, pr);
 	addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
 	for (i = 0; i < w->m; ++i) {
-		scale = w->stgs->normalize ? D[i] / (w->sc_b * w->stgs->scale) : 1;
+		scale = w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1;
 		scale = scale * scale;
 		*nmAxs += (pr[i] * pr[i]) * scale;
 		pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
@@ -180,12 +180,12 @@ static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float 
 
 static scs_float calcDualResid(Work * w, const scs_float * y, const scs_float tau, scs_float *nmATy) {
 	scs_int i;
-	scs_float dres = 0, scale, *dr = w->dr, *E = w->scal->E;
+	scs_float dres = 0, scale, *dr = w->dr;
 	*nmATy = 0;
 	memset(dr, 0, w->n * sizeof(scs_float));
 	accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
 	for (i = 0; i < w->n; ++i) {
-		scale = w->stgs->normalize ? E[i] / (w->sc_c * w->stgs->scale) : 1;
+		scale = w->stgs->normalize ? w->scal->E[i] / (w->sc_c * w->stgs->scale) : 1;
 		scale = scale * scale;
 		*nmATy += (dr[i] * dr[i]) * scale;
 		dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
