@@ -4,7 +4,7 @@
 /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION ("1.1.0")
 
-/* SCS returns one of the following integers: (zero never returned)     */
+/* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE   (-7)
 #define SCS_UNBOUNDED_INACCURATE    (-6)
 #define SCS_SIGINT                  (-5)
@@ -12,7 +12,7 @@
 #define SCS_INDETERMINATE           (-3)
 #define SCS_INFEASIBLE              (-2) /* primal infeasible, dual unbounded   */
 #define SCS_UNBOUNDED               (-1) /* primal unbounded, dual infeasible   */
-#define SCS_UNFINISHED              (0)
+#define SCS_UNFINISHED              (0)  /* never returned */
 #define SCS_SOLVED                  (1)
 #define SCS_SOLVED_INACCURATE       (2)
 
