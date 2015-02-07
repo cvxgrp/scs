@@ -295,36 +295,48 @@ static scs_int projectCones(Work * w, const Cone * k, scs_int iter) {
 	return status;
 }
 
-static scs_int solved(Work * w, Sol * sol, Info * info, scs_float tau) {
-	strcpy(info->status, info->statusVal != 0 ? "Solved" : "Solved/Inaccurate");
-	scaleArray(sol->x, 1.0 / tau, w->n);
-	scaleArray(sol->y, 1.0 / tau, w->m);
-	scaleArray(sol->s, 1.0 / tau, w->m);
-	return SCS_SOLVED;
+static scs_int indeterminate(Work * w, Sol * sol, Info * info) {
+    strcpy(info->status, "Indeterminate");
+    scaleArray(sol->x, NAN, w->n);
+    scaleArray(sol->y, NAN, w->m);
+    scaleArray(sol->s, NAN, w->m);
+    return SCS_INDETERMINATE;
 }
 
-static scs_int indeterminate(Work * w, Sol * sol, Info * info) {
-	strcpy(info->status, "Indeterminate");
-	scaleArray(sol->x, NAN, w->n);
-	scaleArray(sol->y, NAN, w->m);
-	scaleArray(sol->s, NAN, w->m);
-	return SCS_INDETERMINATE;
+static scs_int solved(Work * w, Sol * sol, Info * info, scs_float tau) {
+	scaleArray(sol->x, 1.0 / tau, w->n);
+    scaleArray(sol->y, 1.0 / tau, w->m);
+    scaleArray(sol->s, 1.0 / tau, w->m);
+    if (info->statusVal == 0) {
+        strcpy(info->status, "Solved/Inaccurate");
+        return SCS_SOLVED_INACCURATE;
+    }
+    strcpy(info->status, "Solved");
+    return SCS_SOLVED;
 }
 
 static scs_int infeasible(Work * w, Sol * sol, Info * info, scs_float bTy) {
-	strcpy(info->status, info->statusVal != 0 ? "Infeasible" : "Infeasible/Inaccurate");
-	scaleArray(sol->y, -1 / bTy, w->m);
-	scaleArray(sol->x, NAN, w->n);
-	scaleArray(sol->s, NAN, w->m);
-	return SCS_INFEASIBLE;
+    scaleArray(sol->y, -1 / bTy, w->m);
+    scaleArray(sol->x, NAN, w->n);
+    scaleArray(sol->s, NAN, w->m);
+    if (info->statusVal == 0) {
+        strcpy(info->status, "Infeasible/Inaccurate");
+        return SCS_INFEASIBLE_INACCURATE;
+    }
+    strcpy(info->status, "Infeasible");
+    return SCS_INFEASIBLE;
 }
 
 static scs_int unbounded(Work * w, Sol * sol, Info * info, scs_float cTx) {
-	strcpy(info->status, info->statusVal != 0 ? "Unbounded" : "Unbounded/Inaccurate");
-	scaleArray(sol->x, -1 / cTx, w->n);
-	scaleArray(sol->s, -1 / cTx, w->m);
-	scaleArray(sol->y, NAN, w->m);
-	return SCS_UNBOUNDED;
+    scaleArray(sol->x, -1 / cTx, w->n);
+    scaleArray(sol->s, -1 / cTx, w->m);
+    scaleArray(sol->y, NAN, w->m);
+    if (info->statusVal == 0) {
+        strcpy(info->status, "Unbounded/Inaccurate");
+        return SCS_UNBOUNDED_INACCURATE;
+    }
+    strcpy(info->status, "Unbounded");
+    return SCS_UNBOUNDED;
 }
 
 static void sety(Work * w, Sol * sol) {
@@ -345,23 +357,35 @@ static void setx(Work * w, Sol * sol) {
 	memcpy(sol->x, w->u, w->n * sizeof(scs_float));
 }
 
+scs_int isSolvedStatus(scs_int status) {
+    return status == SCS_SOLVED || status == SCS_SOLVED_INACCURATE;
+}
+
+scs_int isInfeasibleStatus(scs_int status) {
+    return status == SCS_INFEASIBLE || status == SCS_INFEASIBLE_INACCURATE;
+}
+
+scs_int isUnboundedStatus(scs_int status) {
+    return status == SCS_UNBOUNDED || status == SCS_UNBOUNDED_INACCURATE;
+}
+
 static void getInfo(Work * w, Sol * sol, Info * info, struct residuals * r, scs_int iter) {
     info->iter = iter;
     info->resInfeas = r->resInfeas;
     info->resUnbdd = r->resUnbdd;
-    if (info->statusVal == SCS_SOLVED) {
+    if (isSolvedStatus(info->statusVal)) {
         info->relGap = r->relGap;
         info->resPri = r->resPri;
         info->resDual = r->resDual;
         info->pobj = r->cTx_by_tau / r->tau;
         info->dobj = -r->bTy_by_tau / r->tau;
-    } else if (info->statusVal == SCS_UNBOUNDED) {
+    } else if (isUnboundedStatus(info->statusVal)) { 
         info->relGap = NAN;
         info->resPri = NAN;
         info->resDual = NAN;
         info->pobj = -INFINITY;
         info->dobj = -INFINITY;
-    } else if (info->statusVal == SCS_INFEASIBLE) {
+    } else if (isInfeasibleStatus(info->statusVal)) { 
         info->relGap = NAN;
         info->resPri = NAN;
         info->resDual = NAN;
@@ -377,7 +401,7 @@ static void getSolution(Work * w, Sol * sol, Info * info, struct residuals * r, 
 	setx(w, sol);
 	sety(w, sol);
 	sets(w, sol);
-	if (info->statusVal == 0) {
+	if (info->statusVal == SCS_UNFINISHED) {
 		/* not yet converged, take best guess */
 		if (r->tau > INDETERMINATE_TOL && r->tau > r->kap) {
 			info->statusVal = solved(w, sol, info, r->tau);
@@ -388,9 +412,9 @@ static void getSolution(Work * w, Sol * sol, Info * info, struct residuals * r, 
 		} else {
 			info->statusVal = unbounded(w, sol, info, r->cTx_by_tau);
 		}
-	} else if (info->statusVal == SCS_SOLVED) {
+	} else if (isSolvedStatus(info->statusVal)) {
 		info->statusVal = solved(w, sol, info, r->tau);
-	} else if (info->statusVal == SCS_INFEASIBLE) {
+	} else if (isInfeasibleStatus(info->statusVal)) {
 		info->statusVal = infeasible(w, sol, info, r->bTy_by_tau);
 	} else {
 		info->statusVal = unbounded(w, sol, info, r->cTx_by_tau);
@@ -676,7 +700,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 	/* initialize ctrl-c support */
 	startInterruptListener();
 	tic(&solveTimer);
-	info->statusVal = 0; /* not yet converged */
+	info->statusVal = SCS_UNFINISHED; /* not yet converged */
 	r.lastIter = -1;
 	updateWork(d, w, sol);
 
