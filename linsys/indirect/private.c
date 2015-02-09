@@ -46,7 +46,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	p->M = scs_malloc(A->n * sizeof(scs_float));
 	/* form Gram matrix (rho_x * I+A'A) */
 	p->G = scs_calloc(A->n * A->n, sizeof(scs_float));
-	BLAS(syrk)("Upper", "Transpose", &n, &m, &onef, A->x, &m, &zerof, p->G, &n);
+	BLAS(syrk)("Lower", "Transpose", &n, &m, &onef, A->x, &m, &zerof, p->G, &n);
     for (j = 0; j < A->n; j++) {
 		p->G[j * A->n + j] += stgs->rho_x;
 	}
@@ -100,14 +100,14 @@ static scs_int pcg(const AMatrix * A, Priv * pr, const scs_float * s, scs_float 
 	if (s == NULL) {
 		memset(b, 0.0, n * sizeof(scs_float));
 	} else {
-		BLAS(symv)("Upper", &n, &negOnef, G, &n, s, &one, &onef, r, &one);
+		BLAS(symv)("Lower", &n, &negOnef, G, &n, s, &one, &onef, r, &one);
 		memcpy(b, s, n * sizeof(scs_float));
 	}
 	applyPreConditioner(M, z, r, n, &ipzr);
 	memcpy(p, z, n * sizeof(scs_float));
 
 	for (i = 0; i < max_its; i++) {
-		BLAS(symv)("Upper", &n, &onef, G, &n, p, &one, &zerof, Gp, &one);
+		BLAS(symv)("Lower", &n, &onef, G, &n, p, &one, &zerof, Gp, &one);
 
 		alpha = ipzr / BLAS(dot)(&n, p, &one, Gp, &one);
 		negAlpha = -alpha;
