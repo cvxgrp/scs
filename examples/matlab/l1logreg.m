@@ -84,8 +84,8 @@ for i=1:size(sizes,1)
     K.ep = 2*q;
     K.ed = 0;
     
-    params.VERBOSE = 1;
-    params.SCALE = 1;
+    params.verbose = 1;
+    params.scale = 1;
     %write_scs_data_sparse(data,K,params,str)
     direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
     direct_data.output{i}

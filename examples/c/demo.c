@@ -65,8 +65,6 @@ int main(int argc, char **argv) {
 
 scs_int readInData(FILE * fp, Data * d, Cone * k) {
 	/* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
-#define LEN64 64 /* variable-size arrays not allowed in ansi */
-	char s[LEN64], *token;
 	scs_int i, Anz;
 	AMatrix * A;
 	Settings * stgs = scs_malloc(sizeof(Settings));
@@ -80,25 +78,17 @@ scs_int readInData(FILE * fp, Data * d, Cone * k) {
 	if (fscanf(fp, INTRW, &(k->f)) != 1)
 		return -1;
 	if (fscanf(fp, INTRW, &(k->l)) != 1)
-		return -1;
-	if (fscanf(fp, INTRW, &(k->qsize)) != 1)
-		return -1;
-	if (fscanf(fp, INTRW, &(k->ssize)) != 1)
-		return -1;
-
-	/* allow arbitrary additional cones, simply add to below: */
-	if (fgets(s, LEN64, fp) == NULL)
-		return -1;
-	token = strtok(s, " ");
-	if (token)
-		k->ep = atoi(token);
-	token = strtok(NULL, " ");
-	if (token)
-		k->ed = atoi(token);
-	token = strtok(NULL, " ");
-
-	/*if(fscanf(fp, INTRW, &(k->ep))!= 1) return -1; */
-	/*if(fscanf(fp, INTRW, &(k->ed))!= 1) return -1; */
+        return -1;
+    if (fscanf(fp, INTRW, &(k->qsize)) != 1)
+        return -1;
+    if (fscanf(fp, INTRW, &(k->ssize)) != 1)
+        return -1;
+    if(fscanf(fp, INTRW, &(k->ep))!= 1)
+        return -1;
+    if(fscanf(fp, INTRW, &(k->ed))!= 1)
+        return -1;
+    if (fscanf(fp, INTRW, &(k->psize)) != 1)
+        return -1;
 
 	if (fscanf(fp, INTRW, &(stgs->max_iters)) != 1)
 		return -1;
@@ -110,6 +100,12 @@ scs_int readInData(FILE * fp, Data * d, Cone * k) {
 		return -1;
 	if (fscanf(fp, FLOATRW, &(stgs->eps)) != 1)
 		return -1;
+	if (fscanf(fp, FLOATRW, &(stgs->rho_x)) != 1)
+		return -1;
+	if (fscanf(fp, FLOATRW, &(stgs->scale)) != 1)
+		return -1;
+	if (fscanf(fp, FLOATRW, &(stgs->cg_rate)) != 1)
+		return -1;
 	k->q = malloc(sizeof(scs_int) * k->qsize);
 	for (i = 0; i < k->qsize; i++) {
 		if (fscanf(fp, INTRW, &k->q[i]) != 1)
@@ -118,6 +114,11 @@ scs_int readInData(FILE * fp, Data * d, Cone * k) {
 	k->s = malloc(sizeof(scs_int) * k->ssize);
 	for (i = 0; i < k->ssize; i++) {
 		if (fscanf(fp, INTRW, &k->s[i]) != 1)
+			return -1;
+	}
+	k->p = malloc(sizeof(scs_float) * k->psize);
+	for (i = 0; i < k->psize; i++) {
+		if (fscanf(fp, FLOATRW, &k->p[i]) != 1)
 			return -1;
 	}
 	d->b = malloc(sizeof(scs_float) * d->m);
