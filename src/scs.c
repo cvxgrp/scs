@@ -474,7 +474,29 @@ static void printHeader(Work * w, const Cone * k) {
 #endif
 }
 
-static void printFooter(const Data * d, Sol * sol, Work * w, Info * info) {
+scs_float getDualConeDist(const scs_float * y, const Cone * k, scs_int m) {
+    scs_float dist;
+    scs_float * t = scs_malloc(sizeof(scs_float) * m);
+    memcpy(t, y, m * sizeof(scs_float));
+    projDualCone(t, k, NULL, -1);
+    dist = calcNormDiff(t, y, m);
+    scs_free(t);
+    return dist;
+}
+
+/* via moreau */
+scs_float getPriConeDist(const scs_float * s, const Cone * k, scs_int m) {
+    scs_float dist;
+    scs_float * t = scs_malloc(sizeof(scs_float) * m);
+    memcpy(t, s, m * sizeof(scs_float));
+    scaleArray(t, -1.0, m);
+    projDualCone(t, k, NULL, -1);
+    dist = calcNorm(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
+    scs_free(t);
+    return dist;
+}
+
+static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Info * info) {
 	scs_int i;
 	char * linSysStr = getLinSysSummary(w->p, info);
 	char * coneStr = getConeSummary(info);
@@ -502,22 +524,22 @@ static void printFooter(const Data * d, Sol * sol, Work * w, Info * info) {
 	}
 	scs_printf("\n");
 
-	if (info->statusVal == SCS_INFEASIBLE) {
+    if (info->statusVal == SCS_INFEASIBLE) {
 		scs_printf("Certificate of primal infeasibility:\n");
+		scs_printf("dist(y, K*) = %.4e\n", getDualConeDist(sol->y, k, d->m));
 		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resInfeas);
-		scs_printf("dist(y, K*) = 0\n");
 		scs_printf("b'y = %.4f\n", innerProd(d->b, sol->y, d->m));
 	} else if (info->statusVal == SCS_UNBOUNDED) {
 		scs_printf("Certificate of dual infeasibility:\n");
+		scs_printf("dist(s, K) = %.4e\n", getPriConeDist(sol->s, k, d->m));
 		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resUnbdd);
-		scs_printf("dist(s, K) = 0\n");
 		scs_printf("c'x = %.4f\n", innerProd(d->c, sol->x, d->n));
 	} else {
 		scs_printf("Error metrics:\n");
+		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y = %.4e\n", getPriConeDist(sol->s, k, d->m), getDualConeDist(sol->y, k, d->m), innerProd(sol->s, sol->y, d->m));
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
 		scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->resDual);
 		scs_printf("|c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->relGap);
-		scs_printf("dist(s, K) = 0, dist(y, K*) = 0, s'y = 0\n");
 		for (i = 0; i < _lineLen_; ++i) {
 			scs_printf("-");
 		}
@@ -743,7 +765,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 	info->solveTime = tocq(&solveTimer);
 
 	if (w->stgs->verbose)
-		printFooter(d, sol, w, info);
+		printFooter(d, k, sol, w, info);
 	endInterruptListener();
 	return info->statusVal;
 }

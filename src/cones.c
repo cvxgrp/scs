@@ -605,7 +605,6 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 #endif
 	tic(&coneTimer);
 
-
 	if (k->l) {
 		/* project onto positive orthant */
 		for (i = count; i < count + k->l; ++i) {
