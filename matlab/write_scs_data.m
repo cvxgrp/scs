@@ -3,7 +3,7 @@ write_scs_data(data,K,params,name)
 % uncompressed file that can be read by demo_direct and
 % demo_indirect (compiled scs binary files)
 % this is just for testing/debugging as the files
-% for large problems can be prohbitively large
+% for some problems can be prohibitively large
 
 % set default params if not present:
 max_iters = 2500; % maximum num iterations for admm
