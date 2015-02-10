@@ -157,7 +157,7 @@ scs_int validateCones(const Data * d, const Cone * k) {
     }
     if (k->psize && k->p) {
         if (k->psize < 0) {
-            scs_printf("primal power cone error\n");
+            scs_printf("power cone error\n");
             return -1;
         }
         for (i = 0; i<k->psize; ++i) {
@@ -713,10 +713,10 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 	}
 
 	if (k->psize && k->p) {
-		scs_float v[3];
+		scs_float r, s, t;
         scs_int idx;
 #ifdef OPENMP
-#pragma omp parallel for private(v,idx)
+#pragma omp parallel for private(r, s, t, idx)
 #endif
         for (i = 0; i < k->psize; ++i) {
             idx = count + 3 * i;
@@ -725,15 +725,15 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
                 projPowerCone(&(x[idx]), -k->p[i]);
             } else {
                 /* primal power cone, using Moreau */
-                v[0] = -x[idx];
-                v[1] = -x[idx + 1];
-                v[2] = -x[idx + 2];
+                r = -x[idx];
+                s = -x[idx + 1];
+                t = -x[idx + 2];
 
                 projPowerCone(v, k->p[i]);
 
-                x[idx] += v[0];
-                x[idx + 1] += v[1];
-                x[idx + 2] += v[2];
+                x[idx] += r;
+                x[idx + 1] += s;
+                x[idx + 2] += t;
             }
         }
         count += 3 * k->psize;
