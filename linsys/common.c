@@ -215,7 +215,7 @@ void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal) {
 }
 
 void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/* y  = A'*x
+	/* y += A'*x
 	 A in column compressed format
 	 parallelizes over columns (rows of A')
 	 */
@@ -237,7 +237,7 @@ void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const
 }
 
 void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/*y = A*x
+	/*y += A*x
 	 A in column compressed format
 	 this parallelizes over columns and uses
 	 pragma atomic to prevent concurrent writes to y
