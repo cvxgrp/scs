@@ -2,6 +2,7 @@
 
 #define CONE_RATE (2)
 #define CONE_TOL (1e-8)
+#define CONE_THRESH (1e-6)
 #define EXP_CONE_MAX_ITERS (100)
 #define POW_CONE_MAX_ITERS (20)
 
@@ -293,12 +294,12 @@ static scs_int projExpCone(scs_float * v, scs_int iter) {
 	scs_float tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF((iter + 1), CONE_RATE)); */
 
 	/* v in cl(Kexp) */
-	if ((s * exp(r / s) <= t && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
+	if ((s * exp(r / s) - t <= CONE_THRESH && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
 		return 0;
 	}
 
 	/* -v in Kexp^* */
-	if ((-r < 0 && r * exp(s / r) <= -exp(1) * t) || (-r == 0 && -s >= 0 && -t >= 0)) {
+	if ((-r < 0 && r * exp(s / r) + exp(1) * t <= CONE_THRESH) || (-r == 0 && -s >= 0 && -t >= 0)) {
 		memset(v, 0, 3 * sizeof(scs_float));
 		return 0;
 	}
@@ -566,10 +567,10 @@ void projPowerCone(scs_float * v, scs_float a) {
     scs_float x, y, r;
     scs_int i;
     /* v in K_a */
-    if (xh >=0 && yh >= 0 && POWF(xh, a) * POWF(yh, (1-a)) >= rh) return;
+    if (xh >=0 && yh >= 0 && CONE_THRESH + POWF(xh, a) * POWF(yh, (1-a)) >= rh) return;
 
     /* -v in K_a^* */
-    if (xh <= 0 && yh <= 0 && POWF(-xh, a) * POWF(-yh, 1-a) >= rh * POWF(a, a) * POWF(1-a, 1-a)) {
+    if (xh <= 0 && yh <= 0 && CONE_THRESH + POWF(-xh, a) * POWF(-yh, 1-a) >= rh * POWF(a, a) * POWF(1-a, 1-a)) {
         v[0] = v[1] = v[2] = 0;
         return;
     }

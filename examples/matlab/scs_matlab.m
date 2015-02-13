@@ -230,7 +230,8 @@ end
 if (i+1 == max_iters); i=i+1; end
 ttime = toc;
 fprintf('%i:\t%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e\n',i,err_pri,err_dual,gap,pobji,dobji,unb_res,inf_res,kap/tau,ttime);
-fprintf('\tc*x = %4f, -b*y = %4f\n', pobji, dobji);
+fprintf('\tc*x = %4f, -b*y = %4f, dist(s,K) = %.2e, dist(y,K*) = %.2e, s*y = %.2e\n', pobji,...
+    dobji, norm(s - proj_cone(s,K)), norm(y - proj_dual_cone(y,K)), s'*y);
 %%
 tau = abs(u(end));
 kap = abs(v(end)) / (sc_b * sc_c * scale);

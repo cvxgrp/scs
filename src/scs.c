@@ -479,7 +479,7 @@ scs_float getDualConeDist(const scs_float * y, const Cone * k, scs_int m) {
     scs_float * t = scs_malloc(sizeof(scs_float) * m);
     memcpy(t, y, m * sizeof(scs_float));
     projDualCone(t, k, NULL, -1);
-    dist = calcNormDiff(t, y, m);
+    dist = calcNormInfDiff(t, y, m);
     scs_free(t);
     return dist;
 }
@@ -491,7 +491,7 @@ scs_float getPriConeDist(const scs_float * s, const Cone * k, scs_int m) {
     memcpy(t, s, m * sizeof(scs_float));
     scaleArray(t, -1.0, m);
     projDualCone(t, k, NULL, -1);
-    dist = calcNorm(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
+    dist = calcNormInf(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
     scs_free(t);
     return dist;
 }
@@ -536,7 +536,7 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 		scs_printf("c'x = %.4f\n", innerProd(d->c, sol->x, d->n));
 	} else {
 		scs_printf("Error metrics:\n");
-		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y = %.4e\n", getPriConeDist(sol->s, k, d->m), getDualConeDist(sol->y, k, d->m), innerProd(sol->s, sol->y, d->m));
+		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y/m = %.4e\n", getPriConeDist(sol->s, k, d->m), getDualConeDist(sol->y, k, d->m), innerProd(sol->s, sol->y, d->m) / d->m);
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
 		scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->resDual);
 		scs_printf("|c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->relGap);
