@@ -7,7 +7,6 @@ disp('------------------------------------------------------------')
 
 save_results = false;
 
-run '../../matlab/make_scs.m'
 addpath('../../matlab/')
 
 sizes = [600 3000;2000 10000;6000 30000];
@@ -19,7 +18,7 @@ density = 0.01;
 %%
 for i=1:size(sizes,1)
     disp(sprintf('Solving %s l1 regularized logistic regresssion.',sze_str{i}))
-    clearvars -except i sizes sze_str direct_data indirect_data save_results
+    clearvars -except i sizes sze_str direct_data indirect_data save_results density
     
     str = ['data/l1logreg_' sze_str{i}];
     randn('seed',sum(str));rand('seed',sum(str))
