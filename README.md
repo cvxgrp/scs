@@ -4,7 +4,7 @@ SCS
 [![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
 
-SCS = `splitting cone solver`
+SCS = `splitting conic solver`
 
 SCS is a numerical optimization package for solving large-scale convex cone problems, written in C,
 based on our paper [Operator Splitting for Conic Optimization via Homogeneous
