@@ -14,6 +14,7 @@ sizes = [600 3000;2000 10000;6000 30000];
 sze_str{1} = 'small';
 sze_str{2} = 'med';
 sze_str{3} = 'large';
+density = 0.01;
 
 %%
 for i=1:size(sizes,1)
@@ -25,8 +26,7 @@ for i=1:size(sizes,1)
     
     p = sizes(i,1); % features
     q = sizes(i,2); % total samples
-    density = 0.1;
-    
+
     w_true = sprandn(p,1,0.2);
     
     X_tmp = 3*sprandn(p, q, density);

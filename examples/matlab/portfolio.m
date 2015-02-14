@@ -6,8 +6,6 @@ disp('It may also crash/run out of memory.')
 disp('Set run_sdpt3 = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
-run ../../matlab/cvx_install_scs.m
-
 save_results = false;
 run_sdpt3 = false;
 run_scs = true;
@@ -15,7 +13,7 @@ run_scs = true;
 ns = [5000, 50000, 100000];
 ms = [50, 500, 1000];
 
-density = 0.1;
+density = 0.01;
 
 time_pat_cvx = 'Total CPU time \(secs\)\s*=\s*(?<total>[\d\.]+)';
 

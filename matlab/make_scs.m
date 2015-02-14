@@ -24,6 +24,11 @@ else
     flags.LCFLAG = sprintf('-DBLASSUFFIX="" %s', flags.LCFLAG);
 end
 
+if (flags.COMPILE_WITH_OPENMP)
+    flags.link = strcat(flags.link, ' -lgomp'
+end
+
+
 compile_direct(flags, common_scs);
 compile_indirect(flags, common_scs);
 
