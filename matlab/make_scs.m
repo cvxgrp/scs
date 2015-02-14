@@ -25,7 +25,7 @@ else
 end
 
 if (flags.COMPILE_WITH_OPENMP)
-    flags.link = strcat(flags.link, ' -lgomp'
+    flags.link = strcat(flags.link, ' -lgomp')
 end
 
 
