@@ -38,7 +38,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('SCALE',5)
+        cvx_solver_settings('eps',1e-3)
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))
         output = evalc('cvx_end')
@@ -55,7 +55,7 @@ for i = 1:length(ns)
         
         tic
         cvx_begin
-        cvx_solver_settings('USE_INDIRECT',1,'SCALE',5)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3)
         cvx_solver scs
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))

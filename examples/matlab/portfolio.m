@@ -35,7 +35,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('SCALE',5)
+        cvx_solver_settings('eps',1e-3)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
@@ -55,7 +55,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('USE_INDIRECT',1,'SCALE',5)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
