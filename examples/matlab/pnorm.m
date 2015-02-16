@@ -34,10 +34,12 @@ for i = 1:length(ns)
     %%
     if run_scs
         %% scs, with power cone formulation
-        data.A = sparse([G sparse(m,n) sparse(m,1); sparse(1,n) ones(1,n) -1]);
+        Anz = nnz(G) + n + 1 + 3*n;
+        data.A = sparse([],[],[],m+3*n,2*n+1,Anz);
+        data.A(1:m+1,:) = [G sparse(m,n) sparse(m,1); sparse(1,n) ones(1,n) -1];
         for j=1:n
             ej = sparse(n,1);ej(j) = -1;
-            data.A = sparse([data.A; sparse(1,n) ej' 0; sparse(1,2*n) -1;  ej' sparse(1,n) 0]);
+            data.A(m+1+(j-1)*3+1:m+1+j*3,:) = [sparse(1,n) ej' 0; sparse(1,2*n) -1;  ej' sparse(1,n) 0];
         end
         data.c = [zeros(2*n,1); 1];
         data.b = [f; 0 ; zeros(3*n,1)];
