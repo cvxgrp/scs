@@ -7,7 +7,7 @@ if nargin >= 3
 else
     pars = [];
 end
-if (isfield(pars,'USE_INDIRECT') && pars.USE_INDIRECT)
+if (isfield(pars,'use_indirect') && pars.use_indirect)
     [  x, y, s, info  ] = scs_indirect( data, K, pars);
 else
     [  x, y, s, info  ] = scs_direct( data, K, pars);

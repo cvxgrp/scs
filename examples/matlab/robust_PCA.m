@@ -3,11 +3,12 @@ clear all
 disp('------------------------------------------------------------')
 disp('WARNING: this can take a very long time to run.')
 disp('It may also crash/run out of memory.')
-disp('Set run_sdpt3 = false if you just want to run scs.')
+disp('Set run_cvx = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
 save_results = false;
-run_sdpt3 = false;
+run_cvx = false;
+cvx_use_solver = 'sdpt3';
 run_scs = true;
 
 ns = [100,500,1000];
@@ -74,11 +75,11 @@ for i = 1:length(ns)
         
     end
     %%
-    if run_sdpt3
+    if run_cvx
         try
             tic
             cvx_begin
-            cvx_solver sdpt3
+            cvx_solver(cvx_use_solver)
             variables Lt(m,n) St(m,n)
             dual variable Yt
             minimize(norm_nuc(Lt))
