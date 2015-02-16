@@ -46,7 +46,7 @@ for i = 1:length(ns)
         K = struct('f', m+1, 'p', ones(n,1) / pow);
         
         params.eps = 1e-3;
-        
+        params.scale = 1;
         [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
         out
         if (save_results); save('data/pnorm_scs_direct', 'out'); end

@@ -13,6 +13,7 @@ run_scs = true;
 
 ns = [100,500,1000];
 ms = ns; % square matrices, but doesn't have to be
+density = 0.1;
 
 time_pat_cvx = 'Total CPU time \(secs\)\s*=\s*(?<total>[\d\.]+)';
 
@@ -27,7 +28,7 @@ for i = 1:length(ns)
     L1 = randn(m,r);
     L2 = randn(r,n);
     L = L1*L2;
-    S = 10*sprandn(m,n,0.1);
+    S = 10*sprandn(m,n,density);
     M = L + S;
     kap = sum(norms(S,1));
     

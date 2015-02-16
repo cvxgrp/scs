@@ -14,7 +14,7 @@ run_scs = true;
 ns = [3000,10000,30000];
 ms = ceil(ns/5);
 
-density = 0.01;
+density = 0.1;
 
 time_pat_cvx = 'Total CPU time \(secs\)\s*=\s*(?<total>[\d\.]+)';
 

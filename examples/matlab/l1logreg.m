@@ -11,7 +11,7 @@ sizes = [600 3000;2000 10000;6000 30000];
 sze_str{1} = 'small';
 sze_str{2} = 'med';
 sze_str{3} = 'large';
-density = 0.01;
+density = 0.1;
 
 %%
 for i=1:size(sizes,1)
