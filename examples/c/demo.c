@@ -35,8 +35,8 @@ int main(int argc, char **argv) {
 	}
 	fclose(fp);
 	scs_printf("solve once using scs\n");
-	d->stgs->cg_rate = 2;
 	scs(d, k, sol, &info);
+
 	if (TEST_WARM_START) {
 		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
 		/* warm starts stored in Sol */
@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
 		scs_printf("finished\n");
 		scs_finish(w);
 	}
+
 	freeData(d, k);
 	freeSol(sol);
 	return 0;

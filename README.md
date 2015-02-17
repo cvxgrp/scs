@@ -1,7 +1,7 @@
 SCS
 ====
 
-SCS = `splitting cone solver`
+SCS = `splitting conic solver`
 
 SCS is a numerical optimization package for solving large-scale convex cone problems, written in C,
 based on our paper [Operator Splitting for Conic Optimization via Homogeneous

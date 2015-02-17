@@ -2,6 +2,7 @@
 
 #define CONE_RATE (2)
 #define CONE_TOL (1e-8)
+#define CONE_THRESH (1e-6)
 #define EXP_CONE_MAX_ITERS (100)
 #define POW_CONE_MAX_ITERS (20)
 
@@ -157,7 +158,7 @@ scs_int validateCones(const Data * d, const Cone * k) {
     }
     if (k->psize && k->p) {
         if (k->psize < 0) {
-            scs_printf("primal power cone error\n");
+            scs_printf("power cone error\n");
             return -1;
         }
         for (i = 0; i<k->psize; ++i) {
@@ -293,12 +294,12 @@ static scs_int projExpCone(scs_float * v, scs_int iter) {
 	scs_float tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF((iter + 1), CONE_RATE)); */
 
 	/* v in cl(Kexp) */
-	if ((s * exp(r / s) <= t && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
+	if ((s * exp(r / s) - t <= CONE_THRESH && s > 0) || (r <= 0 && s == 0 && t >= 0)) {
 		return 0;
 	}
 
 	/* -v in Kexp^* */
-	if ((-r < 0 && r * exp(s / r) <= -exp(1) * t) || (-r == 0 && -s >= 0 && -t >= 0)) {
+	if ((-r < 0 && r * exp(s / r) + exp(1) * t <= CONE_THRESH) || (-r == 0 && -s >= 0 && -t >= 0)) {
 		memset(v, 0, 3 * sizeof(scs_float));
 		return 0;
 	}
@@ -566,10 +567,10 @@ void projPowerCone(scs_float * v, scs_float a) {
     scs_float x, y, r;
     scs_int i;
     /* v in K_a */
-    if (xh >=0 && yh >= 0 && POWF(xh, a) * POWF(yh, (1-a)) >= rh) return;
+    if (xh >=0 && yh >= 0 && CONE_THRESH + POWF(xh, a) * POWF(yh, (1-a)) >= rh) return;
 
     /* -v in K_a^* */
-    if (xh <= 0 && yh <= 0 && POWF(-xh, a) * POWF(-yh, 1-a) >= rh * POWF(a, a) * POWF(1-a, 1-a)) {
+    if (xh <= 0 && yh <= 0 && CONE_THRESH + POWF(-xh, a) * POWF(-yh, 1-a) >= rh * POWF(a, a) * POWF(1-a, 1-a)) {
         v[0] = v[1] = v[2] = 0;
         return;
     }
@@ -714,27 +715,31 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 
 	if (k->psize && k->p) {
 		scs_float v[3];
-#ifdef OPENMP
-#pragma omp parallel for private(v,idx)
-#endif
+        scs_int idx;
+/* don't use openmp for power cone
+ifdef OPENMP
+pragma omp parallel for private(v, idx)
+endif
+*/
         for (i = 0; i < k->psize; ++i) {
-           if (k->p[i] <= 0) {
+            idx = count + 3 * i;
+            if (k->p[i] <= 0) {
                 /* dual power cone */
-                projPowerCone(&(x[count]), -k->p[i]);
+                projPowerCone(&(x[idx]), -k->p[i]);
             } else {
                 /* primal power cone, using Moreau */
-                v[0] = -x[count];
-                v[1] = -x[count + 1];
-                v[2] = -x[count + 2];
+                v[0] = -x[idx];
+                v[1] = -x[idx + 1];
+                v[2] = -x[idx + 2];
 
                 projPowerCone(v, k->p[i]);
 
-                x[count] += v[0];
-                x[count + 1] += v[1];
-                x[count + 2] += v[2];
+                x[idx] += v[0];
+                x[idx + 1] += v[1];
+                x[idx + 2] += v[2];
             }
-           count += 3;
         }
+        count += 3 * k->psize;
 #ifdef EXTRAVERBOSE
         scs_printf("Power cone proj time: %1.2es\n", tocq(&projTimer) / 1e3);
         tic(&projTimer);

@@ -137,6 +137,7 @@ void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal) {
 	BLAS(scal)(&nm, &invScale, A->x, &one);
 }
 
+<<<<<<< HEAD
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
     blasint one = 1, n = (blasint) A->n, m = (blasint) A->m;
     scs_float onef = 1.0;

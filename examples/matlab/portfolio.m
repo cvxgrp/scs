@@ -3,13 +3,12 @@ clear all
 disp('------------------------------------------------------------')
 disp('WARNING: this can take a very long time to run.')
 disp('It may also crash/run out of memory.')
-disp('Set run_sdpt3 = false if you just want to run scs.')
+disp('Set run_cvx = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
-run ../../matlab/cvx_install_scs.m
-
 save_results = false;
-run_sdpt3 = false;
+run_cvx = false;
+cvx_use_solver = 'sdpt3';
 run_scs = true;
 
 ns = [5000, 50000, 100000];
@@ -37,7 +36,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('SCALE',5)
+        cvx_solver_settings('eps',1e-3)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
@@ -57,7 +56,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('USE_INDIRECT',1,'SCALE',5)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
@@ -76,11 +75,11 @@ for i = 1:length(ns)
         
     end
     %%
-    if run_sdpt3
+    if run_cvx
         try
             tic
             cvx_begin
-            cvx_solver sdpt3
+            cvx_solver(cvx_use_solver)
             variable x(n)
             maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
             sum(x) == 1
