@@ -30,7 +30,6 @@ for i = 1:length(ns)
     D = sqrt(2*rand(n,1));
     F = sprandn(n,m,density);
     gamma = 10;
-
     %%
     if run_scs_direct
         
@@ -42,7 +41,11 @@ for i = 1:length(ns)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
         x >= 0
-        output = evalc('cvx_end')
+        if (save_results)
+            output = evalc('cvx_end')
+        else
+            cvx_end
+        end
         toc
         
         scs_direct.x{i} = x;
@@ -63,7 +66,11 @@ for i = 1:length(ns)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
         x >= 0
-        output = evalc('cvx_end')
+        if (save_results)
+            output = evalc('cvx_end')
+        else
+            cvx_end
+        end
         toc
         
         scs_indirect.x{i} = x;
@@ -85,7 +92,11 @@ for i = 1:length(ns)
             maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
             sum(x) == 1
             x >= 0
-            output = evalc('cvx_end')
+            if (save_results)
+                output = evalc('cvx_end')
+            else
+                cvx_end
+            end
             toc
             
             cvx.x{i} = x;

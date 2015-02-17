@@ -45,7 +45,11 @@ for i = 1:length(ns)
         minimize(norm_nuc(Lc))
         sum(norms(Sc,1)) <= kap
         Yc:Lc + Sc == M;
-        output = evalc('cvx_end')
+        if (save_results)
+            output = evalc('cvx_end')
+        else
+            cvx_end
+        end
         toc
         
         scs_direct.L{i} = Lc;
@@ -66,7 +70,11 @@ for i = 1:length(ns)
         minimize(norm_nuc(Lc))
         sum(norms(Sc,1)) <= kap
         Yc:Lc + Sc == M;
-        output = evalc('cvx_end')
+        if (save_results)
+            output = evalc('cvx_end')
+        else
+            cvx_end
+        end
         toc
         
         scs_indirect.L{i} = Lc;
@@ -86,7 +94,11 @@ for i = 1:length(ns)
             minimize(norm_nuc(Lt))
             sum(norms(St,1)) <= kap
             Yt:Lt + St == M;
-            output = evalc('cvx_end')
+            if (save_results)
+                output = evalc('cvx_end')
+            else
+                cvx_end
+            end
             toc
             
             cvx.L{i} = Lt;

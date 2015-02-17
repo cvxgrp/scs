@@ -43,7 +43,11 @@ for i = 1:length(ns)
         cvx_solver_settings('eps',1e-3,'scale',1)
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))
-        output = evalc('cvx_end')
+        if (save_results)
+            output = evalc('cvx_end')
+        else
+            cvx_end
+        end
         toc
         
         scs_direct.x{i} = x_c;
@@ -62,7 +66,11 @@ for i = 1:length(ns)
         cvx_solver scs
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))
-        output = evalc('cvx_end')
+        if (save_results)
+            output = evalc('cvx_end')
+        else
+            cvx_end
+        end
         toc
         
         scs_indirect.x{i} = x_c;
@@ -80,7 +88,11 @@ for i = 1:length(ns)
             cvx_solver(cvx_use_solver)
             variable x_s(n)
             minimize(0.5*sum_square(A*x_s - b) + mu*norm(W*x_s,1))
-            output = evalc('cvx_end')
+            if (save_results)
+                output = evalc('cvx_end')
+            else
+                cvx_end
+            end
             toc
             
             cvx.x{i} = x_s;

@@ -51,14 +51,20 @@ for i = 1:length(ns)
         params.cg_rate = 1.5;
         
         if (run_scs_direct)
-            [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
-            out
-            if (save_results); save('data/pnorm_scs_direct', 'out'); end
+            if (save_results)
+                [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
+                save('data/pnorm_scs_direct', 'out');
+            else
+                [x_scs,y_scs,s_scs,info] = scs_direct(data, K, params);
+            end
         end
         if (run_scs_indirect)
-            [out,x_scs,y_scs,s_scs,info] = evalc('scs_indirect(data, K, params)');
-            out
-            if (save_results); save('data/pnorm_scs_indirect', 'out'); end
+            if (save_results)
+                [out,x_scs,y_scs,s_scs,info] = evalc('scs_indirect(data, K, params)');
+                save('data/pnorm_scs_indirect', 'out');
+            else
+                [x_scs,y_scs,s_scs,info] = scs_indirect(data, K, params);
+            end
         end
         
     end
@@ -72,8 +78,11 @@ for i = 1:length(ns)
             minimize(norm(x, pow))
             subject to
             G*x == f
-            %cvx = evalc('cvx_end')
-            cvx_end
+            if (save_results)
+                cvx.output{i} = evalc('cvx_end')
+            else
+                cvx_end
+            end
             toc
             
         catch err

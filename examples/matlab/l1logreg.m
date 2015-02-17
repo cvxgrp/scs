@@ -25,7 +25,6 @@ for i=1:size(sizes,1)
     
     p = sizes(i,1); % features
     q = sizes(i,2); % total samples
-
     w_true = sprandn(p,1,0.2);
     
     X_tmp = 3*sprandn(p, q, density);
@@ -90,7 +89,11 @@ for i=1:size(sizes,1)
     %write_scs_data_sparse(data,K,params,str)
     
     if (run_scs_direct)
-        direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
+        if (save_results);
+            direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
+        else
+            [xd,yd,sd,infod]=scs_direct(data,K,params);
+        end
         direct_data.output{i}
         direct_data.x{i} = xd;
         direct_data.y{i} = yd;
@@ -102,7 +105,11 @@ for i=1:size(sizes,1)
     end
     
     if (run_scs_indirect)
-        indirect_data.output{i} = evalc('[xi,yi,si,infoi]=scs_indirect(data,K,params);');
+        if (save_results);
+            indirect_data.output{i} = evalc('[xi,yi,si,infoi]=scs_indirect(data,K,params);');
+        else
+            [xi,yi,si,infoi]=scs_indirect(data,K,params);
+        end
         indirect_data.output{i}
         indirect_data.x{i} = xi;
         indirect_data.y{i} = yi;
