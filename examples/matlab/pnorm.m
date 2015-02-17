@@ -7,11 +7,12 @@ disp('Set run_cvx = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
 save_results = false;
-run_cvx = true;
+run_cvx = false;
 cvx_use_solver = 'sdpt3';
-run_scs = true;
+run_scs_direct = true;
+run_scs_indirect = true;
 
-ns = [3000,10000,30000];
+ns = [1000, 10000, 100000];
 ms = ceil(ns/2);
 
 density = 0.1;
@@ -32,7 +33,7 @@ for i = 1:length(ns)
     m=ms(i);
     
     %%
-    if run_scs
+    if (run_scs_direct || run_scs_indirect)
         %% scs, with power cone formulation
         Anz = nnz(G) + n + 1 + 3*n;
         data.A = sparse([],[],[],m+3*n,2*n+1,Anz);
@@ -47,14 +48,18 @@ for i = 1:length(ns)
         
         params.eps = 1e-3;
         params.scale = 1;
-        [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
-        out
-        if (save_results); save('data/pnorm_scs_direct', 'out'); end
+        params.cg_rate = 1.5;
         
-        %%
-        [out,x_scs,y_scs,s_scs,info] = evalc('scs_indirect(data, K, params)');
-        out
-        if (save_results); save('data/pnorm_scs_indirect', 'out'); end
+        if (run_scs_direct)
+            [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
+            out
+            if (save_results); save('data/pnorm_scs_direct', 'out'); end
+        end
+        if (run_scs_indirect)
+            [out,x_scs,y_scs,s_scs,info] = evalc('scs_indirect(data, K, params)');
+            out
+            if (save_results); save('data/pnorm_scs_indirect', 'out'); end
+        end
         
     end
     %%

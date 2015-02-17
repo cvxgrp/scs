@@ -1,6 +1,9 @@
 clear all;close all;
+
 addpath('../../matlab')
-cd '../../matlab'; make_scs; cd '../examples/matlab';
+addpath('./scs_matlab')
+
+%cd '../../matlab'; make_scs; cd '../examples/matlab';
 
 randn('seed',0);rand('seed',0);
 
@@ -22,7 +25,7 @@ K = struct('f',50,'l',60,'q',[0;1;0;2;100;20],'s',[0;2;1;2;20],'ep',10,'ed',15,'
 
 m = getConeDims(K);
 n = round(m/3);
-params = struct('eps', 1e-3, 'normalize', 1, 'scale',5, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5);
+params = struct('eps', 1e-3, 'normalize', 1, 'scale', 5, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5);
 
 %% generate primal-dual feasible cone prob:
 % Ax + s = b, s \in K, A'y + c = 0, y \in K*, s'y = 0

@@ -6,8 +6,10 @@ disp('It may also crash/run out of memory.')
 disp('------------------------------------------------------------')
 
 save_results = false;
+run_scs_direct = true;
+run_scs_indirect = true;
 
-sizes = [600 3000;2000 10000;6000 30000];
+sizes = [100 1000; 5000 50000; 10000 100000];
 sze_str{1} = 'small';
 sze_str{2} = 'med';
 sze_str{3} = 'large';
@@ -83,27 +85,33 @@ for i=1:size(sizes,1)
     
     params.verbose = 1;
     params.scale = 1;
+    params.cg_rate = 1.5;
+    
     %write_scs_data_sparse(data,K,params,str)
-    direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
-    direct_data.output{i}
-    direct_data.x{i} = xd;
-    direct_data.y{i} = yd;
-    direct_data.s{i} = sd;
-    direct_data.info{i} = infod;
     
-    indirect_data.output{i} = evalc('[xi,yi,si,infoi]=scs_indirect(data,K,params);');
-    indirect_data.output{i}
-    indirect_data.x{i} = xi;
-    indirect_data.y{i} = yi;
-    indirect_data.s{i} = si;
-    indirect_data.info{i} = infoi;
-    
-    if (save_results);
-        save('data/l1logreg_direct', 'direct_data');
-        save('data/l1logreg_indirect', 'indirect_data');
+    if (run_scs_direct)
+        direct_data.output{i} = evalc('[xd,yd,sd,infod]=scs_direct(data,K,params);');
+        direct_data.output{i}
+        direct_data.x{i} = xd;
+        direct_data.y{i} = yd;
+        direct_data.s{i} = sd;
+        direct_data.info{i} = infod;
+        if (save_results);
+            save('data/l1logreg_direct', 'direct_data');
+        end
     end
     
-    
+    if (run_scs_indirect)
+        indirect_data.output{i} = evalc('[xi,yi,si,infoi]=scs_indirect(data,K,params);');
+        indirect_data.output{i}
+        indirect_data.x{i} = xi;
+        indirect_data.y{i} = yi;
+        indirect_data.s{i} = si;
+        indirect_data.info{i} = infoi;
+        if (save_results);
+            save('data/l1logreg_indirect', 'indirect_data');
+        end
+    end
 end
 
 %{
