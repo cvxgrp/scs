@@ -1,6 +1,9 @@
 clear all;close all;
+
 addpath('../../matlab')
-cd '../../matlab'; make_scs; cd '../examples/matlab';
+addpath('./scs_matlab')
+
+%cd '../../matlab'; make_scs; cd '../examples/matlab';
 
 randn('seed',0);rand('seed',0);
 
