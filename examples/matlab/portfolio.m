@@ -11,8 +11,8 @@ run_cvx = false;
 cvx_use_solver = 'sdpt3';
 run_scs = true;
 
-ns = [5000, 50000, 100000];
-ms = [50, 500, 1000];
+ns = [10000, 100000, 250000];
+ms = [100, 1000, 2500];
 
 density = 0.1;
 
@@ -36,7 +36,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3)
+        cvx_solver_settings('eps',1e-3,'scale',1)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1
@@ -56,7 +56,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('use_indirect',1,'eps',1e-3)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',1,'cg_rate',1.5)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == 1

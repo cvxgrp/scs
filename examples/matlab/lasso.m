@@ -11,7 +11,7 @@ run_cvx = false;
 cvx_use_solver = 'sdpt3';
 run_scs = true;
 
-ns = [3000,10000,30000];
+ns = [10000, 30000, 100000];
 ms = ceil(ns/5);
 
 density = 0.1;
@@ -39,7 +39,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3)
+        cvx_solver_settings('eps',1e-3,'scale',1)
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))
         output = evalc('cvx_end')
@@ -56,7 +56,7 @@ for i = 1:length(ns)
         
         tic
         cvx_begin
-        cvx_solver_settings('use_indirect',1,'eps',1e-3)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',1,'cg_rate',1.5)
         cvx_solver scs
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))

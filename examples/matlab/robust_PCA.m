@@ -11,7 +11,7 @@ run_cvx = false;
 cvx_use_solver = 'sdpt3';
 run_scs = true;
 
-ns = [100,500,1000];
+ns = [100, 500, 1000];
 ms = ns; % square matrices, but doesn't have to be
 density = 0.1;
 
@@ -38,7 +38,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3)
+        cvx_solver_settings('eps',1e-3,'scale',1)
         variables Lc(m,n) Sc(m,n)
         dual variable Yc
         minimize(norm_nuc(Lc))
@@ -59,7 +59,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('use_indirect',1,'eps',1e-3)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',1,'cg_rate',1.5)
         variables Lc(m,n) Sc(m,n)
         dual variable Yc
         minimize(norm_nuc(Lc))

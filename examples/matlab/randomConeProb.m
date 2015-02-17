@@ -27,7 +27,7 @@ density = 0.1; % A matrix density
 
 m = getConeDims(K);
 n = round(m/3);
-params = struct('eps', 1e-3, 'normalize', 1, 'scale',5, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5);
+params = struct('eps', 1e-3, 'normalize', 1, 'scale', 5, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5);
 
 %% generate primal-dual feasible cone prob:
 % Ax + s = b, s \in K, A'y + c = 0, y \in K*, s'y = 0

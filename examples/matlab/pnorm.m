@@ -11,7 +11,7 @@ run_cvx = true;
 cvx_use_solver = 'sdpt3';
 run_scs = true;
 
-ns = [3000,10000,30000];
+ns = [1000, 10000, 100000];
 ms = ceil(ns/2);
 
 density = 0.1;
@@ -47,6 +47,8 @@ for i = 1:length(ns)
         
         params.eps = 1e-3;
         params.scale = 1;
+        params.cg_rate = 1.5;
+
         [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
         out
         if (save_results); save('data/pnorm_scs_direct', 'out'); end
