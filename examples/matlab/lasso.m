@@ -9,7 +9,8 @@ disp('------------------------------------------------------------')
 save_results = false;
 run_cvx = false;
 cvx_use_solver = 'sdpt3';
-run_scs = true;
+run_scs_direct = true;
+run_scs_indirect = true;
 
 ns = [10000, 30000, 100000];
 ms = ceil(ns/5);
@@ -35,7 +36,7 @@ for i = 1:length(ns)
     mu = 1;
     
     %%
-    if run_scs
+    if run_scs_direct
         tic
         cvx_begin
         cvx_solver scs
@@ -51,8 +52,9 @@ for i = 1:length(ns)
         
         
         if (save_results); save('data/lasso_scs_direct', 'scs_direct'); end
-        
-        %%
+    end
+    %%
+    if run_scs_indirect
         
         tic
         cvx_begin

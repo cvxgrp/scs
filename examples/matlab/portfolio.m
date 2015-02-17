@@ -9,7 +9,8 @@ disp('------------------------------------------------------------')
 save_results = false;
 run_cvx = false;
 cvx_use_solver = 'sdpt3';
-run_scs = true;
+run_scs_direct = true;
+run_scs_indirect = true;
 
 ns = [10000, 100000, 250000];
 ms = [100, 1000, 2500];
@@ -29,9 +30,9 @@ for i = 1:length(ns)
     D = sqrt(2*rand(n,1));
     F = sprandn(n,m,density);
     gamma = 10;
-        
+
     %%
-    if run_scs
+    if run_scs_direct
         
         tic
         cvx_begin
@@ -51,7 +52,8 @@ for i = 1:length(ns)
         scs_direct.output{i} = output;
         
         if (save_results); save('data/portfolio_scs_direct', 'scs_direct'); end
-        
+    end
+    if run_scs_indirect
         %%
         tic
         cvx_begin
@@ -72,7 +74,6 @@ for i = 1:length(ns)
         
         
         if (save_results); save('data/portfolio_scs_indirect', 'scs_indirect'); end
-        
     end
     %%
     if run_cvx
