@@ -48,6 +48,7 @@ for i = 1:length(ns)
         if (save_results)
             output = evalc('cvx_end')
         else
+            output='';
             cvx_end
         end
         toc
@@ -73,6 +74,7 @@ for i = 1:length(ns)
         if (save_results)
             output = evalc('cvx_end')
         else
+            output='';
             cvx_end
         end
         toc
@@ -97,6 +99,7 @@ for i = 1:length(ns)
             if (save_results)
                 output = evalc('cvx_end')
             else
+                output='';
                 cvx_end
             end
             toc
