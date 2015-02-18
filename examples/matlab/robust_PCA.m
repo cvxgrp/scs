@@ -31,7 +31,7 @@ for i = 1:length(ns)
     L = L1*L2;
     S = 10*sprandn(m,n,density);
     M = L + S;
-    kap = sum(norms(S,1));
+    kap = sum(sum(abs(S)));
     
     %%
     if run_scs_direct
