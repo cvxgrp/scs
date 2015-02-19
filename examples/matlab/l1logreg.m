@@ -83,7 +83,7 @@ for i=1:size(sizes,1)
     K.ed = 0;
     
     params.verbose = 1;
-    params.scale = 1;
+    params.scale = 5;
     params.cg_rate = 1.5;
     
     %write_scs_data_sparse(data,K,params,str)
