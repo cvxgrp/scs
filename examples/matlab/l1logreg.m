@@ -37,7 +37,7 @@ for i=1:size(sizes,1)
     
     X = [X_pos -X_neg]; % include labels with data
     
-    lam = 0.1*norm(X*ones(q,1),'inf')/2;
+    lam = 1;%0.1*norm(X*ones(q,1),'inf')/2;
     
     clear X_tmp ips ps labels;
     %%
