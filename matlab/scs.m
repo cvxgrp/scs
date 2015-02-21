@@ -1,5 +1,5 @@
 function [ x, y, info ] = scs( varargin )
-% scs 1.0
+% scs 1.1.0
 data = varargin{1};
 K = varargin{2};
 if nargin >= 3

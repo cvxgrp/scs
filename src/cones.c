@@ -460,7 +460,6 @@ static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
 	blasint m = 0;
 	blasint nb = (blasint) n;
 	blasint nbPlusOne = (blasint) (n + 1);
-	blasint nSquared = (blasint) (n * n);
 	blasint coneSz = (blasint) (getSdConeSize(n));
 
 	scs_float sqrt2 = SQRTF(2.0);
@@ -488,21 +487,21 @@ static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
 		return 0;
 	}
 	if (n == 2) {
-		return project2By2Sdc(X);
-	}
+        return project2By2Sdc(X);
+    }
 #ifdef LAPACK_LIB_FOUND
-	/* expand lower triangular matrix to full matrix */
-	for (i = 0; i < n; ++i) {
-		memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]), (n - i) * sizeof(scs_float));
-	}
-	/*
-		rescale so projection works, and matrix norm preserved
-		see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
-	 */
-	/* scale diags by sqrt(2) */
-	BLAS(scal)(&nSquared, &sqrt2, Xs, &nbPlusOne);
+    /* expand lower triangular matrix to full matrix */
+    for (i = 0; i < n; ++i) {
+        memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]), (n - i) * sizeof(scs_float));
+    }
+    /*
+       rescale so projection works, and matrix norm preserved
+       see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
+     */
+    /* scale diags by sqrt(2) */
+    BLAS(scal)(&nb, &sqrt2, Xs, &nbPlusOne); /* not nSquared */
 
-	/* max-eig upper bounded by frobenius norm */
+    /* max-eig upper bounded by frobenius norm */
 	vupper = MAX(sqrt2 * BLAS(nrm2)(&coneSz, X, &one), 0.01);
 #ifdef EXTRAVERBOSE
 	printArray(Xs, n * n, "Xs");
@@ -532,7 +531,7 @@ static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
 		BLAS(syr)("Lower", &nb, &a, &(Z[i * n]), &one, Xs, &nb);
 	}
 	/* scale diags by 1/sqrt(2) */
-	BLAS(scal)(&nSquared, &sqrt2Inv, Xs, &nbPlusOne);
+	BLAS(scal)(&nb, &sqrt2Inv, Xs, &nbPlusOne); /* not nSquared */
 	/* extract just lower triangular matrix */
 	for (i = 0; i < n; ++i) {
 		memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Xs[i * (n + 1)]), (n - i) * sizeof(scs_float));
@@ -650,20 +649,23 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
 #endif
 	}
 
-	if (k->ssize && k->s) {
-		/* project onto PSD cone */
-		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] == 0) {
-				continue;
-			}
-			if (projSemiDefiniteCone(&(x[count]), k->s[i], iter) < 0) return -1;
-			count += getSdConeSize(k->s[i]);
-		}
+    if (k->ssize && k->s) {
+        /* project onto PSD cone */
+        for (i = 0; i < k->ssize; ++i) {
 #ifdef EXTRAVERBOSE
-		scs_printf("SD proj time: %1.2es\n", tocq(&projTimer) / 1e3);
-		tic(&projTimer);
+            scs_printf("SD proj size %li\n", (long) k->s[i] );
 #endif
-	}
+            if (k->s[i] == 0) {
+                continue;
+            }
+            if (projSemiDefiniteCone(&(x[count]), k->s[i], iter) < 0) return -1;
+            count += getSdConeSize(k->s[i]);
+        }
+#ifdef EXTRAVERBOSE
+        scs_printf("SD proj time: %1.2es\n", tocq(&projTimer) / 1e3);
+        tic(&projTimer);
+#endif
+    }
 
 	if (k->ep) {
 		scs_float r, s, t;

@@ -9,7 +9,7 @@ save_results = false;
 run_scs_direct = true;
 run_scs_indirect = true;
 
-sizes = [100 1000; 5000 50000; 10000 100000];
+sizes = [100 10000; 1000 100000; 10000 1000000];
 sze_str{1} = 'small';
 sze_str{2} = 'med';
 sze_str{3} = 'large';
@@ -37,7 +37,7 @@ for i=1:size(sizes,1)
     
     X = [X_pos -X_neg]; % include labels with data
     
-    lam = 1;%0.1*norm(X*ones(q,1),'inf')/2;
+    lam = min(0.01*norm(X*ones(q,1),'inf')/2, 10); % too large gives bad results
     
     clear X_tmp ips ps labels;
     %%
