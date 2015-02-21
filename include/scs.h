@@ -80,7 +80,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 void scs_finish(Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */
 scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info);
-
+const char * scs_version(void);
 
 /* the following structs are not exposed to user */
 
@@ -110,6 +110,5 @@ struct residuals {
 	scs_float tau;
 	scs_float kap;
 };
-
 #endif
 

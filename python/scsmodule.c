@@ -221,7 +221,7 @@ static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char 
 }
 
 static PyObject *version(PyObject* self) {
-  return Py_BuildValue("s", SCS_VERSION);
+  return Py_BuildValue("s", scs_version());
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
