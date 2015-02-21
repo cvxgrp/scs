@@ -9,7 +9,7 @@ save_results = false;
 run_scs_direct = true;
 run_scs_indirect = true;
 
-sizes = [100 1000; 5000 50000; 10000 100000];
+sizes = [100 10000; 1000 100000; 10000 1000000];
 sze_str{1} = 'small';
 sze_str{2} = 'med';
 sze_str{3} = 'large';
@@ -18,7 +18,7 @@ density = 0.1;
 %%
 for i=1:size(sizes,1)
     disp(sprintf('Solving %s l1 regularized logistic regresssion.',sze_str{i}))
-    clearvars -except i sizes sze_str direct_data indirect_data save_results density
+    clearvars -except i sizes sze_str direct_data indirect_data save_results density run_scs_direct run_scs_indirect
     
     str = ['data/l1logreg_' sze_str{i}];
     randn('seed',sum(str));rand('seed',sum(str))
@@ -37,7 +37,7 @@ for i=1:size(sizes,1)
     
     X = [X_pos -X_neg]; % include labels with data
     
-    lam = 0.1*norm(X*ones(q,1),'inf')/2;
+    lam = min(0.01*norm(X*ones(q,1),'inf')/2, 10); % too large gives bad results
     
     clear X_tmp ips ps labels;
     %%
@@ -83,7 +83,7 @@ for i=1:size(sizes,1)
     K.ed = 0;
     
     params.verbose = 1;
-    params.scale = 1;
+    params.scale = 5;
     params.cg_rate = 1.5;
     
     %write_scs_data_sparse(data,K,params,str)
@@ -94,7 +94,6 @@ for i=1:size(sizes,1)
         else
             [xd,yd,sd,infod]=scs_direct(data,K,params);
         end
-        direct_data.output{i}
         direct_data.x{i} = xd;
         direct_data.y{i} = yd;
         direct_data.s{i} = sd;
@@ -110,7 +109,6 @@ for i=1:size(sizes,1)
         else
             [xi,yi,si,infoi]=scs_indirect(data,K,params);
         end
-        indirect_data.output{i}
         indirect_data.x{i} = xi;
         indirect_data.y{i} = yi;
         indirect_data.s{i} = si;

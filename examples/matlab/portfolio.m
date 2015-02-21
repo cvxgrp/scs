@@ -12,8 +12,8 @@ cvx_use_solver = 'sdpt3';
 run_scs_direct = true;
 run_scs_indirect = true;
 
-ns = [10000, 100000, 250000];
-ms = [100, 1000, 2500];
+ns = [100000, 1000000, 1000000];
+ms = [10, 100, 1000];
 
 density = 0.1;
 
@@ -26,24 +26,26 @@ for i = 1:length(ns)
     n = ns(i);
     m = ms(i);
     
-    mu = exp(randn(n,1));
-    D = sqrt(2*rand(n,1));
+    mu = exp(0.1*randn(n,1));
+    D = rand(n,1);
     F = sprandn(n,m,density);
-    gamma = 10;
+    gamma = 1;
+    B = n;
     %%
     if run_scs_direct
         
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3,'scale',1)
+        cvx_solver_settings('eps',1e-3,'scale',5)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
-        sum(x) == 1
+        sum(x) == B
         x >= 0
         if (save_results)
             output = evalc('cvx_end')
         else
+            output='';
             cvx_end
         end
         toc
@@ -61,14 +63,15 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',1,'cg_rate',1.5)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',5,'cg_rate',1.5)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
-        sum(x) == 1
+        sum(x) == B
         x >= 0
         if (save_results)
             output = evalc('cvx_end')
         else
+            output='';
             cvx_end
         end
         toc
@@ -90,11 +93,12 @@ for i = 1:length(ns)
             cvx_solver(cvx_use_solver)
             variable x(n)
             maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
-            sum(x) == 1
+            sum(x) == B
             x >= 0
             if (save_results)
                 output = evalc('cvx_end')
             else
+                output='';
                 cvx_end
             end
             toc
