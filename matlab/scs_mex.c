@@ -21,7 +21,7 @@ scs_int parseWarmStart(const mxArray * p_mex, scs_float ** p, scs_int l) {
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-	/* matlab usage: scs(data,cone,settings); */
+	/* matlab usage: [x,y,s,info] = scs(data,cone,settings); */
 	scs_int i, ns, status;
 	Data *d;
 	Cone *k;

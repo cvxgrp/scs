@@ -25,10 +25,6 @@ static scs_int scs_isnan(scs_float x) {
 	return (x == NAN || x != x);
 }
 
-const char * scsVersion(void) {
-	return SCS_VERSION;
-}
-
 static void freeWork(Work * w) {
 	if (w) {
 		if (w->u)
@@ -74,8 +70,7 @@ static void printInitHeader(const Data * d, const Cone * k) {
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
-	scs_printf("\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n",
-			scsVersion());
+	scs_printf("\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012\n", scs_version());
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
