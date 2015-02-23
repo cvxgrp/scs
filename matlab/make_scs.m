@@ -21,7 +21,7 @@ if ( isunix && ~ismac )
 elseif  ( ismac )
     flags.link = '-lm -lut';
 else
-    flags.link = '';
+    flags.link = '-lut';
     flags.LCFLAG = sprintf('-DBLASSUFFIX="" %s', flags.LCFLAG);
 end
 
