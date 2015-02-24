@@ -8,11 +8,13 @@ public class IndirectSolver implements IConeSolver {
     private static native void csolve(AMatrix A, double[] b, double[] c, Cone k, Settings p, Solution s, Info info);
     private static native String cversion();
 
+    private final static String VERSION = cversion();
+
     public void solve(Data d, Cone k, Settings p, Solution sol, Info info) {
         csolve(d.getA(), d.getB(), d.getC(), k, p, sol, info);
     }
 
     public String version() {
-        return cversion();
+        return VERSION;
     }
 }
