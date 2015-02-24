@@ -90,7 +90,7 @@ for i=1:size(sizes,1)
     
     if (run_scs_direct)
         if (save_results);
-            [xd,yd,sd,infod,direct_data.output{i}] = evalc('scs_direct(data,K,params);');
+            [direct_data.output{i}, xd,yd,sd,infod] = evalc('scs_direct(data,K,params);');
             direct_data.output{i}
         else
             [xd,yd,sd,infod]=scs_direct(data,K,params);
@@ -106,7 +106,7 @@ for i=1:size(sizes,1)
     
     if (run_scs_indirect)
         if (save_results);
-            [xi,yi,si,infoi,indirect_data.output{i}] = evalc('scs_indirect(data,K,params);');
+            [indirect_data.output{i},xi,yi,si,infoi] = evalc('scs_indirect(data,K,params);');
             indirect_data.output{i}
         else
             [xi,yi,si,infoi]=scs_indirect(data,K,params);
