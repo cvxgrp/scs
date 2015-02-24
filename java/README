@@ -4,3 +4,8 @@ make
 
 to test:
 make testproblem
+
+generate header etc., in scs/java/src/
+javah -jni scs.IndirectSolver
+javah -jni scs.DirectSolver
+and move as appropriate

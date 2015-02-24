@@ -3,7 +3,7 @@ ROOT = ..
 include $(ROOT)/scs.mk
 
 JAVA_OUT = src
-OBJECTS = $(ROOT)/src/scs.o $(ROOT)/src/util.o $(ROOT)/src/cones.o $(ROOT)/src/cs.o $(ROOT)/src/linAlg.o $(ROOT)/src/ctrlc.o $(ROOT)/$(LINSYS)/common.o
+OBJECTS = $(ROOT)/src/scs.o $(ROOT)/src/util.o $(ROOT)/src/cones.o $(ROOT)/src/cs.o $(ROOT)/src/linAlg.o $(ROOT)/src/ctrlc.o $(ROOT)/src/scs_version.o $(ROOT)/$(LINSYS)/common.o
 
 AMD_SOURCE = $(wildcard $(ROOT)/$(DIRSRCEXT)/amd_*.c)
 DIRECT_OBJECTS = $(ROOT)/$(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o) $(ROOT)/$(DIRSRC)/private.o
