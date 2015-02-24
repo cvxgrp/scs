@@ -53,6 +53,7 @@ for i = 1:length(ns)
         if (run_scs_direct)
             if (save_results)
                 [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
+                info
                 save('data/pnorm_scs_direct', 'out');
             else
                 [x_scs,y_scs,s_scs,info] = scs_direct(data, K, params);
@@ -61,6 +62,7 @@ for i = 1:length(ns)
         if (run_scs_indirect)
             if (save_results)
                 [out,x_scs,y_scs,s_scs,info] = evalc('scs_indirect(data, K, params)');
+                info
                 save('data/pnorm_scs_indirect', 'out');
             else
                 [x_scs,y_scs,s_scs,info] = scs_indirect(data, K, params);
