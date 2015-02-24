@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT void JNICALL Java_scs_IndirectSolver_csolve
   (JNIEnv *, jclass, jobject, jdoubleArray, jdoubleArray, jobject, jobject, jobject, jobject);
 
+/*
+ * Class:     scs_IndirectSolver
+ * Method:    cversion
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_scs_IndirectSolver_cversion
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

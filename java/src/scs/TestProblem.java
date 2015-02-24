@@ -14,27 +14,31 @@ public class TestProblem {
         }
 
         Settings p = new Settings();
-        RandomLinearProgram cp;
         SolutionWithInfo si;
         Data d = new Data();
+        IConeSolver isolver = new IndirectSolver();
+        IConeSolver dsolver = new IndirectSolver();
+        RandomLinearProgram cp = new RandomLinearProgram(m, n, d, p, isolver);
 
-        cp = new RandomLinearProgram(m, n, d, p, new IndirectSolver());
+        si = cp.solve();
+        System.out.println("solver version: " + isolver.version());
         System.out.println("true opt = " + cp.getOpt());
-        si = cp.solve();
-
         System.out.println("c'x = " + Utils.ip(si.getSol().getX(), d.getC()));
         System.out.println("b'y = " + Utils.ip(si.getSol().getY(), d.getB()));
         System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), si.getSol()));
         System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), si.getSol()));
 
-        cp.setSolver(new DirectSolver());
-        si = cp.solve();
+        cp.setSolver(dsolver); // test direct solver
 
+        si = cp.solve();
+        System.out.println("solver version: " + dsolver.version());
+        System.out.println("true opt = " + cp.getOpt());
         System.out.println("c'x = " + Utils.ip(si.getSol().getX(), d.getC()));
         System.out.println("b'y = " + Utils.ip(si.getSol().getY(), d.getB()));
         System.out.println("||Ax + s - b|| / (1 + ||b||)  = " + Utils.getScaledPriResidNorm(d.getA(), d.getB(), si.getSol()));
         System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), si.getSol()));
 
+        /* extra info */
         System.out.println("iters " + si.getInfo().getIter());
         System.out.println("status " + si.getInfo().getStatus());
         System.out.println("pobj " + si.getInfo().getPobj());
