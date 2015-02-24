@@ -12,8 +12,8 @@ cvx_use_solver = 'sdpt3';
 run_scs_direct = true;
 run_scs_indirect = true;
 
-ns = [100000, 1000000, 1000000];
-ms = [10, 100, 1000];
+ns = [100000, 500000, 2500000];
+ms = [100,    500,    2500];
 
 density = 0.1;
 
@@ -26,18 +26,18 @@ for i = 1:length(ns)
     n = ns(i);
     m = ms(i);
     
-    mu = exp(0.1*randn(n,1));
-    D = rand(n,1);
-    F = sprandn(n,m,density);
+    mu = exp(0.01*randn(n,1))-1; % returns
+    D = rand(n,1)/10; % idiosyncratic risk
+    F = sprandn(n,m,density)/10; % factor model
     gamma = 1;
-    B = n;
+    B = 1;
     %%
     if run_scs_direct
         
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3,'scale',5)
+        cvx_solver_settings('eps',1e-3,'scale',1)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == B
@@ -63,7 +63,7 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',5,'cg_rate',1.5)
+        cvx_solver_settings('use_indirect',1,'eps',1e-3,'scale',1,'cg_rate',1.5)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == B
