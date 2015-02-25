@@ -186,16 +186,21 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
 		addScaledArray(r, b, n, -1);
 		scaleArray(r, -1, n);
 		memcpy(b, s, n * sizeof(scs_float));
-	}
-	applyPreConditioner(M, z, r, n, &ipzr);
-	memcpy(p, z, n * sizeof(scs_float));
+    }
 
-	for (i = 0; i < max_its; ++i) {
-		matVec(A, stgs, pr, p, Gp);
+    /* check to see if we need to run CG at all */
+    if (calcNorm(r, n) < MIN(tol, 1e-18)) {
+        return 0;
+    }
 
-		alpha = ipzr / innerProd(p, Gp, n);
-		addScaledArray(b, p, n, alpha);
-		addScaledArray(r, Gp, n, -alpha);
+    applyPreConditioner(M, z, r, n, &ipzr);
+    memcpy(p, z, n * sizeof(scs_float));
+
+    for (i = 0; i < max_its; ++i) {
+        matVec(A, stgs, pr, p, Gp);
+        alpha = ipzr / innerProd(p, Gp, n);
+        addScaledArray(b, p, n, alpha);
+        addScaledArray(r, Gp, n, -alpha);
 
 		if (calcNorm(r, n) < tol) {
 #ifdef EXTRAVERBOSE

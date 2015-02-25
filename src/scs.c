@@ -519,12 +519,12 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 	}
 	scs_printf("\n");
 
-    if (info->statusVal == SCS_INFEASIBLE) {
+    if (isInfeasibleStatus(info->statusVal)) {
 		scs_printf("Certificate of primal infeasibility:\n");
 		scs_printf("dist(y, K*) = %.4e\n", getDualConeDist(sol->y, k, d->m));
 		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resInfeas);
 		scs_printf("b'y = %.4f\n", innerProd(d->b, sol->y, d->m));
-	} else if (info->statusVal == SCS_UNBOUNDED) {
+	} else if (isUnboundedStatus(info->statusVal)) {
 		scs_printf("Certificate of dual infeasibility:\n");
 		scs_printf("dist(s, K) = %.4e\n", getPriConeDist(sol->s, k, d->m));
 		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resUnbdd);
