@@ -267,6 +267,10 @@ end
 info.status = status;
 info.iter = i;
 
+info.resPri =err_pri;
+info.resDual = err_dual;
+info.relGap = gap;
+
 if (normalize)
     y = y ./ (D * sc_c);
     x = x ./ (E * sc_b);
