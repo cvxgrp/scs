@@ -382,6 +382,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(scs_float)); */
 	veclen[0] = d->n;
 	x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
+    PyArray_ENABLEFLAGS((PyArrayObject *) x, NPY_ARRAY_OWNDATA);
 
 	/* y */
 	/* matrix *y; */
@@ -390,6 +391,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(scs_float)); */
 	veclen[0] = d->m;
 	y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
+    PyArray_ENABLEFLAGS((PyArrayObject *) y, NPY_ARRAY_OWNDATA);
 
 	/* s */
 	/* matrix *s; */
@@ -398,8 +400,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(scs_float)); */
 	veclen[0] = d->m;
 	s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
+    PyArray_ENABLEFLAGS((PyArrayObject *) s, NPY_ARRAY_OWNDATA);
 
-	infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
+    infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
 			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
 			"dobj", (scs_float) info.dobj, "resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual,
 			"relGap", (scs_float) info.relGap, "resInfeas", (scs_float) info.resInfeas, "resUnbdd", (scs_float) info.resUnbdd,

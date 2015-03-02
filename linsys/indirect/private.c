@@ -102,52 +102,58 @@ static scs_int pcg(const AMatrix * A, Priv * pr, const scs_float * s, scs_float 
 	} else {
 		BLAS(symv)("Lower", &n, &negOnef, G, &n, s, &one, &onef, r, &one);
 		memcpy(b, s, n * sizeof(scs_float));
-	}
-	applyPreConditioner(M, z, r, n, &ipzr);
-	memcpy(p, z, n * sizeof(scs_float));
+    }
 
-	for (i = 0; i < max_its; i++) {
-		BLAS(symv)("Lower", &n, &onef, G, &n, p, &one, &zerof, Gp, &one);
+    /* check to see if we need to run CG at all */
+    if (BLAS(nrm2)(&n, r, &one) < MIN(tol, 1e-18)) {
+        return 0;
+    }
 
-		alpha = ipzr / BLAS(dot)(&n, p, &one, Gp, &one);
-		negAlpha = -alpha;
+    applyPreConditioner(M, z, r, n, &ipzr);
+    memcpy(p, z, n * sizeof(scs_float));
 
-		BLAS(axpy)(&n, &alpha, p, &one, b, &one);
-		BLAS(axpy)(&n, &negAlpha, Gp, &one, r, &one);
+    for (i = 0; i < max_its; i++) {
+        BLAS(symv)("Lower", &n, &onef, G, &n, p, &one, &zerof, Gp, &one);
 
-		if (BLAS(nrm2)(&n, r, &one) < tol) {
-			return i + 1;
-		}
-		ipzrOld = ipzr;
-		applyPreConditioner(M, z, r, n, &ipzr);
+        alpha = ipzr / BLAS(dot)(&n, p, &one, Gp, &one);
+        negAlpha = -alpha;
 
-		beta = ipzr / ipzrOld;
-		BLAS(scal)(&n, &beta, p, &one);
-		BLAS(axpy)(&n, &onef, z, &one, p, &one);
-	}
-	return i;
+        BLAS(axpy)(&n, &alpha, p, &one, b, &one);
+        BLAS(axpy)(&n, &negAlpha, Gp, &one, r, &one);
+
+        if (BLAS(nrm2)(&n, r, &one) < tol) {
+            return i + 1;
+        }
+        ipzrOld = ipzr;
+        applyPreConditioner(M, z, r, n, &ipzr);
+
+        beta = ipzr / ipzrOld;
+        BLAS(scal)(&n, &beta, p, &one);
+        BLAS(axpy)(&n, &onef, z, &one, p, &one);
+    }
+    return i;
 }
 
 scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
-	/* solves Mx = b, for x but stores result in b
-	 s contains warm-start (if available)	p->r = b; */
-	scs_int cgIts;
-	blasint n = (blasint) A->n, m = (blasint) A->m, one = 1;
-	scs_float onef = 1.0, negOnef = -1.0;
-	scs_float cgTol = BLAS(nrm2)(&n, b, &one) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, stgs->cg_rate));
+    /* solves Mx = b, for x but stores result in b
+       s contains warm-start (if available)	p->r = b; */
+    scs_int cgIts;
+    blasint n = (blasint) A->n, m = (blasint) A->m, one = 1;
+    scs_float onef = 1.0, negOnef = -1.0;
+    scs_float cgTol = BLAS(nrm2)(&n, b, &one) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, stgs->cg_rate));
 #ifdef EXTRAVERBOSE
-	scs_printf("solving lin sys\n");
+    scs_printf("solving lin sys\n");
 #endif
-	tic(&linsysTimer);
-	BLAS(gemv)("Transpose", &m, &n, &onef, A->x, &m, &(b[A->n]), &one, &onef, b, &one);
-	cgIts = pcg(A, p, s, b, A->n, MAX(cgTol, CG_BEST_TOL));
-	BLAS(gemv)("NoTranpose", &m, &n, &onef, A->x, &m, b, &one, &negOnef, &(b[A->n]), &one);
+    tic(&linsysTimer);
+    BLAS(gemv)("Transpose", &m, &n, &onef, A->x, &m, &(b[A->n]), &one, &onef, b, &one);
+    cgIts = pcg(A, p, s, b, A->n, MAX(cgTol, CG_BEST_TOL));
+    BLAS(gemv)("NoTranpose", &m, &n, &onef, A->x, &m, b, &one, &negOnef, &(b[A->n]), &one);
 #ifdef EXTRAVERBOSE
-	scs_printf("\tCG iterations: %i\n", (int) cgIts);
+    scs_printf("\tCG iterations: %i\n", (int) cgIts);
 #endif
-	if (iter >= 0) {
-		totCgIts += cgIts;
-	}
+    if (iter >= 0) {
+        totCgIts += cgIts;
+    }
 
 	totalSolveTime += tocq(&linsysTimer);
 	return 0;
