@@ -48,7 +48,7 @@ The cone `K` can be any Cartesian product of the following primitive cones:
 + exponential cone `{(x,y,z) | y e^(x/y) <= z, y>0 }`
 + dual exponential cone `{(u,v,w) | −u e^(v/u) <= e w, u<0}`
 + power cone `{(x,y,z) | x^a * y^(1-a) >= |z|, x>=0, y>=0}`
-+ dual power cone `{(u,v,w) | (-u/a)^a * (-v/(1-a))^(1-a) >= |w|, u<=0, v<=0}`
++ dual power cone `{(u,v,w) | (u/a)^a * (v/(1-a))^(1-a) >= |w|, u>=0, v>=0}`
 
 The rows of the data matrix `A` correspond to the cones in `K`.
 **The rows of `A` must be in the order of the cones given above, i.e., first come the
