@@ -11,7 +11,7 @@
 typedef void* timer;
 #elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 /* Use Windows QueryPerformanceCounter for timing */
-#include <Windows.h>
+#include <windows.h>
 typedef struct timer {
 	LARGE_INTEGER tic;
 	LARGE_INTEGER toc;
