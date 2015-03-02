@@ -28,6 +28,7 @@ function [x,y,s,info] = scs_matlab(data,K,params)
 %       cone.s, array of SD lengths
 %       cone.ep, num of exp cones
 %       cone.ed, num of dual exp cones
+%       cone.p, array of primal + dual power cone params
 %
 % cone struct is only used in proj_cone, to add other cones
 % simply add the relevant size data to the cone struct and edit the
@@ -130,7 +131,7 @@ if (isfield(params,'warm_xy'))
     if (normalize)
         u(1:n) = u(1:n) .* (E * sc_b);
         u(n+1:n+m) = u(n+1:n+m) .* (D * sc_c);
-        v(n+1:n+m) = v(n+1:n+m) ./ (D / (sc_b * scale))
+        v(n+1:n+m) = v(n+1:n+m) ./ (D / (sc_b * scale));
     end
 else
     u = zeros(l,1);u(end) = sqrt(l);
