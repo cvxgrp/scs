@@ -41,7 +41,7 @@ max_iters = 2500;   % maximum num iterations for admm
 eps = 1e-3;         % quitting tolerances
 alpha = 1.5;        % relaxation parameter (alpha = 1 is unrelaxed)
 normalize = 1;      % heuristic normalization procedure
-scale = 5;          % heuristic re-scaline procedure
+scale = 1;          % heuristic re-scaline procedure
 rho_x = 1e-3;       % x equality rescaling
 
 % conjugate gradient (CG) settings:
