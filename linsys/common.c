@@ -215,44 +215,58 @@ void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal) {
 }
 
 void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/* y += A'*x
-	 A in column compressed format
-	 parallelizes over columns (rows of A')
-	 */
-	scs_int p, j;
-	scs_int c1, c2;
-	scs_float yj;
+    /* y += A'*x
+       A in column compressed format
+       parallelizes over columns (rows of A')
+     */
+    scs_int p, j;
+    scs_int c1, c2;
+    scs_float yj;
+#ifdef EXTRAVERBOSE
+    timer multByAtransTimer;
+    tic(&multByAtransTimer);
+#endif
 #ifdef OPENMP
 #pragma omp parallel for private(p,c1,c2,yj)
 #endif
-	for (j = 0; j < n; j++) {
-		yj = y[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			yj += Ax[p] * x[Ai[p]];
-		}
-		y[j] = yj;
-	}
+    for (j = 0; j < n; j++) {
+        yj = y[j];
+        c1 = Ap[j];
+        c2 = Ap[j + 1];
+        for (p = c1; p < c2; p++) {
+            yj += Ax[p] * x[Ai[p]];
+        }
+        y[j] = yj;
+    }
+#ifdef EXTRAVERBOSE
+    scs_printf("mult By A trans time: %1.2es\n", tocq(&multByAtransTimer) / 1e3);
+#endif
 }
 
 void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_float *x, scs_float *y) {
-	/*y += A*x
-	 A in column compressed format
-	 this parallelizes over columns and uses
-	 pragma atomic to prevent concurrent writes to y
-	 */
-	scs_int p, j;
-	scs_int c1, c2;
-	scs_float xj;
-	/*#pragma omp parallel for private(p,c1,c2,xj)  */
-	for (j = 0; j < n; j++) {
-		xj = x[j];
-		c1 = Ap[j];
-		c2 = Ap[j + 1];
-		for (p = c1; p < c2; p++) {
-			/*#pragma omp atomic */
-			y[Ai[p]] += Ax[p] * xj;
-		}
-	}
+    /*y += A*x
+      A in column compressed format
+      this parallelizes over columns and uses
+      pragma atomic to prevent concurrent writes to y
+     */
+    scs_int p, j;
+    scs_int c1, c2;
+    scs_float xj;
+#ifdef EXTRAVERBOSE
+    timer multByATimer;
+    tic(&multByATimer);
+#endif
+    /*#pragma omp parallel for private(p,c1,c2,xj)  */
+    for (j = 0; j < n; j++) {
+        xj = x[j];
+        c1 = Ap[j];
+        c2 = Ap[j + 1];
+        for (p = c1; p < c2; p++) {
+            /*#pragma omp atomic */
+            y[Ai[p]] += Ax[p] * xj;
+        }
+    }
+#ifdef EXTRAVERBOSE
+    scs_printf("mult By A time: %1.2es\n", tocq(&multByATimer) / 1e3);
+#endif
 }

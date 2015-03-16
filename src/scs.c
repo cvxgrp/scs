@@ -26,36 +26,35 @@ static scs_int scs_isnan(scs_float x) {
 }
 
 static void freeWork(Work * w) {
-	if (w) {
-		if (w->u)
-			scs_free(w->u);
-		if (w->v)
-			scs_free(w->v);
-		if (w->u_t)
-			scs_free(w->u_t);
-		if (w->u_prev)
-			scs_free(w->u_prev);
-		if (w->h)
-			scs_free(w->h);
-		if (w->g)
-			scs_free(w->g);
-		if (w->b)
-			scs_free(w->b);
-		if (w->c)
-			scs_free(w->c);
-		if (w->pr)
-			scs_free(w->pr);
-		if (w->dr)
-			scs_free(w->dr);
-		if (w->scal) {
-			if (w->scal->D)
-				scs_free(w->scal->D);
-			if (w->scal->E)
-				scs_free(w->scal->E);
-			scs_free(w->scal);
-		}
-		scs_free(w);
-	}
+    if (!w) return;
+    if (w->u)
+        scs_free(w->u);
+    if (w->v)
+        scs_free(w->v);
+    if (w->u_t)
+        scs_free(w->u_t);
+    if (w->u_prev)
+        scs_free(w->u_prev);
+    if (w->h)
+        scs_free(w->h);
+    if (w->g)
+        scs_free(w->g);
+    if (w->b)
+        scs_free(w->b);
+    if (w->c)
+        scs_free(w->c);
+    if (w->pr)
+        scs_free(w->pr);
+    if (w->dr)
+        scs_free(w->dr);
+    if (w->scal) {
+        if (w->scal->D)
+            scs_free(w->scal->D);
+        if (w->scal->E)
+            scs_free(w->scal->E);
+        scs_free(w->scal);
+    }
+    scs_free(w);
 }
 
 static void printInitHeader(const Data * d, const Cone * k) {
@@ -744,20 +743,18 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 			}
 		}
 
-		if (w->stgs->verbose) {
-			if (i % PRINT_INTERVAL == 0) {
-				calcResiduals(w, &r, i);
-				printSummary(w, i, &r, &solveTimer);
-			}
-		}
-	}
-	if (w->stgs->verbose) {
-		calcResiduals(w, &r, i);
-		printSummary(w, i, &r, &solveTimer);
-	}
-	/* populate solution vectors (unnormalized) and info */
-	getSolution(w, sol, info, &r, i);
-	info->solveTime = tocq(&solveTimer);
+        if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
+            calcResiduals(w, &r, i);
+            printSummary(w, i, &r, &solveTimer);
+        }
+    }
+    if (w->stgs->verbose) {
+        calcResiduals(w, &r, i);
+        printSummary(w, i, &r, &solveTimer);
+    }
+    /* populate solution vectors (unnormalized) and info */
+    getSolution(w, sol, info, &r, i);
+    info->solveTime = tocq(&solveTimer);
 
 	if (w->stgs->verbose)
 		printFooter(d, k, sol, w, info);
@@ -766,26 +763,24 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 }
 
 void scs_finish(Work * w) {
-	#ifdef EXTRAVERBOSE
+#ifdef EXTRAVERBOSE
     scs_printf("enter finish\n");
-    #endif
-    finishCone();
-	if (w) {
-		if (w->stgs) {
-			if (w->stgs->normalize) {
-#ifndef COPYAMATRIX
-				unNormalizeA(w->A, w->stgs, w->scal);
-#else
-				freeAMatrix(w->A);
 #endif
-			}
-		}
-		if (w->p) freePriv(w->p);
-		freeWork(w);
-	}
-	#ifdef EXTRAVERBOSE
+    finishCone();
+    if (w) {
+        if (w->stgs && w->stgs->normalize) {
+#ifndef COPYAMATRIX
+            unNormalizeA(w->A, w->stgs, w->scal);
+#else
+            freeAMatrix(w->A);
+#endif
+        }
+        if (w->p) freePriv(w->p);
+        freeWork(w);
+    }
+#ifdef EXTRAVERBOSE
     scs_printf("exit finish\n");
-    #endif
+#endif
 }
 
 Work * scs_init(const Data * d, const Cone * k, Info * info) {

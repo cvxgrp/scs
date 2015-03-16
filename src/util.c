@@ -165,27 +165,21 @@ void freeData(Data * d, Cone * k) {
             scs_free(k->p);
         scs_free(k);
     }
-    d = NULL;
-    k = NULL;
 }
 
 void freeSol(Sol *sol) {
     if (sol) {
         if (sol->x) {
             scs_free(sol->x);
-            sol->x = NULL;
         }
         if (sol->y) {
             scs_free(sol->y);
-            sol->y = NULL;
         }
         if (sol->s) {
             scs_free(sol->s);
-            sol->s = NULL;
         }
         scs_free(sol);
     }
-    sol = NULL;
 }
 
 /* assumes d->stgs already allocated memory */

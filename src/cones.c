@@ -272,9 +272,8 @@ scs_float expCalcGrad(scs_float * v, scs_float * x, scs_float rho) {
 	expSolveForXWithRho(v, x, rho);
 	if (x[1] <= 1e-12) {
 		return x[0];
-	} else {
-		return x[0] + x[1] * log(x[1] / x[2]);
 	}
+	return x[0] + x[1] * log(x[1] / x[2]);
 }
 
 void expGetRhoUb(scs_float * v, scs_float * x, scs_float * ub, scs_float * lb) {
