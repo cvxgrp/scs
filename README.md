@@ -273,6 +273,7 @@ and cones is a struct that contains one or more of:
 + `ep` (num primal exponential cones)
 + `ed` (num dual exponential cones)
 + `p`  (array of primal/dual power params).
+
 Type `help scs_direct` at the Matlab prompt to see its documentation.
 
 ### Using SCS in Python
