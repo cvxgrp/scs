@@ -41,7 +41,7 @@ cone = {'q': [], 'l': 2}
 FAIL = 'Failure' # scs code for failure
 
 def check_solution(solution, expected):
-  assert_almost_equals(solution, expected, places=3)
+  assert_almost_equals(solution, expected, places=2)
 
 def check_failure(sol):
   assert sol['info']['status'] == FAIL
