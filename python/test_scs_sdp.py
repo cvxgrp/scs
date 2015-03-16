@@ -36,7 +36,7 @@ except ImportError:
   raise
 
 def check_solution(solution, expected):
-  assert_almost_equals(solution, expected, places=3)
+  assert_almost_equals(solution, expected, places=2)
 
 def check_infeasible(sol):
   assert sol['info']['status'] == 'Infeasible'
