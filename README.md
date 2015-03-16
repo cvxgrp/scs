@@ -117,13 +117,13 @@ These libraries (and `scs.h`) expose only four API functions:
 The relevant data structures are:
 ```
 
-    typedef struct PROBLEM_DATA Data;
-    typedef struct SETTINGS Settings;
-    typedef struct SOL_VARS Sol;
-    typedef struct INFO Info;
-    typedef struct SCALING Scaling;
-    typedef struct WORK Work;
-    typedef struct CONE Cone;
+    typedef struct SCS_PROBLEM_DATA Data;
+    typedef struct SCS_SETTINGS Settings;
+    typedef struct SCS_SOL_VARS Sol;
+    typedef struct SCS_INFO Info;
+    typedef struct SCS_SCALING Scaling;
+    typedef struct SCS_WORK Work;
+    typedef struct SCS_CONE Cone;
 
     /* defined in linSys.h, can be overriden by user */
     typedef struct A_DATA_MATRIX AMatrix;
@@ -138,7 +138,7 @@ The relevant data structures are:
     };
     
     /* struct containing problem data */
-    struct PROBLEM_DATA {
+    struct SCS_PROBLEM_DATA {
         /* these cannot change for multiple runs for the same call to scs_init */
         scs_int m, n;       /* A has m rows, n cols */
         AMatrix * A;        /* A is supplied in data format specified by linsys solver */
@@ -150,7 +150,7 @@ The relevant data structures are:
     };
 
     /* struct containing solver settings */
-    struct SETTINGS {
+    struct SCS_SETTINGS {
         /* settings parameters: default suggested input */
 
         /* these *cannot* change for multiple runs with the same call to scs_init */
@@ -168,12 +168,12 @@ The relevant data structures are:
     };   
 
     /* contains primal-dual solution arrays */
-    struct SOL_VARS {
+    struct SCS_SOL_VARS {
         scs_float * x, *y, *s;
     };
 
     /* contains terminating information */
-    struct INFO {
+    struct SCS_INFO {
         scs_int iter;       /* number of iterations taken */
         char status[32];    /* status string, e.g. 'Solved' */
         scs_int statusVal;  /* status as scs_int, defined below */
@@ -190,13 +190,13 @@ The relevant data structures are:
 
 
     /* contains normalization variables */
-    struct SCALING {
+    struct SCS_SCALING {
         scs_float *D, *E; /* for normalization */
         scs_float meanNormRowA, meanNormColA;
     };
 
     /* NB: rows of data matrix A must be specified in this exact order */
-    struct CONE {
+    struct SCS_CONE {
         scs_int f;          /* number of linear equality constraints */
         scs_int l;          /* length of LP cone */
         scs_int *q;         /* array of second-order cone constraints */
