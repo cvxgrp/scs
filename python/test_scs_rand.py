@@ -60,7 +60,7 @@ m = getConeDims(K)
 
 def test_feasible():
     for i in range(num_feas):
-        data, p_star = genFeasible(K, n = m/3, density = 0.5)
+        data, p_star = genFeasible(K, n = m/3, density = 0.1)
         
         sol = scs.solve(data, K, **opts)
         yield check_solution, dot(data['c'],sol['x']), p_star
