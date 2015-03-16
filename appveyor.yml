@@ -4,8 +4,8 @@ environment:
     matrix:
         - PYVER: 2.7
           PYLOC: python27
-        #- PYVER: 3.4 # comment out until scipy bug fixed
-        #  PYLOC: python34
+        - PYVER: 3.4 # comment out until scipy bug fixed
+          PYLOC: python34
 
 platform:
     - x86
