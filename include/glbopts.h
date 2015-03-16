@@ -90,13 +90,13 @@ typedef float scs_float;
 #endif
 #endif
 
-typedef struct PROBLEM_DATA Data;
-typedef struct SETTINGS Settings;
-typedef struct SOL_VARS Sol;
-typedef struct INFO Info;
-typedef struct SCALING Scaling;
-typedef struct WORK Work;
-typedef struct CONE Cone;
+typedef struct SCS_PROBLEM_DATA Data;
+typedef struct SCS_SETTINGS Settings;
+typedef struct SCS_SOL_VARS Sol;
+typedef struct SCS_INFO Info;
+typedef struct SCS_SCALING Scaling;
+typedef struct SCS_WORK Work;
+typedef struct SCS_CONE Cone;
 
 #endif
 

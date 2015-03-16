@@ -4,7 +4,7 @@
 #include "scs.h"
 
 /* NB: rows of data matrix A must be specified in this exact order */
-struct CONE {
+struct SCS_CONE {
 	scs_int f; /* number of linear equality constraints */
 	scs_int l; /* length of LP cone */
 	scs_int *q; /* array of second-order cone constraints */
