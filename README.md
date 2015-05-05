@@ -318,12 +318,16 @@ To compile the necessary libraries, `cd` into the `java` directory and type
 
 To solve a problem create a new instance of `ConeProgram` with constructor
 
-```public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);```
+```
+public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);
+```
 
 where the `IConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
 Then call
 
-```ConeProgram.solve();```
+```
+ConeProgram.solve();
+```
 
 on your instance of `ConeProgram`, which will return an instance of
 `SolutionWithInfo`, containing the solution and information
