@@ -12,7 +12,7 @@
 #define SCS_INDETERMINATE           (-3)
 #define SCS_INFEASIBLE              (-2) /* primal infeasible, dual unbounded   */
 #define SCS_UNBOUNDED               (-1) /* primal unbounded, dual infeasible   */
-#define SCS_UNFINISHED              (0)  /* never returned */
+#define SCS_UNFINISHED              (0)  /* never returned, used as placeholder */
 #define SCS_SOLVED                  (1)
 #define SCS_SOLVED_INACCURATE       (2)
 

@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
-from distutils.core import setup, Extension
-from distutils.errors import *
+from setuptools import setup, Extension
 from glob import glob
 from platform import system
 from numpy import get_include
