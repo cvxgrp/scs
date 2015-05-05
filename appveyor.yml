@@ -16,7 +16,7 @@ install:
     - C:\%PYLOC%\python C:\get-pip.py
     - C:\%PYLOC%\Scripts\pip.exe install conda
     - C:\%PYLOC%\Scripts\conda.exe init
-    - C:\%PYLOC%\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy nose
+    - C:\%PYLOC%\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy nose setuptools
 
 build_script:
     - cd python
