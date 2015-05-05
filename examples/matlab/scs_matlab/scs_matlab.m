@@ -28,6 +28,7 @@ function [x,y,s,info] = scs_matlab(data,K,params)
 %       cone.s, array of SD lengths
 %       cone.ep, num of exp cones
 %       cone.ed, num of dual exp cones
+%       cone.p, array of primal + dual power cone params
 %
 % cone struct is only used in proj_cone, to add other cones
 % simply add the relevant size data to the cone struct and edit the
@@ -40,7 +41,7 @@ max_iters = 2500;   % maximum num iterations for admm
 eps = 1e-3;         % quitting tolerances
 alpha = 1.5;        % relaxation parameter (alpha = 1 is unrelaxed)
 normalize = 1;      % heuristic normalization procedure
-scale = 5;          % heuristic re-scaline procedure
+scale = 1;          % heuristic re-scaline procedure
 rho_x = 1e-3;       % x equality rescaling
 
 % conjugate gradient (CG) settings:
@@ -130,7 +131,7 @@ if (isfield(params,'warm_xy'))
     if (normalize)
         u(1:n) = u(1:n) .* (E * sc_b);
         u(n+1:n+m) = u(n+1:n+m) .* (D * sc_c);
-        v(n+1:n+m) = v(n+1:n+m) ./ (D / (sc_b * scale))
+        v(n+1:n+m) = v(n+1:n+m) ./ (D / (sc_b * scale));
     end
 else
     u = zeros(l,1);u(end) = sqrt(l);
@@ -265,6 +266,10 @@ else
 end
 info.status = status;
 info.iter = i;
+
+info.resPri =err_pri;
+info.resDual = err_dual;
+info.relGap = gap;
 
 if (normalize)
     y = y ./ (D * sc_c);

@@ -36,7 +36,7 @@ except ImportError:
   raise
 
 def check_solution(solution, expected):
-  assert_almost_equals(solution, expected, places=3)
+  assert_almost_equals(solution, expected, places=2)
 
 def check_infeasible(sol):
   assert sol['info']['status'] == 'Infeasible'
@@ -55,7 +55,7 @@ m = getConeDims(K)
 
 def test_feasible():
     for i in range(num_feas):
-        data, p_star = genFeasible(K, n = m/3, density = 0.01)
+        data, p_star = genFeasible(K, n = m // 3, density = 0.1)
         
         sol = scs.solve(data, K, **opts)
         yield check_solution, dot(data['c'],sol['x']), p_star
@@ -67,14 +67,14 @@ def test_feasible():
 
 def test_infeasible():
     for i in range(num_infeas):
-        data = genInfeasible(K, n = m/3)
+        data = genInfeasible(K, n = m // 3)
         
         yield check_infeasible, scs.solve(data, K, **opts)
         yield check_infeasible, scs.solve(data, K, use_indirect=True, **opts)
 
 def test_unbounded():
     for i in range(num_unb):
-        data = genUnbounded(K, n = m/3)
+        data = genUnbounded(K, n = m // 2)
         
         yield check_unbounded, scs.solve(data, K, **opts)
         yield check_unbounded, scs.solve(data, K, use_indirect=True, **opts)

@@ -11,7 +11,7 @@
 #include "constants.h"
 
 /* struct containing problem data */
-struct PROBLEM_DATA {
+struct SCS_PROBLEM_DATA {
 	/* these cannot change for multiple runs for the same call to scs_init */
 	scs_int m, n; /* A has m rows, n cols*/
 	AMatrix * A; /* A is supplied in data format specified by linsys solver */
@@ -23,7 +23,7 @@ struct PROBLEM_DATA {
 };
 
 /* Settings struct */
-struct SETTINGS {
+struct SCS_SETTINGS {
 	/* settings parameters: default suggested input */
 
 	/* these *cannot* change for multiple runs with the same call to scs_init */
@@ -41,12 +41,12 @@ struct SETTINGS {
 };
 
 /* contains primal-dual solution arrays */
-struct SOL_VARS {
+struct SCS_SOL_VARS {
 	scs_float * x, *y, *s;
 };
 
 /* contains terminating information */
-struct INFO {
+struct SCS_INFO {
 	scs_int iter; /* number of iterations taken */
 	char status[32]; /* status string, e.g. 'Solved' */
 	scs_int statusVal; /* status as scs_int, defined in constants.h */
@@ -63,7 +63,7 @@ struct INFO {
 
 
 /* contains normalization variables */
-struct SCALING {
+struct SCS_SCALING {
 	scs_float *D, *E; /* for normalization */
 	scs_float meanNormRowA, meanNormColA;
 };
@@ -85,7 +85,7 @@ const char * scs_version(void);
 /* the following structs are not exposed to user */
 
 /* workspace for SCS */
-struct WORK {
+struct SCS_WORK {
 	scs_float *u, *v, *u_t, *u_prev; /* u_prev = u from previous iteration */
 	scs_float *h, *g, *pr, *dr;
 	scs_float gTh, sc_b, sc_c, nm_b, nm_c;

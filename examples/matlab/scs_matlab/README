@@ -1,0 +1,5 @@
+cp cvx_scs_matlab.m to path/to/cvx/shims/
+addpath path/to/scs_matlab/
+cvx_setup
+
+cvx_solver('scs_matlab')

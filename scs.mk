@@ -75,3 +75,6 @@ ifneq ($(USE_LAPACK), 0)
   CFLAGS += -DLAPACK_LIB_FOUND
   # CFLAGS += -DBLAS64 # if blas/lapack lib uses 64 bit ints
 endif
+
+# debug to see var values, e.g. 'make print-OBJECTS' shows OBJECTS value
+print-%: ; @echo $*=$($*)

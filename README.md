@@ -18,21 +18,21 @@ SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
 
 ----
 SCS numerically solves convex cone programs using the alternating direction
-method of multipliers [ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html).
+method of multipliers ([ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html)).
 It returns solutions to both the primal and dual problems if the problem
-is feasible, or returns a certificate of infeasibility otherwise. SCS solves
+is feasible, or a certificate of infeasibility otherwise. SCS solves
 the following primal cone problem:
 
 ```
-minimize        c'*x 
-subject to      A*x + s = b 
+minimize        c'x
+subject to      Ax + s = b
                 s in K
 ```
 over variables `x` and `s`, where `A`, `b` and `c` are user-supplied data and `K` is a user-defined convex cone.
 The dual problem is given by
 ```
-maximize        -b'*y 
-subject to      -A'*y == c 
+maximize        -b'y
+subject to      -A'y == c
                 y in K^*
 ```
 over variable `y`, where `K^*` denotes the dual cone to `K`.
@@ -45,7 +45,7 @@ The cone `K` can be any Cartesian product of the following primitive cones:
 + exponential cone `{(x,y,z) | y e^(x/y) <= z, y>0 }`
 + dual exponential cone `{(u,v,w) | −u e^(v/u) <= e w, u<0}`
 + power cone `{(x,y,z) | x^a * y^(1-a) >= |z|, x>=0, y>=0}`
-+ dual power cone `{(u,v,w) | (-u/a)^a * (-v/(1-a))^(1-a) >= |w|, u<=0, v<=0}`
++ dual power cone `{(u,v,w) | (u/a)^a * (v/(1-a))^(1-a) >= |w|, u>=0, v>=0}`
 
 The rows of the data matrix `A` correspond to the cones in `K`.
 **The rows of `A` must be in the order of the cones given above, i.e., first come the
@@ -101,7 +101,7 @@ These libraries (and `scs.h`) expose only four API functions:
     call to `scs_init`, so long as the matrix A
     does not change (b and c can change).
 
-* `void scs_finish(Data * d, Work * w);`
+* `void scs_finish(Work * w);`
     
     Called after all solves completed to free allocated memory and other cleanup.
 
@@ -114,13 +114,13 @@ These libraries (and `scs.h`) expose only four API functions:
 The relevant data structures are:
 ```
 
-    typedef struct PROBLEM_DATA Data;
-    typedef struct SETTINGS Settings;
-    typedef struct SOL_VARS Sol;
-    typedef struct INFO Info;
-    typedef struct SCALING Scaling;
-    typedef struct WORK Work;
-    typedef struct CONE Cone;
+    typedef struct SCS_PROBLEM_DATA Data;
+    typedef struct SCS_SETTINGS Settings;
+    typedef struct SCS_SOL_VARS Sol;
+    typedef struct SCS_INFO Info;
+    typedef struct SCS_SCALING Scaling;
+    typedef struct SCS_WORK Work;
+    typedef struct SCS_CONE Cone;
 
     /* defined in linSys.h, can be overriden by user */
     typedef struct A_DATA_MATRIX AMatrix;
@@ -135,7 +135,7 @@ The relevant data structures are:
     };
     
     /* struct containing problem data */
-    struct PROBLEM_DATA {
+    struct SCS_PROBLEM_DATA {
         /* these cannot change for multiple runs for the same call to scs_init */
         scs_int m, n;       /* A has m rows, n cols */
         AMatrix * A;        /* A is supplied in data format specified by linsys solver */
@@ -147,7 +147,7 @@ The relevant data structures are:
     };
 
     /* struct containing solver settings */
-    struct SETTINGS {
+    struct SCS_SETTINGS {
         /* settings parameters: default suggested input */
 
         /* these *cannot* change for multiple runs with the same call to scs_init */
@@ -165,12 +165,12 @@ The relevant data structures are:
     };   
 
     /* contains primal-dual solution arrays */
-    struct SOL_VARS {
+    struct SCS_SOL_VARS {
         scs_float * x, *y, *s;
     };
 
     /* contains terminating information */
-    struct INFO {
+    struct SCS_INFO {
         scs_int iter;       /* number of iterations taken */
         char status[32];    /* status string, e.g. 'Solved' */
         scs_int statusVal;  /* status as scs_int, defined below */
@@ -187,13 +187,13 @@ The relevant data structures are:
 
 
     /* contains normalization variables */
-    struct SCALING {
+    struct SCS_SCALING {
         scs_float *D, *E; /* for normalization */
         scs_float meanNormRowA, meanNormColA;
     };
 
     /* NB: rows of data matrix A must be specified in this exact order */
-    struct CONE {
+    struct SCS_CONE {
         scs_int f;          /* number of linear equality constraints */
         scs_int l;          /* length of LP cone */
         scs_int *q;         /* array of second-order cone constraints */
@@ -208,12 +208,16 @@ The relevant data structures are:
     };
 
     /* SCS returns one of the following integers: (zero never returned)     */
-    #define SCS_SIGINT          (-5)
-    #define SCS_FAILED          (-4)
-    #define SCS_INDETERMINATE   (-3)
-    #define SCS_INFEASIBLE      (-2) /* primal infeasible, dual unbounded   */
-    #define SCS_UNBOUNDED       (-1) /* primal unbounded, dual infeasible   */
-    #define SCS_SOLVED          (1)
+    #define SCS_INFEASIBLE_INACCURATE   (-7)
+    #define SCS_UNBOUNDED_INACCURATE    (-6)
+    #define SCS_SIGINT                  (-5)
+    #define SCS_FAILED                  (-4)
+    #define SCS_INDETERMINATE           (-3)
+    #define SCS_INFEASIBLE              (-2) /* primal infeasible, dual unbounded   */
+    #define SCS_UNBOUNDED               (-1) /* primal unbounded, dual infeasible   */
+    #define SCS_UNFINISHED              (0)  /* never returned, used as placeholder */
+    #define SCS_SOLVED                  (1)
+    #define SCS_SOLVED_INACCURATE       (2)
 ```
 
 The types `scs_float` and `scs_int` can be specified by the user, they default
@@ -224,19 +228,19 @@ The data matrix `A` is specified in column-compressed format and the vectors
 (slack), and `y` (dual) are returned as dense arrays. Cones are specified as
 the struct above, the rows of `A` must correspond to the cones in the
 exact order as specified by the cone struct (i.e. put linear cones before
-soc cones etc.).
+second-order cones etc.).
 
 **Warm-start**
 
 You can warm-start SCS (supply a guess of the solution) by setting warm_start in
-Data to `1` and supplying the warm-starts in the Sol struct (x,y and s). All
+Data to `1` and supplying the warm-starts in the Sol struct (`x`,`y`, and `s`). All
 inputs must be warm-started if any one is. These
 are used to initialize the iterates in `scs_solve`.
  
 **Re-using matrix factorization**
 
-To factorize the matrix once (if using the direct version) and solve many
-times, simply call scs_init once, and use `scs_solve` many times with the same
+If using the direct version you can factorize the matrix once and solve many
+times. Simply call scs_init once, and use `scs_solve` many times with the same
 workspace, changing the input data `b` and `c` (and optionally warm-starts) for
 each iteration. See run_scs.c for an example.
 
@@ -248,8 +252,8 @@ two structs in `include/linSys.h` and plug it in.
 **Solving SDPs**
 
 In order to solve SDPs you must have BLAS and LAPACK installed.
-Point `scs.mk` to the location of these libraries. Without
-these you can still solve problems using the other cones.
+Edit `scs.mk` to set `USE_LAPACK = 1` and point to the location of these
+libraries. Without these you can still solve problems using the other cones.
 
 ### Using SCS in Matlab
 Running `make_scs` in Matlab under the `matlab` folder will produce two mex
@@ -270,6 +274,7 @@ and cones is a struct that contains one or more of:
 + `ep` (num primal exponential cones)
 + `ed` (num dual exponential cones)
 + `p`  (array of primal/dual power params).
+
 Type `help scs_direct` at the Matlab prompt to see its documentation.
 
 ### Using SCS in Python
@@ -296,23 +301,30 @@ The argument `data` is a python dictionary with three elements `A`, `b`, and
 and `A` is a SCIPY **sparse matrix in CSC format**; if they are not of the proper
 format, SCS will attempt to convert them.
 
-The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep` and
-`ed` (all of which are optional) corresponding to the supported cone types.
+The argument `cone` is a dictionary with fields `f`, `l`, `q`, `s`, `ep`,
+`ed`, and `p` (all of which are optional) corresponding to the supported cone types.
 
 The returned object is a dictionary containing the fields `sol['x']`, `sol['y']`, `sol['s']`, and `sol['info']`.
 The first three are NUMPY arrays containing the relevant solution. The last field contains a dictionary with solver information.
 
 ### Using SCS in Java / Scala
 
-SCS can be called from Java and Scala via the Java native interface (JNI).
+SCS can be called from Java and Scala via the Java Native Interface (JNI).
 To compile the necessary libraries, `cd` into the `java` directory and type
 `make`. To test a random cone program type `make testproblem`.
 
-To solve a problem: create a new instance of `ConeProgram` with constructor
+To solve a problem create a new instance of `ConeProgram` with constructor
 
 ```public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);```
 
 where the `IConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
+Then call
+
+```ConeProgram.solve();```
+
+on your instance of `ConeProgram`, which will return an instance of
+`SolutionWithInfo`, containing the solution and information
+about the run.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
