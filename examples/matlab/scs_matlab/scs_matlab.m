@@ -125,7 +125,7 @@ gTh = g'*h;
 fprintf('Iter:\t      pres      dres       gap      pobj      dobj   unb_res   inf_res   kap/tau  time (s)\n');
 
 % for warm-starting:
-if (isfield(params,'warm_xy'))
+if (nargin==3 && isfield(params,'warm_xy'))
     u = [params.warm_xy;1];
     v = [zeros(n,1);data.b*u(end) - data.A*u(1:n);0];
     if (normalize)
