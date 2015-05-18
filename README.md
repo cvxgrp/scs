@@ -337,14 +337,14 @@ Usage on MAC:
 
 Using the `make` command on MAC will generate .class and dylib files but to use them in JAVA you need to compile them into a single jar file.
 
-1- Download SCS source
-2- Run make (This will generate dylib and class files). If you get jni.h/jni_w.h error during make. Look for these files and use step 3.
-3- Place jni_w.h and jni.h in the same folder and run make.
-4- Run make testprogram
-5- Put all the class files in a new folder named "scs"
-7- Build a jar (https://docs.oracle.com/javase/tutorial/deployment/jar/build.html)
-8- Import the jar in eclipse.
-9- Link the dynamic library (dylib files) -> Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with dylib
+1- Download SCS source </br>
+2- Run make (This will generate dylib and class files). If you get jni.h/jni_w.h error during make. Look for these files and use step 3.</br>
+3- (Optional) Place jni_w.h and jni.h in the same folder and run make.</br>
+4- Run make testprogram </br>
+5- Put all the class files in a new folder named "scs" </br>
+7- Build a jar (https://docs.oracle.com/javase/tutorial/deployment/jar/build.html) </br>
+8- Import the jar in eclipse. </br>
+9- Link the dynamic library (dylib files) -> Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with dylib </br>
 
 
 ### Using SCS in Julia
