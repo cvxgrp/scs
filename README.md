@@ -333,6 +333,20 @@ on your instance of `ConeProgram`, which will return an instance of
 `SolutionWithInfo`, containing the solution and information
 about the run.
 
+Usage on MAC:
+
+Using the `make` command on MAC will generate .class and dylib files but to use them in JAVA you need to compile them into a single jar file.
+
+1- Download SCS source
+2- Run make (This will generate dylib and class files). If you get jni.h/jni_w.h error during make. Look for these files and use step 3.
+3- Place jni_w.h and jni.h in the same folder and run make.
+4- Run make testprogram
+5- Put all the class files in a new folder named "scs"
+7- Build a jar (https://docs.oracle.com/javase/tutorial/deployment/jar/build.html)
+8- Import the jar in eclipse.
+9- Link the dynamic library (dylib files) -> Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with dylib
+
+
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
 
