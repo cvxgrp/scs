@@ -14,6 +14,8 @@
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
+timer globalTimer;
+
 /* printing header */
 static const char* HEADER[] = { " Iter ", " pri res ", " dua res ", " rel gap ", " pri obj ", " dua obj ", " kap/tau ",
 		" time (s)", };
@@ -22,10 +24,12 @@ static const scs_int HEADER_LEN = 8;
 static scs_int _lineLen_;
 
 static scs_int scs_isnan(scs_float x) {
+    DEBUG_FUNC
 	return (x == NAN || x != x);
 }
 
 static void freeWork(Work * w) {
+    DEBUG_FUNC
     if (!w) return;
     if (w->u)
         scs_free(w->u);
@@ -58,7 +62,8 @@ static void freeWork(Work * w) {
 }
 
 static void printInitHeader(const Data * d, const Cone * k) {
-	scs_int i;
+    DEBUG_FUNC
+    scs_int i;
 	Settings * stgs = d->stgs;
 	char * coneStr = getConeHeader(k);
 	char * linSysMethod = getLinSysMethod(d->A, d->stgs);
@@ -94,9 +99,7 @@ static void printInitHeader(const Data * d, const Cone * k) {
 }
 
 static void populateOnFailure(scs_int m, scs_int n, Sol * sol, Info * info, scs_int statusVal, const char * msg) {
-	#ifdef EXTRAVERBOSE
-    scs_printf("populate on failure\n");
-    #endif
+    DEBUG_FUNC
     if (info) {
 		info->relGap = NAN;
 		info->resPri = NAN;
@@ -127,6 +130,7 @@ static void populateOnFailure(scs_int m, scs_int n, Sol * sol, Info * info, scs_
 
 static scs_int failure(Work * w, scs_int m, scs_int n, Sol * sol, Info * info, scs_int stint, const char * msg,
 		const char * ststr) {
+    DEBUG_FUNC
 	scs_int status = stint;
 	populateOnFailure(m, n, sol, info, status, ststr);
 	scs_printf("Failure:%s\n", msg);
@@ -135,6 +139,7 @@ static scs_int failure(Work * w, scs_int m, scs_int n, Sol * sol, Info * info, s
 }
 
 static void warmStartVars(Work * w, const Sol * sol) {
+    DEBUG_FUNC
 	scs_int i, n = w->n, m = w->m;
 	memset(w->v, 0, n * sizeof(scs_float));
 	memcpy(w->u, sol->x, n * sizeof(scs_float));
@@ -156,6 +161,7 @@ static void warmStartVars(Work * w, const Sol * sol) {
 
 static scs_float calcPrimalResid(Work * w, const scs_float * x, const scs_float * s, const scs_float tau,
 		scs_float *nmAxs) {
+    DEBUG_FUNC
 	scs_int i;
 	scs_float pres = 0, scale, *pr = w->pr;
 	*nmAxs = 0;
@@ -784,6 +790,7 @@ void scs_finish(Work * w) {
 }
 
 Work * scs_init(const Data * d, const Cone * k, Info * info) {
+    tic(&globalTimer);
 	Work * w;
 	timer initTimer;
 	startInterruptListener();

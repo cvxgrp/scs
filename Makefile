@@ -13,19 +13,19 @@ TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OU
 .PHONY: default 
 
 default: $(TARGETS) $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
-	@echo "**********************************************************************************"
+	@echo "****************************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2012."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect',"
 	@echo "or '$(OUT)/demo_SOCP_indirect to solve a random SOCP."
 	@echo "**********************************************************************************"
 ifneq ($(USE_LAPACK), 0)
-	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, and ECPs"
+	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs"
 else
-	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, and ECPs)."
+	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, ECPs, and PCPs)."
 	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to set USE_LAPACK=1"
 	@echo "and point to the library install locations, and recompile with 'make purge', 'make'."
 endif
-	@echo "**********************************************************************************"
+	@echo "****************************************************************************************"
 
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
 src/util.o	: src/util.c include/util.h include/constants.h

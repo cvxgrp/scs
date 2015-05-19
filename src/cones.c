@@ -596,7 +596,8 @@ void projPowerCone(scs_float * v, scs_float a) {
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to NULL) */
 scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start, scs_int iter)  {
-	scs_int i;
+    DEBUG_FUNC
+    scs_int i;
 	scs_int count = (k->f ? k->f : 0);
 #ifdef EXTRAVERBOSE
 	timer projTimer;

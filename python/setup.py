@@ -67,7 +67,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
             ext_modules=[_scs_direct, _scs_indirect],
             requires=["numpy (>= 1.7)","scipy (>= 0.13.2)"],
             license = "GPLv3",
-            long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (ECPs). See http://github.com/cvxgrp/scs for more details."
+            long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs), second-order cone programs (SOCPs), semidefinite programs (SDPs), exponential cone programs (ECPs), and power cone programs (PCPs), or problems with any combination of those cones. See http://github.com/cvxgrp/scs for more details."
             )
 
 #####################################
@@ -109,14 +109,14 @@ except:
         install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=get_info('blas'), lapack_info=get_info('lapack'), USE_OPENMP=USE_OPENMP, rootDir=rootDir)
     except:
         install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info={}, lapack_info={}, USE_OPENMP=USE_OPENMP, rootDir=rootDir)
-        print("#############################################################################################")
-        print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, and ECPs #")
-        print("# install blas/lapack and run this install script again to allow SCS to solve SDPs          #")
-        print("#                                                                                           #")
-        print("# scs will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set      #")
-        print("# use this to link against blas/lapack libs that scs can't find on it's own, usage ex:      #")
-        print("#        >> export BLAS_LAPACK_LIB_PATHS=/usr/lib/:/other/dir                               #")
-        print("#        >> export BLAS_LAPACK_LIBS=blas:lapack                                             #")
-        print("#        >> python setup.py install                                                         #")
-        print("#############################################################################################")
+        print("###############################################################################################")
+        print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, ECPs, PCPs #")
+        print("# install blas/lapack and run this install script again to allow SCS to solve SDPs            #")
+        print("#                                                                                             #")
+        print("# scs will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set        #")
+        print("# use this to link against blas/lapack libs that scs can't find on it's own, usage ex:        #")
+        print("#        >> export BLAS_LAPACK_LIB_PATHS=/usr/lib/:/other/dir                                 #")
+        print("#        >> export BLAS_LAPACK_LIBS=blas:lapack                                               #")
+        print("#        >> python setup.py install                                                           #")
+        print("###############################################################################################")
 

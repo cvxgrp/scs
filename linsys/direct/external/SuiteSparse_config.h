@@ -122,6 +122,9 @@ scs_float SuiteSparse_time  /* returns current wall clock time in seconds */
     void
 ) ;
 
+/* SCS: disabling this timing code */
+#define NTIMER
+
 /* determine which timer to use, if any */
 #ifndef NTIMER
 #ifdef _POSIX_C_SOURCE

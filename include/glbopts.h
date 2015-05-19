@@ -90,6 +90,12 @@ typedef float scs_float;
 #endif
 #endif
 
+#ifndef EXTRAVERBOSE
+#define DEBUG_FUNC
+#else
+#define DEBUG_FUNC scs_printf("function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__);
+#endif
+
 typedef struct SCS_PROBLEM_DATA Data;
 typedef struct SCS_SETTINGS Settings;
 typedef struct SCS_SOL_VARS Sol;

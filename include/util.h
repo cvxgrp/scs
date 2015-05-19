@@ -37,6 +37,8 @@ typedef struct timer {
 
 #endif
 
+extern timer globalTimer;
+
 /* these all return milli-seconds */
 void tic(timer * t);
 scs_float toc(timer * t);
