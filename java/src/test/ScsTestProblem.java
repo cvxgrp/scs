@@ -1,7 +1,6 @@
-package scs;
+import org.scs.*;
 
-
-public class TestProblem {
+public class ScsTestProblem {
     public static void main(String [] args) {
         int m;
         int n;

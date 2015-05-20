@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class Solution {
     private Info info;  // information about the run

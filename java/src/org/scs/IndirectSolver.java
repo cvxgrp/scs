@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class IndirectSolver implements IConeSolver {
     static {

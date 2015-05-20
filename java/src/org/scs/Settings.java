@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class Settings {
     // set to defaults:

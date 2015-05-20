@@ -1,11 +1,12 @@
-to make the java libs, in this dir:
+to make the java libs and scs.jar, in this dir:
 make purge
 make
 
 to test:
 make testproblem
 
+// NOTES:
 generate header etc., in scs/java/src/
-javah -jni scs.IndirectSolver
-javah -jni scs.DirectSolver
+javah -jni org.scs.IndirectSolver
+javah -jni org.scs.DirectSolver
 and move as appropriate

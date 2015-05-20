@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class ConeProgram {
     protected Data d;
