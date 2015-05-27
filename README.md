@@ -4,17 +4,14 @@ SCS
 [![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
 
-SCS = `splitting conic solver`
-
-SCS is a numerical optimization package for solving large-scale convex cone problems, written in C,
-based on our paper [Operator Splitting for Conic Optimization via Homogeneous
-Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html).
-
-SCS can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
-programs via included interfaces. (Julia interface available
-[here](https://github.com/JuliaOpt/SCS.jl).)
-
-SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
+SCS (`splitting conic solver`) is a numerical optimization package for solving
+large-scale convex cone problems, based on our paper [Operator Splitting for
+Conic Optimization via Homogeneous Self-Dual
+Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
+and can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
+programs via included interfaces (Julia interface available
+[here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
+convex optimization toolboxes [CVX](http://cvxr.com/cvx/),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
@@ -23,7 +20,7 @@ SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
 SCS numerically solves convex cone programs using the alternating direction
 method of multipliers ([ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html)).
 It returns solutions to both the primal and dual problems if the problem
-is feasible, or a certificate of infeasibility otherwise. SCS solves
+is feasible, or a certificate of infeasibility otherwise. It solves
 the following primal cone problem:
 
 ```
