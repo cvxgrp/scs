@@ -2,10 +2,6 @@
 #include "linsys/amatrix.h"
 #include "problemUtils.h"
 
-#ifndef DEMO_PATH
-#define DEMO_PATH "examples/raw/demo_data"
-#endif
-
 #define NUM_TRIALS (5)
 #define RHOX (1e-3)
 #define TEST_WARM_START (1)

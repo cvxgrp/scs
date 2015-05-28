@@ -310,8 +310,16 @@ The first three are NUMPY arrays containing the relevant solution. The last fiel
 ### Using SCS in Java / Scala
 
 SCS can be called from Java and Scala via the Java Native Interface (JNI).
-To compile the necessary libraries, `cd` into the `java` directory and type
-`make`. To test a random cone program type `make testproblem`.
+Typing `make` in the `java` directory will compile the native libraries into
+`java/bin` and build `scs.jar`. You will need to add these files to your java
+projects to use SCS. To test a random cone program type `make testproblem`.
+
+To use with eclipse follow the above steps, then import `scs.jar` into eclipse and
+link the dynamic libraries (`libscsjdir.*` `libscsjindir.*`):
+
+```
+Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with libraries
+```
 
 To solve a problem create a new instance of `ConeProgram` with constructor
 
@@ -327,22 +335,7 @@ ConeProgram.solve();
 ```
 
 on your instance of `ConeProgram`, which will return an instance of
-`SolutionWithInfo`, containing the solution and information
-about the run.
-
-Usage on MAC:
-
-Using the `make` command on MAC will generate .class and dylib files but to use them in JAVA you need to compile them into a single jar file.
-
-1- Download SCS source </br>
-2- Run make (This will generate dylib and class files). If you get jni.h/jni_w.h error during make. Look for these files and use step 3.</br>
-3- (Optional) Place jni_w.h and jni.h in the same folder and run make.</br>
-4- Run make testprogram </br>
-5- Put all the class files in a new folder named "scs" </br>
-7- Build a jar (https://docs.oracle.com/javase/tutorial/deployment/jar/build.html) </br>
-8- Import the jar in eclipse. </br>
-9- Link the dynamic library (dylib files) -> Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with dylib </br>
-
+`Solution`, containing the solution and information about the run.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
