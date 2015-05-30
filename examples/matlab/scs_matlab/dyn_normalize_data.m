@@ -1,10 +1,10 @@
 function [data, w] = dyn_normalize_data(data, K, w, scale, res_pri, res_dual, D_old, E_old)
-EPS = 0.1;
+EPS = 0.2;
 
 [m,n] = size(data.A);
 
-p = abs(res_pri) / norm(res_pri);
-d = abs(res_dual) / norm(res_dual);
+p = norm(res_pri) ./(abs(res_pri)  + 0.01);
+d = norm(res_dual)./(abs(res_dual) + 0.01);
 
 MIN_SCALE = 1e-3;
 MAX_SCALE = 1e3;
@@ -61,7 +61,6 @@ if (~isnan(E_old))
     Et = (1-EPS)*E_old + EPS*Et;
 end
 data.A = data.A*sparse(diag(1./Et));
-
 
 nmrowA = 1;%mean(twonorms(data.A'));
 nmcolA = 1;%mean(twonorms(data.A));
