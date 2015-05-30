@@ -3,8 +3,11 @@ EPS = 0.2;
 
 [m,n] = size(data.A);
 
-p = norm(res_pri) ./(abs(res_pri)  + 0.01);
-d = norm(res_dual)./(abs(res_dual) + 0.01);
+p = 1 ./(abs(res_pri)  + 0.01);
+d = 1 ./(abs(res_dual) + 0.01);
+
+p = p./norm(p);
+d = d./norm(d);
 
 MIN_SCALE = 1e-3;
 MAX_SCALE = 1e3;
