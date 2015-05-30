@@ -86,7 +86,10 @@ nm_c = norm(data.c);
 
 work = struct();
 if (normalize)
-    [data, work] = normalize_data(data, K, scale, work); % have to do this since matlab pass by val
+    data.A_orig = data.A;
+    data.b_orig = data.b;
+    data.c_orig = data.c;
+    [data, work] = dyn_normalize_data(data, K, work, scale, data.b, data.c, nan, nan); % have to do this since matlab pass by val
     D = work.D;
     E = work.E;
     sc_b = work.sc_b;
@@ -178,8 +181,10 @@ for i=0:max_iters-1
     y = u(n+1:n+m) / tau;
     s = v(n+1:n+m) / tau;
     
-    err_pri = norm(D.*(data.A * x + s - data.b)) / (1 + nm_b) / (sc_b * scale);
-    err_dual = norm(E.*(data.A' * y + data.c)) / (1 + nm_c) / (sc_c * scale);
+    res_pri = D.*(data.A * x + s - data.b) / (sc_b * scale);
+    err_pri = norm(res_pri)/ (1 + nm_b);
+    res_dual = E.*(data.A' * y + data.c) / (sc_c * scale);
+    err_dual = norm(res_dual) / (1 + nm_c);
     pobji = data.c' * x / (sc_c * sc_b * scale);
     dobji = -data.b' * y / (sc_c * sc_b * scale);
     
@@ -214,13 +219,45 @@ for i=0:max_iters-1
     
     sum_nm2(idx,1) = norm(u - u_prev);
     sum_nm2(idx,2) = norm(u - ut);
-    
+    nmD(idx) = norm(D);
+    nmE(idx) = norm(E);
     solved = max(gap,max(err_pri,err_dual)) < eps;
     infeasible = inf_res < eps;
     unbounded = unb_res < eps;
     
-    if (mod(i,CONVERGED_INTERVAL)==0 && (solved || infeasible || unbounded))
-        break
+    if (mod(i,CONVERGED_INTERVAL)==0)
+        if (normalize && ~isnan(norm(res_pri)) && ~isnan(norm(res_dual)))
+            D_old = D;
+            E_old = E;
+            sc_b_old = sc_b;
+            sc_c_old = sc_c;
+            [data, work] = dyn_normalize_data(data, K, work, scale, res_pri, res_dual, D_old, E_old); % have to do this since matlab pass by val
+            D = work.D;
+            E = work.E;
+            sc_b = work.sc_b;
+            sc_c = work.sc_c;
+            [u,v] = update_iterates_renormalize(u, v, D, E, sc_c, sc_b, D_old, E_old, sc_b_old, sc_c_old);
+            %% XXX TODO hack:
+            if use_indirect
+                work.M = 1 ./ diag(rho_x*speye(n) + data.A'*data.A); % pre-conditioner
+            else
+                W=sparse([rho_x*speye(n) data.A';data.A -speye(m)]);
+                try
+                    work.P=amd(W);
+                    [work.L,work.d] = ldlsparse(W,work.P);
+                    work.L=work.L+speye(n+m);
+                catch ldlerror
+                    [work.L,work.d,work.P] = ldl(W,'vector');
+                end
+            end
+            h = [data.c;data.b];
+            [g, itn] = solve_lin_sys(work,data,h,n,m,zeros(n,1),rho_x,-1,use_indirect,cg_rate,extra_verbose);
+            g(n+1:end) = -g(n+1:end);
+            gTh = g'*h;
+        end
+        if (solved || infeasible || unbounded)
+            break
+        end
     end
     
     if (mod(i,PRINT_INTERVAL)==0)
@@ -232,7 +269,7 @@ if (i+1 == max_iters); i=i+1; end
 ttime = toc;
 fprintf('%i:\t%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e%10.2e\n',i,err_pri,err_dual,gap,pobji,dobji,unb_res,inf_res,kap/tau,ttime);
 if (solved)
-    fprintf('\tc*x = %4f, -b*y = %4f, dist(s,K) = %.2e, dist(y,K*) = %.2e, s*y = %.2e\n', pobji,...
+    fprintf('c*x = %4f, -b*y = %4f, dist(s,K) = %.2e, dist(y,K*) = %.2e, s*y = %.2e\n', pobji,...
         dobji, norm(s - proj_cone(s,K)), norm(y - proj_dual_cone(y,K)), s'*y);
 end
 %%
@@ -272,8 +309,8 @@ info.resDual = err_dual;
 info.relGap = gap;
 
 if (normalize)
-    y = y ./ (D * sc_c);
     x = x ./ (E * sc_b);
+    y = y ./ (D * sc_c);
     s = s .* (D / (sc_b * scale));
     %[data, work] = unnormalize_data(data, scale, work);
 end
@@ -294,6 +331,8 @@ if gen_plots
     legend('|u-uprev|','|u-ut|')
     figure();semilogy(pathol(:,1));hold on;semilogy(pathol(:,2),'r');
     legend('unb','inf');
+    figure();plot(nmD);hold on;plot(nmE,'r')
+    legend('norm D','norm E');
     if use_indirect;
         figure();plot(cg_its);xlabel('k');ylabel('Conjugate Gradient Iterations');
         figure();semilogy(cumsum(mults),nms(:,1));hold on;semilogy(cumsum(mults),nms(:,2),'r');semilogy(cumsum(mults),nms(:,3),'g');
