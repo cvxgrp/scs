@@ -2,7 +2,8 @@
 ROOT = ..
 include $(ROOT)/scs.mk
 
-JAVA_OUT = src
+JAVA_SRC = src
+BIN = bin
 OBJECTS = $(ROOT)/src/scs.o $(ROOT)/src/util.o $(ROOT)/src/cones.o $(ROOT)/src/cs.o $(ROOT)/src/linAlg.o $(ROOT)/src/ctrlc.o $(ROOT)/src/scs_version.o $(ROOT)/$(LINSYS)/common.o
 
 DIRECT_OBJECTS = $(ROOT)/$(DIRSRC)/private.o
@@ -10,7 +11,13 @@ INDIRECT_OBJECTS = $(ROOT)/$(INDIRSRC)/private.o
 
 .PHONY: default
 
-default: scs $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED)
+default: scs $(BIN)/libjscsdir.$(SHARED) $(BIN)/libjscsindir.$(SHARED) scs.jar
+	@echo "**********************************************************************************"
+	@echo "Successfully compiled scs java, copyright Brendan O'Donoghue 2012."
+	@echo "To test, type 'make testproblem'."
+	@echo "To use in your own java projects add scs.jar to the classpath, and set"
+	@echo " -Djava.library.path=<your location libraries libjscsdir and libjscsindir>"
+	@echo "**********************************************************************************"
 
 scs_purge:
 	( cd $(ROOT) && $(MAKE) purge )
@@ -18,24 +25,30 @@ scs_purge:
 scs:
 	( cd $(ROOT) && $(MAKE) )
 
-$(JAVA_OUT)/libjscsdir.$(SHARED): $(OBJECTS) $(DIRECT_OBJECTS) scsjnidir.o
+$(BIN)/libjscsdir.$(SHARED): $(OBJECTS) $(DIRECT_OBJECTS) scsjnidir.o
+	mkdir -p $(BIN)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 scsjnidir.o:
 	$(CC) -c -I$(ROOT)/include -I$(ROOT) scsjni.c -o $@
 
-$(JAVA_OUT)/libjscsindir.$(SHARED): $(OBJECTS) $(INDIRECT_OBJECTS) scsjniindir.o
+$(BIN)/libjscsindir.$(SHARED): $(OBJECTS) $(INDIRECT_OBJECTS) scsjniindir.o
+	mkdir -p $(BIN)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 scsjniindir.o:
 	$(CC) -c -DINDIRECTJ -I$(ROOT)/include -I$(ROOT) scsjni.c -o $@
 
+scs.jar:
+	javac $(JAVA_SRC)/org/scs/*.java
+	jar -cf scs.jar -C $(JAVA_SRC) org
+
 testproblem: default
-	javac -cp $(JAVA_OUT) $(JAVA_OUT)/scs/TestProblem.java
-	java -cp $(JAVA_OUT) -Djava.library.path=$(JAVA_OUT) scs.TestProblem
+	javac -cp scs.jar $(JAVA_SRC)/test/*.java
+	java -cp scs.jar:$(JAVA_SRC)/test -Djava.library.path=$(BIN) ScsTestProblem
 
 .PHONY: clean purge
 clean:
-	rm -rf bin $(JAVA_OUT)/libjscsdir.$(SHARED) $(JAVA_OUT)/libjscsindir.$(SHARED) *.o $(JAVA_OUT)/scs/*.class
+	rm -rf scs.jar $(BIN) *.o $(JAVA_SRC)/org/scs/*.class $(JAVA_SRC)/test/*.class
 purge: scs_purge clean
 

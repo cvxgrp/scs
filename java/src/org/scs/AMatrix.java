@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 import java.util.Random;
 import java.util.TreeSet;

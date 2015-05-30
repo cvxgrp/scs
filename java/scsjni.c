@@ -4,9 +4,9 @@
 #include "linsys/amatrix.h"
 
 #ifdef INDIRECTJ
-#include "scs_IndirectSolver.h"
+#include "org_scs_IndirectSolver.h"
 #else
-#include "scs_DirectSolver.h"
+#include "org_scs_DirectSolver.h"
 #endif
 
 jobject getObjUsingGetter(JNIEnv * env, jobject obj, char * method, char * signature) {
@@ -155,19 +155,19 @@ void setInfo(JNIEnv * env, jobject infoJava, Info * info) {
 }
 
 #ifdef INDIRECTJ
-JNIEXPORT jstring JNICALL Java_scs_IndirectSolver_cversion(JNIEnv *env, jclass clazz)
+JNIEXPORT jstring JNICALL Java_org_scs_IndirectSolver_cversion(JNIEnv *env, jclass clazz)
 #else
-JNIEXPORT jstring JNICALL Java_scs_DirectSolver_cversion(JNIEnv *env, jclass clazz)
+JNIEXPORT jstring JNICALL Java_org_scs_DirectSolver_cversion(JNIEnv *env, jclass clazz)
 #endif
 {
     return (*env)->NewStringUTF(env, scs_version());
 }
 
 #ifdef INDIRECTJ
-JNIEXPORT void JNICALL Java_scs_IndirectSolver_csolve(JNIEnv *env, jclass clazz, jobject AJava,
+JNIEXPORT void JNICALL Java_org_scs_IndirectSolver_csolve(JNIEnv *env, jclass clazz, jobject AJava,
         jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava, jobject infoJava)
 #else
-JNIEXPORT void JNICALL Java_scs_DirectSolver_csolve(JNIEnv *env, jclass clazz, jobject AJava,
+JNIEXPORT void JNICALL Java_org_scs_DirectSolver_csolve(JNIEnv *env, jclass clazz, jobject AJava,
         jdoubleArray bJava, jdoubleArray cJava, jobject coneJava, jobject paramsJava, jobject solJava, jobject infoJava)
 #endif
 {

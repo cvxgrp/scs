@@ -1,17 +1,14 @@
 SCS
 ====
 
-SCS = `splitting conic solver`
-
-SCS is a numerical optimization package for solving large-scale convex cone problems, written in C,
-based on our paper [Operator Splitting for Conic Optimization via Homogeneous
-Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html).
-
-SCS can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
-programs via included interfaces. (Julia interface available
-[here](https://github.com/JuliaOpt/SCS.jl).)
-
-SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
+SCS (`splitting conic solver`) is a numerical optimization package for solving
+large-scale convex cone problems, based on our paper [Operator Splitting for
+Conic Optimization via Homogeneous Self-Dual
+Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
+and can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
+programs via included interfaces (Julia interface available
+[here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
+convex optimization toolboxes [CVX](http://cvxr.com/cvx/),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
@@ -20,7 +17,7 @@ SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
 SCS numerically solves convex cone programs using the alternating direction
 method of multipliers ([ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html)).
 It returns solutions to both the primal and dual problems if the problem
-is feasible, or a certificate of infeasibility otherwise. SCS solves
+is feasible, or a certificate of infeasibility otherwise. It solves
 the following primal cone problem:
 
 ```
@@ -310,21 +307,32 @@ The first three are NUMPY arrays containing the relevant solution. The last fiel
 ### Using SCS in Java / Scala
 
 SCS can be called from Java and Scala via the Java Native Interface (JNI).
-To compile the necessary libraries, `cd` into the `java` directory and type
-`make`. To test a random cone program type `make testproblem`.
+Typing `make` in the `java` directory will compile the native libraries into
+`java/bin` and build `scs.jar`. You will need to add these files to your java
+projects to use SCS. To test a random cone program type `make testproblem`.
+
+To use with eclipse follow the above steps, then import `scs.jar` into eclipse and
+link the dynamic libraries (`libscsjdir.*` `libscsjindir.*`):
+
+```
+Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with libraries
+```
 
 To solve a problem create a new instance of `ConeProgram` with constructor
 
-```public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);```
+```
+public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);
+```
 
 where the `IConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
 Then call
 
-```ConeProgram.solve();```
+```
+ConeProgram.solve();
+```
 
 on your instance of `ConeProgram`, which will return an instance of
-`SolutionWithInfo`, containing the solution and information
-about the run.
+`Solution`, containing the solution and information about the run.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).

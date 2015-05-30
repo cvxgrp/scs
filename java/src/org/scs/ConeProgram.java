@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class ConeProgram {
     protected Data d;
@@ -19,10 +19,11 @@ public class ConeProgram {
         this(new Data(A, b, c), k, p, solver);
     }
 
-    public SolutionWithInfo solve() {
+    public Solution solve() {
         Solution sol = new Solution();
         Info info = new Info();
         solver.solve(d, k, p, sol, info);
-        return new SolutionWithInfo(sol, info);
+        sol.setInfo(info);
+        return sol;
     }
 }

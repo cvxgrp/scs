@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class Info {
     private int iter; /* number of iterations taken */

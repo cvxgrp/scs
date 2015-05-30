@@ -2,7 +2,7 @@
 #define CONSTANTS_H_GUARD
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
-#define SCS_VERSION ("1.1.0")
+#define SCS_VERSION ("1.1.1")
 
 /* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE   (-7)

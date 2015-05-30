@@ -1,4 +1,4 @@
-package scs;
+package org.scs;
 
 public class RandomLinearProgram extends ConeProgram {
     private double opt;

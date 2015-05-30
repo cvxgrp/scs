@@ -137,7 +137,7 @@ minimize(c'*x)
 A*x + s == b
 s(1:K.l) >= 0
 idx = K.l;
-for i=1:K.ep
+for j=1:K.ep
     -s(idx+1) >= rel_entr(s(idx+2),s(idx+3));
     idx = idx + 3;
 end
@@ -145,6 +145,6 @@ output = evalc('cvx_end')
 cvx.output{i} = output;
 cvx.x{i} = x;
 cvx.s{i} = s;
+cvx.time{i} = toc;
 if (save_results); save('data/l1logreg_cvx', 'cvx'); end
-toc
 %}
