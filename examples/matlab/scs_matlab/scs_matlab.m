@@ -89,11 +89,20 @@ if (normalize)
     data.A_orig = data.A;
     data.b_orig = data.b;
     data.c_orig = data.c;
+    %{
     [data, work] = dyn_normalize_data(data, K, work, scale, data.b, data.c, nan, nan); % have to do this since matlab pass by val
     D = work.D;
     E = work.E;
     sc_b = work.sc_b;
     sc_c = work.sc_c;
+    %}
+    data.A = data.A * scale;
+    data.b = data.b * scale;
+    data.c = data.c * scale;
+    D = ones(m,1);
+    E = ones(n,1);
+    sc_b = 1;
+    sc_c = 1;
 else
     scale = 1;
     D = ones(m,1);
@@ -172,7 +181,7 @@ for i=0:max_iters-1
     u_bar = (u + u_bar * i) / (i+1);
     ut_bar = (ut + ut_bar * i) / (i+1);
     v_bar = (v + v_bar * i) / (i+1);
-
+    
     %% convergence checking:
     tau = abs(u(end));
     kap = abs(v(end)) / (sc_b * sc_c * scale);

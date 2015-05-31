@@ -1,13 +1,13 @@
 function [data, w] = dyn_normalize_data(data, K, w, scale, res_pri, res_dual, D_old, E_old)
-EPS = 0.2;
+EPS = 0.01;
 
 [m,n] = size(data.A);
 
-p = 1 ./(abs(res_pri)  + 0.01);
-d = 1 ./(abs(res_dual) + 0.01);
+p = 1 ./(abs(res_pri)  + 0.001);
+d = 1 ./(abs(res_dual) + 0.001);
 
-p = p./norm(p);
-d = d./norm(d);
+%p = p./norm(p);
+%d = d./norm(d);
 
 MIN_SCALE = 1e-3;
 MAX_SCALE = 1e3;
@@ -71,11 +71,11 @@ nmcolA = 1;%mean(twonorms(data.A));
 data.A = data.A*scale;
 
 data.b = data.b_orig./Dt;
-sc_b = nmcolA/ max(norm(data.b), MIN_SCALE);
+sc_b = 1;%nmcolA/ max(norm(data.b), MIN_SCALE);
 data.b = data.b * sc_b * scale;
 
 data.c = data.c_orig./Et;
-sc_c = nmrowA/max(norm(data.c), MIN_SCALE);
+sc_c = 1;%nmrowA/max(norm(data.c), MIN_SCALE);
 data.c = data.c * sc_c * scale;
 
 w.D = Dt;
