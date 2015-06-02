@@ -181,8 +181,8 @@ The relevant data structures are:
         scs_float resInfeas;/* infeasibility cert residual */
         scs_float resUnbdd; /* unbounded cert residual */
         scs_float relGap;   /* relative duality gap */
-        scs_float setupTime;/* time taken for setup phase */
-        scs_float solveTime;/* time taken for solve phase */
+        scs_float setupTime;/* time taken for setup phase (milliseconds) */
+        scs_float solveTime;/* time taken for solve phase (milliseconds) */
     };
 
 
