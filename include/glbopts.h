@@ -1,6 +1,10 @@
 #ifndef GLB_H_GUARD
 #define GLB_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <math.h>
 
 /* redefine printfs and memory allocators as needed */
@@ -98,5 +102,8 @@ typedef struct SCS_SCALING Scaling;
 typedef struct SCS_WORK Work;
 typedef struct SCS_CONE Cone;
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 
