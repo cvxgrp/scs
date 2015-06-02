@@ -20,14 +20,10 @@ install:
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy nose coverage
   - source activate test-environment
-  - cd python
-  - python setup.py install
-  - cd ..
+  - cd python && python setup.py install && cd ..
 
 script:
-  - cd python
-  - nosetests --with-cover --cover-package=scs test_scs_basic.py test_scs_rand.py
-  - cd ..
+  - cd python && nosetests --with-cover --cover-package=scs test_scs_basic.py test_scs_rand.py && cd ..
 
 notifications:
   email:
