@@ -5,9 +5,8 @@ SCS
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
-large-scale convex cone problems, based on our paper [Operator Splitting for
-Conic Optimization via Homogeneous Self-Dual
-Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
+large-scale convex cone problems, based on our paper [Conic Optimization via Operator Splitting
+and Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
 and can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
 programs via included interfaces (Julia interface available
 [here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
