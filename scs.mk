@@ -26,7 +26,7 @@ SHARED = so
 endif
 
 # Add on default CFLAGS
-CFLAGS += -g -DCTRLC=1 -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
+CFLAGS += -g -Wall -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
@@ -42,13 +42,36 @@ ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
 
 ########### OPTIONAL FLAGS ##########
-# CFLAGS += -DDLONG # use longs rather than ints
-# CFLAGS += -DFLOAT # use floats rather than doubles
-# CFLAGS += -DNOVALIDATE # remove data validation step
-# CFLAGS += -DBLASSUFFIX="" # blas suffix no underscore
-# CFLAGS += -DEXTRAVERBOSE # extra verbosity level
-# CFLAGS += -DNOTIMER # no timing, times reported as nan
-CFLAGS += -DCOPYAMATRIX # if normalize, copy A
+# these can all be override from the command line
+# e.g. make DLONG=1 will override the setting below
+DLONG = 0
+ifneq ($(DLONG), 0)
+CFLAGS += -DDLONG=$(DLONG) # use longs rather than ints
+endif
+CTRLC = 1
+ifneq ($(CTRLC), 0)
+CFLAGS += -DCTRLC=$(CTRLC) # graceful interrupts with ctrl-c
+endif
+FLOAT = 0
+ifneq ($(FLOAT), 0)
+CFLAGS += -DFLOAT=$(FLOAT) # use floats rather than doubles
+endif
+NOVALIDATE = 0
+ifneq ($(NOVALIDATE), 0)
+CFLAGS += -DNOVALIDATE=$(NOVALIDATE)$ # remove data validation step
+endif
+EXTRAVERBOSE = 0
+ifneq ($(EXTRAVERBOSE), 0)
+CFLAGS += -DEXTRAVERBOSE=$(EXTRAVERBOSE) # extra verbosity level
+endif
+NOTIMER = 0
+ifneq ($(NOTIMER), 0)
+CFLAGS += -DNOTIMER=$(NOTIMER) # no timing, times reported as nan
+endif
+COPYAMATRIX = 1
+ifneq ($(COPYAMATRIX), 0)
+CFLAGS += -DCOPYAMATRIX=$(COPYAMATRIX) # if normalize, copy A
+endif
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):
@@ -56,7 +79,6 @@ CFLAGS += -DCOPYAMATRIX # if normalize, copy A
 # export OMP_NUM_THREADS=4
 
 USE_OPENMP = 0
-
 ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp -DOPENMP
   LDFLAGS += -lgomp
@@ -68,12 +90,34 @@ endif
 # you have blas and lapack installed
 
 USE_LAPACK = 1
-
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
-  LDFLAGS += -lblas -llapack #-lgfortran
+  BLASLDFLAGS = -lblas -llapack #-lgfortran
+  LDFLAGS += $(BLASLDFLAGS)
   CFLAGS += -DLAPACK_LIB_FOUND
-  # CFLAGS += -DBLAS64 # if blas/lapack lib uses 64 bit ints
+
+  BLAS64 = 0
+  ifneq ($(BLAS64), 0)
+  CFLAGS += -DBLAS64=$(BLAS64) # if blas/lapack lib uses 64 bit ints
+  endif
+
+  BLASSUFFIX = "_"
+  ifneq ($(BLASSUFFIX), "_")
+  CFLAGS += -DBLASSUFFIX=$(DBLASSUFFIX) # blas suffix no underscore
+  endif
+endif
+
+MATLAB_MEX_FILE = 0
+ifneq ($(MATLAB_MEX_FILE), 0)
+CFLAGS += -DMATLAB_MEX_FILE=$(MATLAB_MEX_FILE) # matlab mex
+endif
+PYTHON = 0
+ifneq ($(PYTHON), 0)
+CFLAGS += -DPYTHON=$(PYTHON) # python extension
+endif
+USING_R = 0
+ifneq ($(USING_R), 0)
+CFLAGS += -DUSING_R=$(USING_R) # R extension
 endif
 
 # debug to see var values, e.g. 'make print-OBJECTS' shows OBJECTS value

@@ -58,15 +58,15 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_compile_args=extra_compile_args
                         )
     setup(name='scs',
-            version='1.1.0',
+            version='1.1.1',
             author = 'Brendan O\'Donoghue',
             author_email = 'bodonoghue85@gmail.com',
             url = 'http://github.com/cvxgrp/scs',
             description='scs: splittling cone solver',
             py_modules=['scs'],
             ext_modules=[_scs_direct, _scs_indirect],
-            requires=["numpy (>= 1.7)","scipy (>= 0.13.2)"],
-            license = "GPLv3",
+            install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
+            license = "MIT",
             long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (ECPs). See http://github.com/cvxgrp/scs for more details."
             )
 

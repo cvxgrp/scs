@@ -1,6 +1,10 @@
 #ifndef CONSTANTS_H_GUARD
 #define CONSTANTS_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION ("1.1.1")
 
@@ -27,5 +31,8 @@
 #define NORMALIZE       (1)
 #define WARM_START      (0)
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 

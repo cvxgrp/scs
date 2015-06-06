@@ -1,6 +1,10 @@
 #ifndef GLB_H_GUARD
 #define GLB_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <math.h>
 
 /* redefine printfs and memory allocators as needed */
@@ -14,6 +18,13 @@
 #include <Python.h>
 #include <stdlib.h>
 #define scs_printf   PySys_WriteStdout
+#define scs_free     free
+#define scs_malloc   malloc
+#define scs_calloc   calloc
+#elif defined USING_R
+#include <R.h>
+#include <stdlib.h>
+#define scs_printf   Rprintf
 #define scs_free     free
 #define scs_malloc   malloc
 #define scs_calloc   calloc
@@ -98,5 +109,8 @@ typedef struct SCS_SCALING Scaling;
 typedef struct SCS_WORK Work;
 typedef struct SCS_CONE Cone;
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 
