@@ -6,7 +6,7 @@
 #include "cs.h"
 #include "external/amd.h"
 #include "external/ldl.h"
-#include "linsys/common.h"
+#include "../common.h"
 
 struct PRIVATE_DATA {
 	cs * L; /* KKT, and factorization matrix L resp. */

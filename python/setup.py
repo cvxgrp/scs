@@ -62,7 +62,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
             author = 'Brendan O\'Donoghue',
             author_email = 'bodonoghue85@gmail.com',
             url = 'http://github.com/cvxgrp/scs',
-            description='scs: splittling cone solver',
+            description='scs: splittling conic solver',
             py_modules=['scs'],
             ext_modules=[_scs_direct, _scs_indirect],
             install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
