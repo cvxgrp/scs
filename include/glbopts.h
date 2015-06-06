@@ -21,6 +21,13 @@ extern "C" {
 #define scs_free     free
 #define scs_malloc   malloc
 #define scs_calloc   calloc
+#elif defined USING_R
+#include <R.h>
+#include <stdlib.h>
+#define scs_printf   Rprintf
+#define scs_free     free
+#define scs_malloc   malloc
+#define scs_calloc   calloc
 #else
 #include <stdio.h>
 #include <stdlib.h>
