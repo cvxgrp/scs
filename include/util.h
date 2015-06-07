@@ -1,6 +1,10 @@
 #ifndef UTIL_H_GUARD
 #define UTIL_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "scs.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,5 +55,8 @@ void setDefaultSettings(Data * d);
 void freeSol(Sol * sol);
 void freeData(Data * d, Cone * k);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 
