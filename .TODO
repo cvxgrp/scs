@@ -1,5 +1,6 @@
 experiment dynamic scaling
 R interface finish
+update docs for SDP scaling
 
 OLDER:
 add integer programming on x - NB not easy due to tau scaling
