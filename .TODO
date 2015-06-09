@@ -1,6 +1,5 @@
 experiment dynamic scaling
 R interface finish
-use bumpversion (scs, python, matlab all use version)
 
 OLDER:
 add integer programming on x - NB not easy due to tau scaling
