@@ -228,7 +228,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	PyObject *cone, *warm = NULL;
     PyObject *verbose = NULL;
     PyObject *normalize = NULL;
-	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, };
 	/* scs data structures */
 	Data * d = scs_calloc(1, sizeof(Data));
     Cone * k = scs_calloc(1, sizeof(Cone));
