@@ -94,7 +94,7 @@ static void printInitHeader(const Data * d, const Cone * k) {
 }
 
 static void populateOnFailure(scs_int m, scs_int n, Sol * sol, Info * info, scs_int statusVal, const char * msg) {
-	#ifdef EXTRAVERBOSE
+	#if EXTRAVERBOSE > 0
     scs_printf("populate on failure\n");
     #endif
     if (info) {
@@ -430,7 +430,7 @@ static void printSummary(Work * w, scs_int i, struct residuals *r, timer * solve
     scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
     scs_printf("\n");
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     scs_printf("Norm u = %4f, ", calcNorm(w->u, w->n + w->m + 1));
     scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, w->n + w->m + 1));
     scs_printf("Norm v = %4f, ", calcNorm(w->v, w->n + w->m + 1));
@@ -643,7 +643,7 @@ static Work * initWork(const Data *d, const Cone * k) {
 #endif
 		w->scal = scs_malloc(sizeof(Scaling));
 		normalizeA(w->A, w->stgs, k, w->scal);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 		printArray(w->scal->D, d->m, "D");
 		scs_printf("norm D = %4f\n", calcNorm(w->scal->D, d->m));
 		printArray(w->scal->E, d->n, "E");
@@ -674,7 +674,7 @@ static scs_int updateWork(const Data * d, Work * w, const Sol * sol) {
 	memcpy(w->b, d->b, d->m * sizeof(scs_float));
 	memcpy(w->c, d->c, d->n * sizeof(scs_float));
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	printArray(w->b, m, "b");
 	scs_printf("pre-normalized norm b = %4f\n", calcNorm(w->b, m));
 	printArray(w->c, n, "c");
@@ -682,7 +682,7 @@ static scs_int updateWork(const Data * d, Work * w, const Sol * sol) {
 #endif
 	if (w->stgs->normalize) {
 		normalizeBC(w);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 		printArray(w->b, m, "bn");
 		scs_printf("sc_b = %4f\n", w->sc_b);
 		scs_printf("post-normalized norm b = %4f\n", calcNorm(w->b, m));
@@ -763,7 +763,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 }
 
 void scs_finish(Work * w) {
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     scs_printf("enter finish\n");
 #endif
     finishCone();
@@ -778,7 +778,7 @@ void scs_finish(Work * w) {
         if (w->p) freePriv(w->p);
         freeWork(w);
     }
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     scs_printf("exit finish\n");
 #endif
 }
@@ -791,7 +791,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
 		return NULL;
 	}
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	printData(d);
 	printConeData(k);
 #endif
@@ -818,7 +818,7 @@ scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif
 	Work * w = scs_init(d, k, info);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("size of scs_int = %lu, size of scs_float = %lu\n", sizeof(scs_int), sizeof(scs_float));
 #endif
 	if (w) {
