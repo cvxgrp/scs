@@ -815,8 +815,10 @@ void scs_finish(Work * w) {
 
 Work * scs_init(const Data * d, const Cone * k, Info * info) {
     DEBUG_FUNC
+#if EXTRAVERBOSE > 0
     tic(&globalTimer);
-	Work * w;
+#endif
+    Work * w;
 	timer initTimer;
 	startInterruptListener();
 	if (!d || !k || !info) {
