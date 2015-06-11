@@ -41,7 +41,9 @@ typedef struct timer {
 
 #endif
 
+#if EXTRAVERBOSE > 1
 extern timer globalTimer;
+#endif
 
 /* these all return milli-seconds */
 void tic(timer * t);

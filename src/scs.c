@@ -815,7 +815,7 @@ void scs_finish(Work * w) {
 
 Work * scs_init(const Data * d, const Cone * k, Info * info) {
     DEBUG_FUNC
-#if EXTRAVERBOSE > 0
+#if EXTRAVERBOSE > 1
     tic(&globalTimer);
 #endif
     Work * w;

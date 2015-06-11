@@ -101,7 +101,7 @@ typedef float scs_float;
 #endif
 #endif
 
-#if EXTRAVERBOSE > 0
+#if EXTRAVERBOSE > 1
 #define DEBUG_FUNC scs_printf("function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__);
 #else
 #define DEBUG_FUNC

@@ -70,7 +70,7 @@ ifneq ($(COPYAMATRIX), 0)
 CFLAGS += -DCOPYAMATRIX=$(COPYAMATRIX) # if normalize, copy A
 endif
 
-### VERBOSITY LEVELS: 0,1
+### VERBOSITY LEVELS: 0,1,2
 EXTRAVERBOSE = 0
 ifneq ($(EXTRAVERBOSE), 0)
 CFLAGS += -DEXTRAVERBOSE=$(EXTRAVERBOSE) # extra verbosity level
