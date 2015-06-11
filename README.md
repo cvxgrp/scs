@@ -53,7 +53,7 @@ positive orthants, then SOCs, etc.** For a `k` dimensional semidefinite cone
 when interpreting the rows of the data matrix `A`
 SCS assumes that the `k x k` matrix variable has been vectorized by scaling the
 off-diagonal entries by `sqrt(2)` and stacking the **lower triangular elements column-wise**
-to create a vector of length `k(k+1)/2`. See the section on semi-definite programming
+to create a vector of length `k(k+1)/2`. See the section on semidefinite programming
 below.
 
 At termination SCS returns solution `(x*, s*, y*)` if the problem is feasible,
