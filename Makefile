@@ -16,7 +16,7 @@ default: $(TARGETS) $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(S
 	@echo "****************************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2012."
 	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect',"
-	@echo "or '$(OUT)/demo_SOCP_indirect to solve a random SOCP."
+	@echo "or '$(OUT)/demo_SOCP_indirect' to solve a random SOCP."
 	@echo "**********************************************************************************"
 ifneq ($(USE_LAPACK), 0)
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs"

@@ -5,7 +5,7 @@
 #include "scs.h"
 #include "cs.h"
 #include <math.h>
-#include "linsys/common.h"
+#include "../common.h"
 #include "linAlg.h"
 
 struct PRIVATE_DATA {

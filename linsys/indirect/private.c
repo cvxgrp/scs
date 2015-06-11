@@ -28,7 +28,7 @@ void getPreconditioner(const AMatrix * A, const Settings * stgs, Priv * p) {
 	scs_int i;
 	scs_float * M = p->M;
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("getting pre-conditioner\n");
 #endif
 
@@ -37,7 +37,7 @@ void getPreconditioner(const AMatrix * A, const Settings * stgs, Priv * p) {
 		/* M[i] = 1; */
 	}
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("finished getting pre-conditioner\n");
 #endif
 
@@ -55,7 +55,7 @@ static void transpose(const AMatrix * A, Priv * p) {
 	scs_float * Ax = A->x;
 
 	scs_int i, j, q, *z, c1, c2;
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	timer transposeTimer;
 	scs_printf("transposing A\n");
 	tic(&transposeTimer);
@@ -78,7 +78,7 @@ static void transpose(const AMatrix * A, Priv * p) {
 	}
 	scs_free(z);
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("finished transposing A, time: %1.2es\n", tocq(&transposeTimer) / 1e3);
 #endif
 
@@ -203,7 +203,7 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
         addScaledArray(r, Gp, n, -alpha);
 
 		if (calcNorm(r, n) < tol) {
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 			scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, calcNorm(r, n), (long) i+1);
 #endif
 			return i + 1;
@@ -236,7 +236,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
 	}
 
 	totalSolveTime += tocq(&linsysTimer);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif
 	return 0;

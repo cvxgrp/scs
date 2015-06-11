@@ -46,7 +46,7 @@ cs * formKKT(const AMatrix * A, const Settings * s) {
 	const scs_int Knzmax = A->n + A->m + Anz;
 	cs * K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("forming KKT\n");
 #endif
 
@@ -114,11 +114,11 @@ scs_int LDLFactor(cs * A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
 	if (!(*D) || !(*L)->i || !(*L)->x || !Y || !Pattern || !Flag || !Lnz || !Parent)
 		return -1;
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("numeric factorization\n");
 #endif
 	kk = LDL_numeric(n, A->p, A->i, A->x, (*L)->p, Parent, Lnz, (*L)->i, (*L)->x, *D, Y, Pattern, Flag, P, Pinv);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("finished numeric factorization\n");
 #endif
 
@@ -166,7 +166,7 @@ scs_int factorize(const AMatrix * A, const Settings * stgs, Priv * p) {
 	amd_status = LDLInit(K, p->P, &info);
 	if (amd_status < 0)
 		return (amd_status);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	if(stgs->verbose) {
 		scs_printf("Matrix factorization info:\n");
 #ifdef DLONG
@@ -210,7 +210,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
 	tic(&linsysTimer);
 	LDLSolve(b, b, p->L, p->D, p->P, p->bp);
 	totalSolveTime += tocq(&linsysTimer);
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif
 	return 0;

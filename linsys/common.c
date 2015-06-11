@@ -92,7 +92,7 @@ void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * sc
 	scs_float wrk, e;
 	scs_int numBoundaries = getConeBoundaries(k, &boundaries);
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	timer normalizeTimer;
 	tic(&normalizeTimer);
 	scs_printf("normalizing A\n");
@@ -194,7 +194,7 @@ void normalizeA(AMatrix * A, const Settings * stgs, const Cone * k, Scaling * sc
 	scal->D = Dt;
 	scal->E = Et;
 
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
 	scs_printf("finished normalizing A, time: %1.2es\n", tocq(&normalizeTimer) / 1e3);
 	printAMatrix(A);
 #endif
@@ -222,7 +222,7 @@ void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const
     scs_int p, j;
     scs_int c1, c2;
     scs_float yj;
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     timer multByAtransTimer;
     tic(&multByAtransTimer);
 #endif
@@ -238,7 +238,7 @@ void _accumByAtrans(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const
         }
         y[j] = yj;
     }
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     scs_printf("mult By A trans time: %1.2es\n", tocq(&multByAtransTimer) / 1e3);
 #endif
 }
@@ -252,7 +252,7 @@ void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_
     scs_int p, j;
     scs_int c1, c2;
     scs_float xj;
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     timer multByATimer;
     tic(&multByATimer);
 #endif
@@ -266,7 +266,7 @@ void _accumByA(scs_int n, scs_float * Ax, scs_int * Ai, scs_int * Ap, const scs_
             y[Ai[p]] += Ax[p] * xj;
         }
     }
-#ifdef EXTRAVERBOSE
+#if EXTRAVERBOSE > 0
     scs_printf("mult By A time: %1.2es\n", tocq(&multByATimer) / 1e3);
 #endif
 }
