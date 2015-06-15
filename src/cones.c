@@ -501,7 +501,7 @@ static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
     BLAS(scal)(&nb, &sqrt2, Xs, &nbPlusOne); /* not nSquared */
 
     /* max-eig upper bounded by frobenius norm */
-	vupper = MAX(sqrt2 * BLAS(nrm2)(&coneSz, X, &one), 0.01);
+	vupper = 1.2 * MAX(sqrt2 * BLAS(nrm2)(&coneSz, X, &one), 0.01); /* mult by factor to make sure is upper bound */
 #if EXTRAVERBOSE > 0
 	printArray(Xs, n * n, "Xs");
 	printArray(X, getSdConeSize(n), "X");
@@ -535,6 +535,12 @@ static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
 	for (i = 0; i < n; ++i) {
 		memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Xs[i * (n + 1)]), (n - i) * sizeof(scs_float));
 	}
+
+#if EXTRAVERBOSE > 0
+	printArray(Xs, n * n, "Xs");
+	printArray(X, getSdConeSize(n), "X");
+#endif
+
 #else
 	scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack libraries were linked!\n");
 	scs_printf("SCS will return nonsense!\n");

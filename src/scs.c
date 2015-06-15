@@ -499,6 +499,11 @@ scs_float getDualConeDist(const scs_float * y, const Cone * k, scs_int m) {
     memcpy(t, y, m * sizeof(scs_float));
     projDualCone(t, k, NULL, -1);
     dist = calcNormInfDiff(t, y, m);
+#if EXTRAVERBOSE > 0
+    printArray(y, m, "y");
+    printArray(t, m, "projY");
+    scs_printf("dist = %4f\n", dist);
+#endif
     scs_free(t);
     return dist;
 }
@@ -512,6 +517,11 @@ scs_float getPriConeDist(const scs_float * s, const Cone * k, scs_int m) {
     scaleArray(t, -1.0, m);
     projDualCone(t, k, NULL, -1);
     dist = calcNormInf(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
+#if EXTRAVERBOSE > 0
+    printArray(s, m, "s");
+    printArray(t, m, "(s - ProjS)");
+    scs_printf("dist = %4f\n", dist);
+#endif
     scs_free(t);
     return dist;
 }
