@@ -104,7 +104,7 @@ else:
         print("SystemExit")
         print(e)
     except:
-        print("error:", sys.exc_info()[0])
+        # print("error:", sys.exc_info()[0])
         print("blas_opt / lapack_opt install failed, trying blas / lapack")
         try:
             install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=get_info('blas'), lapack_info=get_info('lapack'), USE_OPENMP=USE_OPENMP, rootDir=rootDir)
