@@ -7,7 +7,7 @@ SCS
 SCS (`splitting conic solver`) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper [Conic Optimization via Operator Splitting
 and Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
-and can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
+and can be used in other C, C++, Python, Matlab, R, Julia, Java, and Scala
 programs via included interfaces (Julia interface available
 [here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
 convex optimization toolboxes [CVX](http://cvxr.com/cvx/),
@@ -365,6 +365,21 @@ ConeProgram.solve();
 
 on your instance of `ConeProgram`, which will return an instance of
 `Solution`, containing the solution and information about the run.
+
+### Using SCS in R
+
+To install SCS as an R packge cd into the `r` subdirectory and type
+```
+R CMD INSTALL .
+```
+and to test type `R --no-save < demo/randomLp.R`.
+
+To call SCS use the function `scs`, defined as
+```
+scs <- function(A, b, c, cone, params)
+```
+where `A` is a `Matrix` object, `b` and `c` are vectors, and `cone` and `params`
+are lists specifying the cone dimensions and input params respectively.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
