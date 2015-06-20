@@ -155,8 +155,6 @@ SEXP scsr(SEXP data, SEXP cone, SEXP params) {
     A->m = d->m;
     A->n = d->n;
     A->x = getFloatVectorFromList(data, "Ax", &len);
-    A->i = getIntVectorFromList(data, "Ai", &len);
-    A->p = getIntVectorFromList(data, "Ap", &len);
     d->A = A;
   
     stgs->max_iters  = getIntFromListWithDefault(params, "max_iters", MAX_ITERS);
