@@ -1,0 +1,8 @@
+To install just type (in this dir):
+
+R CMD INSTALL .
+
+This should install the package SCS globally.
+To test, then simply type (in this dir):
+
+R --no-save < demo/randomLp.R

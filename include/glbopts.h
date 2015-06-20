@@ -21,6 +21,7 @@ extern "C" {
 #define scs_free     free
 #define scs_malloc   malloc
 #define scs_calloc   calloc
+/* should not be used
 #elif defined USING_R
 #include <R.h>
 #include <stdlib.h>
@@ -28,6 +29,7 @@ extern "C" {
 #define scs_free     free
 #define scs_malloc   malloc
 #define scs_calloc   calloc
+*/
 #else
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,6 +101,12 @@ typedef float scs_float;
 #else
 #define SQRTF sqrt
 #endif
+#endif
+
+#if EXTRAVERBOSE > 1
+#define DEBUG_FUNC scs_printf("function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__);
+#else
+#define DEBUG_FUNC
 #endif
 
 typedef struct SCS_PROBLEM_DATA Data;

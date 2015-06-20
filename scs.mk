@@ -60,10 +60,6 @@ NOVALIDATE = 0
 ifneq ($(NOVALIDATE), 0)
 CFLAGS += -DNOVALIDATE=$(NOVALIDATE)$ # remove data validation step
 endif
-EXTRAVERBOSE = 0
-ifneq ($(EXTRAVERBOSE), 0)
-CFLAGS += -DEXTRAVERBOSE=$(EXTRAVERBOSE) # extra verbosity level
-endif
 NOTIMER = 0
 ifneq ($(NOTIMER), 0)
 CFLAGS += -DNOTIMER=$(NOTIMER) # no timing, times reported as nan
@@ -71,6 +67,12 @@ endif
 COPYAMATRIX = 1
 ifneq ($(COPYAMATRIX), 0)
 CFLAGS += -DCOPYAMATRIX=$(COPYAMATRIX) # if normalize, copy A
+endif
+
+### VERBOSITY LEVELS: 0,1,2
+EXTRAVERBOSE = 0
+ifneq ($(EXTRAVERBOSE), 0)
+CFLAGS += -DEXTRAVERBOSE=$(EXTRAVERBOSE) # extra verbosity level
 endif
 
 ############ OPENMP: ############

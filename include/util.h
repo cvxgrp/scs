@@ -1,6 +1,10 @@
 #ifndef UTIL_H_GUARD
 #define UTIL_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "scs.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,6 +41,10 @@ typedef struct timer {
 
 #endif
 
+#if EXTRAVERBOSE > 1
+extern timer globalTimer;
+#endif
+
 /* these all return milli-seconds */
 void tic(timer * t);
 scs_float toc(timer * t);
@@ -51,5 +59,8 @@ void setDefaultSettings(Data * d);
 void freeSol(Sol * sol);
 void freeData(Data * d, Cone * k);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 

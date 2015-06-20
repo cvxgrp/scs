@@ -58,16 +58,16 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_compile_args=extra_compile_args
                         )
     setup(name='scs',
-            version='1.1.1',
+            version='1.1.4',
             author = 'Brendan O\'Donoghue',
             author_email = 'bodonoghue85@gmail.com',
             url = 'http://github.com/cvxgrp/scs',
-            description='scs: splittling cone solver',
+            description='scs: splittling conic solver',
             py_modules=['scs'],
             ext_modules=[_scs_direct, _scs_indirect],
             install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
             license = "MIT",
-            long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (ECPs). See http://github.com/cvxgrp/scs for more details."
+            long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs), second-order cone programs (SOCPs), semidefinite programs (SDPs), exponential cone programs (ECPs), and power cone programs (PCPs), or problems with any combination of those cones. See http://github.com/cvxgrp/scs for more details."
             )
 
 #####################################
@@ -95,28 +95,29 @@ if env_lib_dirs or env_libs:
     if env_libs:
         env_vars['libraries'] = env_libs.split(':') 
     install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=env_vars, lapack_info={},  USE_OPENMP=USE_OPENMP, rootDir=rootDir)
-    
-try:
-    print("using blas_opt / lapack_opt")
-    install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=get_info('blas_opt'), lapack_info=get_info('lapack_opt'), USE_OPENMP=USE_OPENMP, rootDir=rootDir)
-except SystemExit as e: # catch permission denied error
-    print("SystemExit")
-    print(e)
-except:
-    print("error:", sys.exc_info()[0])
-    print("blas_opt / lapack_opt install failed, trying blas / lapack")
+else:
+    # environment variables not set, using defaults instead
     try:
-        install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=get_info('blas'), lapack_info=get_info('lapack'), USE_OPENMP=USE_OPENMP, rootDir=rootDir)
+        print("using blas_opt / lapack_opt")
+        install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=get_info('blas_opt'), lapack_info=get_info('lapack_opt'), USE_OPENMP=USE_OPENMP, rootDir=rootDir)
+    except SystemExit as e: # catch permission denied error
+        print("SystemExit")
+        print(e)
     except:
-        install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info={}, lapack_info={}, USE_OPENMP=USE_OPENMP, rootDir=rootDir)
-        print("#############################################################################################")
-        print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, and ECPs #")
-        print("# install blas/lapack and run this install script again to allow SCS to solve SDPs          #")
-        print("#                                                                                           #")
-        print("# scs will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set      #")
-        print("# use this to link against blas/lapack libs that scs can't find on it's own, usage ex:      #")
-        print("#        >> export BLAS_LAPACK_LIB_PATHS=/usr/lib/:/other/dir                               #")
-        print("#        >> export BLAS_LAPACK_LIBS=blas:lapack                                             #")
-        print("#        >> python setup.py install                                                         #")
-        print("#############################################################################################")
+        print("error:", sys.exc_info()[0])
+        print("blas_opt / lapack_opt install failed, trying blas / lapack")
+        try:
+            install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=get_info('blas'), lapack_info=get_info('lapack'), USE_OPENMP=USE_OPENMP, rootDir=rootDir)
+        except:
+            install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info={}, lapack_info={}, USE_OPENMP=USE_OPENMP, rootDir=rootDir)
+            print("###############################################################################################")
+            print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, ECPs, PCPs #")
+            print("# install blas/lapack and run this install script again to allow SCS to solve SDPs            #")
+            print("#                                                                                             #")
+            print("# scs will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set        #")
+            print("# use this to link against blas/lapack libs that scs can't find on it's own, usage ex:        #")
+            print("#        >> export BLAS_LAPACK_LIB_PATHS=/usr/lib/:/other/dir                                 #")
+            print("#        >> export BLAS_LAPACK_LIBS=blas:lapack                                               #")
+            print("#        >> python setup.py install                                                           #")
+            print("###############################################################################################")
 

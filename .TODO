@@ -1,6 +1,5 @@
 experiment dynamic scaling
 R interface finish
-update pip, distribute python wheel
 
 OLDER:
 add integer programming on x - NB not easy due to tau scaling

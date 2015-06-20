@@ -4,7 +4,7 @@ SCS
 SCS (`splitting conic solver`) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper [Conic Optimization via Operator Splitting
 and Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
-and can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
+and can be used in other C, C++, Python, Matlab, R, Julia, Java, and Scala
 programs via included interfaces (Julia interface available
 [here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
 convex optimization toolboxes [CVX](http://cvxr.com/cvx/),
@@ -48,12 +48,42 @@ The rows of the data matrix `A` correspond to the cones in `K`.
 rows that correspond to the zero/free cones, then those that correspond to the
 positive orthants, then SOCs, etc.** For a `k` dimensional semidefinite cone
 when interpreting the rows of the data matrix `A`
-SCS assumes that the `k x k` matrix variable has been vectorized by stacking the
-**lower triangular elements column-wise** to create a vector of length `k(k+1)/2`.
+SCS assumes that the `k x k` matrix variable has been vectorized by scaling the
+off-diagonal entries by `sqrt(2)` and stacking the **lower triangular elements column-wise**
+to create a vector of length `k(k+1)/2`. See the section on semidefinite programming
+below.
 
 At termination SCS returns solution `(x*, s*, y*)` if the problem is feasible,
 or a certificate of infeasibility otherwise. See [here](http://web.stanford.edu/~boyd/cvxbook/)
 for (much) more details about cone programming and certificates of infeasibility.
+
+**Semidefinite Programming**
+
+SCS assumes that the matrix variables and the input data corresponding to
+semidefinite cones have been vectorized by **scaling the off-diagonal entries by
+`sqrt(2)`** and stacking the lower triangular elements **column-wise**. For a `k x k`
+matrix variable (or data matrix) this operation would create a vector of length
+`k(k+1)/2`. Scaling by `sqrt(2)` is required to preserve the inner-product.
+
+**To recover the matrix solution this operation must be inverted on the
+components of the vector returned by SCS corresponding to semidefinite cones**.
+That is, the off-diagonal entries must be scaled by `1/sqrt(2)` and the upper
+triangular entries are filled in by copying the values of lower triangular
+entries.
+
+More explcitly, we want to express
+`Tr(C X)` as `vec(C)'*vec(X)`, where the `vec` operation takes the `k x k` matrix
+```
+X = [ X11 X12 ... X1k
+      X21 X22 ... X2k
+      ...
+      Xk1 Xk2 ... Xkk ]
+```
+and produces a vector consisting of
+```
+vec(X) = (X11, sqrt(2)*X21, ..., sqrt(2)*Xk1, X22, sqrt(2)*X32, ..., Xkk).
+```
+
 
 **Linear equation solvers**
 
@@ -332,6 +362,21 @@ ConeProgram.solve();
 
 on your instance of `ConeProgram`, which will return an instance of
 `Solution`, containing the solution and information about the run.
+
+### Using SCS in R
+
+To install SCS as an R packge cd into the `r` subdirectory and type
+```
+R CMD INSTALL .
+```
+and to test type `R --no-save < demo/randomLp.R`.
+
+To call SCS use the function `scs`, defined as
+```
+scs <- function(A, b, c, cone, params)
+```
+where `A` is a `Matrix` object, `b` and `c` are vectors, and `cone` and `params`
+are lists specifying the cone dimensions and input params respectively.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).

@@ -1,0 +1,3 @@
+#!/bin/bash
+rm -f config.* src/Makevars src/scs.so src/scsr.o
+

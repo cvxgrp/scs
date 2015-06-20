@@ -32,9 +32,6 @@ struct ScsPyData {
 	PyArrayObject * Ax;
 	PyArrayObject * b;
 	PyArrayObject * c;
-	PyArrayObject * x0;
-	PyArrayObject * y0;
-	PyArrayObject * s0;
 };
 
 /* Note, Python3.x may require special handling for the scs_int and scs_float
@@ -80,16 +77,18 @@ static int printErr(char * key) {
 	return -1;
 }
 
-static scs_int getWarmStart(char * key, scs_float ** x, PyArrayObject ** px0, scs_int l, PyObject * warm) {
+/* gets warm starts from warm dict, doesn't destroy input warm start data */
+static scs_int getWarmStart(char * key, scs_float ** x, scs_int l, PyObject * warm) {
     PyArrayObject *x0 = (PyArrayObject *) PyDict_GetItemString(warm, key);
 	*x = scs_calloc(l, sizeof(scs_float));
     if (x0) {
-		if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0,0) != l) {
+		if (!PyArray_ISFLOAT(x0) || PyArray_NDIM(x0) != 1 || PyArray_DIM(x0, 0) != l) {
 			PySys_WriteStderr("Error parsing warm-start input\n");
 			return 0;
 		} else {
-			*px0 = getContiguous(x0, scs_floatType);
-			*x = (scs_float *) PyArray_DATA(*px0);
+			PyArrayObject * px0 = getContiguous(x0, scs_floatType);
+			memcpy(*x, (scs_float *) PyArray_DATA(px0), l * sizeof(scs_float));
+            Py_DECREF(px0);
 			return 1;
 		}
 	}
@@ -187,15 +186,6 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
     if (ps->c) {
         Py_DECREF(ps->c);
     }
-    if (ps->x0) {
-        Py_DECREF(ps->x0);
-    }
-    if (ps->y0) {
-        Py_DECREF(ps->y0);
-    }
-    if (ps->s0) {
-        Py_DECREF(ps->s0);
-    }
     if (k) {
         if (k->q)
             scs_free(k->q);
@@ -230,7 +220,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	PyObject *cone, *warm = NULL;
 	PyObject *verbose = NULL;
     PyObject *normalize = NULL;
-    struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, NULL };
+    struct ScsPyData ps = { NULL, NULL, NULL };
 	/* scs data structures */
 	Data * d = scs_calloc(1, sizeof(Data));
     Cone * k = scs_calloc(1, sizeof(Cone));
@@ -366,9 +356,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* parse warm start if set */
     d->stgs->warm_start = WARM_START;
 	if (warm) {
-		d->stgs->warm_start = getWarmStart("x", &(sol.x), &(ps.x0), d->n, warm);
-		d->stgs->warm_start |= getWarmStart("y", &(sol.y), &(ps.y0), d->m, warm);
-		d->stgs->warm_start |= getWarmStart("s", &(sol.s), &(ps.s0), d->m, warm);
+		d->stgs->warm_start = getWarmStart("x", &(sol.x), d->n, warm);
+		d->stgs->warm_start |= getWarmStart("y", &(sol.y), d->m, warm);
+		d->stgs->warm_start |= getWarmStart("s", &(sol.s), d->m, warm);
 	}
 
     /* Solve! */

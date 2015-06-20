@@ -1,7 +1,7 @@
 # MAKEFILE for scs
 include scs.mk
 
-OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o src/ctrlc.o src/scs_version.o
+SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o src/ctrlc.o src/scs_version.o
 
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
@@ -30,21 +30,21 @@ $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
 $(LINSYS)/common.o: $(LINSYS)/common.c $(LINSYS)/common.h
 
-$(OUT)/libscsdir.a: $(OBJECTS) $(DIRSRC)/private.o $(DIRECT_OBJECTS) $(LINSYS)/common.o
+$(OUT)/libscsdir.a: $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $(OUT)/libscsdir.a $^
 	- $(RANLIB) $(OUT)/libscsdir.a
 
-$(OUT)/libscsindir.a: $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
+$(OUT)/libscsindir.a: $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $(OUT)/libscsindir.a $^
 	- $(RANLIB) $(OUT)/libscsindir.a
 
-$(OUT)/libscsdir.$(SHARED): $(OBJECTS) $(DIRSRC)/private.o $(DIRECT_OBJECTS) $(LINSYS)/common.o
+$(OUT)/libscsdir.$(SHARED): $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libscsindir.$(SHARED): $(OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
+$(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
@@ -66,7 +66,7 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHAR
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(OBJECTS) $(DIRECT_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o
+	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
