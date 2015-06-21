@@ -8,4 +8,3 @@ LazyLoad: yes
 License: MIT
 URL: https://github.com/cvxgrp/scs
 NeedsCompilation: yes
-Depends: Matrix

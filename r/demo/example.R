@@ -1,6 +1,6 @@
 library(scs)
 
-A <- Matrix(c(1), 2, 1)
+A <- matrix(rnorm(2), ncol=1) 
 b = c(1,1)
 c = c(1)
 cone = list(f = 2)
