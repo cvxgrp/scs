@@ -1,5 +1,5 @@
 experiment dynamic scaling
-R interface finish
+change to norm^2 equilibration?
 
 OLDER:
 add integer programming on x - NB not easy due to tau scaling
