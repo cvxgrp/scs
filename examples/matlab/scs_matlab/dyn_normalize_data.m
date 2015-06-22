@@ -1,13 +1,34 @@
-function [data, w] = dyn_normalize_data(data, K, w, scale, res_pri, res_dual, D_old, E_old)
-EPS = 0.01;
+function [data, w] = dyn_normalize_data(data, K, w, scale, res_pri, res_dual, D_old, E_old, iter)
+%if (iter > 1000)
+%    return
+%end
+
+global scale_err_i
+%EPS = 1 / iter;
+EPS = 0.25;
+Kp = 0.1 / iter;
+Ki = 0;
+
+if (1 && norm(res_dual) > 10 * norm(res_pri) || norm(res_dual) < norm(res_pri) / 10)
+    scale_err = 1 - norm(res_dual)/norm(res_pri);
+    scale_err_i = scale_err_i + scale_err;
+    p_val = Kp * scale_err;
+    i_val = Ki * scale_err_i;
+    %d_val = self.Kd * (err - self.err_last)
+    %self.err_last = err
+    w.scale = scale;%min(max(scale + (p_val + i_val), 1e-5), 1e2);
+else
+    scale_err_i = 0;
+    w.scale = scale;
+end
 
 [m,n] = size(data.A);
 
 p = 1 ./(abs(res_pri)  + 0.001);
 d = 1 ./(abs(res_dual) + 0.001);
 
-%p = p./norm(p);
-%d = d./norm(d);
+p = p./mean(p,1);
+d = d./mean(d,1);
 
 MIN_SCALE = 1e-3;
 MAX_SCALE = 1e3;

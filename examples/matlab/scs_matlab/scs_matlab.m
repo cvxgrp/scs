@@ -67,6 +67,10 @@ if nargin==3
     if isfield(params,'cg_rate');cg_rate = params.cg_rate;end
     if isfield(params,'extra_verbose');extra_verbose = params.extra_verbose;end
 end
+% ugly hack for now
+global scale_err_i
+scale_err_i = 0;
+
 %%
 % Q matrix (as in paper):
 %{
@@ -228,8 +232,9 @@ for i=0:max_iters-1
     
     sum_nm2(idx,1) = norm(u - u_prev);
     sum_nm2(idx,2) = norm(u - ut);
-    nmD(idx) = norm(D);
-    nmE(idx) = norm(E);
+    nmD(idx) = std(D);
+    nmE(idx) = std(E);
+    sc(idx) = scale;
     solved = max(gap,max(err_pri,err_dual)) < eps;
     infeasible = inf_res < eps;
     unbounded = unb_res < eps;
@@ -240,9 +245,10 @@ for i=0:max_iters-1
             E_old = E;
             sc_b_old = sc_b;
             sc_c_old = sc_c;
-            [data, work] = dyn_normalize_data(data, K, work, scale, res_pri, res_dual, D_old, E_old); % have to do this since matlab pass by val
+            [data, work] = dyn_normalize_data(data, K, work, scale, res_pri, res_dual, D_old, E_old, i); % have to do this since matlab pass by val
             D = work.D;
             E = work.E;
+            scale = work.scale;
             sc_b = work.sc_b;
             sc_c = work.sc_c;
             [u,v] = update_iterates_renormalize(u, v, D, E, sc_c, sc_b, D_old, E_old, sc_b_old, sc_c_old);
@@ -340,8 +346,8 @@ if gen_plots
     legend('|u-uprev|','|u-ut|')
     figure();semilogy(pathol(:,1));hold on;semilogy(pathol(:,2),'r');
     legend('unb','inf');
-    figure();plot(nmD);hold on;plot(nmE,'r')
-    legend('norm D','norm E');
+    figure();plot(nmD);hold on;plot(nmE,'r');plot(sc)
+    legend('std D','std E','scale');
     if use_indirect;
         figure();plot(cg_its);xlabel('k');ylabel('Conjugate Gradient Iterations');
         figure();semilogy(cumsum(mults),nms(:,1));hold on;semilogy(cumsum(mults),nms(:,2),'r');semilogy(cumsum(mults),nms(:,3),'g');
