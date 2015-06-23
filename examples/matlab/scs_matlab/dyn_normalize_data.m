@@ -9,14 +9,14 @@ EPS = 0.25;
 Kp = 0.1 / iter;
 Ki = 0;
 
-if (1 && norm(res_dual) > 10 * norm(res_pri) || norm(res_dual) < norm(res_pri) / 10)
+if (0 && norm(res_dual) > 10 * norm(res_pri) || norm(res_dual) < norm(res_pri) / 10)
     scale_err = 1 - norm(res_dual)/norm(res_pri);
     scale_err_i = scale_err_i + scale_err;
     p_val = Kp * scale_err;
     i_val = Ki * scale_err_i;
     %d_val = self.Kd * (err - self.err_last)
     %self.err_last = err
-    w.scale = scale;%min(max(scale + (p_val + i_val), 1e-5), 1e2);
+    w.scale = min(max(scale + (p_val + i_val), 1e-5), 1e2);
 else
     scale_err_i = 0;
     w.scale = scale;

@@ -118,7 +118,7 @@ end
 
 %%
 if use_indirect
-    work.M = 1 ./ diag(rho_x*speye(n) + data.A'*data.A); % pre-conditioner
+    work.M = ones(n,1); %1 ./ diag(rho_x*speye(n) + data.A'*data.A); % pre-conditioner
 else
     W=sparse([rho_x*speye(n) data.A';data.A -speye(m)]);
     disp('Factorization')
@@ -254,7 +254,7 @@ for i=0:max_iters-1
             [u,v] = update_iterates_renormalize(u, v, D, E, sc_c, sc_b, D_old, E_old, sc_b_old, sc_c_old);
             %% XXX TODO hack:
             if use_indirect
-                work.M = 1 ./ diag(rho_x*speye(n) + data.A'*data.A); % pre-conditioner
+                work.M = ones(n,1); %1 ./ diag(rho_x*speye(n) + data.A'*data.A); % pre-conditioner
             else
                 W=sparse([rho_x*speye(n) data.A';data.A -speye(m)]);
                 try
