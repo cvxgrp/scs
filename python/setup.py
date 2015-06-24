@@ -58,7 +58,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_compile_args=extra_compile_args
                         )
     setup(name='scs',
-            version='1.1.4',
+            version='1.1.5',
             author = 'Brendan O\'Donoghue',
             author_email = 'bodonoghue85@gmail.com',
             url = 'http://github.com/cvxgrp/scs',
