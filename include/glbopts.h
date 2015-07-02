@@ -104,9 +104,11 @@ typedef float scs_float;
 #endif
 
 #if EXTRAVERBOSE > 1
-#define DEBUG_FUNC scs_printf("function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__);
+#define DEBUG_FUNC scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__);
+#define RETURN scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__); return
 #else
 #define DEBUG_FUNC
+#define RETURN return
 #endif
 
 typedef struct SCS_PROBLEM_DATA Data;
