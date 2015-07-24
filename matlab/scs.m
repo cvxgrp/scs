@@ -1,5 +1,5 @@
 function [ x, y, s, info ] = scs( varargin )
-% scs 1.1.5
+% scs 1.1.6
 % for version call: scs_version()
 data = varargin{1};
 K = varargin{2};
