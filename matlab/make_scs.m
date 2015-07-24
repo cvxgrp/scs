@@ -22,7 +22,7 @@ elseif  ( ismac )
     flags.link = '-lm -lut';
 else
     flags.link = '-lut';
-    flags.LCFLAG = sprintf('-DBLASSUFFIX="" %s', flags.LCFLAG);
+    flags.LCFLAG = sprintf('-DNOBLASSUFFIX %s', flags.LCFLAG);
 end
 
 if (flags.COMPILE_WITH_OPENMP)
