@@ -106,7 +106,7 @@ ifneq ($(USE_LAPACK), 0)
 
   BLASSUFFIX = "_"
   ifneq ($(BLASSUFFIX), "_")
-  CFLAGS += -DBLASSUFFIX=$(DBLASSUFFIX) # blas suffix no underscore
+  CFLAGS += -DBLASSUFFIX=$(BLASSUFFIX) # blas suffix no underscore
   endif
 endif
 
