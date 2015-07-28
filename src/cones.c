@@ -428,7 +428,7 @@ scs_int project2By2Sdc(scs_float * X) {
 }
 
 /* size of X is getSdConeSize(n) */
-static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
+static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, const scs_int iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	scs_int i;
