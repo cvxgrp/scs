@@ -1,7 +1,7 @@
-experiment dynamic scaling
-R interface finish
+change to norm^2 equilibration?
 
 OLDER:
+experiment dynamic scaling - not easy due to pre-solve before first iteration
 add integer programming on x - NB not easy due to tau scaling
 add static, inline to methods
 work on conda recipe

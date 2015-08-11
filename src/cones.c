@@ -1,4 +1,5 @@
 #include "cones.h"
+#include "scs_blas.h" /* contains BLAS(X) macros and type info */
 
 #define CONE_RATE (2)
 #define CONE_TOL (1e-8)
@@ -6,31 +7,7 @@
 #define EXP_CONE_MAX_ITERS (100)
 #define POW_CONE_MAX_ITERS (20)
 
-/* Default to underscore for blas / lapack */
-#ifndef BLASSUFFIX
-#define BLASSUFFIX _
-#endif
-
 #ifdef LAPACK_LIB_FOUND
-/* this extra indirection is needed for BLASSUFFIX to work correctly as a variable */
-#define stitch_(pre,x,post) pre ## x ## post
-#define stitch__(pre,x,post) stitch_(pre,x,post)
-/* single or double precision */
-#ifndef FLOAT
-#define BLAS(x) stitch__(d,x,BLASSUFFIX)
-#else
-#define BLAS(x) stitch__(s,x,BLASSUFFIX)
-#endif
-
-#ifdef MATLAB_MEX_FILE
-typedef ptrdiff_t blasint;
-#elif defined BLAS64
-#include <stdint.h>
-typedef int64_t blasint;
-#else
-typedef int blasint;
-#endif
-
 void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, scs_float* a, blasint* lda, scs_float* vl,
 		scs_float* vu, blasint* il, blasint* iu, scs_float* abstol, blasint* m, scs_float* w, scs_float* z, blasint* ldz,
 		blasint* isuppz, scs_float* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
@@ -451,7 +428,7 @@ scs_int project2By2Sdc(scs_float * X) {
 }
 
 /* size of X is getSdConeSize(n) */
-static scs_int projSemiDefiniteCone(scs_float * X, scs_int n, scs_int iter) {
+static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, const scs_int iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	scs_int i;

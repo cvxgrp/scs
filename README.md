@@ -7,7 +7,7 @@ and Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.ht
 and can be used in other C, C++, Python, Matlab, R, Julia, Java, and Scala
 programs via included interfaces (Julia interface available
 [here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
-convex optimization toolboxes [CVX](http://cvxr.com/cvx/),
+convex optimization toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).

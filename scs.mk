@@ -103,9 +103,14 @@ ifneq ($(USE_LAPACK), 0)
   CFLAGS += -DBLAS64=$(BLAS64) # if blas/lapack lib uses 64 bit ints
   endif
 
+  NOBLASSUFFIX = 0
+  ifneq ($(NOBLASSUFFIX), 0)
+  CFLAGS += -DNOBLASSUFFIX=$(NOBLASSUFFIX) # hack to strip blas suffix
+  endif
+
   BLASSUFFIX = "_"
   ifneq ($(BLASSUFFIX), "_")
-  CFLAGS += -DBLASSUFFIX=$(DBLASSUFFIX) # blas suffix no underscore
+  CFLAGS += -DBLASSUFFIX=$(BLASSUFFIX) # blas suffix (underscore usually)
   endif
 endif
 
