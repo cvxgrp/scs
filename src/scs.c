@@ -556,7 +556,7 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 	if (info->iter == w->stgs->max_iters) {
 		scs_printf("Hit max_iters, solution may be inaccurate\n");
 	}
-	scs_printf("Timing: Total solve time: %1.2es\n", info->solveTime / 1e3);
+	scs_printf("Timing: Solve time: %1.2es\n", info->solveTime / 1e3);
 
 	if (linSysStr) {
 		scs_printf("%s", linSysStr);
