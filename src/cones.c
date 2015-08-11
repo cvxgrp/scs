@@ -232,7 +232,7 @@ scs_float expNewtonOneD(scs_float rho, scs_float y_hat, scs_float z_hat) {
 			return 0;
 		} else if (t <= 0) {
 			return z_hat;
-		} else if ( ABS(f) < CONE_TOL) {
+		} else if (ABS(f) < CONE_TOL) {
 			break;
 		}
 	}
