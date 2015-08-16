@@ -117,7 +117,7 @@ for i = 1:length(ns)
             cvx.err{i} = err;
         end
         
-        if (save_results); save('data/portfolio_cvx', 'cvx'); end
+        if (save_results); save(sprintf('data/portfolio_cvx_%s',cvx_use_solver), 'cvx'); end
         
     end
 end
