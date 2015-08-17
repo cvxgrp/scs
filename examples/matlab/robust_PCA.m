@@ -106,8 +106,8 @@ for i = 1:length(ns)
             
             cvx.L{i} = Lt;
             cvx.obj(i) = norm_nuc(Lt);
-            timing = regexp(output, time_pat_cvx, 'names');
-            cvx.time{i} = str2num(timing.total);
+            %timing = regexp(output, time_pat_cvx, 'names');
+            %cvx.time{i} = str2num(timing.total);
             cvx.output{i} = output;
             cvx.err{i} = 0;
             

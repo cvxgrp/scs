@@ -145,6 +145,5 @@ output = evalc('cvx_end')
 cvx.output{i} = output;
 cvx.x{i} = x;
 cvx.s{i} = s;
-cvx.time{i} = toc;
 if (save_results); save('data/l1logreg_cvx', 'cvx'); end
 %}
