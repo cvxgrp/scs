@@ -17,8 +17,6 @@ ms = ceil(ns/2);
 
 density = 0.1;
 
-time_pat_cvx = 'Total CPU time \(secs\)\s*=\s*(?<total>[\d\.]+)';
-
 for i = 1:length(ns)
     seedstr = sprintf('scs_pnorm_ex_%i',i);
     randn('seed',sum(seedstr));rand('seed',sum(seedstr))
@@ -91,7 +89,7 @@ for i = 1:length(ns)
             cvx.err{i} = err;
         end
         
-        if (save_results); save('data/pnorm_cvx', 'cvx'); end;
+        if (save_results); save(sprintf('data/pnorm_cvx_%s',cvx_use_solver), 'cvx'); end;
         
     end
 end

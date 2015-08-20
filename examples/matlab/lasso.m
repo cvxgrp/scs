@@ -100,8 +100,8 @@ for i = 1:length(ns)
             
             cvx.x{i} = x_s;
             cvx.obj(i) = 0.5*sum_square(A*x_s - b) + mu*norm(W*x_s,1);
-            timing = regexp(output, time_pat_cvx, 'names');
-            cvx.time{i} = str2num(timing.total);
+            %timing = regexp(output, time_pat_cvx, 'names');
+            %cvx.time{i} = str2num(timing.total);
             cvx.output{i} = output;
             cvx.err{i} = 0;
             
@@ -109,7 +109,7 @@ for i = 1:length(ns)
             cvx.err{i} = err;
         end
         
-        if (save_results); save('data/lasso_cvx', 'cvx'); end;
+        if (save_results); save(sprintf('data/lasso_cvx_%s',cvx_use_solver), 'cvx'); end;
         
     end
 end

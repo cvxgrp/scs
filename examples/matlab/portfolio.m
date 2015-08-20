@@ -107,8 +107,8 @@ for i = 1:length(ns)
             cvx.x_viol{i} = min(x);
             cvx.budget_viol{i} = abs(1-sum(x));
             cvx.obj(i) = (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)));
-            timing = regexp(output, time_pat_cvx, 'names');
-            cvx.time{i} = str2num(timing.total);
+            %timing = regexp(output, time_pat_cvx, 'names');
+            %cvx.time{i} = str2num(timing.total);
             cvx.output{i} = output;
             cvx.err{i} = 0;
             
@@ -117,7 +117,7 @@ for i = 1:length(ns)
             cvx.err{i} = err;
         end
         
-        if (save_results); save('data/portfolio_cvx', 'cvx'); end
+        if (save_results); save(sprintf('data/portfolio_cvx_%s',cvx_use_solver), 'cvx'); end
         
     end
 end
