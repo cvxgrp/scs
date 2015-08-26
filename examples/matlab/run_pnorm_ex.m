@@ -1,4 +1,4 @@
-clear all
+function run_pnorm_ex(params)
 
 disp('------------------------------------------------------------')
 disp('WARNING: this can take a very long time to run.')
@@ -11,6 +11,14 @@ run_cvx = false;
 cvx_use_solver = 'sdpt3';
 run_scs_direct = true;
 run_scs_indirect = true;
+
+if nargin==1
+    if isfield(params,'save_results');  save_results = params.save_results;end
+    if isfield(params,'run_cvx');       run_cvx = params.run_cvx;end
+    if isfield(params,'cvx_use_solver');cvx_use_solver = params.cvx_use_solver;end
+    if isfield(params,'run_scs_direct');run_scs_direct = params.run_scs_direct;end
+    if isfield(params,'run_scs_indirect');run_scs_indirect = params.run_scs_indirect;end
+end
 
 ns = [1000, 10000, 100000];
 ms = ceil(ns/2);
@@ -86,6 +94,7 @@ for i = 1:length(ns)
             toc
             
         catch err
+            err
             cvx.err{i} = err;
         end
         
