@@ -66,7 +66,7 @@ static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 	/* the "new_owner" pointer has to have Py_DECREF called on it; it owns */
 	/* the "new" array object created by PyArray_Cast */
 	/* */
-	static PyArrayObject *tmp_arr;
+	PyArrayObject *tmp_arr;
 	PyArrayObject *new_owner;
 	tmp_arr = PyArray_GETCONTIGUOUS(array);
 	new_owner = (PyArrayObject *) PyArray_Cast(tmp_arr, typenum);
@@ -442,7 +442,7 @@ static PyMethodDef scsMethods[] = {
 static struct PyModuleDef moduledef = {
 	PyModuleDef_HEAD_INIT,
 	"_scs", /* m_name */
-	"Solve a convex cone problem using scs.", /* m_doc */
+	"Solve a convex cone problem using SCS.", /* m_doc */
 	-1, /* m_size */
 	scsMethods, /* m_methods */
 	NULL, /* m_reload */
