@@ -20,7 +20,7 @@ scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
 static timer coneTimer;
 static scs_float totalConeTime;
 
-static inline scs_int getSdConeSize(scs_int s) {
+static scs_int getSdConeSize(scs_int s) {
 	return (s * (s + 1)) / 2;
 }
 
