@@ -11,33 +11,37 @@ extern "C" {
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
 #define scs_printf   mexPrintf
-#define scs_free     mxFree
-#define scs_malloc   mxMalloc
-#define scs_calloc   mxCalloc
+#define _scs_free     mxFree
+#define _scs_malloc   mxMalloc
+#define _scs_calloc   mxCalloc
 #elif defined PYTHON
 #include <Python.h>
 #include <stdlib.h>
-#define scs_printf   PySys_WriteStdout
-#define scs_free     free
-#define scs_malloc   malloc
-#define scs_calloc   calloc
+#define scs_printf  PySys_WriteStdout
+#define _scs_free     free
+#define _scs_malloc   malloc
+#define _scs_calloc   calloc
 /* should not be used
 #elif defined USING_R
 #include <R.h>
 #include <stdlib.h>
 #define scs_printf   Rprintf
-#define scs_free     free
-#define scs_malloc   malloc
-#define scs_calloc   calloc
+#define _scs_free     free
+#define _scs_malloc   malloc
+#define _scs_calloc   calloc
 */
 #else
 #include <stdio.h>
 #include <stdlib.h>
 #define scs_printf   printf
-#define scs_free     free
-#define scs_malloc   malloc
-#define scs_calloc   calloc
+#define _scs_free     free
+#define _scs_malloc   malloc
+#define _scs_calloc   calloc
 #endif
+
+#define scs_free(x) _scs_free(x); x = NULL
+#define scs_malloc(x) _scs_malloc(x)
+#define scs_calloc(x,y) _scs_calloc(x,y)
 
 #ifdef DLONG
     #ifdef _WIN64
