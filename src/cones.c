@@ -1,4 +1,4 @@
-#include "cones.h"
+#include "scs.h"
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 
 #define CONE_RATE (2)
@@ -15,13 +15,6 @@ void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha, const
 		scs_float *a, const blasint *lda);
 void BLAS(scal)(const blasint *n, const scs_float *sa, scs_float *sx, const blasint *incx);
 scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
-
-/* private data to help cone projection step */
-static struct ConeData_t {
-	/* workspace for eigenvector decompositions: */
-	scs_float * Xs, *Z, *e, *work;
-	blasint *iwork, lwork, liwork;
-} c = {0};
 #endif
 
 static timer coneTimer;
@@ -155,19 +148,21 @@ char * getConeSummary(const Info * info) {
 	return str;
 }
 
-void finishCone() {
+void finishCone(ConeWork * c) {
 #ifdef LAPACK_LIB_FOUND
-	if (c.Xs)
-		scs_free(c.Xs);
-	if (c.Z)
-		scs_free(c.Z);
-	if (c.e)
-		scs_free(c.e);
-	if (c.work)
-		scs_free(c.work);
-	if (c.iwork)
-		scs_free(c.iwork);
+	if (c->Xs)
+		scs_free(c->Xs);
+	if (c->Z)
+		scs_free(c->Z);
+	if (c->e)
+		scs_free(c->e);
+	if (c->work)
+		scs_free(c->work);
+	if (c->iwork)
+		scs_free(c->iwork);
 #endif
+    if (c)
+        scs_free(c);
 }
 
 char * getConeHeader(const Cone * k) {
@@ -312,76 +307,71 @@ static scs_int projExpCone(scs_float * v, scs_int iter) {
 	return 0;
 }
 
-scs_int initCone(const Cone * k) {
+scs_int setUpSdConeWorkSpace(ConeWork * c, const Cone * k) {
 #ifdef LAPACK_LIB_FOUND
-	scs_int i;
-	blasint nMax = 0;
-	scs_float eigTol = 1e-8;
-	blasint negOne = -1;
-	blasint m = 0;
-	blasint info;
-	scs_float wkopt;
-	c.Xs = NULL;
-	c.Z = NULL;
-	c.e = NULL;
-	c.work = NULL;
-	c.iwork = NULL;
-#endif
-	totalConeTime = 0.0;
+    scs_int i;
+    blasint nMax = 0;
+    scs_float eigTol = 1e-8;
+    blasint negOne = -1;
+    blasint m = 0;
+    blasint info;
+    scs_float wkopt;
 #if EXTRAVERBOSE > 0
-	scs_printf("initCone\n");
-#ifdef LAPACK_LIB_FOUND
 #define _STR_EXPAND(tok) #tok
 #define _STR(tok) _STR_EXPAND(tok)
-	scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
+    scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
 #endif
-#ifdef MATLAB_MEX_FILE
-	mexEvalString("drawnow;");
-#endif
-#endif
+    /* eigenvector decomp workspace */
+    for (i = 0; i < k->ssize; ++i) {
+        if (k->s[i] > nMax) {
+            nMax = (blasint) k->s[i];
+        }
+    }
+    c->Xs = scs_calloc(nMax * nMax, sizeof(scs_float));
+    c->Z = scs_calloc(nMax * nMax, sizeof(scs_float));
+    c->e = scs_calloc(nMax, sizeof(scs_float));
 
-	if (k->ssize && k->s) {
-		if (isSimpleSemiDefiniteCone(k->s, k->ssize)) {
-			return 0;
-		}
-#ifdef LAPACK_LIB_FOUND
-		/* eigenvector decomp workspace */
-		for (i = 0; i < k->ssize; ++i) {
-			if (k->s[i] > nMax) {
-				nMax = (blasint) k->s[i];
-			}
-		}
-		c.Xs = scs_calloc(nMax * nMax, sizeof(scs_float));
-		c.Z = scs_calloc(nMax * nMax, sizeof(scs_float));
-		c.e = scs_calloc(nMax, sizeof(scs_float));
+    BLAS(syevr)("Vectors", "All", "Lower", &nMax, c->Xs, &nMax, NULL, NULL, NULL, NULL,
+            &eigTol, &m, c->e, c->Z, &nMax, NULL, &wkopt, &negOne, &(c->liwork), &negOne, &info);
 
-		BLAS(syevr)("Vectors", "All", "Lower", &nMax, c.Xs, &nMax, NULL, NULL, NULL, NULL,
-				&eigTol, &m, c.e, c.Z, &nMax, NULL, &wkopt, &negOne, &(c.liwork), &negOne, &info);
+    if (info != 0) {
+        scs_printf("FATAL: syevr failure, info = %li\n", (long) info);
+        return -1;
+    }
+    c->lwork = (blasint) (wkopt + 0.01); /* 0.01 for int casting safety */
+    c->work = scs_malloc(c->lwork * sizeof(scs_float));
+    c->iwork = scs_malloc(c->liwork * sizeof(blasint));
 
-		if (info != 0) {
-			scs_printf("FATAL: syevr failure, info = %li\n", (long) info);
-			return -1;
-		}
-		c.lwork = (blasint) (wkopt + 0.01); /* 0.01 for int casting safety */
-		c.work = scs_malloc(c.lwork * sizeof(scs_float));
-		c.iwork = scs_malloc(c.liwork * sizeof(blasint));
-
-		if (!c.Xs || !c.Z || !c.e || !c.work || !c.iwork) {
-			return -1;
-		}
+    if (!c->Xs || !c->Z || !c->e || !c->work || !c->iwork) {
+        return -1;
+    }
+    return 0;
 #else
-		scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked blas+lapack libraries\n");
-		scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
-		return -1;
+    scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked blas+lapack libraries\n");
+    scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
+    return NULL;
 #endif
-	}
+}
+
+ConeWork * initCone(const Cone * k) {
+    ConeWork * coneWork = scs_malloc(sizeof(ConeWork));
 #if EXTRAVERBOSE > 0
-	scs_printf("initCone complete\n");
+    scs_printf("initCone\n");
+#endif
+    totalConeTime = 0.0;
+    if (k->ssize && k->s) {
+        if (!isSimpleSemiDefiniteCone(k->s, k->ssize) && setUpSdConeWorkSpace(coneWork, k) < 0) {
+            scs_free(coneWork);
+            return NULL;
+        }
+    }
+#if EXTRAVERBOSE > 0
+    scs_printf("initCone complete\n");
 #ifdef MATLAB_MEX_FILE
-	mexEvalString("drawnow;");
+    mexEvalString("drawnow;");
 #endif
 #endif
-	return 0;
+    return coneWork;
 }
 
 scs_int project2By2Sdc(scs_float * X) {
@@ -428,7 +418,7 @@ scs_int project2By2Sdc(scs_float * X) {
 }
 
 /* size of X is getSdConeSize(n) */
-static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, const scs_int iter) {
+static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, ConeWork * c, const scs_int iter) {
 	/* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
 	scs_int i;
@@ -440,13 +430,13 @@ static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, const scs_in
 
 	scs_float sqrt2 = SQRTF(2.0);
 	scs_float sqrt2Inv = 1.0 / sqrt2;
-	scs_float * Xs = c.Xs;
-	scs_float * Z = c.Z;
-	scs_float * e = c.e;
-	scs_float * work = c.work;
-	blasint * iwork = c.iwork;
-	blasint lwork = c.lwork;
-	blasint liwork = c.liwork;
+	scs_float * Xs = c->Xs;
+	scs_float * Z = c->Z;
+	scs_float * e = c->e;
+	scs_float * work = c->work;
+	blasint * iwork = c->iwork;
+	blasint lwork = c->lwork;
+	blasint liwork = c->liwork;
 
 	scs_float eigTol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 / POWF(iter + 1, CONE_RATE)); */
 	scs_float zero = 0.0;
@@ -578,7 +568,7 @@ void projPowerCone(scs_float * v, scs_float a) {
 
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to NULL) */
-scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start, scs_int iter)  {
+scs_int projDualCone(scs_float * x, const Cone * k, ConeWork * c, const scs_float * warm_start, scs_int iter)  {
     DEBUG_FUNC
     scs_int i;
 	scs_int count = (k->f ? k->f : 0);
@@ -641,7 +631,7 @@ scs_int projDualCone(scs_float * x, const Cone * k, const scs_float * warm_start
             if (k->s[i] == 0) {
                 continue;
             }
-            if (projSemiDefiniteCone(&(x[count]), k->s[i], iter) < 0) return -1;
+            if (projSemiDefiniteCone(&(x[count]), k->s[i], c, iter) < 0) return -1;
             count += getSdConeSize(k->s[i]);
         }
 #if EXTRAVERBOSE > 0

@@ -304,7 +304,7 @@ static scs_int projectCones(Work * w, const Cone * k, scs_int iter) {
 		w->u[i] = w->stgs->alpha * w->u_t[i] + (1 - w->stgs->alpha) * w->u_prev[i] - w->v[i];
 	}
 	/* u = [x;y;tau] */
-	status = projDualCone(&(w->u[n]), k, &(w->u_prev[n]), iter);
+	status = projDualCone(&(w->u[n]), k, w->coneWork, &(w->u_prev[n]), iter);
 	if (w->u[l - 1] < 0.0)
 		w->u[l - 1] = 0.0;
 
@@ -510,12 +510,12 @@ static void printHeader(Work * w, const Cone * k) {
     RETURN;
 }
 
-scs_float getDualConeDist(const scs_float * y, const Cone * k, scs_int m) {
+scs_float getDualConeDist(const scs_float * y, const Cone * k, ConeWork * c,  scs_int m) {
     DEBUG_FUNC
     scs_float dist;
     scs_float * t = scs_malloc(sizeof(scs_float) * m);
     memcpy(t, y, m * sizeof(scs_float));
-    projDualCone(t, k, NULL, -1);
+    projDualCone(t, k, c, NULL, -1);
     dist = calcNormInfDiff(t, y, m);
 #if EXTRAVERBOSE > 0
     printArray(y, m, "y");
@@ -527,13 +527,13 @@ scs_float getDualConeDist(const scs_float * y, const Cone * k, scs_int m) {
 }
 
 /* via moreau */
-scs_float getPriConeDist(const scs_float * s, const Cone * k, scs_int m) {
+scs_float getPriConeDist(const scs_float * s, const Cone * k, ConeWork * c, scs_int m) {
     DEBUG_FUNC
     scs_float dist;
     scs_float * t = scs_malloc(sizeof(scs_float) * m);
     memcpy(t, s, m * sizeof(scs_float));
     scaleArray(t, -1.0, m);
-    projDualCone(t, k, NULL, -1);
+    projDualCone(t, k, c, NULL, -1);
     dist = calcNormInf(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
 #if EXTRAVERBOSE > 0
     printArray(s, m, "s");
@@ -575,17 +575,18 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 
     if (isInfeasibleStatus(info->statusVal)) {
 		scs_printf("Certificate of primal infeasibility:\n");
-		scs_printf("dist(y, K*) = %.4e\n", getDualConeDist(sol->y, k, d->m));
+		scs_printf("dist(y, K*) = %.4e\n", getDualConeDist(sol->y, k, w->coneWork, d->m));
 		scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->resInfeas);
 		scs_printf("b'y = %.4f\n", innerProd(d->b, sol->y, d->m));
 	} else if (isUnboundedStatus(info->statusVal)) {
 		scs_printf("Certificate of dual infeasibility:\n");
-		scs_printf("dist(s, K) = %.4e\n", getPriConeDist(sol->s, k, d->m));
+		scs_printf("dist(s, K) = %.4e\n", getPriConeDist(sol->s, k, w->coneWork, d->m));
 		scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->resUnbdd);
 		scs_printf("c'x = %.4f\n", innerProd(d->c, sol->x, d->n));
 	} else {
 		scs_printf("Error metrics:\n");
-		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y/m = %.4e\n", getPriConeDist(sol->s, k, d->m), getDualConeDist(sol->y, k, d->m), innerProd(sol->s, sol->y, d->m) / d->m);
+		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y/m = %.4e\n", getPriConeDist(sol->s, k, w->coneWork, d->m), \
+			getDualConeDist(sol->y, k, w->coneWork, d->m), innerProd(sol->s, sol->y, d->m) / d->m);
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
 		scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->resDual);
 		scs_printf("|c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->relGap);
@@ -711,7 +712,7 @@ static Work * initWork(const Data *d, const Cone * k) {
 	} else {
 		w->scal = NULL;
 	}
-	if (initCone(k) < 0) {
+	if (!(w->coneWork = initCone(k))) {
 		scs_printf("ERROR: initCone failure\n");
 		RETURN NULL;
 	}
@@ -827,7 +828,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 
 void scs_finish(Work * w) {
     DEBUG_FUNC
-    finishCone();
+    finishCone(w->coneWork);
     if (w) {
         if (w->stgs && w->stgs->normalize) {
 #ifndef COPYAMATRIX

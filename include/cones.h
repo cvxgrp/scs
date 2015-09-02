@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-#include "scs.h"
+#include "glbopts.h"
+#include "scs_blas.h"
 
 /* NB: rows of data matrix A must be specified in this exact order */
 struct SCS_CONE {
@@ -22,6 +23,17 @@ struct SCS_CONE {
     scs_int psize; /* number of (primal and dual) power cone triples */
 };
 
+#ifdef LAPACK_LIB_FOUND
+/* private data to help cone projection step */
+typedef struct {
+    /* workspace for eigenvector decompositions: */
+    scs_float * Xs, *Z, *e, *work;
+    blasint *iwork, lwork, liwork;
+} ConeWork;
+#else
+typedef void * ConeWork;
+#endif
+
 /*
  * boundaries will contain array of indices of rows of A corresponding to
  * cone boundaries, boundaries[0] is starting index for cones of size larger than 1
@@ -29,15 +41,15 @@ struct SCS_CONE {
  */
 scs_int getConeBoundaries(const Cone * k, scs_int ** boundaries);
 
-scs_int initCone(const Cone * k);
+ConeWork * initCone(const Cone * k);
 char * getConeHeader(const Cone * k);
 scs_int validateCones(const Data * d, const Cone * k);
 
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter < 0 for exact projection, warm_start contains guess
  of solution, can be NULL*/
-scs_int projDualCone(scs_float * x, const Cone *k, const scs_float * warm_start, scs_int iter);
-void finishCone(void);
+scs_int projDualCone(scs_float * x, const Cone *k, ConeWork * c, const scs_float * warm_start, scs_int iter);
+void finishCone(ConeWork * coneWork);
 char * getConeSummary(const Info * info);
 
 #ifdef __cplusplus

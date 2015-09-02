@@ -72,7 +72,6 @@ struct SCS_SCALING {
 	scs_float meanNormRowA, meanNormColA;
 };
 
-
 /*
  * main library api's:
  * scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T -I])
@@ -98,7 +97,8 @@ struct SCS_WORK {
 	AMatrix * A; /* (possibly normalized) A matrix */
     Priv * p; /* struct populated by linear system solver */
 	Settings * stgs; /* contains solver settings specified by user */
-	Scaling * scal;
+	Scaling * scal; /* contains the re-scaling data */
+	ConeWork * coneWork; /* workspace for the cone projection step */
 };
 
 /* to hold residual information (unnormalized) */
