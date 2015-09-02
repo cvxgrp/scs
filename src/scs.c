@@ -828,8 +828,8 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 
 void scs_finish(Work * w) {
     DEBUG_FUNC
-    finishCone(w->coneWork);
     if (w) {
+        finishCone(w->coneWork);
         if (w->stgs && w->stgs->normalize) {
 #ifndef COPYAMATRIX
             unNormalizeA(w->A, w->stgs, w->scal);

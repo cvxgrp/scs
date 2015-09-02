@@ -149,6 +149,7 @@ char * getConeSummary(const Info * info) {
 }
 
 void finishCone(ConeWork * c) {
+    DEBUG_FUNC
 #ifdef LAPACK_LIB_FOUND
 	if (c->Xs)
 		scs_free(c->Xs);
@@ -163,6 +164,7 @@ void finishCone(ConeWork * c) {
 #endif
     if (c)
         scs_free(c);
+    RETURN;
 }
 
 char * getConeHeader(const Cone * k) {
@@ -354,7 +356,7 @@ scs_int setUpSdConeWorkSpace(ConeWork * c, const Cone * k) {
 }
 
 ConeWork * initCone(const Cone * k) {
-    ConeWork * coneWork = scs_malloc(sizeof(ConeWork));
+    ConeWork * coneWork = scs_calloc(1, sizeof(ConeWork));
 #if EXTRAVERBOSE > 0
     scs_printf("initCone\n");
 #endif
