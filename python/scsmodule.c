@@ -381,7 +381,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		d->stgs->warm_start |= getWarmStart("s", &(sol.s), d->m, warm);
 	}
 
-    /* TODO threading not enabled, PySys_WriteStdout and static timers not thread safe */
+    /* TODO threading not enabled, PySys_WriteStdout and static timers not thread safe (WITH_THREAD) */
     /* Py_BEGIN_ALLOW_THREADS */
     /* Solve! */
     scs(d, k, &sol, &info);
