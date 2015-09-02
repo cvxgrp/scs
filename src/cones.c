@@ -27,7 +27,7 @@ static struct ConeData_t {
 static timer coneTimer;
 static scs_float totalConeTime;
 
-scs_int getSdConeSize(scs_int s) {
+static inline scs_int getSdConeSize(scs_int s) {
 	return (s * (s + 1)) / 2;
 }
 
