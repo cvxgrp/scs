@@ -7,33 +7,10 @@ extern "C" {
 
 #include "scs.h"
 #include "amatrix.h"
+#include "scs_blas.h"
 
 #define MIN_SCALE (1e-3)
 #define MAX_SCALE (1e3)
-
-/* Default to underscore for blas / lapack */
-#ifndef BLASSUFFIX
-#define BLASSUFFIX _
-#endif
-
-/* this extra indirection is needed for BLASSUFFIX to work correctly as a variable */
-#define stitch_(pre,x,post) pre ## x ## post
-#define stitch__(pre,x,post) stitch_(pre,x,post)
-/* single or double precision */
-#ifndef FLOAT
-#define BLAS(x) stitch__(d,x,BLASSUFFIX)
-#else
-#define BLAS(x) stitch__(s,x,BLASSUFFIX)
-#endif
-
-#ifdef MATLAB_MEX_FILE
-typedef ptrdiff_t blasint;
-#elif defined BLAS64
-#include <stdint.h>
-typedef int64_t blasint;
-#else
-typedef int blasint;
-#endif
 
 void BLAS(scal)(blasint *n, const scs_float *da, scs_float *dx, blasint *incx);
 scs_float BLAS(nrm2)(blasint *n, scs_float *x, blasint *incx);
