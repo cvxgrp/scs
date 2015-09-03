@@ -71,7 +71,7 @@ void genRandomProbData(Data * d, Cone * k, Sol * opt_sol) {
 		y[i] = z[i] = rand_scs_float();
 	}
 
-	projDualCone(y, k, NULL, -1);
+	projDualCone(y, k, NULL, NULL, -1);
 
 	for (i = 0; i < m; i++) {
 		b[i] = s[i] = y[i] - z[i];

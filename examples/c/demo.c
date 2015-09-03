@@ -6,7 +6,7 @@
 #define TEST_WARM_START (1)
 
 scs_int readInData(FILE * fp, Data * d, Cone * k);
-scs_int openFile(scs_int argc, char ** argv, scs_int idx, char * default_file, FILE ** fb);
+scs_int openFile(scs_int argc, char ** argv, scs_int idx, const char * default_file, FILE ** fb);
 /* void printSol(Data * d, Sol * sol, Info * info); */
 
 int main(int argc, char **argv) {
@@ -140,7 +140,7 @@ scs_int readInData(FILE * fp, Data * d, Cone * k) {
 	return 0;
 }
 
-scs_int openFile(scs_int argc, char ** argv, scs_int idx, char * default_file, FILE ** fb) {
+scs_int openFile(scs_int argc, char ** argv, scs_int idx, const char * default_file, FILE ** fb) {
 	if (argc < idx + 1) {
 		printf("Not enough arguments supplied, using %s as default\n", default_file);
 	} else {

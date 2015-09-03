@@ -1,4 +1,4 @@
-clear all; close all;
+function run_l1logreg_ex(params)
 
 disp('------------------------------------------------------------')
 disp('WARNING: this can take a very long time to run.')
@@ -6,8 +6,18 @@ disp('It may also crash/run out of memory.')
 disp('------------------------------------------------------------')
 
 save_results = false;
+run_cvx = false;
+cvx_use_solver = 'sdpt3';
 run_scs_direct = true;
 run_scs_indirect = true;
+
+if nargin==1
+    if isfield(params,'save_results');  save_results = params.save_results;end
+    if isfield(params,'run_cvx');       run_cvx = params.run_cvx;end
+    if isfield(params,'cvx_use_solver');cvx_use_solver = params.cvx_use_solver;end
+    if isfield(params,'run_scs_direct');run_scs_direct = params.run_scs_direct;end
+    if isfield(params,'run_scs_indirect');run_scs_indirect = params.run_scs_indirect;end
+end
 
 sizes = [100 10000; 1000 100000; 10000 1000000];
 sze_str{1} = 'small';
@@ -18,7 +28,7 @@ density = 0.1;
 %%
 for i=1:size(sizes,1)
     disp(sprintf('Solving %s l1 regularized logistic regresssion.',sze_str{i}))
-    clearvars -except i sizes sze_str direct_data indirect_data save_results density run_scs_direct run_scs_indirect
+    clearvars -except i sizes sze_str direct_data indirect_data save_results density run_scs_direct run_scs_indirect run_cvx cvx_use_solver
     
     str = ['data/l1logreg_' sze_str{i}];
     randn('seed',sum(str));rand('seed',sum(str))
@@ -119,6 +129,30 @@ for i=1:size(sizes,1)
             save('data/l1logreg_indirect', 'indirect_data');
         end
     end
+    
+    if run_cvx
+        try
+            tic
+            cvx_begin
+            cvx_solver(cvx_use_solver)
+            variable w(p)
+            minimize(sum(log_sum_exp([zeros(1,q);w'*full(X)])) + lam * norm(w,1))
+            if (save_results)
+                cvx.output{i} = evalc('cvx_end')
+            else
+                cvx_end
+            end
+            toc
+            
+        catch err
+            err
+            cvx.err{i} = err;
+        end
+        
+        if (save_results); save(sprintf('data/l1logreg_cvx_%s', cvx_use_solver), 'cvx'); end;
+        
+    end
+    
 end
 
 %{

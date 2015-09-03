@@ -1,8 +1,11 @@
 #ifndef COMMON_H_GUARD
 #define COMMON_H_GUARD
 
-#include "glbopts.h"
-#include "cones.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "scs.h"
 #include "amatrix.h"
 
 #define MIN_SCALE (1e-3)
@@ -42,5 +45,9 @@ void BLAS(syrk)(char *uplo, char *trans, blasint *n, blasint *k, scs_float *alph
 
 /* void BLAS(gemm)(char *transa, char *transb, blasint *m, blasint * n, blasint *k, scs_float *alpha, scs_float *a, blasint *lda,
         scs_float *b, blasint *ldb, scs_float *beta, scs_float *c, blasint *ldc); */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
