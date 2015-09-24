@@ -25,7 +25,7 @@ GLOBAL void AMD_defaults
 {
     Int i ;
 
-    if (Control != (scs_float *) NULL)
+    if (Control != (scs_float *) SCS_NULL)
     {
 	for (i = 0 ; i < AMD_CONTROL ; i++)
 	{

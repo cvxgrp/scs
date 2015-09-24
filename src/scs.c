@@ -269,12 +269,12 @@ void printSol(Work * w, Sol * sol, Info * info) {
     DEBUG_FUNC
 	scs_int i;
 	scs_printf("%s\n", info->status);
-	if (sol->x != NULL) {
+	if (sol->x != SCS_NULL) {
 		for (i = 0; i < w->n; ++i) {
 			scs_printf("x[%i] = %4f\n", (int) i, sol->x[i]);
 		}
 	}
-	if (sol->y != NULL) {
+	if (sol->y != SCS_NULL) {
 		for (i = 0; i < w->m; ++i) {
 			scs_printf("y[%i] = %4f\n", (int) i, sol->y[i]);
 		}
@@ -515,7 +515,7 @@ scs_float getDualConeDist(const scs_float * y, const Cone * k, ConeWork * c,  sc
     scs_float dist;
     scs_float * t = scs_malloc(sizeof(scs_float) * m);
     memcpy(t, y, m * sizeof(scs_float));
-    projDualCone(t, k, c, NULL, -1);
+    projDualCone(t, k, c, SCS_NULL, -1);
     dist = calcNormInfDiff(t, y, m);
 #if EXTRAVERBOSE > 0
     printArray(y, m, "y");
@@ -533,7 +533,7 @@ scs_float getPriConeDist(const scs_float * s, const Cone * k, ConeWork * c, scs_
     scs_float * t = scs_malloc(sizeof(scs_float) * m);
     memcpy(t, s, m * sizeof(scs_float));
     scaleArray(t, -1.0, m);
-    projDualCone(t, k, c, NULL, -1);
+    projDualCone(t, k, c, SCS_NULL, -1);
     dist = calcNormInf(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
 #if EXTRAVERBOSE > 0
     printArray(s, m, "s");
@@ -672,7 +672,7 @@ static Work * initWork(const Data *d, const Cone * k) {
 	}
 	if (!w) {
 		scs_printf("ERROR: allocating work failure\n");
-		RETURN NULL;
+		RETURN SCS_NULL;
 	}
 	/* get settings and dims from data struct */
 	w->stgs = d->stgs;
@@ -691,14 +691,14 @@ static Work * initWork(const Data *d, const Cone * k) {
 	w->c = scs_malloc(d->n * sizeof(scs_float));
 	if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr || !w->dr || !w->b || !w->c) {
 		scs_printf("ERROR: work memory allocation failure\n");
-		RETURN NULL;
+		RETURN SCS_NULL;
 	}
 	w->A = d->A;
 	if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
 		if (!copyAMatrix(&(w->A), d->A)) {
 			scs_printf("ERROR: copy A matrix failed\n");
-			RETURN NULL;
+			RETURN SCS_NULL;
 		}
 #endif
 		w->scal = scs_malloc(sizeof(Scaling));
@@ -710,16 +710,16 @@ static Work * initWork(const Data *d, const Cone * k) {
 		scs_printf("norm E = %4f\n", calcNorm(w->scal->E, d->n));
 #endif
 	} else {
-		w->scal = NULL;
+		w->scal = SCS_NULL;
 	}
 	if (!(w->coneWork = initCone(k))) {
 		scs_printf("ERROR: initCone failure\n");
-		RETURN NULL;
+		RETURN SCS_NULL;
 	}
 	w->p = initPriv(w->A, w->stgs);
 	if (!w->p) {
 		scs_printf("ERROR: initPriv failure\n");
-		RETURN NULL;
+		RETURN SCS_NULL;
 	}
 	RETURN w;
 }
@@ -760,7 +760,7 @@ static scs_int updateWork(const Data * d, Work * w, const Sol * sol) {
 	memcpy(w->h, w->c, n * sizeof(scs_float));
 	memcpy(&(w->h[n]), w->b, m * sizeof(scs_float));
 	memcpy(w->g, w->h, (n + m) * sizeof(scs_float));
-	solveLinSys(w->A, w->stgs, w->p, w->g, NULL, -1);
+	solveLinSys(w->A, w->stgs, w->p, w->g, SCS_NULL, -1);
 	scaleArray(&(w->g[n]), -1, m);
 	w->gTh = innerProd(w->h, w->g, n + m);
 	RETURN 0;
@@ -772,7 +772,7 @@ scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * in
 	timer solveTimer;
 	struct residuals r;
 	if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
-		scs_printf("ERROR: NULL input\n");
+		scs_printf("ERROR: SCS_NULL input\n");
 		RETURN SCS_FAILED;
 	}
 	/* initialize ctrl-c support */
@@ -856,7 +856,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 	startInterruptListener();
 	if (!d || !k || !info) {
 		scs_printf("ERROR: Missing Data, Cone or Info input\n");
-		RETURN NULL;
+		RETURN SCS_NULL;
 	}
 #if EXTRAVERBOSE > 0
 	printData(d);
@@ -865,7 +865,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 #ifndef NOVALIDATE
 	if (validate(d, k) < 0) {
 		scs_printf("ERROR: Validation returned failure\n");
-		RETURN NULL;
+		RETURN SCS_NULL;
 	}
 #endif
 	tic(&initTimer);
@@ -893,7 +893,7 @@ scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
         scs_solve(w, d, k, sol, info); 
         status = info->statusVal;
     } else { 
-        status = failure(NULL, d ? d->m : -1, d ? d->n : -1, sol, info, SCS_FAILED, "could not initialize work", "Failure");
+        status = failure(SCS_NULL, d ? d->m : -1, d ? d->n : -1, sol, info, SCS_FAILED, "could not initialize work", "Failure");
 	}
 	scs_finish(w);
 	RETURN status;

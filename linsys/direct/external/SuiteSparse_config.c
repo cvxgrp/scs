@@ -27,9 +27,9 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
     {
         /* Int overflow */
         *ok = 0 ;
-        return (NULL) ;
+        return (SCS_NULL) ;
     }
-    if (!config || config->malloc_memory == NULL)
+    if (!config || config->malloc_memory == SCS_NULL)
     {
         /* use malloc by default */
         p = (void *) malloc (nitems * size_of_item) ;
@@ -39,7 +39,7 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
         /* use the pointer to malloc in the config */
         p = (void *) (config->malloc_memory) (nitems * size_of_item) ;
     }
-    *ok = (p != NULL) ;
+    *ok = (p != SCS_NULL) ;
     return (p) ;
 }
 
@@ -48,7 +48,7 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 /* SuiteSparse_free: free wrapper */
 /* -------------------------------------------------------------------------- */
 
-void *SuiteSparse_free      /* always returns NULL */
+void *SuiteSparse_free      /* always returns SCS_NULL */
 (
     void *p,                /* block to free */
     SuiteSparse_config *config        /* SuiteSparse-wide configuration */
@@ -56,7 +56,7 @@ void *SuiteSparse_free      /* always returns NULL */
 {
     if (p)
     {
-        if (!config || config->free_memory == NULL)
+        if (!config || config->free_memory == SCS_NULL)
         {
             /* use free by default */
             free (p) ;
@@ -67,7 +67,7 @@ void *SuiteSparse_free      /* always returns NULL */
             (config->free_memory) (p) ;
         }
     }
-    return (NULL) ;
+    return (SCS_NULL) ;
 }
 
 

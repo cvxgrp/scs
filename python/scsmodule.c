@@ -100,7 +100,7 @@ static scs_int getWarmStart(char * key, scs_float ** x, scs_int l, PyObject * wa
 static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject * cone) {
 	/* get cone['key'] */
 	scs_int i, n = 0;
-	scs_int * q = NULL;
+	scs_int * q = SCS_NULL;
 	PyObject *obj = PyDict_GetItemString(cone, key);
 	if (obj) {
 		if (PyList_Check(obj)) {
@@ -136,7 +136,7 @@ static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject 
 static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObject * cone) {
     /* get cone['key'] */
     scs_int i, n = 0;
-    scs_float * q = NULL;
+    scs_float * q = SCS_NULL;
     PyObject *obj = PyDict_GetItemString(cone, key);
     if (obj) {
         if (PyList_Check(obj)) {
@@ -215,7 +215,7 @@ static void freePyData(Data * d, Cone * k, struct ScsPyData * ps) {
 static PyObject * finishWithErr(Data * d, Cone * k, struct ScsPyData * ps, char * str) {
 	PyErr_SetString(PyExc_ValueError, str);
 	freePyData(d, k, ps);
-	return NULL;
+	return SCS_NULL;
 }
 
 static PyObject *version(PyObject* self) {
@@ -225,10 +225,10 @@ static PyObject *version(PyObject* self) {
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/* data structures for arguments */
 	PyArrayObject *Ax, *Ai, *Ap, *c, *b;
-	PyObject *cone, *warm = NULL;
-    PyObject *verbose = NULL;
-    PyObject *normalize = NULL;
-	struct ScsPyData ps = { NULL, NULL, NULL, NULL, NULL, };
+	PyObject *cone, *warm = SCS_NULL;
+    PyObject *verbose = SCS_NULL;
+    PyObject *normalize = SCS_NULL;
+	struct ScsPyData ps = { SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, };
 	/* scs data structures */
 	Data * d = scs_calloc(1, sizeof(Data));
     Cone * k = scs_calloc(1, sizeof(Cone));
@@ -237,7 +237,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	Sol sol = { 0 };
 	Info info;
 	static char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "warm",
-        "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", NULL };
+        "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", SCS_NULL };
 	
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
@@ -272,17 +272,17 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
         &(d->stgs->alpha),
         &(d->stgs->rho_x)) ) {
         PySys_WriteStderr("error parsing inputs\n");
-        return NULL; 
+        return SCS_NULL; 
     }
 
 	if (d->m < 0) {
 		PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
-		return NULL;
+		return SCS_NULL;
 	}
 
 	if (d->n < 0) {
 		PyErr_SetString(PyExc_ValueError, "n must be a positive integer");
-		return NULL;
+		return SCS_NULL;
 	}
 
 	/* get the typenum for the primitive scs_int and scs_float types */
@@ -437,7 +437,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 static PyMethodDef scsMethods[] = {
     { "csolve", (PyCFunction) csolve, METH_VARARGS | METH_KEYWORDS, "Solve a convex cone problem using scs."},
     { "version", (PyCFunction)version, METH_NOARGS, "Version number for SCS."},
-    { NULL, NULL, 0, NULL } /* sentinel */
+    { SCS_NULL, SCS_NULL, 0, SCS_NULL } /* sentinel */
 };
 
 /* Module initialization */
@@ -448,10 +448,10 @@ static struct PyModuleDef moduledef = {
 	"Solve a convex cone problem using SCS.", /* m_doc */
 	-1, /* m_size */
 	scsMethods, /* m_methods */
-	NULL, /* m_reload */
-	NULL, /* m_traverse */
-	NULL, /* m_clear */
-	NULL, /* m_free */
+	SCS_NULL, /* m_reload */
+	SCS_NULL, /* m_traverse */
+	SCS_NULL, /* m_clear */
+	SCS_NULL, /* m_free */
 };
 #endif
 
@@ -468,11 +468,11 @@ static PyObject* moduleinit(void) {
 #endif
 #endif
 
-	/*if (import_array() < 0) return NULL; // for numpy arrays */
-	/*if (import_cvxopt() < 0) return NULL; // for cvxopt support */
+	/*if (import_array() < 0) return SCS_NULL; // for numpy arrays */
+	/*if (import_cvxopt() < 0) return SCS_NULL; // for cvxopt support */
 
-	if (m == NULL) {
-		return NULL;
+	if (m == SCS_NULL) {
+		return SCS_NULL;
     }
 	return m;
 };

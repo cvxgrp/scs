@@ -195,7 +195,7 @@
 /* ========================================================================= */
 
 /* All output goes through the PRINTF macro.  */
-#define PRINTF(params) { if (amd_printf != NULL) (void) amd_printf params ; }
+#define PRINTF(params) { if (amd_printf != SCS_NULL) (void) amd_printf params ; }
 
 /* ------------------------------------------------------------------------- */
 /* AMD routine definitions (not user-callable) */

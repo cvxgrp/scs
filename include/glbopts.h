@@ -39,7 +39,7 @@ extern "C" {
 #define _scs_calloc   calloc
 #endif
 
-#define scs_free(x) _scs_free(x); x = NULL
+#define scs_free(x) _scs_free(x); x = SCS_NULL
 #define scs_malloc(x) _scs_malloc(x)
 #define scs_calloc(x,y) _scs_calloc(x,y)
 
@@ -74,10 +74,7 @@ typedef float scs_float;
 #endif
 #endif
 
-#ifdef NULL
-#undef NULL
-#endif
-#define NULL 0
+#define SCS_NULL 0
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))

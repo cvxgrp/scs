@@ -30,7 +30,7 @@ GLOBAL void AMD_debug_init ( char *s )
 {
     FILE *f ;
     f = fopen ("debug.amd", "r") ;
-    if (f == (FILE *) NULL)
+    if (f == (FILE *) SCS_NULL)
     {
 	AMD_debug = -999 ;
     }

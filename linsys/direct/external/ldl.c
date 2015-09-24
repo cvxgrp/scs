@@ -83,7 +83,7 @@
  * ldl_numeric assume their inputs are valid.  You can check your own inputs
  * prior to calling these routines with the ldl_valid_perm and ldl_valid_matrix
  * routines.  Except for the two ldl_valid_* routines, no routine checks to see
- * if the array arguments are present (non-NULL).  Like all C routines, no
+ * if the array arguments are present (non-SCS_NULL).  Like all C routines, no
  * routine can determine if the arrays are long enough and don't overlap.
  *
  * The ldl_numeric does check the numerical factorization, however.  It returns
@@ -169,11 +169,11 @@
  *
  * One workspace vector (Flag) of size n is required.
  *
- * If P is NULL, then it is ignored.  The factorization will be LDL' = A.
+ * If P is SCS_NULL, then it is ignored.  The factorization will be LDL' = A.
  * Pinv is not computed.  In this case, neither P nor Pinv are required by
  * ldl_numeric.
  *
- * If P is not NULL, then it is assumed to be a valid permutation.  If
+ * If P is not SCS_NULL, then it is assumed to be a valid permutation.  If
  * row and column j of A is the kth pivot, the P [k] = j.  The factorization
  * will be LDL' = PAP', or A (p,p) in MATLAB notation.  The inverse permutation
  * Pinv is computed, where Pinv [j] = k if P [k] = j.  In this case, both P
@@ -194,7 +194,7 @@ void LDL_symbolic
     LDL_int Lnz [ ],	/* output of size n, not defined on input */
     LDL_int Flag [ ],	/* workspace of size n, not defn. on input or output */
     LDL_int P [ ],	/* optional input of size n */
-    LDL_int Pinv [ ]	/* optional output of size n (used if P is not NULL) */
+    LDL_int Pinv [ ]	/* optional output of size n (used if P is not SCS_NULL) */
 )
 {
     LDL_int i, k, p, kk, p2 ;
@@ -450,7 +450,7 @@ LDL_int LDL_valid_perm	    /* returns 1 if valid, 0 otherwise */
     }
     if (!P)
     {
-	return (1) ;	    /* If NULL, P is assumed to be the identity perm. */
+	return (1) ;	    /* If SCS_NULL, P is assumed to be the identity perm. */
     }
     for (j = 0 ; j < n ; j++)
     {

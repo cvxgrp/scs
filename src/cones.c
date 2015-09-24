@@ -333,8 +333,8 @@ scs_int setUpSdConeWorkSpace(ConeWork * c, const Cone * k) {
     c->Z = scs_calloc(nMax * nMax, sizeof(scs_float));
     c->e = scs_calloc(nMax, sizeof(scs_float));
 
-    BLAS(syevr)("Vectors", "All", "Lower", &nMax, c->Xs, &nMax, NULL, NULL, NULL, NULL,
-            &eigTol, &m, c->e, c->Z, &nMax, NULL, &wkopt, &negOne, &(c->liwork), &negOne, &info);
+    BLAS(syevr)("Vectors", "All", "Lower", &nMax, c->Xs, &nMax, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL,
+            &eigTol, &m, c->e, c->Z, &nMax, SCS_NULL, &wkopt, &negOne, &(c->liwork), &negOne, &info);
 
     if (info != 0) {
         scs_printf("FATAL: syevr failure, info = %li\n", (long) info);
@@ -351,7 +351,7 @@ scs_int setUpSdConeWorkSpace(ConeWork * c, const Cone * k) {
 #else
     scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked blas+lapack libraries\n");
     scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
-    return NULL;
+    return SCS_NULL;
 #endif
 }
 
@@ -364,7 +364,7 @@ ConeWork * initCone(const Cone * k) {
     if (k->ssize && k->s) {
         if (!isSimpleSemiDefiniteCone(k->s, k->ssize) && setUpSdConeWorkSpace(coneWork, k) < 0) {
             scs_free(coneWork);
-            return NULL;
+            return SCS_NULL;
         }
     }
 #if EXTRAVERBOSE > 0
@@ -477,7 +477,7 @@ static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, ConeWork * c
 #endif
 	/* Solve eigenproblem, reuse workspaces */
 	BLAS(syevr)("Vectors", "VInterval", "Lower", &nb, Xs, &nb, &zero, &vupper,
-			NULL, NULL, &eigTol, &m, e, Z, &nb, NULL, work, &lwork, iwork, &liwork, &info);
+			SCS_NULL, SCS_NULL, &eigTol, &m, e, Z, &nb, SCS_NULL, work, &lwork, iwork, &liwork, &info);
 #if EXTRAVERBOSE > 0
 	if (info != 0) {
 		scs_printf("WARN: LAPACK syevr error, info = %i\n", info);
@@ -569,7 +569,7 @@ void projPowerCone(scs_float * v, scs_float a) {
 }
 
 /* outward facing cone projection routine, iter is outer algorithm iteration, if iter < 0 then iter is ignored
-    warm_start contains guess of projection (can be set to NULL) */
+    warm_start contains guess of projection (can be set to SCS_NULL) */
 scs_int projDualCone(scs_float * x, const Cone * k, ConeWork * c, const scs_float * warm_start, scs_int iter)  {
     DEBUG_FUNC
     scs_int i;

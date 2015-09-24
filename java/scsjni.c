@@ -40,7 +40,7 @@ scs_int * getIntArrayUsingGetter(JNIEnv * env, jobject obj, char * method, scs_i
     jintArray arr = (jintArray) getObjUsingGetter(env, obj, method, "()[I");
     if (!arr) {
         *length = 0;
-        return NULL;
+        return SCS_NULL;
     }
     *length = (*env)->GetArrayLength(env, arr);
     out = scs_malloc(sizeof(scs_int) * (*length));
@@ -53,7 +53,7 @@ scs_float * getFloatArrayUsingGetter(JNIEnv * env, jobject obj, char * method, s
     jdoubleArray arr = (jdoubleArray) getObjUsingGetter(env, obj, method, "()[D");
     if (!arr) {
         *length = 0;
-        return NULL;
+        return SCS_NULL;
     }
     *length = (*env)->GetArrayLength(env, arr);
     out = scs_malloc(sizeof(scs_float) * (*length));
@@ -100,9 +100,9 @@ void populateParams(JNIEnv * env, jobject paramsJava, Data * d) {
 
 Data * getDataStruct(JNIEnv * env, jobject AJava, jdoubleArray bJava, jdoubleArray cJava, jobject paramsJava) {
     Data * d = scs_calloc(1, sizeof(Data));
-    d->b = (*env)->GetDoubleArrayElements(env, bJava, NULL);
+    d->b = (*env)->GetDoubleArrayElements(env, bJava, SCS_NULL);
     d->m = (*env)->GetArrayLength(env, bJava);
-    d->c = (*env)->GetDoubleArrayElements(env, cJava, NULL);
+    d->c = (*env)->GetDoubleArrayElements(env, cJava, SCS_NULL);
     d->n = (*env)->GetArrayLength(env, cJava);
     d->A = getAMatrix(env, AJava, d->m, d->n);
     populateParams(env, paramsJava, d);
