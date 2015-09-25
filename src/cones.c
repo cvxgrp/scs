@@ -470,7 +470,8 @@ static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, ConeWork * c
     BLAS(scal)(&nb, &sqrt2, Xs, &nbPlusOne); /* not nSquared */
 
     /* max-eig upper bounded by frobenius norm */
-	vupper = 1.2 * MAX(sqrt2 * BLAS(nrm2)(&coneSz, X, &one), 0.01); /* mult by factor to make sure is upper bound */
+	vupper = 1.1 * sqrt2 * BLAS(nrm2)(&coneSz, X, &one); /* mult by factor to make sure is upper bound */
+	vupper = MAX(vupper, 0.01);
 #if EXTRAVERBOSE > 0
 	printArray(Xs, n * n, "Xs");
 	printArray(X, getSdConeSize(n), "X");
@@ -520,19 +521,20 @@ static scs_int projSemiDefiniteCone(scs_float * X, const scs_int n, ConeWork * c
 }
 
 scs_float powCalcX(scs_float r, scs_float xh, scs_float rh, scs_float a) {
-    return MAX(0.5 * (xh + SQRTF(xh*xh + 4 * a * (rh - r) * r)), 1e-12);
+    scs_float x = 0.5 * (xh + SQRTF(xh * xh + 4 * a * (rh - r) * r));
+    return MAX(x, 1e-12);
 }
 
 scs_float powCalcdxdr(scs_float x,scs_float xh,scs_float rh,scs_float r, scs_float a) {
-    return a * (rh - 2*r) / (2*x - xh);
+    return a * (rh - 2*r) / (2 * x - xh);
 }
 
 scs_float powCalcF(scs_float x,scs_float y,scs_float r,scs_float a) {
-    return POWF(x,a) * POWF(y,(1-a)) - r;
+    return POWF(x, a) * POWF(y, (1 - a)) - r;
 }
 
 scs_float powCalcFp(scs_float x,scs_float y,scs_float dxdr,scs_float dydr,scs_float a) {
-    return POWF(x,a) * POWF(y,(1-a)) * (a * dxdr / x + (1-a) * dydr / y) - 1;
+    return POWF(x, a) * POWF(y, (1 - a)) * (a * dxdr / x + (1-a) * dydr / y) - 1;
 }
 
 void projPowerCone(scs_float * v, scs_float a) {
@@ -552,16 +554,17 @@ void projPowerCone(scs_float * v, scs_float a) {
     for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
         scs_float f, fp, dxdr, dydr;
         x = powCalcX(r, xh, rh, a);
-        y = powCalcX(r, yh, rh, 1-a);
+        y = powCalcX(r, yh, rh, 1 - a);
 
-        f = powCalcF(x,y,r,a);
+        f = powCalcF(x, y, r, a);
         if (ABS(f) < CONE_TOL) break;
 
-        dxdr = powCalcdxdr(x,xh,rh,r,a);
-        dydr = powCalcdxdr(y,yh,rh,r,(1-a));
-        fp = powCalcFp(x,y,dxdr,dydr,a);
+        dxdr = powCalcdxdr(x, xh, rh, r, a);
+        dydr = powCalcdxdr(y, yh, rh, r, (1 - a));
+        fp = powCalcFp(x, y, dxdr, dydr, a);
 
-        r = MIN(MAX(r - f/fp,0), rh);
+        r = MAX(r - f / fp, 0);
+        r = MIN(r, rh);
     }
     v[0] = x;
     v[1] = y;

@@ -6,17 +6,19 @@
 
 void normalizeBC(Work * w) {
 	scs_int i;
-	scs_float *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
+	scs_float nm, *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
     /* scale b */
     for (i = 0; i < w->m; ++i) {
         b[i] /= D[i];
     }
-    w->sc_b = w->scal->meanNormColA / MAX(calcNorm(b, w->m), MIN_SCALE);
+    nm = calcNorm(b, w->m);
+    w->sc_b = w->scal->meanNormColA / MAX(nm, MIN_SCALE);
     /* scale c */
     for (i = 0; i < w->n; ++i) {
         c[i] /= E[i];
     }
-    w->sc_c = w->scal->meanNormRowA / MAX(calcNorm(c, w->n), MIN_SCALE);
+    nm = calcNorm(c, w->n);
+    w->sc_c = w->scal->meanNormRowA / MAX(nm, MIN_SCALE);
     scaleArray(b, w->sc_b * w->stgs->scale, w->m);
     scaleArray(c, w->sc_c * w->stgs->scale, w->n);
 }
