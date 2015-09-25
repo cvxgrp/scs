@@ -215,7 +215,7 @@ GLOBAL void AMD_2
  *	Iw [pfree..iwlen-1] is always the unused part of Iw.
  *
  * Control:  A scs_float array of size AMD_CONTROL containing input parameters
- *	that affect how the ordering is computed.  If NULL, then default
+ *	that affect how the ordering is computed.  If SCS_NULL, then default
  *	settings are used.
  *
  *	Control [AMD_DENSE] is used to determine whether or not a given input
@@ -277,7 +277,7 @@ GLOBAL void AMD_2
  *	assembly tree.  Note that i refers to a row/column in the original
  *	matrix, not the permuted matrix.
  *
- * Info:  A scs_float array of size AMD_INFO.  If present, (that is, not NULL),
+ * Info:  A scs_float array of size AMD_INFO.  If present, (that is, not SCS_NULL),
  *	then statistics about the ordering are returned in the Info array.
  *	See amd.h for a description.
 
@@ -582,7 +582,7 @@ GLOBAL void AMD_2
     lemax = 0 ;
 
     /* get control parameters */
-    if (Control != (scs_float *) NULL)
+    if (Control != (scs_float *) SCS_NULL)
     {
 	alpha = Control [AMD_DENSE] ;
 	aggressive = (Control [AMD_AGGRESSIVE] != 0) ;
@@ -1520,7 +1520,7 @@ GLOBAL void AMD_2
 	 * (degme+ndense)-by-(degme+ndense).
 	 */
 
-	if (Info != (scs_float *) NULL)
+	if (Info != (scs_float *) SCS_NULL)
 	{
 	    f = nvpiv ;
 	    r = degme + ndense ;
@@ -1556,7 +1556,7 @@ GLOBAL void AMD_2
 /* DONE SELECTING PIVOTS */
 /* ========================================================================= */
 
-    if (Info != (scs_float *) NULL)
+    if (Info != (scs_float *) SCS_NULL)
     {
 
 	/* count the work to factorize the ndense-by-ndense submatrix */

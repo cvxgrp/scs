@@ -74,7 +74,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       Ai: an int/SuiteSparse_long array of size nz, containing the row
  *              indices of A, where nz = Ap [n].
  *       Control:  a scs_float array of size AMD_CONTROL, containing control
- *           parameters.  Defaults are used if Control is NULL.
+ *           parameters.  Defaults are used if Control is SCS_NULL.
  *
  * Output arguments (not defined on input):
  *
@@ -82,7 +82,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *           permutation. If row i is the kth pivot row, then P [k] = i.  In
  *           MATLAB notation, the reordered matrix is A (P,P).
  *       Info: a scs_float array of size AMD_INFO, containing statistical
- *           information.  Ignored if Info is NULL.
+ *           information.  Ignored if Info is SCS_NULL.
  *
  * On input, the matrix A is stored in column-oriented form.  The row indices
  * of nonzero entries in column j are stored in Ai [Ap [j] ... Ap [j+1]-1].
@@ -108,7 +108,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *
  * Restrictions:  n >= 0.  Ap [0] = 0.  Ap [j] <= Ap [j+1] for all j in the
  *       range 0 to n-1.  nz = Ap [n] >= 0.  Ai [0..nz-1] must be in the range 0
- *       to n-1.  Finally, Ai, Ap, and P must not be NULL.  If any of these
+ *       to n-1.  Finally, Ai, Ap, and P must not be SCS_NULL.  If any of these
  *       restrictions are not met, AMD returns AMD_INVALID.
  *
  * AMD returns:
@@ -119,7 +119,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       AMD_OUT_OF_MEMORY if not enough memory can be allocated.
  *
  *       AMD_INVALID if the input arguments n, Ap, Ai are invalid, or if P is
- *           NULL.
+ *           SCS_NULL.
  *
  *       AMD_OK_BUT_JUMBLED if the matrix had unsorted columns, and/or duplicate
  *           entries, but was otherwise valid.
@@ -130,7 +130,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  * matrix is A (P,P), except that 0-based indexing is used instead of the
  * 1-based indexing in MATLAB.
  *
- * The Control array is used to set various parameters for AMD.  If a NULL
+ * The Control array is used to set various parameters for AMD.  If a SCS_NULL
  * pointer is passed, default values are used.  The Control array is not
  * modified.
  *

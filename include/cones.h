@@ -47,7 +47,7 @@ scs_int validateCones(const Data * d, const Cone * k);
 
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter < 0 for exact projection, warm_start contains guess
- of solution, can be NULL*/
+ of solution, can be SCS_NULL*/
 scs_int projDualCone(scs_float * x, const Cone *k, ConeWork * c, const scs_float * warm_start, scs_int iter);
 void finishCone(ConeWork * coneWork);
 char * getConeSummary(const Info * info);

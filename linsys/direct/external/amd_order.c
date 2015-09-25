@@ -37,7 +37,7 @@ GLOBAL Int AMD_order
 #endif
 
     /* clear the Info array, if it exists */
-    info = Info != (scs_float *) NULL ;
+    info = Info != (scs_float *) SCS_NULL ;
     if (info)
     {
 	for (i = 0 ; i < AMD_INFO ; i++)
@@ -49,7 +49,7 @@ GLOBAL Int AMD_order
     }
 
     /* make sure inputs exist and n is >= 0 */
-    if (Ai == (Int *) NULL || Ap == (Int *) NULL || P == (Int *) NULL || n < 0)
+    if (Ai == (Int *) SCS_NULL || Ap == (Int *) SCS_NULL || P == (Int *) SCS_NULL || n < 0)
     {
 	if (info) Info [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;	    /* arguments are invalid */
@@ -128,8 +128,8 @@ GLOBAL Int AMD_order
     else
     {
 	/* order the input matrix as-is.  No need to compute R = A' first */
-	Rp = NULL ;
-	Ri = NULL ;
+	Rp = SCS_NULL ;
+	Ri = SCS_NULL ;
 	Cp = (Int *) Ap ;
 	Ci = (Int *) Ai ;
     }
@@ -146,7 +146,7 @@ GLOBAL Int AMD_order
     /* allocate workspace for matrix, elbow room, and 6 size-n vectors */
     /* --------------------------------------------------------------------- */
 
-    S = NULL ;
+    S = SCS_NULL ;
     slen = nzaat ;			/* space for matrix */
     ok = ((slen + nzaat/5) >= slen) ;	/* check for size_t overflow */
     slen += nzaat/5 ;			/* add elbow room */

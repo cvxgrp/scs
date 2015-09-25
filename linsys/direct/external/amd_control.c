@@ -23,7 +23,7 @@ GLOBAL void AMD_control
     scs_float alpha ;
     Int aggressive ;
 
-    if (Control != (scs_float *) NULL)
+    if (Control != (scs_float *) SCS_NULL)
     {
 	alpha = Control [AMD_DENSE] ;
 	aggressive = Control [AMD_AGGRESSIVE] != 0 ;

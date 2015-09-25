@@ -51,7 +51,7 @@ cs * formKKT(const AMatrix * A, const Settings * s) {
 #endif
 
 	if (!K) {
-		return NULL;
+		return SCS_NULL;
 	}
 	kk = 0;
 	for (k = 0; k < A->n; k++) {
@@ -86,9 +86,9 @@ cs * formKKT(const AMatrix * A, const Settings * s) {
 scs_int LDLInit(cs * A, scs_int P[], scs_float **info) {
 	*info = (scs_float *) scs_malloc(AMD_INFO * sizeof(scs_float));
 #ifdef DLONG
-	return(amd_l_order(A->n, A->p, A->i, P, (scs_float *) NULL, *info));
+	return(amd_l_order(A->n, A->p, A->i, P, (scs_float *) SCS_NULL, *info));
 #else
-	return (amd_order(A->n, A->p, A->i, P, (scs_float *) NULL, *info));
+	return (amd_order(A->n, A->p, A->i, P, (scs_float *) SCS_NULL, *info));
 #endif
 }
 
@@ -133,7 +133,7 @@ scs_int LDLFactor(cs * A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
 void LDLSolve(scs_float *x, scs_float b[], cs * L, scs_float D[], scs_int P[], scs_float * bp) {
 	/* solves PLDL'P' x = b for x */
 	scs_int n = L->n;
-	if (P == NULL) {
+	if (P == SCS_NULL) {
 		if (x != b) /* if they're different addresses */
 			memcpy(x, b, n * sizeof(scs_float));
 		LDL_lsolve(n, x, L->p, L->i, L->x);
@@ -178,7 +178,7 @@ scs_int factorize(const AMatrix * A, const Settings * stgs, Priv * p) {
 #endif
 	Pinv = cs_pinv(p->P, A->n + A->m);
 	C = cs_symperm(K, Pinv, 1);
-	ldl_status = LDLFactor(C, NULL, NULL, &p->L, &p->D);
+	ldl_status = LDLFactor(C, SCS_NULL, SCS_NULL, &p->L, &p->D);
 	cs_spfree(C);
 	cs_spfree(K);
 	scs_free(Pinv);
@@ -198,7 +198,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 
 	if (factorize(A, stgs, p) < 0) {
 		freePriv(p);
-		return NULL;
+		return SCS_NULL;
 	}
 	totalSolveTime = 0.0;
 	return p;

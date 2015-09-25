@@ -37,7 +37,7 @@ GLOBAL size_t AMD_aat	/* returns nz in A+A' */
     ASSERT (AMD_valid (n, n, Ap, Ai) == AMD_OK) ;
 #endif
 
-    if (Info != (scs_float *) NULL)
+    if (Info != (scs_float *) SCS_NULL)
     {
 	/* clear the Info array, if it exists */
 	for (i = 0 ; i < AMD_INFO ; i++)
@@ -170,7 +170,7 @@ GLOBAL size_t AMD_aat	/* returns nz in A+A' */
     AMD_DEBUG1 (("   nzboth: "ID" nz: "ID" nzdiag: "ID" symmetry: %g\n",
 		nzboth, nz, nzdiag, sym)) ;
 
-    if (Info != (scs_float *) NULL)
+    if (Info != (scs_float *) SCS_NULL)
     {
 	Info [AMD_STATUS] = AMD_OK ;
 	Info [AMD_N] = n ;

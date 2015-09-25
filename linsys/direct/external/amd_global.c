@@ -16,8 +16,8 @@
 #include "matrix.h"
 #endif
 
-#ifndef NULL
-#define NULL 0
+#ifndef SCS_NULL
+#define SCS_NULL 0
 #endif
 
 /* ========================================================================= */
@@ -55,10 +55,10 @@ void *(*amd_calloc) (size_t, size_t) = calloc ;
 #endif
 #else
 /* no memory manager defined at compile-time; you MUST define one at run-time */
-void *(*amd_malloc) (size_t) = NULL ;
-void (*amd_free) (void *) = NULL ;
-void *(*amd_realloc) (void *, size_t) = NULL ;
-void *(*amd_calloc) (size_t, size_t) = NULL ;
+void *(*amd_malloc) (size_t) = SCS_NULL ;
+void (*amd_free) (void *) = SCS_NULL ;
+void *(*amd_realloc) (void *, size_t) = SCS_NULL ;
+void *(*amd_calloc) (size_t, size_t) = SCS_NULL ;
 #endif
 
 /* ========================================================================= */
@@ -66,14 +66,14 @@ void *(*amd_calloc) (size_t, size_t) = NULL ;
 /* ========================================================================= */
 
 /* The user can redefine this global pointer at run-time to change the printf
- * routine used by AMD.  If NULL, no printing occurs.  
+ * routine used by AMD.  If SCS_NULL, no printing occurs.  
  *
  * If -DNPRINT is defined at compile-time, stdio.h is not included.  Printing
- * can then be enabled at run-time by setting amd_printf to a non-NULL function.
+ * can then be enabled at run-time by setting amd_printf to a non-SCS_NULL function.
  */
 
 #ifndef NPRINT
 int (*amd_printf) (const char *, ...) = scs_printf ;
 #else
-int (*amd_printf) (const char *, ...) = NULL ;
+int (*amd_printf) (const char *, ...) = SCS_NULL ;
 #endif

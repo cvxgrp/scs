@@ -163,7 +163,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	totCgIts = 0;
 	if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p || !p->At->x) {
 		freePriv(p);
-		return NULL;
+		return SCS_NULL;
 	}
 	return p;
 }
@@ -178,7 +178,7 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
 	scs_float *z = pr->z; /* for preconditioning */
 	scs_float *M = pr->M; /* inverse diagonal preconditioner */
 
-	if (s == NULL) {
+	if (s == SCS_NULL) {
 		memcpy(r, b, n * sizeof(scs_float));
 		memset(b, 0, n * sizeof(scs_float));
 	} else {

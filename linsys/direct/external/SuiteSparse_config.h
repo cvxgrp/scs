@@ -101,7 +101,7 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
     SuiteSparse_config *config        /* SuiteSparse-wide configuration */
 ) ;
 
-void *SuiteSparse_free      /* always returns NULL */
+void *SuiteSparse_free      /* always returns SCS_NULL */
 (
     void *p,                /* block to free */
     SuiteSparse_config *config        /* SuiteSparse-wide configuration */
