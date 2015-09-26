@@ -34,7 +34,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	if (info != 0) {
 		scs_free(p->L);
 		scs_free(p);
-		return NULL;
+		return SCS_NULL;
 	}
 	/* copy L into top half for faster solve steps */
 	for (k = 0; k < n; ++k) {

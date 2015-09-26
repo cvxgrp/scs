@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 	/* default parameters */
 	p_f = 0.1;
 	p_l = 0.3;
-	seed = time(NULL);
+	seed = time(SCS_NULL);
 
 	switch (argc) {
 	case 5:
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 		q_total += k->q[i];
 	}
 
-	k->s = NULL;
+	k->s = SCS_NULL;
 	k->ssize = 0;
 	k->ep = 0;
 	k->ed = 0;

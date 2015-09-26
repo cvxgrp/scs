@@ -9,7 +9,7 @@ void freeMex(Data * d, Cone * k);
 
 scs_int parseWarmStart(const mxArray * p_mex, scs_float ** p, scs_int l) {
 	*p = scs_calloc(l, sizeof(scs_float)); /* this allocates memory used for Sol */
-	if (p_mex == NULL) {
+	if (p_mex == SCS_NULL) {
 		return 0;
 	} else if (mxIsSparse(p_mex) || (scs_int) *mxGetDimensions(p_mex) != l) {
 		scs_printf("Error parsing warm start input (make sure vectors are not sparse and of correct size), running without full warm-start");
@@ -70,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	data = prhs[0];
 
 	A_mex = (mxArray *) mxGetField(data, 0, "A");
-	if (A_mex == NULL) {
+	if (A_mex == SCS_NULL) {
 		scs_free(d);
 		scs_free(k);
 		mexErrMsgTxt("Data struct must contain a `A` entry.");
@@ -81,7 +81,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mexErrMsgTxt("Input matrix A must be in dense format (pass in full(A))");
 	}
 	b_mex = (mxArray *) mxGetField(data, 0, "b");
-	if (b_mex == NULL) {
+	if (b_mex == SCS_NULL) {
 		scs_free(d);
 		scs_free(k);
 		mexErrMsgTxt("Data struct must contain a `b` entry.");
@@ -92,7 +92,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mexErrMsgTxt("Input vector b must be in dense format (pass in full(b))");
 	}
 	c_mex = (mxArray *) mxGetField(data, 0, "c");
-	if (c_mex == NULL) {
+	if (c_mex == SCS_NULL) {
 		scs_free(d);
 		scs_free(k);
 		mexErrMsgTxt("Data struct must contain a `c` entry.");
@@ -114,35 +114,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	/* settings */
 	tmp = mxGetField(settings, 0, "alpha");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->alpha = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "rho_x");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->rho_x = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "max_iters");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->max_iters = (scs_int) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "scale");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->scale = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "eps");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->eps = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "cg_rate");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->cg_rate = (scs_float) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "verbose");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->verbose = (scs_int) *mxGetPr(tmp);
 
 	tmp = mxGetField(settings, 0, "normalize");
-	if (tmp != NULL)
+	if (tmp != SCS_NULL)
 		d->stgs->normalize = (scs_int) *mxGetPr(tmp);
 
 	/* cones */
@@ -185,7 +185,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		}
 	} else {
 		k->qsize = 0;
-		k->q = NULL;
+		k->q = SCS_NULL;
 	}
 
 	ks = mxGetField(cone, 0, "s");
@@ -203,7 +203,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		}
 	} else {
 		k->ssize = 0;
-		k->s = NULL;
+		k->s = SCS_NULL;
 	}
 
     kp = mxGetField(cone, 0, "p");
@@ -221,7 +221,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         }
     } else {
         k->psize = 0;
-        k->p = NULL;
+        k->p = SCS_NULL;
     }
 
 	A = scs_calloc(1, sizeof(AMatrix));

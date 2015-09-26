@@ -16,8 +16,8 @@ static void *cs_calloc(scs_int n, scs_int size) {
 
 /* wrapper for free */
 static void *cs_free(void *p) {
-	if (p) scs_free(p); /* free p if it is not already NULL */
-	return (NULL); /* return NULL to simplify the use of cs_free */
+	if (p) scs_free(p); /* free p if it is not already SCS_NULL */
+	return (SCS_NULL); /* return SCS_NULL to simplify the use of cs_free */
 }
 
 /* C = compressed-column form of a triplet matrix T */
@@ -31,10 +31,10 @@ cs *cs_compress(const cs *T) {
 	Tj = T->p;
 	Tx = T->x;
 	nz = T->nz;
-	C = cs_spalloc(m, n, nz, Tx != NULL, 0); /* allocate result */
+	C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
 	w = cs_calloc(n, sizeof(scs_int)); /* get workspace */
 	if (!C || !w)
-		return (cs_done(C, w, NULL, 0)); /* out of memory */
+		return (cs_done(C, w, SCS_NULL, 0)); /* out of memory */
 	Cp = C->p;
 	Ci = C->i;
 	Cx = C->x;
@@ -46,7 +46,7 @@ cs *cs_compress(const cs *T) {
 		if (Cx)
 			Cx[p] = Tx[k];
 	}
-	return (cs_done(C, w, NULL, 1)); /* success; free w and return C */
+	return (cs_done(C, w, SCS_NULL, 1)); /* success; free w and return C */
 }
 
 cs *cs_done(cs *C, void *w, void *x, scs_int ok) {
@@ -58,24 +58,24 @@ cs *cs_done(cs *C, void *w, void *x, scs_int ok) {
 cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values, scs_int triplet) {
 	cs *A = cs_calloc(1, sizeof(cs)); /* allocate the cs struct */
 	if (!A)
-		return (NULL); /* out of memory */
+		return (SCS_NULL); /* out of memory */
 	A->m = m; /* define dimensions and nzmax */
 	A->n = n;
 	A->nzmax = nzmax = MAX(nzmax, 1);
 	A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
 	A->p = cs_malloc(triplet ? nzmax : n + 1, sizeof(scs_int));
 	A->i = cs_malloc(nzmax, sizeof(scs_int));
-	A->x = values ? cs_malloc(nzmax, sizeof(scs_float)) : NULL;
+	A->x = values ? cs_malloc(nzmax, sizeof(scs_float)) : SCS_NULL;
 	return ((!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A);
 }
 
 cs *cs_spfree(cs *A) {
 	if (!A)
-		return (NULL); /* do nothing if A already NULL */
+		return (SCS_NULL); /* do nothing if A already SCS_NULL */
 	cs_free(A->p);
 	cs_free(A->i);
 	cs_free(A->x);
-	return ((cs *) cs_free(A)); /* free the cs struct and return NULL */
+	return ((cs *) cs_free(A)); /* free the cs struct and return SCS_NULL */
 }
 
 scs_float cs_cumsum(scs_int *p, scs_int *c, scs_int n) {
@@ -96,10 +96,10 @@ scs_float cs_cumsum(scs_int *p, scs_int *c, scs_int n) {
 scs_int *cs_pinv(scs_int const *p, scs_int n) {
 	scs_int k, *pinv;
 	if (!p)
-		return (NULL); /* p = NULL denotes identity */
+		return (SCS_NULL); /* p = SCS_NULL denotes identity */
 	pinv = cs_malloc(n, sizeof(scs_int)); /* allocate result */
 	if (!pinv)
-		return (NULL); /* out of memory */
+		return (SCS_NULL); /* out of memory */
 	for (k = 0; k < n; k++)
 		pinv[p[k]] = k;/* invert the permutation */
 	return (pinv); /* return result */
@@ -113,10 +113,10 @@ cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
 	Ap = A->p;
 	Ai = A->i;
 	Ax = A->x;
-	C = cs_spalloc(n, n, Ap[n], values && (Ax != NULL), 0); /* alloc result*/
+	C = cs_spalloc(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
 	w = cs_calloc(n, sizeof(scs_int)); /* get workspace */
 	if (!C || !w)
-		return (cs_done(C, w, NULL, 0)); /* out of memory */
+		return (cs_done(C, w, SCS_NULL, 0)); /* out of memory */
 	Cp = C->p;
 	Ci = C->i;
 	Cx = C->x;
@@ -144,6 +144,6 @@ cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
 				Cx[q] = Ax[p];
 		}
 	}
-	return (cs_done(C, w, NULL, 1)); /* success; free workspace, return C */
+	return (cs_done(C, w, SCS_NULL, 1)); /* success; free workspace, return C */
 }
 

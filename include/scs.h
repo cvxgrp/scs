@@ -17,7 +17,7 @@ extern "C" {
 /* struct containing problem data */
 struct SCS_PROBLEM_DATA {
 	/* these cannot change for multiple runs for the same call to scs_init */
-	scs_int m, n; /* A has m rows, n cols*/
+	scs_int m, n; /* A has m rows, n cols */
 	AMatrix * A; /* A is supplied in data format specified by linsys solver */
 
 	/* these can change for multiple runs for the same call to scs_init */

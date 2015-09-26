@@ -145,7 +145,7 @@ scs_int openFile(scs_int argc, char ** argv, scs_int idx, const char * default_f
 		printf("Not enough arguments supplied, using %s as default\n", default_file);
 	} else {
 		*fb = fopen(argv[idx], "r");
-		if (*fb != NULL)
+		if (*fb != SCS_NULL)
 			return 0;
 		else {
 			printf("Couldn't open file %s, using %s as default\n", argv[idx], default_file);
@@ -153,7 +153,7 @@ scs_int openFile(scs_int argc, char ** argv, scs_int idx, const char * default_f
 		}
 	}
 	*fb = fopen(default_file, "r");
-	if (*fb == NULL) {
+	if (*fb == SCS_NULL) {
 		printf("Couldn't open %s\n", default_file);
 		return -1;
 	}

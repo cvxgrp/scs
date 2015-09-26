@@ -1,4 +1,6 @@
 change to norm^2 equilibration?
+D,E dynamic rescaling (need to re-solve Mg = h multiple times)
+L-BFGS preconditioner for CG step
 
 OLDER:
 experiment dynamic scaling - not easy due to pre-solve before first iteration

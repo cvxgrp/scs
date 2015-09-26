@@ -97,7 +97,7 @@ static scs_int pcg(const AMatrix * A, Priv * pr, const scs_float * s, scs_float 
 	blasint n = (blasint) A->n, one = 1;
 
 	memcpy(r, b, n * sizeof(scs_float));
-	if (s == NULL) {
+	if (s == SCS_NULL) {
 		memset(b, 0.0, n * sizeof(scs_float));
 	} else {
 		BLAS(symv)("Lower", &n, &negOnef, G, &n, s, &one, &onef, r, &one);
