@@ -73,10 +73,26 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHAR
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+NVCC = nvcc -g
+GPU = gpu
+gpu: $(OUT)/demo_SOCP_indirect_gpu 
+
+$(GPU)/private.o: $(GPU)/private.cu
+	$(NVCC) -c -I include/ -I/Developer/NVIDIA/CUDA-7.5/samples/common/inc/ -Xcompiler -O3,-fPIC -o $(GPU)/private.o $^
+
+$(GPU)/libscsindirgpu.a: $(SCS_OBJECTS) $(GPU)/private.o
+	$(ARCHIVE) $(GPU)/libscsindirgpu.a $^
+	- $(RANLIB) $(GPU)/libscsindirgpu.a
+
+$(OUT)/demo_SOCP_indirect_gpu: examples/c/randomSOCPProb.c $(SCS_OBJECTS) $(GPU)/private.o
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -I/Developer/NVIDIA/CUDA-7.5/samples/common/inc/ -L/usr/local/cuda/lib -lcudart -lcublas -lcusparse -lcudadevrt
+
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o
+	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o $(GPU)/private.o
 	@rm -rf $(OUT)/*.dSYM
+	@rm -rf $(OUT)/*gpu*
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
 	@rm -rf python/*.pyc
