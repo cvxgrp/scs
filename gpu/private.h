@@ -12,9 +12,6 @@
 #include <cusparse.h>
 #include <cublas_v2.h>
 
-#include <helper_functions.h>  // helper for shared functions common to CUDA Samples
-#include <helper_cuda.h>       // helper function CUDA error checking and initialization
-
 #ifdef XXXXXXX
 #define CUDA_CHECK_ERR() \
     do { \
