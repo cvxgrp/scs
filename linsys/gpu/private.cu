@@ -135,9 +135,9 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     Ag->m = A->m;
     p->Ag = Ag;
     AMatrix * G = (AMatrix *)scs_malloc(sizeof(AMatrix));
-   	G->n = A->n;
-    G->m = A->n;
-    p->G = G;
+	G->n = A->n;
+	G->m = A->n;
+	p->G = G;
 	numElementsG = A->n * A->n;
 
     cudaMalloc((void **)&Ag->x, A->n * A->m * sizeof(scs_float));
@@ -151,23 +151,13 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     cudaMemcpy(Ag->x, A->x, A->n * A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
 
     /* create G in CPU mem first, then send to GPU */
-	/*
-	Gtemp = ( scs_float *)scs_calloc(numElementsG, sizeof(scs_float));
-    for (j = 1; j <= A->n; j++) {
-        Gtemp[(j * (j + 1)) / 2 - 1] = stgs->rho_x;
-    }
-    cudaMemcpy(G->x, Gtemp, numElementsG * sizeof(scs_float), cudaMemcpyHostToDevice);
-    scs_free(Gtemp);
-    
-	CUBLAS(syrk)(p->cublasHandle, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_T, A->n, A->m, &onef, p->Ag->x, A->m, &onef, G->x, A->n);
-	*/
 	Gtemp = (scs_float *)scs_calloc(A->n * A->n, sizeof(scs_float));
     for (j = 0; j < A->n; j++) {
         Gtemp[j * A->n + j] = stgs->rho_x;
     }
     cudaMemcpy(G->x, Gtemp, A->n * A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
     scs_free(Gtemp);
-    
+
 	CUBLAS(syrk)(p->cublasHandle, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_T, A->n, A->m, &onef, p->Ag->x, A->m, &onef, G->x, A->n);
 
 	err = cudaGetLastError();

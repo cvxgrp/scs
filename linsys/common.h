@@ -23,7 +23,7 @@ void BLAS(syrk)(char *uplo, char *trans, blasint *n, blasint *k, scs_float *alph
 /* void BLAS(gemm)(char *transa, char *transb, blasint *m, blasint * n, blasint *k, scs_float *alpha, scs_float *a, blasint *lda,
         scs_float *b, blasint *ldb, scs_float *beta, scs_float *c, blasint *ldc); */
 
-void _accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y); 
+void _accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y);
 void _accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y);
 
 #ifdef __cplusplus
