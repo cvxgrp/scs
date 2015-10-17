@@ -6,6 +6,9 @@ SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o src/ctrlc.o
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
+CFLAGS += $(OPT_FLAGS)
+CUDAFLAGS += $(OPT_FLAGS)
+
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_SCS_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
@@ -26,6 +29,9 @@ else
 	@echo "and point to the library install locations, and recompile with 'make purge', 'make'."
 endif
 	@echo "****************************************************************************************"
+
+%.o : src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
 src/util.o	: src/util.c include/util.h include/constants.h
@@ -51,11 +57,11 @@ $(OUT)/libscsindir.a: $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 
 $(OUT)/libscsdir.$(SHARED): $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 $(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
