@@ -1,0 +1,322 @@
+#include "private.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define CG_BEST_TOL 1e-9
+#define CG_MIN_TOL 1e-1
+
+#ifndef FLOAT
+    #define CUBLAS(x) cublasD ## x
+    #define CUSPARSE(x) cusparseD ## x
+#else
+    #define CUBLAS(x) cublasS ## x
+    #define CUSPARSE(x) cusparseS ## x
+#endif
+
+static scs_int totCgIts;
+static timer linsysTimer;
+static scs_float totalSolveTime;
+
+/*
+ CUDA matrix routines only for CSR, not CSC matrices:
+    CSC             CSR             GPU     Mult
+    A (m x n)       A' (n x m)      Ag      accumByATransGpu
+    A'(n x m)       A  (m x n)      Agt     accumByAGpu
+*/
+
+void accumByAtransGpu(const Priv * p, const scs_float *x, scs_float *y) {
+    /* y += A'*x
+       x and y MUST be on GPU already
+    */
+    const scs_float onef = 1.0;
+    AMatrix * Ag = p->Ag;
+    CUSPARSE(csrmv)(p->cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, Ag->n, Ag->m, p->Annz, &onef, p->descr, Ag->x, Ag->p, Ag->i, x, &onef, y); 
+}
+
+void accumByAGpu(const Priv * p, const scs_float *x, scs_float *y) {
+    /* y += A*x
+       x and y MUST be on GPU already
+     */
+    const scs_float onef = 1.0;
+    AMatrix * Agt = p->Agt;
+    CUSPARSE(csrmv)(p->cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, Agt->n, Agt->m, p->Annz, &onef, p->descr, Agt->x, Agt->p, Agt->i, x, &onef, y);
+}
+
+/* do not use within pcg, reuses memory */
+void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+    scs_float * v_m = p->tmp_m;
+    scs_float * v_n = p->r;
+    cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
+    cudaMemcpy(v_n, y, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
+    accumByAtransGpu(p, v_m, v_n);
+    cudaMemcpy(y, v_n, A->n * sizeof(scs_float), cudaMemcpyDeviceToHost);
+}
+
+/* do not use within pcg, reuses memory */
+void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+    scs_float * v_m = p->tmp_m;
+    scs_float * v_n = p->r;
+    cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
+    cudaMemcpy(v_m, y, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
+    accumByAGpu(p, v_n, v_m);
+    cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
+}
+
+char * getLinSysMethod(const AMatrix * A, const Settings * s) {
+	char * str = (char *)scs_malloc(sizeof(char) * 128);
+	sprintf(str, "sparse-indirect GPU, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) A->p[A->n], s->cg_rate);
+	return str;
+}
+
+char * getLinSysSummary(Priv * p, const Info * info) {
+	char * str = (char *)scs_malloc(sizeof(char) * 128);
+	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
+			(scs_float ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
+	totCgIts = 0;
+	totalSolveTime = 0;
+	return str;
+}
+
+void cudaFreeAMatrix(AMatrix * A) {
+    if(A->x)
+        cudaFree(A->x);
+    if(A->i)
+        cudaFree(A->i);
+    if(A->p)
+        cudaFree(A->p);
+}
+
+void freePriv(Priv * p) {
+    if (p) {
+		if (p->p)
+			cudaFree(p->p);
+		if (p->r)
+			cudaFree(p->r);
+		if (p->Gp)
+			cudaFree(p->Gp);
+		if (p->bg)
+			cudaFree(p->bg);
+		if (p->tmp_m)
+			cudaFree(p->tmp_m);
+		if (p->Ag) {
+            cudaFreeAMatrix(p->Ag);
+			scs_free(p->Ag);
+		}
+		if (p->Agt) {
+            cudaFreeAMatrix(p->Agt);
+			scs_free(p->Agt);
+		}
+        cusparseDestroy(p->cusparseHandle);
+        cublasDestroy(p->cublasHandle);
+        cudaDeviceReset();
+        scs_free(p);
+	}
+}
+
+/*y = (RHO_X * I + A'A)x */
+static void matVec(const AMatrix * A, const Settings * s, Priv * p, const scs_float * x, scs_float * y) {
+    /* x and y MUST already be loaded to GPU */
+	scs_float * tmp_m = p->tmp_m; /* temp memory */
+	cudaMemset(tmp_m, 0, A->m * sizeof(scs_float));
+	accumByAGpu(p, x, tmp_m);
+	cudaMemset(y, 0, A->n * sizeof(scs_float));
+	accumByAtransGpu(p, tmp_m, y);
+    CUBLAS(axpy)(p->cublasHandle, A->n, &(s->rho_x), x, 1, y, 1);
+}
+
+Priv * initPriv(const AMatrix * A, const Settings * stgs) {
+    cudaError_t err;
+	Priv * p = (Priv *)scs_calloc(1, sizeof(Priv));
+    p->Annz = A->p[A->n];
+    p->cublasHandle = 0;
+    p->cusparseHandle = 0;
+    p->descr = 0;
+
+	totalSolveTime = 0;
+	totCgIts = 0;
+
+    /* Get handle to the CUBLAS context */
+    cublasCreate(&p->cublasHandle);
+
+    /* Get handle to the CUSPARSE context */
+    cusparseCreate(&p->cusparseHandle);
+
+    /* Matrix description */
+    cusparseCreateMatDescr(&p->descr);
+    cusparseSetMatType(p->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(p->descr, CUSPARSE_INDEX_BASE_ZERO);
+
+    AMatrix * Ag = (AMatrix *)scs_malloc(sizeof(AMatrix));
+    Ag->n = A->n;
+    Ag->m = A->m;
+    p->Ag = Ag;
+
+    AMatrix * Agt = (AMatrix *)scs_malloc(sizeof(AMatrix));
+    Agt->n = A->m;
+    Agt->m = A->n;
+    p->Agt = Agt;
+   
+    cudaMalloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
+    cudaMalloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
+    cudaMalloc((void **)&Ag->x, (A->p[A->n]) * sizeof(scs_float));
+
+    cudaMalloc((void **)&p->p, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->r, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->Gp, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->bg, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->tmp_m, A->m * sizeof(scs_float)); /* intermediate result */
+
+    cudaMemcpy(Ag->i, A->i, (A->p[A->n]) * sizeof(scs_int), cudaMemcpyHostToDevice);
+    cudaMemcpy(Ag->p, A->p, (A->n + 1) * sizeof(scs_int), cudaMemcpyHostToDevice);
+    cudaMemcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float), cudaMemcpyHostToDevice);
+
+    cudaMalloc((void **)&Agt->i, (A->p[A->n]) * sizeof(scs_int));
+    cudaMalloc((void **)&Agt->p, (A->m + 1) * sizeof(scs_int));
+    cudaMalloc((void **)&Agt->x, (A->p[A->n]) * sizeof(scs_float));
+
+    /* transpose Ag into Agt for faster multiplies */
+    /* TODO: memory intensive, could perform transpose in CPU and copy to GPU */
+    CUSPARSE(csr2csc)(p->cusparseHandle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i, Agt->x, Agt->i, Agt->p, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO);
+
+    err = cudaGetLastError(); 
+    if (err != cudaSuccess) {
+        printf("%s:%d:%s\nERROR_CUDA: %s\n", __FILE__, __LINE__, __func__, cudaGetErrorString(err));
+		freePriv(p);
+		return SCS_NULL;
+	}
+	return p;
+}
+
+/* solves (I+A'A)x = b, s warm start, solution stored in b */
+static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const scs_float * s, scs_float * bh, scs_int max_its,
+		scs_float tol) {
+	scs_int i, n = A->n;
+	scs_float alpha, nrm_r, nrm_r_old, pGp, negAlpha, beta;
+    scs_float onef = 1.0, negOnef = -1.0;
+	scs_float *p = pr->p; /* cg direction */
+	scs_float *Gp = pr->Gp; /* updated CG direction */
+	scs_float *r = pr->r; /* cg residual */
+    scs_float *bg = pr->bg; /* rhs */
+	cublasHandle_t cublasHandle = pr->cublasHandle;
+
+    if (s == SCS_NULL) {
+		cudaMemcpy(r, bh, n * sizeof(scs_float), cudaMemcpyHostToDevice);
+  		cudaMemset(bg, 0, n * sizeof(scs_float));
+	} else {
+        /* bg (= b) contains s */
+        cudaMemcpy(bg, s, n * sizeof(scs_float), cudaMemcpyHostToDevice);
+        matVec(A, stgs, pr, bg, r);
+        /* p contains bh temporarily */
+        cudaMemcpy(p, bh, n * sizeof(scs_float), cudaMemcpyHostToDevice);
+        CUBLAS(axpy)(cublasHandle, n, &negOnef, p, 1, r, 1);
+        CUBLAS(scal)(cublasHandle, n, &negOnef, r, 1);
+    }
+
+    /* for some reason nrm2 is VERY slow */
+    /* CUBLAS(nrm2)(cublasHandle, n, r, 1, &nrm_r); */
+    CUBLAS(dot)(cublasHandle, n, r, 1, r, 1, &nrm_r);
+    nrm_r = SQRTF(nrm_r);
+    /* check to see if we need to run CG at all */
+    if (nrm_r < MIN(tol, 1e-18)) {
+        scs_printf("early\n");
+        return 0;
+    }
+    
+    /* put p in r, replacing temp mem */
+    cudaMemcpy(p, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
+
+    for (i = 0; i < max_its; ++i) {
+        matVec(A, stgs, pr, p, Gp);
+        
+        CUBLAS(dot)(cublasHandle, n, p, 1, Gp, 1, &pGp);
+        
+        alpha = (nrm_r * nrm_r) / pGp;
+        negAlpha = -alpha;
+        
+        CUBLAS(axpy)(cublasHandle, n, &alpha, p, 1, bg, 1);
+        CUBLAS(axpy)(cublasHandle, n, &negAlpha, Gp, 1, r, 1);
+
+        nrm_r_old = nrm_r;
+   
+        /* for some reason nrm2 is VERY slow */
+        /* CUBLAS(nrm2)(cublasHandle, n, r, 1, &nrm_r); */
+        CUBLAS(dot)(cublasHandle, n, r, 1, r, 1, &nrm_r);
+        nrm_r = SQRTF(nrm_r);
+		if (nrm_r < tol) {
+			i++;
+            break;
+		}
+        beta = (nrm_r * nrm_r) / (nrm_r_old * nrm_r_old);
+		CUBLAS(scal)(cublasHandle, n, &beta, p, 1);
+        CUBLAS(axpy)(cublasHandle, n, &onef, r, 1, p, 1);
+	}
+    #if EXTRAVERBOSE > 0
+	    scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, nrm_r, (long) i+1);
+    #endif
+    cudaMemcpy(bh, bg, n * sizeof(scs_float), cudaMemcpyDeviceToHost);
+    return i;
+}
+
+void accumByAtransHost(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+	_accumByAtrans(A->n, A->x, A->i, A->p, x, y);
+}
+
+void accumByAHost(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+	_accumByA(A->n, A->x, A->i, A->p, x, y);
+}
+
+scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
+	scs_int cgIts;
+	scs_float cgTol = calcNorm(b, A->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
+
+	tic(&linsysTimer);
+	/* solves Mx = b, for x but stores result in b */
+	/* s contains warm-start (if available) */
+
+#ifdef TEST_GPU_MAT_MUL
+    /* test to see if matrix multiplication codes agree */
+    scs_float tn[A->n], tm[A->m];
+    memcpy(tn, b, A->n * sizeof(scs_float));
+    memcpy(tm, &(b[A->n]), A->m * sizeof(scs_float));
+#endif    
+    
+    accumByAtrans(A, p, &(b[A->n]), b);
+
+#ifdef TEST_GPU_MAT_MUL
+    accumByAtransHost(A, p, tm, tn);
+    printf("A trans multiplication err %2.e\n", calcNormDiff(b, tn, A->n));
+#endif
+
+    /* solves (I+A'A)x = b, s warm start, solution stored in b */
+	cgIts = pcg(A, stgs, p, s, b, A->n, MAX(cgTol, CG_BEST_TOL));
+	scaleArray(&(b[A->n]), -1, A->m);
+
+#ifdef TEST_GPU_MAT_MUL
+    memcpy(tn, b, A->n * sizeof(scs_float));
+    memcpy(tm, &(b[A->n]), A->m * sizeof(scs_float));
+#endif
+    
+    accumByA(A, p, b, &(b[A->n]));
+
+#ifdef TEST_GPU_MAT_MUL
+    accumByAHost(A, p, tn, tm);
+    printf("A multiplcation err %2.e\n", calcNormDiff(&(b[A->n]), tm, A->m));
+#endif
+
+    if (iter >= 0) {
+		totCgIts += cgIts;
+	}
+
+	totalSolveTime += tocq(&linsysTimer);
+#if EXTRAVERBOSE > 0
+	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
+#endif
+	return 0;
+}
+   
+#ifdef __cplusplus
+}
+#endif
+

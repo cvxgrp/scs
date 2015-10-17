@@ -41,13 +41,13 @@ $(LINSYS)/common.o: $(LINSYS)/common.c $(LINSYS)/common.h
 
 $(OUT)/libscsdir.a: $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(ARCHIVE) $(OUT)/libscsdir.a $^
-	- $(RANLIB) $(OUT)/libscsdir.a
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
 
 $(OUT)/libscsindir.a: $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(ARCHIVE) $(OUT)/libscsindir.a $^
-	- $(RANLIB) $(OUT)/libscsindir.a
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
 
 $(OUT)/libscsdir.$(SHARED): $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
@@ -58,41 +58,35 @@ $(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/com
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
 
 $(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS)
 
 $(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.$(SHARED)
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHARED)
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-NVCC = nvcc -g
-GPU = gpu
+# REQUIRES GPU AND CUDA INSTALLED
 gpu: $(OUT)/demo_SOCP_indirect_gpu 
 
 $(GPU)/private.o: $(GPU)/private.cu
-	$(NVCC) -c -I include/ -I/Developer/NVIDIA/CUDA-7.5/samples/common/inc/ -Xcompiler -O3,-fPIC -o $(GPU)/private.o $^
+	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
 
-$(GPU)/libscsindirgpu.a: $(SCS_OBJECTS) $(GPU)/private.o
-	$(ARCHIVE) $(GPU)/libscsindirgpu.a $^
-	- $(RANLIB) $(GPU)/libscsindirgpu.a
-
-$(OUT)/demo_SOCP_indirect_gpu: examples/c/randomSOCPProb.c $(SCS_OBJECTS) $(GPU)/private.o
+$(OUT)/libscsindirgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -I/Developer/NVIDIA/CUDA-7.5/samples/common/inc/ -L/usr/local/cuda/lib -lcudart -lcublas -lcusparse -lcudadevrt
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
+
+$(OUT)/demo_SOCP_indirect_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsindirgpu.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o $(GPU)/private.o
+	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPU)/*.o
 	@rm -rf $(OUT)/*.dSYM
-	@rm -rf $(OUT)/*gpu*
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
 	@rm -rf python/*.pyc

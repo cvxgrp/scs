@@ -2,7 +2,6 @@
 
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
-#define PRINT_INTERVAL 100
 
 static scs_int totCgIts;
 static timer linsysTimer;
@@ -112,7 +111,6 @@ void freePriv(Priv * p) {
 	}
 }
 
-/* solves (I+A'A)x = b, s warm start, solution stored in b */
 /*y = (RHO_X * I + A'A)x */
 static void matVec(const AMatrix * A, const Settings * s, Priv * p, const scs_float * x, scs_float * y) {
 	scs_float * tmp = p->tmp;
@@ -168,6 +166,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	return p;
 }
 
+/* solves (I+A'A)x = b, s warm start, solution stored in b */
 static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const scs_float * s, scs_float * b, scs_int max_its,
 		scs_float tol) {
 	scs_int i, n = A->n;

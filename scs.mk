@@ -1,5 +1,10 @@
 UNAME = $(shell uname -s)
 CC = gcc
+CUCC = nvcc
+
+# must add nvcc to path, e.g.
+# export PATH=/Developer/NVIDIA/CUDA-7.5/bin/:$PATH
+# export DYLD_LIBRARY_PATH=/usr/local/cuda/lib:$DYLD_LIBRARY_PATH
 
 ifneq (, $(findstring CYGWIN, $(UNAME)))
 ISWINDOWS := 1
@@ -11,18 +16,22 @@ else
 ISWINDOWS := 0
 endif
 
+
 ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
 LDFLAGS += -lm
 SHARED = dylib
+CULDFLAGS = -L/usr/local/cuda/lib
 else ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
 LDFLAGS += -lm
 SHARED = dll
+CULDFLAGS = -L/usr/local/cuda/lib64 #TODO: probably doesn't work...
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS += -lm -lrt
 SHARED = so
+CULDFLAGS = -L/usr/local/cuda/lib64
 endif
 
 # Add on default CFLAGS
@@ -31,10 +40,14 @@ ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
 
+CULDFLAGS += -lcudart -lcublas -lcusparse
+CUDAFLAGS = -g -Xcompiler -O3,-fPIC -Iinclude -I$(GPU)/include
+
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct
 DIRSRCEXT = $(DIRSRC)/external
 INDIRSRC = $(LINSYS)/indirect
+GPU = $(LINSYS)/gpu
 
 OUT = out
 AR = ar
@@ -68,6 +81,10 @@ endif
 COPYAMATRIX = 1
 ifneq ($(COPYAMATRIX), 0)
 CFLAGS += -DCOPYAMATRIX=$(COPYAMATRIX) # if normalize, copy A
+endif
+TEST_GPU_MAT_MUL = 0
+ifneq ($(TEST_GPU_MAT_MUL), 0)
+CUDAFLAGS += -DTEST_GPU_MAT_MUL=$(TEST_GPU_MAT_MUL) # tests GPU matrix multiply for correctness
 endif
 
 ### VERBOSITY LEVELS: 0,1,2
