@@ -16,7 +16,6 @@ else
 ISWINDOWS := 0
 endif
 
-
 ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
 LDFLAGS += -lm

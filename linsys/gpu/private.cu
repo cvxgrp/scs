@@ -157,7 +157,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     Agt->n = A->m;
     Agt->m = A->n;
     p->Agt = Agt;
-   
+
     cudaMalloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
     cudaMalloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
     cudaMalloc((void **)&Ag->x, (A->p[A->n]) * sizeof(scs_float));
@@ -180,7 +180,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     /* TODO: memory intensive, could perform transpose in CPU and copy to GPU */
     CUSPARSE(csr2csc)(p->cusparseHandle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i, Agt->x, Agt->i, Agt->p, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO);
 
-    err = cudaGetLastError(); 
+    err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("%s:%d:%s\nERROR_CUDA: %s\n", __FILE__, __LINE__, __func__, cudaGetErrorString(err));
 		freePriv(p);
@@ -203,7 +203,7 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
 
     if (s == SCS_NULL) {
 		cudaMemcpy(r, bh, n * sizeof(scs_float), cudaMemcpyHostToDevice);
-  		cudaMemset(bg, 0, n * sizeof(scs_float));
+		cudaMemset(bg, 0, n * sizeof(scs_float));
 	} else {
         /* bg (= b) contains s */
         cudaMemcpy(bg, s, n * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -223,23 +223,23 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
         scs_printf("early\n");
         return 0;
     }
-    
+
     /* put p in r, replacing temp mem */
     cudaMemcpy(p, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
 
     for (i = 0; i < max_its; ++i) {
         matVec(A, stgs, pr, p, Gp);
-        
+
         CUBLAS(dot)(cublasHandle, n, p, 1, Gp, 1, &pGp);
-        
+
         alpha = (nrm_r * nrm_r) / pGp;
         negAlpha = -alpha;
-        
+
         CUBLAS(axpy)(cublasHandle, n, &alpha, p, 1, bg, 1);
         CUBLAS(axpy)(cublasHandle, n, &negAlpha, Gp, 1, r, 1);
 
         nrm_r_old = nrm_r;
-   
+
         /* for some reason nrm2 is VERY slow */
         /* CUBLAS(nrm2)(cublasHandle, n, r, 1, &nrm_r); */
         CUBLAS(dot)(cublasHandle, n, r, 1, r, 1, &nrm_r);
@@ -280,8 +280,8 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
     scs_float tn[A->n], tm[A->m];
     memcpy(tn, b, A->n * sizeof(scs_float));
     memcpy(tm, &(b[A->n]), A->m * sizeof(scs_float));
-#endif    
-    
+#endif
+
     accumByAtrans(A, p, &(b[A->n]), b);
 
 #ifdef TEST_GPU_MAT_MUL
@@ -297,7 +297,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
     memcpy(tn, b, A->n * sizeof(scs_float));
     memcpy(tm, &(b[A->n]), A->m * sizeof(scs_float));
 #endif
-    
+
     accumByA(A, p, b, &(b[A->n]));
 
 #ifdef TEST_GPU_MAT_MUL
@@ -315,7 +315,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
 #endif
 	return 0;
 }
-   
+
 #ifdef __cplusplus
 }
 #endif
