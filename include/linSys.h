@@ -1,6 +1,10 @@
 #ifndef LINSYS_H_GUARD
 #define LINSYS_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND PRIVATE_DATA STRUCT */
 
 /* private data structs (that you define) containing any necessary data to solve linear system, etc. */
@@ -42,6 +46,10 @@ void freeAMatrix(AMatrix * A);
 #ifdef COPYAMATRIX
 /* copies A (instead of in-place normalization), returns 0 for failure, allocates memory for dstp	*/
 scs_int copyAMatrix(AMatrix ** dstp, const AMatrix * src);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

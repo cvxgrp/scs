@@ -1,6 +1,7 @@
 #include "private.h"
 
-#define CG_BEST_TOL 1e-7
+#define CG_BEST_TOL 1e-9
+#define CG_MIN_TOL 1e-1
 
 static scs_int totCgIts;
 static timer linsysTimer;
@@ -11,6 +12,14 @@ void BLAS(symv)(char *uplo, blasint *n, scs_float *alpha, scs_float *a, blasint 
 		scs_float *beta, scs_float *y, blasint *incy);
 
 scs_float BLAS(dot)(blasint *n, scs_float *dx, blasint *incx, scs_float *dy, blasint *incy);
+
+void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+    _accumByAtrans(A, p, x, y);
+}
+
+void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+    _accumByA(A, p, x, y);
+}
 
 char * getLinSysMethod(const AMatrix * A, const Settings * stgs) {
 	char * str = scs_malloc(sizeof(char) * 128);
@@ -140,7 +149,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
     scs_int cgIts;
     blasint n = (blasint) A->n, m = (blasint) A->m, one = 1;
     scs_float onef = 1.0, negOnef = -1.0;
-    scs_float cgTol = BLAS(nrm2)(&n, b, &one) * (iter < 0 ? CG_BEST_TOL : 1 / POWF(iter + 1, stgs->cg_rate));
+    scs_float cgTol = BLAS(nrm2)(&n, b, &one) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
 #ifdef EXTRAVERBOSE
     scs_printf("solving lin sys\n");
 #endif

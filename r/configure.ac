@@ -1,6 +1,6 @@
 dnl R interface to SCS
 
-AC_INIT([scs], 1.1.7)
+AC_INIT([scs], 1.1.8)
 
 SCS_FLAGS="-DLAPACK_LIB_FOUND -DCOPYAMATRIX"
 SCS_LIBS="-lm"

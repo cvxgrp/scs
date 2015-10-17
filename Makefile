@@ -6,6 +6,9 @@ SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o src/ctrlc.o
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
+CFLAGS += $(OPT_FLAGS)
+CUDAFLAGS += $(OPT_FLAGS)
+
 TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
 
 .PHONY: default 
@@ -17,6 +20,9 @@ default: $(TARGETS) $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(S
 	@echo "**********************************************************************************"
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, and ECPs"
 	@echo "**********************************************************************************"
+
+%.o : src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
 src/util.o	: src/util.c include/util.h include/constants.h
@@ -32,41 +38,51 @@ $(LINSYS)/common.o: $(LINSYS)/common.c $(LINSYS)/common.h
 
 $(OUT)/libscsdir.a: $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(ARCHIVE) $(OUT)/libscsdir.a $^
-	- $(RANLIB) $(OUT)/libscsdir.a
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
 
 $(OUT)/libscsindir.a: $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(ARCHIVE) $(OUT)/libscsindir.a $^
-	- $(RANLIB) $(OUT)/libscsindir.a
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
 
 $(OUT)/libscsdir.$(SHARED): $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 $(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
 
 $(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS)
 
 $(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.$(SHARED)
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHARED)
-	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+# REQUIRES GPU AND CUDA INSTALLED
+gpu: $(OUT)/demo_SOCP_indirect_gpu 
+
+$(GPU)/private.o: $(GPU)/private.cu
+	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
+
+$(OUT)/libscsindirgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
+	mkdir -p $(OUT)
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
+
+$(OUT)/demo_SOCP_indirect_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsindirgpu.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o $(DIRSRC)/private.o $(INDIRSRC)/private.o
+	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPU)/*.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
