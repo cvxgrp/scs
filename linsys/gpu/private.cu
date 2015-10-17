@@ -7,12 +7,31 @@ extern "C" {
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
 
+#define CUDA_CHECK_ERR \
+  do { \
+    cudaError_t err = cudaGetLastError(); \
+    if (err != cudaSuccess) { \
+      printf("%s:%d:%s\n ERROR_CUDA: %s\n", __FILE__, __LINE__, __func__, \
+             cudaGetErrorString(err)); \
+    } \
+  } while (0)
+
+#ifndef EXTRAVERBOSE
 #ifndef FLOAT
     #define CUBLAS(x) cublasD ## x
     #define CUSPARSE(x) cusparseD ## x
 #else
     #define CUBLAS(x) cublasS ## x
     #define CUSPARSE(x) cusparseS ## x
+#endif
+#else
+#ifndef FLOAT
+    #define CUBLAS(x) CUDA_CHECK_ERR; cublasD ## x
+    #define CUSPARSE(x) CUDA_CHECK_ERR; cusparseD ## x
+#else
+    #define CUBLAS(x) CUDA_CHECK_ERR; cublasS ## x
+    #define CUSPARSE(x) CUDA_CHECK_ERR; cusparseS ## x
+#endif
 #endif
 
 static scs_int totCgIts;
@@ -219,7 +238,6 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
     nrm_r = SQRTF(nrm_r);
     /* check to see if we need to run CG at all */
     if (nrm_r < MIN(tol, 1e-18)) {
-        scs_printf("early\n");
         return 0;
     }
 
