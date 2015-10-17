@@ -3,21 +3,23 @@
 
 /* return milli-seconds */
 #if (defined NOTIMER)
+
 void tic(timer* t) {}
 scs_float tocq(timer* t) { return NAN; }
+
 #elif (defined _WIN32 || _WIN64 || defined _WINDLL)
-void tic(timer* t)
-{
+
+void tic(timer* t) {
 	QueryPerformanceFrequency(&t->freq);
 	QueryPerformanceCounter(&t->tic);
 }
 
-scs_float tocq(timer* t)
-{
+scs_float tocq(timer* t) {
 	QueryPerformanceCounter(&t->toc);
 	return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) / (scs_float) t->freq.QuadPart);
 }
 #elif (defined __APPLE__)
+
 void tic(timer* t) {
 	/* read current clock cycles */
 	t->tic = mach_absolute_time();
@@ -38,13 +40,11 @@ scs_float tocq(timer* t) {
 	return (scs_float) duration / 1e6;
 }
 #else
-void tic(timer* t)
-{
+void tic(timer* t) {
 	clock_gettime(CLOCK_MONOTONIC, &t->tic);
 }
 
-scs_float tocq(timer* t)
-{
+scs_float tocq(timer* t) {
 	struct timespec temp;
 
 	clock_gettime(CLOCK_MONOTONIC, &t->toc);

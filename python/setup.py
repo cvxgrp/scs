@@ -4,30 +4,30 @@ from setuptools import setup, Extension
 from glob import glob
 from platform import system
 from numpy import get_include
-from numpy.distutils.system_info import get_info, BlasNotFoundError 
+from numpy.distutils.system_info import get_info, BlasNotFoundError
 
-def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir): 
+def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     libraries = []
     if system() == 'Linux':
         libraries += ['rt']
-   
+
     sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
     include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
-    
+
     define_macros = [('PYTHON', None), ('DLONG', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
     # define_macros += [('EXTRAVERBOSE', 999)] # for debugging
     extra_compile_args = ["-O3"]
     library_dirs = []
     extra_link_args = []
-    
+
     if USE_OPENMP:
         define_macros += [('OPENMP', None)]
         extra_compile_args += ['-fopenmp']
         extra_link_args += ['-lgomp']
-    
+
     if USE_64_BIT_BLAS:
         define_macros += [('BLAS64', None)]
-    
+
     if blas_info or lapack_info:
         define_macros += [('LAPACK_LIB_FOUND', None)] + blas_info.pop('define_macros', []) + lapack_info.pop('define_macros', [])
         include_dirs += blas_info.pop('include_dirs', []) + lapack_info.pop('include_dirs', [])
@@ -35,7 +35,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
         libraries += blas_info.pop('libraries', []) + lapack_info.pop('libraries', [])
         extra_link_args += blas_info.pop('extra_link_args', []) + lapack_info.pop('extra_link_args', [])
         extra_compile_args += blas_info.pop('extra_compile_args', []) + lapack_info.pop('extra_compile_args', [])
-    
+
     _scs_direct = Extension(
                         name='_scs_direct',
                         sources=sources + glob(rootDir + 'linsys/direct/*.c'),
@@ -46,7 +46,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
                         )
-    
+
     _scs_indirect = Extension(
                         name='_scs_indirect',
                         sources=sources + glob(rootDir + 'linsys/indirect/*.c'),
@@ -67,6 +67,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
             ext_modules=[_scs_direct, _scs_indirect],
             install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
             license = "MIT",
+            zip_safe=False,
             long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs), second-order cone programs (SOCPs), semidefinite programs (SDPs), exponential cone programs (ECPs), and power cone programs (PCPs), or problems with any combination of those cones. See http://github.com/cvxgrp/scs for more details."
             )
 
@@ -93,7 +94,7 @@ if env_lib_dirs or env_libs:
     if env_lib_dirs:
         env_vars['library_dirs'] = env_lib_dirs.split(':')
     if env_libs:
-        env_vars['libraries'] = env_libs.split(':') 
+        env_vars['libraries'] = env_libs.split(':')
     install_scs(USE_64_BIT_BLAS=USE_64_BIT_BLAS, blas_info=env_vars, lapack_info={},  USE_OPENMP=USE_OPENMP, rootDir=rootDir)
 else:
     # environment variables not set, using defaults instead
