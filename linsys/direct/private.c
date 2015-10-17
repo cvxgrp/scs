@@ -6,6 +6,15 @@ static scs_float totalSolveTime;
 void BLAS(potrf)(char *uplo, blasint *n, scs_float *a, blasint * lda, blasint *info);
 void BLAS(trsv)(char *uplo, char *trans, char *diag, blasint *n, scs_float *a, blasint *lda, scs_float *x, blasint *incx);
 
+
+void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+    _accumByAtrans(A, p, x, y);
+}
+
+void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+    _accumByA(A, p, x, y);
+}
+
 char * getLinSysMethod(const AMatrix * A, const Settings * stgs) {
 	char * tmp = scs_malloc(sizeof(char) * 32);
 	sprintf(tmp, "dense-direct");

@@ -19,18 +19,14 @@ extern "C" {
 #ifndef EXTRAVERBOSE
 #ifndef FLOAT
     #define CUBLAS(x) cublasD ## x
-    #define CUSPARSE(x) cusparseD ## x
 #else
     #define CUBLAS(x) cublasS ## x
-    #define CUSPARSE(x) cusparseS ## x
 #endif
 #else
 #ifndef FLOAT
     #define CUBLAS(x) CUDA_CHECK_ERR; cublasD ## x
-    #define CUSPARSE(x) CUDA_CHECK_ERR; cusparseD ## x
 #else
     #define CUBLAS(x) CUDA_CHECK_ERR; cublasS ## x
-    #define CUSPARSE(x) CUDA_CHECK_ERR; cusparseS ## x
 #endif
 #endif
 
@@ -38,20 +34,13 @@ static scs_int totCgIts;
 static timer linsysTimer;
 static scs_float totalSolveTime;
 
-/*
- CUDA matrix routines only for CSR, not CSC matrices:
-    CSC             CSR             GPU     Mult
-    A (m x n)       A' (n x m)      Ag      accumByATransGpu
-    A'(n x m)       A  (m x n)      Agt     accumByAGpu
-*/
-
 void accumByAtransGpu(const Priv * p, const scs_float *x, scs_float *y) {
     /* y += A'*x
        x and y MUST be on GPU already
     */
     const scs_float onef = 1.0;
     AMatrix * Ag = p->Ag;
-    CUSPARSE(csrmv)(p->cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, Ag->n, Ag->m, p->Annz, &onef, p->descr, Ag->x, Ag->p, Ag->i, x, &onef, y); 
+    CUBLAS(gemv)(p->cublasHandle, CUBLAS_OP_T, Ag->m, Ag->n, &onef, Ag->x, Ag->m, x, 1, &onef, y, 1);
 }
 
 void accumByAGpu(const Priv * p, const scs_float *x, scs_float *y) {
@@ -59,13 +48,13 @@ void accumByAGpu(const Priv * p, const scs_float *x, scs_float *y) {
        x and y MUST be on GPU already
      */
     const scs_float onef = 1.0;
-    AMatrix * Agt = p->Agt;
-    CUSPARSE(csrmv)(p->cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, Agt->n, Agt->m, p->Annz, &onef, p->descr, Agt->x, Agt->p, Agt->i, x, &onef, y);
+    AMatrix * Ag = p->Ag;
+    CUBLAS(gemv)(p->cublasHandle, CUBLAS_OP_N, Ag->m, Ag->n, &onef, Ag->x, Ag->m, x, 1, &onef, y, 1);
 }
 
 /* do not use within pcg, reuses memory */
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
-    scs_float * v_m = p->tmp_m;
+    scs_float * v_m = p->bg;
     scs_float * v_n = p->r;
     cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
     cudaMemcpy(v_n, y, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -75,7 +64,7 @@ void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y
 
 /* do not use within pcg, reuses memory */
 void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
-    scs_float * v_m = p->tmp_m;
+    scs_float * v_m = p->bg;
     scs_float * v_n = p->r;
     cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
     cudaMemcpy(v_m, y, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -83,10 +72,10 @@ void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
     cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
-char * getLinSysMethod(const AMatrix * A, const Settings * s) {
-	char * str = (char *)scs_malloc(sizeof(char) * 128);
-	sprintf(str, "sparse-indirect GPU, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) A->p[A->n], s->cg_rate);
-	return str;
+char * getLinSysMethod(const AMatrix * A, const Settings * stgs) {
+    char * str = (char *)scs_malloc(sizeof(char) * 128);
+    sprintf(str, "dense-indirect GPU, CG tol ~ 1/iter^(%2.2f)", stgs->cg_rate);
+    return str;
 }
 
 char * getLinSysSummary(Priv * p, const Info * info) {
@@ -101,10 +90,6 @@ char * getLinSysSummary(Priv * p, const Info * info) {
 void cudaFreeAMatrix(AMatrix * A) {
     if(A->x)
         cudaFree(A->x);
-    if(A->i)
-        cudaFree(A->i);
-    if(A->p)
-        cudaFree(A->p);
 }
 
 void freePriv(Priv * p) {
@@ -117,89 +102,75 @@ void freePriv(Priv * p) {
 			cudaFree(p->Gp);
 		if (p->bg)
 			cudaFree(p->bg);
-		if (p->tmp_m)
-			cudaFree(p->tmp_m);
 		if (p->Ag) {
             cudaFreeAMatrix(p->Ag);
 			scs_free(p->Ag);
 		}
-		if (p->Agt) {
-            cudaFreeAMatrix(p->Agt);
-			scs_free(p->Agt);
+		if (p->G) {
+            cudaFreeAMatrix(p->G);
+			scs_free(p->G);
 		}
-        cusparseDestroy(p->cusparseHandle);
         cublasDestroy(p->cublasHandle);
         cudaDeviceReset();
         scs_free(p);
 	}
 }
 
-/*y = (RHO_X * I + A'A)x */
-static void matVec(const AMatrix * A, const Settings * s, Priv * p, const scs_float * x, scs_float * y) {
-    /* x and y MUST already be loaded to GPU */
-	scs_float * tmp_m = p->tmp_m; /* temp memory */
-	cudaMemset(tmp_m, 0, A->m * sizeof(scs_float));
-	accumByAGpu(p, x, tmp_m);
-	cudaMemset(y, 0, A->n * sizeof(scs_float));
-	accumByAtransGpu(p, tmp_m, y);
-    CUBLAS(axpy)(p->cublasHandle, A->n, &(s->rho_x), x, 1, y, 1);
-}
 
 Priv * initPriv(const AMatrix * A, const Settings * stgs) {
+    Priv * p = (Priv *)scs_calloc(1, sizeof(Priv));
+    scs_float *Gtemp, onef = 1.0;
     cudaError_t err;
-	Priv * p = (Priv *)scs_calloc(1, sizeof(Priv));
-    p->Annz = A->p[A->n];
-    p->cublasHandle = 0;
-    p->cusparseHandle = 0;
-    p->descr = 0;
+    scs_int j, numElementsG;
 
+    p->cublasHandle = 0;
 	totalSolveTime = 0;
 	totCgIts = 0;
 
     /* Get handle to the CUBLAS context */
     cublasCreate(&p->cublasHandle);
 
-    /* Get handle to the CUSPARSE context */
-    cusparseCreate(&p->cusparseHandle);
-
-    /* Matrix description */
-    cusparseCreateMatDescr(&p->descr);
-    cusparseSetMatType(p->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
-    cusparseSetMatIndexBase(p->descr, CUSPARSE_INDEX_BASE_ZERO);
-
     AMatrix * Ag = (AMatrix *)scs_malloc(sizeof(AMatrix));
     Ag->n = A->n;
     Ag->m = A->m;
     p->Ag = Ag;
+    AMatrix * G = (AMatrix *)scs_malloc(sizeof(AMatrix));
+   	G->n = A->n;
+    G->m = A->n;
+    p->G = G;
+	numElementsG = A->n * A->n;
 
-    AMatrix * Agt = (AMatrix *)scs_malloc(sizeof(AMatrix));
-    Agt->n = A->m;
-    Agt->m = A->n;
-    p->Agt = Agt;
-
-    cudaMalloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
-    cudaMalloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
-    cudaMalloc((void **)&Ag->x, (A->p[A->n]) * sizeof(scs_float));
+    cudaMalloc((void **)&Ag->x, A->n * A->m * sizeof(scs_float));
+    cudaMalloc((void **)&G->x, numElementsG * sizeof(scs_float));
 
     cudaMalloc((void **)&p->p, A->n * sizeof(scs_float));
     cudaMalloc((void **)&p->r, A->n * sizeof(scs_float));
     cudaMalloc((void **)&p->Gp, A->n * sizeof(scs_float));
     cudaMalloc((void **)&p->bg, (A->n + A->m) * sizeof(scs_float));
-    cudaMalloc((void **)&p->tmp_m, A->m * sizeof(scs_float)); /* intermediate result */
 
-    cudaMemcpy(Ag->i, A->i, (A->p[A->n]) * sizeof(scs_int), cudaMemcpyHostToDevice);
-    cudaMemcpy(Ag->p, A->p, (A->n + 1) * sizeof(scs_int), cudaMemcpyHostToDevice);
-    cudaMemcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float), cudaMemcpyHostToDevice);
+    cudaMemcpy(Ag->x, A->x, A->n * A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
 
-    cudaMalloc((void **)&Agt->i, (A->p[A->n]) * sizeof(scs_int));
-    cudaMalloc((void **)&Agt->p, (A->m + 1) * sizeof(scs_int));
-    cudaMalloc((void **)&Agt->x, (A->p[A->n]) * sizeof(scs_float));
+    /* create G in CPU mem first, then send to GPU */
+	/*
+	Gtemp = ( scs_float *)scs_calloc(numElementsG, sizeof(scs_float));
+    for (j = 1; j <= A->n; j++) {
+        Gtemp[(j * (j + 1)) / 2 - 1] = stgs->rho_x;
+    }
+    cudaMemcpy(G->x, Gtemp, numElementsG * sizeof(scs_float), cudaMemcpyHostToDevice);
+    scs_free(Gtemp);
+    
+	CUBLAS(syrk)(p->cublasHandle, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_T, A->n, A->m, &onef, p->Ag->x, A->m, &onef, G->x, A->n);
+	*/
+	Gtemp = (scs_float *)scs_calloc(A->n * A->n, sizeof(scs_float));
+    for (j = 0; j < A->n; j++) {
+        Gtemp[j * A->n + j] = stgs->rho_x;
+    }
+    cudaMemcpy(G->x, Gtemp, A->n * A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
+    scs_free(Gtemp);
+    
+	CUBLAS(syrk)(p->cublasHandle, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_T, A->n, A->m, &onef, p->Ag->x, A->m, &onef, G->x, A->n);
 
-    /* transpose Ag into Agt for faster multiplies */
-    /* TODO: memory intensive, could perform transpose in CPU and copy to GPU */
-    CUSPARSE(csr2csc)(p->cusparseHandle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i, Agt->x, Agt->i, Agt->p, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO);
-
-    err = cudaGetLastError();
+	err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("%s:%d:%s\nERROR_CUDA: %s\n", __FILE__, __LINE__, __func__, cudaGetErrorString(err));
 		freePriv(p);
@@ -213,23 +184,19 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
         scs_float tol) {
     scs_int i, n = A->n;
     scs_float alpha, nrm_r, nrm_r_old, pGp, negAlpha, beta;
-    scs_float onef = 1.0, negOnef = -1.0;
+    scs_float onef = 1.0, negOnef = -1.0, zerof = 0.0;
     scs_float *p = pr->p; /* cg direction */
     scs_float *Gp = pr->Gp; /* updated CG direction */
     scs_float *r = pr->r; /* cg residual */
     cublasHandle_t cublasHandle = pr->cublasHandle;
 
+	cudaMemcpy(r, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
     if (s == SCS_NULL) {
-        cudaMemcpy(r, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
         cudaMemset(bg, 0, n * sizeof(scs_float));
     } else {
-        /* p contains bg temporarily */
-        cudaMemcpy(p, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
         /* bg contains s */
         cudaMemcpy(bg, s, n * sizeof(scs_float), cudaMemcpyHostToDevice);
-        matVec(A, stgs, pr, bg, r);
-        CUBLAS(axpy)(cublasHandle, n, &negOnef, p, 1, r, 1);
-        CUBLAS(scal)(cublasHandle, n, &negOnef, r, 1);
+		CUBLAS(symv)(pr->cublasHandle, CUBLAS_FILL_MODE_UPPER, n, &negOnef, pr->G->x, n, bg, 1, &onef, r, 1);
     }
 
     /* for some reason nrm2 is VERY slow */
@@ -245,7 +212,7 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
     cudaMemcpy(p, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
 
     for (i = 0; i < max_its; ++i) {
-        matVec(A, stgs, pr, p, Gp);
+    	CUBLAS(symv)(pr->cublasHandle, CUBLAS_FILL_MODE_UPPER, n, &onef, pr->G->x, n, p, 1, &zerof, Gp, 1);
 
         CUBLAS(dot)(cublasHandle, n, p, 1, Gp, 1, &pGp);
 

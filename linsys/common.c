@@ -137,13 +137,13 @@ void unNormalizeA(AMatrix * A, const Settings * stgs, const Scaling * scal) {
 	BLAS(scal)(&nm, &invScale, A->x, &one);
 }
 
-void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+void _accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
     blasint one = 1, n = (blasint) A->n, m = (blasint) A->m;
     scs_float onef = 1.0;
     BLAS(gemv)("Transpose", &m, &n, &onef, A->x, &m, x, &one, &onef, y, &one);
 }
 
-void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
+void _accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
     blasint one = 1, n = (blasint) A->n, m = (blasint) A->m;
     scs_float onef = 1.0;
     BLAS(gemv)("NoTranspose", &m, &n, &onef, A->x, &m, x, &one, &onef, y, &one);
