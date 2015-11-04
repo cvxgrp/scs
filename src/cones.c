@@ -350,8 +350,8 @@ scs_int setUpSdConeWorkSpace(ConeWork * c, const Cone * k) {
     return 0;
 #else
     scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked blas+lapack libraries\n");
-    scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
-    return SCS_NULL;
+    scs_printf("Install blas+lapack and re-compile SCS with blas+lapack libray locations\n");
+    return -1;
 #endif
 }
 
@@ -363,7 +363,7 @@ ConeWork * initCone(const Cone * k) {
     totalConeTime = 0.0;
     if (k->ssize && k->s) {
         if (!isSimpleSemiDefiniteCone(k->s, k->ssize) && setUpSdConeWorkSpace(coneWork, k) < 0) {
-            scs_free(coneWork);
+            finishCone(coneWork);
             return SCS_NULL;
         }
     }
