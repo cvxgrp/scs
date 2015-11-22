@@ -74,8 +74,13 @@ static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 	return new_owner;
 }
 
+static int printErr(char * key) {
+	PySys_WriteStderr("error parsing '%s'\n", key);
+	return -1;
+}
+
 /* returns -1 for failure */
-int parsePosScsInt(PyObject * in, scs_int * out) {
+static int parsePosScsInt(PyObject * in, scs_int * out) {
     if (PyInt_Check(in)) {
         *out = (scs_int) PyInt_AsLong(in);
     } else if (PyLong_Check(in)) {
@@ -83,13 +88,20 @@ int parsePosScsInt(PyObject * in, scs_int * out) {
     } else {
         return -1;
     }
-    return out >= 0 ? 1 : -1;
+    return *out >= 0 ? 1 : -1;
 }
 
-
-static int printErr(char * key) {
-	PySys_WriteStderr("error parsing '%s'\n", key);
-	return -1;
+static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * opts) {
+    *v = defVal;
+    if (opts) {
+        PyObject *obj = PyDict_GetItemString(opts, key);
+        if (obj) {
+            if (parsePosScsInt(obj, v) < 0) {
+                return printErr(key);
+            }
+        }
+    }
+    return 0;
 }
 
 /* gets warm starts from warm dict, doesn't destroy input warm start data */
@@ -171,19 +183,6 @@ static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObj
     }
     *vsize = n;
     *varr = q;
-    return 0;
-}
-
-static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * opts) {
-    *v = defVal;
-    if (opts) {
-        PyObject *obj = PyDict_GetItemString(opts, key);
-        if (obj) {
-            if (parsePosScsInt(obj, v) < 0) {
-                return printErr(key);
-            }
-        }
-    }
     return 0;
 }
 
