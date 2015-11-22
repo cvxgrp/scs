@@ -76,17 +76,21 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHAR
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: $(OUT)/demo_SOCP_indirect_gpu 
+gpu: $(OUT)/demo_SOCP_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 
 $(GPU)/private.o: $(GPU)/private.cu
 	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
 
-$(OUT)/libscsindirgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
+$(OUT)/libscsgpu.$(SHARED): $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+
+$(OUT)/libscsgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/demo_SOCP_indirect_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsindirgpu.a
+$(OUT)/demo_SOCP_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsgpu.$(SHARED)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge

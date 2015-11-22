@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-import _scs_direct
-import _scs_indirect
 from warnings import warn
 from scipy import sparse
+import _scs_direct
 
 __version__ = _scs_direct.version()
 
@@ -50,7 +49,12 @@ def solve(probdata, cone, **kwargs):
     m, n = A.shape
     
     Adata, Aindices, Acolptr = A.data, A.indices, A.indptr
-    if kwargs.pop('use_indirect', False):
+    if kwargs.pop('gpu', False): # False by default
+        import _scs_gpu
+        return _scs_gpu.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, warm, **kwargs)
+
+    if kwargs.pop('use_indirect', False): # False by default
+        import _scs_indirect
         return _scs_indirect.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, warm, **kwargs)
-    else:
-        return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, warm, **kwargs)
+
+    return _scs_direct.csolve((m, n), Adata, Aindices, Acolptr, b, c, cone, warm, **kwargs)

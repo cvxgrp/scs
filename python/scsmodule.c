@@ -74,6 +74,19 @@ static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 	return new_owner;
 }
 
+/* returns -1 for failure */
+int parsePosScsInt(PyObject * in, scs_int * out) {
+    if (PyInt_Check(in)) {
+        *out = (scs_int) PyInt_AsLong(in);
+    } else if (PyLong_Check(in)) {
+        *out = (scs_int) PyLong_AsLong(in);
+    } else {
+        return -1;
+    }
+    return out >= 0 ? 1 : -1;
+}
+
+
 static int printErr(char * key) {
 	PySys_WriteStderr("error parsing '%s'\n", key);
 	return -1;
@@ -98,30 +111,28 @@ static scs_int getWarmStart(char * key, scs_float ** x, scs_int l, PyObject * wa
 }
 
 static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject * cone) {
-	/* get cone['key'] */
-	scs_int i, n = 0;
-	scs_int * q = SCS_NULL;
-	PyObject *obj = PyDict_GetItemString(cone, key);
-	if (obj) {
-		if (PyList_Check(obj)) {
-			n = PyList_Size(obj);
-			q = scs_calloc(n, sizeof(scs_int));
-			for (i = 0; i < n; ++i) {
-				PyObject *qi = PyList_GetItem(obj, i);
-	            if ( !( (PyInt_Check(qi) && ((q[i] = (scs_int) PyInt_AsLong(qi)) >= 0)) ||
-	                        (PyLong_Check(qi) && ((q[i] = (scs_int) PyLong_AsLong(qi)) >= 0))) ) {
-					return printErr(key);
-	            }
-			}
-		} else if (PyInt_Check(obj) || PyLong_Check(obj)) {
-			n = 1;
-			q = scs_malloc(sizeof(scs_int));
-            if ( !( (PyInt_Check(obj) && ((*q = (scs_int) PyInt_AsLong(obj)) >= 0)) ||
-                        (PyLong_Check(obj) && ((*q = (scs_int) PyLong_AsLong(obj)) >= 0))) ) {
-				return printErr(key);
-			}
-		} else {
-			return printErr(key);
+    /* get cone['key'] */
+    scs_int i, n = 0;
+    scs_int * q = SCS_NULL;
+    PyObject *obj = PyDict_GetItemString(cone, key);
+    if (obj) {
+        if (PyList_Check(obj)) {
+            n = PyList_Size(obj);
+            q = scs_calloc(n, sizeof(scs_int));
+            for (i = 0; i < n; ++i) {
+                PyObject *qi = PyList_GetItem(obj, i);
+                if (parsePosScsInt(qi, &(q[i])) < 0) {
+                    return printErr(key);
+                }
+            }
+        } else if (PyInt_Check(obj) || PyLong_Check(obj)) {
+            n = 1;
+            q = scs_malloc(sizeof(scs_int));
+            if (parsePosScsInt(obj, q) < 0) {
+                return printErr(key);
+            }
+        } else {
+            return printErr(key);
         }
         if (PyErr_Occurred()) {
             /* potentially could have been triggered before */
@@ -163,14 +174,12 @@ static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObj
     return 0;
 }
 
-
 static int getPosIntParam(char * key, scs_int * v, scs_int defVal, PyObject * opts) {
     *v = defVal;
     if (opts) {
         PyObject *obj = PyDict_GetItemString(opts, key);
         if (obj) {
-            if ( !( (PyInt_Check(obj) && ((*v = (scs_int) PyInt_AsLong(obj)) >= 0)) ||
-                        (PyLong_Check(obj) && ((*v = (scs_int) PyLong_AsLong(obj)) >= 0))) ) {
+            if (parsePosScsInt(obj, v) < 0) {
                 return printErr(key);
             }
         }
@@ -416,7 +425,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     PyArray_ENABLEFLAGS((PyArrayObject *) s, NPY_ARRAY_OWNDATA);
 
     infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
-			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
+			"statusVal", (long) info.statusVal, "iter", (long) info.iter, "pobj", (scs_float) info.pobj,
 			"dobj", (scs_float) info.dobj, "resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual,
 			"relGap", (scs_float) info.relGap, "resInfeas", (scs_float) info.resInfeas, "resUnbdd", (scs_float) info.resUnbdd,
 			"solveTime", (scs_float) (info.solveTime), "setupTime", (scs_float) (info.setupTime),
@@ -463,6 +472,8 @@ static PyObject* moduleinit(void) {
 #else
 #ifdef INDIRECT
 	m = Py_InitModule("_scs_indirect", scsMethods);
+#elif defined GPU
+	m = Py_InitModule("_scs_gpu", scsMethods);
 #else
 	m = Py_InitModule("_scs_direct", scsMethods);
 #endif
@@ -481,6 +492,8 @@ static PyObject* moduleinit(void) {
 PyMODINIT_FUNC
 #ifdef INDIRECT
 PyInit__scs_indirect(void)
+#elif defined GPU
+PyInit__scs_gpu(void)
 #else
 PyInit__scs_direct(void)
 #endif
@@ -492,6 +505,8 @@ PyInit__scs_direct(void)
 PyMODINIT_FUNC
 #ifdef INDIRECT
 init_scs_indirect(void)
+#elif defined GPU
+init_scs_gpu(void)
 #else
 init_scs_direct(void)
 #endif

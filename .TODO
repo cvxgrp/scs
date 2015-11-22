@@ -1,3 +1,5 @@
+# sudo install_name_tool -add_rpath /old/path /new/path/libscsgpu.dylib
+
 change to norm^2 equilibration?
 D,E dynamic rescaling (need to re-solve Mg = h multiple times)
 L-BFGS preconditioner for CG step

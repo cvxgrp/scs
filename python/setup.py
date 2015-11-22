@@ -6,6 +6,12 @@ from platform import system
 from numpy import get_include
 from numpy.distutils.system_info import get_info, BlasNotFoundError
 
+# if GPU = True then SCS will attempt to install the GPU indirect solver
+# you need to already have the libscsgpu library installed somewhere
+# (type 'make purge && make && make gpu' in the main repo)
+# and have CUDA installed
+GPU = False
+
 def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     libraries = []
     if system() == 'Linux':
@@ -14,7 +20,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     sources = ['scsmodule.c', ] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
     include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
 
-    define_macros = [('PYTHON', None), ('DLONG', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
+    define_macros = [('PYTHON', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
     # define_macros += [('EXTRAVERBOSE', 999)] # for debugging
     extra_compile_args = ["-O3"]
     library_dirs = []
@@ -39,7 +45,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     _scs_direct = Extension(
                         name='_scs_direct',
                         sources=sources + glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c'),
-                        define_macros=define_macros,
+                        define_macros=define_macros + [('DLONG', None)],
                         include_dirs=include_dirs + [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/'],
                         library_dirs=library_dirs,
                         libraries=libraries,
@@ -50,13 +56,29 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     _scs_indirect = Extension(
                         name='_scs_indirect',
                         sources=sources + glob(rootDir + 'linsys/indirect/*.c'),
-                        define_macros=define_macros + [('INDIRECT', None)],
+                        define_macros=define_macros + [('DLONG', None), ('INDIRECT', None)],
                         include_dirs=include_dirs + [rootDir + 'linsys/indirect/'],
                         library_dirs=library_dirs,
                         libraries=libraries,
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
                         )
+
+    ext_modules = [_scs_direct, _scs_indirect]
+
+    if GPU:
+        _scs_gpu = Extension(
+                        name='_scs_gpu',
+                        sources= ['scsmodule.c'],
+                        define_macros=define_macros + [('GPU', None)],
+                        include_dirs=include_dirs,
+                        library_dirs=library_dirs + ['/usr/local/cuda/lib', '/usr/local/lib'], # fix lib location
+                        libraries=libraries + ['scsgpu', 'cudart', 'cublas', 'cusparse'],
+                        extra_link_args=extra_link_args,
+                        extra_compile_args=extra_compile_args
+                        )
+        ext_modules += [_scs_gpu]
+
     setup(name='scs',
             version='1.1.8',
             author = 'Brendan O\'Donoghue',
@@ -64,7 +86,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
             url = 'http://github.com/cvxgrp/scs',
             description='scs: splitting conic solver',
             py_modules=['scs'],
-            ext_modules=[_scs_direct, _scs_indirect],
+            ext_modules=ext_modules,
             install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
             license = "MIT",
             zip_safe=False,
