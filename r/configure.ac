@@ -2,7 +2,7 @@ dnl R interface to SCS
 
 AC_INIT([scs], 1.1.8)
 
-SCS_FLAGS="-DLAPACK_LIB_FOUND -DCOPYAMATRIX"
+SCS_FLAGS="-DLAPACK_LIB_FOUND -DCOPYAMATRIX -DUSING_R"
 SCS_LIBS="-lm"
 SCS_OUT_LIB="out/libscsdir.a"
 
@@ -22,6 +22,7 @@ CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
 LAPACK_LIBS=`"${R_HOME}/bin/R" CMD config LAPACK_LIBS`
 BLAS_LIBS=`"${R_HOME}/bin/R" CMD config BLAS_LIBS`
 dnl FLIBS=`"${R_HOME}/bin/R" CMD config FLIBS`
+R_INCS="${R_HOME}/include"
 
 AC_PROG_CC
 
@@ -37,6 +38,7 @@ AC_SUBST(LAPACK_LIBS)
 AC_SUBST(SCS_FLAGS)
 AC_SUBST(SCS_LIBS)
 AC_SUBST(SCS_OUT_LIB)
+AC_SUBST(R_INCS)
 AC_OUTPUT(src/Makevars)
 
 exit 0

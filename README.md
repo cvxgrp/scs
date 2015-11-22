@@ -370,9 +370,9 @@ on your instance of `ConeProgram`, which will return an instance of
 
 To install SCS as an R packge cd into the `r` subdirectory and type
 ```
-R CMD INSTALL .
+./install.sh
 ```
-and to test type `R --no-save < demo/randomLp.R`.
+and to test type `R --no-save < demo/randomLp.R` (this is also called by the install script).
 
 To call SCS use the function `scs`, defined as
 ```

@@ -8,7 +8,7 @@
 #define POW_CONE_MAX_ITERS (20)
 
 #ifdef LAPACK_LIB_FOUND
-void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, scs_float* a, blasint* lda, scs_float* vl,
+void BLAS(syevr)(const char* jobz, const char* range, const char* uplo, blasint* n, scs_float* a, blasint* lda, scs_float* vl,
 		scs_float* vu, blasint* il, blasint* iu, scs_float* abstol, blasint* m, scs_float* w, scs_float* z, blasint* ldz,
 		blasint* isuppz, scs_float* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
 void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha, const scs_float *x, const blasint *incx,
