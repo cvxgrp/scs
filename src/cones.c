@@ -8,7 +8,7 @@
 #define POW_CONE_MAX_ITERS (20)
 
 #ifdef LAPACK_LIB_FOUND
-void BLAS(syevr)(char* jobz, char* range, char* uplo, blasint* n, scs_float* a, blasint* lda, scs_float* vl,
+void BLAS(syevr)(const char* jobz, const char* range, const char* uplo, blasint* n, scs_float* a, blasint* lda, scs_float* vl,
 		scs_float* vu, blasint* il, blasint* iu, scs_float* abstol, blasint* m, scs_float* w, scs_float* z, blasint* ldz,
 		blasint* isuppz, scs_float* work, blasint* lwork, blasint* iwork, blasint* liwork, blasint* info);
 void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha, const scs_float *x, const blasint *incx,
@@ -350,8 +350,8 @@ scs_int setUpSdConeWorkSpace(ConeWork * c, const Cone * k) {
     return 0;
 #else
     scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked blas+lapack libraries\n");
-    scs_printf("Edit scs.mk to point to blas+lapack libray locations\n");
-    return SCS_NULL;
+    scs_printf("Install blas+lapack and re-compile SCS with blas+lapack libray locations\n");
+    return -1;
 #endif
 }
 
@@ -363,7 +363,7 @@ ConeWork * initCone(const Cone * k) {
     totalConeTime = 0.0;
     if (k->ssize && k->s) {
         if (!isSimpleSemiDefiniteCone(k->s, k->ssize) && setUpSdConeWorkSpace(coneWork, k) < 0) {
-            scs_free(coneWork);
+            finishCone(coneWork);
             return SCS_NULL;
         }
     }

@@ -138,7 +138,7 @@ These libraries (and `scs.h`) expose only four API functions:
     before this call.
 
 The relevant data structures are:
-```
+```C
 
     typedef struct SCS_PROBLEM_DATA Data;
     typedef struct SCS_SETTINGS Settings;
@@ -306,7 +306,7 @@ Type `help scs_direct` at the Matlab prompt to see its documentation.
 ### Using SCS in Python
 
 To install SCS as a python package type:
-```
+```shell
 cd <scs-directory>/python
 python setup.py install
 ```
@@ -314,11 +314,11 @@ You may need `sudo` privileges for a global installation. Running SCS requires n
 scipy to be installed.
 
 After installing the SCS interface, you import SCS using
-```
+```python
 import scs
 ```
 This module provides a single function `scs` with the following call signature:
-```
+```python
 sol = scs(data, cone, [use_indirect=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
 ```
 Arguments in the square brackets are optional, and default to the values on the right of their respective equals signs.
@@ -349,14 +349,14 @@ Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Selec
 
 To solve a problem create a new instance of `ConeProgram` with constructor
 
-```
+```Java
 public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);
 ```
 
 where the `IConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
 Then call
 
-```
+```Java
 ConeProgram.solve();
 ```
 
@@ -366,13 +366,13 @@ on your instance of `ConeProgram`, which will return an instance of
 ### Using SCS in R
 
 To install SCS as an R packge cd into the `r` subdirectory and type
+```shell
+./install.sh
 ```
-R CMD INSTALL .
-```
-and to test type `R --no-save < demo/randomLp.R`.
+and to test type `R --no-save < demo/randomLp.R` (this is also called by the install script).
 
 To call SCS use the function `scs`, defined as
-```
+```R
 scs <- function(A, b, c, cone, params)
 ```
 where `A` is a `Matrix` object, `b` and `c` are vectors, and `cone` and `params`
