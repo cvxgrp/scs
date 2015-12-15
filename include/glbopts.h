@@ -17,7 +17,11 @@ extern "C" {
 #elif defined PYTHON
 #include <Python.h>
 #include <stdlib.h>
-#define scs_printf  PySys_WriteStdout
+#define scs_printf(...) {\
+    PyGILState_STATE gilstate = PyGILState_Ensure();\
+    PySys_WriteStdout(__VA_ARGS__);\
+    PyGILState_Release(gilstate);\
+}
 #define _scs_free     free
 #define _scs_malloc   malloc
 #define _scs_calloc   calloc

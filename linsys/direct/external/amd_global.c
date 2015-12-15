@@ -72,8 +72,4 @@ void *(*amd_calloc) (size_t, size_t) = SCS_NULL ;
  * can then be enabled at run-time by setting amd_printf to a non-SCS_NULL function.
  */
 
-#ifndef NPRINT
-int (*amd_printf) (const char *, ...) = scs_printf ;
-#else
 int (*amd_printf) (const char *, ...) = SCS_NULL ;
-#endif
