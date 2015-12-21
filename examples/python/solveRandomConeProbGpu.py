@@ -16,7 +16,7 @@ def main():
     
 def solveFeasible():
     # cone:
-    K = {'f':10, 'l':50000, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10, 'p':[-0.25, 0.5, 0.75, -0.33]}
+    K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10, 'p':[-0.25, 0.5, 0.75, -0.33]}
     m = getConeDims(K) 
     data, p_star = genFeasible(K, n = m/3, density = 0.01)
     params = {'eps':1e-3, 'normalize':True, 'scale':5, 'cg_rate':2}
