@@ -11,8 +11,8 @@ from genRandomConeProb import *
 def main():
     random.seed(1)
     solveFeasible()
-    #solveInfeasible()
-    #solveUnbounded()
+    solveInfeasible()
+    solveUnbounded()
     
 def solveFeasible():
     # cone:
