@@ -25,7 +25,7 @@
 #endif
 
 
-static int intType;
+static int scs_intType;
 static int scs_floatType;
 
 struct ScsPyData {
@@ -36,8 +36,7 @@ struct ScsPyData {
 	PyArrayObject * c;
 };
 
-/* Note, Python3.x may require special handling for the scs_int and scs_float
- * types. */
+/* Note, Python3.x may require special handling for the scs_int and scs_float types. */
 static int getIntType(void) {
 	switch (sizeof(scs_int)) {
 	case 1:
@@ -53,9 +52,17 @@ static int getIntType(void) {
 	}
 }
 
-static int getDoubleType(void) {
-	/* known bug, if scs_float isn't "double", will cause aliasing in memory */
-	return NPY_DOUBLE;
+static int getFloatType(void) {
+	switch (sizeof(scs_float)) {
+	case 2:
+		return NPY_FLOAT16;
+	case 4:
+		return NPY_FLOAT32;
+	case 8:
+		return NPY_FLOAT64;
+	default:
+		return NPY_FLOAT64; /* defaults to double */
+	}
 }
 
 static PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
@@ -249,9 +256,17 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-	static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
+    #ifdef FLOAT
+    static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffff";
+    #else
+    static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
+    #endif
 #else
+    #ifdef FLOAT
+	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffff";
+    #else
 	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
+    #endif
 #endif
     npy_intp veclen[1];
     PyObject *x, *y, *s, *returnDict, *infoDict;
@@ -294,9 +309,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	}
 
 	/* get the typenum for the primitive scs_int and scs_float types */
-	intType = getIntType();
-	scs_floatType = getDoubleType();
-	
+	scs_intType = getIntType();
+	scs_floatType = getFloatType();
     /* set A */
 	if (!PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
 		return finishWithErr(d, k, &ps, "Ax must be a numpy array of floats");
@@ -308,8 +322,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return finishWithErr(d, k, &ps, "Ap must be a numpy array of ints");
 	}
 	ps.Ax = getContiguous(Ax, scs_floatType);
-	ps.Ai = getContiguous(Ai, intType);
-	ps.Ap = getContiguous(Ap, intType);
+	ps.Ai = getContiguous(Ai, scs_intType);
+	ps.Ap = getContiguous(Ap, scs_intType);
 
     A = scs_malloc(sizeof(AMatrix));
 	A->n = d->n;
@@ -402,7 +416,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(scs_float)); */
 	veclen[0] = d->n;
-	x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.x);
+	x = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.x);
     PyArray_ENABLEFLAGS((PyArrayObject *) x, NPY_ARRAY_OWNDATA);
 
 	/* y */
@@ -411,7 +425,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(scs_float)); */
 	veclen[0] = d->m;
-	y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.y);
+	y = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.y);
     PyArray_ENABLEFLAGS((PyArrayObject *) y, NPY_ARRAY_OWNDATA);
 
 	/* s */
@@ -420,11 +434,25 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	/*   return PyErr_NoMemory(); */
 	/* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(scs_float)); */
 	veclen[0] = d->m;
-	s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, sol.s);
+	s = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.s);
     PyArray_ENABLEFLAGS((PyArrayObject *) s, NPY_ARRAY_OWNDATA);
 
-    infoDict = Py_BuildValue("{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}",
-			"statusVal", (long) info.statusVal, "iter", (long) info.iter, "pobj", (scs_float) info.pobj,
+#ifdef DLONG
+    #ifdef FLOAT
+    static char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
+    #else
+    static char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
+    #endif
+#else
+    #ifdef FLOAT
+	static char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
+    #else
+	static char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
+    #endif
+#endif
+
+    infoDict = Py_BuildValue(outarg_string,
+			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
 			"dobj", (scs_float) info.dobj, "resPri", (scs_float) info.resPri, "resDual", (scs_float) info.resDual,
 			"relGap", (scs_float) info.relGap, "resInfeas", (scs_float) info.resInfeas, "resUnbdd", (scs_float) info.resUnbdd,
 			"solveTime", (scs_float) (info.solveTime), "setupTime", (scs_float) (info.setupTime),

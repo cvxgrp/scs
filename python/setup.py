@@ -21,6 +21,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     include_dirs = [rootDir, rootDir + 'include', get_include(), rootDir + 'linsys']
 
     define_macros = [('PYTHON', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
+    # define_macros += [('FLOAT', 1)] # single precision floating point
     # define_macros += [('EXTRAVERBOSE', 999)] # for debugging
     extra_compile_args = ["-O3"]
     library_dirs = []
@@ -72,7 +73,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         sources= ['scsmodule.c'],
                         define_macros=define_macros + [('GPU', None)],
                         include_dirs=include_dirs,
-                        library_dirs=library_dirs + ['/usr/local/cuda/lib', '/usr/local/lib'], # fix lib location
+                        library_dirs=library_dirs + ['/usr/local/cuda/lib', '/usr/local/lib'], # TODO fix lib location
                         libraries=libraries + ['scsgpu', 'cudart', 'cublas', 'cusparse'],
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
