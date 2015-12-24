@@ -24,10 +24,6 @@
 #define PyInt_Check PyLong_Check
 #endif
 
-
-static int scs_intType;
-static int scs_floatType;
-
 struct ScsPyData {
 	PyArrayObject * Ax;
 	PyArrayObject * Ai;
@@ -120,7 +116,7 @@ static scs_int getWarmStart(char * key, scs_float ** x, scs_int l, PyObject * wa
 			PySys_WriteStderr("Error parsing warm-start input\n");
 			return 0;
 		} else {
-			PyArrayObject * px0 = getContiguous(x0, scs_floatType);
+			PyArrayObject * px0 = getContiguous(x0, getFloatType());
 			memcpy(*x, (scs_float *) PyArray_DATA(px0), l * sizeof(scs_float));
             Py_DECREF(px0);
 			return 1;
@@ -238,14 +234,17 @@ static PyObject *version(PyObject* self) {
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
-	/* data structures for arguments */
-	PyArrayObject *Ax, *Ai, *Ap, *c, *b;
-	PyObject *cone, *warm = SCS_NULL;
+    /* data structures for arguments */
+    PyArrayObject *Ax, *Ai, *Ap, *c, *b;
+    PyObject *cone, *warm = SCS_NULL;
     PyObject *verbose = SCS_NULL;
     PyObject *normalize = SCS_NULL;
-	struct ScsPyData ps = { SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, };
-	/* scs data structures */
-	Data * d = scs_calloc(1, sizeof(Data));
+    /* get the typenum for the primitive scs_int and scs_float types */
+    int scs_intType = getIntType();
+    int scs_floatType = getFloatType();
+    struct ScsPyData ps = { SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, };
+    /* scs data structures */
+    Data * d = scs_calloc(1, sizeof(Data));
     Cone * k = scs_calloc(1, sizeof(Cone));
 
     AMatrix * A;
@@ -308,9 +307,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		return SCS_NULL;
 	}
 
-	/* get the typenum for the primitive scs_int and scs_float types */
-	scs_intType = getIntType();
-	scs_floatType = getFloatType();
     /* set A */
 	if (!PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1) {
 		return finishWithErr(d, k, &ps, "Ax must be a numpy array of floats");
