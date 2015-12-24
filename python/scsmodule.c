@@ -232,7 +232,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	PyObject *verbose = SCS_NULL;
     PyObject *normalize = SCS_NULL;
     /* get the typenum for the primitive scs_int and scs_float types */
-    int scs_intType = getIntType();
+    /* int scs_intType = getIntType(); */
     int scs_floatType = getFloatType();
     struct ScsPyData ps = { SCS_NULL, SCS_NULL, SCS_NULL };
 	/* scs data structures */
