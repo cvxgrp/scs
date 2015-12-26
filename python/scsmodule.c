@@ -250,21 +250,25 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
-	const char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "warm",
+	char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "warm",
         "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", SCS_NULL };
 	
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
     #ifdef FLOAT
-    const char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffff";
+    char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffff";
+    char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
     #else
-    const char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
+    char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
+    char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
     #endif
 #else
     #ifdef FLOAT
-	const char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffff";
+	char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffff";
+	char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
     #else
-	const char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
+	char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
+	char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
     #endif
 #endif
     npy_intp veclen[1];
@@ -432,20 +436,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	veclen[0] = d->m;
 	s = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.s);
     PyArray_ENABLEFLAGS((PyArrayObject *) s, NPY_ARRAY_OWNDATA);
-
-#ifdef DLONG
-    #ifdef FLOAT
-    const char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
-    #else
-    const char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
-    #endif
-#else
-    #ifdef FLOAT
-	const char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
-    #else
-	const char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
-    #endif
-#endif
 
     infoDict = Py_BuildValue(outarg_string,
 			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,
