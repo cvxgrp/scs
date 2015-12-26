@@ -250,21 +250,21 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
-	static char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "warm",
+	const char *kwlist[] = { "shape", "Ax", "Ai", "Ap", "b", "c", "cone", "warm",
         "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", SCS_NULL };
 	
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
     #ifdef FLOAT
-    static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffff";
+    const char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffff";
     #else
-    static char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
+    const char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
     #endif
 #else
     #ifdef FLOAT
-	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffff";
+	const char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffff";
     #else
-	static char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
+	const char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
     #endif
 #endif
     npy_intp veclen[1];
@@ -435,15 +435,15 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 
 #ifdef DLONG
     #ifdef FLOAT
-    static char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
+    const char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
     #else
-    static char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
+    const char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
     #endif
 #else
     #ifdef FLOAT
-	static char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
+	const char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
     #else
-	static char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
+	const char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
     #endif
 #endif
 
