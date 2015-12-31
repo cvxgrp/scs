@@ -7,8 +7,10 @@
 #include "../common.h"
 #include "linAlg.h"
 
-#include "include/cusparse.h"
-#include "include/cublas_v2.h"
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#include <cusparse.h>
+#include <cublas_v2.h>
 
 struct PRIVATE_DATA {
     scs_int Annz; /* num non-zeros in A matrix */
