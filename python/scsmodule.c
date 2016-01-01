@@ -403,11 +403,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 		d->stgs->warm_start |= getWarmStart("s", &(sol.s), d->m, warm);
 	}
 
-    /* TODO threading not enabled, PySys_WriteStdout and static timers not thread safe (WITH_THREAD) */
-    /* Py_BEGIN_ALLOW_THREADS */
+    Py_BEGIN_ALLOW_THREADS
     /* Solve! */
     scs(d, k, &sol, &info);
-    /* Py_END_ALLOW_THREADS */
+    Py_END_ALLOW_THREADS
 
 	/* create output (all data is *deep copied*) */
 	/* x */
