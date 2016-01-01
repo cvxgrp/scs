@@ -581,8 +581,8 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 		scs_printf("c'x = %.4f\n", innerProd(d->c, sol->x, d->n));
 	} else {
 		scs_printf("Error metrics:\n");
-		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y/m = %.4e\n", getPriConeDist(sol->s, k, w->coneWork, d->m), \
-			getDualConeDist(sol->y, k, w->coneWork, d->m), innerProd(sol->s, sol->y, d->m) / d->m);
+		scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y/|s||y| = %.4e\n", getPriConeDist(sol->s, k, w->coneWork, d->m), \
+			getDualConeDist(sol->y, k, w->coneWork, d->m), innerProd(sol->s, sol->y, d->m) / calcNorm(sol->s, d->m) / calcNorm(sol->y, d->m));
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
 		scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->resDual);
 		scs_printf("|c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->relGap);
