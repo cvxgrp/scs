@@ -12,6 +12,9 @@ struct PRIVATE_DATA{
 	scs_float * M; /* pre-conditioner */
 	scs_float * z;
    	scs_float * G; /* Gram matrix */
+    /* reporting */
+    scs_int totCgIts;
+    scs_float totalSolveTime;
 };
 
 #endif

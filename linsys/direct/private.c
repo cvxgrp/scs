@@ -1,11 +1,7 @@
 #include "private.h"
 
-static timer linsysTimer;
-static scs_float totalSolveTime;
-
 void BLAS(potrf)(char *uplo, blasint *n, scs_float *a, blasint * lda, blasint *info);
 void BLAS(trsv)(char *uplo, char *trans, char *diag, blasint *n, scs_float *a, blasint *lda, scs_float *x, blasint *incx);
-
 
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
     _accumByAtrans(A, p, x, y);
@@ -23,8 +19,8 @@ char * getLinSysMethod(const AMatrix * A, const Settings * stgs) {
 
 char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
-	sprintf(str, "\tLin-sys: avg solve time: %1.2es\n", totalSolveTime / (info->iter + 1) / 1e3);
-	totalSolveTime = 0;
+	sprintf(str, "\tLin-sys: avg solve time: %1.2es\n", p->totalSolveTime / (info->iter + 1) / 1e3);
+	p->totalSolveTime = 0;
 	return str;
 }
 
@@ -51,7 +47,7 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 			p->L[k + j * n] = p->L[j + k * n];
         }
 	}
-	totalSolveTime = 0.0;
+	p->totalSolveTime = 0.0;
 	return p;
 }
 
@@ -64,6 +60,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
 	scs_float * L = p->L;
+    timer linsysTimer;
 	blasint m = (blasint) A->m, n = (blasint) A->n, one = 1;
 	scs_float onef = 1.0, negOnef = -1.0;
 #ifdef EXTRAVERBOSE
@@ -79,7 +76,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
 	BLAS(trsv)("Upper", "NoTranspose", "NonUnit", &n, L, &n, b, &one);
 
 	BLAS(gemv)("NoTranspose", &m, &n, &onef, A->x, &m, b, &one, &negOnef, &(b[A->n]), &one);
-	totalSolveTime += tocq(&linsysTimer);
+	p->totalSolveTime += tocq(&linsysTimer);
 #ifdef EXTRAVERBOSE
 	scs_printf("finished solving lin sys\n");
 #endif

@@ -12,6 +12,9 @@
 #include <cublas_v2.h>
 
 struct PRIVATE_DATA {
+    /* reporting */
+    scs_int totCgIts;
+    scs_float totalSolveTime;
     /* CUDA */
     cublasHandle_t cublasHandle;
     /* ALL BELOW HOSTED ON THE GPU */

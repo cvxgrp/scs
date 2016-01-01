@@ -7,6 +7,8 @@
 
 struct PRIVATE_DATA{
 	scs_float * L;
+    /* reporting */
+    scs_float totalSolveTime;
 };
 
 #endif

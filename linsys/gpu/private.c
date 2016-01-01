@@ -30,9 +30,6 @@ extern "C" {
 #endif
 #endif
 
-static scs_int totCgIts;
-static timer linsysTimer;
-static scs_float totalSolveTime;
 
 void accumByAtransGpu(const Priv * p, const scs_float *x, scs_float *y) {
     /* y += A'*x
@@ -81,9 +78,9 @@ char * getLinSysMethod(const AMatrix * A, const Settings * stgs) {
 char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = (char *)scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
-			(scs_float ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
-	totCgIts = 0;
-	totalSolveTime = 0;
+			(scs_float ) p->totCgIts / (info->iter + 1), p->totalSolveTime / (info->iter + 1) / 1e3);
+	p->totCgIts = 0;
+	p->totalSolveTime = 0;
 	return str;
 }
 
@@ -145,8 +142,8 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     scs_int j, numElementsG;
 
     p->cublasHandle = 0;
-	totalSolveTime = 0;
-	totCgIts = 0;
+	p->totalSolveTime = 0;
+	p->totCgIts = 0;
 
     /* Get handle to the CUBLAS context */
     cublasCreate(&p->cublasHandle);
@@ -300,6 +297,7 @@ void testGpuMatMul(const AMatrix * A, Priv * p, scs_float * b) {
 
 scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
     scs_int cgIts;
+    timer linsysTimer;
     scs_float * bg = p->bg;
     scs_float negOnef = -1.0;
     scs_float cgTol = calcNorm(b, A->n) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
@@ -322,10 +320,10 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
     cudaMemcpy(b, bg, (A->n + A->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
 
     if (iter >= 0) {
-        totCgIts += cgIts;
+        p->totCgIts += cgIts;
     }
 
-    totalSolveTime += tocq(&linsysTimer);
+    p->totalSolveTime += tocq(&linsysTimer);
 #if EXTRAVERBOSE > 0
     scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif

@@ -3,10 +3,6 @@
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
 
-static scs_int totCgIts;
-static timer linsysTimer;
-static scs_float totalSolveTime;
-
 /* TODO: dsymv appears to be broken in MATLAB (R2014b at least): */
 void BLAS(symv)(char *uplo, blasint *n, scs_float *alpha, scs_float *a, blasint *lda, const scs_float *x, blasint *incx,
 		scs_float *beta, scs_float *y, blasint *incy);
@@ -30,9 +26,9 @@ char * getLinSysMethod(const AMatrix * A, const Settings * stgs) {
 char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
-			(scs_float ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
-	totCgIts = 0;
-	totalSolveTime = 0;
+			(scs_float ) p->totCgIts / (info->iter + 1), p->totalSolveTime / (info->iter + 1) / 1e3);
+	p->totCgIts = 0;
+	p->totalSolveTime = 0;
 	return str;
 }
 
@@ -60,8 +56,8 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 		p->G[j * A->n + j] += stgs->rho_x;
 	}
 	getPreconditioner(A, p);
-	totalSolveTime = 0;
-	totCgIts = 0;
+	p->totalSolveTime = 0;
+	p->totCgIts = 0;
 	return p;
 }
 
@@ -147,6 +143,7 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
     /* solves Mx = b, for x but stores result in b
        s contains warm-start (if available)	p->r = b; */
     scs_int cgIts;
+    timer linsysTimer;
     blasint n = (blasint) A->n, m = (blasint) A->m, one = 1;
     scs_float onef = 1.0, negOnef = -1.0;
     scs_float cgTol = BLAS(nrm2)(&n, b, &one) * (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
@@ -161,10 +158,9 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
     scs_printf("\tCG iterations: %i\n", (int) cgIts);
 #endif
     if (iter >= 0) {
-        totCgIts += cgIts;
+        p->totCgIts += cgIts;
     }
-
-	totalSolveTime += tocq(&linsysTimer);
+	p->totalSolveTime += tocq(&linsysTimer);
 	return 0;
 }
 
