@@ -13,6 +13,8 @@ struct PRIVATE_DATA {
 	scs_float * D; /* diagonal matrix of factorization */
 	scs_int * P; /* permutation of KKT matrix for factorization */
 	scs_float * bp; /* workspace memory for solves */
+    /* reporting */
+    scs_float totalSolveTime;
 };
 
 #endif

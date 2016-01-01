@@ -17,6 +17,9 @@ struct PRIVATE_DATA {
 	/* preconditioning */
 	scs_float * z;
 	scs_float * M;
+    /* reporting */
+    scs_int totCgIts;
+    scs_float totalSolveTime;
 };
 
 #endif

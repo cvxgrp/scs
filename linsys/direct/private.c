@@ -1,8 +1,5 @@
 #include "private.h"
 
-static timer linsysTimer;
-static scs_float totalSolveTime;
-
 char * getLinSysMethod(const AMatrix * A, const Settings * s) {
 	char * tmp = scs_malloc(sizeof(char) * 128);
 	sprintf(tmp, "sparse-direct, nnz in A = %li", (long) A->p[A->n]);
@@ -13,8 +10,8 @@ char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	scs_int n = p->L->n;
 	sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n", (long) (p->L->p[n] + n),
-			totalSolveTime / (info->iter + 1) / 1e3);
-	totalSolveTime = 0;
+			p->totalSolveTime / (info->iter + 1) / 1e3);
+	p->totalSolveTime = 0;
 	return str;
 }
 
@@ -200,16 +197,17 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 		freePriv(p);
 		return SCS_NULL;
 	}
-	totalSolveTime = 0.0;
+	p->totalSolveTime = 0.0;
 	return p;
 }
 
 scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
 	/* returns solution to linear system */
 	/* Ax = b with solution stored in b */
-	tic(&linsysTimer);
+	timer linsysTimer;
+    tic(&linsysTimer);
 	LDLSolve(b, b, p->L, p->D, p->P, p->bp);
-	totalSolveTime += tocq(&linsysTimer);
+	p->totalSolveTime += tocq(&linsysTimer);
 #if EXTRAVERBOSE > 0
 	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif

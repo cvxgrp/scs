@@ -3,10 +3,6 @@
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
 
-static scs_int totCgIts;
-static timer linsysTimer;
-static scs_float totalSolveTime;
-
 char * getLinSysMethod(const AMatrix * A, const Settings * s) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)", (long ) A->p[A->n], s->cg_rate);
@@ -16,9 +12,9 @@ char * getLinSysMethod(const AMatrix * A, const Settings * s) {
 char * getLinSysSummary(Priv * p, const Info * info) {
 	char * str = scs_malloc(sizeof(char) * 128);
 	sprintf(str, "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
-			(scs_float ) totCgIts / (info->iter + 1), totalSolveTime / (info->iter + 1) / 1e3);
-	totCgIts = 0;
-	totalSolveTime = 0;
+			(scs_float ) p->totCgIts / (info->iter + 1), p->totalSolveTime / (info->iter + 1) / 1e3);
+	p->totCgIts = 0;
+	p->totalSolveTime = 0;
 	return str;
 }
 
@@ -159,8 +155,8 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	p->M = scs_malloc((A->n) * sizeof(scs_float));
 	getPreconditioner(A, stgs, p);
 
-	totalSolveTime = 0;
-	totCgIts = 0;
+	p->totalSolveTime = 0;
+	p->totCgIts = 0;
 	if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p || !p->At->x) {
 		freePriv(p);
 		return SCS_NULL;
@@ -220,7 +216,8 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
 
 scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_float * b, const scs_float * s, scs_int iter) {
 	scs_int cgIts;
-	scs_float cgTol = calcNorm(b, A->n)
+	timer linsysTimer;
+    scs_float cgTol = calcNorm(b, A->n)
 			* (iter < 0 ? CG_BEST_TOL : CG_MIN_TOL / POWF((scs_float) iter + 1, stgs->cg_rate));
 
 	tic(&linsysTimer);
@@ -233,10 +230,10 @@ scs_int solveLinSys(const AMatrix * A, const Settings * stgs, Priv * p, scs_floa
 	accumByA(A, p, b, &(b[A->n]));
 
 	if (iter >= 0) {
-		totCgIts += cgIts;
+		p->totCgIts += cgIts;
 	}
 
-	totalSolveTime += tocq(&linsysTimer);
+	p->totalSolveTime += tocq(&linsysTimer);
 #if EXTRAVERBOSE > 0
 	scs_printf("linsys solve time: %1.2es\n", tocq(&linsysTimer) / 1e3);
 #endif

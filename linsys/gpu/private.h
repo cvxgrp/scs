@@ -14,6 +14,9 @@
 
 struct PRIVATE_DATA {
     scs_int Annz; /* num non-zeros in A matrix */
+    /* reporting */
+    scs_int totCgIts;
+    scs_float totalSolveTime;
     /* CUDA */
     cublasHandle_t cublasHandle;
     cusparseHandle_t cusparseHandle;
