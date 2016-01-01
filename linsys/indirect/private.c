@@ -124,9 +124,11 @@ static void matVec(const AMatrix * A, const Settings * s, Priv * p, const scs_fl
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
 	_accumByAtrans(A->n, A->x, A->i, A->p, x, y);
 }
+
 void accumByA(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
 	_accumByAtrans(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
 }
+
 static void applyPreConditioner(scs_float * M, scs_float * z, scs_float * r, scs_int n, scs_float *ipzr) {
 	scs_int i;
 	*ipzr = 0;

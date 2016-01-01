@@ -132,7 +132,7 @@ static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject 
     PyObject *obj = PyDict_GetItemString(cone, key);
     if (obj) {
         if (PyList_Check(obj)) {
-            n = PyList_Size(obj);
+            n = (scs_int) PyList_Size(obj);
             q = scs_calloc(n, sizeof(scs_int));
             for (i = 0; i < n; ++i) {
                 PyObject *qi = PyList_GetItem(obj, i);
@@ -166,7 +166,7 @@ static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObj
     PyObject *obj = PyDict_GetItemString(cone, key);
     if (obj) {
         if (PyList_Check(obj)) {
-            n = PyList_Size(obj);
+            n = (scs_int) PyList_Size(obj);
             q = scs_calloc(n, sizeof(scs_float));
             for (i = 0; i < n; ++i) {
                 PyObject *qi = PyList_GetItem(obj, i);
