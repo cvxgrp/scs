@@ -30,22 +30,6 @@ struct ScsPyData {
 	PyArrayObject * c;
 };
 
-/* Note, Python3.x may require special handling for the scs_int and scs_float types. */
-static int getIntType(void) {
-	switch (sizeof(scs_int)) {
-	case 1:
-		return NPY_INT8;
-	case 2:
-		return NPY_INT16;
-	case 4:
-		return NPY_INT32;
-	case 8:
-		return NPY_INT64;
-	default:
-		return NPY_INT32; /* defaults to 4 byte int */
-	}
-}
-
 static int getFloatType(void) {
 	switch (sizeof(scs_float)) {
 	case 2:
@@ -130,7 +114,7 @@ static int getConeArrDim(char * key, scs_int ** varr, scs_int * vsize, PyObject 
     PyObject *obj = PyDict_GetItemString(cone, key);
     if (obj) {
         if (PyList_Check(obj)) {
-            n = PyList_Size(obj);
+            n = (scs_int) PyList_Size(obj);
             q = scs_calloc(n, sizeof(scs_int));
             for (i = 0; i < n; ++i) {
                 PyObject *qi = PyList_GetItem(obj, i);
@@ -164,7 +148,7 @@ static int getConeFloatArr(char * key, scs_float ** varr, scs_int * vsize, PyObj
     PyObject *obj = PyDict_GetItemString(cone, key);
     if (obj) {
         if (PyList_Check(obj)) {
-            n = PyList_Size(obj);
+            n = (scs_int) PyList_Size(obj);
             q = scs_calloc(n, sizeof(scs_float));
             for (i = 0; i < n; ++i) {
                 PyObject *qi = PyList_GetItem(obj, i);
@@ -242,20 +226,24 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
     AMatrix * A;
 	Sol sol = { 0 };
 	Info info;
-	static char *kwlist[] = { "shape", "Ax", "b", "c", "cone", "warm",
+	char *kwlist[] = { "shape", "Ax", "b", "c", "cone", "warm",
         "verbose", "normalize", "max_iters", "scale", "eps", "cg_rate", "alpha", "rho_x", SCS_NULL };
     /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
     #ifdef FLOAT
-	static char *argparse_string = "(ll)O!O!O!O!|O!O!O!lfffff";
+	char *argparse_string = "(ll)O!O!O!O!|O!O!O!lfffff";
+    char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
     #else
-	static char *argparse_string = "(ll)O!O!O!O!|O!O!O!lddddd";
+	char *argparse_string = "(ll)O!O!O!O!|O!O!O!lddddd";
+    char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
     #endif
 #else
     #ifdef FLOAT
-	static char *argparse_string = "(ii)O!O!O!O!|O!O!O!ifffff";
+	char *argparse_string = "(ii)O!O!O!O!|O!O!O!ifffff";
+	char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
     #else
-	static char *argparse_string = "(ii)O!O!O!O!|O!O!O!iddddd";
+	char *argparse_string = "(ii)O!O!O!O!|O!O!O!iddddd";
+	char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
     #endif
 #endif
     npy_intp veclen[1];
@@ -411,20 +399,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs) {
 	veclen[0] = d->m;
 	s = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.s);
     PyArray_ENABLEFLAGS((PyArrayObject *) s, NPY_ARRAY_OWNDATA);
-
-#ifdef DLONG
-    #ifdef FLOAT
-    static char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
-    #else
-    static char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
-    #endif
-#else
-    #ifdef FLOAT
-	static char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
-    #else
-	static char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
-    #endif
-#endif
 
     infoDict = Py_BuildValue(outarg_string,
 			"statusVal", (scs_int) info.statusVal, "iter", (scs_int) info.iter, "pobj", (scs_float) info.pobj,

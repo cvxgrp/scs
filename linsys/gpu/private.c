@@ -102,6 +102,10 @@ void freePriv(Priv * p) {
 			cudaFree(p->Gp);
 		if (p->bg)
 			cudaFree(p->bg);
+		if (p->z)
+			cudaFree(p->z);
+		if (p->M)
+			cudaFree(p->M);
 		if (p->Ag) {
             cudaFreeAMatrix(p->Ag);
 			scs_free(p->Ag);
@@ -116,6 +120,23 @@ void freePriv(Priv * p) {
 	}
 }
 
+/* store inverse preconditioner */
+void getPreconditioner(Priv *p) {
+    scs_float onef = 1.0;
+    scs_int i, n = p->G->n;
+    scs_float * tmp = scs_malloc(n * sizeof(scs_float));
+    
+    cudaMemset(p->M, 0, n * sizeof(scs_float));
+    CUBLAS(axpy)(p->cublasHandle, n, &onef, p->G->x, n + 1, p->M, 1);
+
+    /* annoying hack to invert M */
+    cudaMemcpy(tmp, p->M, n * sizeof(scs_float), cudaMemcpyDeviceToHost);
+    for(i = 0; i < n; i++) {
+        tmp[i] = 1 / tmp[i];
+    }
+    cudaMemcpy(p->M, tmp, n * sizeof(scs_float), cudaMemcpyHostToDevice);
+    scs_free(tmp);
+}
 
 Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     Priv * p = (Priv *)scs_calloc(1, sizeof(Priv));
@@ -147,10 +168,12 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     cudaMalloc((void **)&p->r, A->n * sizeof(scs_float));
     cudaMalloc((void **)&p->Gp, A->n * sizeof(scs_float));
     cudaMalloc((void **)&p->bg, (A->n + A->m) * sizeof(scs_float));
+    cudaMalloc((void **)&p->z, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->M, A->n * sizeof(scs_float));
 
     cudaMemcpy(Ag->x, A->x, A->n * A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
 
-    /* create G in CPU mem first, then send to GPU */
+    /* create G in CPU mem first (just rho_x * I part), then send to GPU */
 	Gtemp = (scs_float *)scs_calloc(A->n * A->n, sizeof(scs_float));
     for (j = 0; j < A->n; j++) {
         Gtemp[j * A->n + j] = stgs->rho_x;
@@ -159,8 +182,9 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
     scs_free(Gtemp);
 
 	CUBLAS(syrk)(p->cublasHandle, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_T, A->n, A->m, &onef, p->Ag->x, A->m, &onef, G->x, A->n);
+    getPreconditioner(p);
 
-	err = cudaGetLastError();
+    err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("%s:%d:%s\nERROR_CUDA: %s\n", __FILE__, __LINE__, __func__, cudaGetErrorString(err));
 		freePriv(p);
@@ -169,15 +193,23 @@ Priv * initPriv(const AMatrix * A, const Settings * stgs) {
 	return p;
 }
 
+/* use actual preconditioner (not inverse) */
+static void applyPreConditioner(cublasHandle_t cublasHandle, scs_float * M, scs_float * z, scs_float * r, scs_int n) {
+    cudaMemcpy(z, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
+    CUBLAS(tbmv)(cublasHandle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, n, 0, M, 1, z, 1);
+}
+
 /* solves (I+A'A)x = b, s warm start, solution stored in bg (on GPU) */
 static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const scs_float * s, scs_float * bg, scs_int max_its,
         scs_float tol) {
     scs_int i, n = A->n;
-    scs_float alpha, nrm_r, nrm_r_old, pGp, negAlpha, beta;
+    scs_float alpha, nrm_r, pGp, negAlpha, beta, ipzr, ipzrOld;
     scs_float onef = 1.0, negOnef = -1.0, zerof = 0.0;
     scs_float *p = pr->p; /* cg direction */
     scs_float *Gp = pr->Gp; /* updated CG direction */
     scs_float *r = pr->r; /* cg residual */
+    scs_float *z = pr->z; /* preconditioned */
+    scs_float *M = pr->M; /* preconditioner */
     cublasHandle_t cublasHandle = pr->cublasHandle;
 
 	cudaMemcpy(r, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
@@ -198,21 +230,21 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
         return 0;
     }
 
-    /* put p in r, replacing temp mem */
-    cudaMemcpy(p, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
+    applyPreConditioner(cublasHandle, M, z, r, n);
+    CUBLAS(dot)(cublasHandle, n, r, 1, z, 1, &ipzr);
+    /* put z in p, replacing temp mem */
+    cudaMemcpy(p, z, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
 
     for (i = 0; i < max_its; ++i) {
     	CUBLAS(symv)(pr->cublasHandle, CUBLAS_FILL_MODE_UPPER, n, &onef, pr->G->x, n, p, 1, &zerof, Gp, 1);
 
         CUBLAS(dot)(cublasHandle, n, p, 1, Gp, 1, &pGp);
 
-        alpha = (nrm_r * nrm_r) / pGp;
+        alpha = ipzr / pGp;
         negAlpha = -alpha;
 
         CUBLAS(axpy)(cublasHandle, n, &alpha, p, 1, bg, 1);
         CUBLAS(axpy)(cublasHandle, n, &negAlpha, Gp, 1, r, 1);
-
-        nrm_r_old = nrm_r;
 
         /* for some reason nrm2 is VERY slow */
         /* CUBLAS(nrm2)(cublasHandle, n, r, 1, &nrm_r); */
@@ -222,9 +254,13 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
             i++;
             break;
         }
-        beta = (nrm_r * nrm_r) / (nrm_r_old * nrm_r_old);
+        ipzrOld = ipzr;
+        applyPreConditioner(cublasHandle, M, z, r, n);
+        CUBLAS(dot)(cublasHandle, n, r, 1, z, 1, &ipzr);
+
+        beta = ipzr / ipzrOld;
         CUBLAS(scal)(cublasHandle, n, &beta, p, 1);
-        CUBLAS(axpy)(cublasHandle, n, &onef, r, 1, p, 1);
+        CUBLAS(axpy)(cublasHandle, n, &onef, z, 1, p, 1);
     }
 #if EXTRAVERBOSE > 0
     scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, nrm_r, (long) i+1);

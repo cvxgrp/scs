@@ -1,6 +1,6 @@
 UNAME = $(shell uname -s)
 CC = gcc
-CUCC = nvcc
+CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
 
 # must add nvcc to path, e.g.
 # export PATH=/Developer/NVIDIA/CUDA-7.5/bin/:$PATH
@@ -40,7 +40,7 @@ CFLAGS += -fPIC
 endif
 
 CULDFLAGS += -lcudart -lcublas
-CUDAFLAGS = -g -Xcompiler -O3,-fPIC -Iinclude -I$(GPU)/include
+CUDAFLAGS = $(CFLAGS) -I/usr/local/cuda/include -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/direct

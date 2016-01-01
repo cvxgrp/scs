@@ -7,7 +7,9 @@
 #include "../common.h"
 #include "linAlg.h"
 
-#include "include/cublas_v2.h"
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#include <cublas_v2.h>
 
 struct PRIVATE_DATA {
     /* CUDA */
@@ -17,6 +19,8 @@ struct PRIVATE_DATA {
     scs_float * r; /* cg residual, n */
     scs_float * Gp; /* G * p, n */
     scs_float * bg; /* b, n */
+    scs_float * z; /* preconditioned */
+    scs_float * M; /* preconditioner */
     AMatrix * Ag;   /* A matrix on GPU */
     AMatrix * G; /* Gram matrix on GPU */
 };

@@ -69,7 +69,7 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHAR
 # REQUIRES GPU AND CUDA INSTALLED
 gpu: $(OUT)/demo_SOCP_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 
-$(GPU)/private.o: $(GPU)/private.cu
+$(GPU)/private.o: $(GPU)/private.c
 	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
 
 $(OUT)/libscsgpu.$(SHARED): $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o

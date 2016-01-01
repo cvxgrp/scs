@@ -70,11 +70,11 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
     if GPU:
         _scs_gpu = Extension(
                         name='_scs_gpu',
-                        sources= ['scsmodule.c'],
+                        sources=sources + glob(rootDir + 'linsys/gpu/*.c'),
                         define_macros=define_macros + [('GPU', None)],
-                        include_dirs=include_dirs,
-                        library_dirs=library_dirs + ['/usr/local/cuda/lib', '/usr/local/lib'], # TODO fix lib location
-                        libraries=libraries + ['scsgpu', 'cudart', 'cublas', 'cusparse'],
+                        include_dirs=include_dirs + [rootDir + 'linsys/gpu/', '/usr/local/cuda/include'],
+                        library_dirs=library_dirs + ['/usr/local/cuda/lib'], # TODO fix lib location
+                        libraries=libraries + ['cudart', 'cublas'],
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
                         )
