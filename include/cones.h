@@ -23,16 +23,15 @@ struct SCS_CONE {
     scs_int psize; /* number of (primal and dual) power cone triples */
 };
 
-#ifdef LAPACK_LIB_FOUND
 /* private data to help cone projection step */
 typedef struct {
+#ifdef LAPACK_LIB_FOUND
     /* workspace for eigenvector decompositions: */
     scs_float * Xs, *Z, *e, *work;
     blasint *iwork, lwork, liwork;
-} ConeWork;
-#else
-typedef void * ConeWork;
 #endif
+    scs_float totalConeTime;
+} ConeWork;
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -50,7 +49,7 @@ scs_int validateCones(const Data * d, const Cone * k);
  of solution, can be SCS_NULL*/
 scs_int projDualCone(scs_float * x, const Cone *k, ConeWork * c, const scs_float * warm_start, scs_int iter);
 void finishCone(ConeWork * coneWork);
-char * getConeSummary(const Info * info);
+char * getConeSummary(const Info * info, ConeWork * c);
 
 #ifdef __cplusplus
 }

@@ -17,9 +17,6 @@ void BLAS(scal)(const blasint *n, const scs_float *sa, scs_float *sx, const blas
 scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
 #endif
 
-static timer coneTimer;
-static scs_float totalConeTime;
-
 static scs_int getSdConeSize(scs_int s) {
 	return (s * (s + 1)) / 2;
 }
@@ -141,10 +138,10 @@ scs_int validateCones(const Data * d, const Cone * k) {
    return 0;
 }
 
-char * getConeSummary(const Info * info) {
+char * getConeSummary(const Info * info, ConeWork * c) {
 	char * str = scs_malloc(sizeof(char) * 64);
-	sprintf(str, "\tCones: avg projection time: %1.2es\n", totalConeTime / (info->iter + 1) / 1e3);
-	totalConeTime = 0.0;
+	sprintf(str, "\tCones: avg projection time: %1.2es\n", c->totalConeTime / (info->iter + 1) / 1e3);
+	c->totalConeTime = 0.0;
 	return str;
 }
 
@@ -360,7 +357,7 @@ ConeWork * initCone(const Cone * k) {
 #if EXTRAVERBOSE > 0
     scs_printf("initCone\n");
 #endif
-    totalConeTime = 0.0;
+    coneWork->totalConeTime = 0.0;
     if (k->ssize && k->s) {
         if (!isSimpleSemiDefiniteCone(k->s, k->ssize) && setUpSdConeWorkSpace(coneWork, k) < 0) {
             finishCone(coneWork);
@@ -577,6 +574,7 @@ scs_int projDualCone(scs_float * x, const Cone * k, ConeWork * c, const scs_floa
     DEBUG_FUNC
     scs_int i;
 	scs_int count = (k->f ? k->f : 0);
+    timer coneTimer;
 #if EXTRAVERBOSE > 0
 	timer projTimer;
 	tic(&projTimer);
@@ -726,7 +724,9 @@ endif
 #endif
     }
     /* project onto OTHER cones */
-    totalConeTime += tocq(&coneTimer);
+    if (c) {
+        c->totalConeTime += tocq(&coneTimer);
+    }
     return 0;
 }
 
