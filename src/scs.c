@@ -548,7 +548,7 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
     DEBUG_FUNC
 	scs_int i;
 	char * linSysStr = getLinSysSummary(w->p, info);
-	char * coneStr = getConeSummary(info);
+	char * coneStr = getConeSummary(info, w->coneWork);
 	for (i = 0; i < _lineLen_; ++i) {
 		scs_printf("-");
 	}
