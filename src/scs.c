@@ -21,7 +21,7 @@ static const char* HEADER[] = { " Iter ", " pri res ", " dua res ", " rel gap ",
 		" time (s)", };
 static const scs_int HSPACE = 9;
 static const scs_int HEADER_LEN = 8;
-static scs_int _lineLen_;
+static const scs_int LINE_LEN = 76;
 
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
@@ -68,15 +68,11 @@ static void printInitHeader(const Data * d, const Cone * k) {
 	Settings * stgs = d->stgs;
 	char * coneStr = getConeHeader(k);
 	char * linSysMethod = getLinSysMethod(d->A, d->stgs);
-	_lineLen_ = -1;
-	for (i = 0; i < HEADER_LEN; ++i) {
-		_lineLen_ += (scs_int) strlen(HEADER[i]) + 1;
-	}
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan O'Donoghue, Stanford University, 2012-2015\n", scs_version());
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\n");
@@ -492,7 +488,7 @@ static void printHeader(Work * w, const Cone * k) {
 	scs_int i;
 	if (w->stgs->warm_start)
 		scs_printf("SCS using variable warm-starting\n");
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\n");
@@ -500,7 +496,7 @@ static void printHeader(Work * w, const Cone * k) {
 		scs_printf("%s|", HEADER[i]);
 	}
 	scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\n");
@@ -549,7 +545,7 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 	scs_int i;
 	char * linSysStr = getLinSysSummary(w->p, info);
 	char * coneStr = getConeSummary(info, w->coneWork);
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\nStatus: %s\n", info->status);
@@ -568,7 +564,7 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 		scs_free(coneStr);
 	}
 
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("-");
 	}
 	scs_printf("\n");
@@ -590,13 +586,13 @@ static void printFooter(const Data * d, const Cone * k, Sol * sol, Work * w, Inf
 		scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->resPri);
 		scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->resDual);
 		scs_printf("|c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->relGap);
-		for (i = 0; i < _lineLen_; ++i) {
+		for (i = 0; i < LINE_LEN; ++i) {
 			scs_printf("-");
 		}
 		scs_printf("\n");
 		scs_printf("c'x = %.4f, -b'y = %.4f\n", info->pobj, info->dobj);
 	}
-	for (i = 0; i < _lineLen_; ++i) {
+	for (i = 0; i < LINE_LEN; ++i) {
 		scs_printf("=");
 	}
 	scs_printf("\n");
