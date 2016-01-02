@@ -18,7 +18,7 @@ install:
   - conda update -q conda
   - conda info -a
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy nose coverage
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy nose coverage argparse
   - source activate test-environment
   - cd python && python setup.py install && cd ..
 
