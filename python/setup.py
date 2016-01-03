@@ -100,8 +100,9 @@ def install_scs(**kwargs):
         define_macros += [('EXTRAVERBOSE', 999)] # for debugging
     if args.openmp:
         define_macros += [('OPENMP', 1)] # openMP multi-threading
+        library_dirs += ['/usr/local/gfortran/lib'] # TODO not for all systems
         extra_compile_args += ['-fopenmp']
-#        extra_link_args += ['-lgomp'] # breaks compilation
+        extra_link_args += ['-lgomp']
     if args.blas64:
         define_macros += [('BLAS64', 1)] # 64 bit blas
     if blas_info or lapack_info:
