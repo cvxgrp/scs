@@ -118,7 +118,7 @@ def install_scs(**kwargs):
                         name='_scs_direct',
                         sources=sources + glob(root_dir + 'linsys/direct/*.c'),
                         define_macros=define_macros + extra_define_macros,
-                        include_dirs=include_dirs + [rootDir + 'linsys/direct/'],
+                        include_dirs=include_dirs + [root_dir + 'linsys/direct/'],
                         library_dirs=library_dirs,
                         libraries=libraries,
                         extra_link_args=extra_link_args,
