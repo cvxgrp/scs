@@ -2,8 +2,7 @@ UNAME = $(shell uname -s)
 CC = gcc
 CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
 
-# must add nvcc to path, e.g.
-# export PATH=/Developer/NVIDIA/CUDA-7.5/bin/:$PATH
+# For GPU must add cuda libs to path, e.g.
 # export DYLD_LIBRARY_PATH=/usr/local/cuda/lib:$DYLD_LIBRARY_PATH
 
 ifneq (, $(findstring CYGWIN, $(UNAME)))
