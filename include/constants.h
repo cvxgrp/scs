@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
-#define SCS_VERSION ("1.1.9") /* string literals automatically null-terminated */
+#define SCS_VERSION ("1.2.0") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE   (-7)
