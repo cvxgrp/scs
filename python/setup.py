@@ -66,13 +66,12 @@ def run_install():
     try:
         install_scs(blas_info=get_info('blas'), lapack_info=get_info('lapack'))
     except:
-        install_scs(blas_info={}, lapack_info={})
         print("###############################################################################################")
-        print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, ECPs, PCPs #")
-        print("# install blas/lapack and run this install script again to allow SCS to solve SDPs            #")
+        print("# failed to find blas/lapack libs, dense SCS requires blas and lapack to be installed         #")
+        print("# install blas/lapack and run this install script again                                       #")
         print("#                                                                                             #")
-        print("# scs will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set        #")
-        print("# use this to link against blas/lapack libs that scs can't find on it's own, usage ex:        #")
+        print("# SCS will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set        #")
+        print("# use this to link against blas/lapack libs that SCS can't find on it's own, usage ex:        #")
         print("#        >> export BLAS_LAPACK_LIB_PATHS=/usr/lib/:/other/dir                                 #")
         print("#        >> export BLAS_LAPACK_LIBS=blas:lapack                                               #")
         print("#        >> python setup.py install                                                           #")
