@@ -6,64 +6,67 @@
 #define RHOX (1e-3)
 #define TEST_WARM_START (1)
 
-scs_int readInData(FILE * fp, Data * d, Cone * k);
-scs_int openFile(scs_int argc, char ** argv, scs_int idx, const char * default_file, FILE ** fb);
+scs_int readInData(FILE *fp, Data *d, Cone *k);
+scs_int openFile(scs_int argc, char **argv, scs_int idx,
+                 const char *default_file, FILE **fb);
 /* void printSol(Data * d, Sol * sol, Info * info); */
 
 int main(int argc, char **argv) {
-	FILE * fp;
-	Cone * k;
-	Data * d;
-	Work * w;
-	Sol * sol;
-	Info info = { 0 };
-	scs_int i;
+    FILE *fp;
+    Cone *k;
+    Data *d;
+    Work *w;
+    Sol *sol;
+    Info info = {0};
+    scs_int i;
 
-	if (openFile(argc, argv, 1, DEMO_PATH, &fp) < 0)
-		return -1;
+    if (openFile(argc, argv, 1, DEMO_PATH, &fp) < 0)
+        return -1;
 
-	k = scs_calloc(1, sizeof(Cone));
-	d = scs_calloc(1, sizeof(Data));
-	sol = scs_calloc(1, sizeof(Sol));
-	if (readInData(fp, d, k) == -1) {
-		printf("Error reading in data, aborting.\n");
-		return -1;
-	}
-	fclose(fp);
-	scs_printf("solve once using scs\n");
-	scs(d, k, sol, &info);
+    k = scs_calloc(1, sizeof(Cone));
+    d = scs_calloc(1, sizeof(Data));
+    sol = scs_calloc(1, sizeof(Sol));
+    if (readInData(fp, d, k) == -1) {
+        printf("Error reading in data, aborting.\n");
+        return -1;
+    }
+    fclose(fp);
+    scs_printf("solve once using scs\n");
+    scs(d, k, sol, &info);
 
-	if (TEST_WARM_START) {
-		scs_printf("solve %i times with warm-start and (if applicable) factorization caching.\n", NUM_TRIALS);
-		/* warm starts stored in Sol */
-		w = scs_init(d, k, &info);
-		if (w) {
-			for (i = 0; i < NUM_TRIALS; i++) {
-				/* perturb b and c */
-				perturbVector(d->b, d->m);
-				perturbVector(d->c, d->n);
-				d->stgs->warm_start = 1;
-				d->stgs->cg_rate = 4;
-				scs_solve(w, d, k, sol, &info);
-				d->stgs->warm_start = 0;
-				d->stgs->cg_rate = 2;
-				scs_solve(w, d, k, sol, &info);
-			}
-		}
-		scs_printf("finished\n");
-		scs_finish(w);
-	}
+    if (TEST_WARM_START) {
+        scs_printf("solve %i times with warm-start and (if applicable) "
+                   "factorization caching.\n",
+                   NUM_TRIALS);
+        /* warm starts stored in Sol */
+        w = scs_init(d, k, &info);
+        if (w) {
+            for (i = 0; i < NUM_TRIALS; i++) {
+                /* perturb b and c */
+                perturbVector(d->b, d->m);
+                perturbVector(d->c, d->n);
+                d->stgs->warm_start = 1;
+                d->stgs->cg_rate = 4;
+                scs_solve(w, d, k, sol, &info);
+                d->stgs->warm_start = 0;
+                d->stgs->cg_rate = 2;
+                scs_solve(w, d, k, sol, &info);
+            }
+        }
+        scs_printf("finished\n");
+        scs_finish(w);
+    }
 
-	freeData(d, k);
-	freeSol(sol);
-	return 0;
+    freeData(d, k);
+    freeSol(sol);
+    return 0;
 }
 
-scs_int readInData(FILE * fp, Data * d, Cone * k) {
+scs_int readInData(FILE *fp, Data *d, Cone *k) {
     /* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
     scs_int i, Anz;
-    AMatrix * A;
-    Settings * stgs = scs_malloc(sizeof(Settings));
+    AMatrix *A;
+    Settings *stgs = scs_malloc(sizeof(Settings));
     stgs->rho_x = RHOX;
     stgs->warm_start = 0;
     stgs->scale = 1;
@@ -91,11 +94,11 @@ scs_int readInData(FILE * fp, Data * d, Cone * k) {
         DEBUG_FUNC
         return -1;
     }
-    if (fscanf(fp, INTRW, &(k->ep))!= 1) {
+    if (fscanf(fp, INTRW, &(k->ep)) != 1) {
         DEBUG_FUNC
         return -1;
     }
-    if (fscanf(fp, INTRW, &(k->ed))!= 1) {
+    if (fscanf(fp, INTRW, &(k->ed)) != 1) {
         DEBUG_FUNC
         return -1;
     }
@@ -201,22 +204,25 @@ scs_int readInData(FILE * fp, Data * d, Cone * k) {
     return 0;
 }
 
-scs_int openFile(scs_int argc, char ** argv, scs_int idx, const char * default_file, FILE ** fb) {
-	if (argc < idx + 1) {
-		printf("Not enough arguments supplied, using %s as default\n", default_file);
-	} else {
-		*fb = fopen(argv[idx], "r");
-		if (*fb != SCS_NULL)
-			return 0;
-		else {
-			printf("Couldn't open file %s, using %s as default\n", argv[idx], default_file);
-			fclose(*fb);
-		}
-	}
-	*fb = fopen(default_file, "r");
-	if (*fb == SCS_NULL) {
-		printf("Couldn't open %s\n", default_file);
-		return -1;
-	}
-	return 0;
+scs_int openFile(scs_int argc, char **argv, scs_int idx,
+                 const char *default_file, FILE **fb) {
+    if (argc < idx + 1) {
+        printf("Not enough arguments supplied, using %s as default\n",
+               default_file);
+    } else {
+        *fb = fopen(argv[idx], "r");
+        if (*fb != SCS_NULL)
+            return 0;
+        else {
+            printf("Couldn't open file %s, using %s as default\n", argv[idx],
+                   default_file);
+            fclose(*fb);
+        }
+    }
+    *fb = fopen(default_file, "r");
+    if (*fb == SCS_NULL) {
+        printf("Couldn't open %s\n", default_file);
+        return -1;
+    }
+    return 0;
 }

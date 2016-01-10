@@ -22,15 +22,15 @@ struct PRIVATE_DATA {
     cusparseHandle_t cusparseHandle;
     cusparseMatDescr_t descr;
     /* ALL BELOW HOSTED ON THE GPU */
-    scs_float * p; /* cg iterate, n  */
-    scs_float * r; /* cg residual, n */
-    scs_float * Gp; /* G * p, n */
-    scs_float * bg; /* b, n */
-    scs_float * tmp_m; /* m, used in matVec */
-    scs_float * z; /* preconditioned */
-    scs_float * M; /* preconditioner */
-    AMatrix * Ag;   /* A matrix on GPU */
-    AMatrix * Agt; /* A trans matrix on GPU */
+    scs_float *p;     /* cg iterate, n  */
+    scs_float *r;     /* cg residual, n */
+    scs_float *Gp;    /* G * p, n */
+    scs_float *bg;    /* b, n */
+    scs_float *tmp_m; /* m, used in matVec */
+    scs_float *z;     /* preconditioned */
+    scs_float *M;     /* preconditioner */
+    AMatrix *Ag;      /* A matrix on GPU */
+    AMatrix *Agt;     /* A trans matrix on GPU */
 };
 
 #endif

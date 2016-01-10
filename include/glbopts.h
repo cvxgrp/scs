@@ -10,21 +10,22 @@ extern "C" {
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
-#define scs_printf   mexPrintf
-#define _scs_free     mxFree
-#define _scs_malloc   mxMalloc
-#define _scs_calloc   mxCalloc
+#define scs_printf mexPrintf
+#define _scs_free mxFree
+#define _scs_malloc mxMalloc
+#define _scs_calloc mxCalloc
 #elif defined PYTHON
 #include <Python.h>
 #include <stdlib.h>
-#define scs_printf(...) {\
-    PyGILState_STATE gilstate = PyGILState_Ensure();\
-    PySys_WriteStdout(__VA_ARGS__);\
-    PyGILState_Release(gilstate);\
-}
-#define _scs_free     free
-#define _scs_malloc   malloc
-#define _scs_calloc   calloc
+#define scs_printf(...)                                                        \
+    {                                                                          \
+        PyGILState_STATE gilstate = PyGILState_Ensure();                       \
+        PySys_WriteStdout(__VA_ARGS__);                                        \
+        PyGILState_Release(gilstate);                                          \
+    }
+#define _scs_free free
+#define _scs_malloc malloc
+#define _scs_calloc calloc
 /* should not be used
 #elif defined USING_R
 #include <R.h>
@@ -37,27 +38,29 @@ extern "C" {
 #else
 #include <stdio.h>
 #include <stdlib.h>
-#define scs_printf   printf
-#define _scs_free     free
-#define _scs_malloc   malloc
-#define _scs_calloc   calloc
+#define scs_printf printf
+#define _scs_free free
+#define _scs_malloc malloc
+#define _scs_calloc calloc
 #endif
 
-#define scs_free(x) _scs_free(x); x = SCS_NULL
+#define scs_free(x)                                                            \
+    _scs_free(x);                                                              \
+    x = SCS_NULL
 #define scs_malloc(x) _scs_malloc(x)
-#define scs_calloc(x,y) _scs_calloc(x,y)
+#define scs_calloc(x, y) _scs_calloc(x, y)
 
 #ifdef DLONG
-    #ifdef _WIN64
-        typedef __int64 scs_int;
-        /* #define scs_int __int64 */
-    #else
-        typedef long scs_int;
-        /* #define scs_int long */
-    #endif
+#ifdef _WIN64
+typedef __int64 scs_int;
+/* #define scs_int __int64 */
 #else
-    typedef int scs_int;
-    /* #define scs_int int */
+typedef long scs_int;
+/* #define scs_int long */
+#endif
+#else
+typedef int scs_int;
+/* #define scs_int int */
 #endif
 
 #ifndef FLOAT
@@ -81,11 +84,11 @@ typedef float scs_float;
 #define SCS_NULL 0
 
 #ifndef MAX
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
 #ifndef MIN
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef ABS
@@ -109,8 +112,13 @@ typedef float scs_float;
 #endif
 
 #if EXTRAVERBOSE > 1
-#define DEBUG_FUNC scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__);
-#define RETURN scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n", __func__, tocq(&globalTimer), __FILE__, __LINE__); return
+#define DEBUG_FUNC                                                             \
+    scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n",          \
+               __func__, tocq(&globalTimer), __FILE__, __LINE__);
+#define RETURN                                                                 \
+    scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n",        \
+               __func__, tocq(&globalTimer), __FILE__, __LINE__);              \
+    return
 #else
 #define DEBUG_FUNC
 #define RETURN return
@@ -128,4 +136,3 @@ typedef struct SCS_CONE Cone;
 }
 #endif
 #endif
-
