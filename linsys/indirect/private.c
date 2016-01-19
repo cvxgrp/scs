@@ -131,7 +131,8 @@ void accumByAtrans(const AMatrix *A, Priv *p, const scs_float *x,
 
 void accumByA(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
     scs_float one = 1;
-    mkl_dcscmv("NOTRANS", &A->m, &A->n, &one, "GXXC", A->x, A->i, A->p, &A->p[1], x, &one, y);
+//    mkl_dcscmv("NOTRANS", &A->m, &A->n, &one, "GXXC", A->x, A->i, A->p, &A->p[1], x, &one, y);
+    mkl_dcscmv("TRANS", &p->At->m, &p->At->n, &one, "GXXC", p->At->x, p->At->i, p->At->p, &p->At->p[1], x, &one, y);
 }
 
 static void applyPreConditioner(scs_float *M, scs_float *z, scs_float *r,
