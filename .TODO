@@ -1,6 +1,12 @@
 # sudo install_name_tool -add_rpath /old/path /new/path/libscsgpu.dylib
-
+formatting
+rename output libraries
+MKL
+change ifdefs to if > 0
+clean up pre-amble?
+MEX GPU
 change to norm^2 equilibration?
+
 D,E dynamic rescaling (need to re-solve Mg = h multiple times)
 L-BFGS preconditioner for CG step
 

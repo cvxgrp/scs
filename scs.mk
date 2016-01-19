@@ -32,8 +32,9 @@ SHARED = so
 CULDFLAGS = -L/usr/local/cuda/lib64
 endif
 
+MKLROOT = /opt/intel/compilers_and_libraries_2016.1.111/mac/mkl
 # Add on default CFLAGS
-CFLAGS += -g -Wall -Wwrite-strings -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
+CFLAGS += -g -Wall -Wwrite-strings -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude -L/opt/intel/compilers_and_libraries_2016.1.111/mac/compiler/lib/ -L${MKLROOT}/lib -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -liomp5 -ldl -lpthread -lm 
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif

@@ -3,6 +3,8 @@
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
 
+void mkl_dcscmv(const char *transa, const scs_int *m, const scs_int *k, const double *alpha, const char *matdescra, const double *val, const scs_int *indx, const scs_int *pntrb, const scs_int *pntre, const double *x, const double *beta, double *y);
+
 char *getLinSysMethod(const AMatrix *A, const Settings *s) {
     char *str = scs_malloc(sizeof(char) * 128);
     sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
@@ -123,11 +125,13 @@ static void matVec(const AMatrix *A, const Settings *s, Priv *p,
 
 void accumByAtrans(const AMatrix *A, Priv *p, const scs_float *x,
                    scs_float *y) {
-    _accumByAtrans(A->n, A->x, A->i, A->p, x, y);
+    scs_float one = 1;
+    mkl_dcscmv("TRANS", &A->m, &A->n, &one, "GXXC", A->x, A->i, A->p, &A->p[1], x, &one, y);
 }
 
 void accumByA(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
-    _accumByAtrans(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
+    scs_float one = 1;
+    mkl_dcscmv("NOTRANS", &A->m, &A->n, &one, "GXXC", A->x, A->i, A->p, &A->p[1], x, &one, y);
 }
 
 static void applyPreConditioner(scs_float *M, scs_float *z, scs_float *r,
