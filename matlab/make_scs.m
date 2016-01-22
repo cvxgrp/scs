@@ -1,4 +1,4 @@
-gpu = true; % compile the gpu version of SCS
+gpu = false; % compile the gpu version of SCS
 float = false; % using single precision (rather than double) floating points
 int = false; % use 32 bit integers for indexing
 % WARNING: OPENMP WITH MATLAB CAN CAUSE ERRORS AND CRASH, USE WITH CAUTION:
