@@ -9,7 +9,9 @@ else
     pars = [];
 end
 
-if (isfield(pars,'use_indirect') && pars.use_indirect)
+if (isfield(pars, 'write_data') && pars.write_data)
+     write_scs_data(data, K, pars, 'scs_prob_data')
+elseif (isfield(pars,'use_indirect') && pars.use_indirect)
     [  x, y, s, info  ] = scs_indirect( data, K, pars);
 elseif (isfield(pars,'gpu') && pars.gpu)
     [  x, y, s, info  ] = scs_gpu( data, K, pars);

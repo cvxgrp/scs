@@ -76,7 +76,7 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.$(SHAR
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: $(OUT)/demo_SOCP_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
+gpu: $(OUT)/demo_gpu $(OUT)/demo_SOCP_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 
 $(GPU)/private.o: $(GPU)/private.c
 	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
@@ -92,6 +92,9 @@ $(OUT)/libscsgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
 
 $(OUT)/demo_SOCP_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsgpu.$(SHARED)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+
+$(OUT)/demo_gpu: examples/c/demo.c $(OUT)/libscsgpu.$(SHARED)
+	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge
 clean:

@@ -1,4 +1,4 @@
-function write_scs_data(data,K,params,name)
+function write_scs_data(data, K, params, name)
 % this function takes in problem data and writes out an
 % uncompressed file that can be read by demo_direct and
 % demo_indirect (compiled scs binary files)
