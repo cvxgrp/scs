@@ -244,7 +244,7 @@ static void coldStartVars(Work * w) {
 static scs_int projectLinSys(Work * w, scs_int iter) {
 	/* ut = u + v */
     DEBUG_FUNC
-	scs_int n = w->n, m = w->m, l = n + m + 1, status;
+	scs_int n = w->n, m = w->m, l = n + m + 1, i, status;
 	memcpy(w->u_t, w->u, l * sizeof(scs_float));
 	addScaledArray(w->u_t, w->v, l, 1.0);
 
@@ -257,6 +257,9 @@ static scs_int projectLinSys(Work * w, scs_int iter) {
 	status = solveLinSys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
 
 	w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
+	for (i = n; i < l; ++i) {
+		w->u_t[i] = w->stgs->alpha * w->u_t[i] + (1 - w->stgs->alpha) * w->u_prev[i];
+	}
 
 	RETURN status;
 }
@@ -281,9 +284,8 @@ void printSol(Work * w, Sol * sol, Info * info) {
 static void updateDualVars(Work * w) {
     DEBUG_FUNC
 	scs_int i, n = w->n, l = n + w->m + 1;
-	/* this does not relax 'x' variable */
 	for (i = n; i < l; ++i) {
-		w->v[i] += (w->u[i] - w->stgs->alpha * w->u_t[i] - (1.0 - w->stgs->alpha) * w->u_prev[i]);
+		w->v[i] += w->u[i] - w->u_t[i];
 	}
     RETURN;
 }
@@ -297,7 +299,7 @@ static scs_int projectCones(Work * w, const Cone * k, scs_int iter) {
 		w->u[i] = w->u_t[i] - w->v[i];
 	}
 	for (i = n; i < l; ++i) {
-		w->u[i] = w->stgs->alpha * w->u_t[i] + (1 - w->stgs->alpha) * w->u_prev[i] - w->v[i];
+		w->u[i] = w->u_t[i] - w->v[i];
 	}
 	/* u = [x;y;tau] */
 	status = projDualCone(&(w->u[n]), k, w->coneWork, &(w->u_prev[n]), iter);
