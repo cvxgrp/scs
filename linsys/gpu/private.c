@@ -267,11 +267,11 @@ static scs_int pcg(const AMatrix * A, const Settings * stgs, Priv * pr, const sc
 
 #ifdef TEST_GPU_MAT_MUL
 void accumByAtransHost(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
-    _accumByAtrans(A->n, A->x, A->i, A->p, x, y);
+    _accumByAtrans(A, p, x, y);
 }
 
 void accumByAHost(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
-    _accumByA(A->n, A->x, A->i, A->p, x, y);
+    _accumByA(A, p, x, y);
 }
 
 void testGpuMatMul(const AMatrix * A, Priv * p, scs_float * b) {
