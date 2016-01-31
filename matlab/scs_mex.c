@@ -20,6 +20,39 @@ scs_int parseWarmStart(const mxArray * p_mex, scs_float ** p, scs_int l) {
 	}
 }
 
+#if FLOAT > 0
+/* this memory must be freed */
+scs_float * castToScsFloatArr(double * arr, scs_int len) {
+    scs_int i;
+    scs_float * arrOut = scs_malloc(sizeof(scs_float) * len);
+    for (i = 0; i < len; i++) {
+        arrOut[i] = (scs_float) arr[i];
+    }
+    return arrOut;
+}
+
+double * castToDoubleArr(scs_float * arr, scs_int len) {
+    scs_int i;
+    double * arrOut = scs_malloc(sizeof(double) * len);
+    for (i = 0; i < len; i++) {
+        arrOut[i] = (double) arr[i];
+    }
+    return arrOut;
+}
+#endif
+
+void setOutputField(mxArray ** pout, scs_float * out, scs_int len) {
+	*pout = mxCreateDoubleMatrix(0, 0, mxREAL);
+#if FLOAT > 0
+    mxSetPr(*pout, castToDoubleArr(out, len));
+    scs_free(out);
+#else
+    mxSetPr(*pout, out);
+#endif
+    mxSetM(*pout, len);
+	mxSetN(*pout, 1);
+}
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	/* matlab usage: [x,y,s,info] = scs(data,cone,settings); */
 	scs_int i, ns, status;
@@ -41,9 +74,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mxArray *kep;
 	const mxArray *ked;
 	const mxArray *kp;
-	const scs_float *q_mex;
-    const scs_float *s_mex;
-    const scs_float *p_mex;
+	const double *q_mex;
+    const double *s_mex;
+    const double *p_mex;
     const size_t *q_dims;
     const size_t *s_dims;
     const size_t *p_dims;
@@ -56,7 +89,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const char * infoFields[] = { "iter", "status", "pobj", "dobj", "resPri", "resDual", "resInfeas", "resUnbdd",
 		"relGap", "setupTime", "solveTime" };
 	mxArray *tmp;
-
+#if EXTRAVERBOSE > 0
+    scs_printf("SIZE OF mwSize = %i\n", (int)sizeof(mwSize));
+    scs_printf("SIZE OF mwIndex = %i\n", (int)sizeof(mwIndex));
+#endif
 
 	if (nrhs != 3) {
 		mexErrMsgTxt("Three arguments are required in this order: data struct, cone struct, settings struct");
@@ -102,15 +138,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		scs_free(k);
 		mexErrMsgTxt("Input vector c must be in dense format (pass in full(c))");
 	}
-
 	cone = prhs[1];
 	settings = prhs[2];
 	d->n = (scs_int) *(mxGetDimensions(c_mex));
 	d->m = (scs_int) *(mxGetDimensions(b_mex));
-
+#if FLOAT > 0
+	d->b = castToScsFloatArr(mxGetPr(b_mex), d->m);
+	d->c = castToScsFloatArr(mxGetPr(c_mex), d->n);
+#else
 	d->b = (scs_float *)mxGetPr(b_mex);
 	d->c = (scs_float *)mxGetPr(c_mex);
-	setDefaultSettings(d);
+#endif
+    setDefaultSettings(d);
 
 	/* settings */
 	tmp = mxGetField(settings, 0, "alpha");
@@ -225,33 +264,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
 	A = scs_calloc(1, sizeof(AMatrix));
-	A->x = (scs_float *) mxGetPr(A_mex);
 	A->n = d->n;
     A->m = d->m;
+#if FLOAT > 0
+    A->x = castToScsFloatArr(mxGetPr(A_mex), A->n * A->m);
+#else
+    A->x = (scs_float *) mxGetPr(A_mex);
+#endif
 	d->A = A;
 	/* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used */
 	d->stgs->warm_start = parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
 	d->stgs->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
 	d->stgs->warm_start |= parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
+	
+    status = scs(d, k, &sol, &info);
 
-	status = scs(d, k, &sol, &info);
+    setOutputField(&plhs[0], sol.x, d->n);
+    setOutputField(&plhs[1], sol.y, d->m);
+    setOutputField(&plhs[2], sol.s, d->m);
 
-	plhs[0] = mxCreateDoubleMatrix(0, 0, mxREAL);
-	mxSetPr(plhs[0], sol.x);
-	mxSetM(plhs[0], d->n);
-	mxSetN(plhs[0], 1);
-
-	plhs[1] = mxCreateDoubleMatrix(0, 0, mxREAL);
-	mxSetPr(plhs[1], sol.y);
-	mxSetM(plhs[1], d->m);
-	mxSetN(plhs[1], 1);
-
-	plhs[2] = mxCreateDoubleMatrix(0, 0, mxREAL);
-	mxSetPr(plhs[2], sol.s);
-	mxSetM(plhs[2], d->m);
-	mxSetN(plhs[2], 1);
-
-	plhs[3] = mxCreateStructArray(1, one, numInfoFields, infoFields);
+    plhs[3] = mxCreateStructArray(1, one, numInfoFields, infoFields);
 
 	mxSetField(plhs[3], 0, "status", mxCreateString(info.status));
 
@@ -302,14 +334,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 }
 
 void freeMex(Data * d, Cone * k) {
-	if (k->q)
-		scs_free(k->q);
-	if (k->s)
+    if (k->q)
+        scs_free(k->q);
+    if (k->s)
         scs_free(k->s);
     if (k->p)
         scs_free(k->p);
     if (d) {
-        if(d->A) scs_free(d->A);
+#if FLOAT > 0
+        if (d->b) scs_free(d->b);
+        if (d->c) scs_free(d->c);
+#endif
+        if(d->A) {
+#if FLOAT > 0
+            if (d->A->x) scs_free(d->A->x);
+#endif
+            scs_free(d->A);
+        }
         if(d->stgs) scs_free(d->stgs);
         scs_free(d);
     }
