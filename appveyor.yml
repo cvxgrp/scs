@@ -12,7 +12,7 @@ platform:
     - x64
 
 install:
-    - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
+    - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\get-pip.py')
     - C:\%PYLOC%\python C:\get-pip.py
     - C:\%PYLOC%\Scripts\pip.exe install conda==3.7.0 # remove version when 'activate.bat missing' bug fixed
     - C:\%PYLOC%\Scripts\conda.exe init
