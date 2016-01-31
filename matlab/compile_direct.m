@@ -1,9 +1,9 @@
 function compile_direct(flags, common_scs)
 
 if (flags.COMPILE_WITH_OPENMP)
-    cmd = sprintf('mex -O %s %s %s -DOPENMP COMPFLAGS="/openmp \\$COMPFLAGS" CFLAGS="\\$CFLAGS -fopenmp" -I.. -I../include %s', flags.arr, flags.LCFLAG, flags.INCS);
+    cmd = sprintf('mex -O %s %s %s %s -DOPENMP COMPFLAGS="/openmp \\$COMPFLAGS" CFLAGS="\\$CFLAGS -fopenmp" -I.. -I../include %s', flags.arr, flags.LCFLAG, flags.INCS, flags.INT);
 else
-    cmd = sprintf ('mex -O %s %s %s -I.. -I../include %s', flags.arr, flags.LCFLAG, flags.INCS);
+    cmd = sprintf ('mex -O %s %s %s %s -I.. -I../include %s', flags.arr, flags.LCFLAG, flags.INCS, flags.INT);
 end
 
 amd_files = {'amd_order', 'amd_dump', 'amd_postorder', 'amd_post_tree', ...
