@@ -1,4 +1,9 @@
+ifeq ($(OS),Windows_NT)
+UNAME = CYGWINorMINGWorMSYS
+else
 UNAME = $(shell uname -s)
+endif
+
 CC = gcc
 CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
 
@@ -7,12 +12,16 @@ CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
 
 ifneq (, $(findstring CYGWIN, $(UNAME)))
 ISWINDOWS := 1
-else ifneq (, $(findstring MINGW, $(UNAME)))
+else 
+ifneq (, $(findstring MINGW, $(UNAME)))
 ISWINDOWS := 1
-else ifneq (, $(findstring MSYS, $(UNAME)))
+else 
+ifneq (, $(findstring MSYS, $(UNAME)))
 ISWINDOWS := 1
 else
 ISWINDOWS := 0
+endif
+endif
 endif
 
 ifeq ($(UNAME), Darwin)
@@ -20,7 +29,8 @@ ifeq ($(UNAME), Darwin)
 LDFLAGS += -lm
 SHARED = dylib
 CULDFLAGS = -L/usr/local/cuda/lib
-else ifeq ($(ISWINDOWS), 1)
+else 
+ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
 LDFLAGS += -lm
 SHARED = dll
@@ -30,6 +40,7 @@ else
 LDFLAGS += -lm -lrt
 SHARED = so
 CULDFLAGS = -L/usr/local/cuda/lib64
+endif
 endif
 
 # Add on default CFLAGS
