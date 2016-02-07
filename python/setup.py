@@ -55,10 +55,6 @@ def run_install():
         print("using blas_opt / lapack_opt")
         install_scs(blas_info=get_info('blas_opt'), lapack_info=get_info('lapack_opt'))
         return
-    except SystemExit as e: # catch permission denied error
-        print("Failure. If setting custom params (e.g. --gpu) add %s to command line args before any custom params." % SCS_ARG_MARK)
-        print(e)
-        return
     except:
         pass # fall back to blas / lapack (not opt)
 
