@@ -4,7 +4,7 @@
 #define CG_MIN_TOL 1e-1
 
 /* TODO: dsymv appears to be broken in MATLAB (R2014b at least): */
-void BLAS(symv)(char *uplo, blasint *n, scs_float *alpha, scs_float *a, blasint *lda, const scs_float *x, blasint *incx,
+void BLAS(symv)(const char *uplo, blasint *n, scs_float *alpha, scs_float *a, blasint *lda, const scs_float *x, blasint *incx,
 		scs_float *beta, scs_float *y, blasint *incy);
 
 scs_float BLAS(dot)(blasint *n, scs_float *dx, blasint *incx, scs_float *dy, blasint *incy);

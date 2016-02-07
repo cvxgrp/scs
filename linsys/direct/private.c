@@ -1,7 +1,7 @@
 #include "private.h"
 
-void BLAS(potrf)(char *uplo, blasint *n, scs_float *a, blasint * lda, blasint *info);
-void BLAS(trsv)(char *uplo, char *trans, char *diag, blasint *n, scs_float *a, blasint *lda, scs_float *x, blasint *incx);
+void BLAS(potrf)(const char *uplo, blasint *n, scs_float *a, blasint * lda, blasint *info);
+void BLAS(trsv)(const char *uplo, const char *trans, const char *diag, blasint *n, scs_float *a, blasint *lda, scs_float *x, blasint *incx);
 
 void accumByAtrans(const AMatrix * A, Priv * p, const scs_float *x, scs_float *y) {
     _accumByAtrans(A, p, x, y);
