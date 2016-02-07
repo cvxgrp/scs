@@ -90,10 +90,11 @@ vec(X) = (X11, sqrt(2)*X21, ..., sqrt(2)*Xk1, X22, sqrt(2)*X32, ..., Xkk).
 
 **Linear equation solvers**
 
-Each iteration of SCS requires the solution of a set of linear equations.
-This package includes two implementations for solving linear equations:
-a direct solver which uses
-a cached LDL factorization and an indirect solver based on conjugate gradients.
+Each iteration of SCS requires the solution of a set of linear equations.  This
+package includes two implementations for solving linear equations: a direct
+solver which uses a cached LDL factorization and an indirect solver based on
+conjugate gradients. The indirect solver can be run on either the cpu or
+gpu.
 
 The direct solver uses the LDL and AMD packages numerical linear
 algebra packages by Timothy Davis and others, the necessary files are included.
@@ -102,16 +103,17 @@ these packages.
 
 ### Using SCS in C
 Typing `make` at the command line will compile the code and create
-SCS libraries in the `out` folder. It will also produce four demo binaries in the
-`out` folder named `demo_direct`, `demo_indirect`, `demo_SOCP_direct` and
-`demo_SOCP_indirect`.
+SCS libraries in the `out` folder. It will also produce six demo binaries in the
+`out` folder named `demo_direct`, `demo_indirect`, `demo_gpu`, `demo_SOCP_direct`,
+`demo_SOCP_indirect`, and `demo_SOCP_gpu`.
 
-If `make` completes successfully, it will produce two static library files,
-`libscsdir.a` and `libscsindir.a` under the `out` folder and two dynamic
-library files `libscsdir.ext` and `libscsindir.ext` (where `.ext` extension is
-platform dependent) in the same folder. To include the
-libraries in your own source code, compile with the linker option with
-`-L(PATH_TO_SCS)\lib` and `-lscsdir` or `-lscsindir` (as needed).
+If `make` completes successfully, it will produce three static library files,
+`libscsdir.a`, `libscsindir.a`, and `libscsgpu.a` under the `out` folder and
+three dynamic library files `libscsdir.ext`, `libscsindir.ext`, and
+`libscsgpu.ext` (where `.ext` extension is platform dependent) in the same
+folder. To include the libraries in your own source code, compile with the
+linker option with `-L(PATH_TO_SCS)\lib` and `-lscsdir` or `-lscsindir` (as
+needed).
 
 These libraries (and `scs.h`) expose only four API functions:
 
@@ -314,7 +316,10 @@ cd <scs-directory>/python
 python setup.py install
 ```
 You may need `sudo` privileges for a global installation. Running SCS requires numpy and
-scipy to be installed.
+scipy to be installed. You can install the gpu interface using
+```shell
+python setup.py install --scs --gpu
+```
 
 After installing the SCS interface, you import SCS using
 ```python
@@ -322,7 +327,7 @@ import scs
 ```
 This module provides a single function `scs` with the following call signature:
 ```python
-sol = scs(data, cone, [use_indirect=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
+sol = scs(data, cone, [use_indirect=false, gpu=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
 ```
 Arguments in the square brackets are optional, and default to the values on the right of their respective equals signs.
 The argument `data` is a python dictionary with three elements `A`, `b`, and
