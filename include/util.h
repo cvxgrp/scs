@@ -54,7 +54,7 @@ scs_float tocq(timer *t);
 void printConeData(const Cone *k);
 void printData(const Data *d);
 void printWork(const Work *w);
-void printArray(const scs_float *arr, scs_int n, char *name);
+void printArray(const scs_float *arr, scs_int n, const char *name);
 void setDefaultSettings(Data *d);
 void freeSol(Sol *sol);
 void freeData(Data *d, Cone *k);

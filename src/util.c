@@ -129,7 +129,7 @@ void printData(const Data *d) {
     scs_printf("scale = %4f\n", d->stgs->scale);
 }
 
-void printArray(const scs_float *arr, scs_int n, char *name) {
+void printArray(const scs_float *arr, scs_int n, const char *name) {
     scs_int i, j, k = 0;
     scs_int numOnOneLine = 10;
     scs_printf("\n");
