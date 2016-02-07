@@ -25,15 +25,14 @@ extern "C" {
 #define _scs_free     free
 #define _scs_malloc   malloc
 #define _scs_calloc   calloc
-/* should not be used
-#elif defined USING_R
-#include <R.h>
+#elif ( defined(USING_R) )
 #include <stdlib.h>
+#include <stdio.h>
+#include <R_ext/Print.h>      /* Rprintf etc */
 #define scs_printf   Rprintf
 #define _scs_free     free
 #define _scs_malloc   malloc
 #define _scs_calloc   calloc
-*/
 #else
 #include <stdio.h>
 #include <stdlib.h>

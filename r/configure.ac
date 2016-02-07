@@ -22,8 +22,8 @@ CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
 LAPACK_LIBS=`"${R_HOME}/bin/R" CMD config LAPACK_LIBS`
 BLAS_LIBS=`"${R_HOME}/bin/R" CMD config BLAS_LIBS`
 dnl FLIBS=`"${R_HOME}/bin/R" CMD config FLIBS`
-R_INCS="${R_HOME}/include"
-
+dnl R_INCS="${R_HOME}/include"
+R_INCS=`"${R_HOME}/bin/R" CMD config --cppflags`
 AC_PROG_CC
 
 PKG_LIBS="${PKG_LIBS}" 

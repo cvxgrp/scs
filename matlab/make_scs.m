@@ -53,6 +53,7 @@ mex -O -I../include ../src/scs_version.c scs_version_mex.c -output scs_version
 %%
 clear data cones
 disp('Example run:');
+randn('seed',9)
 m = 9;
 n = 3;
 data.A = randn(m,n);
@@ -61,7 +62,18 @@ data.c = randn(n,1);
 cones.l = m;
 [x,y,s,info] = scs_indirect(data,cones,[]);
 [x,y,s,info] = scs_direct(data,cones,[]);
+
+
 if (gpu)
     [x,y,s,info] = scs_gpu(data,cones,[]);
 end
+
+% test-warm start with solution
+disp('Warm-starting:')
+data.x = x;
+data.y = y;
+data.s = s;
+[x,y,s,info] = scs_indirect(data,cones,[]);
+
+
 disp('SUCCESSFULLY INSTALLED SCS')
