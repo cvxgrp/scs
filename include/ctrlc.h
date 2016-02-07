@@ -13,7 +13,7 @@
 extern int utIsInterruptPending();
 extern int utSetInterruptEnabled(int);
 
-#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL )
+#elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)
 
 /* Use Windows SetConsoleCtrlHandler for signal handling */
 #include <windows.h>
