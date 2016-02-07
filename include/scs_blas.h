@@ -14,22 +14,23 @@ extern "C" {
 
 /* annoying hack because some preprocessors can't handle empty macros */
 #if defined(NOBLASSUFFIX) && NOBLASSUFFIX > 0
-    /* single or double precision */
-    #ifndef FLOAT
-        #define BLAS(x) d ## x
-    #else
-        #define BLAS(x) s ## x
-    #endif
+/* single or double precision */
+#ifndef FLOAT
+#define BLAS(x) d##x
 #else
-    /* this extra indirection is needed for BLASSUFFIX to work correctly as a variable */
-    #define stitch_(pre,x,post) pre ## x ## post
-    #define stitch__(pre,x,post) stitch_(pre,x,post)
-    /* single or double precision */
-    #ifndef FLOAT
-        #define BLAS(x) stitch__(d,x,BLASSUFFIX)
-    #else
-        #define BLAS(x) stitch__(s,x,BLASSUFFIX)
-    #endif
+#define BLAS(x) s##x
+#endif
+#else
+/* this extra indirection is needed for BLASSUFFIX to work correctly as a
+ * variable */
+#define stitch_(pre, x, post) pre##x##post
+#define stitch__(pre, x, post) stitch_(pre, x, post)
+/* single or double precision */
+#ifndef FLOAT
+#define BLAS(x) stitch__(d, x, BLASSUFFIX)
+#else
+#define BLAS(x) stitch__(s, x, BLASSUFFIX)
+#endif
 #endif
 
 #ifdef MATLAB_MEX_FILE

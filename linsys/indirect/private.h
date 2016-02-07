@@ -5,13 +5,13 @@
 #include "scs.h"
 #include "../common.h"
 
-struct PRIVATE_DATA{
-	scs_float * p;
-	scs_float * r;
-	scs_float * Gp;
-	scs_float * M; /* pre-conditioner */
-	scs_float * z;
-   	scs_float * G; /* Gram matrix */
+struct PRIVATE_DATA {
+    scs_float *p;
+    scs_float *r;
+    scs_float *Gp;
+    scs_float *M; /* pre-conditioner */
+    scs_float *z;
+    scs_float *G; /* Gram matrix */
     /* reporting */
     scs_int totCgIts;
     scs_float totalSolveTime;

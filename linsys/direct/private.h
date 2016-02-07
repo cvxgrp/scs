@@ -5,8 +5,8 @@
 #include "scs.h"
 #include "../common.h"
 
-struct PRIVATE_DATA{
-	scs_float * L;
+struct PRIVATE_DATA {
+    scs_float *L;
     /* reporting */
     scs_float totalSolveTime;
 };
