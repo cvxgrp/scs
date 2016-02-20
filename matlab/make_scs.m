@@ -77,3 +77,4 @@ data.s = s;
 
 
 disp('SUCCESSFULLY INSTALLED SCS')
+disp('(If using SCS with CVX, note that SCS only supports CVX v3.0 or later).')
