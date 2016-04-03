@@ -117,9 +117,7 @@ else
 end
 
 h = [data.c;data.b];
-[g, itn] = solve_lin_sys(work,data,h,n,m,zeros(n,1),rho_x,-1,use_indirect,cg_rate,extra_verbose);
-g(n+1:end) = -g(n+1:end);
-gTh = g'*h;
+[g, gTh, ~] = solve_for_g(work,data,h,n,m,rho_x,use_indirect,cg_rate,extra_verbose);
 
 % u = [x;z;tau], v = [y;s;kappa]
 fprintf('Iter:\t      pres      dres       gap      pobj      dobj   unb_res   inf_res   kap/tau  time (s)\n');
@@ -146,15 +144,7 @@ tic
 for i=0:max_iters-1
     % solve linear system
     u_prev = u;
-    ut = u+v;
-    ut(1:n) = rho_x*ut(1:n);
-    ut(1:n+m) = ut(1:n+m) - ut(end)*h;
-    ut(1:n+m) = ut(1:n+m) - h*((g'*ut(1:n+m))/(gTh+1));
-    warm_start = u(1:n+m);
-    ut(n+1:end-1) = -ut(n+1:end-1);
-    [ut(1:n+m), itn] = solve_lin_sys(work, data, ut(1:n+m), n, m, warm_start, rho_x, i, use_indirect, cg_rate, extra_verbose);
-    ut(end) = (ut(end) + h'*ut(1:n+m));
-    
+    [ut, itn] = project_lin_sys(work, data, n, m, u, v, rho_x, i, use_indirect, cg_rate, extra_verbose,  h, g, gTh);
     %% K proj:
     rel_ut = alpha*ut+(1-alpha)*u;
     rel_ut(1:n) = ut(1:n); % don't relax 'x' variable
