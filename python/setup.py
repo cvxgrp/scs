@@ -1,4 +1,5 @@
 from __future__ import print_function
+from distutils.msvccompiler import MSVCCompiler
 from glob import glob
 from numpy import get_include
 from numpy.distutils.system_info import get_info, BlasNotFoundError
@@ -83,18 +84,29 @@ def can_compile_with_openmp(cc, flags, gomp_paths):
     os.chdir(tmpdir)
 
     # attempt to compile a test program with openmp
-    test_filename = 'test_openmp.c'
+    test_filename_base = 'test_openmp'
+    test_filename = test_filename_base + '.c'
     with open(test_filename, 'w') as f:
-        f.write('int main(void) { return 0; }');
+        f.write(
+        '#include <omp.h>\n'
+        '#include <stdio.h>\n'
+        'int main(void) {\n'
+        '  #pragma omp parallel\n'
+        '  printf("thread: %d\\n", omp_get_thread_num());\n'
+        '  return 0;\n'
+        '}')
 
     compilation_cmd = [cc] + flags
     for path in gomp_paths:
         compilation_cmd  += ['-L' + path]
-    compilation_cmd += [test_filename]
+    compilation_cmd += [test_filename] + ['-o'] + [test_filename_base]
+    run_cmd = ['./' + test_filename_base]
 
     try:
         with open(os.devnull, 'w') as fnull:
-            exit_code = subprocess.call(compilation_cmd,
+            subprocess.call(compilation_cmd,
+                stdout=fnull, stderr=fnull)
+            exit_code = subprocess.call(run_cmd,
                 stdout=fnull, stderr=fnull)
     except OSError:
         exit_code = 1
@@ -107,26 +119,38 @@ def can_compile_with_openmp(cc, flags, gomp_paths):
 
 class build_ext_scs(build_ext):
     def build_extensions(self):
-        # fetch the name of the compiler to be invoked
-        cc = self.compiler.compiler_so[0]
-
-        # TODO: include paths for other systems (which system is this particular
-        # path for?)
+        # TODO: include paths for other systems
         gomp_paths = ['/usr/local/gfortran/lib']
 
-        # TODO: use cc to determine the appropriate compiler flags (e.g.,
-        # to support Windows)
-        flags = ['-fopenmp']
+        flags = []
+        cc = None
+        if isinstance(self.compiler, MSVCCompiler):
+            # TODO: support Windows
+            build_ext.build_extensions(self)
+            return
+        else:
+            flags = ['-fopenmp']
+            try:
+                cc = self.compiler.compiler_so[0]
+            except AttributeError:
+                # we should only arrive here if the compiler is a BCPPCompiler
+                print('compiler class does not contain a compiler_so object')
+                build_ext.build_extensions(self)
+                return
+
         if (can_compile_with_openmp(cc, flags, gomp_paths)):
             for e in self.extensions:
                 e.extra_compile_args += flags
                 e.library_dirs += gomp_paths
+                # setuptools silently ignores extra_compile_args;
+                # as a workaround, we include the flags here as well.
+                # (see https://github.com/pypa/setuptools/issues/473)
+                e.extra_link_args += flags + ['-lgomp']
         else:
-            print('###########################################################')
-            print('# failed to compile with OpenMP because ' + cc + ' does not')
-            print('# support any of the following flags: ' + str(flags))
-            print('# some sections of SCS will not be parallelized')
-            print('###########################################################')
+            print('##################################################')
+            print('# failed to compile with OpenMP;                 #')
+            print('# some sections of SCS will not be parallelized. #')
+            print('##################################################')
         build_ext.build_extensions(self)
 
 
