@@ -239,7 +239,7 @@ void _accumByAtrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     timer multByAtransTimer;
     tic(&multByAtransTimer);
 #endif
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(p, c1, c2, yj)
 #endif
     for (j = 0; j < n; j++) {
