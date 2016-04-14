@@ -84,8 +84,8 @@ def install_scs(**kwargs):
     extra_link_args = []
     libraries = []
     extra_define_macros = []
-    sources = ['scsmodule.c', ] + glob(root_dir + 'src/*.c') + glob(root_dir + 'linsys/*.c')
-    include_dirs = [root_dir, root_dir + 'include', get_include(), root_dir + 'linsys']
+    sources = ['scsmodule.c', ] + glob(os.path.join(root_dir, 'src/*.c')) + glob(os.path.join(root_dir, 'linsys/*.c'))
+    include_dirs = [root_dir, os.path.join(root_dir, 'include'), get_include(), os.path.join(root_dir, 'linsys')]
     define_macros = [('PYTHON', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
 
     if system() == 'Linux':
@@ -113,9 +113,9 @@ def install_scs(**kwargs):
 
     _scs_direct = Extension(
                         name='_scs_direct',
-                        sources=sources + glob(root_dir + 'linsys/direct/*.c') + glob(root_dir + 'linsys/direct/external/*.c'),
+                        sources=sources + glob(os.path.join(root_dir, 'linsys/direct/*.c')) + glob(os.path.join(root_dir, 'linsys/direct/external/*.c')),
                         define_macros=define_macros + extra_define_macros,
-                        include_dirs=include_dirs + [root_dir + 'linsys/direct/', root_dir + 'linsys/direct/external/'],
+                        include_dirs=include_dirs + [os.path.join(root_dir, 'linsys/direct/'), os.path.join(root_dir, 'linsys/direct/external/')],
                         library_dirs=library_dirs,
                         libraries=libraries,
                         extra_link_args=extra_link_args,
@@ -124,9 +124,9 @@ def install_scs(**kwargs):
 
     _scs_indirect = Extension(
                         name='_scs_indirect',
-                        sources=sources + glob(root_dir + 'linsys/indirect/*.c'),
+                        sources=sources + glob(os.path.join(root_dir, 'linsys/indirect/*.c')),
                         define_macros=define_macros + extra_define_macros + [('INDIRECT', None)],
-                        include_dirs=include_dirs + [root_dir + 'linsys/indirect/'],
+                        include_dirs=include_dirs + [os.path.join(root_dir, 'linsys/indirect/')],
                         library_dirs=library_dirs,
                         libraries=libraries,
                         extra_link_args=extra_link_args,
@@ -138,9 +138,9 @@ def install_scs(**kwargs):
     if args.gpu:
         _scs_gpu = Extension(
                         name='_scs_gpu',
-                        sources=sources + glob(root_dir + 'linsys/gpu/*.c'),
+                        sources=sources + glob(os.path.join(root_dir, 'linsys/gpu/*.c')),
                         define_macros=define_macros + [('GPU', None)],
-                        include_dirs=include_dirs + [root_dir + 'linsys/gpu/', '/usr/local/cuda/include'],
+                        include_dirs=include_dirs + [os.path.join(root_dir, 'linsys/gpu/'), '/usr/local/cuda/include'],
                         library_dirs=library_dirs + ['/usr/local/cuda/lib', '/usr/local/cuda/lib64'], # TODO probably not right for windows
                         libraries=libraries + ['cudart', 'cublas', 'cusparse'],
                         extra_link_args=extra_link_args,
