@@ -149,7 +149,7 @@ def install_scs(**kwargs):
         ext_modules += [_scs_gpu]
 
     setup(name='scs',
-            version='1.2.2',
+            version='1.2.3',
             author = 'Brendan O\'Donoghue',
             author_email = 'bodonoghue85@gmail.com',
             url = 'http://github.com/cvxgrp/scs',
