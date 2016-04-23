@@ -15,7 +15,7 @@ convex optimization toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
 
-The current version is 1.2.3. If you wish to cite SCS, please use the following:
+The current version is `1.2.3`. If you wish to cite SCS, please use the following:
 ```
 @article{ocpb:16,
     author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
