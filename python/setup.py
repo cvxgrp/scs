@@ -51,29 +51,20 @@ def run_install():
         return
 
     # environment variables not set, using defaults instead
-    try:
-        print("using blas_opt / lapack_opt")
-        install_scs(blas_info=get_info('blas_opt'), lapack_info=get_info('lapack_opt'))
-        return
-    except:
-        pass # fall back to blas / lapack (not opt)
+    blas_info = get_info('blas_opt')
+	if not blas_info:
+		blas_info = get_info('blas')
+	print(blas_info)
 
-    print("blas_opt / lapack_opt install failed, trying blas / lapack")
-    try:
-        install_scs(blas_info=get_info('blas'), lapack_info=get_info('lapack'))
-    except:
-        install_scs(blas_info={}, lapack_info={})
-        print("###############################################################################################")
-        print("# failed to find blas/lapack libs, SCS cannot solve SDPs but can solve LPs, SOCPs, ECPs, PCPs #")
-        print("# install blas/lapack and run this install script again to allow SCS to solve SDPs            #")
-        print("#                                                                                             #")
-        print("# scs will use environment variables BLAS_LAPACK_LIB_PATHS and BLAS_LAPACK_LIBS if set        #")
-        print("# use this to link against blas/lapack libs that scs can't find on it's own, usage ex:        #")
-        print("#        >> export BLAS_LAPACK_LIB_PATHS=/usr/lib/:/other/dir                                 #")
-        print("#        >> export BLAS_LAPACK_LIBS=blas:lapack                                               #")
-        print("#        >> python setup.py install                                                           #")
-        print("###############################################################################################")
+	lapack_info = get_info('lapack_opt')
+	if not lapack_info:
+		lapack_info = get_info('lapack')
+	print(lapack_info)
 
+	try:
+		install_scs(blas_info=blas_info, lapack_info=lapack_info)
+	except:
+		pass #TODO fix
 
 def install_scs(**kwargs):
     blas_info = kwargs['blas_info']
