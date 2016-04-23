@@ -15,6 +15,25 @@ convex optimization toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
 
+The current version is 1.2.3. If you wish to cite SCS, please use the following:
+```
+@article{ocpb:16,
+    author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
+    title        = {Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding},
+    journal      = {Journal of Optimization Theory and Applications},
+    note         = {To appear},
+    url          = {http://stanford.edu/~boyd/papers/scs.html},
+    year         = 2016
+}
+@misc{scs,
+    author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
+    title        = {{SCS}: Splitting Conic Solver, version 1.2.3},
+    howpublished = {\url{https://github.com/cvxgrp/scs}},
+    month        = apr,
+    year         = 2016
+}
+```
+
 ----
 SCS numerically solves convex cone programs using the alternating direction
 method of multipliers ([ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html)).
