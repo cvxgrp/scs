@@ -21,7 +21,7 @@ install:
   - conda info -a
 
   - if [[ "$PYTHON_VERSION" == "2.6" ]]; then
-      conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy nose coverage argparse;
+      conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy=0.14 nose coverage argparse;
     else
       conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy nose coverage;
     fi
