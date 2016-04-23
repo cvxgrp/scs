@@ -21,15 +21,16 @@ install:
   - conda info -a
 
   - if [[ "$PYTHON_VERSION" == "2.6" ]]; then
-      conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy=0.14 nose coverage argparse;
+      conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy=0.14 nose coverage gcc argparse;
     else
-      conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy nose coverage;
+      conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy nose coverage gcc;
     fi
+  - conda install -c https://conda.anaconda.org/cyclus lapack
   - source activate test-environment
   - cd python && python setup.py install && cd ..
 
 script:
-  - cd python && nosetests --with-cover --cover-package=scs test_scs_basic.py test_scs_rand.py && cd ..
+  - cd python && nosetests --with-cover --cover-package=scs test_scs_basic.py test_scs_rand.py test_scs_sdp.py && cd ..
 
 notifications:
   email:
