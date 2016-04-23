@@ -52,18 +52,18 @@ def run_install():
 
     # environment variables not set, using defaults instead
     blas_info = get_info('blas_opt')
-	if not blas_info:
+    if not blas_info:
 		blas_info = get_info('blas')
-	print(blas_info)
+    print(blas_info)
 
-	lapack_info = get_info('lapack_opt')
-	if not lapack_info:
+    lapack_info = get_info('lapack_opt')
+    if not lapack_info:
 		lapack_info = get_info('lapack')
-	print(lapack_info)
+    print(lapack_info)
 
-	try:
+    try:
 		install_scs(blas_info=blas_info, lapack_info=lapack_info)
-	except:
+    except:
 		pass #TODO fix
 
 def install_scs(**kwargs):
