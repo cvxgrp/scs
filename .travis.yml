@@ -25,8 +25,8 @@ install:
     else
       conda create -q -n test-environment python=$PYTHON_VERSION numpy scipy nose coverage gcc;
     fi
-  - conda install -c https://conda.anaconda.org/cyclus lapack
   - source activate test-environment
+  - conda install -c https://conda.anaconda.org/cyclus lapack
   - cd python && python setup.py install && cd ..
 
 script:
