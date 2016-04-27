@@ -346,7 +346,7 @@ import scs
 ```
 This module provides a single function `scs` with the following call signature:
 ```python
-sol = scs(data, cone, [use_indirect=false, gpu=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
+sol = scs(data, cone, [use_indirect=True, gpu=False, verbose=True, normalize=True, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
 ```
 Arguments in the square brackets are optional, and default to the values on the right of their respective equals signs.
 The argument `data` is a python dictionary with three elements `A`, `b`, and
