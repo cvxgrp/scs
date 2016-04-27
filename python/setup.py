@@ -42,7 +42,7 @@ if SCS_ARG_MARK in sys.argv:
 def run_install():
     # scipy bug tries to link against libraries that shouldn't be exposed
     # this annoying hack just removes those libraries
-    banned_libraries = ['mkl_lapack95_lp64', 'mkl_lapack95_lp64']
+    banned_libraries = ['mkl_intel_lp64', 'mkl_lapack95_lp64']
 
     if env_lib_dirs or env_libs:
         print("using environment variables for blas/lapack libraries")
