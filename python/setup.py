@@ -55,7 +55,7 @@ def run_install():
     # ugly hack due to scipy bug
     if 'libraries' in blas_info:
         if 'mkl_intel_lp64' in blas_info['libraries']:
-            blas_info['libraries'].remove('mkl_intel_lp64')
+            blas_info = get_info('blas')
     if not blas_info:
         blas_info = get_info('blas')
     print(blas_info)
@@ -64,7 +64,7 @@ def run_install():
     # ugly hack due to scipy bug
     if 'libraries' in lapack_info:
         if 'mkl_intel_lp64' in lapack_info['libraries']:
-            lapack_info['libraries'].remove('mkl_intel_lp64')
+            lapack_info = get_info('lapack')
     if not lapack_info:
         lapack_info = get_info('lapack')
     print(lapack_info)
