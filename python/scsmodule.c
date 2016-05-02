@@ -407,19 +407,20 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
         d->stgs->warm_start |= getWarmStart("y", &(sol.y), d->m, warm);
         d->stgs->warm_start |= getWarmStart("s", &(sol.s), d->m, warm);
     }
-
+    /* release the GIL */
     Py_BEGIN_ALLOW_THREADS
-        /* Solve! */
-        scs(d, k, &sol, &info);
+    /* Solve! */
+    scs(d, k, &sol, &info);
+    /* reacquire the GIL */
     Py_END_ALLOW_THREADS
 
-        /* create output (all data is *deep copied*) */
-        /* x */
-        /* matrix *x; */
-        /* if(!(x = Matrix_New(n,1,DOUBLE))) */
-        /*   return PyErr_NoMemory(); */
-        /* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(scs_float)); */
-        veclen[0] = d->n;
+    /* create output (all data is *deep copied*) */
+    /* x */
+    /* matrix *x; */
+    /* if(!(x = Matrix_New(n,1,DOUBLE))) */
+    /*   return PyErr_NoMemory(); */
+    /* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(scs_float)); */
+    veclen[0] = d->n;
     x = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.x);
     PyArray_ENABLEFLAGS((PyArrayObject *)x, NPY_ARRAY_OWNDATA);
 
