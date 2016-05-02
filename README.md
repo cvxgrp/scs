@@ -131,7 +131,7 @@ If `make` completes successfully, it will produce three static library files,
 three dynamic library files `libscsdir.ext`, `libscsindir.ext`, and
 `libscsgpu.ext` (where `.ext` extension is platform dependent) in the same
 folder. To include the libraries in your own source code, compile with the
-linker option with `-L(PATH_TO_SCS)\lib` and `-lscsdir` or `-lscsindir` (as
+linker option with `-L(PATH_TO_SCS)\out` and `-lscsdir` or `-lscsindir` (as
 needed).
 
 These libraries (and `scs.h`) expose only four API functions:
