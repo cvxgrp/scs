@@ -148,8 +148,8 @@ These libraries (and `scs.h`) expose only four API functions:
     in `w`. The solution is returned in `sol` and information about the solve
     is returned in `info` (outputs must have memory allocated before calling).
     None of the inputs can be NULL. You can call `scs_solve` many times for one
-    call to `scs_init`, so long as the matrix A
-    does not change (b and c can change).
+    call to `scs_init`, so long as the matrix `A`
+    does not change (vectors `b` and `c` can change).
 
 * `void scs_finish(Work * w);`
     
