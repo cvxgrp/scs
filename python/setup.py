@@ -1,11 +1,16 @@
 from __future__ import print_function
+from distutils.msvccompiler import MSVCCompiler
 from glob import glob
 from numpy import get_include
 from numpy.distutils.system_info import get_info, BlasNotFoundError
 from platform import system
 from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
+import shutil
+import tempfile
 import argparse
 import os
+import subprocess
 import sys
 
 SCS_ARG_MARK = '--scs'
@@ -15,8 +20,6 @@ parser.add_argument(SCS_ARG_MARK, dest='scs', action='store_true',
                     default=False, help='Put this first to ensure following arguments are parsed correctly')
 parser.add_argument('--gpu', dest='gpu', action='store_true',
                     default=False, help='Also compile the GPU CUDA version of SCS')
-parser.add_argument('--openmp', dest='openmp', action='store_true',
-                    default=False, help='Compile with OpenMP multi-threading')
 parser.add_argument('--float', dest='float32', action='store_true',
                     default=False, help='Use 32 bit (single precision) floats, default is 64 bit')
 parser.add_argument('--extraverbose', dest='extraverbose', action='store_true',
@@ -74,6 +77,82 @@ def run_install():
     except:
         pass #TODO fix
 
+def can_compile_with_openmp(cc, flags, gomp_paths):
+    tmpdir = tempfile.mkdtemp()
+    curdir = os.getcwd()
+    os.chdir(tmpdir)
+
+    # attempt to compile a test program with openmp
+    test_filename_base = 'test_openmp'
+    test_filename = test_filename_base + '.c'
+    with open(test_filename, 'w') as f:
+        f.write(
+        '#include <omp.h>\n'
+        '#include <stdio.h>\n'
+        'int main(void) {\n'
+        '  #pragma omp parallel\n'
+        '  printf("thread: %d\\n", omp_get_thread_num());\n'
+        '  return 0;\n'
+        '}')
+
+    compilation_cmd = [cc] + flags
+    for path in gomp_paths:
+        compilation_cmd  += ['-L' + path]
+    compilation_cmd += [test_filename] + ['-o'] + [test_filename_base]
+    run_cmd = ['./' + test_filename_base]
+
+    try:
+        with open(os.devnull, 'w') as fnull:
+            subprocess.call(compilation_cmd,
+                stdout=fnull, stderr=fnull)
+            exit_code = subprocess.call(run_cmd,
+                stdout=fnull, stderr=fnull)
+    except OSError:
+        exit_code = 1
+
+    # clean up
+    os.chdir(curdir)
+    shutil.rmtree(tmpdir)
+    return exit_code == 0
+
+
+class build_ext_scs(build_ext):
+    def build_extensions(self):
+        # TODO: include paths for other systems
+        gomp_paths = ['/usr/local/gfortran/lib']
+
+        flags = []
+        cc = None
+        if isinstance(self.compiler, MSVCCompiler):
+            # TODO: support Windows
+            build_ext.build_extensions(self)
+            return
+        else:
+            flags = ['-fopenmp']
+            try:
+                cc = self.compiler.compiler_so[0]
+            except AttributeError:
+                # we should only arrive here if the compiler is a BCPPCompiler
+                print('compiler class does not contain a compiler_so object')
+                build_ext.build_extensions(self)
+                return
+
+        if (can_compile_with_openmp(cc, flags, gomp_paths)):
+            for e in self.extensions:
+                e.extra_compile_args += flags
+                e.library_dirs += gomp_paths
+                # setuptools silently ignores extra_compile_args;
+                # as a workaround, we include the flags here as well.
+                # (see https://github.com/pypa/setuptools/issues/473)
+                e.extra_link_args += flags + ['-lgomp']
+        else:
+            print('##################################################')
+            print('# failed to compile with OpenMP;                 #')
+            print('# some sections of SCS will not be parallelized. #')
+            print('##################################################')
+        build_ext.build_extensions(self)
+
+
 def install_scs(**kwargs):
     blas_info = kwargs['blas_info']
     lapack_info = kwargs['lapack_info']
@@ -93,11 +172,6 @@ def install_scs(**kwargs):
         define_macros += [('FLOAT', 1)] # single precision floating point
     if args.extraverbose:
         define_macros += [('EXTRAVERBOSE', 999)] # for debugging
-    if args.openmp:
-        define_macros += [('OPENMP', 1)] # openMP multi-threading
-        library_dirs += ['/usr/local/gfortran/lib'] # TODO not for all systems
-        extra_compile_args += ['-fopenmp']
-        extra_link_args += ['-lgomp']
     if args.blas64:
         define_macros += [('BLAS64', 1)] # 64 bit blas
     if blas_info or lapack_info:
@@ -155,6 +229,7 @@ def install_scs(**kwargs):
             description='scs: splitting conic solver',
             py_modules=['scs'],
             ext_modules=ext_modules,
+            cmdclass = {'build_ext': build_ext_scs},
             install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
             license = "MIT",
             zip_safe=False,
