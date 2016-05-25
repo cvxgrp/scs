@@ -58,7 +58,7 @@ def run_install():
     # ugly hack due to scipy bug
     if 'libraries' in blas_info:
         if 'mkl_intel_lp64' in blas_info['libraries']:
-            blas_info = get_info('blas')
+            blas_info = get_info('blas_mkl')
     if not blas_info:
         blas_info = get_info('blas')
     print(blas_info)
