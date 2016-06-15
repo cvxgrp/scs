@@ -21,9 +21,12 @@ The current version is `1.2.6`. If you wish to cite SCS, please use the followin
     author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
     title        = {Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding},
     journal      = {Journal of Optimization Theory and Applications},
-    note         = {To appear},
+    month        = {June},
+    year         = {2016},
+    volume       = {169},
+    number       = {3},
+    pages        = {1042-1068},
     url          = {http://stanford.edu/~boyd/papers/scs.html},
-    year         = 2016
 }
 @misc{scs,
     author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
