@@ -121,7 +121,7 @@ for k = 1 : length( nonls ),
         case 'semidefinite',
             n2 = 0.5 * ( sqrt( 8 * nn + 1 ) - 1 );
             K.s = [ K.s, n2 * ones( 1, nv ) ];
-            if params.newsdp,
+            if true, %params.newsdp,
                 scale = ones(nn,nv);
                 sdiag = cumsum([1,n2:-1:2]);
                 scale(sdiag,:) = sqrt(2);
