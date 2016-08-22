@@ -922,11 +922,6 @@ Work *scs_init(const Data *d, const Cone *k, Info *info) {
 scs_int scs(const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int status;
-#if (defined _WIN32 || defined _WIN64) && !defined MATLAB_MEX_FILE &&          \
-    !defined PYTHON
-    /* sets width of exponent for floating point numbers to 2 instead of 3 */
-    unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
     Work *w = scs_init(d, k, info);
 #if EXTRAVERBOSE > 0
     scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
