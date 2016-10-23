@@ -114,7 +114,6 @@ endif
 USE_OPENMP = 0
 ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp
-  OPT_FLAGS += -DOPENMP
   LDFLAGS += -lgomp
 endif
 
