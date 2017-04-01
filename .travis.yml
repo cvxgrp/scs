@@ -31,7 +31,3 @@ install:
 
 script:
   - cd python && nosetests --with-cover --cover-package=scs test_scs_basic.py test_scs_rand.py test_scs_sdp.py && cd ..
-
-notifications:
-  email:
-    - bodonoghue85@gmail.com
