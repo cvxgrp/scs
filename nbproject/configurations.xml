@@ -97,7 +97,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>out/demo_direct</executablePath>
+          <executablePath>out/unitTests</executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>

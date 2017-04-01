@@ -44,3 +44,4 @@ out
 *.class
 *.dylib
 *.jar
+*~

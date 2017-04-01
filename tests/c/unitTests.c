@@ -44,9 +44,14 @@ int testJustAnother(char** str) {
 }
 
 int main(int argc, char** argv) {
-    test(&testOK, "Dummy passing test");
-    test(&testFail, "Doomed to fail");
-    test(&testJustAnother, "Just another test");
-    return (EXIT_SUCCESS);
+    int r = TEST_SUCCESS;
+    r += test(&testOK, "Dummy passing test");
+    r += test(&testFail, "Doomed to fail");
+    r += test(&testJustAnother, "Just another test");
+    if (r == TEST_SUCCESS) {
+        return (EXIT_SUCCESS);
+    } else {
+        return (EXIT_FAILURE);  
+    }
 }
 

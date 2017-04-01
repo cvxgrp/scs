@@ -1,4 +1,4 @@
-language: cpp
+language: C
 sudo: required
 dist: trusty
 addons:
@@ -8,8 +8,7 @@ addons:
       - liblapack-dev
 before_install:
   - sudo ldconfig 
-  - make > /dev/null
-script:
   - make
+script:
   - ./out/unitTests
 apt: true

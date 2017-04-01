@@ -17,15 +17,16 @@
 extern "C" {
 #endif
 
-#define TEST_SUCCESS 0
-#define TEST_FAILURE 1
-#define MESSAGE_OK "OK"
-#define MESSAGE_MAX_LENGTH 255
+#define TEST_SUCCESS 0 /**< test is successful */
+#define TEST_FAILURE 1 /**< test fails */
+#define MESSAGE_OK "OK" /**< a message returned when a test is successful */
+#define MESSAGE_MAX_LENGTH 1024 /**< maximum message length */
 
     /**
-     * Fails with a given message
+     * Fails with a given message.
+     * FAIL_WITH_MESSAGE(str, message)
      */
-    #define FAIL_WITH_MESSAGE(str, message)\
+#define FAIL_WITH_MESSAGE(str, message)\
         *str = (char*)message;\
         return TEST_FAILURE;
 
@@ -34,12 +35,15 @@ extern "C" {
      * 
      *  int myTestFunction(char**);
      * 
-     * This type is a pointer to such a function.
+     * This type is a pointer to such a function which takes as an input argument 
+     * a pointer to a string (char**) and returns a status code (either TEST_SUCCESS
+     * or TEST_FAILURE).
      */
     typedef int (*unitTest_t)(char**);
 
     /**
      * Dummy successful test.
+     * This serves only as an example.
      * @param msg message ("OK")
      * @return returns #TEST_SUCCESS.
      */
@@ -49,8 +53,9 @@ extern "C" {
      * Tester function.
      * @param ut Unit Test function handle
      * @param name Name of the test
+     * @return TEST_SUCCESS if the test succeeds and TEST_FAILURE if it fails.
      */
-    void test(const unitTest_t ut, const char* name);
+    int test(const unitTest_t ut, const char* name);
 
     /**
      * Assert that two integers are equal.
@@ -64,15 +69,27 @@ extern "C" {
      * Assert that two floats are equal up to a given tolerance.
      * @param a
      * @param b
-     * @param tol
+     * @param tol tolerance
      * @return 
      */
     int assertEqualsFloat(const scs_float a, const scs_float b, const scs_float tol);
 
-    
-    
-    
-    
+    /**
+     * Checks whether two arrays of float are equal, element-wise, up to a certain
+     * tolerance.
+     * 
+     * @param a first array
+     * @param b second array
+     * @param n length of array
+     * @param tol tolerance
+     * @return 
+     */
+    int assertEqualsArray(
+            const scs_float * a,
+            const scs_float * b,
+            scs_int n,
+            const scs_float tol);
+
     /* ---------- SOME IMPLEMENTATIONS --------------- */
 
     int assertEqualsInt(const scs_int a, const scs_int b) {
@@ -97,7 +114,7 @@ extern "C" {
         return 1;
     }
 
-    void test(const unitTest_t ut, const char* name) {
+    int test(const unitTest_t ut, const char* name) {
         char * message = malloc(MESSAGE_MAX_LENGTH * sizeof (char));
         int result = ut(&message);
         if (result == TEST_SUCCESS) {
@@ -106,6 +123,7 @@ extern "C" {
             printf("< FAIL >");
         }
         printf(" (%s) -- %s\n", name, message);
+        return result;
     }
 
 
