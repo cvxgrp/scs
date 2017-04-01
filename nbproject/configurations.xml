@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="include" name="0">
+    </df>
+    <df root="linsys" name="1">
+    </df>
+    <logicalFolder name="SCS" displayName="SCS" projectFiles="true" root=".">
+      <logicalFolder name="examples" displayName="examples" projectFiles="true">
+        <logicalFolder name="c" displayName="c" projectFiles="true">
+          <itemPath>examples/c/demo.c</itemPath>
+          <itemPath>examples/c/problemUtils.h</itemPath>
+          <itemPath>examples/c/randomSOCPProb.c</itemPath>
+        </logicalFolder>
+      </logicalFolder>
+      <logicalFolder name="linsys" displayName="linsys" projectFiles="true">
+        <logicalFolder name="direct" displayName="direct" projectFiles="true">
+          <logicalFolder name="external" displayName="external" projectFiles="true">
+            <itemPath>linsys/direct/external/SuiteSparse_config.h</itemPath>
+            <itemPath>linsys/direct/external/amd.h</itemPath>
+            <itemPath>linsys/direct/external/amd_1.c</itemPath>
+            <itemPath>linsys/direct/external/amd_2.c</itemPath>
+            <itemPath>linsys/direct/external/amd_aat.c</itemPath>
+            <itemPath>linsys/direct/external/amd_control.c</itemPath>
+            <itemPath>linsys/direct/external/amd_defaults.c</itemPath>
+            <itemPath>linsys/direct/external/amd_dump.c</itemPath>
+            <itemPath>linsys/direct/external/amd_global.c</itemPath>
+            <itemPath>linsys/direct/external/amd_info.c</itemPath>
+            <itemPath>linsys/direct/external/amd_internal.h</itemPath>
+            <itemPath>linsys/direct/external/amd_order.c</itemPath>
+            <itemPath>linsys/direct/external/amd_post_tree.c</itemPath>
+            <itemPath>linsys/direct/external/amd_postorder.c</itemPath>
+            <itemPath>linsys/direct/external/amd_preprocess.c</itemPath>
+            <itemPath>linsys/direct/external/amd_valid.c</itemPath>
+            <itemPath>linsys/direct/external/ldl.c</itemPath>
+            <itemPath>linsys/direct/external/ldl.h</itemPath>
+          </logicalFolder>
+          <itemPath>linsys/direct/private.c</itemPath>
+          <itemPath>linsys/direct/private.h</itemPath>
+        </logicalFolder>
+        <logicalFolder name="indirect" displayName="indirect" projectFiles="true">
+          <itemPath>linsys/indirect/private.c</itemPath>
+          <itemPath>linsys/indirect/private.h</itemPath>
+        </logicalFolder>
+        <itemPath>linsys/amatrix.h</itemPath>
+        <itemPath>linsys/common.c</itemPath>
+        <itemPath>linsys/common.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="src" displayName="src" projectFiles="true">
+        <itemPath>src/cones.c</itemPath>
+        <itemPath>src/cs.c</itemPath>
+        <itemPath>src/ctrlc.c</itemPath>
+        <itemPath>src/linAlg.c</itemPath>
+        <itemPath>src/scs.c</itemPath>
+        <itemPath>src/scs_version.c</itemPath>
+        <itemPath>src/util.c</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <df root="src" name="2">
+    </df>
+    <df root="tests" name="3">
+      <df name="c">
+        <in>unitTests.c</in>
+        <in>unitTests.h</in>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>nbproject/private/launcher.properties</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>src</Elem>
+    <Elem>include</Elem>
+    <Elem>linsys</Elem>
+    <Elem>tests</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <flagsDictionary>
+        <element flagsID="0" commonFlags="-g -O3 -fPIC"/>
+      </flagsDictionary>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath>out/demo_direct</executablePath>
+          <cTool>
+            <incDir>
+              <pElem>.</pElem>
+              <pElem>include</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>COPYAMATRIX=1</Elem>
+              <Elem>CTRLC=1</Elem>
+              <Elem>LAPACK_LIB_FOUND</Elem>
+            </preprocessorList>
+          </cTool>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
+          <preBuildCommand></preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path="examples/c/demo.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+          <preprocessorList>
+            <Elem>DEMO_PATH="/home/chung/Documents/SCS/examples/raw/demo_data"</Elem>
+          </preprocessorList>
+        </cTool>
+      </item>
+      <item path="examples/c/randomSOCPProb.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/common.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_1.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_2.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_aat.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_control.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_defaults.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_dump.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_global.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_info.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_order.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_post_tree.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_postorder.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_preprocess.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/amd_valid.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/external/ldl.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/direct/private.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="linsys/indirect/private.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/cones.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/cs.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/ctrlc.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/linAlg.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/scs.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/scs_version.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="src/util.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="tests/c/unitTests.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/c/unitTests.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
