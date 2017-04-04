@@ -1,57 +1,53 @@
 /* 
  * File:   unitTests.c
- * Author: Chung
+ * Author: Pantelis Sopasakis
  *
  * Created on April 1, 2017, 2:10 AM
  */
 
 #include "unitTests.h"
 
-int testOK(char** str) {
-    *str = (char*) MESSAGE_OK;
-    return TEST_SUCCESS;
+bool testOK(char** str) {
+    SUCCEED
 }
 
-int testFail(char** str) {
-    FAIL_WITH_MESSAGE(str, "Assertion Failed");
+bool testLinsysV2(char** str) {
+    SUCCEED
 }
 
-int testJustAnother(char** str) {
-    scs_float X[5];
-    scs_float Y[5];
+bool testScaleArray(char** str) {
+    const scs_int N = 10;
+    float tolerance = 1e-6;
     unsigned int i;
+    bool test_pass = false;
+    scs_float * a = malloc(N * sizeof (scs_float));
+    scs_float * expected_result = malloc(N * sizeof (scs_float));
+    const scs_float b = 3.23412;
 
-    /* test whether two integers are equal */
-    if (!assertEqualsInt(10, 10)) {
-        FAIL_WITH_MESSAGE(str, "Integers not equal");
+    for (i = 0; i < N; ++i) {
+        a[i] = 0.5 * (i + 1);
+        expected_result[i] = b * a[i];
     }
-    /* test whether two float are almost equal */
-    if (!assertEqualsFloat(10.0, 10.0 + 1e-6, 1e-5)) {
-        FAIL_WITH_MESSAGE(str, "Float not equal");
-    }
+    scaleArray(a, b, N);
+    test_pass = assertEqualsArray(a, expected_result, N, tolerance);
 
-    for (i = 0; i < 5; i++) {
-        X[i] = 5.523432 * (i + 1);
-        Y[i] = X[i] + 1e-6;
-    }
-
-    if (!assertEqualsArray(X, Y, 5, 1e-5)) {
-        FAIL_WITH_MESSAGE(str, "The two arrays are not equal");
-    }
-    
-    *str = (char *) MESSAGE_OK;
-    return TEST_SUCCESS;
+    /* free memory */
+    free(a);
+    free(expected_result);
+    if (!test_pass) FAIL_WITH_MESSAGE(str, "scaleArray failed");
+    SUCCEED /* if it reaches this point, it has succeeded */
 }
 
 int main(int argc, char** argv) {
     int r = TEST_SUCCESS;
+    /* Test functions: */
     r += test(&testOK, "Dummy passing test");
-    r += test(&testFail, "Doomed to fail");
-    r += test(&testJustAnother, "Just another test");
+    r += test(&testScaleArray, "Scale array");
+    r += test(&testLinsysV2, "test solve lin sys v2");
     if (r == TEST_SUCCESS) {
         return (EXIT_SUCCESS);
     } else {
-        return (EXIT_FAILURE);  
+        return (EXIT_FAILURE);
     }
 }
 
