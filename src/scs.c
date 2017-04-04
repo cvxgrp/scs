@@ -282,6 +282,28 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
     RETURN status;
 }
 
+/* status < 0 indicates failure */
+static scs_int projectLinSysv2(Work *w, scs_int iter) {
+    /* ut = u + v */
+    DEBUG_FUNC
+    scs_int n = w->n, m = w->m, l = n + m + 1, status;
+    memcpy(w->u_t, w->u, l * sizeof(scs_float));
+//    addScaledArray(w->u_t, w->v, l, 1.0);
+
+    scaleArray(w->u_t, w->stgs->rho_x, n);
+
+    addScaledArray(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
+    addScaledArray(w->u_t, w->h, l - 1,
+                   -innerProd(w->u_t, w->g, l - 1) / (w->gTh + 1));
+    scaleArray(&(w->u_t[n]), -1, m);
+
+    status = solveLinSys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
+
+    w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
+
+    RETURN status;
+}
+
 void printSol(Work *w, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i;
