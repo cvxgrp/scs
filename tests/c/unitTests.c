@@ -32,9 +32,11 @@ bool testScaleArray(char** str) {
     test_pass = assertEqualsArray(a, expected_result, N, tolerance);
 
     /* free memory */
-    free(a);
-    free(expected_result);
-    if (!test_pass) FAIL_WITH_MESSAGE(str, "scaleArray failed");
+    free(a); a = NULL;
+    free(expected_result); expected_result = NULL;
+    if (!test_pass) {
+        FAIL_WITH_MESSAGE(str, "scaleArray failed");
+    }
     SUCCEED /* if it reaches this point, it has succeeded */
 }
 
