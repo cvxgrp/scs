@@ -77,6 +77,23 @@ void normalizeWarmStart(Work *w) {
     }
 }
 
+
+void normalizeWarmStartv2(Work *w) {
+    scs_int i;
+    scs_float *D = w->scal->D;
+    scs_float *E = w->scal->E;
+    scs_float *x = w->u;
+    scs_float *y = &(w->u[w->n]);
+
+    for (i = 0; i < w->n; ++i) {
+        x[i] *= (E[i] * w->sc_b);
+    }
+    for (i = 0; i < w->m; ++i) {
+        y[i] *= (D[i] * w->sc_c);
+    }
+}
+
+
 void unNormalizeSol(Work *w, Sol *sol) {
     scs_int i;
     scs_float *D = w->scal->D;

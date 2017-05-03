@@ -5,11 +5,11 @@
 extern "C" {
 #endif
 
-/* SCS VERSION NUMBER ----------------------------------------------    */
+    /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION                                                            \
     ("1.2.6") /* string literals automatically null-terminated */
 
-/* SCS returns one of the following integers:                           */
+    /* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE (-7)
 #define SCS_UNBOUNDED_INACCURATE (-6)
 #define SCS_SIGINT (-5)
@@ -21,7 +21,7 @@ extern "C" {
 #define SCS_SOLVED (1)
 #define SCS_SOLVED_INACCURATE (2)
 
-/* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
+    /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
 #define MAX_ITERS (2500)
 #define EPS (1E-3)
 #define ALPHA (1.5)
@@ -31,6 +31,23 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
+
+/* Parameters for Superscs*/
+#define K0 (1)
+#define K1 (1)
+#define K2 (1)    
+#define NOMINAL (1)
+#define DIR (1)
+#define C_BLIND (0.999)
+#define DIRECTION (1)
+
+/* Line-search defaults */
+#define LS  (10)
+#define BETA (0.5)
+#define SIGMA (1E-2)
+    
+/* Direction Defaults */
+#define DIRECTION (1)
 
 #ifdef __cplusplus
 }

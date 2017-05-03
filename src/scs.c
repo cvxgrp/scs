@@ -60,6 +60,26 @@ static void freeWork(Work *w) {
         if (w->scal->E)
             scs_free(w->scal->E);
         scs_free(w->scal);
+    if (w->u_b)
+        scs_free(w->u_b);
+    if (w->R)
+        scs_free(w->R);
+    if (w->sc_R)
+        scs_free(w->sc_R);
+    if (w->sc_R_prev)
+        scs_free(w->sc_R_prev);
+    if (w->dir)
+        scs_free(w->dir);
+    if (w->dut)
+        scs_free(w->dut);
+    if (w->Sk)
+        scs_free(w->Sk);
+    if (w->Yk)
+        scs_free(w->Yk);
+    if (w->wu)
+        scs_free(w->wu);
+    if (w->sc_Rwu)
+        scs_free(w->sc_Rwu);   
     }
     scs_free(w);
     RETURN;
@@ -169,6 +189,26 @@ static void warmStartVars(Work *w, const Sol *sol) {
     RETURN;
 }
 
+static void warmStartVarsv2(Work *w, const Sol *sol) {
+    DEBUG_FUNC
+    scs_int i, n = w->n, m = w->m;
+
+    memcpy(w->u, sol->x, n * sizeof(scs_float));
+    memcpy(&(w->u[n]), sol->y, m * sizeof(scs_float));
+    w->u[n + m] = 1.0;
+#ifndef NOVALIDATE
+    for (i = 0; i < n + m + 1; ++i) {
+        if (scs_isnan(w->u[i]))
+            w->u[i] = 0;
+    }
+#endif
+    if (w->stgs->normalize) {
+        normalizeWarmStartv2(w);
+    }
+    RETURN;
+}
+
+
 static scs_float calcPrimalResid(Work *w, const scs_float *x,
                                  const scs_float *s, const scs_float tau,
                                  scs_float *nmAxs) {
@@ -260,6 +300,14 @@ static void coldStartVars(Work *w) {
     RETURN;
 }
 
+static void coldStartVarsv2(Work *w) {
+    DEBUG_FUNC
+    scs_int l = w->n + w->m + 1;
+    memset(w->u, 0, l * sizeof(scs_float));
+    w->u[l - 1] = SQRTF((scs_float)l);
+    RETURN;
+}
+
 /* status < 0 indicates failure */
 static scs_int projectLinSys(Work *w, scs_int iter) {
     /* ut = u + v */
@@ -288,7 +336,6 @@ static scs_int projectLinSysv2(Work *w, scs_int iter) {
     DEBUG_FUNC
     scs_int n = w->n, m = w->m, l = n + m + 1, status;
     memcpy(w->u_t, w->u, l * sizeof(scs_float));
-//    addScaledArray(w->u_t, w->v, l, 1.0);
 
     scaleArray(w->u_t, w->stgs->rho_x, n);
 
@@ -332,6 +379,29 @@ static void updateDualVars(Work *w) {
     RETURN;
 }
 
+/* Calculates the fixed point residual R */
+static void calcFPRes(Work *w) {
+    DEBUG_FUNC
+    scs_int i, n = w->n, l = n + w->m + 1;
+    for (i = 0; i < l; ++i) {
+        w->R[i] = w->u_t[i] - w->u_b[i]; 
+    }
+    RETURN;
+}
+
+
+/* Calculate FP residuals with equality rescaling */
+static void scaleFPRes(Work *w) {
+    scs_int i;
+    memcpy(w->R, w->sc_R, (w->n + w->m + 1) * sizeof(scs_float));
+    for (i=0; i<w->n; ++i) {
+        w->sc_R[i] *= SQRTF(w->stgs->rho_x);
+    }
+    RETURN;
+}
+
+
+  
 /* status < 0 indicates failure */
 static scs_int projectCones(Work *w, const Cone *k, scs_int iter) {
     DEBUG_FUNC
@@ -351,6 +421,25 @@ static scs_int projectCones(Work *w, const Cone *k, scs_int iter) {
 
     RETURN status;
 }
+
+
+/* status < 0 indicates failure */
+static scs_int projectConesv2(Work *w, const Cone *k, scs_int iter) {
+    DEBUG_FUNC
+    scs_int i, n = w->n, l = n + w->m + 1, status;
+    /* this does not relax 'x' variable */
+    for (i = 0; i < l; ++i) {
+        w->u_b[i] = 2 * w->u_t[i] - w->u[i];
+    }
+    
+    /* u = [x;y;tau] */
+    status = projDualCone(&(w->u_b[n]), k, w->coneWork, &(w->u_prev[n]), iter);
+    if (w->u_b[l - 1] < 0.0)
+        w->u_b[l - 1] = 0.0;
+
+    RETURN status;
+}
+
 
 static scs_int indeterminate(Work *w, Sol *sol, Info *info) {
     DEBUG_FUNC
@@ -745,8 +834,24 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->dr = scs_malloc(d->n * sizeof(scs_float));
     w->b = scs_malloc(d->m * sizeof(scs_float));
     w->c = scs_malloc(d->n * sizeof(scs_float));
+    
+    /* added for superscs*/
+    w->u_t = scs_malloc(l * sizeof(scs_float));
+    w->R = scs_malloc(l * sizeof(scs_float));
+    w->sc_R = scs_malloc(l * sizeof(scs_float));
+    w->sc_R_prev = scs_malloc(l * sizeof(scs_float));
+    w->dir = scs_malloc(l * sizeof(scs_float));
+    w->dut = scs_malloc(l * sizeof(scs_float));
+    w->Sk = scs_malloc(l * sizeof(scs_float));
+    w->Yk = scs_malloc(l * sizeof(scs_float));
+    if (w->stgs->ls > 0) {
+        w->wu = scs_malloc(l * sizeof(scs_float));
+        w->sc_Rwu = scs_malloc(l * sizeof(scs_float));
+    }
+    
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
-        !w->dr || !w->b || !w->c) {
+        !w->dr || !w->b || !w->c || !w->u_b|| !w->R|| !w->sc_R|| !w->sc_R_prev||
+        !w->dir|| !w->dut|| !w->Sk|| !w->Yk || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
     }
@@ -825,7 +930,10 @@ static scs_int updateWork(const Data *d, Work *w, const Sol *sol) {
 
 scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
-    scs_int i;
+
+    scs_int i, how;
+    scs_float eta;
+    
     timer solveTimer;
     struct residuals r;
     if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
@@ -837,15 +945,60 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     tic(&solveTimer);
     info->statusVal = SCS_UNFINISHED; /* not yet converged */
     r.lastIter = -1;
-    updateWork(d, w, sol);
+  //  updateWorkv2(d, w, sol);
 
     if (w->stgs->verbose)
         printHeader(w, k);
-    /* scs: */
+    /* supercs: */
+    
+    // Initialize:
+    i = 0;
+    memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
+
+    projectLinSysv2(w, i);
+    projectConesv2(w, k, i);
+    calcFPRes(w);
+    scaleFPRes(w);
+        
+    eta = calcNorm(w->sc_R, (w->n + w->m + 1));  // initialize eta = |Ru^0|
+    memset(w->dir, 0, (w->n + w->m + 1) * sizeof(scs_float));
+    memset(w->Sk, 0, (w->n + w->m + 1) * sizeof(scs_float));
+    memset(w->Yk, 0, (w->n + w->m + 1) * sizeof(scs_float));   
+    memset(w->wu, 0, (w->n + w->m + 1) * sizeof(scs_float));
+    memset(w->sc_Rwu, 0, (w->n + w->m + 1) * sizeof(scs_float));
+    //    memset(w->how, 0, w->stgs->max_iters * sizeof(scs_int)); 
+    memcpy(w->sc_R_prev, w->sc_R, (w->n + w->m + 1) * sizeof(scs_float));
+    for (i = 0; i < w->stgs->max_iters; ++i) {
+        if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
+            if (i==0) {
+                w->dir = w->sc_R;
+                scaleArray(w->dir, -1, w->n + w->m + 1);
+            } else {
+//                if (w->how[i-1] == 0 || w->stgs->ls == 0) {
+                if (how == 0 || w->stgs->ls == 0) {                    
+                    w->Sk = w->u;   // IT IS NOT SCALED!!!!!!!!!!!!!
+                    addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
+                    w->Yk = w->sc_R;
+                    addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);                                                        
+                } else {
+                    w->Sk = w->wu; 
+                    addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
+                    w->Yk = w->sc_Rwu;
+                    addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);                 
+                }
+                // compute direction
+                
+            }        
+        }   
+    }
+   
+
+    
+  /*  
     for (i = 0; i < w->stgs->max_iters; ++i) {
         memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
 
-        if (projectLinSys(w, i) < 0) {
+        if (projectLinSysv2(w, i) < 0) {
             RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
                            "error in projectLinSys", "Failure");
         }
@@ -875,7 +1028,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     if (w->stgs->verbose) {
         calcResiduals(w, &r, i);
         printSummary(w, i, &r, &solveTimer);
-    }
+   } *}
     /* populate solution vectors (unnormalized) and info */
     getSolution(w, sol, info, &r, i);
     info->solveTime = tocq(&solveTimer);
@@ -883,8 +1036,10 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     if (w->stgs->verbose)
         printFooter(d, k, sol, w, info);
     endInterruptListener();
+   
     RETURN info->statusVal;
 }
+
 
 void scs_finish(Work *w) {
     DEBUG_FUNC
