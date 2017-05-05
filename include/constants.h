@@ -37,9 +37,7 @@ extern "C" {
 #define K1 (1)
 #define K2 (1)    
 #define NOMINAL (1)
-#define DIR (1)
-#define C_BLIND (0.999)
-#define DIRECTION (1)
+#define C_BL (0.999)
 
 /* Line-search defaults */
 #define LS  (10)
@@ -48,7 +46,12 @@ extern "C" {
     
 /* Direction Defaults */
 #define DIRECTION (1)
-
+#define TRULE (3)
+#define DELTA (0.5)
+#define THETABAR (1E-1)
+#define ALPHAC (1E-2) 
+#define MEMORY (10)
+    
 #ifdef __cplusplus
 }
 #endif

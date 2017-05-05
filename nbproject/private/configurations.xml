@@ -18,7 +18,27 @@
       <df name="direct">
         <df name="external">
           <in>SuiteSparse_config.c</in>
+          <in>SuiteSparse_config.h</in>
+          <in>amd.h</in>
+          <in>amd_1.c</in>
+          <in>amd_2.c</in>
+          <in>amd_aat.c</in>
+          <in>amd_control.c</in>
+          <in>amd_defaults.c</in>
+          <in>amd_dump.c</in>
+          <in>amd_global.c</in>
+          <in>amd_info.c</in>
+          <in>amd_internal.h</in>
+          <in>amd_order.c</in>
+          <in>amd_post_tree.c</in>
+          <in>amd_postorder.c</in>
+          <in>amd_preprocess.c</in>
+          <in>amd_valid.c</in>
+          <in>ldl.c</in>
+          <in>ldl.h</in>
         </df>
+        <in>private.c</in>
+        <in>private.h</in>
       </df>
       <df name="gpu">
         <in>private.c</in>

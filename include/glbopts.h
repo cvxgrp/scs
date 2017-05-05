@@ -95,9 +95,9 @@ typedef float scs_float;
 #endif
 
 #ifndef SGN
-#define SGN(x) (((x) >= 0) ? 1.0 : -1.0 ) 
+#define SGN(x) (((x) >= 0) ? 1.0 : -1.0) 
 #endif
-
+ 
 #ifndef POWF
 #ifdef FLOAT
 #define POWF powf
