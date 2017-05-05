@@ -105,12 +105,19 @@ extern "C" {
 
     /* workspace for SCS */
     struct SCS_WORK {
-        scs_float *u, *v, *u_t, *u_prev, *u_b; /* u_prev = u from previous iteration */
-        scs_float *h, *g, *pr, *dr;
+        scs_float *u = NULL;
+        scs_float *v = NULL;
+        scs_float *u_t = NULL;
+        scs_float * u_prev = NULL;
+        scs_float *u_b = NULL; /**< u_prev = u from previous iteration */
+        scs_float *h = NULL;
+        scs_float *g = NULL;
+        scs_float *pr = NULL;
+        scs_float *dr = NULL;
         scs_float gTh, sc_b, sc_c, nm_b, nm_c;
-        scs_float *b, *c; /* (possibly normalized) b and c vectors */
-        scs_float *R, *sc_R, *sc_R_prev; /* fixed point residuals */
-        scs_float *dir, *dut; /* variables for direction */
+        scs_float *b, *c; /**<  (possibly normalized) b and c vectors */
+        scs_float *R, *sc_R, *sc_R_prev; /**<  fixed point residuals */
+        scs_float *dir, *dut; /**<  variables for direction */
         scs_float *Sk, *Yk;
         scs_float *wu, *sc_Rwu; /* from line search */
         scs_int m, n; /* A has m rows, n cols */
