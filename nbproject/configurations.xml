@@ -4,8 +4,27 @@
     <df root="include" name="0">
     </df>
     <df root="linsys" name="1">
+      <df name="direct">
+        <df name="external">
+          <in>amd_1.c</in>
+          <in>amd_2.c</in>
+          <in>amd_aat.c</in>
+          <in>amd_control.c</in>
+          <in>amd_defaults.c</in>
+          <in>amd_dump.c</in>
+          <in>amd_global.c</in>
+          <in>amd_info.c</in>
+          <in>amd_order.c</in>
+          <in>amd_post_tree.c</in>
+          <in>amd_postorder.c</in>
+          <in>amd_preprocess.c</in>
+          <in>amd_valid.c</in>
+          <in>ldl.c</in>
+        </df>
+        <in>private.c</in>
+      </df>
     </df>
-    <logicalFolder name="SCS" displayName="SCS" projectFiles="true" root=".">
+    <logicalFolder name="scs" displayName="scs" projectFiles="true" root=".">
       <logicalFolder name="examples" displayName="examples" projectFiles="true">
         <logicalFolder name="c" displayName="c" projectFiles="true">
           <itemPath>examples/c/demo.c</itemPath>
@@ -14,30 +33,6 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="linsys" displayName="linsys" projectFiles="true">
-        <logicalFolder name="direct" displayName="direct" projectFiles="true">
-          <logicalFolder name="external" displayName="external" projectFiles="true">
-            <itemPath>linsys/direct/external/SuiteSparse_config.h</itemPath>
-            <itemPath>linsys/direct/external/amd.h</itemPath>
-            <itemPath>linsys/direct/external/amd_1.c</itemPath>
-            <itemPath>linsys/direct/external/amd_2.c</itemPath>
-            <itemPath>linsys/direct/external/amd_aat.c</itemPath>
-            <itemPath>linsys/direct/external/amd_control.c</itemPath>
-            <itemPath>linsys/direct/external/amd_defaults.c</itemPath>
-            <itemPath>linsys/direct/external/amd_dump.c</itemPath>
-            <itemPath>linsys/direct/external/amd_global.c</itemPath>
-            <itemPath>linsys/direct/external/amd_info.c</itemPath>
-            <itemPath>linsys/direct/external/amd_internal.h</itemPath>
-            <itemPath>linsys/direct/external/amd_order.c</itemPath>
-            <itemPath>linsys/direct/external/amd_post_tree.c</itemPath>
-            <itemPath>linsys/direct/external/amd_postorder.c</itemPath>
-            <itemPath>linsys/direct/external/amd_preprocess.c</itemPath>
-            <itemPath>linsys/direct/external/amd_valid.c</itemPath>
-            <itemPath>linsys/direct/external/ldl.c</itemPath>
-            <itemPath>linsys/direct/external/ldl.h</itemPath>
-          </logicalFolder>
-          <itemPath>linsys/direct/private.c</itemPath>
-          <itemPath>linsys/direct/private.h</itemPath>
-        </logicalFolder>
         <logicalFolder name="indirect" displayName="indirect" projectFiles="true">
           <itemPath>linsys/indirect/private.c</itemPath>
           <itemPath>linsys/indirect/private.h</itemPath>
@@ -61,7 +56,6 @@
     <df root="tests" name="3">
       <df name="c">
         <in>unitTests.c</in>
-        <in>unitTests.h</in>
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -118,7 +112,7 @@
       <item path="examples/c/demo.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
           <preprocessorList>
-            <Elem>DEMO_PATH="/home/chung/Documents/SCS/examples/raw/demo_data"</Elem>
+            <Elem>DEMO_PATH="/home/krina/NetBeansProjects/scs/examples/raw/demo_data"</Elem>
           </preprocessorList>
         </cTool>
       </item>
@@ -241,8 +235,8 @@
         </cTool>
       </item>
       <item path="tests/c/unitTests.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="tests/c/unitTests.h" ex="false" tool="3" flavor2="0">
+        <cTool flags="0">
+        </cTool>
       </item>
     </conf>
   </confs>

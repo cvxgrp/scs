@@ -52,12 +52,17 @@ extern "C" {
         scs_int nominal; /* boolean, nominal updates: 1 */
 
         /* line-search */
-        scs_int ls;
-        scs_float beta;
-        scs_float sigma;
+        scs_int ls; /* max line-search iterations */
+        scs_float beta; /* stepsize reduction */
+        scs_float sigma; /* line-search parameter */
 
         /* direction */
-        scs_int direction;
+        scs_int direction; /* choice of direction: 1 for L-Broyden */
+        scs_int tRule; /* rule for selecting relaxation parameter */ 
+        scs_float delta;  /* parameter in Broyden realaxation: 0.5 */
+        scs_float thetabar; /* modified Broyden's parameter: 1e-1 */
+        scs_float alphaC; /* parameter for skipping rule: 1e-2 */
+        scs_int memory; /* memory for limited memory QN: 10 */
     };
 
     /* contains primal-dual solution arrays */
@@ -105,15 +110,16 @@ extern "C" {
 
     /* workspace for SCS */
     struct SCS_WORK {
-        scs_float *u = NULL;
-        scs_float *v = NULL;
-        scs_float *u_t = NULL;
-        scs_float * u_prev = NULL;
-        scs_float *u_b = NULL; /**< u_prev = u from previous iteration */
-        scs_float *h = NULL;
-        scs_float *g = NULL;
-        scs_float *pr = NULL;
-        scs_float *dr = NULL;
+
+        scs_float *u;
+        scs_float *v;
+        scs_float *u_t;
+        scs_float * u_prev;
+        scs_float *u_b; /**< u_prev = u from previous iteration */
+        scs_float *h;
+        scs_float *g;
+        scs_float *pr;
+        scs_float *dr;
         scs_float gTh, sc_b, sc_c, nm_b, nm_c;
         scs_float *b, *c; /**<  (possibly normalized) b and c vectors */
         scs_float *R, *sc_R, *sc_R_prev; /**<  fixed point residuals */
@@ -122,6 +128,8 @@ extern "C" {
         scs_float *wu, *sc_Rwu; /* from line search */
         scs_int m, n; /* A has m rows, n cols */
  //       scs_int *how;
+        scs_float nrmR_con; /* \|R\| */
+        scs_float *S; 
         AMatrix *A; /* (possibly normalized) A matrix */
         Priv *p; /* struct populated by linear system solver */
         Settings *stgs; /* contains solver settings specified by user */

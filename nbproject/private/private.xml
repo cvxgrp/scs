@@ -10,14 +10,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/chung/Documents/SCS/src/util.c</file>
-            <file>file:/home/chung/Documents/SCS/src/cones.c</file>
-            <file>file:/home/chung/Documents/SCS/include/glbopts.h</file>
-            <file>file:/home/chung/Documents/SCS/include/cones.h</file>
-            <file>file:/home/chung/Documents/SCS/Makefile</file>
-            <file>file:/home/chung/Documents/SCS/include/scs.h</file>
-            <file>file:/home/chung/Documents/SCS/src/scs.c</file>
-            <file>file:/home/chung/Documents/SCS/include/linSys.h</file>
+            <file>file:/home/krina/NetBeansProjects/scs/src/scs.c</file>
+            <file>file:/home/krina/NetBeansProjects/scs/include/constants.h</file>
+            <file>file:/home/krina/NetBeansProjects/scs/include/normalize.h</file>
+            <file>file:/home/krina/NetBeansProjects/scs/include/glbopts.h</file>
+            <file>file:/home/krina/NetBeansProjects/scs/src/linAlg.c</file>
+            <file>file:/home/krina/NetBeansProjects/scs/include/scs.h</file>
         </group>
     </open-files>
 </project-private>
