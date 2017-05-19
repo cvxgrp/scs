@@ -28,6 +28,15 @@ extern "C" {
      * @param ys_cache
      */
     scs_int pushToYSCache(Work *work, YSCache * ys_cache);
+    
+    /**
+     * Resets the cache. This methods does not free the memory allocated by the 
+     * cache, nor does it overwrite the previously cached data. It simply sets the 
+     * parameters `mem_current` and `mem_idx` to 0.
+     * @param ys_cache
+     * @return 
+     */
+    scs_int resetYSCache(YSCache * ys_cache);
 
     /**
      * 

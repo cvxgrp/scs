@@ -848,6 +848,8 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->ys_cache->YS = scs_malloc(d->stgs->memory * sizeof(scs_float)); // YS: l-by-mem
     w->ys_cache->mem_current = 0;
     w->ys_cache->mem_idx = 0;
+    /* the cache must know its memory length */
+    w->ys_cache->mem = d->stgs->memory; 
     
     
     w->Sk = scs_malloc(l * sizeof (scs_float));
