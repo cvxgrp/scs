@@ -11,7 +11,7 @@ scs_int pushToYSCache(Work *work, YSCache * ys_cache) {
     scs_float *yk;
     scs_float *sk;
 
-    /* increment the memory */
+    /* increment the memory (when initialised, mem_idx = -1) */
     ys_cache -> mem_idx++;
     if (ys_cache -> mem_idx >= ys_cache->mem) {
         cache_status = YS_CACHE_RESET;
@@ -46,7 +46,7 @@ scs_int pushToYSCache(Work *work, YSCache * ys_cache) {
 
 scs_int resetYSCache(YSCache * ys_cache) {
     ys_cache->mem_current = 0;
-    ys_cache->mem_idx = 0;
+    ys_cache->mem_idx = -1;
     return YS_CACHE_RESET;
 }
 

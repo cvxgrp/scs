@@ -121,6 +121,7 @@ extern "C" {
         scs_float *YS; /**< (Y,S) inner product */
         scs_int mem_current; /**< current memory (before it's full) */
         scs_int mem_idx; /**< head-index of memory */
+        scs_int mem; /**< (target) memory */
     };
 
     /**

@@ -20,7 +20,6 @@ extern "C" {
  */
 #define YS_CACHE_RESET 1
 
-
     /**
      * Adds a new pair (Yk, Sk) into the YS-cache.
      * 
