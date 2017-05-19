@@ -1,28 +1,43 @@
 #include "directions.h"
 
-void pushToYSCache(Work *w, YSCache * broydenMemory) {
-    broydenMemory -> mem_idx++;
+scs_int pushToYSCache(Work *w, YSCache * ys_cache) {
     
-    if (broydenMemory -> mem_idx >= w->stgs->memory) {
-        broydenMemory -> mem_idx = 0;
+    scs_int cache_status = YS_CACHE_INCREMENT;
+    
+    /* increment the memory */
+    ys_cache -> mem_idx++;        
+    if (ys_cache -> mem_idx >= w->stgs->memory) {
+        cache_status = YS_CACHE_RESET;
+        ys_cache -> mem_idx = 0;
     }
-    broydenMemory->mem_current++; // increase current memory
-    if (broydenMemory->mem_current > w->stgs->memory) {
-        broydenMemory->mem_current = w->stgs->memory; // buffer is now full
+    
+    /* update the current memory */
+    ys_cache->mem_current++; // increase current memory
+    if (ys_cache->mem_current > w->stgs->memory) {
+        cache_status = YS_CACHE_FULL;
+        ys_cache->mem_current = w->stgs->memory; /* buffer is now full */
     }
 
-    scs_float *Y = broydenMemory->Y;
+    /* push Yk into the right position in the cache */
+    scs_float *Y = ys_cache->Y;
     scs_float *yk = w->Yk;
-    Y += (broydenMemory -> mem_idx) * w->l;
+    Y += (ys_cache -> mem_idx) * w->l;
     memcpy(Y, yk, w->l * sizeof (scs_float));
     
-    scs_float *S = broydenMemory->S;
+    /* push Sk into the right position in the cache */
+    scs_float *S = ys_cache->S;
     scs_float *sk = w->Sk;
-    S += (broydenMemory -> mem_idx) * w->l;
+    S += (ys_cache -> mem_idx) * w->l;
     memcpy(S, sk, w->l * sizeof (scs_float));
     
-    scs_float *YS = broydenMemory->YS;
-    YS[broydenMemory -> mem_idx] = innerProd(w->Yk, w->Sk, w->l);
+    /* Compute the inner product and store in the right position in the cache */
+    scs_float *YS = ys_cache->YS;
+    YS[ys_cache -> mem_idx] = innerProd(w->Yk, w->Sk, w->l);
+    
+    return cache_status;
+}
+
+void resetYSCache(YSCache * broydenMemory){
     
 }
 

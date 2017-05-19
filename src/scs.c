@@ -31,6 +31,7 @@ static scs_int scs_isnan(scs_float x) {
     RETURN(x == NAN || x != x);
 }
 
+
 static void freeWork(Work *w) {
     DEBUG_FUNC
     if (!w)
@@ -82,6 +83,8 @@ static void freeWork(Work *w) {
         scs_free(w->wu);
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
+    if (w->ys_cache)
+        
 //    if (w->S)
 //        scs_free(w->S);
 //    if (w->H)

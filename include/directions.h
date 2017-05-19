@@ -7,22 +7,34 @@ extern "C" {
 
 #include "scs.h"
 
+/** 
+ * The cache is full-memory
+ */    
+#define YS_CACHE_FULL 3
+/**
+ * The cache has been incremented
+ */    
+#define YS_CACHE_INCREMENT 2
+/** 
+ * The head of the cache has been reset to 0
+ */
+#define YS_CACHE_RESET 1
 
 
     /**
      * Adds a new pair (Yk, Sk) into the YS-cache.
      * 
-     * @param w
-     * @param broydenMemory
+     * @param work
+     * @param ys_cache
      */
-    void pushToYSCache(Work *w, YSCache * broydenMemory);
+    scs_int pushToYSCache(Work *work, YSCache * ys_cache);
 
     /**
      * 
      * @param w
      * @param iter
      */
-    void computeLBroyden(Work *w, scs_int iter);
+    void computeLBroyden(Work *work, scs_int iter);
 
 
 
