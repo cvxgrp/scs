@@ -1,5 +1,23 @@
 #include "directions.h"
 
+/* Broyden for theta=1 */
+void computeBroyden(Work *w, scs_int iter) {
+    DEBUG_FUNC
+    scs_float Ysk;
+    scs_int l = w->m + w->n + 1;
+    if (iter == 0) {      
+        
+    }
+
+    if ((w->stgs->sc_init && iter == 1) || w->stgs->tRule == 1
+            || w->stgs->tRule == 2) {
+        Ysk = innerProd(w->Yk, w->Sk, l);
+    }
+    if (w->stgs->sc_init && iter == 1 ) {
+        
+    }
+}
+
 void computeLBroyden(Work *w, scs_int iter) {
     DEBUG_FUNC
     scs_float Ysk, qf, theta;
@@ -33,4 +51,18 @@ void computeLBroyden(Work *w, scs_int iter) {
 
         }
     }
+}
+
+/* shift columns of a 2D array to the lest by 1 place */
+void shiftColLeft(scs_float *arr, scs_int rows, scs_int cols) {
+    scs_float temp = arr[0];
+    memmove(&arr[0], &arr[1], (rows * cols - 1) * sizeof *arr);
+    arr[rows * cols - 1] = temp;
+}
+
+
+// for theta = 1
+void computeLMBroyden(Work *w, scs_int iter) {
+    
+    
 }
