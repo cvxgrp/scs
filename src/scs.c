@@ -822,6 +822,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->stgs = d->stgs;
     w->m = d->m;
     w->n = d->n;
+    
     /* allocate workspace: */
     w->u = scs_malloc(l * sizeof (scs_float));
     w->v = scs_malloc(l * sizeof (scs_float));
@@ -843,14 +844,14 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->dut = scs_malloc(l * sizeof (scs_float));
 
     w->ys_cache = scs_calloc(1, sizeof (YSCache));
-    w->ys_cache->S = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); // S: l-by-mem
-    w->ys_cache->Y = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); // Y: l-by-mem
-    w->ys_cache->YS = scs_malloc(d->stgs->memory * sizeof(scs_float)); // YS: l-by-mem
-    w->ys_cache->mem_current = 0;
-    w->ys_cache->mem_idx = -1;
+    w->ys_cache->S = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); /* S: l-by-mem */
+    w->ys_cache->Y = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); /* Y: l-by-mem */
+    w->ys_cache->YS = scs_malloc(d->stgs->memory * sizeof(scs_float)); /* YS: l-by-mem */
+    
     /* the cache must know its memory length */
     w->ys_cache->mem = d->stgs->memory; 
     
+    resetYSCache(w->ys_cache);
     
     w->Sk = scs_malloc(l * sizeof (scs_float));
     w->Yk = scs_malloc(l * sizeof (scs_float));

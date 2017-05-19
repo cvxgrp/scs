@@ -11,6 +11,10 @@ scs_int pushToYSCache(Work *work, YSCache * ys_cache) {
     scs_float *yk;
     scs_float *sk;
 
+    if (ys_cache->mem_current == ys_cache->mem) {
+        cache_status = YS_CACHE_FULL;
+    }
+
     /* increment the memory (when initialised, mem_idx = -1) */
     ys_cache -> mem_idx++;
     if (ys_cache -> mem_idx >= ys_cache->mem) {
@@ -21,7 +25,6 @@ scs_int pushToYSCache(Work *work, YSCache * ys_cache) {
     /* update the current memory */
     ys_cache->mem_current++; /* increase current memory */
     if (ys_cache->mem_current > ys_cache->mem) {
-        cache_status = YS_CACHE_FULL;
         ys_cache->mem_current = ys_cache->mem; /* buffer is now full */
     }
 

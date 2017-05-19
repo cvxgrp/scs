@@ -6,43 +6,10 @@
  */
 
 #include "unitTests.h"
+#include "directions.h"
 
 bool testOK(char** str) {
     SUCCEED
-}
-
-bool testShiftColLeft(char** str) {
-    const scs_int rows = 3;
-    const scs_int cols = 5;
-    float tolerance = 1e-6;
-    unsigned int i;
-    bool test_pass = false;
-    scs_float *s = malloc(cols * sizeof (scs_float *) + (cols * (rows * sizeof (scs_float))));
-    scs_float *expected_result = malloc(cols * sizeof (scs_float *) + (cols * (rows * sizeof (scs_float))));
-/*
-           
- for (i = 0; i < rows; ++i) {
-     for (i = )
-     a[i] = 0.5 * (i + 1);
-     expected_result[i] = b * a[i];
- }
-
- scaleArray(a, b, N);
- test_pass = assertEqualsArray(a, expected_result, N, tolerance);
-
- */
- 
- /* free memory */
- /*   free(a);
-    a = NULL;
-    free(expected_result);
-    expected_result = NULL;
-    if (!test_pass) {
-        FAIL_WITH_MESSAGE(str, "scaleArray failed");
-    
-    }
-    */
-    SUCCEED /* if it reaches this point, it has succeeded */
 }
 
 bool testProjLinSysv2(char** str) {
@@ -52,8 +19,6 @@ bool testProjLinSysv2(char** str) {
     scs_float gTh = 2.2;
     const scs_float rho_x = 1.0;
     scs_float *expected_result;
-    //   scs_int iter = 2;
-    //    scs_float *A;
     bool test_pass = false;
     float tolerance = 1e-6;
 
@@ -151,10 +116,58 @@ bool testScaleArray(char** str) {
     SUCCEED /* if it reaches this point, it has succeeded */
 }
 
+bool testYSCache(char** str) {
+    YSCache cache;
+    Work w;
+    scs_int mem = 10;
+    scs_int l = 4;
+    scs_int i;
+    scs_int k;
+    scs_int status;
+    _Bool testStatus = false;
+
+    cache.Y = scs_malloc(l * mem * sizeof (scs_float));
+    cache.S = scs_malloc(l * mem * sizeof (scs_float));
+    cache.YS = scs_malloc(l * sizeof (scs_float));
+    cache.mem = mem;
+    resetYSCache(&cache);
+
+    w.Sk = scs_malloc(l * sizeof (scs_float));
+    w.Yk = scs_malloc(l * sizeof (scs_float));
+    w.l = l;
+
+    for (k = 0; k < 30; ++k) {
+        for (i = 0; i < l; ++i) {
+            w.Sk[i] = k + 0.05 * i;
+            w.Yk[i] = k + 2 + 0.1 * i;
+        }
+        status = pushToYSCache(&w, &cache);
+        printf("status = %d, mem_idx = %d\n", status, cache.mem_idx);
+        if (k < mem) {
+            testStatus = assertEqualsInt(status, YS_CACHE_INCREMENT);
+            if (!testStatus) {
+                FAIL_WITH_MESSAGE(str, "Memory not incremented");
+            }
+        }     
+        
+        if (k==mem){
+            testStatus = assertEqualsInt(status, YS_CACHE_RESET);
+            if (!testStatus) {
+                FAIL_WITH_MESSAGE(str, "Cache not reset");
+            }
+        }
+        
+        /*TODO more testing needed here! */
+    }
+
+    SUCCEED
+}
+
 int main(int argc, char** argv) {
     int r = TEST_SUCCESS;
     /* Test functions: */
     r += test(&testOK, "Dummy passing test");
+    r += test(&testYSCache, "testYSCache");
     r += test(&testScaleArray, "Scale array");
     r += test(&testProjLinSysv2, "projLinSysv2");
     if (r == TEST_SUCCESS) {
