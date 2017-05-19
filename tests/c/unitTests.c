@@ -19,7 +19,7 @@ bool testShiftColLeft(char** str) {
     bool test_pass = false;
     scs_float *s = malloc(cols * sizeof (scs_float *) + (cols * (rows * sizeof (scs_float))));
     scs_float *expected_result = malloc(cols * sizeof (scs_float *) + (cols * (rows * sizeof (scs_float))));
-
+/*
            
  for (i = 0; i < rows; ++i) {
      for (i = )
@@ -29,7 +29,9 @@ bool testShiftColLeft(char** str) {
 
  scaleArray(a, b, N);
  test_pass = assertEqualsArray(a, expected_result, N, tolerance);
-*/
+
+ */
+ 
  /* free memory */
  /*   free(a);
     a = NULL;
