@@ -2,6 +2,7 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="include" name="0">
+      <in>directions.h</in>
     </df>
     <df root="linsys" name="1">
       <df name="direct">
@@ -52,6 +53,7 @@
       </logicalFolder>
     </logicalFolder>
     <df root="src" name="2">
+      <in>directions.c</in>
     </df>
     <df root="tests" name="3">
       <df name="c">
@@ -119,6 +121,8 @@
       <item path="examples/c/randomSOCPProb.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="include/directions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="linsys/common.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
@@ -217,6 +221,8 @@
       <item path="src/ctrlc.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="src/directions.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/linAlg.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">

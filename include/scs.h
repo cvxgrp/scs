@@ -63,6 +63,7 @@ extern "C" {
         scs_float thetabar; /* modified Broyden's parameter: 1e-1 */
         scs_float alphaC; /* parameter for skipping rule: 1e-2 */
         scs_int memory; /* memory for limited memory QN: 10 */
+        scs_int sc_init; /* Boolean, initial scaling for QN: 0 */
     };
 
     /* contains primal-dual solution arrays */
@@ -121,10 +122,11 @@ extern "C" {
         scs_float *pr;
         scs_float *dr;
         scs_float gTh, sc_b, sc_c, nm_b, nm_c;
-        scs_float *b, *c; /**<  (possibly normalized) b and c vectors */
+        scs_float *b, *c; /**<  (scpossibly normalized) b and c vectors */
         scs_float *R, *sc_R, *sc_R_prev; /**<  fixed point residuals */
         scs_float *dir, *dut; /**<  variables for direction */
         scs_float *Sk, *Yk;
+        scs_float *H; /**< Broyden */
         scs_float *wu, *sc_Rwu; /* from line search */
         scs_int m, n; /* A has m rows, n cols */
  //       scs_int *how;

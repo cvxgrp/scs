@@ -1,5 +1,6 @@
 #include "scs.h"
 #include "normalize.h"
+#include "directions.h"
 
 #ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
@@ -83,7 +84,8 @@ static void freeWork(Work *w) {
         scs_free(w->sc_Rwu);
     if (w->S)
         scs_free(w->S);
-
+    if (w->H)
+        scs_free(w->H);
     scs_free(w);
     RETURN;
 }
@@ -334,20 +336,16 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 
 /* status < 0 indicates failure */
 static scs_int projectLinSysv2(Work *w, scs_int iter) {
-    /* ut = u + v */
     DEBUG_FUNC
     scs_int n = w->n, m = w->m, l = n + m + 1, status;
     memcpy(w->u_t, w->u, l * sizeof (scs_float));
 
     scaleArray(w->u_t, w->stgs->rho_x, n);
-
     addScaledArray(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
     addScaledArray(w->u_t, w->h, l - 1,
             -innerProd(w->u_t, w->g, l - 1) / (w->gTh + 1));
     scaleArray(&(w->u_t[n]), -1, m);
-
     status = solveLinSys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
-
     w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
 
     RETURN status;
@@ -853,9 +851,19 @@ static Work *initWork(const Data *d, const Cone *k) {
         RETURN SCS_NULL;
     }
 
+    
+    /* L-Broyden */
     if (w->stgs->direction == 1) {
         w->S = scs_malloc(l * sizeof (scs_float *) + (l * (w->stgs->memory * sizeof (scs_float))));
         if (!w->S) {
+            scs_printf("ERROR: Memory allocation failed");
+        }
+    }
+    
+    /* Broyden */
+    if (w->stgs->direction == 2) {
+        w->H = scs_malloc(l * sizeof (scs_float *) + (l * (w->stgs->memory * sizeof (scs_float))));
+        if (!w->H) {
             scs_printf("ERROR: Memory allocation failed");
         }
     }
@@ -931,37 +939,6 @@ static scs_int updateWork(const Data *d, Work *w, const Sol *sol) {
     scaleArray(&(w->g[n]), -1, m);
     w->gTh = innerProd(w->h, w->g, n + m);
     RETURN 0;
-}
-
-static void computeLBroyden(Work *w, scs_int iter) {
-    DEBUG_FUNC
-    scs_float Ysk, qf, theta;
-    scs_int l = w->m + w->n + 1;
-    scs_int skip = 0;
-
-    Ysk = innerProd(w->Yk, w->Sk, l);
-
-    switch (w->stgs->tRule) {
-        case 1:
-            qf = -w->u[l - 1] * innerProd(w->Sk, w->sc_R_prev, l);
-            if (Ysk < w->stgs->delta * ABS(qf)) {
-                theta = (1.0 - SGN(qf) * w->stgs->delta) * qf / (qf - Ysk);
-                scaleArray(w->Yk, theta, l);
-                addScaledArray(w->Yk, w->sc_R_prev, l, -w->u[l - 1]*(1.0 * theta));
-            }
-        case 4:
-            if (w->nrmR_con < 1.0)
-                w->stgs->alphaC = 3.0;
-            if (Ysk / innerProd(w->Sk, w->Sk, l) <=
-                    (1e-6) * POWF(w->nrmR_con, w->stgs->alphaC)) {
-                skip = 1;
-            }
-    }
-    if (skip != 0) {
-        if (iter > w->stgs->memory) {
-
-        }
-    }
 }
 
 scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {

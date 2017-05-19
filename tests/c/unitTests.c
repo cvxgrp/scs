@@ -11,14 +11,46 @@ bool testOK(char** str) {
     SUCCEED
 }
 
+bool testShiftColLeft(char** str) {
+    const scs_int rows = 3;
+    const scs_int cols = 5;
+    float tolerance = 1e-6;
+    unsigned int i;
+    bool test_pass = false;
+    scs_float *s = malloc(cols * sizeof (scs_float *) + (cols * (rows * sizeof (scs_float))));
+    scs_float *expected_result = malloc(cols * sizeof (scs_float *) + (cols * (rows * sizeof (scs_float))));
+
+           
+ for (i = 0; i < rows; ++i) {
+     for (i = )
+     a[i] = 0.5 * (i + 1);
+     expected_result[i] = b * a[i];
+ }
+
+ scaleArray(a, b, N);
+ test_pass = assertEqualsArray(a, expected_result, N, tolerance);
+*/
+ /* free memory */
+ /*   free(a);
+    a = NULL;
+    free(expected_result);
+    expected_result = NULL;
+    if (!test_pass) {
+        FAIL_WITH_MESSAGE(str, "scaleArray failed");
+    
+    }
+    */
+    SUCCEED /* if it reaches this point, it has succeeded */
+}
+
 bool testProjLinSysv2(char** str) {
 
-    scs_int n = 5, m = 10, l = n + m + 1,  i;
+    scs_int n = 5, m = 10, l = n + m + 1, i;
     scs_float *u_t, *u, *h, *g;
     scs_float gTh = 2.2;
     const scs_float rho_x = 1.0;
     scs_float *expected_result;
- //   scs_int iter = 2;
+    //   scs_int iter = 2;
     //    scs_float *A;
     bool test_pass = false;
     float tolerance = 1e-6;
@@ -35,12 +67,12 @@ bool testProjLinSysv2(char** str) {
     for (i = 0; i < l; ++i) {
         u_t[i] = 0.5 * (i + 1);
     }
-    
-    for (i = 0; i < l-1; ++i) {
+
+    for (i = 0; i < l - 1; ++i) {
         h[i] = 0.2 * (i + 1);
         g[i] = 0.8 * (i + 1);
     }
-  //  memcpy(u_t, u, l * sizeof (scs_float));
+    //  memcpy(u_t, u, l * sizeof (scs_float));
 
     scaleArray(u_t, rho_x, n);
 
@@ -50,7 +82,7 @@ bool testProjLinSysv2(char** str) {
     scaleArray(&(u_t[n]), -1, m);
     //   status = solveLinSys(A, stgs, w->p, w->u_t, w->u, iter);
     u_t[l - 1] += innerProd(u_t, h, l - 1);
- 
+
     expected_result[0] = 67.10;
     expected_result[1] = 134.20;
     expected_result[2] = 201.30;

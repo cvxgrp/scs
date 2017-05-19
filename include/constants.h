@@ -51,6 +51,7 @@ extern "C" {
 #define THETABAR (1E-1)
 #define ALPHAC (1E-2) 
 #define MEMORY (10)
+#define SC_INIT (0)
     
 #ifdef __cplusplus
 }
