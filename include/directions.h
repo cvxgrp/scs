@@ -7,7 +7,22 @@ extern "C" {
 
 #include "scs.h"
 
-void computeLBroyden(Work *w, scs_int iter);
+
+
+    /**
+     * Adds a new pair (Yk, Sk) into the YS-cache.
+     * 
+     * @param w
+     * @param broydenMemory
+     */
+    void pushToYSCache(Work *w, YSCache * broydenMemory);
+
+    /**
+     * 
+     * @param w
+     * @param iter
+     */
+    void computeLBroyden(Work *w, scs_int iter);
 
 
 

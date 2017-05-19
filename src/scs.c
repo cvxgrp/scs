@@ -82,10 +82,10 @@ static void freeWork(Work *w) {
         scs_free(w->wu);
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
-    if (w->S)
-        scs_free(w->S);
-    if (w->H)
-        scs_free(w->H);
+//    if (w->S)
+//        scs_free(w->S);
+//    if (w->H)
+//        scs_free(w->H);
     scs_free(w);
     RETURN;
 }
@@ -806,7 +806,7 @@ static scs_int validate(const Data *d, const Cone *k) {
 static Work *initWork(const Data *d, const Cone *k) {
     DEBUG_FUNC
     Work *w = scs_calloc(1, sizeof (Work));
-    scs_int l = d->n + d->m + 1;
+    const scs_int l = d->n + d->m + 1;
     if (d->stgs->verbose) {
         printInitHeader(d, k);
     }
@@ -814,6 +814,7 @@ static Work *initWork(const Data *d, const Cone *k) {
         scs_printf("ERROR: allocating work failure\n");
         RETURN SCS_NULL;
     }
+    
     /* get settings and dims from data struct */
     w->stgs = d->stgs;
     w->m = d->m;
@@ -837,6 +838,15 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->sc_R_prev = scs_malloc(l * sizeof (scs_float));
     w->dir = scs_malloc(l * sizeof (scs_float));
     w->dut = scs_malloc(l * sizeof (scs_float));
+
+    w->ys_cache = scs_calloc(1, sizeof (YSCache));
+    w->ys_cache->S = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); // S: l-by-mem
+    w->ys_cache->Y = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); // Y: l-by-mem
+    w->ys_cache->YS = scs_malloc(d->stgs->memory * sizeof(scs_float)); // YS: l-by-mem
+    w->ys_cache->mem_current = 0;
+    w->ys_cache->mem_idx = 0;
+    
+    
     w->Sk = scs_malloc(l * sizeof (scs_float));
     w->Yk = scs_malloc(l * sizeof (scs_float));
     if (w->stgs->ls > 0) {
@@ -846,27 +856,11 @@ static Work *initWork(const Data *d, const Cone *k) {
 
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
             !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->sc_R || !w->sc_R_prev ||
-            !w->dir || !w->dut || !w->Sk || !w->Yk || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
+            !w->dir || !w->dut || !w->Sk || !w->Yk
+            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
-    }
-
-    
-    /* L-Broyden */
-    if (w->stgs->direction == 1) {
-        w->S = scs_malloc(l * sizeof (scs_float *) + (l * (w->stgs->memory * sizeof (scs_float))));
-        if (!w->S) {
-            scs_printf("ERROR: Memory allocation failed");
-        }
-    }
-    
-    /* Broyden */
-    if (w->stgs->direction == 2) {
-        w->H = scs_malloc(l * sizeof (scs_float *) + (l * (w->stgs->memory * sizeof (scs_float))));
-        if (!w->H) {
-            scs_printf("ERROR: Memory allocation failed");
-        }
-    }
+    }   
 
     w->A = d->A;
     if (w->stgs->normalize) {
