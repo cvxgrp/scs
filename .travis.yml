@@ -11,4 +11,5 @@ before_install:
   - make
 script:
   - ./out/unitTests
-apt: true
+cache:  
+  - apt
