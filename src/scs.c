@@ -31,6 +31,38 @@ static scs_int scs_isnan(scs_float x) {
     RETURN(x == NAN || x != x);
 }
 
+static SUCache * initYSCache(scs_int memory, scs_int l) {
+    SUCache * ys_cache = scs_calloc(1, sizeof (SUCache));
+    if (!ys_cache) {
+        scs_printf("ERROR: allocating YSCache failure\n");
+        RETURN SCS_NULL;
+    }
+    ys_cache->S = scs_malloc(memory * l * sizeof (scs_float)); /* S: l-by-mem */
+    ys_cache->U = scs_malloc(memory * l * sizeof (scs_float)); /* U: l-by-mem */
+
+    /* the cache must know its memory length */
+    ys_cache->mem = memory;
+
+    resetYSCache(ys_cache);
+    return ys_cache;
+}
+
+static void freeYSCache(SUCache * cache) {
+    if (!cache) {
+        return;
+    }
+    if (cache->S) {
+        free(cache->S);
+        cache->S = SCS_NULL;
+    }
+    if (cache->U) {
+        free(cache->U);
+        cache->U = SCS_NULL;
+    }
+    free(cache);
+    cache = SCS_NULL;
+    RETURN;
+}
 
 static void freeWork(Work *w) {
     DEBUG_FUNC
@@ -84,11 +116,8 @@ static void freeWork(Work *w) {
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
     if (w->ys_cache)
-        
-//    if (w->S)
-//        scs_free(w->S);
-//    if (w->H)
-//        scs_free(w->H);
+        freeYSCache(w->ys_cache);
+    
     scs_free(w);
     RETURN;
 }
@@ -817,12 +846,12 @@ static Work *initWork(const Data *d, const Cone *k) {
         scs_printf("ERROR: allocating work failure\n");
         RETURN SCS_NULL;
     }
-    
+
     /* get settings and dims from data struct */
     w->stgs = d->stgs;
     w->m = d->m;
     w->n = d->n;
-    
+
     /* allocate workspace: */
     w->u = scs_malloc(l * sizeof (scs_float));
     w->v = scs_malloc(l * sizeof (scs_float));
@@ -843,18 +872,16 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->dir = scs_malloc(l * sizeof (scs_float));
     w->dut = scs_malloc(l * sizeof (scs_float));
 
-    w->ys_cache = scs_calloc(1, sizeof (YSCache));
-    w->ys_cache->S = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); /* S: l-by-mem */
-    w->ys_cache->Y = scs_malloc(d->stgs->memory * l * sizeof(scs_float)); /* Y: l-by-mem */
-    w->ys_cache->YS = scs_malloc(d->stgs->memory * sizeof(scs_float)); /* YS: l-by-mem */
-    
-    /* the cache must know its memory length */
-    w->ys_cache->mem = d->stgs->memory; 
-    
-    resetYSCache(w->ys_cache);
-    
+    /* make cache */
+    if (w->stgs->memory > 0) {
+        w->ys_cache = initYSCache(w->stgs->memory, l);
+    } else {
+        w->ys_cache = SCS_NULL;
+    }
+
     w->Sk = scs_malloc(l * sizeof (scs_float));
     w->Yk = scs_malloc(l * sizeof (scs_float));
+
     if (w->stgs->ls > 0) {
         w->wu = scs_malloc(l * sizeof (scs_float));
         w->sc_Rwu = scs_malloc(l * sizeof (scs_float));
@@ -866,7 +893,7 @@ static Work *initWork(const Data *d, const Cone *k) {
             || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
-    }   
+    }
 
     w->A = d->A;
     if (w->stgs->normalize) {
@@ -943,7 +970,7 @@ static scs_int updateWork(const Data *d, Work *w, const Sol *sol) {
 
 scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
-    scs_int i, how;
+    scs_int i, how = 0;
     scs_float eta;
 
     timer solveTimer;
@@ -957,7 +984,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     tic(&solveTimer);
     info->statusVal = SCS_UNFINISHED; /* not yet converged */
     r.lastIter = -1;
-    //  updateWorkv2(d, w, sol);
+    /*  updateWorkv2(d, w, sol); */
 
     if (w->stgs->verbose)
         printHeader(w, k);
@@ -1041,7 +1068,8 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
           calcResiduals(w, &r, i);
           printSummary(w, i, &r, &solveTimer);
      } *}
-      /* populate solution vectors (unnormalized) and info */
+     */
+    /* populate solution vectors (unnormalized) and info */
     getSolution(w, sol, info, &r, i);
     info->solveTime = tocq(&solveTimer);
 

@@ -116,50 +116,8 @@ bool testScaleArray(char** str) {
     SUCCEED /* if it reaches this point, it has succeeded */
 }
 
-bool testYSCache(char** str) {
-    YSCache cache;
-    Work w;
-    scs_int mem = 10;
-    scs_int l = 4;
-    scs_int i;
-    scs_int k;
-    scs_int status;
-    _Bool testStatus = false;
-
-    cache.Y = scs_malloc(l * mem * sizeof (scs_float));
-    cache.S = scs_malloc(l * mem * sizeof (scs_float));
-    cache.YS = scs_malloc(l * sizeof (scs_float));
-    cache.mem = mem;
-    resetYSCache(&cache);
-
-    w.Sk = scs_malloc(l * sizeof (scs_float));
-    w.Yk = scs_malloc(l * sizeof (scs_float));
-    w.l = l;
-
-    for (k = 0; k < 30; ++k) {
-        for (i = 0; i < l; ++i) {
-            w.Sk[i] = k + 0.05 * i;
-            w.Yk[i] = k + 2 + 0.1 * i;
-        }
-        status = pushToYSCache(&w, &cache);
-        printf("status = %d, mem_idx = %d\n", status, cache.mem_idx);
-        if (k < mem) {
-            testStatus = assertEqualsInt(status, YS_CACHE_INCREMENT);
-            if (!testStatus) {
-                FAIL_WITH_MESSAGE(str, "Memory not incremented");
-            }
-        }     
-        
-        if (k==mem){
-            testStatus = assertEqualsInt(status, YS_CACHE_RESET);
-            if (!testStatus) {
-                FAIL_WITH_MESSAGE(str, "Cache not reset");
-            }
-        }
-        
-        /*TODO more testing needed here! */
-    }
-
+bool testYUCache(char** str) {
+    
     SUCCEED
 }
 
@@ -167,7 +125,7 @@ int main(int argc, char** argv) {
     int r = TEST_SUCCESS;
     /* Test functions: */
     r += test(&testOK, "Dummy passing test");
-    r += test(&testYSCache, "testYSCache");
+    r += test(&testYUCache, "testYSCache");
     r += test(&testScaleArray, "Scale array");
     r += test(&testProjLinSysv2, "projLinSysv2");
     if (r == TEST_SUCCESS) {

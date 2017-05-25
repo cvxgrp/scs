@@ -1,0 +1,87 @@
+\hypertarget{directions_8h}{\section{include/directions.h File Reference}
+\label{directions_8h}\index{include/directions.\-h@{include/directions.\-h}}
+}
+{\ttfamily \#include \char`\"{}scs.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{directions_8h_a8aa5e50059d5bdab0ffa669d870b8247}{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L}~3
+\item 
+\#define \hyperlink{directions_8h_a016624ebe4507676df55e4857a406ee0}{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}~2
+\item 
+\#define \hyperlink{directions_8h_af4ecdb9a9fa9356cb2de7f2048db5802}{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T}~1
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8h_af6e7bfd717d1be5c13a8c7a330e69610}{push\-To\-Y\-S\-Cache} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$work, \hyperlink{scs_8h_a838b9d5cc481adaa7d09517ff08a5f0b}{Y\-S\-Cache} $\ast$ys\-\_\-cache)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8h_a9999df6387e3991338293a378ad2056f}{reset\-Y\-S\-Cache} (\hyperlink{scs_8h_a838b9d5cc481adaa7d09517ff08a5f0b}{Y\-S\-Cache} $\ast$ys\-\_\-cache)
+\item 
+void \hyperlink{directions_8h_a3d9a8690cae3a5c15a59229204083a5c}{compute\-L\-Broyden} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$work, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} iter)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{directions_8h_a8aa5e50059d5bdab0ffa669d870b8247}{\index{directions.\-h@{directions.\-h}!Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L@{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L}}
+\index{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L@{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L}!directions.h@{directions.\-h}}
+\subsubsection[{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-F\-U\-L\-L~3}}\label{directions_8h_a8aa5e50059d5bdab0ffa669d870b8247}
+The cache is full-\/memory \hypertarget{directions_8h_a016624ebe4507676df55e4857a406ee0}{\index{directions.\-h@{directions.\-h}!Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T@{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}}
+\index{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T@{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}!directions.h@{directions.\-h}}
+\subsubsection[{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T~2}}\label{directions_8h_a016624ebe4507676df55e4857a406ee0}
+The cache has been incremented \hypertarget{directions_8h_af4ecdb9a9fa9356cb2de7f2048db5802}{\index{directions.\-h@{directions.\-h}!Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T@{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T}}
+\index{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T@{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T}!directions.h@{directions.\-h}}
+\subsubsection[{Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define Y\-S\-\_\-\-C\-A\-C\-H\-E\-\_\-\-R\-E\-S\-E\-T~1}}\label{directions_8h_af4ecdb9a9fa9356cb2de7f2048db5802}
+The head of the cache has been reset to 0 
+
+\subsection{Function Documentation}
+\hypertarget{directions_8h_a3d9a8690cae3a5c15a59229204083a5c}{\index{directions.\-h@{directions.\-h}!compute\-L\-Broyden@{compute\-L\-Broyden}}
+\index{compute\-L\-Broyden@{compute\-L\-Broyden}!directions.h@{directions.\-h}}
+\subsubsection[{compute\-L\-Broyden}]{\setlength{\rightskip}{0pt plus 5cm}void compute\-L\-Broyden (
+\begin{DoxyParamCaption}
+\item[{{\bf Work} $\ast$}]{work, }
+\item[{{\bf scs\-\_\-int}}]{iter}
+\end{DoxyParamCaption}
+)}}\label{directions_8h_a3d9a8690cae3a5c15a59229204083a5c}
+
+\begin{DoxyParams}{Parameters}
+{\em w} & \\
+\hline
+{\em iter} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{directions_8h_af6e7bfd717d1be5c13a8c7a330e69610}{\index{directions.\-h@{directions.\-h}!push\-To\-Y\-S\-Cache@{push\-To\-Y\-S\-Cache}}
+\index{push\-To\-Y\-S\-Cache@{push\-To\-Y\-S\-Cache}!directions.h@{directions.\-h}}
+\subsubsection[{push\-To\-Y\-S\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} push\-To\-Y\-S\-Cache (
+\begin{DoxyParamCaption}
+\item[{{\bf Work} $\ast$}]{work, }
+\item[{{\bf Y\-S\-Cache} $\ast$}]{ys\-\_\-cache}
+\end{DoxyParamCaption}
+)}}\label{directions_8h_af6e7bfd717d1be5c13a8c7a330e69610}
+Adds a new pair (Yk, Sk) into the Y\-S-\/cache.
+
+
+\begin{DoxyParams}{Parameters}
+{\em work} & provides Yk and Sk \\
+\hline
+{\em ys\-\_\-cache} & the cache into which (Yk, Sk) is added \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+status code 
+\end{DoxyReturn}
+\hypertarget{directions_8h_a9999df6387e3991338293a378ad2056f}{\index{directions.\-h@{directions.\-h}!reset\-Y\-S\-Cache@{reset\-Y\-S\-Cache}}
+\index{reset\-Y\-S\-Cache@{reset\-Y\-S\-Cache}!directions.h@{directions.\-h}}
+\subsubsection[{reset\-Y\-S\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} reset\-Y\-S\-Cache (
+\begin{DoxyParamCaption}
+\item[{{\bf Y\-S\-Cache} $\ast$}]{ys\-\_\-cache}
+\end{DoxyParamCaption}
+)}}\label{directions_8h_a9999df6387e3991338293a378ad2056f}
+Resets the cache. This methods does not free the memory allocated by the cache, nor does it overwrite the previously cached data. It simply sets the parameters {\ttfamily mem\-\_\-current} and {\ttfamily mem\-\_\-idx} to 0. 
+\begin{DoxyParams}{Parameters}
+{\em ys\-\_\-cache} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+status code 
+\end{DoxyReturn}

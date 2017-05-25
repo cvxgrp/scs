@@ -1,0 +1,249 @@
+\href{https://travis-ci.org/kul-forbes/scs}{\tt !\mbox{[}Build Status\mbox{]}(https\-://travis-\/ci.\-org/kul-\/forbes/scs.\-svg?branch=master)}
+
+S\-C\-S ({\ttfamily splitting conic solver}) is a numerical optimization package for solving large-\/scale convex cone problems, based on our paper \href{http://www.stanford.edu/~boyd/papers/scs.html}{\tt Conic Optimization via Operator Splitting and Homogeneous Self-\/\-Dual Embedding}. It is written in C and can be used in other C, C++, Python, Matlab, R, Julia, Java, and Scala programs via included interfaces (Julia interface available \href{https://github.com/JuliaOpt/SCS.jl}{\tt here}). It can also be called as a solver from convex optimization toolboxes \href{http://cvxr.com/cvx/}{\tt C\-V\-X} (3.\-0 or later), \href{https://github.com/cvxgrp/cvxpy}{\tt C\-V\-X\-P\-Y}, \href{https://github.com/JuliaOpt/Convex.jl}{\tt Convex.\-jl}, and \href{https://github.com/johanlofberg/YALMIP}{\tt Yalmip}.
+
+The current version is {\ttfamily 1.\-2.\-6}. If you wish to cite S\-C\-S, please use the following\-: ``` \{ocpb\-:16, author = \{B. O'Donoghue and E. Chu and N. Parikh and S. Boyd\}, title = \{Conic Optimization via Operator Splitting and Homogeneous Self-\/\-Dual Embedding\}, journal = \{Journal of Optimization Theory and Applications\}, month = \{June\}, year = \{2016\}, volume = \{169\}, number = \{3\}, pages = \{1042-\/1068\}, url = \{\href{http://stanford.edu/~boyd/papers/scs.html}{\tt http\-://stanford.\-edu/$\sim$boyd/papers/scs.\-html}\}, \} \{scs, author = \{B. O'Donoghue and E. Chu and N. Parikh and S. Boyd\}, title = \{\{S\-C\-S\}\-: Splitting Conic Solver, version 1.\-2.\-6\}, howpublished = \{\{\href{https://github.com/cvxgrp/scs}{\tt https\-://github.\-com/cvxgrp/scs}\}\}, month = apr, year = 2016 \} ``` 
+
+ S\-C\-S numerically solves convex cone programs using the alternating direction method of multipliers (\href{http://web.stanford.edu/~boyd/papers/admm_distr_stats.html}{\tt A\-D\-M\-M}). It returns solutions to both the primal and dual problems if the problem is feasible, or a certificate of infeasibility otherwise. It solves the following primal cone problem\-:
+
+``` minimize c'x subject to Ax + s = b s in K ``{\ttfamily  over variables}x{\ttfamily and}s{\ttfamily , where}A{\ttfamily ,}b{\ttfamily and}c{\ttfamily are user-\/supplied data and}K` is a user-\/defined convex cone. The dual problem is given by ``` maximize -\/b'y subject to -\/\-A'y == c y in K$^\wedge$$\ast$ ``{\ttfamily  over variable}y{\ttfamily , where}K$^\wedge$$\ast${\ttfamily denotes the dual cone to}K`.
+
+The cone {\ttfamily K} can be any Cartesian product of the following primitive cones\-:
+\begin{DoxyItemize}
+\item zero cone {\ttfamily \{x $\vert$ x = 0 \}} (dual to the free cone {\ttfamily \{x $\vert$ x in R\}})
+\item positive orthant {\ttfamily \{x $\vert$ x $>$= 0\}}
+\item second-\/order cone {\ttfamily \{(t,x) $\vert$ $\vert$$\vert$x$\vert$$\vert$\-\_\-2 $<$= t\}}
+\item positive semidefinite cone {\ttfamily \{ X $\vert$ min(eig(\-X)) $>$= 0, X = X$^\wedge$\-T \}}
+\item exponential cone {\ttfamily \{(x,y,z) $\vert$ y e$^\wedge$(x/y) $<$= z, y$>$0 \}}
+\item dual exponential cone {\ttfamily \{(u,v,w) $\vert$ −u e$^\wedge$(v/u) $<$= e w, u$<$0\}}
+\item power cone {\ttfamily \{(x,y,z) $\vert$ x$^\wedge$a $\ast$ y$^\wedge$(1-\/a) $>$= $\vert$z$\vert$, x$>$=0, y$>$=0\}}
+\item dual power cone {\ttfamily \{(u,v,w) $\vert$ (u/a)$^\wedge$a $\ast$ (v/(1-\/a))$^\wedge$(1-\/a) $>$= $\vert$w$\vert$, u$>$=0, v$>$=0\}}
+\end{DoxyItemize}
+
+The rows of the data matrix {\ttfamily A} correspond to the cones in {\ttfamily K}. {\bfseries The rows of {\ttfamily A} must be in the order of the cones given above, i.\-e., first come the rows that correspond to the zero/free cones, then those that correspond to the positive orthants, then S\-O\-Cs, etc.} For a {\ttfamily k} dimensional semidefinite cone when interpreting the rows of the data matrix {\ttfamily A} S\-C\-S assumes that the {\ttfamily k x k} matrix variable has been vectorized by scaling the off-\/diagonal entries by {\ttfamily sqrt(2)} and stacking the {\bfseries lower triangular elements column-\/wise} to create a vector of length {\ttfamily k(k+1)/2}. See the section on semidefinite programming below.
+
+At termination S\-C\-S returns solution {\ttfamily (x$\ast$, s$\ast$, y$\ast$)} if the problem is feasible, or a certificate of infeasibility otherwise. See \href{http://web.stanford.edu/~boyd/cvxbook/}{\tt here} for (much) more details about cone programming and certificates of infeasibility.
+
+{\bfseries Semidefinite Programming}
+
+S\-C\-S assumes that the matrix variables and the input data corresponding to semidefinite cones have been vectorized by {\bfseries scaling the off-\/diagonal entries by {\ttfamily sqrt(2)}} and stacking the lower triangular elements {\bfseries column-\/wise}. For a {\ttfamily k x k} matrix variable (or data matrix) this operation would create a vector of length {\ttfamily k(k+1)/2}. Scaling by {\ttfamily sqrt(2)} is required to preserve the inner-\/product.
+
+{\bfseries To recover the matrix solution this operation must be inverted on the components of the vector returned by S\-C\-S corresponding to semidefinite cones}. That is, the off-\/diagonal entries must be scaled by {\ttfamily 1/sqrt(2)} and the upper triangular entries are filled in by copying the values of lower triangular entries.
+
+More explcitly, we want to express {\ttfamily Tr(\-C X)} as `vec(C)'$\ast$vec(X){\ttfamily , where the}vec{\ttfamily operation takes the}k x k{\ttfamily matrix }`` X = \mbox{[} X11 X12 ... X1k X21 X22 ... X2k ... Xk1 Xk2 ... Xkk \mbox{]} ``` and produces a vector consisting of ``` vec(\-X) = (X11, sqrt(2)$\ast$\-X21, ..., sqrt(2)$\ast$\-Xk1, X22, sqrt(2)$\ast$\-X32, ..., Xkk). ```
+
+{\bfseries Linear equation solvers}
+
+Each iteration of S\-C\-S requires the solution of a set of linear equations. This package includes two implementations for solving linear equations\-: a direct solver which uses a cached L\-D\-L factorization and an indirect solver based on conjugate gradients. The indirect solver can be run on either the cpu or gpu.
+
+The direct solver uses the L\-D\-L and A\-M\-D packages numerical linear algebra packages by Timothy Davis and others, the necessary files are included. See \href{http://www.cise.ufl.edu/research/sparse/}{\tt here} for more information about these packages.
+
+\subsubsection*{Using S\-C\-S in C}
+
+Typing {\ttfamily make} at the command line will compile the code and create S\-C\-S libraries in the {\ttfamily out} folder. It will also produce six demo binaries in the {\ttfamily out} folder named {\ttfamily demo\-\_\-direct}, {\ttfamily demo\-\_\-indirect}, {\ttfamily demo\-\_\-gpu}, {\ttfamily demo\-\_\-\-S\-O\-C\-P\-\_\-direct}, {\ttfamily demo\-\_\-\-S\-O\-C\-P\-\_\-indirect}, and {\ttfamily demo\-\_\-\-S\-O\-C\-P\-\_\-gpu}.
+
+If {\ttfamily make} completes successfully, it will produce three static library files, {\ttfamily libscsdir.\-a}, {\ttfamily libscsindir.\-a}, and {\ttfamily libscsgpu.\-a} under the {\ttfamily out} folder and three dynamic library files {\ttfamily libscsdir.\-ext}, {\ttfamily libscsindir.\-ext}, and {\ttfamily libscsgpu.\-ext} (where {\ttfamily .ext} extension is platform dependent) in the same folder. To include the libraries in your own source code, compile with the linker option with {\ttfamily -\/\-L(P\-A\-T\-H\-\_\-\-T\-O\-\_\-\-S\-C\-S)\textbackslash{}out} and {\ttfamily -\/lscsdir} or {\ttfamily -\/lscsindir} (as needed).
+
+These libraries (and {\ttfamily \hyperlink{scs_8h}{scs.\-h}}) expose only four A\-P\-I functions\-:
+
+
+\begin{DoxyItemize}
+\item {\ttfamily Work $\ast$ \hyperlink{scs_8h_ac80aff1c3011a5cc31ba32c8e3689f01}{scs\-\_\-init(const Data $\ast$ d, const Cone $\ast$ k, Info $\ast$ info)};}
+
+This initializes the Work struct containing the workspace that scs will use, and performs the necessary preprocessing (e.\-g. matrix factorization). All inputs {\ttfamily d}, {\ttfamily k}, and {\ttfamily info} must be memory allocated before calling.
+\item {\ttfamily scs\-\_\-int \hyperlink{scs_8h_ae5a022dbf33560ad0564178ff61d535d}{scs\-\_\-solve(\-Work $\ast$ w, const Data $\ast$ d, const Cone $\ast$ k, Sol $\ast$ sol, Info $\ast$ info)};}
+
+This solves the problem as defined by Data {\ttfamily d} and Cone {\ttfamily k} using the workspace in {\ttfamily w}. The solution is returned in {\ttfamily sol} and information about the solve is returned in {\ttfamily info} (outputs must have memory allocated before calling). None of the inputs can be N\-U\-L\-L. You can call {\ttfamily scs\-\_\-solve} many times for one call to {\ttfamily scs\-\_\-init}, so long as the matrix {\ttfamily A} does not change (vectors {\ttfamily b} and {\ttfamily c} can change).
+\item {\ttfamily void \hyperlink{scs_8h_a444d62ce119a1e4762f87fe263369047}{scs\-\_\-finish(\-Work $\ast$ w)};}
+
+Called after all solves completed to free allocated memory and other cleanup.
+\item {\ttfamily scs\-\_\-int \hyperlink{scs_8h_a103f47be236f81ae085244d574997706}{scs(const Data $\ast$ d, const Cone $\ast$ k, Sol $\ast$ sol, Info $\ast$ info)};}
+
+Convenience method that simply calls all the above routines in order, for cases where the workspace does not need to be reused. All inputs must have memory allocated before this call.
+\end{DoxyItemize}
+
+The relevant data structures are\-: ```\-C \begin{DoxyVerb}typedef struct SCS_PROBLEM_DATA Data;
+typedef struct SCS_SETTINGS Settings;
+typedef struct SCS_SOL_VARS Sol;
+typedef struct SCS_INFO Info;
+typedef struct SCS_SCALING Scaling;
+typedef struct SCS_WORK Work;
+typedef struct SCS_CONE Cone;
+
+/* defined in linSys.h, can be overriden by user 
+typedef struct A_DATA_MATRIX AMatrix;
+
+/* this struct defines the data matrix A 
+struct A_DATA_MATRIX {
+    /* A is supplied in column compressed format 
+    scs_float * x;      /* A values, size: NNZ A 
+    scs_int * i;        /* A row index, size: NNZ A 
+    scs_int * p;        /* A column pointer, size: n+1 
+    scs_int m, n;       /* m rows, n cols 
+};
+
+/* struct containing problem data 
+struct SCS_PROBLEM_DATA {
+    /* these cannot change for multiple runs for the same call to scs_init 
+    scs_int m, n;       /* A has m rows, n cols 
+    AMatrix * A;        /* A is supplied in data format specified by linsys solver 
+
+    /* these can change for multiple runs for the same call to scs_init 
+    scs_float * b, *c;  /* dense arrays for b (size m), c (size n) 
+
+    Settings * stgs;    /* contains solver settings specified by user 
+};
+
+/* struct containing solver settings 
+struct SCS_SETTINGS {
+    /* settings parameters: default suggested input 
+
+    /* these *cannot* change for multiple runs with the same call to scs_init 
+    scs_int normalize;  /* boolean, heuristic data rescaling: 1 
+    scs_float scale;    /* if normalized, rescales by this factor: 5 
+    scs_float rho_x;    /* x equality constraint scaling: 1e-3 
+
+    /* these can change for multiple runs with the same call to scs_init 
+    scs_int max_iters;  /* maximum iterations to take: 2500 
+    scs_float eps;      /* convergence tolerance: 1e-3 
+    scs_float alpha;    /* relaxation parameter: 1.8 
+    scs_float cg_rate;  /* for indirect, tolerance goes down like (1/iter)^cg_rate: 2 
+    scs_int verbose;    /* boolean, write out progress: 1 
+    scs_int warm_start; /* boolean, warm start (put initial guess in Sol struct): 0 
+};   
+
+/* contains primal-dual solution arrays 
+struct SCS_SOL_VARS {
+    scs_float * x, *y, *s;
+};
+
+/* contains terminating information 
+struct SCS_INFO {
+    scs_int iter;       /* number of iterations taken 
+    char status[32];    /* status string, e.g. 'Solved' 
+    scs_int statusVal;  /* status as scs_int, defined below 
+    scs_float pobj;     /* primal objective 
+    scs_float dobj;     /* dual objective 
+    scs_float resPri;   /* primal equality residual 
+    scs_float resDual;  /* dual equality residual 
+    scs_float resInfeas;/* infeasibility cert residual 
+    scs_float resUnbdd; /* unbounded cert residual 
+    scs_float relGap;   /* relative duality gap 
+    scs_float setupTime;/* time taken for setup phase (milliseconds) 
+    scs_float solveTime;/* time taken for solve phase (milliseconds) 
+};
+
+
+/* contains normalization variables 
+struct SCS_SCALING {
+    scs_float *D, *E; /* for normalization 
+    scs_float meanNormRowA, meanNormColA;
+};
+
+/* NB: rows of data matrix A must be specified in this exact order 
+struct SCS_CONE {
+    scs_int f;          /* number of linear equality constraints 
+    scs_int l;          /* length of LP cone 
+    scs_int *q;         /* array of second-order cone constraints 
+    scs_int qsize;      /* length of SOC array 
+    scs_int *s;         /* array of SD constraints 
+    scs_int ssize;      /* length of SD array 
+    scs_int ep;         /* number of primal exponential cone triples 
+    scs_int ed;         /* number of dual exponential cone triples 
+    scs_int psize;      /* number of (primal and dual) power cone triples 
+    scs_float * p;      /* array of power cone params, must be \in [-1, 1],
+                           negative values are interpreted as specifying the dual cone 
+};
+
+/* SCS returns one of the following integers: (zero never returned)     
+#define SCS_INFEASIBLE_INACCURATE   (-7)
+#define SCS_UNBOUNDED_INACCURATE    (-6)
+#define SCS_SIGINT                  (-5)
+#define SCS_FAILED                  (-4)
+#define SCS_INDETERMINATE           (-3)
+#define SCS_INFEASIBLE              (-2) /* primal infeasible, dual unbounded   
+#define SCS_UNBOUNDED               (-1) /* primal unbounded, dual infeasible   
+#define SCS_UNFINISHED              (0)  /* never returned, used as placeholder 
+#define SCS_SOLVED                  (1)
+#define SCS_SOLVED_INACCURATE       (2)
+\end{DoxyVerb}
+ ```
+
+The types {\ttfamily scs\-\_\-float} and {\ttfamily scs\-\_\-int} can be specified by the user, they default to {\ttfamily double} and {\ttfamily int} respectively.
+
+The data matrix {\ttfamily A} is specified in column-\/compressed format and the vectors {\ttfamily b} and {\ttfamily c} are specified as dense arrays. The solutions {\ttfamily x} (primal), {\ttfamily s} (slack), and {\ttfamily y} (dual) are returned as dense arrays. Cones are specified as the struct above, the rows of {\ttfamily A} must correspond to the cones in the exact order as specified by the cone struct (i.\-e. put linear cones before second-\/order cones etc.).
+
+{\bfseries Warm-\/start}
+
+You can warm-\/start S\-C\-S (supply a guess of the solution) by setting warm\-\_\-start in Data to {\ttfamily 1} and supplying the warm-\/starts in the Sol struct ({\ttfamily x},{\ttfamily y}, and {\ttfamily s}). All inputs must be warm-\/started if any one is. These are used to initialize the iterates in {\ttfamily scs\-\_\-solve}.
+
+{\bfseries Re-\/using matrix factorization}
+
+If using the direct version you can factorize the matrix once and solve many times. Simply call scs\-\_\-init once, and use {\ttfamily scs\-\_\-solve} many times with the same workspace, changing the input data {\ttfamily b} and {\ttfamily c} (and optionally warm-\/starts) for each iteration. See run\-\_\-scs.\-c for an example.
+
+{\bfseries Using your own linear system solver}
+
+To use your own linear system solver simply implement all the methods and the two structs in {\ttfamily \hyperlink{lin_sys_8h}{include/lin\-Sys.\-h}} and plug it in.
+
+{\bfseries Solving S\-D\-Ps}
+
+In order to solve S\-D\-Ps you must have B\-L\-A\-S and L\-A\-P\-A\-C\-K installed. Edit {\ttfamily scs.\-mk} to set {\ttfamily U\-S\-E\-\_\-\-L\-A\-P\-A\-C\-K = 1} and point to the location of these libraries. Without these you can still solve problems using the other cones.
+
+\subsubsection*{Using S\-C\-S in Matlab}
+
+Running {\ttfamily make\-\_\-scs} in Matlab under the {\ttfamily matlab} folder will produce two mex files, one for each of the direct and indirect solvers.
+
+Remember to include the {\ttfamily matlab} directory in your Matlab path if you wish to use the mex file in your Matlab code. The calling sequence is (for the indirect version)\-: \begin{DoxyVerb}[x,y,s,info] = scs_indirect(data,cones,settings)
+\end{DoxyVerb}
+
+
+where data is a struct containing {\ttfamily A}, {\ttfamily b}, and {\ttfamily c}, settings is a struct containing solver options (see matlab file, can be empty), and cones is a struct that contains one or more of\-:
+\begin{DoxyItemize}
+\item {\ttfamily f} (num primal zero / dual free cones, i.\-e. primal equality constraints)
+\item {\ttfamily l} (num linear cones)
+\item {\ttfamily q} (array of S\-O\-Cs sizes)
+\item {\ttfamily s} (array of S\-D\-Cs sizes)
+\item {\ttfamily ep} (num primal exponential cones)
+\item {\ttfamily ed} (num dual exponential cones)
+\item {\ttfamily p} (array of primal/dual power params).
+\end{DoxyItemize}
+
+Type {\ttfamily help scs\-\_\-indirect} at the Matlab prompt to see its documentation.
+
+\subsubsection*{Using S\-C\-S in Python}
+
+To install S\-C\-S as a python package type\-: ```shell cd $<$scs-\/directory$>$/python python setup.\-py install ``{\ttfamily  You may need}sudo` privileges for a global installation. Running S\-C\-S requires numpy and scipy to be installed. You can install the gpu interface using ```shell python setup.\-py install --scs --gpu ```
+
+After installing the S\-C\-S interface, you import S\-C\-S using ```python import scs ``{\ttfamily  This module provides a single function}scs{\ttfamily with the following call signature\-: }``python sol = scs(data, cone, \mbox{[}use\-\_\-indirect=True, gpu=False, verbose=True, normalize=True, max\-\_\-iters=2500, scale=5, eps=1e-\/3, cg\-\_\-rate=2, alpha=1.\-8, rho\-\_\-x=1e-\/3\mbox{]}) ``` Arguments in the square brackets are optional, and default to the values on the right of their respective equals signs. The argument {\ttfamily data} is a python dictionary with three elements {\ttfamily A}, {\ttfamily b}, and {\ttfamily c} where {\ttfamily b} and {\ttfamily c} are N\-U\-M\-P\-Y arrays (i.\-e., matrices with a single column) and {\ttfamily A} is a S\-C\-I\-P\-Y {\bfseries sparse matrix in C\-S\-C format}; if they are not of the proper format, S\-C\-S will attempt to convert them.
+
+The argument {\ttfamily cone} is a dictionary with fields {\ttfamily f}, {\ttfamily l}, {\ttfamily q}, {\ttfamily s}, {\ttfamily ep}, {\ttfamily ed}, and {\ttfamily p} (all of which are optional) corresponding to the supported cone types.
+
+The returned object is a dictionary containing the fields `sol\mbox{[}'x'\mbox{]}{\ttfamily ,}sol\mbox{[}'y'\mbox{]}{\ttfamily ,}sol\mbox{[}'s'\mbox{]}{\ttfamily , and}sol\mbox{[}'info'\mbox{]}`. The first three are N\-U\-M\-P\-Y arrays containing the relevant solution. The last field contains a dictionary with solver information.
+
+\subsubsection*{Using S\-C\-S in Java / Scala}
+
+S\-C\-S can be called from Java and Scala via the Java Native Interface (J\-N\-I). Typing {\ttfamily make} in the {\ttfamily java} directory will compile the native libraries into {\ttfamily java/bin} and build {\ttfamily scs.\-jar}. You will need to add these files to your java projects to use S\-C\-S. To test a random cone program type {\ttfamily make testproblem}.
+
+To use with eclipse follow the above steps, then import {\ttfamily scs.\-jar} into eclipse and link the dynamic libraries ({\ttfamily libscsjdir.$\ast$} {\ttfamily libscsjindir.$\ast$})\-:
+
+``` Project $>$ Properties $>$ Build Path $>$ Open scs.\-jar $>$ Native Library $>$ Edit $>$ Select the folder with libraries ```
+
+To solve a problem create a new instance of {\ttfamily Cone\-Program} with constructor
+
+```\-Java public Cone\-Program(\-Data d, Cone k, Settings p, I\-Cone\-Solver solver); ```
+
+where the {\ttfamily I\-Cone\-Solver} interface can be one of {\ttfamily Direct\-Solver} or {\ttfamily Indirect\-Solver}. Then call
+
+```\-Java Cone\-Program.\-solve(); ```
+
+on your instance of {\ttfamily Cone\-Program}, which will return an instance of {\ttfamily Solution}, containing the solution and information about the run.
+
+\subsubsection*{Using S\-C\-S in R}
+
+To install S\-C\-S as an R packge cd into the {\ttfamily r} subdirectory and type ```shell ./install.sh ``{\ttfamily  and to test type}R --no-\/save $<$ demo/random\-Lp.\-R` (this is also called by the install script).
+
+To call S\-C\-S use the function {\ttfamily scs}, defined as ```\-R scs $<$-\/ function(\-A, b, c, cone, params) ``{\ttfamily  where}A{\ttfamily is a}Matrix{\ttfamily object,}b{\ttfamily and}c{\ttfamily are vectors, and}cone{\ttfamily and}params` are lists specifying the cone dimensions and input params respectively.
+
+\subsubsection*{Using S\-C\-S in Julia}
+
+See usage instructions \href{https://github.com/JuliaOpt/SCS.jl}{\tt here}. 

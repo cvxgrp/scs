@@ -114,11 +114,9 @@ extern "C" {
     /* the following structs are not exposed to user */
 
 
-    struct SCS_YS_MEMORY {
-        scs_float *H; /**< Broyden */
-        scs_float *S; /**< */
-        scs_float *Y; /**< */
-        scs_float *YS; /**< (Y,S) inner product */
+    struct SCS_SU_MEMORY {
+        scs_float *S; /**< cached values of s_i (s-memory) */
+        scs_float *U; /**< cached values of u_i = (s_i - s_tilde_i)/(s_i'*s_tilde_i) (u-memory)*/
         scs_int mem_current; /**< current memory (before it's full) */
         scs_int mem_idx; /**< head-index of memory */
         scs_int mem; /**< (target) memory */
@@ -128,7 +126,7 @@ extern "C" {
      * A finite-memory cache where (Y, S) are cached together with their
      * inner products YS = Y'*S.
      */
-    typedef struct SCS_YS_MEMORY YSCache;
+    typedef struct SCS_SU_MEMORY SUCache;
 
     /* workspace for SCS */
     struct SCS_WORK {
@@ -187,7 +185,7 @@ extern "C" {
          * A cache of Y and S (used, for instance, to compute Broyden-type 
          * or other quasi-Newton directions).
          */
-        YSCache *ys_cache;
+        SUCache *ys_cache;
     };
 
     /* to hold residual information (unnormalized) */

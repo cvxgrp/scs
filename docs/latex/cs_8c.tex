@@ -1,0 +1,86 @@
+\hypertarget{cs_8c}{\section{src/cs.c File Reference}
+\label{cs_8c}\index{src/cs.\-c@{src/cs.\-c}}
+}
+{\ttfamily \#include \char`\"{}cs.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scs.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$ \hyperlink{cs_8c_a917a026613fc4f26e5c5c1b8ce2f8389}{cs\-\_\-compress} (const \hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$T)
+\item 
+\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$ \hyperlink{cs_8c_a21acf55a6e9215e0fe19c3e49503e121}{cs\-\_\-done} (\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$C, void $\ast$w, void $\ast$x, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} ok)
+\item 
+\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$ \hyperlink{cs_8c_a48e1853a1859ac587f0ad8c8be48a1d2}{cs\-\_\-spalloc} (\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} m, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} n, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} nzmax, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} values, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} triplet)
+\item 
+\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$ \hyperlink{cs_8c_a6d705e404a7831ccf01bc0ea064215b9}{cs\-\_\-spfree} (\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$A)
+\item 
+\hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} \hyperlink{cs_8c_ae159ec945518591b1ffc831a07c0c063}{cs\-\_\-cumsum} (\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} $\ast$p, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} $\ast$c, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} n)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} $\ast$ \hyperlink{cs_8c_aa2048f58da40252fa0cd74cd26a5814b}{cs\-\_\-pinv} (\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} const $\ast$p, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} n)
+\item 
+\hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$ \hyperlink{cs_8c_a08e2f4688ac64196e0866cdb996afc3d}{cs\-\_\-symperm} (const \hyperlink{cs_8h_a44e471a015cf32e012cffef17e81b6db}{cs} $\ast$A, const \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} $\ast$pinv, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} values)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{cs_8c_a917a026613fc4f26e5c5c1b8ce2f8389}{\index{cs.\-c@{cs.\-c}!cs\-\_\-compress@{cs\-\_\-compress}}
+\index{cs\-\_\-compress@{cs\-\_\-compress}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-compress}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cs}$\ast$ cs\-\_\-compress (
+\begin{DoxyParamCaption}
+\item[{const {\bf cs} $\ast$}]{T}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_a917a026613fc4f26e5c5c1b8ce2f8389}
+\hypertarget{cs_8c_ae159ec945518591b1ffc831a07c0c063}{\index{cs.\-c@{cs.\-c}!cs\-\_\-cumsum@{cs\-\_\-cumsum}}
+\index{cs\-\_\-cumsum@{cs\-\_\-cumsum}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-cumsum}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-float} cs\-\_\-cumsum (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-int} $\ast$}]{p, }
+\item[{{\bf scs\-\_\-int} $\ast$}]{c, }
+\item[{{\bf scs\-\_\-int}}]{n}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_ae159ec945518591b1ffc831a07c0c063}
+\hypertarget{cs_8c_a21acf55a6e9215e0fe19c3e49503e121}{\index{cs.\-c@{cs.\-c}!cs\-\_\-done@{cs\-\_\-done}}
+\index{cs\-\_\-done@{cs\-\_\-done}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-done}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cs}$\ast$ cs\-\_\-done (
+\begin{DoxyParamCaption}
+\item[{{\bf cs} $\ast$}]{C, }
+\item[{void $\ast$}]{w, }
+\item[{void $\ast$}]{x, }
+\item[{{\bf scs\-\_\-int}}]{ok}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_a21acf55a6e9215e0fe19c3e49503e121}
+\hypertarget{cs_8c_aa2048f58da40252fa0cd74cd26a5814b}{\index{cs.\-c@{cs.\-c}!cs\-\_\-pinv@{cs\-\_\-pinv}}
+\index{cs\-\_\-pinv@{cs\-\_\-pinv}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-pinv}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int}$\ast$ cs\-\_\-pinv (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-int} const $\ast$}]{p, }
+\item[{{\bf scs\-\_\-int}}]{n}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_aa2048f58da40252fa0cd74cd26a5814b}
+\hypertarget{cs_8c_a48e1853a1859ac587f0ad8c8be48a1d2}{\index{cs.\-c@{cs.\-c}!cs\-\_\-spalloc@{cs\-\_\-spalloc}}
+\index{cs\-\_\-spalloc@{cs\-\_\-spalloc}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-spalloc}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cs}$\ast$ cs\-\_\-spalloc (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-int}}]{m, }
+\item[{{\bf scs\-\_\-int}}]{n, }
+\item[{{\bf scs\-\_\-int}}]{nzmax, }
+\item[{{\bf scs\-\_\-int}}]{values, }
+\item[{{\bf scs\-\_\-int}}]{triplet}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_a48e1853a1859ac587f0ad8c8be48a1d2}
+\hypertarget{cs_8c_a6d705e404a7831ccf01bc0ea064215b9}{\index{cs.\-c@{cs.\-c}!cs\-\_\-spfree@{cs\-\_\-spfree}}
+\index{cs\-\_\-spfree@{cs\-\_\-spfree}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-spfree}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cs}$\ast$ cs\-\_\-spfree (
+\begin{DoxyParamCaption}
+\item[{{\bf cs} $\ast$}]{A}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_a6d705e404a7831ccf01bc0ea064215b9}
+\hypertarget{cs_8c_a08e2f4688ac64196e0866cdb996afc3d}{\index{cs.\-c@{cs.\-c}!cs\-\_\-symperm@{cs\-\_\-symperm}}
+\index{cs\-\_\-symperm@{cs\-\_\-symperm}!cs.c@{cs.\-c}}
+\subsubsection[{cs\-\_\-symperm}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cs}$\ast$ cs\-\_\-symperm (
+\begin{DoxyParamCaption}
+\item[{const {\bf cs} $\ast$}]{A, }
+\item[{const {\bf scs\-\_\-int} $\ast$}]{pinv, }
+\item[{{\bf scs\-\_\-int}}]{values}
+\end{DoxyParamCaption}
+)}}\label{cs_8c_a08e2f4688ac64196e0866cdb996afc3d}

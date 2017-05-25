@@ -2,7 +2,6 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="include" name="0">
-      <in>directions.h</in>
     </df>
     <df root="linsys" name="1">
       <df name="direct">
@@ -114,15 +113,13 @@
       <item path="examples/c/demo.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
           <preprocessorList>
-            <Elem>DEMO_PATH="/home/krina/NetBeansProjects/scs/examples/raw/demo_data"</Elem>
+            <Elem>DEMO_PATH="/home/chung/Documents/SCS/examples/raw/demo_data"</Elem>
           </preprocessorList>
         </cTool>
       </item>
       <item path="examples/c/randomSOCPProb.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
-      </item>
-      <item path="include/directions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="linsys/common.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
@@ -223,6 +220,8 @@
         </cTool>
       </item>
       <item path="src/directions.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
       </item>
       <item path="src/linAlg.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">

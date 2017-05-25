@@ -1,0 +1,88 @@
+\hypertarget{cones_8h}{\section{include/cones.h File Reference}
+\label{cones_8h}\index{include/cones.\-h@{include/cones.\-h}}
+}
+{\ttfamily \#include \char`\"{}glbopts.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scs\-\_\-blas.\-h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_s_c_s___c_o_n_e}{S\-C\-S\-\_\-\-C\-O\-N\-E}
+\item 
+struct \hyperlink{struct_cone_work}{Cone\-Work}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{cones_8h_a50d9cf53bcd7d38cb49cd864c40cfc20}{get\-Cone\-Boundaries} (const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} $\ast$$\ast$boundaries)
+\item 
+\hyperlink{struct_cone_work}{Cone\-Work} $\ast$ \hyperlink{cones_8h_af44fab7c53fbfb5c120183d571b9720c}{init\-Cone} (const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k)
+\item 
+char $\ast$ \hyperlink{cones_8h_ae6ed7d7636c5c88e06ca0e27dc74269e}{get\-Cone\-Header} (const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{cones_8h_ad642d570758747290866267b53dbae37}{validate\-Cones} (const \hyperlink{glbopts_8h_a4de8ea3f0fb0078e1829f2727d4771ed}{Data} $\ast$d, const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{cones_8h_a666f769b125b7c0954b379a5038ad83c}{proj\-Dual\-Cone} (\hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} $\ast$x, const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k, \hyperlink{struct_cone_work}{Cone\-Work} $\ast$c, const \hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} $\ast$warm\-\_\-start, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} iter)
+\item 
+void \hyperlink{cones_8h_a7fab6be5cfa2fd061239902654023cd5}{finish\-Cone} (\hyperlink{struct_cone_work}{Cone\-Work} $\ast$cone\-Work)
+\item 
+char $\ast$ \hyperlink{cones_8h_a9865bf4f5e9fcce4a410861053dd0708}{get\-Cone\-Summary} (const \hyperlink{glbopts_8h_a0d98fee0ffa9f2986ddf6c19a9a7daa0}{Info} $\ast$info, \hyperlink{struct_cone_work}{Cone\-Work} $\ast$c)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{cones_8h_a7fab6be5cfa2fd061239902654023cd5}{\index{cones.\-h@{cones.\-h}!finish\-Cone@{finish\-Cone}}
+\index{finish\-Cone@{finish\-Cone}!cones.h@{cones.\-h}}
+\subsubsection[{finish\-Cone}]{\setlength{\rightskip}{0pt plus 5cm}void finish\-Cone (
+\begin{DoxyParamCaption}
+\item[{{\bf Cone\-Work} $\ast$}]{cone\-Work}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_a7fab6be5cfa2fd061239902654023cd5}
+\hypertarget{cones_8h_a50d9cf53bcd7d38cb49cd864c40cfc20}{\index{cones.\-h@{cones.\-h}!get\-Cone\-Boundaries@{get\-Cone\-Boundaries}}
+\index{get\-Cone\-Boundaries@{get\-Cone\-Boundaries}!cones.h@{cones.\-h}}
+\subsubsection[{get\-Cone\-Boundaries}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} get\-Cone\-Boundaries (
+\begin{DoxyParamCaption}
+\item[{const {\bf Cone} $\ast$}]{k, }
+\item[{{\bf scs\-\_\-int} $\ast$$\ast$}]{boundaries}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_a50d9cf53bcd7d38cb49cd864c40cfc20}
+\hypertarget{cones_8h_ae6ed7d7636c5c88e06ca0e27dc74269e}{\index{cones.\-h@{cones.\-h}!get\-Cone\-Header@{get\-Cone\-Header}}
+\index{get\-Cone\-Header@{get\-Cone\-Header}!cones.h@{cones.\-h}}
+\subsubsection[{get\-Cone\-Header}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ get\-Cone\-Header (
+\begin{DoxyParamCaption}
+\item[{const {\bf Cone} $\ast$}]{k}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_ae6ed7d7636c5c88e06ca0e27dc74269e}
+\hypertarget{cones_8h_a9865bf4f5e9fcce4a410861053dd0708}{\index{cones.\-h@{cones.\-h}!get\-Cone\-Summary@{get\-Cone\-Summary}}
+\index{get\-Cone\-Summary@{get\-Cone\-Summary}!cones.h@{cones.\-h}}
+\subsubsection[{get\-Cone\-Summary}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ get\-Cone\-Summary (
+\begin{DoxyParamCaption}
+\item[{const {\bf Info} $\ast$}]{info, }
+\item[{{\bf Cone\-Work} $\ast$}]{c}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_a9865bf4f5e9fcce4a410861053dd0708}
+\hypertarget{cones_8h_af44fab7c53fbfb5c120183d571b9720c}{\index{cones.\-h@{cones.\-h}!init\-Cone@{init\-Cone}}
+\index{init\-Cone@{init\-Cone}!cones.h@{cones.\-h}}
+\subsubsection[{init\-Cone}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Cone\-Work}$\ast$ init\-Cone (
+\begin{DoxyParamCaption}
+\item[{const {\bf Cone} $\ast$}]{k}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_af44fab7c53fbfb5c120183d571b9720c}
+\hypertarget{cones_8h_a666f769b125b7c0954b379a5038ad83c}{\index{cones.\-h@{cones.\-h}!proj\-Dual\-Cone@{proj\-Dual\-Cone}}
+\index{proj\-Dual\-Cone@{proj\-Dual\-Cone}!cones.h@{cones.\-h}}
+\subsubsection[{proj\-Dual\-Cone}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} proj\-Dual\-Cone (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-float} $\ast$}]{x, }
+\item[{const {\bf Cone} $\ast$}]{k, }
+\item[{{\bf Cone\-Work} $\ast$}]{c, }
+\item[{const {\bf scs\-\_\-float} $\ast$}]{warm\-\_\-start, }
+\item[{{\bf scs\-\_\-int}}]{iter}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_a666f769b125b7c0954b379a5038ad83c}
+\hypertarget{cones_8h_ad642d570758747290866267b53dbae37}{\index{cones.\-h@{cones.\-h}!validate\-Cones@{validate\-Cones}}
+\index{validate\-Cones@{validate\-Cones}!cones.h@{cones.\-h}}
+\subsubsection[{validate\-Cones}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} validate\-Cones (
+\begin{DoxyParamCaption}
+\item[{const {\bf Data} $\ast$}]{d, }
+\item[{const {\bf Cone} $\ast$}]{k}
+\end{DoxyParamCaption}
+)}}\label{cones_8h_ad642d570758747290866267b53dbae37}

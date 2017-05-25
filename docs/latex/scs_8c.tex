@@ -1,0 +1,119 @@
+\hypertarget{scs_8c}{\section{src/scs.c File Reference}
+\label{scs_8c}\index{src/scs.\-c@{src/scs.\-c}}
+}
+{\ttfamily \#include \char`\"{}scs.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}normalize.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}directions.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{scs_8c_a515cb544d69e291ad8d0cf6813c23f93}{P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}~100
+\item 
+\#define \hyperlink{scs_8c_a4e4b717291d0110b79e2efb2e8499c55}{C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}~20
+\item 
+\#define \hyperlink{scs_8c_a94f5bbb85116b138ba46912456f4b5e4}{I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L}~1e-\/9
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{scs_8c_a01957880d37ee9f6d67273a28fa21c71}{print\-Sol} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$w, \hyperlink{glbopts_8h_a4bfe3aa7b79eb224b6345a457985eb20}{Sol} $\ast$sol, \hyperlink{glbopts_8h_a0d98fee0ffa9f2986ddf6c19a9a7daa0}{Info} $\ast$info)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{scs_8c_aa1d4dda6af715bc5c7a0740333b8dce3}{is\-Solved\-Status} (\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} status)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{scs_8c_a3793c4757a09da73c9e1b7b1ee8187bc}{is\-Infeasible\-Status} (\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} status)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{scs_8c_a4ce55122bd1338ca5aea7acec918e007}{is\-Unbounded\-Status} (\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} status)
+\item 
+\hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} \hyperlink{scs_8c_ac70c1d4bc4ea86c2230bfc64b72afab2}{get\-Dual\-Cone\-Dist} (const \hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} $\ast$y, const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k, \hyperlink{struct_cone_work}{Cone\-Work} $\ast$c, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} m)
+\item 
+\hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} \hyperlink{scs_8c_adcd735b3e3977003e477d824c6cf1b60}{get\-Pri\-Cone\-Dist} (const \hyperlink{glbopts_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\-\_\-float} $\ast$s, const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k, \hyperlink{struct_cone_work}{Cone\-Work} $\ast$c, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} m)
+\item 
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{scs_8c_ae5a022dbf33560ad0564178ff61d535d}{scs\-\_\-solve} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$w, const \hyperlink{glbopts_8h_a4de8ea3f0fb0078e1829f2727d4771ed}{Data} $\ast$d, const \hyperlink{glbopts_8h_a349e2c420ebc99cfdd732dc952a98182}{Cone} $\ast$k, \hyperlink{glbopts_8h_a4bfe3aa7b79eb224b6345a457985eb20}{Sol} $\ast$sol, \hyperlink{glbopts_8h_a0d98fee0ffa9f2986ddf6c19a9a7daa0}{Info} $\ast$info)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structtimer}{timer} \hyperlink{scs_8c_a75a2a3de1d99739d822b049e8b885036}{global\-Timer}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{scs_8c_a4e4b717291d0110b79e2efb2e8499c55}{\index{scs.\-c@{scs.\-c}!C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L@{C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}}
+\index{C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L@{C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}!scs.c@{scs.\-c}}
+\subsubsection[{C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-O\-N\-V\-E\-R\-G\-E\-D\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L~20}}\label{scs_8c_a4e4b717291d0110b79e2efb2e8499c55}
+\hypertarget{scs_8c_a94f5bbb85116b138ba46912456f4b5e4}{\index{scs.\-c@{scs.\-c}!I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L@{I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L}}
+\index{I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L@{I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L}!scs.c@{scs.\-c}}
+\subsubsection[{I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\-N\-D\-E\-T\-E\-R\-M\-I\-N\-A\-T\-E\-\_\-\-T\-O\-L~1e-\/9}}\label{scs_8c_a94f5bbb85116b138ba46912456f4b5e4}
+\hypertarget{scs_8c_a515cb544d69e291ad8d0cf6813c23f93}{\index{scs.\-c@{scs.\-c}!P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L@{P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}}
+\index{P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L@{P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}!scs.c@{scs.\-c}}
+\subsubsection[{P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-R\-I\-N\-T\-\_\-\-I\-N\-T\-E\-R\-V\-A\-L~100}}\label{scs_8c_a515cb544d69e291ad8d0cf6813c23f93}
+
+
+\subsection{Function Documentation}
+\hypertarget{scs_8c_ac70c1d4bc4ea86c2230bfc64b72afab2}{\index{scs.\-c@{scs.\-c}!get\-Dual\-Cone\-Dist@{get\-Dual\-Cone\-Dist}}
+\index{get\-Dual\-Cone\-Dist@{get\-Dual\-Cone\-Dist}!scs.c@{scs.\-c}}
+\subsubsection[{get\-Dual\-Cone\-Dist}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-float} get\-Dual\-Cone\-Dist (
+\begin{DoxyParamCaption}
+\item[{const {\bf scs\-\_\-float} $\ast$}]{y, }
+\item[{const {\bf Cone} $\ast$}]{k, }
+\item[{{\bf Cone\-Work} $\ast$}]{c, }
+\item[{{\bf scs\-\_\-int}}]{m}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_ac70c1d4bc4ea86c2230bfc64b72afab2}
+\hypertarget{scs_8c_adcd735b3e3977003e477d824c6cf1b60}{\index{scs.\-c@{scs.\-c}!get\-Pri\-Cone\-Dist@{get\-Pri\-Cone\-Dist}}
+\index{get\-Pri\-Cone\-Dist@{get\-Pri\-Cone\-Dist}!scs.c@{scs.\-c}}
+\subsubsection[{get\-Pri\-Cone\-Dist}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-float} get\-Pri\-Cone\-Dist (
+\begin{DoxyParamCaption}
+\item[{const {\bf scs\-\_\-float} $\ast$}]{s, }
+\item[{const {\bf Cone} $\ast$}]{k, }
+\item[{{\bf Cone\-Work} $\ast$}]{c, }
+\item[{{\bf scs\-\_\-int}}]{m}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_adcd735b3e3977003e477d824c6cf1b60}
+\hypertarget{scs_8c_a3793c4757a09da73c9e1b7b1ee8187bc}{\index{scs.\-c@{scs.\-c}!is\-Infeasible\-Status@{is\-Infeasible\-Status}}
+\index{is\-Infeasible\-Status@{is\-Infeasible\-Status}!scs.c@{scs.\-c}}
+\subsubsection[{is\-Infeasible\-Status}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} is\-Infeasible\-Status (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-int}}]{status}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_a3793c4757a09da73c9e1b7b1ee8187bc}
+\hypertarget{scs_8c_aa1d4dda6af715bc5c7a0740333b8dce3}{\index{scs.\-c@{scs.\-c}!is\-Solved\-Status@{is\-Solved\-Status}}
+\index{is\-Solved\-Status@{is\-Solved\-Status}!scs.c@{scs.\-c}}
+\subsubsection[{is\-Solved\-Status}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} is\-Solved\-Status (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-int}}]{status}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_aa1d4dda6af715bc5c7a0740333b8dce3}
+\hypertarget{scs_8c_a4ce55122bd1338ca5aea7acec918e007}{\index{scs.\-c@{scs.\-c}!is\-Unbounded\-Status@{is\-Unbounded\-Status}}
+\index{is\-Unbounded\-Status@{is\-Unbounded\-Status}!scs.c@{scs.\-c}}
+\subsubsection[{is\-Unbounded\-Status}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} is\-Unbounded\-Status (
+\begin{DoxyParamCaption}
+\item[{{\bf scs\-\_\-int}}]{status}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_a4ce55122bd1338ca5aea7acec918e007}
+\hypertarget{scs_8c_a01957880d37ee9f6d67273a28fa21c71}{\index{scs.\-c@{scs.\-c}!print\-Sol@{print\-Sol}}
+\index{print\-Sol@{print\-Sol}!scs.c@{scs.\-c}}
+\subsubsection[{print\-Sol}]{\setlength{\rightskip}{0pt plus 5cm}void print\-Sol (
+\begin{DoxyParamCaption}
+\item[{{\bf Work} $\ast$}]{w, }
+\item[{{\bf Sol} $\ast$}]{sol, }
+\item[{{\bf Info} $\ast$}]{info}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_a01957880d37ee9f6d67273a28fa21c71}
+\hypertarget{scs_8c_ae5a022dbf33560ad0564178ff61d535d}{\index{scs.\-c@{scs.\-c}!scs\-\_\-solve@{scs\-\_\-solve}}
+\index{scs\-\_\-solve@{scs\-\_\-solve}!scs.c@{scs.\-c}}
+\subsubsection[{scs\-\_\-solve}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} scs\-\_\-solve (
+\begin{DoxyParamCaption}
+\item[{{\bf Work} $\ast$}]{w, }
+\item[{const {\bf Data} $\ast$}]{d, }
+\item[{const {\bf Cone} $\ast$}]{k, }
+\item[{{\bf Sol} $\ast$}]{sol, }
+\item[{{\bf Info} $\ast$}]{info}
+\end{DoxyParamCaption}
+)}}\label{scs_8c_ae5a022dbf33560ad0564178ff61d535d}
+
+
+\subsection{Variable Documentation}
+\hypertarget{scs_8c_a75a2a3de1d99739d822b049e8b885036}{\index{scs.\-c@{scs.\-c}!global\-Timer@{global\-Timer}}
+\index{global\-Timer@{global\-Timer}!scs.c@{scs.\-c}}
+\subsubsection[{global\-Timer}]{\setlength{\rightskip}{0pt plus 5cm}{\bf timer} global\-Timer}}\label{scs_8c_a75a2a3de1d99739d822b049e8b885036}
