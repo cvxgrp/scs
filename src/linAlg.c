@@ -82,7 +82,8 @@ scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l) {
     return max;
 }
 
-scs_float sgn(scs_float x) {
+/* sgn function (modified sign) */
+scs_float scs_sgn(scs_float x) {
     if (x >= 0) {
         return 1.0;
     } else {
@@ -90,7 +91,8 @@ scs_float sgn(scs_float x) {
     }
 }
 
-scs_float abs(scs_float x) {
+/* absolute value function */
+scs_float scs_abs(scs_float x) {
     if (x>=0){
         return x;
     } else {

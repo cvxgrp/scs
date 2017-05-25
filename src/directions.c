@@ -41,10 +41,10 @@ scs_int computeLSBroyden(Work *work, SUCache *cache, scs_float stepsize) {
     gamma = -stepsize;
     gamma *= innerProd(work->R, work->Sk, l);
     gamma /= calcNormSq(work->Sk, l);
-    if (abs(gamma) >= theta_bar) {
+    if (scs_abs(gamma) >= theta_bar) {
         theta = 1;
     } else {
-        theta = (1 - sgn(gamma) * theta_bar) / (1 - gamma);
+        theta = (1 - scs_sgn(gamma) * theta_bar) / (1 - gamma);
     }
 
     /* compute new u */
