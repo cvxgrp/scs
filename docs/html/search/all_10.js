@@ -4,7 +4,7 @@ var searchData=
   ['readme_2emd',['README.md',['../_r_e_a_d_m_e_8md.html',1,'']]],
   ['relgap',['relGap',['../struct_s_c_s___i_n_f_o.html#a8956058c7a50430e03efd62b2dfbce72',1,'SCS_INFO::relGap()'],['../structresiduals.html#a879faec02daa66295002b336a526c34f',1,'residuals::relGap()']]],
   ['resdual',['resDual',['../struct_s_c_s___i_n_f_o.html#a6191ab7805b585f711a7ef5b0498d4df',1,'SCS_INFO::resDual()'],['../structresiduals.html#a27e0e9585f4b503ef6b19abff38d1537',1,'residuals::resDual()']]],
-  ['resetyscache',['resetYSCache',['../directions_8c.html#a9999df6387e3991338293a378ad2056f',1,'resetYSCache(YSCache *ys_cache):&#160;directions.c'],['../directions_8h.html#a9999df6387e3991338293a378ad2056f',1,'resetYSCache(YSCache *ys_cache):&#160;directions.c']]],
+  ['resetsucache',['resetSUCache',['../directions_8c.html#abc1704f4eae763ec8fcb16b4032abb2f',1,'resetSUCache(SUCache *cache):&#160;directions.c'],['../directions_8h.html#a2641afd8bc395936ad300699213d9d2b',1,'resetSUCache(SUCache *ys_cache):&#160;directions.c']]],
   ['residuals',['residuals',['../structresiduals.html',1,'']]],
   ['resinfeas',['resInfeas',['../struct_s_c_s___i_n_f_o.html#a70d241dfc725cac8d8a57cb749ab6c18',1,'SCS_INFO::resInfeas()'],['../structresiduals.html#a26867eae4026f37b2a8dd10fa403ed61',1,'residuals::resInfeas()']]],
   ['respri',['resPri',['../struct_s_c_s___i_n_f_o.html#a1af95dd458f4e9075efbbee55f24edc4',1,'SCS_INFO::resPri()'],['../structresiduals.html#a7b16b2674f7eea38fa1b62562bbb8a40',1,'residuals::resPri()']]],

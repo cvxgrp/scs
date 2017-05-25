@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['resetyscache',['resetYSCache',['../directions_8c.html#a9999df6387e3991338293a378ad2056f',1,'resetYSCache(YSCache *ys_cache):&#160;directions.c'],['../directions_8h.html#a9999df6387e3991338293a378ad2056f',1,'resetYSCache(YSCache *ys_cache):&#160;directions.c']]]
+  ['resetsucache',['resetSUCache',['../directions_8c.html#abc1704f4eae763ec8fcb16b4032abb2f',1,'resetSUCache(SUCache *cache):&#160;directions.c'],['../directions_8h.html#a2641afd8bc395936ad300699213d9d2b',1,'resetSUCache(SUCache *ys_cache):&#160;directions.c']]]
 ];

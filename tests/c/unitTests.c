@@ -39,7 +39,7 @@ bool testProjLinSysv2(char** str) {
         h[i] = 0.2 * (i + 1);
         g[i] = 0.8 * (i + 1);
     }
-    //  memcpy(u_t, u, l * sizeof (scs_float));
+    /*  memcpy(u_t, u, l * sizeof (scs_float)); */
 
     scaleArray(u_t, rho_x, n);
 
@@ -47,7 +47,7 @@ bool testProjLinSysv2(char** str) {
     addScaledArray(u_t, h, l - 1,
             -innerProd(u_t, g, l - 1) / (gTh + 1));
     scaleArray(&(u_t[n]), -1, m);
-    //   status = solveLinSys(A, stgs, w->p, w->u_t, w->u, iter);
+    /*   status = solveLinSys(A, stgs, w->p, w->u_t, w->u, iter); */
     u_t[l - 1] += innerProd(u_t, h, l - 1);
 
     expected_result[0] = 67.10;

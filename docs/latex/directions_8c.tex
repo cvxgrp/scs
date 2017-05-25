@@ -5,67 +5,39 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_af6e7bfd717d1be5c13a8c7a330e69610}{push\-To\-Y\-S\-Cache} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$work, \hyperlink{scs_8h_a838b9d5cc481adaa7d09517ff08a5f0b}{Y\-S\-Cache} $\ast$ys\-\_\-cache)
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_abc1704f4eae763ec8fcb16b4032abb2f}{reset\-S\-U\-Cache} (\hyperlink{scs_8h_ae9a66f1669c9fb6760e2910763f6190d}{S\-U\-Cache} $\ast$cache)
 \item 
-\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_a9999df6387e3991338293a378ad2056f}{reset\-Y\-S\-Cache} (\hyperlink{scs_8h_a838b9d5cc481adaa7d09517ff08a5f0b}{Y\-S\-Cache} $\ast$ys\-\_\-cache)
-\item 
-void \hyperlink{directions_8c_a3ba7f6c0f51fae988962bd354e889261}{compute\-L\-Broyden} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$w, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} iter)
-\item 
-void \hyperlink{directions_8c_af7b8b312daff780a1ed71e16b6a09ffb}{compute\-L\-M\-Broyden} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$w, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} iter)
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_abe74a7ed92ab0d09bec9143bcc14c022}{compute\-L\-S\-Broyden} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$work, \hyperlink{scs_8h_ae9a66f1669c9fb6760e2910763f6190d}{S\-U\-Cache} $\ast$cache, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} iter)
 \end{DoxyCompactItemize}
 
 
 \subsection{Function Documentation}
-\hypertarget{directions_8c_a3ba7f6c0f51fae988962bd354e889261}{\index{directions.\-c@{directions.\-c}!compute\-L\-Broyden@{compute\-L\-Broyden}}
-\index{compute\-L\-Broyden@{compute\-L\-Broyden}!directions.c@{directions.\-c}}
-\subsubsection[{compute\-L\-Broyden}]{\setlength{\rightskip}{0pt plus 5cm}void compute\-L\-Broyden (
+\hypertarget{directions_8c_abe74a7ed92ab0d09bec9143bcc14c022}{\index{directions.\-c@{directions.\-c}!compute\-L\-S\-Broyden@{compute\-L\-S\-Broyden}}
+\index{compute\-L\-S\-Broyden@{compute\-L\-S\-Broyden}!directions.c@{directions.\-c}}
+\subsubsection[{compute\-L\-S\-Broyden}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} compute\-L\-S\-Broyden (
 \begin{DoxyParamCaption}
 \item[{{\bf Work} $\ast$}]{work, }
+\item[{{\bf S\-U\-Cache} $\ast$}]{ys\-\_\-cache, }
 \item[{{\bf scs\-\_\-int}}]{iter}
 \end{DoxyParamCaption}
-)}}\label{directions_8c_a3ba7f6c0f51fae988962bd354e889261}
-
+)}}\label{directions_8c_abe74a7ed92ab0d09bec9143bcc14c022}
+Restarted Broyden (as it is reported in the paper) 
 \begin{DoxyParams}{Parameters}
 {\em w} & \\
 \hline
 {\em iter} & \\
 \hline
 \end{DoxyParams}
-\hypertarget{directions_8c_af7b8b312daff780a1ed71e16b6a09ffb}{\index{directions.\-c@{directions.\-c}!compute\-L\-M\-Broyden@{compute\-L\-M\-Broyden}}
-\index{compute\-L\-M\-Broyden@{compute\-L\-M\-Broyden}!directions.c@{directions.\-c}}
-\subsubsection[{compute\-L\-M\-Broyden}]{\setlength{\rightskip}{0pt plus 5cm}void compute\-L\-M\-Broyden (
-\begin{DoxyParamCaption}
-\item[{{\bf Work} $\ast$}]{w, }
-\item[{{\bf scs\-\_\-int}}]{iter}
-\end{DoxyParamCaption}
-)}}\label{directions_8c_af7b8b312daff780a1ed71e16b6a09ffb}
-\hypertarget{directions_8c_af6e7bfd717d1be5c13a8c7a330e69610}{\index{directions.\-c@{directions.\-c}!push\-To\-Y\-S\-Cache@{push\-To\-Y\-S\-Cache}}
-\index{push\-To\-Y\-S\-Cache@{push\-To\-Y\-S\-Cache}!directions.c@{directions.\-c}}
-\subsubsection[{push\-To\-Y\-S\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} push\-To\-Y\-S\-Cache (
-\begin{DoxyParamCaption}
-\item[{{\bf Work} $\ast$}]{work, }
-\item[{{\bf Y\-S\-Cache} $\ast$}]{ys\-\_\-cache}
-\end{DoxyParamCaption}
-)}}\label{directions_8c_af6e7bfd717d1be5c13a8c7a330e69610}
-Adds a new pair (Yk, Sk) into the Y\-S-\/cache.
-
-
-\begin{DoxyParams}{Parameters}
-{\em work} & provides Yk and Sk \\
-\hline
-{\em ys\-\_\-cache} & the cache into which (Yk, Sk) is added \\
-\hline
-\end{DoxyParams}
 \begin{DoxyReturn}{Returns}
 status code 
 \end{DoxyReturn}
-\hypertarget{directions_8c_a9999df6387e3991338293a378ad2056f}{\index{directions.\-c@{directions.\-c}!reset\-Y\-S\-Cache@{reset\-Y\-S\-Cache}}
-\index{reset\-Y\-S\-Cache@{reset\-Y\-S\-Cache}!directions.c@{directions.\-c}}
-\subsubsection[{reset\-Y\-S\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} reset\-Y\-S\-Cache (
+\hypertarget{directions_8c_abc1704f4eae763ec8fcb16b4032abb2f}{\index{directions.\-c@{directions.\-c}!reset\-S\-U\-Cache@{reset\-S\-U\-Cache}}
+\index{reset\-S\-U\-Cache@{reset\-S\-U\-Cache}!directions.c@{directions.\-c}}
+\subsubsection[{reset\-S\-U\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} reset\-S\-U\-Cache (
 \begin{DoxyParamCaption}
-\item[{{\bf Y\-S\-Cache} $\ast$}]{ys\-\_\-cache}
+\item[{{\bf S\-U\-Cache} $\ast$}]{ys\-\_\-cache}
 \end{DoxyParamCaption}
-)}}\label{directions_8c_a9999df6387e3991338293a378ad2056f}
+)}}\label{directions_8c_abc1704f4eae763ec8fcb16b4032abb2f}
 Resets the cache. This methods does not free the memory allocated by the cache, nor does it overwrite the previously cached data. It simply sets the parameters {\ttfamily mem\-\_\-current} and {\ttfamily mem\-\_\-idx} to 0. 
 \begin{DoxyParams}{Parameters}
 {\em ys\-\_\-cache} & \\

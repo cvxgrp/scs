@@ -19,6 +19,8 @@ void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
                     const scs_float sc);
 scs_float calcNormDiff(const scs_float *a, const scs_float *b, scs_int l);
 scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l);
+scs_float sgn(scs_float x);
+scs_float abs(scs_float x);
 
 #ifdef __cplusplus
 }

@@ -32,19 +32,22 @@ static scs_int scs_isnan(scs_float x) {
 }
 
 static SUCache * initYSCache(scs_int memory, scs_int l) {
-    SUCache * ys_cache = scs_calloc(1, sizeof (SUCache));
-    if (!ys_cache) {
+    SUCache * cache = scs_calloc(1, sizeof (SUCache));
+    if (!cache) {
         scs_printf("ERROR: allocating YSCache failure\n");
         RETURN SCS_NULL;
     }
-    ys_cache->S = scs_malloc(memory * l * sizeof (scs_float)); /* S: l-by-mem */
-    ys_cache->U = scs_malloc(memory * l * sizeof (scs_float)); /* U: l-by-mem */
+    
+    /* we allocate one extra memory position because it's needed */
+    cache->S = scs_malloc((1+memory) * l * sizeof (scs_float)); /* S: l-by-mem */
+    cache->U = scs_malloc((1+memory) * l * sizeof (scs_float)); /* U: l-by-mem */
 
     /* the cache must know its memory length */
-    ys_cache->mem = memory;
+    cache->mem = memory;
 
-    resetYSCache(ys_cache);
-    return ys_cache;
+    /* initial active memory is 0 */
+    resetSUCache(cache);
+    return cache;
 }
 
 static void freeYSCache(SUCache * cache) {
@@ -990,7 +993,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
         printHeader(w, k);
     /* supercs: */
 
-    // Initialize:
+    /* Initialize: */
     i = 0;
     memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof (scs_float));
 
@@ -999,13 +1002,13 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     calcFPRes(w);
     scaleFPRes(w);
 
-    eta = calcNorm(w->sc_R, (w->n + w->m + 1)); // initialize eta = |Ru^0|
+    eta = calcNorm(w->sc_R, (w->n + w->m + 1)); /* initialize eta = |Ru^0| */
     memset(w->dir, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->Sk, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->Yk, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->wu, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->sc_Rwu, 0, (w->n + w->m + 1) * sizeof (scs_float));
-    //    memset(w->how, 0, w->stgs->max_iters * sizeof(scs_int)); 
+    /*    memset(w->how, 0, w->stgs->max_iters * sizeof(scs_int));  */
     memcpy(w->sc_R_prev, w->sc_R, (w->n + w->m + 1) * sizeof (scs_float));
     for (i = 0; i < w->stgs->max_iters; ++i) {
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
@@ -1013,9 +1016,9 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
                 w->dir = w->sc_R;
                 scaleArray(w->dir, -1, w->n + w->m + 1);
             } else {
-                //                if (w->how[i-1] == 0 || w->stgs->ls == 0) {
+                /*               if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
-                    w->Sk = w->u; // IT IS NOT SCALED!!!!!!!!!!!!!
+                    w->Sk = w->u; /* IT IS NOT SCALED!!!!!!!!!!!!! */
                     addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
                     w->Yk = w->sc_R;
                     addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
@@ -1025,7 +1028,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
                     w->Yk = w->sc_Rwu;
                     addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
                 }
-                // compute direction
+                /* compute direction */
 
             }
         }

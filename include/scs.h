@@ -118,7 +118,6 @@ extern "C" {
         scs_float *S; /**< cached values of s_i (s-memory) */
         scs_float *U; /**< cached values of u_i = (s_i - s_tilde_i)/(s_i'*s_tilde_i) (u-memory)*/
         scs_int mem_current; /**< current memory (before it's full) */
-        scs_int mem_idx; /**< head-index of memory */
         scs_int mem; /**< (target) memory */
     };
 
@@ -148,10 +147,15 @@ extern "C" {
         scs_float sc_c;
         scs_float nm_b;
         scs_float nm_c;
-        scs_float *b, *c; /**<  (scpossibly normalized) b and c vectors */
-        scs_float *R, *sc_R, *sc_R_prev; /**<  fixed point residuals */
-        scs_float *dir, *dut; /**<  variables for direction */
-        scs_float *wu, *sc_Rwu; /**< from line search */
+        scs_float *b;
+        scs_float *c; /**<  (scpossibly normalized) b and c vectors */
+        scs_float *R;
+        scs_float *sc_R;
+        scs_float *sc_R_prev; /**<  fixed point residuals */
+        scs_float *dir;
+        scs_float *dut; /**<  variables for direction */
+        scs_float *wu;
+        scs_float *sc_Rwu; /**< from line search */
         scs_float nrmR_con; /**< \|R\| */
         scs_float *Sk; /**< Sk */
         scs_float *Yk; /**< Yk */

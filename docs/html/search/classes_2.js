@@ -6,6 +6,6 @@ var searchData=
   ['scs_5fscaling',['SCS_SCALING',['../struct_s_c_s___s_c_a_l_i_n_g.html',1,'']]],
   ['scs_5fsettings',['SCS_SETTINGS',['../struct_s_c_s___s_e_t_t_i_n_g_s.html',1,'']]],
   ['scs_5fsol_5fvars',['SCS_SOL_VARS',['../struct_s_c_s___s_o_l___v_a_r_s.html',1,'']]],
-  ['scs_5fwork',['SCS_WORK',['../struct_s_c_s___w_o_r_k.html',1,'']]],
-  ['scs_5fys_5fmemory',['SCS_YS_MEMORY',['../struct_s_c_s___y_s___m_e_m_o_r_y.html',1,'']]]
+  ['scs_5fsu_5fmemory',['SCS_SU_MEMORY',['../struct_s_c_s___s_u___m_e_m_o_r_y.html',1,'']]],
+  ['scs_5fwork',['SCS_WORK',['../struct_s_c_s___w_o_r_k.html',1,'']]]
 ];

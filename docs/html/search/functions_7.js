@@ -11,6 +11,5 @@ var searchData=
   ['printwork',['printWork',['../util_8c.html#a685f5619aad782a07d1bad8ebd8e441d',1,'printWork(const Work *w):&#160;util.c'],['../util_8h.html#a685f5619aad782a07d1bad8ebd8e441d',1,'printWork(const Work *w):&#160;util.c']]],
   ['projdualcone',['projDualCone',['../cones_8c.html#a666f769b125b7c0954b379a5038ad83c',1,'projDualCone(scs_float *x, const Cone *k, ConeWork *c, const scs_float *warm_start, scs_int iter):&#160;cones.c'],['../cones_8h.html#a666f769b125b7c0954b379a5038ad83c',1,'projDualCone(scs_float *x, const Cone *k, ConeWork *c, const scs_float *warm_start, scs_int iter):&#160;cones.c']]],
   ['project2by2sdc',['project2By2Sdc',['../cones_8c.html#a62448e6adf2b582438012c0bc7735eb1',1,'cones.c']]],
-  ['projpowercone',['projPowerCone',['../cones_8c.html#a46f54f027bbcd4be473b39fff70f5cb9',1,'cones.c']]],
-  ['pushtoyscache',['pushToYSCache',['../directions_8c.html#af6e7bfd717d1be5c13a8c7a330e69610',1,'pushToYSCache(Work *work, YSCache *ys_cache):&#160;directions.c'],['../directions_8h.html#af6e7bfd717d1be5c13a8c7a330e69610',1,'pushToYSCache(Work *work, YSCache *ys_cache):&#160;directions.c']]]
+  ['projpowercone',['projPowerCone',['../cones_8c.html#a46f54f027bbcd4be473b39fff70f5cb9',1,'cones.c']]]
 ];

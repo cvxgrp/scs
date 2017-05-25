@@ -3,7 +3,7 @@
 
 /* x = b*a */
 void setAsScaledArray(scs_float *x, const scs_float *a, const scs_float b,
-                      scs_int len) {
+        scs_int len) {
     scs_int i;
     for (i = 0; i < len; ++i)
         x[i] = b * a[i];
@@ -54,7 +54,7 @@ scs_float calcNormInf(const scs_float *a, scs_int l) {
 
 /* saxpy a += sc*b */
 void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
-                    const scs_float sc) {
+        const scs_float sc) {
     scs_int i;
     for (i = 0; i < n; ++i) {
         a[i] += sc * b[i];
@@ -80,4 +80,20 @@ scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l) {
             max = tmp;
     }
     return max;
+}
+
+scs_float sgn(scs_float x) {
+    if (x >= 0) {
+        return 1.0;
+    } else {
+        return -1.0;
+    }
+}
+
+scs_float abs(scs_float x) {
+    if (x>=0){
+        return x;
+    } else {
+        return -x;
+    }
 }
