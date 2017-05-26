@@ -19,7 +19,7 @@ scs_int computeLSBroyden(Work *work) {
     scs_float theta = 0; /* theta */
     const scs_int l = work->l; /* size of vectors */
     const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
-    
+
 
     /* d [work->dir] = -R [work->R] */
     setAsScaledArray(work->dir, work->R, -1.0, l);
@@ -64,7 +64,7 @@ scs_int computeLSBroyden(Work *work) {
     }
 
     if (cache->mem_current == cache->mem) {
-        status = resetSUCache(cache);
+        return resetSUCache(cache);
     }
 
     cache->mem_current++;

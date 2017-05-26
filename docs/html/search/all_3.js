@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['c',['c',['../struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a582b832e89512479c95de949ccdfd46f',1,'SCS_PROBLEM_DATA::c()'],['../struct_s_c_s___w_o_r_k.html#a5d546a065cf3b3a228617147184287a9',1,'SCS_WORK::c()']]],
+  ['c',['c',['../struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a582b832e89512479c95de949ccdfd46f',1,'SCS_PROBLEM_DATA::c()'],['../struct_s_c_s___w_o_r_k.html#a28739f0f5ed9b1f2184133571a5963a1',1,'SCS_WORK::c()']]],
   ['c_5fbl',['c_bl',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#aa75c4bc92bc7018562db18c804a5e15c',1,'SCS_SETTINGS::c_bl()'],['../constants_8h.html#a36ea160af94b772c3a5438a8da8179e3',1,'C_BL():&#160;constants.h']]],
   ['calcnorm',['calcNorm',['../lin_alg_8c.html#a0c75b64aca29b7ab69dec8ebc0d6faa2',1,'calcNorm(const scs_float *v, scs_int len):&#160;linAlg.c'],['../lin_alg_8h.html#a0c75b64aca29b7ab69dec8ebc0d6faa2',1,'calcNorm(const scs_float *v, scs_int len):&#160;linAlg.c']]],
   ['calcnormdiff',['calcNormDiff',['../lin_alg_8c.html#a0445c72b9f17917bb99ff5ec168fa217',1,'calcNormDiff(const scs_float *a, const scs_float *b, scs_int l):&#160;linAlg.c'],['../lin_alg_8h.html#a0445c72b9f17917bb99ff5ec168fa217',1,'calcNormDiff(const scs_float *a, const scs_float *b, scs_int l):&#160;linAlg.c']]],
@@ -9,7 +9,7 @@ var searchData=
   ['calcnormsq',['calcNormSq',['../lin_alg_8c.html#a622bca83cde454e1c64d4b4140b25c79',1,'calcNormSq(const scs_float *v, scs_int len):&#160;linAlg.c'],['../lin_alg_8h.html#a622bca83cde454e1c64d4b4140b25c79',1,'calcNormSq(const scs_float *v, scs_int len):&#160;linAlg.c']]],
   ['calcscaledresids',['calcScaledResids',['../normalize_8h.html#ada32f0fb38e673f9519c3dd786c00b74',1,'normalize.h']]],
   ['cg_5frate',['cg_rate',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a4549b5528b3b3ed290427b36e737ea13',1,'SCS_SETTINGS::cg_rate()'],['../constants_8h.html#a12bfb0313e34bbbe9b0d083d8249655b',1,'CG_RATE():&#160;constants.h']]],
-  ['computelsbroyden',['computeLSBroyden',['../directions_8c.html#abe74a7ed92ab0d09bec9143bcc14c022',1,'computeLSBroyden(Work *work, SUCache *cache, scs_int iter):&#160;directions.c'],['../directions_8h.html#aca1064117183e04a9666ff111f36219b',1,'computeLSBroyden(Work *work, SUCache *ys_cache, scs_int iter):&#160;directions.c']]],
+  ['computelsbroyden',['computeLSBroyden',['../directions_8c.html#a13920d82d3267564ab3e659a25608941',1,'computeLSBroyden(Work *work):&#160;directions.c'],['../directions_8h.html#a13920d82d3267564ab3e659a25608941',1,'computeLSBroyden(Work *work):&#160;directions.c']]],
   ['cone',['Cone',['../glbopts_8h.html#a349e2c420ebc99cfdd732dc952a98182',1,'glbopts.h']]],
   ['cone_5frate',['CONE_RATE',['../cones_8c.html#a46edc50fe5e74a270b6f09249e184ca0',1,'cones.c']]],
   ['cone_5fthresh',['CONE_THRESH',['../cones_8c.html#a4d4cd2aeaa57f7249083bcf4e07e3c4c',1,'cones.c']]],

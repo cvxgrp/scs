@@ -13,6 +13,12 @@
 <script type="text/javascript">
   $(document).ready(function() { searchBox.OnSelectItem(0); });
 </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -96,11 +102,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 Functions</h2></td></tr>
 <tr class="memitem:abc1704f4eae763ec8fcb16b4032abb2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="directions_8c.html#abc1704f4eae763ec8fcb16b4032abb2f">resetSUCache</a> (<a class="el" href="scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d">SUCache</a> *cache)</td></tr>
 <tr class="separator:abc1704f4eae763ec8fcb16b4032abb2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe74a7ed92ab0d09bec9143bcc14c022"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="directions_8c.html#abe74a7ed92ab0d09bec9143bcc14c022">computeLSBroyden</a> (<a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *work, <a class="el" href="scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d">SUCache</a> *cache, <a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> iter)</td></tr>
-<tr class="separator:abe74a7ed92ab0d09bec9143bcc14c022"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13920d82d3267564ab3e659a25608941"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="directions_8c.html#a13920d82d3267564ab3e659a25608941">computeLSBroyden</a> (<a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *work)</td></tr>
+<tr class="separator:a13920d82d3267564ab3e659a25608941"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="abe74a7ed92ab0d09bec9143bcc14c022"></a>
+<a class="anchor" id="a13920d82d3267564ab3e659a25608941"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -108,36 +114,28 @@ Functions</h2></td></tr>
           <td class="memname"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> computeLSBroyden </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *&#160;</td>
-          <td class="paramname"><em>work</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>work</em></td><td>)</td>
           <td></td>
-          <td class="paramtype"><a class="el" href="scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d">SUCache</a> *&#160;</td>
-          <td class="paramname"><em>ys_cache</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td>
-          <td class="paramname"><em>iter</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Restarted Broyden (as it is reported in the paper) </p>
+<p>Restarted Broyden (as it is reported in the paper).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">w</td><td></td></tr>
-    <tr><td class="paramname">iter</td><td></td></tr>
+    <tr><td class="paramname">work</td><td>Work structure with all available information about the current iteration (current FPR, values of S and Y). Work must provide the following information</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>status code </dd></dl>
+<ul>
+<li>work-&gt;stgs-&gt;thetabar</li>
+<li>work-&gt;su_cache</li>
+<li>work-&gt;Yk</li>
+<li>work-&gt;Sk</li>
+<li>work-&gt;R</li>
+<li>work-&gt;stepsize</li>
+<li>work-&gt;l</li>
+</ul>
+<dl class="section return"><dt>Returns</dt><dd>status code of the method. </dd></dl>
 
 </div>
 </div>
@@ -149,7 +147,7 @@ Functions</h2></td></tr>
           <td class="memname"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> resetSUCache </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d">SUCache</a> *&#160;</td>
-          <td class="paramname"><em>ys_cache</em></td><td>)</td>
+          <td class="paramname"><em>cache</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -157,7 +155,7 @@ Functions</h2></td></tr>
 <p>Resets the cache. This methods does not free the memory allocated by the cache, nor does it overwrite the previously cached data. It simply sets the parameters <code>mem_current</code> and <code>mem_idx</code> to 0. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ys_cache</td><td></td></tr>
+    <tr><td class="paramname">cache</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -168,7 +166,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri May 26 2017 00:19:59 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 26 2017 04:01:34 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

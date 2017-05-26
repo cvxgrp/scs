@@ -7,40 +7,49 @@
 \item 
 \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_abc1704f4eae763ec8fcb16b4032abb2f}{reset\-S\-U\-Cache} (\hyperlink{scs_8h_ae9a66f1669c9fb6760e2910763f6190d}{S\-U\-Cache} $\ast$cache)
 \item 
-\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_abe74a7ed92ab0d09bec9143bcc14c022}{compute\-L\-S\-Broyden} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$work, \hyperlink{scs_8h_ae9a66f1669c9fb6760e2910763f6190d}{S\-U\-Cache} $\ast$cache, \hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} iter)
+\hyperlink{glbopts_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\-\_\-int} \hyperlink{directions_8c_a13920d82d3267564ab3e659a25608941}{compute\-L\-S\-Broyden} (\hyperlink{glbopts_8h_aa6b66a92ab6f62bce1f24a0e358dac55}{Work} $\ast$work)
 \end{DoxyCompactItemize}
 
 
 \subsection{Function Documentation}
-\hypertarget{directions_8c_abe74a7ed92ab0d09bec9143bcc14c022}{\index{directions.\-c@{directions.\-c}!compute\-L\-S\-Broyden@{compute\-L\-S\-Broyden}}
+\hypertarget{directions_8c_a13920d82d3267564ab3e659a25608941}{\index{directions.\-c@{directions.\-c}!compute\-L\-S\-Broyden@{compute\-L\-S\-Broyden}}
 \index{compute\-L\-S\-Broyden@{compute\-L\-S\-Broyden}!directions.c@{directions.\-c}}
 \subsubsection[{compute\-L\-S\-Broyden}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} compute\-L\-S\-Broyden (
 \begin{DoxyParamCaption}
-\item[{{\bf Work} $\ast$}]{work, }
-\item[{{\bf S\-U\-Cache} $\ast$}]{ys\-\_\-cache, }
-\item[{{\bf scs\-\_\-int}}]{iter}
+\item[{{\bf Work} $\ast$}]{work}
 \end{DoxyParamCaption}
-)}}\label{directions_8c_abe74a7ed92ab0d09bec9143bcc14c022}
-Restarted Broyden (as it is reported in the paper) 
+)}}\label{directions_8c_a13920d82d3267564ab3e659a25608941}
+Restarted Broyden (as it is reported in the paper).
+
+
 \begin{DoxyParams}{Parameters}
-{\em w} & \\
-\hline
-{\em iter} & \\
+{\em work} & Work structure with all available information about the current iteration (current F\-P\-R, values of S and Y). Work must provide the following information\\
 \hline
 \end{DoxyParams}
+
+\begin{DoxyItemize}
+\item work-\/$>$stgs-\/$>$thetabar
+\item work-\/$>$su\-\_\-cache
+\item work-\/$>$Yk
+\item work-\/$>$Sk
+\item work-\/$>$R
+\item work-\/$>$stepsize
+\item work-\/$>$l
+\end{DoxyItemize}
+
 \begin{DoxyReturn}{Returns}
-status code 
+status code of the method. 
 \end{DoxyReturn}
 \hypertarget{directions_8c_abc1704f4eae763ec8fcb16b4032abb2f}{\index{directions.\-c@{directions.\-c}!reset\-S\-U\-Cache@{reset\-S\-U\-Cache}}
 \index{reset\-S\-U\-Cache@{reset\-S\-U\-Cache}!directions.c@{directions.\-c}}
 \subsubsection[{reset\-S\-U\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} reset\-S\-U\-Cache (
 \begin{DoxyParamCaption}
-\item[{{\bf S\-U\-Cache} $\ast$}]{ys\-\_\-cache}
+\item[{{\bf S\-U\-Cache} $\ast$}]{cache}
 \end{DoxyParamCaption}
 )}}\label{directions_8c_abc1704f4eae763ec8fcb16b4032abb2f}
 Resets the cache. This methods does not free the memory allocated by the cache, nor does it overwrite the previously cached data. It simply sets the parameters {\ttfamily mem\-\_\-current} and {\ttfamily mem\-\_\-idx} to 0. 
 \begin{DoxyParams}{Parameters}
-{\em ys\-\_\-cache} & \\
+{\em cache} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}

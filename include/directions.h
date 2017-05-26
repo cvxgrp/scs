@@ -33,7 +33,16 @@ extern "C" {
      * Restarted Broyden (as it is reported in the paper).
      * 
      * @param work Work structure with all available information about the current
-     * iteration (current FPR, values of S and Y).
+     * iteration (current FPR, values of S and Y). Work must provide the following 
+     * information
+     * 
+     *   - work->stgs->thetabar
+     *   - work->su_cache
+     *   - work->Yk
+     *   - work->Sk
+     *   - work->R
+     *   - work->stepsize
+     *   - work->l
      * 
      * @return status code of the method.
      */
