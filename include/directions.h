@@ -24,10 +24,10 @@ extern "C" {
      * Resets the cache. This methods does not free the memory allocated by the 
      * cache, nor does it overwrite the previously cached data. It simply sets the 
      * parameters `mem_current` and `mem_idx` to 0.
-     * @param ys_cache
+     * @param cache
      * @return status code
      */
-    scs_int resetSUCache(SUCache * ys_cache);
+    scs_int resetSUCache(SUCache * cache);
 
     /**
      * Restarted Broyden (as it is reported in the paper).
@@ -37,9 +37,7 @@ extern "C" {
      * 
      * @return status code of the method.
      */
-    scs_int computeLSBroyden(Work *work, SUCache *ys_cache, scs_float stepsize);
-
-
+    scs_int computeLSBroyden(Work *work);
 
 
 #ifdef __cplusplus

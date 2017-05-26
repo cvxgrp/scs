@@ -118,8 +118,8 @@ static void freeWork(Work *w) {
         scs_free(w->wu);
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
-    if (w->ys_cache)
-        freeYSCache(w->ys_cache);
+    if (w->su_cache)
+        freeYSCache(w->su_cache);
     
     scs_free(w);
     RETURN;
@@ -874,12 +874,14 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->sc_R_prev = scs_malloc(l * sizeof (scs_float));
     w->dir = scs_malloc(l * sizeof (scs_float));
     w->dut = scs_malloc(l * sizeof (scs_float));
+    
+    w->stepsize = 1.0;
 
     /* make cache */
     if (w->stgs->memory > 0) {
-        w->ys_cache = initYSCache(w->stgs->memory, l);
+        w->su_cache = initYSCache(w->stgs->memory, l);
     } else {
-        w->ys_cache = SCS_NULL;
+        w->su_cache = SCS_NULL;
     }
 
     w->Sk = scs_malloc(l * sizeof (scs_float));

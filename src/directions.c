@@ -5,8 +5,9 @@ scs_int resetSUCache(SUCache * cache) {
     return SU_CACHE_RESET;
 }
 
-scs_int computeLSBroyden(Work *work, SUCache *cache, scs_float stepsize) {
+scs_int computeLSBroyden(Work *work) {
     /* --- DECLARATIONS --- */
+    SUCache * cache = work->su_cache; /* the SU cache */
     scs_int status; /* status (reset/augmented) */
     scs_int i; /* index */
     scs_float * s_tilde_current; /* s_tilde (which is updated) */
@@ -14,10 +15,11 @@ scs_int computeLSBroyden(Work *work, SUCache *cache, scs_float stepsize) {
     scs_float * s_i; /* pointer to the current value of s_i */
     scs_float * u_i; /* pointer to the current value of u_i */
     scs_float ip; /* temporary float to store inner products */
-    scs_float gamma;
-    scs_float theta; /* theta */
+    scs_float gamma; /* scalar gamma as in (6.5e) */
+    scs_float theta = 0; /* theta */
     const scs_int l = work->l; /* size of vectors */
     const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
+    
 
     /* d [work->dir] = -R [work->R] */
     setAsScaledArray(work->dir, work->R, -1.0, l);
@@ -38,7 +40,7 @@ scs_int computeLSBroyden(Work *work, SUCache *cache, scs_float stepsize) {
     }
 
     /* compute theta */
-    gamma = -stepsize;
+    gamma = -work->stepsize;
     gamma *= innerProd(work->R, work->Sk, l);
     gamma /= calcNormSq(work->Sk, l);
     if (scs_abs(gamma) >= theta_bar) {

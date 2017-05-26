@@ -149,16 +149,17 @@ extern "C" {
         scs_float nm_c;
         scs_float *b;
         scs_float *c; /**<  (scpossibly normalized) b and c vectors */
-        scs_float *R;
+        scs_float *R; /**< FPR (fixed point residual) */
         scs_float *sc_R;
         scs_float *sc_R_prev; /**<  fixed point residuals */
-        scs_float *dir;
+        scs_float *dir; /**< direction */
         scs_float *dut; /**<  variables for direction */
         scs_float *wu;
         scs_float *sc_Rwu; /**< from line search */
         scs_float nrmR_con; /**< \|R\| */
         scs_float *Sk; /**< Sk */
         scs_float *Yk; /**< Yk */
+        scs_float stepsize; /**< The current stepsize */
 
         /**
          *  The (possibly normalized) A matrix 
@@ -189,7 +190,7 @@ extern "C" {
          * A cache of Y and S (used, for instance, to compute Broyden-type 
          * or other quasi-Newton directions).
          */
-        SUCache *ys_cache;
+        SUCache *su_cache;
     };
 
     /* to hold residual information (unnormalized) */
