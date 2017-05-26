@@ -55,7 +55,7 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{{\bf scs\-\_\-float} $\ast$}]{y}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_a88366c26472ae79ac015b0ef32cf8486}
-\hypertarget{lin_sys_8h_af02f94ad9a954405128c00b342968058}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!accum\-By\-Atrans@{accum\-By\-Atrans}}
+forms y += A$\ast$x \hypertarget{lin_sys_8h_af02f94ad9a954405128c00b342968058}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!accum\-By\-Atrans@{accum\-By\-Atrans}}
 \index{accum\-By\-Atrans@{accum\-By\-Atrans}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{accum\-By\-Atrans}]{\setlength{\rightskip}{0pt plus 5cm}void accum\-By\-Atrans (
 \begin{DoxyParamCaption}
@@ -65,21 +65,21 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{{\bf scs\-\_\-float} $\ast$}]{y}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_af02f94ad9a954405128c00b342968058}
-\hypertarget{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!free\-A\-Matrix@{free\-A\-Matrix}}
+forms y += A'$\ast$x \hypertarget{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!free\-A\-Matrix@{free\-A\-Matrix}}
 \index{free\-A\-Matrix@{free\-A\-Matrix}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{free\-A\-Matrix}]{\setlength{\rightskip}{0pt plus 5cm}void free\-A\-Matrix (
 \begin{DoxyParamCaption}
 \item[{{\bf A\-Matrix} $\ast$}]{A}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}
-\hypertarget{lin_sys_8h_a05f0e7047b5d6e76e77d1ce31ca51665}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!free\-Priv@{free\-Priv}}
+to free the memory allocated in {\ttfamily A\-Matrix} \hypertarget{lin_sys_8h_a05f0e7047b5d6e76e77d1ce31ca51665}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!free\-Priv@{free\-Priv}}
 \index{free\-Priv@{free\-Priv}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{free\-Priv}]{\setlength{\rightskip}{0pt plus 5cm}void free\-Priv (
 \begin{DoxyParamCaption}
 \item[{{\bf Priv} $\ast$}]{p}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_a05f0e7047b5d6e76e77d1ce31ca51665}
-\hypertarget{lin_sys_8h_adf0a8a95a317099972c2aa1995f2ea2e}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!get\-Lin\-Sys\-Method@{get\-Lin\-Sys\-Method}}
+frees {\ttfamily Priv} structure and allocated memory in {\ttfamily Priv} \hypertarget{lin_sys_8h_adf0a8a95a317099972c2aa1995f2ea2e}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!get\-Lin\-Sys\-Method@{get\-Lin\-Sys\-Method}}
 \index{get\-Lin\-Sys\-Method@{get\-Lin\-Sys\-Method}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{get\-Lin\-Sys\-Method}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ get\-Lin\-Sys\-Method (
 \begin{DoxyParamCaption}
@@ -87,7 +87,7 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{const {\bf Settings} $\ast$}]{stgs}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_adf0a8a95a317099972c2aa1995f2ea2e}
-\hypertarget{lin_sys_8h_a808516dfaa30877d07d04739ce29eef2}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!get\-Lin\-Sys\-Summary@{get\-Lin\-Sys\-Summary}}
+returns string describing method, can return null, if not null free will be called on output \hypertarget{lin_sys_8h_a808516dfaa30877d07d04739ce29eef2}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!get\-Lin\-Sys\-Summary@{get\-Lin\-Sys\-Summary}}
 \index{get\-Lin\-Sys\-Summary@{get\-Lin\-Sys\-Summary}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{get\-Lin\-Sys\-Summary}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ get\-Lin\-Sys\-Summary (
 \begin{DoxyParamCaption}
@@ -95,7 +95,7 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{const {\bf Info} $\ast$}]{info}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_a808516dfaa30877d07d04739ce29eef2}
-\hypertarget{lin_sys_8h_a4a17d19de53c10fc677dd7c5bf8ac8d9}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!init\-Priv@{init\-Priv}}
+returns string containing summary information about linear system solves, can return null, if not null free will be called on output \hypertarget{lin_sys_8h_a4a17d19de53c10fc677dd7c5bf8ac8d9}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!init\-Priv@{init\-Priv}}
 \index{init\-Priv@{init\-Priv}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{init\-Priv}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Priv}$\ast$ init\-Priv (
 \begin{DoxyParamCaption}
@@ -103,7 +103,7 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{const {\bf Settings} $\ast$}]{stgs}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_a4a17d19de53c10fc677dd7c5bf8ac8d9}
-\hypertarget{lin_sys_8h_aaba8b6405653717a3c634b6807bab9d4}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!normalize\-A@{normalize\-A}}
+initialize Priv structure and perform any necessary preprocessing \hypertarget{lin_sys_8h_aaba8b6405653717a3c634b6807bab9d4}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!normalize\-A@{normalize\-A}}
 \index{normalize\-A@{normalize\-A}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{normalize\-A}]{\setlength{\rightskip}{0pt plus 5cm}void normalize\-A (
 \begin{DoxyParamCaption}
@@ -113,7 +113,7 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{{\bf Scaling} $\ast$}]{scal}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_aaba8b6405653717a3c634b6807bab9d4}
-\hypertarget{lin_sys_8h_aa97c8049f89347baeba6f207a9ae6d4b}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!solve\-Lin\-Sys@{solve\-Lin\-Sys}}
+normalizes A matrix, sets {\ttfamily w-\/$>$E} and {\ttfamily w-\/$>$D} diagonal scaling matrices, {\ttfamily Anew = d-\/$>$S\-C\-A\-L\-E $\ast$ (D$^\wedge$-\/1)$\ast$\-A$\ast$(E$^\wedge$-\/1)} (different to paper which is {\ttfamily D$\ast$\-A$\ast$\-E}) D and E must be all positive entries, D must satisfy cone boundaries must set ({\ttfamily w-\/$>$mean\-Norm\-Row\-A} = mean of norms of rows of normalized A) T\-H\-E\-N scale resulting {\ttfamily A} by {\ttfamily d-\/$>$S\-C\-A\-L\-E}. \hypertarget{lin_sys_8h_aa97c8049f89347baeba6f207a9ae6d4b}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!solve\-Lin\-Sys@{solve\-Lin\-Sys}}
 \index{solve\-Lin\-Sys@{solve\-Lin\-Sys}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{solve\-Lin\-Sys}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} solve\-Lin\-Sys (
 \begin{DoxyParamCaption}
@@ -125,7 +125,7 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{{\bf scs\-\_\-int}}]{iter}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_aa97c8049f89347baeba6f207a9ae6d4b}
-\hypertarget{lin_sys_8h_adb35cd0196da9710f0d8b18b749e30df}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!un\-Normalize\-A@{un\-Normalize\-A}}
+solves \mbox{[}d-\/$>$R\-H\-O\-\_\-\-X $\ast$ I A' ; A -\/\-I\mbox{]} x = b for x, stores result in b, s contains warm-\/start, iter is current scs iteration count \hypertarget{lin_sys_8h_adb35cd0196da9710f0d8b18b749e30df}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!un\-Normalize\-A@{un\-Normalize\-A}}
 \index{un\-Normalize\-A@{un\-Normalize\-A}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{un\-Normalize\-A}]{\setlength{\rightskip}{0pt plus 5cm}void un\-Normalize\-A (
 \begin{DoxyParamCaption}
@@ -134,10 +134,11 @@ void \hyperlink{lin_sys_8h_a79e4d64a1c53379d6b6ae529b9fb863a}{free\-A\-Matrix} (
 \item[{const {\bf Scaling} $\ast$}]{scal}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_adb35cd0196da9710f0d8b18b749e30df}
-\hypertarget{lin_sys_8h_a186e2f63c4ede61e16dd37a6aa452bf3}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!validate\-Lin\-Sys@{validate\-Lin\-Sys}}
+unnormalizes {\ttfamily A} matrix, unnormalizes by {\ttfamily w-\/$>$D} and {\ttfamily w-\/$>$E} and {\ttfamily d-\/$>$S\-C\-A\-L\-E}. \hypertarget{lin_sys_8h_a186e2f63c4ede61e16dd37a6aa452bf3}{\index{lin\-Sys.\-h@{lin\-Sys.\-h}!validate\-Lin\-Sys@{validate\-Lin\-Sys}}
 \index{validate\-Lin\-Sys@{validate\-Lin\-Sys}!linSys.h@{lin\-Sys.\-h}}
 \subsubsection[{validate\-Lin\-Sys}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} validate\-Lin\-Sys (
 \begin{DoxyParamCaption}
 \item[{const {\bf A\-Matrix} $\ast$}]{A}
 \end{DoxyParamCaption}
 )}}\label{lin_sys_8h_a186e2f63c4ede61e16dd37a6aa452bf3}
+returns negative num if input data is invalid 

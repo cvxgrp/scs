@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['scs',['SCS',['../md__r_e_a_d_m_e.html',1,'']]],
   ['s',['s',['../struct_s_c_s___c_o_n_e.html#a8400cfd0fc6f3ccdb89b6ddcc74d2732',1,'SCS_CONE::s()'],['../struct_s_c_s___s_o_l___v_a_r_s.html#aa3c4c55b3bab23bd2f31398e85ab2ff8',1,'SCS_SOL_VARS::s()'],['../struct_s_c_s___s_u___m_e_m_o_r_y.html#aac89225fdd99a98b9e209a434a7fd037',1,'SCS_SU_MEMORY::S()']]],
   ['sc_5fb',['sc_b',['../struct_s_c_s___w_o_r_k.html#a00e156d74af3a51c8225907fed29a4a3',1,'SCS_WORK']]],
   ['sc_5fc',['sc_c',['../struct_s_c_s___w_o_r_k.html#ab5bc1756422f09fb8e51a6c8e93adf4c',1,'SCS_WORK']]],

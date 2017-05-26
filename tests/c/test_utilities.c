@@ -1,16 +1,4 @@
-/* 
- * File:   unitTests.c
- * Author: Pantelis Sopasakis
- *
- * Created on April 1, 2017, 2:10 AM
- */
-
-#include "unitTests.h"
-#include "directions.h"
-
-bool testOK(char** str) {
-    SUCCEED
-}
+#include "test_utilities.h"
 
 bool testProjLinSysv2(char** str) {
 
@@ -114,24 +102,5 @@ bool testScaleArray(char** str) {
         FAIL_WITH_MESSAGE(str, "scaleArray failed");
     }
     SUCCEED /* if it reaches this point, it has succeeded */
-}
-
-bool testYUCache(char** str) {
-    
-    SUCCEED
-}
-
-int main(int argc, char** argv) {
-    int r = TEST_SUCCESS;
-    /* Test functions: */
-    r += test(&testOK, "Dummy passing test");
-    r += test(&testYUCache, "testYSCache");
-    r += test(&testScaleArray, "Scale array");
-    r += test(&testProjLinSysv2, "projLinSysv2");
-    if (r == TEST_SUCCESS) {
-        return (EXIT_SUCCESS);
-    } else {
-        return (EXIT_FAILURE);
-    }
 }
 

@@ -132,7 +132,7 @@ void \hyperlink{cones_8c_a46f54f027bbcd4be473b39fff70f5cb9}{proj\-Power\-Cone} (
 \item[{{\bf scs\-\_\-int} $\ast$$\ast$}]{boundaries}
 \end{DoxyParamCaption}
 )}}\label{cones_8c_a50d9cf53bcd7d38cb49cd864c40cfc20}
-\hypertarget{cones_8c_ae6ed7d7636c5c88e06ca0e27dc74269e}{\index{cones.\-c@{cones.\-c}!get\-Cone\-Header@{get\-Cone\-Header}}
+boundaries will contain array of indices of rows of A corresponding to cone boundaries, boundaries\mbox{[}0\mbox{]} is starting index for cones of size larger than 1 returns length of boundaries array, boundaries malloc-\/ed here so should be freed \hypertarget{cones_8c_ae6ed7d7636c5c88e06ca0e27dc74269e}{\index{cones.\-c@{cones.\-c}!get\-Cone\-Header@{get\-Cone\-Header}}
 \index{get\-Cone\-Header@{get\-Cone\-Header}!cones.c@{cones.\-c}}
 \subsubsection[{get\-Cone\-Header}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ get\-Cone\-Header (
 \begin{DoxyParamCaption}
@@ -222,7 +222,7 @@ void \hyperlink{cones_8c_a46f54f027bbcd4be473b39fff70f5cb9}{proj\-Power\-Cone} (
 \item[{{\bf scs\-\_\-int}}]{iter}
 \end{DoxyParamCaption}
 )}}\label{cones_8c_a666f769b125b7c0954b379a5038ad83c}
-\hypertarget{cones_8c_a62448e6adf2b582438012c0bc7735eb1}{\index{cones.\-c@{cones.\-c}!project2\-By2\-Sdc@{project2\-By2\-Sdc}}
+pass in iter to control how accurate the cone projection with iteration, set iter $<$ 0 for exact projection, warm\-\_\-start contains guess of solution, can be S\-C\-S\-\_\-\-N\-U\-L\-L \hypertarget{cones_8c_a62448e6adf2b582438012c0bc7735eb1}{\index{cones.\-c@{cones.\-c}!project2\-By2\-Sdc@{project2\-By2\-Sdc}}
 \index{project2\-By2\-Sdc@{project2\-By2\-Sdc}!cones.c@{cones.\-c}}
 \subsubsection[{project2\-By2\-Sdc}]{\setlength{\rightskip}{0pt plus 5cm}{\bf scs\-\_\-int} project2\-By2\-Sdc (
 \begin{DoxyParamCaption}

@@ -36,13 +36,17 @@ extern "C" {
      * iteration (current FPR, values of S and Y). Work must provide the following 
      * information
      * 
-     *   - work->stgs->thetabar
-     *   - work->su_cache
-     *   - work->Yk
-     *   - work->Sk
-     *   - work->R
-     *   - work->stepsize
-     *   - work->l
+     *   - <code>work->stgs->thetabar</code>
+     *   - <code>work->su_cache</code> with
+     *      - <code>work->su_cache->S</code> 
+     *      - <code>work->su_cache->U</code> 
+     *      - <code>work->su_cache->current_mem</code> 
+     *      - <code>work->su_cache->mem</code> (nonzero memory)
+     *   - <code>work->Yk</code>
+     *   - <code>work->Sk</code>
+     *   - <code>work->R</code>
+     *   - <code>work->stepsize</code>
+     *   - <code>work->l</code>
      * 
      * @return status code of the method.
      */

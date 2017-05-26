@@ -1,7 +1,6 @@
 var searchData=
 [
   ['r',['R',['../struct_s_c_s___w_o_r_k.html#a599d46f1e9537cbf96bc6f1cf671ffc7',1,'SCS_WORK']]],
-  ['readme_2emd',['README.md',['../_r_e_a_d_m_e_8md.html',1,'']]],
   ['relgap',['relGap',['../struct_s_c_s___i_n_f_o.html#a8956058c7a50430e03efd62b2dfbce72',1,'SCS_INFO::relGap()'],['../structresiduals.html#a879faec02daa66295002b336a526c34f',1,'residuals::relGap()']]],
   ['resdual',['resDual',['../struct_s_c_s___i_n_f_o.html#a6191ab7805b585f711a7ef5b0498d4df',1,'SCS_INFO::resDual()'],['../structresiduals.html#a27e0e9585f4b503ef6b19abff38d1537',1,'residuals::resDual()']]],
   ['resetsucache',['resetSUCache',['../directions_8c.html#abc1704f4eae763ec8fcb16b4032abb2f',1,'resetSUCache(SUCache *cache):&#160;directions.c'],['../directions_8h.html#abc1704f4eae763ec8fcb16b4032abb2f',1,'resetSUCache(SUCache *cache):&#160;directions.c']]],
