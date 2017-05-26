@@ -16,6 +16,7 @@
 
 #include "test_dummy.h"
 #include "test_utilities.h"
+#include "test_broyden.h"
 
 #ifdef __cplusplus
 extern "C" {

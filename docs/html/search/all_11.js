@@ -70,5 +70,6 @@ var searchData=
   ['su_5fcache_5ffull',['SU_CACHE_FULL',['../directions_8h.html#a8d19c42b8c7c93261e47e18a517d1c22',1,'directions.h']]],
   ['su_5fcache_5fincrement',['SU_CACHE_INCREMENT',['../directions_8h.html#a9ef806f1a64860c65968b02f0115703b',1,'directions.h']]],
   ['su_5fcache_5freset',['SU_CACHE_RESET',['../directions_8h.html#aaaefc3a36f18d4a13fe8745387336eba',1,'directions.h']]],
-  ['sucache',['SUCache',['../scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d',1,'scs.h']]]
+  ['sucache',['SUCache',['../scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d',1,'scs.h']]],
+  ['succeed',['SUCCEED',['../unit__test__util_8h.html#a753e9e46e51063c920e4a87668595062',1,'unit_test_util.h']]]
 ];

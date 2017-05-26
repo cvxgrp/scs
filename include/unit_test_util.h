@@ -21,8 +21,8 @@ extern "C" {
 
 #ifndef _STDBOOL_H
     typedef int bool;
-    #define true 1
-    #define false 0
+#define true 1
+#define false 0
 #endif
 
 #define TEST_SUCCESS 0 /**< test is successful */
@@ -33,13 +33,36 @@ extern "C" {
 
     /**
      * Fails with a given message.
-     * FAIL_WITH_MESSAGE(str, message)
      */
 #define FAIL_WITH_MESSAGE(str, message)\
-        *str = (char*)message;\
+        *str = (char*)(message);\
         return TEST_FAILURE;
 
-#define SUCCEED\
+    
+#define ASSERT_TRUE_OR_FAIL(p, str, message)\
+    if (!(p)) { \
+        FAIL_WITH_MESSAGE((str), (message));\
+    };
+    
+    /**
+     * Check whether two integers are equal, or fail with a given message.
+     */
+#define ASSERT_EQAUL_INT_OR_FAIL(a, b, str, message)\
+        if (!assertEqualsInt((a),(b))) { \
+          printf("\tExpected: %d, Actual %d\n", b, a); \
+          FAIL_WITH_MESSAGE((str), (message)); \
+        };
+
+    /**
+     * Check whether two integers are equal, or fail with a given message.
+     */
+#define ASSERT_EQAUL_FLOAT_OR_FAIL(a, b, tol, str, message)\
+        if (!assertEqualsFloat((a), (b), (tol))) { FAIL_WITH_MESSAGE((str), (message)); };
+
+    /**
+     * Succeed
+     */
+#define SUCCEED(str)\
         *str = (char*) MESSAGE_OK;\
         return TEST_SUCCESS;
 
@@ -53,25 +76,8 @@ extern "C" {
      * or TEST_FAILURE).
      */
     typedef bool (*unitTest_t)(char**);
+    
 
-    /**
-     * Dummy successful test.
-     * This serves only as an example.
-     * @param msg message ("OK")
-     * @return returns #TEST_SUCCESS.
-     */
-    bool testOK(char** msg);
-    
-    /**
-     * This method tests `scaleArray`
-     * @param msg
-     * @return 
-     */
-    bool testScaleArray(char** msg);
-
-    
-    /* ------------- DEFAULT DECLARATIONS ---------------- */
-    
     /**
      * Tester function.
      * @param ut Unit Test function handle
@@ -111,7 +117,7 @@ extern "C" {
             const scs_float * a,
             const scs_float * b,
             scs_int n,
-            const scs_float tol);   
+            const scs_float tol);
 
 
 #ifdef __cplusplus

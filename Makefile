@@ -119,11 +119,13 @@ clean:
 purge: clean 
 	@rm -rf $(OUT)
 	
-test:	
+test:	$(OUT)/libscsdir.a
 	@echo "Compiling individual tests..."
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_dummy.c -o $(TEST_SRC_DIR)/test_dummy.o
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_utilities.c -o $(TEST_SRC_DIR)/test_utilities.o
-	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/test_runner.c -o out/$(TEST_RUNNER) $(TEST_SRC_DIR)/test_dummy.o $(TEST_SRC_DIR)/test_utilities.o $(OUT)/libscsdir.a $(LDFLAGS)
+	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_broyden.c -o $(TEST_SRC_DIR)/test_broyden.o
+	@echo "Building test runner..."
+	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/test_runner.c -o out/$(TEST_RUNNER) $(TEST_SRC_DIR)/test_dummy.o $(TEST_SRC_DIR)/test_broyden.o $(TEST_SRC_DIR)/test_utilities.o $(OUT)/libscsdir.a $(LDFLAGS)
 
 run-test:
 	out/UNIT_TEST_RUNNER

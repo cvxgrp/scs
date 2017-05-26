@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['priv',['Priv',['../lin_sys_8h.html#a86729d179a2466b10983c1f4bd700058',1,'linSys.h']]]
+  ['info',['Info',['../glbopts_8h.html#a0d98fee0ffa9f2986ddf6c19a9a7daa0',1,'glbopts.h']]]
 ];

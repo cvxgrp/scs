@@ -53,10 +53,17 @@
     </logicalFolder>
     <df root="src" name="2">
       <in>directions.c</in>
+      <in>unit_test_util.c</in>
     </df>
     <df root="tests" name="3">
       <df name="c">
-        <in>unitTests.c</in>
+        <in>test_broyden.c</in>
+        <in>test_broyden.h</in>
+        <in>test_dummy.c</in>
+        <in>test_runner.c</in>
+        <in>test_runner.h</in>
+        <in>test_utilities.c</in>
+        <in>test_utilities.h</in>
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -90,9 +97,9 @@
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <buildCommand>${MAKE} -f Makefile default test</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>out/unitTests</executablePath>
+          <executablePath>out/UNIT_TEST_RUNNER</executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>
@@ -235,13 +242,27 @@
         <cTool flags="0">
         </cTool>
       </item>
+      <item path="src/unit_test_util.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
       <item path="src/util.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
       </item>
-      <item path="tests/c/unitTests.c" ex="false" tool="0" flavor2="0">
-        <cTool flags="0">
-        </cTool>
+      <item path="tests/c/test_broyden.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/c/test_broyden.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/c/test_dummy.c" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="tests/c/test_runner.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/c/test_runner.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/c/test_utilities.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/c/test_utilities.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

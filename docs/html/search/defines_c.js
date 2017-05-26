@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['return',['RETURN',['../glbopts_8h.html#a6a0e6b80dd3d5ca395cf58151749f5e2',1,'glbopts.h']]],
-  ['rho_5fx',['RHO_X',['../constants_8h.html#ad723143cb262cd9996cb8c4e9894ec66',1,'constants.h']]]
+  ['pow_5fcone_5fmax_5fiters',['POW_CONE_MAX_ITERS',['../cones_8c.html#a245d867d239f588186f2f810804c34b4',1,'cones.c']]],
+  ['powf',['POWF',['../glbopts_8h.html#a5eb338b58f3b23067d6a87b00eca4971',1,'glbopts.h']]],
+  ['print_5finterval',['PRINT_INTERVAL',['../scs_8c.html#a515cb544d69e291ad8d0cf6813c23f93',1,'scs.c']]]
 ];

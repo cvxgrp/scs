@@ -31,7 +31,7 @@ static scs_int scs_isnan(scs_float x) {
     RETURN(x == NAN || x != x);
 }
 
-static SUCache * initYSCache(scs_int memory, scs_int l) {
+static SUCache * initSUCache(scs_int memory, scs_int l) {
     SUCache * cache = scs_calloc(1, sizeof (SUCache));
     if (!cache) {
         scs_printf("ERROR: allocating YSCache failure\n");
@@ -879,7 +879,7 @@ static Work *initWork(const Data *d, const Cone *k) {
 
     /* make cache */
     if (w->stgs->memory > 0) {
-        w->su_cache = initYSCache(w->stgs->memory, l);
+        w->su_cache = initSUCache(w->stgs->memory, l);
     } else {
         w->su_cache = SCS_NULL;
     }

@@ -37,14 +37,15 @@ extern "C" {
      * information
      * 
      *   - <code>work->stgs->thetabar</code>
-     *   - <code>work->su_cache</code> with
-     *      - <code>work->su_cache->S</code> 
-     *      - <code>work->su_cache->U</code> 
+     *   - <code>work->su_cache</code> allocated with
+     *      - <code>work->su_cache->S</code> allocated 
+     *      - <code>work->su_cache->U</code> allocated 
      *      - <code>work->su_cache->current_mem</code> 
      *      - <code>work->su_cache->mem</code> (nonzero memory)
-     *   - <code>work->Yk</code>
-     *   - <code>work->Sk</code>
-     *   - <code>work->R</code>
+     *   - <code>work->Yk</code> allocated and value provided
+     *   - <code>work->Sk</code> allocated and value provided 
+     *   - <code>work->R</code> allocated and value provided 
+     *   - <code>work->dir</code> allocated 
      *   - <code>work->stepsize</code>
      *   - <code>work->l</code>
      * 

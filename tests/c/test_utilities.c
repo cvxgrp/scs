@@ -73,7 +73,7 @@ bool testProjLinSysv2(char** str) {
         FAIL_WITH_MESSAGE(str, "testProjLinSysv2 failed");
     }
 
-    SUCCEED
+    SUCCEED(str)
 }
 
 bool testScaleArray(char** str) {
@@ -101,6 +101,6 @@ bool testScaleArray(char** str) {
     if (!test_pass) {
         FAIL_WITH_MESSAGE(str, "scaleArray failed");
     }
-    SUCCEED /* if it reaches this point, it has succeeded */
+    SUCCEED(str) /* if it reaches this point, it has succeeded */
 }
 

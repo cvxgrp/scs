@@ -8,7 +8,7 @@
 #ifndef TEST_UTILITIES_H
 #define TEST_UTILITIES_H
 
-#include "../../include/unit_test_util.h"
+#include "unit_test_util.h"
 
 #ifdef __cplusplus
 extern "C" {

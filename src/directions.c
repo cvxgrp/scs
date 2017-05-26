@@ -63,7 +63,7 @@ scs_int computeLSBroyden(Work *work) {
         work->dir[i] += ip * u_new[i];
     }
 
-    if (cache->mem_current == cache->mem) {
+    if (cache->mem_current >= cache->mem) {
         return resetSUCache(cache);
     }
 
