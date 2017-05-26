@@ -119,7 +119,7 @@ clean:
 purge: clean 
 	@rm -rf $(OUT)
 	
-test:	$(OUT)/libscsdir.a
+test:	default 
 	@echo "Compiling individual tests..."
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_dummy.c -o $(TEST_SRC_DIR)/test_dummy.o
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_utilities.c -o $(TEST_SRC_DIR)/test_utilities.o

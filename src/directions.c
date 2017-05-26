@@ -26,6 +26,7 @@ scs_int computeLSBroyden(Work *work) {
 
     /* s_tilde_current = y [work->Yk] */
     /* use the end of the cache to store s_tilde_current */
+    /* later we use the same position of the S-buffer to store the current Sk */
     s_tilde_current = cache->S + (cache->mem_current * l);
     memcpy(s_tilde_current, work->Yk, l * sizeof (scs_float));
 
@@ -39,9 +40,8 @@ scs_int computeLSBroyden(Work *work) {
         addScaledArray(work->dir, u_i, ip, l); /* update direction */
     }
 
-    /* compute theta */
-    gamma = -work->stepsize;
-    gamma *= innerProd(work->R, work->Sk, l);
+    /* compute theta = */
+    gamma = innerProd(s_tilde_current, work->Sk, l);
     gamma /= calcNormSq(work->Sk, l);
     if (scs_abs(gamma) >= theta_bar) {
         theta = 1;
@@ -49,19 +49,27 @@ scs_int computeLSBroyden(Work *work) {
         theta = (1 - scs_sgn(gamma) * theta_bar) / (1 - gamma);
     }
 
-    /* compute new u */
+
+    /* FINALISE */
+
+    /* s_tilde_current = (1-theta)*s + theta*s_tilde_current */
+    for (i = 0; i < l; ++i) {
+        s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
+    }
+    /* update u_new */
     u_new = cache->U + (cache->mem_current * l);
     ip = innerProd(work->Sk, s_tilde_current, l);
     for (i = 0; i < l; ++i) {
         u_new[i] = (work->Sk[i] - s_tilde_current[i]) / ip;
     }
-
-    /* finalise */
+    /* update direction */
     ip = innerProd(work->Sk, work->dir, l); /* s'd */
     for (i = 0; i < l; ++i) {
-        s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
         work->dir[i] += ip * u_new[i];
     }
+
+    /* push s into the buffer */
+    memcpy(s_tilde_current, work->Sk, l);
 
     if (cache->mem_current >= cache->mem) {
         return resetSUCache(cache);
