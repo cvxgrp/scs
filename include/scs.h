@@ -100,19 +100,41 @@ extern "C" {
      * scs_solve: can be called many times with different b,c data for one init call
      * scs_finish: cleans up the memory (one per init call)
      */
-    Work *scs_init(const Data *d, const Cone *k, Info *info);
+    Work *scs_init(
+            const Data *d, 
+            const Cone *k, 
+            Info *info);
     
-    scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info);
+    scs_int scs_solve(
+            Work *w, 
+            const Data *d, 
+            const Cone *k, 
+            Sol *sol, 
+            Info *info);
     
     void scs_finish(Work *w);
     
-    /** scs calls scs_init, scs_solve, and scs_finish */
-    scs_int scs(const Data *d, const Cone *k, Sol *sol, Info *info);
+    /** 
+     * scs calls \c scs_init, \c scs_solve, and \c scs_finish 
+     */
+    scs_int scs(
+            const Data *d, 
+            const Cone *k, 
+            Sol *sol, 
+            Info *info);
     
+    /**
+     * Returns the version of SCS
+     * @return 
+     */
     const char *scs_version(void);
 
     /* the following structs are not exposed to user */
 
+    /**
+     * A cache of \f$(s_i, u_i)\f$ where \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$.
+     * We do not need to store past values of \f$\tilde{s}_i\f$.
+     */
     struct SCS_SU_MEMORY {
         scs_float *S; /**< cached values of \f$s_i\f$ (s-memory) */
         scs_float *U; /**< cached values of \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$ (u-memory)*/
@@ -125,7 +147,9 @@ extern "C" {
      */
     typedef struct SCS_SU_MEMORY SUCache;
 
-    /* workspace for SCS */
+    /**
+     *  Workspace for SCS 
+     */
     struct SCS_WORK {
         scs_int m; /**< row dimension of \f$A\f$ */
         scs_int n; /**< column dimension of \f$A\f$ */
@@ -189,7 +213,9 @@ extern "C" {
         SUCache *su_cache;
     };
 
-    /* to hold residual information (unnormalized) */
+    /**
+     *  Structure to hold residual information (unnormalized) 
+     */
     struct residuals {
         scs_int lastIter;
         scs_float resDual;

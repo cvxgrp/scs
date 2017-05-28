@@ -13,7 +13,6 @@ int main(int argc, char** argv) {
     r += test(&test_dummy_method, "Dummy passing test");
     r += test(&testProjLinSysv2, "Test projLinSysv2");
     r += test(&testScaleArray, "Test scaleArray");
-    
     r += test(&test_cache_increments, "Test Broyden cache");
     r += test(&test_broyden_direction_empty_memory, "Test Broyden direction");
     

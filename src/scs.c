@@ -39,8 +39,9 @@ static SUCache * initSUCache(scs_int memory, scs_int l) {
     }
     
     /* we allocate one extra memory position because it's needed */
-    cache->S = scs_malloc((1+memory) * l * sizeof (scs_float)); /* S: l-by-mem */
-    cache->U = scs_malloc((1+memory) * l * sizeof (scs_float)); /* U: l-by-mem */
+    cache->S = scs_calloc((1+memory) * l, sizeof (scs_float)); /* S: l-by-mem */
+    cache->U = scs_calloc((1+memory) * l, sizeof (scs_float)); /* U: l-by-mem */
+
 
     /* the cache must know its memory length */
     cache->mem = memory;

@@ -10,10 +10,10 @@ static void randomize_values(scs_float* x, scs_int l) {
 static void prepare_work(Work * work, scs_int l_size, scs_int memory) {
     work->l = l_size;
     work->stgs = scs_calloc(1, sizeof (Settings));
-    work->stgs->thetabar = 0.8;
+    work->stgs->thetabar = 0.2;
     work->su_cache = scs_calloc(1, sizeof (SUCache));
-    work->su_cache->S = scs_malloc((1 + memory) * l_size * sizeof (scs_float));
-    work->su_cache->U = scs_malloc((1 + memory) * l_size * sizeof (scs_float));
+    work->su_cache->S = scs_calloc((1 + memory) * l_size, sizeof (scs_float));
+    work->su_cache->U = scs_calloc((1 + memory) * l_size, sizeof (scs_float));
     work->su_cache->mem = memory;
     work->su_cache->mem_current = 0;
     work->Sk = scs_malloc(l_size * sizeof (scs_float));
@@ -26,8 +26,6 @@ static void prepare_work(Work * work, scs_int l_size, scs_int memory) {
     randomize_values(work->Yk, l_size);
     randomize_values(work->dir, l_size);
     randomize_values(work->R, l_size);
-    randomize_values(work->su_cache->S, l_size * (1 + memory));
-    randomize_values(work->su_cache->U, l_size * (1 + memory));
 }
 
 static void destroy_work(Work * work) {
@@ -90,7 +88,8 @@ bool test_broyden_direction_empty_memory(char** str) {
 
     prepare_work(work, l, mem);
 
-    work->stgs->thetabar = 1.0;
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem, mem, str, "memory not set correctly");
+    work->stgs->thetabar = 0.4;
 
     /* Yk = [1.5; 3.2; -1.8; 0.7]; */
     work->Yk[0] = 1.5;
@@ -103,7 +102,7 @@ bool test_broyden_direction_empty_memory(char** str) {
     work->Sk[1] = 4.1;
     work->Sk[2] = -3.0;
     work->Sk[3] = 6.2;
-    
+
     /* R = [3.3; 5.1, 0.7, -5.2];*/
     work->R[0] = 3.3;
     work->R[1] = 5.1;
@@ -111,10 +110,18 @@ bool test_broyden_direction_empty_memory(char** str) {
     work->R[3] = -5.2;
 
     work->stepsize = 0.9;
-    
+
+
+
     method_status = computeLSBroyden(work);
     ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "memory not incremented");
-    
+
+    scs_float u_expected[4] = {-0.0366837857666911, 0.0330154071900220, -0.0440205429200293, 0.2017608217168012};
+    scs_float d_expected[4] = {-3.73213499633162, -4.71107850330154, -1.21856199559795, 7.57674247982392};
+    ASSERT_EQUAL_ARRAY_OR_FAIL(work->su_cache->U, u_expected, l, 1e-10, str, "u not correct");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(work->dir, d_expected, l, 1e-10, str, "direction not correct");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(work->su_cache->S, work->Sk, l, 1e-10, str, "sk not added to the cache");
+
 
     destroy_work(work);
 

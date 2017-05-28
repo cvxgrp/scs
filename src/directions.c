@@ -7,8 +7,7 @@ scs_int resetSUCache(SUCache * cache) {
 
 scs_int computeLSBroyden(Work *work) {
     /* --- DECLARATIONS --- */
-    SUCache * cache = work->su_cache; /* the SU cache */
-    scs_int status; /* status (reset/augmented) */
+    SUCache * cache = work->su_cache; /* the SU cache (pointer) */
     scs_int i; /* index */
     scs_float * s_tilde_current; /* s_tilde (which is updated) */
     scs_float * u_new; /* new value of u */
@@ -40,9 +39,10 @@ scs_int computeLSBroyden(Work *work) {
         addScaledArray(work->dir, u_i, ip, l); /* update direction */
     }
 
-    /* compute theta = */
+    /* compute theta */
     gamma = innerProd(s_tilde_current, work->Sk, l);
     gamma /= calcNormSq(work->Sk, l);
+
     if (scs_abs(gamma) >= theta_bar) {
         theta = 1;
     } else {
@@ -56,7 +56,7 @@ scs_int computeLSBroyden(Work *work) {
     for (i = 0; i < l; ++i) {
         s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
     }
-    /* update u_new */
+    /* update u_new (at the end of the buffer) */
     u_new = cache->U + (cache->mem_current * l);
     ip = innerProd(work->Sk, s_tilde_current, l);
     for (i = 0; i < l; ++i) {
@@ -69,13 +69,12 @@ scs_int computeLSBroyden(Work *work) {
     }
 
     /* push s into the buffer */
-    memcpy(s_tilde_current, work->Sk, l);
+    memcpy(work->su_cache->S + (cache->mem_current * l), work->Sk, l*sizeof(scs_float));
 
     if (cache->mem_current >= cache->mem) {
-        return resetSUCache(cache);
+        return resetSUCache(cache); /* returns SU_CACHE_RESET */
     }
 
     cache->mem_current++;
-    status = SU_CACHE_INCREMENT;
-    return status;
+    return SU_CACHE_INCREMENT;
 }

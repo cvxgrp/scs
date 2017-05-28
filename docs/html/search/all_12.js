@@ -6,8 +6,6 @@ var searchData=
   ['test_5ffailure',['TEST_FAILURE',['../unit__test__util_8h.html#a9170c32e7599282baefbe7a5ad27cf8d',1,'unit_test_util.h']]],
   ['test_5fpass_5fflag',['TEST_PASS_FLAG',['../unit__test__util_8h.html#a913f2027b896460a4f04e48d714675b0',1,'unit_test_util.h']]],
   ['test_5fsuccess',['TEST_SUCCESS',['../unit__test__util_8h.html#aee1dc5ecf95c68bc90ba502679668096',1,'unit_test_util.h']]],
-  ['testok',['testOK',['../unit__test__util_8h.html#a98fd46dcd3a451554c8b96f033d8248d',1,'unit_test_util.h']]],
-  ['testscalearray',['testScaleArray',['../unit__test__util_8h.html#a2c251c0178c1457c9be70800233e8c9d',1,'unit_test_util.h']]],
   ['thetabar',['thetabar',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a2ce39340133d9b8efac35b67432e1141',1,'SCS_SETTINGS::thetabar()'],['../constants_8h.html#a8216f11f7b950985cb2f7665a12195c5',1,'THETABAR():&#160;constants.h']]],
   ['tic',['tic',['../structtimer.html#a3b3bc24666d652e8b08827bf9f1bb5fe',1,'timer::tic()'],['../util_8c.html#a9f503d29b96333dfc0c9744d922b9c6c',1,'tic(timer *t):&#160;util.c'],['../util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c',1,'tic(timer *t):&#160;util.c']]],
   ['timer',['timer',['../structtimer.html',1,'timer'],['../util_8h.html#a30c945d813befeeeffa501ae4a589f03',1,'timer():&#160;util.h']]],
