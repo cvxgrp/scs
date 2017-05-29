@@ -67,7 +67,6 @@ var searchData=
   ['stgs',['stgs',['../struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a14bfc0a349fe9be30059e55c4ba0066f',1,'SCS_PROBLEM_DATA::stgs()'],['../struct_s_c_s___w_o_r_k.html#a4f48ab97dacf5c54b250752d2213c83c',1,'SCS_WORK::stgs()']]],
   ['strtoc',['strtoc',['../util_8c.html#ace2dfd43ca6dcafe55c6897e085130b8',1,'strtoc(char *str, timer *t):&#160;util.c'],['../util_8h.html#ace2dfd43ca6dcafe55c6897e085130b8',1,'strtoc(char *str, timer *t):&#160;util.c']]],
   ['su_5fcache',['su_cache',['../struct_s_c_s___w_o_r_k.html#a868a7451f64464b0f2c6c053073998ed',1,'SCS_WORK']]],
-  ['su_5fcache_5ffull',['SU_CACHE_FULL',['../directions_8h.html#a8d19c42b8c7c93261e47e18a517d1c22',1,'directions.h']]],
   ['su_5fcache_5fincrement',['SU_CACHE_INCREMENT',['../directions_8h.html#a9ef806f1a64860c65968b02f0115703b',1,'directions.h']]],
   ['su_5fcache_5freset',['SU_CACHE_RESET',['../directions_8h.html#aaaefc3a36f18d4a13fe8745387336eba',1,'directions.h']]],
   ['sucache',['SUCache',['../scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d',1,'scs.h']]],

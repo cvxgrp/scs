@@ -2,7 +2,7 @@
 
 scs_int resetSUCache(SUCache * cache) {
     cache->mem_cursor = 0; /* set active memory to 0 */
-    return SU_CACHE_RESET;
+    RETURN SU_CACHE_RESET;
 }
 
 scs_int computeLSBroyden(Work *work) {
@@ -48,15 +48,15 @@ scs_int computeLSBroyden(Work *work) {
         theta = 1;
     } else {
         theta = (1 - scs_sgn(gamma) * theta_bar) / (1 - gamma);
+        /* s_tilde_current = (1-theta)*s + theta*s_tilde_current */
+        for (i = 0; i < l; ++i) {
+            s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
+        }
     }
 
 
     /* FINALISE */
 
-    /* s_tilde_current = (1-theta)*s + theta*s_tilde_current */
-    for (i = 0; i < l; ++i) {
-        s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
-    }
     /* update u_new (at the end of the buffer) */
     u_new = cache->U + (cache->mem_cursor * l);
     ip = innerProd(work->Sk, s_tilde_current, l);
@@ -72,11 +72,12 @@ scs_int computeLSBroyden(Work *work) {
     /* push s into the buffer */
     memcpy(s_tilde_current, work->Sk, l * sizeof (scs_float));
 
-    cache->mem_cursor++;
+    cache->mem_cursor++; /* move the cursor */
 
+    /* if the cursor has exceeded the last position, reset the cache */
     if (cache->mem_cursor >= cache->mem) {
-        return resetSUCache(cache); /* returns SU_CACHE_RESET */
+        RETURN resetSUCache(cache); /* returns SU_CACHE_RESET */
     }
 
-    return SU_CACHE_INCREMENT;
+    RETURN SU_CACHE_INCREMENT;
 }

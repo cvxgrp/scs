@@ -7,16 +7,12 @@ extern "C" {
 
 #include "scs.h"
 
-/** 
- * The cache is full-memory
- */    
-#define SU_CACHE_FULL 3
 /**
- * The cache has been incremented
+ * The cache has been incremented.
  */    
 #define SU_CACHE_INCREMENT 2
 /** 
- * The head of the cache has been reset to 0
+ * The sursor of the cache has been reset to \c 0.
  */
 #define SU_CACHE_RESET 1
     
@@ -24,8 +20,10 @@ extern "C" {
      * Resets the cache. This methods does not free the memory allocated by the 
      * cache, nor does it overwrite the previously cached data. It simply sets the 
      * parameters `mem_current` and `mem_idx` to 0.
-     * @param cache
-     * @return status code
+     * 
+     * @param cache the cache to be reset 
+     * 
+     * @return status code (returns #SU_CACHE_RESET)
      */
     scs_int resetSUCache(SUCache * cache);
 

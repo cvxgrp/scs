@@ -33,39 +33,30 @@ static void destroy_work(Work * work) {
         return;
     }
     if (work->stgs) {
-        free(work->stgs);
-        work->stgs = NULL;
+        scs_free(work->stgs);
     }
     if (work->Sk) {
-        free(work->Sk);
-        work->Sk = NULL;
+        scs_free(work->Sk);
     }
     if (work->Yk) {
-        free(work->Yk);
-        work->Yk = NULL;
+        scs_free(work->Yk);
     }
     if (work->R) {
-        free(work->R);
-        work->R = NULL;
+        scs_free(work->R);
     }
     if (work->dir) {
-        free(work->dir);
-        work->dir = NULL;
+        scs_free(work->dir);
     }
     if (work->su_cache) {
         if (work->su_cache->S) {
-            free(work->su_cache->S);
-            work->su_cache->S = NULL;
+            scs_free(work->su_cache->S);
         }
         if (work->su_cache->U) {
-            free(work->su_cache->U);
-            work->su_cache->U = NULL;
+            scs_free(work->su_cache->U);
         }
-        free(work->su_cache);
-        work->su_cache = NULL;
+        scs_free(work->su_cache);
     }
-    free(work);
-    work = NULL;
+    scs_free(work);
 }
 
 bool test_cache_increments(char** str) {
@@ -153,45 +144,48 @@ bool test_cache_s(char** str) {
     Work * work = scs_calloc(1, sizeof (Work));
     scs_int i;
     scs_int j;
+    scs_int cursor_before_reset;
     const scs_int l = 4;
-    const scs_int mem = 5;
+    const scs_int mem = 10;
+    const scs_int runs = 500;
     scs_int method_status;
+    scs_float * S_prev;
 
     prepare_work(work, l, mem);
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem, mem, str, "memory not set");
 
+    for (i = 0; i < runs; ++i) {
 
-    for (i = 0; i < 20; ++i) {
+        for (j = 0; j < l; ++j) {
+            work->Sk[j] = 0.1 * (j + 1) + 10.0 / i;
+            work->R[j] *= 0.3;
+            work->R[j] += 0.05 * j;
+            work->Yk[j] *= 0.2;
+            work->Yk[j] += 0.01 * j;
+        }
 
-        work->Sk[0] = 1.0 + 4.5 / i;
-        work->Sk[1] = 50.1 + 16.2 / i;
-        work->Sk[2] = 10.0 / i;
-        work->Sk[3] = 1.0 / i;
-
-
-        work->R[0] *= 0.01;
-        work->R[1] *= 0.01;
-        work->R[2] *= 0.01;
-        work->R[3] *= 0.01;
-
-        work->Yk[0] *= 0.1;
-        work->Yk[1] *= 0.1;
-        work->Yk[2] *= 0.1;
-        work->Yk[3] *= 0.1;
-
+        cursor_before_reset = work->su_cache->mem_cursor;
         method_status = computeLSBroyden(work);
-
 
         if ((i + 1) % (mem) == 0) {
             ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 0, str, "current mem not zero");
             ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_RESET, str, "not reset");
+            ASSERT_EQAUL_INT_OR_FAIL(cursor_before_reset, work->su_cache->mem - 1, str, "not reset when it should have");
         } else {
             ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "not reset");
             ASSERT_TRUE_OR_FAIL(work->su_cache->mem_cursor > 0, str, "memory cursor is at zero");
-            ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, (i + 1) % (mem), str, "cursor at wrong position")
+            ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, (i + 1) % (mem), str, "cursor at wrong position");
+            S_prev = work->su_cache->S + (work->su_cache->mem_cursor - 1) * l;
+            for (j = 0; j < j; ++j) {
+                ASSERT_EQAUL_FLOAT_OR_FAIL(S_prev[j], 0.1 * (j + 1) + 10.0 / (i - 1), 1e-9, str, "S_previous incorrect");
+            }
         }
-    }
 
-    destroy_work(work);
+
+
+    } /* end for loop */
+
+    if (work) destroy_work(work);
 
     SUCCEED(str);
 }

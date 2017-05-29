@@ -22,7 +22,6 @@ var searchData=
   ['sigma',['SIGMA',['../constants_8h.html#ab899f53048f1f06a224b5eb1fa369750',1,'constants.h']]],
   ['sqrtf',['SQRTF',['../glbopts_8h.html#a3b9d7d973bd11c5ad12d329c6ea8b308',1,'glbopts.h']]],
   ['startinterruptlistener',['startInterruptListener',['../ctrlc_8h.html#a1c8e1257fd1ea10595f53534a0fcb67a',1,'ctrlc.h']]],
-  ['su_5fcache_5ffull',['SU_CACHE_FULL',['../directions_8h.html#a8d19c42b8c7c93261e47e18a517d1c22',1,'directions.h']]],
   ['su_5fcache_5fincrement',['SU_CACHE_INCREMENT',['../directions_8h.html#a9ef806f1a64860c65968b02f0115703b',1,'directions.h']]],
   ['su_5fcache_5freset',['SU_CACHE_RESET',['../directions_8h.html#aaaefc3a36f18d4a13fe8745387336eba',1,'directions.h']]],
   ['succeed',['SUCCEED',['../unit__test__util_8h.html#a753e9e46e51063c920e4a87668595062',1,'unit_test_util.h']]]

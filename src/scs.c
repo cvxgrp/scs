@@ -37,10 +37,10 @@ static SUCache * initSUCache(scs_int memory, scs_int l) {
         scs_printf("ERROR: allocating YSCache failure\n");
         RETURN SCS_NULL;
     }
-    
+
     /* we allocate one extra memory position because it's needed */
-    cache->S = scs_calloc((1+memory) * l, sizeof (scs_float)); /* S: l-by-mem */
-    cache->U = scs_calloc((1+memory) * l, sizeof (scs_float)); /* U: l-by-mem */
+    cache->S = scs_calloc((1 + memory) * l, sizeof (scs_float)); /* S: l-by-mem */
+    cache->U = scs_calloc((1 + memory) * l, sizeof (scs_float)); /* U: l-by-mem */
 
 
     /* the cache must know its memory length */
@@ -56,15 +56,12 @@ static void freeYSCache(SUCache * cache) {
         return;
     }
     if (cache->S) {
-        free(cache->S);
-        cache->S = SCS_NULL;
+        scs_free(cache->S);
     }
     if (cache->U) {
-        free(cache->U);
-        cache->U = SCS_NULL;
+        scs_free(cache->U);
     }
-    free(cache);
-    cache = SCS_NULL;
+    scs_free(cache);
     RETURN;
 }
 
@@ -121,7 +118,7 @@ static void freeWork(Work *w) {
         scs_free(w->sc_Rwu);
     if (w->su_cache)
         freeYSCache(w->su_cache);
-    
+
     scs_free(w);
     RETURN;
 }
@@ -836,6 +833,23 @@ static scs_int validate(const Data *d, const Cone *k) {
         scs_printf("scale must be positive (1 works well).\n");
         RETURN - 1;
     }
+    /* validate settings related to SuperSCS */
+    if (stgs->thetabar < 0 || stgs->thetabar > 1) {
+        scs_printf("thetabar must be a scalar between 0 and 1\n");
+        RETURN - 1;
+    }
+    if (stgs->memory <= 1) {
+        scs_printf("Quasi-Newton memory length (mem=%d) is too low; choose an integer at least equal to 2.\n", stgs->memory);
+        RETURN - 1;
+    }
+    if (stgs->beta >= 1 || stgs->beta <= 0) {
+        scs_printf("Stepsize reduction factor (beta=%g) out of bounds.\n", stgs->beta);
+        RETURN - 1;
+    }
+    if (stgs->rho_x <= 0) {
+        scs_printf("Parameter rho_x (=%g) cannot be nonpositive.\n", stgs->rho_x);
+        RETURN - 1;
+    }
     RETURN 0;
 }
 
@@ -875,7 +889,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->sc_R_prev = scs_malloc(l * sizeof (scs_float));
     w->dir = scs_malloc(l * sizeof (scs_float));
     w->dut = scs_malloc(l * sizeof (scs_float));
-    
+
     w->stepsize = 1.0;
 
     /* make cache */
