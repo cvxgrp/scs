@@ -132,3 +132,13 @@ run-test: test
 	
 run-test-mem: test
 	valgrind -v --leak-check=full out/UNIT_TEST_RUNNER
+	
+help:
+	@echo "\nMakefile targets...\n"
+	@echo "make help ....................... this help message"
+	@echo "make clear ...................... clears build"
+	@echo "make purge ...................... spring-clean of build files/folders"
+	@echo "make default .................... builds everything"
+	@echo "make test ....................... builds tests"
+	@echo "make run-test ................... runs all unit tests"
+	@echo "make run-test-mem ............... memchecks unit tests\n"
