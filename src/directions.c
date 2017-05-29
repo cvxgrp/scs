@@ -69,7 +69,7 @@ scs_int computeLSBroyden(Work *work) {
     }
 
     /* push s into the buffer */
-    memcpy(work->su_cache->S + (cache->mem_current * l), work->Sk, l*sizeof(scs_float));
+    memcpy(s_tilde_current, work->Sk, l*sizeof(scs_float));
 
     if (cache->mem_current >= cache->mem) {
         return resetSUCache(cache); /* returns SU_CACHE_RESET */
