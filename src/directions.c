@@ -1,13 +1,13 @@
 #include "directions.h"
 
 scs_int resetSUCache(SUCache * cache) {
-    cache->mem_current = 0; /* set active memory to 0 */
+    cache->mem_cursor = 0; /* set active memory to 0 */
     return SU_CACHE_RESET;
 }
 
 scs_int computeLSBroyden(Work *work) {
     /* --- DECLARATIONS --- */
-    SUCache * cache = work->su_cache; /* the SU cache (pointer) */
+    SUCache * cache; /* the SU cache (pointer) */
     scs_int i; /* index */
     scs_float * s_tilde_current; /* s_tilde (which is updated) */
     scs_float * u_new; /* new value of u */
@@ -19,6 +19,7 @@ scs_int computeLSBroyden(Work *work) {
     const scs_int l = work->l; /* size of vectors */
     const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
 
+    cache = work->su_cache;
 
     /* d [work->dir] = -R [work->R] */
     setAsScaledArray(work->dir, work->R, -1.0, l);
@@ -26,11 +27,11 @@ scs_int computeLSBroyden(Work *work) {
     /* s_tilde_current = y [work->Yk] */
     /* use the end of the cache to store s_tilde_current */
     /* later we use the same position of the S-buffer to store the current Sk */
-    s_tilde_current = cache->S + (cache->mem_current * l);
+    s_tilde_current = cache->S + (cache->mem_cursor * l);
     memcpy(s_tilde_current, work->Yk, l * sizeof (scs_float));
 
     /* update s and d */
-    for (i = 0; i < cache->mem_current; ++i) {
+    for (i = 0; i < cache->mem_cursor; ++i) {
         s_i = cache->S + i * l; /* retrieve s_i from the cache */
         u_i = cache->U + i * l; /* retrieve u_i from the cache */
         ip = innerProd(s_i, s_tilde_current, l);
@@ -57,7 +58,7 @@ scs_int computeLSBroyden(Work *work) {
         s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
     }
     /* update u_new (at the end of the buffer) */
-    u_new = cache->U + (cache->mem_current * l);
+    u_new = cache->U + (cache->mem_cursor * l);
     ip = innerProd(work->Sk, s_tilde_current, l);
     for (i = 0; i < l; ++i) {
         u_new[i] = (work->Sk[i] - s_tilde_current[i]) / ip;
@@ -69,12 +70,13 @@ scs_int computeLSBroyden(Work *work) {
     }
 
     /* push s into the buffer */
-    memcpy(s_tilde_current, work->Sk, l*sizeof(scs_float));
+    memcpy(s_tilde_current, work->Sk, l * sizeof (scs_float));
 
-    if (cache->mem_current >= cache->mem) {
+    cache->mem_cursor++;
+
+    if (cache->mem_cursor >= cache->mem) {
         return resetSUCache(cache); /* returns SU_CACHE_RESET */
     }
 
-    cache->mem_current++;
     return SU_CACHE_INCREMENT;
 }

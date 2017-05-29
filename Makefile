@@ -127,5 +127,8 @@ test:	default
 	@echo "Building test runner..."
 	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/test_runner.c -o out/$(TEST_RUNNER) $(TEST_SRC_DIR)/test_dummy.o $(TEST_SRC_DIR)/test_broyden.o $(TEST_SRC_DIR)/test_utilities.o $(OUT)/libscsdir.a $(LDFLAGS)
 
-run-test:
+run-test: test
 	out/UNIT_TEST_RUNNER
+	
+run-test-mem: test
+	valgrind -v --leak-check=full out/UNIT_TEST_RUNNER

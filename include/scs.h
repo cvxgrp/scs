@@ -138,7 +138,7 @@ extern "C" {
     struct SCS_SU_MEMORY {
         scs_float *S; /**< cached values of \f$s_i\f$ (s-memory) */
         scs_float *U; /**< cached values of \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$ (u-memory)*/
-        scs_int mem_current; /**< current memory (before it's full) */
+        scs_int mem_cursor; /**< current memory cursor [0..mem-1] */
         scs_int mem; /**< (target) memory */
     };
 

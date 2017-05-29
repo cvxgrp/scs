@@ -16,10 +16,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
-    
+
     bool test_cache_increments(char** str);
-    
-    bool test_broyden_direction_empty_memory(char** str);        
+
+    bool test_broyden_direction_empty_memory(char** str);
+
+    bool test_cache_s(char** str);
 
 
 #ifdef __cplusplus

@@ -37,13 +37,13 @@ extern "C" {
      */
 #define FAIL_WITH_MESSAGE(str, message)\
         *str = (char*)(message);\
-        return TEST_FAILURE;
+        return TEST_FAILURE
 
 
 #define ASSERT_TRUE_OR_FAIL(p, str, message)\
     if (!(p)) { \
         FAIL_WITH_MESSAGE((str), (message));\
-    };
+    }
 
     /**
      * Check whether two integers are equal, or fail with a given message.
@@ -58,13 +58,15 @@ extern "C" {
            strcat(buff, error_msg);\
            FAIL_WITH_MESSAGE((str), (buff)); \
           }\
-        };
+        }
 
     /**
      * Check whether two integers are equal, or fail with a given message.
      */
 #define ASSERT_EQAUL_FLOAT_OR_FAIL(val, expected, tol, str, message)\
-        if (!assertEqualsFloat((val), (expected), (tol))) { FAIL_WITH_MESSAGE((str), (message)); };
+        if (!assertEqualsFloat((val), (expected), (tol))) {\
+            FAIL_WITH_MESSAGE((str), (message));\
+        }
 
     /**
      * Check whether two arrays are equal, or fail with a given message.
@@ -72,14 +74,14 @@ extern "C" {
 #define ASSERT_EQUAL_ARRAY_OR_FAIL(val,expected,len,tol,str,message)\
     if (!assertEqualsArray((val),(expected),(len),(tol))){\
       FAIL_WITH_MESSAGE((str), (message));\
-    };
+    }
 
     /**
      * Succeed
      */
 #define SUCCEED(str)\
         *str = (char*) MESSAGE_OK;\
-        return TEST_SUCCESS;
+        return TEST_SUCCESS
 
     /**
      * Function template defining a unit test:

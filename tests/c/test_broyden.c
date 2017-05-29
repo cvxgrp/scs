@@ -15,11 +15,11 @@ static void prepare_work(Work * work, scs_int l_size, scs_int memory) {
     work->su_cache->S = scs_calloc((1 + memory) * l_size, sizeof (scs_float));
     work->su_cache->U = scs_calloc((1 + memory) * l_size, sizeof (scs_float));
     work->su_cache->mem = memory;
-    work->su_cache->mem_current = 0;
-    work->Sk = scs_malloc(l_size * sizeof (scs_float));
-    work->Yk = scs_malloc(l_size * sizeof (scs_float));
-    work->dir = scs_malloc(l_size * sizeof (scs_float));
-    work->R = scs_malloc(l_size * sizeof (scs_float));
+    work->su_cache->mem_cursor = 0;
+    work->Sk = scs_calloc(l_size, sizeof (scs_float)); /* malloc would be just fine anyway... */
+    work->Yk = scs_calloc(l_size, sizeof (scs_float));
+    work->dir = scs_calloc(l_size, sizeof (scs_float));
+    work->R = scs_calloc(l_size, sizeof (scs_float));
     work->stepsize = 1;
 
     randomize_values(work->Sk, l_size);
@@ -29,20 +29,41 @@ static void prepare_work(Work * work, scs_int l_size, scs_int memory) {
 }
 
 static void destroy_work(Work * work) {
-    free(work->stgs);
-    work->stgs = NULL;
-    free(work->Sk);
-    work->Sk = NULL;
-    free(work->Yk);
-    work->Yk = NULL;
-    free(work->R);
-    work->R = NULL;
-    free(work->su_cache->S);
-    work->su_cache->S = NULL;
-    free(work->su_cache->U);
-    work->su_cache->U = NULL;
-    free(work->su_cache);
-    work->su_cache = NULL;
+    if (!work) {
+        return;
+    }
+    if (work->stgs) {
+        free(work->stgs);
+        work->stgs = NULL;
+    }
+    if (work->Sk) {
+        free(work->Sk);
+        work->Sk = NULL;
+    }
+    if (work->Yk) {
+        free(work->Yk);
+        work->Yk = NULL;
+    }
+    if (work->R) {
+        free(work->R);
+        work->R = NULL;
+    }
+    if (work->dir) {
+        free(work->dir);
+        work->dir = NULL;
+    }
+    if (work->su_cache) {
+        if (work->su_cache->S) {
+            free(work->su_cache->S);
+            work->su_cache->S = NULL;
+        }
+        if (work->su_cache->U) {
+            free(work->su_cache->U);
+            work->su_cache->U = NULL;
+        }
+        free(work->su_cache);
+        work->su_cache = NULL;
+    }
     free(work);
     work = NULL;
 }
@@ -52,32 +73,34 @@ bool test_cache_increments(char** str) {
     scs_int i;
     const scs_int l = 4;
     const scs_int mem = 10;
-    const scs_int runs = 1000;
+    const scs_int runs = 5000;
     scs_int method_status;
     prepare_work(work, l, mem);
+    resetSUCache(work->su_cache);
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 0, str, "active mem after reset not 0");
 
     ASSERT_EQAUL_INT_OR_FAIL(work->l, l, str, "size not correct")
     ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem, mem, str, "wrong memory")
-    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_current, 0, str, "initial mem not 0")
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 0, str, "initial mem not 0")
     ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem, mem, str, "memory not set correctly")
 
     for (i = 0; i < runs; ++i) {
         method_status = computeLSBroyden(work);
-        if (i > 1 && work->su_cache->mem_current == 0) {
+        if (i > 1 && work->su_cache->mem_cursor == 0) {
             ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_RESET, str, "status not SU_CACHE_RESET")
         } else {
             ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "status not SU_CACHE_INCREMENT")
         }
-        ASSERT_TRUE_OR_FAIL(work->su_cache->mem_current <= work->su_cache->mem,
+        ASSERT_TRUE_OR_FAIL(work->su_cache->mem_cursor <= work->su_cache->mem,
                 str, "mem of cache overflowed")
     }
 
     resetSUCache(work->su_cache);
-    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_current, 0, str, "active mem after reset not 0")
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 0, str, "active mem after reset not 0");
 
     destroy_work(work);
 
-    SUCCEED(str)
+    SUCCEED(str);
 }
 
 bool test_broyden_direction_empty_memory(char** str) {
@@ -111,8 +134,6 @@ bool test_broyden_direction_empty_memory(char** str) {
 
     work->stepsize = 0.9;
 
-
-
     method_status = computeLSBroyden(work);
     ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "memory not incremented");
 
@@ -125,5 +146,50 @@ bool test_broyden_direction_empty_memory(char** str) {
 
     destroy_work(work);
 
-    SUCCEED(str)
+    SUCCEED(str);
+}
+
+bool test_cache_s(char** str) {
+    Work * work = scs_calloc(1, sizeof (Work));
+    scs_int i;
+    scs_int j;
+    const scs_int l = 4;
+    const scs_int mem = 5;
+    scs_int method_status;
+
+    prepare_work(work, l, mem);
+
+
+    for (i = 0; i < 20; ++i) {
+
+        work->Sk[0] = 1.0 + 4.5 / i;
+        work->Sk[1] = 50.1 + 16.2 / i;
+        work->Sk[2] = 10.0 / i;
+        work->Sk[3] = 1.0 / i;
+
+
+        work->R[0] *= 0.01;
+        work->R[1] *= 0.01;
+        work->R[2] *= 0.01;
+        work->R[3] *= 0.01;
+
+        work->Yk[0] *= 0.1;
+        work->Yk[1] *= 0.1;
+        work->Yk[2] *= 0.1;
+        work->Yk[3] *= 0.1;
+
+        method_status = computeLSBroyden(work);
+
+
+        if ((i + 1) % (mem) == 0) {
+            ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 0, str, "current mem not zero");
+            ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_RESET, str, "not reset");
+        } else {
+            ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "not reset");
+        }
+    }
+
+    destroy_work(work);
+
+    SUCCEED(str);
 }
