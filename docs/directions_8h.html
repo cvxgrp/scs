@@ -173,26 +173,28 @@ Functions</h2></td></tr>
 <p>Restarted Broyden (as it is reported in the paper).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">work</td><td>Work structure with all available information about the current iteration (current FPR, values of S and Y). Work must provide the following information</td></tr>
+    <tr><td class="paramname">work</td><td>Work structure with all available information about the current iteration (current FPR, values of \(s_k\), \(y_k\) etc).</td></tr>
   </table>
   </dd>
 </dl>
-<ul>
-<li><code>work-&gt;stgs-&gt;thetabar</code></li>
-<li><code>work-&gt;su_cache</code> allocated with<ul>
-<li><code>work-&gt;su_cache-&gt;S</code> allocated</li>
-<li><code>work-&gt;su_cache-&gt;U</code> allocated</li>
-<li><code>work-&gt;su_cache-&gt;current_mem</code></li>
-<li><code>work-&gt;su_cache-&gt;mem</code> (nonzero memory)</li>
-</ul>
+<p>Directions are computed according to the following procedure:</p>
+<ol type="1">
+<li>Inputs: \(y=y_k\), \(r=Rx_k\), \(s=s_k\), \(\bar{\theta}\), \(m\) (memory)</li>
+<li>Buffer: \((\mathbf{s}, \mathbf{u})\)</li>
+<li>\(d_\star \gets -r\)</li>
+<li>\(s_\star \gets y\)</li>
+<li>for \(i=0,\ldots, m-1\),<ol type="a">
+<li>\(s_\star \gets s_\star + \langle \mathbf{s}_i, s_\star\rangle \mathbf{u}_i\)</li>
+<li>\(d_\star \gets d_\star + \langle \mathbf{s}_i, d_\star\rangle \mathbf{u}_i\)</li>
+</ol>
 </li>
-<li><code>work-&gt;Yk</code> allocated and value provided</li>
-<li><code>work-&gt;Sk</code> allocated and value provided</li>
-<li><code>work-&gt;R</code> allocated and value provided</li>
-<li><code>work-&gt;dir</code> allocated</li>
-<li><code>work-&gt;stepsize</code></li>
-<li><code>work-&gt;l</code></li>
-</ul>
+<li>\(\gamma \gets \langle s, s_\star \rangle/\|s\|^2\)</li>
+<li>\(\theta \gets \begin{cases}1,&amp;\text{if } |\gamma| &gt; \bar{\theta}\\ \frac{1-\mathrm{sgn}(\gamma)\bar{\theta}}{1-\gamma},&amp;\text{otherwise}\end{cases}\)</li>
+<li>\(s_\star \gets (1-\theta)s + \theta s_\star\)</li>
+<li>\(u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\) and push it into the buffer</li>
+<li>\(d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\)</li>
+<li>Add \(s\) into the buffer or empty/reset it if it is full</li>
+</ol>
 <dl class="section return"><dt>Returns</dt><dd>status code of the method. </dd></dl>
 
 </div>
@@ -224,7 +226,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon May 29 2017 01:30:59 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon May 29 2017 15:28:28 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -7,7 +7,7 @@ var searchData=
   ['meannormcola',['meanNormColA',['../struct_s_c_s___s_c_a_l_i_n_g.html#ac9dbd3395f9fdafa716dc81b6b4eb68e',1,'SCS_SCALING']]],
   ['meannormrowa',['meanNormRowA',['../struct_s_c_s___s_c_a_l_i_n_g.html#a875081f04d7673908463c20387e655ad',1,'SCS_SCALING']]],
   ['mem',['mem',['../struct_s_c_s___s_u___m_e_m_o_r_y.html#a2adf52e26eab40e526b88f0576713bad',1,'SCS_SU_MEMORY']]],
-  ['mem_5fcurrent',['mem_current',['../struct_s_c_s___s_u___m_e_m_o_r_y.html#a8ff7e7d7b7c9aafbc1b230a62edec9d7',1,'SCS_SU_MEMORY']]],
+  ['mem_5fcursor',['mem_cursor',['../struct_s_c_s___s_u___m_e_m_o_r_y.html#aeca27fffcca8b6834c244e2782ca4b92',1,'SCS_SU_MEMORY']]],
   ['memory',['memory',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a0073d0c26b1dd856ae4bbfe755b24362',1,'SCS_SETTINGS::memory()'],['../constants_8h.html#aaf08a63f67339d49d4c4efec7562496f',1,'MEMORY():&#160;constants.h']]],
   ['message_5fok',['MESSAGE_OK',['../unit__test__util_8h.html#ae0981e47a8bfbb1db7aa28638d6df9f9',1,'unit_test_util.h']]],
   ['min',['MIN',['../glbopts_8h.html#a3acffbd305ee72dcd4593c0d8af64a4f',1,'glbopts.h']]],
