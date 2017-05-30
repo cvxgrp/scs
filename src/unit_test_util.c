@@ -24,7 +24,7 @@ bool assertEqualsArray(
     unsigned int i;
     for (i = 0; i < n; i++) {
         if (!assertEqualsFloat(a[i], b[i], tol)) {
-            return 0;
+            return 0; /* LCOV_EXCL_LINE */
         }
     }
     return true;
@@ -36,7 +36,7 @@ bool test(const unitTest_t ut, const char* name) {
     if (result == TEST_SUCCESS) {
         printf(TEST_PASS_FLAG);
     } else {
-        printf(TEST_FAIL_FLAG);
+        printf(TEST_FAIL_FLAG); /* LCOV_EXCL_LINE */
     }
     printf(" (%s) -- %s\n", name, message);
     return result;

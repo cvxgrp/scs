@@ -1,3 +1,4 @@
+*.info
 nbproject/private/*
 private
 private.xml

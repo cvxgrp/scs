@@ -1164,6 +1164,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l);
                     scaleArray(w->Rwu, sqrt(w->stgs->rho_x), w->n); /* Scaled FP res in ls */
+
                     nrmRw_con = calcNorm(w->Rwu, w->l);
                     /* K1 */
                     if (w->stgs->k1 && nrmRw_con <= w->stgs->c1 * nrmR_con_old && w->nrmR_con <= r_safe) { // a bit different than matlab
@@ -1203,11 +1204,11 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
             projectLinSysv2(w->u_t, w->u, w, i);
             projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
             // TODO: add calculations for sb and kapb
-            calcFPRes(w->R, w->u_t, w->u_b, w->l); 
+            calcFPRes(w->R, w->u_t, w->u_b, w->l);
             scaleArray(w->R, sqrt(w->stgs->rho_x), w->n);
-            w->nrmR_con = calcNorm(w->R, w->l); 
+            w->nrmR_con = calcNorm(w->R, w->l);
         }
-    }
+    } /* main for loop */
 
     /* populate solution vectors (unnormalized) and info */
     getSolution(w, sol, info, &r, i);
