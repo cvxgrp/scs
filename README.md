@@ -2,6 +2,10 @@ SCS
 ====
 
 [![Build Status](https://travis-ci.org/kul-forbes/scs.svg?branch=master)](https://travis-ci.org/kul-forbes/scs)
+[![codecov](https://codecov.io/gh/kul-forbes/scs/branch/master/graph/badge.svg)](https://codecov.io/gh/kul-forbes/scs)
+
+
+
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper [Conic Optimization via Operator Splitting
