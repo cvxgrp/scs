@@ -178,8 +178,7 @@ extern "C" {
         scs_float *b;/**<  (possibly normalized) \c b vector */
         scs_float *c; /**<  (possibly normalized) \c c vector */
         scs_float *R; /**< FPR \f$Rx_k\f$ (fixed point residual) */
-        scs_float *sc_R; /**<  fixed point residuals \f$Ru_k\f$*/
-        scs_float *sc_R_prev; 
+        scs_float *R_prev; 
         scs_float *dir; /**< direction \f$d_k\f$ for \f$u\f$ */
         scs_float *dut; /**<  direction \f$\tilde{u} \f$*/
         scs_float *wu;
