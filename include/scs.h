@@ -179,7 +179,7 @@ extern "C" {
         scs_float nm_c;
         scs_float *b;/**<  (possibly normalized) \c b vector */
         scs_float *c; /**<  (possibly normalized) \c c vector */
-        scs_float *R; /**< FPR \f$Rx_k\f$ (fixed point residual) */
+        scs_float *R; /**< FPR \f$Ru_k\f$ (fixed point residual) */
         scs_float *R_prev; 
         scs_float *dir; /**< direction \f$d_k\f$ for \f$u\f$ */
         scs_float *dut; /**<  direction \f$\tilde{u} \f$*/
@@ -187,7 +187,7 @@ extern "C" {
         scs_float *wu_t; 
         scs_float *wu_b; 
         scs_float *Rwu; /**< from line search */
-        scs_float nrmR_con; /**<  \f$\|Rx_k\|\f$ */
+        scs_float nrmR_con; /**<  \f$\|Ru_k\|\f$ */
         scs_float *Sk; /**< \f$s_k\f$ */
         scs_float *Yk; /**< \f$y_k\f$ */
         scs_float stepsize; /**< The current stepsize */
