@@ -1142,7 +1142,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 for (j=0; j<w->stgs->ls; ++j) { 
                     w->stepsize *= w->stgs->beta;
                     addScaledArray(w->wu, w->dir, w->l, w->stepsize);
-                    addScaledArray(w->wu);
+                   // addScaledArray(w->wu_t, w->u_t,  );
                 } /* end of line-search */
             }
             
