@@ -1,3 +1,5 @@
+*.gcno
+*.gcda
 *.iml
 examples/DIMACS/
 local.mk

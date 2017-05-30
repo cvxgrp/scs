@@ -99,6 +99,8 @@ bool test_broyden_direction_empty_memory(char** str) {
     const scs_int l = 4;
     const scs_int mem = 10;
     scs_int method_status;
+    scs_float u_expected[4] = {-0.0366837857666911, 0.0330154071900220, -0.0440205429200293, 0.2017608217168012};
+    scs_float d_expected[4] = {-3.73213499633162, -4.71107850330154, -1.21856199559795, 7.57674247982392};
 
     prepare_work(work, l, mem);
 
@@ -126,10 +128,7 @@ bool test_broyden_direction_empty_memory(char** str) {
     work->stepsize = 0.9;
 
     method_status = computeLSBroyden(work);
-    ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "memory not incremented");
-
-    scs_float u_expected[4] = {-0.0366837857666911, 0.0330154071900220, -0.0440205429200293, 0.2017608217168012};
-    scs_float d_expected[4] = {-3.73213499633162, -4.71107850330154, -1.21856199559795, 7.57674247982392};
+    ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "memory not incremented");    
     ASSERT_EQUAL_ARRAY_OR_FAIL(work->su_cache->U, u_expected, l, 1e-10, str, "u not correct");
     ASSERT_EQUAL_ARRAY_OR_FAIL(work->dir, d_expected, l, 1e-10, str, "direction not correct");
     ASSERT_EQUAL_ARRAY_OR_FAIL(work->su_cache->S, work->Sk, l, 1e-10, str, "sk not added to the cache");
