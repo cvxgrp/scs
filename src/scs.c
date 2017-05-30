@@ -994,7 +994,8 @@ static scs_int updateWork(const Data *d, Work *w, const Sol *sol) {
 
 scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
-    scs_int i, how = 0;
+    scs_int i;
+    scs_int how = 0;
     scs_float eta;
 
     timer solveTimer;
@@ -1031,6 +1032,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     memset(w->sc_Rwu, 0, (w->n + w->m + 1) * sizeof (scs_float));
     /*    memset(w->how, 0, w->stgs->max_iters * sizeof(scs_int));  */
     memcpy(w->sc_R_prev, w->sc_R, (w->n + w->m + 1) * sizeof (scs_float));
+ 
     for (i = 0; i < w->stgs->max_iters; ++i) {
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
@@ -1050,6 +1052,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
                     addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
                 }
                 /* compute direction */
+                computeLSBroyden(w);
             }
         }
     }
