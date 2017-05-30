@@ -116,8 +116,18 @@ clean:
 	@rm -rf .idea
 	@rm -rf python/*.pyc
 	@rm -rf python/build
+	@rm -rf *.gcno 
+	@rm -rf *.gcda
+	@rm -rf */*.gcno 
+	@rm -rf */*.gcda
+	@rm -rf */*/*.gcno 
+	@rm -rf */*/*.gcda
+	@rm -rf */*/*/*.gcno 
+	@rm -rf */*/*/*.gcda
 purge: clean 
 	@rm -rf $(OUT)
+	@rm -rf docs
+	@rm -rf *.info
 	
 test:	default 
 	@echo "Compiling individual tests..."
