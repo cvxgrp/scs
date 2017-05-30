@@ -11,11 +11,15 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/home/krina/NetBeansProjects/scs/src/scs.c</file>
+            <file>file:/home/krina/NetBeansProjects/scs/nbproject/project.properties</file>
             <file>file:/home/krina/NetBeansProjects/scs/include/constants.h</file>
-            <file>file:/home/krina/NetBeansProjects/scs/include/normalize.h</file>
-            <file>file:/home/krina/NetBeansProjects/scs/include/glbopts.h</file>
+            <file>file:/home/krina/NetBeansProjects/scs/src/cones.c</file>
+            <file>file:/home/krina/NetBeansProjects/scs/Makefile</file>
             <file>file:/home/krina/NetBeansProjects/scs/src/linAlg.c</file>
             <file>file:/home/krina/NetBeansProjects/scs/include/scs.h</file>
+            <file>file:/home/krina/NetBeansProjects/scs/nbproject/configurations.xml</file>
+            <file>file:/home/krina/NetBeansProjects/scs/src/directions.c</file>
+            <file>file:/home/krina/NetBeansProjects/scs/nbproject/private/cpp_standard_headers_indexer.cpp</file>
         </group>
     </open-files>
 </project-private>

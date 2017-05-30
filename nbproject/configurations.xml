@@ -52,10 +52,15 @@
       </logicalFolder>
     </logicalFolder>
     <df root="src" name="2">
+      <in>directions.c</in>
+      <in>unit_test_util.c</in>
     </df>
     <df root="tests" name="3">
       <df name="c">
-        <in>unitTests.c</in>
+        <in>test_broyden.c</in>
+        <in>test_dummy.c</in>
+        <in>test_runner.c</in>
+        <in>test_utilities.c</in>
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -82,16 +87,16 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-g -O3 -fPIC"/>
+        <element flagsID="0" commonFlags="-g -fPIC"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <buildCommand>${MAKE} -f Makefile default test</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>out/unitTests</executablePath>
+          <executablePath>out/UNIT_TEST_RUNNER</executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>
@@ -218,6 +223,10 @@
         <cTool flags="0">
         </cTool>
       </item>
+      <item path="src/directions.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
       <item path="src/linAlg.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
@@ -230,11 +239,27 @@
         <cTool flags="0">
         </cTool>
       </item>
+      <item path="src/unit_test_util.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
       <item path="src/util.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
       </item>
-      <item path="tests/c/unitTests.c" ex="false" tool="0" flavor2="0">
+      <item path="tests/c/test_broyden.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="tests/c/test_dummy.c" ex="false" tool="0" flavor2="2">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="tests/c/test_runner.c" ex="false" tool="0" flavor2="0">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="tests/c/test_utilities.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
       </item>

@@ -6,6 +6,7 @@
       <in>constants.h</in>
       <in>cs.h</in>
       <in>ctrlc.h</in>
+      <in>directions.h</in>
       <in>glbopts.h</in>
       <in>linAlg.h</in>
       <in>linSys.h</in>
@@ -48,11 +49,15 @@
       </df>
     </df>
     <df root="src" name="2">
+      <in>directions.c</in>
+      <in>unit_test_util.c</in>
     </df>
     <df root="tests" name="3">
       <df name="c">
-        <in>unitTests.c</in>
-        <in>unitTests.h</in>
+        <in>test_broyden.c</in>
+        <in>test_dummy.c</in>
+        <in>test_runner.c</in>
+        <in>test_utilities.c</in>
       </df>
     </df>
   </logicalFolder>
@@ -65,13 +70,13 @@
       </toolsSet>
       <compile>
         <compiledirpicklist>
-          <compiledirpicklistitem>.</compiledirpicklistitem>
           <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
         </compiledirpicklist>
         <compiledir>${AUTO_FOLDER}</compiledir>
         <compilecommandpicklist>
-          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
           <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
         </compilecommandpicklist>
         <compilecommand>${AUTO_COMPILE}</compilecommand>
       </compile>
@@ -95,7 +100,7 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
         </runcommandpicklist>
         <runcommand>"${OUTPUT_PATH}"</runcommand>
-        <rundir>.</rundir>
+        <rundir></rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>
