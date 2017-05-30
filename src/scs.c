@@ -370,7 +370,7 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 /* status < 0 indicates failure */
 static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int iter) {
     DEBUG_FUNC
-    const scs_int l = w->l;
+            const scs_int l = w->l;
     scs_int status;
 
     /* u_t = u (is already provided scaled      */
@@ -1090,13 +1090,13 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
     calcFPRes(w); /* computes Ru */
-
-    /***** HENCEFORTH, R IS SCALED! *****/
-
-    eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| */
-    scaleArray(w->u, sqrt(w->stgs->rho_x), w->n);
-    r_safe = eta; 
+    scaleArray(w->R, sqrt(w->stgs->rho_x), w->n);
+    eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
+    scaleArray(w->u, sqrt(w->stgs->rho_x), w->n); /* u is now scaled */
+    r_safe = eta;
     
+    /***** HENCEFORTH, R and u ARE SCALED! *****/
+
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < w->stgs->max_iters; ++i) {
 
@@ -1126,28 +1126,28 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         }
         memcpy(w->u_prev, w->u, w->l);
         how = -1; /* no backtracking (yet) */
-        
+
         if (i >= w->stgs->warm_start) {
             if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
                 addScaledArray(w->u, w->dir, w->l, 1.0);
                 how = 0;
                 eta = w->nrmR_con;
-                r_safe = INFINITY; 
+                r_safe = INFINITY;
                 w->stepsize = 1.0;
             } else if (w->stgs->ls > 0) {
                 projectLinSysv2(w->dut, w->dir, w, i);
                 w->stepsize = 2.0;
-                
+
                 /* Line - search */
-                for (j=0; j<w->stgs->ls; ++j) { 
+                for (j = 0; j < w->stgs->ls; ++j) {
                     w->stepsize *= w->stgs->beta;
                     addScaledArray(w->wu, w->dir, w->l, w->stepsize);
                     addScaledArray(w->wu_t, w->dut, w->l, w->stepsize);
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
-                    
+
                 } /* end of line-search */
             }
-            
+
         }
 
     }
