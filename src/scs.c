@@ -1122,6 +1122,17 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 scaleArray(w->dir, 1 / sqrt(w->stgs->rho_x), w->n);
             }
         }
+        memcpy(w->u_prev, w->u, w->l);
+        how = -1;
+        if (i >= w->stgs->warm_start) {
+            if (K0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
+                addScaledArray(w->u, w->dir, w->l, 1.0);
+                how = 0;
+                eta = w->nrmR_con;
+                // add rsafe
+            }
+        }
+        
     }
 
     /* populate solution vectors (unnormalized) and info */
