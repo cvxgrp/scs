@@ -1075,7 +1075,12 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scs_int how = 0; /* -1:unsuccessful backtracking, 0:K0, 1:K1, 2:K2 */
     scs_float eta;
     scs_float r_safe;
-
+    scs_float nrmRw_con; /* norm of FP res at line-search */
+    scs_float nrmR_con_old; /* keeps previous FP res */
+    scs_float slack; /* for K2 */
+    scs_float rhs; /* for K2 */
+    scs_float stepsize2; /* for K2 */
+    
     timer solveTimer;
     struct residuals r;
     if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
@@ -1094,7 +1099,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         printHeader(w, k);
 
     /* Initialize: */
-
+    i = 0; /* Needed for the next two functions */
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
  
@@ -1108,9 +1113,9 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < w->stgs->max_iters; ++i) {
-
+        
         w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, (w->n + w->m + 1));
-
+        w->stgs->sse *= w->stgs->sse;
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
                 w->dir = w->R;
@@ -1133,9 +1138,9 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 scaleArray(w->dir, 1 / sqrt(w->stgs->rho_x), w->n);
             }
         }
-        memcpy(w->u_prev, w->u, w->l);
+        memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
         how = -1; /* no backtracking (yet) */
-
+        nrmR_con_old = w->nrmR_con;
         if (i >= w->stgs->warm_start) {
             if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
                 addScaledArray(w->u, w->dir, w->l, 1.0);
@@ -1146,7 +1151,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
             } else if (w->stgs->ls > 0) {
                 projectLinSysv2(w->dut, w->dir, w, i);
                 w->stepsize = 2.0;
-
+                
                 /* Line - search */
                 for (j = 0; j < w->stgs->ls; ++j) {
                     w->stepsize *= w->stgs->beta;
@@ -1155,7 +1160,32 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); 
                     scaleArray(w->Rwu, sqrt(w->stgs->rho_x), w->n); /* Scaled FP res in ls */
-                //    if (w->stgs->k1 && )   
+                    nrmRw_con = calcNorm(w->Rwu, w->l);
+                    /* K1 */
+                    if (w->stgs->k1 && nrmRw_con <= w->stgs->c1 * nrmR_con_old && w->nrmR_con <= r_safe) { // a bit different than matlab
+                          memcpy(w->u, w->wu, w->l * sizeof (scs_float));
+                          memcpy(w->u_t, w->wu_t, w->l * sizeof (scs_float));
+                          memcpy(w->u_b, w->wu_b, w->l * sizeof (scs_float));
+                          memcpy(w->R, w->Rwu, w->l * sizeof (scs_float));
+                          w->nrmR_con = nrmRw_con;
+                          r_safe += w->stgs->sse; // The power already computed at the beginning of the main loop
+                          how = 1;
+                          break;
+                    }   
+                    /* K2 */
+                    if (K2) {
+                        slack = nrmRw_con*nrmRw_con - w->stepsize*innerProd(w->dir,w->Rwu, w->l);
+                        rhs = w->stgs->sigma * w->nrmR_con * nrmRw_con;
+                        if (slack >= rhs) {
+                            stepsize2 = (w->stgs->alpha * (slack/(nrmRw_con*nrmRw_con)));
+                            addScaledArray(w->u, w->Rwu, w->l, -stepsize2);
+                            how = 2; 
+                            if (r_safe == INFINITY) {
+                                r_safe = w->nrmR_con;
+                            }
+                            break;
+                        }
+                    }
                 } /* end of line-search */
             }
 
