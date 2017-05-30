@@ -1119,14 +1119,13 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     for (i = 0; i < w->stgs->max_iters; ++i) {
 
         w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, w->l);
-        if (i > 0) {
-            w->stgs->sse *= w->stgs->sse;
-        }
+
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
                 memcpy(w->dir, w->R, w->l);
                 scaleArray(w->dir, -1, w->l); /* dir^0 = -R */
             } else {
+                w->stgs->sse *= w->stgs->sse;
                 /*  if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
                     memcpy(w->Sk, w->u, w->l);
