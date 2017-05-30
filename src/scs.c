@@ -1119,7 +1119,9 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     for (i = 0; i < w->stgs->max_iters; ++i) {
 
         w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, w->l);
-        w->stgs->sse *= w->stgs->sse;
+        if (i > 0) {
+            w->stgs->sse *= w->stgs->sse;
+        }
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
                 memcpy(w->dir, w->R, w->l);
