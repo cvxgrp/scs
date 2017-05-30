@@ -114,6 +114,8 @@ static void freeWork(Work *w) {
         scs_free(w->wu);
     if (w->wu_t)
         scs_free(w->wu_t);
+    if (w->wu_b)
+        scs_free(w->wu_b);
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
     if (w->su_cache)
@@ -422,11 +424,11 @@ static void updateDualVars(Work *w) {
 }
 
 /* Calculates the fixed point residual R */
-static void calcFPRes(Work *w) {
+static void calcFPRes(scs_float *R, scs_float *u_t, scs_float *u_b, scs_int l) {
     DEBUG_FUNC
-    scs_int i, n = w->n, l = n + w->m + 1;
+    scs_int i;
     for (i = 0; i < l; ++i) {
-        w->R[i] = w->u_t[i] - w->u_b[i];
+        R[i] = u_t[i] - u_b[i];
     }
     RETURN;
 }
@@ -452,18 +454,18 @@ static scs_int projectCones(Work *w, const Cone *k, scs_int iter) {
 }
 
 /* status < 0 indicates failure */
-static scs_int projectConesv2(Work *w, const Cone *k, scs_int iter) {
+static scs_int projectConesv2(scs_float *u_b, scs_float *u_t, scs_float *u, Work *w, const Cone *k, scs_int iter) {
     DEBUG_FUNC
     scs_int i, n = w->n, l = n + w->m + 1, status;
     /* this does not relax 'x' variable */
     for (i = 0; i < l; ++i) {
-        w->u_b[i] = 2 * w->u_t[i] - w->u[i];
+        u_b[i] = 2 * u_t[i] - u[i];
     }
 
     /* u = [x;y;tau] */
-    status = projDualCone(&(w->u_b[n]), k, w->coneWork, &(w->u_prev[n]), iter);
-    if (w->u_b[l - 1] < 0.0)
-        w->u_b[l - 1] = 0.0;
+    status = projDualCone(&(u_b[n]), k, w->coneWork, &(w->u_prev[n]), iter);
+    if (u_b[l - 1] < 0.0)
+        u_b[l - 1] = 0.0;
 
     RETURN status;
 }
@@ -910,13 +912,14 @@ static Work *initWork(const Data *d, const Cone *k) {
     if (w->stgs->ls > 0) {
         w->wu = scs_calloc(l, sizeof (scs_float));
         w->sc_Rwu = scs_calloc(l, sizeof (scs_float));
-        w->wu_t = scs_malloc(l, sizeof (scs_float)); 
+        w->wu_t = scs_calloc(l, sizeof (scs_float));
+        w->wu_b = scs_calloc(l, sizeof (scs_float));
     }
 
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
             !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->R_prev ||
             !w->dir || !w->dut || !w->Sk || !w->Yk
-            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu || !w->wu_t))) {
+            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu || !w->wu_t || !w->wu_b))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
     }
@@ -1085,7 +1088,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     /* Initialize: */
 
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
-    projectConesv2(w, k, i); /* u_bar = proj_C(2u_t - u) */
+    projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
     calcFPRes(w); /* computes Ru */
 
     /***** HENCEFORTH, R IS SCALED! *****/
@@ -1132,14 +1135,16 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 r_safe = INFINITY; 
                 w->stepsize = 1.0;
             } else if (w->stgs->ls > 0) {
-                projectLinSysv2(w, i);
+                projectLinSysv2(w->dut, w->dir, w, i);
                 w->stepsize = 2.0;
                 
                 /* Line - search */
                 for (j=0; j<w->stgs->ls; ++j) { 
                     w->stepsize *= w->stgs->beta;
                     addScaledArray(w->wu, w->dir, w->l, w->stepsize);
-                   // addScaledArray(w->wu_t, w->u_t,  );
+                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize);
+                    projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
+                    
                 } /* end of line-search */
             }
             
