@@ -43,6 +43,8 @@ extern "C" {
 #define K2 (1)    
 #define NOMINAL (1)
 #define C_BL (0.999)
+#define C1 (1.0-1E-4)
+#define SSE (1.0-1E-3) 
 
     /* Line-search defaults */
 #define LS  (10)
