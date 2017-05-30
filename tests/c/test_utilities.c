@@ -35,9 +35,10 @@ bool testProjLinSysv2(char** str) {
     addScaledArray(u_t, h, l - 1,
             -innerProd(u_t, g, l - 1) / (gTh + 1));
     scaleArray(&(u_t[n]), -1, m);
+    
     /*   status = solveLinSys(A, stgs, w->p, w->u_t, w->u, iter); */
     u_t[l - 1] += innerProd(u_t, h, l - 1);
-
+    
     expected_result[0] = 67.10;
     expected_result[1] = 134.20;
     expected_result[2] = 201.30;

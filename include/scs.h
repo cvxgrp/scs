@@ -45,6 +45,7 @@ extern "C" {
         scs_int warm_start; /**< boolean, warm start (put initial guess in Sol
                            struct): 0 */
         /* superscs */
+        scs_int do_super_scs; /**< boolean: whether to use superscs or not */
         scs_int k0; /**< boolean, K0: 1 */
         scs_float c_bl; /**< parameter for blind updates: 0.999 */
         scs_int k1; /**< boolean, K1: 1 */
@@ -111,6 +112,13 @@ extern "C" {
             Sol *sol, 
             Info *info);
     
+    scs_int superscs_solve(
+            Work *w, 
+            const Data *d, 
+            const Cone *k, 
+            Sol *sol, 
+            Info *info);
+    
     void scs_finish(Work *w);
     
     /** 
@@ -170,10 +178,10 @@ extern "C" {
         scs_float *b;/**<  (possibly normalized) \c b vector */
         scs_float *c; /**<  (possibly normalized) \c c vector */
         scs_float *R; /**< FPR \f$Rx_k\f$ (fixed point residual) */
-        scs_float *sc_R;
-        scs_float *sc_R_prev; /**<  fixed point residuals */
-        scs_float *dir; /**< direction \f$d_k\f$ */
-        scs_float *dut; /**<  variables for direction */
+        scs_float *sc_R; /**<  fixed point residuals \f$Ru_k\f$*/
+        scs_float *sc_R_prev; 
+        scs_float *dir; /**< direction \f$d_k\f$ for \f$u\f$ */
+        scs_float *dut; /**<  direction \f$\tilde{u} \f$*/
         scs_float *wu;
         scs_float *sc_Rwu; /**< from line search */
         scs_float nrmR_con; /**<  \f$\|Rx_k\|\f$ */
