@@ -1122,20 +1122,20 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
-                memcpy(w->dir, w->R, w->l);
+                memcpy(w->dir, w->R, w->l * sizeof(scs_float));
                 scaleArray(w->dir, -1, w->l); /* dir^0 = -R */
             } else {
                 w->stgs->sse *= w->stgs->sse;
                 /*  if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
-                    memcpy(w->Sk, w->u, w->l);
+                    memcpy(w->Sk, w->u, w->l * sizeof(scs_float));
                     addScaledArray(w->Sk, w->u_prev, w->l, -1);
-                    memcpy(w->Yk, w->R, w->l);
+                    memcpy(w->Yk, w->R, w->l * sizeof(scs_float));
                     addScaledArray(w->Yk, w->R_prev, w->l, -1);
                 } else {
-                    memcpy(w->Sk, w->wu, w->l);
+                    memcpy(w->Sk, w->wu, w->l * sizeof(scs_float));
                     addScaledArray(w->Sk, w->u_prev, w->l, -1);
-                    memcpy(w->Yk, w->Rwu, w->l);
+                    memcpy(w->Yk, w->Rwu, w->l * sizeof(scs_float));
                     addScaledArray(w->Yk, w->R_prev, w->l, -1);
                 }
                 /* compute direction */
