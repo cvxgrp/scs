@@ -116,8 +116,8 @@ static void freeWork(Work *w) {
         scs_free(w->wu_t);
     if (w->wu_b)
         scs_free(w->wu_b);
-    if (w->sc_Rwu)
-        scs_free(w->sc_Rwu);
+    if (w->Rwu)
+        scs_free(w->Rwu);
     if (w->su_cache)
         freeYSCache(w->su_cache);
 
@@ -856,6 +856,14 @@ static scs_int validate(const Data *d, const Cone *k) {
             scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
             RETURN - 1;
         }
+        if (stgs->c1 < 0 || stgs->c1 >= 1) {
+                scs_printf("Parameter (c1=%g) for step K1 out of bounds.\n", stgs->c1);
+            RETURN - 1;
+        }
+        if (stgs->sse < 0 || stgs->sse >= 1) {
+                scs_printf("Parameter (sse=%g) for step K1 out of bounds.\n", stgs->sse);
+            RETURN - 1;
+        }
     }
     RETURN 0;
 }
@@ -911,7 +919,7 @@ static Work *initWork(const Data *d, const Cone *k) {
 
     if (w->stgs->ls > 0) {
         w->wu = scs_calloc(l, sizeof (scs_float));
-        w->sc_Rwu = scs_calloc(l, sizeof (scs_float));
+        w->Rwu = scs_calloc(l, sizeof (scs_float));
         w->wu_t = scs_calloc(l, sizeof (scs_float));
         w->wu_b = scs_calloc(l, sizeof (scs_float));
     }
@@ -919,7 +927,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
             !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->R_prev ||
             !w->dir || !w->dut || !w->Sk || !w->Yk
-            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu || !w->wu_t || !w->wu_b))) {
+            || (w->stgs->ls > 0 && (!w->wu || !w->Rwu || !w->wu_t || !w->wu_b))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
     }
@@ -1117,7 +1125,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 } else {
                     w->Sk = w->wu;
                     addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
-                    w->Yk = w->sc_Rwu;
+                    w->Yk = w->Rwu;
                     addScaledArray(w->Yk, w->R_prev, (w->n + w->m + 1), -1);
                 }
                 /* compute direction */
@@ -1145,7 +1153,9 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                     addScaledArray(w->wu, w->dir, w->l, w->stepsize);
                     addScaledArray(w->wu_t, w->dut, w->l, w->stepsize);
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
-
+                    calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); 
+                    scaleArray(w->Rwu, sqrt(w->stgs->rho_x), w->n); /* Scaled FP res in ls */
+                //    if (w->stgs->k1 && )   
                 } /* end of line-search */
             }
 
