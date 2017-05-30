@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - LibForBES Unit Tests - src/directions.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - directions.c<span style="font-size: 80%;"> (source / <a href="directions.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">LibForBES Unit Tests</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-05-30</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #include &quot;directions.h&quot;</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span><span class="lineCov">        552 : scs_int resetSUCache(SUCache * cache) {</span>
+<span class="lineNum">       4 </span><span class="lineCov">        552 :     cache-&gt;mem_cursor = 0; /* set active memory to 0 */</span>
+<span class="lineNum">       5 </span><span class="lineCov">        552 :     RETURN SU_CACHE_RESET;</span>
+<a name="6"><span class="lineNum">       6 </span>            : }</a>
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span><span class="lineCov">       5501 : scs_int computeLSBroyden(Work *work) {</span>
+<span class="lineNum">       9 </span>            :     /* --- DECLARATIONS --- */
+<span class="lineNum">      10 </span>            :     SUCache * cache; /* the SU cache (pointer) */
+<span class="lineNum">      11 </span>            :     scs_int i; /* index */
+<span class="lineNum">      12 </span>            :     scs_float * s_tilde_current; /* s_tilde (which is updated) */
+<span class="lineNum">      13 </span>            :     scs_float * u_new; /* new value of u */
+<span class="lineNum">      14 </span>            :     scs_float * s_i; /* pointer to the current value of s_i */
+<span class="lineNum">      15 </span>            :     scs_float * u_i; /* pointer to the current value of u_i */
+<span class="lineNum">      16 </span>            :     scs_float ip; /* temporary float to store inner products */
+<span class="lineNum">      17 </span>            :     scs_float s_norm_sq; /* scalar gamma as in (6.5e) */
+<span class="lineNum">      18 </span><span class="lineCov">       5501 :     scs_float theta = 0; /* theta */</span>
+<span class="lineNum">      19 </span><span class="lineCov">       5501 :     const scs_int l = work-&gt;l; /* size of vectors */</span>
+<span class="lineNum">      20 </span><span class="lineCov">       5501 :     const scs_float theta_bar = work-&gt;stgs-&gt;thetabar; /* parameter in Powell's trick */</span>
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span><span class="lineCov">       5501 :     cache = work-&gt;su_cache;</span>
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            :     /* d [work-&gt;dir] = -R [work-&gt;R] */
+<span class="lineNum">      25 </span><span class="lineCov">       5501 :     setAsScaledArray(work-&gt;dir, work-&gt;R, -1.0, l);</span>
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            :     /* s_tilde_current = y [work-&gt;Yk] */
+<span class="lineNum">      28 </span>            :     /* use the end of the cache to store s_tilde_current */
+<span class="lineNum">      29 </span>            :     /* later we use the same position of the S-buffer to store the current Sk */
+<span class="lineNum">      30 </span><span class="lineCov">       5501 :     s_tilde_current = cache-&gt;S + (cache-&gt;mem_cursor * l);</span>
+<span class="lineNum">      31 </span><span class="lineCov">       5501 :     memcpy(s_tilde_current, work-&gt;Yk, l * sizeof (scs_float));</span>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            :     /* update s and d */
+<span class="lineNum">      34 </span><span class="lineCov">      30251 :     for (i = 0; i &lt; cache-&gt;mem_cursor; ++i) {</span>
+<span class="lineNum">      35 </span><span class="lineCov">      24750 :         s_i = cache-&gt;S + i * l; /* retrieve s_i from the cache */</span>
+<span class="lineNum">      36 </span><span class="lineCov">      24750 :         u_i = cache-&gt;U + i * l; /* retrieve u_i from the cache */</span>
+<span class="lineNum">      37 </span><span class="lineCov">      24750 :         ip = innerProd(s_i, s_tilde_current, l);</span>
+<span class="lineNum">      38 </span><span class="lineCov">      24750 :         addScaledArray(s_tilde_current, u_i, ip, l); /* update s_tilde */</span>
+<span class="lineNum">      39 </span><span class="lineCov">      24750 :         ip = innerProd(s_i, work-&gt;dir, l);</span>
+<span class="lineNum">      40 </span><span class="lineCov">      24750 :         addScaledArray(work-&gt;dir, u_i, ip, l); /* update direction */</span>
+<span class="lineNum">      41 </span>            :     }
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :     /* compute theta */
+<span class="lineNum">      44 </span><span class="lineCov">       5501 :     ip = innerProd(s_tilde_current, work-&gt;Sk, l);</span>
+<span class="lineNum">      45 </span><span class="lineCov">       5501 :     s_norm_sq = calcNormSq(work-&gt;Sk, l);</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">       5501 :     if (scs_abs(ip) &gt;= theta_bar * s_norm_sq) {</span>
+<span class="lineNum">      48 </span><span class="lineCov">       5001 :         theta = 1;</span>
+<span class="lineNum">      49 </span>            :     } else {
+<span class="lineNum">      50 </span><span class="lineCov">        500 :         theta = s_norm_sq * (1 - scs_sgn(ip) * theta_bar) / (s_norm_sq - ip);</span>
+<span class="lineNum">      51 </span>            :         /* s_tilde_current = (1-theta)*s + theta*s_tilde_current */
+<span class="lineNum">      52 </span><span class="lineCov">       2500 :         for (i = 0; i &lt; l; ++i) {</span>
+<span class="lineNum">      53 </span><span class="lineCov">       2000 :             s_tilde_current[i] = (1 - theta) * work-&gt;Sk[i] + theta * s_tilde_current[i];</span>
+<span class="lineNum">      54 </span>            :         }
+<span class="lineNum">      55 </span>            :     }
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :     /* FINALISE */
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     /* update u_new (at the end of the buffer) */
+<span class="lineNum">      61 </span><span class="lineCov">       5501 :     u_new = cache-&gt;U + (cache-&gt;mem_cursor * l);</span>
+<span class="lineNum">      62 </span><span class="lineCov">       5501 :     ip = innerProd(work-&gt;Sk, s_tilde_current, l);</span>
+<span class="lineNum">      63 </span><span class="lineCov">      27505 :     for (i = 0; i &lt; l; ++i) {</span>
+<span class="lineNum">      64 </span><span class="lineCov">      22004 :         u_new[i] = (work-&gt;Sk[i] - s_tilde_current[i]) / ip;</span>
+<span class="lineNum">      65 </span>            :     }
+<span class="lineNum">      66 </span>            :     /* update direction */
+<span class="lineNum">      67 </span><span class="lineCov">       5501 :     ip = innerProd(work-&gt;Sk, work-&gt;dir, l); /* s'd */</span>
+<span class="lineNum">      68 </span><span class="lineCov">      27505 :     for (i = 0; i &lt; l; ++i) {</span>
+<span class="lineNum">      69 </span><span class="lineCov">      22004 :         work-&gt;dir[i] += ip * u_new[i];</span>
+<span class="lineNum">      70 </span>            :     }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     /* push s into the buffer */
+<span class="lineNum">      73 </span><span class="lineCov">       5501 :     memcpy(s_tilde_current, work-&gt;Sk, l * sizeof (scs_float));</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">       5501 :     cache-&gt;mem_cursor++; /* move the cursor */</span>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :     /* if the cursor has exceeded the last position, reset the cache */
+<span class="lineNum">      78 </span><span class="lineCov">       5501 :     if (cache-&gt;mem_cursor &gt;= cache-&gt;mem) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">        550 :         RETURN resetSUCache(cache); /* returns SU_CACHE_RESET */</span>
+<span class="lineNum">      80 </span>            :     }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">       4951 :     RETURN SU_CACHE_INCREMENT;</span>
+<span class="lineNum">      83 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

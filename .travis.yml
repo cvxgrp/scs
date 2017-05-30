@@ -14,3 +14,7 @@ script:
   - make run-test
 cache:  
   - apt
+after_success:
+  - make cov
+  - coveralls-lcov --repo-token $COVERALLS_KEY scs-coverage.info
+  - bash <(curl -s https://codecov.io/bash)

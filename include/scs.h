@@ -95,8 +95,7 @@ extern "C" {
 
     /*
      * main library API's:
-     * scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T
-     * -I])
+     * scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T -I])
      * scs_solve: can be called many times with different b,c data for one init call
      * scs_finish: cleans up the memory (one per init call)
      */

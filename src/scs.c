@@ -814,28 +814,28 @@ static scs_int validate(const Data *d, const Cone *k) {
         RETURN - 1;
     }
     if (stgs->max_iters <= 0) {
-        scs_printf("max_iters must be positive\n");
+        scs_printf("max_iters must be positive (max_iters=%d)\n", stgs->max_iters);
         RETURN - 1;
     }
     if (stgs->eps <= 0) {
-        scs_printf("eps tolerance must be positive\n");
+        scs_printf("eps tolerance must be positive (eps=%g)\n", stgs->eps);
         RETURN - 1;
     }
     if (stgs->alpha <= 0 || stgs->alpha >= 2) {
-        scs_printf("alpha must be in (0,2)\n");
+        scs_printf("alpha must be in (0,2) (alpha=%d)\n", stgs->alpha);
         RETURN - 1;
     }
     if (stgs->rho_x <= 0) {
-        scs_printf("rhoX must be positive (1e-3 works well).\n");
+        scs_printf("rhoX must be positive (1e-3 works well) (rho_x=%d).\n", stgs->rho_x);
         RETURN - 1;
     }
     if (stgs->scale <= 0) {
-        scs_printf("scale must be positive (1 works well).\n");
+        scs_printf("Parameter `scale` must be positive (1 works well).\n");
         RETURN - 1;
     }
     /* validate settings related to SuperSCS */
     if (stgs->thetabar < 0 || stgs->thetabar > 1) {
-        scs_printf("thetabar must be a scalar between 0 and 1\n");
+        scs_printf("Parameters `thetabar` must be a scalar between 0 and 1 (thetabar=%g)\n", stgs->thetabar);
         RETURN - 1;
     }
     if (stgs->memory <= 1) {
@@ -846,8 +846,12 @@ static scs_int validate(const Data *d, const Cone *k) {
         scs_printf("Stepsize reduction factor (beta=%g) out of bounds.\n", stgs->beta);
         RETURN - 1;
     }
-    if (stgs->rho_x <= 0) {
-        scs_printf("Parameter rho_x (=%g) cannot be nonpositive.\n", stgs->rho_x);
+    if (stgs->ls < 0) {
+        scs_printf("Illegal maximum number of line search iterations (ls=%d).\n", stgs->ls);
+        RETURN - 1;
+    }
+    if (stgs->sigma < 0) {
+        scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
         RETURN - 1;
     }
     RETURN 0;
@@ -1046,49 +1050,10 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
                     addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
                 }
                 /* compute direction */
-
             }
         }
     }
-
-
-
-    /*  
-      for (i = 0; i < w->stgs->max_iters; ++i) {
-          memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
-
-          if (projectLinSysv2(w, i) < 0) {
-              RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                             "error in projectLinSys", "Failure");
-          }
-          if (projectCones(w, k, i) < 0) {
-              RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                             "error in projectCones", "Failure");
-          }
-
-          updateDualVars(w);
-
-          if (isInterrupted()) {
-              RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
-                             "Interrupted");
-          }
-          if (i % CONVERGED_INTERVAL == 0) {
-              calcResiduals(w, &r, i);
-              if ((info->statusVal = hasConverged(w, &r, i)) != 0) {
-                  break;
-              }
-          }
-
-          if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-              calcResiduals(w, &r, i);
-              printSummary(w, i, &r, &solveTimer);
-          }
-      }
-      if (w->stgs->verbose) {
-          calcResiduals(w, &r, i);
-          printSummary(w, i, &r, &solveTimer);
-     } *}
-     */
+    
     /* populate solution vectors (unnormalized) and info */
     getSolution(w, sol, info, &r, i);
     info->solveTime = tocq(&solveTimer);

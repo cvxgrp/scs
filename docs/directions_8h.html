@@ -169,7 +169,10 @@ Functions</h2></td></tr>
 <li>Returns: Direction \(d_\star\) (and updates the \((\mathbf{s}, \mathbf{u})\)-buffer)</li>
 <li>\(d_\star \gets -r\)</li>
 <li>\(s_\star \gets y\)</li>
-<li>for \(i=0,\ldots, m-1\),<ol type="a">
+<li>\(m&#39;\gets\) current cursor position</li>
+</ol>
+<ol type="1">
+<li>for \(i=0,\ldots, m&#39;-1\),<ol type="a">
 <li>\(s_\star \gets s_\star + \langle \mathbf{s}_i, s_\star\rangle \mathbf{u}_i\)</li>
 <li>\(d_\star \gets d_\star + \langle \mathbf{s}_i, d_\star\rangle \mathbf{u}_i\)</li>
 </ol>
@@ -178,7 +181,7 @@ Functions</h2></td></tr>
 <li>\(s_\star \gets (1-\theta)s + \theta s_\star\)</li>
 <li>\(u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\) and push it into the buffer</li>
 <li>\(d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\)</li>
-<li>Add \(s\) into the buffer or empty/reset it if it is full</li>
+<li>Add \(s\) into the buffer and move the cursor forward or empty/reset it if it is full</li>
 </ol>
 <dl class="section return"><dt>Returns</dt><dd>status code of the method. </dd></dl>
 
@@ -211,7 +214,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue May 30 2017 11:22:16 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue May 30 2017 11:26:05 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -16,7 +16,7 @@ TEST_SRC_DIR = tests/c
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-CFLAGS += $(OPT_FLAGS) 
+CFLAGS += $(OPT_FLAGS) -g --coverage
 CUDAFLAGS += $(OPT_FLAGS)
 
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
@@ -133,6 +133,11 @@ run-test: test
 run-test-mem: test
 	valgrind -v --leak-check=full out/UNIT_TEST_RUNNER
 	
+cov: run-test
+	lcov --directory ./src --capture --output-file scs-coverage.info
+	lcov --remove coverage.info  '/usr/*' --output-file scs-coverage.info
+	lcov --list scs-coverage.info
+
 help:
 	@echo "\nMakefile targets...\n"
 	@echo "make help ....................... this help message"
