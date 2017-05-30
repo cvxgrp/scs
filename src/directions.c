@@ -14,7 +14,7 @@ scs_int computeLSBroyden(Work *work) {
     scs_float * s_i; /* pointer to the current value of s_i */
     scs_float * u_i; /* pointer to the current value of u_i */
     scs_float ip; /* temporary float to store inner products */
-    scs_float gamma; /* scalar gamma as in (6.5e) */
+    scs_float s_norm_sq; /* scalar gamma as in (6.5e) */
     scs_float theta = 0; /* theta */
     const scs_int l = work->l; /* size of vectors */
     const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
@@ -41,13 +41,13 @@ scs_int computeLSBroyden(Work *work) {
     }
 
     /* compute theta */
-    gamma = innerProd(s_tilde_current, work->Sk, l);
-    gamma /= calcNormSq(work->Sk, l);
+    ip = innerProd(s_tilde_current, work->Sk, l);
+    s_norm_sq = calcNormSq(work->Sk, l);
 
-    if (scs_abs(gamma) >= theta_bar) {
+    if (scs_abs(ip) >= theta_bar * s_norm_sq) {
         theta = 1;
     } else {
-        theta = (1 - scs_sgn(gamma) * theta_bar) / (1 - gamma);
+        theta = s_norm_sq * (1 - scs_sgn(ip) * theta_bar) / (s_norm_sq - ip);
         /* s_tilde_current = (1-theta)*s + theta*s_tilde_current */
         for (i = 0; i < l; ++i) {
             s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
