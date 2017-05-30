@@ -13,6 +13,7 @@
       <in>normalize.h</in>
       <in>scs.h</in>
       <in>scs_blas.h</in>
+      <in>unit_test_util.h</in>
       <in>util.h</in>
     </df>
     <df root="linsys" name="1">
@@ -55,9 +56,13 @@
     <df root="tests" name="3">
       <df name="c">
         <in>test_broyden.c</in>
+        <in>test_broyden.h</in>
         <in>test_dummy.c</in>
+        <in>test_dummy.h</in>
         <in>test_runner.c</in>
+        <in>test_runner.h</in>
         <in>test_utilities.c</in>
+        <in>test_utilities.h</in>
       </df>
     </df>
   </logicalFolder>
@@ -70,13 +75,13 @@
       </toolsSet>
       <compile>
         <compiledirpicklist>
-          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
           <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
         </compiledirpicklist>
         <compiledir>${AUTO_FOLDER}</compiledir>
         <compilecommandpicklist>
-          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
           <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
         </compilecommandpicklist>
         <compilecommand>${AUTO_COMPILE}</compilecommand>
       </compile>

@@ -58,14 +58,12 @@
     <df root="tests" name="3">
       <df name="c">
         <in>test_broyden.c</in>
-
         <in>test_broyden.h</in>
         <in>test_dummy.c</in>
         <in>test_runner.c</in>
         <in>test_runner.h</in>
         <in>test_utilities.c</in>
         <in>test_utilities.h</in>
-
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -249,7 +247,6 @@
         </cTool>
       </item>
       <item path="src/util.c" ex="false" tool="0" flavor2="0">
-
         <cTool flags="0">
         </cTool>
       </item>

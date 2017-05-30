@@ -100,10 +100,8 @@ static void freeWork(Work *w) {
         scs_free(w->u_b);
     if (w->R)
         scs_free(w->R);
-    if (w->sc_R)
-        scs_free(w->sc_R);
-    if (w->sc_R_prev)
-        scs_free(w->sc_R_prev);
+    if (w->R_prev)
+        scs_free(w->R_prev);
     if (w->dir)
         scs_free(w->dir);
     if (w->dut)
@@ -210,15 +208,19 @@ static void warmStartVars(Work *w, const Sol *sol) {
     memset(w->v, 0, n * sizeof (scs_float));
     memcpy(w->u, sol->x, n * sizeof (scs_float));
     memcpy(&(w->u[n]), sol->y, m * sizeof (scs_float));
-    memcpy(&(w->v[n]), sol->s, m * sizeof (scs_float));
+    if (!w->stgs->do_super_scs) {
+        memcpy(&(w->v[n]), sol->s, m * sizeof (scs_float));
+        w->v[n + m] = 0.0;
+    }
     w->u[n + m] = 1.0;
-    w->v[n + m] = 0.0;
 #ifndef NOVALIDATE
     for (i = 0; i < n + m + 1; ++i) {
-        if (scs_isnan(w->u[i]))
+        if (scs_isnan(w->u[i])) {
             w->u[i] = 0;
-        if (scs_isnan(w->v[i]))
+        }
+        if (!w->stgs->do_super_scs && scs_isnan(w->v[i])) {
             w->v[i] = 0;
+        }
     }
 #endif
     if (w->stgs->normalize) {
@@ -241,7 +243,7 @@ static void warmStartVarsv2(Work *w, const Sol *sol) {
     }
 #endif
     if (w->stgs->normalize) {
-        normalizeWarmStartv2(w);
+        normalizeWarmStart(w);
     }
     RETURN;
 }
@@ -329,19 +331,13 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
 
 static void coldStartVars(Work *w) {
     DEBUG_FUNC
-    scs_int l = w->n + w->m + 1;
-    memset(w->u, 0, l * sizeof (scs_float));
-    memset(w->v, 0, l * sizeof (scs_float));
+    scs_int l = w->l;
+    memset(w->u, 0, l * sizeof (scs_float));    
     w->u[l - 1] = SQRTF((scs_float) l);
-    w->v[l - 1] = SQRTF((scs_float) l);
-    RETURN;
-}
-
-static void coldStartVarsv2(Work *w) {
-    DEBUG_FUNC
-    scs_int l = w->n + w->m + 1;
-    memset(w->u, 0, l * sizeof (scs_float));
-    w->u[l - 1] = SQRTF((scs_float) l);
+    if (!w->stgs->do_super_scs) {
+        memset(w->v, 0, l * sizeof (scs_float));
+        w->v[l - 1] = SQRTF((scs_float) l);
+    }
     RETURN;
 }
 
@@ -434,16 +430,6 @@ static void calcFPRes(Work *w) {
     scs_int i, n = w->n, l = n + w->m + 1;
     for (i = 0; i < l; ++i) {
         w->R[i] = w->u_t[i] - w->u_b[i];
-    }
-    RETURN;
-}
-
-/* Calculate FP residuals with equality rescaling */
-static void scaleFPRes(Work *w) {
-    scs_int i;
-    memcpy(w->R, w->sc_R, (w->n + w->m + 1) * sizeof (scs_float));
-    for (i = 0; i < w->n; ++i) {
-        w->sc_R[i] *= SQRTF(w->stgs->rho_x);
     }
     RETURN;
 }
@@ -908,8 +894,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     /* added for superscs*/
     w->u_t = scs_malloc(l * sizeof (scs_float));
     w->R = scs_calloc(l, sizeof (scs_float));
-    w->sc_R = scs_calloc(l, sizeof (scs_float));
-    w->sc_R_prev = scs_calloc(l, sizeof (scs_float));
+    w->R_prev = scs_calloc(l, sizeof (scs_float));
     w->dir = scs_calloc(l, sizeof (scs_float));
     w->dut = scs_calloc(l, sizeof (scs_float));
 
@@ -931,7 +916,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     }
 
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
-            !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->sc_R || !w->sc_R_prev ||
+            !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->R_prev ||
             !w->dir || !w->dut || !w->Sk || !w->Yk
             || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
         scs_printf("ERROR: work memory allocation failure\n");
@@ -1031,7 +1016,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
         printHeader(w, k);
     /* scs: */
     for (i = 0; i < w->stgs->max_iters; ++i) {
-        memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof (scs_float));
+        memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
 
         if (projectLinSys(w, i) < 0) {
             RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1079,6 +1064,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scs_int i;
     scs_int how = 0;
     scs_float eta;
+    scs_float r_safe;
 
     timer solveTimer;
     struct residuals r;
@@ -1098,41 +1084,42 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         printHeader(w, k);
 
     /* Initialize: */
-    memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof (scs_float));
+    memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
 
     projectLinSysv2(w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w, k, i); /* u_bar = proj_C(2u_t - u) */
     calcFPRes(w); /* computes Ru */
-    scaleFPRes(w); /* Scale with rho_x */
+    scaleArray(w->R, sqrt(w->stgs->rho_x), w->n); /* Scale with rho_x, R = [sqrt(rho_x)*R_x, R_y, R_tau] */
 
-    eta = calcNorm(w->sc_R, (w->n + w->m + 1)); /* initialize eta = |Ru^0| */
+    /***** HENCEFORTH, R IS SCALED! *****/
+
+    eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| */
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < w->stgs->max_iters; ++i) {
 
-
-        w->nrmR_con = (i == 0) ? eta : calcNorm(w->sc_R, (w->n + w->m + 1));
-
+        w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, (w->n + w->m + 1));
 
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
-                w->dir = w->sc_R;
+                w->dir = w->R;
                 scaleArray(w->dir, -1, w->n + w->m + 1);
             } else {
                 /*  if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
                     w->Sk = w->u; /* IT IS NOT SCALED!!!!!!!!!!!!! */
                     addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
-                    w->Yk = w->sc_R;
-                    addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
+                    w->Yk = w->R;
+                    addScaledArray(w->Yk, w->R_prev, (w->n + w->m + 1), -1);
                 } else {
                     w->Sk = w->wu;
                     addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
                     w->Yk = w->sc_Rwu;
-                    addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
+                    addScaledArray(w->Yk, w->R_prev, (w->n + w->m + 1), -1);
                 }
                 /* compute direction */
                 computeLSBroyden(w);
+                scaleArray(w->dir, 1 / sqrt(w->stgs->rho_x), w->n);
             }
         }
     }

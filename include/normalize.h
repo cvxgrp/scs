@@ -1,6 +1,9 @@
 #ifndef NORMALIZE_H_GUARD
 #define NORMALIZE_H_GUARD
 
+#include "scs.h"
+
+
 #define MIN_SCALE (1e-3)
 #define MAX_SCALE (1e3)
 
@@ -64,35 +67,18 @@ void normalizeWarmStart(Work *w) {
     scs_float *D = w->scal->D;
     scs_float *E = w->scal->E;
     scs_float *x = w->u;
-    scs_float *y = &(w->u[w->n]);
-    scs_float *s = &(w->v[w->n]);
+    scs_float *y = w->u + w->n;
+    scs_float *s = w->v + w->n;
     for (i = 0; i < w->n; ++i) {
         x[i] *= (E[i] * w->sc_b);
     }
     for (i = 0; i < w->m; ++i) {
         y[i] *= (D[i] * w->sc_c);
     }
-    for (i = 0; i < w->m; ++i) {
+    for (i = 0; !w->stgs->do_super_scs && i < w->m; ++i) {
         s[i] /= (D[i] / (w->sc_b * w->stgs->scale));
     }
 }
-
-
-void normalizeWarmStartv2(Work *w) {
-    scs_int i;
-    scs_float *D = w->scal->D;
-    scs_float *E = w->scal->E;
-    scs_float *x = w->u;
-    scs_float *y = &(w->u[w->n]);
-
-    for (i = 0; i < w->n; ++i) {
-        x[i] *= (E[i] * w->sc_b);
-    }
-    for (i = 0; i < w->m; ++i) {
-        y[i] *= (D[i] * w->sc_c);
-    }
-}
-
 
 void unNormalizeSol(Work *w, Sol *sol) {
     scs_int i;
@@ -121,5 +107,5 @@ void unNormalizeBC(Work * w, Sol * sol) {
                 w->b[i] *= D[i] / (w->sc_b * w->scale);
         }
 }
-*/
+ */
 #endif
