@@ -856,6 +856,10 @@ static scs_int validate(const Data *d, const Cone *k) {
             scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
             RETURN - 1;
         }
+        if (stgs->c_bl < 0 || stgs->c_bl >= 1) {
+            scs_printf("Parameter c0 of K0 (c0=%g) must be in [0,1).\n", stgs->c_bl);
+            RETURN - 1;
+        }
     }
     RETURN 0;
 }
@@ -1094,7 +1098,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
     scaleArray(w->u, sqrt(w->stgs->rho_x), w->n); /* u is now scaled */
     r_safe = eta;
-    
+
     /***** HENCEFORTH, R and u ARE SCALED! *****/
 
     /* MAIN SUPER SCS LOOP */
