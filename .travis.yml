@@ -6,6 +6,9 @@ addons:
     packages:
       - libblas-dev
       - liblapack-dev
+      - lcov
+install:
+  - sudo gem install coveralls-lcov       
 before_install:
   - sudo ldconfig 
   - make
@@ -13,7 +16,7 @@ script:
   - make test
   - make run-test
 cache:  
-  - apt
+  apt: true
 after_success:
   - make cov
   - coveralls-lcov --repo-token $COVERALLS_KEY scs-coverage.info
