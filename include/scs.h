@@ -181,7 +181,8 @@ extern "C" {
         scs_float *R_prev; 
         scs_float *dir; /**< direction \f$d_k\f$ for \f$u\f$ */
         scs_float *dut; /**<  direction \f$\tilde{u} \f$*/
-        scs_float *wu;
+        scs_float *wu; 
+        scs_float *wu_t; 
         scs_float *sc_Rwu; /**< from line search */
         scs_float nrmR_con; /**<  \f$\|Rx_k\|\f$ */
         scs_float *Sk; /**< \f$s_k\f$ */

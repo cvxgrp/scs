@@ -112,6 +112,8 @@ static void freeWork(Work *w) {
         scs_free(w->Yk);
     if (w->wu)
         scs_free(w->wu);
+    if (w->wu_t)
+        scs_free(w->wu_t);
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
     if (w->su_cache)
@@ -908,12 +910,13 @@ static Work *initWork(const Data *d, const Cone *k) {
     if (w->stgs->ls > 0) {
         w->wu = scs_calloc(l, sizeof (scs_float));
         w->sc_Rwu = scs_calloc(l, sizeof (scs_float));
+        w->wu_t = scs_malloc(l, sizeof (scs_float)); 
     }
 
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
             !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->R_prev ||
             !w->dir || !w->dut || !w->Sk || !w->Yk
-            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
+            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu || !w->wu_t))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
     }
@@ -1057,7 +1060,8 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
 scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i;
-    scs_int how = 0;
+    scs_int j;
+    scs_int how = 0; /* -1:unsuccessful backtracking, 0:K0, 1:K1, 2:K2 */
     scs_float eta;
     scs_float r_safe;
 
@@ -1079,7 +1083,6 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         printHeader(w, k);
 
     /* Initialize: */
-    memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
 
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w, k, i); /* u_bar = proj_C(2u_t - u) */
@@ -1088,9 +1091,9 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     /***** HENCEFORTH, R IS SCALED! *****/
 
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| */
-
     scaleArray(w->u, sqrt(w->stgs->rho_x), w->n);
-
+    r_safe = eta; 
+    
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < w->stgs->max_iters; ++i) {
 
@@ -1122,12 +1125,24 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         how = -1; /* no backtracking (yet) */
         
         if (i >= w->stgs->warm_start) {
-            if (K0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
+            if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
                 addScaledArray(w->u, w->dir, w->l, 1.0);
                 how = 0;
                 eta = w->nrmR_con;
-                // add rsafe
+                r_safe = INFINITY; 
+                w->stepsize = 1.0;
+            } else if (w->stgs->ls > 0) {
+                projectLinSysv2(w, i);
+                w->stepsize = 2.0;
+                
+                /* Line - search */
+                for (j=0; j<w->stgs->ls; ++j) { 
+                    w->stepsize *= w->stgs->beta;
+                    addScaledArray(w->wu, w->dir, w->l, w->stepsize);
+                    addScaledArray(w->wu);
+                } /* end of line-search */
             }
+            
         }
 
     }
