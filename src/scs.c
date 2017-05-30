@@ -1098,8 +1098,6 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         printHeader(w, k);
 
     /* Initialize: */
-    memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof (scs_float));
-
     projectLinSysv2(w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w, k, i); /* u_bar = proj_C(2u_t - u) */
     calcFPRes(w); /* computes Ru */
