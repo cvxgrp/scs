@@ -1089,7 +1089,8 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
-    calcFPRes(w); /* computes Ru */
+ 
+    calcFPRes(w->R, w->u_t, w->u_b, w->l); /* computes Ru */
     scaleArray(w->R, sqrt(w->stgs->rho_x), w->n);
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
     scaleArray(w->u, sqrt(w->stgs->rho_x), w->n); /* u is now scaled */
