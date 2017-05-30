@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['s',['s',['../struct_s_c_s___c_o_n_e.html#a8400cfd0fc6f3ccdb89b6ddcc74d2732',1,'SCS_CONE::s()'],['../struct_s_c_s___s_o_l___v_a_r_s.html#aa3c4c55b3bab23bd2f31398e85ab2ff8',1,'SCS_SOL_VARS::s()'],['../struct_s_c_s___s_u___m_e_m_o_r_y.html#aac89225fdd99a98b9e209a434a7fd037',1,'SCS_SU_MEMORY::S()']]],
+  ['sc_5fb',['sc_b',['../struct_s_c_s___w_o_r_k.html#a00e156d74af3a51c8225907fed29a4a3',1,'SCS_WORK']]],
+  ['sc_5fc',['sc_c',['../struct_s_c_s___w_o_r_k.html#ab5bc1756422f09fb8e51a6c8e93adf4c',1,'SCS_WORK']]],
+  ['sc_5finit',['sc_init',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#af35dd2ca65a1a2134f6d267f8c579a3d',1,'SCS_SETTINGS']]],
+  ['sc_5fr',['sc_R',['../struct_s_c_s___w_o_r_k.html#a12b050da330cd2ecd6288576f345aacb',1,'SCS_WORK']]],
+  ['sc_5fr_5fprev',['sc_R_prev',['../struct_s_c_s___w_o_r_k.html#afcd5e2a4166f6e776ee7cc28380f69ba',1,'SCS_WORK']]],
+  ['sc_5frwu',['sc_Rwu',['../struct_s_c_s___w_o_r_k.html#a4526bd47507bf76528c5503c2c718472',1,'SCS_WORK']]],
+  ['scal',['scal',['../struct_s_c_s___w_o_r_k.html#a730615f403149dba91df8a1a95cce630',1,'SCS_WORK']]],
+  ['scale',['scale',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#ab2b6a1ce51f2136cd86fa83c556115db',1,'SCS_SETTINGS']]],
+  ['setuptime',['setupTime',['../struct_s_c_s___i_n_f_o.html#a256bf2cabb2fef250de553e378898306',1,'SCS_INFO']]],
+  ['sigma',['sigma',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a7b45173215e15ea5936fdf9f268e5881',1,'SCS_SETTINGS']]],
+  ['sk',['Sk',['../struct_s_c_s___w_o_r_k.html#a7cca350a27cb51159173625c33c612a8',1,'SCS_WORK']]],
+  ['solvetime',['solveTime',['../struct_s_c_s___i_n_f_o.html#abf921434213a047f2abc2a47feca54e8',1,'SCS_INFO']]],
+  ['ssize',['ssize',['../struct_s_c_s___c_o_n_e.html#a743ed457f561a65bc02af67d3fe1d29f',1,'SCS_CONE']]],
+  ['status',['status',['../struct_s_c_s___i_n_f_o.html#ac79351c93fe44f38bd52330cabadbc3b',1,'SCS_INFO']]],
+  ['statusval',['statusVal',['../struct_s_c_s___i_n_f_o.html#ae6e5ecc65a6c58d8ae4c8ee2f83af4e1',1,'SCS_INFO']]],
+  ['stepsize',['stepsize',['../struct_s_c_s___w_o_r_k.html#ac5a727ef1efb0420f4cffa873f30eacd',1,'SCS_WORK']]],
+  ['stgs',['stgs',['../struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a14bfc0a349fe9be30059e55c4ba0066f',1,'SCS_PROBLEM_DATA::stgs()'],['../struct_s_c_s___w_o_r_k.html#a4f48ab97dacf5c54b250752d2213c83c',1,'SCS_WORK::stgs()']]],
+  ['su_5fcache',['su_cache',['../struct_s_c_s___w_o_r_k.html#a868a7451f64464b0f2c6c053073998ed',1,'SCS_WORK']]]
+];

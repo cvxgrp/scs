@@ -1,5 +1,6 @@
 #include "scs.h"
 #include "normalize.h"
+#include "directions.h"
 
 #ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
@@ -28,6 +29,40 @@ static const scs_int LINE_LEN = 76;
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
     RETURN(x == NAN || x != x);
+}
+
+static SUCache * initSUCache(scs_int memory, scs_int l) {
+    SUCache * cache = scs_calloc(1, sizeof (SUCache));
+    if (!cache) {
+        scs_printf("ERROR: allocating YSCache failure\n");
+        RETURN SCS_NULL;
+    }
+
+    /* we allocate one extra memory position because it's needed */
+    cache->S = scs_calloc((1 + memory) * l, sizeof (scs_float)); /* S: l-by-mem */
+    cache->U = scs_calloc((1 + memory) * l, sizeof (scs_float)); /* U: l-by-mem */
+
+
+    /* the cache must know its memory length */
+    cache->mem = memory;
+
+    /* initial active memory is 0 */
+    resetSUCache(cache);
+    return cache;
+}
+
+static void freeYSCache(SUCache * cache) {
+    if (!cache) {
+        return;
+    }
+    if (cache->S) {
+        scs_free(cache->S);
+    }
+    if (cache->U) {
+        scs_free(cache->U);
+    }
+    scs_free(cache);
+    RETURN;
 }
 
 static void freeWork(Work *w) {
@@ -81,8 +116,8 @@ static void freeWork(Work *w) {
         scs_free(w->wu);
     if (w->sc_Rwu)
         scs_free(w->sc_Rwu);
-    if (w->S)
-        scs_free(w->S);
+    if (w->su_cache)
+        freeYSCache(w->su_cache);
 
     scs_free(w);
     RETURN;
@@ -334,20 +369,16 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 
 /* status < 0 indicates failure */
 static scs_int projectLinSysv2(Work *w, scs_int iter) {
-    /* ut = u + v */
     DEBUG_FUNC
     scs_int n = w->n, m = w->m, l = n + m + 1, status;
     memcpy(w->u_t, w->u, l * sizeof (scs_float));
 
     scaleArray(w->u_t, w->stgs->rho_x, n);
-
     addScaledArray(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
     addScaledArray(w->u_t, w->h, l - 1,
             -innerProd(w->u_t, w->g, l - 1) / (w->gTh + 1));
     scaleArray(&(w->u_t[n]), -1, m);
-
     status = solveLinSys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
-
     w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
 
     RETURN status;
@@ -783,23 +814,44 @@ static scs_int validate(const Data *d, const Cone *k) {
         RETURN - 1;
     }
     if (stgs->max_iters <= 0) {
-        scs_printf("max_iters must be positive\n");
+        scs_printf("max_iters must be positive (max_iters=%d)\n", stgs->max_iters);
         RETURN - 1;
     }
     if (stgs->eps <= 0) {
-        scs_printf("eps tolerance must be positive\n");
+        scs_printf("eps tolerance must be positive (eps=%g)\n", stgs->eps);
         RETURN - 1;
     }
     if (stgs->alpha <= 0 || stgs->alpha >= 2) {
-        scs_printf("alpha must be in (0,2)\n");
+        scs_printf("alpha must be in (0,2) (alpha=%d)\n", stgs->alpha);
         RETURN - 1;
     }
     if (stgs->rho_x <= 0) {
-        scs_printf("rhoX must be positive (1e-3 works well).\n");
+        scs_printf("rhoX must be positive (1e-3 works well) (rho_x=%d).\n", stgs->rho_x);
         RETURN - 1;
     }
     if (stgs->scale <= 0) {
-        scs_printf("scale must be positive (1 works well).\n");
+        scs_printf("Parameter `scale` must be positive (1 works well).\n");
+        RETURN - 1;
+    }
+    /* validate settings related to SuperSCS */
+    if (stgs->thetabar < 0 || stgs->thetabar > 1) {
+        scs_printf("Parameters `thetabar` must be a scalar between 0 and 1 (thetabar=%g)\n", stgs->thetabar);
+        RETURN - 1;
+    }
+    if (stgs->memory <= 1) {
+        scs_printf("Quasi-Newton memory length (mem=%d) is too low; choose an integer at least equal to 2.\n", stgs->memory);
+        RETURN - 1;
+    }
+    if (stgs->beta >= 1 || stgs->beta <= 0) {
+        scs_printf("Stepsize reduction factor (beta=%g) out of bounds.\n", stgs->beta);
+        RETURN - 1;
+    }
+    if (stgs->ls < 0) {
+        scs_printf("Illegal maximum number of line search iterations (ls=%d).\n", stgs->ls);
+        RETURN - 1;
+    }
+    if (stgs->sigma < 0) {
+        scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
         RETURN - 1;
     }
     RETURN 0;
@@ -808,7 +860,7 @@ static scs_int validate(const Data *d, const Cone *k) {
 static Work *initWork(const Data *d, const Cone *k) {
     DEBUG_FUNC
     Work *w = scs_calloc(1, sizeof (Work));
-    scs_int l = d->n + d->m + 1;
+    const scs_int l = d->n + d->m + 1;
     if (d->stgs->verbose) {
         printInitHeader(d, k);
     }
@@ -816,10 +868,12 @@ static Work *initWork(const Data *d, const Cone *k) {
         scs_printf("ERROR: allocating work failure\n");
         RETURN SCS_NULL;
     }
+
     /* get settings and dims from data struct */
     w->stgs = d->stgs;
     w->m = d->m;
     w->n = d->n;
+
     /* allocate workspace: */
     w->u = scs_malloc(l * sizeof (scs_float));
     w->v = scs_malloc(l * sizeof (scs_float));
@@ -839,8 +893,19 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->sc_R_prev = scs_malloc(l * sizeof (scs_float));
     w->dir = scs_malloc(l * sizeof (scs_float));
     w->dut = scs_malloc(l * sizeof (scs_float));
+
+    w->stepsize = 1.0;
+
+    /* make cache */
+    if (w->stgs->memory > 0) {
+        w->su_cache = initSUCache(w->stgs->memory, l);
+    } else {
+        w->su_cache = SCS_NULL;
+    }
+
     w->Sk = scs_malloc(l * sizeof (scs_float));
     w->Yk = scs_malloc(l * sizeof (scs_float));
+
     if (w->stgs->ls > 0) {
         w->wu = scs_malloc(l * sizeof (scs_float));
         w->sc_Rwu = scs_malloc(l * sizeof (scs_float));
@@ -848,16 +913,10 @@ static Work *initWork(const Data *d, const Cone *k) {
 
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
             !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->sc_R || !w->sc_R_prev ||
-            !w->dir || !w->dut || !w->Sk || !w->Yk || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
+            !w->dir || !w->dut || !w->Sk || !w->Yk
+            || (w->stgs->ls > 0 && (!w->wu || !w->sc_Rwu))) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
-    }
-
-    if (w->stgs->direction == 1) {
-        w->S = scs_malloc(l * sizeof (scs_float *) + (l * (w->stgs->memory * sizeof (scs_float))));
-        if (!w->S) {
-            scs_printf("ERROR: Memory allocation failed");
-        }
     }
 
     w->A = d->A;
@@ -933,40 +992,9 @@ static scs_int updateWork(const Data *d, Work *w, const Sol *sol) {
     RETURN 0;
 }
 
-static void computeLBroyden(Work *w, scs_int iter) {
-    DEBUG_FUNC
-    scs_float Ysk, qf, theta;
-    scs_int l = w->m + w->n + 1;
-    scs_int skip = 0;
-
-    Ysk = innerProd(w->Yk, w->Sk, l);
-
-    switch (w->stgs->tRule) {
-        case 1:
-            qf = -w->u[l - 1] * innerProd(w->Sk, w->sc_R_prev, l);
-            if (Ysk < w->stgs->delta * ABS(qf)) {
-                theta = (1.0 - SGN(qf) * w->stgs->delta) * qf / (qf - Ysk);
-                scaleArray(w->Yk, theta, l);
-                addScaledArray(w->Yk, w->sc_R_prev, l, -w->u[l - 1]*(1.0 * theta));
-            }
-        case 4:
-            if (w->nrmR_con < 1.0)
-                w->stgs->alphaC = 3.0;
-            if (Ysk / innerProd(w->Sk, w->Sk, l) <=
-                    (1e-6) * POWF(w->nrmR_con, w->stgs->alphaC)) {
-                skip = 1;
-            }
-    }
-    if (skip != 0) {
-        if (iter > w->stgs->memory) {
-
-        }
-    }
-}
-
 scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
-    scs_int i, how;
+    scs_int i, how = 0;
     scs_float eta;
 
     timer solveTimer;
@@ -980,13 +1008,13 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     tic(&solveTimer);
     info->statusVal = SCS_UNFINISHED; /* not yet converged */
     r.lastIter = -1;
-    //  updateWorkv2(d, w, sol);
+    /*  updateWorkv2(d, w, sol); */
 
     if (w->stgs->verbose)
         printHeader(w, k);
     /* supercs: */
 
-    // Initialize:
+    /* Initialize: */
     i = 0;
     memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof (scs_float));
 
@@ -995,13 +1023,13 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     calcFPRes(w);
     scaleFPRes(w);
 
-    eta = calcNorm(w->sc_R, (w->n + w->m + 1)); // initialize eta = |Ru^0|
+    eta = calcNorm(w->sc_R, (w->n + w->m + 1)); /* initialize eta = |Ru^0| */
     memset(w->dir, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->Sk, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->Yk, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->wu, 0, (w->n + w->m + 1) * sizeof (scs_float));
     memset(w->sc_Rwu, 0, (w->n + w->m + 1) * sizeof (scs_float));
-    //    memset(w->how, 0, w->stgs->max_iters * sizeof(scs_int)); 
+    /*    memset(w->how, 0, w->stgs->max_iters * sizeof(scs_int));  */
     memcpy(w->sc_R_prev, w->sc_R, (w->n + w->m + 1) * sizeof (scs_float));
     for (i = 0; i < w->stgs->max_iters; ++i) {
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
@@ -1009,9 +1037,9 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
                 w->dir = w->sc_R;
                 scaleArray(w->dir, -1, w->n + w->m + 1);
             } else {
-                //                if (w->how[i-1] == 0 || w->stgs->ls == 0) {
+                /*               if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
-                    w->Sk = w->u; // IT IS NOT SCALED!!!!!!!!!!!!!
+                    w->Sk = w->u; /* IT IS NOT SCALED!!!!!!!!!!!!! */
                     addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
                     w->Yk = w->sc_R;
                     addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
@@ -1021,50 +1049,12 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
                     w->Yk = w->sc_Rwu;
                     addScaledArray(w->Yk, w->sc_R_prev, (w->n + w->m + 1), -1);
                 }
-                // compute direction
-
+                /* compute direction */
             }
         }
     }
-
-
-
-    /*  
-      for (i = 0; i < w->stgs->max_iters; ++i) {
-          memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
-
-          if (projectLinSysv2(w, i) < 0) {
-              RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                             "error in projectLinSys", "Failure");
-          }
-          if (projectCones(w, k, i) < 0) {
-              RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                             "error in projectCones", "Failure");
-          }
-
-          updateDualVars(w);
-
-          if (isInterrupted()) {
-              RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
-                             "Interrupted");
-          }
-          if (i % CONVERGED_INTERVAL == 0) {
-              calcResiduals(w, &r, i);
-              if ((info->statusVal = hasConverged(w, &r, i)) != 0) {
-                  break;
-              }
-          }
-
-          if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-              calcResiduals(w, &r, i);
-              printSummary(w, i, &r, &solveTimer);
-          }
-      }
-      if (w->stgs->verbose) {
-          calcResiduals(w, &r, i);
-          printSummary(w, i, &r, &solveTimer);
-     } *}
-      /* populate solution vectors (unnormalized) and info */
+    
+    /* populate solution vectors (unnormalized) and info */
     getSolution(w, sol, info, &r, i);
     info->solveTime = tocq(&solveTimer);
 

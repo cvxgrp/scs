@@ -6,8 +6,13 @@ extern "C" {
 #endif
 
     /* SCS VERSION NUMBER ----------------------------------------------    */
+    /* string literals automatically null-terminated */
+    /**
+     * Version of SCS
+     */
 #define SCS_VERSION                                                            \
-    ("1.2.6") /* string literals automatically null-terminated */
+    ("1.2.6-KUL-SuperMann") 
+
 
     /* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE (-7)
@@ -32,26 +37,27 @@ extern "C" {
 #define NORMALIZE (1)
 #define WARM_START (0)
 
-/* Parameters for Superscs*/
+    /* Parameters for Superscs*/
 #define K0 (1)
 #define K1 (1)
 #define K2 (1)    
 #define NOMINAL (1)
 #define C_BL (0.999)
 
-/* Line-search defaults */
+    /* Line-search defaults */
 #define LS  (10)
 #define BETA (0.5)
 #define SIGMA (1E-2)
-    
-/* Direction Defaults */
+
+    /* Direction Defaults */
 #define DIRECTION (1)
 #define TRULE (3)
 #define DELTA (0.5)
 #define THETABAR (1E-1)
 #define ALPHAC (1E-2) 
 #define MEMORY (10)
-    
+#define SC_INIT (0)
+
 #ifdef __cplusplus
 }
 #endif

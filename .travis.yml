@@ -6,9 +6,17 @@ addons:
     packages:
       - libblas-dev
       - liblapack-dev
+      - lcov
+install:
+  - sudo gem install coveralls-lcov       
 before_install:
   - sudo ldconfig 
   - make
 script:
-  - ./out/unitTests
-apt: true
+  - make test
+  - make run-test
+cache:  
+  apt: true
+after_success:
+  - make cov
+  - bash <(curl -s https://codecov.io/bash)

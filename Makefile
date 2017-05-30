@@ -1,17 +1,27 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o src/ctrlc.o src/scs_version.o src/directions.o
+SCS_OBJECTS =	src/scs.o \
+		src/util.o \
+		src/cones.o \
+		src/cs.o \
+		src/linAlg.o \
+		src/ctrlc.o \
+		src/scs_version.o \
+		src/directions.o \
+		src/unit_test_util.o
 
+TEST_RUNNER = UNIT_TEST_RUNNER
+TEST_SRC_DIR = tests/c
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-CFLAGS += $(OPT_FLAGS) 
+CFLAGS += $(OPT_FLAGS) -g --coverage
 CUDAFLAGS += $(OPT_FLAGS)
 
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_SCS_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o)
-TARGETS = $(OUT)/unitTests $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
+TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
 
 .PHONY: default 
 
@@ -65,9 +75,6 @@ $(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/com
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/unitTests: tests/c/unitTests.c $(OUT)/libscsdir.a
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-
 $(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
 
@@ -101,7 +108,7 @@ $(OUT)/demo_SOCP_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsgpu.a
 $(OUT)/demo_gpu: examples/c/demo.c $(OUT)/libscsgpu.$(SHARED)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS) $(CULDFLAGS)
 
-.PHONY: clean purge
+.PHONY: clean purge test
 clean:
 	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPU)/*.o
 	@rm -rf $(OUT)/*.dSYM
@@ -111,4 +118,32 @@ clean:
 	@rm -rf python/build
 purge: clean 
 	@rm -rf $(OUT)
+	
+test:	default 
+	@echo "Compiling individual tests..."
+	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_dummy.c -o $(TEST_SRC_DIR)/test_dummy.o
+	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_utilities.c -o $(TEST_SRC_DIR)/test_utilities.o
+	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_broyden.c -o $(TEST_SRC_DIR)/test_broyden.o
+	@echo "Building test runner..."
+	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/test_runner.c -o out/$(TEST_RUNNER) $(TEST_SRC_DIR)/test_dummy.o $(TEST_SRC_DIR)/test_broyden.o $(TEST_SRC_DIR)/test_utilities.o $(OUT)/libscsdir.a $(LDFLAGS)
 
+run-test: test
+	out/UNIT_TEST_RUNNER
+	
+run-test-mem: test
+	valgrind -v --leak-check=full out/UNIT_TEST_RUNNER
+	
+cov: run-test
+	lcov --directory ./src --capture --output-file scs-coverage.info
+	lcov --remove coverage.info  '/usr/*' --output-file scs-coverage.info
+	lcov --list scs-coverage.info
+
+help:
+	@echo "\nMakefile targets...\n"
+	@echo "make help ....................... this help message"
+	@echo "make clear ...................... clears build"
+	@echo "make purge ...................... spring-clean of build files/folders"
+	@echo "make default .................... builds everything"
+	@echo "make test ....................... builds tests"
+	@echo "make run-test ................... runs all unit tests"
+	@echo "make run-test-mem ............... memchecks unit tests\n"

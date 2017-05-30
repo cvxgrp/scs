@@ -45,3 +45,4 @@ out
 *.dylib
 *.jar
 *~
+nbproject/private/**
