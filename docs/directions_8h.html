@@ -166,6 +166,7 @@ Functions</h2></td></tr>
 <ol type="1">
 <li>Inputs: \(y=y_k\), \(r=Rx_k\), \(s=s_k\), \(\bar{\theta}\), \(m\) (memory)</li>
 <li>Buffer: \((\mathbf{s}, \mathbf{u})\)</li>
+<li>Returns: Direction \(d_\star\) (and updates the \((\mathbf{s}, \mathbf{u})\)-buffer)</li>
 <li>\(d_\star \gets -r\)</li>
 <li>\(s_\star \gets y\)</li>
 <li>for \(i=0,\ldots, m-1\),<ol type="a">
@@ -173,8 +174,7 @@ Functions</h2></td></tr>
 <li>\(d_\star \gets d_\star + \langle \mathbf{s}_i, d_\star\rangle \mathbf{u}_i\)</li>
 </ol>
 </li>
-<li>\(\gamma \gets \langle s, s_\star \rangle/\|s\|^2\)</li>
-<li>\(\theta \gets \begin{cases}1,&amp;\text{if } |\gamma| &gt; \bar{\theta}\\ \frac{1-\mathrm{sgn}(\gamma)\bar{\theta}}{1-\gamma},&amp;\text{otherwise}\end{cases}\)</li>
+<li>\(\theta \gets \begin{cases}1,&amp;\text{if } |\langle s, s_\star \rangle| \geq \bar{\theta} \|s\|^2\\ \frac{\|s\|^2(1-\mathrm{sgn}(\langle s, s_\star \rangle \bar{\theta})}{\|s\|^2-\langle s, s_\star \rangle},&amp;\text{otherwise}\end{cases}\)</li>
 <li>\(s_\star \gets (1-\theta)s + \theta s_\star\)</li>
 <li>\(u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\) and push it into the buffer</li>
 <li>\(d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\)</li>
@@ -211,7 +211,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue May 30 2017 11:07:58 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue May 30 2017 11:22:16 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
