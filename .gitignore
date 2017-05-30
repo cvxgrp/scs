@@ -1,4 +1,6 @@
 nbproject/private/*
+private
+private.xml
 *.gcno
 *.gcda
 *.iml
