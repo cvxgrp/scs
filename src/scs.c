@@ -334,7 +334,7 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
 static void coldStartVars(Work *w) {
     DEBUG_FUNC
     scs_int l = w->l;
-    memset(w->u, 0, l * sizeof (scs_float));    
+    memset(w->u, 0, l * sizeof (scs_float));
     w->u[l - 1] = SQRTF((scs_float) l);
     if (!w->stgs->do_super_scs) {
         memset(w->v, 0, l * sizeof (scs_float));
@@ -366,34 +366,29 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 }
 
 /* status < 0 indicates failure */
-static scs_int projectLinSysv2(Work *w, scs_int iter) {
+static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int iter) {
     DEBUG_FUNC
-            const scs_int n = w->n;
-    const scs_int m = w->m;
-    const scs_int l = n + m + 1;
+    const scs_int l = w->l;
     scs_int status;
 
-    /* u_t = u                                  */
-    memcpy(w->u_t, w->u, l * sizeof (scs_float));
-
-    /* ut  = rho_x * u_t                        */
-    scaleArray(w->u_t, w->stgs->rho_x, n);
+    /* u_t = u (is already provided scaled      */
+    memcpy(u_t, u, l * sizeof (scs_float));
 
     /* ut(1:l-1) = ut(1:l-1) - ut(end) * h      */
-    addScaledArray(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
+    addScaledArray(u_t, w->h, l - 1, -u_t[l - 1]);
 
     /* ut -= scalar * h                         */
-    addScaledArray(w->u_t, w->h, l - 1,
-            -innerProd(w->u_t, w->g, l - 1) / (w->gTh + 1));
+    addScaledArray(u_t, w->h, l - 1,
+            -innerProd(u_t, w->g, l - 1) / (w->gTh + 1));
 
-    /* ut(1:l-1) -= ut(end) * h                 */
-    scaleArray(w->u_t + n, -1, m);
+    /* ut(n+1:end-1) = -ut(n+1:end-1);           */
+    scaleArray(u_t + w->n, -1, w->m);
 
     /* call `solveLinSys` to update ut(1:n+m)   */
-    status = solveLinSys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
+    status = solveLinSys(w->A, w->stgs, w->p, u_t, u, iter);
 
     /* ut(end) = (ut(end) + h'*ut(1:l-1))       */
-    w->u_t[l - 1] += innerProd(w->u_t, w->h, l - 1);
+    u_t[l - 1] += innerProd(u_t, w->h, l - 1);
 
     RETURN status;
 }
@@ -1089,15 +1084,16 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
     /* Initialize: */
 
-    projectLinSysv2(w, i); /* u_t = (I+Q)^{-1} u*/
+    projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w, k, i); /* u_bar = proj_C(2u_t - u) */
     calcFPRes(w); /* computes Ru */
-    scaleArray(w->R, sqrt(w->stgs->rho_x), w->n); /* Scale with rho_x, R = [sqrt(rho_x)*R_x, R_y, R_tau] */
 
     /***** HENCEFORTH, R IS SCALED! *****/
 
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| */
+    scaleArray(w->u, sqrt(w->stgs->rho_x), w->n);
     r_safe = eta; 
+    
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < w->stgs->max_iters; ++i) {
 
@@ -1106,11 +1102,11 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             if (i == 0) {
                 w->dir = w->R;
-                scaleArray(w->dir, -1, w->n + w->m + 1);
+                scaleArray(w->dir, -1, w->n + w->m + 1); /* dir^0 = -R */
             } else {
                 /*  if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
-                    w->Sk = w->u; /* IT IS NOT SCALED!!!!!!!!!!!!! */
+                    w->Sk = w->u;
                     addScaledArray(w->Sk, w->u_prev, (w->n + w->m + 1), -1);
                     w->Yk = w->R;
                     addScaledArray(w->Yk, w->R_prev, (w->n + w->m + 1), -1);
@@ -1126,7 +1122,8 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
             }
         }
         memcpy(w->u_prev, w->u, w->l);
-        how = -1;
+        how = -1; /* no backtracking (yet) */
+        
         if (i >= w->stgs->warm_start) {
             if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
                 addScaledArray(w->u, w->dir, w->l, 1.0);
@@ -1147,7 +1144,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
             }
             
         }
-        
+
     }
 
     /* populate solution vectors (unnormalized) and info */
