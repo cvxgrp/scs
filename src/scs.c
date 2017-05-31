@@ -1085,6 +1085,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scs_float rhs; /* for K2 */
     scs_float stepsize2; /* for K2 */
     scs_float sqrt_rhox = sqrt(w->stgs->rho_x);
+    scs_float q = w->stgs->sse;
 
     timer solveTimer;
     struct residuals r;
@@ -1114,6 +1115,11 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scaleArray(w->u, sqrt_rhox, w->n); /* u is now scaled */
     r_safe = eta;
 
+    /* dir^0 = -R */
+    for (j = 0; j < w->l; ++j) {
+        w->dir[j] = -w->R[j];
+    }
+
     /***** HENCEFORTH, R and u ARE SCALED! *****/
 
     /* MAIN SUPER SCS LOOP */
@@ -1122,38 +1128,30 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, w->l);
 
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
-            if (i == 0) {
-                /* dir^0 = -R */
+            w->stgs->sse *= q; /*sse = q^i */
+            if (how == 0 || w->stgs->ls == 0) {
                 for (j = 0; j < w->l; ++j) {
-                    w->dir[j] = -w->R[j];
+                    w->Sk[j] = w->u[j] - w->u_prev[j];
+                    w->Yk[j] = w->R[j] - w->R_prev[j];
                 }
             } else {
-                w->stgs->sse *= w->stgs->sse;
-                if (how == 0 || w->stgs->ls == 0) {
-                    for (j = 0; j < w->l; ++j) {
-                        w->Sk[j] = w->u[j] - w->u_prev[j];
-                        w->Yk[j] = w->R[j] - w->R_prev[j];
-                    }
-                } else {
-                    for (j = 0; j < w->l; ++j) {
-                        w->Sk[j] = w->wu[j] - w->u_prev[j];
-                        w->Yk[j] = w->Rwu[j] - w->R_prev[j];
-                    }
+                for (j = 0; j < w->l; ++j) {
+                    w->Sk[j] = w->wu[j] - w->u_prev[j];
+                    w->Yk[j] = w->Rwu[j] - w->R_prev[j];
                 }
-                /* compute direction */
-                computeLSBroyden(w);
-                scaleArray(w->dir, 1 / sqrt_rhox, w->n);
             }
+            /* compute direction */
+            computeLSBroyden(w);
+            scaleArray(w->dir, 1 / sqrt_rhox, w->n);
         }
         memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
         how = -1; /* no backtracking (yet) */
         nrmR_con_old = w->nrmR_con;
         if (i >= w->stgs->warm_start) {
             if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
-                addArray(w->u, w->dir, w->l);   /* u += dir */
+                addArray(w->u, w->dir, w->l); /* u += dir */
                 how = 0;
                 eta = w->nrmR_con;
-                r_safe = INFINITY; /* TODO: chk if it should be inf. */
                 w->stepsize = 1.0;
             } else if (w->stgs->ls > 0) {
                 projectLinSysv2(w->dut, w->dir, w, i);
@@ -1162,36 +1160,35 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 /* Line - search */
                 for (j = 0; j < w->stgs->ls; ++j) {
                     w->stepsize *= w->stgs->beta;
-                    addScaledArray(w->wu, w->dir, w->l, w->stepsize);   /* wu += step * dir */
-                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize); /* wut += step * dut */
+                    addScaledArray(w->wu, w->dir, w->l, w->stepsize); /* wu   += step * dir */
+                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize); /* wut  += step * dut */
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
-                    calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l);
-                    scaleArray(w->Rwu, sqrt_rhox, w->n); /* Scaled FP res in ls */
+                    calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); /* calculate FPR on scaled vectors */
+                    /* here we dont' scale R */
 
                     nrmRw_con = calcNorm(w->Rwu, w->l);
                     /* K1 */
-                    if (w->stgs->k1 && nrmRw_con <= w->stgs->c1 * nrmR_con_old && w->nrmR_con <= r_safe) { // a bit different than matlab
+                    if (w->stgs->k1
+                            && nrmRw_con <= w->stgs->c1 * nrmR_con_old
+                            && w->nrmR_con <= r_safe) { // a bit different than matlab
                         memcpy(w->u, w->wu, w->l * sizeof (scs_float));
                         memcpy(w->u_t, w->wu_t, w->l * sizeof (scs_float));
                         memcpy(w->u_b, w->wu_b, w->l * sizeof (scs_float));
                         memcpy(w->R, w->Rwu, w->l * sizeof (scs_float));
                         // TODO: add computation of sb and kapb
                         w->nrmR_con = nrmRw_con;
-                        r_safe += w->stgs->sse; // The power already computed at the beginning of the main loop
+                        r_safe = w->nrmR_con + w->stgs->sse; // The power already computed at the beginning of the main loop
                         how = 1;
                         break;
                     }
                     /* K2 */
-                    if (K2) {
+                    if (w->stgs->k2) {
                         slack = nrmRw_con * nrmRw_con - w->stepsize * innerProd(w->dir, w->Rwu, w->l);
                         rhs = w->stgs->sigma * w->nrmR_con * nrmRw_con;
                         if (slack >= rhs) {
                             stepsize2 = (w->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
                             addScaledArray(w->u, w->Rwu, w->l, -stepsize2);
                             how = 2;
-                            if (r_safe == INFINITY) {
-                                r_safe = w->nrmR_con;
-                            }
                             break;
                         }
                     }
