@@ -1084,6 +1084,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scs_float slack; /* for K2 */
     scs_float rhs; /* for K2 */
     scs_float stepsize2; /* for K2 */
+    scs_float sqrt_rhox = sqrt(w->stgs->rho_x);
 
     timer solveTimer;
     struct residuals r;
@@ -1108,9 +1109,9 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
 
     calcFPRes(w->R, w->u_t, w->u_b, w->l); /* computes Ru */
-    scaleArray(w->R, sqrt(w->stgs->rho_x), w->n);
+    scaleArray(w->R, sqrt_rhox, w->n);
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
-    scaleArray(w->u, sqrt(w->stgs->rho_x), w->n); /* u is now scaled */
+    scaleArray(w->u, sqrt_rhox, w->n); /* u is now scaled */
     r_safe = eta;
 
     /***** HENCEFORTH, R and u ARE SCALED! *****/
@@ -1142,7 +1143,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 }
                 /* compute direction */
                 computeLSBroyden(w);
-                scaleArray(w->dir, 1 / sqrt(w->stgs->rho_x), w->n);
+                scaleArray(w->dir, 1 / sqrt_rhox, w->n);
             }
         }
         memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
@@ -1166,7 +1167,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                     addScaledArray(w->wu_t, w->dut, w->l, w->stepsize);
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l);
-                    scaleArray(w->Rwu, sqrt(w->stgs->rho_x), w->n); /* Scaled FP res in ls */
+                    scaleArray(w->Rwu, sqrt_rhox, w->n); /* Scaled FP res in ls */
 
                     nrmRw_con = calcNorm(w->Rwu, w->l);
                     /* K1 */
@@ -1200,7 +1201,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
         }
         if (how == -1) { //means that R didn't change
-            scaleArray(w->R, 1.0 / sqrt(w->stgs->rho_x), w->n); /* TODO: FP res should be unscaled here, but then needs to be scaled back?? */
+            scaleArray(w->R, 1.0 / sqrt_rhox, w->n); /* TODO: FP res should be unscaled here, but then needs to be scaled back?? */
             addScaledArray(w->u, w->R, w->l, -w->stgs->alpha);
         }
         if (how != 1) {
@@ -1208,7 +1209,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
             projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
             // TODO: add calculations for sb and kapb
             calcFPRes(w->R, w->u_t, w->u_b, w->l);
-            scaleArray(w->R, sqrt(w->stgs->rho_x), w->n);
+            scaleArray(w->R, sqrt_rhox, w->n);
             w->nrmR_con = calcNorm(w->R, w->l);
         }
     } /* main for loop */
