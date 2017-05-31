@@ -1107,7 +1107,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     i = 0; /* Needed for the next two functions */
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
-
+    
     calcFPRes(w->R, w->u_t, w->u_b, w->l); /* computes Ru */
     scaleArray(w->R, sqrt_rhox, w->n);
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
@@ -1154,7 +1154,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 addScaledArray(w->u, w->dir, w->l, 1.0);
                 how = 0;
                 eta = w->nrmR_con;
-                r_safe = INFINITY; /* TODO: chk if it should be inf. */
+            //    r_safe = INFINITY; /* TODO: chk if it should be inf. */
                 w->stepsize = 1.0;
             } else if (w->stgs->ls > 0) {
                 projectLinSysv2(w->dut, w->dir, w, i);

@@ -191,6 +191,8 @@ extern "C" {
         scs_float *Sk; /**< \f$s_k\f$ */
         scs_float *Yk; /**< \f$y_k\f$ */
         scs_float stepsize; /**< The current stepsize */
+        scs_float *s_b; /**< primal residual */
+        scs_float kap_b; /**< variable for cerfificates of infeasibility/unboudedness */
 
         /**
          *  The (possibly normalized) \c A matrix 
