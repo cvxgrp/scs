@@ -120,7 +120,8 @@ static void freeWork(Work *w) {
         scs_free(w->Rwu);
     if (w->su_cache)
         freeYSCache(w->su_cache);
-
+    if (w->s_b)
+        scs_free(w->s_b);
     scs_free(w);
     RETURN;
 }
@@ -908,6 +909,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->R_prev = scs_calloc(l, sizeof (scs_float));
     w->dir = scs_calloc(l, sizeof (scs_float));
     w->dut = scs_calloc(l, sizeof (scs_float));
+    w->s_b = scs_malloc(d->m * sizeof (scs_float));
 
     w->stepsize = 1.0;
 
@@ -931,7 +933,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
             !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->R_prev ||
             !w->dir || !w->dut || !w->Sk || !w->Yk
-            || (w->stgs->ls > 0 && (!w->wu || !w->Rwu || !w->wu_t || !w->wu_b))) {
+            || (w->stgs->ls > 0 && (!w->wu || !w->Rwu || !w->wu_t || !w->wu_b)) || !w->s_b) {
         scs_printf("ERROR: work memory allocation failure\n");
         RETURN SCS_NULL;
     }
@@ -1072,6 +1074,15 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     RETURN info->statusVal;
 }
 
+static void compute_sb_kapb(scs_float *u, scs_float *u_b, scs_float *u_t, Work *w) {
+    scs_int j;
+
+    for (j = 0; j < w->m; ++j) {
+        w->s_b[j] = u_b[w->n + j] - 2.0 * u_t[w->n + j] + u[w->n + j];
+    }
+    w->kap_b = u_b[w->l - 1] - 2 * u_t[w->l - 1] + u[w->l - 1];
+}
+
 scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i;
@@ -1108,8 +1119,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     i = 0; /* Needed for the next two functions */
     projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
     projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
-//    sb = yb-yh;
-//kapb = taub-tauh;
+    compute_sb_kapb(w->u, w->u_b, w->u_t, w);
     calcFPRes(w->R, w->u_t, w->u_b, w->l); /* computes Ru */
     scaleArray(w->R, sqrt_rhox, w->n);
     eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
@@ -1153,6 +1163,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 addArray(w->u, w->dir, w->l); /* u += dir */
                 how = 0;
                 eta = w->nrmR_con;
+                //    r_safe = INFINITY; /* TODO: chk if it should be inf. */
                 w->stepsize = 1.0;
             } else if (w->stgs->ls > 0) {
                 projectLinSysv2(w->dut, w->dir, w, i);
@@ -1161,8 +1172,8 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 /* Line - search */
                 for (j = 0; j < w->stgs->ls; ++j) {
                     w->stepsize *= w->stgs->beta;
-                    addScaledArray(w->wu, w->dir, w->l, w->stepsize); /* wu   += step * dir */
-                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize); /* wut  += step * dut */
+                    addScaledArray(w->wu, w->dir, w->l, w->stepsize); /* wu += step * dir */
+                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize); /* wut += step * dut */
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); /* calculate FPR on scaled vectors */
                     /* here we dont' scale R */
@@ -1176,7 +1187,8 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                         memcpy(w->u_t, w->wu_t, w->l * sizeof (scs_float));
                         memcpy(w->u_b, w->wu_b, w->l * sizeof (scs_float));
                         memcpy(w->R, w->Rwu, w->l * sizeof (scs_float));
-                        // TODO: add computation of sb and kapb
+                        compute_sb_kapb(w->wu, w->wu_b, w->wu_t, w);
+
                         w->nrmR_con = nrmRw_con;
                         r_safe = w->nrmR_con + w->stgs->sse; // The power already computed at the beginning of the main loop
                         how = 1;
@@ -1207,7 +1219,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         if (how != 1) {
             projectLinSysv2(w->u_t, w->u, w, i);
             projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
-            // TODO: add calculations for sb and kapb
+            compute_sb_kapb(w->u, w->u_b, w->u_t, w);
             calcFPRes(w->R, w->u_t, w->u_b, w->l);
             scaleArray(w->R, sqrt_rhox, w->n);
             w->nrmR_con = calcNorm(w->R, w->l);
