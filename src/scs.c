@@ -334,6 +334,48 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     RETURN;
 }
 
+static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
+    DEBUG_FUNC
+    scs_float *x = w->u;
+    scs_float *y = &(w->u[w->n]);
+    scs_float *s = &(w->v[w->n]);
+    scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
+    scs_int n = w->n, m = w->m;
+
+    /* checks if the residuals are unchanged by checking iteration */
+    if (r->lastIter == iter) {
+        RETURN;
+    }
+    r->lastIter = iter;
+
+    r->tau = ABS(w->u[n + m]);
+//    r->kap = ABS(w->v[n + m]) /
+//            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+
+    nmpr_tau = calcPrimalResid(w, x, s, r->tau, &nmAxs_tau);
+    nmdr_tau = calcDualResid(w, y, r->tau, &nmATy_tau);
+
+    r->bTy_by_tau =
+            innerProd(y, w->b, m) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+    r->cTx_by_tau =
+            innerProd(x, w->c, n) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+
+    r->resInfeas =
+            r->bTy_by_tau < 0 ? w->nm_b * nmATy_tau / -r->bTy_by_tau : NAN;
+    r->resUnbdd =
+            r->cTx_by_tau < 0 ? w->nm_c * nmAxs_tau / -r->cTx_by_tau : NAN;
+
+    bTy = r->bTy_by_tau / r->tau;
+    cTx = r->cTx_by_tau / r->tau;
+
+    r->resPri = nmpr_tau / (1 + w->nm_b) / r->tau;
+    r->resDual = nmdr_tau / (1 + w->nm_c) / r->tau;
+    r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
+    RETURN;
+}
+
 static void coldStartVars(Work *w) {
     DEBUG_FUNC
     scs_int l = w->l;
@@ -1129,6 +1171,22 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < w->stgs->max_iters; ++i) {
+
+        if (isInterrupted()) {
+            RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
+                    "Interrupted");
+        }
+        if (i % CONVERGED_INTERVAL == 0) {
+            calcResiduals(w, &r, i);
+            if ((info->statusVal = hasConverged(w, &r, i)) != 0) {
+                break;
+            }
+        }
+
+        if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
+            calcResiduals(w, &r, i);
+            printSummary(w, i, &r, &solveTimer);
+        }
 
         w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, w->l);
 
