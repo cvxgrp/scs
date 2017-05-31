@@ -44,10 +44,10 @@ scs_int computeLSBroyden(Work *work) {
     ip = innerProd(s_tilde_current, work->Sk, l);
     s_norm_sq = calcNormSq(work->Sk, l);
 
-    if (scs_abs(ip) >= theta_bar * s_norm_sq) {
+    if (ABS(ip) >= theta_bar * s_norm_sq) {
         theta = 1;
     } else {
-        theta = s_norm_sq * (1 - scs_sgn(ip) * theta_bar) / (s_norm_sq - ip);
+        theta = s_norm_sq * (1 - SGN(ip) * theta_bar) / (s_norm_sq - ip);
         /* s_tilde_current = (1-theta)*s + theta*s_tilde_current */
         for (i = 0; i < l; ++i) {
             s_tilde_current[i] = (1 - theta) * work->Sk[i] + theta * s_tilde_current[i];
