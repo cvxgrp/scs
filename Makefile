@@ -145,7 +145,7 @@ run-test-mem: test
 	
 cov: run-test
 	lcov --directory ./src --capture --output-file scs-coverage.info
-	lcov --remove coverage.info  '/usr/*' --output-file scs-coverage.info
+	lcov --remove scs-coverage.info  '/usr/*' --output-file scs-coverage.info
 	lcov --list scs-coverage.info
 
 help:
