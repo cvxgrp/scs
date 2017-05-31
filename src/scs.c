@@ -1129,7 +1129,6 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 }
             } else {
                 w->stgs->sse *= w->stgs->sse;
-                /*  if (w->how[i-1] == 0 || w->stgs->ls == 0) { */
                 if (how == 0 || w->stgs->ls == 0) {
                     for (j = 0; j < w->l; ++j) {
                         w->Sk[j] = w->u[j] - w->u_prev[j];
@@ -1151,7 +1150,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
         nrmR_con_old = w->nrmR_con;
         if (i >= w->stgs->warm_start) {
             if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
-                addScaledArray(w->u, w->dir, w->l, 1.0);
+                addArray(w->u, w->dir, w->l);   /* u += dir */
                 how = 0;
                 eta = w->nrmR_con;
                 r_safe = INFINITY; /* TODO: chk if it should be inf. */
@@ -1163,8 +1162,8 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 /* Line - search */
                 for (j = 0; j < w->stgs->ls; ++j) {
                     w->stepsize *= w->stgs->beta;
-                    addScaledArray(w->wu, w->dir, w->l, w->stepsize);
-                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize);
+                    addScaledArray(w->wu, w->dir, w->l, w->stepsize);   /* wu += step * dir */
+                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize); /* wut += step * dut */
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l);
                     scaleArray(w->Rwu, sqrt_rhox, w->n); /* Scaled FP res in ls */
@@ -1201,8 +1200,11 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
 
         }
         if (how == -1) { //means that R didn't change
-            scaleArray(w->R, 1.0 / sqrt_rhox, w->n); /* TODO: FP res should be unscaled here, but then needs to be scaled back?? */
-            addScaledArray(w->u, w->R, w->l, -w->stgs->alpha);
+            /* x -= alpha*sqrt(rho)*Rx */
+            addScaledArray(w->u, w->R, w->l, -w->stgs->alpha * sqrt_rhox);
+            /* s -= Rs      */
+            /* tau -= Rtau  */
+            subtractArray(w->u + w->n, w->R + w->n, w->m + 1);
         }
         if (how != 1) {
             projectLinSysv2(w->u_t, w->u, w, i);

@@ -84,9 +84,34 @@ extern "C" {
      * @param n length of \c a
      * @param sc the scalar \f$\gamma\f$
      */
-    void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
+    void addScaledArray(
+            scs_float *a,
+            const scs_float *b,
+            scs_int n,
             const scs_float sc);
 
+    /**
+     * Performs the operation
+     * \f[
+     *  a \leftarrow a + b
+     * \f]
+     * @param a vector \c a
+     * @param b vector \c b
+     * @param n length of \c a
+     */
+    void addArray(scs_float *a, const scs_float *b, scs_int n);
+
+    /**
+     * Performs the operation
+     * \f[
+     *  a \leftarrow a - b
+     * \f]
+     * @param a vector \c a
+     * @param b vector \c b
+     * @param n length of \c a
+     */
+    void subtractArray(scs_float *a, const scs_float *b, scs_int n);
+    
     /**
      * Returns the Euclidean norm of the difference of two vectors
      * @param a
