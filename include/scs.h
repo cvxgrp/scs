@@ -52,7 +52,7 @@ extern "C" {
         scs_int k2; /**< boolean, K2: 1 */
         scs_int nominal; /**< boolean, nominal updates: 1 */
         scs_float c1; /**< Parameter to check condition at K1 */
-        scs_float sse; /**< Parameter to update r_safe at K1 */
+        scs_float sse; /**< Parameter to update r_safe at K1 (denoted as 'q' in the paper) */
         
         /* line-search */
         scs_int ls; /**< max line-search iterations */

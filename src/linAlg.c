@@ -61,6 +61,20 @@ void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
     }
 }
 
+void addArray(scs_float *a, const scs_float *b, scs_int n) {
+    scs_int i;
+    for (i = 0; i < n; ++i) {
+        a[i] += b[i];
+    }
+}
+
+void subtractArray(scs_float *a, const scs_float *b, scs_int n) {
+    scs_int i;
+    for (i = 0; i < n; ++i) {
+        a[i] -= b[i];
+    }
+}
+
 scs_float calcNormDiff(const scs_float *a, const scs_float *b, scs_int l) {
     scs_float nmDiff = 0.0, tmp;
     scs_int i;
