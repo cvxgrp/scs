@@ -371,8 +371,8 @@ static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
     r->lastIter = iter;
 
     r->tau = ABS(w->u[n + m]);
-//    r->kap = ABS(w->v[n + m]) /
-//            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+    //    r->kap = ABS(w->v[n + m]) /
+    //            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
 
     nmpr_tau = calcPrimalResid(w, x, s, r->tau, &nmAxs_tau);
     nmdr_tau = calcDualResid(w, y, r->tau, &nmATy_tau);
@@ -529,9 +529,9 @@ static scs_int projectConesv2(scs_float *u_b, scs_float *u_t, scs_float *u, Work
 
     /* u = [x;y;tau] */
     status = projDualCone(&(u_b[n]), k, w->coneWork, &(w->u_prev[n]), iter);
-    if (u_b[l - 1] < 0.0)
+    if (u_b[l - 1] < 0.0) {
         u_b[l - 1] = 0.0;
-
+    }
     RETURN status;
 }
 
@@ -957,6 +957,7 @@ static Work *initWork(const Data *d, const Cone *k) {
 
     /* allocate workspace: */
     w->u = scs_malloc(l * sizeof (scs_float));
+    w->u_b = scs_malloc(l * sizeof (scs_float));
     w->v = scs_malloc(l * sizeof (scs_float));
     w->u_t = scs_malloc(l * sizeof (scs_float));
     w->u_prev = scs_malloc(l * sizeof (scs_float));
@@ -967,7 +968,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->b = scs_malloc(d->m * sizeof (scs_float));
     w->c = scs_malloc(d->n * sizeof (scs_float));
 
-    /* added for superscs*/
+    /* added for superscs */
     w->u_t = scs_malloc(l * sizeof (scs_float));
     w->R = scs_calloc(l, sizeof (scs_float));
     w->R_prev = scs_calloc(l, sizeof (scs_float));
@@ -1174,7 +1175,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     tic(&solveTimer);
     info->statusVal = SCS_UNFINISHED; /* not yet converged */
     r.lastIter = -1;
-    /*  updateWorkv2(d, w, sol); */
+    updateWork(d, w, sol);
 
     if (w->stgs->verbose)
         printHeader(w, k);
@@ -1190,10 +1191,6 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scaleArray(w->u, sqrt_rhox, w->n); /* u is now scaled */
     r_safe = eta;
 
-    /* dir^0 = -R */
-    for (j = 0; j < w->l; ++j) {
-        w->dir[j] = -w->R[j];
-    }
 
     /***** HENCEFORTH, R and u ARE SCALED! *****/
 
@@ -1204,38 +1201,37 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
             RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
         }
-        if (i % CONVERGED_INTERVAL == 0) {
-            calcResiduals(w, &r, i);
-            if ((info->statusVal = hasConverged(w, &r, i)) != 0) {
-                break;
-            }
-        }
-
-        if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-            calcResiduals(w, &r, i);
-            printSummary(w, i, &r, &solveTimer);
-        }
 
         w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, w->l);
 
         if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
             w->stgs->sse *= q; /*sse = q^i */
-            if (how == 0 || w->stgs->ls == 0) {
+            if (i == 0) {
+                /* dir^0 = -R */
                 for (j = 0; j < w->l; ++j) {
-                    w->Sk[j] = w->u[j] - w->u_prev[j];
-                    w->Yk[j] = w->R[j] - w->R_prev[j];
+                    w->dir[j] = -w->R[j];
                 }
             } else {
-                for (j = 0; j < w->l; ++j) {
-                    w->Sk[j] = w->wu[j] - w->u_prev[j];
-                    w->Yk[j] = w->Rwu[j] - w->R_prev[j];
+                if (how == 0 || w->stgs->ls == 0) {
+                    for (j = 0; j < w->l; ++j) {
+                        w->Sk[j] = w->u[j] - w->u_prev[j];
+                        w->Yk[j] = w->R[j] - w->R_prev[j];
+                    }
+                } else {
+                    for (j = 0; j < w->l; ++j) {
+                        w->Sk[j] = w->wu[j] - w->u_prev[j];
+                        w->Yk[j] = w->Rwu[j] - w->R_prev[j];
+                    }
                 }
+                /* compute direction */
+                computeLSBroyden(w);
             }
-            /* compute direction */
-            computeLSBroyden(w);
             scaleArray(w->dir, 1 / sqrt_rhox, w->n);
         }
+
+
         memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
+        memcpy(w->R_prev, w->R, w->l * sizeof (scs_float));
         how = -1; /* no backtracking (yet) */
         nrmR_con_old = w->nrmR_con;
         if (i >= w->stgs->warm_start) {
@@ -1252,9 +1248,12 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                 /* Line - search */
                 for (j = 0; j < w->stgs->ls; ++j) {
                     w->stepsize *= w->stgs->beta;
-                    addScaledArray(w->wu, w->dir, w->l, w->stepsize); /* wu += step * dir */
-                    addScaledArray(w->wu_t, w->dut, w->l, w->stepsize); /* wut += step * dut */
+                    for (j = 0; j < w->l; ++j) {
+                        w->wu[j] = w->u[j] + w->stepsize * w->dir[j]; /* wu = u + step * dir */
+                        w->wu_t[j] = w->u_t[j] + w->stepsize * w->dut[j]; /* wut = u_t + step * dut */
+                    }
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
+                    printArray(w->wu_b, w->l, "wub");
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); /* calculate FPR on scaled vectors */
                     /* here we dont' scale R */
 

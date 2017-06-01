@@ -147,7 +147,7 @@ run-test: test
 	out/UNIT_TEST_RUNNER
 	
 run-test-mem: test
-	valgrind -v --leak-check=full out/UNIT_TEST_RUNNER
+	valgrind -v --track-origins=yes --leak-check=full out/UNIT_TEST_RUNNER
 	
 cov: run-test
 	lcov --directory ./src --capture --output-file scs-coverage.info

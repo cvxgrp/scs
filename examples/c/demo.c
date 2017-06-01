@@ -32,6 +32,20 @@ int main(int argc, char **argv) {
     }
     fclose(fp);
     scs_printf("solve once using scs\n");
+    d->stgs->do_super_scs = 1;
+    d->stgs->beta = BETA;
+    d->stgs->c1 = C1;
+    d->stgs->c_bl = C_BL;
+    d->stgs->k0 = K0;
+    d->stgs->k1 = K1;
+    d->stgs->k2 = K2;
+    d->stgs->ls = LS;
+    d->stgs->max_iters = MAX_ITERS;
+    d->stgs->sigma = SIGMA;
+    d->stgs->thetabar = THETABAR;
+    d->stgs->rho_x = 1;
+    d->stgs->sse = SSE;
+    d->stgs->memory = MEMORY;
     scs(d, k, sol, &info);
 
     if (TEST_WARM_START) {
