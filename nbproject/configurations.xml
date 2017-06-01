@@ -60,7 +60,6 @@
         <in>test_broyden.c</in>
         <in>test_dummy.c</in>
         <in>test_runner.c</in>
-        <in>test_runner.h</in>
         <in>test_superscs.c</in>
         <in>test_superscs.h</in>
         <in>test_utilities.c</in>
