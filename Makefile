@@ -134,8 +134,14 @@ test:	default
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_dummy.c -o $(TEST_SRC_DIR)/test_dummy.o
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_utilities.c -o $(TEST_SRC_DIR)/test_utilities.o
 	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_broyden.c -o $(TEST_SRC_DIR)/test_broyden.o
+	$(CC) -c $(CFLAGS) $(TEST_SRC_DIR)/test_superscs.c -o $(TEST_SRC_DIR)/test_superscs.o
 	@echo "Building test runner..."
-	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/test_runner.c -o out/$(TEST_RUNNER) $(TEST_SRC_DIR)/test_dummy.o $(TEST_SRC_DIR)/test_broyden.o $(TEST_SRC_DIR)/test_utilities.o $(OUT)/libscsdir.a $(LDFLAGS)
+	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/test_runner.c \
+	    -o out/$(TEST_RUNNER) $(TEST_SRC_DIR)/test_dummy.o \
+	    $(TEST_SRC_DIR)/test_broyden.o \
+	    $(TEST_SRC_DIR)/test_superscs.o \
+	    $(TEST_SRC_DIR)/test_utilities.o \
+	    $(OUT)/libscsdir.a $(LDFLAGS)
 
 run-test: test
 	out/UNIT_TEST_RUNNER

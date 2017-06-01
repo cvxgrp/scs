@@ -60,6 +60,9 @@
         <in>test_broyden.c</in>
         <in>test_dummy.c</in>
         <in>test_runner.c</in>
+        <in>test_runner.h</in>
+        <in>test_superscs.c</in>
+        <in>test_superscs.h</in>
         <in>test_utilities.c</in>
       </df>
     </df>
@@ -96,7 +99,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile default test</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>out/UNIT_TEST_RUNNER</executablePath>
+          <executablePath>out/demo_direct</executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>
@@ -258,6 +261,10 @@
       <item path="tests/c/test_runner.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="tests/c/test_superscs.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/c/test_superscs.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="tests/c/test_utilities.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
