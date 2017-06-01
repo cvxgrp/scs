@@ -274,6 +274,28 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
     RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
+static scs_float calcPrimalResidv2(Work *w, const scs_float *x,
+        const scs_float *s, const scs_float tau,
+        scs_float *nmAxs) {
+    DEBUG_FUNC
+    scs_int i;
+    scs_float pres = 0, scale, *pr = w->pr;
+    *nmAxs = 0;
+    memset(pr, 0, w->m * sizeof (scs_float));
+    accumByA(w->A, w->p, x, pr);
+    addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
+    for (i = 0; i < w->m; ++i) {
+        scale =
+                w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1;
+        scale = scale * scale;
+        *nmAxs += (pr[i] * pr[i]) * scale;
+        pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
+    }
+    *nmAxs = SQRTF(*nmAxs);
+    RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
+}
+
+
 static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
         scs_float *nmATy) {
     DEBUG_FUNC
