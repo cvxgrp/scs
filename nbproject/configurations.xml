@@ -101,7 +101,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile default test</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>out/demo_direct</executablePath>
+          <executablePath>out/UNIT_TEST_RUNNER</executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>

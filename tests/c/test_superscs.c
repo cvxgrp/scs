@@ -19,8 +19,10 @@ bool test_superscs(char** str) {
     data->c[2] = -3.0;
 
     data->b = malloc(m * sizeof (scs_float));
-    data->b[0] = 0;
-    data->b[1] = 0;
+    data->b[0] = 0.2;
+    data->b[1] = 0.1;
+    data->b[2] = -0.1;
+    data->b[3] = 0.1;
 
     data->m = m;
     data->n = n;
@@ -54,29 +56,30 @@ bool test_superscs(char** str) {
     
     data->A = A;
     data->stgs = scs_malloc(sizeof(Settings));
-    data->stgs->max_iters = 5000;
-    data->stgs->eps = .00100;
-    data->stgs->alpha = 1.5;
-    data->stgs->rho_x = 0.001;
-    data->stgs->scale = 1;
-    data->stgs->verbose = 1;
+    data->stgs->max_iters = 1000;
     
-    data->stgs->beta = BETA;
+    data->stgs->alpha = 1.5;
+    data->stgs->beta = 0.5;
     data->stgs->c1 = C1;
-    data->stgs->c_bl = C_BL;
-    data->stgs->k0 = K0;
-    data->stgs->k1 = K1;
-    data->stgs->k2 = K2;
-    data->stgs->ls = LS;
-    data->stgs->sigma = SIGMA;
-    data->stgs->thetabar = THETABAR;
+    data->stgs->c_bl = 0.999;
+    data->stgs->eps = .00100;
+    data->stgs->k0 = 1;
+    data->stgs->k1 = 1;
+    data->stgs->k2 = 1;
+    data->stgs->ls = 10;
+    data->stgs->normalize = 0;
+    data->stgs->warm_start = 0;    
     data->stgs->rho_x = 1;
-    data->stgs->sse = SSE;
-    data->stgs->memory = MEMORY;
+    data->stgs->scale = 1;    
+    data->stgs->verbose = 1;                    
+    data->stgs->sigma = 1e-2;
+    data->stgs->thetabar = 0.1;
+    data->stgs->sse = 1e-3;
+    data->stgs->memory = 10;
 
     Cone * cone = malloc(sizeof (Cone));
     cone->qsize = 1;
-    cone->q = malloc(sizeof(scs_int));
+    cone->q = malloc(4*sizeof(scs_int));
     cone->q[0] = 4;
     initCone(cone);
 
