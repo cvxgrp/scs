@@ -1,6 +1,9 @@
 #ifndef CONSTANTS_H_GUARD
 #define CONSTANTS_H_GUARD
 
+#include "glbopts.h"
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,28 +40,28 @@ extern "C" {
 #define NORMALIZE (1)
 #define WARM_START (0)
 
-    /* Parameters for Superscs*/
-#define K0 (1)
-#define K1 (1)
-#define K2 (1)    
-#define NOMINAL (1)
-#define C_BL (0.999)
-#define C1 (1.0-1E-4)
-#define SSE (1.0-1E-3) 
+/* Parameters for Superscs*/
+#define K0_DEFAULT (1)
+#define K1_DEFAULT (1)
+#define K2_DEFAULT (1)    
+#define NOMINAL_DEFAULT (1)
+#define C_BL_DEFAULT (0.999)
+#define C1_DEFAULT (1.0-1E-4)
+#define SSE_DEFAULT (1.0-1E-3) 
 
     /* Line-search defaults */
-#define LS  (10)
-#define BETA (0.5)
-#define SIGMA (1E-2)
+#define LS_DEFAULT  (10)
+#define BETA_DEFAULT (0.5)
+#define SIGMA_DEFAULT (1E-2)
 
     /* Direction Defaults */
-#define DIRECTION (1)
-#define TRULE (3)
-#define DELTA (0.5)
-#define THETABAR (1E-1)
-#define ALPHAC (1E-2) 
-#define MEMORY (10)
-#define SC_INIT (0)
+#define DIRECTION_DEFAULT (fixed_point_residual)
+#define TRULE_DEFAULT (3)
+#define DELTA_DEFAULT (0.5)
+#define THETABAR_DEFAULT (1E-1)
+#define ALPHAC_DEFAULT (1E-2) 
+#define MEMORY_DEFAULT (10)
+#define SC_INIT_DEFAULT (0)
 
 #ifdef __cplusplus
 }

@@ -57,7 +57,7 @@ bool test_superscs(char** str) {
     
     data->A = A;
     data->stgs = scs_malloc(sizeof(Settings));
-    data->stgs->max_iters = 600;
+    data->stgs->max_iters = 60000;
     data->stgs->alpha = 1.5;
     data->stgs->beta = 0.5;
     data->stgs->c1 = 1.0-1E-4;
@@ -71,7 +71,7 @@ bool test_superscs(char** str) {
     data->stgs->warm_start = 0;    
     data->stgs->rho_x = 1;
     data->stgs->scale = 1;    
-    data->stgs->verbose = 0;                    
+    data->stgs->verbose = 5;                    
     data->stgs->sigma = 1e-2;
     data->stgs->thetabar = 0.1;
     data->stgs->sse = 1e-3;
@@ -92,7 +92,7 @@ bool test_superscs(char** str) {
     
     cone->p = SCS_NULL;
     cone->s = SCS_NULL;
-
+        
     sol = initSol();
     info = initInfo();
     

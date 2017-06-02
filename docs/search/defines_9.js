@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ls',['LS',['../constants_8h.html#aeb0ce037090c628feafc65349031b214',1,'constants.h']]]
+  ['ls_5fdefault',['LS_DEFAULT',['../constants_8h.html#a670da578a5ee0b7948c2a7b3e9e6cf49',1,'constants.h']]]
 ];

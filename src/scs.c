@@ -1436,3 +1436,43 @@ Info * initInfo() {
             
     RETURN info;
 }
+
+Data * initData(){
+    Data * data;
+    data = malloc(sizeof (Data));
+    
+    if (!data) {
+        scs_printf("ERROR: allocating data failure\n");
+        RETURN SCS_NULL;
+    }
+    
+    data->A = SCS_NULL;
+    data->b = SCS_NULL;
+    data->c = SCS_NULL;
+    data->m = 0;
+    data->n = 0;
+    
+    data->stgs = scs_malloc(sizeof(Settings));
+    data->stgs->max_iters = MAX_ITERS;
+    data->stgs->alpha = ALPHA;
+    data->stgs->beta = BETA_DEFAULT;
+    data->stgs->c1 = C1_DEFAULT;
+    data->stgs->c_bl = C_BL_DEFAULT;
+    data->stgs->eps = EPS;
+    data->stgs->k0 = K0_DEFAULT;
+    data->stgs->k1 = K1_DEFAULT;
+    data->stgs->k2 = K2_DEFAULT;
+    data->stgs->ls = LS_DEFAULT;
+    data->stgs->normalize = NORMALIZE;
+    data->stgs->warm_start = WARM_START;    
+    data->stgs->rho_x = RHO_X;
+    data->stgs->scale = SCALE;    
+    data->stgs->verbose = VERBOSE;                    
+    data->stgs->sigma = SIGMA_DEFAULT;
+    data->stgs->thetabar = THETABAR_DEFAULT;
+    data->stgs->sse = SSE_DEFAULT;
+    data->stgs->memory = MEMORY_DEFAULT;
+    data->stgs->direction = fixed_point_residual;
+    
+    RETURN data;
+}

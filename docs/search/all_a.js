@@ -1,7 +1,11 @@
 var searchData=
 [
-  ['k0',['k0',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#affbf198622170170a757ff2a1ac25aa9',1,'SCS_SETTINGS::k0()'],['../constants_8h.html#a307c72605e3713972b4f4fb2d53ea20e',1,'K0():&#160;constants.h']]],
-  ['k1',['k1',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#aa261f1b4c27efee39b31dceb0d6b497a',1,'SCS_SETTINGS::k1()'],['../constants_8h.html#aadecb1977e30da2f62766f1fcb8b1f95',1,'K1():&#160;constants.h']]],
-  ['k2',['k2',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a2c7ad16b3c1adf90105056eadb5d91a0',1,'SCS_SETTINGS::k2()'],['../constants_8h.html#ab6d0e745059aded06587e4b6933bca0b',1,'K2():&#160;constants.h']]],
-  ['kap',['kap',['../structresiduals.html#a3b3a62e7379ccc6f36578e0e390c9129',1,'residuals']]]
+  ['k0',['k0',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#ac1ebb46880ba02d9634119349df97251',1,'SCS_SETTINGS']]],
+  ['k0_5fdefault',['K0_DEFAULT',['../constants_8h.html#a5a71d8aae0a1c821f648c168b010ca20',1,'constants.h']]],
+  ['k1',['k1',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a7c644d0c855262d90ce197852ce46f76',1,'SCS_SETTINGS']]],
+  ['k1_5fdefault',['K1_DEFAULT',['../constants_8h.html#ac7d18d33711291f5f119f0cdf7edfde7',1,'constants.h']]],
+  ['k2',['k2',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#ab3e52784f3dc6e37e903847e4ffc76e8',1,'SCS_SETTINGS']]],
+  ['k2_5fdefault',['K2_DEFAULT',['../constants_8h.html#a328a3bef38f64a43b83c0d09f3bde1c9',1,'constants.h']]],
+  ['kap',['kap',['../structresiduals.html#a3393a0b54a547030ed904d3f78539f9d',1,'residuals']]],
+  ['kap_5fb',['kap_b',['../struct_s_c_s___w_o_r_k.html#a4447608555cda2e37d7fb2dbf522453c',1,'SCS_WORK']]]
 ];

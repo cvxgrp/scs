@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['finishcone',['finishCone',['../cones_8c.html#a472f9872c46c0e5ccf9fa2e0d2f94d2e',1,'finishCone(ConeWork *c):&#160;cones.c'],['../cones_8h.html#a7fab6be5cfa2fd061239902654023cd5',1,'finishCone(ConeWork *coneWork):&#160;cones.c']]],
-  ['freeamatrix',['freeAMatrix',['../lin_sys_8h.html#a79e4d64a1c53379d6b6ae529b9fb863a',1,'linSys.h']]],
-  ['freedata',['freeData',['../util_8c.html#a7d5b04fecf73be8d52acccf3a2c56f34',1,'freeData(Data *d, Cone *k):&#160;util.c'],['../util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34',1,'freeData(Data *d, Cone *k):&#160;util.c']]],
-  ['freepriv',['freePriv',['../lin_sys_8h.html#a05f0e7047b5d6e76e77d1ce31ca51665',1,'linSys.h']]],
-  ['freesol',['freeSol',['../util_8c.html#a8a352feaf15ae14ab30284f8c4b0f156',1,'freeSol(Sol *sol):&#160;util.c'],['../util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156',1,'freeSol(Sol *sol):&#160;util.c']]]
+  ['getconeboundaries',['getConeBoundaries',['../cones_8h.html#a50d9cf53bcd7d38cb49cd864c40cfc20',1,'cones.h']]],
+  ['getconeheader',['getConeHeader',['../cones_8h.html#ae6ed7d7636c5c88e06ca0e27dc74269e',1,'cones.h']]],
+  ['getconesummary',['getConeSummary',['../cones_8h.html#a9865bf4f5e9fcce4a410861053dd0708',1,'cones.h']]],
+  ['getlinsysmethod',['getLinSysMethod',['../lin_sys_8h.html#adf0a8a95a317099972c2aa1995f2ea2e',1,'linSys.h']]],
+  ['getlinsyssummary',['getLinSysSummary',['../lin_sys_8h.html#a808516dfaa30877d07d04739ce29eef2',1,'linSys.h']]]
 ];

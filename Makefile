@@ -108,7 +108,7 @@ $(OUT)/demo_SOCP_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsgpu.a
 $(OUT)/demo_gpu: examples/c/demo.c $(OUT)/libscsgpu.$(SHARED)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS) $(CULDFLAGS)
 
-.PHONY: clean purge test
+.PHONY: clean purge test docs
 	
 clean-cov:
 	@rm -rf *.gcno 
@@ -167,3 +167,9 @@ help:
 	@echo "make test ....................... builds tests"
 	@echo "make run-test ................... runs all unit tests"
 	@echo "make run-test-mem ............... memchecks unit tests\n"
+	
+docs:
+	doxygen Doxyfile
+
+show-docs: docs
+	xdg-open docs/index.html
