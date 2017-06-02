@@ -109,13 +109,8 @@ $(OUT)/demo_gpu: examples/c/demo.c $(OUT)/libscsgpu.$(SHARED)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge test
-clean:
-	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPU)/*.o
-	@rm -rf $(OUT)/*.dSYM
-	@rm -rf matlab/*.mex*
-	@rm -rf .idea
-	@rm -rf python/*.pyc
-	@rm -rf python/build
+	
+clean-cov:
 	@rm -rf *.gcno 
 	@rm -rf *.gcda
 	@rm -rf */*.gcno 
@@ -123,7 +118,16 @@ clean:
 	@rm -rf */*/*.gcno 
 	@rm -rf */*/*.gcda
 	@rm -rf */*/*/*.gcno 
-	@rm -rf */*/*/*.gcda
+	@rm -rf */*/*/*.gcda	
+	
+clean: clean-cov
+	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPU)/*.o
+	@rm -rf $(OUT)/*.dSYM
+	@rm -rf matlab/*.mex*
+	@rm -rf .idea
+	@rm -rf python/*.pyc
+	@rm -rf python/build
+
 purge: clean 
 	@rm -rf $(OUT)
 	@rm -rf docs
@@ -147,7 +151,7 @@ run-test: test
 	out/UNIT_TEST_RUNNER
 	
 run-test-mem: test
-	valgrind -v --track-origins=yes --leak-check=full out/UNIT_TEST_RUNNER
+	valgrind --track-origins=yes --leak-check=full out/UNIT_TEST_RUNNER
 	
 cov: run-test
 	lcov --directory ./src --capture --output-file scs-coverage.info

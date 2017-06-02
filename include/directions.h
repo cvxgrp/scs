@@ -53,6 +53,8 @@ extern "C" {
      * @return status code of the method.
      */
     scs_int computeLSBroyden(Work *work);
+    
+    scs_int computeDirection(Work *work);
 
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-function [d,S,U,sig] = computeLSBroyden(Rx,Rxold,tau,Sk,Yk,S,U,sig,iter,optsDir)
+function [d,S,U,sig] = ls_broyden(Rx,Rxold,tau,Sk,Yk,S,U,sig,iter,optsDir)
 im = mod(iter-1,optsDir.memory);
 
 YSk = Yk'*Sk;

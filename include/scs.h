@@ -60,7 +60,7 @@ extern "C" {
         scs_float sigma; /**< line-search parameter */
 
         /* direction */
-        scs_int direction; /**< choice of direction: 1 for L-Broyden */
+        direction_type direction; /**< choice of direction: 1 for L-Broyden */
         scs_int tRule; /**< rule for selecting relaxation parameter */
         scs_float delta; /**< parameter in Broyden realaxation: 0.5 */
         scs_float thetabar; /**< modified Broyden's parameter: 1e-1 */

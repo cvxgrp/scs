@@ -135,6 +135,14 @@ typedef struct SCS_SCALING Scaling;
 typedef struct SCS_WORK Work;
 typedef struct SCS_CONE Cone;
 
+typedef 
+enum direction_enum {
+    restarted_broyden,
+    restarted_broyden_v2,
+    fixed_point_residual
+}
+direction_type;
+
 #ifdef __cplusplus
 }
 #endif
