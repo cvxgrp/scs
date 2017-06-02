@@ -9,6 +9,7 @@ scs_int computeLSBroyden2(Work *work) {
     /* --- DECLARATIONS --- */
     SUCache * cache; /* the SU cache (pointer) */
     const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
+    RETURN 0;
 }
 
 scs_int computeLSBroyden(Work *work) {

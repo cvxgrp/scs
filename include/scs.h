@@ -14,6 +14,10 @@ extern "C" {
 #include "ctrlc.h"
 #include "constants.h"
 
+    Sol * initSol();
+    
+    Info * initInfo();
+    
     /* struct containing problem data */
     struct SCS_PROBLEM_DATA {
         /* these cannot change for multiple runs for the same call to scs_init */
@@ -26,7 +30,7 @@ extern "C" {
         Settings *stgs; /**< contains solver settings specified by user */
     };
 
-    /* Settings struct */
+    /** Settings struct */
     struct SCS_SETTINGS {
         /* settings parameters: default suggested input */
 
@@ -69,12 +73,12 @@ extern "C" {
         scs_int sc_init; /**< Boolean, initial scaling for QN: 0 */
     };
 
-    /* contains primal-dual solution arrays */
+    /** contains primal-dual solution arrays */
     struct SCS_SOL_VARS {
         scs_float *x, *y, *s;
     };
 
-    /* contains terminating information */
+    /** contains terminating information */
     struct SCS_INFO {
         scs_int iter; /* number of iterations taken */
         char status[32]; /* status string, e.g. 'Solved' */
@@ -90,17 +94,17 @@ extern "C" {
         scs_float solveTime; /* time taken for solve phase (milliseconds) */
     };
 
-    /* contains normalization variables */
+    /** contains normalization variables */
     struct SCS_SCALING {
         scs_float *D, *E; /* for normalization */
         scs_float meanNormRowA, meanNormColA;
     };
 
-    /*
+    /**
      * main library API's:
-     * scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T -I])
-     * scs_solve: can be called many times with different b,c data for one init call
-     * scs_finish: cleans up the memory (one per init call)
+     *  1. scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T -I])
+     *  2. scs_solve: can be called many times with different b,c data for one init call
+     *  3. scs_finish: cleans up the memory (one per init call)
      */
     Work *scs_init(
             const Data *d, 

@@ -48,7 +48,7 @@ static SUCache * initSUCache(scs_int memory, scs_int l) {
 
     /* initial active memory is 0 */
     resetSUCache(cache);
-    return cache;
+    RETURN cache;
 }
 
 static void freeYSCache(SUCache * cache) {
@@ -851,65 +851,81 @@ static scs_int validate(const Data *d, const Cone *k) {
     }
     if (validateLinSys(d->A) < 0) {
         scs_printf("invalid linear system input data\n");
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (validateCones(d, k) < 0) {
         scs_printf("cone validation error\n");
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->max_iters <= 0) {
         scs_printf("max_iters must be positive (max_iters=%d)\n", stgs->max_iters);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->eps <= 0) {
         scs_printf("eps tolerance must be positive (eps=%g)\n", stgs->eps);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->alpha <= 0 || stgs->alpha >= 2) {
         scs_printf("alpha must be in (0,2) (alpha=%g)\n", stgs->alpha);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->rho_x <= 0) {
         scs_printf("rhoX must be positive (1e-3 works well) (rho_x=%g).\n", stgs->rho_x);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->scale <= 0) {
         scs_printf("Parameter `scale` must be positive (1 works well).\n");
-        RETURN - 1;
+        RETURN SCS_FAILED;
+    }
+    if (stgs->do_super_scs != 0 && stgs->do_super_scs != 1) {
+        scs_printf("do_super_scs (=%d) can be either 0 or 1.\n", stgs->do_super_scs);
+        RETURN SCS_FAILED;
     }
     /* validate settings related to SuperSCS */
     if (stgs->do_super_scs == 1) {
         if (stgs->thetabar < 0 || stgs->thetabar > 1) {
             scs_printf("Parameters `thetabar` must be a scalar between 0 and 1 (thetabar=%g)\n", stgs->thetabar);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->memory <= 1) {
             scs_printf("Quasi-Newton memory length (mem=%d) is too low; choose an integer at least equal to 2.\n", stgs->memory);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->beta >= 1 || stgs->beta <= 0) {
             scs_printf("Stepsize reduction factor (beta=%g) out of bounds.\n", stgs->beta);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->ls < 0) {
             scs_printf("Illegal maximum number of line search iterations (ls=%d).\n", stgs->ls);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->sigma < 0) {
             scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
-        if (stgs->c_bl < 0 || stgs->c1 >= 1) {
+        if (stgs->c_bl < 0 || stgs->c_bl >= 1) {
             scs_printf("Parameter (c_0=%g) for blind updates out of bounds.\n", stgs->c_bl);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->c1 < 0 || stgs->c1 >= 1) {
             scs_printf("Parameter (c1=%g) for step K1 out of bounds.\n", stgs->c1);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->sse < 0 || stgs->sse >= 1) {
             scs_printf("Parameter (sse=%g) for step K1 out of bounds.\n", stgs->sse);
-            RETURN - 1;
+            RETURN SCS_FAILED;
+        }
+        if (stgs->k0 != 0 && stgs->k0 != 1) {
+            scs_printf("Parameter (k0=%d) can be eiter 0 (k0: off) or 1 (k0: on).\n", stgs->k0);
+            RETURN SCS_FAILED;
+        }
+        if (stgs->k1 != 0 && stgs->k1 != 1) {
+            scs_printf("Parameter (k1=%d) can be eiter 0 (k1: off) or 1 (k1: on).\n", stgs->k0);
+            RETURN SCS_FAILED;
+        }
+        if (stgs->k2 != 0 && stgs->k2 != 1) {
+            scs_printf("Parameter (k2=%d) can be eiter 0 (k2: off) or 1 (k2: on).\n", stgs->k0);
+            RETURN SCS_FAILED;
         }
     }
     RETURN 0;
@@ -947,7 +963,6 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->c = scs_malloc(d->n * sizeof (scs_float));
 
     /* added for superscs */
-    w->u_t = scs_malloc(l * sizeof (scs_float));
     w->R = scs_calloc(l, sizeof (scs_float));
     w->R_prev = scs_calloc(l, sizeof (scs_float));
     w->dir = scs_calloc(l, sizeof (scs_float));
@@ -1162,8 +1177,14 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
-    projectLinSysv2(work->u_t, work->u, work, i); /* u_t = (I+Q)^{-1} u*/
-    projectConesv2(work->u_b, work->u_t, work->u, work, cone, i); /* u_bar = proj_C(2u_t - u) */
+    if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
+        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                "error in projectLinSysv2", "Failure");
+    }
+    if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
+        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                "error in projectConesv2", "Failure");
+    }
     compute_sb_kapb(work->u, work->u_b, work->u_t, work);
     calcFPRes(work->R, work->u_t, work->u_b, work->l); /* computes Ru */
     scaleArray(work->R, sqrt_rhox, work->n);
@@ -1176,7 +1197,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
-     
+
         if (isInterrupted()) {
             RETURN failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
@@ -1311,6 +1332,7 @@ void scs_finish(Work * w) {
             freeAMatrix(w->A);
 #endif
         }
+
         if (w->p)
             freePriv(w->p);
         freeWork(w);
@@ -1348,6 +1370,7 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
     /* strtoc("init", &initTimer); */
     info->setupTime = tocq(&initTimer);
     if (d->stgs->verbose) {
+
         scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3);
     }
     endInterruptListener();
@@ -1379,4 +1402,37 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
     }
     scs_finish(w);
     RETURN status;
+}
+
+Sol * initSol() {
+    Sol *sol = scs_calloc(1, sizeof (Sol));
+    if (!sol) {
+        scs_printf("ERROR: allocating sol failure\n");
+        RETURN SCS_NULL;
+    }
+    sol->s = SCS_NULL;
+    sol->x = SCS_NULL;
+    sol->y = SCS_NULL;
+    RETURN sol;
+}
+
+Info * initInfo() {
+    Info * info = scs_calloc(1, sizeof (Info));
+    if (!info) {
+        scs_printf("ERROR: allocating info failure\n");
+        RETURN SCS_NULL;
+    }
+    info->pobj = NAN;
+    info->dobj = NAN;
+    info->iter = -1;
+    info->relGap = NAN;
+    info->resDual = NAN;
+    info->resInfeas = NAN;
+    info->resPri = NAN;
+    info->resUnbdd = NAN;
+    info->setupTime = NAN;
+    info->solveTime = NAN;
+    info->statusVal = SCS_INDETERMINATE;
+            
+    RETURN info;
 }

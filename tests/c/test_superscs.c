@@ -10,7 +10,7 @@ bool test_superscs(char** str) {
     Sol* sol;
     Data * data;
     AMatrix * A;
-    Info info = {0};
+    Info * info;
     Cone * cone;
 
     data = malloc(sizeof (Data));
@@ -92,15 +92,16 @@ bool test_superscs(char** str) {
     
     cone->p = SCS_NULL;
     cone->s = SCS_NULL;
-    
-    initCone(cone);
 
-    sol = scs_calloc(1, sizeof (Sol));
+    sol = initSol();
+    info = initInfo();
+    
     data->stgs->do_super_scs = 1;
-    scs(data, cone, sol, &info);
+    scs(data, cone, sol, info);
             
     freeData(data, cone);
     freeSol(sol);
+    scs_free(info);
     
     SUCCEED(str);
 }
