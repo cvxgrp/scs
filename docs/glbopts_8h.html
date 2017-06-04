@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Macros</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -91,7 +91,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a>  </div>
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">glbopts.h File Reference</div>  </div>
 </div><!--header-->
@@ -161,6 +162,18 @@ Typedefs</h2></td></tr>
 <tr class="separator:aa6b66a92ab6f62bce1f24a0e358dac55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a349e2c420ebc99cfdd732dc952a98182"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_s_c_s___c_o_n_e.html">SCS_CONE</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="glbopts_8h.html#a349e2c420ebc99cfdd732dc952a98182">Cone</a></td></tr>
 <tr class="separator:a349e2c420ebc99cfdd732dc952a98182"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9a66f1669c9fb6760e2910763f6190d"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_s_c_s___s_u___m_e_m_o_r_y.html">SCS_SU_MEMORY</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="glbopts_8h.html#ae9a66f1669c9fb6760e2910763f6190d">SUCache</a></td></tr>
+<tr class="separator:ae9a66f1669c9fb6760e2910763f6190d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2abf62b7d5a79be54f18723e9d65f06c"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4c">direction_enum</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="glbopts_8h.html#a2abf62b7d5a79be54f18723e9d65f06c">direction_type</a></td></tr>
+<tr class="separator:a2abf62b7d5a79be54f18723e9d65f06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ae846c6457f3d41c69f5f313e396f9f4c"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4c">direction_enum</a> { <a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca8c55599a07579d01ab088f80b9ed7a3e">restarted_broyden</a>, 
+<a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca259a58e90d91ad557b2c7e034c1a5434">restarted_broyden_v2</a>, 
+<a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca5994baddc7538e34154c5249c9ea3b35">fixed_point_residual</a>
+ }</td></tr>
+<tr class="separator:ae846c6457f3d41c69f5f313e396f9f4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a class="anchor" id="a63b54d37a966814e93830d14bd8978c6"></a>
@@ -466,6 +479,19 @@ Typedefs</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a2abf62b7d5a79be54f18723e9d65f06c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef enum <a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4c">direction_enum</a>
+     <a class="el" href="glbopts_8h.html#a2abf62b7d5a79be54f18723e9d65f06c">direction_type</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a0d98fee0ffa9f2986ddf6c19a9a7daa0"></a>
 <div class="memitem">
 <div class="memproto">
@@ -538,6 +564,19 @@ Typedefs</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ae9a66f1669c9fb6760e2910763f6190d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_s_c_s___s_u___m_e_m_o_r_y.html">SCS_SU_MEMORY</a> <a class="el" href="glbopts_8h.html#ae9a66f1669c9fb6760e2910763f6190d">SUCache</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A finite-memory cache where \((Y, U)\) are stored. </p>
+
+</div>
+</div>
 <a class="anchor" id="aa6b66a92ab6f62bce1f24a0e358dac55"></a>
 <div class="memitem">
 <div class="memproto">
@@ -550,10 +589,31 @@ Typedefs</h2></td></tr>
 
 </div>
 </div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="ae846c6457f3d41c69f5f313e396f9f4c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4c">direction_enum</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ae846c6457f3d41c69f5f313e396f9f4ca8c55599a07579d01ab088f80b9ed7a3e"></a>restarted_broyden</em>&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ae846c6457f3d41c69f5f313e396f9f4ca259a58e90d91ad557b2c7e034c1a5434"></a>restarted_broyden_v2</em>&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ae846c6457f3d41c69f5f313e396f9f4ca5994baddc7538e34154c5249c9ea3b35"></a>fixed_point_residual</em>&#160;</td><td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue May 30 2017 11:26:05 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 2 2017 19:18:28 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

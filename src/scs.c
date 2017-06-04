@@ -48,7 +48,7 @@ static SUCache * initSUCache(scs_int memory, scs_int l) {
 
     /* initial active memory is 0 */
     resetSUCache(cache);
-    return cache;
+    RETURN cache;
 }
 
 static void freeYSCache(SUCache * cache) {
@@ -873,65 +873,81 @@ static scs_int validate(const Data *d, const Cone *k) {
     }
     if (validateLinSys(d->A) < 0) {
         scs_printf("invalid linear system input data\n");
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (validateCones(d, k) < 0) {
         scs_printf("cone validation error\n");
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->max_iters <= 0) {
         scs_printf("max_iters must be positive (max_iters=%d)\n", stgs->max_iters);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->eps <= 0) {
         scs_printf("eps tolerance must be positive (eps=%g)\n", stgs->eps);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->alpha <= 0 || stgs->alpha >= 2) {
         scs_printf("alpha must be in (0,2) (alpha=%g)\n", stgs->alpha);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->rho_x <= 0) {
         scs_printf("rhoX must be positive (1e-3 works well) (rho_x=%g).\n", stgs->rho_x);
-        RETURN - 1;
+        RETURN SCS_FAILED;
     }
     if (stgs->scale <= 0) {
         scs_printf("Parameter `scale` must be positive (1 works well).\n");
-        RETURN - 1;
+        RETURN SCS_FAILED;
+    }
+    if (stgs->do_super_scs != 0 && stgs->do_super_scs != 1) {
+        scs_printf("do_super_scs (=%d) can be either 0 or 1.\n", stgs->do_super_scs);
+        RETURN SCS_FAILED;
     }
     /* validate settings related to SuperSCS */
     if (stgs->do_super_scs == 1) {
         if (stgs->thetabar < 0 || stgs->thetabar > 1) {
             scs_printf("Parameters `thetabar` must be a scalar between 0 and 1 (thetabar=%g)\n", stgs->thetabar);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->memory <= 1) {
             scs_printf("Quasi-Newton memory length (mem=%d) is too low; choose an integer at least equal to 2.\n", stgs->memory);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->beta >= 1 || stgs->beta <= 0) {
             scs_printf("Stepsize reduction factor (beta=%g) out of bounds.\n", stgs->beta);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->ls < 0) {
             scs_printf("Illegal maximum number of line search iterations (ls=%d).\n", stgs->ls);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->sigma < 0) {
             scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
-        if (stgs->c_bl < 0 || stgs->c1 >= 1) {
+        if (stgs->c_bl < 0 || stgs->c_bl >= 1) {
             scs_printf("Parameter (c_0=%g) for blind updates out of bounds.\n", stgs->c_bl);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->c1 < 0 || stgs->c1 >= 1) {
             scs_printf("Parameter (c1=%g) for step K1 out of bounds.\n", stgs->c1);
-            RETURN - 1;
+            RETURN SCS_FAILED;
         }
         if (stgs->sse < 0 || stgs->sse >= 1) {
             scs_printf("Parameter (sse=%g) for step K1 out of bounds.\n", stgs->sse);
-            RETURN - 1;
+            RETURN SCS_FAILED;
+        }
+        if (stgs->k0 != 0 && stgs->k0 != 1) {
+            scs_printf("Parameter (k0=%d) can be eiter 0 (k0: off) or 1 (k0: on).\n", stgs->k0);
+            RETURN SCS_FAILED;
+        }
+        if (stgs->k1 != 0 && stgs->k1 != 1) {
+            scs_printf("Parameter (k1=%d) can be eiter 0 (k1: off) or 1 (k1: on).\n", stgs->k0);
+            RETURN SCS_FAILED;
+        }
+        if (stgs->k2 != 0 && stgs->k2 != 1) {
+            scs_printf("Parameter (k2=%d) can be eiter 0 (k2: off) or 1 (k2: on).\n", stgs->k0);
+            RETURN SCS_FAILED;
         }
     }
     RETURN 0;
@@ -958,7 +974,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     /* allocate workspace: */
     w->u = scs_malloc(l * sizeof (scs_float));
     w->u_b = scs_malloc(l * sizeof (scs_float));
-    w->v = scs_malloc(l * sizeof (scs_float));
+    w->v = scs_calloc(l, sizeof (scs_float));
     w->u_t = scs_malloc(l * sizeof (scs_float));
     w->u_prev = scs_malloc(l * sizeof (scs_float));
     w->h = scs_malloc((l - 1) * sizeof (scs_float));
@@ -969,7 +985,6 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->c = scs_malloc(d->n * sizeof (scs_float));
 
     /* added for superscs */
-    w->u_t = scs_malloc(l * sizeof (scs_float));
     w->R = scs_calloc(l, sizeof (scs_float));
     w->R_prev = scs_calloc(l, sizeof (scs_float));
     w->dir = scs_calloc(l, sizeof (scs_float));
@@ -1141,17 +1156,17 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
 
 static void compute_sb_kapb(scs_float *u, scs_float *u_b, scs_float *u_t, Work *w) {
     scs_int j;
-
     for (j = 0; j < w->m; ++j) {
         w->s_b[j] = u_b[w->n + j] - 2.0 * u_t[w->n + j] + u[w->n + j];
     }
-    w->kap_b = u_b[w->l - 1] - 2 * u_t[w->l - 1] + u[w->l - 1];
+    w->kap_b = u_b[w->l - 1] - 2.0 * u_t[w->l - 1] + u[w->l - 1];
 }
 
-scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
+scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol, Info *info) {
     DEBUG_FUNC
-    scs_int i;
-    scs_int j;
+    scs_int i; /* i indexes the (outer) iterations */
+    scs_int j; /* j indexes the line search iterations */
+    scs_int j1; /* j1 indexes other auxiliary iterations (e.g., algebraic operations) */
     scs_int how = 0; /* -1:unsuccessful backtracking, 0:K0, 1:K1, 2:K2 */
     scs_float eta;
     scs_float r_safe;
@@ -1160,12 +1175,14 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     scs_float slack; /* for K2 */
     scs_float rhs; /* for K2 */
     scs_float stepsize2; /* for K2 */
-    scs_float sqrt_rhox = sqrt(w->stgs->rho_x);
-    scs_float q = w->stgs->sse;
+    scs_float sqrt_rhox = sqrt(work->stgs->rho_x);
+    scs_float q = work->stgs->sse;
+
+
 
     timer solveTimer;
     struct residuals r;
-    if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
+    if (!data || !cone || !sol || !info || !work || !data->b || !data->c) {
         scs_printf("ERROR: SCS_NULL input\n");
         RETURN SCS_FAILED;
     }
@@ -1175,142 +1192,154 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
     tic(&solveTimer);
     info->statusVal = SCS_UNFINISHED; /* not yet converged */
     r.lastIter = -1;
-    updateWork(d, w, sol);
+    updateWork(data, work, sol);
 
-    if (w->stgs->verbose)
-        printHeader(w, k);
+    if (work->stgs->verbose)
+        printHeader(work, cone);
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
-    projectLinSysv2(w->u_t, w->u, w, i); /* u_t = (I+Q)^{-1} u*/
-    projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
-    compute_sb_kapb(w->u, w->u_b, w->u_t, w);
-    calcFPRes(w->R, w->u_t, w->u_b, w->l); /* computes Ru */
-    scaleArray(w->R, sqrt_rhox, w->n);
-    eta = calcNorm(w->R, w->l); /* initialize eta = |Ru^0| (norm of scaled R) */
-    scaleArray(w->u, sqrt_rhox, w->n); /* u is now scaled */
+    if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
+        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                "error in projectLinSysv2", "Failure");
+    }
+    if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
+        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                "error in projectConesv2", "Failure");
+    }
+    compute_sb_kapb(work->u, work->u_b, work->u_t, work);
+    calcFPRes(work->R, work->u_t, work->u_b, work->l); /* computes Ru */
+    scaleArray(work->R, sqrt_rhox, work->n);
+    eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
+    scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
 
 
     /***** HENCEFORTH, R and u ARE SCALED! *****/
 
     /* MAIN SUPER SCS LOOP */
-    for (i = 0; i < w->stgs->max_iters; ++i) {
+    for (i = 0; i < work->stgs->max_iters; ++i) {
 
         if (isInterrupted()) {
-            RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
+            RETURN failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
         }
 
-        w->nrmR_con = (i == 0) ? eta : calcNorm(w->R, w->l);
+        work->nrmR_con = (i == 0) ? eta : calcNorm(work->R, work->l);
 
-        if (w->stgs->ls > 0 || w->stgs->k0 == 1) {
-            w->stgs->sse *= q; /*sse = q^i */
+        if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
+            work->stgs->sse *= q; /*sse = q^i */
             if (i == 0) {
                 /* dir^0 = -R */
-                for (j = 0; j < w->l; ++j) {
-                    w->dir[j] = -w->R[j];
+                for (j1 = 0; j1 < work->l; ++j1) {
+                    work->dir[j1] = -work->R[j1];
                 }
             } else {
-                if (how == 0 || w->stgs->ls == 0) {
-                    for (j = 0; j < w->l; ++j) {
-                        w->Sk[j] = w->u[j] - w->u_prev[j];
-                        w->Yk[j] = w->R[j] - w->R_prev[j];
+                if (how == 0 || work->stgs->ls == 0) {
+                    for (j1 = 0; j1 < work->l; ++j1) {
+                        work->Sk[j1] = work->u[j1] - work->u_prev[j1];
+                        work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
                 } else {
-                    for (j = 0; j < w->l; ++j) {
-                        w->Sk[j] = w->wu[j] - w->u_prev[j];
-                        w->Yk[j] = w->Rwu[j] - w->R_prev[j];
+                    for (j1 = 0; j1 < work->l; ++j1) {
+                        work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
+                        work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
                     }
                 }
                 /* compute direction */
-                computeLSBroyden(w);
+                computeDirection(work);
             }
-            scaleArray(w->dir, 1 / sqrt_rhox, w->n);
+            scaleArray(work->dir, 1 / sqrt_rhox, work->n);
         }
 
-
-        memcpy(w->u_prev, w->u, w->l * sizeof (scs_float));
-        memcpy(w->R_prev, w->R, w->l * sizeof (scs_float));
+        memcpy(work->u_prev, work->u, work->l * sizeof (scs_float)); /* u_prev = u */
+        memcpy(work->R_prev, work->R, work->l * sizeof (scs_float)); /* R_prev = R */
         how = -1; /* no backtracking (yet) */
-        nrmR_con_old = w->nrmR_con;
-        if (i >= w->stgs->warm_start) {
-            if (w->stgs->k0 == 1 && w->nrmR_con <= w->stgs->c_bl * eta) {
-                addArray(w->u, w->dir, w->l); /* u += dir */
+        nrmR_con_old = work->nrmR_con;
+
+        if (i >= work->stgs->warm_start) {
+            if (work->stgs->k0 == 1 && work->nrmR_con <= work->stgs->c_bl * eta) {
+                addArray(work->u, work->dir, work->l); /* u += dir */
                 how = 0;
-                eta = w->nrmR_con;
+                eta = work->nrmR_con;
                 //    r_safe = INFINITY; /* TODO: chk if it should be inf. */
-                w->stepsize = 1.0;
-            } else if (w->stgs->ls > 0) {
-                projectLinSysv2(w->dut, w->dir, w, i);
-                w->stepsize = 2.0;
+                work->stepsize = 1.0;
+            } else if (work->stgs->ls > 0) {
+                projectLinSysv2(work->dut, work->dir, work, i);
+                work->stepsize = 2.0;
 
                 /* Line - search */
-                for (j = 0; j < w->stgs->ls; ++j) {
-                    w->stepsize *= w->stgs->beta;
-                    for (j = 0; j < w->l; ++j) {
-                        w->wu[j] = w->u[j] + w->stepsize * w->dir[j]; /* wu = u + step * dir */
-                        w->wu_t[j] = w->u_t[j] + w->stepsize * w->dut[j]; /* wut = u_t + step * dut */
+                for (j = 0; j < work->stgs->ls; ++j) {
+                    work->stepsize *= work->stgs->beta;
+                    for (j1 = 0; j1 < work->l; ++j1) {
+                        work->wu[j1] = work->u[j1] + work->stepsize * work->dir[j1]; /* wu = u + step * dir */
+                        work->wu_t[j1] = work->u_t[j1] + work->stepsize * work->dut[j1]; /* wut = u_t + step * dut */
                     }
-                    projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
-                //    printArray(w->wu_b, w->l, "wub");
-                    calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); /* calculate FPR on scaled vectors */
+
+                    projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i);
+                    calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
+
                     /* here we dont' scale R */
 
-                    nrmRw_con = calcNorm(w->Rwu, w->l);
+                    nrmRw_con = calcNorm(work->Rwu, work->l);
                     /* K1 */
-                    if (w->stgs->k1
-                            && nrmRw_con <= w->stgs->c1 * nrmR_con_old
-                            && w->nrmR_con <= r_safe) { // a bit different than matlab
-                        memcpy(w->u, w->wu, w->l * sizeof (scs_float));
-                        memcpy(w->u_t, w->wu_t, w->l * sizeof (scs_float));
-                        memcpy(w->u_b, w->wu_b, w->l * sizeof (scs_float));
-                        memcpy(w->R, w->Rwu, w->l * sizeof (scs_float));
-                        compute_sb_kapb(w->wu, w->wu_b, w->wu_t, w);
-
-                        w->nrmR_con = nrmRw_con;
-                        r_safe = w->nrmR_con + w->stgs->sse; // The power already computed at the beginning of the main loop
+                    // <editor-fold defaultstate="collapsed" desc="K1 block">
+                    if (work->stgs->k1
+                            && nrmRw_con <= work->stgs->c1 * nrmR_con_old
+                            && work->nrmR_con <= r_safe) { // a bit different than matlab
+                        memcpy(work->u, work->wu, work->l * sizeof (scs_float));
+                        memcpy(work->u_t, work->wu_t, work->l * sizeof (scs_float));
+                        memcpy(work->u_b, work->wu_b, work->l * sizeof (scs_float));
+                        memcpy(work->R, work->Rwu, work->l * sizeof (scs_float));
+                        compute_sb_kapb(work->wu, work->wu_b, work->wu_t, work);
+                        work->nrmR_con = nrmRw_con;
+                        r_safe = work->nrmR_con + work->stgs->sse; // The power already computed at the beginning of the main loop
                         how = 1;
                         break;
-                    }
+                    }// </editor-fold>
+
                     /* K2 */
-                    if (w->stgs->k2) {
-                        slack = nrmRw_con * nrmRw_con - w->stepsize * innerProd(w->dir, w->Rwu, w->l);
-                        rhs = w->stgs->sigma * w->nrmR_con * nrmRw_con;
+                    // <editor-fold defaultstate="collapsed" desc="K2 block">
+                    if (work->stgs->k2) {
+                        slack = nrmRw_con * nrmRw_con - work->stepsize * innerProd(work->dir, work->Rwu, work->l);
+                        rhs = work->stgs->sigma * work->nrmR_con * nrmRw_con;
+                        /* printf("%2.12f, %2.12f \n", slack, rhs); */
                         if (slack >= rhs) {
-                            stepsize2 = (w->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
-                            addScaledArray(w->u, w->Rwu, w->l, -stepsize2);
+                            stepsize2 = (work->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
+                            addScaledArray(work->u, work->Rwu, work->l, -stepsize2);
                             how = 2;
-                            break;
+                            break; /* exits the line search loop */
                         }
-                    }
+                    }// </editor-fold>
+
                 } /* end of line-search */
             }
 
         }
-        if (how == -1) { //means that R didn't change
+        if (how == -1) { /* means that R didn't change */
             /* x -= alpha*sqrt(rho)*Rx */
-            addScaledArray(w->u, w->R, w->l, -w->stgs->alpha * sqrt_rhox);
+            addScaledArray(work->u, work->R, work->l, -work->stgs->alpha * sqrt_rhox);
             /* s -= Rs      */
             /* tau -= Rtau  */
-            subtractArray(w->u + w->n, w->R + w->n, w->m + 1);
+            subtractArray(work->u + work->n, work->R + work->n, work->m + 1);
         }
-        if (how != 1) {
-            projectLinSysv2(w->u_t, w->u, w, i);
-            projectConesv2(w->u_b, w->u_t, w->u, w, k, i); /* u_bar = proj_C(2u_t - u) */
-            compute_sb_kapb(w->u, w->u_b, w->u_t, w);
-            calcFPRes(w->R, w->u_t, w->u_b, w->l);
-            scaleArray(w->R, sqrt_rhox, w->n);
-            w->nrmR_con = calcNorm(w->R, w->l);
+        if (how != 1) { /* exited with K1 */
+            projectLinSysv2(work->u_t, work->u, work, i);
+            projectConesv2(work->u_b, work->u_t, work->u, work, cone, i); /* u_bar = proj_C(2u_t - u) */
+            compute_sb_kapb(work->u, work->u_b, work->u_t, work);
+            calcFPRes(work->R, work->u_t, work->u_b, work->l);
+            scaleArray(work->R, sqrt_rhox, work->n);
+            work->nrmR_con = calcNorm(work->R, work->l);
+            /* printf("%3.12f\n", work->nrmR_con); */
         }
     } /* main for loop */
 
     /* populate solution vectors (unnormalized) and info */
-    getSolution(w, sol, info, &r, i);
+    getSolution(work, sol, info, &r, i);
     info->solveTime = tocq(&solveTimer);
 
-    if (w->stgs->verbose)
-        printFooter(d, k, sol, w, info);
+    if (work->stgs->verbose)
+        printFooter(data, cone, sol, work, info);
     endInterruptListener();
 
     RETURN info->statusVal;
@@ -1327,6 +1356,7 @@ void scs_finish(Work * w) {
             freeAMatrix(w->A);
 #endif
         }
+
         if (w->p)
             freePriv(w->p);
         freeWork(w);
@@ -1364,6 +1394,7 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
     /* strtoc("init", &initTimer); */
     info->setupTime = tocq(&initTimer);
     if (d->stgs->verbose) {
+
         scs_printf("Setup time: %1.2es\n", info->setupTime / 1e3);
     }
     endInterruptListener();
@@ -1395,4 +1426,77 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
     }
     scs_finish(w);
     RETURN status;
+}
+
+Sol * initSol() {
+    Sol *sol = scs_calloc(1, sizeof (Sol));
+    if (!sol) {
+        scs_printf("ERROR: allocating sol failure\n");
+        RETURN SCS_NULL;
+    }
+    sol->s = SCS_NULL;
+    sol->x = SCS_NULL;
+    sol->y = SCS_NULL;
+    RETURN sol;
+}
+
+Info * initInfo() {
+    Info * info = scs_calloc(1, sizeof (Info));
+    if (!info) {
+        scs_printf("ERROR: allocating info failure\n");
+        RETURN SCS_NULL;
+    }
+    info->pobj = NAN;
+    info->dobj = NAN;
+    info->iter = -1;
+    info->relGap = NAN;
+    info->resDual = NAN;
+    info->resInfeas = NAN;
+    info->resPri = NAN;
+    info->resUnbdd = NAN;
+    info->setupTime = NAN;
+    info->solveTime = NAN;
+    info->statusVal = SCS_INDETERMINATE;
+            
+    RETURN info;
+}
+
+Data * initData(){
+    Data * data;
+    data = malloc(sizeof (Data));
+    
+    if (!data) {
+        scs_printf("ERROR: allocating data failure\n");
+        RETURN SCS_NULL;
+    }
+    
+    data->A = SCS_NULL;
+    data->b = SCS_NULL;
+    data->c = SCS_NULL;
+    data->m = 0;
+    data->n = 0;
+    
+    data->stgs = scs_malloc(sizeof(Settings));
+    data->stgs->max_iters = MAX_ITERS;
+    data->stgs->alpha = ALPHA;
+    data->stgs->beta = BETA_DEFAULT;
+    data->stgs->c1 = C1_DEFAULT;
+    data->stgs->c_bl = C_BL_DEFAULT;
+    data->stgs->eps = EPS;
+    data->stgs->k0 = K0_DEFAULT;
+    data->stgs->k1 = K1_DEFAULT;
+    data->stgs->k2 = K2_DEFAULT;
+    data->stgs->ls = LS_DEFAULT;
+    data->stgs->normalize = NORMALIZE;
+    data->stgs->warm_start = WARM_START;    
+    data->stgs->rho_x = RHO_X;
+    data->stgs->scale = SCALE;    
+    data->stgs->verbose = VERBOSE;                    
+    data->stgs->sigma = SIGMA_DEFAULT;
+    data->stgs->thetabar = THETABAR_DEFAULT;
+    data->stgs->sse = SSE_DEFAULT;
+    data->stgs->memory = MEMORY_DEFAULT;
+    data->stgs->direction = fixed_point_residual;
+    
+    RETURN data;
 }

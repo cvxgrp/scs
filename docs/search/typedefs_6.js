@@ -5,5 +5,5 @@ var searchData=
   ['scs_5fint',['scs_int',['../glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b',1,'glbopts.h']]],
   ['settings',['Settings',['../glbopts_8h.html#a6ef430ee595f717434ba4b1e27d102d8',1,'glbopts.h']]],
   ['sol',['Sol',['../glbopts_8h.html#a4bfe3aa7b79eb224b6345a457985eb20',1,'glbopts.h']]],
-  ['sucache',['SUCache',['../scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d',1,'scs.h']]]
+  ['sucache',['SUCache',['../glbopts_8h.html#ae9a66f1669c9fb6760e2910763f6190d',1,'glbopts.h']]]
 ];

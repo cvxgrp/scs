@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Macros</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -96,7 +96,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">normalize.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
+<div class="textblock"><code>#include &quot;<a class="el" href="scs_8h_source.html">scs.h</a>&quot;</code><br/>
+</div>
 <p><a href="normalize_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -114,8 +115,6 @@ Functions</h2></td></tr>
 <tr class="separator:ada32f0fb38e673f9519c3dd786c00b74"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac73d540b76c6a5076ae542bbae49f14a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="normalize_8h.html#ac73d540b76c6a5076ae542bbae49f14a">normalizeWarmStart</a> (<a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *w)</td></tr>
 <tr class="separator:ac73d540b76c6a5076ae542bbae49f14a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a219b111030c122a5d123fa41723b0f5f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="normalize_8h.html#a219b111030c122a5d123fa41723b0f5f">normalizeWarmStartv2</a> (<a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *w)</td></tr>
-<tr class="separator:a219b111030c122a5d123fa41723b0f5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7961bb8da438cbed83744fd9d55c5c99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="normalize_8h.html#a7961bb8da438cbed83744fd9d55c5c99">unNormalizeSol</a> (<a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *w, <a class="el" href="glbopts_8h.html#a4bfe3aa7b79eb224b6345a457985eb20">Sol</a> *sol)</td></tr>
 <tr class="separator:a7961bb8da438cbed83744fd9d55c5c99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -203,22 +202,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a219b111030c122a5d123fa41723b0f5f"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void normalizeWarmStartv2 </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *&#160;</td>
-          <td class="paramname"><em>w</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a class="anchor" id="a7961bb8da438cbed83744fd9d55c5c99"></a>
 <div class="memitem">
 <div class="memproto">
@@ -248,7 +231,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue May 30 2017 11:26:05 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 2 2017 19:18:28 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

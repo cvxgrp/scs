@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['beta',['BETA',['../constants_8h.html#a1b996515309fc3c03449912bb33046e3',1,'constants.h']]]
+  ['beta_5fdefault',['BETA_DEFAULT',['../constants_8h.html#a087bc4c9c52ecc1f5efa6b70dc47d616',1,'constants.h']]]
 ];

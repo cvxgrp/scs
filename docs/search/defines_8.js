@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['k0',['K0',['../constants_8h.html#a307c72605e3713972b4f4fb2d53ea20e',1,'constants.h']]],
-  ['k1',['K1',['../constants_8h.html#aadecb1977e30da2f62766f1fcb8b1f95',1,'constants.h']]],
-  ['k2',['K2',['../constants_8h.html#ab6d0e745059aded06587e4b6933bca0b',1,'constants.h']]]
+  ['k0_5fdefault',['K0_DEFAULT',['../constants_8h.html#a5a71d8aae0a1c821f648c168b010ca20',1,'constants.h']]],
+  ['k1_5fdefault',['K1_DEFAULT',['../constants_8h.html#ac7d18d33711291f5f119f0cdf7edfde7',1,'constants.h']]],
+  ['k2_5fdefault',['K2_DEFAULT',['../constants_8h.html#a328a3bef38f64a43b83c0d09f3bde1c9',1,'constants.h']]]
 ];

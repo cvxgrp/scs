@@ -75,6 +75,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="globals_func.html"><span>Functions</span></a></li>
       <li><a href="globals_vars.html"><span>Variables</span></a></li>
       <li><a href="globals_type.html"><span>Typedefs</span></a></li>
+      <li><a href="globals_enum.html"><span>Enumerations</span></a></li>
+      <li><a href="globals_eval.html"><span>Enumerator</span></a></li>
       <li><a href="globals_defs.html"><span>Macros</span></a></li>
     </ul>
   </div>
@@ -108,7 +110,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Macros</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -121,20 +123,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="textblock">Here is a list of all functions, variables, defines, enums, and typedefs with links to the files they belong to:</div>
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
+<li>C1
+: <a class="el" href="constants_8h.html#a44779f18d87e71c78fc9fbf9dc88537d">constants.h</a>
+</li>
 <li>C_BL
 : <a class="el" href="constants_8h.html#a36ea160af94b772c3a5438a8da8179e3">constants.h</a>
 </li>
 <li>calcNorm()
-: <a class="el" href="lin_alg_8c.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">linAlg.c</a>
-, <a class="el" href="lin_alg_8h.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">linAlg.h</a>
+: <a class="el" href="lin_alg_8h.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">linAlg.h</a>
+, <a class="el" href="lin_alg_8c.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">linAlg.c</a>
 </li>
 <li>calcNormDiff()
 : <a class="el" href="lin_alg_8c.html#a0445c72b9f17917bb99ff5ec168fa217">linAlg.c</a>
 , <a class="el" href="lin_alg_8h.html#a0445c72b9f17917bb99ff5ec168fa217">linAlg.h</a>
 </li>
 <li>calcNormInf()
-: <a class="el" href="lin_alg_8c.html#a9fec615eabdbed48d18c0f6dcc8ebfa2">linAlg.c</a>
-, <a class="el" href="lin_alg_8h.html#a9fec615eabdbed48d18c0f6dcc8ebfa2">linAlg.h</a>
+: <a class="el" href="lin_alg_8h.html#a9fec615eabdbed48d18c0f6dcc8ebfa2">linAlg.h</a>
+, <a class="el" href="lin_alg_8c.html#a9fec615eabdbed48d18c0f6dcc8ebfa2">linAlg.c</a>
 </li>
 <li>calcNormInfDiff()
 : <a class="el" href="lin_alg_8c.html#ac03a83f4399614983fddd63a538c740b">linAlg.c</a>
@@ -150,9 +155,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>CG_RATE
 : <a class="el" href="constants_8h.html#a12bfb0313e34bbbe9b0d083d8249655b">constants.h</a>
 </li>
+<li>computeDirection()
+: <a class="el" href="directions_8h.html#a3c3fd80397cffcb9f98967b19ce465f7">directions.h</a>
+, <a class="el" href="directions_8c.html#a3c3fd80397cffcb9f98967b19ce465f7">directions.c</a>
+</li>
 <li>computeLSBroyden()
 : <a class="el" href="directions_8c.html#a13920d82d3267564ab3e659a25608941">directions.c</a>
 , <a class="el" href="directions_8h.html#a13920d82d3267564ab3e659a25608941">directions.h</a>
+</li>
+<li>computeLSBroyden2()
+: <a class="el" href="directions_8c.html#a45c520ca1f5092d6dc6a145fb4e4871b">directions.c</a>
 </li>
 <li>Cone
 : <a class="el" href="glbopts_8h.html#a349e2c420ebc99cfdd732dc952a98182">glbopts.h</a>
@@ -181,20 +193,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 , <a class="el" href="cs_8c.html#ae159ec945518591b1ffc831a07c0c063">cs.c</a>
 </li>
 <li>cs_done()
-: <a class="el" href="cs_8h.html#a21acf55a6e9215e0fe19c3e49503e121">cs.h</a>
-, <a class="el" href="cs_8c.html#a21acf55a6e9215e0fe19c3e49503e121">cs.c</a>
+: <a class="el" href="cs_8c.html#a21acf55a6e9215e0fe19c3e49503e121">cs.c</a>
+, <a class="el" href="cs_8h.html#a21acf55a6e9215e0fe19c3e49503e121">cs.h</a>
 </li>
 <li>cs_pinv()
-: <a class="el" href="cs_8h.html#aa2048f58da40252fa0cd74cd26a5814b">cs.h</a>
-, <a class="el" href="cs_8c.html#aa2048f58da40252fa0cd74cd26a5814b">cs.c</a>
+: <a class="el" href="cs_8c.html#aa2048f58da40252fa0cd74cd26a5814b">cs.c</a>
+, <a class="el" href="cs_8h.html#aa2048f58da40252fa0cd74cd26a5814b">cs.h</a>
 </li>
 <li>cs_spalloc()
 : <a class="el" href="cs_8c.html#a48e1853a1859ac587f0ad8c8be48a1d2">cs.c</a>
 , <a class="el" href="cs_8h.html#a48e1853a1859ac587f0ad8c8be48a1d2">cs.h</a>
 </li>
 <li>cs_spfree()
-: <a class="el" href="cs_8h.html#a6d705e404a7831ccf01bc0ea064215b9">cs.h</a>
-, <a class="el" href="cs_8c.html#a6d705e404a7831ccf01bc0ea064215b9">cs.c</a>
+: <a class="el" href="cs_8c.html#a6d705e404a7831ccf01bc0ea064215b9">cs.c</a>
+, <a class="el" href="cs_8h.html#a6d705e404a7831ccf01bc0ea064215b9">cs.h</a>
 </li>
 <li>cs_symperm()
 : <a class="el" href="cs_8c.html#a08e2f4688ac64196e0866cdb996afc3d">cs.c</a>
@@ -204,7 +216,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue May 30 2017 11:26:05 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 2 2017 18:10:53 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

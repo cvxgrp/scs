@@ -75,6 +75,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="globals_func.html"><span>Functions</span></a></li>
       <li><a href="globals_vars.html"><span>Variables</span></a></li>
       <li><a href="globals_type.html"><span>Typedefs</span></a></li>
+      <li><a href="globals_enum.html"><span>Enumerations</span></a></li>
+      <li><a href="globals_eval.html"><span>Enumerator</span></a></li>
       <li><a href="globals_defs.html"><span>Macros</span></a></li>
     </ul>
   </div>
@@ -108,7 +110,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Macros</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -136,11 +138,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </li>
 <li>scs()
 : <a class="el" href="scs_8c.html#a103f47be236f81ae085244d574997706">scs.c</a>
-, <a class="el" href="scs_8h.html#a103f47be236f81ae085244d574997706">scs.h</a>
 </li>
 <li>scs_abs()
-: <a class="el" href="lin_alg_8c.html#a1e145f69d746d5609fb6ff8105a183c0">linAlg.c</a>
-, <a class="el" href="lin_alg_8h.html#a1e145f69d746d5609fb6ff8105a183c0">linAlg.h</a>
+: <a class="el" href="lin_alg_8h.html#a1e145f69d746d5609fb6ff8105a183c0">linAlg.h</a>
 </li>
 <li>scs_calloc
 : <a class="el" href="glbopts_8h.html#a516ae41750b3ec240856a719a1a666ec">glbopts.h</a>
@@ -150,7 +150,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </li>
 <li>scs_finish()
 : <a class="el" href="scs_8c.html#a444d62ce119a1e4762f87fe263369047">scs.c</a>
-, <a class="el" href="scs_8h.html#a444d62ce119a1e4762f87fe263369047">scs.h</a>
 </li>
 <li>scs_float
 : <a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">glbopts.h</a>
@@ -169,7 +168,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </li>
 <li>scs_init()
 : <a class="el" href="scs_8c.html#ac80aff1c3011a5cc31ba32c8e3689f01">scs.c</a>
-, <a class="el" href="scs_8h.html#ac80aff1c3011a5cc31ba32c8e3689f01">scs.h</a>
 </li>
 <li>scs_int
 : <a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">glbopts.h</a>
@@ -184,15 +182,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="glbopts_8h.html#a74b592ebf6298c05fd3de8e31288fb8e">glbopts.h</a>
 </li>
 <li>scs_sgn()
-: <a class="el" href="lin_alg_8c.html#a766e1da8f360e3bf6afe3affca1f1862">linAlg.c</a>
-, <a class="el" href="lin_alg_8h.html#a766e1da8f360e3bf6afe3affca1f1862">linAlg.h</a>
+: <a class="el" href="lin_alg_8h.html#a766e1da8f360e3bf6afe3affca1f1862">linAlg.h</a>
 </li>
 <li>SCS_SIGINT
 : <a class="el" href="constants_8h.html#a0d4e848eb3de81287e5e1c8fae2dab0a">constants.h</a>
 </li>
 <li>scs_solve()
 : <a class="el" href="scs_8c.html#ae5a022dbf33560ad0564178ff61d535d">scs.c</a>
-, <a class="el" href="scs_8h.html#ae5a022dbf33560ad0564178ff61d535d">scs.h</a>
 </li>
 <li>SCS_SOLVED
 : <a class="el" href="constants_8h.html#a0fcae593d880f4d9a0b21b188ba58094">constants.h</a>
@@ -209,20 +205,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>SCS_UNFINISHED
 : <a class="el" href="constants_8h.html#a97f7a5b842fd70105d97841fcd6ee680">constants.h</a>
 </li>
-<li>scs_version()
-: <a class="el" href="scs__version_8c.html#a43b8531ef2762feb762ead03d47ed0bf">scs_version.c</a>
-, <a class="el" href="scs_8h.html#a43b8531ef2762feb762ead03d47ed0bf">scs.h</a>
-</li>
 <li>SCS_VERSION
 : <a class="el" href="constants_8h.html#abae8a893f5f047e479a6fdeea4cad79b">constants.h</a>
+</li>
+<li>scs_version()
+: <a class="el" href="scs__version_8c.html#a43b8531ef2762feb762ead03d47ed0bf">scs_version.c</a>
 </li>
 <li>setAsScaledArray()
 : <a class="el" href="lin_alg_8h.html#a1a79f14f41b82a9e6eb22ffbe3670fca">linAlg.h</a>
 , <a class="el" href="lin_alg_8c.html#a1a79f14f41b82a9e6eb22ffbe3670fca">linAlg.c</a>
 </li>
 <li>setDefaultSettings()
-: <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">util.h</a>
-, <a class="el" href="util_8c.html#ad288272137e5eb3fa3eac46dbb556bf6">util.c</a>
+: <a class="el" href="util_8c.html#ad288272137e5eb3fa3eac46dbb556bf6">util.c</a>
+, <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">util.h</a>
 </li>
 <li>Settings
 : <a class="el" href="glbopts_8h.html#a6ef430ee595f717434ba4b1e27d102d8">glbopts.h</a>
@@ -245,6 +240,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>SQRTF
 : <a class="el" href="glbopts_8h.html#a3b9d7d973bd11c5ad12d329c6ea8b308">glbopts.h</a>
 </li>
+<li>SSE
+: <a class="el" href="constants_8h.html#ad518177eb0b052ffed6ce4d0d63e6ae4">constants.h</a>
+</li>
 <li>startInterruptListener
 : <a class="el" href="ctrlc_8h.html#a1c8e1257fd1ea10595f53534a0fcb67a">ctrlc.h</a>
 </li>
@@ -258,17 +256,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>SU_CACHE_RESET
 : <a class="el" href="directions_8h.html#aaaefc3a36f18d4a13fe8745387336eba">directions.h</a>
 </li>
-<li>SUCache
-: <a class="el" href="scs_8h.html#ae9a66f1669c9fb6760e2910763f6190d">scs.h</a>
+<li>subtractArray()
+: <a class="el" href="lin_alg_8c.html#a8f9484eb226411277bc60b165e5dd611">linAlg.c</a>
+, <a class="el" href="lin_alg_8h.html#a8f9484eb226411277bc60b165e5dd611">linAlg.h</a>
 </li>
 <li>SUCCEED
 : <a class="el" href="unit__test__util_8h.html#a753e9e46e51063c920e4a87668595062">unit_test_util.h</a>
+</li>
+<li>superscs_solve()
+: <a class="el" href="scs_8c.html#a0c4c5699fc091617841cb0278fc51472">scs.c</a>
 </li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue May 30 2017 11:26:05 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 2 2017 18:10:53 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

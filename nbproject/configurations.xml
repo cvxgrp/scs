@@ -26,8 +26,13 @@
         <in>private.c</in>
       </df>
     </df>
+<<<<<<< HEAD
     <df root="linsys" name="3">
     </df>
+=======
+    <logicalFolder name="pages" displayName="pages" projectFiles="true">
+    </logicalFolder>
+>>>>>>> a23dae8233249dc6c2d3fa81eeff1095b6a51ca0
     <logicalFolder name="scs" displayName="scs" projectFiles="true" root=".">
       <logicalFolder name="examples" displayName="examples" projectFiles="true">
         <logicalFolder name="c" displayName="c" projectFiles="true">
@@ -87,6 +92,7 @@
       <itemPath>Makefile</itemPath>
       <itemPath>nbproject/private/launcher.properties</itemPath>
     </logicalFolder>
+    <itemPath>pages/mainpage.h</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
@@ -94,10 +100,14 @@
     <Elem>include</Elem>
     <Elem>linsys</Elem>
     <Elem>tests</Elem>
+<<<<<<< HEAD
     <Elem>src</Elem>
     <Elem>include</Elem>
     <Elem>linsys</Elem>
     <Elem>tests</Elem>
+=======
+    <Elem>pages</Elem>
+>>>>>>> a23dae8233249dc6c2d3fa81eeff1095b6a51ca0
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -231,6 +241,8 @@
       <item path="linsys/indirect/private.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="pages/mainpage.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/cones.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">

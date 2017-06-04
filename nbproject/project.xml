@@ -14,10 +14,14 @@
                 <sourceRootElem>include</sourceRootElem>
                 <sourceRootElem>linsys</sourceRootElem>
                 <sourceRootElem>tests</sourceRootElem>
+<<<<<<< HEAD
                 <sourceRootElem>src</sourceRootElem>
                 <sourceRootElem>include</sourceRootElem>
                 <sourceRootElem>linsys</sourceRootElem>
                 <sourceRootElem>tests</sourceRootElem>
+=======
+                <sourceRootElem>pages</sourceRootElem>
+>>>>>>> a23dae8233249dc6c2d3fa81eeff1095b6a51ca0
             </sourceRootList>
             <confList>
                 <confElem>

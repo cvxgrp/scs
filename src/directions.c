@@ -5,6 +5,13 @@ scs_int resetSUCache(SUCache * cache) {
     RETURN SU_CACHE_RESET;
 }
 
+scs_int computeLSBroyden2(Work *work) {
+    /* --- DECLARATIONS --- */
+    SUCache * cache; /* the SU cache (pointer) */
+    const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
+    RETURN 0;
+}
+
 scs_int computeLSBroyden(Work *work) {
     /* --- DECLARATIONS --- */
     SUCache * cache; /* the SU cache (pointer) */
@@ -24,9 +31,9 @@ scs_int computeLSBroyden(Work *work) {
     /* d [work->dir] = -R [work->R] */
     setAsScaledArray(work->dir, work->R, -1.0, l);
 
-    /* s_tilde_current = y [work->Yk] */
-    /* use the end of the cache to store s_tilde_current */
-    /* later we use the same position of the S-buffer to store the current Sk */
+    /* s_tilde_current = y [work->Yk]                                           */
+    /* use the end of the cache to store s_tilde_current                        */
+    /* later we use the same position of the S-buffer to store the current Sk   */
     s_tilde_current = cache->S + (cache->mem_cursor * l);
     memcpy(s_tilde_current, work->Yk, l * sizeof (scs_float));
 
@@ -80,4 +87,20 @@ scs_int computeLSBroyden(Work *work) {
     }
 
     RETURN SU_CACHE_INCREMENT;
+}
+
+scs_int computeDirection(Work *work) {
+    scs_int j;
+    if (work->stgs->direction == fixed_point_residual) {
+        for (j = 0; j < work->l; ++j) {
+            work->dir[j] = -work->R[j];
+        }
+        RETURN 0;
+    } else if (work->stgs->direction == restarted_broyden) {
+        RETURN computeLSBroyden(work);
+    } else if (work->stgs->direction == restarted_broyden_v2) {
+        RETURN - 1; /* Not implemented yet */
+    } else {
+        RETURN -2;
+    }
 }
