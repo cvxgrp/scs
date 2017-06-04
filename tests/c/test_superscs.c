@@ -52,7 +52,7 @@ bool test_superscs(char** str) {
     A->x[3] = 0.9;
     A->x[4] = 0.2;
        
-    printAMatrix(A);
+   // printAMatrix(A);
     
     data->A = A;
     data->stgs = scs_malloc(sizeof(Settings));

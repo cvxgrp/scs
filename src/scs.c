@@ -1253,7 +1253,7 @@ scs_int superscs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *in
                         w->wu_t[j] = w->u_t[j] + w->stepsize * w->dut[j]; /* wut = u_t + step * dut */
                     }
                     projectConesv2(w->wu_b, w->wu_t, w->wu, w, k, i);
-                    printArray(w->wu_b, w->l, "wub");
+                //    printArray(w->wu_b, w->l, "wub");
                     calcFPRes(w->Rwu, w->wu_t, w->wu_b, w->l); /* calculate FPR on scaled vectors */
                     /* here we dont' scale R */
 

@@ -12,7 +12,7 @@ extern "C" {
  */    
 #define SU_CACHE_INCREMENT 2
 /** 
- * The sursor of the cache has been reset to \c 0.
+ * The cursor of the cache has been reset to \c 0.
  */
 #define SU_CACHE_RESET 1
     
