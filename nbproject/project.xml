@@ -4,12 +4,16 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>SCS</name>
-            <c-extensions>c</c-extensions>
+            <c-extensions>c,m</c-extensions>
             <cpp-extensions/>
             <header-extensions>h</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
+                <sourceRootElem>src</sourceRootElem>
+                <sourceRootElem>include</sourceRootElem>
+                <sourceRootElem>linsys</sourceRootElem>
+                <sourceRootElem>tests</sourceRootElem>
                 <sourceRootElem>src</sourceRootElem>
                 <sourceRootElem>include</sourceRootElem>
                 <sourceRootElem>linsys</sourceRootElem>

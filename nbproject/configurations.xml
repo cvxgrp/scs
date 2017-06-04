@@ -3,7 +3,9 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="include" name="0">
     </df>
-    <df root="linsys" name="1">
+    <df root="include" name="1">
+    </df>
+    <df root="linsys" name="2">
       <df name="direct">
         <df name="external">
           <in>amd_1.c</in>
@@ -23,6 +25,8 @@
         </df>
         <in>private.c</in>
       </df>
+    </df>
+    <df root="linsys" name="3">
     </df>
     <logicalFolder name="scs" displayName="scs" projectFiles="true" root=".">
       <logicalFolder name="examples" displayName="examples" projectFiles="true">
@@ -51,11 +55,13 @@
         <itemPath>src/util.c</itemPath>
       </logicalFolder>
     </logicalFolder>
-    <df root="src" name="2">
+    <df root="src" name="4">
       <in>directions.c</in>
       <in>unit_test_util.c</in>
     </df>
-    <df root="tests" name="3">
+    <df root="src" name="5">
+    </df>
+    <df root="tests" name="6">
       <df name="c">
         <in>test_broyden.c</in>
         <in>test_dummy.c</in>
@@ -65,6 +71,15 @@
         <in>test_utilities.c</in>
       </df>
     </df>
+    <df root="tests" name="7">
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>nbproject/private/launcher.properties</itemPath>
+    </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false"
@@ -75,6 +90,10 @@
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
+    <Elem>src</Elem>
+    <Elem>include</Elem>
+    <Elem>linsys</Elem>
+    <Elem>tests</Elem>
     <Elem>src</Elem>
     <Elem>include</Elem>
     <Elem>linsys</Elem>
