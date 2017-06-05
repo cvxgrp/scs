@@ -274,26 +274,6 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
     RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
-static scs_float calcPrimalResidv2(Work *w, const scs_float *x_b,
-        const scs_float *s_b, const scs_float tau_b,
-        scs_float *nmAxs) {
-    DEBUG_FUNC
-    scs_int i;
-    scs_float pres = 0, scale, *pr = w->pr;
-    *nmAxs = 0;
-    memset(pr, 0, w->m * sizeof (scs_float));
-    accumByA(w->A, w->p, x_b, pr);  /* pr += Ax_b */
-    addScaledArray(pr, s_b, w->m, 1.0); /* pr = Ax_b + s_b */
-    for (i = 0; i < w->m; ++i) {
-        scale =
-                w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1.0;
-        scale = scale * scale;
-        *nmAxs += (pr[i] * pr[i]) * scale;
-        pres += (pr[i] - w->b[i] * tau_b) * (pr[i] - w->b[i] * tau_b) * scale;
-    }
-    *nmAxs = SQRTF(*nmAxs);
-    RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
-}
 
 static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
         scs_float *nmATy) {
@@ -314,24 +294,6 @@ static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
     RETURN SQRTF(dres); /* norm(A'y + c * tau) */
 }
 
-static scs_float calcDualResidv2(Work *w, const scs_float *y_b, const scs_float tau_b,
-        scs_float *nmATy) {
-    DEBUG_FUNC
-    scs_int i;
-    scs_float dres = 0, scale, *dr = w->dr;
-    *nmATy = 0;
-    memset(dr, 0, w->n * sizeof (scs_float));
-    accumByAtrans(w->A, w->p, y_b, dr); /* dr = A'y */
-    for (i = 0; i < w->n; ++i) {
-        scale =
-                w->stgs->normalize ? w->scal->E[i] / (w->sc_c * w->stgs->scale) : 1.0;
-        scale = scale * scale;
-        *nmATy += (dr[i] * dr[i]) * scale;
-        dres += (dr[i] + w->c[i] * tau_b) * (dr[i] + w->c[i] * tau_b) * scale;
-    }
-    *nmATy = SQRTF(*nmATy);
-    RETURN SQRTF(dres); /* norm(A'y + c * tau) */
-}
 
 /* calculates un-normalized quantities */
 static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
@@ -374,6 +336,7 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     RETURN;
 }
 
+/* calculates un-normalized quantities for superSCS */
 static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
     DEBUG_FUNC
     scs_float *x_b = w->u_b;
@@ -392,11 +355,6 @@ static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
         RETURN;
     }
     r->lastIter = iter;
-/*
-    r->tau = ABS(w->u[n + m]);
-    r->kap = ABS(w->kap_b) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
-*/  
    
     r->tau = w->u_b[n + m];  /* it's actually tau_b */
     nmpr_tau = calcPrimalResid(w, x_b, w->s_b, r->tau, &nmAxs_tau);
@@ -708,6 +666,42 @@ static void getSolution(Work *w, Sol *sol, Info *info, struct residuals *r,
     getInfo(w, sol, info, r, iter);
     RETURN;
 }
+
+/* for superSCS: sets solutions, re-scales by inner prods if infeasible or unbounded */
+static void getSolutionv2(Work *w, Sol *sol, Info *info, struct residuals *r,
+        scs_int iter) {
+    DEBUG_FUNC
+    scs_int l = w->n + w->m + 1;
+    calcResiduals(w, r, iter);
+    setx(w, sol);
+    sety(w, sol);
+    sets(w, sol);
+    if (info->statusVal == SCS_UNFINISHED) {
+        /* not yet converged, take best guess */
+        if (r->tau > INDETERMINATE_TOL && r->tau > r->kap) {
+            info->statusVal = solved(w, sol, info, r->tau);
+        } else if (calcNorm(w->u, l) <
+                INDETERMINATE_TOL * SQRTF((scs_float) l)) {
+            info->statusVal = indeterminate(w, sol, info);
+        } else if (r->bTy_by_tau < r->cTx_by_tau) {
+            info->statusVal = infeasible(w, sol, info, r->bTy_by_tau);
+        } else {
+            info->statusVal = unbounded(w, sol, info, r->cTx_by_tau);
+        }
+    } else if (isSolvedStatus(info->statusVal)) {
+        info->statusVal = solved(w, sol, info, r->tau);
+    } else if (isInfeasibleStatus(info->statusVal)) {
+        info->statusVal = infeasible(w, sol, info, r->bTy_by_tau);
+    } else {
+        info->statusVal = unbounded(w, sol, info, r->cTx_by_tau);
+    }
+    if (w->stgs->normalize) {
+        unNormalizeSol(w, sol);
+    }
+    getInfo(w, sol, info, r, iter);
+    RETURN;
+}
+
 
 static void printSummary(Work *w, scs_int i, struct residuals *r,
         timer *solveTimer) {
@@ -1246,6 +1240,20 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         if (isInterrupted()) {
             RETURN failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
+        }
+        
+        /* Convergence checks */
+        if (i % CONVERGED_INTERVAL == 0) {
+            calcResidualsv2(work, &r, i);
+            if ((info->statusVal = hasConverged(work, &r, i)) != 0) {
+                break;
+            }
+        }
+        
+        /* Prints results every PRINT_INTERVAL iterations */
+        if (work->stgs->verbose && i % PRINT_INTERVAL == 0) {
+            calcResidualsv2(work, &r, i);
+            printSummary(work, i, &r, &solveTimer);
         }
 
         work->nrmR_con = (i == 0) ? eta : calcNorm(work->R, work->l);
