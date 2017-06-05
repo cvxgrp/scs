@@ -261,7 +261,7 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
     scs_float pres = 0, scale, *pr = w->pr;
     *nmAxs = 0;
     memset(pr, 0, w->m * sizeof (scs_float));
-    accumByA(w->A, w->p, x, pr);
+    accumByA(w->A, w->p, x, pr); 
     addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
     for (i = 0; i < w->m; ++i) {
         scale =
@@ -274,27 +274,26 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
     RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
-static scs_float calcPrimalResidv2(Work *w, const scs_float *x,
-        const scs_float *s, const scs_float tau,
+static scs_float calcPrimalResidv2(Work *w, const scs_float *x_b,
+        const scs_float *s_b, const scs_float tau_b,
         scs_float *nmAxs) {
     DEBUG_FUNC
     scs_int i;
     scs_float pres = 0, scale, *pr = w->pr;
     *nmAxs = 0;
     memset(pr, 0, w->m * sizeof (scs_float));
-    accumByA(w->A, w->p, x, pr);
-    addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
+    accumByA(w->A, w->p, x_b, pr);  /* pr += Ax_b */
+    addScaledArray(pr, s_b, w->m, 1.0); /* pr = Ax_b + s_b */
     for (i = 0; i < w->m; ++i) {
         scale =
-                w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1;
+                w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1.0;
         scale = scale * scale;
         *nmAxs += (pr[i] * pr[i]) * scale;
-        pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
+        pres += (pr[i] - w->b[i] * tau_b) * (pr[i] - w->b[i] * tau_b) * scale;
     }
     *nmAxs = SQRTF(*nmAxs);
     RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
-
 
 static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
         scs_float *nmATy) {
@@ -310,6 +309,25 @@ static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
         scale = scale * scale;
         *nmATy += (dr[i] * dr[i]) * scale;
         dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
+    }
+    *nmATy = SQRTF(*nmATy);
+    RETURN SQRTF(dres); /* norm(A'y + c * tau) */
+}
+
+static scs_float calcDualResidv2(Work *w, const scs_float *y_b, const scs_float tau_b,
+        scs_float *nmATy) {
+    DEBUG_FUNC
+    scs_int i;
+    scs_float dres = 0, scale, *dr = w->dr;
+    *nmATy = 0;
+    memset(dr, 0, w->n * sizeof (scs_float));
+    accumByAtrans(w->A, w->p, y_b, dr); /* dr = A'y */
+    for (i = 0; i < w->n; ++i) {
+        scale =
+                w->stgs->normalize ? w->scal->E[i] / (w->sc_c * w->stgs->scale) : 1.0;
+        scale = scale * scale;
+        *nmATy += (dr[i] * dr[i]) * scale;
+        dres += (dr[i] + w->c[i] * tau_b) * (dr[i] + w->c[i] * tau_b) * scale;
     }
     *nmATy = SQRTF(*nmATy);
     RETURN SQRTF(dres); /* norm(A'y + c * tau) */
@@ -358,31 +376,38 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
 
 static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
     DEBUG_FUNC
-    scs_float *x = w->u;
-    scs_float *y = &(w->u[w->n]);
-    scs_float *s = &(w->v[w->n]);
-    scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
-    scs_int n = w->n, m = w->m;
+    scs_float *x_b = w->u_b;
+    scs_float *y_b = &(w->u_b[w->n]);
+    scs_float nmpr_tau;
+    scs_float nmdr_tau;
+    scs_float nmAxs_tau;
+    scs_float nmATy_tau;
+    scs_float cTx;
+    scs_float bTy;
+    scs_int n = w->n;
+    scs_int m = w->m;
 
     /* checks if the residuals are unchanged by checking iteration */
     if (r->lastIter == iter) {
         RETURN;
     }
     r->lastIter = iter;
-
+/*
     r->tau = ABS(w->u[n + m]);
-    //    r->kap = ABS(w->v[n + m]) /
-    //            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
-
-    nmpr_tau = calcPrimalResid(w, x, s, r->tau, &nmAxs_tau);
-    nmdr_tau = calcDualResid(w, y, r->tau, &nmATy_tau);
+    r->kap = ABS(w->kap_b) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
+*/  
+   
+    r->tau = w->u_b[n + m];  /* it's actually tau_b */
+    nmpr_tau = calcPrimalResid(w, x_b, w->s_b, r->tau, &nmAxs_tau);
+    nmdr_tau = calcDualResid(w, y_b, r->tau, &nmATy_tau);
 
     r->bTy_by_tau =
-            innerProd(y, w->b, m) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+            innerProd(y_b, w->b, m) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
     r->cTx_by_tau =
-            innerProd(x, w->c, n) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+            innerProd(x_b, w->c, n) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
 
     r->resInfeas =
             r->bTy_by_tau < 0 ? w->nm_b * nmATy_tau / -r->bTy_by_tau : NAN;
@@ -1178,8 +1203,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float sqrt_rhox = sqrt(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
 
-
-
     timer solveTimer;
     struct residuals r;
     if (!data || !cone || !sol || !info || !work || !data->b || !data->c) {
@@ -1457,26 +1480,26 @@ Info * initInfo() {
     info->setupTime = NAN;
     info->solveTime = NAN;
     info->statusVal = SCS_INDETERMINATE;
-            
+
     RETURN info;
 }
 
-Data * initData(){
+Data * initData() {
     Data * data;
     data = malloc(sizeof (Data));
-    
+
     if (!data) {
         scs_printf("ERROR: allocating data failure\n");
         RETURN SCS_NULL;
     }
-    
+
     data->A = SCS_NULL;
     data->b = SCS_NULL;
     data->c = SCS_NULL;
     data->m = 0;
     data->n = 0;
     
-    data->stgs = scs_malloc(sizeof(Settings));
+    data->stgs = scs_malloc(sizeof (Settings));
     data->stgs->max_iters = MAX_ITERS;
     data->stgs->alpha = ALPHA;
     data->stgs->beta = BETA_DEFAULT;
@@ -1488,15 +1511,15 @@ Data * initData(){
     data->stgs->k2 = K2_DEFAULT;
     data->stgs->ls = LS_DEFAULT;
     data->stgs->normalize = NORMALIZE;
-    data->stgs->warm_start = WARM_START;    
+    data->stgs->warm_start = WARM_START;
     data->stgs->rho_x = RHO_X;
-    data->stgs->scale = SCALE;    
-    data->stgs->verbose = VERBOSE;                    
+    data->stgs->scale = SCALE;
+    data->stgs->verbose = VERBOSE;
     data->stgs->sigma = SIGMA_DEFAULT;
     data->stgs->thetabar = THETABAR_DEFAULT;
     data->stgs->sse = SSE_DEFAULT;
     data->stgs->memory = MEMORY_DEFAULT;
     data->stgs->direction = fixed_point_residual;
-    
+
     RETURN data;
 }

@@ -1,82 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <df root="include" name="0">
-    </df>
-    <df root="include" name="1">
-    </df>
-    <df root="linsys" name="2">
-      <df name="direct">
-        <df name="external">
-          <in>amd_1.c</in>
-          <in>amd_2.c</in>
-          <in>amd_aat.c</in>
-          <in>amd_control.c</in>
-          <in>amd_defaults.c</in>
-          <in>amd_dump.c</in>
-          <in>amd_global.c</in>
-          <in>amd_info.c</in>
-          <in>amd_order.c</in>
-          <in>amd_post_tree.c</in>
-          <in>amd_postorder.c</in>
-          <in>amd_preprocess.c</in>
-          <in>amd_valid.c</in>
-          <in>ldl.c</in>
+    <df root="." name="0">
+      <df name="examples">
+        <df name="c">
+          <in>demo.c</in>
+          <in>randomSOCPProb.c</in>
         </df>
-        <in>private.c</in>
       </df>
-    </df>
-<<<<<<< HEAD
-    <df root="linsys" name="3">
-    </df>
-=======
-    <logicalFolder name="pages" displayName="pages" projectFiles="true">
-    </logicalFolder>
->>>>>>> a23dae8233249dc6c2d3fa81eeff1095b6a51ca0
-    <logicalFolder name="scs" displayName="scs" projectFiles="true" root=".">
-      <logicalFolder name="examples" displayName="examples" projectFiles="true">
-        <logicalFolder name="c" displayName="c" projectFiles="true">
-          <itemPath>examples/c/demo.c</itemPath>
-          <itemPath>examples/c/problemUtils.h</itemPath>
-          <itemPath>examples/c/randomSOCPProb.c</itemPath>
-        </logicalFolder>
-      </logicalFolder>
-      <logicalFolder name="linsys" displayName="linsys" projectFiles="true">
-        <logicalFolder name="indirect" displayName="indirect" projectFiles="true">
-          <itemPath>linsys/indirect/private.c</itemPath>
-          <itemPath>linsys/indirect/private.h</itemPath>
-        </logicalFolder>
-        <itemPath>linsys/amatrix.h</itemPath>
-        <itemPath>linsys/common.c</itemPath>
-        <itemPath>linsys/common.h</itemPath>
-      </logicalFolder>
-      <logicalFolder name="src" displayName="src" projectFiles="true">
-        <itemPath>src/cones.c</itemPath>
-        <itemPath>src/cs.c</itemPath>
-        <itemPath>src/ctrlc.c</itemPath>
-        <itemPath>src/linAlg.c</itemPath>
-        <itemPath>src/scs.c</itemPath>
-        <itemPath>src/scs_version.c</itemPath>
-        <itemPath>src/util.c</itemPath>
-      </logicalFolder>
-    </logicalFolder>
-    <df root="src" name="4">
-      <in>directions.c</in>
-      <in>unit_test_util.c</in>
-    </df>
-    <df root="src" name="5">
-    </df>
-    <df root="tests" name="6">
-      <df name="c">
-        <in>test_broyden.c</in>
-        <in>test_dummy.c</in>
-        <in>test_runner.c</in>
-        <in>test_superscs.c</in>
-        <in>test_superscs.h</in>
-        <in>test_utilities.c</in>
+      <df name="linsys">
+        <df name="direct">
+          <df name="external">
+            <in>amd_1.c</in>
+            <in>amd_2.c</in>
+            <in>amd_aat.c</in>
+            <in>amd_control.c</in>
+            <in>amd_defaults.c</in>
+            <in>amd_dump.c</in>
+            <in>amd_global.c</in>
+            <in>amd_info.c</in>
+            <in>amd_order.c</in>
+            <in>amd_post_tree.c</in>
+            <in>amd_postorder.c</in>
+            <in>amd_preprocess.c</in>
+            <in>amd_valid.c</in>
+            <in>ldl.c</in>
+          </df>
+          <in>private.c</in>
+        </df>
+        <df name="indirect">
+          <in>private.c</in>
+        </df>
+        <in>common.c</in>
       </df>
-    </df>
-    <df root="tests" name="7">
+      <df name="src">
+        <in>cones.c</in>
+        <in>cs.c</in>
+        <in>ctrlc.c</in>
+        <in>directions.c</in>
+        <in>linAlg.c</in>
+        <in>scs.c</in>
+        <in>scs_version.c</in>
+        <in>unit_test_util.c</in>
+        <in>util.c</in>
+      </df>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -85,29 +52,10 @@
       <itemPath>Makefile</itemPath>
       <itemPath>nbproject/private/launcher.properties</itemPath>
     </logicalFolder>
-    <logicalFolder name="ExternalFiles"
-                   displayName="Important Files"
-                   projectFiles="false"
-                   kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>Makefile</itemPath>
-      <itemPath>nbproject/private/launcher.properties</itemPath>
-    </logicalFolder>
-    <itemPath>pages/mainpage.h</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
-    <Elem>src</Elem>
-    <Elem>include</Elem>
-    <Elem>linsys</Elem>
-    <Elem>tests</Elem>
-<<<<<<< HEAD
-    <Elem>src</Elem>
-    <Elem>include</Elem>
-    <Elem>linsys</Elem>
-    <Elem>tests</Elem>
-=======
-    <Elem>pages</Elem>
->>>>>>> a23dae8233249dc6c2d3fa81eeff1095b6a51ca0
+    <Elem>.</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -125,9 +73,9 @@
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile default test</buildCommand>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>out/UNIT_TEST_RUNNER</executablePath>
+          <executablePath></executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>
@@ -242,8 +190,6 @@
         <cTool flags="0">
         </cTool>
       </item>
-      <item path="pages/mainpage.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="src/cones.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
@@ -277,26 +223,6 @@
         </cTool>
       </item>
       <item path="src/util.c" ex="false" tool="0" flavor2="0">
-        <cTool flags="0">
-        </cTool>
-      </item>
-      <item path="tests/c/test_broyden.c" ex="false" tool="0" flavor2="0">
-        <cTool flags="0">
-        </cTool>
-      </item>
-      <item path="tests/c/test_dummy.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="0">
-        </cTool>
-      </item>
-      <item path="tests/c/test_runner.c" ex="false" tool="0" flavor2="0">
-        <cTool flags="0">
-        </cTool>
-      </item>
-      <item path="tests/c/test_superscs.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="tests/c/test_superscs.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="tests/c/test_utilities.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
       </item>
