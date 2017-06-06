@@ -290,7 +290,7 @@ static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
         dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
     }
     *nmATy = SQRTF(*nmATy);
-    RETURN SQRTF(dres); /* norm(A'y + c * tau) */
+    RETURN SQRTF(dres); /* norm(A'y + c * tau), for superSCS: norm(A'y_b + c * tau_b)*/
 }
 
 /* calculates un-normalized quantities */
@@ -305,13 +305,6 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     scs_float nmATy_tau;
     scs_float cTx, bTy;
     scs_int n = w->n, m = w->m;
-    
-    x = w->u;
-    y = &(w->u[w->n]);
-    if (!w->stgs->do_super_scs) {
-        s = &(w->v[w->n]);
-    }
-    
 
     /* checks if the residuals are unchanged by checking iteration */
     if (r->lastIter == iter) {
@@ -319,9 +312,23 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     }
     r->lastIter = iter;
 
-    r->tau = ABS(w->u[n + m]);
-    r->kap = ABS(w->v[n + m]) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+
+    if (!w->stgs->do_super_scs) {
+        s = &(w->v[w->n]);
+        x = w->u;
+        y = &(w->u[w->n]);
+        
+        r->tau = ABS(w->u[n + m]);
+        r->kap = ABS(w->v[n + m]) /
+                (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+    } else {
+        s = w->s_b;
+        x = w->u_b;
+        y = &(w->u_b[w->n]);
+
+        r->kap = w->kap_b;
+        r->tau = w->u_b[n + m]; /* it's actually tau_b */
+    }
 
     nmpr_tau = calcPrimalResid(w, x, s, r->tau, &nmAxs_tau);
     nmdr_tau = calcDualResid(w, y, r->tau, &nmATy_tau);
@@ -332,53 +339,6 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     r->cTx_by_tau =
             innerProd(x, w->c, n) /
             (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
-
-    r->resInfeas =
-            r->bTy_by_tau < 0 ? w->nm_b * nmATy_tau / -r->bTy_by_tau : NAN;
-    r->resUnbdd =
-            r->cTx_by_tau < 0 ? w->nm_c * nmAxs_tau / -r->cTx_by_tau : NAN;
-
-    bTy = r->bTy_by_tau / r->tau;
-    cTx = r->cTx_by_tau / r->tau;
-
-    r->resPri = nmpr_tau / (1 + w->nm_b) / r->tau;
-    r->resDual = nmdr_tau / (1 + w->nm_c) / r->tau;
-    r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
-    RETURN;
-}
-
-/* calculates un-normalized quantities for superSCS */
-static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
-    DEBUG_FUNC
-    scs_float *x_b = w->u_b;
-    scs_float *y_b = &(w->u_b[w->n]);
-    scs_float nmpr_tau;
-    scs_float nmdr_tau;
-    scs_float nmAxs_tau;
-    scs_float nmATy_tau;
-    scs_float cTx;
-    scs_float bTy;
-    scs_int n = w->n;
-    scs_int m = w->m;
-
-    /* checks if the residuals are unchanged by checking iteration */
-    if (r->lastIter == iter) {
-        RETURN;
-    }
-    r->lastIter = iter;
-
-    r->kap = w->kap_b;
-    r->tau = w->u_b[n + m]; /* it's actually tau_b */
-
-    nmpr_tau = calcPrimalResid(w, x_b, w->s_b, r->tau, &nmAxs_tau);
-    nmdr_tau = calcDualResid(w, y_b, r->tau, &nmATy_tau);
-
-    r->bTy_by_tau =
-            innerProd(y_b, w->b, m) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
-    r->cTx_by_tau =
-            innerProd(x_b, w->c, n) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
 
     r->resInfeas =
             r->bTy_by_tau < 0 ? w->nm_b * nmATy_tau / -r->bTy_by_tau : NAN;
@@ -1239,7 +1199,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
         /* Convergence checks */
         if (i % CONVERGED_INTERVAL == 0) {
-            calcResidualsv2(work, &r, i);
+            calcResiduals(work, &r, i);
             if ((info->statusVal = hasConverged(work, &r, i)) != 0) {
                 break;
             }
@@ -1247,7 +1207,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
         /* Prints results every PRINT_INTERVAL iterations */
         if (work->stgs->verbose && i % PRINT_INTERVAL == 0) {
-            calcResidualsv2(work, &r, i);
+            calcResiduals(work, &r, i);
             printSummary(work, i, &r, &solveTimer);
         }
 
@@ -1362,7 +1322,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* prints summary of last iteration */
     if (work->stgs->verbose) {
-        calcResidualsv2(work, &r, i);
+        calcResiduals(work, &r, i);
         printSummary(work, i, &r, &solveTimer);
     }
 
