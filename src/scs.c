@@ -4,7 +4,7 @@
 
 #ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
-#define PRINT_INTERVAL 100
+#define PRINT_INTERVAL 10
 /* check for convergence every this num iterations */
 #define CONVERGED_INTERVAL 20
 #else
@@ -20,11 +20,11 @@ timer globalTimer;
 /* printing header */
 static const char *HEADER[] = {
     " Iter ", " pri res ", " dua res ", " rel gap ",
-    " pri obj ", " dua obj ", " kap/tau ", " time (s)",
+    " pri obj ", " dua obj ", " kap/tau ", "   FPR   ", " time (s)",
 };
 static const scs_int HSPACE = 9;
-static const scs_int HEADER_LEN = 8;
-static const scs_int LINE_LEN = 76;
+static const scs_int HEADER_LEN = 9;
+static const scs_int LINE_LEN = 85;
 
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
@@ -625,7 +625,7 @@ static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
     if (!work->stgs->do_super_scs) {
         calcResiduals(work, r, iter);
     } else {
-        calcResidualsv2(work, r, iter);
+        calcResiduals(work, r, iter);
         r->kap = ABS(work->kap_b) /
                 (work->stgs->normalize ? (work->stgs->scale * work->sc_c * work->sc_b) : 1.0);
     }
@@ -668,15 +668,22 @@ static void printSummary(Work *w, scs_int i, struct residuals *r,
     scs_printf("%*.2e ", (int) HSPACE, r->cTx_by_tau / r->tau);
     scs_printf("%*.2e ", (int) HSPACE, -r->bTy_by_tau / r->tau);
     scs_printf("%*.2e ", (int) HSPACE, r->kap / r->tau);
+    if (w->stgs->do_super_scs) {
+        scs_printf("%*.2e ", (int) HSPACE, w->nrmR_con);
+    }
     scs_printf("%*.2e ", (int) HSPACE, tocq(solveTimer) / 1e3);
     scs_printf("\n");
 
 #if EXTRAVERBOSE > 0
     scs_printf("Norm u = %4f, ", calcNorm(w->u, w->n + w->m + 1));
     scs_printf("Norm u_t = %4f, ", calcNorm(w->u_t, w->n + w->m + 1));
-    scs_printf("Norm v = %4f, ", calcNorm(w->v, w->n + w->m + 1));
+    if (!w->stgs->do_super_scs) {
+        scs_printf("Norm v = %4f, ", calcNorm(w->v, w->n + w->m + 1));
+    }
     scs_printf("tau = %4f, ", w->u[w->n + w->m]);
-    scs_printf("kappa = %4f, ", w->v[w->n + w->m]);
+    if (!w->stgs->do_super_scs) {
+        scs_printf("kappa = %4f, ", w->v[w->n + w->m]);
+    }
     scs_printf("|u - u_prev| = %1.2e, ",
             calcNormDiff(w->u, w->u_prev, w->n + w->m + 1));
     scs_printf("|u - u_t| = %1.2e, ",
@@ -700,8 +707,11 @@ static void printHeader(Work *w, const Cone *k) {
         scs_printf("-");
     }
     scs_printf("\n");
-    for (i = 0; i < HEADER_LEN - 1; ++i) {
+    for (i = 0; i < HEADER_LEN - 2; ++i) {
         scs_printf("%s|", HEADER[i]);
+    }
+    if  (w->stgs->do_super_scs) {
+        scs_printf("%s|", HEADER[HEADER_LEN - 2]);
     }
     scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
     for (i = 0; i < LINE_LEN; ++i) {
