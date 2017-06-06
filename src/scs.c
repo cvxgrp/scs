@@ -261,7 +261,7 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
     scs_float pres = 0, scale, *pr = w->pr;
     *nmAxs = 0;
     memset(pr, 0, w->m * sizeof (scs_float));
-    accumByA(w->A, w->p, x, pr); 
+    accumByA(w->A, w->p, x, pr);
     addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
     for (i = 0; i < w->m; ++i) {
         scale =
@@ -273,7 +273,6 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
     *nmAxs = SQRTF(*nmAxs);
     RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
-
 
 static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
         scs_float *nmATy) {
@@ -294,13 +293,25 @@ static scs_float calcDualResid(Work *w, const scs_float *y, const scs_float tau,
     RETURN SQRTF(dres); /* norm(A'y + c * tau) */
 }
 
-
 /* calculates un-normalized quantities */
 static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     DEBUG_FUNC
-    scs_float *x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
-    scs_float nmpr_tau, nmdr_tau, nmAxs_tau, nmATy_tau, cTx, bTy;
+    scs_float *x;
+    scs_float *y;
+    scs_float *s;
+    scs_float nmpr_tau;
+    scs_float nmdr_tau;
+    scs_float nmAxs_tau;
+    scs_float nmATy_tau;
+    scs_float cTx, bTy;
     scs_int n = w->n, m = w->m;
+    
+    x = w->u;
+    y = &(w->u[w->n]);
+    if (!w->stgs->do_super_scs) {
+        s = &(w->v[w->n]);
+    }
+    
 
     /* checks if the residuals are unchanged by checking iteration */
     if (r->lastIter == iter) {
@@ -355,10 +366,10 @@ static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
         RETURN;
     }
     r->lastIter = iter;
-   
+
     r->kap = w->kap_b;
-    r->tau = w->u_b[n + m];  /* it's actually tau_b */
-    
+    r->tau = w->u_b[n + m]; /* it's actually tau_b */
+
     nmpr_tau = calcPrimalResid(w, x_b, w->s_b, r->tau, &nmAxs_tau);
     nmdr_tau = calcDualResid(w, y_b, r->tau, &nmATy_tau);
 
@@ -589,7 +600,7 @@ static void sets(Work *w, Sol *sol) {
     if (!w->stgs->do_super_scs) {
         memcpy(sol->s, &(w->v[w->n]), w->m * sizeof (scs_float));
     } else {
-        memcpy(sol->s, w->s_b , w->m * sizeof (scs_float));
+        memcpy(sol->s, w->s_b, w->m * sizeof (scs_float));
     }
     RETURN;
 }
@@ -656,7 +667,7 @@ static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
     } else {
         calcResidualsv2(w, r, iter);
         r->kap = ABS(w->kap_b) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
+                (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
     }
     setx(w, sol);
     sety(w, sol);
@@ -686,7 +697,6 @@ static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
     getInfo(work, sol, info, r, iter);
     RETURN;
 }
-
 
 static void printSummary(Work *w, scs_int i, struct residuals *r,
         timer *solveTimer) {
@@ -1221,12 +1231,12 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
-        
+
         if (isInterrupted()) {
             RETURN failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
         }
-        
+
         /* Convergence checks */
         if (i % CONVERGED_INTERVAL == 0) {
             calcResidualsv2(work, &r, i);
@@ -1234,7 +1244,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 break;
             }
         }
-        
+
         /* Prints results every PRINT_INTERVAL iterations */
         if (work->stgs->verbose && i % PRINT_INTERVAL == 0) {
             calcResidualsv2(work, &r, i);
@@ -1349,7 +1359,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             /* printf("%3.12f\n", work->nrmR_con); */
         }
     } /* main for loop */
-    
+
     /* prints summary of last iteration */
     if (work->stgs->verbose) {
         calcResidualsv2(work, &r, i);
@@ -1499,7 +1509,7 @@ Data * initData() {
     data->c = SCS_NULL;
     data->m = 0;
     data->n = 0;
-    
+
     data->stgs = scs_malloc(sizeof (Settings));
     data->stgs->max_iters = MAX_ITERS;
     data->stgs->alpha = ALPHA;
