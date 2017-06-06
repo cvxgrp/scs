@@ -3,14 +3,18 @@
     <type>org.netbeans.modules.cnd.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>scs</name>
+            <name>SCS</name>
             <c-extensions>c,m</c-extensions>
             <cpp-extensions/>
             <header-extensions>h</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
-                <sourceRootElem>.</sourceRootElem>
+                <sourceRootElem>src</sourceRootElem>
+                <sourceRootElem>include</sourceRootElem>
+                <sourceRootElem>linsys</sourceRootElem>
+                <sourceRootElem>tests</sourceRootElem>
+                <sourceRootElem>pages</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

@@ -621,17 +621,17 @@ static void getInfo(Work *w, Sol *sol, Info *info, struct residuals *r,
 static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
         scs_int iter) {
     DEBUG_FUNC
-    scs_int l = w->l;
-    if (!w->stgs->do_super_scs) {
-        calcResiduals(w, r, iter);
+    scs_int l = work->l;
+    if (!work->stgs->do_super_scs) {
+        calcResiduals(work, r, iter);
     } else {
-        calcResidualsv2(w, r, iter);
-        r->kap = ABS(w->kap_b) /
-                (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1.0);
+        calcResidualsv2(work, r, iter);
+        r->kap = ABS(work->kap_b) /
+                (work->stgs->normalize ? (work->stgs->scale * work->sc_c * work->sc_b) : 1.0);
     }
-    setx(w, sol);
-    sety(w, sol);
-    sets(w, sol);
+    setx(work, sol);
+    sety(work, sol);
+    sets(work, sol);
     if (info->statusVal == SCS_UNFINISHED) {
         /* not yet converged, take best guess */
         if (r->tau > INDETERMINATE_TOL && r->tau > r->kap) {
