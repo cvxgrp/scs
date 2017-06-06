@@ -317,7 +317,7 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
         s = &(w->v[w->n]);
         x = w->u;
         y = &(w->u[w->n]);
-        
+
         r->tau = ABS(w->u[n + m]);
         r->kap = ABS(w->v[n + m]) /
                 (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
@@ -710,7 +710,7 @@ static void printHeader(Work *w, const Cone *k) {
     for (i = 0; i < HEADER_LEN - 2; ++i) {
         scs_printf("%s|", HEADER[i]);
     }
-    if  (w->stgs->do_super_scs) {
+    if (w->stgs->do_super_scs) {
         scs_printf("%s|", HEADER[HEADER_LEN - 2]);
     }
     scs_printf("%s\n", HEADER[HEADER_LEN - 1]);
@@ -1210,7 +1210,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         /* Convergence checks */
         if (i % CONVERGED_INTERVAL == 0) {
             calcResiduals(work, &r, i);
-            if ((info->statusVal = hasConverged(work, &r, i)) != 0) {
+            if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
             }
         }
@@ -1258,7 +1258,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 addArray(work->u, work->dir, work->l); /* u += dir */
                 how = 0;
                 eta = work->nrmR_con;
-                //    r_safe = INFINITY; /* TODO: chk if it should be inf. */
                 work->stepsize = 1.0;
             } else if (work->stgs->ls > 0) {
                 projectLinSysv2(work->dut, work->dir, work, i);
@@ -1279,23 +1278,21 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
                     nrmRw_con = calcNorm(work->Rwu, work->l);
                     /* K1 */
-                    // <editor-fold defaultstate="collapsed" desc="K1 block">
                     if (work->stgs->k1
                             && nrmRw_con <= work->stgs->c1 * nrmR_con_old
-                            && work->nrmR_con <= r_safe) { // a bit different than matlab
+                            && work->nrmR_con <= r_safe) { /* a bit different than matlab */
                         memcpy(work->u, work->wu, work->l * sizeof (scs_float));
                         memcpy(work->u_t, work->wu_t, work->l * sizeof (scs_float));
                         memcpy(work->u_b, work->wu_b, work->l * sizeof (scs_float));
                         memcpy(work->R, work->Rwu, work->l * sizeof (scs_float));
                         compute_sb_kapb(work->wu, work->wu_b, work->wu_t, work);
                         work->nrmR_con = nrmRw_con;
-                        r_safe = work->nrmR_con + work->stgs->sse; // The power already computed at the beginning of the main loop
+                        r_safe = work->nrmR_con + work->stgs->sse; /* The power already computed at the beginning of the main loop */
                         how = 1;
                         break;
-                    }// </editor-fold>
+                    }
 
                     /* K2 */
-                    // <editor-fold defaultstate="collapsed" desc="K2 block">
                     if (work->stgs->k2) {
                         slack = nrmRw_con * nrmRw_con - work->stepsize * innerProd(work->dir, work->Rwu, work->l);
                         rhs = work->stgs->sigma * work->nrmR_con * nrmRw_con;
@@ -1306,7 +1303,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                             how = 2;
                             break; /* exits the line search loop */
                         }
-                    }// </editor-fold>
+                    }
 
                 } /* end of line-search */
             }
@@ -1339,7 +1336,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     /* populate solution vectors (unnormalized) and info */
     /* update u, denormalize, etc */
     getSolution(work, sol, info, &r, i);
-    
+    info->iter = i;
     info->solveTime = tocq(&solveTimer);
 
     if (work->stgs->verbose)
@@ -1407,6 +1404,51 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
+
+    if (d->stgs->verbose >= 2) {
+        scs_printf("Settings:\n"
+                "alpha = %g\n"
+                "beta = %g\n"
+                "c1 = %g\n"
+                "c_bl = %g\n"
+                "cg_rate = %g\n"
+                "dir = %d\n"
+                "do_super_scs = %d\n"
+                "eps=%g\n"
+                "(k0, k1, k2) = (%d, %d, %d)\n"
+                "ls = %d\n"
+                "max_iters = %d\n"
+                "memory=%d\n"
+                "normalize = %d\n"
+                "rho_x = %g\n"
+                "scale = %g\n"
+                "sigma = %g\n"
+                "sse = %g\n"
+                "thetabar = %g\n"
+                "warm_start =%d\n",
+                d->stgs->alpha,
+                d->stgs->beta,
+                d->stgs->c1,
+                d->stgs->c_bl,
+                d->stgs->cg_rate,
+                d->stgs->direction,
+                d->stgs->do_super_scs,
+                d->stgs->eps,
+                d->stgs->k0,
+                d->stgs->k1,
+                d->stgs->k2,
+                d->stgs->ls,
+                d->stgs->max_iters,
+                d->stgs->memory,
+                d->stgs->normalize,
+                d->stgs->rho_x,
+                d->stgs->scale,
+                d->stgs->sigma,
+                d->stgs->sse,
+                d->stgs->thetabar,
+                d->stgs->warm_start);
+    }
+
     DEBUG_FUNC
     scs_int status;
     Work *w = scs_init(d, k, info);
@@ -1481,26 +1523,7 @@ Data * initData() {
     data->n = 0;
 
     data->stgs = scs_malloc(sizeof (Settings));
-    data->stgs->max_iters = MAX_ITERS;
-    data->stgs->alpha = ALPHA;
-    data->stgs->beta = BETA_DEFAULT;
-    data->stgs->c1 = C1_DEFAULT;
-    data->stgs->c_bl = C_BL_DEFAULT;
-    data->stgs->eps = EPS;
-    data->stgs->k0 = K0_DEFAULT;
-    data->stgs->k1 = K1_DEFAULT;
-    data->stgs->k2 = K2_DEFAULT;
-    data->stgs->ls = LS_DEFAULT;
-    data->stgs->normalize = NORMALIZE;
-    data->stgs->warm_start = WARM_START;
-    data->stgs->rho_x = RHO_X;
-    data->stgs->scale = SCALE;
-    data->stgs->verbose = VERBOSE;
-    data->stgs->sigma = SIGMA_DEFAULT;
-    data->stgs->thetabar = THETABAR_DEFAULT;
-    data->stgs->sse = SSE_DEFAULT;
-    data->stgs->memory = MEMORY_DEFAULT;
-    data->stgs->direction = fixed_point_residual;
+    setDefaultSettings(data);
 
     RETURN data;
 }

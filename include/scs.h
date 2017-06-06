@@ -151,7 +151,6 @@ extern "C" {
         scs_float c_bl; /**< parameter for blind updates: 0.999 */
         scs_int k1; /**< boolean, K1: 1 */
         scs_int k2; /**< boolean, K2: 1 */
-        scs_int nominal; /**< boolean, nominal updates: 1 */
         scs_float c1; /**< Parameter to check condition at K1 */
         scs_float sse; /**< Parameter to update r_safe at K1 (denoted as 'q' in the paper) */
         
@@ -162,12 +161,8 @@ extern "C" {
 
         /* direction */
         direction_type direction; /**< choice of direction: 1 for L-Broyden */
-        scs_int tRule; /**< rule for selecting relaxation parameter */
-        scs_float delta; /**< parameter in Broyden realaxation: 0.5 */
         scs_float thetabar; /**< modified Broyden's parameter: 1e-1 */
-        scs_float alphaC; /**< parameter for skipping rule: 1e-2 */
         scs_int memory; /**< memory for limited memory QN: 10 */
-        scs_int sc_init; /**< Boolean, initial scaling for QN: 0 */
     };
 
     /**
@@ -233,7 +228,9 @@ extern "C" {
      *  2. c0 = 0.999
      *  3. c1 = ...
      * 
-     * @return 
+     * @return ::Data object
+     * 
+     * @see ::setDefaultSettings
      */
     Data * initData(void);
     

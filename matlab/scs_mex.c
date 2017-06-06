@@ -15,7 +15,7 @@ scs_int parseWarmStart(const mxArray *p_mex, scs_float **p, scs_int l) {
     } else if (mxIsSparse(p_mex) || (scs_int)*mxGetDimensions(p_mex) != l) {
         scs_printf("Error parsing warm start input (make sure vectors are not "
                    "sparse and of correct size), running without full "
-                   "warm-start");
+                   "warm-start\n");
         return 0;
     } else {
         memcpy(*p, mxGetPr(p_mex), l * sizeof(scs_float));
@@ -203,6 +203,57 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tmp = mxGetField(settings, 0, "normalize");
     if (tmp != SCS_NULL)
         d->stgs->normalize = (scs_int)*mxGetPr(tmp);
+    
+    /* SuperSCS parameters */
+    tmp = mxGetField(settings, 0, "do_super_scs");
+    if (tmp != SCS_NULL)
+        d->stgs->do_super_scs = (scs_int)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "k0");
+    if (tmp != SCS_NULL)
+        d->stgs->k0 = (scs_int)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "k1");
+    if (tmp != SCS_NULL)
+        d->stgs->k1 = (scs_int)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "k2");
+    if (tmp != SCS_NULL)
+        d->stgs->k2 = (scs_int)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "memory");
+    if (tmp != SCS_NULL)
+        d->stgs->memory = (scs_int)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "sse");
+    if (tmp != SCS_NULL)
+        d->stgs->sse = (scs_float)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "ls");
+    if (tmp != SCS_NULL)
+        d->stgs->ls = (scs_int)*mxGetPr(tmp);
+        
+    tmp = mxGetField(settings, 0, "beta");
+    if (tmp != SCS_NULL)
+        d->stgs->beta = (scs_float)*mxGetPr(tmp);\
+            
+    tmp = mxGetField(settings, 0, "sigma");
+    if (tmp != SCS_NULL)
+        d->stgs->sigma = (scs_float)*mxGetPr(tmp);            
+    
+    tmp = mxGetField(settings, 0, "c_bl");
+    if (tmp != SCS_NULL)
+        d->stgs->c_bl = (scs_float)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "c1");
+    if (tmp != SCS_NULL)
+        d->stgs->c1 = (scs_float)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "thetabar");
+    if (tmp != SCS_NULL)
+        d->stgs->thetabar = (scs_float)*mxGetPr(tmp);
+    
+    d->stgs->direction = restarted_broyden;
 
     /* cones */
     kf = mxGetField(cone, 0, "f");

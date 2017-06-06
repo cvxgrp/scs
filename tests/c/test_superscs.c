@@ -56,8 +56,8 @@ bool test_superscs(char** str) {
 
     data->A = A;
     data->stgs->eps = 1e-9;
-    data->stgs->rho_x = 1;
-    data->stgs->verbose = 1;
+    data->stgs->rho_x = 1.0;
+    data->stgs->verbose = 2;
     data->stgs->sse = 0.7;
     data->stgs->direction = restarted_broyden;
 
@@ -92,11 +92,14 @@ bool test_superscs(char** str) {
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2], 15.000000000002315, 1e-6, str, "y_star[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3], 59.903742996445253, 1e-6, str, "y_star[0] wrong");
     
+    ASSERT_EQAUL_FLOAT_OR_FAIL(info->pobj, -16.375426437011065, 1e-7, str, "pobj wrong");
+    
     ASSERT_EQAUL_FLOAT_OR_FAIL(info->pobj, info->dobj, 1e-4, str, "P not equal to D");
     ASSERT_TRUE_OR_FAIL(info->relGap<1e-10, str, "relative gap too high");
     ASSERT_EQAUL_INT_OR_FAIL(strcmp(info->status, "Solved"), 0, str, "problem not 'Solved'");
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");    
     
+    printf("iters=%d\n", info->iter);
     freeData(data, cone);
     freeSol(sol);
     scs_free(info);
