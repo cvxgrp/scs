@@ -3,8 +3,7 @@ SCS
 
 [![Build Status](https://travis-ci.org/kul-forbes/scs.svg?branch=master)](https://travis-ci.org/kul-forbes/scs)
 [![codecov](https://codecov.io/gh/kul-forbes/scs/branch/master/graph/badge.svg)](https://codecov.io/gh/kul-forbes/scs)
-
-
+<a href="https://kul-forbes.github.io/scs"><img src="https://maxcdn.icons8.com/Share/icon/dotty/User_Interface//user_manual1600.png" width="25" alt="RTFM" title="Documentation"></a>
 
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
