@@ -22,12 +22,12 @@ data.c = c;
 params = struct('eps', 1e-3, 'normalize', 0, 'max_iters', 2500, 'alpha', 1.5);
 
 params.max_iters = 600;
-params.eps = 1e-9;
+params.eps = 1e-12;
 params.lambda = 1.5;
 params.scale = 1;
 params.verbose = 1;
 
-params.direction = -1;
+params.direction = 5;
 params.tRule = 1;
 params.beta = 0.5;
 params.c1 =1.0-1e-4;
@@ -42,5 +42,5 @@ params.nominal = 0;
 params.rho_x = 1;
 params.memory = 10;
 
-superscs(data, K, params)
+[x,y]=superscs(data, K, params)
 %scs_direct(data, K, params)

@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
     r += test(&test_cache_increments, "Test Broyden cache");
     r += test(&test_broyden_direction_empty_memory, "Test Broyden direction");     
     r += test(&test_cache_s, "Test Broyden S-Cache");
+    r += test(&test_broyden, "Test Broyden dir correctness");
     r += test(&test_superscs, "Test SuperSCS");
     
     if (r == TEST_SUCCESS) {

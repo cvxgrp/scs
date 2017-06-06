@@ -42,9 +42,9 @@ scs_int computeLSBroyden(Work *work) {
         s_i = cache->S + i * l; /* retrieve s_i from the cache */
         u_i = cache->U + i * l; /* retrieve u_i from the cache */
         ip = innerProd(s_i, s_tilde_current, l);
-        addScaledArray(s_tilde_current, u_i, ip, l); /* update s_tilde */
+        addScaledArray(s_tilde_current, u_i, l, ip); /* update s_tilde */
         ip = innerProd(s_i, work->dir, l);
-        addScaledArray(work->dir, u_i, ip, l); /* update direction */
+        addScaledArray(work->dir, u_i, l, ip); /* update direction */
     }
 
     /* compute theta */

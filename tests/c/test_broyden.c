@@ -128,7 +128,7 @@ bool test_broyden_direction_empty_memory(char** str) {
     work->stepsize = 0.9;
 
     method_status = computeLSBroyden(work);
-    ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "memory not incremented");    
+    ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "memory not incremented");
     ASSERT_EQUAL_ARRAY_OR_FAIL(work->su_cache->U, u_expected, l, 1e-10, str, "u not correct");
     ASSERT_EQUAL_ARRAY_OR_FAIL(work->dir, d_expected, l, 1e-10, str, "direction not correct");
     ASSERT_EQUAL_ARRAY_OR_FAIL(work->su_cache->S, work->Sk, l, 1e-10, str, "sk not added to the cache");
@@ -186,5 +186,67 @@ bool test_cache_s(char** str) {
 
     if (work) destroy_work(work);
 
+    SUCCEED(str);
+}
+
+bool test_broyden(char** str) {
+    Work * work = scs_calloc(1, sizeof (Work));
+    scs_int i;
+    scs_int j;
+    scs_int cursor_before_reset;
+    const scs_int l = 3;
+    const scs_int mem = 4;
+    scs_int method_status;
+
+    prepare_work(work, l, mem);
+    work->Sk[0] = 0.417022004702574;
+    work->Sk[1] = 0.720324493442158;
+    work->Sk[2] = 0.000114374817345;
+
+
+    work->Yk[0] = 0.302332572631840;
+    work->Yk[1] = 0.146755890817113;
+    work->Yk[2] = 0.092338594768798;
+
+    work->R[0] = 0.186260211377671;
+    work->R[1] = 0.345560727043048;
+    work->R[2] = 0.396767474230670;
+
+    work->stgs->thetabar = 0.1;
+
+    resetSUCache(work->su_cache);
+
+    computeLSBroyden(work);
+
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.347871060977909, 1e-9, str, "dir[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -1.153786101435742, 1e-9, str, "dir[1] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], -0.266812741078959, 1e-9, str, "dir[2] wrong");
+    
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[0], 0.494773777143634, 1e-9, str, "U[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[1], 2.474392791454103, 1e-9, str, "U[1] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[2], -0.397858153324567, 1e-9, str, "U[2] wrong");
+    
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 1, str, "mem_cursor is wrong");
+
+    work->Sk[0] = 0.178380225849766;
+    work->Sk[1] = -0.196861446475943;
+    work->Sk[2] = 0.586442621667069;
+
+
+    work->Yk[0] = -0.851886969622469;
+    work->Yk[1] = 0.800320709801823;
+    work->Yk[2] = -1.509404724734393;
+
+    work->R[0] = 0.875874147834533;
+    work->R[1] = -0.242789536333340;
+    work->R[2] = 0.166813439453503;
+    
+    computeLSBroyden(work);
+    
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.844821713918483, 1e-5, str, "dir[0] wrong");
+    
+   
+
+    if (work) destroy_work(work);
     SUCCEED(str);
 }

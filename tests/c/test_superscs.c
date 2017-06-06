@@ -62,8 +62,8 @@ bool test_superscs(char** str) {
     data->stgs->beta = 0.5;
     data->stgs->c1 = C1_DEFAULT;
     data->stgs->c_bl = C_BL_DEFAULT;
-    data->stgs->eps = EPS;
-    data->stgs->k0 = 1;
+    data->stgs->eps = 1e-5;
+    data->stgs->k0 = 0;
     data->stgs->k1 = 1;
     data->stgs->k2 = 0;
     data->stgs->ls = 10;
@@ -72,7 +72,7 @@ bool test_superscs(char** str) {
     data->stgs->rho_x = 1;
 
     data->stgs->scale = SCALE;
-    data->stgs->verbose = 2;
+    data->stgs->verbose = 0;
     data->stgs->sigma = SIGMA_DEFAULT;
     data->stgs->thetabar = THETABAR_DEFAULT;
     data->stgs->sse = 0.7;
@@ -100,6 +100,16 @@ bool test_superscs(char** str) {
     data->stgs->do_super_scs = 1;
     scs(data, cone, sol, info);
 
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -16.874896969005714, 1e-6, str, "x_star[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -5.634341514927034, 1e-6, str, "x_star[1] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 3.589737499286473, 1e-6, str, "x_star[2] wrong");
+            
+  
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0], 96.506238327408525, 1e-6, str, "y_star[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[1], -74.161955281143605, 1e-6, str, "y_star[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2], 15.000000000002315, 1e-6, str, "y_star[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3], 59.903742996445253, 1e-6, str, "y_star[0] wrong");
+    
     freeData(data, cone);
     freeSol(sol);
     scs_free(info);

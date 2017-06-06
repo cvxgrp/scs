@@ -1339,7 +1339,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     /* populate solution vectors (unnormalized) and info */
     /* update u, denormalize, etc */
     getSolution(work, sol, info, &r, i);
-    printSol(work, sol, info);
+    
     info->solveTime = tocq(&solveTimer);
 
     if (work->stgs->verbose)
