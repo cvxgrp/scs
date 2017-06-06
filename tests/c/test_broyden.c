@@ -193,10 +193,9 @@ bool test_broyden(char** str) {
     Work * work = scs_calloc(1, sizeof (Work));
     scs_int i;
     scs_int j;
-    scs_int cursor_before_reset;
+    const scs_float tol = 1e-10;
     const scs_int l = 3;
     const scs_int mem = 4;
-    scs_int method_status;
 
     prepare_work(work, l, mem);
     work->Sk[0] = 0.417022004702574;
@@ -218,13 +217,13 @@ bool test_broyden(char** str) {
 
     computeLSBroyden(work);
 
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.347871060977909, 1e-9, str, "dir[0] wrong");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -1.153786101435742, 1e-9, str, "dir[1] wrong");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], -0.266812741078959, 1e-9, str, "dir[2] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.347871060977909, tol, str, "dir[0] wrong (0)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -1.153786101435742, tol, str, "dir[1] wrong (0)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], -0.266812741078959, tol, str, "dir[2] wrong (0)");
     
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[0], 0.494773777143634, 1e-9, str, "U[0] wrong");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[1], 2.474392791454103, 1e-9, str, "U[1] wrong");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[2], -0.397858153324567, 1e-9, str, "U[2] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[0], 0.494773777143634, tol, str, "U[0] wrong (0)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[1], 2.474392791454103, tol, str, "U[1] wrong (0)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->U[2], -0.397858153324567, tol, str, "U[2] wrong (0)");
     
     ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 1, str, "mem_cursor is wrong");
 
@@ -243,9 +242,20 @@ bool test_broyden(char** str) {
     
     computeLSBroyden(work);
     
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.844821713918483, 1e-5, str, "dir[0] wrong");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.844821713918483, tol, str, "dir[0] wrong (1)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -0.438339038559064, tol, str, "dir[1] wrong (1)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], 0.205958930034291, tol, str, "dir[2] wrong (1)");
     
+    
+    computeLSBroyden(work);
+    computeLSBroyden(work);
+    computeLSBroyden(work);
    
+   ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.615557936175172, tol, str, "dir[0] wrong (4)");
+   ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -0.009167123450977, tol, str, "dir[0] wrong (4)");
+   ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], 0.362741460313521, tol, str, "dir[0] wrong (4)");
+   ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 1, str, "wrong cursor position");
+
 
     if (work) destroy_work(work);
     SUCCEED(str);

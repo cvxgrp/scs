@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['superscs_20documentation',['SuperSCS Documentation',['../index.html',1,'']]]
+  ['directions',['Directions',['../page_1directions.html',1,'']]]
 ];

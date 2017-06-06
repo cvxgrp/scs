@@ -43,6 +43,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -132,21 +133,22 @@ Functions</h2></td></tr>
 <tr class="separator:aeae5f3471b534d9da47ea840affd87a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3fb9eba640ba9f6c3d36b57b5a2f298"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a0d98fee0ffa9f2986ddf6c19a9a7daa0">Info</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scs_8h.html#ab3fb9eba640ba9f6c3d36b57b5a2f298">initInfo</a> (void)</td></tr>
 <tr class="separator:ab3fb9eba640ba9f6c3d36b57b5a2f298"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfe9ec5419a62c248ca07f70046029f0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scs_8h.html#abfe9ec5419a62c248ca07f70046029f0">initData</a> ()</td></tr>
-<tr class="separator:abfe9ec5419a62c248ca07f70046029f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3bb1aa63932d2fcf176d7d49d114447"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scs_8h.html#aa3bb1aa63932d2fcf176d7d49d114447">initData</a> (void)</td></tr>
+<tr class="separator:aa3bb1aa63932d2fcf176d7d49d114447"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a103f47be236f81ae085244d574997706"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scs_8h.html#a103f47be236f81ae085244d574997706">scs</a> (const <a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a> *d, const <a class="el" href="glbopts_8h.html#a349e2c420ebc99cfdd732dc952a98182">Cone</a> *k, <a class="el" href="glbopts_8h.html#a4bfe3aa7b79eb224b6345a457985eb20">Sol</a> *sol, <a class="el" href="glbopts_8h.html#a0d98fee0ffa9f2986ddf6c19a9a7daa0">Info</a> *info)</td></tr>
 <tr class="separator:a103f47be236f81ae085244d574997706"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43b8531ef2762feb762ead03d47ed0bf"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scs_8h.html#a43b8531ef2762feb762ead03d47ed0bf">scs_version</a> (void)</td></tr>
 <tr class="separator:a43b8531ef2762feb762ead03d47ed0bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="abfe9ec5419a62c248ca07f70046029f0"></a>
+<a class="anchor" id="aa3bb1aa63932d2fcf176d7d49d114447"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a>* initData </td>
           <td>(</td>
+          <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -194,7 +196,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Creates a new empty solution structure which is to be used to retrieve the solution \((x^\star, y^\star, s^\star)\).</p>
-<p>This function does not initialize of allocate memory for</p>
+<p>This function does not initialize of allocate memory for <code>x</code>, <code>s</code> or <code>y</code> (but it sets the respective pointers to <a class="el" href="glbopts_8h.html#a0be174af2a751cfa8a91c310d799943f">SCS_NULL</a>).</p>
 <dl class="section return"><dt>Returns</dt><dd>Initialized Sol structure. </dd></dl>
 
 </div>
@@ -259,7 +261,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 2 2017 19:18:28 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 6 2017 18:03:22 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

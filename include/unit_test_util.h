@@ -65,7 +65,12 @@ extern "C" {
      */
 #define ASSERT_EQAUL_FLOAT_OR_FAIL(val, expected, tol, str, message)\
         if (!assertEqualsFloat((val), (expected), (tol))) {\
-            FAIL_WITH_MESSAGE((str), (message));\
+           char buff[500];\
+           char error_msg[100];\
+           sprintf(error_msg, "\n\tExpected: %g, Actual %g (tol=%g)", expected, val, tol);\
+           strcpy(buff, message);\
+           strcat(buff, error_msg);\
+           FAIL_WITH_MESSAGE((str), (buff)); \
         }
 
     /**

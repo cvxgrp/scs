@@ -207,7 +207,8 @@ extern "C" {
      * Creates a new empty solution structure which is to be used 
      * to retrieve the solution \f$(x^\star, y^\star, s^\star)\f$. 
      * 
-     * This function does not initialize of allocate memory for 
+     * This function does not initialize of allocate memory for \c x, \c s
+     * or \c y (but it sets the respective pointers to ::SCS_NULL).
      * 
      * @return Initialized Sol structure.
      */

@@ -1,6 +1,5 @@
 #include "test_superscs.h"
 #include "linsys/amatrix.h"
-#include <string.h>
 
 bool test_superscs(char** str) {
 
@@ -13,7 +12,7 @@ bool test_superscs(char** str) {
     Info * info;
     Cone * cone;
 
-    data = malloc(sizeof (Data));
+    data = initData();
 
     data->c = malloc(n * sizeof (scs_float));
     data->c[0] = 1.0;
@@ -56,27 +55,10 @@ bool test_superscs(char** str) {
 
 
     data->A = A;
-    data->stgs = scs_malloc(sizeof (Settings));
-    data->stgs->max_iters = 3500;
-    data->stgs->alpha = ALPHA;
-    data->stgs->beta = 0.5;
-    data->stgs->c1 = C1_DEFAULT;
-    data->stgs->c_bl = C_BL_DEFAULT;
-    data->stgs->eps = 1e-5;
-    data->stgs->k0 = 0;
-    data->stgs->k1 = 1;
-    data->stgs->k2 = 0;
-    data->stgs->ls = 10;
-    data->stgs->normalize = NORMALIZE;
-    data->stgs->warm_start = WARM_START;
+    data->stgs->eps = 1e-9;
     data->stgs->rho_x = 1;
-
-    data->stgs->scale = SCALE;
-    data->stgs->verbose = 0;
-    data->stgs->sigma = SIGMA_DEFAULT;
-    data->stgs->thetabar = THETABAR_DEFAULT;
+    data->stgs->verbose = 1;
     data->stgs->sse = 0.7;
-    data->stgs->memory = 10;
     data->stgs->direction = restarted_broyden;
 
     cone = malloc(sizeof (Cone));
@@ -109,6 +91,11 @@ bool test_superscs(char** str) {
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[1], -74.161955281143605, 1e-6, str, "y_star[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2], 15.000000000002315, 1e-6, str, "y_star[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3], 59.903742996445253, 1e-6, str, "y_star[0] wrong");
+    
+    ASSERT_EQAUL_FLOAT_OR_FAIL(info->pobj, info->dobj, 1e-4, str, "P not equal to D");
+    ASSERT_TRUE_OR_FAIL(info->relGap<1e-10, str, "relative gap too high");
+    ASSERT_EQAUL_INT_OR_FAIL(strcmp(info->status, "Solved"), 0, str, "problem not 'Solved'");
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");    
     
     freeData(data, cone);
     freeSol(sol);

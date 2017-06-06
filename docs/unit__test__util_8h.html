@@ -43,6 +43,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -196,8 +197,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><span class="keywordflow">if</span> (!<a class="code" href="unit__test__util_8h.html#ac68c45abf605abcca3741d1a5b6292d8">assertEqualsFloat</a>((val), (expected), (tol))) {<a class="code" href="unit__test__util_8h.html#a7dab15b9b82a55f28a3d3dd6f4b523ac">\</a></div>
-<div class="line"><a class="code" href="unit__test__util_8h.html#a7dab15b9b82a55f28a3d3dd6f4b523ac">            FAIL_WITH_MESSAGE</a>((str), (message));\</div>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordflow">if</span> (!<a class="code" href="unit__test__util_8h.html#ac68c45abf605abcca3741d1a5b6292d8">assertEqualsFloat</a>((val), (expected), (tol))) {\</div>
+<div class="line">           char buff[500];\</div>
+<div class="line">           char error_msg[100];\</div>
+<div class="line">           sprintf(error_msg, <span class="stringliteral">&quot;\n\tExpected: %g, Actual %g (tol=%g)&quot;</span>, expected, val, tol);\</div>
+<div class="line">           strcpy(buff, message);\</div>
+<div class="line">           strcat(buff, error_msg);<a class="code" href="unit__test__util_8h.html#a7dab15b9b82a55f28a3d3dd6f4b523ac">\</a></div>
+<div class="line"><a class="code" href="unit__test__util_8h.html#a7dab15b9b82a55f28a3d3dd6f4b523ac">           FAIL_WITH_MESSAGE</a>((str), (buff)); \</div>
 <div class="line">        }</div>
 <div class="ttc" id="unit__test__util_8h_html_ac68c45abf605abcca3741d1a5b6292d8"><div class="ttname"><a href="unit__test__util_8h.html#ac68c45abf605abcca3741d1a5b6292d8">assertEqualsFloat</a></div><div class="ttdeci">bool assertEqualsFloat(const scs_float a, const scs_float b, const scs_float tol)</div></div>
 <div class="ttc" id="unit__test__util_8h_html_a7dab15b9b82a55f28a3d3dd6f4b523ac"><div class="ttname"><a href="unit__test__util_8h.html#a7dab15b9b82a55f28a3d3dd6f4b523ac">FAIL_WITH_MESSAGE</a></div><div class="ttdeci">#define FAIL_WITH_MESSAGE(str, message)</div><div class="ttdef"><b>Definition:</b> unit_test_util.h:38</div></div>
@@ -681,7 +687,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 2 2017 19:18:28 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 6 2017 18:03:22 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

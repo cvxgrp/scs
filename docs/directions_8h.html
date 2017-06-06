@@ -43,6 +43,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -139,7 +140,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The sursor of the cache has been reset to <code>0</code>. </p>
+<p>The cursor of the cache has been reset to <code>0</code>. </p>
 
 </div>
 </div>
@@ -157,6 +158,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Computes a direction according to the value of <code>work-&gt;stgs-&gt;direction</code>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">work</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="glbopts_8h.html#a2abf62b7d5a79be54f18723e9d65f06c">direction_type</a> </dd></dl>
 
 </div>
 </div>
@@ -180,28 +190,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>Directions are computed according to the following procedure:</p>
-<ol type="1">
-<li>Inputs: \(y=y_k\), \(r=Rx_k\), \(s=s_k\), \(\bar{\theta}\), \(m\) (memory)</li>
-<li>Buffer: \((\mathbf{s}, \mathbf{u})\)</li>
-<li>Returns: Direction \(d_\star\) (and updates the \((\mathbf{s}, \mathbf{u})\)-buffer)</li>
-<li>\(d_\star \gets -r\)</li>
-<li>\(s_\star \gets y\)</li>
-<li>\(m&#39;\gets\) current cursor position</li>
-</ol>
-<ol type="1">
-<li>for \(i=0,\ldots, m&#39;-1\),<ol type="a">
-<li>\(s_\star \gets s_\star + \langle \mathbf{s}_i, s_\star\rangle \mathbf{u}_i\)</li>
-<li>\(d_\star \gets d_\star + \langle \mathbf{s}_i, d_\star\rangle \mathbf{u}_i\)</li>
-</ol>
-</li>
-<li>\(\theta \gets \begin{cases}1,&amp;\text{if } |\langle s, s_\star \rangle| \geq \bar{\theta} \|s\|^2\\ \frac{\|s\|^2(1-\mathrm{sgn}(\langle s, s_\star \rangle \bar{\theta})}{\|s\|^2-\langle s, s_\star \rangle},&amp;\text{otherwise}\end{cases}\)</li>
-<li>\(s_\star \gets (1-\theta)s + \theta s_\star\)</li>
-<li>\(u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\) and push it into the buffer</li>
-<li>\(d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\)</li>
-<li>Add \(s\) into the buffer and move the cursor forward or empty/reset it if it is full</li>
-</ol>
-<dl class="section return"><dt>Returns</dt><dd>status code of the method. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>status code of the method.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="page_1directions.html#sec-restarted-broyden">Restarted Broyden Algorithm</a> </dd></dl>
 
 </div>
 </div>
@@ -232,7 +222,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 2 2017 19:18:28 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 6 2017 18:03:22 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
