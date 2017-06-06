@@ -25,6 +25,7 @@
       </df>
     </df>
     <logicalFolder name="pages" displayName="pages" projectFiles="true">
+      <itemPath>pages/mainpage.h</itemPath>
     </logicalFolder>
     <logicalFolder name="scs" displayName="scs" projectFiles="true" root=".">
       <logicalFolder name="examples" displayName="examples" projectFiles="true">
@@ -77,7 +78,6 @@
       <itemPath>Makefile</itemPath>
       <itemPath>nbproject/private/launcher.properties</itemPath>
     </logicalFolder>
-    <itemPath>pages/mainpage.h</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>

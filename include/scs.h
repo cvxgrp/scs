@@ -234,7 +234,7 @@ extern "C" {
      * 
      * @return 
      */
-    Data * initData();
+    Data * initData(void);
     
     /** 
      * scs calls \c scs_init, \c scs_solve, and \c scs_finish 
