@@ -44,8 +44,8 @@ extern "C" {
         scs_float *dr;
         scs_float gTh;
         scs_float sc_b;
-        scs_float sc_c;
-        scs_float nm_b;
+        scs_float sc_c; 
+        scs_float nm_b; 
         scs_float nm_c;
         scs_float *b;/**<  (possibly normalized) \c b vector */
         scs_float *c; /**<  (possibly normalized) \c c vector */
@@ -61,9 +61,9 @@ extern "C" {
         scs_float *Sk; /**< \f$s_k\f$ */
         scs_float *Yk; /**< \f$y_k\f$ */
         scs_float stepsize; /**< The current stepsize */
-        scs_float *s_b; /**< primal residual */
-        scs_float kap_b; /**< variable for cerfificates of infeasibility/unboudedness */
-
+        scs_float *s_b; /**< variable that corresponds to the primal slack for the 2nd step of DRS */
+        scs_float kap_b; /**< variable for cerfificates of infeasibility/unboudedness */        
+        
         /**
          *  The (possibly normalized) \c A matrix 
          */

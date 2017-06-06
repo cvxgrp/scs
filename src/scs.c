@@ -356,6 +356,7 @@ static void calcResidualsv2(Work *w, struct residuals *r, scs_int iter) {
     }
     r->lastIter = iter;
    
+    r->kap = w->kap_b;
     r->tau = w->u_b[n + m];  /* it's actually tau_b */
     
     nmpr_tau = calcPrimalResid(w, x_b, w->s_b, r->tau, &nmAxs_tau);
@@ -1220,7 +1221,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
-
+        
         if (isInterrupted()) {
             RETURN failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
@@ -1357,6 +1358,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* populate solution vectors (unnormalized) and info */
     getSolution(work, sol, info, &r, i);
+    printSol(work, sol, info);
     info->solveTime = tocq(&solveTimer);
 
     if (work->stgs->verbose)
