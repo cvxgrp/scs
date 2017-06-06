@@ -161,12 +161,17 @@ cov: run-test
 help:
 	@echo "\nMakefile targets...\n"
 	@echo "make help ....................... this help message"
+	@echo "make ............................ builds the project (creates static library files)"
 	@echo "make clear ...................... clears build"
+	@echo "make clear-cov .................. clears coverage files (gcno, gcda)"
 	@echo "make purge ...................... spring-clean of build files/folders"
 	@echo "make default .................... builds everything"
 	@echo "make test ....................... builds tests"
 	@echo "make run-test ................... runs all unit tests"
-	@echo "make run-test-mem ............... memchecks unit tests\n"
+	@echo "make run-test-mem ............... memchecks unit tests"
+	@echo "make cov ........................ runs lcov"
+	@echo "make docs ....................... runs doxygen and creates documentation"
+	@echo "make show-docs .................. makes documentation and shows the result\n"
 	
 docs:
 	doxygen Doxyfile

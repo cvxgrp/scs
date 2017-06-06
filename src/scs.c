@@ -647,7 +647,7 @@ static void getInfo(Work *w, Sol *sol, Info *info, struct residuals *r,
 }
 
 /* sets solutions, re-scales by inner prods if infeasible or unbounded */
-static void getSolution(Work *w, Sol *sol, Info *info, struct residuals *r,
+static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
         scs_int iter) {
     DEBUG_FUNC
     scs_int l = w->l;
@@ -664,26 +664,26 @@ static void getSolution(Work *w, Sol *sol, Info *info, struct residuals *r,
     if (info->statusVal == SCS_UNFINISHED) {
         /* not yet converged, take best guess */
         if (r->tau > INDETERMINATE_TOL && r->tau > r->kap) {
-            info->statusVal = solved(w, sol, info, r->tau);
-        } else if (calcNorm(w->u, l) <
+            info->statusVal = solved(work, sol, info, r->tau);
+        } else if (calcNorm(work->u, l) <
                 INDETERMINATE_TOL * SQRTF((scs_float) l)) {
-            info->statusVal = indeterminate(w, sol, info);
+            info->statusVal = indeterminate(work, sol, info);
         } else if (r->bTy_by_tau < r->cTx_by_tau) {
-            info->statusVal = infeasible(w, sol, info, r->bTy_by_tau);
+            info->statusVal = infeasible(work, sol, info, r->bTy_by_tau);
         } else {
-            info->statusVal = unbounded(w, sol, info, r->cTx_by_tau);
+            info->statusVal = unbounded(work, sol, info, r->cTx_by_tau);
         }
     } else if (isSolvedStatus(info->statusVal)) {
-        info->statusVal = solved(w, sol, info, r->tau);
+        info->statusVal = solved(work, sol, info, r->tau);
     } else if (isInfeasibleStatus(info->statusVal)) {
-        info->statusVal = infeasible(w, sol, info, r->bTy_by_tau);
+        info->statusVal = infeasible(work, sol, info, r->bTy_by_tau);
     } else {
-        info->statusVal = unbounded(w, sol, info, r->cTx_by_tau);
+        info->statusVal = unbounded(work, sol, info, r->cTx_by_tau);
     }
-    if (w->stgs->normalize) {
-        unNormalizeSol(w, sol);
+    if (work->stgs->normalize) {
+        unNormalizeSol(work, sol);
     }
-    getInfo(w, sol, info, r, iter);
+    getInfo(work, sol, info, r, iter);
     RETURN;
 }
 
@@ -1357,6 +1357,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     }
 
     /* populate solution vectors (unnormalized) and info */
+    /* update u, denormalize, etc */
     getSolution(work, sol, info, &r, i);
     printSol(work, sol, info);
     info->solveTime = tocq(&solveTimer);

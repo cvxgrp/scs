@@ -40,7 +40,6 @@ params.sigma = 1e-2;
 params.thetabar = 0.1;
 params.nominal = 0;
 params.rho_x = 1;
-%  data->stgs->sse = SSE;
 params.memory = 10;
 
 superscs(data, K, params)
