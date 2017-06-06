@@ -271,7 +271,7 @@ static scs_float calcPrimalResid(Work *w, const scs_float *x,
         pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
     }
     *nmAxs = SQRTF(*nmAxs);
-    RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
+    RETURN SQRTF(pres); /* norm(Ax + s - b * tau), for superSCS: norm(Ax_b + s_b - b * tau_b) */
 }
 
 

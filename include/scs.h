@@ -107,8 +107,8 @@ extern "C" {
         scs_float relGap;
         scs_float cTx_by_tau; /* not divided by tau */
         scs_float bTy_by_tau; /* not divided by tau */
-        scs_float tau;
-        scs_float kap;
+        scs_float tau; /* for superSCS it's tau_b */
+        scs_float kap; /* for superSCS it's kap_b */
     };
     
     /**
