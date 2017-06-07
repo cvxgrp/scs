@@ -1,6 +1,8 @@
 /*! \mainpage SuperSCS Documentation
  *
  * \section intro_sec Installation
+ * 
+ * \subsection installation_in_c For use in C
  *
  * What SuperSCS is about
  * 
@@ -24,17 +26,20 @@
  *     make help
  * 
  * 
+ * \subsection installation_in_matlab For use in MATLAB
  * 
- * \section examples-of-use Examples of use 
+ * In order to use SuperSCS from MATLAB, you need to compile a MEX interface.
  * 
- * ~~~~~~{.c}
- * sol = initSol();
- * info = initInfo();
- * data->stgs->do_super_scs = 1;
- * scs(data, cone, sol, info);
- * freeData(data, cone);
- * freeSol(sol);
- * scs_free(info);
- * ~~~~~~
+ *     cd  matlab
+ *     make_scs; 
+ *  
+ * \section more More
+ * 
+ * 
+ * \subsection github-page Source code
+ * 
+ * The source code of SuperSCS is available at [https://github.com/kul-forbes/scs](https://github.com/kul-forbes/scs).
+ * 
+ * This project was originally forked from [https://github.com/cvxgrp/scs](https://github.com/cvxgrp/scs).
  */
 
