@@ -108,7 +108,7 @@ $(OUT)/demo_SOCP_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsgpu.a
 $(OUT)/demo_gpu: examples/c/demo.c $(OUT)/libscsgpu.$(SHARED)
 	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS) $(CULDFLAGS)
 
-.PHONY: clean purge test docs
+.PHONY: clean clean-cov purge test docs
 	
 clean-cov:
 	@rm -rf *.gcno 

@@ -7,7 +7,6 @@ var searchData=
   ['addarray',['addArray',['../lin_alg_8h.html#a9b2aab57930d02c7b6daa9cc5fdc9360',1,'linAlg.h']]],
   ['addscaledarray',['addScaledArray',['../lin_alg_8h.html#a66c0f3a3261ca34697b7b27897676bdf',1,'linAlg.h']]],
   ['alpha',['alpha',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#acbde49a968c48ad2215d2908de38fb3e',1,'SCS_SETTINGS::alpha()'],['../constants_8h.html#af5abd28c44c29b7397c84f1fec4b1d84',1,'ALPHA():&#160;constants.h']]],
-  ['alphac',['alphaC',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a20702ce2d53bed7b0f4eec8eec118554',1,'SCS_SETTINGS']]],
   ['alphac_5fdefault',['ALPHAC_DEFAULT',['../constants_8h.html#a56eeab37b7e8e55e3b7c3622567aa421',1,'constants.h']]],
   ['amatrix',['AMatrix',['../lin_sys_8h.html#a324336b006180aa358ac994307a02ba2',1,'linSys.h']]],
   ['assert_5feqaul_5ffloat_5for_5ffail',['ASSERT_EQAUL_FLOAT_OR_FAIL',['../unit__test__util_8h.html#a3b6370ef74e3176362ae27e268329d63',1,'unit_test_util.h']]],

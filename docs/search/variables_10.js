@@ -4,7 +4,6 @@ var searchData=
   ['s_5fb',['s_b',['../struct_s_c_s___w_o_r_k.html#ac4e1e55f6fbcd905e860afc1cb850fd2',1,'SCS_WORK']]],
   ['sc_5fb',['sc_b',['../struct_s_c_s___w_o_r_k.html#a0fe5bffa0ac061d8b45a197ef97f7fec',1,'SCS_WORK']]],
   ['sc_5fc',['sc_c',['../struct_s_c_s___w_o_r_k.html#a89afffcda39d156a3927da9f1e1decf2',1,'SCS_WORK']]],
-  ['sc_5finit',['sc_init',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a46655d7dd4453c163f5287c04d02994c',1,'SCS_SETTINGS']]],
   ['scal',['scal',['../struct_s_c_s___w_o_r_k.html#a6ab8d9bf4b0e9ac95f129a700c0d248d',1,'SCS_WORK']]],
   ['scale',['scale',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a15d7c4d64c93b547448e6d682793e6af',1,'SCS_SETTINGS']]],
   ['setuptime',['setupTime',['../struct_s_c_s___i_n_f_o.html#a737206389622dc55e144f5c27a554069',1,'SCS_INFO']]],

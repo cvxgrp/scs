@@ -46,7 +46,7 @@ scs_int computeLSBroyden(Work *work) {
         ip = innerProd(s_i, work->dir, l);
         addScaledArray(work->dir, u_i, l, ip); /* update direction */
     }
-
+    
     /* compute theta */
     ip = innerProd(s_tilde_current, work->Sk, l);
     s_norm_sq = calcNormSq(work->Sk, l);

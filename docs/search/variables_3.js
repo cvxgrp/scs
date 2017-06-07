@@ -1,7 +1,6 @@
 var searchData=
 [
   ['d',['D',['../struct_s_c_s___s_c_a_l_i_n_g.html#a3c79b037bc02bdbfa8d63f4236047eab',1,'SCS_SCALING']]],
-  ['delta',['delta',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a04fa17e433368c2202790f122c94d19b',1,'SCS_SETTINGS']]],
   ['dir',['dir',['../struct_s_c_s___w_o_r_k.html#ac005c11b4585faacdb4d37a3b21dd5c7',1,'SCS_WORK']]],
   ['direction',['direction',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a52ba1d15f1faad0c99cf86ad42ef1285',1,'SCS_SETTINGS']]],
   ['do_5fsuper_5fscs',['do_super_scs',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a89aaf17bb454952ab43f9ca72cae3ff8',1,'SCS_SETTINGS']]],

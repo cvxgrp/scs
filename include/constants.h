@@ -33,7 +33,7 @@ extern "C" {
 #define MAX_ITERS (2500)
 #define EPS (1E-3)
 #define ALPHA (1.5)
-#define RHO_X (1E-3)
+#define RHO_X (1)
 #define SCALE (1.0)
 #define CG_RATE (2.0)
 #define VERBOSE (1)

@@ -197,4 +197,19 @@ void setDefaultSettings(Data *d) {
     d->stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
     d->stgs->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
     d->stgs->warm_start = WARM_START;
+    
+    d->stgs->alpha = ALPHA;
+    d->stgs->beta = BETA_DEFAULT;
+    d->stgs->c1 = C1_DEFAULT;
+    d->stgs->c_bl = C_BL_DEFAULT;
+    d->stgs->k0 = K0_DEFAULT;
+    d->stgs->k1 = K1_DEFAULT;
+    d->stgs->k2 = K2_DEFAULT;
+    d->stgs->ls = LS_DEFAULT;
+    d->stgs->sigma = SIGMA_DEFAULT;
+    d->stgs->thetabar = THETABAR_DEFAULT;
+    d->stgs->sse = SSE_DEFAULT;
+    d->stgs->memory = MEMORY_DEFAULT;
+    d->stgs->direction = fixed_point_residual;
+    d->stgs->do_super_scs = 1;
 }
