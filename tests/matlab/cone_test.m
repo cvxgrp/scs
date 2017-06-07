@@ -1,13 +1,7 @@
 clc
 clear all;
 
-K = struct( 'f',0,...
-            'l',4,...
-            'q',0,...
-            's',0,...
-            'ep',0,...
-            'ed',0,...
-            'p',[] );
+K.q = 4;
 
 A(1,1) = 0.3;
 A(4,1) = -0.5;
@@ -22,27 +16,27 @@ data.A = sparse(A);
 data.b = b;
 data.c = c;
 
-params.nominal=0;
-params.eps = 1e-9;
+params.max_iters = 2;
+params.nominal = 0;
+params.eps = 1e-4;
 params.do_super_scs = 1;
-params.max_iters = 2500;
 params.alpha = 1.5;
 params.scale = 1;
-params.verbose = 1;
+params.verbose = 2;
 params.normalize = 1;
-params.direction = 5;
+params.direction = 100;
 params.beta = 0.5;
 params.c1 =1.0-1e-4;
 params.c_bl = 0.999;
-params.k0 = 0;
-params.k1 = 1;
-params.k2 = 1;
+params.k0 = 1;
+params.k1 = 0;
+params.k2 = 0;
 params.ls = 10;
 params.sigma = 1e-2;
 params.thetabar = 0.1;
 params.rho_x = 1;
-params.memory = 100;
-params.sse = 0.3;
+params.memory = 10;
+params.sse = 0.9999;
 params.tRule=3;
 
-[x,y,s,info]=scs_direct(data, K, params);
+[x,y,s,info]=superscs(data, K, params);

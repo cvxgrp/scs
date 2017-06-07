@@ -1401,8 +1401,12 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
 }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
-scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
+scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {    
 
+    DEBUG_FUNC
+    scs_int status;
+    Work *w = scs_init(d, k, info);
+    
     if (d->stgs->verbose >= 2) {
         scs_printf("Settings:\n"
                 "alpha = %g\n"
@@ -1446,10 +1450,6 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
                 d->stgs->thetabar,
                 d->stgs->warm_start);
     }
-
-    DEBUG_FUNC
-    scs_int status;
-    Work *w = scs_init(d, k, info);
 
 #if EXTRAVERBOSE > 0
     scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",

@@ -26,11 +26,13 @@ extern "C" {
 #define false 0
 #endif
 
+    int number_of_assertions;
+
 #define TEST_SUCCESS 0 /**< test is successful */
 #define TEST_FAILURE 1 /**< test fails */
 #define MESSAGE_OK "OK" /**< a message returned when a test is successful */
-#define TEST_PASS_FLAG "\e[92m[PASS]\e[39m " /**< flag for PASS */
-#define TEST_FAIL_FLAG "\e[31m<FAIL>\e[39m " /**< flag for FAIL */   
+#define TEST_PASS_FLAG "\x1B[92m[PASS]\x1B[39m " /**< flag for PASS */
+#define TEST_FAIL_FLAG "\x1B[31m<FAIL>\x1B[39m " /**< flag for FAIL */   
 
     /**
      * Fails with a given message.
@@ -41,6 +43,7 @@ extern "C" {
 
 
 #define ASSERT_TRUE_OR_FAIL(p, str, message)\
+    number_of_assertions++;\
     if (!(p)) { \
         FAIL_WITH_MESSAGE((str), (message));\
     }
@@ -49,6 +52,7 @@ extern "C" {
      * Check whether two integers are equal, or fail with a given message.
      */
 #define ASSERT_EQAUL_INT_OR_FAIL(val, expected, str, message)\
+        number_of_assertions++;\
         if (!assertEqualsInt((val),(expected))) { \
           {\
            char buff[500];\
@@ -64,6 +68,7 @@ extern "C" {
      * Check whether two integers are equal, or fail with a given message.
      */
 #define ASSERT_EQAUL_FLOAT_OR_FAIL(val, expected, tol, str, message)\
+        number_of_assertions++;\
         if (!assertEqualsFloat((val), (expected), (tol))) {\
            char buff[500];\
            char error_msg[100];\
@@ -77,6 +82,7 @@ extern "C" {
      * Check whether two arrays are equal, or fail with a given message.
      */
 #define ASSERT_EQUAL_ARRAY_OR_FAIL(val,expected,len,tol,str,message)\
+    number_of_assertions++;\
     if (!assertEqualsArray((val),(expected),(len),(tol))){\
       FAIL_WITH_MESSAGE((str), (message));\
     }

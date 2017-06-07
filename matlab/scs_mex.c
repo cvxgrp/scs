@@ -235,7 +235,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         
     tmp = mxGetField(settings, 0, "beta");
     if (tmp != SCS_NULL)
-        d->stgs->beta = (scs_float)*mxGetPr(tmp);\
+        d->stgs->beta = (scs_float)*mxGetPr(tmp);
             
     tmp = mxGetField(settings, 0, "sigma");
     if (tmp != SCS_NULL)
@@ -253,7 +253,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (tmp != SCS_NULL)
         d->stgs->thetabar = (scs_float)*mxGetPr(tmp);
     
-    d->stgs->direction = restarted_broyden;
+    tmp = mxGetField(settings, 0, "direction");
+    if (tmp != SCS_NULL)
+        d->stgs->direction = (direction_type)*mxGetPr(tmp);
 
     /* cones */
     kf = mxGetField(cone, 0, "f");

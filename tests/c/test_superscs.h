@@ -14,7 +14,15 @@
 extern "C" {
 #endif
     
-    bool test_superscs(char** str);
+    bool test_superscs_solve(char** str);
+    
+    bool test_superscs_000(char** str);
+    
+    bool test_superscs_001_fpr(char** str);
+    
+    bool test_superscs_001_rbroyden(char** str);
+    
+    bool test_superscs_100_rbroyden(char** str);
 
 #ifdef __cplusplus
 }

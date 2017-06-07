@@ -191,8 +191,6 @@ bool test_cache_s(char** str) {
 
 bool test_broyden(char** str) {
     Work * work = scs_calloc(1, sizeof (Work));
-    scs_int i;
-    scs_int j;
     const scs_float tol = 1e-10;
     const scs_int l = 3;
     const scs_int mem = 4;
