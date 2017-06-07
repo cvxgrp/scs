@@ -2,7 +2,8 @@
 #include "linsys/amatrix.h"
 
 bool test_superscs(char** str) {
-
+    
+    scs_int status;
     const scs_int n = 3;
     const scs_int m = 4;
     const scs_int nnz = 5;
@@ -57,7 +58,7 @@ bool test_superscs(char** str) {
     data->A = A;
     data->stgs->eps = 1e-9;
     data->stgs->rho_x = 1.0;
-    data->stgs->verbose = 2;
+    data->stgs->verbose = 0;
     data->stgs->sse = 0.7;
     data->stgs->direction = restarted_broyden;
 
@@ -80,7 +81,8 @@ bool test_superscs(char** str) {
     info = initInfo();
 
     data->stgs->do_super_scs = 1;
-    scs(data, cone, sol, info);
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "Problem not solved");
 
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -16.874896969005714, 1e-6, str, "x_star[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -5.634341514927034, 1e-6, str, "x_star[1] wrong");
@@ -98,8 +100,7 @@ bool test_superscs(char** str) {
     ASSERT_TRUE_OR_FAIL(info->relGap<1e-10, str, "relative gap too high");
     ASSERT_EQAUL_INT_OR_FAIL(strcmp(info->status, "Solved"), 0, str, "problem not 'Solved'");
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");    
-    
-    printf("iters=%d\n", info->iter);
+        
     freeData(data, cone);
     freeSol(sol);
     scs_free(info);

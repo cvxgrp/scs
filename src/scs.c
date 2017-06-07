@@ -32,15 +32,15 @@ static scs_int scs_isnan(scs_float x) {
 }
 
 static SUCache * initSUCache(scs_int memory, scs_int l) {
-    SUCache * cache = scs_calloc(1, sizeof (SUCache));
+    SUCache * cache = scs_calloc(1, sizeof (*cache));
     if (!cache) {
         scs_printf("ERROR: allocating YSCache failure\n");
         RETURN SCS_NULL;
     }
 
     /* we allocate one extra memory position because it's needed */
-    cache->S = scs_calloc((1 + memory) * l, sizeof (scs_float)); /* S: l-by-mem */
-    cache->U = scs_calloc((1 + memory) * l, sizeof (scs_float)); /* U: l-by-mem */
+    cache->S = scs_malloc((1 + memory) * l * sizeof (scs_float)); /* S: l-by-mem */
+    cache->U = scs_malloc((1 + memory) * l * sizeof (scs_float)); /* U: l-by-mem */
 
 
     /* the cache must know its memory length */
@@ -939,7 +939,7 @@ static scs_int validate(const Data *d, const Cone *k) {
 
 static Work *initWork(const Data *d, const Cone *k) {
     DEBUG_FUNC
-    Work *w = scs_calloc(1, sizeof (Work));
+    Work *w = scs_calloc(1, sizeof (*w));
     const scs_int l = d->n + d->m + 1;
     if (d->stgs->verbose) {
         printInitHeader(d, k);
@@ -971,8 +971,8 @@ static Work *initWork(const Data *d, const Cone *k) {
     /* added for superscs */
     w->R = scs_calloc(l, sizeof (scs_float));
     w->R_prev = scs_calloc(l, sizeof (scs_float));
-    w->dir = scs_calloc(l, sizeof (scs_float));
-    w->dut = scs_calloc(l, sizeof (scs_float));
+    w->dir = scs_malloc(l * sizeof (scs_float));
+    w->dut = scs_malloc(l * sizeof (scs_float));
     w->s_b = scs_malloc(d->m * sizeof (scs_float));
 
     w->stepsize = 1.0;
@@ -984,14 +984,14 @@ static Work *initWork(const Data *d, const Cone *k) {
         w->su_cache = SCS_NULL;
     }
 
-    w->Sk = scs_calloc(l, sizeof (scs_float));
-    w->Yk = scs_calloc(l, sizeof (scs_float));
+    w->Sk = scs_malloc(l * sizeof (scs_float));
+    w->Yk = scs_malloc(l * sizeof (scs_float));
 
     if (w->stgs->ls > 0) {
-        w->wu = scs_calloc(l, sizeof (scs_float));
-        w->Rwu = scs_calloc(l, sizeof (scs_float));
-        w->wu_t = scs_calloc(l, sizeof (scs_float));
-        w->wu_b = scs_calloc(l, sizeof (scs_float));
+        w->wu = scs_malloc(l * sizeof (scs_float));
+        w->Rwu = scs_malloc(l * sizeof (scs_float));
+        w->wu_t = scs_malloc(l * sizeof (scs_float));
+        w->wu_b = scs_malloc(l * sizeof (scs_float));
     }
 
     if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
@@ -1475,7 +1475,7 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
 }
 
 Sol * initSol() {
-    Sol *sol = scs_calloc(1, sizeof (Sol));
+    Sol *sol = scs_calloc(1, sizeof (* sol));
     if (!sol) {
         scs_printf("ERROR: allocating sol failure\n");
         RETURN SCS_NULL;
@@ -1487,7 +1487,7 @@ Sol * initSol() {
 }
 
 Info * initInfo() {
-    Info * info = scs_calloc(1, sizeof (Info));
+    Info * info = scs_calloc(1, sizeof (*info));
     if (!info) {
         scs_printf("ERROR: allocating info failure\n");
         RETURN SCS_NULL;
@@ -1508,8 +1508,7 @@ Info * initInfo() {
 }
 
 Data * initData() {
-    Data * data;
-    data = malloc(sizeof (Data));
+    Data * data = malloc(sizeof (*data));
 
     if (!data) {
         scs_printf("ERROR: allocating data failure\n");

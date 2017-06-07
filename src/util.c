@@ -211,4 +211,5 @@ void setDefaultSettings(Data *d) {
     d->stgs->sse = SSE_DEFAULT;
     d->stgs->memory = MEMORY_DEFAULT;
     d->stgs->direction = fixed_point_residual;
+    d->stgs->do_super_scs = 1;
 }
