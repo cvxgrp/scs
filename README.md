@@ -3,6 +3,8 @@ SCS
 
 [![Build Status](https://travis-ci.org/kul-forbes/scs.svg?branch=master)](https://travis-ci.org/kul-forbes/scs)
 [![codecov](https://codecov.io/gh/kul-forbes/scs/branch/master/graph/badge.svg)](https://codecov.io/gh/kul-forbes/scs)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ef4a850c3a3b445f8130452b0edce2c6)](https://www.codacy.com/app/alphaville/scs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=kul-forbes/scs&amp;utm_campaign=Badge_Grade)
+
 <a href="https://kul-forbes.github.io/scs"><img src="https://maxcdn.icons8.com/Share/icon/dotty/User_Interface//user_manual1600.png" style="vertical-align:bottom;max-width:100%" width="25" alt="RTFM" title="Documentation"></a>
 
 
