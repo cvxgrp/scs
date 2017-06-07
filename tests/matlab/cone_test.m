@@ -16,16 +16,16 @@ data.A = sparse(A);
 data.b = b;
 data.c = c;
 
-params.max_iters = 2;
+params.max_iters = 24;
 params.nominal = 0;
-params.eps = 1e-4;
+params.eps = 1e-5;
 params.do_super_scs = 1;
 params.alpha = 1.5;
 params.scale = 1;
-params.verbose = 2;
+params.verbose = 1;
 params.normalize = 1;
 params.direction = 100;
-params.beta = 0.5;
+params.beta = 0.9;
 params.c1 =1.0-1e-4;
 params.c_bl = 0.999;
 params.k0 = 1;
@@ -36,7 +36,10 @@ params.sigma = 1e-2;
 params.thetabar = 0.1;
 params.rho_x = 1;
 params.memory = 10;
-params.sse = 0.9999;
+params.sse = 0.999;
 params.tRule=3;
 
-[x,y,s,info]=superscs(data, K, params);
+
+params.max_iters = 204;
+[x1,y1,s1,info1]=scs_direct(data, K, params);
+[x2,y2,s2,info2]=superscs(data, K, params);
