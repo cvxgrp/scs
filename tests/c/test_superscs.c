@@ -57,11 +57,17 @@ bool test_superscs(char** str) {
 
     data->A = A;
     data->stgs->eps = 1e-9;
-    data->stgs->rho_x = 1.0;
-    data->stgs->verbose = 0;
+    data->stgs->rho_x = 1.0;   
     data->stgs->sse = 0.7;
-    data->stgs->direction = restarted_broyden;
-
+    data->stgs->direction = (direction_type)restarted_broyden;
+    data->stgs->k0 = 1;
+    data->stgs->k1 = 1;
+    data->stgs->k2 = 1;
+    data->stgs->ls = 1000;
+    data->stgs->verbose = 2;
+    data->stgs->scale=1;
+    data->stgs->normalize = 1;
+    
     cone = malloc(sizeof (Cone));
     cone->ssize = 0;
     cone->ed = 0;

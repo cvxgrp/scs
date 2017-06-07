@@ -6,7 +6,7 @@
 /* if verbose print summary output every this num iterations */
 #define PRINT_INTERVAL 10
 /* check for convergence every this num iterations */
-#define CONVERGED_INTERVAL 20
+#define CONVERGED_INTERVAL 1
 #else
 #define PRINT_INTERVAL 1
 #define CONVERGED_INTERVAL 1
@@ -956,8 +956,8 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->l = l; /* total dimension */
 
     /* allocate workspace: */
-    w->u = scs_malloc(l * sizeof (scs_float));
-    w->u_b = scs_malloc(l * sizeof (scs_float));
+    w->u = scs_calloc(l, sizeof (scs_float));
+    w->u_b = scs_calloc(l, sizeof (scs_float));
     w->v = scs_calloc(l, sizeof (scs_float));
     w->u_t = scs_malloc(l * sizeof (scs_float));
     w->u_prev = scs_malloc(l * sizeof (scs_float));
@@ -1311,10 +1311,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         }
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*sqrt(rho)*Rx */
-            addScaledArray(work->u, work->R, work->l, -work->stgs->alpha * sqrt_rhox);
-            /* s -= Rs      */
-            /* tau -= Rtau  */
-            subtractArray(work->u + work->n, work->R + work->n, work->m + 1);
+            addScaledArray(work->u, work->R, work->n, -work->stgs->alpha * sqrt_rhox);
+            addScaledArray(work->u + work->n, work->R + work->n, work->m + 1, -work->stgs->alpha);
         }
         if (how != 1) { /* exited with K1 */
             projectLinSysv2(work->u_t, work->u, work, i);
