@@ -1401,12 +1401,12 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
 }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
-scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {    
+scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
 
     DEBUG_FUNC
     scs_int status;
     Work *w = scs_init(d, k, info);
-    
+
     if (d->stgs->verbose >= 2) {
         scs_printf("Settings:\n"
                 "alpha = %g\n"
@@ -1508,7 +1508,7 @@ Info * initInfo() {
 Data * initData() {
     Data * data = malloc(sizeof (*data));
 
-    if (!data) {
+    if (data == SCS_NULL) {
         scs_printf("ERROR: allocating data failure\n");
         RETURN SCS_NULL;
     }

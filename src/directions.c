@@ -5,21 +5,12 @@ scs_int resetSUCache(SUCache * cache) {
     RETURN SU_CACHE_RESET;
 }
 
-scs_int computeLSBroyden2(Work *work) {
-    /* --- DECLARATIONS --- */
-    SUCache * cache; /* the SU cache (pointer) */
-    const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
-    RETURN 0;
-}
-
 scs_int computeLSBroyden(Work *work) {
     /* --- DECLARATIONS --- */
     SUCache * cache; /* the SU cache (pointer) */
     scs_int i; /* index */
     scs_float * s_tilde_current; /* s_tilde (which is updated) */
     scs_float * u_new; /* new value of u */
-    scs_float * s_i; /* pointer to the current value of s_i */
-    scs_float * u_i; /* pointer to the current value of u_i */
     scs_float ip; /* temporary float to store inner products */
     scs_float s_norm_sq; /* scalar gamma as in (6.5e) */
     scs_float theta = 0; /* theta */
@@ -39,6 +30,8 @@ scs_int computeLSBroyden(Work *work) {
 
     /* update s and d */
     for (i = 0; i < cache->mem_cursor; ++i) {
+        scs_float * s_i; /* pointer to the current value of s_i */
+        scs_float * u_i; /* pointer to the current value of u_i */
         s_i = cache->S + i * l; /* retrieve s_i from the cache */
         u_i = cache->U + i * l; /* retrieve u_i from the cache */
         ip = innerProd(s_i, s_tilde_current, l);
@@ -46,7 +39,7 @@ scs_int computeLSBroyden(Work *work) {
         ip = innerProd(s_i, work->dir, l);
         addScaledArray(work->dir, u_i, l, ip); /* update direction */
     }
-    
+
     /* compute theta */
     ip = innerProd(s_tilde_current, work->Sk, l);
     s_norm_sq = calcNormSq(work->Sk, l);
@@ -91,16 +84,18 @@ scs_int computeLSBroyden(Work *work) {
 
 scs_int computeDirection(Work *work) {
     scs_int j;
+    scs_int status;
     if (work->stgs->direction == fixed_point_residual) {
         for (j = 0; j < work->l; ++j) {
             work->dir[j] = -work->R[j];
         }
-        RETURN 0;
+        status = 0;
     } else if (work->stgs->direction == restarted_broyden) {
-        RETURN computeLSBroyden(work);
+        status = computeLSBroyden(work);
     } else if (work->stgs->direction == restarted_broyden_v2) {
-        RETURN - 1; /* Not implemented yet */
+        status = -1; /* Not implemented yet */
     } else {
-        RETURN -2;
+        status = -2;
     }
+    RETURN status;
 }
