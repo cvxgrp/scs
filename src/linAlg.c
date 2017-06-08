@@ -46,7 +46,7 @@ pack_A(int mc, int kc, const double *A, int incRowA, int incColA,
     int mp = mc / MR;
     int _mr = mc % MR;
 
-    int i, j;
+    int i;
 
     for (i = 0; i < mp; ++i) {
         pack_MRxk(kc, A, incRowA, incColA, buffer);
@@ -54,6 +54,7 @@ pack_A(int mc, int kc, const double *A, int incRowA, int incColA,
         A += MR*incRowA;
     }
     if (_mr > 0) {
+        int j;
         for (j = 0; j < kc; ++j) {
             for (i = 0; i < _mr; ++i) {
                 buffer[i] = A[i * incRowA];
@@ -581,13 +582,15 @@ dgemm_macro_kernel(int mc,
     int _mr = mc % MR;
     int _nr = nc % NR;
 
-    int mr, nr;
+    int mr;
     int i, j;
 
     const double *nextA;
-    const double *nextB;
+
 
     for (j = 0; j < np; ++j) {
+        int nr;
+        const double * nextB;
         nr = (j != np - 1 || _nr == 0) ? NR : _nr;
         nextB = &_B[j * kc * NR];
 
@@ -628,20 +631,20 @@ dgemm_macro_kernel(int mc,
  */
 
 void dgemm_nn(
-            int m,
-            int n,
-            int k,
-            double alpha,
-            const double *A,
-            int incRowA,
-            int incColA,
-            const double *B,
-            int incRowB,
-            int incColB,
-            double beta,
-            double *C,
-            int incRowC,
-            int incColC) {
+        int m,
+        int n,
+        int k,
+        double alpha,
+        const double *A,
+        int incRowA,
+        int incColA,
+        const double *B,
+        int incRowB,
+        int incColB,
+        double beta,
+        double *C,
+        int incRowC,
+        int incColC) {
     int mb = (m + MC - 1) / MC;
     int nb = (n + NC - 1) / NC;
     int kb = (k + KC - 1) / KC;
@@ -650,7 +653,7 @@ void dgemm_nn(
     int _nc = n % NC;
     int _kc = k % KC;
 
-    int mc, nc, kc;
+    int mc, kc;
     int i, j, l;
 
     double _beta;
@@ -661,7 +664,7 @@ void dgemm_nn(
     }
 
     for (j = 0; j < nb; ++j) {
-        nc = (j != nb - 1 || _nc == 0) ? NC : _nc;
+        int nc = (j != nb - 1 || _nc == 0) ? NC : _nc;
 
         for (l = 0; l < kb; ++l) {
             kc = (l != kb - 1 || _kc == 0) ? KC : _kc;
@@ -687,15 +690,27 @@ void dgemm_nn(
 }
 
 void matrixMultiplicationColumnPacked(
-            int m,
-            int n,
-            int k,
-            double alpha,
-            const double *A,
-            double beta,
-            const double *B,
-            double *C) {
+        int m,
+        int n,
+        int k,
+        double alpha,
+        const double *A,
+        double beta,
+        const double *B,
+        double *C) {
     dgemm_nn(m, n, k, alpha, A, 1, m, B, 1, k, beta, C, 1, m);
+}
+
+void matrixMultiplicationTransColumnPacked(
+        int m,
+        int n,
+        int k,
+        double alpha,
+        const double *A,
+        double beta,
+        const double *B,
+        double *C) {
+    dgemm_nn(m, n, k, alpha, A, k, 1, B, 1, k, beta, C, 1, m);
 }
 
 /* x = b*a */

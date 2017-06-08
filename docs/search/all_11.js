@@ -40,7 +40,7 @@ var searchData=
   ['scs_5funbounded',['SCS_UNBOUNDED',['../constants_8h.html#ac8c72aeee9bcd3f1ed58fcf99a76d01c',1,'constants.h']]],
   ['scs_5funbounded_5finaccurate',['SCS_UNBOUNDED_INACCURATE',['../constants_8h.html#aa9926c8e5b23495ae9195e3c444c4b5a',1,'constants.h']]],
   ['scs_5funfinished',['SCS_UNFINISHED',['../constants_8h.html#a97f7a5b842fd70105d97841fcd6ee680',1,'constants.h']]],
-  ['scs_5fversion',['SCS_VERSION',['../constants_8h.html#abae8a893f5f047e479a6fdeea4cad79b',1,'SCS_VERSION():&#160;constants.h'],['../scs_8h.html#a43b8531ef2762feb762ead03d47ed0bf',1,'scs_version(void):&#160;scs.h']]],
+  ['scs_5fversion',['scs_version',['../scs_8h.html#a43b8531ef2762feb762ead03d47ed0bf',1,'scs_version(void):&#160;scs.h'],['../constants_8h.html#abae8a893f5f047e479a6fdeea4cad79b',1,'SCS_VERSION():&#160;constants.h']]],
   ['scs_5fwork',['SCS_WORK',['../struct_s_c_s___w_o_r_k.html',1,'']]],
   ['setasscaledarray',['setAsScaledArray',['../lin_alg_8h.html#a1a79f14f41b82a9e6eb22ffbe3670fca',1,'linAlg.h']]],
   ['setdefaultsettings',['setDefaultSettings',['../util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6',1,'util.h']]],

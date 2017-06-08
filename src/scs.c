@@ -69,59 +69,65 @@ static void freeWork(Work *w) {
     DEBUG_FUNC
     if (w == SCS_NULL)
         RETURN;
-    if (w->u)
+    if (w->u != SCS_NULL)
         scs_free(w->u);
-    if (w->v)
+    if (w->v != SCS_NULL)
         scs_free(w->v);
-    if (w->u_t)
+    if (w->u_t != SCS_NULL)
         scs_free(w->u_t);
-    if (w->u_prev)
+    if (w->u_prev != SCS_NULL)
         scs_free(w->u_prev);
-    if (w->h)
+    if (w->h != SCS_NULL)
         scs_free(w->h);
-    if (w->g)
+    if (w->g != SCS_NULL)
         scs_free(w->g);
-    if (w->b)
+    if (w->b != SCS_NULL)
         scs_free(w->b);
-    if (w->c)
+    if (w->c != SCS_NULL)
         scs_free(w->c);
-    if (w->pr)
+    if (w->pr != SCS_NULL)
         scs_free(w->pr);
-    if (w->dr)
+    if (w->dr != SCS_NULL)
         scs_free(w->dr);
-    if (w->scal) {
-        if (w->scal->D)
+    if (w->scal != SCS_NULL) {
+        if (w->scal->D != SCS_NULL)
             scs_free(w->scal->D);
-        if (w->scal->E)
+        if (w->scal->E != SCS_NULL)
             scs_free(w->scal->E);
         scs_free(w->scal);
     }
-    if (w->u_b)
+    if (w->u_b != SCS_NULL)
         scs_free(w->u_b);
-    if (w->R)
-        scs_free(w->R);
-    if (w->R_prev)
-        scs_free(w->R_prev);
-    if (w->dir)
-        scs_free(w->dir);
-    if (w->dut)
-        scs_free(w->dut);
-    if (w->Sk)
-        scs_free(w->Sk);
-    if (w->Yk)
-        scs_free(w->Yk);
-    if (w->wu)
-        scs_free(w->wu);
-    if (w->wu_t)
-        scs_free(w->wu_t);
-    if (w->wu_b)
-        scs_free(w->wu_b);
-    if (w->Rwu)
-        scs_free(w->Rwu);
-    if (w->su_cache)
-        freeYSCache(w->su_cache);
-    if (w->s_b)
-        scs_free(w->s_b);
+
+    if (w->stgs->do_super_scs == 1) {
+        if (w->R != SCS_NULL)
+            scs_free(w->R);
+        if (w->R_prev != SCS_NULL)
+            scs_free(w->R_prev);
+        if (w->dir != SCS_NULL)
+            scs_free(w->dir);
+        if (w->dut != SCS_NULL)
+            scs_free(w->dut);
+        if (w->Sk != SCS_NULL)
+            scs_free(w->Sk);
+        if (w->Yk != SCS_NULL)
+            scs_free(w->Yk);
+        if (w->wu != SCS_NULL)
+            scs_free(w->wu);
+        if (w->wu_t != SCS_NULL)
+            scs_free(w->wu_t);
+        if (w->wu_b != SCS_NULL)
+            scs_free(w->wu_b);
+        if (w->Rwu != SCS_NULL)
+            scs_free(w->Rwu);
+        if (w->su_cache != SCS_NULL)
+            freeYSCache(w->su_cache);
+        if (w->s_b != SCS_NULL)
+            scs_free(w->s_b);
+        if (w->H != SCS_NULL) {
+            scs_free(w->H);
+        }
+    }
     scs_free(w);
     RETURN;
 }
@@ -893,7 +899,8 @@ static scs_int validate(const Data *d, const Cone *k) {
             scs_printf("Parameters `thetabar` must be a scalar between 0 and 1 (thetabar=%g)\n", stgs->thetabar);
             RETURN SCS_FAILED;
         }
-        if (stgs->memory <= 1) {
+        if ((stgs->direction == restarted_broyden || stgs->direction == restarted_broyden_v2)
+                && stgs->memory <= 1) {
             scs_printf("Quasi-Newton memory length (mem=%d) is too low; choose an integer at least equal to 2.\n", stgs->memory);
             RETURN SCS_FAILED;
         }
@@ -955,53 +962,187 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->n = d->n;
     w->l = l; /* total dimension */
 
-    /* allocate workspace: */
+    /* -------------------------------------
+     * Workspace allocation:
+     * 
+     * After every call to scs_malloc or scs_calloc
+     * we check whether the allocation has been
+     * successful.
+     * ------------------------------------- */
     w->u = scs_calloc(l, sizeof (scs_float));
+    if (w->u == SCS_NULL) {
+        scs_printf("ERROR: `u` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->u_b = scs_calloc(l, sizeof (scs_float));
-    w->v = scs_calloc(l, sizeof (scs_float));
+    if (w->u_b == SCS_NULL) {
+        scs_printf("ERROR: `u_b` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
+    if (w->stgs->do_super_scs == 0) {
+        w->v = scs_calloc(l, sizeof (scs_float));
+        if (w->v == SCS_NULL) {
+            scs_printf("ERROR: `v` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+    }
     w->u_t = scs_malloc(l * sizeof (scs_float));
+    if (w->u_t == SCS_NULL) {
+        scs_printf("ERROR: `u_t` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->u_prev = scs_malloc(l * sizeof (scs_float));
+    if (w->u_prev == SCS_NULL) {
+        scs_printf("ERROR: `u_prev` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->h = scs_malloc((l - 1) * sizeof (scs_float));
+    if (w->h == SCS_NULL) {
+        scs_printf("ERROR: `h` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->g = scs_malloc((l - 1) * sizeof (scs_float));
+    if (w->g == SCS_NULL) {
+        scs_printf("ERROR: `g` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->pr = scs_malloc(d->m * sizeof (scs_float));
+    if (w->pr == SCS_NULL) {
+        scs_printf("ERROR: `pr` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->dr = scs_malloc(d->n * sizeof (scs_float));
+    if (w->dr == SCS_NULL) {
+        scs_printf("ERROR: `dr` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->b = scs_malloc(d->m * sizeof (scs_float));
+    if (w->b == SCS_NULL) {
+        scs_printf("ERROR: `b` memory allocation failure\n");
+        RETURN SCS_NULL;
+    }
     w->c = scs_malloc(d->n * sizeof (scs_float));
-
-    /* added for superscs */
-    w->R = scs_calloc(l, sizeof (scs_float));
-    w->R_prev = scs_calloc(l, sizeof (scs_float));
-    w->dir = scs_malloc(l * sizeof (scs_float));
-    w->dut = scs_malloc(l * sizeof (scs_float));
-    w->s_b = scs_malloc(d->m * sizeof (scs_float));
-
-    w->stepsize = 1.0;
-
-    /* make cache */
-    if (w->stgs->memory > 0) {
-        w->su_cache = initSUCache(w->stgs->memory, l);
-    } else {
-        w->su_cache = SCS_NULL;
-    }
-
-    w->Sk = scs_malloc(l * sizeof (scs_float));
-    w->Yk = scs_malloc(l * sizeof (scs_float));
-
-    if (w->stgs->ls > 0) {
-        w->wu = scs_malloc(l * sizeof (scs_float));
-        w->Rwu = scs_malloc(l * sizeof (scs_float));
-        w->wu_t = scs_malloc(l * sizeof (scs_float));
-        w->wu_b = scs_malloc(l * sizeof (scs_float));
-    }
-
-    if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
-            !w->dr || !w->b || !w->c || !w->u_b || !w->R || !w->R_prev ||
-            !w->dir || !w->dut || !w->Sk || !w->Yk
-            || (w->stgs->ls > 0 && (!w->wu || !w->Rwu || !w->wu_t || !w->wu_b)) || !w->s_b) {
-        scs_printf("ERROR: work memory allocation failure\n");
+    if (w->c == SCS_NULL) {
+        scs_printf("ERROR: `c` memory allocation failure\n");
         RETURN SCS_NULL;
     }
 
+
+
+    if (w->stgs->do_super_scs == 1) {
+        /* -------------------------------------
+         * Additional memory needs to be allocated 
+         * in SuperSCS
+         * ------------------------------------- */
+        w->R = scs_calloc(l, sizeof (scs_float));
+        if (w->R == SCS_NULL) {
+            scs_printf("ERROR: `R` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+        w->R_prev = scs_calloc(l, sizeof (scs_float));
+        if (w->R_prev == SCS_NULL) {
+            scs_printf("ERROR: `R_prev` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+        w->dir = scs_malloc(l * sizeof (scs_float));
+        if (w->dir == SCS_NULL) {
+            scs_printf("ERROR: `dir` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+        w->dut = scs_malloc(l * sizeof (scs_float));
+        if (w->dut == SCS_NULL) {
+            scs_printf("ERROR: `dut` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+        w->s_b = scs_malloc(d->m * sizeof (scs_float));
+        if (w->s_b == SCS_NULL) {
+            scs_printf("ERROR: `s_b` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+
+        w->stepsize = 1.0;
+
+        /* -------------------------------------
+         * Restarted Broyden requires the allocation
+         * of an (S,U)-cache.
+         * ------------------------------------- */
+        if ((w->stgs->direction == restarted_broyden || w->stgs->direction == restarted_broyden_v2)
+                && w->stgs->memory > 0) {
+            w->su_cache = initSUCache(w->stgs->memory, l);
+            if (w->su_cache == SCS_NULL) {
+                scs_printf("ERROR: `su_cache` memory allocation failure\n");
+                RETURN SCS_NULL;
+            }
+        } else {
+            w->su_cache = SCS_NULL;
+        }
+
+        /* -------------------------------------
+         * Allocate memory for the full Broyden
+         * method
+         * ------------------------------------- */
+        if (w->stgs->direction == full_broyden) {
+            w->H = scs_malloc(l * l * sizeof (scs_float));
+            if (w->H == SCS_NULL) {
+                scs_printf("ERROR: `H` memory allocation failure\n");
+                RETURN SCS_NULL;
+            }
+        } else {
+            w->H = SCS_NULL;
+        }
+
+        w->Sk = scs_malloc(l * sizeof (scs_float));
+        if (w->Sk == SCS_NULL) {
+            scs_printf("ERROR: `Sk` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+        w->Yk = scs_malloc(l * sizeof (scs_float));
+        if (w->Yk == SCS_NULL) {
+            scs_printf("ERROR: `Yk` memory allocation failure\n");
+            RETURN SCS_NULL;
+        }
+
+        if (w->stgs->ls > 0) {
+            w->wu = scs_malloc(l * sizeof (scs_float));
+            if (w->wu == SCS_NULL) {
+                scs_printf("ERROR: `wu` memory allocation failure\n");
+                RETURN SCS_NULL;
+            }
+            w->Rwu = scs_malloc(l * sizeof (scs_float));
+            if (w->Rwu == SCS_NULL) {
+                scs_printf("ERROR: `Rwu` memory allocation failure\n");
+                RETURN SCS_NULL;
+            }
+            w->wu_t = scs_malloc(l * sizeof (scs_float));
+            if (w->wu_t == SCS_NULL) {
+                scs_printf("ERROR: `wu_t` memory allocation failure\n");
+                RETURN SCS_NULL;
+            }
+            w->wu_b = scs_malloc(l * sizeof (scs_float));
+            if (w->wu_b == SCS_NULL) {
+                scs_printf("ERROR: `wu_b` memory allocation failure\n");
+                RETURN SCS_NULL;
+            }
+        }
+    } else {
+        /* -------------------------------------
+         * In SCS, the pointers which correspond to
+         * SuperSCS are set to SCS_NULL and are 
+         * inactive.
+         * ------------------------------------- */
+        w->R = SCS_NULL;
+        w->R_prev = SCS_NULL;
+        w->dir = SCS_NULL;
+        w->dut = SCS_NULL;
+        w->s_b = SCS_NULL;
+        w->su_cache = SCS_NULL;
+        w->Yk = SCS_NULL;
+        w->Sk = SCS_NULL;
+        w->wu = SCS_NULL;
+        w->Rwu = SCS_NULL;
+        w->wu_t = SCS_NULL;
+        w->wu_b = SCS_NULL;
+    }
     w->A = d->A;
     if (w->stgs->normalize) {
 #ifdef COPYAMATRIX

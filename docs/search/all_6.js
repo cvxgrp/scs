@@ -8,5 +8,6 @@ var searchData=
   ['freeamatrix',['freeAMatrix',['../lin_sys_8h.html#a79e4d64a1c53379d6b6ae529b9fb863a',1,'linSys.h']]],
   ['freedata',['freeData',['../util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34',1,'util.h']]],
   ['freepriv',['freePriv',['../lin_sys_8h.html#a05f0e7047b5d6e76e77d1ce31ca51665',1,'linSys.h']]],
-  ['freesol',['freeSol',['../util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156',1,'util.h']]]
+  ['freesol',['freeSol',['../util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156',1,'util.h']]],
+  ['full_5fbroyden',['full_broyden',['../glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4caf8730db88bbcaa3400fdcffe07cbcb26',1,'glbopts.h']]]
 ];
