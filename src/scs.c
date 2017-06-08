@@ -33,7 +33,7 @@ static scs_int scs_isnan(scs_float x) {
 
 static SUCache * initSUCache(scs_int memory, scs_int l) {
     SUCache * cache = scs_calloc(1, sizeof (*cache));
-    if (!cache) {
+    if (cache == SCS_NULL) {
         scs_printf("ERROR: allocating YSCache failure\n");
         RETURN SCS_NULL;
     }
@@ -52,7 +52,7 @@ static SUCache * initSUCache(scs_int memory, scs_int l) {
 }
 
 static void freeYSCache(SUCache * cache) {
-    if (!cache) {
+    if (cache == SCS_NULL) {
         return;
     }
     if (cache->S) {
@@ -67,7 +67,7 @@ static void freeYSCache(SUCache * cache) {
 
 static void freeWork(Work *w) {
     DEBUG_FUNC
-    if (!w)
+    if (w == SCS_NULL)
         RETURN;
     if (w->u)
         scs_free(w->u);
@@ -181,15 +181,15 @@ static void populateOnFailure(scs_int m, scs_int n, Sol *sol, Info *info,
     }
     if (sol) {
         if (n > 0) {
-            if (!sol->x)
+            if (sol->x == SCS_NULL)
                 sol->x = scs_malloc(sizeof (scs_float) * n);
             scaleArray(sol->x, NAN, n);
         }
         if (m > 0) {
-            if (!sol->y)
+            if (sol->y == SCS_NULL)
                 sol->y = scs_malloc(sizeof (scs_float) * m);
             scaleArray(sol->y, NAN, m);
-            if (!sol->s)
+            if (sol->s == SCS_NULL)
                 sol->s = scs_malloc(sizeof (scs_float) * m);
             scaleArray(sol->s, NAN, m);
         }
@@ -223,7 +223,7 @@ static void warmStartVars(Work *w, const Sol *sol) {
         if (scs_isnan(w->u[i])) {
             w->u[i] = 0;
         }
-        if (!w->stgs->do_super_scs && scs_isnan(w->v[i])) {
+        if (w->stgs->do_super_scs == 0 && scs_isnan(w->v[i])) {
             w->v[i] = 0;
         }
     }
@@ -1080,7 +1080,13 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     scs_int i;
     timer solveTimer;
     struct residuals r;
-    if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
+    if (d == SCS_NULL
+            || k == SCS_NULL
+            || sol == SCS_NULL
+            || info == SCS_NULL
+            || w == SCS_NULL
+            || d->b == SCS_NULL
+            || d->c == SCS_NULL) {
         scs_printf("ERROR: SCS_NULL input\n");
         RETURN SCS_FAILED;
     }
@@ -1164,7 +1170,13 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     timer solveTimer;
     struct residuals r;
-    if (!data || !cone || !sol || !info || !work || !data->b || !data->c) {
+    if (data == SCS_NULL
+            || cone == SCS_NULL
+            || sol == SCS_NULL
+            || info == SCS_NULL
+            || work == SCS_NULL
+            || data->b == SCS_NULL
+            || data->c == SCS_NULL) {
         scs_printf("ERROR: SCS_NULL input\n");
         RETURN SCS_FAILED;
     }
@@ -1374,7 +1386,9 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
     Work *w;
     timer initTimer;
     startInterruptListener();
-    if (!d || !k || !info) {
+    if (d == SCS_NULL
+            || k == SCS_NULL
+            || info == SCS_NULL) {
         scs_printf("ERROR: Missing Data, Cone or Info input\n");
         RETURN SCS_NULL;
     }
@@ -1474,7 +1488,7 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
 
 Sol * initSol() {
     Sol *sol = scs_calloc(1, sizeof (* sol));
-    if (!sol) {
+    if (sol == SCS_NULL) {
         scs_printf("ERROR: allocating sol failure\n");
         RETURN SCS_NULL;
     }
@@ -1486,7 +1500,7 @@ Sol * initSol() {
 
 Info * initInfo() {
     Info * info = scs_calloc(1, sizeof (*info));
-    if (!info) {
+    if (info == SCS_NULL) {
         scs_printf("ERROR: allocating info failure\n");
         RETURN SCS_NULL;
     }
