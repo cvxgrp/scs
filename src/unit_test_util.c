@@ -21,13 +21,7 @@ bool assertEqualsArray(
         const scs_float * b,
         scs_int n,
         const scs_float tol) {
-    unsigned int i;
-    for (i = 0; i < n; i++) {
-        if (!assertEqualsFloat(a[i], b[i], tol)) {
-            return 0; /* LCOV_EXCL_LINE */
-        }
-    }
-    return true;
+    return calcNormInfDiff(a, b, n) < tol;
 }
 
 bool test(const unitTest_t ut, const char* name) {

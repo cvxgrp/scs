@@ -17,6 +17,10 @@ extern "C" {
     bool testProjLinSysv2(char** str);
 
     bool testScaleArray(char** str);
+    
+    bool testGemm(char** str);
+    
+    bool testGemmCP(char** str);
 
 
 #ifdef __cplusplus

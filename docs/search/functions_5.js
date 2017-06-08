@@ -1,6 +1,9 @@
 var searchData=
 [
-  ['normalizea',['normalizeA',['../lin_sys_8h.html#aaba8b6405653717a3c634b6807bab9d4',1,'linSys.h']]],
-  ['normalizebc',['normalizeBC',['../normalize_8h.html#a1fb8661db767d6a394f36970259f6b43',1,'normalize.h']]],
-  ['normalizewarmstart',['normalizeWarmStart',['../normalize_8h.html#ac73d540b76c6a5076ae542bbae49f14a',1,'normalize.h']]]
+  ['initcone',['initCone',['../cones_8h.html#af44fab7c53fbfb5c120183d571b9720c',1,'cones.h']]],
+  ['initdata',['initData',['../scs_8h.html#aa3bb1aa63932d2fcf176d7d49d114447',1,'scs.h']]],
+  ['initinfo',['initInfo',['../scs_8h.html#ab3fb9eba640ba9f6c3d36b57b5a2f298',1,'scs.h']]],
+  ['initpriv',['initPriv',['../lin_sys_8h.html#a4a17d19de53c10fc677dd7c5bf8ac8d9',1,'linSys.h']]],
+  ['initsol',['initSol',['../scs_8h.html#aeae5f3471b534d9da47ea840affd87a5',1,'scs.h']]],
+  ['innerprod',['innerProd',['../lin_alg_8h.html#ac404bb227fd9ccf89d685e78e77bc7b6',1,'linAlg.h']]]
 ];

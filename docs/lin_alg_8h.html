@@ -129,6 +129,10 @@ Functions</h2></td></tr>
 <tr class="separator:a766e1da8f360e3bf6afe3affca1f1862"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e145f69d746d5609fb6ff8105a183c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lin_alg_8h.html#a1e145f69d746d5609fb6ff8105a183c0">scs_abs</a> (<a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> x)</td></tr>
 <tr class="separator:a1e145f69d746d5609fb6ff8105a183c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7faa5a12cac3cba6b7f39b74b2fdeec7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a> (int m, int n, int k, double alpha, const double *A, int incRowA, int incColA, const double *B, int incRowB, int incColB, double beta, double *C, int incRowC, int incColC)</td></tr>
+<tr class="separator:a7faa5a12cac3cba6b7f39b74b2fdeec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4249523beef60e26717f68d6a092917b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lin_alg_8h.html#a4249523beef60e26717f68d6a092917b">matrixMultiplicationColumnPacked</a> (int m, int n, int k, double alpha, const double *A, double beta, const double *B, double *C)</td></tr>
+<tr class="separator:a4249523beef60e26717f68d6a092917b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a9b2aab57930d02c7b6daa9cc5fdc9360"></a>
@@ -415,6 +419,134 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a7faa5a12cac3cba6b7f39b74b2fdeec7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dgemm_nn </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>m</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>k</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>alpha</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>incRowA</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>incColA</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>incRowB</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>incColB</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>beta</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>incRowC</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>incColC</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Perofrms the operation </p>
+<p class="formulaDsp">
+\[ C \leftarrow \beta C + \alpha A B \]
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">m</td><td>number of rows of matrix \(A\) </td></tr>
+    <tr><td class="paramname">n</td><td>number of columns of matrix \(B\) </td></tr>
+    <tr><td class="paramname">k</td><td>number of rows of matrix \(B\) (columns of \(A\)) </td></tr>
+    <tr><td class="paramname">alpha</td><td>coefficient \(\alpha\) </td></tr>
+    <tr><td class="paramname">A</td><td>pointer to matrix \(A\) </td></tr>
+    <tr><td class="paramname">incRowA</td><td>increment in traversing the rows of \(A\) </td></tr>
+    <tr><td class="paramname">incColA</td><td>increment in traversing the columns of \(A\) </td></tr>
+    <tr><td class="paramname">B</td><td>pointer to matrix \(B\) </td></tr>
+    <tr><td class="paramname">incRowB</td><td>increment in traversing the rows of \(B\) </td></tr>
+    <tr><td class="paramname">incColB</td><td>increment in traversing the columns of \(B\) </td></tr>
+    <tr><td class="paramname">beta</td><td>coefficient \(\beta\) </td></tr>
+    <tr><td class="paramname">C</td><td>pointer to matrix \(C\) </td></tr>
+    <tr><td class="paramname">incRowC</td><td>increment in traversing the rows of \(C\) </td></tr>
+    <tr><td class="paramname">incColC</td><td>increment in traversing the columns of \(C\)</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="lin_alg_8h.html#a4249523beef60e26717f68d6a092917b">matrixMultiplicationColumnPacked</a></dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The implementation of this method is that of <a href="http://apfel.mathematik.uni-ulm.de/~lehn/sghpc/gemm/page13/index.html">ULMBLAS</a>.</dd>
+<dd>
+The original source code is available at <a href="http://apfel.mathematik.uni-ulm.de/~lehn/sghpc/gemm/page13/index.html">this link</a>.</dd>
+<dd>
+The <a href="https://github.com/michael-lehn/ulmBLAS">ULMBLAS project</a> is available on github and is licensed with the <a href="https://github.com/michael-lehn/ulmBLAS/blob/master/LICENSE">new BSD licence</a>.</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>This function works only with <code>double</code> precision data. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ac404bb227fd9ccf89d685e78e77bc7b6"></a>
 <div class="memitem">
 <div class="memproto">
@@ -457,6 +589,84 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a4249523beef60e26717f68d6a092917b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void matrixMultiplicationColumnPacked </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>m</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>k</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>alpha</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>beta</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>C</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Perofrms the operation \(C \leftarrow \beta C + \alpha A B,\) where \(A\), \(B\) and \(C\) are column-packed matrices.</p>
+<p>This method is a proxy to <a class="el" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">m</td><td>number of rows of matrix \(A\) </td></tr>
+    <tr><td class="paramname">n</td><td>number of columns of matrix \(B\) </td></tr>
+    <tr><td class="paramname">k</td><td>number of rows of matrix \(B\) (columns of \(A\)) </td></tr>
+    <tr><td class="paramname">alpha</td><td>coefficient \(\alpha\) </td></tr>
+    <tr><td class="paramname">A</td><td>pointer to matrix \(A\) in column-packed form </td></tr>
+    <tr><td class="paramname">beta</td><td>coefficient \(\beta\) </td></tr>
+    <tr><td class="paramname">B</td><td>pointer to matrix \(B\) in column-packed form </td></tr>
+    <tr><td class="paramname">C</td><td>pointer to matrix \(C\) in column-packed form</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a> </dd></dl>
 
 </div>
 </div>
@@ -654,7 +864,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jun 7 2017 22:53:40 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jun 8 2017 15:24:03 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

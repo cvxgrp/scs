@@ -368,9 +368,9 @@ bool test_superscs_100_rbroyden(char** str) {
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -0.349018320302040, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], 0.015102755569314, 1e-10, str, "x[1] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 1.778110351429428, 1e-10, str, "x[2] wrong");
+   
     
    
-    printf("\n\n--------WARNING: THIS MUST BE TESTED MORE THOROUGHLY---------------\n\n");
     
     freeData(data, cone);
     freeSol(sol);

@@ -143,6 +143,7 @@ bool test_cache_s(char** str) {
     Work * work = scs_calloc(1, sizeof (Work));
     scs_int i;
     scs_int j;
+    scs_int k;
     scs_int cursor_before_reset;
     const scs_int l = 4;
     const scs_int mem = 10;
@@ -163,7 +164,6 @@ bool test_cache_s(char** str) {
             work->Yk[j] += 0.01 * j;
         }
 
-
         cursor_before_reset = work->su_cache->mem_cursor;
         method_status = computeLSBroyden(work);
 
@@ -175,12 +175,14 @@ bool test_cache_s(char** str) {
             ASSERT_EQAUL_INT_OR_FAIL(method_status, SU_CACHE_INCREMENT, str, "not reset");
             ASSERT_TRUE_OR_FAIL(work->su_cache->mem_cursor > 0, str, "memory cursor is at zero");
             ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, (i + 1) % (mem), str, "cursor at wrong position");
-            S_prev = work->su_cache->S + (work->su_cache->mem_cursor - 1) * l;
-            for (j = 0; j < l; ++j) {
-                ASSERT_EQAUL_FLOAT_OR_FAIL(
-                        S_prev[j],
-                        0.1 * (j + 1) + 10.0 / (i + 1),
-                        1e-9, str, "S_previous incorrect");
+            for (k = 1; k < work->su_cache->mem_cursor; ++k) {
+                S_prev = work->su_cache->S + (work->su_cache->mem_cursor - k) * l;
+                for (j = 0; j < l; ++j) {
+                    ASSERT_EQAUL_FLOAT_OR_FAIL(
+                            S_prev[j],
+                            0.1 * (j + 1) + 10.0 / (i + 2 - k),
+                            1e-9, str, "S_previous incorrect");
+                }
             }
         }
 
@@ -196,6 +198,7 @@ bool test_broyden(char** str) {
     const scs_float tol = 1e-10;
     const scs_int l = 3;
     const scs_int mem = 4;
+    scs_int i;
 
     prepare_work(work, l, mem);
     work->Sk[0] = 0.417022004702574;
@@ -252,11 +255,31 @@ bool test_broyden(char** str) {
     computeLSBroyden(work);
 
     ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[0], -0.615557936175172, tol, str, "dir[0] wrong (4)");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -0.009167123450977, tol, str, "dir[0] wrong (4)");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], 0.362741460313521, tol, str, "dir[0] wrong (4)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[1], -0.009167123450977, tol, str, "dir[1] wrong (4)");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(work->dir[2], 0.362741460313521, tol, str, "dir[2] wrong (4)");
     ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 1, str, "wrong cursor position");
 
+    resetSUCache(work->su_cache);
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 0, str, "wrong cursor position");
+    work->Sk[0] = 0.1;
+    work->Sk[1] = 0.2;
+    work->Sk[2] = 0.3;
+    computeLSBroyden(work);
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 1, str, "wrong cursor position");
+    work->Sk[0] = 0.4;
+    work->Sk[1] = 0.5;
+    work->Sk[2] = 0.6;
+    computeLSBroyden(work);
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 2, str, "wrong cursor position");
+    work->Sk[0] = 0.7;
+    work->Sk[1] = 0.8;
+    work->Sk[2] = 0.9;
+    computeLSBroyden(work);
+    ASSERT_EQAUL_INT_OR_FAIL(work->su_cache->mem_cursor, 3, str, "wrong cursor position");
+    for (i = 0; i < work->su_cache->mem_cursor * l; ++i) {
+        ASSERT_EQAUL_FLOAT_OR_FAIL(work->su_cache->S[i], 0.1 * (i + 1), 1e-10, str, "wrong memory entry");
+    }
 
-    if (work) destroy_work(work);
+    if (work != SCS_NULL) destroy_work(work);
     SUCCEED(str);
 }

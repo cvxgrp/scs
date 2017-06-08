@@ -17,7 +17,7 @@ scs_int computeLSBroyden(Work *work) {
     const scs_int l = work->l; /* size of vectors */
     const scs_float theta_bar = work->stgs->thetabar; /* parameter in Powell's trick */
 
-    cache = work->su_cache;
+    cache = work->su_cache; /* cache of Sk and Uk */
 
     /* d [work->dir] = -R [work->R] */
     setAsScaledArray(work->dir, work->R, -1.0, l);
@@ -54,7 +54,6 @@ scs_int computeLSBroyden(Work *work) {
         }
     }
 
-
     /* FINALISE */
 
     /* update u_new (at the end of the buffer) */
@@ -84,7 +83,7 @@ scs_int computeLSBroyden(Work *work) {
 
 scs_int computeDirection(Work *work) {
     scs_int j;
-    scs_int status;
+    scs_int status = 0;
     if (work->stgs->direction == fixed_point_residual) {
         for (j = 0; j < work->l; ++j) {
             work->dir[j] = -work->R[j];
@@ -94,8 +93,6 @@ scs_int computeDirection(Work *work) {
         status = computeLSBroyden(work);
     } else if (work->stgs->direction == restarted_broyden_v2) {
         status = -1; /* Not implemented yet */
-    } else {
-        status = -2;
-    }
+    } 
     RETURN status;
 }

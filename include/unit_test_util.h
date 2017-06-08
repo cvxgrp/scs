@@ -20,11 +20,22 @@
 extern "C" {
 #endif
 
-#ifndef _STDBOOL_H
+#ifdef bool
+#undef bool
+#endif
+
+#ifdef true
+#undef true
+#endif
+
+#ifdef false
+#undef false
+#endif
+    
     typedef int bool;
 #define true 1
 #define false 0
-#endif
+
 
     int number_of_assertions;
 
