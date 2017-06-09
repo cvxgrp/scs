@@ -24,6 +24,8 @@ extern "C" {
     bool test_cache_s(char** str);
     
     bool test_broyden(char** str);
+    
+    bool test_full_broyden(char** str);
 
 
 #ifdef __cplusplus

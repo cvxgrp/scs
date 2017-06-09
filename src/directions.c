@@ -1,5 +1,7 @@
 #include "directions.h"
 
+static scs_float * HY; /* Vector H*Y of length l */
+
 scs_int resetSUCache(SUCache * cache) {
     cache->mem_cursor = 0; /* set active memory to 0 */
     RETURN SU_CACHE_RESET;
@@ -81,18 +83,56 @@ scs_int computeLSBroyden(Work *work) {
     RETURN SU_CACHE_INCREMENT;
 }
 
-scs_int computeDirection(Work *work) {
+scs_int computeFullBroyden(Work *work, scs_int i) {
+    scs_float ip = 0;
+    scs_float tmp = 0;
+
+
+    if (i == 0 || HY == SCS_NULL) {
+        /* HY is allocated the first time this function is called (that is, for i==0) */
+        HY = malloc(work->l * sizeof (*HY));
+        if (HY == SCS_NULL){
+            scs_printf("ERROR: allocating `HY` in `computeFullBroyden` failure\n");
+            RETURN DIRECTION_ERROR;
+        }
+    }
+
+    if ((work->stgs->broyden_init_scaling && i == 1)
+            || (work->stgs->tRule == 1 || work->stgs->tRule == 2)) {
+        ip = innerProd(work->Yk, work->Sk, work->l);
+    }
+
+    if (work->stgs->broyden_init_scaling && i == 1) {
+        scs_int i;
+        tmp = ip / calcNorm(work->Yk, work->l);
+        for (i = 0; i < work->l; ++i) {
+            work->H[i * (work->l + 1)] = tmp;
+        }
+    }
+
+    return 0;
+}
+
+scs_int computeDirection(Work *work, scs_int i) {
     scs_int j;
-    scs_int status = 0;
+    scs_int status = DIRECTION_SUCCESS;
     if (work->stgs->direction == fixed_point_residual) {
         for (j = 0; j < work->l; ++j) {
             work->dir[j] = -work->R[j];
         }
-        status = 0;
+        status = DIRECTION_SUCCESS;
     } else if (work->stgs->direction == restarted_broyden) {
         status = computeLSBroyden(work);
     } else if (work->stgs->direction == restarted_broyden_v2) {
-        status = -1; /* Not implemented yet */
-    } 
+        status = DIRECTION_ERROR; /* Not implemented yet */
+    } else if (work->stgs->direction == full_broyden) {
+
+    }
     RETURN status;
+}
+
+void freeFullBroyden() {
+    if (HY != SCS_NULL) {
+        scs_free(HY);
+    }
 }

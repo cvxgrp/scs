@@ -30,35 +30,35 @@ extern "C" {
      */
     struct SCS_WORK {
         /**
-         *  row dimension of \f$A\f$ 
+         *  Row dimension of \f$A\f$. 
          */
         scs_int m;
         /**
-         *  column dimension of \f$A\f$
+         *  Column dimension of \f$A\f$.
          */
         scs_int n;
         /**
-         *  \f$l = m + n + 1\f$ (length of \f$u_k\f$)
+         *  Dimension of \f$u_k\f$, that is \f$l = m + n + 1\f$ .
          */
         scs_int l;
         /**
-         * Vector \f$u_k=(x_k,y_k,\tau_k) \f$
+         * Vector \f$u_k=(x_k,y_k,\tau_k)\f$.
          */
         scs_float *u;
         /**
-         * Vector \f$v_k = Qu_k\f$ (used only in SCS, not in SuperSCS)
+         * Vector \f$v_k = Qu_k\f$ (used only in SCS, not in SuperSCS).
          */
         scs_float *v;
         /**
-         * Vector \f$\tilde{u}_k\f$
+         * Vector \f$\tilde{u}_k\f$.
          */
         scs_float *u_t;
         /**
-         * Vector \f$u_{k-1}\f$ of the previous iteration
+         * Vector \f$u_{k-1}\f$ of the previous iteration.
          */
         scs_float * u_prev;
         /**
-         * Vector \f$\bar{u}_k\f$
+         * Vector \f$\bar{u}_k\f$.
          */
         scs_float *u_b;
         /**
@@ -89,19 +89,19 @@ extern "C" {
          */
         scs_float nm_c;
         /**  
-         * The (possibly normalized) vector \f$b\f$
+         * The (possibly normalized) vector \f$b\f$.
          */
         scs_float *b;
         /**  
-         * The (possibly normalized) vector \f$c\f$
+         * The (possibly normalized) vector \f$c\f$.
          */
         scs_float *c;
         /**  
-         * Fixed-point residual \f$R_k\f$
+         * Fixed-point residual \f$R_k\f$.
          */
         scs_float *R;
         /**  
-         * Fixed-point residual of the previous iteration \f$R_{k-1}\f$
+         * Fixed-point residual (FPR) of the previous iteration \f$R_{k-1}\f$.
          */
         scs_float *R_prev;
         /**
@@ -109,12 +109,13 @@ extern "C" {
          */
         scs_float *dir;
         /**
-         * Hessian approximation used by the full Broyden method
+         * Hessian approximation used by the full Broyden method.
+         * 
          * @see ::full_broyden
          */
         scs_float * H;
         /** 
-         * Direction corresponding to \f$\tilde{u}\f$
+         * Direction corresponding to \f$\tilde{u}\f$.
          */
         scs_float *dut;
         /**
@@ -127,19 +128,19 @@ extern "C" {
          */
         scs_float *wu_b;
         /**
-         * Vector \c Rwu from line search
+         * Vector \c Rwu from line search.
          */
         scs_float *Rwu;
         /** 
-         * \f$\|Ru_k\|\f$ 
+         * \f$\|Ru_k\|\f$. 
          */
         scs_float nrmR_con;
         /**
-         *  \f$s_k\f$ 
+         *  \f$s_k = u_k - u_{k-1}\f$ 
          */
         scs_float *Sk;
         /** 
-         * \f$y_k\f$ 
+         * \f$y_k = R_k - R_{k-1}\f$ 
          */
         scs_float *Yk;
         /** 
@@ -223,30 +224,32 @@ extern "C" {
     struct SCS_SETTINGS {
         /* settings parameters: default suggested input */
 
-        
+
         /* -------------------------------------
          * General Settings
          * 
-         * these *cannot* change for multiple runs with the same call to scs_init
+         * these *cannot* change for multiple runs 
+         * with the same call to scs_init
          * ------------------------------------- */
-        
+
         /** 
          * Boolean, heuristic data rescaling
          * 
          * Default : 1
          */
-        scs_int normalize; 
-        
+        scs_int normalize;
+
         scs_float scale; /**< if normalized, rescales by this factor: 5 */
         scs_float rho_x; /**< x equality constraint scaling: 1e-3 */
 
-        
-         /* -------------------------------------
+
+        /* -------------------------------------
          * General Settings
          * 
-         * these can change for multiple runs with the same call to scs_init
+         * these can change for multiple runs with 
+         * the same call to scs_init
          * ------------------------------------- */
-        
+
         /**
          *  Maximum iterations to take: 2500 
          */
@@ -256,16 +259,16 @@ extern "C" {
          * 
          * Default: 1e-3 
          */
-        scs_float eps; 
+        scs_float eps;
         /** 
          * Relaxation parameter.
          * 
          * Default : 1.8 
          */
-        scs_float alpha; 
+        scs_float alpha;
         scs_float cg_rate; /**< for indirect, tolerance goes down like
                            (1/iter)^cg_rate: 2 */
-        
+
         /** 
          * Level of verbosity.
          * 
@@ -275,15 +278,15 @@ extern "C" {
          * 
          */
         scs_int verbose;
-         /** 
-          * Boolean, warm start (put initial guess in Sol struct): 0 
-          */
+        /** 
+         * Boolean, warm start (put initial guess in Sol struct): 0 
+         */
         scs_int warm_start;
-        
+
         /* -------------------------------------
          * Settings associated with SuperSCS
          * ------------------------------------- */
-        
+
         scs_int do_super_scs; /**< boolean: whether to use superscs or not */
         scs_int k0; /**< boolean, K0: 1 */
         scs_float c_bl; /**< parameter for blind updates: 0.999 */
@@ -296,16 +299,43 @@ extern "C" {
          * Settings associated with the line 
          * search
          * ------------------------------------- */
-        scs_int ls; /**< max line-search iterations */
-        scs_float beta; /**< stepsize reduction */
-        scs_float sigma; /**< line-search parameter */
+        /** 
+         * max line-search iterations 
+         */
+        scs_int ls;
+        /**
+         * Step size reduction coefficient. 
+         * 
+         * In every line search iteration, the step size is reduced as 
+         * \f$t \leftarrow \beta t\f$.
+         */
+        scs_float beta;
+        /** 
+         * Line-search parameter 
+         */
+        scs_float sigma;
 
         /* -------------------------------------
          * Settings associated with the direction
          * ------------------------------------- */
-        direction_type direction; /**< choice of direction: 100 for Restarted Broyden */
-        scs_float thetabar; /**< modified Broyden's parameter: 1e-1 */
-        scs_int memory; /**< memory for limited memory QN: 10 */
+        /** 
+         * Choice of direction
+         * 
+         * Default : ::restarted_broyden 
+         */
+        direction_type direction;
+        /** 
+         * Modified Broyden parameter.
+         * 
+         * Default : 1e-1 
+         */
+        scs_float thetabar;
+        /** 
+         * Memory length for limited-memory Broyden method
+         * 
+         * Default: 10 
+         */
+        scs_int memory; 
         /**
          * Option for the Broyden direction.
          * 
@@ -394,6 +424,13 @@ extern "C" {
 
     /** 
      * scs calls \c scs_init, \c scs_solve, and \c scs_finish 
+     * 
+     * @param d
+     * @param k
+     * @param sol
+     * @param info
+     * 
+     * @return status code
      */
     scs_int scs(
             const Data *d,
@@ -403,6 +440,7 @@ extern "C" {
 
     /**
      * Returns the version of SCS
+     * 
      * @return 
      */
     const char *scs_version(void);

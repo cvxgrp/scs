@@ -1082,10 +1082,15 @@ static Work *initWork(const Data *d, const Cone *k) {
          * method
          * ------------------------------------- */
         if (w->stgs->direction == full_broyden) {
+            scs_int i;
             w->H = scs_malloc(l * l * sizeof (scs_float));
             if (w->H == SCS_NULL) {
                 scs_printf("ERROR: `H` memory allocation failure\n");
                 RETURN SCS_NULL;
+            }
+            /* H = I */
+            for (i = 0; i < l; ++i) {
+                w->H[i * (l + 1)] = 1.0;
             }
         } else {
             w->H = SCS_NULL;
@@ -1143,6 +1148,7 @@ static Work *initWork(const Data *d, const Cone *k) {
         w->wu_t = SCS_NULL;
         w->wu_b = SCS_NULL;
     }
+    
     w->A = d->A;
     if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
@@ -1329,7 +1335,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     r.lastIter = -1;
     updateWork(data, work, sol);
 
-    if (work->stgs->verbose)
+    if (work->stgs->verbose > 0)
         printHeader(work, cone);
 
     /* Initialize: */
@@ -1349,6 +1355,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
 
+    work->nrmR_con = eta;
 
     /***** HENCEFORTH, R and u ARE SCALED! *****/
 
@@ -1373,9 +1380,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             calcResiduals(work, &r, i);
             printSummary(work, i, &r, &solveTimer);
         }
-
-        work->nrmR_con = (i == 0) ? eta : calcNorm(work->R, work->l);
-
+        
         if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
             work->stgs->sse *= q; /*sse = q^i */
             if (i == 0) {
@@ -1396,7 +1401,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     }
                 }
                 /* compute direction */
-                computeDirection(work);
+                computeDirection(work, i);
             }
             scaleArray(work->dir, 1 / sqrt_rhox, work->n);
         }
