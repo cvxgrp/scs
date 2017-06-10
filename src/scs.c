@@ -312,7 +312,7 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     }
     r->lastIter = iter;
 
-
+    
     if (!w->stgs->do_super_scs) {
         s = &(w->v[w->n]);
         x = w->u;
@@ -353,6 +353,94 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
     RETURN;
 }
+
+static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
+    DEBUG_FUNC
+    scs_float *x;
+    scs_float *y;
+    scs_float *s;
+    scs_float cTx;
+    scs_float bTy;
+    scs_float *pr = w->pr;
+    scs_float *dr = w->dr;
+    scs_int n = w->n;
+    scs_int m = w->m;
+    scs_int i;
+
+    /* checks if the residuals are unchanged by checking iteration */
+    if (r->lastIter == iter) {
+        RETURN;
+    }
+    r->lastIter = iter;
+
+
+    s = w->s_b;
+    x = w->u_b;
+    y = &(w->u_b[n]);
+
+    r->kap = w->kap_b;
+    r->tau = w->u_b[n + m]; /* it's actually tau_b */
+ 
+    memset(pr, 0, w->m * sizeof (scs_float));
+    memset(dr, 0, w->n * sizeof (scs_float));
+
+    accumByA(w->A, w->p, x, pr);
+    addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
+    addScaledArray(pr, w->b, m, -r->tau); /* pr = Ax + s - b*tau */          
+    
+    accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
+    addScaledArray(dr, w->c, w->n, r->tau); /* dr = A'y + c*tau */
+  
+    r->bTy_by_tau =
+            innerProd(y, w->b, m) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+    r->cTx_by_tau =
+            innerProd(x, w->c, n) /
+            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+
+    bTy = r->bTy_by_tau / r->tau;
+    cTx = r->cTx_by_tau / r->tau;
+
+    
+//    r->resInfeas =
+ //           bTy < 0 ? w->nm_b *  / -r->bTy_by_tau : NAN;
+//    r->resUnbdd =
+//            r->cTx_by_tau < 0 ? w->nm_c * nmAxs_tau / -r->cTx_by_tau : NAN;
+
+    
+    
+    if (w->stgs->normalize) {
+        for (i = 0; i<m; ++i ) {
+            pr[i] *= w->scal->D[i]/r->tau; 
+        }
+        r->resPri = calcNorm(pr, m);
+        r->resPri /= (1+ w->nm_b) * (w->sc_b * w->stgs->scale);    
+     } else {
+        for (i = 0; i<m; ++i ) {
+            pr[i] /= r->tau; 
+        }
+        r->resPri = calcNorm(pr, m);
+        r->resPri /= (1+ w->nm_b);
+     }
+    
+    if (w->stgs->normalize) {
+        for (i = 0; i<n; ++i ) {
+            dr[i] *= w->scal->E[i]/r->tau;
+        }
+        r->resDual = calcNorm(dr, n);
+        r->resDual /= (1+ w->nm_c) * (w->sc_c * w->stgs->scale);
+     } else {
+        for (i = 0; i<n; ++i ) {
+           dr[i] /= r->tau; 
+        }
+        r->resDual = calcNorm(dr, n);
+        r->resDual /= (1+ w->nm_c);
+    }
+    
+    r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
+    RETURN;
+}
+
 
 static void coldStartVars(Work *w) {
     DEBUG_FUNC
@@ -625,7 +713,7 @@ static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
     if (!work->stgs->do_super_scs) {
         calcResiduals(work, r, iter);
     } else {
-        calcResiduals(work, r, iter);
+        calcResidualsSuperscs(work, r, iter);
         r->kap = ABS(work->kap_b) /
                 (work->stgs->normalize ? (work->stgs->scale * work->sc_c * work->sc_b) : 1.0);
     }
@@ -1221,15 +1309,15 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
         /* Convergence checks */
         if (i % CONVERGED_INTERVAL == 0) {
-            calcResiduals(work, &r, i);
+            calcResidualsSuperscs(work, &r, i);
             if ((info->statusVal = hasConverged(work, &r, i))) {
-                break;
+              //  break;
             }
         }
 
         /* Prints results every PRINT_INTERVAL iterations */
         if (work->stgs->verbose && i % PRINT_INTERVAL == 0) {
-            calcResiduals(work, &r, i);
+            calcResidualsSuperscs(work, &r, i);
             printSummary(work, i, &r, &solveTimer);
         }
 
@@ -1339,7 +1427,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* prints summary of last iteration */
     if (work->stgs->verbose) {
-        calcResiduals(work, &r, i);
+        calcResidualsSuperscs(work, &r, i);
         printSummary(work, i, &r, &solveTimer);
     }
 
