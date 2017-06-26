@@ -9,6 +9,8 @@ var searchData=
   ['direction',['direction',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#a52ba1d15f1faad0c99cf86ad42ef1285',1,'SCS_SETTINGS']]],
   ['direction_5fdefault',['DIRECTION_DEFAULT',['../constants_8h.html#a339622aa4eb741c32c8f6739e690e5b5',1,'constants.h']]],
   ['direction_5fenum',['direction_enum',['../glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4c',1,'glbopts.h']]],
+  ['direction_5ferror',['DIRECTION_ERROR',['../directions_8h.html#a3d952ccde2f2c145d3d0dfa423add90d',1,'directions.h']]],
+  ['direction_5fsuccess',['DIRECTION_SUCCESS',['../directions_8h.html#abf32d7fe965a3767ba72bea789bf9f4b',1,'directions.h']]],
   ['direction_5ftype',['direction_type',['../glbopts_8h.html#a2abf62b7d5a79be54f18723e9d65f06c',1,'glbopts.h']]],
   ['directions_2eh',['directions.h',['../directions_8h.html',1,'']]],
   ['directions_5fpage_2eh',['directions_page.h',['../directions__page_8h.html',1,'']]],

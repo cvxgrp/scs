@@ -15,50 +15,51 @@ extern "C" {
 #endif
 
     /**
-     * A cache of \f$(s_i, u_i)\f$ where \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$.
-     * We do not need to store past values of \f$\tilde{s}_i\f$.
+     * \brief A cache of \f$(s_i, u_i)\f$ where \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$.
+     * 
+     * \note We do not need to store past values of \f$\tilde{s}_i\f$.
      */
     struct SCS_SU_MEMORY {
-        scs_float *S; /**< cached values of \f$s_i\f$ (s-memory) */
-        scs_float *U; /**< cached values of \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$ (u-memory)*/
-        scs_int mem_cursor; /**< current memory cursor [0..mem-1] */
-        scs_int mem; /**< (target) memory */
+        scs_float *S; /**< \brief cached values of \f$s_i\f$ (s-memory) */
+        scs_float *U; /**< \brief cached values of \f$u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\f$ (u-memory)*/
+        scs_int mem_cursor; /**< \brief current memory cursor [0..mem-1] */
+        scs_int mem; /**< \brief (target/maximum/allocated) memory */
     };
 
     /**
-     *  Workspace for SCS 
+     *  \brief Workspace for SCS 
      */
     struct SCS_WORK {
         /**
-         *  Row dimension of \f$A\f$. 
+         *  \brief Row dimension of \f$A\f$. 
          */
         scs_int m;
         /**
-         *  Column dimension of \f$A\f$.
+         *  \brief Column dimension of \f$A\f$.
          */
         scs_int n;
         /**
-         *  Dimension of \f$u_k\f$, that is \f$l = m + n + 1\f$ .
+         *  \brief Dimension of \f$u_k\f$, that is \f$l = m + n + 1\f$ .
          */
         scs_int l;
         /**
-         * Vector \f$u_k=(x_k,y_k,\tau_k)\f$.
+         * \brief Vector \f$u_k=(x_k,y_k,\tau_k)\f$.
          */
         scs_float *u;
         /**
-         * Vector \f$v_k = Qu_k\f$ (used only in SCS, not in SuperSCS).
+         * \brief Vector \f$v_k = Qu_k\f$ (used only in SCS, not in SuperSCS).
          */
         scs_float *v;
         /**
-         * Vector \f$\tilde{u}_k\f$.
+         * \brief Vector \f$\tilde{u}_k\f$.
          */
         scs_float *u_t;
         /**
-         * Vector \f$u_{k-1}\f$ of the previous iteration.
+         * \brief Vector \f$u_{k-1}\f$ of the previous iteration.
          */
         scs_float * u_prev;
         /**
-         * Vector \f$\bar{u}_k\f$.
+         * \brief Vector \f$\bar{u}_k\f$.
          */
         scs_float *u_b;
         /**
@@ -77,45 +78,49 @@ extern "C" {
          */
         scs_float gTh;
         /**
+         * \brief Scaling factor corresponding to \f$b\f$
          */
         scs_float sc_b;
         /**
+         * \brief Scaling factor corresponding to \f$c\f$
          */
         scs_float sc_c;
         /**
+         * \brief Norm of \f$b\f$
          */
         scs_float nm_b;
         /**
+         * \brief Norm of \f$c\f$
          */
         scs_float nm_c;
         /**  
-         * The (possibly normalized) vector \f$b\f$.
+         * \brief The (possibly normalized) vector \f$b\f$.
          */
         scs_float *b;
         /**  
-         * The (possibly normalized) vector \f$c\f$.
+         * \brief The (possibly normalized) vector \f$c\f$.
          */
         scs_float *c;
         /**  
-         * Fixed-point residual \f$R_k\f$.
+         * \brief Fixed-point residual \f$R_k\f$.
          */
         scs_float *R;
         /**  
-         * Fixed-point residual (FPR) of the previous iteration \f$R_{k-1}\f$.
+         * \brief Fixed-point residual (FPR) of the previous iteration \f$R_{k-1}\f$.
          */
         scs_float *R_prev;
         /**
-         * Direction \f$d_k\f$
+         * \brief Direction \f$d_k\f$
          */
         scs_float *dir;
         /**
-         * Hessian approximation used by the full Broyden method.
+         * \brief Hessian approximation used by the full Broyden method.
          * 
          * @see ::full_broyden
          */
         scs_float * H;
         /** 
-         * Direction corresponding to \f$\tilde{u}\f$.
+         * \brief Direction corresponding to \f$\tilde{u}\f$.
          */
         scs_float *dut;
         /**
@@ -128,55 +133,55 @@ extern "C" {
          */
         scs_float *wu_b;
         /**
-         * Vector \c Rwu from line search.
+         * \brief Vector \c Rwu from line search.
          */
         scs_float *Rwu;
         /** 
-         * \f$\|Ru_k\|\f$. 
+         * \brief \f$\|Ru_k\|\f$. 
          */
         scs_float nrmR_con;
         /**
-         *  \f$s_k = u_k - u_{k-1}\f$ 
+         *  \brief \f$s_k = u_k - u_{k-1}\f$ 
          */
         scs_float *Sk;
         /** 
-         * \f$y_k = R_k - R_{k-1}\f$ 
+         * \brief \f$y_k = R_k - R_{k-1}\f$ 
          */
         scs_float *Yk;
         /** 
-         * The current stepsize \f$t_k\f$
+         * \brief The current stepsize \f$t_k\f$
          */
         scs_float stepsize;
         /** 
-         * Variable that corresponds to the primal slack for the 2nd step of DRS 
+         * \brief Variable that corresponds to the primal slack for the 2nd step of DRS 
          */
         scs_float *s_b;
         /** 
-         * Variable for certificates of infeasibility/unboudedness 
+         * \brief Variable for certificates of infeasibility/unboudedness 
          */
         scs_float kap_b;
         /**
-         *  The (possibly normalized) \c A matrix 
+         *  \brief The (possibly normalized) \c A matrix 
          */
         AMatrix *A;
         /** 
-         * struct populated by linear system solver 
+         * \brief struct populated by linear system solver 
          */
         Priv *p;
         /** 
-         * contains solver settings specified by user 
+         * \brief contains solver settings specified by user 
          */
         Settings *stgs;
         /**
-         *  contains the re-scaling data 
+         * \brief contains the re-scaling data 
          */
         Scaling *scal;
         /** 
-         * workspace for the cone projection step 
+         * \brief workspace for the cone projection step 
          */
         ConeWork *coneWork;
         /**
-         * A cache of \c S and \c U (used, to compute Broyden-type directions).
+         * \brief A cache of \c S and \c U (used, to compute Broyden-type directions).
          */
         SUCache *su_cache;
     };
@@ -185,15 +190,59 @@ extern "C" {
      *  Structure to hold residual information (unnormalized) 
      */
     struct residuals {
+        /**
+         * \brief The last iteration when the residuals were updated.
+         */
         scs_int lastIter;
+        /**
+         * \brief Dual residual
+         * 
+         * \f[
+         * \text{resdual} = \frac{E(A'y + \tau c)}{\tau(1+\|c\|)\cdot \text{scale}_c\cdot \text{scale}}
+         * \f]
+         */
         scs_float resDual;
+        /**
+         * \brief Primal residual
+         * 
+         * \f[
+         *  \text{respri} = \frac{\|D(Ax+s-\tau b)\|}{\tau(1+\|b\|)(\text{scale}_b\cdot \text{scale})}
+         * \f]
+         */
         scs_float resPri;
+        /**
+         * \brief Infeasibility residual
+         * 
+         * \f[
+         *  \text{infres} = -\frac{\|Db\| \|EA'y\|}{b'y \cdot \text{scale}}
+         * \f]
+         */
         scs_float resInfeas;
+        /**
+         * \brief Unboundedness
+         * 
+         * \f[
+         * \text{unbdd} = -\frac{\|Ec\| \|D(Ax+s)}{c'x\cdot \text{scale}}
+         * \f]
+         */
         scs_float resUnbdd;
+        /**
+         * \brief Relative duality gap defined as 
+         * 
+         * \f[
+         *  \text{relgap} = \frac{c'x + b'y}{1+|c'x|+|b'y|}
+         * \f]
+         */
         scs_float relGap;
         scs_float cTx_by_tau; /* not divided by tau */
         scs_float bTy_by_tau; /* not divided by tau */
+        /**
+         * Variable \f$\tau\f$ (\f$\tau_b\f$ in SuperSCS)
+         */
         scs_float tau; /* for superSCS it's tau_b */
+        /**
+         * Variable \f$\kappa\f$ (\f$\kappa_b\f$ in SuperSCS)
+         */
         scs_float kap; /* for superSCS it's kap_b */
     };
 

@@ -229,29 +229,9 @@ static void warmStartVars(Work *w, const Sol *sol) {
         if (scs_isnan(w->u[i])) {
             w->u[i] = 0;
         }
-        if (w->stgs->do_super_scs == 0 && scs_isnan(w->v[i])) {
+        if (scs_isnan(w->v[i])) {
             w->v[i] = 0;
         }
-    }
-#endif
-    if (w->stgs->normalize) {
-        normalizeWarmStart(w);
-    }
-    RETURN;
-}
-
-/*TODO warmStartVarsv2 is unused */
-static void warmStartVarsv2(Work *w, const Sol *sol) {
-    DEBUG_FUNC
-    scs_int i, n = w->n, m = w->m;
-
-    memcpy(w->u, sol->x, n * sizeof (scs_float));
-    memcpy(&(w->u[n]), sol->y, m * sizeof (scs_float));
-    w->u[n + m] = 1.0;
-#ifndef NOVALIDATE
-    for (i = 0; i < n + m + 1; ++i) {
-        if (scs_isnan(w->u[i]))
-            w->u[i] = 0;
     }
 #endif
     if (w->stgs->normalize) {
@@ -363,9 +343,9 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
 
 static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
     DEBUG_FUNC
-    scs_float *x;
-    scs_float *y;
-    scs_float *s;
+    scs_float *xb;
+    scs_float *yb;
+    scs_float *sb;
     scs_float cTx;
     scs_float bTy;
     scs_float *pr = w->pr;
@@ -388,9 +368,9 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
     r->lastIter = iter;
 
 
-    s = w->s_b;
-    x = w->u_b;
-    y = &(w->u_b[n]);
+    sb = w->s_b;
+    xb = w->u_b;
+    yb = &(w->u_b[n]);
 
     r->kap = w->kap_b;
     r->tau = w->u_b[n + m]; /* it's actually tau_b */
@@ -398,8 +378,8 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
     memset(pr, 0, w->m * sizeof (scs_float)); /* pr = 0 */
     memset(dr, 0, w->n * sizeof (scs_float)); /* dr = 0 */
 
-    accumByA(w->A, w->p, x, pr); /* pr = Ax */
-    addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
+    accumByA(w->A, w->p, xb, pr); /* pr = A xb */
+    addScaledArray(pr, sb, w->m, 1.0); /* pr = A xb + sb */
     /* --- compute ||D(Ax + s)|| --- */
     norm_D_Axs = 0;
     for (i = 0; i < m; ++i) {
@@ -407,30 +387,30 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
         norm_D_Axs += tmp;
     }
     norm_D_Axs = SQRTF(norm_D_Axs);
-    addScaledArray(pr, w->b, m, -r->tau); /* pr = Ax + s - b*tau */
+    addScaledArray(pr, w->b, m, -r->tau); /* pr = A xb + sb - b taub */
 
-    accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
-    /* --- compute ||EA'y|| --- */
+    accumByAtrans(w->A, w->p, yb, dr); /* dr = A' yb */
+    /* --- compute ||E A' yb|| --- */
     norm_E_ATy = 0;
     for (i = 0; i < n; ++i) {
         scs_float tmp = w->scal->E[i] * dr[i];
         norm_E_ATy += tmp;
     }
     norm_E_ATy = SQRTF(norm_E_ATy);
-    addScaledArray(dr, w->c, w->n, r->tau); /* dr = A'y + c*tau */
+    addScaledArray(dr, w->c, w->n, r->tau); /* dr = A' yb + c taub */
 
     /*
-     * bTy_by_tau = b'y / (scale*sc_c*sc_b)
-     * cTx_by_tau = c'x / (scale*sc_c*sc_b)
+     * bTy_by_tau = b'yb / (scale*sc_c*sc_b)
+     * cTx_by_tau = c'xb / (scale*sc_c*sc_b)
      */
-    tmp_bTy = innerProd(y, w->b, m);
+    tmp_bTy = innerProd(yb, w->b, m);
     r->bTy_by_tau = tmp_bTy / (w->stgs->normalize ? (temp2) : 1);
-    tmp_cTx = innerProd(x, w->c, n);
+    tmp_cTx = innerProd(xb, w->c, n);
     r->cTx_by_tau = tmp_cTx / (w->stgs->normalize ? (temp2) : 1);
 
     /*
-     * bTy = b'y / (scale*sc_c*sc_b) / tau
-     * cTx = c'x / (scale*sc_c*sc_b) / tau
+     * bTy = b'yb / (scale*sc_c*sc_b) / taub
+     * cTx = c'xb / (scale*sc_c*sc_b) / taub
      */
     bTy = r->bTy_by_tau / r->tau;
     cTx = r->cTx_by_tau / r->tau;
