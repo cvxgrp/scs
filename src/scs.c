@@ -387,16 +387,20 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
     r->kap = w->kap_b;
     r->tau = w->u_b[n + m]; /* it's actually tau_b */
  
-    memset(pr, 0, w->m * sizeof (scs_float));
-    memset(dr, 0, w->n * sizeof (scs_float));
+    memset(pr, 0, w->m * sizeof (scs_float)); /* pr = 0 */
+    memset(dr, 0, w->n * sizeof (scs_float)); /* dr = 0 */
 
-    accumByA(w->A, w->p, x, pr);
+    accumByA(w->A, w->p, x, pr); /* pr = Ax */
     addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
     addScaledArray(pr, w->b, m, -r->tau); /* pr = Ax + s - b*tau */          
     
     accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
     addScaledArray(dr, w->c, w->n, r->tau); /* dr = A'y + c*tau */
   
+    /*
+     * bTy_by_tau = b'y / (scale*sc_c*sc_b)
+     * cTx_by_tau = c'x / (scale*sc_c*sc_b)
+     */
     r->bTy_by_tau =
             innerProd(y, w->b, m) /
             (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
@@ -404,17 +408,14 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
             innerProd(x, w->c, n) /
             (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
 
+    /*
+     * bTy = b'y / (scale*sc_c*sc_b) / tau
+     * cTx = c'x / (scale*sc_c*sc_b) / tau
+     */
     bTy = r->bTy_by_tau / r->tau;
     cTx = r->cTx_by_tau / r->tau;
-
     
-//    r->resInfeas =
- //           bTy < 0 ? w->nm_b *  / -r->bTy_by_tau : NAN;
-//    r->resUnbdd =
-//            r->cTx_by_tau < 0 ? w->nm_c * nmAxs_tau / -r->cTx_by_tau : NAN;
-
-    
-    
+    /*TODO why divide by tau in the for loop? */
     if (w->stgs->normalize) {
         for (i = 0; i<m; ++i ) {
             pr[i] *= w->scal->D[i]/r->tau; 
@@ -443,6 +444,9 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
         r->resDual /= (1+ w->nm_c);
     }
     
+    /*TODO calculate the residuals */
+    r->resUnbdd = 1;
+    r->resInfeas = 1;
     r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
     RETURN;
 }
@@ -1459,7 +1463,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         if (i % CONVERGED_INTERVAL == 0) {
             calcResidualsSuperscs(work, &r, i);
             if ((info->statusVal = hasConverged(work, &r, i))) {
-              //  break;
+              /*  break; */
+                break;
             }
         }
 

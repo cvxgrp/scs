@@ -16,7 +16,7 @@ data.A = sparse(A);
 data.b = b;
 data.c = c;
 
-params.eps          = 1e-4;
+params.eps          = 1e-9;
 params.nominal      = 0;
 params.do_super_scs = 1;
 params.alpha        = 1.5;
@@ -38,7 +38,7 @@ params.memory       = 100;
 params.sse          = 0.999;
 params.tRule        = 1;
 
-params.max_iters    = 3;
+params.max_iters    = 10000;
 [x1, y1, s1, info1] = scs_direct(data, K, params);
 
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
