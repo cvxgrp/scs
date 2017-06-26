@@ -87,7 +87,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="toc"><h3>Table of Contents</h3>
 <ul><li class="level1"><a href="#sec-fpr">Fixed-point residual</a></li>
 <li class="level1"><a href="#sec-restarted-broyden">Restarted Broyden</a></li>
-<li class="level1"><a href="#sec-full-broyden">Full Broyden</a></li>
 </ul>
 </div>
 <div class="textblock"><h1><a class="anchor" id="sec-fpr"></a>
@@ -114,15 +113,12 @@ Restarted Broyden</h1>
 <li>\(s_\star \gets (1-\theta)s + \theta s_\star\)</li>
 <li>\(u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\) and push it into the buffer</li>
 <li>\(d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\)</li>
-<li>Add \(s\) into the buffer and move the cursor forward or empty/reset it if it is full</li>
+<li>Add \(s\) into the buffer and move the cursor forward or empty/reset it if it is full </li>
 </ol>
-<h1><a class="anchor" id="sec-full-broyden"></a>
-Full Broyden</h1>
-<p>Full Broyden method </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 9 2017 00:42:17 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jun 8 2017 15:24:03 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

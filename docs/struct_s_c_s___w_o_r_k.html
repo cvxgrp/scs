@@ -142,8 +142,6 @@ Data Fields</h2></td></tr>
 <tr class="separator:a4c1e7aa93f04ec10b52f05ea1d844534"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac005c11b4585faacdb4d37a3b21dd5c7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#ac005c11b4585faacdb4d37a3b21dd5c7">dir</a></td></tr>
 <tr class="separator:ac005c11b4585faacdb4d37a3b21dd5c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26bf956ff7e60fb650dcd122d7b500b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#a26bf956ff7e60fb650dcd122d7b500b8">H</a></td></tr>
-<tr class="separator:a26bf956ff7e60fb650dcd122d7b500b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c983e9f2c1e5b488e28749bb23c03c7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#a2c983e9f2c1e5b488e28749bb23c03c7">dut</a></td></tr>
 <tr class="separator:a2c983e9f2c1e5b488e28749bb23c03c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af14b5b959b2ab84ff57063262ee01e72"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#af14b5b959b2ab84ff57063262ee01e72">wu</a></td></tr>
@@ -204,7 +202,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The (possibly normalized) vector \(b\). </p>
+<p>(possibly normalized) <code>b</code> vector </p>
 
 </div>
 </div>
@@ -217,7 +215,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The (possibly normalized) vector \(c\). </p>
+<p>(possibly normalized) <code>c</code> vector </p>
 
 </div>
 </div>
@@ -243,7 +241,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Direction \(d_k\) </p>
+<p>direction \(d_k\) for \(u\) </p>
 
 </div>
 </div>
@@ -268,7 +266,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Direction corresponding to \(\tilde{u}\). </p>
+<p>direction \(\tilde{u} \) </p>
 
 </div>
 </div>
@@ -308,20 +306,6 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a26bf956ff7e60fb650dcd122d7b500b8"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>* H</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Hessian approximation used by the full Broyden method.</p>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4caf8730db88bbcaa3400fdcffe07cbcb26">full_broyden</a> </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="a4447608555cda2e37d7fb2dbf522453c"></a>
 <div class="memitem">
 <div class="memproto">
@@ -331,7 +315,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Variable for certificates of infeasibility/unboudedness </p>
+<p>variable for cerfificates of infeasibility/unboudedness </p>
 
 </div>
 </div>
@@ -344,7 +328,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Dimension of \(u_k\), that is \(l = m + n + 1\) . </p>
+<p>\(l = m + n + 1\) (length of \(y_k\), \(s_k\), etc) </p>
 
 </div>
 </div>
@@ -357,7 +341,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Row dimension of \(A\). </p>
+<p>row dimension of \(A\) </p>
 
 </div>
 </div>
@@ -370,7 +354,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Column dimension of \(A\). </p>
+<p>column dimension of \(A\) </p>
 
 </div>
 </div>
@@ -407,7 +391,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>\(\|Ru_k\|\). </p>
+<p>\(\|Ru_k\|\) </p>
 
 </div>
 </div>
@@ -445,7 +429,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Fixed-point residual \(R_k\). </p>
+<p>FPR \(Ru_k\) (fixed point residual) </p>
 
 </div>
 </div>
@@ -458,7 +442,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Fixed-point residual (FPR) of the previous iteration \(R_{k-1}\). </p>
 
 </div>
 </div>
@@ -471,7 +454,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Vector <code>Rwu</code> from line search. </p>
+<p>from line search </p>
 
 </div>
 </div>
@@ -484,7 +467,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Variable that corresponds to the primal slack for the 2nd step of DRS </p>
+<p>variable that corresponds to the primal slack for the 2nd step of DRS </p>
 
 </div>
 </div>
@@ -534,7 +517,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>\(s_k = u_k - u_{k-1}\) </p>
+<p>\(s_k\) </p>
 
 </div>
 </div>
@@ -547,7 +530,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The current stepsize \(t_k\) </p>
+<p>The current stepsize </p>
 
 </div>
 </div>
@@ -586,7 +569,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Vector \(u_k=(x_k,y_k,\tau_k)\). </p>
 
 </div>
 </div>
@@ -599,7 +581,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Vector \(\bar{u}_k\). </p>
 
 </div>
 </div>
@@ -612,7 +593,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Vector \(u_{k-1}\) of the previous iteration. </p>
+<p>u_prev = u from previous iteration </p>
 
 </div>
 </div>
@@ -625,7 +606,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Vector \(\tilde{u}_k\). </p>
 
 </div>
 </div>
@@ -638,7 +618,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Vector \(v_k = Qu_k\) (used only in SCS, not in SuperSCS). </p>
 
 </div>
 </div>
@@ -687,7 +666,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>\(y_k = R_k - R_{k-1}\) </p>
+<p>\(y_k\) </p>
 
 </div>
 </div>
@@ -697,7 +676,7 @@ Data Fields</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 9 2017 00:42:17 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jun 8 2017 15:24:03 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

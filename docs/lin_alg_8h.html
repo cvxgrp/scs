@@ -133,8 +133,6 @@ Functions</h2></td></tr>
 <tr class="separator:a7faa5a12cac3cba6b7f39b74b2fdeec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4249523beef60e26717f68d6a092917b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lin_alg_8h.html#a4249523beef60e26717f68d6a092917b">matrixMultiplicationColumnPacked</a> (int m, int n, int k, double alpha, const double *A, double beta, const double *B, double *C)</td></tr>
 <tr class="separator:a4249523beef60e26717f68d6a092917b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae14dce63dbd50e1910164152e1b2c39a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lin_alg_8h.html#ae14dce63dbd50e1910164152e1b2c39a">matrixMultiplicationTransColumnPacked</a> (int m, int n, int k, double alpha, const double *A, double beta, const double *B, double *C)</td></tr>
-<tr class="separator:ae14dce63dbd50e1910164152e1b2c39a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a9b2aab57930d02c7b6daa9cc5fdc9360"></a>
@@ -672,84 +670,6 @@ The <a href="https://github.com/michael-lehn/ulmBLAS">ULMBLAS project</a> is ava
 
 </div>
 </div>
-<a class="anchor" id="ae14dce63dbd50e1910164152e1b2c39a"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void matrixMultiplicationTransColumnPacked </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>m</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>n</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>k</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>alpha</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>beta</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>B</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>C</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Perofrms the operation \(C \leftarrow \beta C + \alpha A^{\top} B,\) where \(A\), \(B\) and \(C\) are column-packed matrices.</p>
-<p>This method is a proxy to <a class="el" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">m</td><td>number of rows of matrix \(A\) </td></tr>
-    <tr><td class="paramname">n</td><td>number of columns of matrix \(B\) </td></tr>
-    <tr><td class="paramname">k</td><td>number of rows of matrix \(B\) (columns of \(A\)) </td></tr>
-    <tr><td class="paramname">alpha</td><td>coefficient \(\alpha\) </td></tr>
-    <tr><td class="paramname">A</td><td>pointer to matrix \(A\) in column-packed form </td></tr>
-    <tr><td class="paramname">beta</td><td>coefficient \(\beta\) </td></tr>
-    <tr><td class="paramname">B</td><td>pointer to matrix \(B\) in column-packed form </td></tr>
-    <tr><td class="paramname">C</td><td>pointer to matrix \(C\) in column-packed form</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a> </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="a438bf41755c61afef25cdd3ef3f0a854"></a>
 <div class="memitem">
 <div class="memproto">
@@ -944,7 +864,7 @@ The <a href="https://github.com/michael-lehn/ulmBLAS">ULMBLAS project</a> is ava
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 9 2017 00:42:17 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jun 8 2017 15:24:03 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
