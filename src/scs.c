@@ -240,6 +240,7 @@ static void warmStartVars(Work *w, const Sol *sol) {
     RETURN;
 }
 
+/*TODO warmStartVarsv2 is unused */
 static void warmStartVarsv2(Work *w, const Sol *sol) {
     DEBUG_FUNC
     scs_int i, n = w->n, m = w->m;
@@ -318,7 +319,7 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     }
     r->lastIter = iter;
 
-    
+
     if (!w->stgs->do_super_scs) {
         s = &(w->v[w->n]);
         x = w->u;
@@ -372,6 +373,13 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
     scs_int n = w->n;
     scs_int m = w->m;
     scs_int i;
+    scs_float norm_D_Axs; /* norm of D*(Ax+s), intermediate variable */
+    scs_float norm_E_ATy; /* norm of E*A'*y,   intermediate variable */
+    scs_float tmp_cTx;    /* c'x */
+    scs_float tmp_bTy;    /* b'y */
+    const scs_float temp1 = w->sc_b * w->stgs->scale; /* auxiliary variable #1 */
+    const scs_float temp2 = w->sc_c * temp1; /* auxiliary variable #2 */
+    const scs_float temp3 = w->sc_c * w->stgs->scale; /* auxiliary variable #3 */
 
     /* checks if the residuals are unchanged by checking iteration */
     if (r->lastIter == iter) {
@@ -386,27 +394,39 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
 
     r->kap = w->kap_b;
     r->tau = w->u_b[n + m]; /* it's actually tau_b */
- 
+
     memset(pr, 0, w->m * sizeof (scs_float)); /* pr = 0 */
     memset(dr, 0, w->n * sizeof (scs_float)); /* dr = 0 */
 
     accumByA(w->A, w->p, x, pr); /* pr = Ax */
     addScaledArray(pr, s, w->m, 1.0); /* pr = Ax + s */
-    addScaledArray(pr, w->b, m, -r->tau); /* pr = Ax + s - b*tau */          
-    
+    /* --- compute ||D(Ax + s)|| --- */
+    norm_D_Axs = 0;
+    for (i = 0; i < m; ++i) {
+        scs_float tmp = w->scal->D[i] * pr[i];
+        norm_D_Axs += tmp;
+    }
+    norm_D_Axs = SQRTF(norm_D_Axs);
+    addScaledArray(pr, w->b, m, -r->tau); /* pr = Ax + s - b*tau */
+
     accumByAtrans(w->A, w->p, y, dr); /* dr = A'y */
+    /* --- compute ||EA'y|| --- */
+    norm_E_ATy = 0;
+    for (i = 0; i < n; ++i) {
+        scs_float tmp = w->scal->E[i] * dr[i];
+        norm_E_ATy += tmp;
+    }
+    norm_E_ATy = SQRTF(norm_E_ATy);
     addScaledArray(dr, w->c, w->n, r->tau); /* dr = A'y + c*tau */
-  
+
     /*
      * bTy_by_tau = b'y / (scale*sc_c*sc_b)
      * cTx_by_tau = c'x / (scale*sc_c*sc_b)
      */
-    r->bTy_by_tau =
-            innerProd(y, w->b, m) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
-    r->cTx_by_tau =
-            innerProd(x, w->c, n) /
-            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+    tmp_bTy = innerProd(y, w->b, m);
+    r->bTy_by_tau = tmp_bTy / (w->stgs->normalize ? (temp2) : 1);
+    tmp_cTx = innerProd(x, w->c, n);
+    r->cTx_by_tau = tmp_cTx / (w->stgs->normalize ? (temp2) : 1);
 
     /*
      * bTy = b'y / (scale*sc_c*sc_b) / tau
@@ -414,43 +434,64 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
      */
     bTy = r->bTy_by_tau / r->tau;
     cTx = r->cTx_by_tau / r->tau;
-    
-    /*TODO why divide by tau in the for loop? */
+
+    /* PRIMAL RESIDUAL */
     if (w->stgs->normalize) {
-        for (i = 0; i<m; ++i ) {
-            pr[i] *= w->scal->D[i]/r->tau; 
+        r->resPri = 0;
+        for (i = 0; i < m; ++i) {
+            scs_float tmp = w->scal->D[i] * pr[i];
+            r->resPri += tmp * tmp;
         }
-        r->resPri = calcNorm(pr, m);
-        r->resPri /= (1+ w->nm_b) * (w->sc_b * w->stgs->scale);    
-     } else {
-        for (i = 0; i<m; ++i ) {
-            pr[i] /= r->tau; 
-        }
-        r->resPri = calcNorm(pr, m);
-        r->resPri /= (1+ w->nm_b);
-     }
-    
-    if (w->stgs->normalize) {
-        for (i = 0; i<n; ++i ) {
-            dr[i] *= w->scal->E[i]/r->tau;
-        }
-        r->resDual = calcNorm(dr, n);
-        r->resDual /= (1+ w->nm_c) * (w->sc_c * w->stgs->scale);
-     } else {
-        for (i = 0; i<n; ++i ) {
-           dr[i] /= r->tau; 
-        }
-        r->resDual = calcNorm(dr, n);
-        r->resDual /= (1+ w->nm_c);
+        r->resPri = SQRTF(r->resPri) / r->tau;
+        r->resPri /= ((1 + w->nm_b) * temp1);
+    } else {
+        r->resPri = calcNorm(pr, m) / r->tau;
+        r->resPri /= (1 + w->nm_b);
     }
-    
-    /*TODO calculate the residuals */
-    r->resUnbdd = 1;
-    r->resInfeas = 1;
+
+    /* DUAL RESIDUAL */
+    if (w->stgs->normalize) {
+        r->resDual = 0;
+        for (i = 0; i < n; ++i) {
+            scs_float tmp = w->scal->E[i] * dr[i];
+            r->resDual += tmp * tmp;
+        }
+        r->resDual = SQRTF(r->resDual) / r->tau;
+        r->resDual /= ((1 + w->nm_c) * temp3);
+    } else {
+        r->resDual = calcNorm(dr, n) / r->tau;
+        r->resDual /= (1 + w->nm_c);
+    }
+
+    /* UNBOUNDEDNESS */
+    if (tmp_cTx < 0) {
+        scs_float norm_Ec = 0;
+        for (i = 0; i < n; ++i) {
+            scs_float tmp = w->scal->E[i] * w->c[i];
+            norm_Ec += tmp * tmp;
+        }
+        r->resUnbdd = - SQRTF(norm_Ec) * norm_D_Axs / tmp_cTx;
+        r->resUnbdd /= w->stgs->normalize ? w->stgs->scale : 1;        
+    } else {
+        r->resUnbdd = NAN;
+    }
+
+    /* INFEASIBILITY */
+    if (r->bTy_by_tau < 0) {
+        scs_float norm_Db = 0;
+        for (i = 0; i < m; ++i) {
+            scs_float tmp = w->scal->D[i] * w->b[i];
+            norm_Db += tmp * tmp;
+        }
+        r->resInfeas = - SQRTF(norm_Db) * norm_E_ATy / tmp_bTy;
+        r->resInfeas /= w->stgs->normalize ? w->stgs->scale : 1;
+    } else {
+        r->resInfeas = NAN;
+    }
+
     r->relGap = ABS(cTx + bTy) / (1 + ABS(cTx) + ABS(bTy));
     RETURN;
 }
-
 
 static void coldStartVars(Work *w) {
     DEBUG_FUNC
@@ -1240,7 +1281,7 @@ static Work *initWork(const Data *d, const Cone *k) {
         w->wu_t = SCS_NULL;
         w->wu_b = SCS_NULL;
     }
-    
+
     w->A = d->A;
     if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
@@ -1463,7 +1504,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         if (i % CONVERGED_INTERVAL == 0) {
             calcResidualsSuperscs(work, &r, i);
             if ((info->statusVal = hasConverged(work, &r, i))) {
-              /*  break; */
+                /*  break; */
                 break;
             }
         }
@@ -1473,7 +1514,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             calcResidualsSuperscs(work, &r, i);
             printSummary(work, i, &r, &solveTimer);
         }
-        
+
         if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
             work->stgs->sse *= q; /*sse = q^i */
             if (i == 0) {

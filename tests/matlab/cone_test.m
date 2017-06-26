@@ -16,7 +16,7 @@ data.A = sparse(A);
 data.b = b;
 data.c = c;
 
-params.eps          = 1e-9;
+params.eps          = 1e-6;
 params.nominal      = 0;
 params.do_super_scs = 1;
 params.alpha        = 1.5;
