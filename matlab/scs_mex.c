@@ -96,10 +96,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const mxArray *settings;
 
     const mwSize one[1] = {1};
-    const int numInfoFields = 13;
+    const int numInfoFields = 17;
     const char *infoFields[] = {"iter", "status", "pobj", "dobj",
         "resPri", "resDual", "resInfeas", "resUnbdd",
-        "relGap", "setupTime", "solveTime", "progress_iter", "progress_relgap"};
+        "relGap", "setupTime", "solveTime",
+        "progress_iter",
+        "progress_relgap",
+        "progress_respri",
+        "progress_resdual",
+        "progress_pcost",
+        "progress_dcost"};
     mxArray *tmp;
 #if EXTRAVERBOSE > 0
     scs_printf("SIZE OF mwSize = %i\n", (int) sizeof (mwSize));
@@ -441,11 +447,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             tmp_data[k] = (scs_float) (info.progress_iter[k]);
         }
 
-        /* info.historyRelGap */
+        /* info.progress_relgap */
         tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
         mxSetField(plhs[3], 0, "progress_relgap", tmp);
         tmp_data = mxGetPr(tmp);
         memcpy(tmp_data, info.progress_relgap, info.history_length * sizeof (scs_float));
+        
+        /* info.progress_respri */
+        tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_respri", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info.progress_respri, info.history_length * sizeof (scs_float));
+        
+        /* info.progress_resdual */
+        tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_resdual", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info.progress_resdual, info.history_length * sizeof (scs_float));
+        
+        /* info.progress_pcost */
+        tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_pcost", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info.progress_pcost, info.history_length * sizeof (scs_float));
+        
+        
+        /* info.progress_dcost */
+        tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_dcost", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info.progress_dcost, info.history_length * sizeof (scs_float));
     }
     freeMex(d, k);
     return;

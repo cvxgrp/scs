@@ -34,20 +34,19 @@ params.ls           = 10;
 params.sigma        = 1e-2;
 params.thetabar     = 0.1;
 params.rho_x        = 1;
-params.memory       = 10;
+params.memory       = 100;
 params.sse          = 0.999;
 params.tRule        = 1;
 params.do_record_progress = 1;
 
-params.max_iters    = 200;
+params.max_iters    = 2000;
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
 [x1, y1, s1, info1] = scs_direct(data, K, params);
 fprintf('|errx| = %g, |erry| = %g, |errs| = %g\n', ...
     norm(x1 - x2, Inf), norm(y1 - y2, Inf), norm(s1 - s2, Inf));
-assert(norm(x1 - x2, Inf)<1e-7);
-if (all(~isnan(y1)) && all(~isnan(y2))), assert(norm(y1 - y2, Inf)<1e-7); end
-assert(norm(s1 - s2, Inf)<1e-7);
-
+assert(norm(x1 - x2, Inf)<1e-7,'x');
+if (all(~isnan(y1)) && all(~isnan(y2))), assert(norm(y1 - y2, Inf)<1e-6,'y'); end
+assert(norm(s1 - s2, Inf)<1e-7,'z');
 
 info1
 

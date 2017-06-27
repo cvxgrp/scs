@@ -4,7 +4,6 @@
  * 
  * \subsection installation_in_c For use in C
  *
- * What SuperSCS is about
  * 
  * First, you need to [download SuperSCS](https://github.com/kul-forbes/scs/archive/master.zip)
  * from the [github repo](https://github.com/kul-forbes/scs) of SuperSCS, or use the 

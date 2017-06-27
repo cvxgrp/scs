@@ -201,11 +201,11 @@ void freeInfo(Info *info) {
         if (info->progress_respri != SCS_NULL){
             scs_free(info->progress_respri);
         }
-        if (info->progress_pcost_scaled != SCS_NULL){
-            scs_free(info->progress_pcost_scaled);
+        if (info->progress_pcost != SCS_NULL){
+            scs_free(info->progress_pcost);
         }
-        if (info->progress_dcost_scaled != SCS_NULL){
-            scs_free(info->progress_dcost_scaled);
+        if (info->progress_dcost != SCS_NULL){
+            scs_free(info->progress_dcost);
         }
         scs_free(info);
     }

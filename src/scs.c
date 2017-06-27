@@ -1429,27 +1429,26 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float stepsize2; /* for K2 */
     scs_float sqrt_rhox = sqrt(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
-
+    timer solveTimer;
+    struct residuals r;
 
     if (work->stgs->do_record_progress) {
         const scs_int max_history_alloc = data->stgs->max_iters / CONVERGED_INTERVAL;
         info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
         info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);
         info->progress_resdual = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_pcost_scaled = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_dcost_scaled = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_pcost = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_dcost = malloc(sizeof (scs_float) * max_history_alloc);
         info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
     } else {
         info->progress_relgap = SCS_NULL;
         info->progress_respri = SCS_NULL;
         info->progress_resdual = SCS_NULL;
-        info->progress_pcost_scaled = SCS_NULL;
-        info->progress_dcost_scaled = SCS_NULL;
+        info->progress_pcost = SCS_NULL;
+        info->progress_dcost = SCS_NULL;
         info->progress_iter = SCS_NULL;
     }
 
-    timer solveTimer;
-    struct residuals r;
     if (data == SCS_NULL
             || cone == SCS_NULL
             || sol == SCS_NULL
@@ -1509,8 +1508,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 info->progress_relgap[idx_progress] = r.relGap;
                 info->progress_respri[idx_progress] = r.resPri;
                 info->progress_resdual[idx_progress] = r.resDual;
-                info->progress_pcost_scaled[idx_progress] = r.cTx_by_tau;
-                info->progress_dcost_scaled[idx_progress] = -r.bTy_by_tau;
+                info->progress_pcost[idx_progress] = r.cTx_by_tau / r.tau;
+                info->progress_dcost[idx_progress] = -r.bTy_by_tau / r.tau;
             }
             if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
@@ -1804,7 +1803,12 @@ Info * initInfo() {
     info->setupTime = NAN;
     info->solveTime = NAN;
     info->statusVal = SCS_INDETERMINATE;
-
+    info->progress_iter = SCS_NULL;
+    info->progress_dcost = SCS_NULL;
+    info->progress_pcost = SCS_NULL;
+    info->progress_relgap = SCS_NULL;
+    info->progress_resdual = SCS_NULL;
+    info->progress_respri = SCS_NULL;
     RETURN info;
 }
 
