@@ -34,6 +34,7 @@ typedef struct timer {
 #else
 /* Use POSIX clock_gettime() for timing on other machines */
 #include <time.h>
+/** \brief SCS timer timer timer */
 typedef struct timer {
     struct timespec tic;
     struct timespec toc;
@@ -58,6 +59,7 @@ void printArray(const scs_float *arr, scs_int n, const char *name);
 void setDefaultSettings(Data *d);
 void freeSol(Sol *sol);
 void freeData(Data *d, Cone *k);
+void freeInfo(Info *info);
 
 #ifdef __cplusplus
 }

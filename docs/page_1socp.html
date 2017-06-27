@@ -204,11 +204,24 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --><p>The last thing to do is to free the used memory</p>
 <div class="fragment"><div class="line"><a class="code" href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a>(data, cone);</div>
 <div class="line"><a class="code" href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a>(sol);</div>
-<div class="line"><a class="code" href="glbopts_8h.html#a2f0c0c4aef43c9e062293944c859802b">scs_free</a>(info);</div>
-</div><!-- fragment --> </div></div><!-- contents -->
+<div class="line"><a class="code" href="util_8h.html#a47feb31161b6b0ee636590777b3d7616">freeInfo</a>(info);</div>
+</div><!-- fragment --><p>If we need to collect progress data for the algorithm, we need to activate logging using</p>
+<div class="fragment"><div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8cffc52e994430a67229d27145a5750d">do_record_progress</a> = 1;</div>
+</div><!-- fragment --><p>This option is otherwise disabled by default.</p>
+<p>We may then print various statistics</p>
+<div class="fragment"><div class="line"><span class="keywordflow">for</span> (i = 0; i &lt;= info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a5dfb720759d0a2cc25aeca6de76bae16">history_length</a>; ++i) {</div>
+<div class="line">     printf(<span class="stringliteral">&quot;[%d]  rel = %g, respri = %g, pc = %g, dc = %g\n&quot;</span>, </div>
+<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a0e0c43b2c8c00b4da83542f1581cb575">progress_iter</a>[i], </div>
+<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ac6fa681d0725824ea046435c89d6e165">progress_relgap</a>[i], </div>
+<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a06e4ee5f0a341170fa7299dffec5abab">progress_respri</a>[i],</div>
+<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a09d090a3ef72d1f6a335aac340dbc7b8">progress_pcost_scaled</a>[i],</div>
+<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a62a58f5c9d97faa699d08a82ded9c994">progress_dcost_scaled</a>[i]);</div>
+<div class="line"> }</div>
+</div><!-- fragment --><p>If <code>do_record_progress</code> is, instead, set to <code>0</code>, no progress data are stored and the above pointers are equal to <a class="el" href="glbopts_8h.html#a0be174af2a751cfa8a91c310d799943f">SCS_NULL</a>. </p>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 8 2017 15:24:03 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 27 2017 01:41:43 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

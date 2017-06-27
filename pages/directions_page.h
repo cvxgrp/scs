@@ -24,4 +24,8 @@
  *  9.  \f$u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\f$ and push it into the buffer
  *  10. \f$d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\f$
  *  11. Add \f$s\f$ into the buffer and move the cursor forward or empty/reset it if it is full
+ * 
+ * 
+ * \section sec-full-broyden Full Broyden
+ * Full Broyden method
  */

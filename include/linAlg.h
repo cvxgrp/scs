@@ -228,6 +228,33 @@ extern "C" {
             double beta,
             const double *B,
             double *C);
+    
+    /**
+     * Perofrms the operation \f$C \leftarrow \beta C + \alpha A^{\top} B,\f$
+     * where \f$A\f$, \f$B\f$ and \f$C\f$ are column-packed matrices.
+     * 
+     * This method is a proxy to ::dgemm_nn.
+     * 
+     * @param m number of rows of matrix \f$A\f$
+     * @param n number of columns of matrix \f$B\f$
+     * @param k number of rows of matrix \f$B\f$ (columns of \f$A\f$)
+     * @param alpha coefficient \f$\alpha\f$
+     * @param A pointer to matrix \f$A\f$ in column-packed form
+     * @param beta coefficient \f$\beta\f$
+     * @param B pointer to matrix \f$B\f$ in column-packed form
+     * @param C pointer to matrix \f$C\f$ in column-packed form
+     * 
+     * @see ::dgemm_nn
+     */
+    void matrixMultiplicationTransColumnPacked(
+            int m,
+            int n,
+            int k,
+            double alpha,
+            const double *A,
+            double beta,
+            const double *B,
+            double *C) ;
 
 #ifdef __cplusplus
 }

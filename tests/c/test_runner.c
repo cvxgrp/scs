@@ -18,8 +18,10 @@ int main(int argc, char** argv) {
     r += test(&testScaleArray, "Test scaleArray");
     r += test(&testGemm, "Test GEMM");
     r += test(&testGemmCP, "Test GEMM/CP");
-    r += test(&test_cache_increments, "Test Broyden cache");
-    r += test(&test_broyden_direction_empty_memory, "Test Broyden direction");     
+    r += test(&testGemmTransCP, "Test GEMM/Tran/CP");
+    r += test(&test_cache_increments, "Test Restarted Broyden cache");
+    r += test(&test_broyden_direction_empty_memory, "Test Restarted Broyden direction");     
+    r += test(&test_full_broyden, "Test full Broyden");     
     r += test(&test_cache_s, "Test Broyden S-Cache");
     r += test(&test_broyden, "Test Broyden dir correctness");
     r += test(&test_superscs_solve, "Test SuperSCS");

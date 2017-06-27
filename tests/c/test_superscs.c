@@ -108,7 +108,7 @@ bool test_superscs_solve(char** str) {
 
     freeData(data, cone);
     freeSol(sol);
-    scs_free(info);
+    freeInfo(info);
 
     SUCCEED(str);
 }
@@ -139,6 +139,7 @@ bool test_superscs_000(char** str) {
     info = initInfo();
 
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -0.109053491087962, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -0.003683620781908, 1e-10, str, "x[1] wrong");
@@ -154,6 +155,7 @@ bool test_superscs_000(char** str) {
 
     data->stgs->max_iters = 2;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -1.261463537904218, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2], 92.364496490679642, 1e-10, str, "y[2] wrong");
@@ -161,6 +163,7 @@ bool test_superscs_000(char** str) {
 
     data->stgs->max_iters = 10;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -2.232691713491094, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -0.590885686812609, 1e-10, str, "x[1] wrong");
@@ -182,7 +185,7 @@ bool test_superscs_000(char** str) {
 
     freeData(data, cone);
     freeSol(sol);
-    scs_free(info);
+    freeInfo(info);
 
     SUCCEED(str);
 }
@@ -228,6 +231,7 @@ bool test_superscs_001_fpr(char** str) {
 
     data->stgs->max_iters = 2;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -1.052622260714879, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0], 23.429483256003490, 1e-10, str, "y[0] wrong");
@@ -235,12 +239,14 @@ bool test_superscs_001_fpr(char** str) {
 
     data->stgs->max_iters = 3;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -0.3708797830183899, 1e-10, str, "x[1] wrong");
 
     data->stgs->max_iters = 10;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0], 34.954357266943035, 1e-10, str, "y[0] wrong");
 
@@ -297,6 +303,7 @@ bool test_superscs_001_rbroyden(char** str) {
 
     data->stgs->max_iters = 2;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -0.465406066728364, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -0.166978364590537, 1e-10, str, "x[1] wrong");
@@ -307,6 +314,7 @@ bool test_superscs_001_rbroyden(char** str) {
 
     data->stgs->max_iters = 11;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_UNBOUNDED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -1.046552668150064, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -0.353299417556677, 1e-10, str, "x[1] wrong");
@@ -321,17 +329,20 @@ bool test_superscs_001_rbroyden(char** str) {
 
     data->stgs->max_iters = 40;
     status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -18.660744885301725, 1e-10, str, "x[0] wrong");
 
-    data->stgs->max_iters = 239;
+    data->stgs->max_iters = 250;
+    data->stgs->do_record_progress = 1;
+    data->stgs->eps = 1e-4;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     freeData(data, cone);
     freeSol(sol);
-    scs_free(info);
+    freeInfo(info);
 
     SUCCEED(str);
 }
@@ -355,7 +366,7 @@ bool test_superscs_100_rbroyden(char** str) {
     data->stgs->k1 = 0;
     data->stgs->k2 = 0;
     data->stgs->ls = 10;
-    
+
     data->stgs->verbose = 0;
     data->stgs->do_super_scs = 1;
 
@@ -364,17 +375,17 @@ bool test_superscs_100_rbroyden(char** str) {
 
     data->stgs->max_iters = 2;
     status = scs(data, cone, sol, info);
-    
+
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -0.349018320302040, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], 0.015102755569314, 1e-10, str, "x[1] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 1.778110351429428, 1e-10, str, "x[2] wrong");
-   
-    
-   
-    
+
+
+
+
     freeData(data, cone);
     freeSol(sol);
-    scs_free(info);
+    freeInfo(info);
 
     SUCCEED(str);
 }

@@ -141,9 +141,22 @@ extern "C" {
 
     typedef
     enum direction_enum {
-        restarted_broyden    = 100,
+        /**
+         * Restarted Broyden method
+         */
+        restarted_broyden = 100,
+        /**
+         * Restarted Broyden method (experimental)
+         */
         restarted_broyden_v2 = 101,
-        fixed_point_residual = 200
+        /**
+         * Using \f$d_k = - R_k\f$
+         */
+        fixed_point_residual = 200,
+        /**
+         * Full Broyden method
+         */
+        full_broyden = 300
     }
     direction_type;
 

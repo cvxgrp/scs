@@ -94,21 +94,29 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
+<p>A cache of \((s_i, u_i)\) where \(u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\).  
+ <a href="struct_s_c_s___s_u___m_e_m_o_r_y.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="scs_8h_source.html">scs.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:a10bb3a9b693e18f175ccf7045b465e33"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_u___m_e_m_o_r_y.html#a10bb3a9b693e18f175ccf7045b465e33">S</a></td></tr>
+<tr class="memdesc:a10bb3a9b693e18f175ccf7045b465e33"><td class="mdescLeft">&#160;</td><td class="mdescRight">cached values of \(s_i\) (s-memory)  <a href="#a10bb3a9b693e18f175ccf7045b465e33">More...</a><br/></td></tr>
 <tr class="separator:a10bb3a9b693e18f175ccf7045b465e33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef122c98ef52d8ebd05a2c09481d270d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_u___m_e_m_o_r_y.html#aef122c98ef52d8ebd05a2c09481d270d">U</a></td></tr>
+<tr class="memdesc:aef122c98ef52d8ebd05a2c09481d270d"><td class="mdescLeft">&#160;</td><td class="mdescRight">cached values of \(u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\) (u-memory)  <a href="#aef122c98ef52d8ebd05a2c09481d270d">More...</a><br/></td></tr>
 <tr class="separator:aef122c98ef52d8ebd05a2c09481d270d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a835143691db9673858723295f73f8a1a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_u___m_e_m_o_r_y.html#a835143691db9673858723295f73f8a1a">mem_cursor</a></td></tr>
+<tr class="memdesc:a835143691db9673858723295f73f8a1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">current memory cursor [0..mem-1]  <a href="#a835143691db9673858723295f73f8a1a">More...</a><br/></td></tr>
 <tr class="separator:a835143691db9673858723295f73f8a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a456402bc43127e3ff141213b588208b0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_u___m_e_m_o_r_y.html#a456402bc43127e3ff141213b588208b0">mem</a></td></tr>
+<tr class="memdesc:a456402bc43127e3ff141213b588208b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">(target/maximum/allocated) memory  <a href="#a456402bc43127e3ff141213b588208b0">More...</a><br/></td></tr>
 <tr class="separator:a456402bc43127e3ff141213b588208b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A cache of \((s_i, u_i)\) where \(u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\). We do not need to store past values of \(\tilde{s}_i\). </p>
+<div class="textblock"><p>A cache of \((s_i, u_i)\) where \(u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\). </p>
+<dl class="section note"><dt>Note</dt><dd>We do not need to store past values of \(\tilde{s}_i\). </dd></dl>
 </div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="a456402bc43127e3ff141213b588208b0"></a>
 <div class="memitem">
@@ -119,7 +127,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>(target) memory </p>
+
+<p>(target/maximum/allocated) memory </p>
 
 </div>
 </div>
@@ -132,6 +141,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
 <p>current memory cursor [0..mem-1] </p>
 
 </div>
@@ -145,6 +155,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
 <p>cached values of \(s_i\) (s-memory) </p>
 
 </div>
@@ -158,6 +169,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
 <p>cached values of \(u_i = \frac{s_i - \tilde{s}_i}{\langle s_i, \tilde{s}_i\rangle}\) (u-memory) </p>
 
 </div>
@@ -168,7 +180,7 @@ Data Fields</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 8 2017 15:24:03 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 27 2017 01:41:43 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

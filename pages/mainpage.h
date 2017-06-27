@@ -4,7 +4,12 @@
  * 
  * \subsection installation_in_c For use in C
  *
- * What SuperSCS is about
+ * 
+ * First, you need to [download SuperSCS](https://github.com/kul-forbes/scs/archive/master.zip)
+ * from the [github repo](https://github.com/kul-forbes/scs) of SuperSCS, or use the 
+ * command:
+ * 
+ *     git clone https://github.com/kul-forbes/scs.git
  * 
  * Installation runs as simple as 
  * 
@@ -16,7 +21,7 @@
  *
  * 
  * If, additionally, you want to run the tests and perform a memory check
- * using valgrind, do 
+ * using [valgrind](http://valgrind.org), do 
  * 
  *     make run-test-mem
  * 
@@ -30,16 +35,23 @@
  * 
  * In order to use SuperSCS from MATLAB, you need to compile a MEX interface.
  * 
- *     cd  matlab
+ *     cd matlab
  *     make_scs; 
  *  
  * \section more More
  * 
+ * \subsection main-examples Examples
+ * 
+ * Examples of use:
+ * 
+ * - \ref page:socp
+ * - \ref page:directions
+ * - More to come
  * 
  * \subsection github-page Source code
  * 
  * The source code of SuperSCS is available at [https://github.com/kul-forbes/scs](https://github.com/kul-forbes/scs).
  * 
- * This project was originally forked from [https://github.com/cvxgrp/scs](https://github.com/cvxgrp/scs).
+ * This project was originally forked [cvxgrp/scs](https://github.com/cvxgrp/scs).
  */
 

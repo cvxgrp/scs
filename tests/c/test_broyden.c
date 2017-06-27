@@ -283,3 +283,20 @@ bool test_broyden(char** str) {
     if (work != SCS_NULL) destroy_work(work);
     SUCCEED(str);
 }
+
+bool test_full_broyden(char** str) {
+    Work * work = scs_calloc(1, sizeof (Work));
+    const scs_float tol = 1e-10;
+    const scs_int l = 3;
+    const scs_int mem = 4;
+    scs_int i;
+
+    prepare_work(work, l, mem);
+    work->stgs->direction = full_broyden;
+    work->stgs->broyden_init_scaling = 1;
+    work->stgs->tRule = 1;
+    
+    destroy_work(work);
+    
+    SUCCEED(str);
+}

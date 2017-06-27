@@ -21,6 +21,8 @@ extern "C" {
     bool testGemm(char** str);
     
     bool testGemmCP(char** str);
+    
+    bool testGemmTransCP(char** str);
 
 
 #ifdef __cplusplus

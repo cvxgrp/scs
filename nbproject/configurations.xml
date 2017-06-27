@@ -25,6 +25,7 @@
       </df>
     </df>
     <logicalFolder name="pages" displayName="pages" projectFiles="true">
+      <itemPath>pages/directions_page.h</itemPath>
       <itemPath>pages/mainpage.h</itemPath>
       <itemPath>pages/socp_page.h</itemPath>
     </logicalFolder>
@@ -79,7 +80,6 @@
       <itemPath>Makefile</itemPath>
       <itemPath>nbproject/private/launcher.properties</itemPath>
     </logicalFolder>
-    <itemPath>pages/directions_page.h</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
