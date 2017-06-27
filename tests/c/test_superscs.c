@@ -389,3 +389,61 @@ bool test_superscs_100_rbroyden(char** str) {
 
     SUCCEED(str);
 }
+
+bool test_residuals(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    scs_float relgap_expected[12] = {
+        0,
+        0.45039546702,
+        0.18197423289,
+        0.44654726283,
+        0.16195937371,
+        0.27652759990,
+        0.29785223028,
+        0.16934030689,
+        0.00588709109,
+        0.07145742814,
+        0.03247612575,
+        0.04010905318
+    };
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+
+    data->stgs->eps = 1e-8;
+    data->stgs->k0 = 0;
+    data->stgs->k1 = 0;
+    data->stgs->k2 = 0;
+    data->stgs->ls = 0;
+    data->stgs->rho_x = 1.0;
+    data->stgs->direction = fixed_point_residual;
+    data->stgs->sse = 0.999;
+    data->stgs->sigma = 1e-2;
+    data->stgs->c_bl = 0.999;
+    data->stgs->c1 = 1.0 - 1e-4;
+    data->stgs->beta = 0.5;
+    data->stgs->normalize = 1;
+    data->stgs->scale = 1;
+    data->stgs->alpha = 1.5;
+    data->stgs->do_super_scs = 1;
+    data->stgs->verbose = 0;
+    data->stgs->do_record_progress = 1;
+    data->stgs->max_iters = 12;
+
+    sol = initSol();
+    info = initInfo();
+
+    status = scs(data, cone, sol, info);
+    ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-7, str, "relative gap");
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
