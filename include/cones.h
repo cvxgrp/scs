@@ -9,21 +9,23 @@ extern "C" {
 #include "scs_blas.h"
 
     /* NB: rows of data matrix A must be specified in this exact order */
+    /** \brief Cone structure */
     struct SCS_CONE {
-        scs_int f; /**< number of linear equality constraints */
-        scs_int l; /**< length of LP cone */
-        scs_int *q; /**< array of second-order cone constraints */
-        scs_int qsize; /**< length of SOC array */
-        scs_int *s; /**< array of SD constraints */
-        scs_int ssize; /**< length of SD array */
-        scs_int ep; /**< number of primal exponential cone triples */
-        scs_int ed; /**< number of dual exponential cone triples */
-        scs_float * p; /**< array of power cone params, must be \in [-1, 1],
+        scs_int f; /**< \brief number of linear equality constraints */
+        scs_int l; /**<  \brief length of LP cone */
+        scs_int *q; /**<  \brief array of second-order cone constraints */
+        scs_int qsize; /**<  \brief length of SOC array */
+        scs_int *s; /**<  \brief array of SD constraints */
+        scs_int ssize; /**<  \brief length of SD array */
+        scs_int ep; /**<  \brief number of primal exponential cone triples */
+        scs_int ed; /**<  \brief number of dual exponential cone triples */
+        scs_float * p; /**<  \brief array of power cone params, must be in [-1, 1],
                      negative values are interpreted as specifying the dual cone */
-        scs_int psize; /**< number of (primal and dual) power cone triples */
+        scs_int psize; /**<  \brief number of (primal and dual) power cone triples */
     };
 
     /** private data to help cone projection step */
+    /** \brief Workspace for cones */
     typedef struct {
 #ifdef LAPACK_LIB_FOUND
         /* workspace for eigenvector decompositions: */

@@ -96,10 +96,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const mxArray *settings;
 
     const mwSize one[1] = {1};
-    const int numInfoFields = 11;
+    const int numInfoFields = 13;
     const char *infoFields[] = {"iter", "status", "pobj", "dobj",
         "resPri", "resDual", "resInfeas", "resUnbdd",
-        "relGap", "setupTime", "solveTime"};
+        "relGap", "setupTime", "solveTime", "progress_iter", "progress_relgap"};
     mxArray *tmp;
 #if EXTRAVERBOSE > 0
     scs_printf("SIZE OF mwSize = %i\n", (int) sizeof (mwSize));
@@ -252,6 +252,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tmp = mxGetField(settings, 0, "direction");
     if (tmp != SCS_NULL)
         d->stgs->direction = (direction_type) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "do_record_progress");
+    if (tmp != SCS_NULL)
+        d->stgs->do_record_progress = (scs_int) * mxGetPr(tmp);
 
     /* cones */
     kf = mxGetField(cone, 0, "f");
@@ -413,16 +417,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mxSetField(plhs[3], 0, "relGap", tmp);
     *mxGetPr(tmp) = info.relGap;
 
-    /*info.time is millisecs - return value in secs */
+    /*info.setupTime is millisecs - return value in secs */
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "setupTime", tmp);
     *mxGetPr(tmp) = info.setupTime;
 
-    /*info.time is millisecs - return value in secs */
+    /*info.solveTime is millisecs - return value in secs */
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "solveTime", tmp);
     *mxGetPr(tmp) = info.solveTime;
 
+    if (d->stgs->do_record_progress) {
+        scs_float * tmp_data;
+        scs_int * tmp_data_int;
+        scs_int k;
+
+
+        /* info.progress_iter */
+        tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_iter", tmp);
+        tmp_data = mxGetPr(tmp);
+        for (k = 0; k < info.history_length; ++k) {
+            tmp_data[k] = (scs_float) (info.progress_iter[k]);
+        }
+
+        /* info.historyRelGap */
+        tmp = mxCreateDoubleMatrix(info.history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_relgap", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info.progress_relgap, info.history_length * sizeof (scs_float));
+    }
     freeMex(d, k);
     return;
 }

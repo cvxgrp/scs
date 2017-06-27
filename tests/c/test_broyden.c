@@ -296,5 +296,7 @@ bool test_full_broyden(char** str) {
     work->stgs->broyden_init_scaling = 1;
     work->stgs->tRule = 1;
     
+    destroy_work(work);
+    
     SUCCEED(str);
 }

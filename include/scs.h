@@ -69,9 +69,22 @@ extern "C" {
          */
         scs_float *g;
         /**
+         * \brief Primal residual vector
+         * 
+         * \f[
+         *  \text{pr} = A x + s - b \tau,
+         * \f]
+         * and in SuperSCS, \f$x\f$ is \f$\bar{x}\f$, \f$s\f$ is \f$\bar{s}\f$
+         * and \f$\tau\f$ is \f$\bar{\tau}\f$
          */
         scs_float *pr;
         /**
+         * \brief Dual residual vector
+         * 
+         * \f[
+         *  \text{dr} = A'y + c \tau,
+         * \f]
+         * and in SuperSCS, \f$y\f$ is \f$\bar{y}\f$ and \f$\tau\f$ is \f$\bar{\tau}\f$.
          */
         scs_float *dr;
         /**
@@ -187,7 +200,7 @@ extern "C" {
     };
 
     /**
-     *  Structure to hold residual information (unnormalized) 
+     *  \brief Structure to hold residual information (unnormalized) 
      */
     struct residuals {
         /**
@@ -237,17 +250,17 @@ extern "C" {
         scs_float cTx_by_tau; /* not divided by tau */
         scs_float bTy_by_tau; /* not divided by tau */
         /**
-         * Variable \f$\tau\f$ (\f$\tau_b\f$ in SuperSCS)
+         * Variable \f$\tau\f$ (\f$\bar{\tau}\f$ in SuperSCS)
          */
         scs_float tau; /* for superSCS it's tau_b */
         /**
-         * Variable \f$\kappa\f$ (\f$\kappa_b\f$ in SuperSCS)
+         * Variable \f$\kappa\f$ (\f$\bar{\kappa}\f$ in SuperSCS)
          */
         scs_float kap; /* for superSCS it's kap_b */
     };
 
     /**
-     *  struct containing problem data 
+     *  \brief struct containing problem data 
      */
     struct SCS_PROBLEM_DATA {
         /* these cannot change for multiple runs for the same call to scs_init */
@@ -268,7 +281,7 @@ extern "C" {
     };
 
     /**
-     *  Settings struct 
+     * \brief Settings structure
      */
     struct SCS_SETTINGS {
         /* settings parameters: default suggested input */
@@ -384,7 +397,7 @@ extern "C" {
          * 
          * Default: 10 
          */
-        scs_int memory; 
+        scs_int memory;
         /**
          * Option for the Broyden direction.
          * 
@@ -400,35 +413,51 @@ extern "C" {
          * Default : 0
          */
         scs_int broyden_init_scaling;
+        /**
+         * Whether to record progress data
+         */
+        scs_int do_record_progress;
     };
 
     /**
-     *  contains primal-dual solution arrays 
+     *  \brief Primal-dual solution arrays 
      */
     struct SCS_SOL_VARS {
-        scs_float *x, *y, *s;
+        scs_float *x;
+        scs_float *y;
+        scs_float *s;
     };
 
     /**
-     *  contains terminating information 
+     *  \brief Terminating information 
+     * 
+     * \see ::freeInfo
      */
     struct SCS_INFO {
-        scs_int iter; /**< number of iterations taken */
-        char status[32]; /**< status string, e.g. 'Solved' */
-        scs_int statusVal; /**< status as scs_int, defined in constants.h */
-        scs_float pobj; /**< primal objective */
-        scs_float dobj; /**< dual objective */
-        scs_float resPri; /**< primal equality residual */
-        scs_float resDual; /**< dual equality residual */
-        scs_float resInfeas; /**< infeasibility cert residual */
-        scs_float resUnbdd; /**< unbounded cert residual */
-        scs_float relGap; /**< relative duality gap */
-        scs_float setupTime; /**< time taken for setup phase (milliseconds) */
-        scs_float solveTime; /**< time taken for solve phase (milliseconds) */
+        scs_int iter; /**< \brief number of iterations taken */
+        char status[32]; /**< \brief status string, e.g. 'Solved' */
+        scs_int statusVal; /**< \brief status as scs_int, defined in constants.h */
+        scs_float pobj; /**< \brief primal objective */
+        scs_float dobj; /**< \brief dual objective */
+        scs_float resPri; /**< \brief primal equality residual */
+        scs_float resDual; /**< \brief dual equality residual */
+        scs_float resInfeas; /**< \brief infeasibility cert residual */
+        scs_float resUnbdd; /**< \brief unbounded cert residual */
+        scs_float relGap; /**< \brief relative duality gap */
+        scs_float setupTime; /**< \brief time taken for setup phase (milliseconds) */
+        scs_float solveTime; /**< \brief time taken for solve phase (milliseconds) */
+        
+        scs_int     history_length; /**< \brief how many history entries */
+        scs_int   * progress_iter; /**< \brief iterations when residulas are recorded */
+        scs_float * progress_relgap; /**< \brief relative gap history */
+        scs_float * progress_respri;  /**< \brief primal residual history */
+        scs_float * progress_resdual;  /**< \brief dual residual history */
+        scs_float * progress_pcost_scaled;  /**< \brief scaled primal cost history */
+        scs_float * progress_dcost_scaled;  /**< \brief sclaed dual cost history */
     };
 
     /**
-     *  contains normalization variables 
+     *  \brief Normalization variables 
      */
     struct SCS_SCALING {
         scs_float *D, *E; /* for normalization */

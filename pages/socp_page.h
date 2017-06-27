@@ -185,7 +185,31 @@
  * ~~~~~{.c}
  * freeData(data, cone);
  * freeSol(sol);
- * scs_free(info);
+ * freeInfo(info);
  * ~~~~~
  * 
+ * If we need to collect progress data for the algorithm, we need to activate logging
+ * using
+ * 
+ * ~~~~~{.c}
+ * data->stgs->do_record_progress = 1;
+ * ~~~~~
+ * 
+ * This option is otherwise disabled by default.
+ * 
+ * We may then print various statistics
+ * 
+ * ~~~~~{.c}
+ * for (i = 0; i <= info->history_length; ++i) {
+        printf("[%d]  rel = %g, respri = %g, pc = %g, dc = %g\n", 
+                info->progress_iter[i], 
+                info->progress_relgap[i], 
+                info->progress_respri[i],
+                info->progress_pcost_scaled[i],
+                info->progress_dcost_scaled[i]);
+    }
+ * ~~~~~
+ * 
+ * If <code>do_record_progress</code> is, instead, set to <code>0</code>, no progress
+ * data are stored and the above pointers are equal to ::SCS_NULL.
  */

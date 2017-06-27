@@ -1,5 +1,6 @@
 #include "directions.h"
 
+/*TODO Allocate this variable within work */
 static scs_float * HY; /* Vector H*Y of length l */
 
 scs_int resetSUCache(SUCache * cache) {
@@ -87,11 +88,10 @@ scs_int computeFullBroyden(Work *work, scs_int i) {
     scs_float ip = 0;
     scs_float tmp = 0;
 
-
     if (i == 0 || HY == SCS_NULL) {
         /* HY is allocated the first time this function is called (that is, for i==0) */
         HY = malloc(work->l * sizeof (*HY));
-        if (HY == SCS_NULL){
+        if (HY == SCS_NULL) {
             scs_printf("ERROR: allocating `HY` in `computeFullBroyden` failure\n");
             RETURN DIRECTION_ERROR;
         }
@@ -126,7 +126,7 @@ scs_int computeDirection(Work *work, scs_int i) {
     } else if (work->stgs->direction == restarted_broyden_v2) {
         status = DIRECTION_ERROR; /* Not implemented yet */
     } else if (work->stgs->direction == full_broyden) {
-
+        computeFullBroyden(work, i);
     }
     RETURN status;
 }

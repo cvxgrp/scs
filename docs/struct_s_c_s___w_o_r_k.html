@@ -130,8 +130,10 @@ Data Fields</h2></td></tr>
 <tr class="memitem:afa80f430325a1d1e939f24d0bded7e87"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#afa80f430325a1d1e939f24d0bded7e87">g</a></td></tr>
 <tr class="separator:afa80f430325a1d1e939f24d0bded7e87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82f17018c6c8698dc1853775e61c5d27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#a82f17018c6c8698dc1853775e61c5d27">pr</a></td></tr>
+<tr class="memdesc:a82f17018c6c8698dc1853775e61c5d27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Primal residual vector.  <a href="#a82f17018c6c8698dc1853775e61c5d27">More...</a><br/></td></tr>
 <tr class="separator:a82f17018c6c8698dc1853775e61c5d27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59412adf004013519c02a694972cc4c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#a59412adf004013519c02a694972cc4c1">dr</a></td></tr>
+<tr class="memdesc:a59412adf004013519c02a694972cc4c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dual residual vector.  <a href="#a59412adf004013519c02a694972cc4c1">More...</a><br/></td></tr>
 <tr class="separator:a59412adf004013519c02a694972cc4c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa56bb20d56b1f8c7329e66db8a6e51e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___w_o_r_k.html#afa56bb20d56b1f8c7329e66db8a6e51e">gTh</a></td></tr>
 <tr class="separator:afa56bb20d56b1f8c7329e66db8a6e51e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -296,6 +298,12 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Dual residual vector. </p>
+<p class="formulaDsp">
+\[ \text{dr} = A&#39;y + c \tau, \]
+</p>
+<p> and in SuperSCS, \(y\) is \(\bar{y}\) and \(\tau\) is \(\bar{\tau}\). </p>
 
 </div>
 </div>
@@ -485,6 +493,12 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Primal residual vector. </p>
+<p class="formulaDsp">
+\[ \text{pr} = A x + s - b \tau, \]
+</p>
+<p> and in SuperSCS, \(x\) is \(\bar{x}\), \(s\) is \(\bar{s}\) and \(\tau\) is \(\bar{\tau}\) </p>
 
 </div>
 </div>
@@ -768,7 +782,7 @@ Data Fields</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jun 26 2017 18:23:26 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 27 2017 01:41:43 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

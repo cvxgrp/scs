@@ -341,7 +341,10 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     RETURN;
 }
 
-static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
+static void calcResidualsSuperscs(
+        Work *w,
+        struct residuals *r,
+        scs_int iter) {
     DEBUG_FUNC
     scs_float *xb;
     scs_float *yb;
@@ -355,8 +358,8 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
     scs_int i;
     scs_float norm_D_Axs; /* norm of D*(Ax+s), intermediate variable */
     scs_float norm_E_ATy; /* norm of E*A'*y,   intermediate variable */
-    scs_float tmp_cTx;    /* c'x */
-    scs_float tmp_bTy;    /* b'y */
+    scs_float tmp_cTx; /* c'x */
+    scs_float tmp_bTy; /* b'y */
     const scs_float temp1 = w->sc_b * w->stgs->scale; /* auxiliary variable #1 */
     const scs_float temp2 = w->sc_c * temp1; /* auxiliary variable #2 */
     const scs_float temp3 = w->sc_c * w->stgs->scale; /* auxiliary variable #3 */
@@ -366,7 +369,6 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
         RETURN;
     }
     r->lastIter = iter;
-
 
     sb = w->s_b;
     xb = w->u_b;
@@ -450,20 +452,20 @@ static void calcResidualsSuperscs(Work *w, struct residuals *r, scs_int iter) {
             scs_float tmp = w->scal->E[i] * w->c[i];
             norm_Ec += tmp * tmp;
         }
-        r->resUnbdd = - SQRTF(norm_Ec) * norm_D_Axs / tmp_cTx;
-        r->resUnbdd /= w->stgs->normalize ? w->stgs->scale : 1;        
+        r->resUnbdd = -SQRTF(norm_Ec) * norm_D_Axs / tmp_cTx;
+        r->resUnbdd /= w->stgs->normalize ? w->stgs->scale : 1;
     } else {
         r->resUnbdd = NAN;
     }
 
     /* INFEASIBILITY */
-    if (r->bTy_by_tau < 0) {
+    if (tmp_bTy < 0) {
         scs_float norm_Db = 0;
         for (i = 0; i < m; ++i) {
             scs_float tmp = w->scal->D[i] * w->b[i];
             norm_Db += tmp * tmp;
         }
-        r->resInfeas = - SQRTF(norm_Db) * norm_E_ATy / tmp_bTy;
+        r->resInfeas = -SQRTF(norm_Db) * norm_E_ATy / tmp_bTy;
         r->resInfeas /= w->stgs->normalize ? w->stgs->scale : 1;
     } else {
         r->resInfeas = NAN;
@@ -523,7 +525,7 @@ static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int
     addScaledArray(u_t, w->h, l - 1,
             -innerProd(u_t, w->g, l - 1) / (w->gTh + 1));
 
-    /* ut(n+1:end-1) = -ut(n+1:end-1);           */
+    /* ut(n+1:end-1) = -ut(n+1:end-1);          */
     scaleArray(u_t + w->n, -1, w->m);
 
     /* call `solveLinSys` to update ut(1:n+m)   */
@@ -1428,6 +1430,24 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float sqrt_rhox = sqrt(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
 
+
+    if (work->stgs->do_record_progress) {
+        const scs_int max_history_alloc = data->stgs->max_iters / CONVERGED_INTERVAL;
+        info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_resdual = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_pcost_scaled = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_dcost_scaled = malloc(sizeof (scs_float) * max_history_alloc);
+        info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
+    } else {
+        info->progress_relgap = SCS_NULL;
+        info->progress_respri = SCS_NULL;
+        info->progress_resdual = SCS_NULL;
+        info->progress_pcost_scaled = SCS_NULL;
+        info->progress_dcost_scaled = SCS_NULL;
+        info->progress_iter = SCS_NULL;
+    }
+
     timer solveTimer;
     struct residuals r;
     if (data == SCS_NULL
@@ -1483,8 +1503,16 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         /* Convergence checks */
         if (i % CONVERGED_INTERVAL == 0) {
             calcResidualsSuperscs(work, &r, i);
+            if (work->stgs->do_record_progress) {
+                scs_int idx_progress = i / CONVERGED_INTERVAL;
+                info->progress_iter[idx_progress] = i;
+                info->progress_relgap[idx_progress] = r.relGap;
+                info->progress_respri[idx_progress] = r.resPri;
+                info->progress_resdual[idx_progress] = r.resDual;
+                info->progress_pcost_scaled[idx_progress] = r.cTx_by_tau;
+                info->progress_dcost_scaled[idx_progress] = -r.bTy_by_tau;
+            }
             if ((info->statusVal = hasConverged(work, &r, i))) {
-                /*  break; */
                 break;
             }
         }
@@ -1546,7 +1574,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i);
                     calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
 
-                    /* here we dont' scale R */
+                    /* here we don't scale R */
 
                     nrmRw_con = calcNorm(work->Rwu, work->l);
                     /* K1 */
@@ -1608,6 +1636,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     getSolution(work, sol, info, &r, i);
     info->iter = i;
     info->solveTime = tocq(&solveTimer);
+    info->history_length = i / CONVERGED_INTERVAL;
 
     if (work->stgs->verbose)
         printFooter(data, cone, sol, work, info);
