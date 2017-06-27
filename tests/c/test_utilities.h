@@ -23,6 +23,8 @@ extern "C" {
     bool testGemmCP(char** str);
     
     bool testGemmTransCP(char** str);
+    
+    bool testUnrolledDot(char** str);
 
 
 #ifdef __cplusplus

@@ -244,3 +244,20 @@ bool testGemmTransCP(char** str) {
     ASSERT_EQUAL_ARRAY_OR_FAIL(C, Cexp, 4, 1e-5, str, "gemm failed");
     SUCCEED(str);
 }
+
+bool testUnrolledDot(char** str){
+    scs_float x[4] = {5.,2.,3.,4.};
+    scs_float y[4] = {0.1,0.2,0.5,-0.9};
+    scs_float a[5] = {5.0,6.0,7.0,8.0,9.0};
+    scs_float b[5] = {11.0, 13.0, 15.0, 17.0, 19.0};
+    scs_float ip;
+    scs_float ip2;
+    
+    ip = innerProd(x, y, 4);
+    ip2 = innerProd(a, b, 5);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(-1.2, ip, 1e-6, str, "inn prod");
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip2, 545.0, 1e-6, str, "inn prod 2");
+    
+    
+    SUCCEED(str);
+}

@@ -11,6 +11,7 @@ var searchData=
   ['priv',['Priv',['../lin_sys_8h.html#a86729d179a2466b10983c1f4bd700058',1,'linSys.h']]],
   ['progress_5fdcost',['progress_dcost',['../struct_s_c_s___i_n_f_o.html#a08db9ab2eb0bf319aca95ba6a8f1c9a5',1,'SCS_INFO']]],
   ['progress_5fiter',['progress_iter',['../struct_s_c_s___i_n_f_o.html#a0e0c43b2c8c00b4da83542f1581cb575',1,'SCS_INFO']]],
+  ['progress_5fnorm_5ffpr',['progress_norm_fpr',['../struct_s_c_s___i_n_f_o.html#ac258609b3ebe7acf4593fa54d90cf742',1,'SCS_INFO']]],
   ['progress_5fpcost',['progress_pcost',['../struct_s_c_s___i_n_f_o.html#ab5827c00fe66a97fb45781bf46a14585',1,'SCS_INFO']]],
   ['progress_5frelgap',['progress_relgap',['../struct_s_c_s___i_n_f_o.html#ac6fa681d0725824ea046435c89d6e165',1,'SCS_INFO']]],
   ['progress_5fresdual',['progress_resdual',['../struct_s_c_s___i_n_f_o.html#aad0be529b78c5ab2f56797150809ee0d',1,'SCS_INFO']]],
