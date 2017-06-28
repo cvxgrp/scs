@@ -1472,6 +1472,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
+/*   scaleArray(work->u_t, sqrt_rhox, work->n); */
     if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
         RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
                 "error in projectLinSysv2", "Failure");
