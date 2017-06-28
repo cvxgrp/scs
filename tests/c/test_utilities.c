@@ -263,8 +263,9 @@ bool testUnrolledDot(char** str) {
         const unsigned n = 5e6;
         scs_float * big_x = malloc(n * sizeof (scs_float));
         scs_float * big_y = malloc(n * sizeof (scs_float));    
+        scs_int i;
      */
-    scs_int i;
+    
     scs_float ip;
     /*
         clock_t t;
@@ -302,5 +303,21 @@ bool testUnrolledDot(char** str) {
         scs_free(big_x);
         scs_free(big_y);
      */
+    SUCCEED(str);
+}
+
+bool testLinAlg(char** str) {
+#define n 97
+    scs_float x[n];
+    scs_float y[n];
+    unsigned int i = 0;
+    for (i = 0; i < n; ++i) {
+        x[i] = SQRTF(0.1*i+1);
+        y[i] = sin(i/20);
+    }
+    subtractArray(x, y, n);
+    for (i = 0; i < n; ++i) {
+        ASSERT_EQAUL_FLOAT_OR_FAIL(x[i], SQRTF(0.1*i+1) - sin(i/20), 1e-10, str, "wrong");
+    }
     SUCCEED(str);
 }

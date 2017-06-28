@@ -34,8 +34,10 @@ static scs_int scs_isnan(scs_float x) {
 static SUCache * initSUCache(scs_int memory, scs_int l) {
     SUCache * cache = scs_calloc(1, sizeof (*cache));
     if (cache == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: allocating YSCache failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
 
     /* we allocate one extra memory position because it's needed */
@@ -132,6 +134,7 @@ static void freeWork(Work *w) {
     RETURN;
 }
 
+/* LCOV_EXCL_START */
 static void printInitHeader(const Data *d, const Cone *k) {
     DEBUG_FUNC
     scs_int i;
@@ -170,6 +173,7 @@ static void printInitHeader(const Data *d, const Cone *k) {
 #endif
     RETURN;
 }
+/* LCOV_EXCL_STOP */
 
 static void populateOnFailure(scs_int m, scs_int n, Sol *sol, Info *info,
         scs_int statusVal, const char *msg) {
@@ -537,6 +541,7 @@ static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int
     RETURN status;
 }
 
+/* LCOV_EXCL_START */
 void printSol(Work *w, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i;
@@ -553,6 +558,7 @@ void printSol(Work *w, Sol *sol, Info *info) {
     }
     RETURN;
 }
+/* LCOV_EXCL_STOP */
 
 static void updateDualVars(Work *w) {
     DEBUG_FUNC
@@ -779,6 +785,7 @@ static void getSolution(Work *work, Sol *sol, Info *info, struct residuals *r,
     RETURN;
 }
 
+/* LCOV_EXCL_START */
 static void printSummary(Work *w, scs_int i, struct residuals *r,
         timer *solveTimer) {
     DEBUG_FUNC
@@ -844,6 +851,7 @@ static void printHeader(Work *w, const Cone *k) {
 #endif
     RETURN;
 }
+/* LCOV_EXCL_STOP */
 
 scs_float getDualConeDist(const scs_float *y, const Cone *k, ConeWork *c,
         scs_int m) {
@@ -881,6 +889,7 @@ scs_float getPriConeDist(const scs_float *s, const Cone *k, ConeWork *c,
     RETURN dist;
 }
 
+/* LCOV_EXCL_START */
 static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
         Info *info) {
     DEBUG_FUNC
@@ -948,6 +957,7 @@ static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
 #endif
     RETURN;
 }
+/* LCOV_EXCL_STOP */
 
 static scs_int hasConverged(Work *w, struct residuals *r, scs_int iter) {
     DEBUG_FUNC
@@ -968,92 +978,134 @@ static scs_int validate(const Data *d, const Cone *k) {
     DEBUG_FUNC
     Settings *stgs = d->stgs;
     if (d->m <= 0 || d->n <= 0) {
+        /* LCOV_EXCL_START */
         scs_printf("m and n must both be greater than 0; m = %li, n = %li\n",
                 (long) d->m, (long) d->n);
         RETURN - 1;
+        /* LCOV_EXCL_STOP */
     }
     if (d->m < d->n) {
+        /* LCOV_EXCL_START */
         scs_printf("WARN: m less than n, problem likely degenerate\n");
         /* RETURN -1; */
+        /* LCOV_EXCL_STOP */
     }
     if (validateLinSys(d->A) < 0) {
+        /* LCOV_EXCL_START */
         scs_printf("invalid linear system input data\n");
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (validateCones(d, k) < 0) {
+        /* LCOV_EXCL_START */
         scs_printf("cone validation error\n");
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (stgs->max_iters <= 0) {
+        /* LCOV_EXCL_START */
         scs_printf("max_iters must be positive (max_iters=%d)\n", stgs->max_iters);
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (stgs->eps <= 0) {
+        /* LCOV_EXCL_START */
         scs_printf("eps tolerance must be positive (eps=%g)\n", stgs->eps);
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (stgs->alpha <= 0 || stgs->alpha >= 2) {
+        /* LCOV_EXCL_START */
         scs_printf("alpha must be in (0,2) (alpha=%g)\n", stgs->alpha);
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (stgs->rho_x <= 0) {
-        scs_printf("rhoX must be positive (1e-3 works well) (rho_x=%g).\n", stgs->rho_x);
+        /* LCOV_EXCL_START */
+        scs_printf("rho_x must be positive (1e-3 works well) (rho_x=%g).\n", stgs->rho_x);
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (stgs->scale <= 0) {
+        /* LCOV_EXCL_START */
         scs_printf("Parameter `scale` must be positive (1 works well).\n");
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     if (stgs->do_super_scs != 0 && stgs->do_super_scs != 1) {
+        /* LCOV_EXCL_START */
         scs_printf("do_super_scs (=%d) can be either 0 or 1.\n", stgs->do_super_scs);
         RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
     /* validate settings related to SuperSCS */
     if (stgs->do_super_scs == 1) {
         if (stgs->thetabar < 0 || stgs->thetabar > 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameters `thetabar` must be a scalar between 0 and 1 (thetabar=%g)\n", stgs->thetabar);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if ((stgs->direction == restarted_broyden || stgs->direction == restarted_broyden_v2)
                 && stgs->memory <= 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Quasi-Newton memory length (mem=%d) is too low; choose an integer at least equal to 2.\n", stgs->memory);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->beta >= 1 || stgs->beta <= 0) {
+            /* LCOV_EXCL_START */
             scs_printf("Stepsize reduction factor (beta=%g) out of bounds.\n", stgs->beta);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->ls < 0) {
+            /* LCOV_EXCL_START */
             scs_printf("Illegal maximum number of line search iterations (ls=%d).\n", stgs->ls);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->sigma < 0) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->c_bl < 0 || stgs->c_bl >= 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter (c_0=%g) for blind updates out of bounds.\n", stgs->c_bl);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->c1 < 0 || stgs->c1 >= 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter (c1=%g) for step K1 out of bounds.\n", stgs->c1);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->sse < 0 || stgs->sse >= 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter (sse=%g) for step K1 out of bounds.\n", stgs->sse);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->k0 != 0 && stgs->k0 != 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter (k0=%d) can be eiter 0 (k0: off) or 1 (k0: on).\n", stgs->k0);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->k1 != 0 && stgs->k1 != 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter (k1=%d) can be eiter 0 (k1: off) or 1 (k1: on).\n", stgs->k0);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
         if (stgs->k2 != 0 && stgs->k2 != 1) {
+            /* LCOV_EXCL_START */
             scs_printf("Parameter (k2=%d) can be eiter 0 (k2: off) or 1 (k2: on).\n", stgs->k0);
             RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
         }
     }
     RETURN 0;
@@ -1401,7 +1453,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     info->solveTime = tocq(&solveTimer);
 
     if (w->stgs->verbose)
-        printFooter(d, k, sol, w, info);
+        printFooter(d, k, sol, w, info); /* LCOV_EXCL_LINE */
     endInterruptListener();
     RETURN info->statusVal;
 }
@@ -1641,7 +1693,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     info->history_length = i / CONVERGED_INTERVAL;
 
     if (work->stgs->verbose)
-        printFooter(data, cone, sol, work, info);
+        printFooter(data, cone, sol, work, info); /* LCOV_EXCL_LINE */
     endInterruptListener();
 
     RETURN info->statusVal;
@@ -1680,8 +1732,10 @@ Work * scs_init(const Data *d, const Cone *k, Info * info) {
     if (d == SCS_NULL
             || k == SCS_NULL
             || info == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: Missing Data, Cone or Info input\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
 #if EXTRAVERBOSE > 0
     printData(d);
@@ -1713,6 +1767,7 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
     Work *w = scs_init(d, k, info);
 
     if (d->stgs->verbose >= 2) {
+        /* LCOV_EXCL_START */
         scs_printf("Settings:\n"
                 "alpha        : %g\n"
                 "beta         : %g\n"
@@ -1754,6 +1809,7 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
                 d->stgs->sse,
                 d->stgs->thetabar,
                 d->stgs->warm_start);
+        /* LCOV_EXCL_STOP */
     }
 
 #if EXTRAVERBOSE > 0
@@ -1780,8 +1836,10 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
 Sol * initSol() {
     Sol *sol = scs_calloc(1, sizeof (* sol));
     if (sol == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: allocating sol failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     sol->s = SCS_NULL;
     sol->x = SCS_NULL;
@@ -1792,8 +1850,10 @@ Sol * initSol() {
 Info * initInfo() {
     Info * info = scs_calloc(1, sizeof (*info));
     if (info == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: allocating info failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     info->pobj = NAN;
     info->dobj = NAN;
@@ -1819,8 +1879,10 @@ Data * initData() {
     Data * data = malloc(sizeof (*data));
 
     if (data == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: allocating data failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
 
     data->A = SCS_NULL;

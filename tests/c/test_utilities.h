@@ -25,6 +25,8 @@ extern "C" {
     bool testGemmTransCP(char** str);
     
     bool testUnrolledDot(char** str);
+    
+    bool testLinAlg(char** str);
 
 
 #ifdef __cplusplus
