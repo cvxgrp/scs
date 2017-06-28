@@ -207,6 +207,9 @@ void freeInfo(Info *info) {
         if (info->progress_dcost != SCS_NULL){
             scs_free(info->progress_dcost);
         }
+        if (info->progress_norm_fpr != SCS_NULL){
+            scs_free(info->progress_norm_fpr);
+        }
         scs_free(info);
     }
 }

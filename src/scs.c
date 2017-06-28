@@ -1441,6 +1441,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         info->progress_pcost = malloc(sizeof (scs_float) * max_history_alloc);
         info->progress_dcost = malloc(sizeof (scs_float) * max_history_alloc);
         info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
+        info->progress_norm_fpr = malloc(sizeof (scs_int) * max_history_alloc);
     } else {
         info->progress_relgap = SCS_NULL;
         info->progress_respri = SCS_NULL;
@@ -1448,6 +1449,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         info->progress_pcost = SCS_NULL;
         info->progress_dcost = SCS_NULL;
         info->progress_iter = SCS_NULL;
+        info->progress_norm_fpr = SCS_NULL;
     }
 
     if (data == SCS_NULL
@@ -1490,7 +1492,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     work->nrmR_con = eta;
 
-    /***** HENCEFORTH, R and u ARE SCALED! *****/
+    /***** HENCEFORTH, R IS SCALED! *****/
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
