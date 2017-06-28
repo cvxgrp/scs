@@ -23,6 +23,8 @@ extern "C" {
     bool test_superscs_001_rbroyden(char** str);
     
     bool test_superscs_100_rbroyden(char** str);
+    
+    bool test_residuals(char** str);
 
 #ifdef __cplusplus
 }

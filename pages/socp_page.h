@@ -205,8 +205,8 @@
                 info->progress_iter[i], 
                 info->progress_relgap[i], 
                 info->progress_respri[i],
-                info->progress_pcost_scaled[i],
-                info->progress_dcost_scaled[i]);
+                info->progress_pcost[i],
+                info->progress_dcost[i]);
     }
  * ~~~~~
  * 

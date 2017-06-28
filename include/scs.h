@@ -454,6 +454,7 @@ extern "C" {
         scs_float * progress_resdual;  /**< \brief dual residual history */
         scs_float * progress_pcost;  /**< \brief scaled primal cost history */
         scs_float * progress_dcost;  /**< \brief sclaed dual cost history */
+        scs_float * progress_norm_fpr; /**< \brief FPR history */
     };
 
     /**

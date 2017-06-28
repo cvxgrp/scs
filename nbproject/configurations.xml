@@ -25,6 +25,7 @@
       </df>
     </df>
     <logicalFolder name="pages" displayName="pages" projectFiles="true">
+      <itemPath>pages/dev_page.h</itemPath>
       <itemPath>pages/directions_page.h</itemPath>
       <itemPath>pages/mainpage.h</itemPath>
       <itemPath>pages/socp_page.h</itemPath>
@@ -221,6 +222,8 @@
       <item path="linsys/indirect/private.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="pages/dev_page.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="pages/directions_page.h" ex="false" tool="3" flavor2="0">
       </item>

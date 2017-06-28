@@ -1433,6 +1433,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     struct residuals r;
 
     if (work->stgs->do_record_progress) {
+        /*TODO store the norm of FPR */
         const scs_int max_history_alloc = data->stgs->max_iters / CONVERGED_INTERVAL;
         info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
         info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);

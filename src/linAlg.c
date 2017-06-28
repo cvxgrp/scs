@@ -732,20 +732,29 @@ void scaleArray(scs_float *a, const scs_float b, scs_int len) {
 scs_float innerProd(const scs_float *x, const scs_float *y, scs_int len) {
     scs_int i;
     scs_float ip = 0.0;
-    for (i = 0; i < len; ++i) {
-        ip += x[i] * y[i];
+    scs_float s0 = 0.f;
+    scs_float s1 = 0.f;
+    scs_float s2 = 0.f;
+    scs_float s3 = 0.f;
+    const scs_int block_size = 4;
+    const scs_int block_len = len / block_size;
+
+    for (i = 0; i < block_len; ++i) {
+        s0 += x[block_size * i] * y[block_size * i];
+        s1 += x[block_size * i + 1] * y[block_size * i + 1];
+        s2 += x[block_size * i + 2] * y[block_size * i + 2];
+        s3 += x[block_size * i + 3] * y[block_size * i + 3];
+    }
+    ip = s0 + s1 + s2 + s3;
+    for (i = 0; i < len % block_size; ++i) {
+        ip += x[block_size * block_len + i] * y[block_size * block_len + i];
     }
     return ip;
 }
 
 /* ||v||_2^2 */
 scs_float calcNormSq(const scs_float *v, scs_int len) {
-    scs_int i;
-    scs_float nmsq = 0.0;
-    for (i = 0; i < len; ++i) {
-        nmsq += v[i] * v[i];
-    }
-    return nmsq;
+    return innerProd(v, v, len);
 }
 
 /* ||v||_2 */
@@ -768,22 +777,53 @@ scs_float calcNormInf(const scs_float *a, scs_int l) {
 void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
         const scs_float sc) {
     scs_int i;
-    for (i = 0; i < n; ++i) {
-        a[i] += sc * b[i];
+    const scs_int block_size = 4;
+    const scs_int block_len = n / block_size;
+
+    for (i = 0; i < block_len; ++i) {
+        a[block_size * i] += sc * b[block_size * i];
+        a[block_size * i + 1] += sc * b[block_size * i + 1];
+        a[block_size * i + 2] += sc * b[block_size * i + 2];
+        a[block_size * i + 3] += sc * b[block_size * i + 3];
     }
+
+    for (i = 0; i < n % block_size; ++i) {
+        a[block_size * block_len + i] += sc * b[block_size * block_len + i];
+    }
+
 }
 
 void addArray(scs_float *a, const scs_float *b, scs_int n) {
     scs_int i;
-    for (i = 0; i < n; ++i) {
-        a[i] += b[i];
+    const scs_int block_size = 4;
+    const scs_int block_len = n / block_size;
+
+    for (i = 0; i < block_len; ++i) {
+        a[block_size * i] += b[block_size * i];
+        a[block_size * i + 1] += b[block_size * i + 1];
+        a[block_size * i + 2] += b[block_size * i + 2];
+        a[block_size * i + 3] += b[block_size * i + 3];
+    }
+
+    for (i = 0; i < n % block_size; ++i) {
+        a[block_size * block_len + i] += b[block_size * block_len + i];
     }
 }
 
 void subtractArray(scs_float *a, const scs_float *b, scs_int n) {
     scs_int i;
-    for (i = 0; i < n; ++i) {
-        a[i] -= b[i];
+    const scs_int block_size = 4;
+    const scs_int block_len = n / block_size;
+
+    for (i = 0; i < block_len; ++i) {
+        a[block_size * i] -= b[block_size * i];
+        a[block_size * i + 1] -= b[block_size * i + 1];
+        a[block_size * i + 2] -= b[block_size * i + 2];
+        a[block_size * i + 3] -= b[block_size * i + 3];
+    }
+
+    for (i = 0; i < n % block_size; ++i) {
+        a[block_size * block_len + i] -= b[block_size * block_len + i];
     }
 }
 
