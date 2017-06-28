@@ -19,6 +19,8 @@ extern "C" {
      * @param a
      * @param b
      * @param len
+     * 
+     * \note with loop unrolling for speed
      */
     void setAsScaledArray(
             scs_float *x,
@@ -34,6 +36,8 @@ extern "C" {
      * @param a
      * @param b
      * @param len
+     * 
+     * \note with loop unrolling for speed
      */
     void scaleArray(scs_float *a, const scs_float b, scs_int len);
 
@@ -46,6 +50,8 @@ extern "C" {
      * @param y
      * @param len
      * @return 
+     * 
+     * \note with loop unrolling for speed
      */
     scs_float innerProd(const scs_float *x, const scs_float *y, scs_int len);
 
@@ -54,6 +60,8 @@ extern "C" {
      * @param v
      * @param len
      * @return 
+     * 
+     * \note uses ::innerProd
      */
     scs_float calcNormSq(const scs_float *v, scs_int len);
 
@@ -83,6 +91,8 @@ extern "C" {
      * @param b vector \c b
      * @param n length of \c a
      * @param sc the scalar \f$\gamma\f$
+     * 
+     * \note with loop unrolling for speed
      */
     void addScaledArray(
             scs_float *a,
@@ -98,6 +108,8 @@ extern "C" {
      * @param a vector \c a
      * @param b vector \c b
      * @param n length of \c a
+     * 
+     * \note with loop unrolling for speed
      */
     void addArray(scs_float *a, const scs_float *b, scs_int n);
 
@@ -109,6 +121,8 @@ extern "C" {
      * @param a vector \c a
      * @param b vector \c b
      * @param n length of \c a
+     * 
+     * \note with loop unrolling for speed
      */
     void subtractArray(scs_float *a, const scs_float *b, scs_int n);
 
@@ -129,26 +143,7 @@ extern "C" {
      * @return 
      */
     scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l);
-    /**
-     * Returns the modified sign of \c x, that is
-     * \f[
-     *   \mathrm{sgn}(x) = 
-     *  \cases{
-     *     1, \text{ if }\, x \geq 0,\cr
-     *     0, \text{ otherwise }\cr
-     *  }
-     * \f]
-     * @param x
-     * @return 
-     */
-    scs_float scs_sgn(scs_float x);
-
-    /**
-     * Returns the absolute value of \c x.
-     * @param x
-     * @return 
-     */
-    scs_float scs_abs(scs_float x);
+    
 
     /**
      * Perofrms the operation

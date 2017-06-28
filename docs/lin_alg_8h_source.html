@@ -44,7 +44,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -67,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
-      <li><a href="globals.html"><span>File&#160;Members</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -75,7 +75,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -104,89 +104,85 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="scs_8h.html">scs.h</a>&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;math.h&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a1a79f14f41b82a9e6eb22ffbe3670fca">setAsScaledArray</a>(</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;            <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *x,</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a,</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> b,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;            <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a438bf41755c61afef25cdd3ef3f0a854">scaleArray</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#ac404bb227fd9ccf89d685e78e77bc7b6">innerProd</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *x, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *y, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a622bca83cde454e1c64d4b4140b25c79">calcNormSq</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *v, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">calcNorm</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *v, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a1a79f14f41b82a9e6eb22ffbe3670fca">setAsScaledArray</a>(</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *x,</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a,</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> b,</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;            <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a438bf41755c61afef25cdd3ef3f0a854">scaleArray</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#ac404bb227fd9ccf89d685e78e77bc7b6">innerProd</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *x, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *y, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a622bca83cde454e1c64d4b4140b25c79">calcNormSq</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *v, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a9fec615eabdbed48d18c0f6dcc8ebfa2">calcNormInf</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> l);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">calcNorm</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *v, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> len);</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a66c0f3a3261ca34697b7b27897676bdf">addScaledArray</a>(</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n,</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> sc);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a9b2aab57930d02c7b6daa9cc5fdc9360">addArray</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n);</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a8f9484eb226411277bc60b165e5dd611">subtractArray</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n);</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a0445c72b9f17917bb99ff5ec168fa217">calcNormDiff</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> l);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#ac03a83f4399614983fddd63a538c740b">calcNormInfDiff</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> l);</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a766e1da8f360e3bf6afe3affca1f1862">scs_sgn</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> x);</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a1e145f69d746d5609fb6ff8105a183c0">scs_abs</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> x);</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a>(</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;            <span class="keywordtype">int</span> m,</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;            <span class="keywordtype">int</span> n,</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;            <span class="keywordtype">int</span> k,</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;            <span class="keywordtype">double</span> alpha,</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *A,</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;            <span class="keywordtype">int</span> incRowA,</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;            <span class="keywordtype">int</span> incColA,</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *B,</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;            <span class="keywordtype">int</span> incRowB,</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;            <span class="keywordtype">int</span> incColB,</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;            <span class="keywordtype">double</span> beta,</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;            <span class="keywordtype">double</span> *C,</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;            <span class="keywordtype">int</span> incRowC,</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            <span class="keywordtype">int</span> incColC);</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a4249523beef60e26717f68d6a092917b">matrixMultiplicationColumnPacked</a>(</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;            <span class="keywordtype">int</span> m,</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;            <span class="keywordtype">int</span> n,</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;            <span class="keywordtype">int</span> k,</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;            <span class="keywordtype">double</span> alpha,</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *A,</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;            <span class="keywordtype">double</span> beta,</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *B,</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;            <span class="keywordtype">double</span> *C);</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    </div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#ae14dce63dbd50e1910164152e1b2c39a">matrixMultiplicationTransColumnPacked</a>(</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;            <span class="keywordtype">int</span> m,</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;            <span class="keywordtype">int</span> n,</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;            <span class="keywordtype">int</span> k,</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;            <span class="keywordtype">double</span> alpha,</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *A,</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;            <span class="keywordtype">double</span> beta,</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *B,</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;            <span class="keywordtype">double</span> *C) ;</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a9fec615eabdbed48d18c0f6dcc8ebfa2">calcNormInf</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> l);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a66c0f3a3261ca34697b7b27897676bdf">addScaledArray</a>(</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;            <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a,</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b,</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;            <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n,</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;            <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> sc);</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a9b2aab57930d02c7b6daa9cc5fdc9360">addArray</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n);</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a8f9484eb226411277bc60b165e5dd611">subtractArray</a>(<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n);</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#a0445c72b9f17917bb99ff5ec168fa217">calcNormDiff</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> l);</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="lin_alg_8h.html#ac03a83f4399614983fddd63a538c740b">calcNormInfDiff</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *a, <span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *b, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> l);</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    </div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a>(</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;            <span class="keywordtype">int</span> m,</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;            <span class="keywordtype">int</span> n,</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;            <span class="keywordtype">int</span> k,</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;            <span class="keywordtype">double</span> alpha,</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *A,</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;            <span class="keywordtype">int</span> incRowA,</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;            <span class="keywordtype">int</span> incColA,</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *B,</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;            <span class="keywordtype">int</span> incRowB,</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;            <span class="keywordtype">int</span> incColB,</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;            <span class="keywordtype">double</span> beta,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;            <span class="keywordtype">double</span> *C,</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;            <span class="keywordtype">int</span> incRowC,</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;            <span class="keywordtype">int</span> incColC);</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#a4249523beef60e26717f68d6a092917b">matrixMultiplicationColumnPacked</a>(</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;            <span class="keywordtype">int</span> m,</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;            <span class="keywordtype">int</span> n,</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;            <span class="keywordtype">int</span> k,</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;            <span class="keywordtype">double</span> alpha,</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *A,</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;            <span class="keywordtype">double</span> beta,</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *B,</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;            <span class="keywordtype">double</span> *C);</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    </div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="lin_alg_8h.html#ae14dce63dbd50e1910164152e1b2c39a">matrixMultiplicationTransColumnPacked</a>(</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;            <span class="keywordtype">int</span> m,</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            <span class="keywordtype">int</span> n,</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;            <span class="keywordtype">int</span> k,</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;            <span class="keywordtype">double</span> alpha,</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *A,</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;            <span class="keywordtype">double</span> beta,</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> *B,</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;            <span class="keywordtype">double</span> *C) ;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="lin_alg_8h_html_ac03a83f4399614983fddd63a538c740b"><div class="ttname"><a href="lin_alg_8h.html#ac03a83f4399614983fddd63a538c740b">calcNormInfDiff</a></div><div class="ttdeci">scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l)</div></div>
 <div class="ttc" id="scs_8h_html"><div class="ttname"><a href="scs_8h.html">scs.h</a></div></div>
 <div class="ttc" id="lin_alg_8h_html_a66c0f3a3261ca34697b7b27897676bdf"><div class="ttname"><a href="lin_alg_8h.html#a66c0f3a3261ca34697b7b27897676bdf">addScaledArray</a></div><div class="ttdeci">void addScaledArray(scs_float *a, const scs_float *b, scs_int n, const scs_float sc)</div></div>
-<div class="ttc" id="lin_alg_8h_html_a766e1da8f360e3bf6afe3affca1f1862"><div class="ttname"><a href="lin_alg_8h.html#a766e1da8f360e3bf6afe3affca1f1862">scs_sgn</a></div><div class="ttdeci">scs_float scs_sgn(scs_float x)</div></div>
 <div class="ttc" id="lin_alg_8h_html_a4249523beef60e26717f68d6a092917b"><div class="ttname"><a href="lin_alg_8h.html#a4249523beef60e26717f68d6a092917b">matrixMultiplicationColumnPacked</a></div><div class="ttdeci">void matrixMultiplicationColumnPacked(int m, int n, int k, double alpha, const double *A, double beta, const double *B, double *C)</div></div>
 <div class="ttc" id="lin_alg_8h_html_a9b2aab57930d02c7b6daa9cc5fdc9360"><div class="ttname"><a href="lin_alg_8h.html#a9b2aab57930d02c7b6daa9cc5fdc9360">addArray</a></div><div class="ttdeci">void addArray(scs_float *a, const scs_float *b, scs_int n)</div></div>
 <div class="ttc" id="lin_alg_8h_html_ae14dce63dbd50e1910164152e1b2c39a"><div class="ttname"><a href="lin_alg_8h.html#ae14dce63dbd50e1910164152e1b2c39a">matrixMultiplicationTransColumnPacked</a></div><div class="ttdeci">void matrixMultiplicationTransColumnPacked(int m, int n, int k, double alpha, const double *A, double beta, const double *B, double *C)</div></div>
 <div class="ttc" id="lin_alg_8h_html_a438bf41755c61afef25cdd3ef3f0a854"><div class="ttname"><a href="lin_alg_8h.html#a438bf41755c61afef25cdd3ef3f0a854">scaleArray</a></div><div class="ttdeci">void scaleArray(scs_float *a, const scs_float b, scs_int len)</div></div>
-<div class="ttc" id="lin_alg_8h_html_a1e145f69d746d5609fb6ff8105a183c0"><div class="ttname"><a href="lin_alg_8h.html#a1e145f69d746d5609fb6ff8105a183c0">scs_abs</a></div><div class="ttdeci">scs_float scs_abs(scs_float x)</div></div>
 <div class="ttc" id="lin_alg_8h_html_a0c75b64aca29b7ab69dec8ebc0d6faa2"><div class="ttname"><a href="lin_alg_8h.html#a0c75b64aca29b7ab69dec8ebc0d6faa2">calcNorm</a></div><div class="ttdeci">scs_float calcNorm(const scs_float *v, scs_int len)</div></div>
 <div class="ttc" id="lin_alg_8h_html_a7faa5a12cac3cba6b7f39b74b2fdeec7"><div class="ttname"><a href="lin_alg_8h.html#a7faa5a12cac3cba6b7f39b74b2fdeec7">dgemm_nn</a></div><div class="ttdeci">void dgemm_nn(int m, int n, int k, double alpha, const double *A, int incRowA, int incColA, const double *B, int incRowB, int incColB, double beta, double *C, int incRowC, int incColC)</div></div>
 <div class="ttc" id="lin_alg_8h_html_a1a79f14f41b82a9e6eb22ffbe3670fca"><div class="ttname"><a href="lin_alg_8h.html#a1a79f14f41b82a9e6eb22ffbe3670fca">setAsScaledArray</a></div><div class="ttdeci">void setAsScaledArray(scs_float *x, const scs_float *a, const scs_float b, scs_int len)</div></div>
@@ -200,7 +196,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 27 2017 20:41:34 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jun 28 2017 03:08:52 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

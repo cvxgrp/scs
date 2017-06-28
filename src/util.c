@@ -77,6 +77,7 @@ scs_float strtoc(char *str, timer *t) {
     return time;
 }
 
+/* LCOV_EXCL_START */
 void printConeData(const Cone *k) {
     scs_int i;
     scs_printf("num zeros = %i\n", (int) k->f);
@@ -147,6 +148,7 @@ void printArray(const scs_float *arr, scs_int n, const char *name) {
     }
     scs_printf("\n");
 }
+/* LCOV_EXCL_STOP */
 
 void freeData(Data *d, Cone *k) {
     if (d!=SCS_NULL) {
@@ -206,6 +208,9 @@ void freeInfo(Info *info) {
         }
         if (info->progress_dcost != SCS_NULL){
             scs_free(info->progress_dcost);
+        }
+        if (info->progress_norm_fpr != SCS_NULL){
+            scs_free(info->progress_norm_fpr);
         }
         scs_free(info);
     }

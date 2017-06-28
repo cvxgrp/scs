@@ -1,4 +1,5 @@
 #include "test_utilities.h"
+#include <time.h>
 
 bool testProjLinSysv2(char** str) {
 
@@ -106,13 +107,13 @@ bool testScaleArray(char** str) {
 }
 
 bool testGemm(char** str) {
-    double A[6] = {0.8147,
+    const double A[6] = {0.8147,
         0.9058,
         0.1270,
         0.9134,
         0.6324,
         0.0975};
-    double B[6] = {0.2785,
+    const double B[6] = {0.2785,
         0.5469,
         0.9575,
         0.9649,
@@ -122,12 +123,12 @@ bool testGemm(char** str) {
         0.4854,
         0.8003,
         0.1419};
-    double Cexp[4] = {2.3653,
+    const double Cexp[4] = {2.3653,
         1.3934,
         2.3106,
         0.8401};
-    double alpha = 0.5;
-    double beta = 2;
+    const double alpha = 0.5;
+    const double beta = 2;
     dgemm_nn(2, 2, 3,
             alpha, A,
             1, 2,
@@ -142,7 +143,7 @@ bool testGemm(char** str) {
 }
 
 bool testGemmCP(char** str) {
-    double A[10] = {
+    const double A[10] = {
         0.334430155748757,
         -0.119893174350795,
         0.804005060428243,
@@ -154,7 +155,7 @@ bool testGemmCP(char** str) {
         0.470502094834760,
         0.320050300435137
     };
-    double B[15] = {
+    const double B[15] = {
         0.242754814623263,
         -0.103589012251697,
         -0.454961543295210,
@@ -179,9 +180,9 @@ bool testGemmCP(char** str) {
         1.037274430734777,
         0.420892205865074
     };
-    double alpha = -0.286281752586377;
-    double beta = 3.194915595797473;
-    double Cexp[6] = {
+    const double alpha = -0.286281752586377;
+    const double beta = 3.194915595797473;
+    const double Cexp[6] = {
         -3.034975746827981,
         -3.123425247115062,
         -7.381229796362662,
@@ -198,7 +199,7 @@ bool testGemmCP(char** str) {
 }
 
 bool testGemmTransCP(char** str) {
-    double A[12] = {
+    const double A[12] = {
         0.698299663682011,
         -1.627423017907931,
         -1.372695305499414,
@@ -212,7 +213,7 @@ bool testGemmTransCP(char** str) {
         -0.212130772097334,
         -0.095040503915385
     };
-    double B[8] = {
+    const double B[8] = {
         0.701256481812284,
         0.876974554050047,
         -2.190732553342963,
@@ -230,9 +231,9 @@ bool testGemmTransCP(char** str) {
         -0.628575736932150,
         -0.462395267263025
     };
-    double alpha = -0.023912990352431;
-    double beta = 0.916952300228893;
-    double Cexp[6] = {
+    const double alpha = -0.023912990352431;
+    const double beta = 0.916952300228893;
+    const double Cexp[6] = {
         -1.506664428673252,
         -0.104113242719988,
         1.521217097262638,
@@ -245,19 +246,78 @@ bool testGemmTransCP(char** str) {
     SUCCEED(str);
 }
 
-bool testUnrolledDot(char** str){
-    scs_float x[4] = {5.,2.,3.,4.};
-    scs_float y[4] = {0.1,0.2,0.5,-0.9};
-    scs_float a[5] = {5.0,6.0,7.0,8.0,9.0};
-    scs_float b[5] = {11.0, 13.0, 15.0, 17.0, 19.0};
+bool testUnrolledDot(char** str) {
+    const scs_float x[4] = {5., 2., 3., 4.};
+    const scs_float y[4] = {0.1, 0.2, 0.5, -0.9};
+    const scs_float a[5] = {5.0, 6.0, 7.0, 8.0, 9.0};
+    const scs_float b[5] = {11.0, 13.0, 15.0, 17.0, 19.0};
+    const scs_float c[6] = {-1.2, 3.4, 5.6, 7.8, 9.1, 11.12};
+    const scs_float d[6] = {2.3, 4.5, 6.7, 8.9, 10.11, 12.13};
+    const scs_float p[11] = {0.554259561551264, -2.159803537045049, -0.372961114202917,
+        -2.592374718571431, 0.549237254991523, 0.535999299756211, -0.188665249567086,
+        0.760181191234408, 1.033831426574950, -0.196086216446758, 0.474596953309341};
+    const scs_float q[11] = {-1.2360603341291734, -0.7844101929878990, 0.7651738841267504,
+        -0.8603726595864287, 1.0311516752375671, 0.5283233936417885, -1.2091816279319294,
+        -0.1549870848290139, -0.9608099563757425, 0.7599149377251431, 0.0224256807626837};
+    /*
+        const unsigned n = 5e6;
+        scs_float * big_x = malloc(n * sizeof (scs_float));
+        scs_float * big_y = malloc(n * sizeof (scs_float));    
+        scs_int i;
+     */
+    
     scs_float ip;
-    scs_float ip2;
-    
+    /*
+        clock_t t;
+     */
+
     ip = innerProd(x, y, 4);
-    ip2 = innerProd(a, b, 5);
-    ASSERT_EQAUL_FLOAT_OR_FAIL(-1.2, ip, 1e-6, str, "inn prod");
-    ASSERT_EQAUL_FLOAT_OR_FAIL(ip2, 545.0, 1e-6, str, "inn prod 2");
-    
-    
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, -1.2, 1e-6, str, "inn prod 1");
+    ip = innerProd(a, b, 5);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 545.0, 1e-6, str, "inn prod 2");
+    ip = innerProd(c, d, 6);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 346.3666, 1e-6, str, "inn prod 3");
+    ip = innerProd(p, q, 11);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 2.78226083574042, 1e-10, str, "inn prod 4");
+    ip = innerProd(p, q, 7);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 4.03176031557307, 1e-10, str, "inn prod 5");
+    ip = innerProd(p, q, 8);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 3.91394204880181, 1e-10, str, "inn prod 6");
+    ip = innerProd(p, q, 1);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, -0.685098258845344, 1e-10, str, "inn prod 7");
+    ip = innerProd(p, q, 2);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 1.00907365046411, 1e-10, str, "inn prod 8");
+    ip = innerProd(p, q, 0);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 0.0f, 1e-10, str, "inn prod 9");
+    ip = innerProd(p, q, -1);
+    ASSERT_EQAUL_FLOAT_OR_FAIL(ip, 0.0f, 1e-10, str, "inn prod 10");
+
+    /*
+        t = clock();
+        for (i = 0; i < 500; ++i) {
+            ip = innerProd(big_x, big_y, n);
+        }
+        t = clock() - t;
+        double elapsed_time = t / (double) CLOCKS_PER_SEC;
+        printf("Elapsed time: %g.\n", elapsed_time);
+        scs_free(big_x);
+        scs_free(big_y);
+     */
+    SUCCEED(str);
+}
+
+bool testLinAlg(char** str) {
+#define n 97
+    scs_float x[n];
+    scs_float y[n];
+    unsigned int i = 0;
+    for (i = 0; i < n; ++i) {
+        x[i] = SQRTF(0.1*i+1);
+        y[i] = sin(i/20);
+    }
+    subtractArray(x, y, n);
+    for (i = 0; i < n; ++i) {
+        ASSERT_EQAUL_FLOAT_OR_FAIL(x[i], SQRTF(0.1*i+1) - sin(i/20), 1e-10, str, "wrong");
+    }
     SUCCEED(str);
 }
