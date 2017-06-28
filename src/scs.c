@@ -173,6 +173,7 @@ static void printInitHeader(const Data *d, const Cone *k) {
 #endif
     RETURN;
 }
+
 /* LCOV_EXCL_STOP */
 
 static void populateOnFailure(scs_int m, scs_int n, Sol *sol, Info *info,
@@ -515,12 +516,15 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 
 /* status < 0 indicates failure */
 static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int iter) {
-    DEBUG_FUNC
-            const scs_int l = w->l;
+    DEBUG_FUNC;
+    const scs_int l = w->l;
     scs_int status;
 
-    /* u_t = u (is already provided scaled      */
-    memcpy(u_t, u, l * sizeof (scs_float));
+    /*TODO make more efficient; eliminate memcpy? use setAsScaledArray? */
+    
+    /* ut(1:n) = rho_x*ut(1:n); */
+    memcpy(u_t + w->n, u + w->n, (w->m + 1) * sizeof (scs_float));
+    setAsScaledArray(u_t, u, w->stgs->rho_x, w->n);
 
     /* ut(1:l-1) = ut(1:l-1) - ut(end) * h      */
     addScaledArray(u_t, w->h, l - 1, -u_t[l - 1]);
@@ -558,6 +562,7 @@ void printSol(Work *w, Sol *sol, Info *info) {
     }
     RETURN;
 }
+
 /* LCOV_EXCL_STOP */
 
 static void updateDualVars(Work *w) {
@@ -851,6 +856,7 @@ static void printHeader(Work *w, const Cone *k) {
 #endif
     RETURN;
 }
+
 /* LCOV_EXCL_STOP */
 
 scs_float getDualConeDist(const scs_float *y, const Cone *k, ConeWork *c,
@@ -957,6 +963,7 @@ static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
 #endif
     RETURN;
 }
+
 /* LCOV_EXCL_STOP */
 
 static scs_int hasConverged(Work *w, struct residuals *r, scs_int iter) {
@@ -1479,7 +1486,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float slack; /* for K2 */
     scs_float rhs; /* for K2 */
     scs_float stepsize2; /* for K2 */
-    scs_float sqrt_rhox = sqrt(work->stgs->rho_x);
+    scs_float sqrt_rhox = SQRTF(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
     timer solveTimer;
     struct residuals r;
@@ -1535,9 +1542,9 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
                 "error in projectConesv2", "Failure");
     }
-    compute_sb_kapb(work->u, work->u_b, work->u_t, work);
-    calcFPRes(work->R, work->u_t, work->u_b, work->l); /* computes Ru */
-    scaleArray(work->R, sqrt_rhox, work->n);
+    compute_sb_kapb(work->u, work->u_b, work->u_t, work); /* compute s_b and kappa_b */
+    calcFPRes(work->R, work->u_t, work->u_b, work->l); /* compute Ru */
+    scaleArray(work->R, sqrt_rhox, work->n); /* scale R_x with sqrt_rhox */
     eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
     scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
@@ -1580,10 +1587,11 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
             work->stgs->sse *= q; /*sse = q^i */
             if (i == 0) {
-                /* dir^0 = -R */
-                for (j1 = 0; j1 < work->l; ++j1) {
-                    work->dir[j1] = -work->R[j1];
-                }
+                /* -------------------------------------------
+                 * At i=0, the direction is defined using the 
+                 * FPR: dir^0 = -R 
+                 * -------------------------------------------- */
+                setAsScaledArray(work->dir, work->R, -1, work->l);
             } else {
                 if (how == 0 || work->stgs->ls == 0) {
                     for (j1 = 0; j1 < work->l; ++j1) {
@@ -1599,6 +1607,9 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 /* compute direction */
                 computeDirection(work, i);
             }
+            /* -------------------------------------------
+             * Scale the x-part of dir using sqrt_rhox
+             * -------------------------------------------- */
             scaleArray(work->dir, 1 / sqrt_rhox, work->n);
         }
 
@@ -1617,7 +1628,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 projectLinSysv2(work->dut, work->dir, work, i);
                 work->stepsize = 2.0;
 
-                /* Line - search */
+                /* Line search */
                 for (j = 0; j < work->stgs->ls; ++j) {
                     work->stepsize *= work->stgs->beta;
                     for (j1 = 0; j1 < work->l; ++j1) {
@@ -1627,8 +1638,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
                     projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i);
                     calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
-
-                    /* here we don't scale R */
 
                     nrmRw_con = calcNorm(work->Rwu, work->l);
                     /* K1 */

@@ -275,7 +275,7 @@ bool test_superscs_001_rbroyden(char** str) {
 
     data->stgs->sse = 0.5;
     data->stgs->eps = 1e-4;
-    data->stgs->rho_x = 1.0;
+    data->stgs->rho_x = 1.f;
     data->stgs->direction = (direction_type) restarted_broyden;
     data->stgs->verbose = 0;
     data->stgs->k0 = 0;
@@ -284,10 +284,19 @@ bool test_superscs_001_rbroyden(char** str) {
     data->stgs->ls = 10;
     data->stgs->max_iters = 1;
     data->stgs->do_super_scs = 1;
+    data->stgs->memory = 10;
+    data->stgs->sigma = 1e-2;
+    data->stgs->c1 = 1.0 - 1e-4;
+    data->stgs->c_bl = 0.999;
+    data->stgs->beta = 0.5;
+    data->stgs->normalize = 1;
+    data->stgs->scale = 1;
+    data->stgs->alpha = 1.5;
 
     sol = initSol();
     info = initInfo();
 
+    
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_UNBOUNDED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], 0.274057420504456, 1e-10, str, "x[0] wrong");
@@ -332,10 +341,12 @@ bool test_superscs_001_rbroyden(char** str) {
     ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -18.660744885301725, 1e-10, str, "x[0] wrong");
-
+    
+    
     data->stgs->max_iters = 250;
     data->stgs->do_record_progress = 1;
     data->stgs->eps = 1e-4;
+    data->stgs->rho_x = 1;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
