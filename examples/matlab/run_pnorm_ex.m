@@ -7,7 +7,7 @@ disp('Set run_cvx = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
 save_results = false;
-run_cvx = false;
+run_cvx = true;
 cvx_use_solver = 'sdpt3';
 run_scs_direct = true;
 run_scs_indirect = true;
@@ -52,10 +52,14 @@ for i = 1:length(ns)
         data.b = [f; 0 ; zeros(3*n,1)];
         K = struct('f', m+1, 'p', ones(n,1) / pow);
         
-        params.eps = 1e-3;
+        params.eps = 1e-6;
         params.scale = 1;
         params.cg_rate = 1.5;
-        
+        params.do_super_scs = 1;
+        params.memory = 50;
+        params.normalize = 1;
+        params.direction = 100;
+        params.rho_x = 1;
         if (run_scs_direct)
             if (save_results)
                 [out,x_scs,y_scs,s_scs,info] = evalc('scs_direct(data, K, params)');
@@ -65,6 +69,7 @@ for i = 1:length(ns)
                 [x_scs,y_scs,s_scs,info] = scs_direct(data, K, params);
             end
         end
+        
         if (run_scs_indirect)
             if (save_results)
                 [out,x_scs,y_scs,s_scs,info] = evalc('scs_indirect(data, K, params)');
@@ -81,7 +86,9 @@ for i = 1:length(ns)
         try
             tic
             cvx_begin
-            cvx_solver(cvx_use_solver)
+            cvx_solver scs
+            cvx_solver_settings('eps',1e-4,'verbose',2,'do_super_scs', 1, 'rho_x', 1, 'direction', 100, 'memory', 40 );
+    
             variable x(n)
             minimize(norm(x, pow))
             subject to
