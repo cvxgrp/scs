@@ -16,7 +16,7 @@ data.A = sparse(A);
 data.b = b;
 data.c = c;
 
-params.eps          = 1e-4;
+params.eps          = 1e-8;
 params.nominal      = 0;
 params.do_super_scs = 1;
 params.alpha        = 1.5;
@@ -36,14 +36,12 @@ params.thetabar     = 0.1;
 params.memory       = 10;
 params.sse          = 0.999;
 params.tRule        = 1;
-params.do_record_progress = 0;
+params.do_record_progress = 1;
 params.max_iters    = 2e3;
-params.rho_x        = 1;
+params.rho_x        = .01;
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
-
-x2
-
 [x1, y1, s1, info1] = scs_direct(data, K, params);
+%%
 fprintf('|errx| = %g, |erry| = %g, |errs| = %g\n', ...
     norm(x1 - x2, Inf), norm(y1 - y2, Inf), norm(s1 - s2, Inf));
 assert(norm(x1 - x2, Inf)<1e-7,'x');
@@ -71,11 +69,11 @@ c = [1;-2;-3];
 
 n = size(A,2);
 cvx_begin
-    cvx_solver scs
-    cvx_solver_settings('eps', 1e-8, 'do_super_scs', 1, 'rho_x', 1, 'direction', 100, 'memory', 50 );
-    variable x(n);
-    dual variable y;
-    minimize( x'*x + c' * x );
-    subject to
-    y : A * x <= b;
+cvx_solver scs
+cvx_solver_settings('eps', 1e-8, 'do_super_scs', 1, 'rho_x', 1, 'direction', 100, 'memory', 50 );
+variable x(n);
+dual variable y;
+minimize( x'*x + c' * x );
+subject to
+y : A * x <= b;
 cvx_end
