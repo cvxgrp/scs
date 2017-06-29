@@ -60,12 +60,12 @@ data.A = sparse(randn(m,n));
 data.b = randn(m,1);
 data.c = randn(n,1);
 cones.q = m;
-[x,y,s,info] = scs_direct(data,cones,struct('eps',1e-5,'do_super_scs',1,'memory',50));
+[x,y,s,info] = scs_direct(data,cones,struct('eps',1e-5,'do_super_scs',1,'memory',50,'rho_x',.1));
 assert(strcmp(info.status,'Solved')==1);
 assert(abs(info.pobj-info.dobj)<1e-4);
 
 %
-[x,y,s,info] = scs_indirect(data,cones,struct('eps',1e-5,'do_super_scs',1));
+[x,y,s,info] = scs_indirect(data,cones,struct('eps',1e-5,'do_super_scs',1,'rho_x',.01));
 assert(strcmp(info.status,'Solved')==1);
 assert(abs(info.pobj-info.dobj)<1e-4);
 

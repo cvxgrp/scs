@@ -1627,7 +1627,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     timer solveTimer;
     struct residuals r;
 
-    if (i = initProgressData(info, work) < 0) {
+    i = initProgressData(info, work);
+    if (i < 0) {
         /* LCOV_EXCL_START */
         scs_printf("Memory allocation error (progress arrays), code: %d\n", i);
         RETURN SCS_FAILED;
@@ -1694,7 +1695,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 info->progress_resdual[idx_progress] = r.resDual;
                 info->progress_pcost[idx_progress] = r.cTx_by_tau / r.tau;
                 info->progress_dcost[idx_progress] = -r.bTy_by_tau / r.tau;
-                //                info->progress_norm_fpr[idx_progress] = 0.0;
+                info->progress_norm_fpr[idx_progress] = 0.0;
             }
             if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
