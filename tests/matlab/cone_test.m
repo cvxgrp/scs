@@ -36,14 +36,13 @@ params.thetabar     = 0.1;
 params.memory       = 10;
 params.sse          = 0.999;
 params.tRule        = 1;
-params.do_record_progress = 1;
-
+params.do_record_progress = 0;
 params.max_iters    = 2e3;
-params.rho_x        = 0.01;
+params.rho_x        = 1;
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
 
 x2
-%%
+
 [x1, y1, s1, info1] = scs_direct(data, K, params);
 fprintf('|errx| = %g, |erry| = %g, |errs| = %g\n', ...
     norm(x1 - x2, Inf), norm(y1 - y2, Inf), norm(s1 - s2, Inf));

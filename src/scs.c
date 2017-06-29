@@ -28,7 +28,7 @@ static const scs_int LINE_LEN = 85;
 
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
-    RETURN( isnan(x) ); /* `isnan` works both for `float` and `double` types */
+    RETURN(isnan(x)); /* `isnan` works both for `float` and `double` types */
 }
 
 static SUCache * initSUCache(scs_int memory, scs_int l) {
@@ -516,30 +516,28 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 
 /* status < 0 indicates failure */
 static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int iter) {
-    DEBUG_FUNC;
-    const scs_int l = w->l;
+    DEBUG_FUNC
     scs_int status;
-
-    /*TODO make more efficient; eliminate memcpy? use setAsScaledArray? */
-
-    /* ut(1:n) = rho_x*ut(1:n); */
+    const scs_int l = w->l;        
+    
+    /* x_t = rho_x * x_t */
     memcpy(u_t + w->n, u + w->n, (w->m + 1) * sizeof (scs_float));
     setAsScaledArray(u_t, u, w->stgs->rho_x, w->n);
 
-    /* ut(1:l-1) = ut(1:l-1) - ut(end) * h      */
+    /* (x_t, y_t) -= tau_t * h                   */
     addScaledArray(u_t, w->h, l - 1, -u_t[l - 1]);
 
-    /* ut -= scalar * h                         */
+    /* u_t -= scalar * h                         */
     addScaledArray(u_t, w->h, l - 1,
             -innerProd(u_t, w->g, l - 1) / (w->gTh + 1));
 
-    /* ut(n+1:end-1) = -ut(n+1:end-1);          */
+    /* y_t *= (-1)                               */
     scaleArray(u_t + w->n, -1, w->m);
 
-    /* call `solveLinSys` to update ut(1:n+m)   */
+    /* call `solveLinSys` to update (x_t, y_t)   */
     status = solveLinSys(w->A, w->stgs, w->p, u_t, u, iter);
 
-    /* ut(end) = (ut(end) + h'*ut(1:l-1))       */
+    /* tau_t += h'*(x_t, y_t)                    */
     u_t[l - 1] += innerProd(u_t, w->h, l - 1);
 
     RETURN status;
@@ -1606,7 +1604,7 @@ static scs_int initProgressData(Info * info, Work * work) {
             if (info->progress_norm_fpr == SCS_NULL) return -16;
         }
     }
-
+    return 0;
 }
 
 scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol, Info *info) {
@@ -1695,7 +1693,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 info->progress_resdual[idx_progress] = r.resDual;
                 info->progress_pcost[idx_progress] = r.cTx_by_tau / r.tau;
                 info->progress_dcost[idx_progress] = -r.bTy_by_tau / r.tau;
-                info->progress_norm_fpr[idx_progress] = 0.0;
+                info->progress_norm_fpr[idx_progress] = work->nrmR_con;
             }
             if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
@@ -1729,7 +1727,12 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     }
                 }
                 /* compute direction */
-                computeDirection(work, i);
+                if (computeDirection(work, i) < 0) {
+                    {
+                        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                                "error in computeDirection", "Failure");
+                    }
+                }
             }
             /* -------------------------------------------
              * Scale the x-part of dir using sqrt_rhox
@@ -1749,7 +1752,10 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 eta = work->nrmR_con;
                 work->stepsize = 1.0;
             } else if (work->stgs->ls > 0) {
-                projectLinSysv2(work->dut, work->dir, work, i);
+                if (projectLinSysv2(work->dut, work->dir, work, i) < 0) {
+                    RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                            "error in projectLinSysv2", "Failure");
+                }
                 work->stepsize = 2.0;
 
                 /* Line search */
@@ -1760,7 +1766,10 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->wu_t[j1] = work->u_t[j1] + work->stepsize * work->dut[j1]; /* wut = u_t + step * dut */
                     }
 
-                    projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i);
+                    if (projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i) < 0) {
+                        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                                "error in projectConesv2", "Failure");
+                    }
                     calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
 
                     nrmRw_con = calcNorm(work->Rwu, work->l);
@@ -1802,13 +1811,18 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             addScaledArray(work->u + work->n, work->R + work->n, work->m + 1, -work->stgs->alpha);
         }
         if (how != 1) { /* exited with K1 */
-            projectLinSysv2(work->u_t, work->u, work, i);
-            projectConesv2(work->u_b, work->u_t, work->u, work, cone, i); /* u_bar = proj_C(2u_t - u) */
+            if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
+                RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                        "error in projectLinSysv2", "Failure");
+            }
+            if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
+                RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                        "error in projectConesv2", "Failure");
+            }
             compute_sb_kapb(work->u, work->u_b, work->u_t, work);
             calcFPRes(work->R, work->u_t, work->u_b, work->l);
             scaleArray(work->R, sqrt_rhox, work->n);
             work->nrmR_con = calcNorm(work->R, work->l);
-            /* printf("%3.12f\n", work->nrmR_con); */
         }
     } /* main for loop */
 

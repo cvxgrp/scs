@@ -110,7 +110,7 @@ scs_int computeFullBroyden(Work *work, scs_int i) {
         }
     }
 
-    return 0;
+    return DIRECTION_SUCCESS;
 }
 
 scs_int computeDirection(Work *work, scs_int i) {

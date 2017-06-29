@@ -399,7 +399,7 @@ bool test_superscs_001_rbroyden(char** str) {
     data->stgs->do_super_scs = 0;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
-    
+
     freeData(data, cone);
     freeSol(sol);
     freeInfo(info);
@@ -492,14 +492,31 @@ bool test_residuals(char** str) {
     data->stgs->do_super_scs = 1;
     data->stgs->verbose = 0;
     data->stgs->do_record_progress = 1;
-    data->stgs->max_iters = 12;
-
+    data->stgs->max_iters = 120;
+    
     sol = initSol();
     info = initInfo();
 
     status = scs(data, cone, sol, info);
     ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
     ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-7, str, "relative gap");
+
+    /*
+    scs_int i;
+    const scs_int column_size = 10;
+    printf("  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n");
+    printf("----------------------------------------------------------------\n");
+    for (i = 0; i < info->iter; ++i) {
+        printf("%*i ", 3, i);
+        printf("%*.2e", column_size, info->progress_pcost[i]);
+        printf("%*.2e", column_size, info->progress_dcost[i]);
+        printf("%*.2e", column_size, info->progress_relgap[i]);
+        printf("%*.2e", column_size, info->progress_norm_fpr[i]);
+        printf("%*.2e", column_size, info->progress_respri[i]);
+        printf("%*.2e", column_size, info->progress_resdual[i]);
+        printf("\n");
+    }
+    */
 
     freeData(data, cone);
     freeSol(sol);
