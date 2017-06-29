@@ -28,7 +28,7 @@ static const scs_int LINE_LEN = 85;
 
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
-    RETURN(x == NAN || x != x);
+    RETURN( isnan(x) ); /* `isnan` works both for `float` and `double` types */
 }
 
 static SUCache * initSUCache(scs_int memory, scs_int l) {
@@ -1145,60 +1145,82 @@ static Work *initWork(const Data *d, const Cone *k) {
      * ------------------------------------- */
     w->u = scs_calloc(l, sizeof (scs_float));
     if (w->u == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->u_b = scs_calloc(l, sizeof (scs_float));
     if (w->u_b == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u_b` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     if (w->stgs->do_super_scs == 0) {
         w->v = scs_calloc(l, sizeof (scs_float));
         if (w->v == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `v` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
     }
     w->u_t = scs_malloc(l * sizeof (scs_float));
     if (w->u_t == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u_t` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->u_prev = scs_malloc(l * sizeof (scs_float));
     if (w->u_prev == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u_prev` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->h = scs_malloc((l - 1) * sizeof (scs_float));
     if (w->h == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `h` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->g = scs_malloc((l - 1) * sizeof (scs_float));
     if (w->g == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `g` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->pr = scs_malloc(d->m * sizeof (scs_float));
     if (w->pr == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `pr` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->dr = scs_malloc(d->n * sizeof (scs_float));
     if (w->dr == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `dr` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->b = scs_malloc(d->m * sizeof (scs_float));
     if (w->b == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `b` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->c = scs_malloc(d->n * sizeof (scs_float));
     if (w->c == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `c` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
 
 
@@ -1210,28 +1232,38 @@ static Work *initWork(const Data *d, const Cone *k) {
          * ------------------------------------- */
         w->R = scs_calloc(l, sizeof (scs_float));
         if (w->R == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `R` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->R_prev = scs_calloc(l, sizeof (scs_float));
         if (w->R_prev == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `R_prev` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->dir = scs_malloc(l * sizeof (scs_float));
         if (w->dir == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `dir` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->dut = scs_malloc(l * sizeof (scs_float));
         if (w->dut == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `dut` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->s_b = scs_malloc(d->m * sizeof (scs_float));
         if (w->s_b == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `s_b` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
 
         w->stepsize = 1.0;
@@ -1244,8 +1276,10 @@ static Work *initWork(const Data *d, const Cone *k) {
                 && w->stgs->memory > 0) {
             w->su_cache = initSUCache(w->stgs->memory, l);
             if (w->su_cache == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `su_cache` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
         } else {
             w->su_cache = SCS_NULL;
@@ -1259,8 +1293,10 @@ static Work *initWork(const Data *d, const Cone *k) {
             scs_int i;
             w->H = scs_malloc(l * l * sizeof (scs_float));
             if (w->H == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `H` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             /* H = I */
             for (i = 0; i < l; ++i) {
@@ -1272,35 +1308,47 @@ static Work *initWork(const Data *d, const Cone *k) {
 
         w->Sk = scs_malloc(l * sizeof (scs_float));
         if (w->Sk == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `Sk` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->Yk = scs_malloc(l * sizeof (scs_float));
         if (w->Yk == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `Yk` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
 
         if (w->stgs->ls > 0) {
             w->wu = scs_malloc(l * sizeof (scs_float));
             if (w->wu == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `wu` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             w->Rwu = scs_malloc(l * sizeof (scs_float));
             if (w->Rwu == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `Rwu` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             w->wu_t = scs_malloc(l * sizeof (scs_float));
             if (w->wu_t == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `wu_t` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             w->wu_b = scs_malloc(l * sizeof (scs_float));
             if (w->wu_b == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `wu_b` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
         }
     } else {
@@ -1327,8 +1375,10 @@ static Work *initWork(const Data *d, const Cone *k) {
     if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
         if (!copyAMatrix(&(w->A), d->A)) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: copy A matrix failed\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
 #endif
         w->scal = scs_malloc(sizeof (Scaling));
@@ -1343,13 +1393,17 @@ static Work *initWork(const Data *d, const Cone *k) {
         w->scal = SCS_NULL;
     }
     if (!(w->coneWork = initCone(k))) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: initCone failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->p = initPriv(w->A, w->stgs);
     if (!w->p) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: initPriv failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     RETURN w;
 }
