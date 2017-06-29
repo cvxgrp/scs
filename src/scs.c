@@ -1536,17 +1536,7 @@ static scs_int initProgressData(Info * info, Work * work) {
      * initially set to SCS_NULL.
      * ------------------------------------------------------------- */
     if (work->stgs->do_record_progress) {
-        const scs_int max_history_alloc = work->stgs->max_iters;
-        /*
-        printf("max_history_alloc: %d\n", max_history_alloc);
-        printf("previous max iter: %d\n", work->stgs->previous_max_iters);
-        printf("info->progress_relgap: 0x%p\n", (void *) info->progress_relgap);
-        printf("info->progress_respri: 0x%p\n", (void *) info->progress_respri);
-        printf("info->progress_resdual: 0x%p\n", (void *) info->progress_resdual);
-        printf("info->progress_pcost: 0x%p\n", (void *) info->progress_pcost);
-        printf("info->progress_dcost: 0x%p\n", (void *) info->progress_dcost);
-        printf("info->progress_iter: 0x%p\n", (void *) info->progress_iter);
-        printf("info->progress_norm_fpr: 0x%p\n", (void *) info->progress_norm_fpr);*/
+        const scs_int max_history_alloc = work->stgs->max_iters;       
 
         /* ----------------------------------------
          * If a pointer is SCS_NULL, it means that 
@@ -1637,7 +1627,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     struct residuals r;
 
     i = initProgressData(info, work);
-    printf("process data status : %d\n", i);
     if (i < 0) {
         /* LCOV_EXCL_START */
         scs_printf("Memory allocation error (progress arrays), code: %d\n", i);
