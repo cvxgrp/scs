@@ -16,7 +16,7 @@ data.A = sparse(A);
 data.b = b;
 data.c = c;
 
-params.eps          = 1e-8;
+params.eps          = 1e-4;
 params.nominal      = 0;
 params.do_super_scs = 1;
 params.alpha        = 1.5;
@@ -33,15 +33,16 @@ params.k2           = 1;
 params.ls           = 10;
 params.sigma        = 1e-2;
 params.thetabar     = 0.1;
-params.rho_x        = .1;
 params.memory       = 10;
 params.sse          = 0.999;
 params.tRule        = 1;
 params.do_record_progress = 1;
 
 params.max_iters    = 2e3;
+params.rho_x        = 0.01;
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
 
+x2
 %%
 [x1, y1, s1, info1] = scs_direct(data, K, params);
 fprintf('|errx| = %g, |erry| = %g, |errs| = %g\n', ...

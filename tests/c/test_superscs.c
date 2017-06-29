@@ -1,6 +1,7 @@
 #include "test_superscs.h"
 #include "linsys/amatrix.h"
 #include "linsys/common.h"
+#include "linsys/direct/external/amd_internal.h"
 
 static void prepare_data(Data ** data) {
     const scs_int n = 3;
@@ -275,7 +276,7 @@ bool test_superscs_001_rbroyden(char** str) {
 
     data->stgs->sse = 0.5;
     data->stgs->eps = 1e-4;
-    data->stgs->rho_x = 1.f;
+    data->stgs->rho_x = 1.;
     data->stgs->direction = (direction_type) restarted_broyden;
     data->stgs->verbose = 0;
     data->stgs->k0 = 0;
@@ -296,7 +297,7 @@ bool test_superscs_001_rbroyden(char** str) {
     sol = initSol();
     info = initInfo();
 
-    
+
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_UNBOUNDED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], 0.274057420504456, 1e-10, str, "x[0] wrong");
@@ -341,16 +342,64 @@ bool test_superscs_001_rbroyden(char** str) {
     ASSERT_EQAUL_INT_OR_FAIL(info->iter, data->stgs->max_iters, str, "no iterations");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -18.660744885301725, 1e-10, str, "x[0] wrong");
-    
-    
-    data->stgs->max_iters = 250;
-    data->stgs->do_record_progress = 1;
+
+    /*
+     * Here I'm modifying the maximum number of iterations to make sure that  
+     * those tricks with stgs->previous_max_iter indeed works.
+     */
+
+    data->stgs->max_iters = 1000;
     data->stgs->eps = 1e-4;
-    data->stgs->rho_x = 1;
+    data->stgs->rho_x = 0.5;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->progress_dcost == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_pcost == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_relgap == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_respri == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_resdual == SCS_NULL, str, "progress not NULL");
 
+    data->stgs->max_iters = 2000;
+    data->stgs->do_record_progress = 1;
+    data->stgs->rho_x = .1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->progress_dcost != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_pcost != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_relgap != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_respri != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_resdual != SCS_NULL, str, "progress NULL");
+    ASSERT_EQAUL_INT_OR_FAIL(data->stgs->max_iters, 2000, str, "Wrong previous no. iter");
+    ASSERT_EQAUL_INT_OR_FAIL(data->stgs->previous_max_iters, 2000, str, "Wrong previous no. iter");
+
+    data->stgs->max_iters = 3000;
+    data->stgs->rho_x = .01;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+
+    data->stgs->max_iters = 2000;
+    data->stgs->rho_x = .001;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+
+    data->stgs->max_iters = 3100;
+    data->stgs->rho_x = .0001;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+
+    data->stgs->max_iters = 3200;
+    data->stgs->rho_x = 10;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+
+    data->stgs->max_iters = 3300;
+    data->stgs->rho_x = 0.001;
+    data->stgs->do_super_scs = 0;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    
     freeData(data, cone);
     freeSol(sol);
     freeInfo(info);

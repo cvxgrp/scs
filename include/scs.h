@@ -9,6 +9,7 @@
 #include "util.h"
 #include "ctrlc.h"
 #include "constants.h"
+#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -313,9 +314,15 @@ extern "C" {
          * ------------------------------------- */
 
         /**
-         *  Maximum iterations to take: 2500 
+         * Maximum iterations to take: 2500 
          */
         scs_int max_iters;
+        /**
+         * Maximum iterations of the previous invocation to scs.
+         * 
+         * Used to avoid memory leaks when recording the progress of the algorithm.
+         */
+        scs_int previous_max_iters;
         /** 
          * Convergence tolerance.
          * 
@@ -414,7 +421,7 @@ extern "C" {
          */
         scs_int broyden_init_scaling;
         /**
-         * Whether to record progress data
+         * Whether to record progress data when running SuperSCS.
          */
         scs_int do_record_progress;
     };
@@ -446,14 +453,14 @@ extern "C" {
         scs_float relGap; /**< \brief relative duality gap */
         scs_float setupTime; /**< \brief time taken for setup phase (milliseconds) */
         scs_float solveTime; /**< \brief time taken for solve phase (milliseconds) */
-        
-        scs_int     history_length; /**< \brief how many history entries */
-        scs_int   * progress_iter; /**< \brief iterations when residulas are recorded */
+
+        scs_int history_length; /**< \brief how many history entries */
+        scs_int * progress_iter; /**< \brief iterations when residulas are recorded */
         scs_float * progress_relgap; /**< \brief relative gap history */
-        scs_float * progress_respri;  /**< \brief primal residual history */
-        scs_float * progress_resdual;  /**< \brief dual residual history */
-        scs_float * progress_pcost;  /**< \brief scaled primal cost history */
-        scs_float * progress_dcost;  /**< \brief sclaed dual cost history */
+        scs_float * progress_respri; /**< \brief primal residual history */
+        scs_float * progress_resdual; /**< \brief dual residual history */
+        scs_float * progress_pcost; /**< \brief scaled primal cost history */
+        scs_float * progress_dcost; /**< \brief sclaed dual cost history */
         scs_float * progress_norm_fpr; /**< \brief FPR history */
     };
 

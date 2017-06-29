@@ -219,6 +219,7 @@ void freeInfo(Info *info) {
 /* assumes d->stgs already allocated memory */
 void setDefaultSettings(Data *d) {
     d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
+    d->stgs->previous_max_iters = -1; /* maximum iterations of previous invocation */
     d->stgs->eps = EPS; /* convergence tolerance: 1e-3 */
     d->stgs->alpha = ALPHA; /* relaxation parameter: 1.8 */
     d->stgs->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */

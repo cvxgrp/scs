@@ -521,7 +521,7 @@ static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int
     scs_int status;
 
     /*TODO make more efficient; eliminate memcpy? use setAsScaledArray? */
-    
+
     /* ut(1:n) = rho_x*ut(1:n); */
     memcpy(u_t + w->n, u + w->n, (w->m + 1) * sizeof (scs_float));
     setAsScaledArray(u_t, u, w->stgs->rho_x, w->n);
@@ -1473,6 +1473,88 @@ static void compute_sb_kapb(scs_float *u, scs_float *u_b, scs_float *u_t, Work *
     w->kap_b = u_b[w->l - 1] - 2.0 * u_t[w->l - 1] + u[w->l - 1];
 }
 
+static scs_int initProgressData(Info * info, Work * work) {
+    /* -------------------------------------------------------------
+     * As the might be successive calls to superSCS (superscs_solve) 
+     * with different values of `do_record_progress`, we nee to make
+     * sure that we neither allocate memory for the same array
+     * twice, nor do we set any arrays to SCS_NULL unnecessarily.
+     * Note that, provided that `info` has been initialized with 
+     * initInfo (this is highly recommended), all pointers are 
+     * initially set to SCS_NULL.
+     * ------------------------------------------------------------- */
+    if (work->stgs->do_record_progress) {
+        const scs_int max_history_alloc = work->stgs->max_iters;
+        /* ----------------------------------------
+         * If a pointer is SCS_NULL, it means that 
+         * no memory has been allocated for that 
+         * previously.
+         * ---------------------------------------- */
+        if (info->progress_relgap == SCS_NULL) {
+            info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_relgap == SCS_NULL) return -1;
+        }
+        if (info->progress_respri == SCS_NULL) {
+            info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_respri == SCS_NULL) return -2;
+        }
+        if (info->progress_resdual == SCS_NULL) {
+            info->progress_resdual = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_resdual == SCS_NULL) return -3;
+        }
+        if (info->progress_pcost == SCS_NULL) {
+            info->progress_pcost = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_pcost == SCS_NULL) return -4;
+        }
+        if (info->progress_dcost == SCS_NULL) {
+            info->progress_dcost = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_dcost == SCS_NULL) return -5;
+        }
+        if (info->progress_iter == SCS_NULL) {
+            info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
+            if (info->progress_iter == SCS_NULL) return -6;
+        }
+        if (info->progress_norm_fpr == SCS_NULL) {
+            info->progress_norm_fpr = malloc(sizeof (scs_int) * max_history_alloc);
+            if (info->progress_norm_fpr == SCS_NULL) return -7;
+        }
+
+        /* ---------------------------------------------------------
+         * If `do_record_progress` is true, and there has
+         * been a previous allocation, but now the maximum
+         * number of iterations has increased
+         * 
+         * Note: if the current `max_iters` is smaller than 
+         * the previous value, it means that more than adequate
+         * memory space has been allocated for the progress arrays.
+         * However, we will not use `realloc` to size it down.
+         * --------------------------------------------------------- */
+        if (max_history_alloc > work->stgs->previous_max_iters) {
+            /* ------------------------------------
+             * We don't check for NULL values here 
+             * because `realloc` on NULL pointers 
+             * behaves like `malloc`
+             * ------------------------------------
+             */
+            info->progress_relgap = realloc(info->progress_relgap, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_relgap == SCS_NULL) return -10;
+            info->progress_respri = realloc(info->progress_respri, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_respri == SCS_NULL) return -11;
+            info->progress_resdual = realloc(info->progress_resdual, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_resdual == SCS_NULL) return -12;
+            info->progress_pcost = realloc(info->progress_pcost, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_pcost == SCS_NULL) return -13;
+            info->progress_dcost = realloc(info->progress_dcost, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_dcost == SCS_NULL) return -14;
+            info->progress_iter = realloc(info->progress_iter, sizeof (scs_int) * max_history_alloc);
+            if (info->progress_iter == SCS_NULL) return -15;
+            info->progress_norm_fpr = realloc(info->progress_norm_fpr, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_norm_fpr == SCS_NULL) return -16;
+        }
+    }
+
+}
+
 scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i; /* i indexes the (outer) iterations */
@@ -1491,25 +1573,13 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     timer solveTimer;
     struct residuals r;
 
-    if (work->stgs->do_record_progress) {
-        /*TODO store the norm of FPR */
-        const scs_int max_history_alloc = data->stgs->max_iters / CONVERGED_INTERVAL;
-        info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_resdual = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_pcost = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_dcost = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
-        info->progress_norm_fpr = malloc(sizeof (scs_int) * max_history_alloc);
-    } else {
-        info->progress_relgap = SCS_NULL;
-        info->progress_respri = SCS_NULL;
-        info->progress_resdual = SCS_NULL;
-        info->progress_pcost = SCS_NULL;
-        info->progress_dcost = SCS_NULL;
-        info->progress_iter = SCS_NULL;
-        info->progress_norm_fpr = SCS_NULL;
+    if (i = initProgressData(info, work) < 0) {
+        /* LCOV_EXCL_START */
+        scs_printf("Memory allocation error (progress arrays), code: %d\n", i);
+        RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
+    work->stgs->previous_max_iters = work->stgs->max_iters;
 
     if (data == SCS_NULL
             || cone == SCS_NULL
@@ -1548,10 +1618,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
     scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
-
     work->nrmR_con = eta;
 
-    /***** HENCEFORTH, R IS SCALED! *****/
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
@@ -1572,6 +1640,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 info->progress_resdual[idx_progress] = r.resDual;
                 info->progress_pcost[idx_progress] = r.cTx_by_tau / r.tau;
                 info->progress_dcost[idx_progress] = -r.bTy_by_tau / r.tau;
+                //                info->progress_norm_fpr[idx_progress] = 0.0;
             }
             if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
@@ -1881,6 +1950,7 @@ Info * initInfo() {
     info->progress_relgap = SCS_NULL;
     info->progress_resdual = SCS_NULL;
     info->progress_respri = SCS_NULL;
+    info->progress_norm_fpr = SCS_NULL;
     RETURN info;
 }
 
