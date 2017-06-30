@@ -526,7 +526,7 @@ bool test_residuals(char** str) {
     SUCCEED(str);
 }
 
-bool test_residuals(char** str) {
+bool test_residuals2(char** str) {
     scs_int status;
     Sol* sol;
     Data * data;
