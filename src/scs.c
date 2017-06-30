@@ -15,6 +15,7 @@
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
+/* #define EXTREME_DEBUG */
 timer globalTimer;
 
 /* printing header */
@@ -610,12 +611,14 @@ static scs_int projectConesv2(scs_float *u_b, scs_float *u_t, scs_float *u, Work
     scs_int i, n = w->n, l = n + w->m + 1, status;
     /* this does not relax 'x' variable */
     for (i = 0; i < l; ++i) {
+        /*TODO optimize this loop */
         u_b[i] = 2 * u_t[i] - u[i];
     }
 
     /* u = [x;y;tau] */
     status = projDualCone(&(u_b[n]), k, w->coneWork, &(w->u_prev[n]), iter);
     if (u_b[l - 1] < 0.0) {
+        /*TODO optimize this loop too */
         u_b[l - 1] = 0.0;
     }
     RETURN status;
@@ -1112,6 +1115,15 @@ static scs_int validate(const Data *d, const Cone *k) {
             RETURN SCS_FAILED;
             /* LCOV_EXCL_STOP */
         }
+        if (stgs->direction != restarted_broyden
+                && stgs->direction != restarted_broyden_v2
+                && stgs->direction != fixed_point_residual
+                && stgs->direction != full_broyden) {
+            /* LCOV_EXCL_START */
+            scs_printf("Invalid direction (%d).\n", stgs->direction);
+            RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
+        }
     }
     RETURN 0;
 }
@@ -1536,7 +1548,7 @@ static scs_int initProgressData(Info * info, Work * work) {
      * initially set to SCS_NULL.
      * ------------------------------------------------------------- */
     if (work->stgs->do_record_progress) {
-        const scs_int max_history_alloc = work->stgs->max_iters;       
+        const scs_int max_history_alloc = work->stgs->max_iters;
 
         /* ----------------------------------------
          * If a pointer is SCS_NULL, it means that 
@@ -1617,10 +1629,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float eta;
     scs_float r_safe;
     scs_float nrmRw_con; /* norm of FP res at line-search */
-    scs_float nrmR_con_old; /* keeps previous FP res */
-    scs_float slack; /* for K2 */
-    scs_float rhs; /* for K2 */
-    scs_float stepsize2; /* for K2 */
+    scs_float nrmR_con_old; /* keeps previous FP res */   
     scs_float sqrt_rhox = SQRTF(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
     timer solveTimer;
@@ -1707,6 +1716,13 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             printSummary(work, i, &r, &solveTimer);
         }
 
+#ifdef EXTREME_DEBUG
+        printf("nrmR_con: %3.12f\n", work->nrmR_con);
+        printArray(work->R, work->l, "R");
+        printArray(work->u, work->l, "u");
+        printArray(work->u_t, work->l, "ut");
+        printf("BRK-1\n");
+#endif
         if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
             work->stgs->sse *= q; /*sse = q^i */
             if (i == 0) {
@@ -1721,12 +1737,31 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
+                    scaleArray(work->Sk, sqrt_rhox, work->n);
+#ifdef EXTREME_DEBUG                    
+                    printArray(work->Sk, work->l, "S");
+                    printArray(work->Yk, work->l, "Y");
+                    printArray(work->R, work->l, "R");
+                    printf("BRK-2\n");
+#endif
                 } else {
-                    for (j1 = 0; j1 < work->l; ++j1) {
+                    for (j1 = 0; j1 < work->n; ++j1) {
+                        work->Sk[j1] = sqrt_rhox * (work->wu[j1] - work->u_prev[j1]);
+                        work->Yk[j1] = sqrt_rhox * work->Rwu[j1] - work->R_prev[j1];
+                    }
+                    for (j1 = work->n; j1 < work->l; ++j1) {
                         work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
                     }
+#ifdef EXTREME_DEBUG                                        
+                    printArray(work->Sk, work->l, "S");
+                    printArray(work->Yk, work->l, "Y");
+                    printArray(work->R, work->l, "R");
+                    printf("BRK-3\n");
+#endif                    
                 }
+
+                scaleArray(work->R, sqrt_rhox, work->n);
                 /* compute direction */
                 if (computeDirection(work, i) < 0) {
                     {
@@ -1739,6 +1774,10 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
              * Scale the x-part of dir using sqrt_rhox
              * -------------------------------------------- */
             scaleArray(work->dir, 1 / sqrt_rhox, work->n);
+#ifdef EXTREME_DEBUG
+            printArray(work->dir, work->l, "d");
+            printf("BRK-5\n");
+#endif
         }
 
         memcpy(work->u_prev, work->u, work->l * sizeof (scs_float)); /* u_prev = u */
@@ -1758,10 +1797,15 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                             "error in projectLinSysv2", "Failure");
                 }
                 work->stepsize = 2.0;
-
+#ifdef EXTREME_DEBUG                
+                printArray(work->dut, work->l, "dut");
+                printf("BRK-6\n");
+#endif
                 /* Line search */
                 for (j = 0; j < work->stgs->ls; ++j) {
                     work->stepsize *= work->stgs->beta;
+
+
                     for (j1 = 0; j1 < work->l; ++j1) {
                         work->wu[j1] = work->u[j1] + work->stepsize * work->dir[j1]; /* wu = u + step * dir */
                         work->wu_t[j1] = work->u_t[j1] + work->stepsize * work->dut[j1]; /* wut = u_t + step * dut */
@@ -1773,7 +1817,20 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     }
                     calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
 
-                    nrmRw_con = calcNorm(work->Rwu, work->l);
+                    nrmRw_con = SQRTF(
+                            calcNormSq(work->Rwu + work->n, work->m + 1)
+                            + work->stgs->rho_x * calcNormSq(work->Rwu, work->n));
+#ifdef EXTREME_DEBUG
+                    printf("\n\n------------------------------------------\n");
+                    printArray(work->dir, work->l, "d");
+                    printArray(work->u, work->l, "u");
+                    printArray(work->wu, work->l, "wu");
+                    printArray(work->wu_t, work->l, "wut");
+                    printArray(work->wu_b, work->l, "wub");
+                    printArray(work->Rwu, work->l, "Rwu");
+                    printf("nrmRw_con: %3.16f\n", nrmRw_con);
+                    printf("BRK-7\n");
+#endif                    
                     /* K1 */
                     if (work->stgs->k1
                             && nrmRw_con <= work->stgs->c1 * nrmR_con_old
@@ -1786,32 +1843,49 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->nrmR_con = nrmRw_con;
                         r_safe = work->nrmR_con + work->stgs->sse; /* The power already computed at the beginning of the main loop */
                         how = 1;
+#ifdef EXTREME_DEBUG
+                        printArray(work->R, work->l, "R");
+                        printArray(work->u_b, work->l, "ub");
+                        printArray(work->u_t, work->l, "ut");
+                        printArray(work->u, work->l, "u");
+                        printf("BRK-8\n");
+#endif                        
                         break;
                     }
 
                     /* K2 */
                     if (work->stgs->k2) {
-                        slack = nrmRw_con * nrmRw_con - work->stepsize * innerProd(work->dir, work->Rwu, work->l);
+                        /*TODO: check this one out!!! */
+                        scs_float slack;
+                        scs_float rhs;
+                        scs_float stepsize2;
+                        slack = nrmRw_con * nrmRw_con - work->stepsize * (
+                                innerProd(work->dir + work->n, work->Rwu + work->n, work->m + 1)
+                                + work->stgs->rho_x * innerProd(work->dir, work->Rwu, work->n)
+                                );
                         rhs = work->stgs->sigma * work->nrmR_con * nrmRw_con;
-                        /* printf("%2.12f, %2.12f \n", slack, rhs); */
+#ifdef EXTREME_DEBUG  
+                        printf("slack     : %3.16f\n", slack);
+                        printf("rhs       : %3.16f\n", rhs);
+                        printf("stepsize2 : %3.16f\n", stepsize2);
+#endif
                         if (slack >= rhs) {
                             stepsize2 = (work->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
                             addScaledArray(work->u, work->Rwu, work->l, -stepsize2);
                             how = 2;
                             break; /* exits the line search loop */
                         }
-                    }
-
+                    } /* end of K2 */
                 } /* end of line-search */
-            }
-
-        }
+            } /* end of `else if` block (when !K1 OR no blind update) */
+        } /* IF-block: iterated after warm start */
+        
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*sqrt(rho)*Rx */
             addScaledArray(work->u, work->R, work->n, -work->stgs->alpha * sqrt_rhox);
             addScaledArray(work->u + work->n, work->R + work->n, work->m + 1, -work->stgs->alpha);
         }
-        if (how != 1) { /* exited with K1 */
+        if (how != 1) { /* exited with other than K1 */
             if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
                 RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
                         "error in projectLinSysv2", "Failure");
@@ -1822,8 +1896,13 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             }
             compute_sb_kapb(work->u, work->u_b, work->u_t, work);
             calcFPRes(work->R, work->u_t, work->u_b, work->l);
+            /* Make sure the following is correct... */
             scaleArray(work->R, sqrt_rhox, work->n);
             work->nrmR_con = calcNorm(work->R, work->l);
+#ifdef EXTREME_DEBUG            
+            printf("nrmRw_con: %3.16f\n", nrmRw_con);
+            printf("BRK-HOW:-1\n");
+#endif            
         }
     } /* main for loop */
 
