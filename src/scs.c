@@ -1073,6 +1073,12 @@ static scs_int validate(const Data *d, const Cone *k) {
             RETURN SCS_FAILED;
             /* LCOV_EXCL_STOP */
         }
+        if (stgs->ls > 10) {
+            /* LCOV_EXCL_START */
+            scs_printf("WARNING! The value ls=%d is too high. We highly recommend"
+                    "the maximum number of line search iterations to be at most 10.\n", stgs->ls);
+            /* LCOV_EXCL_STOP */
+        }
         if (stgs->sigma < 0) {
             /* LCOV_EXCL_START */
             scs_printf("Parameter sigma of the line search (sigma=%g) cannot be negative.\n", stgs->sigma);
@@ -1105,13 +1111,13 @@ static scs_int validate(const Data *d, const Cone *k) {
         }
         if (stgs->k1 != 0 && stgs->k1 != 1) {
             /* LCOV_EXCL_START */
-            scs_printf("Parameter (k1=%d) can be eiter 0 (k1: off) or 1 (k1: on).\n", stgs->k0);
+            scs_printf("Parameter (k1=%d) can be eiter 0 (k1: off) or 1 (k1: on).\n", stgs->k1);
             RETURN SCS_FAILED;
             /* LCOV_EXCL_STOP */
         }
         if (stgs->k2 != 0 && stgs->k2 != 1) {
             /* LCOV_EXCL_START */
-            scs_printf("Parameter (k2=%d) can be eiter 0 (k2: off) or 1 (k2: on).\n", stgs->k0);
+            scs_printf("Parameter (k2=%d) can be eiter 0 (k2: off) or 1 (k2: on).\n", stgs->k2);
             RETURN SCS_FAILED;
             /* LCOV_EXCL_STOP */
         }
@@ -1719,6 +1725,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         }
 
 #ifdef EXTREME_DEBUG
+        printf("\n\nBlock: #1\n");
         printf("nrmR_con: %3.12f\n", work->nrmR_con);
         printArray(work->R, work->l, "R");
         printArray(work->u, work->l, "u");
@@ -1738,15 +1745,24 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             } else {
                 /*TODO optimize the following operations */
                 if (how == 0 || work->stgs->ls == 0) {
-                    for (j1 = 0; j1 < work->l; ++j1) {
+                    for (j1 = 0; j1 < work->n; ++j1) {
+                        work->Sk[j1] = work->u[j1] - work->u_prev[j1];
+                        work->Yk[j1] = sqrt_rhox * work->R[j1] - work->R_prev[j1];
+                    }
+                    for (j1 = work->n; j1 < work->l; ++j1) {
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
                     scaleArray(work->Sk, sqrt_rhox, work->n);
-#ifdef EXTREME_DEBUG                    
+#ifdef EXTREME_DEBUG            
+                    printf("\n\nBlock: #2\n");
+                    printArray(work->u, work->l, "u");
+                    printArray(work->u_prev, work->l, "uold");
                     printArray(work->Sk, work->l, "S");
                     printArray(work->Yk, work->l, "Y");
                     printArray(work->R, work->l, "R");
+                    printArray(work->Rwu, work->l, "Rw");
+                    printArray(work->R_prev, work->l, "Rold");
                     printf("BRK-2\n");
 #endif
                 } else {
@@ -1758,7 +1774,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
                     }
-#ifdef EXTREME_DEBUG              
+#ifdef EXTREME_DEBUG      
+                    printf("\n\nBlock: #3\n");
                     printf("sse: %3.12f\n", work->stgs->sse);
                     printArray(work->Sk, work->l, "S");
                     printArray(work->Yk, work->l, "Y");
@@ -1776,13 +1793,15 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     }
                 }
                 /*TODO: optimize this bit... */
-                scaleArray(work->R, 1/sqrt_rhox, work->n);
+                /* X-035 */
+                scaleArray(work->R, 1 / sqrt_rhox, work->n);
             }
             /* -------------------------------------------
              * Scale the x-part of dir using sqrt_rhox
              * -------------------------------------------- */
             scaleArray(work->dir, 1 / sqrt_rhox, work->n);
 #ifdef EXTREME_DEBUG
+            printf("\n\nBlock: #5\n");
             printArray(work->R, work->l, "R");
             printArray(work->dir, work->l, "d");
             printf("BRK-5\n");
@@ -1791,11 +1810,12 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
         memcpy(work->u_prev, work->u, work->l * sizeof (scs_float)); /* u_prev = u */
         memcpy(work->R_prev, work->R, work->l * sizeof (scs_float)); /* R_prev = R */
-        scaleArray(work->R_prev, sqrt_rhox, work->n);
+        scaleArray(work->R_prev, sqrt_rhox, work->n); /* X-035 */
         how = -1; /* no backtracking (yet) */
         nrmR_con_old = work->nrmR_con;
 
 #ifdef EXTREME_DEBUG
+        printf("\n\nBlock: #5B\n");
         printArray(work->R_prev, work->l, "Rold");
         printf("BRK-5B\n");
 #endif
@@ -1805,6 +1825,13 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 how = 0;
                 eta = work->nrmR_con;
                 work->stepsize = 1.0;
+#ifdef EXTREME_DEBUG
+                printf("\n\nBlock: #5X-K0\n");
+                printf("nrmR_con: %3.12f\n", work->nrmR_con);
+                printf("eta: %3.12f\n", eta);
+                printArray(work->u, work->l, "u");
+                printf("BRK-5X-K0\n");
+#endif
             } else if (work->stgs->ls > 0) {
                 if (projectLinSysv2(work->dut, work->dir, work, i) < 0) {
                     RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
@@ -1812,6 +1839,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 }
                 work->stepsize = 2.0;
 #ifdef EXTREME_DEBUG                
+                printf("\n\nBlock: #6\n");
                 printArray(work->dut, work->l, "dut");
                 printf("BRK-6\n");
 #endif
@@ -1836,6 +1864,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                             + work->stgs->rho_x * calcNormSq(work->Rwu, work->n));
 #ifdef EXTREME_DEBUG
                     printf("\n\n------------------------------------------\n");
+                    printf("Block: #7\n");
                     printArray(work->dir, work->l, "d");
                     printArray(work->u, work->l, "u");
                     printArray(work->wu, work->l, "wu");
@@ -1858,7 +1887,10 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         r_safe = work->nrmR_con + work->stgs->sse; /* The power already computed at the beginning of the main loop */
                         how = 1;
 #ifdef EXTREME_DEBUG
+                        printf("Block: #8\n");
                         printArray(work->R, work->l, "R");
+                        printArray(work->Rwu, work->l, "Rw");
+                        printArray(work->R_prev, work->l, "Rold");
                         printArray(work->u_b, work->l, "ub");
                         printArray(work->u_t, work->l, "ut");
                         printArray(work->u, work->l, "u");
@@ -1915,7 +1947,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             }
             compute_sb_kapb(work->u, work->u_b, work->u_t, work);
             calcFPRes(work->R, work->u_t, work->u_b, work->l);
-            /*FIXME Most likely, this sqrt_rhox here is wrong... */
             work->nrmR_con = SQRTF(
                     work->stgs->rho_x * calcNormSq(work->R, work->n)
                     + calcNormSq(work->R + work->n, work->m + 1)
@@ -1924,6 +1955,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             printf("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
             printf("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
             printArray(work->R, work->l, "R");
+            printArray(work->Rwu, work->l, "Rw");
+            printArray(work->R_prev, work->l, "Rold");
             printArray(work->u_b, work->l, "ub");
             printArray(work->u_t, work->l, "ut");
             printArray(work->u, work->l, "u");
@@ -2066,6 +2099,14 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
                 d->stgs->thetabar,
                 d->stgs->warm_start);
         /* LCOV_EXCL_STOP */
+    }
+
+    if (w->stgs->verbose > 0) {
+        if (w->stgs->do_super_scs == 1){
+            scs_printf("Running SuperSCS...\n");
+        }else{
+            scs_printf("Running Standard SCS...\n");
+        }
     }
 
 #if EXTRAVERBOSE > 0

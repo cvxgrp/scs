@@ -134,7 +134,7 @@ void printData(const Data *d) {
 
 void printArray(const scs_float *arr, scs_int n, const char *name) {
     scs_int i, j, k = 0;
-    scs_int numOnOneLine = 10;
+    scs_int numOnOneLine = 1;
     scs_printf("\n");
     for (i = 0; i < n / numOnOneLine; ++i) {
         for (j = 0; j < numOnOneLine; ++j) {

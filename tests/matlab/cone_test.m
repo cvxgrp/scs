@@ -25,10 +25,10 @@ params.verbose      = 1;
 params.normalize    = 1;
 params.direction    = 100;
 params.beta         = 0.5;
-params.c1           = 1.0 - 1e-4;
+params.c1           = 0.9999;
 params.c_bl         = 0.999;
-params.k0           = 0;
-params.k1           = 1;
+params.k0           = 1;
+params.k1           = 0;
 params.k2           = 0;
 params.ls           = 10;
 params.sigma        = 1e-2;
@@ -37,14 +37,14 @@ params.memory       = 10;
 params.sse          = 0.999;
 params.tRule        = 1;
 params.do_record_progress = 1;
-params.max_iters    = 1000;
-params.rho_x        = .1;
+params.max_iters    = 2000;
+params.rho_x        = .2;
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
 [x1, y1, s1, info1] = scs_direct(data, K, params);
 
 
 
-
+assert(info2.iter-info1.iter==1, 'number of iterations');
 fprintf('|errx| = %g, |erry| = %g, |errs| = %g\n', ...
     norm(x1 - x2, Inf), norm(y1 - y2, Inf), norm(s1 - s2, Inf));
 assert(norm(x1 - x2, Inf)<1e-7,'x');

@@ -26,6 +26,8 @@ extern "C" {
     
     bool test_residuals(char** str);
     
+    bool test_residuals2(char** str);
+    
     bool test_rho_x(char** str);
 
 #ifdef __cplusplus

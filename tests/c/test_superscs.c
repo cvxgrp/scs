@@ -620,18 +620,21 @@ bool test_rho_x(char** str) {
     data->stgs->normalize       = 1;
     data->stgs->direction       = restarted_broyden;
     data->stgs->beta            = 0.5;
-    data->stgs->c1              = 1.0 - 1e-4;
+    data->stgs->c1              = 0.9999;
     data->stgs->c_bl            = 0.999;    
-    data->stgs->k0              = 0;
+    
+    data->stgs->k0              = 1;
     data->stgs->k1              = 0;
     data->stgs->k2              = 0;
-    data->stgs->ls              = 0;
+    
+    data->stgs->ls              = 1;
+    
     data->stgs->sigma           = 1e-2;
     data->stgs->thetabar        = 0.1;
     data->stgs->memory          = 10;
     data->stgs->sse             = 0.999;
     data->stgs->do_record_progress = 1;
-    data->stgs->max_iters       = 1000;
+    data->stgs->max_iters       = 2000;
     data->stgs->rho_x           = 0.2;    
    
     sol = initSol();
