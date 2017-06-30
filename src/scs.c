@@ -15,7 +15,7 @@
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
-/* #define EXTREME_DEBUG  */
+/* #define EXTREME_DEBUG */
 timer globalTimer;
 
 /* printing header */
@@ -1678,7 +1678,10 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     }
     compute_sb_kapb(work->u, work->u_b, work->u_t, work); /* compute s_b and kappa_b */
     calcFPRes(work->R, work->u_t, work->u_b, work->l); /* compute Ru */
-    eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
+    eta = SQRTF(
+            work->stgs->rho_x * calcNormSq(work->R, work->n)
+            + calcNormSq(work->R + work->n, work->m + 1)
+            ); /* initialize eta = |Ru^0| (norm of R using rho_x) */
     r_safe = eta;
     work->nrmR_con = eta;
 
@@ -1729,15 +1732,16 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                  * At i=0, the direction is defined using the 
                  * FPR: dir^0 = -R 
                  * -------------------------------------------- */
+                /*TODO optimize the following two lines */
                 setAsScaledArray(work->dir, work->R, -1, work->l);
+                scaleArray(work->dir, sqrt_rhox, work->n);
             } else {
+                /*TODO optimize the following operations */
                 if (how == 0 || work->stgs->ls == 0) {
                     for (j1 = 0; j1 < work->l; ++j1) {
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
-
-                    /* TODO: not sure if we need to scale here*/
                     scaleArray(work->Sk, sqrt_rhox, work->n);
 #ifdef EXTREME_DEBUG                    
                     printArray(work->Sk, work->l, "S");
@@ -1754,7 +1758,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
                     }
-#ifdef EXTREME_DEBUG                                        
+#ifdef EXTREME_DEBUG              
+                    printf("sse: %3.12f\n", work->stgs->sse);
                     printArray(work->Sk, work->l, "S");
                     printArray(work->Yk, work->l, "Y");
                     printArray(work->R, work->l, "R");
@@ -1770,12 +1775,15 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                                 "error in computeDirection", "Failure");
                     }
                 }
+                /*TODO: optimize this bit... */
+                scaleArray(work->R, 1/sqrt_rhox, work->n);
             }
             /* -------------------------------------------
              * Scale the x-part of dir using sqrt_rhox
              * -------------------------------------------- */
             scaleArray(work->dir, 1 / sqrt_rhox, work->n);
 #ifdef EXTREME_DEBUG
+            printArray(work->R, work->l, "R");
             printArray(work->dir, work->l, "d");
             printf("BRK-5\n");
 #endif
@@ -1783,9 +1791,14 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
         memcpy(work->u_prev, work->u, work->l * sizeof (scs_float)); /* u_prev = u */
         memcpy(work->R_prev, work->R, work->l * sizeof (scs_float)); /* R_prev = R */
+        scaleArray(work->R_prev, sqrt_rhox, work->n);
         how = -1; /* no backtracking (yet) */
         nrmR_con_old = work->nrmR_con;
 
+#ifdef EXTREME_DEBUG
+        printArray(work->R_prev, work->l, "Rold");
+        printf("BRK-5B\n");
+#endif
         if (i >= work->stgs->warm_start) {
             if (work->stgs->k0 == 1 && work->nrmR_con <= work->stgs->c_bl * eta) {
                 addArray(work->u, work->dir, work->l); /* u += dir */
@@ -1887,7 +1900,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*Rx */
             addScaledArray(work->u, work->R, work->l, -work->stgs->alpha);
-        }
+        } /* how == -1 */
 #ifdef EXTREME_DEBUG  
         printArray(work->u, work->l, "u");
 #endif        
@@ -1919,7 +1932,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             printArray(work->s_b, work->m, "sb");
             printf("BRK-HOW:-1\n");
 #endif            
-        }
+        } /* how != 1 */
     } /* main for loop */
 
     /* prints summary of last iteration */
