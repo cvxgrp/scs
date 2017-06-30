@@ -109,6 +109,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:abd2c2ac659387dab81690e651bbf166f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf089866dbf7d3a1bdda5afd48e1c5a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#aaf089866dbf7d3a1bdda5afd48e1c5a3">max_iters</a></td></tr>
 <tr class="separator:aaf089866dbf7d3a1bdda5afd48e1c5a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acaa7e7c1997bc99118dbbd9d78b921b1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#acaa7e7c1997bc99118dbbd9d78b921b1">previous_max_iters</a></td></tr>
+<tr class="separator:acaa7e7c1997bc99118dbbd9d78b921b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72dec01083dfcb3d60bb16207d2d5d96"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a72dec01083dfcb3d60bb16207d2d5d96">eps</a></td></tr>
 <tr class="separator:a72dec01083dfcb3d60bb16207d2d5d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbde49a968c48ad2215d2908de38fb3e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#acbde49a968c48ad2215d2908de38fb3e">alpha</a></td></tr>
@@ -259,7 +261,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Whether to record progress data </p>
+<p>Whether to record progress data when running SuperSCS. </p>
 
 </div>
 </div>
@@ -383,6 +385,20 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="acaa7e7c1997bc99118dbbd9d78b921b1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> previous_max_iters</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Maximum iterations of the previous invocation to scs.</p>
+<p>Used to avoid memory leaks when recording the progress of the algorithm. </p>
+
+</div>
+</div>
 <a class="anchor" id="abd2c2ac659387dab81690e651bbf166f"></a>
 <div class="memitem">
 <div class="memproto">
@@ -498,7 +514,7 @@ Data Fields</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jun 28 2017 17:48:51 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 30 2017 01:40:25 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

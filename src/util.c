@@ -219,17 +219,19 @@ void freeInfo(Info *info) {
 /* assumes d->stgs already allocated memory */
 void setDefaultSettings(Data *d) {
     d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
+    d->stgs->previous_max_iters = -1; /* maximum iterations of previous invocation */
     d->stgs->eps = EPS; /* convergence tolerance: 1e-3 */
-    d->stgs->alpha = ALPHA; /* relaxation parameter: 1.8 */
-    d->stgs->rho_x = RHO_X; /* x equality constraint scaling: 1e-3 */
+    d->stgs->alpha = ALPHA; /* relaxation parameter: 1.5 */
+    d->stgs->rho_x = RHO_X; /* parameter rho_x: 1e-3 */
     d->stgs->scale = SCALE; /* if normalized, rescales by this factor: 1 */
-    d->stgs->cg_rate = CG_RATE; /* for indirect, tolerance goes down like
-                                   (1/iter)^CG_RATE: 2 */
+    d->stgs->cg_rate = CG_RATE; /* for indirect, tolerance goes down like (1/iter)^CG_RATE: 2 */
     d->stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
     d->stgs->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
     d->stgs->warm_start = WARM_START;
-
-    d->stgs->alpha = ALPHA;
+    
+    /* -----------------------------
+     * SuperSCS-specific parameters
+     * ----------------------------- */
     d->stgs->beta = BETA_DEFAULT;
     d->stgs->c1 = C1_DEFAULT;
     d->stgs->c_bl = C_BL_DEFAULT;
@@ -241,7 +243,7 @@ void setDefaultSettings(Data *d) {
     d->stgs->thetabar = THETABAR_DEFAULT;
     d->stgs->sse = SSE_DEFAULT;
     d->stgs->memory = MEMORY_DEFAULT;
-    d->stgs->direction = fixed_point_residual;
-    d->stgs->do_super_scs = 1;
+    d->stgs->direction = DIRECTION_DEFAULT;
+    d->stgs->do_super_scs = 1; /* whether to run in SuperSCS mode (default: 1) */
     d->stgs->do_record_progress = 0;
 }

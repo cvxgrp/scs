@@ -15,6 +15,7 @@
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
+/* #define EXTREME_DEBUG */
 timer globalTimer;
 
 /* printing header */
@@ -28,7 +29,7 @@ static const scs_int LINE_LEN = 85;
 
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
-    RETURN(x == NAN || x != x);
+    RETURN(isnan(x)); /* `isnan` works both for `float` and `double` types */
 }
 
 static SUCache * initSUCache(scs_int memory, scs_int l) {
@@ -516,30 +517,28 @@ static scs_int projectLinSys(Work *w, scs_int iter) {
 
 /* status < 0 indicates failure */
 static scs_int projectLinSysv2(scs_float * u_t, scs_float * u, Work * w, scs_int iter) {
-    DEBUG_FUNC;
-    const scs_int l = w->l;
+    DEBUG_FUNC
     scs_int status;
+    const scs_int l = w->l;
 
-    /*TODO make more efficient; eliminate memcpy? use setAsScaledArray? */
-    
-    /* ut(1:n) = rho_x*ut(1:n); */
+    /* x_t = rho_x * x_t */
     memcpy(u_t + w->n, u + w->n, (w->m + 1) * sizeof (scs_float));
     setAsScaledArray(u_t, u, w->stgs->rho_x, w->n);
 
-    /* ut(1:l-1) = ut(1:l-1) - ut(end) * h      */
+    /* (x_t, y_t) -= tau_t * h                   */
     addScaledArray(u_t, w->h, l - 1, -u_t[l - 1]);
 
-    /* ut -= scalar * h                         */
+    /* u_t -= scalar * h                         */
     addScaledArray(u_t, w->h, l - 1,
             -innerProd(u_t, w->g, l - 1) / (w->gTh + 1));
 
-    /* ut(n+1:end-1) = -ut(n+1:end-1);          */
+    /* y_t *= (-1)                               */
     scaleArray(u_t + w->n, -1, w->m);
 
-    /* call `solveLinSys` to update ut(1:n+m)   */
+    /* call `solveLinSys` to update (x_t, y_t)   */
     status = solveLinSys(w->A, w->stgs, w->p, u_t, u, iter);
 
-    /* ut(end) = (ut(end) + h'*ut(1:l-1))       */
+    /* tau_t += h'*(x_t, y_t)                    */
     u_t[l - 1] += innerProd(u_t, w->h, l - 1);
 
     RETURN status;
@@ -612,12 +611,14 @@ static scs_int projectConesv2(scs_float *u_b, scs_float *u_t, scs_float *u, Work
     scs_int i, n = w->n, l = n + w->m + 1, status;
     /* this does not relax 'x' variable */
     for (i = 0; i < l; ++i) {
+        /*TODO optimize this loop */
         u_b[i] = 2 * u_t[i] - u[i];
     }
 
     /* u = [x;y;tau] */
     status = projDualCone(&(u_b[n]), k, w->coneWork, &(w->u_prev[n]), iter);
     if (u_b[l - 1] < 0.0) {
+        /*TODO optimize this loop too */
         u_b[l - 1] = 0.0;
     }
     RETURN status;
@@ -1114,6 +1115,15 @@ static scs_int validate(const Data *d, const Cone *k) {
             RETURN SCS_FAILED;
             /* LCOV_EXCL_STOP */
         }
+        if (stgs->direction != restarted_broyden
+                && stgs->direction != restarted_broyden_v2
+                && stgs->direction != fixed_point_residual
+                && stgs->direction != full_broyden) {
+            /* LCOV_EXCL_START */
+            scs_printf("Invalid direction (%d).\n", stgs->direction);
+            RETURN SCS_FAILED;
+            /* LCOV_EXCL_STOP */
+        }
     }
     RETURN 0;
 }
@@ -1145,60 +1155,82 @@ static Work *initWork(const Data *d, const Cone *k) {
      * ------------------------------------- */
     w->u = scs_calloc(l, sizeof (scs_float));
     if (w->u == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->u_b = scs_calloc(l, sizeof (scs_float));
     if (w->u_b == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u_b` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     if (w->stgs->do_super_scs == 0) {
         w->v = scs_calloc(l, sizeof (scs_float));
         if (w->v == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `v` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
     }
     w->u_t = scs_malloc(l * sizeof (scs_float));
     if (w->u_t == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u_t` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->u_prev = scs_malloc(l * sizeof (scs_float));
     if (w->u_prev == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `u_prev` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->h = scs_malloc((l - 1) * sizeof (scs_float));
     if (w->h == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `h` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->g = scs_malloc((l - 1) * sizeof (scs_float));
     if (w->g == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `g` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->pr = scs_malloc(d->m * sizeof (scs_float));
     if (w->pr == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `pr` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->dr = scs_malloc(d->n * sizeof (scs_float));
     if (w->dr == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `dr` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->b = scs_malloc(d->m * sizeof (scs_float));
     if (w->b == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `b` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->c = scs_malloc(d->n * sizeof (scs_float));
     if (w->c == SCS_NULL) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: `c` memory allocation failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
 
 
@@ -1210,28 +1242,38 @@ static Work *initWork(const Data *d, const Cone *k) {
          * ------------------------------------- */
         w->R = scs_calloc(l, sizeof (scs_float));
         if (w->R == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `R` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->R_prev = scs_calloc(l, sizeof (scs_float));
         if (w->R_prev == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `R_prev` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->dir = scs_malloc(l * sizeof (scs_float));
         if (w->dir == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `dir` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->dut = scs_malloc(l * sizeof (scs_float));
         if (w->dut == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `dut` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->s_b = scs_malloc(d->m * sizeof (scs_float));
         if (w->s_b == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `s_b` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
 
         w->stepsize = 1.0;
@@ -1244,8 +1286,10 @@ static Work *initWork(const Data *d, const Cone *k) {
                 && w->stgs->memory > 0) {
             w->su_cache = initSUCache(w->stgs->memory, l);
             if (w->su_cache == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `su_cache` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
         } else {
             w->su_cache = SCS_NULL;
@@ -1259,8 +1303,10 @@ static Work *initWork(const Data *d, const Cone *k) {
             scs_int i;
             w->H = scs_malloc(l * l * sizeof (scs_float));
             if (w->H == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `H` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             /* H = I */
             for (i = 0; i < l; ++i) {
@@ -1272,35 +1318,47 @@ static Work *initWork(const Data *d, const Cone *k) {
 
         w->Sk = scs_malloc(l * sizeof (scs_float));
         if (w->Sk == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `Sk` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
         w->Yk = scs_malloc(l * sizeof (scs_float));
         if (w->Yk == SCS_NULL) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: `Yk` memory allocation failure\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
 
         if (w->stgs->ls > 0) {
             w->wu = scs_malloc(l * sizeof (scs_float));
             if (w->wu == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `wu` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             w->Rwu = scs_malloc(l * sizeof (scs_float));
             if (w->Rwu == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `Rwu` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             w->wu_t = scs_malloc(l * sizeof (scs_float));
             if (w->wu_t == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `wu_t` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
             w->wu_b = scs_malloc(l * sizeof (scs_float));
             if (w->wu_b == SCS_NULL) {
+                /* LCOV_EXCL_START */
                 scs_printf("ERROR: `wu_b` memory allocation failure\n");
                 RETURN SCS_NULL;
+                /* LCOV_EXCL_STOP */
             }
         }
     } else {
@@ -1327,8 +1385,10 @@ static Work *initWork(const Data *d, const Cone *k) {
     if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
         if (!copyAMatrix(&(w->A), d->A)) {
+            /* LCOV_EXCL_START */
             scs_printf("ERROR: copy A matrix failed\n");
             RETURN SCS_NULL;
+            /* LCOV_EXCL_STOP */
         }
 #endif
         w->scal = scs_malloc(sizeof (Scaling));
@@ -1343,13 +1403,17 @@ static Work *initWork(const Data *d, const Cone *k) {
         w->scal = SCS_NULL;
     }
     if (!(w->coneWork = initCone(k))) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: initCone failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     w->p = initPriv(w->A, w->stgs);
     if (!w->p) {
+        /* LCOV_EXCL_START */
         scs_printf("ERROR: initPriv failure\n");
         RETURN SCS_NULL;
+        /* LCOV_EXCL_STOP */
     }
     RETURN w;
 }
@@ -1473,6 +1537,89 @@ static void compute_sb_kapb(scs_float *u, scs_float *u_b, scs_float *u_t, Work *
     w->kap_b = u_b[w->l - 1] - 2.0 * u_t[w->l - 1] + u[w->l - 1];
 }
 
+static scs_int initProgressData(Info * info, Work * work) {
+    /* -------------------------------------------------------------
+     * As the might be successive calls to superSCS (superscs_solve) 
+     * with different values of `do_record_progress`, we nee to make
+     * sure that we neither allocate memory for the same array
+     * twice, nor do we set any arrays to SCS_NULL unnecessarily.
+     * Note that, provided that `info` has been initialized with 
+     * initInfo (this is highly recommended), all pointers are 
+     * initially set to SCS_NULL.
+     * ------------------------------------------------------------- */
+    if (work->stgs->do_record_progress) {
+        const scs_int max_history_alloc = work->stgs->max_iters;
+
+        /* ----------------------------------------
+         * If a pointer is SCS_NULL, it means that 
+         * no memory has been allocated for that 
+         * previously.
+         * ---------------------------------------- */
+        if (info->progress_relgap == SCS_NULL) {
+            info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_relgap == SCS_NULL) return -1;
+        }
+        if (info->progress_respri == SCS_NULL) {
+            info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_respri == SCS_NULL) return -2;
+        }
+        if (info->progress_resdual == SCS_NULL) {
+            info->progress_resdual = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_resdual == SCS_NULL) return -3;
+        }
+        if (info->progress_pcost == SCS_NULL) {
+            info->progress_pcost = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_pcost == SCS_NULL) return -4;
+        }
+        if (info->progress_dcost == SCS_NULL) {
+            info->progress_dcost = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_dcost == SCS_NULL) return -5;
+        }
+        if (info->progress_iter == SCS_NULL) {
+            info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
+            if (info->progress_iter == SCS_NULL) return -6;
+        }
+        if (info->progress_norm_fpr == SCS_NULL) {
+            info->progress_norm_fpr = malloc(sizeof (scs_int) * max_history_alloc);
+            if (info->progress_norm_fpr == SCS_NULL) return -7;
+        }
+
+        /* ---------------------------------------------------------
+         * If `do_record_progress` is true, and there has
+         * been a previous allocation, but now the maximum
+         * number of iterations has increased
+         * 
+         * Note: if the current `max_iters` is smaller than 
+         * the previous value, it means that more than adequate
+         * memory space has been allocated for the progress arrays.
+         * However, we will not use `realloc` to size it down.
+         * --------------------------------------------------------- */
+        if (max_history_alloc > work->stgs->previous_max_iters) {
+            /* ------------------------------------
+             * We don't check for NULL values here 
+             * because `realloc` on NULL pointers 
+             * behaves like `malloc`
+             * ------------------------------------
+             */
+            info->progress_relgap = realloc(info->progress_relgap, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_relgap == SCS_NULL) return -10;
+            info->progress_respri = realloc(info->progress_respri, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_respri == SCS_NULL) return -11;
+            info->progress_resdual = realloc(info->progress_resdual, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_resdual == SCS_NULL) return -12;
+            info->progress_pcost = realloc(info->progress_pcost, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_pcost == SCS_NULL) return -13;
+            info->progress_dcost = realloc(info->progress_dcost, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_dcost == SCS_NULL) return -14;
+            info->progress_iter = realloc(info->progress_iter, sizeof (scs_int) * max_history_alloc);
+            if (info->progress_iter == SCS_NULL) return -15;
+            info->progress_norm_fpr = realloc(info->progress_norm_fpr, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_norm_fpr == SCS_NULL) return -16;
+        }
+    }
+    return 0;
+}
+
 scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i; /* i indexes the (outer) iterations */
@@ -1482,34 +1629,20 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float eta;
     scs_float r_safe;
     scs_float nrmRw_con; /* norm of FP res at line-search */
-    scs_float nrmR_con_old; /* keeps previous FP res */
-    scs_float slack; /* for K2 */
-    scs_float rhs; /* for K2 */
-    scs_float stepsize2; /* for K2 */
+    scs_float nrmR_con_old; /* keeps previous FP res */   
     scs_float sqrt_rhox = SQRTF(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
     timer solveTimer;
     struct residuals r;
 
-    if (work->stgs->do_record_progress) {
-        /*TODO store the norm of FPR */
-        const scs_int max_history_alloc = data->stgs->max_iters / CONVERGED_INTERVAL;
-        info->progress_relgap = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_respri = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_resdual = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_pcost = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_dcost = malloc(sizeof (scs_float) * max_history_alloc);
-        info->progress_iter = malloc(sizeof (scs_int) * max_history_alloc);
-        info->progress_norm_fpr = malloc(sizeof (scs_int) * max_history_alloc);
-    } else {
-        info->progress_relgap = SCS_NULL;
-        info->progress_respri = SCS_NULL;
-        info->progress_resdual = SCS_NULL;
-        info->progress_pcost = SCS_NULL;
-        info->progress_dcost = SCS_NULL;
-        info->progress_iter = SCS_NULL;
-        info->progress_norm_fpr = SCS_NULL;
+    i = initProgressData(info, work);
+    if (i < 0) {
+        /* LCOV_EXCL_START */
+        scs_printf("Memory allocation error (progress arrays), code: %d\n", i);
+        RETURN SCS_FAILED;
+        /* LCOV_EXCL_STOP */
     }
+    work->stgs->previous_max_iters = work->stgs->max_iters;
 
     if (data == SCS_NULL
             || cone == SCS_NULL
@@ -1549,10 +1682,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
     scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
-
     work->nrmR_con = eta;
 
-    /***** HENCEFORTH, R IS SCALED! *****/
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
@@ -1573,6 +1704,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 info->progress_resdual[idx_progress] = r.resDual;
                 info->progress_pcost[idx_progress] = r.cTx_by_tau / r.tau;
                 info->progress_dcost[idx_progress] = -r.bTy_by_tau / r.tau;
+                info->progress_norm_fpr[idx_progress] = work->nrmR_con;
             }
             if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
@@ -1585,6 +1717,13 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             printSummary(work, i, &r, &solveTimer);
         }
 
+#ifdef EXTREME_DEBUG
+        printf("nrmR_con: %3.12f\n", work->nrmR_con);
+        printArray(work->R, work->l, "R");
+        printArray(work->u, work->l, "u");
+        printArray(work->u_t, work->l, "ut");
+        printf("BRK-1\n");
+#endif
         if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
             work->stgs->sse *= q; /*sse = q^i */
             if (i == 0) {
@@ -1599,19 +1738,47 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
+                    scaleArray(work->Sk, sqrt_rhox, work->n);
+#ifdef EXTREME_DEBUG                    
+                    printArray(work->Sk, work->l, "S");
+                    printArray(work->Yk, work->l, "Y");
+                    printArray(work->R, work->l, "R");
+                    printf("BRK-2\n");
+#endif
                 } else {
-                    for (j1 = 0; j1 < work->l; ++j1) {
+                    for (j1 = 0; j1 < work->n; ++j1) {
+                        work->Sk[j1] = sqrt_rhox * (work->wu[j1] - work->u_prev[j1]);
+                        work->Yk[j1] = sqrt_rhox * work->Rwu[j1] - work->R_prev[j1];
+                    }
+                    for (j1 = work->n; j1 < work->l; ++j1) {
                         work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
                     }
+#ifdef EXTREME_DEBUG                                        
+                    printArray(work->Sk, work->l, "S");
+                    printArray(work->Yk, work->l, "Y");
+                    printArray(work->R, work->l, "R");
+                    printf("BRK-3\n");
+#endif                    
                 }
+
+                scaleArray(work->R, sqrt_rhox, work->n);
                 /* compute direction */
-                computeDirection(work, i);
+                if (computeDirection(work, i) < 0) {
+                    {
+                        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                                "error in computeDirection", "Failure");
+                    }
+                }
             }
             /* -------------------------------------------
              * Scale the x-part of dir using sqrt_rhox
              * -------------------------------------------- */
             scaleArray(work->dir, 1 / sqrt_rhox, work->n);
+#ifdef EXTREME_DEBUG
+            printArray(work->dir, work->l, "d");
+            printf("BRK-5\n");
+#endif
         }
 
         memcpy(work->u_prev, work->u, work->l * sizeof (scs_float)); /* u_prev = u */
@@ -1626,21 +1793,45 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 eta = work->nrmR_con;
                 work->stepsize = 1.0;
             } else if (work->stgs->ls > 0) {
-                projectLinSysv2(work->dut, work->dir, work, i);
+                if (projectLinSysv2(work->dut, work->dir, work, i) < 0) {
+                    RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                            "error in projectLinSysv2", "Failure");
+                }
                 work->stepsize = 2.0;
-
+#ifdef EXTREME_DEBUG                
+                printArray(work->dut, work->l, "dut");
+                printf("BRK-6\n");
+#endif
                 /* Line search */
                 for (j = 0; j < work->stgs->ls; ++j) {
                     work->stepsize *= work->stgs->beta;
+
+
                     for (j1 = 0; j1 < work->l; ++j1) {
                         work->wu[j1] = work->u[j1] + work->stepsize * work->dir[j1]; /* wu = u + step * dir */
                         work->wu_t[j1] = work->u_t[j1] + work->stepsize * work->dut[j1]; /* wut = u_t + step * dut */
                     }
 
-                    projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i);
+                    if (projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i) < 0) {
+                        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                                "error in projectConesv2", "Failure");
+                    }
                     calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
 
-                    nrmRw_con = calcNorm(work->Rwu, work->l);
+                    nrmRw_con = SQRTF(
+                            calcNormSq(work->Rwu + work->n, work->m + 1)
+                            + work->stgs->rho_x * calcNormSq(work->Rwu, work->n));
+#ifdef EXTREME_DEBUG
+                    printf("\n\n------------------------------------------\n");
+                    printArray(work->dir, work->l, "d");
+                    printArray(work->u, work->l, "u");
+                    printArray(work->wu, work->l, "wu");
+                    printArray(work->wu_t, work->l, "wut");
+                    printArray(work->wu_b, work->l, "wub");
+                    printArray(work->Rwu, work->l, "Rwu");
+                    printf("nrmRw_con: %3.16f\n", nrmRw_con);
+                    printf("BRK-7\n");
+#endif                    
                     /* K1 */
                     if (work->stgs->k1
                             && nrmRw_con <= work->stgs->c1 * nrmR_con_old
@@ -1653,39 +1844,66 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->nrmR_con = nrmRw_con;
                         r_safe = work->nrmR_con + work->stgs->sse; /* The power already computed at the beginning of the main loop */
                         how = 1;
+#ifdef EXTREME_DEBUG
+                        printArray(work->R, work->l, "R");
+                        printArray(work->u_b, work->l, "ub");
+                        printArray(work->u_t, work->l, "ut");
+                        printArray(work->u, work->l, "u");
+                        printf("BRK-8\n");
+#endif                        
                         break;
                     }
 
                     /* K2 */
                     if (work->stgs->k2) {
-                        slack = nrmRw_con * nrmRw_con - work->stepsize * innerProd(work->dir, work->Rwu, work->l);
+                        /*TODO: check this one out!!! */
+                        scs_float slack;
+                        scs_float rhs;
+                        scs_float stepsize2;
+                        slack = nrmRw_con * nrmRw_con - work->stepsize * (
+                                innerProd(work->dir + work->n, work->Rwu + work->n, work->m + 1)
+                                + work->stgs->rho_x * innerProd(work->dir, work->Rwu, work->n)
+                                );
                         rhs = work->stgs->sigma * work->nrmR_con * nrmRw_con;
-                        /* printf("%2.12f, %2.12f \n", slack, rhs); */
+#ifdef EXTREME_DEBUG  
+                        printf("slack     : %3.16f\n", slack);
+                        printf("rhs       : %3.16f\n", rhs);
+                        printf("stepsize2 : %3.16f\n", stepsize2);
+#endif
                         if (slack >= rhs) {
                             stepsize2 = (work->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
                             addScaledArray(work->u, work->Rwu, work->l, -stepsize2);
                             how = 2;
                             break; /* exits the line search loop */
                         }
-                    }
-
+                    } /* end of K2 */
                 } /* end of line-search */
-            }
-
-        }
+            } /* end of `else if` block (when !K1 OR no blind update) */
+        } /* IF-block: iterated after warm start */
+        
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*sqrt(rho)*Rx */
             addScaledArray(work->u, work->R, work->n, -work->stgs->alpha * sqrt_rhox);
             addScaledArray(work->u + work->n, work->R + work->n, work->m + 1, -work->stgs->alpha);
         }
-        if (how != 1) { /* exited with K1 */
-            projectLinSysv2(work->u_t, work->u, work, i);
-            projectConesv2(work->u_b, work->u_t, work->u, work, cone, i); /* u_bar = proj_C(2u_t - u) */
+        if (how != 1) { /* exited with other than K1 */
+            if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
+                RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                        "error in projectLinSysv2", "Failure");
+            }
+            if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
+                RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                        "error in projectConesv2", "Failure");
+            }
             compute_sb_kapb(work->u, work->u_b, work->u_t, work);
             calcFPRes(work->R, work->u_t, work->u_b, work->l);
+            /* Make sure the following is correct... */
             scaleArray(work->R, sqrt_rhox, work->n);
             work->nrmR_con = calcNorm(work->R, work->l);
-            /* printf("%3.12f\n", work->nrmR_con); */
+#ifdef EXTREME_DEBUG            
+            printf("nrmRw_con: %3.16f\n", nrmRw_con);
+            printf("BRK-HOW:-1\n");
+#endif            
         }
     } /* main for loop */
 
@@ -1882,6 +2100,7 @@ Info * initInfo() {
     info->progress_relgap = SCS_NULL;
     info->progress_resdual = SCS_NULL;
     info->progress_respri = SCS_NULL;
+    info->progress_norm_fpr = SCS_NULL;
     RETURN info;
 }
 

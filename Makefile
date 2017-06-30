@@ -157,6 +157,8 @@ cov: run-test
 	lcov --directory ./src --capture --output-file scs-coverage.info
 	lcov --remove scs-coverage.info  '/usr/*' --output-file scs-coverage.info
 	lcov --list scs-coverage.info
+	mkdir -p coverage
+	genhtml -s --legend --title 'SuperSCS Unit Tests' scs-coverage.info --output-directory coverage
 
 help:
 	@echo "\nMakefile targets...\n"

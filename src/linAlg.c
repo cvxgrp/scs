@@ -97,16 +97,16 @@ pack_B(int kc, int nc, const double *B, int incRowB, int incColB,
         double *buffer) {
     int np = nc / NR;
     int _nr = nc % NR;
+    int i;
 
-    int i, j;
-
-    for (j = 0; j < np; ++j) {
+    for (i = 0; i < np; ++i) {
         pack_kxNR(kc, B, incRowB, incColB, buffer);
         buffer += kc*NR;
         B += NR*incColB;
     }
     if (_nr > 0) {
         for (i = 0; i < kc; ++i) {
+            int j;
             for (j = 0; j < _nr; ++j) {
                 buffer[j] = B[j * incColB];
             }
@@ -771,11 +771,11 @@ void scaleArray(scs_float *a, const scs_float b, scs_int len) {
 /* x'*y */
 scs_float innerProd(const scs_float *x, const scs_float *y, scs_int len) {
     register scs_int j;
-    register scs_float ip = 0.f;
-    register scs_float s0 = 0.f;
-    register scs_float s1 = 0.f;
-    register scs_float s2 = 0.f;
-    register scs_float s3 = 0.f;
+    register scs_float ip = 0.;
+    register scs_float s0 = 0.;
+    register scs_float s1 = 0.;
+    register scs_float s2 = 0.;
+    register scs_float s3 = 0.;
     const scs_int block_size = 4;
     const scs_int block_len = len >> 2;
     const scs_int remaining = len % block_size;
@@ -831,7 +831,7 @@ void addScaledArray(
         const scs_float sc) {
     register scs_int j;
     const scs_int block_size = 4;
-    const scs_int block_len = len >> 2;
+    const scs_int block_len = len >> 2; /* divide by 4*/
     const scs_int remaining = len % block_size;
     j = 0;
     while (j < block_len * block_size) {

@@ -94,26 +94,38 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
+<p>Matrix in compressed-column or triplet form.  
+ <a href="structcs__sparse.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="cs_8h_source.html">cs.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:ac1bfba554f3869b6971c2a0cb5633ef9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#ac1bfba554f3869b6971c2a0cb5633ef9">nzmax</a></td></tr>
+<tr class="memdesc:ac1bfba554f3869b6971c2a0cb5633ef9"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximum number of entries  <a href="#ac1bfba554f3869b6971c2a0cb5633ef9">More...</a><br/></td></tr>
 <tr class="separator:ac1bfba554f3869b6971c2a0cb5633ef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb8d3ac9f1eb0f06ce7c424c82d5f507"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#abb8d3ac9f1eb0f06ce7c424c82d5f507">m</a></td></tr>
+<tr class="memdesc:abb8d3ac9f1eb0f06ce7c424c82d5f507"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of rows  <a href="#abb8d3ac9f1eb0f06ce7c424c82d5f507">More...</a><br/></td></tr>
 <tr class="separator:abb8d3ac9f1eb0f06ce7c424c82d5f507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4aa7f0765711dc019816ea1b84280d82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#a4aa7f0765711dc019816ea1b84280d82">n</a></td></tr>
+<tr class="memdesc:a4aa7f0765711dc019816ea1b84280d82"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of columns  <a href="#a4aa7f0765711dc019816ea1b84280d82">More...</a><br/></td></tr>
 <tr class="separator:a4aa7f0765711dc019816ea1b84280d82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa341eac00e906fabba371f34ce8f1e3c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#aa341eac00e906fabba371f34ce8f1e3c">p</a></td></tr>
+<tr class="memdesc:aa341eac00e906fabba371f34ce8f1e3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">column pointers (size n+1) or col indices (size nzmax)  <a href="#aa341eac00e906fabba371f34ce8f1e3c">More...</a><br/></td></tr>
 <tr class="separator:aa341eac00e906fabba371f34ce8f1e3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f7dbbbbd21533a7effe950c175e31e1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#a1f7dbbbbd21533a7effe950c175e31e1">i</a></td></tr>
+<tr class="memdesc:a1f7dbbbbd21533a7effe950c175e31e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">row indices, size nzmax  <a href="#a1f7dbbbbd21533a7effe950c175e31e1">More...</a><br/></td></tr>
 <tr class="separator:a1f7dbbbbd21533a7effe950c175e31e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ddc07d9e8387207c2bfa3fcac466d80"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#a6ddc07d9e8387207c2bfa3fcac466d80">x</a></td></tr>
+<tr class="memdesc:a6ddc07d9e8387207c2bfa3fcac466d80"><td class="mdescLeft">&#160;</td><td class="mdescRight">numerical values, size nzmax  <a href="#a6ddc07d9e8387207c2bfa3fcac466d80">More...</a><br/></td></tr>
 <tr class="separator:a6ddc07d9e8387207c2bfa3fcac466d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8267b0c0bc7fe5e8ff24c945325794ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcs__sparse.html#a8267b0c0bc7fe5e8ff24c945325794ed">nz</a></td></tr>
+<tr class="memdesc:a8267b0c0bc7fe5e8ff24c945325794ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of entries in triplet matrix, -1 for compressed-col.  <a href="#a8267b0c0bc7fe5e8ff24c945325794ed">More...</a><br/></td></tr>
 <tr class="separator:a8267b0c0bc7fe5e8ff24c945325794ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Matrix in compressed-column or triplet form. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="a1f7dbbbbd21533a7effe950c175e31e1"></a>
 <div class="memitem">
 <div class="memproto">
@@ -123,6 +135,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>row indices, size nzmax </p>
 
 </div>
 </div>
@@ -136,6 +150,8 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>number of rows </p>
+
 </div>
 </div>
 <a class="anchor" id="a4aa7f0765711dc019816ea1b84280d82"></a>
@@ -147,6 +163,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>number of columns </p>
 
 </div>
 </div>
@@ -160,6 +178,8 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Number of entries in triplet matrix, -1 for compressed-col. </p>
+
 </div>
 </div>
 <a class="anchor" id="ac1bfba554f3869b6971c2a0cb5633ef9"></a>
@@ -171,6 +191,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>maximum number of entries </p>
 
 </div>
 </div>
@@ -184,6 +206,8 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>column pointers (size n+1) or col indices (size nzmax) </p>
+
 </div>
 </div>
 <a class="anchor" id="a6ddc07d9e8387207c2bfa3fcac466d80"></a>
@@ -196,6 +220,8 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>numerical values, size nzmax </p>
+
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
@@ -204,7 +230,7 @@ Data Fields</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jun 28 2017 17:48:51 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 30 2017 01:40:25 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

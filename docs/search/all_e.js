@@ -4,6 +4,7 @@ var searchData=
   ['pobj',['pobj',['../struct_s_c_s___i_n_f_o.html#a0e436f279ea98b8813f35eb9f9676298',1,'SCS_INFO']]],
   ['powf',['POWF',['../glbopts_8h.html#a5eb338b58f3b23067d6a87b00eca4971',1,'glbopts.h']]],
   ['pr',['pr',['../struct_s_c_s___w_o_r_k.html#a82f17018c6c8698dc1853775e61c5d27',1,'SCS_WORK']]],
+  ['previous_5fmax_5fiters',['previous_max_iters',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#acaa7e7c1997bc99118dbbd9d78b921b1',1,'SCS_SETTINGS']]],
   ['printarray',['printArray',['../util_8h.html#aafa3d12d87a208f23728988a67031a8c',1,'util.h']]],
   ['printconedata',['printConeData',['../util_8h.html#afb012ff1a4bd5a4018440981d7eb2c9f',1,'util.h']]],
   ['printdata',['printData',['../util_8h.html#a0911138952ccd995990d19d0255ee167',1,'util.h']]],

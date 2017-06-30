@@ -200,14 +200,20 @@
  * We may then print various statistics
  * 
  * ~~~~~{.c}
- * for (i = 0; i <= info->history_length; ++i) {
-        printf("[%d]  rel = %g, respri = %g, pc = %g, dc = %g\n", 
-                info->progress_iter[i], 
-                info->progress_relgap[i], 
-                info->progress_respri[i],
-                info->progress_pcost[i],
-                info->progress_dcost[i]);
-    }
+ * scs_int i;
+ * const scs_int column_size = 10;
+ * printf("  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n");
+ * printf("----------------------------------------------------------------\n");
+ * for (i = 0; i < info->iter; ++i) {
+ *       printf("%*i ", 3, i);
+ *       printf("%*.2e", column_size, info->progress_pcost[i]);
+ *       printf("%*.2e", column_size, info->progress_dcost[i]);
+ *       printf("%*.2e", column_size, info->progress_relgap[i]);
+ *       printf("%*.2e", column_size, info->progress_norm_fpr[i]);
+ *       printf("%*.2e", column_size, info->progress_respri[i]);
+ *       printf("%*.2e", column_size, info->progress_resdual[i]);
+ *       printf("\n");
+ * }
  * ~~~~~
  * 
  * If <code>do_record_progress</code> is, instead, set to <code>0</code>, no progress

@@ -58,6 +58,8 @@ extern "C" {
      * @return status code of the method.
      * 
      * @see \ref sec-full-broyden "Full Broyden Algorithm"
+     * 
+     * \warning Not implemented yet
      */
     scs_int computeFullBroyden(Work *work, scs_int i);
 
@@ -72,7 +74,7 @@ extern "C" {
      * 
      * @param work workspace structure
      * @param i iteration count
-     * @return 
+     * @return status code; negative status corresponds to error. 
      * 
      * @see direction_type
      */
