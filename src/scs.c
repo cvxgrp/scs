@@ -1680,7 +1680,9 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     calcFPRes(work->R, work->u_t, work->u_b, work->l); /* compute Ru */
     scaleArray(work->R, sqrt_rhox, work->n); /* scale R_x with sqrt_rhox */
     eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
-    scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
+
+    /* TODO: do we really need to schale here? Delete if Sk and Yk scaled separately later */
+/*    scaleArray(work->u, sqrt_rhox, work->n);/* /* u is now scaled */
     r_safe = eta;
     work->nrmR_con = eta;
 
@@ -1738,6 +1740,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
+                    
+                    /* TODO: not sure if we need to scale here*/
                     scaleArray(work->Sk, sqrt_rhox, work->n);
 #ifdef EXTREME_DEBUG                    
                     printArray(work->Sk, work->l, "S");
@@ -1856,7 +1860,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
                     /* K2 */
                     if (work->stgs->k2) {
-                        /*TODO: check this one out!!! */
+                        /*TODO: check this one out!!!  --- looks fine */
                         scs_float slack;
                         scs_float rhs;
                         scs_float stepsize2;
@@ -1882,9 +1886,9 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         } /* IF-block: iterated after warm start */
         
         if (how == -1) { /* means that R didn't change */
-            /* x -= alpha*sqrt(rho)*Rx */
-            addScaledArray(work->u, work->R, work->n, -work->stgs->alpha * sqrt_rhox);
-            addScaledArray(work->u + work->n, work->R + work->n, work->m + 1, -work->stgs->alpha);
+            /* x -= alpha*Rx */
+            addScaledArray(work->u, work->R, work->l, -work->stgs->alpha);
+
         }
         if (how != 1) { /* exited with other than K1 */
             if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
