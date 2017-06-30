@@ -15,7 +15,7 @@
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
-/* #define EXTREME_DEBUG */
+/* #define EXTREME_DEBUG  */
 timer globalTimer;
 
 /* printing header */
@@ -305,7 +305,7 @@ static void calcResiduals(Work *w, struct residuals *r, scs_int iter) {
     }
     r->lastIter = iter;
 
-    
+
     if (!w->stgs->do_super_scs) {
         s = &(w->v[w->n]);
         x = w->u;
@@ -1629,7 +1629,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     scs_float eta;
     scs_float r_safe;
     scs_float nrmRw_con; /* norm of FP res at line-search */
-    scs_float nrmR_con_old; /* keeps previous FP res */   
+    scs_float nrmR_con_old; /* keeps previous FP res */
     scs_float sqrt_rhox = SQRTF(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
     timer solveTimer;
@@ -1667,7 +1667,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
-/*   scaleArray(work->u_t, sqrt_rhox, work->n); */
+    /*   scaleArray(work->u_t, sqrt_rhox, work->n); */
     if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
         RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
                 "error in projectLinSysv2", "Failure");
@@ -1678,11 +1678,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     }
     compute_sb_kapb(work->u, work->u_b, work->u_t, work); /* compute s_b and kappa_b */
     calcFPRes(work->R, work->u_t, work->u_b, work->l); /* compute Ru */
-    scaleArray(work->R, sqrt_rhox, work->n); /* scale R_x with sqrt_rhox */
     eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
-
-    /* TODO: do we really need to schale here? Delete if Sk and Yk scaled separately later */
-    scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
     work->nrmR_con = eta;
 
@@ -1740,7 +1736,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
-                    
+
                     /* TODO: not sure if we need to scale here*/
                     scaleArray(work->Sk, sqrt_rhox, work->n);
 #ifdef EXTREME_DEBUG                    
@@ -1863,7 +1859,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         /*TODO: check this one out!!!  --- looks fine */
                         scs_float slack;
                         scs_float rhs;
-                        scs_float stepsize2;
                         slack = nrmRw_con * nrmRw_con - work->stepsize * (
                                 innerProd(work->dir + work->n, work->Rwu + work->n, work->m + 1)
                                 + work->stgs->rho_x * innerProd(work->dir, work->Rwu, work->n)
@@ -1872,9 +1867,9 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 #ifdef EXTREME_DEBUG  
                         printf("slack     : %3.16f\n", slack);
                         printf("rhs       : %3.16f\n", rhs);
-                        printf("stepsize2 : %3.16f\n", stepsize2);
 #endif
                         if (slack >= rhs) {
+                            scs_float stepsize2;
                             stepsize2 = (work->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
                             addScaledArray(work->u, work->Rwu, work->l, -stepsize2);
                             how = 2;
@@ -1884,12 +1879,18 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 } /* end of line-search */
             } /* end of `else if` block (when !K1 OR no blind update) */
         } /* IF-block: iterated after warm start */
-        
+
+#ifdef EXTREME_DEBUG  
+        printArray(work->R, work->l, "R");
+        printArray(work->u, work->l, "u");
+#endif
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*Rx */
             addScaledArray(work->u, work->R, work->l, -work->stgs->alpha);
-
         }
+#ifdef EXTREME_DEBUG  
+        printArray(work->u, work->l, "u");
+#endif        
         if (how != 1) { /* exited with other than K1 */
             if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
                 RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
@@ -1901,11 +1902,21 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             }
             compute_sb_kapb(work->u, work->u_b, work->u_t, work);
             calcFPRes(work->R, work->u_t, work->u_b, work->l);
-            /* Make sure the following is correct... */
-            scaleArray(work->R, sqrt_rhox, work->n);
-            work->nrmR_con = calcNorm(work->R, work->l);
-#ifdef EXTREME_DEBUG            
-            printf("nrmRw_con: %3.16f\n", nrmRw_con);
+            /*FIXME Most likely, this sqrt_rhox here is wrong... */
+            work->nrmR_con = SQRTF(
+                    work->stgs->rho_x * calcNormSq(work->R, work->n)
+                    + calcNormSq(work->R + work->n, work->m + 1)
+                    );
+#ifdef EXTREME_DEBUG          
+            printf("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+            printf("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+            printArray(work->R, work->l, "R");
+            printArray(work->u_b, work->l, "ub");
+            printArray(work->u_t, work->l, "ut");
+            printArray(work->u, work->l, "u");
+            printf("nrmRw_con: %3.16f\n", work->nrmR_con);
+            printf("kappa_b: %3.16f\n", work->kap_b);
+            printArray(work->s_b, work->m, "sb");
             printf("BRK-HOW:-1\n");
 #endif            
         }

@@ -623,9 +623,9 @@ bool test_rho_x(char** str) {
     data->stgs->c1              = 1.0 - 1e-4;
     data->stgs->c_bl            = 0.999;    
     data->stgs->k0              = 0;
-    data->stgs->k1              = 1;
-    data->stgs->k2              = 1;
-    data->stgs->ls              = 10;
+    data->stgs->k1              = 0;
+    data->stgs->k2              = 0;
+    data->stgs->ls              = 0;
     data->stgs->sigma           = 1e-2;
     data->stgs->thetabar        = 0.1;
     data->stgs->memory          = 10;
