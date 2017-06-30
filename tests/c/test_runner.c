@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     r += test(&test_superscs_001_fpr, "Test SuperSCS (0,0,1) with FPR"); 
     r += test(&test_superscs_001_rbroyden, "Test SuperSCS (0,0,1) with R-Broyden");
     r += test(&test_superscs_100_rbroyden, "Test SuperSCS (1,0,0) with R-Broyden");
-    /* r += test(&test_residuals, "Test residuals"); */
+    r += test(&test_residuals, "Test residuals"); 
     r += test(&test_rho_x, "Test rho_x");
     
     

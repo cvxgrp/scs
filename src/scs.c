@@ -1682,7 +1682,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     eta = calcNorm(work->R, work->l); /* initialize eta = |Ru^0| (norm of scaled R) */
 
     /* TODO: do we really need to schale here? Delete if Sk and Yk scaled separately later */
-/*    scaleArray(work->u, sqrt_rhox, work->n);/* /* u is now scaled */
+    scaleArray(work->u, sqrt_rhox, work->n); /* u is now scaled */
     r_safe = eta;
     work->nrmR_con = eta;
 

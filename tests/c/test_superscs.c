@@ -456,19 +456,20 @@ bool test_residuals(char** str) {
     Data * data;
     Info * info;
     Cone * cone;
+
     scs_float relgap_expected[12] = {
         0,
-        0.45039546702,
-        0.18197423289,
-        0.44654726283,
-        0.16195937371,
-        0.27652759990,
-        0.29785223028,
-        0.16934030689,
-        0.00588709109,
-        0.07145742814,
-        0.03247612575,
-        0.04010905318
+        0.641360567339623,
+        0.258326003751872,
+        0.427755914304124,
+        0.070601296495286,
+        0.136391692925419,
+        0.110228818969576,
+        0.116212468002787,
+        0.100073649960616,
+        0.037913746742520,
+        0.031013566758557,
+        0.031786667245133,
     };
 
     prepare_data(&data);
@@ -480,7 +481,7 @@ bool test_residuals(char** str) {
     data->stgs->k2 = 1;
     data->stgs->ls = 10;
     data->stgs->rho_x = 1.0;
-    data->stgs->direction = fixed_point_residual;
+    data->stgs->direction = 100;
     data->stgs->sse = 0.999;
     data->stgs->sigma = 1e-2;
     data->stgs->c_bl = 0.999;
@@ -499,7 +500,7 @@ bool test_residuals(char** str) {
 
     status = scs(data, cone, sol, info);
     ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
-    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-7, str, "relative gap");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-13, str, "relative gap");
 
     /*
     scs_int i;
@@ -524,6 +525,83 @@ bool test_residuals(char** str) {
 
     SUCCEED(str);
 }
+
+bool test_residuals(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+
+    scs_float relgap_expected[12] = {
+        0,
+        0.641360567339623,
+        0.258326003751872,
+        0.427755914304124,
+        0.070601296495286,
+        0.136391692925419,
+        0.110228818969576,
+        0.116212468002787,
+        0.100073649960616,
+        0.037913746742520,
+        0.031013566758557,
+        0.031786667245133,
+    };
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+
+    data->stgs->eps = 1e-8;
+    data->stgs->k0 = 0;
+    data->stgs->k1 = 1;
+    data->stgs->k2 = 1;
+    data->stgs->ls = 10;
+    data->stgs->rho_x = 1.0;
+    data->stgs->direction = 100;
+    data->stgs->sse = 0.999;
+    data->stgs->sigma = 1e-2;
+    data->stgs->c_bl = 0.999;
+    data->stgs->c1 = 1.0 - 1e-4;
+    data->stgs->beta = 0.5;
+    data->stgs->normalize = 1;
+    data->stgs->scale = 1;
+    data->stgs->alpha = 1.5;
+    data->stgs->do_super_scs = 1;
+    data->stgs->verbose = 0;
+    data->stgs->do_record_progress = 1;
+    data->stgs->max_iters = 120;
+
+    sol = initSol();
+    info = initInfo();
+
+    status = scs(data, cone, sol, info);
+    ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-13, str, "relative gap");
+
+    /*
+    scs_int i;
+    const scs_int column_size = 10;
+    printf("  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n");
+    printf("----------------------------------------------------------------\n");
+    for (i = 0; i < info->iter; ++i) {
+        printf("%*i ", 3, i);
+        printf("%*.2e", column_size, info->progress_pcost[i]);
+        printf("%*.2e", column_size, info->progress_dcost[i]);
+        printf("%*.2e", column_size, info->progress_relgap[i]);
+        printf("%*.2e", column_size, info->progress_norm_fpr[i]);
+        printf("%*.2e", column_size, info->progress_respri[i]);
+        printf("%*.2e", column_size, info->progress_resdual[i]);
+        printf("\n");
+    }
+     */
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
 
 bool test_rho_x(char** str) {
     scs_int status;
