@@ -1667,6 +1667,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
+    /*   scaleArray(work->u_t, sqrt_rhox, work->n); */
     if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
         RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
                 "error in projectLinSysv2", "Failure");
@@ -1735,6 +1736,8 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
+
+                    /* TODO: not sure if we need to scale here*/
                     scaleArray(work->Sk, sqrt_rhox, work->n);
 #ifdef EXTREME_DEBUG                    
                     printArray(work->Sk, work->l, "S");
@@ -1853,7 +1856,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
                     /* K2 */
                     if (work->stgs->k2) {
-                        /*TODO: check this one out!!! */
+                        /*TODO: check this one out!!!  --- looks fine */
                         scs_float slack;
                         scs_float rhs;
                         slack = nrmRw_con * nrmRw_con - work->stepsize * (
@@ -1883,8 +1886,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 #endif
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*Rx */
-            addScaledArray(work->u, work->R, work->n, -work->stgs->alpha);
-            addScaledArray(work->u + work->n, work->R + work->n, work->m + 1, -work->stgs->alpha);
+            addScaledArray(work->u, work->R, work->l, -work->stgs->alpha);
         }
 #ifdef EXTREME_DEBUG  
         printArray(work->u, work->l, "u");
