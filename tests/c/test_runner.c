@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     /* Test functions: */
     
     r += test(&test_dummy_method, "Dummy passing test");
-    r += test(&testUnrolledDot, "Unrolled dot");
+    /*r += test(&testUnrolledDot, "Unrolled dot");
     r += test(&testLinAlg, "Unrolled dot");
     r += test(&testProjLinSysv2, "Test projLinSysv2");
     r += test(&testScaleArray, "Test scaleArray");
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     r += test(&test_superscs_000, "Test SuperSCS (0,0,0)");
     r += test(&test_superscs_001_fpr, "Test SuperSCS (0,0,1) with FPR"); 
     r += test(&test_superscs_001_rbroyden, "Test SuperSCS (0,0,1) with R-Broyden");
-    r += test(&test_superscs_100_rbroyden, "Test SuperSCS (1,0,0) with R-Broyden");
+    r += test(&test_superscs_100_rbroyden, "Test SuperSCS (1,0,0) with R-Broyden"); */
     /* r += test(&test_residuals, "Test residuals"); */
     r += test(&test_rho_x, "Test rho_x");
     

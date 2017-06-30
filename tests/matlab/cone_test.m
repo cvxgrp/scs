@@ -29,7 +29,7 @@ params.c1           = 1.0 - 1e-4;
 params.c_bl         = 0.999;
 params.k0           = 0;
 params.k1           = 1;
-params.k2           = 1;
+params.k2           = 0;
 params.ls           = 10;
 params.sigma        = 1e-2;
 params.thetabar     = 0.1;
@@ -38,7 +38,7 @@ params.sse          = 0.999;
 params.tRule        = 1;
 params.do_record_progress = 1;
 params.max_iters    = 1000;
-params.rho_x        = 0.2;
+params.rho_x        = .1;
 [x2, y2, s2, info2] = superscsCversion(data, K, params);
 [x1, y1, s1, info1] = scs_direct(data, K, params);
 
