@@ -15,7 +15,6 @@
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
 
-/* #define EXTREME_DEBUG */
 timer globalTimer;
 
 /* printing header */
@@ -1600,7 +1599,8 @@ static scs_int initProgressData(Info * info, Work * work) {
          * memory space has been allocated for the progress arrays.
          * However, we will not use `realloc` to size it down.
          * --------------------------------------------------------- */
-        if (max_history_alloc > work->stgs->previous_max_iters) {
+        if (work->stgs->previous_max_iters != -1
+                && max_history_alloc > work->stgs->previous_max_iters) {
             /* ------------------------------------
              * We don't check for NULL values here 
              * because `realloc` on NULL pointers 
@@ -1629,17 +1629,21 @@ static scs_int initProgressData(Info * info, Work * work) {
 scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol, Info *info) {
     DEBUG_FUNC
     scs_int i; /* i indexes the (outer) iterations */
-    scs_int j; /* j indexes the line search iterations */
-    scs_int j1; /* j1 indexes other auxiliary iterations (e.g., algebraic operations) */
     scs_int how = 0; /* -1:unsuccessful backtracking, 0:K0, 1:K1, 2:K2 */
     scs_float eta;
     scs_float r_safe;
     scs_float nrmRw_con; /* norm of FP res at line-search */
     scs_float nrmR_con_old; /* keeps previous FP res */
-    scs_float sqrt_rhox = SQRTF(work->stgs->rho_x);
     scs_float q = work->stgs->sse;
+    const scs_float rhox = work->stgs->rho_x;
+    const scs_float sqrt_rhox = SQRTF(rhox);
+    const scs_float q0 = work->stgs->sse;
+    const scs_int n = work->n;
+    const scs_int m = work->m;
+    const scs_int l = work->l;
     timer solveTimer;
     struct residuals r;
+
 
     i = initProgressData(info, work);
     if (i < 0) {
@@ -1673,20 +1677,19 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
-    /*   scaleArray(work->u_t, sqrt_rhox, work->n); */
     if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
-        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+        RETURN failure(work, m, n, sol, info, SCS_FAILED,
                 "error in projectLinSysv2", "Failure");
     }
     if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
-        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+        RETURN failure(work, m, n, sol, info, SCS_FAILED,
                 "error in projectConesv2", "Failure");
     }
     compute_sb_kapb(work->u, work->u_b, work->u_t, work); /* compute s_b and kappa_b */
-    calcFPRes(work->R, work->u_t, work->u_b, work->l); /* compute Ru */
+    calcFPRes(work->R, work->u_t, work->u_b, l); /* compute Ru */
     eta = SQRTF(
-            work->stgs->rho_x * calcNormSq(work->R, work->n)
-            + calcNormSq(work->R + work->n, work->m + 1)
+            rhox * calcNormSq(work->R, n)
+            + calcNormSq(work->R + n, m + 1)
             ); /* initialize eta = |Ru^0| (norm of R using rho_x) */
     r_safe = eta;
     work->nrmR_con = eta;
@@ -1694,9 +1697,10 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
+        scs_int j; /* j indexes the line search iterations */
 
         if (isInterrupted()) {
-            RETURN failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
+            RETURN failure(work, m, n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted");
         }
 
@@ -1724,199 +1728,123 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             printSummary(work, i, &r, &solveTimer);
         }
 
-#ifdef EXTREME_DEBUG
-        printf("\n\nBlock: #1\n");
-        printf("nrmR_con: %3.12f\n", work->nrmR_con);
-        printArray(work->R, work->l, "R");
-        printArray(work->u, work->l, "u");
-        printArray(work->u_t, work->l, "ut");
-        printf("BRK-1\n");
-#endif
         if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
-            work->stgs->sse *= q; /*sse = q^i */
+            q *= q0; /*q = q0^i */
             if (i == 0) {
                 /* -------------------------------------------
                  * At i=0, the direction is defined using the 
                  * FPR: dir^0 = -R 
                  * -------------------------------------------- */
-                /*TODO optimize the following two lines */
-                setAsScaledArray(work->dir, work->R, -1, work->l);
-                scaleArray(work->dir, sqrt_rhox, work->n);
+                setAsScaledArray(work->dir, work->R, -sqrt_rhox, n);
+                setAsScaledArray(work->dir + n, work->R + n, -1, m + 1);
+
             } else {
-                /*TODO optimize the following operations */
+                scs_int j1; /* j1 indexes other auxiliary iterations (e.g., algebraic operations) */
+                /*TODO optimize the following operations (need axpy implementation) */
                 if (how == 0 || work->stgs->ls == 0) {
-                    for (j1 = 0; j1 < work->n; ++j1) {
+                    for (j1 = 0; j1 < n; ++j1) {
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = sqrt_rhox * work->R[j1] - work->R_prev[j1];
                     }
-                    for (j1 = work->n; j1 < work->l; ++j1) {
+                    for (j1 = n; j1 < l; ++j1) {
                         work->Sk[j1] = work->u[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->R[j1] - work->R_prev[j1];
                     }
-                    scaleArray(work->Sk, sqrt_rhox, work->n);
-#ifdef EXTREME_DEBUG            
-                    printf("\n\nBlock: #2\n");
-                    printArray(work->u, work->l, "u");
-                    printArray(work->u_prev, work->l, "uold");
-                    printArray(work->Sk, work->l, "S");
-                    printArray(work->Yk, work->l, "Y");
-                    printArray(work->R, work->l, "R");
-                    printArray(work->Rwu, work->l, "Rw");
-                    printArray(work->R_prev, work->l, "Rold");
-                    printf("BRK-2\n");
-#endif
+                    scaleArray(work->Sk, sqrt_rhox, n);
                 } else {
-                    for (j1 = 0; j1 < work->n; ++j1) {
+                    for (j1 = 0; j1 < n; ++j1) {
                         work->Sk[j1] = sqrt_rhox * (work->wu[j1] - work->u_prev[j1]);
                         work->Yk[j1] = sqrt_rhox * work->Rwu[j1] - work->R_prev[j1];
                     }
-                    for (j1 = work->n; j1 < work->l; ++j1) {
+                    for (j1 = n; j1 < l; ++j1) {
                         work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
                         work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
                     }
-#ifdef EXTREME_DEBUG      
-                    printf("\n\nBlock: #3\n");
-                    printf("sse: %3.12f\n", work->stgs->sse);
-                    printArray(work->Sk, work->l, "S");
-                    printArray(work->Yk, work->l, "Y");
-                    printArray(work->R, work->l, "R");
-                    printf("BRK-3\n");
-#endif                    
                 }
 
-                scaleArray(work->R, sqrt_rhox, work->n);
+                scaleArray(work->R, sqrt_rhox, n);
                 /* compute direction */
                 if (computeDirection(work, i) < 0) {
                     {
-                        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                        RETURN failure(work, m, n, sol, info, SCS_FAILED,
                                 "error in computeDirection", "Failure");
                     }
                 }
-                /*TODO: optimize this bit... */
-                /* X-035 */
-                scaleArray(work->R, 1 / sqrt_rhox, work->n);
+                scaleArray(work->R, 1 / sqrt_rhox, n);
             }
             /* -------------------------------------------
              * Scale the x-part of dir using sqrt_rhox
              * -------------------------------------------- */
-            scaleArray(work->dir, 1 / sqrt_rhox, work->n);
-#ifdef EXTREME_DEBUG
-            printf("\n\nBlock: #5\n");
-            printArray(work->R, work->l, "R");
-            printArray(work->dir, work->l, "d");
-            printf("BRK-5\n");
-#endif
+            scaleArray(work->dir, 1 / sqrt_rhox, n);
         }
 
-        memcpy(work->u_prev, work->u, work->l * sizeof (scs_float)); /* u_prev = u */
-        memcpy(work->R_prev, work->R, work->l * sizeof (scs_float)); /* R_prev = R */
-        scaleArray(work->R_prev, sqrt_rhox, work->n); /* X-035 */
+        memcpy(work->u_prev, work->u, l * sizeof (scs_float)); /* u_prev = u */
+        memcpy(work->R_prev, work->R, l * sizeof (scs_float)); /* R_prev = R */
+        scaleArray(work->R_prev, sqrt_rhox, n);
         how = -1; /* no backtracking (yet) */
         nrmR_con_old = work->nrmR_con;
 
-#ifdef EXTREME_DEBUG
-        printf("\n\nBlock: #5B\n");
-        printArray(work->R_prev, work->l, "Rold");
-        printf("BRK-5B\n");
-#endif
         if (i >= work->stgs->warm_start) {
             if (work->stgs->k0 == 1 && work->nrmR_con <= work->stgs->c_bl * eta) {
-                addArray(work->u, work->dir, work->l); /* u += dir */
+                addArray(work->u, work->dir, l); /* u += dir */
                 how = 0;
                 eta = work->nrmR_con;
                 work->stepsize = 1.0;
-#ifdef EXTREME_DEBUG
-                printf("\n\nBlock: #5X-K0\n");
-                printf("nrmR_con: %3.12f\n", work->nrmR_con);
-                printf("eta: %3.12f\n", eta);
-                printArray(work->u, work->l, "u");
-                printf("BRK-5X-K0\n");
-#endif
             } else if (work->stgs->ls > 0) {
                 if (projectLinSysv2(work->dut, work->dir, work, i) < 0) {
-                    RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                    RETURN failure(work, m, n, sol, info, SCS_FAILED,
                             "error in projectLinSysv2", "Failure");
                 }
                 work->stepsize = 2.0;
-#ifdef EXTREME_DEBUG                
-                printf("\n\nBlock: #6\n");
-                printArray(work->dut, work->l, "dut");
-                printf("BRK-6\n");
-#endif
+
                 /* Line search */
                 for (j = 0; j < work->stgs->ls; ++j) {
+                    scs_int j1; /* j1 indexes other auxiliary iterations (e.g., algebraic operations) */
                     work->stepsize *= work->stgs->beta;
 
-
-                    for (j1 = 0; j1 < work->l; ++j1) {
+                    for (j1 = 0; j1 < l; ++j1) {
                         work->wu[j1] = work->u[j1] + work->stepsize * work->dir[j1]; /* wu = u + step * dir */
                         work->wu_t[j1] = work->u_t[j1] + work->stepsize * work->dut[j1]; /* wut = u_t + step * dut */
                     }
 
                     if (projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i) < 0) {
-                        RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                        RETURN failure(work, m, n, sol, info, SCS_FAILED,
                                 "error in projectConesv2", "Failure");
                     }
-                    calcFPRes(work->Rwu, work->wu_t, work->wu_b, work->l); /* calculate FPR on scaled vectors */
+                    calcFPRes(work->Rwu, work->wu_t, work->wu_b, l); /* calculate FPR on scaled vectors */
 
                     nrmRw_con = SQRTF(
-                            calcNormSq(work->Rwu + work->n, work->m + 1)
-                            + work->stgs->rho_x * calcNormSq(work->Rwu, work->n));
-#ifdef EXTREME_DEBUG
-                    printf("\n\n------------------------------------------\n");
-                    printf("Block: #7\n");
-                    printArray(work->dir, work->l, "d");
-                    printArray(work->u, work->l, "u");
-                    printArray(work->wu, work->l, "wu");
-                    printArray(work->wu_t, work->l, "wut");
-                    printArray(work->wu_b, work->l, "wub");
-                    printArray(work->Rwu, work->l, "Rwu");
-                    printf("nrmRw_con: %3.16f\n", nrmRw_con);
-                    printf("BRK-7\n");
-#endif                    
+                            calcNormSq(work->Rwu + n, m + 1)
+                            + rhox * calcNormSq(work->Rwu, n));
+
                     /* K1 */
                     if (work->stgs->k1
                             && nrmRw_con <= work->stgs->c1 * nrmR_con_old
                             && work->nrmR_con <= r_safe) { /* a bit different than matlab */
-                        memcpy(work->u, work->wu, work->l * sizeof (scs_float));
-                        memcpy(work->u_t, work->wu_t, work->l * sizeof (scs_float));
-                        memcpy(work->u_b, work->wu_b, work->l * sizeof (scs_float));
-                        memcpy(work->R, work->Rwu, work->l * sizeof (scs_float));
+                        memcpy(work->u, work->wu, l * sizeof (scs_float));
+                        memcpy(work->u_t, work->wu_t, l * sizeof (scs_float));
+                        memcpy(work->u_b, work->wu_b, l * sizeof (scs_float));
+                        memcpy(work->R, work->Rwu, l * sizeof (scs_float));
                         compute_sb_kapb(work->wu, work->wu_b, work->wu_t, work);
                         work->nrmR_con = nrmRw_con;
-                        r_safe = work->nrmR_con + work->stgs->sse; /* The power already computed at the beginning of the main loop */
+                        r_safe = work->nrmR_con + q; /* The power already computed at the beginning of the main loop */
                         how = 1;
-#ifdef EXTREME_DEBUG
-                        printf("Block: #8\n");
-                        printArray(work->R, work->l, "R");
-                        printArray(work->Rwu, work->l, "Rw");
-                        printArray(work->R_prev, work->l, "Rold");
-                        printArray(work->u_b, work->l, "ub");
-                        printArray(work->u_t, work->l, "ut");
-                        printArray(work->u, work->l, "u");
-                        printf("BRK-8\n");
-#endif                        
                         break;
                     }
 
                     /* K2 */
                     if (work->stgs->k2) {
-                        /*TODO: check this one out!!!  --- looks fine */
                         scs_float slack;
                         scs_float rhs;
                         slack = nrmRw_con * nrmRw_con - work->stepsize * (
-                                innerProd(work->dir + work->n, work->Rwu + work->n, work->m + 1)
-                                + work->stgs->rho_x * innerProd(work->dir, work->Rwu, work->n)
+                                innerProd(work->dir + n, work->Rwu + n, m + 1)
+                                + rhox * innerProd(work->dir, work->Rwu, n)
                                 );
                         rhs = work->stgs->sigma * work->nrmR_con * nrmRw_con;
-#ifdef EXTREME_DEBUG  
-                        printf("slack     : %3.16f\n", slack);
-                        printf("rhs       : %3.16f\n", rhs);
-#endif
                         if (slack >= rhs) {
                             scs_float stepsize2;
                             stepsize2 = (work->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
-                            addScaledArray(work->u, work->Rwu, work->l, -stepsize2);
+                            addScaledArray(work->u, work->Rwu, l, -stepsize2);
                             how = 2;
                             break; /* exits the line search loop */
                         }
@@ -1925,46 +1853,25 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
             } /* end of `else if` block (when !K1 OR no blind update) */
         } /* IF-block: iterated after warm start */
 
-#ifdef EXTREME_DEBUG  
-        printArray(work->R, work->l, "R");
-        printArray(work->u, work->l, "u");
-#endif
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*Rx */
-            addScaledArray(work->u, work->R, work->l, -work->stgs->alpha);
+            addScaledArray(work->u, work->R, l, -work->stgs->alpha);
         } /* how == -1 */
-#ifdef EXTREME_DEBUG  
-        printArray(work->u, work->l, "u");
-#endif        
         if (how != 1) { /* exited with other than K1 */
             if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
-                RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                RETURN failure(work, m, n, sol, info, SCS_FAILED,
                         "error in projectLinSysv2", "Failure");
             }
             if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
-                RETURN failure(work, work->m, work->n, sol, info, SCS_FAILED,
+                RETURN failure(work, m, n, sol, info, SCS_FAILED,
                         "error in projectConesv2", "Failure");
             }
             compute_sb_kapb(work->u, work->u_b, work->u_t, work);
-            calcFPRes(work->R, work->u_t, work->u_b, work->l);
+            calcFPRes(work->R, work->u_t, work->u_b, l);
             work->nrmR_con = SQRTF(
-                    work->stgs->rho_x * calcNormSq(work->R, work->n)
-                    + calcNormSq(work->R + work->n, work->m + 1)
+                    rhox * calcNormSq(work->R, n)
+                    + calcNormSq(work->R + n, m + 1)
                     );
-#ifdef EXTREME_DEBUG          
-            printf("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            printf("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            printArray(work->R, work->l, "R");
-            printArray(work->Rwu, work->l, "Rw");
-            printArray(work->R_prev, work->l, "Rold");
-            printArray(work->u_b, work->l, "ub");
-            printArray(work->u_t, work->l, "ut");
-            printArray(work->u, work->l, "u");
-            printf("nrmRw_con: %3.16f\n", work->nrmR_con);
-            printf("kappa_b: %3.16f\n", work->kap_b);
-            printArray(work->s_b, work->m, "sb");
-            printf("BRK-HOW:-1\n");
-#endif            
         } /* how != 1 */
     } /* main for loop */
 
@@ -1977,6 +1884,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     /* populate solution vectors (unnormalized) and info */
     /* update u, denormalize, etc */
     getSolution(work, sol, info, &r, i);
+    /*TODO Should this be info->iter = i+1 instead? */
     info->iter = i;
     info->solveTime = tocq(&solveTimer);
     info->history_length = i / CONVERGED_INTERVAL;
@@ -2102,9 +2010,9 @@ scs_int scs(const Data *d, const Cone *k, Sol *sol, Info * info) {
     }
 
     if (w->stgs->verbose > 0) {
-        if (w->stgs->do_super_scs == 1){
+        if (w->stgs->do_super_scs == 1) {
             scs_printf("Running SuperSCS...\n");
-        }else{
+        } else {
             scs_printf("Running Standard SCS...\n");
         }
     }

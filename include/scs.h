@@ -479,7 +479,7 @@ extern "C" {
      * This function does not initialize of allocate memory for \c x, \c s
      * or \c y (but it sets the respective pointers to ::SCS_NULL).
      * 
-     * @return Initialized Sol structure.
+     * @return Initialized ::Sol structure.
      */
     Sol * initSol(void);
 
@@ -517,6 +517,9 @@ extern "C" {
      * @param info
      * 
      * @return status code
+     * 
+     * \remark It is very important that <code>info</code> is created using 
+     * ::initInfo.
      */
     scs_int scs(
             const Data *d,

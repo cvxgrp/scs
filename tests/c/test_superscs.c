@@ -345,7 +345,7 @@ bool test_superscs_001_rbroyden(char** str) {
 
     /*
      * Here I'm modifying the maximum number of iterations to make sure that  
-     * those tricks with stgs->previous_max_iter indeed works.
+     * those tricks with stgs->previous_max_iter indeed work.
      */
 
     data->stgs->max_iters = 1000;
@@ -378,27 +378,32 @@ bool test_superscs_001_rbroyden(char** str) {
     data->stgs->rho_x = .01;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     data->stgs->max_iters = 2000;
     data->stgs->rho_x = .001;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     data->stgs->max_iters = 3100;
     data->stgs->rho_x = .0001;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     data->stgs->max_iters = 3200;
     data->stgs->rho_x = 10;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     data->stgs->max_iters = 3300;
     data->stgs->rho_x = 0.001;
     data->stgs->do_super_scs = 0;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     freeData(data, cone);
     freeSol(sol);
@@ -436,11 +441,10 @@ bool test_superscs_100_rbroyden(char** str) {
     data->stgs->max_iters = 2;
     status = scs(data, cone, sol, info);
 
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -0.349018320302040, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], 0.015102755569314, 1e-10, str, "x[1] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 1.778110351429428, 1e-10, str, "x[2] wrong");
-
-
 
 
     freeData(data, cone);
@@ -491,7 +495,7 @@ bool test_residuals(char** str) {
     data->stgs->scale = 1;
     data->stgs->alpha = 1.5;
     data->stgs->do_super_scs = 1;
-    data->stgs->verbose = 0;
+    data->stgs->verbose = 1;
     data->stgs->do_record_progress = 1;
     data->stgs->max_iters = 120;
 
@@ -501,23 +505,7 @@ bool test_residuals(char** str) {
     status = scs(data, cone, sol, info);
     ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
     ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-13, str, "relative gap");
-
-    /*
-    scs_int i;
-    const scs_int column_size = 10;
-    printf("  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n");
-    printf("----------------------------------------------------------------\n");
-    for (i = 0; i < info->iter; ++i) {
-        printf("%*i ", 3, i);
-        printf("%*.2e", column_size, info->progress_pcost[i]);
-        printf("%*.2e", column_size, info->progress_dcost[i]);
-        printf("%*.2e", column_size, info->progress_relgap[i]);
-        printf("%*.2e", column_size, info->progress_norm_fpr[i]);
-        printf("%*.2e", column_size, info->progress_respri[i]);
-        printf("%*.2e", column_size, info->progress_resdual[i]);
-        printf("\n");
-    }
-     */
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     freeData(data, cone);
     freeSol(sol);
@@ -525,83 +513,6 @@ bool test_residuals(char** str) {
 
     SUCCEED(str);
 }
-
-bool test_residuals2(char** str) {
-    scs_int status;
-    Sol* sol;
-    Data * data;
-    Info * info;
-    Cone * cone;
-
-    scs_float relgap_expected[12] = {
-        0,
-        0.641360567339623,
-        0.258326003751872,
-        0.427755914304124,
-        0.070601296495286,
-        0.136391692925419,
-        0.110228818969576,
-        0.116212468002787,
-        0.100073649960616,
-        0.037913746742520,
-        0.031013566758557,
-        0.031786667245133,
-    };
-
-    prepare_data(&data);
-    prepare_cone(&cone);
-
-    data->stgs->eps = 1e-8;
-    data->stgs->k0 = 0;
-    data->stgs->k1 = 1;
-    data->stgs->k2 = 1;
-    data->stgs->ls = 10;
-    data->stgs->rho_x = 1.0;
-    data->stgs->direction = 100;
-    data->stgs->sse = 0.999;
-    data->stgs->sigma = 1e-2;
-    data->stgs->c_bl = 0.999;
-    data->stgs->c1 = 1.0 - 1e-4;
-    data->stgs->beta = 0.5;
-    data->stgs->normalize = 1;
-    data->stgs->scale = 1;
-    data->stgs->alpha = 1.5;
-    data->stgs->do_super_scs = 1;
-    data->stgs->verbose = 0;
-    data->stgs->do_record_progress = 1;
-    data->stgs->max_iters = 120;
-
-    sol = initSol();
-    info = initInfo();
-
-    status = scs(data, cone, sol, info);
-    ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
-    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-13, str, "relative gap");
-
-    /*
-    scs_int i;
-    const scs_int column_size = 10;
-    printf("  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n");
-    printf("----------------------------------------------------------------\n");
-    for (i = 0; i < info->iter; ++i) {
-        printf("%*i ", 3, i);
-        printf("%*.2e", column_size, info->progress_pcost[i]);
-        printf("%*.2e", column_size, info->progress_dcost[i]);
-        printf("%*.2e", column_size, info->progress_relgap[i]);
-        printf("%*.2e", column_size, info->progress_norm_fpr[i]);
-        printf("%*.2e", column_size, info->progress_respri[i]);
-        printf("%*.2e", column_size, info->progress_resdual[i]);
-        printf("\n");
-    }
-     */
-
-    freeData(data, cone);
-    freeSol(sol);
-    freeInfo(info);
-
-    SUCCEED(str);
-}
-
 
 bool test_rho_x(char** str) {
     scs_int status;
@@ -609,42 +520,79 @@ bool test_rho_x(char** str) {
     Data * data;
     Info * info;
     Cone * cone;
+    scs_int i, j, k, l;
+    scs_float rho;
+
     prepare_data(&data);
     prepare_cone(&cone);
 
-    data->stgs->eps             = 1e-8;
-    data->stgs->do_super_scs    = 1;
-    data->stgs->alpha           = 1.5;
-    data->stgs->scale           = 1.0;
-    data->stgs->verbose         = 1;
-    data->stgs->normalize       = 1;
-    data->stgs->direction       = restarted_broyden;
-    data->stgs->beta            = 0.5;
-    data->stgs->c1              = 0.9999;
-    data->stgs->c_bl            = 0.999;    
-    
-    data->stgs->k0              = 1;
-    data->stgs->k1              = 0;
-    data->stgs->k2              = 0;
-    
-    data->stgs->ls              = 1;
-    
-    data->stgs->sigma           = 1e-2;
-    data->stgs->thetabar        = 0.1;
-    data->stgs->memory          = 10;
-    data->stgs->sse             = 0.999;
+    data->stgs->eps = 1e-8;
+    data->stgs->do_super_scs = 1;
+    data->stgs->alpha = 1.5;
+    data->stgs->scale = 1.0;
+    data->stgs->verbose = 0;
+    data->stgs->normalize = 1;
+    data->stgs->direction = restarted_broyden;
+    data->stgs->beta = 0.5;
+    data->stgs->c1 = 0.9999;
+    data->stgs->c_bl = 0.999;
+
+    data->stgs->sigma = 1e-2;
+    data->stgs->thetabar = 0.1;
+    data->stgs->memory = 10;
+    data->stgs->sse = 0.999;
     data->stgs->do_record_progress = 1;
-    data->stgs->max_iters       = 2000;
-    data->stgs->rho_x           = 0.2;    
-   
+    data->stgs->max_iters = 2000;
+
+
     sol = initSol();
     info = initInfo();
 
-    status = scs(data, cone, sol, info);
- 
+    /* Make sure it converges for different values of rho_x */
+    data->stgs->rho_x = 0.2;
+    for (i = 0; i <= 1; ++i) {
+        for (j = 0; j <= 1; ++j) {
+            for (k = 0; k <= 1; ++k) {
+                for (l = 0; l <= 5; ++l) {
+                    for (rho = 0.001; rho < 0.5; rho *= 1.8) {
+                        /* Test for all possible choices of k0, k1, k2 */
+                        data->stgs->k0 = i;
+                        data->stgs->k1 = j;
+                        data->stgs->k2 = k;
+                        /* Test for different values of ls */
+                        data->stgs->ls = l;
+                        /* Test for different values of rho_x */
+                        data->stgs->rho_x = rho;
+                        status = scs(data, cone, sol, info);
+                        ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+                        /* verify that the residuals are lower than eps */
+                        ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
+                        ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
+                        ASSERT_TRUE_OR_FAIL(info->relGap < data->stgs->eps, str, "duality gap too high");
+                        ASSERT_TRUE_OR_FAIL(info->iter < data->stgs->max_iters, str, "too many iterations");
+                        /* verify the solution */
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -16.874896967418358, 1e-5, str, "x[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -5.634341514381794, 1e-5, str, "x[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2],  3.589737499067709, 1e-5, str, "x[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0],  96.506238321412667, 1e-5, str, "y[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[1], -74.161955276422589, 1e-5, str, "y[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2],  14.999999999635596, 1e-5, str, "y[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3],  59.903742992722336, 1e-5, str, "y[3] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[0],   5.262469090219521, 1e-5, str, "s[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[1],   4.044039060072064, 1e-5, str, "s[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[2],  -0.817947499813188, 1e-5, str, "s[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[3],  -3.266541120769288, 1e-5, str, "s[3] wrong");
+                    }
+                }
+            }
+        }
+    }
+
+   
+
     freeData(data, cone);
     freeSol(sol);
     freeInfo(info);
-    
+
     SUCCEED(str);
 }

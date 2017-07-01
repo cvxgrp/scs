@@ -84,6 +84,7 @@ scs_int computeLSBroyden(Work *work) {
     RETURN SU_CACHE_INCREMENT;
 }
 
+/* LCOV_EXCL_START */
 scs_int computeFullBroyden(Work *work, scs_int i) {
     scs_float ip = 0;
     scs_float tmp = 0;
@@ -112,6 +113,7 @@ scs_int computeFullBroyden(Work *work, scs_int i) {
 
     return DIRECTION_SUCCESS;
 }
+/* LCOV_EXCL_STOP */
 
 scs_int computeDirection(Work *work, scs_int i) {
     scs_int j;
@@ -123,16 +125,19 @@ scs_int computeDirection(Work *work, scs_int i) {
         status = DIRECTION_SUCCESS;
     } else if (work->stgs->direction == restarted_broyden) {
         status = computeLSBroyden(work);
+        /* LCOV_EXCL_START */
     } else if (work->stgs->direction == restarted_broyden_v2) {
         status = DIRECTION_ERROR; /* Not implemented yet */
     } else if (work->stgs->direction == full_broyden) {
         computeFullBroyden(work, i);
-    }
+    }/* LCOV_EXCL_STOP */
     RETURN status;
 }
 
+/* LCOV_EXCL_START */
 void freeFullBroyden() {
     if (HY != SCS_NULL) {
         scs_free(HY);
     }
 }
+/* LCOV_EXCL_STOP */
