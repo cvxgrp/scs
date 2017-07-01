@@ -38,7 +38,6 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #define scs_printf printf
-#define scs_fprintf fprintf
 #define _scs_free free
 #define _scs_malloc malloc
 #define _scs_calloc calloc

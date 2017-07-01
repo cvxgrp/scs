@@ -496,6 +496,7 @@ bool test_residuals(char** str) {
     data->stgs->alpha = 1.5;
     data->stgs->do_super_scs = 1;
     data->stgs->verbose = 1;
+    data->stgs->do_override_streams = 1;
     data->stgs->output_stream = stderr;
     data->stgs->do_record_progress = 1;
     data->stgs->max_iters = 120;
@@ -602,80 +603,83 @@ bool test_validation(char** str) {
     Data * data;
     Info * info;
     Cone * cone;
-    Settings *s;
 
     prepare_data(&data);
     prepare_cone(&cone);
     sol = initSol();
     info = initInfo();
 
-
-    s = data->stgs;
-
-    s->k0 = 2;
+    data->stgs->do_override_streams = 1;
+    data->stgs->k0 = 2;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k0");
     setDefaultSettings(data);
 
-    s->k1 = -1;
+    data->stgs->do_override_streams = 1;
+    data->stgs->k1 = -1;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k1");
     setDefaultSettings(data);
 
-    s->k2 = 5;
+    data->stgs->do_override_streams = 1;
+    data->stgs->k2 = 5;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k2");
     setDefaultSettings(data);
 
-    s->alpha = -0.1;
+    data->stgs->do_override_streams = 1;
+    data->stgs->alpha = -0.1;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "alpha < 0");
     setDefaultSettings(data);
 
-    s->alpha = 2.1;
+    data->stgs->do_override_streams = 1;
+    data->stgs->alpha = 2.1;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "alpha > 2");
     setDefaultSettings(data);
 
-    s->beta = 1.01;
+    data->stgs->do_override_streams = 1;
+    data->stgs->beta = 1.01;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "beta>1");
     setDefaultSettings(data);
 
-    s->beta = 1;
+    data->stgs->do_override_streams = 1;
+    data->stgs->beta = 1;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "beta=1");
     setDefaultSettings(data);
 
-    s->ls = 40;
+    data->stgs->do_override_streams = 1;
+    data->stgs->ls = 40;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "ls=40");
     setDefaultSettings(data);
 
-    s->ls = -1;
+    data->stgs->do_override_streams = 1;
+    data->stgs->ls = -1;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "ls=-1");
     setDefaultSettings(data);
 
-    s->sigma = -0.0001;
+    data->stgs->do_override_streams = 1;
+    data->stgs->sigma = -0.0001;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "sigma < 0");
     setDefaultSettings(data);
 
-    s->c_bl = -1e-4;
+    data->stgs->do_override_streams = 1;
+    data->stgs->c_bl = -1e-4;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "c_bl");
     setDefaultSettings(data);
 
-    s->c1 = -1e-4;
+    data->stgs->do_override_streams = 1;
+    data->stgs->c1 = -1e-4;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "c1");
     setDefaultSettings(data);
-
-    s->verbose = 1;
-    s->output_stream = stderr;
-    s->normalize = 0; /*FIXME causes segmentation fault!!! */
-    status = scs(data, cone, sol, info);
 
     freeData(data, cone);
     freeSol(sol);
@@ -701,11 +705,17 @@ bool test_no_normalization(char** str) {
 
     s->normalize = 0;
     s->do_super_scs = 1;
-    s->eps = 1e-8;
-    s->max_iters = 110;
-    s->verbose = 0;
+    s->eps = 1e-10;
+    s->max_iters = 120;
+    s->do_override_streams = 1;
+    s->verbose = 1;
+    s->output_stream = stderr;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
+    ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
+    ASSERT_TRUE_OR_FAIL(info->relGap < data->stgs->eps, str, "duality gap too high");
+    ASSERT_TRUE_OR_FAIL(info->iter < data->stgs->max_iters, str, "too many iterations");
 
     freeData(data, cone);
     freeSol(sol);

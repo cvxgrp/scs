@@ -148,41 +148,42 @@ void printArray(const scs_float *arr, scs_int n, const char *name) {
     }
     scs_printf("\n");
 }
+
 /* LCOV_EXCL_STOP */
 
 void freeData(Data *d, Cone *k) {
-    if (d!=SCS_NULL) {
-        if (d->b!=SCS_NULL)
+    if (d != SCS_NULL) {
+        if (d->b != SCS_NULL)
             scs_free(d->b);
-        if (d->c!=SCS_NULL)
+        if (d->c != SCS_NULL)
             scs_free(d->c);
-        if (d->stgs!=SCS_NULL)
+        if (d->stgs != SCS_NULL)
             scs_free(d->stgs);
-        if (d->A!=SCS_NULL) {
+        if (d->A != SCS_NULL) {
             freeAMatrix(d->A);
         }
         scs_free(d);
     }
-    if (k!=SCS_NULL) {
-        if (k->q!=SCS_NULL)
+    if (k != SCS_NULL) {
+        if (k->q != SCS_NULL)
             scs_free(k->q);
-        if (k->s!=SCS_NULL)
+        if (k->s != SCS_NULL)
             scs_free(k->s);
-        if (k->p!=SCS_NULL)
+        if (k->p != SCS_NULL)
             scs_free(k->p);
         scs_free(k);
     }
 }
 
 void freeSol(Sol *sol) {
-    if (sol!=SCS_NULL) {
-        if (sol->x!=SCS_NULL) {
+    if (sol != SCS_NULL) {
+        if (sol->x != SCS_NULL) {
             scs_free(sol->x);
         }
-        if (sol->y!=SCS_NULL) {
+        if (sol->y != SCS_NULL) {
             scs_free(sol->y);
         }
-        if (sol->s!=SCS_NULL) {
+        if (sol->s != SCS_NULL) {
             scs_free(sol->s);
         }
         scs_free(sol);
@@ -191,25 +192,25 @@ void freeSol(Sol *sol) {
 
 void freeInfo(Info *info) {
     if (info != SCS_NULL) {
-        if (info->progress_iter != SCS_NULL){
+        if (info->progress_iter != SCS_NULL) {
             scs_free(info->progress_iter);
         }
-        if (info->progress_relgap != SCS_NULL){
+        if (info->progress_relgap != SCS_NULL) {
             scs_free(info->progress_relgap);
         }
-        if (info->progress_resdual != SCS_NULL){
+        if (info->progress_resdual != SCS_NULL) {
             scs_free(info->progress_resdual);
         }
-        if (info->progress_respri != SCS_NULL){
+        if (info->progress_respri != SCS_NULL) {
             scs_free(info->progress_respri);
         }
-        if (info->progress_pcost != SCS_NULL){
+        if (info->progress_pcost != SCS_NULL) {
             scs_free(info->progress_pcost);
         }
-        if (info->progress_dcost != SCS_NULL){
+        if (info->progress_dcost != SCS_NULL) {
             scs_free(info->progress_dcost);
         }
-        if (info->progress_norm_fpr != SCS_NULL){
+        if (info->progress_norm_fpr != SCS_NULL) {
             scs_free(info->progress_norm_fpr);
         }
         scs_free(info);
@@ -228,7 +229,7 @@ void setDefaultSettings(Data *d) {
     d->stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
     d->stgs->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
     d->stgs->warm_start = WARM_START;
-    
+
     /* -----------------------------
      * SuperSCS-specific parameters
      * ----------------------------- */
@@ -246,5 +247,28 @@ void setDefaultSettings(Data *d) {
     d->stgs->direction = DIRECTION_DEFAULT;
     d->stgs->do_super_scs = 1; /* whether to run in SuperSCS mode (default: 1) */
     d->stgs->do_record_progress = 0;
+    d->stgs->do_override_streams = 0;
     d->stgs->output_stream = stdout;
+}
+
+int scs_special_print(
+        scs_int print_mode,
+        FILE *__restrict __stream,
+        const char *__restrict __format, ...) {
+    va_list args; /* variable-lenth args */
+    va_start(args, __format); /* The variable-lenth args start after __format */
+
+    if (!print_mode) {
+        /* -----------------------------------------------------
+         * The reason we do the following is because MATLAB
+         * redefines printf as mexPrintf. If we use vprintf, 
+         * or any other function, such as fprintf, MATLAB will
+         * not be able to show anything in the MATLAB console.
+         * ----------------------------------------------------- */
+        char message_buffer[4096];
+        vsnprintf(message_buffer, 4096, __format, args);
+        return printf("%s", message_buffer);
+    } else {
+        return vfprintf(__stream, __format, args);
+    }
 }

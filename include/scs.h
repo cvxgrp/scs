@@ -198,7 +198,7 @@ extern "C" {
         /**
          * \brief A cache of \c S and \c U (used, to compute Broyden-type directions).
          */
-        SUCache *su_cache;        
+        SUCache *su_cache;
     };
 
     /**
@@ -313,7 +313,7 @@ extern "C" {
          * these can change for multiple runs with 
          * the same call to scs_init
          * ------------------------------------- */
-        
+
         /**
          * Maximum iterations to take: 2500 
          */
@@ -425,7 +425,20 @@ extern "C" {
          * Whether to record progress data when running SuperSCS.
          */
         scs_int do_record_progress;
-        
+
+        /**
+         * Whether to override the default output stream.
+         */
+        scs_int do_override_streams;
+        /**
+         * \brief Output stream where progress information is printed.
+         * 
+         * \note The default value, as this is defined in ::setDefaultSettings
+         * is <code>stdout</code>/
+         * 
+         * \note It is important to note that in order for a user-defined output
+         * stream to take effect, you need to set ::do_override_streams to <code>1</code>.
+         */
         FILE * output_stream;
     };
 
