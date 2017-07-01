@@ -496,6 +496,7 @@ bool test_residuals(char** str) {
     data->stgs->alpha = 1.5;
     data->stgs->do_super_scs = 1;
     data->stgs->verbose = 1;
+    data->stgs->output_stream = stderr;
     data->stgs->do_record_progress = 1;
     data->stgs->max_iters = 120;
 
@@ -573,22 +574,138 @@ bool test_rho_x(char** str) {
                         /* verify the solution */
                         ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -16.874896967418358, 1e-5, str, "x[0] wrong");
                         ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -5.634341514381794, 1e-5, str, "x[1] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2],  3.589737499067709, 1e-5, str, "x[2] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0],  96.506238321412667, 1e-5, str, "y[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 3.589737499067709, 1e-5, str, "x[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0], 96.506238321412667, 1e-5, str, "y[0] wrong");
                         ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[1], -74.161955276422589, 1e-5, str, "y[1] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2],  14.999999999635596, 1e-5, str, "y[2] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3],  59.903742992722336, 1e-5, str, "y[3] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[0],   5.262469090219521, 1e-5, str, "s[0] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[1],   4.044039060072064, 1e-5, str, "s[1] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[2],  -0.817947499813188, 1e-5, str, "s[2] wrong");
-                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[3],  -3.266541120769288, 1e-5, str, "s[3] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2], 14.999999999635596, 1e-5, str, "y[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3], 59.903742992722336, 1e-5, str, "y[3] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[0], 5.262469090219521, 1e-5, str, "s[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[1], 4.044039060072064, 1e-5, str, "s[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[2], -0.817947499813188, 1e-5, str, "s[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[3], -3.266541120769288, 1e-5, str, "s[3] wrong");
                     }
                 }
             }
         }
     }
 
-   
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
+bool test_validation(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    Settings *s;
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+    sol = initSol();
+    info = initInfo();
+
+
+    s = data->stgs;
+
+    s->k0 = 2;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k0");
+    setDefaultSettings(data);
+
+    s->k1 = -1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k1");
+    setDefaultSettings(data);
+
+    s->k2 = 5;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k2");
+    setDefaultSettings(data);
+
+    s->alpha = -0.1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "alpha < 0");
+    setDefaultSettings(data);
+
+    s->alpha = 2.1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "alpha > 2");
+    setDefaultSettings(data);
+
+    s->beta = 1.01;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "beta>1");
+    setDefaultSettings(data);
+
+    s->beta = 1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "beta=1");
+    setDefaultSettings(data);
+
+    s->ls = 40;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "ls=40");
+    setDefaultSettings(data);
+
+    s->ls = -1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "ls=-1");
+    setDefaultSettings(data);
+
+    s->sigma = -0.0001;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "sigma < 0");
+    setDefaultSettings(data);
+
+    s->c_bl = -1e-4;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "c_bl");
+    setDefaultSettings(data);
+
+    s->c1 = -1e-4;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "c1");
+    setDefaultSettings(data);
+
+    s->verbose = 1;
+    s->output_stream = stderr;
+    s->normalize = 0; /*FIXME causes segmentation fault!!! */
+    status = scs(data, cone, sol, info);
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
+bool test_no_normalization(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    Settings *s;
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+    sol = initSol();
+    info = initInfo();
+
+    s = data->stgs;
+
+    s->normalize = 0;
+    s->do_super_scs = 1;
+    s->eps = 1e-8;
+    s->max_iters = 110;
+    s->verbose = 0;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
 
     freeData(data, cone);
     freeSol(sol);

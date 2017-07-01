@@ -27,6 +27,10 @@ extern "C" {
     bool test_residuals(char** str);   
     
     bool test_rho_x(char** str);
+    
+    bool test_validation(char** str);
+    
+    bool test_no_normalization(char** str);
 
 #ifdef __cplusplus
 }

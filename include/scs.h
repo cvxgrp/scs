@@ -10,6 +10,7 @@
 #include "ctrlc.h"
 #include "constants.h"
 #include <math.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -197,7 +198,7 @@ extern "C" {
         /**
          * \brief A cache of \c S and \c U (used, to compute Broyden-type directions).
          */
-        SUCache *su_cache;
+        SUCache *su_cache;        
     };
 
     /**
@@ -312,7 +313,7 @@ extern "C" {
          * these can change for multiple runs with 
          * the same call to scs_init
          * ------------------------------------- */
-
+        
         /**
          * Maximum iterations to take: 2500 
          */
@@ -424,6 +425,8 @@ extern "C" {
          * Whether to record progress data when running SuperSCS.
          */
         scs_int do_record_progress;
+        
+        FILE * output_stream;
     };
 
     /**

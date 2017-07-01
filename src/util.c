@@ -246,4 +246,5 @@ void setDefaultSettings(Data *d) {
     d->stgs->direction = DIRECTION_DEFAULT;
     d->stgs->do_super_scs = 1; /* whether to run in SuperSCS mode (default: 1) */
     d->stgs->do_record_progress = 0;
+    d->stgs->output_stream = stdout;
 }
