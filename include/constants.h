@@ -41,7 +41,7 @@ extern "C" {
 #define WARM_START (0)
 
 /* Parameters for Superscs*/
-#define K0_DEFAULT (1)
+#define K0_DEFAULT (0)
 #define K1_DEFAULT (1)
 #define K2_DEFAULT (1)    
 #define NOMINAL_DEFAULT (1)
@@ -55,14 +55,14 @@ extern "C" {
 #define SIGMA_DEFAULT (1E-2)
 
     /* Direction Defaults */
-#define DIRECTION_DEFAULT (fixed_point_residual)
+#define DIRECTION_DEFAULT (restarted_broyden)
 #define TRULE_DEFAULT (3)
 #define DELTA_DEFAULT (0.5)
 #define THETABAR_DEFAULT (1E-1)
 #define ALPHAC_DEFAULT (1E-2) 
 #define MEMORY_DEFAULT (10)
 #define SC_INIT_DEFAULT (0)
-
+    
 #ifdef __cplusplus
 }
 #endif

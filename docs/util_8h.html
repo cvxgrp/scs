@@ -44,7 +44,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -67,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
-      <li><a href="globals.html"><span>File&#160;Members</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -75,7 +75,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -91,23 +91,24 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
+<a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">util.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="scs_8h_source.html">scs.h</a>&quot;</code><br/>
-<code>#include &lt;stdlib.h&gt;</code><br/>
+<div class="textblock"><code>#include &lt;stdlib.h&gt;</code><br/>
 <code>#include &lt;stdio.h&gt;</code><br/>
+<code>#include &lt;stdarg.h&gt;</code><br/>
+<code>#include &quot;<a class="el" href="scs_8h_source.html">scs.h</a>&quot;</code><br/>
 <code>#include &quot;<a class="el" href="cones_8h_source.html">cones.h</a>&quot;</code><br/>
 <code>#include &lt;time.h&gt;</code><br/>
 </div>
 <p><a href="util_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
+Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtimer.html">timer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">SCS timer timer timer.  <a href="structtimer.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -121,29 +122,44 @@ Typedefs</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a9f503d29b96333dfc0c9744d922b9c6c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c">tic</a> (<a class="el" href="structtimer.html">timer</a> *t)</td></tr>
+<tr class="memdesc:a9f503d29b96333dfc0c9744d922b9c6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts the timer.  <a href="#a9f503d29b96333dfc0c9744d922b9c6c">More...</a><br/></td></tr>
 <tr class="separator:a9f503d29b96333dfc0c9744d922b9c6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac97aceb18a9cc6569e8c9256f3814b82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a> (<a class="el" href="structtimer.html">timer</a> *t)</td></tr>
+<tr class="memdesc:ac97aceb18a9cc6569e8c9256f3814b82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the timer.  <a href="#ac97aceb18a9cc6569e8c9256f3814b82">More...</a><br/></td></tr>
 <tr class="separator:ac97aceb18a9cc6569e8c9256f3814b82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace2dfd43ca6dcafe55c6897e085130b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#ace2dfd43ca6dcafe55c6897e085130b8">strtoc</a> (char *str, <a class="el" href="structtimer.html">timer</a> *t)</td></tr>
+<tr class="memdesc:ace2dfd43ca6dcafe55c6897e085130b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the timer and prints a custom message.  <a href="#ace2dfd43ca6dcafe55c6897e085130b8">More...</a><br/></td></tr>
 <tr class="separator:ace2dfd43ca6dcafe55c6897e085130b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46dee8cdde9adf87bc67b9d8f11887d9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a46dee8cdde9adf87bc67b9d8f11887d9">tocq</a> (<a class="el" href="structtimer.html">timer</a> *t)</td></tr>
+<tr class="memdesc:a46dee8cdde9adf87bc67b9d8f11887d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the timer.  <a href="#a46dee8cdde9adf87bc67b9d8f11887d9">More...</a><br/></td></tr>
 <tr class="separator:a46dee8cdde9adf87bc67b9d8f11887d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb012ff1a4bd5a4018440981d7eb2c9f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#afb012ff1a4bd5a4018440981d7eb2c9f">printConeData</a> (const <a class="el" href="glbopts_8h.html#a349e2c420ebc99cfdd732dc952a98182">Cone</a> *k)</td></tr>
+<tr class="memdesc:afb012ff1a4bd5a4018440981d7eb2c9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints the content of a Cone object.  <a href="#afb012ff1a4bd5a4018440981d7eb2c9f">More...</a><br/></td></tr>
 <tr class="separator:afb012ff1a4bd5a4018440981d7eb2c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0911138952ccd995990d19d0255ee167"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a0911138952ccd995990d19d0255ee167">printData</a> (const <a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a> *d)</td></tr>
+<tr class="memdesc:a0911138952ccd995990d19d0255ee167"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints the content of a Data object.  <a href="#a0911138952ccd995990d19d0255ee167">More...</a><br/></td></tr>
 <tr class="separator:a0911138952ccd995990d19d0255ee167"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a685f5619aad782a07d1bad8ebd8e441d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a685f5619aad782a07d1bad8ebd8e441d">printWork</a> (const <a class="el" href="glbopts_8h.html#aa6b66a92ab6f62bce1f24a0e358dac55">Work</a> *w)</td></tr>
+<tr class="memdesc:a685f5619aad782a07d1bad8ebd8e441d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints the content of a Work object.  <a href="#a685f5619aad782a07d1bad8ebd8e441d">More...</a><br/></td></tr>
 <tr class="separator:a685f5619aad782a07d1bad8ebd8e441d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aafa3d12d87a208f23728988a67031a8c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#aafa3d12d87a208f23728988a67031a8c">printArray</a> (const <a class="el" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *arr, <a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n, const char *name)</td></tr>
+<tr class="memdesc:aafa3d12d87a208f23728988a67031a8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints an array.  <a href="#aafa3d12d87a208f23728988a67031a8c">More...</a><br/></td></tr>
 <tr class="separator:aafa3d12d87a208f23728988a67031a8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad288272137e5eb3fa3eac46dbb556bf6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a> (<a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a> *d)</td></tr>
+<tr class="memdesc:ad288272137e5eb3fa3eac46dbb556bf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the settings to certain default values.  <a href="#ad288272137e5eb3fa3eac46dbb556bf6">More...</a><br/></td></tr>
 <tr class="separator:ad288272137e5eb3fa3eac46dbb556bf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a352feaf15ae14ab30284f8c4b0f156"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a> (<a class="el" href="glbopts_8h.html#a4bfe3aa7b79eb224b6345a457985eb20">Sol</a> *sol)</td></tr>
+<tr class="memdesc:a8a352feaf15ae14ab30284f8c4b0f156"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frees the memory allocated for a Sol object.  <a href="#a8a352feaf15ae14ab30284f8c4b0f156">More...</a><br/></td></tr>
 <tr class="separator:a8a352feaf15ae14ab30284f8c4b0f156"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d5b04fecf73be8d52acccf3a2c56f34"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a> (<a class="el" href="glbopts_8h.html#a4de8ea3f0fb0078e1829f2727d4771ed">Data</a> *d, <a class="el" href="glbopts_8h.html#a349e2c420ebc99cfdd732dc952a98182">Cone</a> *k)</td></tr>
+<tr class="memdesc:a7d5b04fecf73be8d52acccf3a2c56f34"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frees the memory allocate of a Data and a Cone object.  <a href="#a7d5b04fecf73be8d52acccf3a2c56f34">More...</a><br/></td></tr>
 <tr class="separator:a7d5b04fecf73be8d52acccf3a2c56f34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a47feb31161b6b0ee636590777b3d7616"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a47feb31161b6b0ee636590777b3d7616">freeInfo</a> (<a class="el" href="glbopts_8h.html#a0d98fee0ffa9f2986ddf6c19a9a7daa0">Info</a> *info)</td></tr>
+<tr class="memdesc:a47feb31161b6b0ee636590777b3d7616"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frees the memory allocated for an Info object.  <a href="#a47feb31161b6b0ee636590777b3d7616">More...</a><br/></td></tr>
 <tr class="separator:a47feb31161b6b0ee636590777b3d7616"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fd9dee7399fba64c11739fb3a8dc294"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="util_8h.html#a2fd9dee7399fba64c11739fb3a8dc294">scs_special_print</a> (<a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> print_mode, FILE *__restrict __stream, const char *__restrict __format,...)</td></tr>
+<tr class="memdesc:a2fd9dee7399fba64c11739fb3a8dc294"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom print function for SCS.  <a href="#a2fd9dee7399fba64c11739fb3a8dc294">More...</a><br/></td></tr>
+<tr class="separator:a2fd9dee7399fba64c11739fb3a8dc294"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Typedef Documentation</h2>
 <a class="anchor" id="a30c945d813befeeeffa501ae4a589f03"></a>
@@ -185,6 +201,18 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Frees the memory allocate of a Data and a Cone object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">d</td><td></td></tr>
+    <tr><td class="paramname">k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6" title="Sets the settings to certain default values. ">setDefaultSettings</a> </dd>
+<dd>
+<a class="el" href="scs_8h.html#aa3bb1aa63932d2fcf176d7d49d114447">initData</a> </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a47feb31161b6b0ee636590777b3d7616"></a>
@@ -201,6 +229,15 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Frees the memory allocated for an Info object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">info</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="scs_8h.html#ab3fb9eba640ba9f6c3d36b57b5a2f298">initInfo</a> </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a8a352feaf15ae14ab30284f8c4b0f156"></a>
@@ -216,6 +253,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Frees the memory allocated for a Sol object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sol</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="scs_8h.html#aeae5f3471b534d9da47ea840affd87a5">initSol</a> </dd></dl>
 
 </div>
 </div>
@@ -249,6 +295,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Prints an array. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">arr</td><td>pointer to array </td></tr>
+    <tr><td class="paramname">n</td><td>length of array </td></tr>
+    <tr><td class="paramname">name</td><td>name of the array </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a class="anchor" id="afb012ff1a4bd5a4018440981d7eb2c9f"></a>
@@ -264,6 +320,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Prints the content of a Cone object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">k</td><td>pointer to cone </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -281,6 +345,14 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Prints the content of a Data object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">d</td><td>pointer to data </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a class="anchor" id="a685f5619aad782a07d1bad8ebd8e441d"></a>
@@ -297,6 +369,67 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Prints the content of a Work object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">w</td><td>pointer to work </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a2fd9dee7399fba64c11739fb3a8dc294"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int scs_special_print </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td>
+          <td class="paramname"><em>print_mode</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILE *__restrict&#160;</td>
+          <td class="paramname"><em>__stream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *__restrict&#160;</td>
+          <td class="paramname"><em>__format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Custom print function for SCS. </p>
+<p>This functions allows to print in different streams. The argument <code>print_mode</code> specifies whether it is allowed to override the default stream and use a print function other than <code>printf</code>.</p>
+<p>For example, if SCS is interfaced via a MEX function, MATLAB expects to use <code>printf</code> exclusively which it then delegated to <code>mexPrintf</code>; a function that prints the program's output to the console of MATLAB.</p>
+<p>When SCS is called from other software, it is likely that <code>print_mode</code> has to be set to 0.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">print_mode</td><td>whether to override the default behavior (using <code>printf</code>) </td></tr>
+    <tr><td class="paramname">__stream</td><td>an output stream </td></tr>
+    <tr><td class="paramname">__format</td><td>string format </td></tr>
+    <tr><td class="paramname">...</td><td>arguments specifying data to print </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>return value of <code>print</code> or <code>vfprintf</code> </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="ad288272137e5eb3fa3eac46dbb556bf6"></a>
@@ -312,6 +445,76 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Sets the settings to certain default values. </p>
+<table class="doxtable">
+<tr>
+<th>Parameter</th><th>Default value </th></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a787e6490032a00049a7dd4e0f7cf23e0">normalize</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a15d7c4d64c93b547448e6d682793e6af">scale</a></td><td>1.0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#abd2c2ac659387dab81690e651bbf166f">rho_x</a></td><td>1.0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#aaf089866dbf7d3a1bdda5afd48e1c5a3">max_iters</a></td><td>2500 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#acaa7e7c1997bc99118dbbd9d78b921b1">previous_max_iters</a></td><td>-1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a72dec01083dfcb3d60bb16207d2d5d96">eps</a></td><td>1e-3 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#acbde49a968c48ad2215d2908de38fb3e">alpha</a></td><td>1.5 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a5f3fd9e7bc415317bc8053056e677a73">cg_rate</a></td><td>2.0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a1b32fd02f88434dd3c98a89ff0c8b88c">verbose</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#aead03c71e10ff6b514bb17ab5b9935c0">warm_start</a></td><td>0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a89aaf17bb454952ab43f9ca72cae3ff8">do_super_scs</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#ac1ebb46880ba02d9634119349df97251">k0</a></td><td>0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a7c644d0c855262d90ce197852ce46f76">k1</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#ab3e52784f3dc6e37e903847e4ffc76e8">k2</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a71a973dd8f00869515b2a98630106a7f">c_bl</a></td><td>0.999 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a71a973dd8f00869515b2a98630106a7f">c1</a></td><td>0.9999 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a15b5effcdabcfca2f8a51a1a73ec945c">ls</a></td><td>10 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a1d727f9f7c565414e082d108103e4e90">beta</a></td><td>0.5 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a127eed9b06de5903806821b4d6700c9a">sigma</a></td><td>0.01 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a52ba1d15f1faad0c99cf86ad42ef1285">direction</a></td><td><a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca8c55599a07579d01ab088f80b9ed7a3e">restarted_broyden</a> </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#ae93cafb315525e41c3ec244fbefe8adb">thetabar</a></td><td>0.1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a3a537b5321b2fd79aa60a1dd90f42d9a">memory</a></td><td>10 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#aa8f330e597648194eee2f0123c912b35">tRule</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#ad1f6c0aefeb9075eecdf487931d3143e">broyden_init_scaling</a></td><td>1 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8cffc52e994430a67229d27145a5750d">do_record_progress</a></td><td>0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a10b2cc1a58533111b8acfa25539056dc">do_override_streams</a></td><td>0 </td></tr>
+<tr>
+<td><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8685218a3d454afab678d69e16e2df3a">output_stream</a></td><td><code>stdout</code> </td></tr>
+</table>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">d</td><td>Pointer to data</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section warning"><dt>Warning</dt><dd>If you want to increase the maximum number of iteration with respect to the previous run and you have set <a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8cffc52e994430a67229d27145a5750d">do_record_progress</a> to <code>1</code>, then you should not use this function. If you really want to use it, however, you should set the parameter <a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#acaa7e7c1997bc99118dbbd9d78b921b1">previous_max_iters</a> to the maximum number of iterations you used in the previous run. This is in order to avoid memory management errors.</dd>
+<dd>
+Alternatively, a simple solution is to invoke <a class="el" href="util_8h.html#a47feb31161b6b0ee636590777b3d7616" title="Frees the memory allocated for an Info object. ">freeInfo</a> after you call <a class="el" href="scs_8h.html#a103f47be236f81ae085244d574997706">scs</a> and then again <a class="el" href="scs_8h.html#ab3fb9eba640ba9f6c3d36b57b5a2f298">initInfo</a>. Then it is safe to call this function and run <a class="el" href="scs_8h.html#a103f47be236f81ae085244d574997706">scs</a> again.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If you have set <a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8cffc52e994430a67229d27145a5750d">do_record_progress</a> to <code>0</code>, you may ignote this warning. </dd></dl>
 
 </div>
 </div>
@@ -339,6 +542,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Stops the timer and prints a custom message. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>string </td></tr>
+    <tr><td class="paramname">t</td><td>timer </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>elapsed time </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a9f503d29b96333dfc0c9744d922b9c6c"></a>
@@ -354,6 +567,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Starts the timer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>timer </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -371,6 +592,18 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Stops the timer. </p>
+<p>This function prints a message of the form:</p>
+<div class="fragment"><div class="line">time: %8.4f milli-seconds.\n</div>
+</div><!-- fragment --><p>to the standard output using <code>printf</code>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>timer </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>elapsed time in milliseconds </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a46dee8cdde9adf87bc67b9d8f11887d9"></a>
@@ -387,12 +620,21 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Stops the timer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>timer </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>elapsed time in milliseconds </dd></dl>
+
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 27 2017 20:41:34 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:42:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -1,3 +1,6 @@
+*.odt
+*#
+coverage/
 *.info
 nbproject/private/*
 private

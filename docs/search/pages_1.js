@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['for_20developers',['For Developers',['../page_1dev.html',1,'']]]
+  ['directions',['Directions',['../page_directions.html',1,'']]]
 ];

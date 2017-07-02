@@ -145,10 +145,10 @@ test:	default
 	    $(TEST_SRC_DIR)/test_broyden.o \
 	    $(TEST_SRC_DIR)/test_superscs.o \
 	    $(TEST_SRC_DIR)/test_utilities.o \
-	    $(OUT)/libscsdir.a $(LDFLAGS)
+	    $(OUT)/libscsdir.a $(LDFLAGS) 
 
 run-test: test
-	out/UNIT_TEST_RUNNER
+	out/UNIT_TEST_RUNNER 2> test_stderr_output.log
 	
 run-test-mem: test
 	valgrind --track-origins=yes --leak-check=full out/UNIT_TEST_RUNNER
@@ -157,6 +157,8 @@ cov: run-test
 	lcov --directory ./src --capture --output-file scs-coverage.info
 	lcov --remove scs-coverage.info  '/usr/*' --output-file scs-coverage.info
 	lcov --list scs-coverage.info
+	mkdir -p coverage
+	genhtml -s --legend --title 'SuperSCS Unit Tests' scs-coverage.info --output-directory coverage
 
 help:
 	@echo "\nMakefile targets...\n"

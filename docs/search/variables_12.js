@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['u',['u',['../struct_s_c_s___w_o_r_k.html#a86c9f1723aa50ac4c9beed1406cc3b9b',1,'SCS_WORK::u()'],['../struct_s_c_s___s_u___m_e_m_o_r_y.html#aef122c98ef52d8ebd05a2c09481d270d',1,'SCS_SU_MEMORY::U()']]],
-  ['u_5fb',['u_b',['../struct_s_c_s___w_o_r_k.html#a8cb10ba302cb8b6b033a89f34973d368',1,'SCS_WORK']]],
-  ['u_5fprev',['u_prev',['../struct_s_c_s___w_o_r_k.html#acef8265c09140c60fda71b456ad088d3',1,'SCS_WORK']]],
-  ['u_5ft',['u_t',['../struct_s_c_s___w_o_r_k.html#ac37f5c6fe4de2b067991a6eb15ec5ef8',1,'SCS_WORK']]]
+  ['tau',['tau',['../structresiduals.html#a8db9d48e32f599dd4667ff53620b3be4',1,'residuals']]],
+  ['thetabar',['thetabar',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#ae93cafb315525e41c3ec244fbefe8adb',1,'SCS_SETTINGS']]],
+  ['tic',['tic',['../structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae',1,'timer']]],
+  ['toc',['toc',['../structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2',1,'timer']]],
+  ['totalconetime',['totalConeTime',['../struct_cone_work.html#a08b74cc65c59296dd7dc5b1cdcec2804',1,'ConeWork']]],
+  ['trule',['tRule',['../struct_s_c_s___s_e_t_t_i_n_g_s.html#aa8f330e597648194eee2f0123c912b35',1,'SCS_SETTINGS']]]
 ];

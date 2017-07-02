@@ -1,4 +1,4 @@
-/*! \page page:socp Second-Order Cone Problems
+/*! \page page_socp Second-Order Cone Problems
  * 
  * Let us solve the following second-order cone program:
  * 
@@ -112,13 +112,16 @@
  * Next, we may modify some of the default settings 
  * 
  * ~~~~~{.c}
- * data->stgs->eps = 1e-9;
+ * setDefaultSettings(data);                // default settings
+ * data->stgs->eps = 1e-9;                  // override defaults
  * data->stgs->rho_x = 1;
  * data->stgs->verbose = 0;
  * data->stgs->sse = 0.7;
  * data->stgs->direction = restarted_broyden;
  * data->stgs->do_super_scs = 1;
  * ~~~~~
+ * 
+ * Function ::setDefaultSettings set the \ref ::setDefaultSettings "default settings"
  * 
  * In the last line, we specify that we want to run the solver using SuperSCS.
  * 
@@ -150,6 +153,9 @@
  * scs(data, cone, sol, info);
  * ~~~~~
  * 
+ * It is highly recommended that you use these initializers to create
+ * these structures.
+ * 
  * Now 
  * \code info->statusVal \endcode 
  * is the exit-flag of the solver and it is equal to ::SCS_SOLVED.
@@ -161,23 +167,33 @@
  * printed 
  * 
  * \code{.txt}
- * -------------------------------------------------------------------------------------
- * Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau |   FPR   | time (s)
- * -------------------------------------------------------------------------------------
- *     0|      inf      -nan      -nan      -inf      -nan       inf  0.00e+00  7.26e-05 
- *    10| 4.98e-02  1.68e+00  8.10e-02 -9.36e+00 -1.11e+01  0.00e+00  3.85e-02  3.32e-04 
- *    20| 8.05e-03  1.99e-01  2.32e-02 -1.53e+01 -1.46e+01  0.00e+00  6.43e-03  6.01e-04 
- *    30| 1.10e-05  9.60e-04  2.54e-07 -1.64e+01 -1.64e+01  0.00e+00  6.89e-06  8.78e-04 
- *    40| 8.03e-13  1.21e-11  2.06e-12 -1.64e+01 -1.64e+01  0.00e+00  5.17e-13  1.20e-03 
- * -------------------------------------------------------------------------------------
+ * Lin-sys: sparse-direct, nnz in A = 5
+ * eps = 1.00e-08, alpha = 1.50, max_iters = 2000, normalize = 1, scale = 1.00
+ * Variables n = 3, constraints m = 4
+ * Cones:	soc vars: 4, soc blks: 1
+ * Setup time: 1.01e-02s
+ * Running SuperSCS...
+ * ---------------------------------------------------------------------------------------
+ *  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau |   FPR   | time (s)
+ * ---------------------------------------------------------------------------------------     
+ *      0| 5.65e+00  9.74e+00  5.21e-01 -4.58e+01 -1.41e+01  0.00e+00  1.96e+00  6.49e-03     
+ *     10| 7.27e-02  2.47e-01  2.54e-02 -1.64e+01 -1.73e+01  0.00e+00  1.82e-02  1.92e-02 
+ *     20| 2.14e-03  5.13e-03  7.45e-04 -1.67e+01 -1.68e+01  0.00e+00  7.75e-04  3.30e-02 
+ *     30| 3.71e-09  3.15e-07  5.48e-09 -1.64e+01 -1.64e+01  0.00e+00  4.83e-09  4.25e-02 
+ *     32| 6.75e-12  2.24e-11  2.70e-12 -1.64e+01 -1.64e+01  0.00e+00  2.23e-12  5.42e-02 
+ * ---------------------------------------------------------------------------------------
+ * Status: Solved
+ * Timing: Solve time: 6.78e-02s
+ * 	Lin-sys: nnz in L factor: 12, avg solve time: 6.98e-06s
+ * 	Cones: avg projection time: 7.37e-06s
+ * ---------------------------------------------------------------------------------------
  * Error metrics:
- * dist(s, K) = 0.0000e+00, dist(y, K*) = 0.0000e+00, s'y/|s||y| = 5.5964e-17
- * |Ax + s - b|_2 / (1 + |b|_2) = 8.0307e-13
- * |A'y + c|_2 / (1 + |c|_2) = 1.2125e-11
- * |c'x + b'y| / (1 + |c'x| + |b'y|) = 2.0604e-12
- * -------------------------------------------------------------------------------------
+ * dist(s, K) = 0.0000e+00, dist(y, K*) = 1.4211e-14, s'y/|s||y| = -2.7982e-17
+ * |Ax + s - b|_2 / (1 + |b|_2) = 6.7545e-12
+ * |A'y + c|_2 / (1 + |c|_2) = 2.2441e-11
+ * |c'x + b'y| / (1 + |c'x| + |b'y|) = 2.6977e-12
+ * ---------------------------------------------------------------------------------------
  * c'x = -16.3754, -b'y = -16.3754
- * =====================================================================================
  * \endcode
  * 
  * The last thing to do is to free the used memory
@@ -200,14 +216,20 @@
  * We may then print various statistics
  * 
  * ~~~~~{.c}
- * for (i = 0; i <= info->history_length; ++i) {
-        printf("[%d]  rel = %g, respri = %g, pc = %g, dc = %g\n", 
-                info->progress_iter[i], 
-                info->progress_relgap[i], 
-                info->progress_respri[i],
-                info->progress_pcost[i],
-                info->progress_dcost[i]);
-    }
+ * scs_int i;
+ * const scs_int column_size = 10;
+ * printf("  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n");
+ * printf("----------------------------------------------------------------\n");
+ * for (i = 0; i < info->iter; ++i) {
+ *       printf("%*i ", 3, i);
+ *       printf("%*.2e", column_size, info->progress_pcost[i]);
+ *       printf("%*.2e", column_size, info->progress_dcost[i]);
+ *       printf("%*.2e", column_size, info->progress_relgap[i]);
+ *       printf("%*.2e", column_size, info->progress_norm_fpr[i]);
+ *       printf("%*.2e", column_size, info->progress_respri[i]);
+ *       printf("%*.2e", column_size, info->progress_resdual[i]);
+ *       printf("\n");
+ * }
  * ~~~~~
  * 
  * If <code>do_record_progress</code> is, instead, set to <code>0</code>, no progress

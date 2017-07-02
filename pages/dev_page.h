@@ -1,4 +1,4 @@
-/*! \page page:dev For Developers
+/*! \page page_dev For Developers
  * 
  * \tableofcontents
  * 

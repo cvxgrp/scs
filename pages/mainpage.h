@@ -38,20 +38,30 @@
  *     cd matlab
  *     make_scs; 
  *  
- * \section more More
+ * \section sec-first-steps First steps
  * 
- * \subsection main-examples Examples
+ * \subsection main-examples Documentation
  * 
  * Examples of use:
  * 
- * - \ref page:socp
- * - \ref page:directions
- * - More to come
+ * - \ref page_socp
+ * - \ref page_benchmarks
+ * - \ref page_directions
+ * - \ref page_dev
  * 
- * \subsection github-page Source code
+ * \subsection sec-github-page Source code
  * 
  * The source code of SuperSCS is available at [https://github.com/kul-forbes/scs](https://github.com/kul-forbes/scs).
  * 
- * This project was originally forked [cvxgrp/scs](https://github.com/cvxgrp/scs).
+ * This project was originally forked from [cvxgrp/scs](https://github.com/cvxgrp/scs).
+ * 
+ * \subsection sec-verification Verification
+ * 
+ * Quality assurance:
+ * - [unit tests](https://github.com/kul-forbes/scs/tree/master/tests)
+ * - [memory management tests](http://valgrind.org) using valgrind
+ * - [continuous integration](https://travis-ci.org/kul-forbes/scs) on Travis CI
+ * - [coverage reports](https://codecov.io/gh/kul-forbes/scs) on Codecov
+ * - [code quality reports](https://www.codacy.com/app/alphaville/scs/dashboard) on codacy
  */
 

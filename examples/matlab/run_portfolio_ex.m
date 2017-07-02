@@ -43,7 +43,8 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3,'scale',1)
+        cvx_solver_settings('eps',1e-3,'scale',1,'do_super_scs',1,'direction',100,'memory',10,'k0',1,...
+            'normalize',1,'scale',1,'rho_x',1)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
         sum(x) == B

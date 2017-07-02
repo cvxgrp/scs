@@ -286,10 +286,10 @@ bool test_broyden(char** str) {
 
 bool test_full_broyden(char** str) {
     Work * work = scs_calloc(1, sizeof (Work));
-    const scs_float tol = 1e-10;
+    /* const scs_float tol = 1e-10; */
     const scs_int l = 3;
     const scs_int mem = 4;
-    scs_int i;
+    /* scs_int i; */
 
     prepare_work(work, l, mem);
     work->stgs->direction = full_broyden;
@@ -297,6 +297,8 @@ bool test_full_broyden(char** str) {
     work->stgs->tRule = 1;
     
     destroy_work(work);
+    
+    /*TODO complete this test! */
     
     SUCCEED(str);
 }

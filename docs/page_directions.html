@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>SuperSCS: A documentation page</title>
+<title>SuperSCS: Directions</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -81,30 +81,48 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">A documentation page </div>  </div>
+<div class="title">Directions </div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#sec">An example section</a><ul><li class="level2"><a href="#subsection1">The first subsection</a></li>
-<li class="level2"><a href="#subsection2">The second subsection</a></li>
-</ul>
-</li>
+<ul><li class="level1"><a href="#sec-fpr">Fixed-point residual</a></li>
+<li class="level1"><a href="#sec-restarted-broyden">Restarted Broyden</a></li>
+<li class="level1"><a href="#sec-full-broyden">Full Broyden</a></li>
 </ul>
 </div>
-<div class="textblock"><p>Leading text. </p>
-<h1><a class="anchor" id="sec"></a>
-An example section</h1>
-<p>This page contains the subsections <a class="el" href="page1.html#subsection1">The first subsection</a> and <a class="el" href="page1.html#subsection2">The second subsection</a>. For more info see page page2. </p>
-<h2><a class="anchor" id="subsection1"></a>
-The first subsection</h2>
-<p>Text. </p>
-<h2><a class="anchor" id="subsection2"></a>
-The second subsection</h2>
-<p>More text. </p>
+<div class="textblock"><h1><a class="anchor" id="sec-fpr"></a>
+Fixed-point residual</h1>
+<p>This is the most trivial choice where \(d_k = -Rx_k\).</p>
+<h1><a class="anchor" id="sec-restarted-broyden"></a>
+Restarted Broyden</h1>
+<p>Directions are computed according to the following procedure:</p>
+<ol type="1">
+<li>Inputs: \(y=y_k\), \(r=Rx_k\), \(s=s_k\), \(\bar{\theta}\), \(m\) (memory)</li>
+<li>Buffer: \((\mathbf{s}, \mathbf{u})\)</li>
+<li>Returns: Direction \(d_\star\) (and updates the \((\mathbf{s}, \mathbf{u})\)-buffer)</li>
+<li>\(d_\star \gets -r\)</li>
+<li>\(s_\star \gets y\)</li>
+<li>\(m&#39;\gets\) current cursor position</li>
+</ol>
+<ol type="1">
+<li>for \(i=0,\ldots, m&#39;-1\),<ol type="a">
+<li>\(s_\star \gets s_\star + \langle \mathbf{s}_i, s_\star\rangle \mathbf{u}_i\)</li>
+<li>\(d_\star \gets d_\star + \langle \mathbf{s}_i, d_\star\rangle \mathbf{u}_i\)</li>
+</ol>
+</li>
+<li>\(\theta \gets \begin{cases}1,&amp;\text{if } |\langle s, s_\star \rangle| \geq \bar{\theta} \|s\|^2\\ \frac{\|s\|^2(1-\mathrm{sgn}(\langle s, s_\star \rangle \bar{\theta})}{\|s\|^2-\langle s, s_\star \rangle},&amp;\text{otherwise}\end{cases}\)</li>
+<li>\(s_\star \gets (1-\theta)s + \theta s_\star\)</li>
+<li>\(u_\star \gets \frac{s-s_\star}{\langle s, s_\star \rangle}\) and push it into the buffer</li>
+<li>\(d_\star \gets d_\star + \langle s, d_\star\rangle u_\star\)</li>
+<li>Add \(s\) into the buffer and move the cursor forward or empty/reset it if it is full</li>
+</ol>
+<h1><a class="anchor" id="sec-full-broyden"></a>
+Full Broyden</h1>
+<p>Full Broyden method </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 6 2017 17:05:50 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:42:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

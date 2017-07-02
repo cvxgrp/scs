@@ -9,6 +9,8 @@
 #include "util.h"
 #include "ctrlc.h"
 #include "constants.h"
+#include <math.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -313,9 +315,15 @@ extern "C" {
          * ------------------------------------- */
 
         /**
-         *  Maximum iterations to take: 2500 
+         * Maximum iterations to take: 2500 
          */
         scs_int max_iters;
+        /**
+         * Maximum iterations of the previous invocation to scs.
+         * 
+         * Used to avoid memory leaks when recording the progress of the algorithm.
+         */
+        scs_int previous_max_iters;
         /** 
          * Convergence tolerance.
          * 
@@ -414,9 +422,25 @@ extern "C" {
          */
         scs_int broyden_init_scaling;
         /**
-         * Whether to record progress data
+         * Whether to record progress data when running SuperSCS.
          */
         scs_int do_record_progress;
+
+        /**
+         * Whether to override the default output stream.
+         */
+        scs_int do_override_streams;
+        /**
+         * \brief Output stream where progress information is printed.
+         * 
+         * \note The default value, as this is defined in ::setDefaultSettings
+         * is <code>stdout</code>.
+         * 
+         * \note It is important to note that in order for a user-defined output
+         * stream to take effect, you need to set \ref SCS_SETTINGS::do_override_streams "do_override_streams"
+         * to <code>1</code>.
+         */
+        FILE * output_stream;
     };
 
     /**
@@ -446,14 +470,14 @@ extern "C" {
         scs_float relGap; /**< \brief relative duality gap */
         scs_float setupTime; /**< \brief time taken for setup phase (milliseconds) */
         scs_float solveTime; /**< \brief time taken for solve phase (milliseconds) */
-        
-        scs_int     history_length; /**< \brief how many history entries */
-        scs_int   * progress_iter; /**< \brief iterations when residulas are recorded */
+
+        scs_int history_length; /**< \brief how many history entries */
+        scs_int * progress_iter; /**< \brief iterations when residulas are recorded */
         scs_float * progress_relgap; /**< \brief relative gap history */
-        scs_float * progress_respri;  /**< \brief primal residual history */
-        scs_float * progress_resdual;  /**< \brief dual residual history */
-        scs_float * progress_pcost;  /**< \brief scaled primal cost history */
-        scs_float * progress_dcost;  /**< \brief sclaed dual cost history */
+        scs_float * progress_respri; /**< \brief primal residual history */
+        scs_float * progress_resdual; /**< \brief dual residual history */
+        scs_float * progress_pcost; /**< \brief scaled primal cost history */
+        scs_float * progress_dcost; /**< \brief sclaed dual cost history */
         scs_float * progress_norm_fpr; /**< \brief FPR history */
     };
 
@@ -472,7 +496,7 @@ extern "C" {
      * This function does not initialize of allocate memory for \c x, \c s
      * or \c y (but it sets the respective pointers to ::SCS_NULL).
      * 
-     * @return Initialized Sol structure.
+     * @return Initialized ::Sol structure.
      */
     Sol * initSol(void);
 
@@ -510,6 +534,9 @@ extern "C" {
      * @param info
      * 
      * @return status code
+     * 
+     * \remark It is very important that <code>info</code> is created using 
+     * ::initInfo.
      */
     scs_int scs(
             const Data *d,

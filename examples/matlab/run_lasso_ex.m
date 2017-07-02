@@ -46,7 +46,8 @@ for i = 1:length(ns)
         tic
         cvx_begin
         cvx_solver scs
-        cvx_solver_settings('eps',1e-3,'scale',1)
+        cvx_solver_settings('eps',1e-3);
+        %cvx_solver_settings('eps',1e-3,'scale',1,'do_super_scs',1,'direction',100,'memory',30,'rho_x',1)
         variable x_c(n)
         minimize(0.5*sum_square(A*x_c - b) + mu*norm(W*x_c,1))
         if (save_results)

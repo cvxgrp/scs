@@ -11,6 +11,8 @@
 #define MR  4
 #define NR  4
 
+#define PREFETCH_DISTANCE 80
+
 /*
  * Local buffers for storing panels from A, B and C
  */
@@ -95,16 +97,16 @@ pack_B(int kc, int nc, const double *B, int incRowB, int incColB,
         double *buffer) {
     int np = nc / NR;
     int _nr = nc % NR;
+    int i;
 
-    int i, j;
-
-    for (j = 0; j < np; ++j) {
+    for (i = 0; i < np; ++i) {
         pack_kxNR(kc, B, incRowB, incColB, buffer);
         buffer += kc*NR;
         B += NR*incColB;
     }
     if (_nr > 0) {
         for (i = 0; i < kc; ++i) {
+            int j;
             for (j = 0; j < _nr; ++j) {
                 buffer[j] = B[j * incColB];
             }
@@ -716,38 +718,86 @@ void matrixMultiplicationTransColumnPacked(
 /* x = b*a */
 void setAsScaledArray(scs_float *x, const scs_float *a, const scs_float b,
         scs_int len) {
-    scs_int i;
-    for (i = 0; i < len; ++i)
-        x[i] = b * a[i];
+    register scs_int j;
+    const scs_int block_size = 4;
+    const scs_int block_len = len >> 2;
+    const scs_int remaining = len % block_size;
+    j = 0;
+    while (j < block_len * block_size) {
+        x[j] = b * a[j];
+        ++j;
+        x[j] = b * a[j];
+        ++j;
+        x[j] = b * a[j];
+        ++j;
+        x[j] = b * a[j];
+        ++j;
+    }
+    j = block_size * block_len;
+    switch (remaining) {
+        case 3: x[j + 2] = b * a[j + 2];
+        case 2: x[j + 1] = b * a[j + 1];
+        case 1: x[j] = b * a[j];
+        case 0:;
+    }
 }
 
 /* a *= b */
 void scaleArray(scs_float *a, const scs_float b, scs_int len) {
-    scs_int i;
-    for (i = 0; i < len; ++i)
-        a[i] *= b;
+    register scs_int j;
+    const scs_int block_size = 4;
+    const scs_int block_len = len >> 2;
+    const scs_int remaining = len % block_size;
+    j = 0;
+    while (j < block_len * block_size) {
+        a[j] *= b;
+        ++j;
+        a[j] *= b;
+        ++j;
+        a[j] *= b;
+        ++j;
+        a[j] *= b;
+        ++j;
+    }
+    j = block_size * block_len;
+    switch (remaining) {
+        case 3: a[j + 2] *= b;
+        case 2: a[j + 1] *= b;
+        case 1: a[j] *= b;
+        case 0:;
+    }
 }
 
 /* x'*y */
 scs_float innerProd(const scs_float *x, const scs_float *y, scs_int len) {
-    scs_int i;
-    scs_float ip = 0.0;
-    scs_float s0 = 0.f;
-    scs_float s1 = 0.f;
-    scs_float s2 = 0.f;
-    scs_float s3 = 0.f;
+    register scs_int j;
+    register scs_float ip = 0.;
+    register scs_float s0 = 0.;
+    register scs_float s1 = 0.;
+    register scs_float s2 = 0.;
+    register scs_float s3 = 0.;
     const scs_int block_size = 4;
-    const scs_int block_len = len / block_size;
+    const scs_int block_len = len >> 2;
+    const scs_int remaining = len % block_size;
 
-    for (i = 0; i < block_len; ++i) {
-        s0 += x[block_size * i] * y[block_size * i];
-        s1 += x[block_size * i + 1] * y[block_size * i + 1];
-        s2 += x[block_size * i + 2] * y[block_size * i + 2];
-        s3 += x[block_size * i + 3] * y[block_size * i + 3];
+    j = 0;
+    while (j < block_len * block_size) {
+        s0 += x[j] * y[j];
+        ++j;
+        s1 += x[j] * y[j];
+        ++j;
+        s2 += x[j] * y[j];
+        ++j;
+        s3 += x[j] * y[j];
+        ++j;
     }
     ip = s0 + s1 + s2 + s3;
-    for (i = 0; i < len % block_size; ++i) {
-        ip += x[block_size * block_len + i] * y[block_size * block_len + i];
+    j = block_size * block_len;
+    switch (remaining) {
+        case 3: ip += x[j + 2] * y[j + 2];
+        case 2: ip += x[j + 1] * y[j + 1];
+        case 1: ip += x[j] * y[j];
+        case 0:;
     }
     return ip;
 }
@@ -774,56 +824,90 @@ scs_float calcNormInf(const scs_float *a, scs_int l) {
 }
 
 /* saxpy a += sc*b */
-void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
+void addScaledArray(
+        scs_float *a,
+        const scs_float *b,
+        scs_int len,
         const scs_float sc) {
-    scs_int i;
+    register scs_int j;
     const scs_int block_size = 4;
-    const scs_int block_len = n / block_size;
-
-    for (i = 0; i < block_len; ++i) {
-        a[block_size * i] += sc * b[block_size * i];
-        a[block_size * i + 1] += sc * b[block_size * i + 1];
-        a[block_size * i + 2] += sc * b[block_size * i + 2];
-        a[block_size * i + 3] += sc * b[block_size * i + 3];
+    const scs_int block_len = len >> 2; /* divide by 4*/
+    const scs_int remaining = len % block_size;
+    j = 0;
+    while (j < block_len * block_size) {
+        a[j] += sc * b[j];
+        ++j;
+        a[j] += sc * b[j];
+        ++j;
+        a[j] += sc * b[j];
+        ++j;
+        a[j] += sc * b[j];
+        ++j;
     }
-
-    for (i = 0; i < n % block_size; ++i) {
-        a[block_size * block_len + i] += sc * b[block_size * block_len + i];
-    }
-
-}
-
-void addArray(scs_float *a, const scs_float *b, scs_int n) {
-    scs_int i;
-    const scs_int block_size = 4;
-    const scs_int block_len = n / block_size;
-
-    for (i = 0; i < block_len; ++i) {
-        a[block_size * i] += b[block_size * i];
-        a[block_size * i + 1] += b[block_size * i + 1];
-        a[block_size * i + 2] += b[block_size * i + 2];
-        a[block_size * i + 3] += b[block_size * i + 3];
-    }
-
-    for (i = 0; i < n % block_size; ++i) {
-        a[block_size * block_len + i] += b[block_size * block_len + i];
+    j = block_size * block_len;
+    switch (remaining) {
+        case 3: a[j + 2] += sc * b[j + 2];
+        case 2: a[j + 1] += sc * b[j + 1];
+        case 1: a[j] += sc * b[j];
+        case 0:;
     }
 }
 
-void subtractArray(scs_float *a, const scs_float *b, scs_int n) {
-    scs_int i;
+void addArray(
+        scs_float *a,
+        const scs_float *b,
+        scs_int len) {
+
+    register scs_int j = 0;
     const scs_int block_size = 4;
-    const scs_int block_len = n / block_size;
-
-    for (i = 0; i < block_len; ++i) {
-        a[block_size * i] -= b[block_size * i];
-        a[block_size * i + 1] -= b[block_size * i + 1];
-        a[block_size * i + 2] -= b[block_size * i + 2];
-        a[block_size * i + 3] -= b[block_size * i + 3];
+    const scs_int block_len = len >> 2;
+    const scs_int remaining = len % block_size;
+    while (j < block_len * block_size) {
+        a[j] += b[j];
+        ++j;
+        a[j] += b[j];
+        ++j;
+        a[j] += b[j];
+        ++j;
+        a[j] += b[j];
+        ++j;
     }
+    j = block_size * block_len;
+    switch (remaining) {
+        case 3: a[j + 2] += b[j + 2];
+        case 2: a[j + 1] += b[j + 1];
+        case 1: a[j] += b[j];
+        case 0:;
+    }
+}
 
-    for (i = 0; i < n % block_size; ++i) {
-        a[block_size * block_len + i] -= b[block_size * block_len + i];
+void subtractArray(
+        scs_float *a,
+        const scs_float *b,
+        scs_int len) {
+
+    register scs_int j = 0;
+    const scs_int block_size = 4;
+    const scs_int block_len = len >> 2;
+    const scs_int remaining = len % block_size;
+
+    j = 0;
+    while (j < block_len * block_size) {
+        a[j] -= b[j];
+        ++j;
+        a[j] -= b[j];
+        ++j;
+        a[j] -= b[j];
+        ++j;
+        a[j] -= b[j];
+        ++j;
+    }
+    j = block_size * block_len;
+    switch (remaining) {
+        case 3: a[j + 2] -= b[j + 2];
+        case 2: a[j + 1] -= b[j + 1];
+        case 1: a[j] -= b[j];
+        case 0:;
     }
 }
 

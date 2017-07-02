@@ -44,7 +44,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -103,24 +103,35 @@ For use in MATLAB</h2>
 <p>In order to use SuperSCS from MATLAB, you need to compile a MEX interface. </p>
 <pre class="fragment">cd matlab
 make_scs; 
-</pre><h1><a class="anchor" id="more"></a>
-More</h1>
+</pre><h1><a class="anchor" id="sec-first-steps"></a>
+First steps</h1>
 <h2><a class="anchor" id="main-examples"></a>
-Examples</h2>
+Documentation</h2>
 <p>Examples of use:</p>
 <ul>
-<li><a class="el" href="page_1socp.html">Second-Order Cone Problems</a></li>
-<li><a class="el" href="page_1directions.html">Directions</a></li>
-<li>More to come</li>
+<li><a class="el" href="page_socp.html">Second-Order Cone Problems</a></li>
+<li><a class="el" href="page_benchmarks.html">Benchmarks</a></li>
+<li><a class="el" href="page_directions.html">Directions</a></li>
+<li><a class="el" href="page_dev.html">For Developers</a></li>
 </ul>
-<h2><a class="anchor" id="github-page"></a>
+<h2><a class="anchor" id="sec-github-page"></a>
 Source code</h2>
 <p>The source code of SuperSCS is available at <a href="https://github.com/kul-forbes/scs">https://github.com/kul-forbes/scs</a>.</p>
-<p>This project was originally forked <a href="https://github.com/cvxgrp/scs">cvxgrp/scs</a>. </p>
+<p>This project was originally forked from <a href="https://github.com/cvxgrp/scs">cvxgrp/scs</a>.</p>
+<h2><a class="anchor" id="sec-verification"></a>
+Verification</h2>
+<p>Quality assurance:</p>
+<ul>
+<li><a href="https://github.com/kul-forbes/scs/tree/master/tests">unit tests</a></li>
+<li><a href="http://valgrind.org">memory management tests</a> using valgrind</li>
+<li><a href="https://travis-ci.org/kul-forbes/scs">continuous integration</a> on Travis CI</li>
+<li><a href="https://codecov.io/gh/kul-forbes/scs">coverage reports</a> on Codecov</li>
+<li><a href="https://www.codacy.com/app/alphaville/scs/dashboard">code quality reports</a> on codacy </li>
+</ul>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 27 2017 20:41:34 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:42:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -44,7 +44,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -69,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -153,13 +153,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"></div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a669e3fa8b9f4af2cdfc35775b7b8be35">A</a> = A;</div>
 </div><!-- fragment --><p>Next, we may modify some of the default settings</p>
-<div class="fragment"><div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a72dec01083dfcb3d60bb16207d2d5d96">eps</a> = 1e-9;</div>
+<div class="fragment"><div class="line"><a class="code" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a>(data);                <span class="comment">// default settings</span></div>
+<div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a72dec01083dfcb3d60bb16207d2d5d96">eps</a> = 1e-9;                  <span class="comment">// override defaults</span></div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#abd2c2ac659387dab81690e651bbf166f">rho_x</a> = 1;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a1b32fd02f88434dd3c98a89ff0c8b88c">verbose</a> = 0;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a5e40b12249d561d4d9d0846f357e2bd5">sse</a> = 0.7;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a52ba1d15f1faad0c99cf86ad42ef1285">direction</a> = <a class="code" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca8c55599a07579d01ab088f80b9ed7a3e">restarted_broyden</a>;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a89aaf17bb454952ab43f9ca72cae3ff8">do_super_scs</a> = 1;</div>
-</div><!-- fragment --><p>In the last line, we specify that we want to run the solver using SuperSCS.</p>
+</div><!-- fragment --><p>Function <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6" title="Sets the settings to certain default values. ">setDefaultSettings</a> set the <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">default settings</a></p>
+<p>In the last line, we specify that we want to run the solver using SuperSCS.</p>
 <p>Last thing to define is the second-order cone \(\mathcal{K}\)</p>
 <div class="fragment"><div class="line">cone = malloc(<span class="keyword">sizeof</span> (<a class="code" href="struct_s_c_s___c_o_n_e.html">Cone</a>));</div>
 <div class="line">cone-&gt;<a class="code" href="struct_s_c_s___c_o_n_e.html#a5fe4cf9ee168d3bc8da9f2de4e78bbf3">ssize</a> = 0;</div>
@@ -179,28 +181,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="fragment"><div class="line">sol = <a class="code" href="scs_8h.html#aeae5f3471b534d9da47ea840affd87a5">initSol</a>();</div>
 <div class="line">info = <a class="code" href="scs_8h.html#ab3fb9eba640ba9f6c3d36b57b5a2f298">initInfo</a>();</div>
 <div class="line"><a class="code" href="scs_8h.html#a103f47be236f81ae085244d574997706">scs</a>(data, cone, sol, info);</div>
-</div><!-- fragment --><p>Now </p>
+</div><!-- fragment --><p>It is highly recommended that you use these initializers to create these structures.</p>
+<p>Now </p>
 <div class="fragment"><div class="line">info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#aac2e43268116ffd134e5cb413e785b88">statusVal</a> </div>
 </div><!-- fragment --><p> is the exit-flag of the solver and it is equal to <a class="el" href="constants_8h.html#a0fcae593d880f4d9a0b21b188ba58094">SCS_SOLVED</a>.</p>
 <p>The primal-dual solution \((x^\star,s^\star,y^\star)\) is now stored in <code>sol</code>.</p>
 <p>If <code>data-&gt;stgs-&gt;verbose</code> is set to <code>1</code>, the following will be printed</p>
-<div class="fragment"><div class="line">-------------------------------------------------------------------------------------</div>
-<div class="line">Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau |   FPR   | time (s)</div>
-<div class="line">-------------------------------------------------------------------------------------</div>
-<div class="line">    0|      inf      -nan      -nan      -inf      -nan       inf  0.00e+00  7.26e-05 </div>
-<div class="line">   10| 4.98e-02  1.68e+00  8.10e-02 -9.36e+00 -1.11e+01  0.00e+00  3.85e-02  3.32e-04 </div>
-<div class="line">   20| 8.05e-03  1.99e-01  2.32e-02 -1.53e+01 -1.46e+01  0.00e+00  6.43e-03  6.01e-04 </div>
-<div class="line">   30| 1.10e-05  9.60e-04  2.54e-07 -1.64e+01 -1.64e+01  0.00e+00  6.89e-06  8.78e-04 </div>
-<div class="line">   40| 8.03e-13  1.21e-11  2.06e-12 -1.64e+01 -1.64e+01  0.00e+00  5.17e-13  1.20e-03 </div>
-<div class="line">-------------------------------------------------------------------------------------</div>
+<div class="fragment"><div class="line">Lin-sys: sparse-direct, nnz in A = 5</div>
+<div class="line">eps = 1.00e-08, alpha = 1.50, max_iters = 2000, normalize = 1, scale = 1.00</div>
+<div class="line">Variables n = 3, constraints m = 4</div>
+<div class="line">Cones:  soc vars: 4, soc blks: 1</div>
+<div class="line">Setup time: 1.01e-02s</div>
+<div class="line">Running SuperSCS...</div>
+<div class="line">---------------------------------------------------------------------------------------</div>
+<div class="line"> Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau |   FPR   | time (s)</div>
+<div class="line">---------------------------------------------------------------------------------------     </div>
+<div class="line">     0| 5.65e+00  9.74e+00  5.21e-01 -4.58e+01 -1.41e+01  0.00e+00  1.96e+00  6.49e-03     </div>
+<div class="line">    10| 7.27e-02  2.47e-01  2.54e-02 -1.64e+01 -1.73e+01  0.00e+00  1.82e-02  1.92e-02 </div>
+<div class="line">    20| 2.14e-03  5.13e-03  7.45e-04 -1.67e+01 -1.68e+01  0.00e+00  7.75e-04  3.30e-02 </div>
+<div class="line">    30| 3.71e-09  3.15e-07  5.48e-09 -1.64e+01 -1.64e+01  0.00e+00  4.83e-09  4.25e-02 </div>
+<div class="line">    32| 6.75e-12  2.24e-11  2.70e-12 -1.64e+01 -1.64e+01  0.00e+00  2.23e-12  5.42e-02 </div>
+<div class="line">---------------------------------------------------------------------------------------</div>
+<div class="line">Status: Solved</div>
+<div class="line">Timing: Solve time: 6.78e-02s</div>
+<div class="line">    Lin-sys: nnz in L factor: 12, avg solve time: 6.98e-06s</div>
+<div class="line">    Cones: avg projection time: 7.37e-06s</div>
+<div class="line">---------------------------------------------------------------------------------------</div>
 <div class="line">Error metrics:</div>
-<div class="line">dist(s, K) = 0.0000e+00, dist(y, K*) = 0.0000e+00, s<span class="stringliteral">&#39;y/|s||y| = 5.5964e-17</span></div>
-<div class="line"><span class="stringliteral">|Ax + s - b|_2 / (1 + |b|_2) = 8.0307e-13</span></div>
-<div class="line"><span class="stringliteral">|A&#39;</span>y + c|_2 / (1 + |c|_2) = 1.2125e-11</div>
-<div class="line">|c<span class="stringliteral">&#39;x + b&#39;</span>y| / (1 + |c<span class="stringliteral">&#39;x| + |b&#39;</span>y|) = 2.0604e-12</div>
-<div class="line">-------------------------------------------------------------------------------------</div>
+<div class="line">dist(s, K) = 0.0000e+00, dist(y, K*) = 1.4211e-14, s<span class="stringliteral">&#39;y/|s||y| = -2.7982e-17</span></div>
+<div class="line"><span class="stringliteral">|Ax + s - b|_2 / (1 + |b|_2) = 6.7545e-12</span></div>
+<div class="line"><span class="stringliteral">|A&#39;</span>y + c|_2 / (1 + |c|_2) = 2.2441e-11</div>
+<div class="line">|c<span class="stringliteral">&#39;x + b&#39;</span>y| / (1 + |c<span class="stringliteral">&#39;x| + |b&#39;</span>y|) = 2.6977e-12</div>
+<div class="line">---------------------------------------------------------------------------------------</div>
 <div class="line">c<span class="stringliteral">&#39;x = -16.3754, -b&#39;</span>y = -16.3754</div>
-<div class="line">=====================================================================================</div>
 </div><!-- fragment --><p>The last thing to do is to free the used memory</p>
 <div class="fragment"><div class="line"><a class="code" href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a>(data, cone);</div>
 <div class="line"><a class="code" href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a>(sol);</div>
@@ -209,19 +222,25 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="fragment"><div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8cffc52e994430a67229d27145a5750d">do_record_progress</a> = 1;</div>
 </div><!-- fragment --><p>This option is otherwise disabled by default.</p>
 <p>We may then print various statistics</p>
-<div class="fragment"><div class="line"><span class="keywordflow">for</span> (i = 0; i &lt;= info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a5dfb720759d0a2cc25aeca6de76bae16">history_length</a>; ++i) {</div>
-<div class="line">     printf(<span class="stringliteral">&quot;[%d]  rel = %g, respri = %g, pc = %g, dc = %g\n&quot;</span>, </div>
-<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a0e0c43b2c8c00b4da83542f1581cb575">progress_iter</a>[i], </div>
-<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ac6fa681d0725824ea046435c89d6e165">progress_relgap</a>[i], </div>
-<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a06e4ee5f0a341170fa7299dffec5abab">progress_respri</a>[i],</div>
-<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ab5827c00fe66a97fb45781bf46a14585">progress_pcost</a>[i],</div>
-<div class="line">             info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a08db9ab2eb0bf319aca95ba6a8f1c9a5">progress_dcost</a>[i]);</div>
-<div class="line"> }</div>
+<div class="fragment"><div class="line"><a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> i;</div>
+<div class="line"><span class="keyword">const</span> <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> column_size = 10;</div>
+<div class="line">printf(<span class="stringliteral">&quot;  i     P Cost    D Cost       Gap       FPR      PRes      DRes\n&quot;</span>);</div>
+<div class="line">printf(<span class="stringliteral">&quot;----------------------------------------------------------------\n&quot;</span>);</div>
+<div class="line"><span class="keywordflow">for</span> (i = 0; i &lt; info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ae3eac7a2ca18f2a75c20c53ce6cc5650">iter</a>; ++i) {</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*i &quot;</span>, 3, i);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*.2e&quot;</span>, column_size, info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ab5827c00fe66a97fb45781bf46a14585">progress_pcost</a>[i]);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*.2e&quot;</span>, column_size, info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a08db9ab2eb0bf319aca95ba6a8f1c9a5">progress_dcost</a>[i]);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*.2e&quot;</span>, column_size, info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ac6fa681d0725824ea046435c89d6e165">progress_relgap</a>[i]);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*.2e&quot;</span>, column_size, info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#ac258609b3ebe7acf4593fa54d90cf742">progress_norm_fpr</a>[i]);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*.2e&quot;</span>, column_size, info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#a06e4ee5f0a341170fa7299dffec5abab">progress_respri</a>[i]);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;%*.2e&quot;</span>, column_size, info-&gt;<a class="code" href="struct_s_c_s___i_n_f_o.html#aad0be529b78c5ab2f56797150809ee0d">progress_resdual</a>[i]);</div>
+<div class="line">      printf(<span class="stringliteral">&quot;\n&quot;</span>);</div>
+<div class="line">}</div>
 </div><!-- fragment --><p>If <code>do_record_progress</code> is, instead, set to <code>0</code>, no progress data are stored and the above pointers are equal to <a class="el" href="glbopts_8h.html#a0be174af2a751cfa8a91c310d799943f">SCS_NULL</a>. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 27 2017 20:41:34 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:41:14 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

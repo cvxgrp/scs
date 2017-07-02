@@ -1,6 +1,7 @@
 #include "test_superscs.h"
 #include "linsys/amatrix.h"
 #include "linsys/common.h"
+#include "linsys/direct/external/amd_internal.h"
 
 static void prepare_data(Data ** data) {
     const scs_int n = 3;
@@ -275,7 +276,7 @@ bool test_superscs_001_rbroyden(char** str) {
 
     data->stgs->sse = 0.5;
     data->stgs->eps = 1e-4;
-    data->stgs->rho_x = 1.0;
+    data->stgs->rho_x = 1.;
     data->stgs->direction = (direction_type) restarted_broyden;
     data->stgs->verbose = 0;
     data->stgs->k0 = 0;
@@ -284,9 +285,18 @@ bool test_superscs_001_rbroyden(char** str) {
     data->stgs->ls = 10;
     data->stgs->max_iters = 1;
     data->stgs->do_super_scs = 1;
+    data->stgs->memory = 10;
+    data->stgs->sigma = 1e-2;
+    data->stgs->c1 = 1.0 - 1e-4;
+    data->stgs->c_bl = 0.999;
+    data->stgs->beta = 0.5;
+    data->stgs->normalize = 1;
+    data->stgs->scale = 1;
+    data->stgs->alpha = 1.5;
 
     sol = initSol();
     info = initInfo();
+
 
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_UNBOUNDED_INACCURATE, str, "wrong status");
@@ -333,9 +343,64 @@ bool test_superscs_001_rbroyden(char** str) {
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -18.660744885301725, 1e-10, str, "x[0] wrong");
 
-    data->stgs->max_iters = 250;
-    data->stgs->do_record_progress = 1;
+    /*
+     * Here I'm modifying the maximum number of iterations to make sure that  
+     * those tricks with stgs->previous_max_iter indeed work.
+     */
+
+    data->stgs->max_iters = 1000;
     data->stgs->eps = 1e-4;
+    data->stgs->rho_x = 0.5;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->progress_dcost == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_pcost == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_relgap == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_respri == SCS_NULL, str, "progress not NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_resdual == SCS_NULL, str, "progress not NULL");
+
+    data->stgs->max_iters = 2000;
+    data->stgs->do_record_progress = 1;
+    data->stgs->rho_x = .1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->progress_dcost != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_pcost != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_relgap != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_respri != SCS_NULL, str, "progress NULL");
+    ASSERT_TRUE_OR_FAIL(info->progress_resdual != SCS_NULL, str, "progress NULL");
+    ASSERT_EQAUL_INT_OR_FAIL(data->stgs->max_iters, 2000, str, "Wrong previous no. iter");
+    ASSERT_EQAUL_INT_OR_FAIL(data->stgs->previous_max_iters, 2000, str, "Wrong previous no. iter");
+
+    data->stgs->max_iters = 3000;
+    data->stgs->rho_x = .01;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+
+    data->stgs->max_iters = 2000;
+    data->stgs->rho_x = .001;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+
+    data->stgs->max_iters = 3100;
+    data->stgs->rho_x = .0001;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+
+    data->stgs->max_iters = 3200;
+    data->stgs->rho_x = 10;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+
+    data->stgs->max_iters = 3300;
+    data->stgs->rho_x = 0.001;
+    data->stgs->do_super_scs = 0;
     status = scs(data, cone, sol, info);
     ASSERT_EQAUL_INT_OR_FAIL(info->statusVal, SCS_SOLVED, str, "problem status not SCS_SOLVED");
     ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
@@ -376,11 +441,10 @@ bool test_superscs_100_rbroyden(char** str) {
     data->stgs->max_iters = 2;
     status = scs(data, cone, sol, info);
 
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED_INACCURATE, str, "wrong status");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -0.349018320302040, 1e-10, str, "x[0] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], 0.015102755569314, 1e-10, str, "x[1] wrong");
     ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 1.778110351429428, 1e-10, str, "x[2] wrong");
-
-
 
 
     freeData(data, cone);
@@ -396,19 +460,20 @@ bool test_residuals(char** str) {
     Data * data;
     Info * info;
     Cone * cone;
+
     scs_float relgap_expected[12] = {
         0,
-        0.45039546702,
-        0.18197423289,
-        0.44654726283,
-        0.16195937371,
-        0.27652759990,
-        0.29785223028,
-        0.16934030689,
-        0.00588709109,
-        0.07145742814,
-        0.03247612575,
-        0.04010905318
+        0.641360567339623,
+        0.258326003751872,
+        0.427755914304124,
+        0.070601296495286,
+        0.136391692925419,
+        0.110228818969576,
+        0.116212468002787,
+        0.100073649960616,
+        0.037913746742520,
+        0.031013566758557,
+        0.031786667245133,
     };
 
     prepare_data(&data);
@@ -416,11 +481,11 @@ bool test_residuals(char** str) {
 
     data->stgs->eps = 1e-8;
     data->stgs->k0 = 0;
-    data->stgs->k1 = 0;
-    data->stgs->k2 = 0;
-    data->stgs->ls = 0;
+    data->stgs->k1 = 1;
+    data->stgs->k2 = 1;
+    data->stgs->ls = 10;
     data->stgs->rho_x = 1.0;
-    data->stgs->direction = fixed_point_residual;
+    data->stgs->direction = 100;
     data->stgs->sse = 0.999;
     data->stgs->sigma = 1e-2;
     data->stgs->c_bl = 0.999;
@@ -430,16 +495,228 @@ bool test_residuals(char** str) {
     data->stgs->scale = 1;
     data->stgs->alpha = 1.5;
     data->stgs->do_super_scs = 1;
-    data->stgs->verbose = 0;
+    data->stgs->verbose = 1;
+    data->stgs->do_override_streams = 1;
+    data->stgs->output_stream = stderr;
     data->stgs->do_record_progress = 1;
-    data->stgs->max_iters = 12;
+    data->stgs->max_iters = 120;
 
     sol = initSol();
     info = initInfo();
 
     status = scs(data, cone, sol, info);
     ASSERT_TRUE_OR_FAIL(isnan(info->progress_relgap[0]), str, "rel gap [0] not NAN");
-    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-7, str, "relative gap");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap + 1, relgap_expected + 1, 11, 1e-13, str, "relative gap");
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
+bool test_rho_x(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    scs_int i, j, k, l;
+    scs_float rho;
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+
+    data->stgs->eps = 1e-8;
+    data->stgs->do_super_scs = 1;
+    data->stgs->alpha = 1.5;
+    data->stgs->scale = 1.0;
+    data->stgs->verbose = 0;
+    data->stgs->normalize = 1;
+    data->stgs->direction = restarted_broyden;
+    data->stgs->beta = 0.5;
+    data->stgs->c1 = 0.9999;
+    data->stgs->c_bl = 0.999;
+
+    data->stgs->sigma = 1e-2;
+    data->stgs->thetabar = 0.1;
+    data->stgs->memory = 10;
+    data->stgs->sse = 0.999;
+    data->stgs->do_record_progress = 1;
+    data->stgs->max_iters = 2000;
+
+
+    sol = initSol();
+    info = initInfo();
+
+    /* Make sure it converges for different values of rho_x */
+    data->stgs->rho_x = 0.2;
+    for (i = 0; i <= 1; ++i) {
+        for (j = 0; j <= 1; ++j) {
+            for (k = 0; k <= 1; ++k) {
+                for (l = 0; l <= 5; ++l) {
+                    for (rho = 0.001; rho < 0.5; rho *= 1.8) {
+                        /* Test for all possible choices of k0, k1, k2 */
+                        data->stgs->k0 = i;
+                        data->stgs->k1 = j;
+                        data->stgs->k2 = k;
+                        /* Test for different values of ls */
+                        data->stgs->ls = l;
+                        /* Test for different values of rho_x */
+                        data->stgs->rho_x = rho;
+                        status = scs(data, cone, sol, info);
+                        ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+                        /* verify that the residuals are lower than eps */
+                        ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
+                        ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
+                        ASSERT_TRUE_OR_FAIL(info->relGap < data->stgs->eps, str, "duality gap too high");
+                        ASSERT_TRUE_OR_FAIL(info->iter < data->stgs->max_iters, str, "too many iterations");
+                        /* verify the solution */
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[0], -16.874896967418358, 1e-5, str, "x[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[1], -5.634341514381794, 1e-5, str, "x[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->x[2], 3.589737499067709, 1e-5, str, "x[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[0], 96.506238321412667, 1e-5, str, "y[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[1], -74.161955276422589, 1e-5, str, "y[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[2], 14.999999999635596, 1e-5, str, "y[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->y[3], 59.903742992722336, 1e-5, str, "y[3] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[0], 5.262469090219521, 1e-5, str, "s[0] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[1], 4.044039060072064, 1e-5, str, "s[1] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[2], -0.817947499813188, 1e-5, str, "s[2] wrong");
+                        ASSERT_EQAUL_FLOAT_OR_FAIL(sol->s[3], -3.266541120769288, 1e-5, str, "s[3] wrong");
+                    }
+                }
+            }
+        }
+    }
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
+bool test_validation(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+    sol = initSol();
+    info = initInfo();
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->k0 = 2;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k0");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->k1 = -1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k1");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->k2 = 5;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "k2");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->alpha = -0.1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "alpha < 0");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->alpha = 2.1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "alpha > 2");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->beta = 1.01;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "beta>1");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->beta = 1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "beta=1");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->ls = 40;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "ls=40");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->ls = -1;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "ls=-1");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->sigma = -0.0001;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "sigma < 0");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->c_bl = -1e-4;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "c_bl");
+    setDefaultSettings(data);
+
+    data->stgs->do_override_streams = 1;
+    data->stgs->c1 = -1e-4;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_FAILED, str, "c1");
+    setDefaultSettings(data);
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
+bool test_no_normalization(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    Settings *s;
+
+    prepare_data(&data);
+    prepare_cone(&cone);
+    sol = initSol();
+    info = initInfo();
+
+    s = data->stgs;
+
+    s->normalize = 0;
+    s->k0 = 1;
+    s->do_super_scs = 1;
+    s->eps = 1e-10;
+    s->max_iters = 120;
+    s->do_override_streams = 1;
+    s->verbose = 1;
+    s->output_stream = stderr;
+    status = scs(data, cone, sol, info);
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
+    ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
+    ASSERT_TRUE_OR_FAIL(info->relGap < data->stgs->eps, str, "duality gap too high");
+    ASSERT_TRUE_OR_FAIL(info->iter < data->stgs->max_iters, str, "too many iterations");
 
     freeData(data, cone);
     freeSol(sol);

@@ -81,6 +81,7 @@
       <itemPath>Makefile</itemPath>
       <itemPath>nbproject/private/launcher.properties</itemPath>
     </logicalFolder>
+    <itemPath>pages/benchmarks_page.h</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
@@ -222,6 +223,8 @@
       <item path="linsys/indirect/private.c" ex="false" tool="0" flavor2="0">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="pages/benchmarks_page.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="pages/dev_page.h" ex="false" tool="3" flavor2="0">
       </item>
