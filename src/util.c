@@ -257,6 +257,7 @@ int scs_special_print(
         scs_int print_mode,
         FILE *__restrict __stream,
         const char *__restrict __format, ...) {
+    int status;
     va_list args; /* variable-lenth args */
     va_start(args, __format); /* The variable-lenth args start after __format */
 
@@ -269,8 +270,10 @@ int scs_special_print(
          * ----------------------------------------------------- */
         char message_buffer[4096];
         vsnprintf(message_buffer, 4096, __format, args);
-        return printf("%s", message_buffer);
+        status = printf("%s", message_buffer);
     } else {
-        return vfprintf(__stream, __format, args);
+        status = vfprintf(__stream, __format, args);
     }
+    va_end(args);
+    return status;
 }
