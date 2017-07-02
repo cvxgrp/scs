@@ -51,7 +51,7 @@
  * 
  * \subsection sec-github-page Source code
  * 
- * The source code of SuperSCS is available at [https://github.com/kul-forbes/scs](https://github.com/kul-forbes/scs).
+ * The source code of [SuperSCS](https://github.com/kul-forbes/scs) is available on [github](https://github.com/kul-forbes/scs).
  * 
  * This project was originally forked from [cvxgrp/scs](https://github.com/cvxgrp/scs).
  * 
@@ -63,5 +63,6 @@
  * - [continuous integration](https://travis-ci.org/kul-forbes/scs) on Travis CI
  * - [coverage reports](https://codecov.io/gh/kul-forbes/scs) on Codecov
  * - [code quality reports](https://www.codacy.com/app/alphaville/scs/dashboard) on codacy
+ * - [lcov report] using <code>make cov</code>
  */
 

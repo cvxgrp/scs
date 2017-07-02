@@ -1,7 +1,20 @@
 /*! \page page_benchmarks Benchmarks
  * 
  * \tableofcontents 
- * \section sec_lasso LASSO
+ * 
+ * In what follows we give a few code snippets in MATLAB and compare SuperSCS
+ * with SCS.
+ * 
+ * This is a preliminary study to show that SuperSCS outperforms SCS, but 
+ * a more thorough analysis is necessary.
+ * 
+ * In what follows we compare the two algorithms using five different types of problems:
+ * A LASSO-like problem  (\f$\ell_1\f$-regularized least squares), Semidefinite programming (SDP) 
+ * and in particular a minimum-norm problem and an LMI-constrained problem, 
+ * Logistic regression, Minimization of \f$p\f$-norm and, last, a 2-norm-constrained
+ * minimum-norm problem.
+ * 
+ * \section sec_lasso LASSO-type problem
  * We solve a simple LASSO problem of the form
  * \f[
  * \mathrm{Minimize}_x\ \frac{1}{2} \|Ax-b\| + \mu \|x\|_1,

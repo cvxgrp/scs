@@ -18,7 +18,7 @@
     extensions: ["tex2jax.js"],
     jax: ["input/TeX","output/HTML-CSS"],
 });
-</script><script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+</script><script src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -85,15 +85,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#sec_lasso">LASSO</a></li>
+<ul><li class="level1"><a href="#sec_lasso">LASSO-type problem</a></li>
 <li class="level1"><a href="#sec_SDP">Semidefinite Programming</a></li>
 <li class="level1"><a href="#sec_log_reg">Logistic Regression</a></li>
 <li class="level1"><a href="#sec_p_norm">Minimization of p-norm</a></li>
 <li class="level1"><a href="#sec_another_problem">Norm-constrained minimum-norm problem</a></li>
 </ul>
 </div>
-<div class="textblock"><h1><a class="anchor" id="sec_lasso"></a>
-LASSO</h1>
+<div class="textblock"><p>In what follows we give a few code snippets in MATLAB and compare SuperSCS with SCS.</p>
+<p>This is a preliminary study to show that SuperSCS outperforms SCS, but a more thorough analysis is necessary.</p>
+<p>In what follows we compare the two algorithms using five different types of problems: A LASSO-like problem ( \(\ell_1\)-regularized least squares), Semidefinite programming (SDP) and in particular a minimum-norm problem and an LMI-constrained problem, Logistic regression, Minimization of \(p\)-norm and, last, a 2-norm-constrained minimum-norm problem.</p>
+<h1><a class="anchor" id="sec_lasso"></a>
+LASSO-type problem</h1>
 <p>We solve a simple LASSO problem of the form </p>
 <p class="formulaDsp">
 \[ \mathrm{Minimize}_x\ \frac{1}{2} \|Ax-b\| + \mu \|x\|_1, \]
@@ -163,7 +166,7 @@ Semidefinite Programming</h1>
 <p class="formulaDsp">
 \[ \begin{align} &amp;\mathrm{Minimize}_{P}\ \mathrm{trace}(P)\\ &amp;P=P&#39;\\ &amp;P \geq I\\ &amp;A&#39;P + PA \leq -I \end{align} \]
 </p>
-<p>For this example we chose a (stable) matrix \(A\) with its eigenvalue uniformly logarithmically spaced between \(-10^{-1}\) and \(-10^{1}\).</p>
+<p>For this example we chose a (stable) matrix \(A\) with its eigenvalues uniformly logarithmically spaced between \(-10^{-1}\) and \(-10^{1}\).</p>
 <div class="fragment"><div class="line">n=100;</div>
 <div class="line">A = diag(-logspace(-0.5, 1, n));</div>
 <div class="line">U = orth(randn(n,n));</div>
@@ -292,7 +295,7 @@ Norm-constrained minimum-norm problem</h1>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jul 2 2017 04:42:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 05:36:27 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
