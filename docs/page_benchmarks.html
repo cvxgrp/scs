@@ -91,11 +91,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li class="level1"><a href="#sec_p_norm">Minimization of p-norm</a></li>
 <li class="level1"><a href="#sec_another_problem">Norm-constrained minimum-norm problem</a></li>
 <li class="level1"><a href="#sec_matrix_completion">Regularized matrix completion problem</a></li>
+<li class="level1"><a href="#sec_portfolio">Portfolio selection</a></li>
 </ul>
 </div>
 <div class="textblock"><p>In what follows we give a few code snippets in MATLAB and compare SuperSCS with SCS.</p>
 <p>This is a preliminary study to show that SuperSCS outperforms SCS, but a more thorough analysis is necessary.</p>
-<p>In what follows we compare the two algorithms using five different types of problems: A LASSO-like problem ( \(\ell_1\)-regularized least squares), Semidefinite programming (SDP) and in particular a minimum-norm problem and an LMI-constrained problem, Logistic regression, Minimization of \(p\)-norm and, last, a 2-norm-constrained minimum-norm problem.</p>
+<p>In what follows we compare the two algorithms using five different types of problems: (i) a LASSO-like problem ( \(\ell_1\)-regularized least squares), (ii) a semidefinite program (SDP) and, in particular, a minimum-norm problem and an LMI-constrained problem, (iii) a logistic regression problem, (iv) a minimum \(p\)-norm problem, (v) a 2-norm-constrained minimum-norm problem and, last , (vi) a matrix completion problem involving the nuclear norm.</p>
+<dl class="section note"><dt>Note</dt><dd>The following benchmarks are available in <a href="https://github.com/kul-forbes/scs/tree/master/tests/matlab">/tests/matlab/</a>.</dd></dl>
 <h1><a class="anchor" id="sec_lasso"></a>
 LASSO-type problem</h1>
 <p>We solve a simple LASSO problem of the form </p>
@@ -139,6 +141,7 @@ LASSO-type problem</h1>
 <p>SuperSCS with the above options terminates after \(169\) iterations and \(85.1\) s.</p>
 <p>Instead, SCS requires \(3243\) iterations which corresponds to \(802\) s.</p>
 <p>SuperSCS exhibits a speed-up of \(\times 9.4\).</p>
+<dl class="section note"><dt>Note</dt><dd>Any values that are not overridden using <code>cvx_solver_settings</code> are set to their <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">default values</a>.</dd></dl>
 <h1><a class="anchor" id="sec_SDP"></a>
 Semidefinite Programming</h1>
 <p>Here we solve the problem </p>
@@ -331,11 +334,19 @@ Regularized matrix completion problem</h1>
 <div class="line">    end</div>
 <div class="line">cvx_end</div>
 <div class="line"><a class="code" href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a></div>
-</div><!-- fragment --><p>SuperSCS converges in \(18.4s\) ( \(102\) iterations), whereas SCS takes \(270s\) ( \(6061\) iterations). </p>
+</div><!-- fragment --><p>SuperSCS converges in \(18.4s\) ( \(102\) iterations), whereas SCS takes \(270s\) ( \(6061\) iterations).</p>
+<p>Changing <code>lam</code> to <code>0.05</code> deems SCS unable to converge within 10,000 iterations (gain, with \(\epsilon=10^{-3}\)), while SuperSCS converges in \(26.2\)s ( \(145\) iterations).</p>
+<h1><a class="anchor" id="sec_portfolio"></a>
+Portfolio selection</h1>
+<p>Here we solve the following portfolio selection problem:</p>
+<p class="formulaDsp">
+\[ \begin{align} &amp;\mathrm{Maximize}_z\ \mu&#39;z - \gamma z&#39;\Sigma z\\ &amp;1&#39;z = 1\\ &amp;z \geq 0, \end{align} \]
+</p>
+<p>where \(z\) is the portfolio of assets, \(\mu\) is the vector of expected returns, \(\gamma\) is a risk-aversion parameter and \(\Sigma=F&#39;F+D\) is the asset return covariance matrix with \(F\) being the <em>factor loading matrix</em> and \(D\) is a diagonal matrix called the <em>asset-specific risk</em>. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jul 2 2017 14:22:37 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 16:05:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

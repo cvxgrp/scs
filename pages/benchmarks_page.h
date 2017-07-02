@@ -9,10 +9,14 @@
  * a more thorough analysis is necessary.
  * 
  * In what follows we compare the two algorithms using five different types of problems:
- * A LASSO-like problem  (\f$\ell_1\f$-regularized least squares), Semidefinite programming (SDP) 
- * and in particular a minimum-norm problem and an LMI-constrained problem, 
- * Logistic regression, Minimization of \f$p\f$-norm and, last, a 2-norm-constrained
- * minimum-norm problem.
+ * (i) a LASSO-like problem  (\f$\ell_1\f$-regularized least squares), (ii) 
+ * a semidefinite program (SDP) and, in particular, a minimum-norm problem and an 
+ * LMI-constrained problem, (iii) a logistic regression problem, (iv) a minimum 
+ * \f$p\f$-norm problem, (v) a 2-norm-constrained minimum-norm problem and, last ,
+ * (vi) a matrix completion problem involving the nuclear norm.
+ * 
+ * \note The following benchmarks are available in 
+ * [/tests/matlab/](https://github.com/kul-forbes/scs/tree/master/tests/matlab).
  * 
  * \section sec_lasso LASSO-type problem
  * We solve a simple LASSO problem of the form
@@ -74,6 +78,9 @@
  * Instead, SCS requires \f$3243\f$ iterations which corresponds to \f$802\f$ s.
  * 
  * SuperSCS exhibits a speed-up of \f$\times 9.4\f$.
+ * 
+ * \note Any values that are not overridden using <code>cvx_solver_settings</code> are 
+ * set to their \ref ::setDefaultSettings "default values".
  * 
  * \section sec_SDP Semidefinite Programming
  * 
@@ -363,6 +370,27 @@
  * SuperSCS converges in \f$18.4s\f$ (\f$102\f$ iterations), whereas SCS takes
  * \f$270s\f$ (\f$6061\f$ iterations).
  * 
+ * Changing <code>lam</code> to <code>0.05</code> deems SCS unable to converge 
+ * within 10,000 iterations (gain, with \f$\epsilon=10^{-3}\f$), while SuperSCS converges 
+ * in \f$26.2\f$s (\f$145\f$ iterations).
  * 
+ * 
+ * \section sec_portfolio Portfolio selection
+ * 
+ * Here we solve the following portfolio selection problem:
+ * 
+ * \f[
+ * \begin{align}
+ * &\mathrm{Maximize}_z\ \mu'z  - \gamma z'\Sigma z\\
+ * &1'z = 1\\
+ * &z \geq 0,
+ * \end{align}
+ * \f]
+ * 
+ * where \f$z\f$ is the portfolio of assets, \f$\mu\f$ is the vector of 
+ * expected returns, \f$\gamma\f$ is a risk-aversion parameter and 
+ * \f$\Sigma=F'F+D\f$ is the asset return covariance matrix with \f$F\f$
+ * being the <em>factor loading matrix</em> and \f$D\f$ is a diagonal matrix 
+ * called the <em>asset-specific risk</em>.
  * 
  */
