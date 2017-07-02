@@ -429,7 +429,9 @@
  * cvx_end
  * ~~~~~
  * 
- * The above problem is solved in 91.7s and at 292 iterations with SuperSCS.
+ * The above problem is solved in 91.7s and at 292 iterations with SuperSCS running with restarted Broyden directions with memory=100.
+ * If the memory is reduced to 50 the results are: 59.8s and 323 iterations.
+ * 
  * The respective results for SCS are 261s and 3050 iterations. 
  * 
  */
