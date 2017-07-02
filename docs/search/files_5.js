@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['normalize_2eh',['normalize.h',['../normalize_8h.html',1,'']]]
+  ['mainpage_2eh',['mainpage.h',['../mainpage_8h.html',1,'']]]
 ];

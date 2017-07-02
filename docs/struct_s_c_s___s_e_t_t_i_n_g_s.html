@@ -153,6 +153,11 @@ Data Fields</h2></td></tr>
 <tr class="separator:ad1f6c0aefeb9075eecdf487931d3143e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cffc52e994430a67229d27145a5750d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8cffc52e994430a67229d27145a5750d">do_record_progress</a></td></tr>
 <tr class="separator:a8cffc52e994430a67229d27145a5750d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10b2cc1a58533111b8acfa25539056dc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a10b2cc1a58533111b8acfa25539056dc">do_override_streams</a></td></tr>
+<tr class="separator:a10b2cc1a58533111b8acfa25539056dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8685218a3d454afab678d69e16e2df3a"><td class="memItemLeft" align="right" valign="top">FILE *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a8685218a3d454afab678d69e16e2df3a">output_stream</a></td></tr>
+<tr class="memdesc:a8685218a3d454afab678d69e16e2df3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output stream where progress information is printed.  <a href="#a8685218a3d454afab678d69e16e2df3a">More...</a><br/></td></tr>
+<tr class="separator:a8685218a3d454afab678d69e16e2df3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Settings structure. </p>
@@ -249,6 +254,19 @@ Data Fields</h2></td></tr>
 </div><div class="memdoc">
 <p>Choice of direction</p>
 <p>Default : <a class="el" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca8c55599a07579d01ab088f80b9ed7a3e">restarted_broyden</a> </p>
+
+</div>
+</div>
+<a class="anchor" id="a10b2cc1a58533111b8acfa25539056dc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> do_override_streams</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether to override the default output stream. </p>
 
 </div>
 </div>
@@ -385,6 +403,23 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a8685218a3d454afab678d69e16e2df3a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE* output_stream</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Output stream where progress information is printed. </p>
+<dl class="section note"><dt>Note</dt><dd>The default value, as this is defined in <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6" title="Sets the settings to certain default values. ">setDefaultSettings</a> is <code>stdout</code>.</dd>
+<dd>
+It is important to note that in order for a user-defined output stream to take effect, you need to set <a class="el" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a10b2cc1a58533111b8acfa25539056dc">do_override_streams</a> to <code>1</code>. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="acaa7e7c1997bc99118dbbd9d78b921b1"></a>
 <div class="memitem">
 <div class="memproto">
@@ -514,7 +549,7 @@ Data Fields</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jul 1 2017 04:14:24 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:42:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

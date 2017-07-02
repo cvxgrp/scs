@@ -704,6 +704,7 @@ bool test_no_normalization(char** str) {
     s = data->stgs;
 
     s->normalize = 0;
+    s->k0 = 1;
     s->do_super_scs = 1;
     s->eps = 1e-10;
     s->max_iters = 120;

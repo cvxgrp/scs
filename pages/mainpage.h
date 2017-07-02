@@ -44,9 +44,10 @@
  * 
  * Examples of use:
  * 
- * - \ref page:socp
- * - \ref page:directions
- * - More to come
+ * - \ref page_socp
+ * - \ref page_benchmarks
+ * - \ref page_directions
+ * - \ref page_dev
  * 
  * \subsection sec-github-page Source code
  * 

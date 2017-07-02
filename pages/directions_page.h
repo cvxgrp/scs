@@ -1,4 +1,4 @@
-/*! \page page:directions Directions
+/*! \page page_directions Directions
  * 
  * \tableofcontents
  * 

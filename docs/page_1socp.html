@@ -153,13 +153,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"></div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a669e3fa8b9f4af2cdfc35775b7b8be35">A</a> = A;</div>
 </div><!-- fragment --><p>Next, we may modify some of the default settings</p>
-<div class="fragment"><div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a72dec01083dfcb3d60bb16207d2d5d96">eps</a> = 1e-9;</div>
+<div class="fragment"><div class="line"><a class="code" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a>(data);                <span class="comment">// default settings</span></div>
+<div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a72dec01083dfcb3d60bb16207d2d5d96">eps</a> = 1e-9;                  <span class="comment">// override defaults</span></div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#abd2c2ac659387dab81690e651bbf166f">rho_x</a> = 1;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a1b32fd02f88434dd3c98a89ff0c8b88c">verbose</a> = 0;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a5e40b12249d561d4d9d0846f357e2bd5">sse</a> = 0.7;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a52ba1d15f1faad0c99cf86ad42ef1285">direction</a> = <a class="code" href="glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4ca8c55599a07579d01ab088f80b9ed7a3e">restarted_broyden</a>;</div>
 <div class="line">data-&gt;<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html#a3af17f596d1354c7fa47816ae28b11bc">stgs</a>-&gt;<a class="code" href="struct_s_c_s___s_e_t_t_i_n_g_s.html#a89aaf17bb454952ab43f9ca72cae3ff8">do_super_scs</a> = 1;</div>
-</div><!-- fragment --><p>In the last line, we specify that we want to run the solver using SuperSCS.</p>
+</div><!-- fragment --><p>Function <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6" title="Sets the settings to certain default values. ">setDefaultSettings</a> set the <a class="el" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">default settings</a></p>
+<p>In the last line, we specify that we want to run the solver using SuperSCS.</p>
 <p>Last thing to define is the second-order cone \(\mathcal{K}\)</p>
 <div class="fragment"><div class="line">cone = malloc(<span class="keyword">sizeof</span> (<a class="code" href="struct_s_c_s___c_o_n_e.html">Cone</a>));</div>
 <div class="line">cone-&gt;<a class="code" href="struct_s_c_s___c_o_n_e.html#a5fe4cf9ee168d3bc8da9f2de4e78bbf3">ssize</a> = 0;</div>
@@ -238,7 +240,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jul 1 2017 04:14:24 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:41:14 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

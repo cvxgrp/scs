@@ -41,7 +41,7 @@ extern "C" {
 #define WARM_START (0)
 
 /* Parameters for Superscs*/
-#define K0_DEFAULT (1)
+#define K0_DEFAULT (0)
 #define K1_DEFAULT (1)
 #define K2_DEFAULT (1)    
 #define NOMINAL_DEFAULT (1)

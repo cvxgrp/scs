@@ -434,10 +434,11 @@ extern "C" {
          * \brief Output stream where progress information is printed.
          * 
          * \note The default value, as this is defined in ::setDefaultSettings
-         * is <code>stdout</code>/
+         * is <code>stdout</code>.
          * 
          * \note It is important to note that in order for a user-defined output
-         * stream to take effect, you need to set ::do_override_streams to <code>1</code>.
+         * stream to take effect, you need to set \ref SCS_SETTINGS::do_override_streams "do_override_streams"
+         * to <code>1</code>.
          */
         FILE * output_stream;
     };

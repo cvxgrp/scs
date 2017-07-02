@@ -1,4 +1,4 @@
-/*! \page page:socp Second-Order Cone Problems
+/*! \page page_socp Second-Order Cone Problems
  * 
  * Let us solve the following second-order cone program:
  * 
@@ -112,13 +112,16 @@
  * Next, we may modify some of the default settings 
  * 
  * ~~~~~{.c}
- * data->stgs->eps = 1e-9;
+ * setDefaultSettings(data);                // default settings
+ * data->stgs->eps = 1e-9;                  // override defaults
  * data->stgs->rho_x = 1;
  * data->stgs->verbose = 0;
  * data->stgs->sse = 0.7;
  * data->stgs->direction = restarted_broyden;
  * data->stgs->do_super_scs = 1;
  * ~~~~~
+ * 
+ * Function ::setDefaultSettings set the \ref ::setDefaultSettings "default settings"
  * 
  * In the last line, we specify that we want to run the solver using SuperSCS.
  * 

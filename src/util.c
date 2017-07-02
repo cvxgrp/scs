@@ -249,6 +249,8 @@ void setDefaultSettings(Data *d) {
     d->stgs->do_record_progress = 0;
     d->stgs->do_override_streams = 0;
     d->stgs->output_stream = stdout;
+    d->stgs->tRule = 1;
+    d->stgs->broyden_init_scaling = 1;
 }
 
 int scs_special_print(

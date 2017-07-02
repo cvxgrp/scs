@@ -101,93 +101,106 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="scs_8h.html">scs.h</a>&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="cones_8h.html">cones.h</a>&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">/* timing code courtesty of A. Domahidi */</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#if (defined NOTIMER)</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor"></span><span class="keyword">typedef</span> <span class="keywordtype">void</span> *<a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor"></span><span class="comment">/* Use Windows QueryPerformanceCounter for timing */</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;windows.h&gt;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>timer {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    LARGE_INTEGER <a class="code" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">tic</a>;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    LARGE_INTEGER <a class="code" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">toc</a>;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    LARGE_INTEGER freq;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;} <a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#elif(defined __APPLE__)</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor"></span><span class="comment">/* Use MAC OSX mach_time for timing */</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &lt;mach/mach_time.h&gt;</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>timer {</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    uint64_t <a class="code" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">tic</a>;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    uint64_t <a class="code" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">toc</a>;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    mach_timebase_info_data_t tinfo;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;} <a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="comment">/* Use POSIX clock_gettime() for timing on other machines */</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#include &lt;time.h&gt;</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="structtimer.html">   38</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>timer {</div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">   39</a></span>&#160;    <span class="keyword">struct </span>timespec <a class="code" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">tic</a>;</div>
-<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">   40</a></span>&#160;    <span class="keyword">struct </span>timespec <a class="code" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">toc</a>;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;} <a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#if EXTRAVERBOSE &gt; 1</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> timer globalTimer;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;stdarg.h&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="scs_8h.html">scs.h</a>&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="cones_8h.html">cones.h</a>&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="comment">/* timing code courtesty of A. Domahidi */</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#if (defined NOTIMER)</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor"></span>    <span class="keyword">typedef</span> <span class="keywordtype">void</span> *<a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor"></span>    <span class="comment">/* Use Windows QueryPerformanceCounter for timing */</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">struct </span>timer {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        LARGE_INTEGER <a class="code" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">tic</a>;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        LARGE_INTEGER <a class="code" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">toc</a>;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        LARGE_INTEGER freq;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    } <a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#elif(defined __APPLE__)</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor"></span>    <span class="comment">/* Use MAC OSX mach_time for timing */</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#include &lt;mach/mach_time.h&gt;</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">struct </span>timer {</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;        uint64_t <a class="code" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">tic</a>;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;        uint64_t <a class="code" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">toc</a>;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        mach_timebase_info_data_t tinfo;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    } <a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor"></span>    <span class="comment">/* Use POSIX clock_gettime() for timing on other machines */</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#include &lt;time.h&gt;</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="structtimer.html">   42</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">struct </span>timer {</div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">   43</a></span>&#160;        <span class="keyword">struct </span>timespec <a class="code" href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">tic</a>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">   44</a></span>&#160;        <span class="keyword">struct </span>timespec <a class="code" href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">toc</a>;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    } <a class="code" href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a>;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="comment">/* these all return milli-seconds */</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c">tic</a>(timer *t);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a>(timer *t);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="util_8h.html#ace2dfd43ca6dcafe55c6897e085130b8">strtoc</a>(<span class="keywordtype">char</span> *str, timer *t);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="util_8h.html#a46dee8cdde9adf87bc67b9d8f11887d9">tocq</a>(timer *t);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">#if EXTRAVERBOSE &gt; 1</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor"></span>    <span class="keyword">extern</span> timer globalTimer;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="comment">/* these all return milli-seconds */</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#afb012ff1a4bd5a4018440981d7eb2c9f">printConeData</a>(<span class="keyword">const</span> <a class="code" href="struct_s_c_s___c_o_n_e.html">Cone</a> *k);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#a0911138952ccd995990d19d0255ee167">printData</a>(<span class="keyword">const</span> <a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">Data</a> *d);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#a685f5619aad782a07d1bad8ebd8e441d">printWork</a>(<span class="keyword">const</span> <a class="code" href="struct_s_c_s___w_o_r_k.html">Work</a> *w);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#aafa3d12d87a208f23728988a67031a8c">printArray</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *arr, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n, <span class="keyword">const</span> <span class="keywordtype">char</span> *name);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a>(<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">Data</a> *d);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a>(<a class="code" href="struct_s_c_s___s_o_l___v_a_r_s.html">Sol</a> *sol);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a>(<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">Data</a> *d, <a class="code" href="struct_s_c_s___c_o_n_e.html">Cone</a> *k);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keywordtype">void</span> <a class="code" href="util_8h.html#a47feb31161b6b0ee636590777b3d7616">freeInfo</a>(<a class="code" href="struct_s_c_s___i_n_f_o.html">Info</a> *info);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c">tic</a>(timer *t);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a>(timer *t);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="util_8h.html#ace2dfd43ca6dcafe55c6897e085130b8">strtoc</a>(<span class="keywordtype">char</span> *str, timer *t);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> <a class="code" href="util_8h.html#a46dee8cdde9adf87bc67b9d8f11887d9">tocq</a>(timer *t);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#afb012ff1a4bd5a4018440981d7eb2c9f">printConeData</a>(<span class="keyword">const</span> <a class="code" href="struct_s_c_s___c_o_n_e.html">Cone</a> *k);</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#a0911138952ccd995990d19d0255ee167">printData</a>(<span class="keyword">const</span> <a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">Data</a> *d);</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#a685f5619aad782a07d1bad8ebd8e441d">printWork</a>(<span class="keyword">const</span> <a class="code" href="struct_s_c_s___w_o_r_k.html">Work</a> *w);</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#aafa3d12d87a208f23728988a67031a8c">printArray</a>(<span class="keyword">const</span> <a class="code" href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a> *arr, <a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> n, <span class="keyword">const</span> <span class="keywordtype">char</span> *name);</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a>(<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">Data</a> *d);</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a>(<a class="code" href="struct_s_c_s___s_o_l___v_a_r_s.html">Sol</a> *sol);</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a>(<a class="code" href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">Data</a> *d, <a class="code" href="struct_s_c_s___c_o_n_e.html">Cone</a> *k);</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="util_8h.html#a47feb31161b6b0ee636590777b3d7616">freeInfo</a>(<a class="code" href="struct_s_c_s___i_n_f_o.html">Info</a> *info);</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="util_8h.html#a2fd9dee7399fba64c11739fb3a8dc294">scs_special_print</a>(<a class="code" href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a> print_mode,</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;            FILE *__restrict __stream,</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">char</span> *__restrict __format, ...);</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="util_8h_html_a2fd9dee7399fba64c11739fb3a8dc294"><div class="ttname"><a href="util_8h.html#a2fd9dee7399fba64c11739fb3a8dc294">scs_special_print</a></div><div class="ttdeci">int scs_special_print(scs_int print_mode, FILE *__restrict __stream, const char *__restrict __format,...)</div><div class="ttdoc">Custom print function for SCS. </div></div>
 <div class="ttc" id="scs_8h_html"><div class="ttname"><a href="scs_8h.html">scs.h</a></div></div>
-<div class="ttc" id="util_8h_html_aafa3d12d87a208f23728988a67031a8c"><div class="ttname"><a href="util_8h.html#aafa3d12d87a208f23728988a67031a8c">printArray</a></div><div class="ttdeci">void printArray(const scs_float *arr, scs_int n, const char *name)</div></div>
-<div class="ttc" id="util_8h_html_a9f503d29b96333dfc0c9744d922b9c6c"><div class="ttname"><a href="util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c">tic</a></div><div class="ttdeci">void tic(timer *t)</div></div>
-<div class="ttc" id="util_8h_html_ace2dfd43ca6dcafe55c6897e085130b8"><div class="ttname"><a href="util_8h.html#ace2dfd43ca6dcafe55c6897e085130b8">strtoc</a></div><div class="ttdeci">scs_float strtoc(char *str, timer *t)</div></div>
-<div class="ttc" id="util_8h_html_a8a352feaf15ae14ab30284f8c4b0f156"><div class="ttname"><a href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a></div><div class="ttdeci">void freeSol(Sol *sol)</div></div>
-<div class="ttc" id="struct_s_c_s___w_o_r_k_html"><div class="ttname"><a href="struct_s_c_s___w_o_r_k.html">SCS_WORK</a></div><div class="ttdoc">Workspace for SCS. </div><div class="ttdef"><b>Definition:</b> scs.h:33</div></div>
-<div class="ttc" id="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a_html"><div class="ttname"><a href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">SCS_PROBLEM_DATA</a></div><div class="ttdoc">struct containing problem data </div><div class="ttdef"><b>Definition:</b> scs.h:266</div></div>
+<div class="ttc" id="util_8h_html_aafa3d12d87a208f23728988a67031a8c"><div class="ttname"><a href="util_8h.html#aafa3d12d87a208f23728988a67031a8c">printArray</a></div><div class="ttdeci">void printArray(const scs_float *arr, scs_int n, const char *name)</div><div class="ttdoc">Prints an array. </div></div>
+<div class="ttc" id="util_8h_html_a9f503d29b96333dfc0c9744d922b9c6c"><div class="ttname"><a href="util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c">tic</a></div><div class="ttdeci">void tic(timer *t)</div><div class="ttdoc">Starts the timer. </div></div>
+<div class="ttc" id="util_8h_html_ace2dfd43ca6dcafe55c6897e085130b8"><div class="ttname"><a href="util_8h.html#ace2dfd43ca6dcafe55c6897e085130b8">strtoc</a></div><div class="ttdeci">scs_float strtoc(char *str, timer *t)</div><div class="ttdoc">Stops the timer and prints a custom message. </div></div>
+<div class="ttc" id="util_8h_html_a8a352feaf15ae14ab30284f8c4b0f156"><div class="ttname"><a href="util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156">freeSol</a></div><div class="ttdeci">void freeSol(Sol *sol)</div><div class="ttdoc">Frees the memory allocated for a Sol object. </div></div>
+<div class="ttc" id="struct_s_c_s___w_o_r_k_html"><div class="ttname"><a href="struct_s_c_s___w_o_r_k.html">SCS_WORK</a></div><div class="ttdoc">Workspace for SCS. </div><div class="ttdef"><b>Definition:</b> scs.h:34</div></div>
+<div class="ttc" id="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a_html"><div class="ttname"><a href="struct_s_c_s___p_r_o_b_l_e_m___d_a_t_a.html">SCS_PROBLEM_DATA</a></div><div class="ttdoc">struct containing problem data </div><div class="ttdef"><b>Definition:</b> scs.h:267</div></div>
 <div class="ttc" id="struct_s_c_s___c_o_n_e_html"><div class="ttname"><a href="struct_s_c_s___c_o_n_e.html">SCS_CONE</a></div><div class="ttdoc">Cone structure. </div><div class="ttdef"><b>Definition:</b> cones.h:13</div></div>
-<div class="ttc" id="struct_s_c_s___s_o_l___v_a_r_s_html"><div class="ttname"><a href="struct_s_c_s___s_o_l___v_a_r_s.html">SCS_SOL_VARS</a></div><div class="ttdoc">Primal-dual solution arrays. </div><div class="ttdef"><b>Definition:</b> scs.h:432</div></div>
-<div class="ttc" id="structtimer_html_a3e17fd7a751005d94d13eca5cb9c1aae"><div class="ttname"><a href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">timer::tic</a></div><div class="ttdeci">struct timespec tic</div><div class="ttdef"><b>Definition:</b> util.h:39</div></div>
-<div class="ttc" id="util_8h_html_a7d5b04fecf73be8d52acccf3a2c56f34"><div class="ttname"><a href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a></div><div class="ttdeci">void freeData(Data *d, Cone *k)</div></div>
-<div class="ttc" id="struct_s_c_s___i_n_f_o_html"><div class="ttname"><a href="struct_s_c_s___i_n_f_o.html">SCS_INFO</a></div><div class="ttdoc">Terminating information. </div><div class="ttdef"><b>Definition:</b> scs.h:443</div></div>
-<div class="ttc" id="structtimer_html_a76ef24889d11b26ed279e5efa9a3ddb2"><div class="ttname"><a href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">timer::toc</a></div><div class="ttdeci">struct timespec toc</div><div class="ttdef"><b>Definition:</b> util.h:40</div></div>
+<div class="ttc" id="struct_s_c_s___s_o_l___v_a_r_s_html"><div class="ttname"><a href="struct_s_c_s___s_o_l___v_a_r_s.html">SCS_SOL_VARS</a></div><div class="ttdoc">Primal-dual solution arrays. </div><div class="ttdef"><b>Definition:</b> scs.h:449</div></div>
+<div class="ttc" id="structtimer_html_a3e17fd7a751005d94d13eca5cb9c1aae"><div class="ttname"><a href="structtimer.html#a3e17fd7a751005d94d13eca5cb9c1aae">timer::tic</a></div><div class="ttdeci">struct timespec tic</div><div class="ttdef"><b>Definition:</b> util.h:43</div></div>
+<div class="ttc" id="util_8h_html_a7d5b04fecf73be8d52acccf3a2c56f34"><div class="ttname"><a href="util_8h.html#a7d5b04fecf73be8d52acccf3a2c56f34">freeData</a></div><div class="ttdeci">void freeData(Data *d, Cone *k)</div><div class="ttdoc">Frees the memory allocate of a Data and a Cone object. </div></div>
+<div class="ttc" id="struct_s_c_s___i_n_f_o_html"><div class="ttname"><a href="struct_s_c_s___i_n_f_o.html">SCS_INFO</a></div><div class="ttdoc">Terminating information. </div><div class="ttdef"><b>Definition:</b> scs.h:460</div></div>
+<div class="ttc" id="structtimer_html_a76ef24889d11b26ed279e5efa9a3ddb2"><div class="ttname"><a href="structtimer.html#a76ef24889d11b26ed279e5efa9a3ddb2">timer::toc</a></div><div class="ttdeci">struct timespec toc</div><div class="ttdef"><b>Definition:</b> util.h:44</div></div>
 <div class="ttc" id="cones_8h_html"><div class="ttname"><a href="cones_8h.html">cones.h</a></div></div>
 <div class="ttc" id="glbopts_8h_html_a23c48a83ce0c58783595ad45ffcaf76b"><div class="ttname"><a href="glbopts_8h.html#a23c48a83ce0c58783595ad45ffcaf76b">scs_int</a></div><div class="ttdeci">int scs_int</div><div class="ttdef"><b>Definition:</b> glbopts.h:61</div></div>
-<div class="ttc" id="util_8h_html_ac97aceb18a9cc6569e8c9256f3814b82"><div class="ttname"><a href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a></div><div class="ttdeci">scs_float toc(timer *t)</div></div>
-<div class="ttc" id="util_8h_html_a0911138952ccd995990d19d0255ee167"><div class="ttname"><a href="util_8h.html#a0911138952ccd995990d19d0255ee167">printData</a></div><div class="ttdeci">void printData(const Data *d)</div></div>
+<div class="ttc" id="util_8h_html_ac97aceb18a9cc6569e8c9256f3814b82"><div class="ttname"><a href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a></div><div class="ttdeci">scs_float toc(timer *t)</div><div class="ttdoc">Stops the timer. </div></div>
+<div class="ttc" id="util_8h_html_a0911138952ccd995990d19d0255ee167"><div class="ttname"><a href="util_8h.html#a0911138952ccd995990d19d0255ee167">printData</a></div><div class="ttdeci">void printData(const Data *d)</div><div class="ttdoc">Prints the content of a Data object. </div></div>
 <div class="ttc" id="glbopts_8h_html_ad37836e6404bb2c3ae8adcc6290699b9"><div class="ttname"><a href="glbopts_8h.html#ad37836e6404bb2c3ae8adcc6290699b9">scs_float</a></div><div class="ttdeci">double scs_float</div><div class="ttdef"><b>Definition:</b> glbopts.h:66</div></div>
 <div class="ttc" id="util_8h_html_a30c945d813befeeeffa501ae4a589f03"><div class="ttname"><a href="util_8h.html#a30c945d813befeeeffa501ae4a589f03">timer</a></div><div class="ttdeci">struct timer timer</div><div class="ttdoc">SCS timer timer timer. </div></div>
-<div class="ttc" id="util_8h_html_a685f5619aad782a07d1bad8ebd8e441d"><div class="ttname"><a href="util_8h.html#a685f5619aad782a07d1bad8ebd8e441d">printWork</a></div><div class="ttdeci">void printWork(const Work *w)</div></div>
-<div class="ttc" id="util_8h_html_a47feb31161b6b0ee636590777b3d7616"><div class="ttname"><a href="util_8h.html#a47feb31161b6b0ee636590777b3d7616">freeInfo</a></div><div class="ttdeci">void freeInfo(Info *info)</div></div>
-<div class="ttc" id="util_8h_html_ad288272137e5eb3fa3eac46dbb556bf6"><div class="ttname"><a href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a></div><div class="ttdeci">void setDefaultSettings(Data *d)</div></div>
-<div class="ttc" id="util_8h_html_afb012ff1a4bd5a4018440981d7eb2c9f"><div class="ttname"><a href="util_8h.html#afb012ff1a4bd5a4018440981d7eb2c9f">printConeData</a></div><div class="ttdeci">void printConeData(const Cone *k)</div></div>
-<div class="ttc" id="util_8h_html_a46dee8cdde9adf87bc67b9d8f11887d9"><div class="ttname"><a href="util_8h.html#a46dee8cdde9adf87bc67b9d8f11887d9">tocq</a></div><div class="ttdeci">scs_float tocq(timer *t)</div></div>
+<div class="ttc" id="util_8h_html_a685f5619aad782a07d1bad8ebd8e441d"><div class="ttname"><a href="util_8h.html#a685f5619aad782a07d1bad8ebd8e441d">printWork</a></div><div class="ttdeci">void printWork(const Work *w)</div><div class="ttdoc">Prints the content of a Work object. </div></div>
+<div class="ttc" id="util_8h_html_a47feb31161b6b0ee636590777b3d7616"><div class="ttname"><a href="util_8h.html#a47feb31161b6b0ee636590777b3d7616">freeInfo</a></div><div class="ttdeci">void freeInfo(Info *info)</div><div class="ttdoc">Frees the memory allocated for an Info object. </div></div>
+<div class="ttc" id="util_8h_html_ad288272137e5eb3fa3eac46dbb556bf6"><div class="ttname"><a href="util_8h.html#ad288272137e5eb3fa3eac46dbb556bf6">setDefaultSettings</a></div><div class="ttdeci">void setDefaultSettings(Data *d)</div><div class="ttdoc">Sets the settings to certain default values. </div></div>
+<div class="ttc" id="util_8h_html_afb012ff1a4bd5a4018440981d7eb2c9f"><div class="ttname"><a href="util_8h.html#afb012ff1a4bd5a4018440981d7eb2c9f">printConeData</a></div><div class="ttdeci">void printConeData(const Cone *k)</div><div class="ttdoc">Prints the content of a Cone object. </div></div>
+<div class="ttc" id="util_8h_html_a46dee8cdde9adf87bc67b9d8f11887d9"><div class="ttname"><a href="util_8h.html#a46dee8cdde9adf87bc67b9d8f11887d9">tocq</a></div><div class="ttdeci">scs_float tocq(timer *t)</div><div class="ttdoc">Stops the timer. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jul 1 2017 04:14:23 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 04:42:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
