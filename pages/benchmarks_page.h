@@ -307,4 +307,62 @@
  * Note that SuperSCS can attain much higher precision; for instance, 
  * it converges with \f$\epsilon=10^{-4}\f$ in \f$41.2\f$s (\f$131\f$ iterations) and
  * with \f$\epsilon=10^{-6}\f$ it converges after \f$58\f$s (\f$194\f$ iterations). 
+ * 
+ * 
+ * \section sec_matrix_completion Regularized matrix completion problem
+ * 
+ * Let \f$M\f$ be a given matrix whose elements \f$\{(i,j)\}_{i\in I, j\in J}\f$
+ * are missing.
+ * 
+ * Here, we formualte the matrix completion problem as a nuclear norm minimization 
+ * problem.
+ * 
+ * \f[
+ * \begin{align}
+ * &\mathrm{Minimize}_{X}\ \|X-M\|_* + \lambda \|X\|_{\mathrm{fro}}^2\\
+ * &X_{i',j'} = M_{i',j'},\ \forall i'\notin I,\ j'\notin J
+ * \end{align}
+ * \f]
+ * 
+ * 
+ * 
+ * ~~~~~{.m}
+ * rng('default');
+ * rng(1);
+ * m=200;
+ * n=200;
+ * n_nan = ceil(0.8*m*n);
+ * 
+ * M = sprandn(m, n, 0.4);
+ * idx = randperm(m*n);
+ * M(idx(1:n_nan))=nan;
+ * lam = 0.5;
+ * 
+ * tic
+ * cvx_begin sdp
+ *     cvx_solver scs
+ *     cvx_solver_settings('eps', 1e-3,...
+ *         'do_super_scs', 1,...
+ *         'direction', 100,...
+ *         'memory', 100,...
+ *         'rho_x', 0.001)
+ *     variable X(m,n)
+ *     minimize (norm_nuc(X)  + lam*sum_square(X(:)))
+ *     subject to
+ *     for i=1:m
+ *         for j=1:n
+ *             if (~isnan(M(i,j)))
+ *                 X(i,j)==M(i,j)
+ *             end
+ *         end
+ *     end
+ * cvx_end
+ * toc
+ * ~~~~~
+ * 
+ * SuperSCS converges in \f$18.4s\f$ (\f$102\f$ iterations), whereas SCS takes
+ * \f$270s\f$ (\f$6061\f$ iterations).
+ * 
+ * 
+ * 
  */

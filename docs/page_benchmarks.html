@@ -90,6 +90,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li class="level1"><a href="#sec_log_reg">Logistic Regression</a></li>
 <li class="level1"><a href="#sec_p_norm">Minimization of p-norm</a></li>
 <li class="level1"><a href="#sec_another_problem">Norm-constrained minimum-norm problem</a></li>
+<li class="level1"><a href="#sec_matrix_completion">Regularized matrix completion problem</a></li>
 </ul>
 </div>
 <div class="textblock"><p>In what follows we give a few code snippets in MATLAB and compare SuperSCS with SCS.</p>
@@ -291,11 +292,50 @@ Norm-constrained minimum-norm problem</h1>
 <div class="line"><a class="code" href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a></div>
 </div><!-- fragment --><p>SuperSCS converges after \(37.1\)s ( \(116\) iterations).</p>
 <p>On the other hand, SCS did not converge after \(242s\) ( \(5000\) iterations).</p>
-<p>Note that SuperSCS can attain much higher precision; for instance, it converges with \(\epsilon=10^{-4}\) in \(41.2\)s ( \(131\) iterations) and with \(\epsilon=10^{-6}\) it converges after \(58\)s ( \(194\) iterations). </p>
+<p>Note that SuperSCS can attain much higher precision; for instance, it converges with \(\epsilon=10^{-4}\) in \(41.2\)s ( \(131\) iterations) and with \(\epsilon=10^{-6}\) it converges after \(58\)s ( \(194\) iterations).</p>
+<h1><a class="anchor" id="sec_matrix_completion"></a>
+Regularized matrix completion problem</h1>
+<p>Let \(M\) be a given matrix whose elements \(\{(i,j)\}_{i\in I, j\in J}\) are missing.</p>
+<p>Here, we formualte the matrix completion problem as a nuclear norm minimization problem.</p>
+<p class="formulaDsp">
+\[ \begin{align} &amp;\mathrm{Minimize}_{X}\ \|X-M\|_* + \lambda \|X\|_{\mathrm{fro}}^2\\ &amp;X_{i&#39;,j&#39;} = M_{i&#39;,j&#39;},\ \forall i&#39;\notin I,\ j&#39;\notin J \end{align} \]
+</p>
+<div class="fragment"><div class="line">rng(<span class="stringliteral">&#39;default&#39;</span>);</div>
+<div class="line">rng(1);</div>
+<div class="line">m=200;</div>
+<div class="line">n=200;</div>
+<div class="line">n_nan = ceil(0.8*m*n);</div>
+<div class="line"></div>
+<div class="line">M = sprandn(m, n, 0.4);</div>
+<div class="line">idx = randperm(m*n);</div>
+<div class="line">M(idx(1:n_nan))=nan;</div>
+<div class="line">lam = 0.5;</div>
+<div class="line"></div>
+<div class="line"><a class="code" href="util_8h.html#a9f503d29b96333dfc0c9744d922b9c6c">tic</a></div>
+<div class="line">cvx_begin sdp</div>
+<div class="line">    cvx_solver <a class="code" href="scs_8h.html#a103f47be236f81ae085244d574997706">scs</a></div>
+<div class="line">    cvx_solver_settings(<span class="stringliteral">&#39;eps&#39;</span>, 1e-3,...</div>
+<div class="line">        <span class="stringliteral">&#39;do_super_scs&#39;</span>, 1,...</div>
+<div class="line">        <span class="stringliteral">&#39;direction&#39;</span>, 100,...</div>
+<div class="line">        <span class="stringliteral">&#39;memory&#39;</span>, 100,...</div>
+<div class="line">        <span class="stringliteral">&#39;rho_x&#39;</span>, 0.001)</div>
+<div class="line">    variable X(m,n)</div>
+<div class="line">    minimize (norm_nuc(X)  + lam*sum_square(X(:)))</div>
+<div class="line">    subject to</div>
+<div class="line">    for i=1:m</div>
+<div class="line">        for j=1:n</div>
+<div class="line">            if (~isnan(M(i,j)))</div>
+<div class="line">                X(i,j)==M(i,j)</div>
+<div class="line">            end</div>
+<div class="line">        end</div>
+<div class="line">    end</div>
+<div class="line">cvx_end</div>
+<div class="line"><a class="code" href="util_8h.html#ac97aceb18a9cc6569e8c9256f3814b82">toc</a></div>
+</div><!-- fragment --><p>SuperSCS converges in \(18.4s\) ( \(102\) iterations), whereas SCS takes \(270s\) ( \(6061\) iterations). </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jul 2 2017 05:36:27 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jul 2 2017 14:22:37 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
