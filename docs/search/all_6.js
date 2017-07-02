@@ -11,6 +11,5 @@ var searchData=
   ['freeinfo',['freeInfo',['../util_8h.html#a47feb31161b6b0ee636590777b3d7616',1,'util.h']]],
   ['freepriv',['freePriv',['../lin_sys_8h.html#a05f0e7047b5d6e76e77d1ce31ca51665',1,'linSys.h']]],
   ['freesol',['freeSol',['../util_8h.html#a8a352feaf15ae14ab30284f8c4b0f156',1,'util.h']]],
-  ['full_5fbroyden',['full_broyden',['../glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4caf8730db88bbcaa3400fdcffe07cbcb26',1,'glbopts.h']]],
-  ['for_20developers',['For Developers',['../page_dev.html',1,'']]]
+  ['full_5fbroyden',['full_broyden',['../glbopts_8h.html#ae846c6457f3d41c69f5f313e396f9f4caf8730db88bbcaa3400fdcffe07cbcb26',1,'glbopts.h']]]
 ];

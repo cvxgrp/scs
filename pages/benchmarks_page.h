@@ -393,4 +393,43 @@
  * being the <em>factor loading matrix</em> and \f$D\f$ is a diagonal matrix 
  * called the <em>asset-specific risk</em>.
  * 
+ * The problem is generated as follows: 
+ * 
+ * ~~~~~{.m}
+ * density = 0.1;
+ * rc = 0.5; % estimated reciprocal condition number
+ * 
+ * n = 100000;
+ * m = 100;
+ * 
+ * mu = exp(0.01 * randn(n, 1)) - 1; % returns
+ * D = rand(n,1) / 10; % idiosyncratic risk
+ * F = sprandn(n, m, density, rc) / 10; % factor model
+ * gamma = 1;
+ * B = 1;
+ * ~~~~~
+ * 
+ * The corresponding CVX formulation is:
+ * 
+ * ~~~~~{.m}
+ * cvx_begin
+ *     cvx_solver scs
+ *     cvx_solver_settings('eps', 1e-4,...
+ *         'scale', 1,...
+ *         'do_super_scs', 1,...
+ *         'direction', 100,...
+ *         'k0', 0,...
+ *         'memory', 100,...
+ *         'rho_x', 0.001,...
+ *         'verbose', 2)
+ *     variable x(n)
+ *     maximize(mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
+ *     sum(x) == B
+ *     x >= 0
+ * cvx_end
+ * ~~~~~
+ * 
+ * The above problem is solved in 91.7s and at 292 iterations with SuperSCS.
+ * The respective results for SCS are 261s and 3050 iterations. 
+ * 
  */

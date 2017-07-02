@@ -10,9 +10,9 @@ rc = 0.5; % estimated reciprocal condition number
 n = 100000;
 m = 100;
 
-mu = exp(0.01*randn(n,1))-1; % returns
-D = rand(n,1)/10; % idiosyncratic risk
-F = sprandn(n,m,density,rc)/10; % factor model
+mu = exp(0.01 * randn(n, 1)) - 1; % returns
+D = rand(n,1) / 10; % idiosyncratic risk
+F = sprandn(n, m, density, rc) / 10; % factor model
 gamma = 1;
 B = 1;
 
