@@ -551,6 +551,21 @@ extern "C" {
      */
     const char *scs_version(void);
 
+    /**
+     * \brief Converts milliseconds to a 00:00:00.0.. time format
+     * 
+     * @param time given elapsed time in milliseconds
+     * @param hours hours
+     * @param minutes minutes
+     * @param secs seconds
+     * @param sec_rest remaining time in seconds (positive and smaller than \c 1)
+     */
+    void millisToTime(scs_float time,
+            scs_int * hours,
+            scs_int * minutes,
+            scs_int * secs,
+            scs_float * sec_rest);
+
 #ifdef __cplusplus
 }
 #endif

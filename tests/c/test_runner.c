@@ -14,6 +14,7 @@ int main(int argc, char** argv) {
     /* Test functions: */
     
     r += test(&test_dummy_method, "Dummy passing test");
+    r += test(&testMillisToTime, "Milliseconds to time");
     r += test(&testUnrolledDot, "Unrolled dot");
     r += test(&testLinAlg, "Unrolled dot");
     r += test(&testProjLinSysv2, "Test projLinSysv2");

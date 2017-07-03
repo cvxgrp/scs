@@ -26,7 +26,6 @@ static const scs_int HSPACE = 9;
 static const scs_int HEADER_LEN = 9;
 static const scs_int LINE_LEN = 85;
 
-
 static scs_int scs_isnan(scs_float x) {
     DEBUG_FUNC
     RETURN(isnan(x)); /* `isnan` works both for `float` and `double` types */
@@ -924,11 +923,33 @@ scs_float getPriConeDist(const scs_float *s, const Cone *k, ConeWork *c,
     RETURN dist;
 }
 
+void millisToTime(scs_float time,
+        scs_int * hours,
+        scs_int * minutes,
+        scs_int * secs,
+        scs_float * sec_rest) {
+    scs_float integral;
+    scs_float time_seconds = time / 1e3;
+    *sec_rest = (scs_float) modf((double) time_seconds, &integral);
+    *secs = (scs_int) time_seconds;
+    *minutes = *secs / 60;
+    *secs %= 60;
+    if (*minutes >= 60) {
+        *hours = *minutes / 60;
+        *minutes %= 60;
+    } else {
+        *hours = 0;
+    }
+}
+
 /* LCOV_EXCL_START */
 static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
         Info *info) {
     DEBUG_FUNC
     scs_int i;
+    scs_int hours, minutes, seconds;
+    scs_float millis;
+
     char *linSysStr = getLinSysSummary(w->p, info);
     char *coneStr = getConeSummary(info, w->coneWork);
     FILE * stream = w->stgs->output_stream;
@@ -940,7 +961,10 @@ static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
     if (info->iter == w->stgs->max_iters) {
         scs_special_print(print_mode, stream, "Hit max_iters, solution may be inaccurate\n");
     }
-    scs_special_print(print_mode, stream, "Timing: Solve time: %1.2es\n", info->solveTime / 1e3);
+
+    millisToTime(info->solveTime, &hours, &minutes, &seconds, &millis);
+    scs_special_print(print_mode, stream, "Timing: Solve time: %02d:%02d:%02d.%d\n",
+            hours, minutes, seconds, (scs_int) round(1e4 * millis) / 10);
 
     if (linSysStr) {
         scs_special_print(print_mode, stream, "%s", linSysStr);

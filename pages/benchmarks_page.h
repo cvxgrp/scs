@@ -215,7 +215,7 @@
  *   &&Gx = f
  * \f}
  * 
- * This is the problem formualation in CVX
+ * This is the problem formulation in CVX
  * 
  * ~~~~~{.m}
  * n = 2000;
@@ -304,7 +304,7 @@
  * Let \f$M\f$ be a given matrix whose elements \f$\{(i,j)\}_{i\in I, j\in J}\f$
  * are missing.
  * 
- * Here, we formualte the matrix completion problem as a nuclear norm minimization 
+ * Here, we formulate the matrix completion problem as a nuclear norm minimization 
  * problem.
  * 
  * \f{eqnarray*}{

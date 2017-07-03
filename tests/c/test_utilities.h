@@ -9,6 +9,9 @@
 #define TEST_UTILITIES_H
 
 #include "unit_test_util.h"
+#include "linAlg.h"
+#include "scs.h"
+/* #include <time.h> */
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,6 +30,8 @@ extern "C" {
     bool testUnrolledDot(char** str);
     
     bool testLinAlg(char** str);
+    
+    bool testMillisToTime(char** str);
 
 
 #ifdef __cplusplus
