@@ -479,6 +479,9 @@ extern "C" {
         scs_float * progress_pcost; /**< \brief scaled primal cost history */
         scs_float * progress_dcost; /**< \brief sclaed dual cost history */
         scs_float * progress_norm_fpr; /**< \brief FPR history */
+        scs_float * progress_time; /**< \brief Timestamp of iteration */
+        scs_int * progress_mode; /**< \brief Mode of SuperSCS at each iteration */
+        scs_int * progress_ls; /**< \brief Number of line search iterations */
     };
 
     /**

@@ -454,6 +454,45 @@ bool test_superscs_100_rbroyden(char** str) {
     SUCCEED(str);
 }
 
+bool test_superscs_011_progress(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    scs_int mode_exp[20] = {1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2};
+    scs_int ls_exp[20] = {1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4};
+    scs_float gap_exp[6] =  {0.521136588669913, 0.452292411994033, 0.390774095584746, 0.084086837089436, 0.010215190495717, 0.737805654686660};
+    scs_float pres_exp[6] = {5.651585413034721, 0.881043969782380, 0.271916642815964, 0.052153221225419, 0.045003598675170, 0.480719322491409};
+    scs_float dres_exp[6] = {9.739130818329103, 5.430982744844291, 0.738951762380322, 0.262551525410492, 0.246763246541060, 0.634137521605225};
+    
+    prepare_data(&data);
+    prepare_cone(&cone);
+    info = initInfo();
+    sol = initSol();
+
+    data->stgs->eps = 1e-8;
+    data->stgs->do_super_scs = 1;
+    data->stgs->verbose = 0;
+    data->stgs->memory = 10;
+    data->stgs->do_record_progress = 1;
+
+    status = scs(data, cone, sol, info);
+    
+    ASSERT_EQAUL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_mode, mode_exp, 20, 1e-12, str, "mode");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_ls, ls_exp, 20, 1e-12, str, "ls");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_relgap, gap_exp, 6, 1e-12, str, "gap");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_respri, pres_exp, 6, 1e-10, str, "pres");
+    ASSERT_EQUAL_ARRAY_OR_FAIL(info->progress_resdual, dres_exp, 6, 1e-10, str, "dres");
+    
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
 bool test_residuals(char** str) {
     scs_int status;
     Sol* sol;

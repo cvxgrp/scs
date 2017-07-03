@@ -83,6 +83,9 @@ extern "C" {
     scs_float strtoc(char *str, timer *t);
     /**
      * \brief Stops the timer 
+     * 
+     * \note In contrast to ::toc, this function does not print anything
+     * 
      * @param t timer 
      * @return elapsed time in milliseconds
      */

@@ -1651,8 +1651,20 @@ static scs_int initProgressData(Info * info, Work * work) {
             if (info->progress_iter == SCS_NULL) return -6;
         }
         if (info->progress_norm_fpr == SCS_NULL) {
-            info->progress_norm_fpr = malloc(sizeof (scs_int) * max_history_alloc);
+            info->progress_norm_fpr = malloc(sizeof (scs_float) * max_history_alloc);
             if (info->progress_norm_fpr == SCS_NULL) return -7;
+        }
+        if (info->progress_time == SCS_NULL) {
+            info->progress_time = malloc(sizeof (scs_float) * max_history_alloc);
+            if (info->progress_time == SCS_NULL) return -8;
+        }
+        if (info->progress_mode == SCS_NULL) {
+            info->progress_mode = malloc(sizeof (scs_int) * max_history_alloc);
+            if (info->progress_mode == SCS_NULL) return -9;
+        }
+        if (info->progress_ls == SCS_NULL) {
+            info->progress_ls = malloc(sizeof (scs_int) * max_history_alloc);
+            if (info->progress_ls == SCS_NULL) return -10;
         }
 
         /* ---------------------------------------------------------
@@ -1674,19 +1686,34 @@ static scs_int initProgressData(Info * info, Work * work) {
              * ------------------------------------
              */
             info->progress_relgap = realloc(info->progress_relgap, sizeof (scs_float) * max_history_alloc);
-            if (info->progress_relgap == SCS_NULL) return -10;
+            if (info->progress_relgap == SCS_NULL) return -100;
+
             info->progress_respri = realloc(info->progress_respri, sizeof (scs_float) * max_history_alloc);
-            if (info->progress_respri == SCS_NULL) return -11;
+            if (info->progress_respri == SCS_NULL) return -101;
+
             info->progress_resdual = realloc(info->progress_resdual, sizeof (scs_float) * max_history_alloc);
-            if (info->progress_resdual == SCS_NULL) return -12;
+            if (info->progress_resdual == SCS_NULL) return -102;
+
             info->progress_pcost = realloc(info->progress_pcost, sizeof (scs_float) * max_history_alloc);
-            if (info->progress_pcost == SCS_NULL) return -13;
+            if (info->progress_pcost == SCS_NULL) return -103;
+
             info->progress_dcost = realloc(info->progress_dcost, sizeof (scs_float) * max_history_alloc);
-            if (info->progress_dcost == SCS_NULL) return -14;
+            if (info->progress_dcost == SCS_NULL) return -104;
+
             info->progress_iter = realloc(info->progress_iter, sizeof (scs_int) * max_history_alloc);
-            if (info->progress_iter == SCS_NULL) return -15;
+            if (info->progress_iter == SCS_NULL) return -105;
+
             info->progress_norm_fpr = realloc(info->progress_norm_fpr, sizeof (scs_float) * max_history_alloc);
-            if (info->progress_norm_fpr == SCS_NULL) return -16;
+            if (info->progress_norm_fpr == SCS_NULL) return -106;
+
+            info->progress_time = realloc(info->progress_time, sizeof (scs_float) * max_history_alloc);
+            if (info->progress_time == SCS_NULL) return -107;
+
+            info->progress_mode = realloc(info->progress_mode, sizeof (scs_int) * max_history_alloc);
+            if (info->progress_mode == SCS_NULL) return -108;
+            
+            info->progress_ls = realloc(info->progress_ls, sizeof (scs_int) * max_history_alloc);
+            if (info->progress_ls == SCS_NULL) return -109;
         }
     }
     return 0;
@@ -1764,7 +1791,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
     /* MAIN SUPER SCS LOOP */
     for (i = 0; i < work->stgs->max_iters; ++i) {
-        scs_int j; /* j indexes the line search iterations */
+        scs_int j = 0; /* j indexes the line search iterations */
 
         if (isInterrupted()) {
             RETURN failure(work, m, n, sol, info, SCS_SIGINT, "Interrupted",
@@ -1783,6 +1810,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                 info->progress_pcost[idx_progress] = r.cTx_by_tau / r.tau;
                 info->progress_dcost[idx_progress] = -r.bTy_by_tau / r.tau;
                 info->progress_norm_fpr[idx_progress] = work->nrmR_con;
+                info->progress_time[idx_progress] = tocq(&solveTimer);
             }
             if ((info->statusVal = hasConverged(work, &r, i))) {
                 break;
@@ -1917,6 +1945,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                         }
                     } /* end of K2 */
                 } /* end of line-search */
+                j++;
             } /* end of `else if` block (when !K1 OR no blind update) */
         } /* IF-block: iterated after warm start */
 
@@ -1940,10 +1969,21 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     + calcNormSq(work->R + n, m + 1)
                     );
         } /* how != 1 */
+
+        /* -------------------------------------------
+         * Record some more progress information
+         * -------------------------------------------*/
+        if (work->stgs->do_record_progress && i % CONVERGED_INTERVAL == 0) {
+            scs_int idx_progress = i / CONVERGED_INTERVAL;
+            info->progress_mode[idx_progress] = how;
+            info->progress_ls[idx_progress] = j;
+        }
+
     } /* main for loop */
 
     /* prints summary of last iteration */
     if (work->stgs->verbose) {
+        /*TODO Shouldn't the following line go out of the if block? */
         calcResidualsSuperscs(work, &r, i);
         printSummary(work, i, &r, &solveTimer);
     }
@@ -2150,6 +2190,9 @@ Info * initInfo() {
     info->progress_resdual = SCS_NULL;
     info->progress_respri = SCS_NULL;
     info->progress_norm_fpr = SCS_NULL;
+    info->progress_time = SCS_NULL;
+    info->progress_mode = SCS_NULL;
+    info->progress_ls = SCS_NULL;
     RETURN info;
 }
 
