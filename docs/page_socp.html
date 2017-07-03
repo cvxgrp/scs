@@ -86,19 +86,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 <div class="textblock"><p>Let us solve the following second-order cone program:</p>
 <p class="formulaDsp">
-\[ \begin{align} &amp;\mathrm{Minimize}\ \langle c, x \rangle\\ &amp;Ax + s = b\\ &amp;s\in\mathcal{K}, \end{align} \]
+\begin{eqnarray*} &amp;&amp;\mathrm{Minimize}\ \langle c, x \rangle\\ &amp;&amp;Ax + s = b\\ &amp;&amp;s\in\mathcal{K}, \end{eqnarray*}
 </p>
 <p>where \(x\in\mathbb{R}^3\), \(A\in\mathbb{R}^{4\times 3}\) is the following sparse matrix</p>
 <p class="formulaDsp">
-\[ \begin{align} A = \begin{bmatrix} 0.3\\ &amp; 0.7\\ &amp;&amp; 0.2\\ -0.5 &amp; 0.9 \end{bmatrix} \end{align} \]
+\begin{eqnarray*} A &amp;=&amp; \begin{bmatrix} 0.3\\ &amp; 0.7\\ &amp;&amp; 0.2\\ -0.5 &amp; 0.9 \end{bmatrix} \end{eqnarray*}
 </p>
 <p>and \(c\in\mathbb{R}^3\) and \(b\in\mathbb{R}^4\) are the vectors</p>
 <p class="formulaDsp">
-\[ \begin{align} c = \begin{bmatrix} 1 &amp; -2 &amp; -3 \end{bmatrix}^{\top} \end{align} \]
+\begin{eqnarray*} c &amp;=&amp; \begin{bmatrix} 1 &amp; -2 &amp; -3 \end{bmatrix}^{\top} \end{eqnarray*}
 </p>
 <p>and</p>
 <p class="formulaDsp">
-\[ \begin{align} b = \begin{bmatrix} 0.2 &amp; 0.1 &amp; -0.1 &amp; 0.1 \end{bmatrix}^{\top}. \end{align} \]
+\begin{eqnarray*} b &amp;=&amp; \begin{bmatrix} 0.2 &amp; 0.1 &amp; -0.1 &amp; 0.1 \end{bmatrix}^{\top}. \end{eqnarray*}
 </p>
 <p>Last, \(\mathcal{K}\) is the second-order cone in \(\mathbb{R}^4\).</p>
 <p>Let us first start with some declarations:</p>
@@ -240,7 +240,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Jul 2 2017 16:05:54 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 3 2017 03:26:16 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

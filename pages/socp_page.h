@@ -2,47 +2,39 @@
  * 
  * Let us solve the following second-order cone program:
  * 
- * \f[
- * \begin{align}
- * &\mathrm{Minimize}\ \langle c, x \rangle\\
- * &Ax + s = b\\
- * &s\in\mathcal{K},
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ * &&\mathrm{Minimize}\ \langle c, x \rangle\\
+ * &&Ax + s = b\\
+ * &&s\in\mathcal{K},
+ * \f}
  * 
  * where \f$x\in\mathbb{R}^3\f$, \f$A\in\mathbb{R}^{4\times 3}\f$ is the following
  * sparse matrix
  * 
- * \f[
- * \begin{align}
- * A = \begin{bmatrix}
+ * \f{eqnarray*}{
+ * A &=& \begin{bmatrix}
  * 0.3\\
  * & 0.7\\
  * && 0.2\\
  * -0.5 & 0.9
  * \end{bmatrix}
- * \end{align}
- * \f]
+ * \f}
  * 
  * and \f$c\in\mathbb{R}^3\f$ and \f$b\in\mathbb{R}^4\f$ are the vectors
  * 
- * \f[
- * \begin{align}
- * c = \begin{bmatrix}
+ * \f{eqnarray*}{
+ * c &=& \begin{bmatrix}
  * 1 & -2 & -3
  * \end{bmatrix}^{\top}
- * \end{align}
- * \f]
+ * \f}
  * 
  * and
  * 
- * \f[
- * \begin{align}
- * b = \begin{bmatrix}
+ * \f{eqnarray*}{
+ * b &=& \begin{bmatrix}
  * 0.2 & 0.1 & -0.1 & 0.1
  * \end{bmatrix}^{\top}.
- * \end{align}
- * \f] 
+ * \f}
  * 
  * Last, \f$\mathcal{K}\f$ is the second-order cone in \f$\mathbb{R}^4\f$.
  * 

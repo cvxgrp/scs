@@ -18,6 +18,19 @@
  * \note The following benchmarks are available in 
  * [/tests/matlab/](https://github.com/kul-forbes/scs/tree/master/tests/matlab).
  * 
+ * \note Reported runtimes were recorded on an Intel® Core™ i5-6200U CPU @ 2.30GHz × 4
+ * machine with 11.6 GiB RAM running 64-bit Ubuntu 14.04.
+ * 
+ * \note Both SuperSCS and SCS were compiled using <code>gcc</code> v4.8.5 and accessed
+ * via MATLAB® using a MEX interface.
+ * 
+ * \remark For the sake of reproducibility, we use
+ * 
+ * ~~~~~{.m}
+ * rng('default');
+ * rng(1);
+ * ~~~~~
+ * 
  * \section sec_lasso LASSO-type problem
  * We solve a simple LASSO problem of the form
  * \f[
@@ -58,13 +71,9 @@
  * cvx_begin
  *     cvx_solver scs
  *     cvx_solver_settings('eps', 1e-4,...
- *         'scale', 1,...
  *         'do_super_scs',do_super_scs,...
  *         'direction', 100,...
- *         'k0', 0,...
- *         'memory', 100,...
- *         'rho_x', 0.001,...
- *         'verbose', 2)
+ *         'memory', 100)
  *     variable x_c(n)
  *     minimize(0.5*sum_square(A*x_c - b) + mu*norm(x_c,1))
  * cvx_end
@@ -85,26 +94,19 @@
  * \section sec_SDP Semidefinite Programming
  * 
  * Here we solve the problem 
- * \f[
- * \begin{align}
- *  &\mathrm{Minimize}_{Z}\ \|Z-P\|_{\mathrm{fro}}\\
- *  &Z\geq 0\\
- *  &Z: \text{Hermitian, Toeplitz}
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ *  &&\mathrm{Minimize}_{Z}\ \|Z-P\|_{\mathrm{fro}}\\
+ *  &&Z\geq 0\\
+ *  &&Z: \mathrm{Hermitian},\ \mathrm{Toeplitz}
+ * \f}
  * ~~~~~{.m}
  * n=800;
  * P = randn(n,n);
  * cvx_begin sdp
  * cvx_solver scs
  * cvx_solver_settings('eps', 1e-4,...
- *         'scale', 1,...
  *         'do_super_scs',1,...
- *         'direction', 100,...
- *         'k0', 0,...
- *         'memory', 50,...
- *         'rho_x', 0.001,...
- *         'verbose', 2)
+ *         'memory', 50)
  *     variable Z(n,n) hermitian toeplitz
  *     dual variable Q
  *     minimize( norm( Z - P, 'fro' ) )
@@ -119,14 +121,12 @@
  * Another interesting SDP problem is that of determining a symmetric positive 
  * definite matrix \f$P\f$ which solves
  * 
- * \f[
- * \begin{align}
- *  &\mathrm{Minimize}_{P}\ \mathrm{trace}(P)\\
- *  &P=P'\\
- *  &P \geq I\\
- *  &A'P + PA \leq -I
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ *  &&\mathrm{Minimize}_{P}\ \mathrm{trace}(P)\\
+ *  &&P=P'\\
+ *  &&P \geq I\\
+ *  &&A'P + PA \leq -I
+ * \f}
  * 
  * For this example we chose a (stable) matrix \f$A\f$ with its eigenvalues 
  * uniformly logarithmically spaced between \f$-10^{-1}\f$ and \f$-10^{1}\f$.
@@ -141,11 +141,7 @@
  * cvx_begin sdp
  *     cvx_solver scs
  *     cvx_solver_settings('eps', 1e-3,...
- *         'verbose', 1,...
  *         'do_super_scs', 1, ...
- *         'rho_x', .001,  ...
- *         'k0', 0, ...
- *         'direction', 100, ...
  *         'memory', 100);
  *     variable P(n,n) symmetric
  *     minimize(trace(P))
@@ -187,27 +183,26 @@
  * We formulate the problem as follows:
  * 
  * ~~~~~{.m}
+ * tolerance = 1e-3;
  * cvx_begin
  *    cvx_solver scs
- *    cvx_solver_settings('eps', 1e-4,...
- *      'scale', 1,...
+ *    cvx_solver_settings('eps', tolerance,...
  *      'do_super_scs', 1,...
- *      'direction', 100,...
- *      'k0', 0,...
  *      'ls', 5,...
- *      'memory', 15,...
- *      'rho_x', 0.001,...
- *      'verbose', 2)
+ *      'memory', 50)
  *    variable w(p)
  *    minimize(sum(log_sum_exp([sparse(1,q);w'*X])) + lam * norm(w,1))       
  * cvx_end
  * ~~~~~
  * 
- * SuperSCS terminates after \f$200\f$s (\f$218\f$ iterations), while SCS requires
- * \f$485\f$s (\f$942\f$ iterations).
+ * For \f$\epsilon=10^{-3}\f$, SuperSCS terminates after \f$131\f$s (\f$134\f$ iterations), 
+ * while SCS requires \f$329\f$s (\f$675\f$ iterations).
  * 
- * For \f$\epsilon=10^{-3}\f$, SuperSCS requires \f$160\f$s (\f$177\f$ iterations),
- * whereas SCS still requires as much as \f$325\f$s (\f$651\f$ iterations).
+ * 
+ * For \f$\epsilon=10^{-4}\f$, SuperSCS requires \f$179\f$s (\f$183\f$ iterations),
+ * whereas SCS still requires as much as \f$497\f$s (\f$983\f$ iterations).
+ * 
+ * In both cases, SuperSCS is about \f$2.5\f$ times faster.
  * 
  * 
  * 
@@ -215,12 +210,10 @@
  * \section sec_p_norm Minimization of p-norm
  * 
  * Consider the problem
- * \f[
- * \begin{align}
- *   &\mathrm{Minimize}_x\ \|x\|_p\\
- *   &Gx = f
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ *   &&\mathrm{Minimize}_x\ \|x\|_p\\
+ *   &&Gx = f
+ * \f}
  * 
  * This is the problem formualation in CVX
  * 
@@ -237,11 +230,7 @@
  * cvx_begin
  *     cvx_solver scs
  *     cvx_solver_settings('eps', 1e-4,...
- *         'verbose', 2,...
  *         'do_super_scs', 0, ...
- *         'rho_x', .001,  ...
- *         'k0', 0, ...
- *         'direction', 100, ...
  *         'memory', 50,...
  *         'use_indirect', 0);
  *     variable x(n)
@@ -264,12 +253,10 @@
  * 
  * Here we solve a constrained problem of the form
  * 
- * \f[
- * \begin{align}
- * &\mathrm{Minimize}_x\ \|Ax-b\|\\
- * &\|Gx\| \leq 1
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ * &&\mathrm{Minimize}_x\ \|Ax-b\|\\
+ * &&\|Gx\| \leq 1
+ * \f}
  * 
  * with \f$x\in\mathbb{R}^m\f$, \f$A\in\mathbb{R}^{m\times n}\f$ and 
  * \f$G\in\mathbb{R}^{2n\times n}\f$.
@@ -293,11 +280,7 @@
  * cvx_begin
  *     cvx_solver scs
  *     cvx_solver_settings('eps', 1e-3,...
- *         'verbose', 1,...
  *         'do_super_scs', 1, ...
- *         'rho_x', .001,  ...
- *         'k0', 0, ...
- *         'direction', 100, ...
  *         'memory', 20);
  *     variable x(n)
  *     minimize( norm(A*x-b) )
@@ -324,12 +307,10 @@
  * Here, we formualte the matrix completion problem as a nuclear norm minimization 
  * problem.
  * 
- * \f[
- * \begin{align}
- * &\mathrm{Minimize}_{X}\ \|X-M\|_* + \lambda \|X\|_{\mathrm{fro}}^2\\
- * &X_{i',j'} = M_{i',j'},\ \forall i'\notin I,\ j'\notin J
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ * &&\mathrm{Minimize}_{X}\ \|X-M\|_* + \lambda \|X\|_{\mathrm{fro}}^2\\
+ * &&X_{i',j'} = M_{i',j'},\ \forall i'\notin I,\ j'\notin J
+ * \f}
  * 
  * 
  * 
@@ -350,9 +331,7 @@
  *     cvx_solver scs
  *     cvx_solver_settings('eps', 1e-3,...
  *         'do_super_scs', 1,...
- *         'direction', 100,...
- *         'memory', 100,...
- *         'rho_x', 0.001)
+ *         'memory', 100)
  *     variable X(m,n)
  *     minimize (norm_nuc(X)  + lam*sum_square(X(:)))
  *     subject to
@@ -379,13 +358,11 @@
  * 
  * Here we solve the following portfolio selection problem:
  * 
- * \f[
- * \begin{align}
- * &\mathrm{Maximize}_z\ \mu'z  - \gamma z'\Sigma z\\
- * &1'z = 1\\
- * &z \geq 0,
- * \end{align}
- * \f]
+ * \f{eqnarray*}{
+ * &&\mathrm{Maximize}_z\ \mu'z  - \gamma z'\Sigma z\\
+ * &&1'z = 1\\
+ * &&z \geq 0,
+ * \f}
  * 
  * where \f$z\f$ is the portfolio of assets, \f$\mu\f$ is the vector of 
  * expected returns, \f$\gamma\f$ is a risk-aversion parameter and 
@@ -409,29 +386,69 @@
  * B = 1;
  * ~~~~~
  * 
- * The corresponding CVX formulation is:
+ * The problem is solved using CVX as follows:
  * 
  * ~~~~~{.m}
  * cvx_begin
  *     cvx_solver scs
  *     cvx_solver_settings('eps', 1e-4,...
- *         'scale', 1,...
  *         'do_super_scs', 1,...
  *         'direction', 100,...
- *         'k0', 0,...
- *         'memory', 100,...
- *         'rho_x', 0.001,...
- *         'verbose', 2)
+ *         'memory', 100)
  *     variable x(n)
- *     maximize(mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
+ *     maximize(mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))r
  *     sum(x) == B
  *     x >= 0
  * cvx_end
  * ~~~~~
  * 
- * The above problem is solved in 91.7s and at 292 iterations with SuperSCS running with restarted Broyden directions with memory=100.
- * If the memory is reduced to 50 the results are: 59.8s and 323 iterations.
+ * The above problem is solved in \f$46.7\f$s and at \f$292\f$ iterations with SuperSCS 
+ * running with restarted Broyden directions with memory equal to \f$100\f$.
  * 
- * The respective results for SCS are 261s and 3050 iterations. 
+ * The respective results for SCS are \f$157\f$s and \f$3050\f$ iterations (approximately
+ * \f$3.3\f$ times slower).
  * 
+ * For a lower tolerance of \f$\epsilon=10^{-3}\f$ , SuperSCS with memory equal to \f$100\f$
+ * terminates at \f$162\f$ iterations after \f$23.5\f$s while SCS converges after \f$43.9\f$s 
+ * at \f$787\f$ iterations.
+ * 
+ * 
+ * \section sec_pac Principle components analysis 
+ * 
+ * Here we solve the following PCA problem (using an \f$\ell_1\f$-regularization).
+ * 
+ * The problem has the form
+ * 
+ * \f{eqnarray*}{
+ *  &&\mathrm{Maximize}_X\ \mathrm{trace}(SX) - \lambda \|X\|_1\\
+ * && \mathrm{trace}(X) = 1\\
+ * && X = X' \succeq 0
+ * \f}
+ * 
+ * ~~~~~{.m}
+ * d = 200;
+ * p = 10;
+ * A = sprandn(p,d,0.3,0.0001);
+ * S = full(A'*A);
+ * lam = 2;
+ * 
+ * cvx_begin sdp
+ *     cvx_solver scs
+ *     cvx_solver_settings('eps', 1e-3,...
+ *        'verbose', 1,...
+ *        'do_super_scs', 0, ...
+ *        'direction', 100, ...
+ *        'memory', 100);
+ *     variable X(d,d) symmetric
+ *     minimize(-trace(S*X) + lam*norm(X,1))
+ *     trace(X)==1
+ *     X>=0
+ * cvx_end  
+ * ~~~~~
+ * 
+ * SuperSCS: \f$7.6\f$s, \f$95\f$ iterations
+ * 
+ * SCS: \f$65\f$s, \f$2291\f$ iterations
+ * 
+ * Speed-up: \f$\times 8.6\f$
  */

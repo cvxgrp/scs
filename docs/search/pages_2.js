@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['superscs_20documentation',['SuperSCS Documentation',['../index.html',1,'']]]
+  ['for_20developers',['For Developers',['../page_dev.html',1,'']]]
 ];

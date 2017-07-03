@@ -1,3 +1,4 @@
+clear;
 rng('default');
 rng(1);
 
@@ -13,7 +14,7 @@ A=sprandn(m,n,density,rcA);
 b = A*x_true + 0.1*randn(m,1);
 mu = 1;
 
-%%
+
 do_super_scs = 0;
 
 tic;
@@ -32,23 +33,3 @@ cvx_begin
 cvx_end
 toc
 
-%%
-n=800;
-P = randn(n,n);
-tic;
-cvx_begin sdp
-cvx_solver scs
-cvx_solver_settings('eps', 1e-4,...
-        'scale', 1,...
-        'do_super_scs',0,...
-        'direction', 100,...
-        'k0', 0,...
-        'memory', 50,...
-        'rho_x', 0.001,...
-        'verbose', 2)
-    variable Z(n,n) hermitian toeplitz
-    dual variable Q
-    minimize( norm( Z - P, 'fro' ) )
-    Z >= 0 : Q;
-cvx_end
-toc

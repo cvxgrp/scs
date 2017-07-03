@@ -1927,7 +1927,6 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     /* populate solution vectors (unnormalized) and info */
     /* update u, denormalize, etc */
     getSolution(work, sol, info, &r, i);
-    /*TODO Should this be info->iter = i+1 instead? */
     info->iter = i;
     info->solveTime = tocq(&solveTimer);
     info->history_length = i / CONVERGED_INTERVAL;
