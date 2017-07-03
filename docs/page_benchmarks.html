@@ -92,7 +92,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li class="level1"><a href="#sec_another_problem">Norm-constrained minimum-norm problem</a></li>
 <li class="level1"><a href="#sec_matrix_completion">Regularized matrix completion problem</a></li>
 <li class="level1"><a href="#sec_portfolio">Portfolio selection</a></li>
-<li class="level1"><a href="#sec_pac">Principle components analysis</a></li>
+<li class="level1"><a href="#sec_pca">Principal components analysis</a></li>
 </ul>
 </div>
 <div class="textblock"><p>In what follows we give a few code snippets in MATLAB and compare SuperSCS with SCS.</p>
@@ -352,14 +352,13 @@ Portfolio selection</h1>
 </div><!-- fragment --><p>The above problem is solved in \(46.7\)s and at \(292\) iterations with SuperSCS running with restarted Broyden directions with memory equal to \(100\).</p>
 <p>The respective results for SCS are \(157\)s and \(3050\) iterations (approximately \(3.3\) times slower).</p>
 <p>For a lower tolerance of \(\epsilon=10^{-3}\) , SuperSCS with memory equal to \(100\) terminates at \(162\) iterations after \(23.5\)s while SCS converges after \(43.9\)s at \(787\) iterations.</p>
-<h1><a class="anchor" id="sec_pac"></a>
-Principle components analysis</h1>
+<h1><a class="anchor" id="sec_pca"></a>
+Principal components analysis</h1>
 <p>Here we solve the following PCA problem (using an \(\ell_1\)-regularization).</p>
 <p>The problem has the form</p>
 <p class="formulaDsp">
 \begin{eqnarray*} &amp;&amp;\mathrm{Maximize}_X\ \mathrm{trace}(SX) - \lambda \|X\|_1\\ &amp;&amp; \mathrm{trace}(X) = 1\\ &amp;&amp; X = X&#39; \succeq 0 \end{eqnarray*}
 </p>
-<p>In this example, \(S\) is particularly ill conditioned.</p>
 <div class="fragment"><div class="line">d = 200;</div>
 <div class="line">p = 10;</div>
 <div class="line">A = sprandn(p,d,0.3,0.0001);</div>
@@ -384,7 +383,7 @@ Principle components analysis</h1>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 3 2017 03:26:16 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 3 2017 03:33:21 for SuperSCS by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
