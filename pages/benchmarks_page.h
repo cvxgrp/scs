@@ -413,7 +413,7 @@
  * at \f$787\f$ iterations.
  * 
  * 
- * \section sec_pca Principal components analysis 
+ * \section sec_pca Principal component analysis 
  * 
  * Here we solve the following PCA problem (using an \f$\ell_1\f$-regularization).
  * 
