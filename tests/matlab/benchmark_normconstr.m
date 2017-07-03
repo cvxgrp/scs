@@ -7,9 +7,6 @@ A = sprandn(m,n,0.5,0.01);
 b = 10*randn(m,1);
 G = 2*sprandn(2*n, n, 0.1);
 
-
-
-%%
 tic;
 cvx_begin
     cvx_solver scs

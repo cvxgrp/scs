@@ -62,7 +62,7 @@ extern "C" {
     /**
      * Check whether two integers are equal, or fail with a given message.
      */
-#define ASSERT_EQAUL_INT_OR_FAIL(val, expected, str, message)\
+#define ASSERT_EQUAL_INT_OR_FAIL(val, expected, str, message)\
         number_of_assertions++;\
         if (!assertEqualsInt((val),(expected))) { \
           {\
@@ -78,7 +78,7 @@ extern "C" {
     /**
      * Check whether two integers are equal, or fail with a given message.
      */
-#define ASSERT_EQAUL_FLOAT_OR_FAIL(val, expected, tol, str, message)\
+#define ASSERT_EQUAL_FLOAT_OR_FAIL(val, expected, tol, str, message)\
         number_of_assertions++;\
         if (!assertEqualsFloat((val), (expected), (tol))) {\
            char buff[500];\

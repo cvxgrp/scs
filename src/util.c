@@ -213,6 +213,15 @@ void freeInfo(Info *info) {
         if (info->progress_norm_fpr != SCS_NULL) {
             scs_free(info->progress_norm_fpr);
         }
+        if (info->progress_time != SCS_NULL) {
+            scs_free(info->progress_time);
+        }
+        if (info->progress_mode != SCS_NULL) {
+            scs_free(info->progress_mode);
+        }
+        if (info->progress_ls != SCS_NULL) {
+            scs_free(info->progress_ls);
+        }
         scs_free(info);
     }
 }

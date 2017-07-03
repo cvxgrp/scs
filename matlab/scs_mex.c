@@ -96,7 +96,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const mxArray *settings;
 
     const mwSize one[1] = {1};
-    const int numInfoFields = 17;
+    const int numInfoFields = 20;
     const char *infoFields[] = {"iter", "status", "pobj", "dobj",
         "resPri", "resDual", "resInfeas", "resUnbdd",
         "relGap", "setupTime", "solveTime",
@@ -105,7 +105,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         "progress_respri",
         "progress_resdual",
         "progress_pcost",
-        "progress_dcost"};
+        "progress_dcost",
+        "progress_time",
+        "progress_mode",
+        "progress_ls"};
     mxArray *tmp;
 #if EXTRAVERBOSE > 0
     scs_printf("SIZE OF mwSize = %i\n", (int) sizeof (mwSize));
@@ -478,6 +481,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mxSetField(plhs[3], 0, "progress_dcost", tmp);
         tmp_data = mxGetPr(tmp);
         memcpy(tmp_data, info->progress_dcost, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_time */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_time", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_time, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_mode */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_mode", tmp);
+        tmp_data = mxGetPr(tmp);
+        for (k = 0; k < info->history_length; ++k) {
+            tmp_data[k] = (scs_float) (info->progress_mode[k]);
+        }
+        
+        /* info.progress_ls */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_ls", tmp);
+        tmp_data = mxGetPr(tmp);
+        for (k = 0; k < info->history_length; ++k) {
+            tmp_data[k] = (scs_float) (info->progress_ls[k]);
+        }
     }
     freeMex(d, k);
     return;

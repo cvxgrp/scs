@@ -3,12 +3,10 @@ rng(1);
 
 n = 2000;
 m = ceil(n/4);
-
 density = 0.1;
 G = sprandn(m,n,density);
 f = randn(m,1) * n * density;
 pow = 1.5;
-
 tic
 cvx_begin
     cvx_solver scs

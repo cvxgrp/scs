@@ -83,6 +83,9 @@ extern "C" {
     scs_float strtoc(char *str, timer *t);
     /**
      * \brief Stops the timer 
+     * 
+     * \note In contrast to ::toc, this function does not print anything
+     * 
      * @param t timer 
      * @return elapsed time in milliseconds
      */
@@ -120,7 +123,7 @@ extern "C" {
      * <tr><th>Parameter<th>Default value
      * <tr><td>\ref Settings::normalize "normalize"<td>1
      * <tr><td>\ref Settings::scale "scale"<td>1.0
-     * <tr><td>\ref Settings::rho_x "rho_x"<td>1.0
+     * <tr><td>\ref Settings::rho_x "rho_x"<td>0.001
      * <tr><td>\ref Settings::max_iters "max_iters"<td>2500
      * <tr><td>\ref Settings::previous_max_iters "previous_max_iters"<td>-1
      * <tr><td>\ref Settings::eps "eps"<td>1e-3

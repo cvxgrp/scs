@@ -479,6 +479,9 @@ extern "C" {
         scs_float * progress_pcost; /**< \brief scaled primal cost history */
         scs_float * progress_dcost; /**< \brief sclaed dual cost history */
         scs_float * progress_norm_fpr; /**< \brief FPR history */
+        scs_float * progress_time; /**< \brief Timestamp of iteration */
+        scs_int * progress_mode; /**< \brief Mode of SuperSCS at each iteration */
+        scs_int * progress_ls; /**< \brief Number of line search iterations */
     };
 
     /**
@@ -550,6 +553,21 @@ extern "C" {
      * @return 
      */
     const char *scs_version(void);
+
+    /**
+     * \brief Converts milliseconds to a 00:00:00.0.. time format
+     * 
+     * @param time given elapsed time in milliseconds
+     * @param hours hours
+     * @param minutes minutes
+     * @param secs seconds
+     * @param sec_rest remaining time in seconds (positive and smaller than \c 1)
+     */
+    void millisToTime(scs_float time,
+            scs_int * hours,
+            scs_int * minutes,
+            scs_int * secs,
+            scs_float * sec_rest);
 
 #ifdef __cplusplus
 }
