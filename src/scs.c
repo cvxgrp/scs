@@ -1737,6 +1737,26 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     timer solveTimer;
     struct residuals r;
     scs_int print_mode = work->stgs->do_override_streams;
+    /* ------------------------------------
+     * Store some pointers in function-scope
+     * variables for performance.
+     * ------------------------------------ */
+    Settings * stgs = work->stgs;
+    float alpha = stgs->alpha;
+    scs_float * dir = work->dir;
+    scs_float * R = work->R;
+    scs_float * R_prev = work->R_prev;
+    scs_float * Rwu = work->Rwu;
+    scs_float * u = work->u;
+    scs_float * u_t = work->u_t;
+    scs_float * u_b = work->u_b;
+    scs_float * u_prev = work->u_prev;
+    scs_float * wu = work->wu;
+    scs_float * wu_t = work->wu_t;
+    scs_float * wu_b = work->wu_b;
+    scs_float * Sk = work->Sk;
+    scs_float * Yk = work->Yk;
+    scs_float * dut = work->dut;
 
 
     i = initProgressData(info, work);
@@ -1746,7 +1766,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         RETURN SCS_FAILED;
         /* LCOV_EXCL_STOP */
     }
-    work->stgs->previous_max_iters = work->stgs->max_iters;
+    stgs->previous_max_iters = stgs->max_iters;
 
     if (data == SCS_NULL
             || cone == SCS_NULL
@@ -1766,31 +1786,31 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     r.lastIter = -1;
     updateWork(data, work, sol);
 
-    if (work->stgs->verbose > 0)
+    if (stgs->verbose > 0)
         printHeader(work, cone);
 
     /* Initialize: */
     i = 0; /* Needed for the next two functions */
-    if (projectLinSysv2(work->u_t, work->u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
+    if (projectLinSysv2(u_t, u, work, i) < 0) { /* u_t = (I+Q)^{-1} u*/
         RETURN failure(work, m, n, sol, info, SCS_FAILED,
                 "error in projectLinSysv2", "Failure", print_mode);
     }
-    if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
+    if (projectConesv2(u_b, u_t, u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
         RETURN failure(work, m, n, sol, info, SCS_FAILED,
                 "error in projectConesv2", "Failure", print_mode);
     }
-    compute_sb_kapb(work->u, work->u_b, work->u_t, work); /* compute s_b and kappa_b */
-    calcFPRes(work->R, work->u_t, work->u_b, l); /* compute Ru */
+    compute_sb_kapb(u, u_b, u_t, work); /* compute s_b and kappa_b */
+    calcFPRes(R, u_t, u_b, l); /* compute Ru */
     eta = SQRTF(
-            rhox * calcNormSq(work->R, n)
-            + calcNormSq(work->R + n, m + 1)
+            rhox * calcNormSq(R, n)
+            + calcNormSq(R + n, m + 1)
             ); /* initialize eta = |Ru^0| (norm of R using rho_x) */
     r_safe = eta;
     work->nrmR_con = eta;
 
 
     /* MAIN SUPER SCS LOOP */
-    for (i = 0; i < work->stgs->max_iters; ++i) {
+    for (i = 0; i < stgs->max_iters; ++i) {
         scs_int j = 0; /* j indexes the line search iterations */
 
         if (isInterrupted()) {
@@ -1801,7 +1821,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         /* Convergence checks */
         if (i % CONVERGED_INTERVAL == 0) {
             calcResidualsSuperscs(work, &r, i);
-            if (work->stgs->do_record_progress) {
+            if (stgs->do_record_progress) {
                 scs_int idx_progress = i / CONVERGED_INTERVAL;
                 info->progress_iter[idx_progress] = i;
                 info->progress_relgap[idx_progress] = r.relGap;
@@ -1818,46 +1838,46 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
         }
 
         /* Prints results every PRINT_INTERVAL iterations */
-        if (work->stgs->verbose && i % PRINT_INTERVAL == 0) {
+        if (stgs->verbose && i % PRINT_INTERVAL == 0) {
             calcResidualsSuperscs(work, &r, i);
             printSummary(work, i, &r, &solveTimer);
         }
 
-        if (work->stgs->ls > 0 || work->stgs->k0 == 1) {
+        if (stgs->ls > 0 || stgs->k0 == 1) {
             q *= q0; /*q = q0^i */
             if (i == 0) {
                 /* -------------------------------------------
                  * At i=0, the direction is defined using the 
                  * FPR: dir^0 = -R 
                  * -------------------------------------------- */
-                setAsScaledArray(work->dir, work->R, -sqrt_rhox, n);
-                setAsScaledArray(work->dir + n, work->R + n, -1, m + 1);
+                setAsScaledArray(dir, R, -sqrt_rhox, n);
+                setAsScaledArray(dir + n, R + n, -1, m + 1);
 
             } else {
                 scs_int j1; /* j1 indexes other auxiliary iterations (e.g., algebraic operations) */
                 /*TODO optimize the following operations (need axpy implementation) */
-                if (how == 0 || work->stgs->ls == 0) {
+                if (how == 0 || stgs->ls == 0) {
                     for (j1 = 0; j1 < n; ++j1) {
-                        work->Sk[j1] = work->u[j1] - work->u_prev[j1];
-                        work->Yk[j1] = sqrt_rhox * work->R[j1] - work->R_prev[j1];
+                        Sk[j1] = u[j1] - u_prev[j1];
+                        Yk[j1] = sqrt_rhox * R[j1] - R_prev[j1];
                     }
                     for (j1 = n; j1 < l; ++j1) {
-                        work->Sk[j1] = work->u[j1] - work->u_prev[j1];
-                        work->Yk[j1] = work->R[j1] - work->R_prev[j1];
+                        Sk[j1] = u[j1] - u_prev[j1];
+                        Yk[j1] = R[j1] - R_prev[j1];
                     }
-                    scaleArray(work->Sk, sqrt_rhox, n);
+                    scaleArray(Sk, sqrt_rhox, n);
                 } else {
                     for (j1 = 0; j1 < n; ++j1) {
-                        work->Sk[j1] = sqrt_rhox * (work->wu[j1] - work->u_prev[j1]);
-                        work->Yk[j1] = sqrt_rhox * work->Rwu[j1] - work->R_prev[j1];
+                        Sk[j1] = sqrt_rhox * (wu[j1] - u_prev[j1]);
+                        Yk[j1] = sqrt_rhox * Rwu[j1] - R_prev[j1];
                     }
                     for (j1 = n; j1 < l; ++j1) {
-                        work->Sk[j1] = work->wu[j1] - work->u_prev[j1];
-                        work->Yk[j1] = work->Rwu[j1] - work->R_prev[j1];
+                        Sk[j1] = wu[j1] - u_prev[j1];
+                        Yk[j1] = Rwu[j1] - R_prev[j1];
                     }
                 }
 
-                scaleArray(work->R, sqrt_rhox, n);
+                scaleArray(R, sqrt_rhox, n);
                 /* compute direction */
                 if (computeDirection(work, i) < 0) {
                     {
@@ -1865,62 +1885,62 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                                 "error in computeDirection", "Failure", print_mode);
                     }
                 }
-                scaleArray(work->R, 1 / sqrt_rhox, n);
+                scaleArray(R, 1 / sqrt_rhox, n);
             }
             /* -------------------------------------------
              * Scale the x-part of dir using sqrt_rhox
              * -------------------------------------------- */
-            scaleArray(work->dir, 1 / sqrt_rhox, n);
+            scaleArray(dir, 1 / sqrt_rhox, n);
         }
 
-        memcpy(work->u_prev, work->u, l * sizeof (scs_float)); /* u_prev = u */
-        memcpy(work->R_prev, work->R, l * sizeof (scs_float)); /* R_prev = R */
-        scaleArray(work->R_prev, sqrt_rhox, n);
+        memcpy(u_prev, u, l * sizeof (scs_float)); /* u_prev = u */
+        memcpy(R_prev, R, l * sizeof (scs_float)); /* R_prev = R */
+        scaleArray(R_prev, sqrt_rhox, n);
         how = -1; /* no backtracking (yet) */
         nrmR_con_old = work->nrmR_con;
 
-        if (i >= work->stgs->warm_start) {
-            if (work->stgs->k0 == 1 && work->nrmR_con <= work->stgs->c_bl * eta) {
-                addArray(work->u, work->dir, l); /* u += dir */
+        if (i >= stgs->warm_start) {
+            if (stgs->k0 == 1 && work->nrmR_con <= stgs->c_bl * eta) {
+                addArray(u, dir, l); /* u += dir */
                 how = 0;
                 eta = work->nrmR_con;
                 work->stepsize = 1.0;
-            } else if (work->stgs->ls > 0) {
-                if (projectLinSysv2(work->dut, work->dir, work, i) < 0) {
+            } else if (stgs->ls > 0) {
+                if (projectLinSysv2(dut, dir, work, i) < 0) {
                     RETURN failure(work, m, n, sol, info, SCS_FAILED,
                             "error in projectLinSysv2", "Failure", print_mode);
                 }
                 work->stepsize = 2.0;
 
                 /* Line search */
-                for (j = 0; j < work->stgs->ls; ++j) {
+                for (j = 0; j < stgs->ls; ++j) {
                     scs_int j1; /* j1 indexes other auxiliary iterations (e.g., algebraic operations) */
-                    work->stepsize *= work->stgs->beta;
+                    work->stepsize *= stgs->beta;
 
                     for (j1 = 0; j1 < l; ++j1) {
-                        work->wu[j1] = work->u[j1] + work->stepsize * work->dir[j1]; /* wu = u + step * dir */
-                        work->wu_t[j1] = work->u_t[j1] + work->stepsize * work->dut[j1]; /* wut = u_t + step * dut */
+                        wu[j1] = u[j1] + work->stepsize * dir[j1]; /* wu = u + step * dir */
+                        wu_t[j1] = u_t[j1] + work->stepsize * dut[j1]; /* wut = u_t + step * dut */
                     }
 
-                    if (projectConesv2(work->wu_b, work->wu_t, work->wu, work, cone, i) < 0) {
+                    if (projectConesv2(wu_b, wu_t, wu, work, cone, i) < 0) {
                         RETURN failure(work, m, n, sol, info, SCS_FAILED,
                                 "error in projectConesv2", "Failure", print_mode);
                     }
-                    calcFPRes(work->Rwu, work->wu_t, work->wu_b, l); /* calculate FPR on scaled vectors */
+                    calcFPRes(Rwu, wu_t, wu_b, l); /* calculate FPR on scaled vectors */
 
                     nrmRw_con = SQRTF(
-                            calcNormSq(work->Rwu + n, m + 1)
-                            + rhox * calcNormSq(work->Rwu, n));
+                            calcNormSq(Rwu + n, m + 1)
+                            + rhox * calcNormSq(Rwu, n));
 
                     /* K1 */
-                    if (work->stgs->k1
-                            && nrmRw_con <= work->stgs->c1 * nrmR_con_old
+                    if (stgs->k1
+                            && nrmRw_con <= stgs->c1 * nrmR_con_old
                             && work->nrmR_con <= r_safe) { /* a bit different than matlab */
-                        memcpy(work->u, work->wu, l * sizeof (scs_float));
-                        memcpy(work->u_t, work->wu_t, l * sizeof (scs_float));
-                        memcpy(work->u_b, work->wu_b, l * sizeof (scs_float));
-                        memcpy(work->R, work->Rwu, l * sizeof (scs_float));
-                        compute_sb_kapb(work->wu, work->wu_b, work->wu_t, work);
+                        memcpy(u, wu, l * sizeof (scs_float));
+                        memcpy(u_t, wu_t, l * sizeof (scs_float));
+                        memcpy(u_b, wu_b, l * sizeof (scs_float));
+                        memcpy(R, Rwu, l * sizeof (scs_float));
+                        compute_sb_kapb(wu, wu_b, wu_t, work);
                         work->nrmR_con = nrmRw_con;
                         r_safe = work->nrmR_con + q; /* The power already computed at the beginning of the main loop */
                         how = 1;
@@ -1928,18 +1948,18 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
                     }
 
                     /* K2 */
-                    if (work->stgs->k2) {
+                    if (stgs->k2) {
                         scs_float slack;
                         scs_float rhs;
                         slack = nrmRw_con * nrmRw_con - work->stepsize * (
-                                innerProd(work->dir + n, work->Rwu + n, m + 1)
-                                + rhox * innerProd(work->dir, work->Rwu, n)
+                                innerProd(dir + n, Rwu + n, m + 1)
+                                + rhox * innerProd(dir, Rwu, n)
                                 );
-                        rhs = work->stgs->sigma * work->nrmR_con * nrmRw_con;
+                        rhs = stgs->sigma * work->nrmR_con * nrmRw_con;
                         if (slack >= rhs) {
                             scs_float stepsize2;
-                            stepsize2 = (work->stgs->alpha * (slack / (nrmRw_con * nrmRw_con)));
-                            addScaledArray(work->u, work->Rwu, l, -stepsize2);
+                            stepsize2 = (alpha * (slack / (nrmRw_con * nrmRw_con)));
+                            addScaledArray(u, Rwu, l, -stepsize2);
                             how = 2;
                             break; /* exits the line search loop */
                         }
@@ -1951,29 +1971,29 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
 
         if (how == -1) { /* means that R didn't change */
             /* x -= alpha*Rx */
-            addScaledArray(work->u, work->R, l, -work->stgs->alpha);
+            addScaledArray(u, R, l, -alpha);
         } /* how == -1 */
         if (how != 1) { /* exited with other than K1 */
-            if (projectLinSysv2(work->u_t, work->u, work, i) < 0) {
+            if (projectLinSysv2(u_t, u, work, i) < 0) {
                 RETURN failure(work, m, n, sol, info, SCS_FAILED,
                         "error in projectLinSysv2", "Failure", print_mode);
             }
-            if (projectConesv2(work->u_b, work->u_t, work->u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
+            if (projectConesv2(u_b, u_t, u, work, cone, i) < 0) { /* u_bar = proj_C(2u_t - u) */
                 RETURN failure(work, m, n, sol, info, SCS_FAILED,
                         "error in projectConesv2", "Failure", print_mode);
             }
-            compute_sb_kapb(work->u, work->u_b, work->u_t, work);
-            calcFPRes(work->R, work->u_t, work->u_b, l);
+            compute_sb_kapb(u, u_b, u_t, work);
+            calcFPRes(R, u_t, u_b, l);
             work->nrmR_con = SQRTF(
-                    rhox * calcNormSq(work->R, n)
-                    + calcNormSq(work->R + n, m + 1)
+                    rhox * calcNormSq(R, n)
+                    + calcNormSq(R + n, m + 1)
                     );
         } /* how != 1 */
 
         /* -------------------------------------------
          * Record some more progress information
          * -------------------------------------------*/
-        if (work->stgs->do_record_progress && i % CONVERGED_INTERVAL == 0) {
+        if (stgs->do_record_progress && i % CONVERGED_INTERVAL == 0) {
             scs_int idx_progress = i / CONVERGED_INTERVAL;
             info->progress_mode[idx_progress] = how;
             info->progress_ls[idx_progress] = j;
@@ -1982,7 +2002,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     } /* main for loop */
 
     /* prints summary of last iteration */
-    if (work->stgs->verbose) {
+    if (stgs->verbose) {
         /*TODO Shouldn't the following line go out of the if block? */
         calcResidualsSuperscs(work, &r, i);
         printSummary(work, i, &r, &solveTimer);
@@ -1995,7 +2015,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
     info->solveTime = tocq(&solveTimer);
     info->history_length = i / CONVERGED_INTERVAL;
 
-    if (work->stgs->verbose)
+    if (stgs->verbose)
         printFooter(data, cone, sol, work, info); /* LCOV_EXCL_LINE */
     endInterruptListener();
 
