@@ -4,7 +4,7 @@
 
 #ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
-#define PRINT_INTERVAL 10
+#define PRINT_INTERVAL 1
 /* check for convergence every this num iterations */
 #define CONVERGED_INTERVAL 1
 #else
@@ -262,9 +262,9 @@ static void warmStartVars(Work *w, const Sol *sol) {
         normalizeWarmStart(w);
     }
     if (w->stgs->do_super_scs) {
-        memset(Ax, 0, w->m * sizeof (scs_float));
-        memset(ATy, 0, w->n * sizeof (scs_float));
-
+        Ax = scs_calloc(m, sizeof(scs_float));
+        ATy = scs_calloc(n, sizeof (scs_float));
+        
         accumByA(w->A, w->p, w->u_t, Ax); /* Ax_t = A*x_t */
         accumByAtrans(w->A, w->p, w->u_t + w->n, ATy); /* ATy_t = AT*y_t */
         for (i = 0; i < n; ++i) {
