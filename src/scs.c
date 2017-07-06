@@ -4,7 +4,7 @@
 
 #ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
-#define PRINT_INTERVAL 1
+#define PRINT_INTERVAL 10
 /* check for convergence every this num iterations */
 #define CONVERGED_INTERVAL 1
 #else
@@ -266,17 +266,17 @@ static void warmStartVars(Work *w, const Sol *sol) {
         ATy = scs_calloc(n, sizeof (scs_float));
         
         accumByA(w->A, w->p, w->u_t, Ax); /* Ax_t = A*x_t */
-        accumByAtrans(w->A, w->p, w->u_t + w->n, ATy); /* ATy_t = AT*y_t */
+        accumByAtrans(w->A, w->p, &(w->u_t[n]), ATy); /* ATy_t = AT*y_t */
         for (i = 0; i < n; ++i) {
             /* rho_x*x_t  + ATy_t + c*tau_t */
-            w->u[i] = w->stgs->rho_x * w->u_t[i] + ATy[i] + w->c[i] * w->u_t[n + m];
-        }
+            w->u[i] = w->u_t[i] + ATy[i] + w->c[i] * w->u_t[n + m];
+        }     
         for (i = 0; i < m; ++i) {
             /* -Ax_t  + y_t + b*tau_t */
             w->u[i + n] = -Ax[i] + w->u_t[i + n] + w->b[i] * w->u_t[n + m];
         }
         /* -cTx_t - BTy_t + tau_t */
-        w->u[n + m] = -innerProd(w->c, w->u_t, w->n) - innerProd(w->b, w->u_t + w->n, w->m) + w->u_t[n + m];
+        w->u[n + m] = -innerProd(w->c, w->u_t, w->n) - innerProd(w->b, &(w->u_t[n]), w->m) + w->u_t[n + m];
     }
     RETURN;
 }
@@ -1776,7 +1776,7 @@ scs_int superscs_solve(Work *work, const Data *data, const Cone *cone, Sol *sol,
      * variables for performance.
      * ------------------------------------ */
     Settings * stgs = work->stgs;
-    float alpha = stgs->alpha;
+    scs_float alpha = stgs->alpha;
     scs_float * dir = work->dir;
     scs_float * R = work->R;
     scs_float * R_prev = work->R_prev;

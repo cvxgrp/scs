@@ -785,7 +785,6 @@ bool test_warm_start(char** str) {
     info = initInfo();
 
     s = data->stgs;
-
     s->normalize = 1;
     s->k0 = 1;
     s->do_super_scs = 1;
