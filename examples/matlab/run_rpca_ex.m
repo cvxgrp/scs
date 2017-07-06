@@ -7,8 +7,8 @@ disp('Set run_cvx = false if you just want to run scs.')
 disp('------------------------------------------------------------')
 
 save_results = false;
-run_cvx = false;
-cvx_use_solver = 'sdpt3';
+run_cvx = true;
+cvx_use_solver = 'scs';
 run_scs_direct = true;
 run_scs_indirect = true;
 

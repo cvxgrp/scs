@@ -47,7 +47,7 @@ endif
 endif
 
 # Add on default CFLAGS
-CFLAGS += -g -Wall -Wwrite-strings -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
+CFLAGS += -g -Wall -Wpedantic -Wwrite-strings -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
@@ -122,7 +122,7 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
-USE_LAPACK = 0
+USE_LAPACK = 1
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   BLASLDFLAGS = -lblas -llapack #-lgfortran

@@ -49,14 +49,16 @@ for j=1:NN
     
     Dt(Dt < minRowScale) = 1;
     Dt(Dt > maxRowScale) = maxRowScale;
-    data.A = sparse(diag(1./Dt))*data.A;
-    
+   % data.A = sparse(diag(1./Dt))*data.A;
+    nn = length(Dt);
+    data.A = spdiags(1./Dt, 0, nn, nn)*data.A;
     %% E Scale
     Et = twonorms(data.A)';
     Et(Et < minColScale) = 1;
     Et(Et > maxColScale) = maxColScale;
-    data.A = data.A*sparse(diag(1./Et));
-    
+%    data.A = data.A*sparse(diag(1./Et));
+    mm = length(Et);
+    data.A = data.A*spdiags(1./Et, 0, mm, mm);
     %%
     D = D.*Dt;
     E = E.*Et;

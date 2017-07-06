@@ -7,20 +7,20 @@
 
 scs_int copyAMatrix(AMatrix **dstp, const AMatrix *src) {
     scs_int Anz = src->p[src->n];
-    AMatrix *A = scs_calloc(1, sizeof(AMatrix));
+    AMatrix *A = scs_calloc(1, sizeof (AMatrix));
     if (!A)
         return 0;
     A->n = src->n;
     A->m = src->m;
-    A->x = scs_malloc(sizeof(scs_float) * Anz); /* A values, size: NNZ A */
-    A->i = scs_malloc(sizeof(scs_int) * Anz);   /* A row index, size: NNZ A */
-    A->p = scs_malloc(sizeof(scs_int) *
-                      (src->n + 1)); /* A column pointer, size: n+1 */
+    A->x = scs_malloc(sizeof (scs_float) * Anz); /* A values, size: NNZ A */
+    A->i = scs_malloc(sizeof (scs_int) * Anz); /* A row index, size: NNZ A */
+    A->p = scs_malloc(sizeof (scs_int) *
+            (src->n + 1)); /* A column pointer, size: n+1 */
     if (!A->x || !A->i || !A->p)
         return 0;
-    memcpy(A->x, src->x, sizeof(scs_float) * Anz);
-    memcpy(A->i, src->i, sizeof(scs_int) * Anz);
-    memcpy(A->p, src->p, sizeof(scs_int) * (src->n + 1));
+    memcpy(A->x, src->x, sizeof (scs_float) * Anz);
+    memcpy(A->i, src->i, sizeof (scs_int) * Anz);
+    memcpy(A->p, src->p, sizeof (scs_int) * (src->n + 1));
     *dstp = A;
     return 1;
 }
@@ -35,17 +35,17 @@ scs_int validateLinSys(const AMatrix *A) {
     for (i = 0; i < A->n; ++i) {
         if (A->p[i] == A->p[i + 1]) {
             scs_printf("WARN: A->p (column pointers) not strictly increasing, "
-                       "column %li empty\n",
-                       (long)i);
+                    "column %li empty\n",
+                    (long) i);
         } else if (A->p[i] > A->p[i + 1]) {
             scs_printf("ERROR: A->p (column pointers) decreasing\n");
             return -1;
         }
     }
     Anz = A->p[A->n];
-    if (((scs_float)Anz / A->m > A->n) || (Anz <= 0)) {
+    if (((scs_float) Anz / A->m > A->n) || (Anz <= 0)) {
         scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n",
-                   (long)Anz);
+                (long) Anz);
         return -1;
     }
     rMax = 0;
@@ -61,12 +61,15 @@ scs_int validateLinSys(const AMatrix *A) {
 }
 
 void freeAMatrix(AMatrix *A) {
-    if (A->x)
+    if (A->x) {
         scs_free(A->x);
-    if (A->i)
+    }
+    if (A->i) {
         scs_free(A->i);
-    if (A->p)
+    }
+    if (A->p) {
         scs_free(A->p);
+    }
     scs_free(A);
 }
 
@@ -76,29 +79,29 @@ void printAMatrix(const AMatrix *A) {
     if (A->p[A->n] < 2500) {
         scs_printf("\n");
         for (i = 0; i < A->n; ++i) {
-            scs_printf("Col %li: ", (long)i);
+            scs_printf("Col %li: ", (long) i);
             for (j = A->p[i]; j < A->p[i + 1]; j++) {
-                scs_printf("A[%li,%li] = %4f, ", (long)A->i[j], (long)i,
-                           A->x[j]);
+                scs_printf("A[%li,%li] = %4f, ", (long) A->i[j], (long) i,
+                        A->x[j]);
             }
             scs_printf("norm col = %4f\n",
-                       calcNorm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+                    calcNorm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
         }
         scs_printf("norm A = %4f\n", calcNorm(A->x, A->p[A->n]));
     }
 }
 
 void normalizeA(AMatrix *A, const Settings *stgs, const Cone *k,
-                Scaling *scal) {
-    scs_float *D = scs_malloc(A->m * sizeof(scs_float));
-    scs_float *E = scs_malloc(A->n * sizeof(scs_float));
-    scs_float *Dt = scs_malloc(A->m * sizeof(scs_float));
-    scs_float *Et = scs_malloc(A->n * sizeof(scs_float));
-    scs_float *nms = scs_calloc(A->m, sizeof(scs_float));
-    scs_float minRowScale = MIN_SCALE * SQRTF((scs_float)A->n),
-              maxRowScale = MAX_SCALE * SQRTF((scs_float)A->n);
-    scs_float minColScale = MIN_SCALE * SQRTF((scs_float)A->m),
-              maxColScale = MAX_SCALE * SQRTF((scs_float)A->m);
+        Scaling *scal) {
+    scs_float *D = scs_malloc(A->m * sizeof (scs_float));
+    scs_float *E = scs_malloc(A->n * sizeof (scs_float));
+    scs_float *Dt = scs_malloc(A->m * sizeof (scs_float));
+    scs_float *Et = scs_malloc(A->n * sizeof (scs_float));
+    scs_float *nms = scs_calloc(A->m, sizeof (scs_float));
+    scs_float minRowScale = MIN_SCALE * SQRTF((scs_float) A->n),
+            maxRowScale = MAX_SCALE * SQRTF((scs_float) A->n);
+    scs_float minColScale = MIN_SCALE * SQRTF((scs_float) A->m),
+            maxColScale = MAX_SCALE * SQRTF((scs_float) A->m);
     scs_int i, j, l, count, delta, *boundaries, c1, c2;
     scs_float wrk, e;
     scs_int numBoundaries = getConeBoundaries(k, &boundaries);
@@ -111,8 +114,8 @@ void normalizeA(AMatrix *A, const Settings *stgs, const Cone *k,
 #endif
 
     for (l = 0; l < NUM_SCALE_PASSES; ++l) {
-        memset(D, 0, A->m * sizeof(scs_float));
-        memset(E, 0, A->n * sizeof(scs_float));
+        memset(D, 0, A->m * sizeof (scs_float));
+        memset(E, 0, A->n * sizeof (scs_float));
         /* calculate row norms */
         for (i = 0; i < A->n; ++i) {
             c1 = A->p[i];
@@ -207,7 +210,7 @@ void normalizeA(AMatrix *A, const Settings *stgs, const Cone *k,
 
 #if EXTRAVERBOSE > 0
     scs_printf("finished normalizing A, time: %1.2es\n",
-               tocq(&normalizeTimer) / 1e3);
+            tocq(&normalizeTimer) / 1e3);
     printAMatrix(A);
 #endif
 }
@@ -227,7 +230,7 @@ void unNormalizeA(AMatrix *A, const Settings *stgs, const Scaling *scal) {
 }
 
 void _accumByAtrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                    const scs_float *x, scs_float *y) {
+        const scs_float *x, scs_float *y) {
     /* y += A'*x
        A in column compressed format
        parallelizes over columns (rows of A')
@@ -253,12 +256,12 @@ void _accumByAtrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     }
 #if EXTRAVERBOSE > 0
     scs_printf("mult By A trans time: %1.2es\n",
-               tocq(&multByAtransTimer) / 1e3);
+            tocq(&multByAtransTimer) / 1e3);
 #endif
 }
 
 void _accumByA(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-               const scs_float *x, scs_float *y) {
+        const scs_float *x, scs_float *y) {
     /*y += A*x
       A in column compressed format
       this parallelizes over columns and uses

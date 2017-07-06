@@ -9,48 +9,50 @@ void freeMex(Data *d, Cone *k);
 
 scs_int parseWarmStart(const mxArray *p_mex, scs_float **p, scs_int l) {
     *p = scs_calloc(l,
-                    sizeof(scs_float)); /* this allocates memory used for Sol */
+            sizeof (scs_float)); /* this allocates memory used for Sol */
     if (p_mex == SCS_NULL) {
         return 0;
-    } else if (mxIsSparse(p_mex) || (scs_int)*mxGetDimensions(p_mex) != l) {
+    } else if (mxIsSparse(p_mex) || (scs_int) * mxGetDimensions(p_mex) != l) {
         scs_printf("Error parsing warm start input (make sure vectors are not "
-                   "sparse and of correct size), running without full "
-                   "warm-start");
+                "sparse and of correct size), running without full "
+                "warm-start\n");
         return 0;
     } else {
-        memcpy(*p, mxGetPr(p_mex), l * sizeof(scs_float));
+        memcpy(*p, mxGetPr(p_mex), l * sizeof (scs_float));
         return 1;
     }
 }
 
 #if !(DLONG > 0)
+
 /* this memory must be freed */
 scs_int *castToScsIntArr(mwIndex *arr, scs_int len) {
     scs_int i;
-    scs_int *arrOut = scs_malloc(sizeof(scs_int) * len);
+    scs_int *arrOut = scs_malloc(sizeof (scs_int) * len);
     for (i = 0; i < len; i++) {
-        arrOut[i] = (scs_int)arr[i];
+        arrOut[i] = (scs_int) arr[i];
     }
     return arrOut;
 }
 #endif
 
 #if FLOAT > 0
+
 /* this memory must be freed */
 scs_float *castToScsFloatArr(double *arr, scs_int len) {
     scs_int i;
-    scs_float *arrOut = scs_malloc(sizeof(scs_float) * len);
+    scs_float *arrOut = scs_malloc(sizeof (scs_float) * len);
     for (i = 0; i < len; i++) {
-        arrOut[i] = (scs_float)arr[i];
+        arrOut[i] = (scs_float) arr[i];
     }
     return arrOut;
 }
 
 double *castToDoubleArr(scs_float *arr, scs_int len) {
     scs_int i;
-    double *arrOut = scs_malloc(sizeof(double) * len);
+    double *arrOut = scs_malloc(sizeof (double) * len);
     for (i = 0; i < len; i++) {
-        arrOut[i] = (double)arr[i];
+        arrOut[i] = (double) arr[i];
     }
     return arrOut;
 }
@@ -74,8 +76,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     Data *d;
     Cone *k;
     Sol sol = {0};
-    Info info;
-    AMatrix *A;
+    Info *info;
+    AMatrix *A;       
 
     const mxArray *data;
     const mxArray *A_mex;
@@ -89,40 +91,43 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const mxArray *kep;
     const mxArray *ked;
     const mxArray *kp;
-    const double *q_mex;
-    const double *s_mex;
-    const double *p_mex;
-    const size_t *q_dims;
-    const size_t *s_dims;
-    const size_t *p_dims;
 
     const mxArray *cone;
     const mxArray *settings;
 
     const mwSize one[1] = {1};
-    const int numInfoFields = 11;
-    const char *infoFields[] = {"iter",   "status",    "pobj",      "dobj",
-                                "resPri", "resDual",   "resInfeas", "resUnbdd",
-                                "relGap", "setupTime", "solveTime"};
+    const int numInfoFields = 20;
+    const char *infoFields[] = {"iter", "status", "pobj", "dobj",
+        "resPri", "resDual", "resInfeas", "resUnbdd",
+        "relGap", "setupTime", "solveTime",
+        "progress_iter",
+        "progress_relgap",
+        "progress_respri",
+        "progress_resdual",
+        "progress_pcost",
+        "progress_dcost",
+        "progress_time",
+        "progress_mode",
+        "progress_ls"};
     mxArray *tmp;
 #if EXTRAVERBOSE > 0
-    scs_printf("SIZE OF mwSize = %i\n", (int)sizeof(mwSize));
-    scs_printf("SIZE OF mwIndex = %i\n", (int)sizeof(mwIndex));
+    scs_printf("SIZE OF mwSize = %i\n", (int) sizeof (mwSize));
+    scs_printf("SIZE OF mwIndex = %i\n", (int) sizeof (mwIndex));
 #endif
 
     if (nrhs != 3) {
         mexErrMsgTxt("Three arguments are required in this order: data struct, "
-                     "cone struct, settings struct");
+                "cone struct, settings struct");
     }
     if (nlhs > 4) {
         mexErrMsgTxt("scs returns up to 4 output arguments only.");
     }
-    d = mxMalloc(sizeof(Data));
-    d->stgs = mxMalloc(sizeof(Settings));
-    k = mxMalloc(sizeof(Cone));
+    d = mxMalloc(sizeof (Data));
+    d->stgs = mxMalloc(sizeof (Settings));
+    k = mxMalloc(sizeof (Cone));
     data = prhs[0];
 
-    A_mex = (mxArray *)mxGetField(data, 0, "A");
+    A_mex = (mxArray *) mxGetField(data, 0, "A");
     if (A_mex == SCS_NULL) {
         scs_free(d);
         scs_free(k);
@@ -132,9 +137,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         scs_free(d);
         scs_free(k);
         mexErrMsgTxt(
-            "Input matrix A must be in sparse format (pass in sparse(A))");
+                "Input matrix A must be in sparse format (pass in sparse(A))");
     }
-    b_mex = (mxArray *)mxGetField(data, 0, "b");
+    b_mex = (mxArray *) mxGetField(data, 0, "b");
     if (b_mex == SCS_NULL) {
         scs_free(d);
         scs_free(k);
@@ -144,9 +149,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         scs_free(d);
         scs_free(k);
         mexErrMsgTxt(
-            "Input vector b must be in dense format (pass in full(b))");
+                "Input vector b must be in dense format (pass in full(b))");
     }
-    c_mex = (mxArray *)mxGetField(data, 0, "c");
+    c_mex = (mxArray *) mxGetField(data, 0, "c");
     if (c_mex == SCS_NULL) {
         scs_free(d);
         scs_free(k);
@@ -156,7 +161,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         scs_free(d);
         scs_free(k);
         mexErrMsgTxt(
-            "Input vector c must be in dense format (pass in full(c))");
+                "Input vector c must be in dense format (pass in full(c))");
     }
     cone = prhs[1];
     settings = prhs[2];
@@ -166,81 +171,140 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     d->b = castToScsFloatArr(mxGetPr(b_mex), d->m);
     d->c = castToScsFloatArr(mxGetPr(c_mex), d->n);
 #else
-    d->b = (scs_float *)mxGetPr(b_mex);
-    d->c = (scs_float *)mxGetPr(c_mex);
+    d->b = (scs_float *) mxGetPr(b_mex);
+    d->c = (scs_float *) mxGetPr(c_mex);
 #endif
     setDefaultSettings(d);
 
     /* settings */
     tmp = mxGetField(settings, 0, "alpha");
     if (tmp != SCS_NULL)
-        d->stgs->alpha = (scs_float)*mxGetPr(tmp);
+        d->stgs->alpha = (scs_float) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "rho_x");
     if (tmp != SCS_NULL)
-        d->stgs->rho_x = (scs_float)*mxGetPr(tmp);
+        d->stgs->rho_x = (scs_float) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "max_iters");
     if (tmp != SCS_NULL)
-        d->stgs->max_iters = (scs_int)*mxGetPr(tmp);
+        d->stgs->max_iters = (scs_int) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "scale");
     if (tmp != SCS_NULL)
-        d->stgs->scale = (scs_float)*mxGetPr(tmp);
+        d->stgs->scale = (scs_float) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "eps");
     if (tmp != SCS_NULL)
-        d->stgs->eps = (scs_float)*mxGetPr(tmp);
+        d->stgs->eps = (scs_float) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "cg_rate");
     if (tmp != SCS_NULL)
-        d->stgs->cg_rate = (scs_float)*mxGetPr(tmp);
+        d->stgs->cg_rate = (scs_float) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "verbose");
     if (tmp != SCS_NULL)
-        d->stgs->verbose = (scs_int)*mxGetPr(tmp);
+        d->stgs->verbose = (scs_int) * mxGetPr(tmp);
 
     tmp = mxGetField(settings, 0, "normalize");
     if (tmp != SCS_NULL)
-        d->stgs->normalize = (scs_int)*mxGetPr(tmp);
+        d->stgs->normalize = (scs_int) * mxGetPr(tmp);
+
+    /* SuperSCS parameters */
+    tmp = mxGetField(settings, 0, "do_super_scs");
+    if (tmp != SCS_NULL)
+        d->stgs->do_super_scs = (scs_int) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "k0");
+    if (tmp != SCS_NULL)
+        d->stgs->k0 = (scs_int) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "k1");
+    if (tmp != SCS_NULL)
+        d->stgs->k1 = (scs_int) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "k2");
+    if (tmp != SCS_NULL)
+        d->stgs->k2 = (scs_int) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "memory");
+    if (tmp != SCS_NULL)
+        d->stgs->memory = (scs_int) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "sse");
+    if (tmp != SCS_NULL)
+        d->stgs->sse = (scs_float) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "ls");
+    if (tmp != SCS_NULL)
+        d->stgs->ls = (scs_int) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "beta");
+    if (tmp != SCS_NULL)
+        d->stgs->beta = (scs_float) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "sigma");
+    if (tmp != SCS_NULL)
+        d->stgs->sigma = (scs_float) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "c_bl");
+    if (tmp != SCS_NULL)
+        d->stgs->c_bl = (scs_float) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "c1");
+    if (tmp != SCS_NULL)
+        d->stgs->c1 = (scs_float) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "thetabar");
+    if (tmp != SCS_NULL)
+        d->stgs->thetabar = (scs_float) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "direction");
+    if (tmp != SCS_NULL)
+        d->stgs->direction = (direction_type) * mxGetPr(tmp);
+
+    tmp = mxGetField(settings, 0, "do_record_progress");
+    if (tmp != SCS_NULL)
+        d->stgs->do_record_progress = (scs_int) * mxGetPr(tmp);
 
     /* cones */
     kf = mxGetField(cone, 0, "f");
     if (kf && !mxIsEmpty(kf))
-        k->f = (scs_int)*mxGetPr(kf);
+        k->f = (scs_int) * mxGetPr(kf);
     else
         k->f = 0;
 
     kl = mxGetField(cone, 0, "l");
     if (kl && !mxIsEmpty(kl))
-        k->l = (scs_int)*mxGetPr(kl);
+        k->l = (scs_int) * mxGetPr(kl);
     else
         k->l = 0;
 
     kep = mxGetField(cone, 0, "ep");
     if (kep && !mxIsEmpty(kep))
-        k->ep = (scs_int)*mxGetPr(kep);
+        k->ep = (scs_int) * mxGetPr(kep);
     else
         k->ep = 0;
 
     ked = mxGetField(cone, 0, "ed");
     if (ked && !mxIsEmpty(ked))
-        k->ed = (scs_int)*mxGetPr(ked);
+        k->ed = (scs_int) * mxGetPr(ked);
     else
         k->ed = 0;
 
     kq = mxGetField(cone, 0, "q");
     if (kq && !mxIsEmpty(kq)) {
+        const double *q_mex;
+        const size_t *q_dims;
         q_mex = mxGetPr(kq);
-        ns = (scs_int)mxGetNumberOfDimensions(kq);
+        ns = (scs_int) mxGetNumberOfDimensions(kq);
         q_dims = mxGetDimensions(kq);
-        k->qsize = (scs_int)q_dims[0];
+        k->qsize = (scs_int) q_dims[0];
         if (ns > 1 && q_dims[0] == 1) {
-            k->qsize = (scs_int)q_dims[1];
+            k->qsize = (scs_int) q_dims[1];
         }
-        k->q = mxMalloc(sizeof(scs_int) * k->qsize);
+        k->q = mxMalloc(sizeof (scs_int) * k->qsize);
         for (i = 0; i < k->qsize; i++) {
-            k->q[i] = (scs_int)q_mex[i];
+            k->q[i] = (scs_int) q_mex[i];
         }
     } else {
         k->qsize = 0;
@@ -249,16 +313,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     ks = mxGetField(cone, 0, "s");
     if (ks && !mxIsEmpty(ks)) {
+        const double *s_mex;
+        const size_t *s_dims;
         s_mex = mxGetPr(ks);
-        ns = (scs_int)mxGetNumberOfDimensions(ks);
+        ns = (scs_int) mxGetNumberOfDimensions(ks);
         s_dims = mxGetDimensions(ks);
-        k->ssize = (scs_int)s_dims[0];
+        k->ssize = (scs_int) s_dims[0];
         if (ns > 1 && s_dims[0] == 1) {
-            k->ssize = (scs_int)s_dims[1];
+            k->ssize = (scs_int) s_dims[1];
         }
-        k->s = mxMalloc(sizeof(scs_int) * k->ssize);
+        k->s = mxMalloc(sizeof (scs_int) * k->ssize);
         for (i = 0; i < k->ssize; i++) {
-            k->s[i] = (scs_int)s_mex[i];
+            k->s[i] = (scs_int) s_mex[i];
         }
     } else {
         k->ssize = 0;
@@ -267,36 +333,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     kp = mxGetField(cone, 0, "p");
     if (kp && !mxIsEmpty(kp)) {
+        const double *p_mex;
+        const size_t *p_dims;
         p_mex = mxGetPr(kp);
-        ns = (scs_int)mxGetNumberOfDimensions(kp);
+        ns = (scs_int) mxGetNumberOfDimensions(kp);
         p_dims = mxGetDimensions(kp);
-        k->psize = (scs_int)p_dims[0];
+        k->psize = (scs_int) p_dims[0];
         if (ns > 1 && p_dims[0] == 1) {
-            k->psize = (scs_int)p_dims[1];
+            k->psize = (scs_int) p_dims[1];
         }
-        k->p = mxMalloc(sizeof(scs_float) * k->psize);
+        k->p = mxMalloc(sizeof (scs_float) * k->psize);
         for (i = 0; i < k->psize; i++) {
-            k->p[i] = (scs_float)p_mex[i];
+            k->p[i] = (scs_float) p_mex[i];
         }
     } else {
         k->psize = 0;
         k->p = SCS_NULL;
     }
 
-    A = scs_malloc(sizeof(AMatrix));
+    A = scs_malloc(sizeof (AMatrix));
     A->n = d->n;
     A->m = d->m;
-/* TODO:
- * these return (mwIndex *), equivalent to (size_t *)
- * casting as (scs_int *), when scs_int = long seems to work
- * although maybe not on all machines:
- *
- * If scs_int is not long, then we explictly cast the entire
- * array to get the correct width
- */
+    /* TODO:
+     * these return (mwIndex *), equivalent to (size_t *)
+     * casting as (scs_int *), when scs_int = long seems to work
+     * although maybe not on all machines:
+     *
+     * If scs_int is not long, then we explictly cast the entire
+     * array to get the correct width
+     */
 #if DLONG > 0
-    A->p = (scs_int *)mxGetJc(A_mex);
-    A->i = (scs_int *)mxGetIr(A_mex);
+    A->p = (scs_int *) mxGetJc(A_mex);
+    A->i = (scs_int *) mxGetIr(A_mex);
 #else
     A->p = castToScsIntArr(mxGetJc(A_mex), A->n + 1);
     A->i = castToScsIntArr(mxGetIr(A_mex), A->p[A->n]);
@@ -304,19 +372,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 #if FLOAT > 0
     A->x = castToScsFloatArr(mxGetPr(A_mex), A->p[A->n]);
 #else
-    A->x = (scs_float *)mxGetPr(A_mex);
+    A->x = (scs_float *) mxGetPr(A_mex);
 #endif
     d->A = A;
     /* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used
      */
     d->stgs->warm_start =
-        parseWarmStart((mxArray *)mxGetField(data, 0, "x"), &(sol.x), d->n);
+            parseWarmStart((mxArray *) mxGetField(data, 0, "x"), &(sol.x), d->n);
     d->stgs->warm_start |=
-        parseWarmStart((mxArray *)mxGetField(data, 0, "y"), &(sol.y), d->m);
+            parseWarmStart((mxArray *) mxGetField(data, 0, "y"), &(sol.y), d->m);
     d->stgs->warm_start |=
-        parseWarmStart((mxArray *)mxGetField(data, 0, "s"), &(sol.s), d->m);
+            parseWarmStart((mxArray *) mxGetField(data, 0, "s"), &(sol.s), d->m);
 
-    status = scs(d, k, &sol, &info);
+    info = initInfo();
+    status = scs(d, k, &sol, info);
 
     setOutputField(&plhs[0], sol.x, d->n);
     setOutputField(&plhs[1], sol.y, d->m);
@@ -324,50 +393,117 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     plhs[3] = mxCreateStructArray(1, one, numInfoFields, infoFields);
 
-    mxSetField(plhs[3], 0, "status", mxCreateString(info.status));
+    mxSetField(plhs[3], 0, "status", mxCreateString(info->status));
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "iter", tmp);
-    *mxGetPr(tmp) = (scs_float)info.iter;
+    *mxGetPr(tmp) = (scs_float) info->iter;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "pobj", tmp);
-    *mxGetPr(tmp) = info.pobj;
+    *mxGetPr(tmp) = info->pobj;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "dobj", tmp);
-    *mxGetPr(tmp) = info.dobj;
+    *mxGetPr(tmp) = info->dobj;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "resPri", tmp);
-    *mxGetPr(tmp) = info.resPri;
+    *mxGetPr(tmp) = info->resPri;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "resDual", tmp);
-    *mxGetPr(tmp) = info.resDual;
+    *mxGetPr(tmp) = info->resDual;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "resInfeas", tmp);
-    *mxGetPr(tmp) = info.resInfeas;
+    *mxGetPr(tmp) = info->resInfeas;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "resUnbdd", tmp);
-    *mxGetPr(tmp) = info.resUnbdd;
+    *mxGetPr(tmp) = info->resUnbdd;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "relGap", tmp);
-    *mxGetPr(tmp) = info.relGap;
+    *mxGetPr(tmp) = info->relGap;
 
-    /*info.time is millisecs - return value in secs */
+    /*info.setupTime is millisecs - return value in secs */
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "setupTime", tmp);
-    *mxGetPr(tmp) = info.setupTime;
+    *mxGetPr(tmp) = info->setupTime;
 
-    /*info.time is millisecs - return value in secs */
+    /*info.solveTime is millisecs - return value in secs */
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxSetField(plhs[3], 0, "solveTime", tmp);
-    *mxGetPr(tmp) = info.solveTime;
+    *mxGetPr(tmp) = info->solveTime;
 
+    if (d->stgs->do_record_progress) {
+        scs_float * tmp_data;
+        scs_int * tmp_data_int;
+        scs_int k;
+
+
+        /* info.progress_iter */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_iter", tmp);
+        tmp_data = mxGetPr(tmp);
+        for (k = 0; k < info->history_length; ++k) {
+            tmp_data[k] = (scs_float) (info->progress_iter[k]);
+        }
+
+        /* info.progress_relgap */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_relgap", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_relgap, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_respri */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_respri", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_respri, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_resdual */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_resdual", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_resdual, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_pcost */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_pcost", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_pcost, info->history_length * sizeof (scs_float));
+        
+        
+        /* info.progress_dcost */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_dcost", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_dcost, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_time */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_time", tmp);
+        tmp_data = mxGetPr(tmp);
+        memcpy(tmp_data, info->progress_time, info->history_length * sizeof (scs_float));
+        
+        /* info.progress_mode */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_mode", tmp);
+        tmp_data = mxGetPr(tmp);
+        for (k = 0; k < info->history_length; ++k) {
+            tmp_data[k] = (scs_float) (info->progress_mode[k]);
+        }
+        
+        /* info.progress_ls */
+        tmp = mxCreateDoubleMatrix(info->history_length, 1, mxREAL);
+        mxSetField(plhs[3], 0, "progress_ls", tmp);
+        tmp_data = mxGetPr(tmp);
+        for (k = 0; k < info->history_length; ++k) {
+            tmp_data[k] = (scs_float) (info->progress_ls[k]);
+        }
+    }
     freeMex(d, k);
     return;
 }

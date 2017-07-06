@@ -7,7 +7,7 @@ extern "C" {
 
 #include <math.h>
 
-/* redefine printfs and memory allocators as needed */
+    /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
 #define scs_printf mexPrintf
@@ -51,19 +51,19 @@ extern "C" {
 
 #ifdef DLONG
 #ifdef _WIN64
-typedef __int64 scs_int;
-/* #define scs_int __int64 */
+    typedef __int64 scs_int;
+    /* #define scs_int __int64 */
 #else
-typedef long scs_int;
-/* #define scs_int long */
+    typedef long scs_int;
+    /* #define scs_int long */
 #endif
 #else
-typedef int scs_int;
-/* #define scs_int int */
+    typedef int scs_int;
+    /* #define scs_int int */
 #endif
 
 #ifndef FLOAT
-typedef double scs_float;
+    typedef double scs_float;
 #ifndef NAN
 #define NAN ((scs_float)0x7ff8000000000000)
 #endif
@@ -71,7 +71,7 @@ typedef double scs_float;
 #define INFINITY NAN
 #endif
 #else
-typedef float scs_float;
+    typedef float scs_float;
 #ifndef NAN
 #define NAN ((float)0x7fc00000)
 #endif
@@ -92,6 +92,10 @@ typedef float scs_float;
 
 #ifndef ABS
 #define ABS(x) (((x) < 0) ? -(x) : (x))
+#endif
+
+#ifndef SGN
+#define SGN(x) (((x) >= 0) ? 1.0 : -1.0) 
 #endif
 
 #ifndef POWF
@@ -123,13 +127,38 @@ typedef float scs_float;
 #define RETURN return
 #endif
 
-typedef struct SCS_PROBLEM_DATA Data;
-typedef struct SCS_SETTINGS Settings;
-typedef struct SCS_SOL_VARS Sol;
-typedef struct SCS_INFO Info;
-typedef struct SCS_SCALING Scaling;
-typedef struct SCS_WORK Work;
-typedef struct SCS_CONE Cone;
+    typedef struct SCS_PROBLEM_DATA Data;
+    typedef struct SCS_SETTINGS Settings;
+    typedef struct SCS_SOL_VARS Sol;
+    typedef struct SCS_INFO Info;
+    typedef struct SCS_SCALING Scaling;
+    typedef struct SCS_WORK Work;
+    typedef struct SCS_CONE Cone;
+    /**
+     * A finite-memory cache where \f$(Y, U)\f$ are stored.
+     */
+    typedef struct SCS_SU_MEMORY SUCache;
+
+    typedef
+    enum direction_enum {
+        /**
+         * Restarted Broyden method
+         */
+        restarted_broyden = 100,
+        /**
+         * Restarted Broyden method (experimental)
+         */
+        restarted_broyden_v2 = 101,
+        /**
+         * Using \f$d_k = - R_k\f$
+         */
+        fixed_point_residual = 200,
+        /**
+         * Full Broyden method
+         */
+        full_broyden = 300
+    }
+    direction_type;
 
 #ifdef __cplusplus
 }

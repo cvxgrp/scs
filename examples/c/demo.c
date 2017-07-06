@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     }
     fclose(fp);
     scs_printf("solve once using scs\n");
+    
     scs(d, k, sol, &info);
 
     if (TEST_WARM_START) {
