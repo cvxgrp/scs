@@ -2,6 +2,7 @@
 #define NORMALIZE_H_GUARD
 
 #include "scs.h"
+#include "unit_test_util.h"
 
 
 #define MIN_SCALE (1e-3)
@@ -64,19 +65,30 @@ void calcScaledResids(Work *w, struct residuals *r) {
 
 void normalizeWarmStart(Work *w) {
     scs_int i;
-    scs_float *D = w->scal->D;
-    scs_float *E = w->scal->E;
-    scs_float *x = w->u;
-    scs_float *y = w->u + w->n;
-    scs_float *s = w->v + w->n;
+    scs_float *D;
+    scs_float *E;
+    scs_float *x;
+    scs_float *y;
+    scs_float *s;
+
+    D = w->scal->D;
+    E = w->scal->E;
+    if (!w->stgs->do_super_scs) {
+        x = w->u;
+        y = &(w->u[w->n]);
+        s = &(w->u[w->n]);
+        for (i = 0; i < w->m; ++i) {
+            s[i] /= (D[i] / (w->sc_b * w->stgs->scale));
+        }
+    } else {
+        x = w->u_t;
+        y = &(w->u_t[w->n]);
+    }
     for (i = 0; i < w->n; ++i) {
         x[i] *= (E[i] * w->sc_b);
     }
     for (i = 0; i < w->m; ++i) {
         y[i] *= (D[i] * w->sc_c);
-    }
-    for (i = 0; !w->stgs->do_super_scs && i < w->m; ++i) {
-        s[i] /= (D[i] / (w->sc_b * w->stgs->scale));
     }
 }
 

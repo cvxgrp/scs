@@ -222,27 +222,61 @@ static scs_int failure(Work *w, scs_int m, scs_int n, Sol *sol, Info *info,
 
 static void warmStartVars(Work *w, const Sol *sol) {
     DEBUG_FUNC
-    scs_int i, n = w->n, m = w->m;
-    memset(w->v, 0, n * sizeof (scs_float));
-    memcpy(w->u, sol->x, n * sizeof (scs_float));
-    memcpy(&(w->u[n]), sol->y, m * sizeof (scs_float));
+    scs_int i;
+    scs_int n = w->n;
+    scs_int m = w->m;
+    scs_float *Ax;
+    scs_float *ATy;
+
     if (!w->stgs->do_super_scs) {
+        memset(w->v, 0, n * sizeof (scs_float));
+        memcpy(w->u, sol->x, n * sizeof (scs_float));
+        memcpy(&(w->u[n]), sol->y, m * sizeof (scs_float));
         memcpy(&(w->v[n]), sol->s, m * sizeof (scs_float));
         w->v[n + m] = 0.0;
+        w->u[n + m] = 1.0;
+    } else {
+        memcpy(w->u_t, sol->x, n * sizeof (scs_float));
+        memcpy(&(w->u_t[n]), sol->y, m * sizeof (scs_float));
+        w->u_t[n + m] = 1.0;
     }
-    w->u[n + m] = 1.0;
 #ifndef NOVALIDATE
-    for (i = 0; i < n + m + 1; ++i) {
-        if (scs_isnan(w->u[i])) {
-            w->u[i] = 0;
+    if (!w->stgs->do_super_scs) {
+        for (i = 0; i < n + m + 1; ++i) {
+            if (scs_isnan(w->u[i])) {
+                w->u[i] = 0;
+            }
+            if (scs_isnan(w->v[i])) {
+                w->v[i] = 0;
+            }
         }
-        if (scs_isnan(w->v[i])) {
-            w->v[i] = 0;
+    } else {
+        for (i = 0; i < n + m + 1; ++i) {
+            if (scs_isnan(w->u_t[i])) {
+                w->u_t[i] = 0;
+            }
         }
     }
 #endif
     if (w->stgs->normalize) {
         normalizeWarmStart(w);
+    }
+    if (w->stgs->do_super_scs) {
+        memset(Ax, 0, w->m * sizeof (scs_float));
+        memset(ATy, 0, w->n * sizeof (scs_float));
+
+        accumByA(w->A, w->p, w->u_t, Ax); /* Ax_t = A*x_t */
+        accumByAtrans(w->A, w->p, w->u_t + w->n, ATy); /* ATy_t = AT*y_t */
+        for (i = 0; i < n; ++i) {
+            /* rho_x*x_t  + ATy_t + c*tau_t */
+            w->u[i] = w->stgs->rho_x * w->u_t[i] + ATy[i] + w->c[i] * w->u_t[n + m];
+        }
+        for (i = 0; i < m; ++i) {
+            /* -Ax_t  + y_t + b*tau_t */
+            w->u[i + n] = -Ax[i] + w->u_t[i + n] + w->b[i] * w->u_t[n + m];
+        }
+        /* -cTx_t - BTy_t + tau_t */
+        w->u[n + m] = -innerProd(w->c, w->u_t, w->n) - innerProd(w->b, w->u_t + w->n, w->m) + w->u_t[n + m];
     }
     RETURN;
 }
