@@ -2,6 +2,7 @@
 #include "linsys/amatrix.h"
 #include "linsys/common.h"
 #include "linsys/direct/external/amd_internal.h"
+#include "examples/c/problemUtils.h"
 
 static void prepare_data(Data ** data) {
     const scs_int n = 3;
@@ -757,6 +758,47 @@ bool test_no_normalization(char** str) {
     s->verbose = 1;
     s->output_stream = stderr;
     status = scs(data, cone, sol, info);
+    ASSERT_EQUAL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
+    ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
+    ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
+    ASSERT_TRUE_OR_FAIL(info->relGap < data->stgs->eps, str, "duality gap too high");
+    ASSERT_TRUE_OR_FAIL(info->iter < data->stgs->max_iters, str, "too many iterations");
+
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str);
+}
+
+bool test_warm_start(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    Settings *s;
+    Work *w;
+    prepare_data(&data);
+    prepare_cone(&cone);
+    sol = initSol();
+    info = initInfo();
+
+    s = data->stgs;
+
+    s->normalize = 0;
+    s->k0 = 1;
+    s->do_super_scs = 1;
+    s->eps = 1e-5;
+    s->max_iters = 1200;
+    s->do_override_streams = 0;
+    s->verbose = 2;
+    s->output_stream = stderr;
+    status = scs(data, cone, sol, info);
+  
+    s->warm_start = 1;
+    status = scs(data, cone, sol, info);
+
     ASSERT_EQUAL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
     ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
     ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
