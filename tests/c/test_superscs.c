@@ -785,7 +785,7 @@ bool test_warm_start(char** str) {
     info = initInfo();
 
     s = data->stgs;
-    s->normalize = 1;
+    s->normalize = 0;
     s->k0 = 1;
     s->do_super_scs = 1;
     s->eps = 1e-5;
@@ -800,6 +800,69 @@ bool test_warm_start(char** str) {
    
     ASSERT_TRUE_OR_FAIL(info->iter < 2, str, "Many iterations on warm start");
 
+    freeData(data, cone);
+    freeSol(sol);
+    freeInfo(info);
+
+    SUCCEED(str); 
+}
+
+bool test_scale(char** str) {
+    scs_int status;
+    Sol* sol;
+    Data * data;
+    Info * info;
+    Cone * cone;
+    Settings *s;
+    Work *w;
+    prepare_data(&data);
+    prepare_cone(&cone);
+    sol = initSol();
+    info = initInfo();
+
+
+    s = data->stgs;
+    s->normalize = 1;
+    s->k0 = 1;
+    s->k1 = 1;
+    s->k2 = 1;
+    s->scale = 15;
+    s->do_super_scs = 1;
+    s->eps = 1e-6;
+    s->max_iters = 2000;
+    s->do_override_streams = 0;
+    s->verbose = 2;
+    s->output_stream = stderr;
+    s->direction = 100;
+    s->ls = 10;
+    s->do_record_progress = 1;
+    s->sigma = 1e-2;
+    s->c_bl = 0.999;
+    s->rho_x = 1;
+    status = scs(data, cone, sol, info);
+
+
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[0], -16.874907448328781, 1e-8, str, "x[0] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[1], -5.634345166890147, 1e-8, str, "x[1] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[2], 3.589738058939145, 1e-8, str, "x[2] wrong");
+
+    s->max_iters = 10;
+    s->rho_x = 1;
+    status = scs(data, cone, sol, info);
+
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[0], -39.960928349001684, 1e-8, str, "x[0] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[1], -16.312646568605800, 1e-8, str, "x[1] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[2], 55.380466955733162, 1e-8, str, "x[2] wrong");
+   
+    s->rho_x = 1e-3;
+    s->max_iters = 5;
+    status = scs(data, cone, sol, info);
+
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[0], 0.445214546741234, 1e-8, str, "x[0] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[1], 0.354427545209519, 1e-8, str, "x[1] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(sol->x[2], -0.109254623283501, 1e-8, str, "x[2] wrong");
+    ASSERT_EQUAL_FLOAT_OR_FAIL(info->progress_relgap[4], 0.656363317136892, 1e-8, str, "relGap wrong");
+    
     freeData(data, cone);
     freeSol(sol);
     freeInfo(info);

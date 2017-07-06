@@ -35,6 +35,8 @@ extern "C" {
     bool test_no_normalization(char** str);
 
     bool test_warm_start(char** str);
+    
+    bool test_scale(char** str);
 
 #ifdef __cplusplus
 }
