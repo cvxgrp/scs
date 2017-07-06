@@ -786,7 +786,7 @@ bool test_warm_start(char** str) {
 
     s = data->stgs;
 
-    s->normalize = 0;
+    s->normalize = 1;
     s->k0 = 1;
     s->do_super_scs = 1;
     s->eps = 1e-5;
@@ -795,15 +795,11 @@ bool test_warm_start(char** str) {
     s->verbose = 2;
     s->output_stream = stderr;
     status = scs(data, cone, sol, info);
-  
     s->warm_start = 1;
     status = scs(data, cone, sol, info);
 
-    ASSERT_EQUAL_INT_OR_FAIL(status, SCS_SOLVED, str, "wrong status");
-    ASSERT_TRUE_OR_FAIL(info->resPri < data->stgs->eps, str, "primal residual too high");
-    ASSERT_TRUE_OR_FAIL(info->resDual < data->stgs->eps, str, "dual residual too high");
-    ASSERT_TRUE_OR_FAIL(info->relGap < data->stgs->eps, str, "duality gap too high");
-    ASSERT_TRUE_OR_FAIL(info->iter < data->stgs->max_iters, str, "too many iterations");
+   
+    ASSERT_TRUE_OR_FAIL(info->iter < 2, str, "Many iterations on warm start");
 
     freeData(data, cone);
     freeSol(sol);
