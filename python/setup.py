@@ -47,7 +47,7 @@ def run_install():
         print("using environment variables for blas/lapack libraries")
         env_vars = {}
         if env_lib_dirs:
-            env_vars['library_dirs'] = env_lib_dirs.split(':')
+            env_vars['library_dirs'] = [env_lib_dirs]
         if env_libs:
             env_vars['libraries'] = env_libs.split(':')
         install_scs(blas_info=env_vars, lapack_info={})
