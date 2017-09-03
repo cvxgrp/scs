@@ -28,17 +28,20 @@ ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
 LDFLAGS += -lm
 SHARED = dylib
+SONAME = -install_name
 CULDFLAGS = -L/usr/local/cuda/lib
 else
 ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
 LDFLAGS += -lm
 SHARED = dll
+SONAME = -soname #TODO: might not be correct
 CULDFLAGS = -L/usr/local/cuda/lib64 #TODO: probably doesn't work...
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS += -lm -lrt
 SHARED = so
+SONAME = -soname
 CULDFLAGS = -L/usr/local/cuda/lib64
 endif
 endif
@@ -110,7 +113,6 @@ endif
 USE_OPENMP = 0
 ifneq ($(USE_OPENMP), 0)
   CFLAGS += -fopenmp
-  OPT_FLAGS += -DOPENMP
   LDFLAGS += -lgomp
 endif
 

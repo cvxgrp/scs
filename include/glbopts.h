@@ -111,6 +111,9 @@ typedef float scs_float;
 #endif
 
 #if EXTRAVERBOSE > 1
+#if (defined _WIN32 || defined _WIN64 || defined _WINDLL)
+#define __func__ __FUNCTION__
+#endif
 #define DEBUG_FUNC                                                             \
     scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n",          \
                __func__, tocq(&globalTimer), __FILE__, __LINE__);

@@ -12,6 +12,28 @@ convex optimization toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
 
+The current version is `1.2.7`. If you wish to cite SCS, please use the following:
+```
+@article{ocpb:16,
+    author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
+    title        = {Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding},
+    journal      = {Journal of Optimization Theory and Applications},
+    month        = {June},
+    year         = {2016},
+    volume       = {169},
+    number       = {3},
+    pages        = {1042-1068},
+    url          = {http://stanford.edu/~boyd/papers/scs.html},
+}
+@misc{scs,
+    author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
+    title        = {{SCS}: Splitting Conic Solver, version 1.2.7},
+    howpublished = {\url{https://github.com/cvxgrp/scs}},
+    month        = apr,
+    year         = 2016
+}
+```
+
 ----
 SCS numerically solves convex cone programs using the alternating direction
 method of multipliers ([ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html)).
@@ -87,10 +109,11 @@ vec(X) = (X11, sqrt(2)*X21, ..., sqrt(2)*Xk1, X22, sqrt(2)*X32, ..., Xkk).
 
 **Linear equation solvers**
 
-Each iteration of SCS requires the solution of a set of linear equations.
-This package includes two implementations for solving linear equations:
-a direct solver which uses
-a cached LDL factorization and an indirect solver based on conjugate gradients.
+Each iteration of SCS requires the solution of a set of linear equations.  This
+package includes two implementations for solving linear equations: a direct
+solver which uses a cached LDL factorization and an indirect solver based on
+conjugate gradients. The indirect solver can be run on either the cpu or
+gpu.
 
 The direct solver uses the LDL and AMD packages numerical linear
 algebra packages by Timothy Davis and others, the necessary files are included.
@@ -99,16 +122,17 @@ these packages.
 
 ### Using SCS in C
 Typing `make` at the command line will compile the code and create
-SCS libraries in the `out` folder. It will also produce four demo binaries in the
-`out` folder named `demo_direct`, `demo_indirect`, `demo_SOCP_direct` and
-`demo_SOCP_indirect`.
+SCS libraries in the `out` folder. It will also produce six demo binaries in the
+`out` folder named `demo_direct`, `demo_indirect`, `demo_gpu`, `demo_SOCP_direct`,
+`demo_SOCP_indirect`, and `demo_SOCP_gpu`.
 
-If `make` completes successfully, it will produce two static library files,
-`libscsdir.a` and `libscsindir.a` under the `out` folder and two dynamic
-library files `libscsdir.ext` and `libscsindir.ext` (where `.ext` extension is
-platform dependent) in the same folder. To include the
-libraries in your own source code, compile with the linker option with
-`-L(PATH_TO_SCS)\lib` and `-lscsdir` or `-lscsindir` (as needed).
+If `make` completes successfully, it will produce three static library files,
+`libscsdir.a`, `libscsindir.a`, and `libscsgpu.a` under the `out` folder and
+three dynamic library files `libscsdir.ext`, `libscsindir.ext`, and
+`libscsgpu.ext` (where `.ext` extension is platform dependent) in the same
+folder. To include the libraries in your own source code, compile with the
+linker option with `-L(PATH_TO_SCS)\out` and `-lscsdir` or `-lscsindir` (as
+needed).
 
 These libraries (and `scs.h`) expose only four API functions:
 
@@ -124,8 +148,8 @@ These libraries (and `scs.h`) expose only four API functions:
     in `w`. The solution is returned in `sol` and information about the solve
     is returned in `info` (outputs must have memory allocated before calling).
     None of the inputs can be NULL. You can call `scs_solve` many times for one
-    call to `scs_init`, so long as the matrix A
-    does not change (b and c can change).
+    call to `scs_init`, so long as the matrix `A`
+    does not change (vectors `b` and `c` can change).
 
 * `void scs_finish(Work * w);`
     
@@ -286,9 +310,9 @@ Running `make_scs` in Matlab under the `matlab` folder will produce two mex
 files, one for each of the direct and indirect solvers.
 
 Remember to include the `matlab` directory in your Matlab path if you wish to
-use the mex file in your Matlab code. The calling sequence is (for the direct version):
+use the mex file in your Matlab code. The calling sequence is (for the indirect version):
 
-	[x,y,s,info] = scs_direct(data,cones,settings)
+	[x,y,s,info] = scs_indirect(data,cones,settings)
 
 where data is a struct containing `A`, `b`, and `c`, settings is a struct containing 
 solver options (see matlab file, can be empty),
@@ -301,7 +325,7 @@ and cones is a struct that contains one or more of:
 + `ed` (num dual exponential cones)
 + `p`  (array of primal/dual power params).
 
-Type `help scs_direct` at the Matlab prompt to see its documentation.
+Type `help scs_indirect` at the Matlab prompt to see its documentation.
 
 ### Using SCS in Python
 
@@ -311,7 +335,10 @@ cd <scs-directory>/python
 python setup.py install
 ```
 You may need `sudo` privileges for a global installation. Running SCS requires numpy and
-scipy to be installed.
+scipy to be installed. You can install the gpu interface using
+```shell
+python setup.py install --scs --gpu
+```
 
 After installing the SCS interface, you import SCS using
 ```python
@@ -319,7 +346,7 @@ import scs
 ```
 This module provides a single function `scs` with the following call signature:
 ```python
-sol = scs(data, cone, [use_indirect=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
+sol = scs(data, cone, [use_indirect=True, gpu=False, verbose=True, normalize=True, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
 ```
 Arguments in the square brackets are optional, and default to the values on the right of their respective equals signs.
 The argument `data` is a python dictionary with three elements `A`, `b`, and

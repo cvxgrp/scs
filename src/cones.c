@@ -695,7 +695,7 @@ scs_int projDualCone(scs_float *x, const Cone *k, ConeWork *c,
          * \Pi_C^*(y) = y + \Pi_C(-y)
          */
         scaleArray(&(x[count]), -1, 3 * k->ep); /* x = -x; */
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(r, s, t, idx)
 #endif
         for (i = 0; i < k->ep; ++i) {
@@ -719,7 +719,7 @@ scs_int projDualCone(scs_float *x, const Cone *k, ConeWork *c,
 
     if (k->ed) {
 /* exponential cone: */
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (i = 0; i < k->ed; ++i) {
@@ -736,7 +736,7 @@ scs_int projDualCone(scs_float *x, const Cone *k, ConeWork *c,
         scs_float v[3];
         scs_int idx;
         /* don't use openmp for power cone
-        ifdef OPENMP
+        ifdef _OPENMP
         pragma omp parallel for private(v, idx)
         endif
         */

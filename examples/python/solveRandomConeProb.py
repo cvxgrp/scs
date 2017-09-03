@@ -28,7 +28,7 @@ def solveFeasible():
     print('pri error = ', (dot(data['c'], xi) - p_star) / p_star)
     print('dual error = ', (-dot(data['b'], yi) - p_star) / p_star)
     # direct:
-    sol_d = scs.solve(data, K, **params)
+    sol_d = scs.solve(data, K, use_indirect=False, **params)
     xd = sol_d['x']
     yd = sol_d['y']
     print('p*  = ', p_star)
@@ -41,7 +41,7 @@ def solveInfeasible():
     data = genInfeasible(K, n = m//3)
     params = {'eps':1e-4, 'normalize':True, 'scale':0.5, 'cg_rate':2}
     sol_i = scs.solve(data, K, use_indirect=True, **params)
-    sol_d = scs.solve(data, K, **params)
+    sol_d = scs.solve(data, K, use_indirect=False, **params)
 
 def solveUnbounded():
     K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10, 'p':[-0.25, 0.5, 0.75, -0.33]}
@@ -49,7 +49,7 @@ def solveUnbounded():
     data = genUnbounded(K, n = m//3)
     params = {'eps':1e-4, 'normalize':True, 'scale':0.5, 'cg_rate':2}
     sol_i = scs.solve(data, K, use_indirect=True, **params)
-    sol_d = scs.solve(data, K, **params)
+    sol_d = scs.solve(data, K, use_indirect=False, **params)
 
 if __name__ == "__main__":
    main()

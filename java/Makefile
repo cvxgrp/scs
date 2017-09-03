@@ -30,14 +30,14 @@ $(BIN)/libjscsdir.$(SHARED): $(OBJECTS) $(DIRECT_OBJECTS) scsjnidir.o
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 scsjnidir.o:
-	$(CC) -c -I$(ROOT)/include -I$(ROOT) scsjni.c -o $@
+	$(CC) -c -I$(ROOT)/include -I$(ROOT) -fPIC scsjni.c -o $@
 
 $(BIN)/libjscsindir.$(SHARED): $(OBJECTS) $(INDIRECT_OBJECTS) scsjniindir.o
 	mkdir -p $(BIN)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 scsjniindir.o:
-	$(CC) -c -DINDIRECTJ -I$(ROOT)/include -I$(ROOT) scsjni.c -o $@
+	$(CC) -c -DINDIRECTJ -I$(ROOT)/include -I$(ROOT) -fPIC scsjni.c -o $@
 
 scs.jar:
 	javac $(JAVA_SRC)/org/scs/*.java
