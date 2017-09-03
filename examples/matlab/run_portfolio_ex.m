@@ -20,7 +20,7 @@ if nargin==1
     if isfield(params,'run_scs_indirect');run_scs_indirect = params.run_scs_indirect;end
 end
 
-ns = [100000, 500000, 2500000];
+ns = [10000, 50000, 250000];
 ms = [100,    500,    2500];
 
 density = 0.1;
@@ -42,7 +42,7 @@ for i = 1:length(ns)
         
         tic
         cvx_begin
-        cvx_solver scs
+        cvx_solver scs_matlab
         cvx_solver_settings('eps',1e-3,'scale',1)
         variable x(n)
         maximize (mu'*x - gamma*(sum_square(F'*x) + sum_square(D.*x)))
