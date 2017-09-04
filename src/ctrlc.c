@@ -26,7 +26,7 @@ int isInterrupted(void) {
     return utIsInterruptPending();
 }
 
-#elif defined _WIN32 || defined _WIN64
+#elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 
 static int int_detected;
 BOOL WINAPI handle_ctrlc(DWORD dwCtrlType) {
