@@ -35,6 +35,7 @@ extern "C" {
 #define _scs_malloc malloc
 #define _scs_calloc calloc
 #else
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #define scs_printf printf

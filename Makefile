@@ -79,7 +79,7 @@ $(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
 gpu: $(OUT)/demo_gpu $(OUT)/demo_SOCP_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 
 $(GPU)/private.o: $(GPU)/private.c
-	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
+	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS) -I/usr/include/linux/
 
 $(OUT)/libscsgpu.$(SHARED): $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
 	mkdir -p $(OUT)
