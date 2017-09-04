@@ -1,14 +1,14 @@
 clear all;close all;
 randn('seed',0)
 
-n= 100;
+n= 200;
 
 A = randn(n); A = A*A;
 b = randn(n,1);
 c = randn(n,1);
 lam = 1;
 
-use_indirect = 0;
+use_indirect = 1;
 
 %%
 %{
