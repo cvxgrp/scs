@@ -215,7 +215,7 @@ for i=0:max_iters-1
         delta_accel = [delta_accel; norm([a; zeros(anderson_lookback - length(a),1)] - [a_last; zeros(anderson_lookback - length(a_last),1)])];
         a_last = a;
         %}
-        %{%
+        %{
         epp = 0.;
         FTF1 = (F'*F + epp * eye(size(F,2))) \ ones(size(F,2),1);
         a = FTF1 / sum(FTF1);
@@ -223,9 +223,10 @@ for i=0:max_iters-1
         delta_accel = [delta_accel; norm([a(2:end); zeros(anderson_lookback - length(a(2:end)),1)] - [a_last(1:end-1); zeros(anderson_lookback - length(a_last(1:end-1)),1)])];
         a_last = a;
         %}
-        %{
+        %{%
+        epp = 0.;
         dF = F(:,1:end-1) - F(:,2:end);
-        gg = (dF + 1e-8 * eye(size(dF))) \ F(:,end);
+        gg = (dF + epp * eye(size(dF))) \ F(:,end);
         dG = G(:,1:end-1) - G(:,2:end);
         uv = G(:,end) - dG * gg;
         delta_accel = [delta_accel; norm([gg; zeros(anderson_lookback - length(gg),1)] - [a_last; zeros(anderson_lookback - length(a_last),1)])];
