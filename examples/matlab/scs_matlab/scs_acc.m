@@ -207,7 +207,7 @@ for i=0:max_iters-1
         end
         F = [F f];
         G = [G [u;v]];
-        % Three different ways to do the update:
+        % Some different ways to do the update:
         %{
         a = [F'*F ones(size(F,2),1); ones(1, size(F,2)) 0] \ [zeros(size(F,2),1); 1];
         a = a(1:end-1);
@@ -219,6 +219,18 @@ for i=0:max_iters-1
         epp = 0.;
         FTF1 = (F'*F + epp * eye(size(F,2))) \ ones(size(F,2),1);
         a = FTF1 / sum(FTF1);
+        uv = G*a;
+        delta_accel = [delta_accel; norm([a(2:end); zeros(anderson_lookback - length(a(2:end)),1)] - [a_last(1:end-1); zeros(anderson_lookback - length(a_last(1:end-1)),1)])];
+        a_last = a;
+        %}
+        %{
+        cvx_begin
+        cvx_quiet True
+        variable a(size(F,2))
+        a >= 0
+        sum(a) == 1
+        minimize(norm(F*a))
+        cvx_end
         uv = G*a;
         delta_accel = [delta_accel; norm([a(2:end); zeros(anderson_lookback - length(a(2:end)),1)] - [a_last(1:end-1); zeros(anderson_lookback - length(a_last(1:end-1)),1)])];
         a_last = a;
