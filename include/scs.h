@@ -14,6 +14,18 @@ extern "C" {
 #include "ctrlc.h"
 #include "constants.h"
 
+struct ACCEL {
+    scs_float * dF;
+    scs_float * dG;
+    scs_float * f;
+    scs_float * g;
+    scs_float * theta;
+    scs_float * tmp;
+    scs_int k, l;
+};
+
+typedef struct ACCEL Accel;
+
 /* struct containing problem data */
 struct SCS_PROBLEM_DATA {
     /* these cannot change for multiple runs for the same call to scs_init */
@@ -44,6 +56,7 @@ struct SCS_SETTINGS {
     scs_int verbose;    /* boolean, write out progress: 1 */
     scs_int warm_start; /* boolean, warm start (put initial guess in Sol
                            struct): 0 */
+    scs_int acceleration_lookback;
 };
 
 /* contains primal-dual solution arrays */
@@ -91,13 +104,14 @@ const char *scs_version(void);
 
 /* workspace for SCS */
 struct SCS_WORK {
-    scs_float *u, *v, *u_t, *u_prev; /* u_prev = u from previous iteration */
+    scs_float *u, *v, *u_t, *u_prev, *v_prev; /* u_prev = u from previous iteration */
     scs_float *h, *g, *pr, *dr;
     scs_float gTh, sc_b, sc_c, nm_b, nm_c;
     scs_float *b, *c;   /* (possibly normalized) b and c vectors */
     scs_int m, n;       /* A has m rows, n cols */
     AMatrix *A;         /* (possibly normalized) A matrix */
     Priv *p;            /* struct populated by linear system solver */
+    Accel *accel;       /* Struct for acceleration workspace */
     Settings *stgs;     /* contains solver settings specified by user */
     Scaling *scal;      /* contains the re-scaling data */
     ConeWork *coneWork; /* workspace for the cone projection step */

@@ -148,21 +148,11 @@ v_bar = v;
 % anderson
 F = [];
 G = [];
-delta_accel = [];
-a_last = [];
-% broyden
-phi_prev = -1;
-%phi_prev_prev = -1;
-uv_prev = -1;
-%uv_prev_prev = -1;
 tic
 for i=0:max_iters-1
     uv = [u;v];
-    % solve linear system
-    %uv_prev_prev_prev = uv_prev_prev;
-    uv_prev_prev = uv_prev;
-    uv_prev = uv;
     u_prev = u;
+    % solve linear system
     [ut, itn] = project_lin_sys(work, data, n, m, u, v, rho_x, i, use_indirect, cg_rate, extra_verbose,  h, g, gTh);
     %% K proj:
     rel_ut = alpha*ut+(1-alpha)*u;
@@ -201,6 +191,7 @@ for i=0:max_iters-1
     % ANDERSON:
     if true
         f = [u;v] - uv;
+        uv = [u;v];
         if size(F,2) >= anderson_lookback
             F = F(:, 2:end);
             G = G(:, 2:end);
@@ -212,16 +203,12 @@ for i=0:max_iters-1
         a = [F'*F ones(size(F,2),1); ones(1, size(F,2)) 0] \ [zeros(size(F,2),1); 1];
         a = a(1:end-1);
         uv = G*a;
-        delta_accel = [delta_accel; norm([a; zeros(anderson_lookback - length(a),1)] - [a_last; zeros(anderson_lookback - length(a_last),1)])];
-        a_last = a;
         %}
         %{
         epp = 0.;
         FTF1 = (F'*F + epp * eye(size(F,2))) \ ones(size(F,2),1);
         a = FTF1 / sum(FTF1);
         uv = G*a;
-        delta_accel = [delta_accel; norm([a(2:end); zeros(anderson_lookback - length(a(2:end)),1)] - [a_last(1:end-1); zeros(anderson_lookback - length(a_last(1:end-1)),1)])];
-        a_last = a;
         %}
         %{
         cvx_begin
@@ -232,17 +219,14 @@ for i=0:max_iters-1
         minimize(norm(F*a))
         cvx_end
         uv = G*a;
-        delta_accel = [delta_accel; norm([a(2:end); zeros(anderson_lookback - length(a(2:end)),1)] - [a_last(1:end-1); zeros(anderson_lookback - length(a_last(1:end-1)),1)])];
-        a_last = a;
         %}
         %{%
-        epp = 0.;
-        dF = F(:,2:end) - F(:,1:end-1);
-        gg = (dF + epp * eye(size(dF))) \ F(:,end);
-        dG = G(:,2:end) - G(:,1:end-1);
-        uv = G(:,end) - dG * gg;
-        delta_accel = [delta_accel; norm([gg; zeros(anderson_lookback - length(gg),1)] - [a_last; zeros(anderson_lookback - length(a_last),1)])];
-        a_last = gg;
+        %if size(F,2) >= anderson_lookback
+            dF = -F(:,2:end) + F(:,1:end-1);
+            dG = -G(:,2:end) + G(:,1:end-1);
+            gg = dF \ F(:,end);
+            uv = G(:,end) - dG * gg;
+        %end
         %}
         u = uv(1:n+m+1);
         v = uv(n+m+2:end);
@@ -378,7 +362,5 @@ if gen_plots
         legend('pri resid','dual resid','gap');
         xlabel('A multiplies');
     end
-    figure();semilogy(delta_accel);
-    legend('delta_accel');
 end
 end

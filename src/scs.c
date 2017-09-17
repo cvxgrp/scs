@@ -16,6 +16,9 @@
 
 timer globalTimer;
 
+void BLAS(gels)(const char *trans, const blasint *m, const blasint *n, const blasint *nrhs, scs_float *a, const blasint *lda, scs_float *b, const blasint *ldb, scs_float *work, const blasint *lwork, blasint *info);
+void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n, const scs_float *alpha, const scs_float *a, const blasint *lda, const scs_float *x, const blasint *incx, const scs_float *beta, scs_float *y, const blasint *incy);
+
 /* printing header */
 static const char *HEADER[] = {
     " Iter ",    " pri res ", " dua res ", " rel gap ",
@@ -42,6 +45,8 @@ static void freeWork(Work *w) {
         scs_free(w->u_t);
     if (w->u_prev)
         scs_free(w->u_prev);
+    if (w->v_prev)
+        scs_free(w->v_prev);
     if (w->h)
         scs_free(w->h);
     if (w->g)
@@ -308,6 +313,118 @@ static void updateDualVars(Work *w) {
                     (1.0 - w->stgs->alpha) * w->u_prev[i]);
     }
     RETURN;
+}
+
+static void update_accel_params(Work * w, scs_int idx){
+    DEBUG_FUNC
+    scs_float* dF = w->accel->dF;
+    scs_float* dG = w->accel->dG;
+    scs_float* f = w->accel->f;
+    scs_float* g = w->accel->g;
+    scs_int l = w->m + w->n + 1;
+    if (idx > 0) {
+        // copy g_prev into idx col of dG
+        memcpy(&(dG[(idx - 1) * 2 * l]), g, sizeof(scs_float) * 2 * l);
+        // copy f_prev into idx col of dF
+        memcpy(&(dF[(idx - 1) * 2 * l]), f, sizeof(scs_float) * 2 * l);
+    }
+    // g = [u;v]
+    memcpy(g, w->u, sizeof(scs_float) * l);
+    memcpy(&(g[l]), w->v, sizeof(scs_float) * l);
+    // calulcate f = g - [u_prev, v_prev]
+    memcpy(f, g, sizeof(scs_float) * 2 * l);
+    addScaledArray(f, w->u_prev, l, -1.0);
+    addScaledArray(&(f[l]), w->v_prev, l, -1.0);
+    if (idx > 0) {
+        // last col of dG = g_prev - g
+        addScaledArray(&(dG[(idx - 1) * 2 * l]), g, 2 * l, -1);
+        // last col of dF = f_prev - f
+        addScaledArray(&(dF[(idx - 1) * 2 * l]), f, 2 * l, -1);
+    }
+    RETURN;
+}
+
+static Accel* initAccel(Work * w) {
+    Accel * a = scs_malloc(sizeof(Accel));
+    scs_int l = w->m + w->n + 1;
+    a->l = l;
+    /* k = lookback - 1 since we use the difference form
+       of anderson acceleration, and so there is one fewer params */
+    a->k = 20; // w->stgs->acceleration_lookback - 1;
+    a->dF = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
+    a->dG = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
+    a->f = scs_malloc(sizeof(scs_float) * 2 * l);
+    a->g = scs_malloc(sizeof(scs_float) * 2 * l);
+    //a->theta= scs_malloc(sizeof(scs_float) * a->k);
+    a->theta = scs_malloc(sizeof(scs_float) * 2 * l);
+    a->tmp = scs_malloc(sizeof(scs_float) * 2 * l);
+    RETURN a;
+}
+
+static void solve_accel_linsys(Accel * a) {
+    blasint info;
+    scs_float twork;
+    scs_int l = a->l;
+    blasint lwork = -1;
+    blasint twol = 2 * l;
+    blasint one = 1;
+    scs_int k = a->k;
+    blasint bk = (blasint) k;
+    scs_float negOnef = -1.0;
+    scs_float onef = 1.0;
+    memcpy(a->theta, a->f, sizeof(scs_float) * 2 * l);
+    scs_float * dFQR = scs_malloc(sizeof(scs_float) * 2 * l * k);
+    memcpy(dFQR, a->dF, sizeof(scs_float) * 2 * l * k);
+    BLAS(gels)("NoTrans", &twol, &bk, &one, dFQR, &twol, a->theta, &twol, &twork, &lwork, &info);
+    blasint worksize = (blasint) twork;
+    scs_float * wrk = scs_malloc(sizeof(blasint) * worksize);
+    BLAS(gels)("NoTrans", &twol, &bk, &one, dFQR, &twol, a->theta, &twol, wrk, &worksize, &info);
+    scs_free(dFQR);
+    memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * l);
+    // matmul g = g - dG * theta
+    BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
+    scs_free(wrk);
+}
+
+static scs_int accelerate(Work *w, scs_int iter) {
+    // TODO: what if k > 2l ?
+    DEBUG_FUNC
+    scs_float* dF = w->accel->dF;
+    scs_float* dG = w->accel->dG;
+    scs_float * tmp = w->accel->tmp;
+    scs_int l = w->accel->l;
+    scs_int k = w->accel->k;
+    if (k == 0 || k == 1) {
+        RETURN 0;
+    }
+    if (iter < k) {
+        update_accel_params(w, iter);
+        RETURN 0;
+    }
+    if (iter > k) {
+        // shift dF
+        memcpy(dF, &(dF[2*l]), sizeof(scs_float) * 2 * l * (k-1));
+        // shift dG
+        memcpy(dG, &(dG[2*l]), sizeof(scs_float) * 2 * l * (k-1));
+    }
+    // update dF, dG, f, g
+    update_accel_params(w, k);
+    // solve linear system for theta
+    solve_accel_linsys(w->accel);
+    // set [u;v] = tmp
+    memcpy(w->u, tmp, sizeof(scs_float) * l);
+    memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
+    RETURN 0;
+}
+
+static void freeAccel(Accel * a) {
+    scs_free(a->dF);
+    scs_free(a->dG);
+    scs_free(a->f);
+    scs_free(a->g);
+    scs_free(a->theta);
+    scs_free(a->tmp);
+    scs_free(a);
 }
 
 /* status < 0 indicates failure */
@@ -717,6 +834,7 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->v = scs_malloc(l * sizeof(scs_float));
     w->u_t = scs_malloc(l * sizeof(scs_float));
     w->u_prev = scs_malloc(l * sizeof(scs_float));
+    w->v_prev = scs_malloc(l * sizeof(scs_float));
     w->h = scs_malloc((l - 1) * sizeof(scs_float));
     w->g = scs_malloc((l - 1) * sizeof(scs_float));
     w->pr = scs_malloc(d->m * sizeof(scs_float));
@@ -754,6 +872,11 @@ static Work *initWork(const Data *d, const Cone *k) {
     w->p = initPriv(w->A, w->stgs);
     if (!w->p) {
         scs_printf("ERROR: initPriv failure\n");
+        RETURN SCS_NULL;
+    }
+    w->accel = initAccel(w);
+    if (!w->accel) {
+        scs_printf("ERROR: initAccel failure\n");
         RETURN SCS_NULL;
     }
     RETURN w;
@@ -822,6 +945,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     /* scs: */
     for (i = 0; i < w->stgs->max_iters; ++i) {
         memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
+        memcpy(w->v_prev, w->v, (w->n + w->m + 1) * sizeof(scs_float));
 
         if (projectLinSys(w, i) < 0) {
             RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -833,6 +957,11 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
         }
 
         updateDualVars(w);
+
+        if (accelerate(w, i) < 0) {
+            RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
+                           "error in accelerate", "Failure");
+        }
 
         if (isInterrupted()) {
             RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
@@ -877,6 +1006,8 @@ void scs_finish(Work *w) {
         }
         if (w->p)
             freePriv(w->p);
+        if (w->accel)
+            freeAccel(w->accel);
         freeWork(w);
     }
 #if EXTRAVERBOSE > 0
