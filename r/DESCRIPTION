@@ -1,5 +1,5 @@
 Package: scs 
-Version: 1.2.7
+Version: 1.3.0
 Title: SCS - Splitting Conic Solver
 Author: Brendan O'Donoghue
 Maintainer: Brendan O'Donoghue <bodonoghue85@gmail.com> 
