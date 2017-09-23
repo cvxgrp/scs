@@ -12,7 +12,7 @@ flags.LCFLAG = '-DMATLAB_MEX_FILE -DLAPACK_LIB_FOUND -DCTRLC=1 -DCOPYAMATRIX';
 flags.INCS = '';
 flags.LOCS = '';
 
-common_scs = '../src/linAlg.c ../src/cones.c ../src/cs.c ../src/util.c ../src/scs.c ../src/ctrlc.c ../linsys/common.c ../src/scs_version.c scs_mex.c';
+common_scs = '../src/linAlg.c ../src/cones.c ../src/accel.c ../src/cs.c ../src/util.c ../src/scs.c ../src/ctrlc.c ../linsys/common.c ../src/scs_version.c scs_mex.c';
 if (~isempty (strfind (computer, '64')))
     flags.arr = '-largeArrayDims';
 else

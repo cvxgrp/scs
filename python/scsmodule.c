@@ -263,23 +263,23 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     char *kwlist[] = {"shape",     "Ax",    "Ai",   "Ap",      "b",
                       "c",         "cone",  "warm", "verbose", "normalize",
                       "max_iters", "scale", "eps",  "cg_rate", "alpha",
-                      "rho_x",     SCS_NULL};
+                      "rho_x", "acceleration_lookback", SCS_NULL};
 
 /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
 #ifdef FLOAT
-    char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffff";
+    char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lfffffl";
     char *outarg_string = "{s:l,s:l,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
 #else
-    char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!lddddd";
+    char *argparse_string = "(ll)O!O!O!O!O!O!|O!O!O!ldddddl";
     char *outarg_string = "{s:l,s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
 #endif
 #else
 #ifdef FLOAT
-    char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffff";
+    char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!ifffffi";
     char *outarg_string = "{s:i,s:i,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:f,s:s}";
 #else
-    char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!iddddd";
+    char *argparse_string = "(ii)O!O!O!O!O!O!|O!O!O!idddddi";
     char *outarg_string = "{s:i,s:i,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:s}";
 #endif
 #endif
@@ -298,7 +298,7 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
             &PyDict_Type, &warm, &PyBool_Type, &verbose, &PyBool_Type,
             &normalize, &(d->stgs->max_iters), &(d->stgs->scale),
             &(d->stgs->eps), &(d->stgs->cg_rate), &(d->stgs->alpha),
-            &(d->stgs->rho_x))) {
+            &(d->stgs->rho_x), &(d->stgs->acceleration_lookback))) {
         PySys_WriteStderr("error parsing inputs\n");
         return SCS_NULL;
     }
@@ -384,6 +384,9 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
         normalize ? (scs_int)PyObject_IsTrue(normalize) : NORMALIZE;
     if (d->stgs->max_iters < 0) {
         return finishWithErr(d, k, &ps, "max_iters must be positive");
+    }
+    if (d->stgs->acceleration_lookback < 0) {
+        return finishWithErr(d, k, &ps, "acceleration_lookback must be positive");
     }
     if (d->stgs->scale < 0) {
         return finishWithErr(d, k, &ps, "scale must be positive");

@@ -22,8 +22,8 @@ extern "C" {
 #define SCS_SOLVED_INACCURATE (2)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
-#define MAX_ITERS (2500)
-#define EPS (1E-3)
+#define MAX_ITERS (5000)
+#define EPS (1E-6)
 #define ALPHA (1.5)
 #define RHO_X (1E-3)
 #define SCALE (1.0)
@@ -31,6 +31,7 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
+#define ACCELERATION_LOOKBACK (20)
 
 #ifdef __cplusplus
 }

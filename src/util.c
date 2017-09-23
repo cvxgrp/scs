@@ -121,10 +121,11 @@ void printData(const Data *d) {
     scs_printf("max_iters = %i\n", (int)d->stgs->max_iters);
     scs_printf("verbose = %i\n", (int)d->stgs->verbose);
     scs_printf("normalize = %i\n", (int)d->stgs->normalize);
-    scs_printf("warmStart = %i\n", (int)d->stgs->warm_start);
+    scs_printf("warm_start = %i\n", (int)d->stgs->warm_start);
+    scs_printf("acceleration_lookback = %i\n", (int)d->stgs->acceleration_lookback);
     scs_printf("eps = %4f\n", d->stgs->eps);
     scs_printf("alpha = %4f\n", d->stgs->alpha);
-    scs_printf("rhoX = %4f\n", d->stgs->rho_x);
+    scs_printf("rho_x = %4f\n", d->stgs->rho_x);
     scs_printf("cg_rate = %4f\n", d->stgs->cg_rate);
     scs_printf("scale = %4f\n", d->stgs->scale);
 }
@@ -197,4 +198,5 @@ void setDefaultSettings(Data *d) {
     d->stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
     d->stgs->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
     d->stgs->warm_start = WARM_START;
+    d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
 }

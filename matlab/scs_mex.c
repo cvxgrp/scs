@@ -183,7 +183,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tmp = mxGetField(settings, 0, "max_iters");
     if (tmp != SCS_NULL)
         d->stgs->max_iters = (scs_int)*mxGetPr(tmp);
-
+    
     tmp = mxGetField(settings, 0, "scale");
     if (tmp != SCS_NULL)
         d->stgs->scale = (scs_float)*mxGetPr(tmp);
@@ -203,6 +203,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tmp = mxGetField(settings, 0, "normalize");
     if (tmp != SCS_NULL)
         d->stgs->normalize = (scs_int)*mxGetPr(tmp);
+    
+    tmp = mxGetField(settings, 0, "acceleration_lookback");
+    if (tmp != SCS_NULL)
+        d->stgs->acceleration_lookback = (scs_int)*mxGetPr(tmp);
 
     /* cones */
     kf = mxGetField(cone, 0, "f");

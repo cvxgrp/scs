@@ -13,18 +13,7 @@ extern "C" {
 #include "util.h"
 #include "ctrlc.h"
 #include "constants.h"
-
-struct ACCEL {
-    scs_float * dF;
-    scs_float * dG;
-    scs_float * f;
-    scs_float * g;
-    scs_float * theta;
-    scs_float * tmp;
-    scs_int k, l;
-};
-
-typedef struct ACCEL Accel;
+#include "accel.h"
 
 /* struct containing problem data */
 struct SCS_PROBLEM_DATA {
