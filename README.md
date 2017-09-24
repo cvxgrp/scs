@@ -33,7 +33,7 @@ The current version is `1.3.0`. If you wish to cite SCS, please use the followin
     title        = {{SCS}: Splitting Conic Solver, version 1.3.0},
     howpublished = {\url{https://github.com/cvxgrp/scs}},
     month        = apr,
-    year         = 2016
+    year         = 2017
 }
 ```
 
