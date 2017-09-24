@@ -274,7 +274,7 @@ if use_indirect;
 end
 
 if gen_plots
-    figure();semilogy(nms(:,1));hold on;semilogy(nms(:,2),'r');semilogy(nms(:,3),'g');
+    figure();semilogy(nms(:,1),'b');hold on;semilogy(nms(:,2),'r');semilogy(nms(:,3),'g');
     legend('pri resid','dual resid','gap');
     figure();plot(tau_i);hold on; plot(kap_i,'r');
     legend('tau','kappa')
@@ -286,7 +286,7 @@ if gen_plots
     legend('unb','inf');
     if use_indirect;
         figure();plot(cg_its);xlabel('k');ylabel('Conjugate Gradient Iterations');
-        figure();semilogy(cumsum(mults),nms(:,1));hold on;semilogy(cumsum(mults),nms(:,2),'r');semilogy(cumsum(mults),nms(:,3),'g');
+        figure();semilogy(cumsum(mults),nms(:,1), 'b');hold on;semilogy(cumsum(mults),nms(:,2),'r');semilogy(cumsum(mults),nms(:,3),'g');
         legend('pri resid','dual resid','gap');
         xlabel('A multiplies');
     end
