@@ -2,14 +2,8 @@
 #include "scs.h"
 #include "scs_blas.h"
 
-void BLAS(gels)(const char *trans, const blasint *m, const blasint *n, const blasint *nrhs, scs_float *a, const blasint *lda, scs_float *b, const blasint *ldb, scs_float *work, const blasint *lwork, blasint *info);
-void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n, const scs_float *alpha, const scs_float *a, const blasint *lda, const scs_float *x, const blasint *incx, const scs_float *beta, scs_float *y, const blasint *incy);
-
-blasint initAccelWrk(Accel * a);
-scs_int solve_accel_linsys(Accel * a);
-void update_accel_params(Work * w, scs_int idx);
-
 struct SCS_ACCEL {
+#ifdef LAPACK_LIB_FOUND
     scs_float * dF;
     scs_float * dG;
     scs_float * f;
@@ -20,7 +14,17 @@ struct SCS_ACCEL {
     scs_float * wrk;
     scs_int k, l;
     blasint worksize;
+#endif
+    scs_float totalAccelTime;
 };
+
+#ifdef LAPACK_LIB_FOUND
+void BLAS(gels)(const char *trans, const blasint *m, const blasint *n, const blasint *nrhs, scs_float *a, const blasint *lda, scs_float *b, const blasint *ldb, scs_float *work, const blasint *lwork, blasint *info);
+void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n, const scs_float *alpha, const scs_float *a, const blasint *lda, const scs_float *x, const blasint *incx, const scs_float *beta, scs_float *y, const blasint *incy);
+
+blasint initAccelWrk(Accel * a);
+scs_int solve_accel_linsys(Accel * a);
+void update_accel_params(Work * w, scs_int idx);
 
 void update_accel_params(Work * w, scs_int idx){
     DEBUG_FUNC
@@ -69,6 +73,9 @@ blasint initAccelWrk(Accel * a){
 
 Accel* initAccel(Work * w) {
   Accel * a = scs_malloc(sizeof(Accel));
+  if (!a) {
+    RETURN SCS_NULL;
+  }
   scs_int l = w->m + w->n + 1;
   scs_int info;
   a->l = l;
@@ -83,8 +90,9 @@ Accel* initAccel(Work * w) {
   a->theta = scs_malloc(sizeof(scs_float) * MAX(2 * l, a->k));
   a->tmp = scs_malloc(sizeof(scs_float) * 2 * l);
   a->dFQR = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
+  a->totalAccelTime = 0.0;
   info = initAccelWrk(a);
-  if (!a || !a->dF || ! a->dG || !a->f || !a->g || !a->theta || !a->tmp || ! a->dFQR || info != 0) {
+  if (!a->dF || ! a->dG || !a->f || !a->g || !a->theta || !a->tmp || ! a->dFQR || info != 0) {
     freeAccel(a);
     a = SCS_NULL;
   }
@@ -117,6 +125,8 @@ scs_int accelerate(Work *w, scs_int iter) {
     scs_int l = w->accel->l;
     scs_int k = w->accel->k;
     scs_int info;
+    timer accelTimer;
+    tic(&accelTimer);
     if (k == 0) {
         RETURN 0;
     }
@@ -137,6 +147,7 @@ scs_int accelerate(Work *w, scs_int iter) {
     // set [u;v] = tmp
     memcpy(w->u, tmp, sizeof(scs_float) * l);
     memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
+    w->accel->totalAccelTime += tocq(&accelTimer);
     RETURN info;
 }
 
@@ -162,3 +173,28 @@ void freeAccel(Accel * a) {
   }
 }
 
+#else
+
+Accel* initAccel(Work * w) {
+  Accel * a = scs_malloc(sizeof(Accel));
+  a->totalAccelTime = 0.0;
+  RETURN a;
+}
+
+void freeAccel(Accel * a) {
+  if (a)
+    scs_free(a);
+}
+
+scs_int accelerate(Work *w, scs_int iter) {
+ RETURN 0;
+}
+#endif
+
+char *getAccelSummary(const Info *info, Accel *a) {
+    char *str = scs_malloc(sizeof(char) * 64);
+    sprintf(str, "\tAcceleration: avg solve time: %1.2es\n",
+            a->totalAccelTime / (info->iter + 1) / 1e3);
+    a->totalAccelTime = 0.0;
+    return str;
+}

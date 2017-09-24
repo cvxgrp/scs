@@ -74,6 +74,11 @@ static void printInitHeader(const Data *d, const Cone *k) {
     Settings *stgs = d->stgs;
     char *coneStr = getConeHeader(k);
     char *linSysMethod = getLinSysMethod(d->A, d->stgs);
+#ifdef LAPACK_LIB_FOUND
+    scs_int acceleration_lookback = stgs->acceleration_lookback;
+#else
+    scs_int acceleration_lookback = -1;
+#endif
     for (i = 0; i < LINE_LEN; ++i) {
         scs_printf("-");
     }
@@ -93,12 +98,12 @@ static void printInitHeader(const Data *d, const Cone *k) {
                    "scale = %2.2f\nacceleration_lookback = %i, rho_x = %.2e\n",
                    stgs->eps, stgs->alpha, (int)stgs->max_iters,
                    (int)stgs->normalize, stgs->scale, 
-                   (int) stgs->acceleration_lookback, stgs->rho_x);
+                   (int) acceleration_lookback, stgs->rho_x);
     } else {
         scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n"
                    "acceleration_lookback = %i, rho_x = %.2e\n",
                    stgs->eps, stgs->alpha, (int)stgs->max_iters,
-                   (int)stgs->normalize, (int) stgs->acceleration_lookback, 
+                   (int)stgs->normalize, (int) acceleration_lookback,
                    stgs->rho_x);
     }
     scs_printf("Variables n = %i, constraints m = %i\n", (int)d->n, (int)d->m);
@@ -583,6 +588,7 @@ static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
     scs_int i;
     char *linSysStr = getLinSysSummary(w->p, info);
     char *coneStr = getConeSummary(info, w->coneWork);
+    char *accelStr = getAccelSummary(info, w->accel);
     for (i = 0; i < LINE_LEN; ++i) {
         scs_printf("-");
     }
@@ -600,6 +606,11 @@ static void printFooter(const Data *d, const Cone *k, Sol *sol, Work *w,
     if (coneStr) {
         scs_printf("%s", coneStr);
         scs_free(coneStr);
+    }
+
+    if (accelStr) {
+        scs_printf("%s", accelStr);
+        scs_free(accelStr);
     }
 
     for (i = 0; i < LINE_LEN; ++i) {
