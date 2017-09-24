@@ -847,7 +847,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
 
         updateDualVars(w);
 
-        if (accelerate(w, i) < 0) {
+        if (accelerate(w, i) != 0) {
             RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
                            "error in accelerate", "Failure");
         }

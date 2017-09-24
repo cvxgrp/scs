@@ -6,7 +6,7 @@ void BLAS(gels)(const char *trans, const blasint *m, const blasint *n, const bla
 void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n, const scs_float *alpha, const scs_float *a, const blasint *lda, const scs_float *x, const blasint *incx, const scs_float *beta, scs_float *y, const blasint *incy);
 
 blasint initAccelWrk(Accel * a);
-void solve_accel_linsys(Accel * a);
+scs_int solve_accel_linsys(Accel * a);
 void update_accel_params(Work * w, scs_int idx);
 
 struct SCS_ACCEL {
@@ -16,9 +16,9 @@ struct SCS_ACCEL {
     scs_float * g;
     scs_float * theta;
     scs_float * tmp;
-    scs_int k, l;
     scs_float * dFQR;
     scs_float * wrk;
+    scs_int k, l;
     blasint worksize;
 };
 
@@ -58,58 +58,65 @@ blasint initAccelWrk(Accel * a){
   blasint lwork = -1;
   blasint twol = 2 * l;
   blasint one = 1;
-  scs_int k = a->k;
-  blasint bk = (blasint) k;
+  blasint k = (blasint) a->k;
   blasint worksize;
-  BLAS(gels)("NoTrans", &twol, &bk, &one, a->dFQR, &twol, a->theta, &twol, &twork, &lwork, &info);
+  BLAS(gels)("NoTrans", &twol, &k, &one, a->dFQR, &twol, a->theta, &twol, &twork, &lwork, &info);
   worksize = (blasint) twork;
+  a->worksize = worksize;
   a->wrk = scs_malloc(sizeof(blasint) * worksize);
-  RETURN worksize;
+  RETURN info;
 }
 
 Accel* initAccel(Work * w) {
   Accel * a = scs_malloc(sizeof(Accel));
   scs_int l = w->m + w->n + 1;
+  scs_int info;
   a->l = l;
   /* k = lookback - 1 since we use the difference form
      of anderson acceleration, and so there is one fewer var in lin sys. */
-  a->k = w->stgs->acceleration_lookback - 1;
+  /* Use MIN to prevent not full rank matrices */
+  a->k = MIN(2 * l, w->stgs->acceleration_lookback - 1);
   a->dF = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
   a->dG = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
   a->f = scs_malloc(sizeof(scs_float) * 2 * l);
   a->g = scs_malloc(sizeof(scs_float) * 2 * l);
-  a->theta = scs_malloc(sizeof(scs_float) * 2 * l);
+  a->theta = scs_malloc(sizeof(scs_float) * MAX(2 * l, a->k));
   a->tmp = scs_malloc(sizeof(scs_float) * 2 * l);
   a->dFQR = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
-  a->worksize = initAccelWrk(a);
+  info = initAccelWrk(a);
+  if (!a || !a->dF || ! a->dG || !a->f || !a->g || !a->theta || !a->tmp || ! a->dFQR || info != 0) {
+    freeAccel(a);
+    a = SCS_NULL;
+  }
   RETURN a;
 }
 
-void solve_accel_linsys(Accel * a) {
-    blasint info;
-    scs_int l = a->l;
-    blasint twol = 2 * l;
-    blasint one = 1;
-    scs_int k = a->k;
-    blasint bk = (blasint) k;
-    scs_float negOnef = -1.0;
-    scs_float onef = 1.0;
-    memcpy(a->theta, a->f, sizeof(scs_float) * 2 * l);
-    memcpy(a->dFQR, a->dF, sizeof(scs_float) * 2 * l * k);
-    BLAS(gels)("NoTrans", &twol, &bk, &one, a->dFQR, &twol, a->theta, &twol, a->wrk, &(a->worksize), &info);
-    memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * l);
-    // matmul g = g - dG * theta
-    BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
+scs_int solve_accel_linsys(Accel * a) {
+  DEBUG_FUNC
+  blasint info;
+  scs_int l = a->l;
+  blasint twol = 2 * l;
+  blasint one = 1;
+  blasint k = (blasint) a->k;
+  scs_float negOnef = -1.0;
+  scs_float onef = 1.0;
+  memcpy(a->theta, a->f, sizeof(scs_float) * 2 * l);
+  memcpy(a->dFQR, a->dF, sizeof(scs_float) * 2 * l * k);
+  BLAS(gels)("NoTrans", &twol, &k, &one, a->dFQR, &twol, a->theta, &twol, a->wrk, &(a->worksize), &info);
+  memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * l);
+  // matmul g = g - dG * theta
+  BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
+  RETURN info;
 }
 
 scs_int accelerate(Work *w, scs_int iter) {
-    // TODO: what if k > 2l ?
     DEBUG_FUNC
     scs_float* dF = w->accel->dF;
     scs_float* dG = w->accel->dG;
     scs_float * tmp = w->accel->tmp;
     scs_int l = w->accel->l;
     scs_int k = w->accel->k;
+    scs_int info;
     if (k == 0) {
         RETURN 0;
     }
@@ -126,22 +133,32 @@ scs_int accelerate(Work *w, scs_int iter) {
     // update dF, dG, f, g
     update_accel_params(w, k);
     // solve linear system for theta
-    solve_accel_linsys(w->accel);
+    info = solve_accel_linsys(w->accel);
     // set [u;v] = tmp
     memcpy(w->u, tmp, sizeof(scs_float) * l);
     memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
-    RETURN 0;
+    RETURN info;
 }
 
 void freeAccel(Accel * a) {
-    scs_free(a->dF);
-    scs_free(a->dG);
-    scs_free(a->f);
-    scs_free(a->g);
-    scs_free(a->dFQR);
-    scs_free(a->wrk);
-    scs_free(a->theta);
-    scs_free(a->tmp);
+  if(a) {
+    if (a->dF)
+      scs_free(a->dF);
+    if (a->dG)
+      scs_free(a->dG);
+    if (a->f)
+      scs_free(a->f);
+    if (a->g)
+      scs_free(a->g);
+    if (a->dFQR)
+      scs_free(a->dFQR);
+    if (a->theta)
+      scs_free(a->theta);
+    if (a->tmp)
+      scs_free(a->tmp);
+    if (a->wrk)
+      scs_free(a->wrk);
     scs_free(a);
+  }
 }
 
