@@ -56,6 +56,7 @@ void update_accel_params(Work * w, scs_int idx){
 }
 
 blasint initAccelWrk(Accel * a){
+  DEBUG_FUNC
   blasint info;
   scs_float twork;
   scs_int l = a->l;
@@ -72,6 +73,7 @@ blasint initAccelWrk(Accel * a){
 }
 
 Accel* initAccel(Work * w) {
+  DEBUG_FUNC
   Accel * a = scs_malloc(sizeof(Accel));
   if (!a) {
     RETURN SCS_NULL;
@@ -83,6 +85,10 @@ Accel* initAccel(Work * w) {
      of anderson acceleration, and so there is one fewer var in lin sys. */
   /* Use MIN to prevent not full rank matrices */
   a->k = MIN(2 * l, w->stgs->acceleration_lookback - 1);
+  if (a->k <= 0) {
+    a->dF = a->dG = a->f = a->g = a->theta = a->tmp = a->dFQR = a->wrk = SCS_NULL;
+    RETURN a;
+  }
   a->dF = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
   a->dG = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
   a->f = scs_malloc(sizeof(scs_float) * 2 * l);
@@ -118,59 +124,61 @@ scs_int solve_accel_linsys(Accel * a) {
 }
 
 scs_int accelerate(Work *w, scs_int iter) {
-    DEBUG_FUNC
-    scs_float* dF = w->accel->dF;
-    scs_float* dG = w->accel->dG;
-    scs_float * tmp = w->accel->tmp;
-    scs_int l = w->accel->l;
-    scs_int k = w->accel->k;
-    scs_int info;
-    timer accelTimer;
-    tic(&accelTimer);
-    if (k == 0) {
-        RETURN 0;
-    }
-    if (iter < k) {
-        update_accel_params(w, iter);
-        RETURN 0;
-    }
-    if (iter > k) {
-        // shift dF
-        memcpy(dF, &(dF[2*l]), sizeof(scs_float) * 2 * l * (k-1));
-        // shift dG
-        memcpy(dG, &(dG[2*l]), sizeof(scs_float) * 2 * l * (k-1));
-    }
-    // update dF, dG, f, g
-    update_accel_params(w, k);
-    // solve linear system for theta
-    info = solve_accel_linsys(w->accel);
-    // set [u;v] = tmp
-    memcpy(w->u, tmp, sizeof(scs_float) * l);
-    memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
-    w->accel->totalAccelTime += tocq(&accelTimer);
-    RETURN info;
+  DEBUG_FUNC
+  scs_float* dF = w->accel->dF;
+  scs_float* dG = w->accel->dG;
+  scs_float * tmp = w->accel->tmp;
+  scs_int l = w->accel->l;
+  scs_int k = w->accel->k;
+  scs_int info;
+  timer accelTimer;
+  tic(&accelTimer);
+  if (k <= 0) {
+    RETURN 0;
+  }
+  if (iter < k) {
+    update_accel_params(w, iter);
+    RETURN 0;
+  }
+  if (iter > k) {
+    // shift dF
+    memcpy(dF, &(dF[2*l]), sizeof(scs_float) * 2 * l * (k-1));
+    // shift dG
+    memcpy(dG, &(dG[2*l]), sizeof(scs_float) * 2 * l * (k-1));
+  }
+  // update dF, dG, f, g
+  update_accel_params(w, k);
+  // solve linear system for theta
+  info = solve_accel_linsys(w->accel);
+  // set [u;v] = tmp
+  memcpy(w->u, tmp, sizeof(scs_float) * l);
+  memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
+  w->accel->totalAccelTime += tocq(&accelTimer);
+  RETURN info;
 }
 
 void freeAccel(Accel * a) {
-  if(a) {
-    if (a->dF)
-      scs_free(a->dF);
-    if (a->dG)
-      scs_free(a->dG);
-    if (a->f)
-      scs_free(a->f);
-    if (a->g)
-      scs_free(a->g);
-    if (a->dFQR)
-      scs_free(a->dFQR);
-    if (a->theta)
-      scs_free(a->theta);
-    if (a->tmp)
-      scs_free(a->tmp);
-    if (a->wrk)
-      scs_free(a->wrk);
-    scs_free(a);
-  }
+  DEBUG_FUNC
+    if(a) {
+      if (a->dF)
+        scs_free(a->dF);
+      if (a->dG)
+        scs_free(a->dG);
+      if (a->f)
+        scs_free(a->f);
+      if (a->g)
+        scs_free(a->g);
+      if (a->dFQR)
+        scs_free(a->dFQR);
+      if (a->theta)
+        scs_free(a->theta);
+      if (a->tmp)
+        scs_free(a->tmp);
+      if (a->wrk)
+        scs_free(a->wrk);
+      scs_free(a);
+    }
+  RETURN;
 }
 
 #else
@@ -192,9 +200,10 @@ scs_int accelerate(Work *w, scs_int iter) {
 #endif
 
 char *getAccelSummary(const Info *info, Accel *a) {
+  DEBUG_FUNC
     char *str = scs_malloc(sizeof(char) * 64);
-    sprintf(str, "\tAcceleration: avg solve time: %1.2es\n",
-            a->totalAccelTime / (info->iter + 1) / 1e3);
-    a->totalAccelTime = 0.0;
-    return str;
+  sprintf(str, "\tAcceleration: avg solve time: %1.2es\n",
+      a->totalAccelTime / (info->iter + 1) / 1e3);
+  a->totalAccelTime = 0.0;
+  RETURN str;
 }
