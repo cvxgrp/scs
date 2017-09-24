@@ -645,10 +645,12 @@ static scs_int hasConverged(Work *w, struct residuals *r, scs_int iter) {
     if (r->resPri < eps && r->resDual < eps && r->relGap < eps) {
         RETURN SCS_SOLVED;
     }
-    if (r->resUnbdd < eps) {
+    /* Add iter > 0 to avoid strange edge case where infeasible point found
+     * right at start of run `out/demo_SOCP_indirect 2 0.1 0.3 1506264403` */
+    if (r->resUnbdd < eps && iter > 0) {
         RETURN SCS_UNBOUNDED;
     }
-    if (r->resInfeas < eps) {
+    if (r->resInfeas < eps && iter > 0) {
         RETURN SCS_INFEASIBLE;
     }
     RETURN 0;
