@@ -34,22 +34,22 @@ void update_accel_params(Work * w, scs_int idx){
     scs_float* g = w->accel->g;
     scs_int l = w->m + w->n + 1;
     if (idx > 0) {
-        // copy g_prev into idx col of dG
+        /* copy g_prev into idx col of dG */
         memcpy(&(dG[(idx - 1) * 2 * l]), g, sizeof(scs_float) * 2 * l);
-        // copy f_prev into idx col of dF
+        /* copy f_prev into idx col of dF */
         memcpy(&(dF[(idx - 1) * 2 * l]), f, sizeof(scs_float) * 2 * l);
     }
-    // g = [u;v]
+    /* g = [u;v] */
     memcpy(g, w->u, sizeof(scs_float) * l);
     memcpy(&(g[l]), w->v, sizeof(scs_float) * l);
-    // calulcate f = g - [u_prev, v_prev]
+    /* calulcate f = g - [u_prev, v_prev] */
     memcpy(f, g, sizeof(scs_float) * 2 * l);
     addScaledArray(f, w->u_prev, l, -1.0);
     addScaledArray(&(f[l]), w->v_prev, l, -1.0);
     if (idx > 0) {
-        // last col of dG = g_prev - g
+        /* last col of dG = g_prev - g */
         addScaledArray(&(dG[(idx - 1) * 2 * l]), g, 2 * l, -1);
-        // last col of dF = f_prev - f
+        /* last col of dF = f_prev - f */
         addScaledArray(&(dF[(idx - 1) * 2 * l]), f, 2 * l, -1);
     }
     RETURN;
@@ -75,11 +75,11 @@ blasint initAccelWrk(Accel * a){
 Accel* initAccel(Work * w) {
   DEBUG_FUNC
   Accel * a = scs_malloc(sizeof(Accel));
+  scs_int l = w->m + w->n + 1;
+  scs_int info;
   if (!a) {
     RETURN SCS_NULL;
   }
-  scs_int l = w->m + w->n + 1;
-  scs_int info;
   a->l = l;
   /* k = lookback - 1 since we use the difference form
      of anderson acceleration, and so there is one fewer var in lin sys. */
@@ -118,7 +118,7 @@ scs_int solve_accel_linsys(Accel * a) {
   memcpy(a->dFQR, a->dF, sizeof(scs_float) * 2 * l * k);
   BLAS(gels)("NoTrans", &twol, &k, &one, a->dFQR, &twol, a->theta, &twol, a->wrk, &(a->worksize), &info);
   memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * l);
-  // matmul g = g - dG * theta
+  /* matmul g = g - dG * theta */
   BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
   RETURN info;
 }
@@ -141,16 +141,16 @@ scs_int accelerate(Work *w, scs_int iter) {
     RETURN 0;
   }
   if (iter > k) {
-    // shift dF
+    /* shift dF */
     memcpy(dF, &(dF[2*l]), sizeof(scs_float) * 2 * l * (k-1));
-    // shift dG
+    /* shift dG */
     memcpy(dG, &(dG[2*l]), sizeof(scs_float) * 2 * l * (k-1));
   }
-  // update dF, dG, f, g
+  /* update dF, dG, f, g */
   update_accel_params(w, k);
-  // solve linear system for theta
+  /* solve linear system for theta */
   info = solve_accel_linsys(w->accel);
-  // set [u;v] = tmp
+  /* set [u;v] = tmp */
   memcpy(w->u, tmp, sizeof(scs_float) * l);
   memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
   w->accel->totalAccelTime += tocq(&accelTimer);
