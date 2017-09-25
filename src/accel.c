@@ -142,9 +142,9 @@ scs_int accelerate(Work *w, scs_int iter) {
   }
   if (iter > k) {
     /* shift dF */
-    memcpy(dF, &(dF[2*l]), sizeof(scs_float) * 2 * l * (k-1));
+    memmove(dF, &(dF[2*l]), sizeof(scs_float) * 2 * l * (k-1));
     /* shift dG */
-    memcpy(dG, &(dG[2*l]), sizeof(scs_float) * 2 * l * (k-1));
+    memmove(dG, &(dG[2*l]), sizeof(scs_float) * 2 * l * (k-1));
   }
   /* update dF, dG, f, g */
   update_accel_params(w, k);
