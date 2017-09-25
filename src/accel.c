@@ -24,13 +24,13 @@ void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n,
                 const scs_float *alpha, const scs_float *a, const blasint *lda,
                 const scs_float *x, const blasint *incx, const scs_float *beta,
                 scs_float *y, const blasint *incy);
-void BLAS(symv)(const char *uplo, const int *n,
-                const double *alpha, const double *a,
-                const int *lda, const double *x, const int *incx,
-                const double *beta, double *y, const int *incy);
-void BLAS(syr) (const char *uplo, const int *n,
-                const double *alpha, const double *x,
-                const int *incx, double *a, const int *lda);
+void BLAS(symv)(const char *uplo, const blasint *n,
+                const scs_float *alpha, const scs_float *a,
+                const blasint *lda, const scs_float *x, const blasint *incx,
+                const scs_float *beta, scs_float *y, const blasint *incy);
+void BLAS(syr) (const char *uplo, const blasint *n,
+                const scs_float *alpha, const scs_float *x,
+                const blasint *incx, scs_float *a, const blasint *lda);
 
 
 scs_int solve_accel_linsys(Accel *a);
@@ -73,7 +73,6 @@ Accel *initAccel(Work *w) {
   Accel *a = scs_malloc(sizeof(Accel));
   scs_int l = w->m + w->n + 1;
   scs_int i;
-  scs_int info;
   if (!a) {
     RETURN SCS_NULL;
   }
@@ -113,10 +112,14 @@ Accel *initAccel(Work *w) {
 
 // factor should be one of -1, +1
 void rank_one_update(scs_float *A, scs_float *u, scs_int len, scs_float factor) {
+  DEBUG_FUNC
   blasint blen = (blasint) len;
   blasint one = (blasint) 1;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
+  printArray(A, len, 'A');
+  scs_printf("factor %f\n", factor);
+  scs_printf("len %i\n", len);
   // TODO
   scs_float * v = scs_malloc(sizeof(scs_float) * len);
   // v = A * u
@@ -127,9 +130,11 @@ void rank_one_update(scs_float *A, scs_float *u, scs_int len, scs_float factor) 
   BLAS(syr)("Upper", &blen, &factor, v, &one, A, &blen);
   // TODO
   scs_free(v);
+  RETURN;
 }
 
 scs_int solve_accel_linsys(Accel *a) {
+  DEBUG_FUNC
   blasint twol = 2 * a->l;
   blasint one = 1;
   blasint k = (blasint)a->k;
