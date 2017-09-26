@@ -22,11 +22,6 @@ void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n,
                 const scs_float *alpha, const scs_float *a, const blasint *lda,
                 const scs_float *x, const blasint *incx, const scs_float *beta,
                 scs_float *y, const blasint *incy);
-/*
-void BLAS(syr) (const char *uplo, const blasint *n,
-                const scs_float *alpha, const scs_float *x,
-                const blasint *incx, scs_float *a, const blasint *lda);
-*/
 void BLAS(syrk)(const char *uplo, const char *trans, blasint *n, blasint *k,
                 scs_float *alpha, scs_float *a, blasint *lda, scs_float *beta,
                 scs_float *c, blasint *ldc);
@@ -35,8 +30,6 @@ void BLAS(posv) (const char *uplo, blasint * n, blasint * nrhs, scs_float * a,
 
 /* Not clear if this should just be 0. */
 #define ACCEL_REGULARIZATION (1e-9)
-
-/* TODO: rank 2 update. */
 
 scs_int solve_accel_linsys(Accel *a) {
   DEBUG_FUNC
@@ -73,22 +66,21 @@ void update_accel_params(Work *w, scs_int idx) {
   scs_float *g = w->accel->g;
   scs_int l = w->m + w->n + 1;
   scs_int k = w->accel->k;
-  scs_int prev_idx = (k + idx - 1) % k;
-  /* copy g_prev into prev_idx col of dG */
-  memcpy(&(dG[prev_idx * 2 * l]), g, sizeof(scs_float) * 2 * l);
+  /* copy g_prev into idx col of dG */
+  memcpy(&(dG[idx * 2 * l]), g, sizeof(scs_float) * 2 * l);
   /* copy f_prev into idx col of dF */
-  memcpy(&(dF[prev_idx * 2 * l]), f, sizeof(scs_float) * 2 * l);
+  memcpy(&(dF[idx * 2 * l]), f, sizeof(scs_float) * 2 * l);
   /* g = [u;v] */
   memcpy(g, w->u, sizeof(scs_float) * l);
   memcpy(&(g[l]), w->v, sizeof(scs_float) * l);
-  /* calulcate f = g - [u_prev, v_prev] */
+  /* calculcate f = g - [u_prev, v_prev] */
   memcpy(f, g, sizeof(scs_float) * 2 * l);
   addScaledArray(f, w->u_prev, l, -1.0);
   addScaledArray(&(f[l]), w->v_prev, l, -1.0);
-  /* last col of dG = g_prev - g */
-  addScaledArray(&(dG[prev_idx * 2 * l]), g, 2 * l, -1);
-  /* last col of dF = f_prev - f */
-  addScaledArray(&(dF[prev_idx * 2 * l]), f, 2 * l, -1);
+  /* idx col of dG = g_prev - g */
+  addScaledArray(&(dG[idx * 2 * l]), g, 2 * l, -1);
+  /* idx col of dF = f_prev - f */
+  addScaledArray(&(dF[idx * 2 * l]), f, 2 * l, -1);
   RETURN;
 }
 
@@ -136,7 +128,7 @@ scs_int accelerate(Work *w, scs_int iter) {
     RETURN 0;
   }
   /* update dF, dG, f, g */
-  update_accel_params(w, iter % k);
+  update_accel_params(w, (k + iter - 1) % k);
   if (iter < k) {
     RETURN 0;
   }
