@@ -2,6 +2,9 @@
 #include "scs.h"
 #include "scs_blas.h"
 
+/* Not clear if this should just be 0. */
+#define ACCEL_REGULARIZATION (0.)
+
 struct SCS_ACCEL {
 #ifdef LAPACK_LIB_FOUND
   scs_float *dF;
@@ -27,9 +30,6 @@ void BLAS(syrk)(const char *uplo, const char *trans, blasint *n, blasint *k,
                 scs_float *c, blasint *ldc);
 void BLAS(posv) (const char *uplo, blasint * n, blasint * nrhs, scs_float * a,
                  blasint * lda, scs_float * b, blasint * ldb, blasint * info);
-
-/* Not clear if this should just be 0. */
-#define ACCEL_REGULARIZATION (0.)
 
 scs_int solve_accel_linsys(Accel *a) {
   DEBUG_FUNC
@@ -137,6 +137,9 @@ scs_int accelerate(Work *w, scs_int iter) {
   memcpy(w->u, tmp, sizeof(scs_float) * l);
   memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
   w->accel->totalAccelTime += tocq(&accelTimer);
+  if (info != 0) {
+    scs_printf("Accelerate error, info %i\n", info);
+  }
   RETURN info;
 }
 
