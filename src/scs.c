@@ -97,7 +97,7 @@ static void printInitHeader(const Data *d, const Cone *k) {
         scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i, "
                    "scale = %2.2f\nacceleration_lookback = %i, rho_x = %.2e\n",
                    stgs->eps, stgs->alpha, (int)stgs->max_iters,
-                   (int)stgs->normalize, stgs->scale, 
+                   (int)stgs->normalize, stgs->scale,
                    (int) acceleration_lookback, stgs->rho_x);
     } else {
         scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n"
