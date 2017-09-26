@@ -65,7 +65,6 @@ void update_accel_params(Work *w, scs_int idx) {
   scs_float *f = w->accel->f;
   scs_float *g = w->accel->g;
   scs_int l = w->m + w->n + 1;
-  scs_int k = w->accel->k;
   /* copy g_prev into idx col of dG */
   memcpy(&(dG[idx * 2 * l]), g, sizeof(scs_float) * 2 * l);
   /* copy f_prev into idx col of dF */

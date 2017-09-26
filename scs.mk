@@ -52,7 +52,7 @@ ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
 
-CULDFLAGS += -L/usr/local/google/home/bodonoghue/miniconda2/envs/python35/lib/ -lcudart -lcublas -lcusparse
+CULDFLAGS += -lcudart -lcublas -lcusparse
 CUDAFLAGS = $(CFLAGS) -I/usr/local/cuda/include -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 LINSYS = linsys
@@ -125,7 +125,7 @@ endif
 USE_LAPACK = 1
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
-  BLASLDFLAGS = -L/usr/local/google/home/bodonoghue/miniconda2/envs/python35/lib/ -lblas -llapack #-lgfortran
+  BLASLDFLAGS = -lblas -llapack #-lgfortran
   LDFLAGS += $(BLASLDFLAGS)
   OPT_FLAGS += -DLAPACK_LIB_FOUND
 
