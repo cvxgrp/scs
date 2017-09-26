@@ -36,6 +36,7 @@ void BLAS(posv) (const char *uplo, blasint * n, blasint * nrhs, scs_float * a,
 /* Not clear if this should just be 0. */
 #define ACCEL_REGULARIZATION (1e-9)
 
+/* TODO: rank 2 update, get rid of memove */
 
 scs_int solve_accel_linsys(Accel *a);
 void update_accel_params(Work *w, scs_int idx);
