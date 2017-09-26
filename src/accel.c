@@ -121,12 +121,15 @@ scs_int solve_accel_linsys(Accel *a) {
   scs_int info;
   scs_int i;
   // TODO
+  timer projTimer;
   scs_float * X = scs_calloc(a->k * a->k, sizeof(scs_float));
   for (i = 0; i < a->k; ++i) {
     X[i * a->k + i] = 0.0001;
   }
   // now X = dF'*dF
+  //tic(&projTimer);
   BLAS(syrk)("Lower", "Transpose", &k, &twol, &onef, a->dF, &twol, &zerof, X, &k);
+  //scs_printf("pos orthant proj time: %1.2es\n", tocq(&projTimer) / 1e3);
   // theta = dF' f
   BLAS(gemv)("Trans", &twol, &k, &onef, a->dF, &twol, a->f, &one, &zerof, a->theta, &one);
   // theta = (dF'dF) \ dF' f
