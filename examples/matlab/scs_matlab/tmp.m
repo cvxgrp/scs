@@ -1,5 +1,6 @@
 clear all;close all;
-randn('seed',0)
+randn('seed', 0)
+rand('seed', 0)
 
 n = 1000;
 
@@ -10,7 +11,6 @@ b = A * b0 + 0.05 * randn(n,1);
 lam = 1;
 
 use_indirect = 1;
-clc
 
 %%
 %{

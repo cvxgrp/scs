@@ -29,7 +29,7 @@ void BLAS(posv) (const char *uplo, blasint * n, blasint * nrhs, scs_float * a,
                  blasint * lda, scs_float * b, blasint * ldb, blasint * info);
 
 /* Not clear if this should just be 0. */
-#define ACCEL_REGULARIZATION (1e-9)
+#define ACCEL_REGULARIZATION (0.)
 
 scs_int solve_accel_linsys(Accel *a) {
   DEBUG_FUNC
