@@ -10,8 +10,7 @@ struct SCS_ACCEL {
   scs_float *g;
   scs_float *theta;
   scs_float *tmp;
-  scs_float *dFQR;
-  scs_float *wrk;
+  scs_float *X;
   scs_int k, l;
   blasint worksize;
 #endif
@@ -23,20 +22,19 @@ void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n,
                 const scs_float *alpha, const scs_float *a, const blasint *lda,
                 const scs_float *x, const blasint *incx, const scs_float *beta,
                 scs_float *y, const blasint *incy);
-void BLAS(symv)(const char *uplo, const blasint *n,
-                const scs_float *alpha, const scs_float *a,
-                const blasint *lda, const scs_float *x, const blasint *incx,
-                const scs_float *beta, scs_float *y, const blasint *incy);
+/*
 void BLAS(syr) (const char *uplo, const blasint *n,
                 const scs_float *alpha, const scs_float *x,
                 const blasint *incx, scs_float *a, const blasint *lda);
+*/
 void BLAS(syrk)(const char *uplo, const char *trans, blasint *n, blasint *k,
                 scs_float *alpha, scs_float *a, blasint *lda, scs_float *beta,
                 scs_float *c, blasint *ldc);
 void BLAS(posv) (const char *uplo, blasint * n, blasint * nrhs, scs_float * a,
                  blasint * lda, scs_float * b, blasint * ldb, blasint * info);
 
-
+/* Not clear if this should just be 0. */
+#define ACCEL_REGULARIZATION (1e-9)
 
 
 scs_int solve_accel_linsys(Accel *a);
@@ -84,8 +82,7 @@ Accel *initAccel(Work *w) {
   /* Use MIN to prevent not full rank matrices */
   a->k = MIN(2 * l, w->stgs->acceleration_lookback - 1);
   if (a->k <= 0) {
-    a->dF = a->dG = a->f = a->g = a->theta = a->tmp = a->dFQR = a->wrk =
-        SCS_NULL;
+    a->dF = a->dG = a->f = a->g = a->theta = a->tmp = SCS_NULL;
     RETURN a;
   }
   a->dF = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
@@ -94,19 +91,13 @@ Accel *initAccel(Work *w) {
   a->g = scs_malloc(sizeof(scs_float) * 2 * l);
   a->theta = scs_malloc(sizeof(scs_float) * MAX(2 * l, a->k));
   a->tmp = scs_malloc(sizeof(scs_float) * 2 * l);
-  a->dFQR = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
-
-  // TODO
-
+  a->X = scs_malloc(sizeof(scs_float) * a->k * a->k);
 
   a->totalAccelTime = 0.0;
-  /*
-  if (!a->dF || !a->dG || !a->f || !a->g || !a->theta || !a->tmp || !a->dFQR ||
-      info != 0) {
+  if (!a->dF || !a->dG || !a->f || !a->g || !a->theta || !a->tmp || !a->X) {
     freeAccel(a);
     a = SCS_NULL;
   }
-  */
   RETURN a;
 }
 
@@ -118,28 +109,23 @@ scs_int solve_accel_linsys(Accel *a) {
   scs_float negOnef = -1.0;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
-  scs_int info;
-  scs_int i;
-  // TODO
-  timer projTimer;
-  scs_float * X = scs_calloc(a->k * a->k, sizeof(scs_float));
-  for (i = 0; i < a->k; ++i) {
-    X[i * a->k + i] = 0.0001;
+  scs_int info, i;
+  memset(a->X, 0, a->k * a->k * sizeof(scs_float));
+  if (ACCEL_REGULARIZATION > 0.) {
+    for (i = 0; i < a->k; ++i) {
+      a->X[i * a->k + i] = ACCEL_REGULARIZATION;
+    }
   }
-  // now X = dF'*dF
-  //tic(&projTimer);
-  BLAS(syrk)("Lower", "Transpose", &k, &twol, &onef, a->dF, &twol, &zerof, X, &k);
-  //scs_printf("pos orthant proj time: %1.2es\n", tocq(&projTimer) / 1e3);
-  // theta = dF' f
+  /* X = dF'*dF */
+  BLAS(syrk)("Lower", "Transpose", &k, &twol, &onef, a->dF, &twol, &onef, a->X, &k);
+  /* theta = dF' f */
   BLAS(gemv)("Trans", &twol, &k, &onef, a->dF, &twol, a->f, &one, &zerof, a->theta, &one);
-  // theta = (dF'dF) \ dF' f
-  BLAS(posv)("Lower", &k, &one, X, &k, a->theta, &k, &info);
+  /* theta = (dF'dF) \ dF' f */
+  BLAS(posv)("Lower", &k, &one, a->X, &k, a->theta, &k, &info);
   memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * a->l);
-  // g = g - dG * theta
+  /* g = g - dG * theta */
   BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
-  // TODO
-  scs_free(X);
-  RETURN 0;
+  RETURN info;
 }
 
 scs_int accelerate(Work *w, scs_int iter) {
@@ -183,10 +169,9 @@ void freeAccel(Accel *a) {
     if (a->dG) scs_free(a->dG);
     if (a->f) scs_free(a->f);
     if (a->g) scs_free(a->g);
-    if (a->dFQR) scs_free(a->dFQR);
     if (a->theta) scs_free(a->theta);
     if (a->tmp) scs_free(a->tmp);
-    if (a->wrk) scs_free(a->wrk);
+    if (a->X) scs_free(a->X);
     scs_free(a);
   }
   RETURN;
