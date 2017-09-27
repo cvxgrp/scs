@@ -48,6 +48,22 @@ def solveFeasible():
   print('pri error = ', (dot(data['c'], xd) - p_star) / p_star)
   print('dual error = ', (-dot(data['b'], yd) - p_star) / p_star)
 
+  params['acceleration_lookback'] = 30
+  sol_i = scs.solve(data, K, use_indirect=True, **params)
+  xi = sol_i['x']
+  yi = sol_i['y']
+  print('p*  = ', p_star)
+  print('pri error = ', (dot(data['c'], xi) - p_star) / p_star)
+  print('dual error = ', (-dot(data['b'], yi) - p_star) / p_star)
+
+  params['acceleration_lookback'] = 0
+  sol_i = scs.solve(data, K, use_indirect=True, **params)
+  xi = sol_i['x']
+  yi = sol_i['y']
+  print('p*  = ', p_star)
+  print('pri error = ', (dot(data['c'], xi) - p_star) / p_star)
+  print('dual error = ', (-dot(data['b'], yi) - p_star) / p_star)
+
 
 if __name__ == '__main__':
   main()
