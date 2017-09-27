@@ -32,40 +32,39 @@ static scs_int scs_isnan(scs_float x) {
 }
 
 static void freeWork(Work *w) {
-    DEBUG_FUNC
-    if (!w)
-        RETURN;
-    if (w->u)
-        scs_free(w->u);
-    if (w->v)
-        scs_free(w->v);
-    if (w->u_t)
-        scs_free(w->u_t);
-    if (w->u_prev)
-        scs_free(w->u_prev);
-    if (w->v_prev)
-        scs_free(w->v_prev);
-    if (w->h)
-        scs_free(w->h);
-    if (w->g)
-        scs_free(w->g);
-    if (w->b)
-        scs_free(w->b);
-    if (w->c)
-        scs_free(w->c);
-    if (w->pr)
-        scs_free(w->pr);
-    if (w->dr)
-        scs_free(w->dr);
-    if (w->scal) {
-        if (w->scal->D)
-            scs_free(w->scal->D);
-        if (w->scal->E)
-            scs_free(w->scal->E);
-        scs_free(w->scal);
-    }
-    scs_free(w);
-    RETURN;
+  DEBUG_FUNC
+  if (!w) {RETURN;}
+  if (w->u)
+    scs_free(w->u);
+  if (w->v)
+    scs_free(w->v);
+  if (w->u_t)
+    scs_free(w->u_t);
+  if (w->u_prev)
+    scs_free(w->u_prev);
+  if (w->v_prev)
+    scs_free(w->v_prev);
+  if (w->h)
+    scs_free(w->h);
+  if (w->g)
+    scs_free(w->g);
+  if (w->b)
+    scs_free(w->b);
+  if (w->c)
+    scs_free(w->c);
+  if (w->pr)
+    scs_free(w->pr);
+  if (w->dr)
+    scs_free(w->dr);
+  if (w->scal) {
+    if (w->scal->D)
+      scs_free(w->scal->D);
+    if (w->scal->E)
+      scs_free(w->scal->E);
+    scs_free(w->scal);
+  }
+  scs_free(w);
+  RETURN;
 }
 
 static void printInitHeader(const Data *d, const Cone *k) {
@@ -912,9 +911,6 @@ void scs_finish(Work *w) {
             freeAccel(w->accel);
         freeWork(w);
     }
-#if EXTRAVERBOSE > 0
-    scs_printf("exit finish\n");
-#endif
     RETURN;
 }
 
