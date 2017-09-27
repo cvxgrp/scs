@@ -14,6 +14,7 @@ extern "C" {
 #define _scs_free mxFree
 #define _scs_malloc mxMalloc
 #define _scs_calloc mxCalloc
+#define _scs_realloc mxRealloc
 #elif defined PYTHON
 #include <Python.h>
 #include <stdlib.h>
@@ -26,6 +27,7 @@ extern "C" {
 #define _scs_free free
 #define _scs_malloc malloc
 #define _scs_calloc calloc
+#define _scs_realloc realloc
 #elif(defined(USING_R))
 #include <stdlib.h>
 #include <stdio.h>
@@ -34,6 +36,7 @@ extern "C" {
 #define _scs_free free
 #define _scs_malloc malloc
 #define _scs_calloc calloc
+#define _scs_realloc realloc
 #else
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +44,7 @@ extern "C" {
 #define _scs_free free
 #define _scs_malloc malloc
 #define _scs_calloc calloc
+#define _scs_realloc realloc
 #endif
 
 #define scs_free(x)                                                            \
@@ -48,6 +52,7 @@ extern "C" {
     x = SCS_NULL
 #define scs_malloc(x) _scs_malloc(x)
 #define scs_calloc(x, y) _scs_calloc(x, y)
+#define scs_realloc(x, y) _scs_realloc(x, y)
 
 #ifdef DLONG
 #ifdef _WIN64

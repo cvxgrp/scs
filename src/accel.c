@@ -11,13 +11,12 @@ struct SCS_ACCEL {
   scs_float *dG;
   scs_float *f;
   scs_float *g;
+  scs_float *sol;
   scs_float *theta;
-  scs_float *tmp;
-  scs_float *X;
-  scs_float *dFQR;
-  scs_float *wrk;
-  scs_int k, l, bad_numerics;
+  scs_float *X; /* dF'dF for posv, or QR of dF for gels */
+  scs_float *wrk; /* gels only: workspace for QR decomp */
   blasint worksize;
+  scs_int k, l, bad_numerics;
 #endif
   scs_float totalAccelTime;
 };
@@ -33,8 +32,15 @@ void BLAS(syrk)(const char *uplo, const char *trans, blasint *n, blasint *k,
 void BLAS(posv) (const char *uplo, blasint * n, blasint * nrhs, scs_float * a,
                  blasint * lda, scs_float * b, blasint * ldb, blasint * info);
 void BLAS(gels)(const char *trans, const blasint *m, const blasint *n,
-                const blasint *nrhs, scs_float *a, const blasint *lda, scs_float *b,
-                const blasint *ldb, scs_float *work, const blasint *lwork, blasint *info);
+                const blasint *nrhs, scs_float *a, const blasint *lda,
+                scs_float *b, const blasint *ldb, scs_float *work,
+                const blasint *lwork, blasint *info);
+
+/* TODO run clang format
+ * allow rolling window on acceleration length (don't just start at k)
+ * make sure variable memory is aligned when switching solver
+ * make sure blasints all there
+ */
 
 scs_int solve_with_gels(Accel * a) {
   DEBUG_FUNC
@@ -46,15 +52,47 @@ scs_int solve_with_gels(Accel * a) {
   scs_float negOnef = -1.0;
   scs_float onef = 1.0;
   memcpy(a->theta, a->f, sizeof(scs_float) * 2 * l);
-  memcpy(a->dFQR, a->dF, sizeof(scs_float) * 2 * l * k);
-  BLAS(gels)("NoTrans", &twol, &k, &one, a->dFQR, &twol, a->theta, &twol, a->wrk, &(a->worksize), &info);
-  memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * l);
-  /* matmul g = g - dG * theta */
-  BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
+  memcpy(a->X, a->dF, sizeof(scs_float) * 2 * l * k);
+  /* solve dF theta = f */
+  BLAS(gels)("NoTrans", &twol, &k, &one, a->X, &twol, a->theta, &twol, a->wrk, &(a->worksize), &info);
+  /* sol = g */
+  memcpy(a->sol, a->g, sizeof(scs_float) * 2 * l);
+  /* sol = sol - dG * theta */
+  BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->sol, &one);
   RETURN info;
 }
 
-blasint init_accel_work(Accel * a){
+scs_int solve_with_posv(Accel * a) {
+  DEBUG_FUNC
+  scs_int i;
+  blasint info;
+  blasint twol = 2 * a->l;
+  blasint one = 1;
+  blasint k = (blasint)a->k;
+  scs_float negOnef = -1.0;
+  scs_float onef = 1.0;
+  scs_float zerof = 0.0;
+  scs_float reg = ACCEL_REGULARIZATION;
+  memset(a->X, 0, a->k * a->k * sizeof(scs_float));
+  if (reg > 0.) {
+    for (i = 0; i < a->k; ++i) {
+      a->X[i * a->k + i] = 1.;
+    }
+  }
+  /* X = dF'*dF */
+  BLAS(syrk)("Lower", "Transpose", &k, &twol, &onef, a->dF, &twol, &reg, a->X, &k);
+  /* theta = dF' f */
+  BLAS(gemv)("Trans", &twol, &k, &onef, a->dF, &twol, a->f, &one, &zerof, a->theta, &one);
+  /* theta = (dF'dF) \ dF' f */
+  BLAS(posv)("Lower", &k, &one, a->X, &k, a->theta, &k, &info);
+  /* sol = g */
+  memcpy(a->sol, a->g, sizeof(scs_float) * 2 * a->l);
+  /* sol = sol - dG * theta */
+  BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->sol, &one);
+  RETURN (scs_int) info;
+}
+
+scs_int init_gels(Accel * a){
   DEBUG_FUNC
   blasint info;
   scs_float twork;
@@ -64,45 +102,30 @@ blasint init_accel_work(Accel * a){
   blasint one = 1;
   blasint k = (blasint) a->k;
   blasint worksize;
-  BLAS(gels)("NoTrans", &twol, &k, &one, a->dFQR, &twol, a->theta, &twol, &twork, &lwork, &info);
+  scs_free(a->X);
+  scs_free(a->theta);
+  a->theta = scs_malloc(sizeof(scs_float) * MAX(2 * a->l, a->k));
+  a->X = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
+  BLAS(gels)("NoTrans", &twol, &k, &one, a->X, &twol, a->theta, &twol, &twork, &lwork, &info);
   worksize = (blasint) twork;
   a->worksize = worksize;
-  a->dFQR = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
   a->wrk = scs_malloc(sizeof(blasint) * worksize);
-  RETURN info;
+  RETURN (scs_int) info;
 }
 
 scs_int solve_accel_linsys(Accel *a) {
   DEBUG_FUNC
-  if (a->bad_numerics) RETURN solve_with_gels(a);
-  blasint twol = 2 * a->l;
-  blasint one = 1;
-  blasint k = (blasint)a->k;
-  scs_float negOnef = -1.0;
-  scs_float onef = 1.0;
-  scs_float zerof = 0.0;
-  scs_int info, i;
-  memset(a->X, 0, a->k * a->k * sizeof(scs_float));
-  if (ACCEL_REGULARIZATION > 0.) {
-    for (i = 0; i < a->k; ++i) {
-      a->X[i * a->k + i] = ACCEL_REGULARIZATION;
-    }
+  scs_int info;
+  if (a->bad_numerics) {
+    RETURN solve_with_gels(a);
   }
-  /* X = dF'*dF */
-  BLAS(syrk)("Lower", "Transpose", &k, &twol, &onef, a->dF, &twol, &onef, a->X, &k);
-  /* theta = dF' f */
-  BLAS(gemv)("Trans", &twol, &k, &onef, a->dF, &twol, a->f, &one, &zerof, a->theta, &one);
-  /* theta = (dF'dF) \ dF' f */
-  BLAS(posv)("Lower", &k, &one, a->X, &k, a->theta, &k, &info);
+  info = solve_with_posv(a);
   if (info != 0) {
     scs_printf("\tposv ran into numerical issues, info %i, switching to gels\n", info);
     a->bad_numerics = 1;
-    init_accel_work(a);
+    init_gels(a);
     RETURN solve_with_gels(a);
   }
-  memcpy(a->tmp, a->g, sizeof(scs_float) * 2 * a->l);
-  /* g = g - dG * theta */
-  BLAS(gemv)("NoTrans", &twol, &k, &negOnef, a->dG, &twol, a->theta, &one, &onef, a->tmp, &one);
   RETURN info;
 }
 
@@ -133,31 +156,29 @@ void update_accel_params(Work *w, scs_int idx) {
 
 Accel *initAccel(Work *w) {
   DEBUG_FUNC
-  Accel *a = scs_malloc(sizeof(Accel));
-  scs_int l = w->m + w->n + 1;
+  Accel *a = scs_calloc(1, sizeof(Accel));
   if (!a) {
     RETURN SCS_NULL;
   }
+  a->l = w->m + w->n + 1;;
+  a->k = MIN(2 * a->l, w->stgs->acceleration_lookback - 1);
   a->bad_numerics = 0;
-  a->l = l;
+  if (a->k <= 0) {
+    RETURN a;
+  }
   /* k = lookback - 1 since we use the difference form
      of anderson acceleration, and so there is one fewer var in lin sys. */
   /* Use MIN to prevent not full rank matrices */
-  a->k = MIN(2 * l, w->stgs->acceleration_lookback - 1);
-  if (a->k <= 0) {
-    a->dF = a->dG = a->f = a->g = a->theta = a->tmp = SCS_NULL;
-    RETURN a;
-  }
-  a->dF = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
-  a->dG = scs_malloc(sizeof(scs_float) * 2 * l * a->k);
-  a->f = scs_malloc(sizeof(scs_float) * 2 * l);
-  a->g = scs_malloc(sizeof(scs_float) * 2 * l);
-  a->theta = scs_malloc(sizeof(scs_float) * MAX(2 * l, a->k));
-  a->tmp = scs_malloc(sizeof(scs_float) * 2 * l);
+  a->dF = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  a->dG = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  a->f = scs_calloc(2 * a->l, sizeof(scs_float));
+  a->g = scs_calloc(2 * a->l, sizeof(scs_float));
+  a->sol = scs_malloc(sizeof(scs_float) * 2 * a->l);
+  /* posv swap to using these for gels if needed */
+  a->theta = scs_malloc(sizeof(scs_float) * a->k);
   a->X = scs_malloc(sizeof(scs_float) * a->k * a->k);
-  a->wrk = a->dFQR = SCS_NULL;
   a->totalAccelTime = 0.0;
-  if (!a->dF || !a->dG || !a->f || !a->g || !a->theta || !a->tmp || !a->X) {
+  if (!a->dF || !a->dG || !a->f || !a->g || !a->theta || !a->sol || !a->X) {
     freeAccel(a);
     a = SCS_NULL;
   }
@@ -166,7 +187,7 @@ Accel *initAccel(Work *w) {
 
 scs_int accelerate(Work *w, scs_int iter) {
   DEBUG_FUNC
-  scs_float *tmp = w->accel->tmp;
+  scs_float *sol = w->accel->sol;
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
   scs_int info;
@@ -180,16 +201,18 @@ scs_int accelerate(Work *w, scs_int iter) {
   if (iter < k) {
     RETURN 0;
   }
-  /* solve linear system for theta */
+  /* solve linear system, new point stored in sol */
   info = solve_accel_linsys(w->accel);
-  /* set [u;v] = tmp */
-  memcpy(w->u, tmp, sizeof(scs_float) * l);
-  memcpy(w->v, &(tmp[l]), sizeof(scs_float) * l);
-  w->accel->totalAccelTime += tocq(&accelTimer);
-  if (info != 0) {
-    scs_printf("Accelerate error, info %i\n", info);
+  /* set [u;v] = sol */
+  if (info == 0) {
+    memcpy(w->u, sol, sizeof(scs_float) * l);
+    memcpy(w->v, &(sol[l]), sizeof(scs_float) * l);
+  } else {
+    /* Could fall back to gelsy or others in this case case */
+    scs_printf("\taccelerate error, info %i, no acceleration applied\n", info);
   }
-  RETURN info;
+  w->accel->totalAccelTime += tocq(&accelTimer);
+  RETURN 0;
 }
 
 void freeAccel(Accel *a) {
@@ -199,10 +222,9 @@ void freeAccel(Accel *a) {
     if (a->dG) scs_free(a->dG);
     if (a->f) scs_free(a->f);
     if (a->g) scs_free(a->g);
+    if (a->sol) scs_free(a->sol);
     if (a->theta) scs_free(a->theta);
-    if (a->tmp) scs_free(a->tmp);
     if (a->X) scs_free(a->X);
-    if (a->dFQR) scs_free(a->dFQR);
     if (a->wrk) scs_free(a->wrk);
     scs_free(a);
   }
@@ -218,7 +240,7 @@ Accel *initAccel(Work *w) {
 }
 
 void freeAccel(Accel *a) {
-  if (a) scs_free(a);
+  if (a) {scs_free(a);}
 }
 
 scs_int accelerate(Work *w, scs_int iter) { RETURN 0; }
