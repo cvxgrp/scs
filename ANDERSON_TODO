@@ -1,0 +1,6 @@
+clang format
+update apis
+fix demo.c (others?)
+add gpu support
+refactor to snake_case
+experiment with different lookbacks

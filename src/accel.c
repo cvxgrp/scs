@@ -5,14 +5,14 @@
 /* Not clear if this should just be 0. */
 #define ACCEL_REGULARIZATION (0.)
 
-/* This package uses Anderson acceleration to improve the convergence of the
+/* This file uses Anderson acceleration to improve the convergence of the
  * ADMM iteration z^+ = \phi(z). At each iteration we need to solve a (small)
  * linear system, we do this using LAPACK, first forming the normal equations
  * and using ?posv (fastest, but bad numerical stability), if that fails we
  * switch to using ?gels, which uses a QR factorization (slower, but better
  * numerically). If this fails then we just don't do any acceleration this
  * iteration, however we could fall back further to ?gelsy or other more
- * robust methods if we really want
+ * robust methods if we wanted to.
  */
 
 struct SCS_ACCEL {
@@ -45,10 +45,6 @@ void BLAS(gels)(const char *trans, const blasint *m, const blasint *n,
                 const blasint *nrhs, scs_float *a, const blasint *lda,
                 scs_float *b, const blasint *ldb, scs_float *work,
                 const blasint *lwork, blasint *info);
-
-/* TODO run clang format
- * make sure blasints all there
- */
 
 scs_int solve_with_gels(Accel * a, scs_int len) {
   DEBUG_FUNC
