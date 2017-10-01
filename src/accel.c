@@ -242,7 +242,6 @@ void update_factorization(Accel * a, scs_int idx) {
   BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
 
   /* Walk up the spike, R finishes upper Hessenberg */
-  // TODO memory stomping in here:
   for (i = k; i > idx + 1; --i) {
     scs_int ridx = k * idx + i - 1;
     scs_float r1 = R[ridx - 1];
@@ -253,14 +252,13 @@ void update_factorization(Accel * a, scs_int idx) {
   }
 
   /* Walk down the sub-diagonal, R finishes upper triangular */
-  // TODO memory issues here:
   for (i = idx + 1; i < k - 1; ++i) {
     scs_int ridx = k * i + i;
     scs_float r1 = R[ridx];
     scs_float r2 = R[ridx + 1];
     BLAS(rotg)(&r1, &r2, &c, &s);
     BLAS(rot)(&bk, &(R[i]), &bk, &(R[i + 1]), &bk, &c, &s);
-    BLAS(rot)(&twol, &(Q[2 * l * i]), &one, &(Q[2 * l * i+1]), &one, &c, &s);
+    BLAS(rot)(&twol, &(Q[2 * l * i]), &one, &(Q[2 * l * (i+1)]), &one, &c, &s);
   }
 
   /* Finish fake bottom row of R, extra col of Q */
@@ -296,6 +294,7 @@ scs_int accelerate(Work *w, scs_int iter) {
 
     update_factorization(w->accel, (k + iter - 1) % k);
     //qrfactorize(w->accel);
+    /* 
     scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
     blasint twol = 2 * a->l;
     blasint bk = (blasint) a->k;
@@ -308,8 +307,11 @@ scs_int accelerate(Work *w, scs_int iter) {
     //printArray(w->accel->Q, k * 2 * l, "Q");
     //printArray(w->accel->R, k * k, "R");
     
-    scs_printf("||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
+    scs_printf("||DdF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
+    scs_printf("||DdF||/||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l *
+          a->k) / calcNorm(a->dF, 2 * a->l * a->k));
     scs_free(dF0);
+    */
     //printArray(w->accel->Q, k * 2 * l, "Q_true");
     //printArray(w->accel->R, k * k, "R_true");
     
