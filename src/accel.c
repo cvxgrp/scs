@@ -137,6 +137,8 @@ void update_accel_params(Work *w, scs_int idx) {
   addScaledArray(delta, &(dF[idx * 2 * l]), 2 * l, -1.0);
   /* delta = new - old */
   scaleArray(delta, -1.0, 2 * l);
+  //scs_printf("norm f %e\n", calcNorm(f, 2 * l));
+  //scs_printf("norm delta %e\n", calcNorm(delta, 2 * l));
   RETURN;
 }
 
@@ -274,6 +276,26 @@ void update_factorization(Accel * a, scs_int idx) {
     //BLAS(rot)(&twol, &(Q[2 * l * i]), &one, &(Q[2 * l * (i+1)]), &one, &c, &s);
   }
 
+  scs_float min_r = 9999999.9;
+  scs_float prod_r = 1.0;
+  for (i = 0; i < k; ++i){
+    //scs_printf("R[%i, %i] = %e, ", i, i, R[i * k + i]);
+    /*
+    if (ABS(R[i * k + i]) < min_r){
+        min_r = ABS(R[i * k + i]);
+        prod_r *= ABS(R[i * k + i]);
+    }
+    */
+    if (R[i * k + i] < 0) {
+      R[i * k + i] -= 1e-4;
+    } else {
+      R[i * k + i] += 1e-4;
+    }
+  }
+  //scs_printf("\n");
+  //scs_printf("min diag R %e\n", min_r);
+  //scs_printf("prod diag R %e\n", prod_r);
+
   /* Finish fake bottom row of R, extra col of Q */
   BLAS(rotg)(&(R[k * k - 1]), &(bot_row[k - 1]), &c, &s);
   //BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
@@ -283,6 +305,7 @@ void update_factorization(Accel * a, scs_int idx) {
 
 scs_int accelerate(Work *w, scs_int iter) {
   DEBUG_FUNC
+  //scs_printf("iter %i\n", iter);
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
   scs_float *sol;
@@ -307,7 +330,7 @@ scs_int accelerate(Work *w, scs_int iter) {
 
     update_factorization(w->accel, (k + iter - 1) % k);
     //qrfactorize(w->accel);
-    /* 
+    /*
     scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
     blasint twol = 2 * a->l;
     blasint bk = (blasint) a->k;
@@ -319,7 +342,7 @@ scs_int accelerate(Work *w, scs_int iter) {
         a->R, &bk, &zerof, dF0, &twol);
     //printArray(w->accel->Q, k * 2 * l, "Q");
     //printArray(w->accel->R, k * k, "R");
-    
+
     scs_printf("||DdF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
     scs_printf("||DdF||/||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l *
           a->k) / calcNorm(a->dF, 2 * a->l * a->k));
@@ -327,7 +350,7 @@ scs_int accelerate(Work *w, scs_int iter) {
     */
     //printArray(w->accel->Q, k * 2 * l, "Q_true");
     //printArray(w->accel->R, k * k, "R_true");
-    
+
   }
   /* solve linear system, new point stored in sol */
   sol = solve_accel_linsys(w->accel, k);
@@ -335,6 +358,7 @@ scs_int accelerate(Work *w, scs_int iter) {
   //solve_with_gels(w->accel, k);
   //printArray(sol, 2 * l, "sol2");
   /* set [u;v] = sol */
+  //scs_printf("norm of sol %e\n", calcNorm(sol, 2 *l));
   memcpy(w->u, sol, sizeof(scs_float) * l);
   memcpy(w->v, &(sol[l]), sizeof(scs_float) * l);
   w->accel->totalAccelTime += tocq(&accelTimer);
