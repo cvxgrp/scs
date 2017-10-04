@@ -294,13 +294,12 @@ scs_int accelerate(Work *w, scs_int iter) {
 
     update_factorization(w->accel, (k + iter - 1) % k);
     //qrfactorize(w->accel);
-    /* 
     scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
     blasint twol = 2 * a->l;
     blasint bk = (blasint) a->k;
     scs_float onef = 1.0;
     scs_float zerof = 0.0;
-
+   
 
     BLAS(gemm)("NoTrans", "NoTrans", &twol, &bk, &bk, &onef, a->Q, &twol,
         a->R, &bk, &zerof, dF0, &twol);
@@ -308,10 +307,10 @@ scs_int accelerate(Work *w, scs_int iter) {
     //printArray(w->accel->R, k * k, "R");
     
     scs_printf("||DdF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
+    scs_printf("||dF|| = %e\n", calcNorm(a->dF, 2 * a->l * a->k));
     scs_printf("||DdF||/||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l *
           a->k) / calcNorm(a->dF, 2 * a->l * a->k));
     scs_free(dF0);
-    */
     //printArray(w->accel->Q, k * 2 * l, "Q_true");
     //printArray(w->accel->R, k * k, "R_true");
     

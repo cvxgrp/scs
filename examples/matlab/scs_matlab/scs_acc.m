@@ -149,6 +149,10 @@ v_bar = v;
 F = [];
 G = [];
 tic
+
+z = 10 * [u;v] / norm([u;v]);
+u = z(1:n+m+1);
+v = z(n+m+2:end);
 for i=0:max_iters-1
     uv = [u;v];
     u_prev = u;
@@ -169,6 +173,13 @@ for i=0:max_iters-1
     ut_bar = (ut + ut_bar * i) / (i+1);
     v_bar = (v + v_bar * i) / (i+1);
     
+    %% normalize
+    Nrml = true;
+    if Nrml & false
+        z = 10 * [u;v] / norm([u;v]);
+        u = z(1:n+m+1);
+        v = z(n+m+2:end);
+    end
     %% acceleration
     % BROYDEN: CAN't GET TO WORK
     if false
@@ -204,12 +215,32 @@ for i=0:max_iters-1
         a = a(1:end-1);
         uv = G*a;
         %}
+        
+        FtF = F'*F;
+        epp = 0;%min(0.01, min(diag(FtF)));
+        reg = [epp * eye(size(FtF) - 1) zeros(size(FtF, 2) - 1, 1); zeros(1, size(FtF, 1))];
+        a_0 = (FtF + reg) \ ones(size(F,2),1);
+        a = a_0 / sum(a_0);
         %{
-        epp = 0.;
-        FTF1 = (F'*F + epp * eye(size(F,2))) \ ones(size(F,2),1);
-        a = FTF1 / sum(FTF1);
-        uv = G*a;
+        disp('F')
+        cond(F)
+        disp('dF')
+        cond(-F(:,2:end) + F(:,1:end-1))
+        disp('FtF')
+        cond(FtF)
+        disp('FtF + reg')
+        cond(FtF + reg)
         %}
+        %{
+        norm(FtF)
+        norm(FtF + reg)
+        a_1 = FtF \ ones(size(F,2),1);
+        b = a_1 / sum(a_1);
+        [a b]
+        norms([a b])
+        %}
+        uv = G*a;
+        
         %{
         cvx_begin
         cvx_quiet True
@@ -220,7 +251,7 @@ for i=0:max_iters-1
         cvx_end
         uv = G*a;
         %}
-        %{%
+        %{
         %if size(F,2) >= anderson_lookback
             dF = -F(:,2:end) + F(:,1:end-1);
             dG = -G(:,2:end) + G(:,1:end-1);
@@ -230,6 +261,11 @@ for i=0:max_iters-1
         %}
         u = uv(1:n+m+1);
         v = uv(n+m+2:end);
+    end
+    if Nrml
+        z = 10 * [u;v] / norm([u;v]);
+        u = z(1:n+m+1);
+        v = z(n+m+2:end);
     end
     
     %% convergence checking:
