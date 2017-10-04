@@ -31,7 +31,7 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
-#define ACCELERATION_LOOKBACK (100)
+#define ACCELERATION_LOOKBACK (20)
 
 #ifdef __cplusplus
 }

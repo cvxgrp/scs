@@ -6,7 +6,7 @@
 /* if verbose print summary output every this num iterations */
 #define PRINT_INTERVAL 100
 /* check for convergence every this num iterations */
-#define CONVERGED_INTERVAL 20
+#define CONVERGED_INTERVAL 1
 #else
 #define PRINT_INTERVAL 1
 #define CONVERGED_INTERVAL 1
@@ -265,8 +265,8 @@ static void coldStartVars(Work *w) {
     scs_int l = w->n + w->m + 1;
     memset(w->u, 0, l * sizeof(scs_float));
     memset(w->v, 0, l * sizeof(scs_float));
-    w->u[l - 1] = SQRTF((scs_float)l);
-    w->v[l - 1] = SQRTF((scs_float)l);
+    w->u[l - 1] = 10000 * SQRTF((scs_float)l);
+    w->v[l - 1] = 10000 * SQRTF((scs_float)l);
     RETURN;
 }
 

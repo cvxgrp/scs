@@ -152,7 +152,7 @@ Accel *initAccel(Work *w) {
   /* k = lookback - 1 since we use the difference form
      of anderson acceleration, and so there is one fewer var in lin sys.
      Use MIN to prevent not full rank matrices */
-  a->k = MIN(2 * a->l, w->stgs->acceleration_lookback - 1);
+  a->k = MIN(w->n, w->stgs->acceleration_lookback - 1);
   if (a->k <= 0) {
     RETURN a;
   }
@@ -193,7 +193,9 @@ void qrfactorize(Accel * a) {
   lwork = (blasint) worksize;
   work = scs_malloc(lwork * sizeof(scs_float));
   BLAS(geqrf)(&twol, &bk, Q, &twol, tau, work, &lwork, &info);
+  scs_printf("info %i\n", info);
   scs_free(work);
+  scs_printf("norm dF %e\n", calcNorm(a->dF, 2 * a->l * a->k));
   for (i = 0; i < a->k; ++i) {
     memcpy(&(a->R[i * a->k]), &(Q[i * a->l * 2]), sizeof(scs_float) * (i + 1));
   }
@@ -202,6 +204,9 @@ void qrfactorize(Accel * a) {
   //work = scs_malloc(lwork * sizeof(scs_float));
   //BLAS(orgqr)(&twol, &bk, &bk, a->Q, &twol, tau, work, &lwork, &info);
   //scs_free(work);
+  for (i = 0; i < a->k; ++i){
+    scs_printf("R[%i, %i] = %e, ", i, i, a->R[i * a->k + i]);
+  }
   scs_free(Q);
   scs_free(tau);
   RETURN;
@@ -279,18 +284,19 @@ void update_factorization(Accel * a, scs_int idx) {
   scs_float min_r = 9999999.9;
   scs_float prod_r = 1.0;
   for (i = 0; i < k; ++i){
-    //scs_printf("R[%i, %i] = %e, ", i, i, R[i * k + i]);
+    scs_printf("R[%i, %i] = %e, ", i, i, R[i * k + i]);
     /*
     if (ABS(R[i * k + i]) < min_r){
         min_r = ABS(R[i * k + i]);
         prod_r *= ABS(R[i * k + i]);
     }
-    */
+
     if (R[i * k + i] < 0) {
-      R[i * k + i] -= 1e-4;
+      R[i * k + i] -= 1e-1;
     } else {
-      R[i * k + i] += 1e-4;
+      R[i * k + i] += 1e-1;
     }
+    */
   }
   //scs_printf("\n");
   //scs_printf("min diag R %e\n", min_r);
@@ -328,8 +334,8 @@ scs_int accelerate(Work *w, scs_int iter) {
   } else {
     /* update Q, R factors */
 
-    update_factorization(w->accel, (k + iter - 1) % k);
-    //qrfactorize(w->accel);
+    //update_factorization(w->accel, (k + iter - 1) % k);
+    qrfactorize(w->accel);
     /*
     scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
     blasint twol = 2 * a->l;
