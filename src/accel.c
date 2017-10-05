@@ -193,9 +193,9 @@ void qrfactorize(Accel * a) {
   lwork = (blasint) worksize;
   work = scs_malloc(lwork * sizeof(scs_float));
   BLAS(geqrf)(&twol, &bk, Q, &twol, tau, work, &lwork, &info);
-  scs_printf("info %i\n", info);
+  //scs_printf("info %i\n", info);
   scs_free(work);
-  scs_printf("norm dF %e\n", calcNorm(a->dF, 2 * a->l * a->k));
+  //scs_printf("norm dF %e\n", calcNorm(a->dF, 2 * a->l * a->k));
   for (i = 0; i < a->k; ++i) {
     memcpy(&(a->R[i * a->k]), &(Q[i * a->l * 2]), sizeof(scs_float) * (i + 1));
   }
@@ -204,9 +204,9 @@ void qrfactorize(Accel * a) {
   //work = scs_malloc(lwork * sizeof(scs_float));
   //BLAS(orgqr)(&twol, &bk, &bk, a->Q, &twol, tau, work, &lwork, &info);
   //scs_free(work);
-  for (i = 0; i < a->k; ++i){
-    scs_printf("R[%i, %i] = %e, ", i, i, a->R[i * a->k + i]);
-  }
+  //for (i = 0; i < a->k; ++i){
+  //  scs_printf("R[%i, %i] = %e, ", i, i, a->R[i * a->k + i]);
+  //}
   scs_free(Q);
   scs_free(tau);
   RETURN;
@@ -284,7 +284,7 @@ void update_factorization(Accel * a, scs_int idx) {
   scs_float min_r = 9999999.9;
   scs_float prod_r = 1.0;
   for (i = 0; i < k; ++i){
-    scs_printf("R[%i, %i] = %e, ", i, i, R[i * k + i]);
+    //scs_printf("R[%i, %i] = %e, ", i, i, R[i * k + i]);
     /*
     if (ABS(R[i * k + i]) < min_r){
         min_r = ABS(R[i * k + i]);
@@ -336,23 +336,23 @@ scs_int accelerate(Work *w, scs_int iter) {
 
     update_factorization(w->accel, (k + iter - 1) % k);
     //qrfactorize(w->accel);
-    scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-    blasint twol = 2 * a->l;
-    blasint bk = (blasint) a->k;
-    scs_float onef = 1.0;
-    scs_float zerof = 0.0;
-   
+    //scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+    //blasint twol = 2 * a->l;
+    //blasint bk = (blasint) a->k;
+    //scs_float onef = 1.0;
+    //scs_float zerof = 0.0;
 
-    BLAS(gemm)("NoTrans", "NoTrans", &twol, &bk, &bk, &onef, a->Q, &twol,
-        a->R, &bk, &zerof, dF0, &twol);
+
+    //BLAS(gemm)("NoTrans", "NoTrans", &twol, &bk, &bk, &onef, a->Q, &twol,
+    //    a->R, &bk, &zerof, dF0, &twol);
     //printArray(w->accel->Q, k * 2 * l, "Q");
     //printArray(w->accel->R, k * k, "R");
 
-    scs_printf("||DdF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
-    scs_printf("||dF|| = %e\n", calcNorm(a->dF, 2 * a->l * a->k));
-    scs_printf("||DdF||/||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l *
-          a->k) / calcNorm(a->dF, 2 * a->l * a->k));
-    scs_free(dF0);
+    //scs_printf("||DdF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
+    //scs_printf("||dF|| = %e\n", calcNorm(a->dF, 2 * a->l * a->k));
+    //scs_printf("||DdF||/||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l *
+    //      a->k) / calcNorm(a->dF, 2 * a->l * a->k));
+    //scs_free(dF0);
     //printArray(w->accel->Q, k * 2 * l, "Q_true");
     //printArray(w->accel->R, k * k, "R_true");
 

@@ -6,7 +6,7 @@
 /* if verbose print summary output every this num iterations */
 #define PRINT_INTERVAL 100
 /* check for convergence every this num iterations */
-#define CONVERGED_INTERVAL 1
+#define CONVERGED_INTERVAL 20
 #else
 #define PRINT_INTERVAL 1
 #define CONVERGED_INTERVAL 1
@@ -14,6 +14,7 @@
 
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
+#define ITERATE_NORM (100.)
 
 timer globalTimer;
 
@@ -265,8 +266,8 @@ static void coldStartVars(Work *w) {
     scs_int l = w->n + w->m + 1;
     memset(w->u, 0, l * sizeof(scs_float));
     memset(w->v, 0, l * sizeof(scs_float));
-    w->u[l - 1] = 10000 * SQRTF((scs_float)l);
-    w->v[l - 1] = 10000 * SQRTF((scs_float)l);
+    w->u[l - 1] = SQRTF((scs_float)l);
+    w->v[l - 1] = SQRTF((scs_float)l);
     RETURN;
 }
 
@@ -830,6 +831,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     scs_int i;
     timer solveTimer;
     struct residuals r;
+    scs_int l = w->m + w->n + 1;
     if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
         scs_printf("ERROR: SCS_NULL input\n");
         RETURN SCS_FAILED;
@@ -845,8 +847,12 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
         printHeader(w, k);
     /* scs: */
     for (i = 0; i < w->stgs->max_iters; ++i) {
-        memcpy(w->u_prev, w->u, (w->n + w->m + 1) * sizeof(scs_float));
-        memcpy(w->v_prev, w->v, (w->n + w->m + 1) * sizeof(scs_float));
+        scs_float total_norm = SQRTF(calcNormSq(w->u, l) + calcNormSq(w->v, l));
+        scaleArray(w->u, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
+        scaleArray(w->v, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
+
+        memcpy(w->u_prev, w->u, l * sizeof(scs_float));
+        memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
         if (projectLinSys(w, i) < 0) {
             RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
