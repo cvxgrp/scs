@@ -7,3 +7,6 @@ experiment with different lookbacks
 fix too-fast convergence
 what's the right initial norm
 QR vs rank 1 vs FR vs normal
+normalize post-AA step
+update MATLAB implementation to be the same numerically
+add AA relaxation
