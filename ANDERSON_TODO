@@ -4,9 +4,11 @@ fix demo.c (others?)
 add gpu support
 refactor to snake_case
 experiment with different lookbacks
-fix too-fast convergence
+fix 'too-fast' convergence, check conv on u - u_old, v- v_old
 what's the right initial norm
 QR vs rank 1 vs FR vs normal
 normalize post-AA step
 update MATLAB implementation to be the same numerically
-add AA relaxation
+add AA beta-relaxation
+add delay until starting AA (constant)
+add rolling QR so AA starts right away
