@@ -12,3 +12,4 @@ update MATLAB implementation to be the same numerically
 add AA beta-relaxation
 add delay until starting AA (constant)
 add rolling QR so AA starts right away
+https://kristerw.blogspot.co.uk/2017/09/useful-gcc-warning-options-not-enabled.html
