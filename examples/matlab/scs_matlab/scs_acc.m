@@ -148,6 +148,7 @@ v_bar = v;
 % anderson
 F = [];
 G = [];
+X = [];
 tic
 
 z = 10 * [u;v] / norm([u;v]);
@@ -206,21 +207,25 @@ for i=0:max_iters-1
         if size(F,2) >= anderson_lookback
             F = F(:, 2:end);
             G = G(:, 2:end);
+            X = X(:, 2:end);
         end
         F = [F f];
         G = [G [u;v]];
+        X = [X uv];
         % Some different ways to do the update:
         %{
         a = [F'*F ones(size(F,2),1); ones(1, size(F,2)) 0] \ [zeros(size(F,2),1); 1];
         a = a(1:end-1);
         uv = G*a;
         %}
-        
+        %{
         FtF = F'*F;
         epp = 0;%min(0.01, min(diag(FtF)));
         reg = [epp * eye(size(FtF) - 1) zeros(size(FtF, 2) - 1, 1); zeros(1, size(FtF, 1))];
         a_0 = (FtF + reg) \ ones(size(F,2),1);
         a = a_0 / sum(a_0);
+        uv = G*a;
+        %}
         %{
         disp('F')
         cond(F)
@@ -239,7 +244,6 @@ for i=0:max_iters-1
         [a b]
         norms([a b])
         %}
-        uv = G*a;
         
         %{
         cvx_begin
@@ -251,14 +255,25 @@ for i=0:max_iters-1
         cvx_end
         uv = G*a;
         %}
-        %{
+        
         %if size(F,2) >= anderson_lookback
+            % type I
+            %{
+            dX = -X(:,2:end) + X(:,1:end-1);
+            dF = -F(:,2:end) + F(:,1:end-1);
+            dG = -G(:,2:end) + G(:,1:end-1);
+            gg = -(dX'*dF) \ (dX'* F(:,end));
+            uv = G(:,end) - dG * gg;
+            %}
+            % type II
+            %
             dF = -F(:,2:end) + F(:,1:end-1);
             dG = -G(:,2:end) + G(:,1:end-1);
             gg = dF \ F(:,end);
             uv = G(:,end) - dG * gg;
+            %}
         %end
-        %}
+        
         u = uv(1:n+m+1);
         v = uv(n+m+2:end);
     end

@@ -23,8 +23,8 @@ struct SCS_ACCEL {
   scs_float *g;
   scs_float *sol;
   scs_float *scratch;
-  //scs_float *Q;
-  scs_float *dFold;
+  scs_float *Q;
+  //scs_float *dFold;
   scs_float *R;
   scs_float *delta;
   scs_int k, l;
@@ -115,7 +115,7 @@ void update_accel_params(Work *w, scs_int idx) {
   scs_float *delta = w->accel->delta;
   Accel *a = w->accel;
   scs_int l = w->m + w->n + 1;
-  memcpy(a->dFold, dF, sizeof(scs_float) * 2 * l * a->k);
+  //memcpy(a->dFold, dF, sizeof(scs_float) * 2 * l * a->k);
   /* copy old col into delta */
   memcpy(delta, &(dF[idx * 2 * l]), sizeof(scs_float) * 2 * l);
   /* copy g_prev into idx col of dG */
@@ -157,11 +157,11 @@ Accel *initAccel(Work *w) {
     RETURN a;
   }
   a->dF = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-  a->dFold = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  //a->dFold = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
   a->dG = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
   a->f = scs_calloc(2 * a->l, sizeof(scs_float));
   a->g = scs_calloc(2 * a->l, sizeof(scs_float));
-  //a->Q = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  a->Q = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
   a->R = scs_calloc(a->k * a->k, sizeof(scs_float));
   a->sol = scs_malloc(sizeof(scs_float) * 2 * a->l);
   a->scratch = scs_malloc(sizeof(scs_float) * 2 * a->l);
@@ -187,7 +187,7 @@ void qrfactorize(Accel * a) {
   scs_float worksize;
   scs_float * work;
   scs_float * tau = scs_malloc(a->k * sizeof(scs_float));
-  scs_float * Q = scs_malloc(2 * a->l * a->k * sizeof(scs_float));
+  scs_float * Q = a->Q;
   memcpy(Q, a->dF, sizeof(scs_float) * a->k * 2 * a->l);
   BLAS(geqrf)(&twol, &bk, Q, &twol, tau, &worksize, &negOne, &info);
   lwork = (blasint) worksize;
@@ -199,22 +199,21 @@ void qrfactorize(Accel * a) {
   for (i = 0; i < a->k; ++i) {
     memcpy(&(a->R[i * a->k]), &(Q[i * a->l * 2]), sizeof(scs_float) * (i + 1));
   }
-  //BLAS(orgqr)(&twol, &bk, &bk, a->Q, &twol, tau, &worksize, &negOne, &info);
-  //lwork = (blasint) worksize;
-  //work = scs_malloc(lwork * sizeof(scs_float));
-  //BLAS(orgqr)(&twol, &bk, &bk, a->Q, &twol, tau, work, &lwork, &info);
-  //scs_free(work);
+  BLAS(orgqr)(&twol, &bk, &bk, Q, &twol, tau, &worksize, &negOne, &info);
+  lwork = (blasint) worksize;
+  work = scs_malloc(lwork * sizeof(scs_float));
+  BLAS(orgqr)(&twol, &bk, &bk, Q, &twol, tau, work, &lwork, &info);
+  scs_free(work);
   //for (i = 0; i < a->k; ++i){
   //  scs_printf("R[%i, %i] = %e, ", i, i, a->R[i * a->k + i]);
   //}
-  scs_free(Q);
   scs_free(tau);
   RETURN;
 }
 
 void update_factorization(Accel * a, scs_int idx) {
   DEBUG_FUNC
-  //scs_float * Q = a->Q;
+  scs_float * Q = a->Q;
   scs_float * R = a->R;
   scs_float * u = a->delta;
   scs_float * w = a->scratch;
@@ -233,14 +232,15 @@ void update_factorization(Accel * a, scs_int idx) {
   scs_int i;
 
   /* w = Q' * delta = R^-T * dF' * delta, size k: col of R */
-  BLAS(gemv)("Trans", &twol, &bk, &onef, a->dFold, &twol, u, &one, &zerof, w, &one);
-  BLAS(trsv)("Upper", "Trans", "NotUnitDiag", &bk, a->R, &bk, w, &one);
+  BLAS(gemv)("Trans", &twol, &bk, &onef, a->Q, &twol, u, &one, &zerof, w, &one);
+  //BLAS(trsv)("Upper", "Trans", "NotUnitDiag", &bk, a->R, &bk, w, &one);
   //BLAS(gemv)("Trans", &twol, &bk, &onef, a->Q, &twol, u, &one, &zerof, w, &one);
   /* u = delta - Q * w = dF * R^-1 w, size m: col of Q */
   scs_float * tmp = scs_malloc(sizeof(scs_float) * k);
   memcpy(tmp, w, sizeof(scs_float) * k);
-  BLAS(trsv)("Upper", "NoTrans", "NotUnitDiag", &bk, a->R, &bk, tmp, &one);
-  BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->dFold, &twol, tmp, &one, &onef, u, &one);
+  //BLAS(trsv)("Upper", "NoTrans", "NotUnitDiag", &bk, a->R, &bk, tmp, &one);
+  //BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->dFold, &twol, tmp, &one, &onef, u, &one);
+  BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->Q, &twol, tmp, &one, &onef, u, &one);
   scs_free(tmp);
   /* nrm_u = ||u|| */
   nrm_u = BLAS(nrm2)(&twol, u, &one);
@@ -259,7 +259,7 @@ void update_factorization(Accel * a, scs_int idx) {
   bot_row[idx] = nrm_u;
   BLAS(rotg)(&r1, &r2, &c, &s);
   BLAS(rot)(&bk, &(R[k - 1]), &bk, bot_row, &one, &c, &s);
-  //BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
+  BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
 
   /* Walk up the spike, R finishes upper Hessenberg */
   for (i = k; i > idx + 1; --i) {
@@ -268,7 +268,7 @@ void update_factorization(Accel * a, scs_int idx) {
     scs_float r2 = R[ridx];
     BLAS(rotg)(&(r1), &(r2), &c, &s);
     BLAS(rot)(&bk, &(R[i - 2]), &bk, &(R[i - 1]), &bk, &c, &s);
-    //BLAS(rot)(&twol, &(Q[2 * l * (i-2)]), &one, &(Q[2 * l * (i-1)]), &one, &c, &s);
+    BLAS(rot)(&twol, &(Q[2 * l * (i-2)]), &one, &(Q[2 * l * (i-1)]), &one, &c, &s);
   }
 
   /* Walk down the sub-diagonal, R finishes upper triangular */
@@ -278,7 +278,7 @@ void update_factorization(Accel * a, scs_int idx) {
     scs_float r2 = R[ridx + 1];
     BLAS(rotg)(&r1, &r2, &c, &s);
     BLAS(rot)(&bk, &(R[i]), &bk, &(R[i + 1]), &bk, &c, &s);
-    //BLAS(rot)(&twol, &(Q[2 * l * i]), &one, &(Q[2 * l * (i+1)]), &one, &c, &s);
+    BLAS(rot)(&twol, &(Q[2 * l * i]), &one, &(Q[2 * l * (i+1)]), &one, &c, &s);
   }
 
   scs_float min_r = 9999999.9;
@@ -304,7 +304,7 @@ void update_factorization(Accel * a, scs_int idx) {
 
   /* Finish fake bottom row of R, extra col of Q */
   BLAS(rotg)(&(R[k * k - 1]), &(bot_row[k - 1]), &c, &s);
-  //BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
+  BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
   scs_free(bot_row);
   RETURN;
 }
@@ -316,25 +316,33 @@ scs_int accelerate(Work *w, scs_int iter) {
   scs_int k = w->accel->k;
   scs_float *sol;
   Accel * a = w->accel;
+  scs_int idx = k - 1 - iter % k; 
   timer accelTimer;
   tic(&accelTimer);
+  //scs_printf("--------------------------------------\n"); 
+  //scs_printf("idx %i\n", idx); 
+  //scs_printf("iter %i\n", iter);
   if (k <= 0) {
     RETURN 0;
   }
   /* update dF, dG, f, g, delta */
-  update_accel_params(w, (k + iter - 1) % k);
-  /* iter < k doesn't do any acceleration until iters hit k */
-  if (iter < k) {
+  update_accel_params(w, idx); 
+  /* iter < k doesn't do any acceleration until iters hit k - 1
+     at which point idx = 0, the matrix is filled and we can start
+     accelerating.
+  */
+  if (iter < k - 1) {
     RETURN 0;
   }
-  if (iter == k) {
+  if (idx == 0) {
+    //scs_printf("factorize %i\n", iter);
     qrfactorize(w->accel);
     //printArray(w->accel->Q, k * 2 * l, "Q_true");
     //printArray(w->accel->R, k * k, "R_true");
   } else {
     /* update Q, R factors */
 
-    update_factorization(w->accel, (k + iter - 1) % k);
+    update_factorization(w->accel, idx);
     //qrfactorize(w->accel);
     //scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
     //blasint twol = 2 * a->l;
@@ -379,8 +387,8 @@ void freeAccel(Accel *a) {
     if (a->g) scs_free(a->g);
     if (a->sol) scs_free(a->sol);
     if (a->scratch) scs_free(a->scratch);
-    if (a->dFold) scs_free(a->dFold);
-    //if (a->Q) scs_free(a->Q);
+    //if (a->dFold) scs_free(a->dFold);
+    if (a->Q) scs_free(a->Q);
     if (a->R) scs_free(a->R);
     if (a->delta) scs_free(a->delta);
     scs_free(a);
