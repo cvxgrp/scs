@@ -2,9 +2,6 @@
 #include "scs.h"
 #include "scs_blas.h"
 
-/* Not clear if this should just be 0. */
-#define ACCEL_REGULARIZATION (0.)
-
 /* This file uses Anderson acceleration to improve the convergence of the
  * ADMM iteration z^+ = \phi(z). At each iteration we need to solve a (small)
  * linear system, we do this using LAPACK, first forming the normal equations
@@ -24,7 +21,6 @@ struct SCS_ACCEL {
   scs_float *sol;
   scs_float *scratch;
   scs_float *Q;
-  //scs_float *dFold;
   scs_float *R;
   scs_float *delta;
   scs_int k, l;
@@ -37,26 +33,14 @@ void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n,
                 const scs_float *alpha, const scs_float *a, const blasint *lda,
                 const scs_float *x, const blasint *incx, const scs_float *beta,
                 scs_float *y, const blasint *incy);
-void BLAS(syrk)(const char *uplo, const char *trans, blasint *n, blasint *k,
-                scs_float *alpha, scs_float *a, blasint *lda, scs_float *beta,
-                scs_float *c, blasint *ldc);
 void BLAS(geqrf)(blasint *m, blasint *n, scs_float *a, blasint * lda, scs_float *tau, scs_float *work, blasint *lwork, blasint *info);
 void BLAS(orgqr)(blasint *m, blasint *n, blasint *k, scs_float * a, blasint *lda, scs_float *tau, scs_float *work, blasint *lwork, blasint *info);
 void BLAS(trsv)(const char *uplo, const char *trans, const char *diag,
                 blasint *n, scs_float *a, blasint *lda, scs_float *x,
                 blasint *incx);
+void BLAS(rotg)(scs_float *a, scs_float *b, scs_float *c, scs_float *s);
+void BLAS(rot)(const blasint *n, scs_float *x, const blasint *incx, scs_float *y, const blasint *incy, const scs_float *c, const scs_float *s);
 scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
-void BLAS(rotg) (scs_float *a, scs_float *b, scs_float *c, scs_float *s);
-void BLAS(rot) (const blasint *n, scs_float *x, const blasint *incx, scs_float *y, const blasint *incy, const scs_float *c, const scs_float *s);
-
-void BLAS(gels)(const char *trans, const blasint *m, const blasint *n,
-                const blasint *nrhs, scs_float *a, const blasint *lda,
-                scs_float *b, const blasint *ldb, scs_float *work,
-                const blasint *lwork, blasint *info);
-void BLAS(gemm)(const char *transa, const char *transb, blasint *m, blasint *
-    n, blasint *k, scs_float *alpha, scs_float *a, blasint *lda,
-    scs_float *b, blasint *ldb, scs_float *beta, scs_float *c, blasint
-    *ldc);
 
 /* dF * sol = QR * sol = f */
 scs_float * solve_accel_linsys(Accel *a, scs_int len) {
@@ -81,31 +65,6 @@ scs_float * solve_accel_linsys(Accel *a, scs_int len) {
   RETURN a->sol;
 }
 
-scs_int solve_with_gels(Accel * a, scs_int len) {
-  DEBUG_FUNC
-  blasint info;
-  scs_int l = a->l;
-  blasint twol = 2 * l;
-  blasint one = 1;
-  blasint blen = (blasint) len;
-  scs_float negOnef = -1.0;
-  scs_float onef = 1.0;
-  scs_float * X = scs_malloc(sizeof(scs_float) * 2 * l * len);
-  memcpy(a->scratch, a->f, sizeof(scs_float) * 2 * l);
-  memcpy(X, a->dF, sizeof(scs_float) * 2 * l * len);
-  scs_float * wrk = scs_malloc(sizeof(scs_float) * 2 * l * len);
-  blasint worksize = 2 * l * len;
-  /* solve dF scratch = f */
-  BLAS(gels)("NoTrans", &twol, &blen, &one, X, &twol, a->scratch, &twol, wrk, &worksize, &info);
-  /* sol = g */
-  memcpy(a->sol, a->g, sizeof(scs_float) * 2 * l);
-  /* sol = sol - dG * scratch */
-  BLAS(gemv)("NoTrans", &twol, &blen, &negOnef, a->dG, &twol, a->scratch, &one, &onef, a->sol, &one);
-  scs_free(wrk);
-  scs_free(X);
-  RETURN info;
-}
-
 void update_accel_params(Work *w, scs_int idx) {
   DEBUG_FUNC
   scs_float *dF = w->accel->dF;
@@ -113,9 +72,7 @@ void update_accel_params(Work *w, scs_int idx) {
   scs_float *f = w->accel->f;
   scs_float *g = w->accel->g;
   scs_float *delta = w->accel->delta;
-  Accel *a = w->accel;
   scs_int l = w->m + w->n + 1;
-  //memcpy(a->dFold, dF, sizeof(scs_float) * 2 * l * a->k);
   /* copy old col into delta */
   memcpy(delta, &(dF[idx * 2 * l]), sizeof(scs_float) * 2 * l);
   /* copy g_prev into idx col of dG */
@@ -137,8 +94,6 @@ void update_accel_params(Work *w, scs_int idx) {
   addScaledArray(delta, &(dF[idx * 2 * l]), 2 * l, -1.0);
   /* delta = new - old */
   scaleArray(delta, -1.0, 2 * l);
-  //scs_printf("norm f %e\n", calcNorm(f, 2 * l));
-  //scs_printf("norm delta %e\n", calcNorm(delta, 2 * l));
   RETURN;
 }
 
@@ -157,7 +112,6 @@ Accel *initAccel(Work *w) {
     RETURN a;
   }
   a->dF = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-  //a->dFold = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
   a->dG = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
   a->f = scs_calloc(2 * a->l, sizeof(scs_float));
   a->g = scs_calloc(2 * a->l, sizeof(scs_float));
@@ -193,9 +147,7 @@ void qrfactorize(Accel * a) {
   lwork = (blasint) worksize;
   work = scs_malloc(lwork * sizeof(scs_float));
   BLAS(geqrf)(&twol, &bk, Q, &twol, tau, work, &lwork, &info);
-  //scs_printf("info %i\n", info);
   scs_free(work);
-  //scs_printf("norm dF %e\n", calcNorm(a->dF, 2 * a->l * a->k));
   for (i = 0; i < a->k; ++i) {
     memcpy(&(a->R[i * a->k]), &(Q[i * a->l * 2]), sizeof(scs_float) * (i + 1));
   }
@@ -204,9 +156,6 @@ void qrfactorize(Accel * a) {
   work = scs_malloc(lwork * sizeof(scs_float));
   BLAS(orgqr)(&twol, &bk, &bk, Q, &twol, tau, work, &lwork, &info);
   scs_free(work);
-  //for (i = 0; i < a->k; ++i){
-  //  scs_printf("R[%i, %i] = %e, ", i, i, a->R[i * a->k + i]);
-  //}
   scs_free(tau);
   RETURN;
 }
@@ -233,13 +182,9 @@ void update_factorization(Accel * a, scs_int idx) {
 
   /* w = Q' * delta = R^-T * dF' * delta, size k: col of R */
   BLAS(gemv)("Trans", &twol, &bk, &onef, a->Q, &twol, u, &one, &zerof, w, &one);
-  //BLAS(trsv)("Upper", "Trans", "NotUnitDiag", &bk, a->R, &bk, w, &one);
-  //BLAS(gemv)("Trans", &twol, &bk, &onef, a->Q, &twol, u, &one, &zerof, w, &one);
   /* u = delta - Q * w = dF * R^-1 w, size m: col of Q */
   scs_float * tmp = scs_malloc(sizeof(scs_float) * k);
   memcpy(tmp, w, sizeof(scs_float) * k);
-  //BLAS(trsv)("Upper", "NoTrans", "NotUnitDiag", &bk, a->R, &bk, tmp, &one);
-  //BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->dFold, &twol, tmp, &one, &onef, u, &one);
   BLAS(gemv)("NoTrans", &twol, &bk, &negOnef, a->Q, &twol, tmp, &one, &onef, u, &one);
   scs_free(tmp);
   /* nrm_u = ||u|| */
@@ -251,8 +196,6 @@ void update_factorization(Accel * a, scs_int idx) {
 
   scs_float * bot_row = scs_calloc(k, sizeof(scs_float));
   /* Givens rotations, start with fake bottom row of R, extra col of Q */
-  //scs_printf("idx %i\n", idx);
-  //scs_printf("k %i\n", k);
   scs_int ridx = k * idx + k - 1;
   scs_float r1 = R[ridx];
   scs_float r2 = nrm_u;
@@ -281,27 +224,6 @@ void update_factorization(Accel * a, scs_int idx) {
     BLAS(rot)(&twol, &(Q[2 * l * i]), &one, &(Q[2 * l * (i+1)]), &one, &c, &s);
   }
 
-  scs_float min_r = 9999999.9;
-  scs_float prod_r = 1.0;
-  for (i = 0; i < k; ++i){
-    //scs_printf("R[%i, %i] = %e, ", i, i, R[i * k + i]);
-    /*
-    if (ABS(R[i * k + i]) < min_r){
-        min_r = ABS(R[i * k + i]);
-        prod_r *= ABS(R[i * k + i]);
-    }
-
-    if (R[i * k + i] < 0) {
-      R[i * k + i] -= 1e-1;
-    } else {
-      R[i * k + i] += 1e-1;
-    }
-    */
-  }
-  //scs_printf("\n");
-  //scs_printf("min diag R %e\n", min_r);
-  //scs_printf("prod diag R %e\n", prod_r);
-
   /* Finish fake bottom row of R, extra col of Q */
   BLAS(rotg)(&(R[k * k - 1]), &(bot_row[k - 1]), &c, &s);
   BLAS(rot)(&twol, &(Q[2 * l * (k - 1)]), &one, u, &one, &c, &s);
@@ -311,20 +233,16 @@ void update_factorization(Accel * a, scs_int idx) {
 
 scs_int accelerate(Work *w, scs_int iter) {
   DEBUG_FUNC
-  //scs_printf("iter %i\n", iter);
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
   scs_float *sol;
-  Accel * a = w->accel;
-  scs_int idx = k - 1 - iter % k; 
+  scs_int idx;
   timer accelTimer;
-  tic(&accelTimer);
-  //scs_printf("--------------------------------------\n"); 
-  //scs_printf("idx %i\n", idx); 
-  //scs_printf("iter %i\n", iter);
   if (k <= 0) {
     RETURN 0;
   }
+  tic(&accelTimer);
+  idx = k - 1 - iter % k; 
   /* update dF, dG, f, g, delta */
   update_accel_params(w, idx); 
   /* iter < k doesn't do any acceleration until iters hit k - 1
@@ -335,43 +253,17 @@ scs_int accelerate(Work *w, scs_int iter) {
     RETURN 0;
   }
   if (idx == 0) {
-    //scs_printf("factorize %i\n", iter);
+    /* every k iterations this does a full factorization for 
+       numerical stability
+    */
     qrfactorize(w->accel);
-    //printArray(w->accel->Q, k * 2 * l, "Q_true");
-    //printArray(w->accel->R, k * k, "R_true");
   } else {
     /* update Q, R factors */
-
     update_factorization(w->accel, idx);
-    //qrfactorize(w->accel);
-    //scs_float * dF0 = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-    //blasint twol = 2 * a->l;
-    //blasint bk = (blasint) a->k;
-    //scs_float onef = 1.0;
-    //scs_float zerof = 0.0;
-
-
-    //BLAS(gemm)("NoTrans", "NoTrans", &twol, &bk, &bk, &onef, a->Q, &twol,
-    //    a->R, &bk, &zerof, dF0, &twol);
-    //printArray(w->accel->Q, k * 2 * l, "Q");
-    //printArray(w->accel->R, k * k, "R");
-
-    //scs_printf("||DdF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l * a->k));
-    //scs_printf("||dF|| = %e\n", calcNorm(a->dF, 2 * a->l * a->k));
-    //scs_printf("||DdF||/||dF|| = %e\n", calcNormDiff(a->dF, dF0, 2 * a->l *
-    //      a->k) / calcNorm(a->dF, 2 * a->l * a->k));
-    //scs_free(dF0);
-    //printArray(w->accel->Q, k * 2 * l, "Q_true");
-    //printArray(w->accel->R, k * k, "R_true");
-
   }
   /* solve linear system, new point stored in sol */
   sol = solve_accel_linsys(w->accel, k);
-  //printArray(sol, 2 * l, "sol1");
-  //solve_with_gels(w->accel, k);
-  //printArray(sol, 2 * l, "sol2");
   /* set [u;v] = sol */
-  //scs_printf("norm of sol %e\n", calcNorm(sol, 2 *l));
   memcpy(w->u, sol, sizeof(scs_float) * l);
   memcpy(w->v, &(sol[l]), sizeof(scs_float) * l);
   w->accel->totalAccelTime += tocq(&accelTimer);
@@ -387,7 +279,6 @@ void freeAccel(Accel *a) {
     if (a->g) scs_free(a->g);
     if (a->sol) scs_free(a->sol);
     if (a->scratch) scs_free(a->scratch);
-    //if (a->dFold) scs_free(a->dFold);
     if (a->Q) scs_free(a->Q);
     if (a->R) scs_free(a->R);
     if (a->delta) scs_free(a->delta);

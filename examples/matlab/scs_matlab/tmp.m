@@ -41,7 +41,7 @@ cvx_begin
 variable x(n)
 cvx_solver('scs')
 cvx_solver_settings('extra_verbose', 0, 'eps',1e-7, 'scale', 1, 'normalize', 1, 'use_indirect', use_indirect, 'gen_plots', 0, 'max_iters', 10000)
-minimize(norm(A*x - b) + lam*norm(x,1))
+minimize(norm(A*x - b,1) + lam*norm(x,1))
 x >= 0
 cvx_end
 
@@ -54,7 +54,7 @@ cvx_begin
 variable x(n)
 cvx_solver('scs')
 cvx_solver_settings('extra_verbose', 0, 'eps',1e-7, 'scale', 1, 'normalize', 1, 'use_indirect', use_indirect, 'gen_plots', 0, 'max_iters', 10000)
-minimize(norm(A*x - b) + lam*norm(x,1))
+minimize(norm(A*x - b,1) + lam*norm(x,1))
 x >= 0
 cvx_end
 
@@ -67,7 +67,7 @@ cvx_begin
 variable x(n)
 cvx_solver('scs')
 cvx_solver_settings('extra_verbose', 0, 'eps',1e-7, 'scale', 1, 'normalize', 1, 'use_indirect', use_indirect, 'gen_plots', 1, 'max_iters', 10000)
-minimize(norm(A*x - b) + lam*norm(x,1))
+minimize(norm(A*x - b,1) + lam*norm(x,1))
 x >= 0
 cvx_end
 
