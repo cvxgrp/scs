@@ -1,3 +1,4 @@
+prefix scs to structs
 clang format
 update apis
 fix demo.c (others?)
