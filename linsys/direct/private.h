@@ -14,7 +14,7 @@ struct PRIVATE_DATA {
     scs_int *P;    /* permutation of KKT matrix for factorization */
     scs_float *bp; /* workspace memory for solves */
     /* reporting */
-    scs_float totalSolveTime;
+    scs_float total_solve_time;
 };
 
 #endif

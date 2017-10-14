@@ -273,7 +273,7 @@ LDL_int LDL_numeric	/* returns n if successful, k if D (k,k) is zero */
     LDL_int i, k, p, kk, p2, len, top ;
     for (k = 0 ; k < n ; k++)
     {
-	if(isInterrupted()) {
+	if(is_interrupted()) {
         scs_printf("interrupt detected in factorization\n");
         return -1;
     }

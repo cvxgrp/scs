@@ -13,14 +13,14 @@ scs_float tocq(timer *t) {
 #elif(defined _WIN32 || _WIN64 || defined _WINDLL)
 
 void tic(timer *t) {
-    QueryPerformanceFrequency(&t->freq);
-    QueryPerformanceCounter(&t->tic);
+    query_performance_frequency(&t->freq);
+    query_performance_counter(&t->tic);
 }
 
 scs_float tocq(timer *t) {
-    QueryPerformanceCounter(&t->toc);
-    return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) /
-            (scs_float)t->freq.QuadPart);
+    query_performance_counter(&t->toc);
+    return (1e3 * (t->toc.quad_part - t->tic.quad_part) /
+            (scs_float)t->freq.quad_part);
 }
 #elif(defined __APPLE__)
 
@@ -75,7 +75,7 @@ scs_float strtoc(char *str, timer *t) {
     return time;
 }
 
-void printConeData(const Cone *k) {
+void print_cone_data(const Cone *k) {
     scs_int i;
     scs_printf("num zeros = %i\n", (int)k->f);
     scs_printf("num LP = %i\n", (int)k->l);
@@ -98,7 +98,7 @@ void printConeData(const Cone *k) {
     }
 }
 
-void printWork(const Work *w) {
+void print_work(const Work *w) {
     scs_int i, l = w->n + w->m;
     scs_printf("\n u_t is \n");
     for (i = 0; i < l; i++) {
@@ -114,7 +114,7 @@ void printWork(const Work *w) {
     }
 }
 
-void printData(const Data *d) {
+void print_data(const Data *d) {
     scs_printf("m = %i\n", (int)d->m);
     scs_printf("n = %i\n", (int)d->n);
 
@@ -130,12 +130,12 @@ void printData(const Data *d) {
     scs_printf("scale = %4f\n", d->stgs->scale);
 }
 
-void printArray(const scs_float *arr, scs_int n, const char *name) {
+void print_array(const scs_float *arr, scs_int n, const char *name) {
     scs_int i, j, k = 0;
-    scs_int numOnOneLine = 10;
+    scs_int num_on_one_line = 10;
     scs_printf("\n");
-    for (i = 0; i < n / numOnOneLine; ++i) {
-        for (j = 0; j < numOnOneLine; ++j) {
+    for (i = 0; i < n / num_on_one_line; ++i) {
+        for (j = 0; j < num_on_one_line; ++j) {
             scs_printf("%s[%li] = %4f, ", name, (long)k, arr[k]);
             k++;
         }
@@ -147,7 +147,7 @@ void printArray(const scs_float *arr, scs_int n, const char *name) {
     scs_printf("\n");
 }
 
-void freeData(Data *d, Cone *k) {
+void free_data(Data *d, Cone *k) {
     if (d) {
         if (d->b)
             scs_free(d->b);
@@ -156,7 +156,7 @@ void freeData(Data *d, Cone *k) {
         if (d->stgs)
             scs_free(d->stgs);
         if (d->A) {
-            freeAMatrix(d->A);
+            free_a_matrix(d->A);
         }
         scs_free(d);
     }
@@ -171,7 +171,7 @@ void freeData(Data *d, Cone *k) {
     }
 }
 
-void freeSol(Sol *sol) {
+void free_sol(Sol *sol) {
     if (sol) {
         if (sol->x) {
             scs_free(sol->x);
@@ -187,7 +187,7 @@ void freeSol(Sol *sol) {
 }
 
 /* assumes d->stgs already allocated memory */
-void setDefaultSettings(Data *d) {
+void set_default_settings(Data *d) {
     d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
     d->stgs->eps = EPS;             /* convergence tolerance: 1e-3 */
     d->stgs->alpha = ALPHA;         /* relaxation parameter: 1.8 */

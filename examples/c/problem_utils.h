@@ -7,7 +7,7 @@
 #define PI (3.141592654)
 #ifdef DLONG
 #ifdef _WIN64
-/* this is a Microsoft extension, but also works with MinGW-w64 */
+/* this is a Microsoft extension, but also works with min_g_w-w64 */
 #define INTRW "%I64d"
 #else
 #define INTRW "%ld"
@@ -43,14 +43,14 @@ scs_float rand_gauss(void) {
     return Z;
 }
 
-void perturbVector(scs_float *v, scs_int l) {
+void perturb_vector(scs_float *v, scs_int l) {
     scs_int i;
     for (i = 0; i < l; i++) {
         v[i] += 0.01 * rand_gauss();
     }
 }
 
-void genRandomProbData(scs_int nnz, scs_int col_nnz, Data *d, Cone *k,
+void gen_random_prob_data(scs_int nnz, scs_int col_nnz, Data *d, Cone *k,
                        Sol *opt_sol) {
     scs_int n = d->n;
     scs_int m = d->m;
@@ -74,7 +74,7 @@ void genRandomProbData(scs_int nnz, scs_int col_nnz, Data *d, Cone *k,
         y[i] = z[i] = rand_scs_float();
     }
 
-    projDualCone(y, k, SCS_NULL, SCS_NULL, -1);
+    proj_dual_cone(y, k, SCS_NULL, SCS_NULL, -1);
 
     for (i = 0; i < m; i++) {
         b[i] = s[i] = y[i] - z[i];

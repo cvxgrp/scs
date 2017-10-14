@@ -8,8 +8,8 @@ extern "C" {
 #include "glbopts.h"
 #include <string.h>
 #include "cones.h"
-#include "linAlg.h"
-#include "linSys.h"
+#include "lin_alg.h"
+#include "lin_sys.h"
 #include "util.h"
 #include "ctrlc.h"
 #include "constants.h"
@@ -57,22 +57,22 @@ struct SCS_SOL_VARS {
 struct SCS_INFO {
     scs_int iter;        /* number of iterations taken */
     char status[32];     /* status string, e.g. 'Solved' */
-    scs_int statusVal;   /* status as scs_int, defined in constants.h */
+    scs_int status_val;   /* status as scs_int, defined in constants.h */
     scs_float pobj;      /* primal objective */
     scs_float dobj;      /* dual objective */
-    scs_float resPri;    /* primal equality residual */
-    scs_float resDual;   /* dual equality residual */
-    scs_float resInfeas; /* infeasibility cert residual */
-    scs_float resUnbdd;  /* unbounded cert residual */
-    scs_float relGap;    /* relative duality gap */
-    scs_float setupTime; /* time taken for setup phase (milliseconds) */
-    scs_float solveTime; /* time taken for solve phase (milliseconds) */
+    scs_float res_pri;    /* primal equality residual */
+    scs_float res_dual;   /* dual equality residual */
+    scs_float res_infeas; /* infeasibility cert residual */
+    scs_float res_unbdd;  /* unbounded cert residual */
+    scs_float rel_gap;    /* relative duality gap */
+    scs_float setup_time; /* time taken for setup phase (milliseconds) */
+    scs_float solve_time; /* time taken for solve phase (milliseconds) */
 };
 
 /* contains normalization variables */
 struct SCS_SCALING {
     scs_float *D, *E; /* for normalization */
-    scs_float meanNormRowA, meanNormColA;
+    scs_float mean_norm_row_a, mean_norm_col_a;
 };
 
 /*
@@ -95,7 +95,7 @@ const char *scs_version(void);
 struct SCS_WORK {
     scs_float *u, *v, *u_t, *u_prev, *v_prev; /* u_prev = u from previous iteration */
     scs_float *h, *g, *pr, *dr;
-    scs_float gTh, sc_b, sc_c, nm_b, nm_c;
+    scs_float g_th, sc_b, sc_c, nm_b, nm_c;
     scs_float *b, *c;   /* (possibly normalized) b and c vectors */
     scs_int m, n;       /* A has m rows, n cols */
     AMatrix *A;         /* (possibly normalized) A matrix */
@@ -103,19 +103,19 @@ struct SCS_WORK {
     Accel *accel;       /* Struct for acceleration workspace */
     Settings *stgs;     /* contains solver settings specified by user */
     Scaling *scal;      /* contains the re-scaling data */
-    ConeWork *coneWork; /* workspace for the cone projection step */
+    Cone_work *cone_work; /* workspace for the cone projection step */
 };
 
 /* to hold residual information (unnormalized) */
 struct residuals {
-    scs_int lastIter;
-    scs_float resDual;
-    scs_float resPri;
-    scs_float resInfeas;
-    scs_float resUnbdd;
-    scs_float relGap;
-    scs_float cTx_by_tau; /* not divided by tau */
-    scs_float bTy_by_tau; /* not divided by tau */
+    scs_int last_iter;
+    scs_float res_dual;
+    scs_float res_pri;
+    scs_float res_infeas;
+    scs_float res_unbdd;
+    scs_float rel_gap;
+    scs_float c_tx_by_tau; /* not divided by tau */
+    scs_float b_ty_by_tau; /* not divided by tau */
     scs_float tau;
     scs_float kap;
 };

@@ -1,9 +1,9 @@
 /*
  * Implements signal handling (ctrl-c) for SCS.
  *
- * Under Windows, we use SetConsoleCtrlHandler.
+ * Under Windows, we use set_console_ctrl_handler.
  * Under Unix systems, we use sigaction.
- * For Mex files, we use utSetInterruptEnabled/utIsInterruptPending.
+ * For Mex files, we use ut_set_interrupt_enabled/ut_is_interrupt_pending.
  *
  */
 
@@ -14,38 +14,38 @@
 #ifdef MATLAB_MEX_FILE
 
 static int istate;
-void startInterruptListener(void) {
-    istate = utSetInterruptEnabled(1);
+void start_interrupt_listener(void) {
+    istate = ut_set_interrupt_enabled(1);
 }
 
-void endInterruptListener(void) {
-    utSetInterruptEnabled(istate);
+void end_interrupt_listener(void) {
+    ut_set_interrupt_enabled(istate);
 }
 
-int isInterrupted(void) {
-    return utIsInterruptPending();
+int is_interrupted(void) {
+    return ut_is_interrupt_pending();
 }
 
 #elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 
 static int int_detected;
-BOOL WINAPI handle_ctrlc(DWORD dwCtrlType) {
-    if (dwCtrlType != CTRL_C_EVENT)
+BOOL WINAPI handle_ctrlc(DWORD dw_ctrl_type) {
+    if (dw_ctrl_type != CTRL_C_EVENT)
         return FALSE;
     int_detected = 1;
     return TRUE;
 }
 
-void startInterruptListener(void) {
+void start_interrupt_listener(void) {
     int_detected = 0;
-    SetConsoleCtrlHandler(handle_ctrlc, TRUE);
+    set_console_ctrl_handler(handle_ctrlc, TRUE);
 }
 
-void endInterruptListener(void) {
-    SetConsoleCtrlHandler(handle_ctrlc, FALSE);
+void end_interrupt_listener(void) {
+    set_console_ctrl_handler(handle_ctrlc, FALSE);
 }
 
-int isInterrupted(void) {
+int is_interrupted(void) {
     return int_detected;
 }
 
@@ -58,7 +58,7 @@ void handle_ctrlc(int dummy) {
     int_detected = dummy ? dummy : -1;
 }
 
-void startInterruptListener(void) {
+void start_interrupt_listener(void) {
     struct sigaction act;
     int_detected = 0;
     act.sa_flags = 0;
@@ -67,12 +67,12 @@ void startInterruptListener(void) {
     sigaction(SIGINT, &act, &oact);
 }
 
-void endInterruptListener(void) {
+void end_interrupt_listener(void) {
     struct sigaction act;
     sigaction(SIGINT, &oact, &act);
 }
 
-int isInterrupted(void) {
+int is_interrupted(void) {
     return int_detected;
 }
 

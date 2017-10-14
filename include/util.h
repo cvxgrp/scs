@@ -42,7 +42,7 @@ typedef struct timer {
 #endif
 
 #if EXTRAVERBOSE > 1
-extern timer globalTimer;
+extern timer global_timer;
 #endif
 
 /* these all return milli-seconds */
@@ -51,13 +51,13 @@ scs_float toc(timer *t);
 scs_float strtoc(char *str, timer *t);
 scs_float tocq(timer *t);
 
-void printConeData(const Cone *k);
-void printData(const Data *d);
-void printWork(const Work *w);
-void printArray(const scs_float *arr, scs_int n, const char *name);
-void setDefaultSettings(Data *d);
-void freeSol(Sol *sol);
-void freeData(Data *d, Cone *k);
+void print_cone_data(const Cone *k);
+void print_data(const Data *d);
+void print_work(const Work *w);
+void print_array(const scs_float *arr, scs_int n, const char *name);
+void set_default_settings(Data *d);
+void free_sol(Sol *sol);
+void free_data(Data *d, Cone *k);
 
 #ifdef __cplusplus
 }

@@ -1,15 +1,15 @@
 #include "scs.h"
 #include "linsys/amatrix.h"
-#include "problemUtils.h"
+#include "problem_utils.h"
 
 #define NUM_TRIALS (5)
 #define RHOX (1e-3)
 #define TEST_WARM_START (1)
 
-scs_int readInData(FILE *fp, Data *d, Cone *k);
-scs_int openFile(scs_int argc, char **argv, scs_int idx,
+scs_int read_in_data(FILE *fp, Data *d, Cone *k);
+scs_int open_file(scs_int argc, char **argv, scs_int idx,
                  const char *default_file, FILE **fb);
-/* void printSol(Data * d, Sol * sol, Info * info); */
+/* void print_sol(Data * d, Sol * sol, Info * info); */
 
 int main(int argc, char **argv) {
     FILE *fp;
@@ -20,13 +20,13 @@ int main(int argc, char **argv) {
     Info info = {0};
     scs_int i;
 
-    if (openFile(argc, argv, 1, DEMO_PATH, &fp) < 0)
+    if (open_file(argc, argv, 1, DEMO_PATH, &fp) < 0)
         return -1;
 
     k = scs_calloc(1, sizeof(Cone));
     d = scs_calloc(1, sizeof(Data));
     sol = scs_calloc(1, sizeof(Sol));
-    if (readInData(fp, d, k) == -1) {
+    if (read_in_data(fp, d, k) == -1) {
         printf("Error reading in data, aborting.\n");
         return -1;
     }
@@ -43,8 +43,8 @@ int main(int argc, char **argv) {
         if (w) {
             for (i = 0; i < NUM_TRIALS; i++) {
                 /* perturb b and c */
-                perturbVector(d->b, d->m);
-                perturbVector(d->c, d->n);
+                perturb_vector(d->b, d->m);
+                perturb_vector(d->c, d->n);
                 d->stgs->warm_start = 1;
                 d->stgs->cg_rate = 4;
                 scs_solve(w, d, k, sol, &info);
@@ -57,12 +57,12 @@ int main(int argc, char **argv) {
         scs_finish(w);
     }
 
-    freeData(d, k);
-    freeSol(sol);
+    free_data(d, k);
+    free_sol(sol);
     return 0;
 }
 
-scs_int readInData(FILE *fp, Data *d, Cone *k) {
+scs_int read_in_data(FILE *fp, Data *d, Cone *k) {
     /* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
     scs_int i, Anz;
     AMatrix *A;
@@ -204,7 +204,7 @@ scs_int readInData(FILE *fp, Data *d, Cone *k) {
     return 0;
 }
 
-scs_int openFile(scs_int argc, char **argv, scs_int idx,
+scs_int open_file(scs_int argc, char **argv, scs_int idx,
                  const char *default_file, FILE **fb) {
     if (argc < idx + 1) {
         printf("Not enough arguments supplied, using %s as default\n",

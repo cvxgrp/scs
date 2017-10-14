@@ -1,6 +1,6 @@
 #include "scs.h"
 #include "linsys/amatrix.h"
-#include "problemUtils.h"
+#include "problem_utils.h"
 #include <time.h> /* to seed random */
 
 /*
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
     k->ep = 0;
     k->ed = 0;
 
-    scs_printf("\nA is %ld by %ld, with %ld nonzeros per column.\n", (long)m,
+    scs_printf("\n_a is %ld by %ld, with %ld nonzeros per column.\n", (long)m,
                (long)n, (long)col_nnz);
     scs_printf("A has %ld nonzeros (%f%% dense).\n", (long)nnz,
                100 * (scs_float)col_nnz / m);
@@ -142,26 +142,26 @@ int main(int argc, char **argv) {
     /* set up SCS structures */
     d->m = m;
     d->n = n;
-    genRandomProbData(nnz, col_nnz, d, k, opt_sol);
-    setDefaultSettings(d);
+    gen_random_prob_data(nnz, col_nnz, d, k, opt_sol);
+    set_default_settings(d);
 
-    scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
-    scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));
+    scs_printf("true pri opt = %4f\n", inner_prod(d->c, opt_sol->x, d->n));
+    scs_printf("true dua opt = %4f\n", -inner_prod(d->b, opt_sol->y, d->m));
     /* solve! */
     scs(d, k, sol, &info);
-    scs_printf("true pri opt = %4f\n", innerProd(d->c, opt_sol->x, d->n));
-    scs_printf("true dua opt = %4f\n", -innerProd(d->b, opt_sol->y, d->m));
+    scs_printf("true pri opt = %4f\n", inner_prod(d->c, opt_sol->x, d->n));
+    scs_printf("true dua opt = %4f\n", -inner_prod(d->b, opt_sol->y, d->m));
 
     if (sol->x) {
-        scs_printf("scs pri obj= %4f\n", innerProd(d->c, sol->x, d->n));
+        scs_printf("scs pri obj= %4f\n", inner_prod(d->c, sol->x, d->n));
     }
     if (sol->y) {
-        scs_printf("scs dua obj = %4f\n", -innerProd(d->b, sol->y, d->m));
+        scs_printf("scs dua obj = %4f\n", -inner_prod(d->b, sol->y, d->m));
     }
 
-    freeData(d, k);
-    freeSol(sol);
-    freeSol(opt_sol);
+    free_data(d, k);
+    free_sol(sol);
+    free_sol(opt_sol);
 
     return 0;
 }

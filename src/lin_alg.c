@@ -1,8 +1,8 @@
-#include "linAlg.h"
+#include "lin_alg.h"
 #include <math.h>
 
 /* x = b*a */
-void setAsScaledArray(scs_float *x, const scs_float *a, const scs_float b,
+void set_as_scaled_array(scs_float *x, const scs_float *a, const scs_float b,
                       scs_int len) {
     scs_int i;
     for (i = 0; i < len; ++i)
@@ -10,14 +10,14 @@ void setAsScaledArray(scs_float *x, const scs_float *a, const scs_float b,
 }
 
 /* a *= b */
-void scaleArray(scs_float *a, const scs_float b, scs_int len) {
+void scale_array(scs_float *a, const scs_float b, scs_int len) {
     scs_int i;
     for (i = 0; i < len; ++i)
         a[i] *= b;
 }
 
 /* x'*y */
-scs_float innerProd(const scs_float *x, const scs_float *y, scs_int len) {
+scs_float inner_prod(const scs_float *x, const scs_float *y, scs_int len) {
     scs_int i;
     scs_float ip = 0.0;
     for (i = 0; i < len; ++i) {
@@ -27,7 +27,7 @@ scs_float innerProd(const scs_float *x, const scs_float *y, scs_int len) {
 }
 
 /* ||v||_2^2 */
-scs_float calcNormSq(const scs_float *v, scs_int len) {
+scs_float calc_norm_sq(const scs_float *v, scs_int len) {
     scs_int i;
     scs_float nmsq = 0.0;
     for (i = 0; i < len; ++i) {
@@ -37,11 +37,11 @@ scs_float calcNormSq(const scs_float *v, scs_int len) {
 }
 
 /* ||v||_2 */
-scs_float calcNorm(const scs_float *v, scs_int len) {
-    return SQRTF(calcNormSq(v, len));
+scs_float calc_norm(const scs_float *v, scs_int len) {
+    return SQRTF(calc_norm_sq(v, len));
 }
 
-scs_float calcNormInf(const scs_float *a, scs_int l) {
+scs_float calc_norm_inf(const scs_float *a, scs_int l) {
     scs_float tmp, max = 0.0;
     scs_int i;
     for (i = 0; i < l; ++i) {
@@ -53,7 +53,7 @@ scs_float calcNormInf(const scs_float *a, scs_int l) {
 }
 
 /* saxpy a += sc*b */
-void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
+void add_scaled_array(scs_float *a, const scs_float *b, scs_int n,
                     const scs_float sc) {
     scs_int i;
     for (i = 0; i < n; ++i) {
@@ -61,17 +61,17 @@ void addScaledArray(scs_float *a, const scs_float *b, scs_int n,
     }
 }
 
-scs_float calcNormDiff(const scs_float *a, const scs_float *b, scs_int l) {
-    scs_float nmDiff = 0.0, tmp;
+scs_float calc_norm_diff(const scs_float *a, const scs_float *b, scs_int l) {
+    scs_float nm_diff = 0.0, tmp;
     scs_int i;
     for (i = 0; i < l; ++i) {
         tmp = (a[i] - b[i]);
-        nmDiff += tmp * tmp;
+        nm_diff += tmp * tmp;
     }
-    return SQRTF(nmDiff);
+    return SQRTF(nm_diff);
 }
 
-scs_float calcNormInfDiff(const scs_float *a, const scs_float *b, scs_int l) {
+scs_float calc_norm_inf_diff(const scs_float *a, const scs_float *b, scs_int l) {
     scs_float tmp, max = 0.0;
     scs_int i;
     for (i = 0; i < l; ++i) {

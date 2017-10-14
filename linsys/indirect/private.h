@@ -6,7 +6,7 @@
 #include "cs.h"
 #include <math.h>
 #include "../common.h"
-#include "linAlg.h"
+#include "lin_alg.h"
 
 struct PRIVATE_DATA {
     scs_float *p; /* cg iterate  */
@@ -18,8 +18,8 @@ struct PRIVATE_DATA {
     scs_float *z;
     scs_float *M;
     /* reporting */
-    scs_int totCgIts;
-    scs_float totalSolveTime;
+    scs_int tot_cg_its;
+    scs_float total_solve_time;
 };
 
 #endif
