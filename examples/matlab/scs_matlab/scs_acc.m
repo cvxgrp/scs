@@ -151,7 +151,7 @@ G = [];
 X = [];
 tic
 
-z = 10 * [u;v] / norm([u;v]);
+z = sqrt(l) * 10 * [u;v] / norm([u;v]);
 u = z(1:n+m+1);
 v = z(n+m+2:end);
 for i=0:max_iters-1
@@ -177,7 +177,7 @@ for i=0:max_iters-1
     %% normalize
     Nrml = true;
     if Nrml & false
-        z = 10 * [u;v] / norm([u;v]);
+        z = sqrt(l) * 10 * [u;v] / norm([u;v]);
         u = z(1:n+m+1);
         v = z(n+m+2:end);
     end
@@ -278,7 +278,7 @@ for i=0:max_iters-1
         v = uv(n+m+2:end);
     end
     if Nrml
-        z = 10 * [u;v] / norm([u;v]);
+        z = sqrt(l) * 10 * [u;v] / norm([u;v]);
         u = z(1:n+m+1);
         v = z(n+m+2:end);
     end

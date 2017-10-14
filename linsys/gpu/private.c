@@ -9,36 +9,36 @@ extern "C" {
 
 #define CUDA_CHECK_ERR                                                         \
     do {                                                                       \
-        cuda_error_t err = cuda_get_last_error();                                  \
-        if (err != cuda_success) {                                              \
+        cudaError_t err = cudaGetLastError();                                  \
+        if (err != cudaSuccess) {                                              \
             printf("%s:%d:%s\n ERROR_CUDA: %s\n", __FILE__, __LINE__,          \
-                   __func__, cuda_get_error_string(err));                         \
+                   __func__, cudaGetErrorString(err));                         \
         }                                                                      \
     } while (0)
 
 #ifndef EXTRAVERBOSE
 #ifndef FLOAT
-#define CUBLAS(x) cublas_d##x
-#define CUSPARSE(x) cusparse_d##x
+#define CUBLAS(x) cublasD##x
+#define CUSPARSE(x) cusparseD##x
 #else
-#define CUBLAS(x) cublas_s##x
-#define CUSPARSE(x) cusparse_s##x
+#define CUBLAS(x) cublasS##x
+#define CUSPARSE(x) cusparseS##x
 #endif
 #else
 #ifndef FLOAT
 #define CUBLAS(x)                                                              \
     CUDA_CHECK_ERR;                                                            \
-    cublas_d##x
+    cublasD##x
 #define CUSPARSE(x)                                                            \
     CUDA_CHECK_ERR;                                                            \
-    cusparse_d##x
+    cusparseD##x
 #else
 #define CUBLAS(x)                                                              \
     CUDA_CHECK_ERR;                                                            \
-    cublas_s##x
+    cublasS##x
 #define CUSPARSE(x)                                                            \
     CUDA_CHECK_ERR;                                                            \
-    cusparse_s##x
+    cusparseS##x
 #endif
 #endif
 
@@ -76,20 +76,20 @@ void accum_by_atrans(const AMatrix *A, Priv *p, const scs_float *x,
                    scs_float *y) {
     scs_float *v_m = p->tmp_m;
     scs_float *v_n = p->r;
-    cuda_memcpy(v_m, x, A->m * sizeof(scs_float), cuda_memcpy_host_to_device);
-    cuda_memcpy(v_n, y, A->n * sizeof(scs_float), cuda_memcpy_host_to_device);
+    cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
+    cudaMemcpy(v_n, y, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
     accum_by_atrans_gpu(p, v_m, v_n);
-    cuda_memcpy(y, v_n, A->n * sizeof(scs_float), cuda_memcpy_device_to_host);
+    cudaMemcpy(y, v_n, A->n * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
 /* do not use within pcg, reuses memory */
 void accum_by_a(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
     scs_float *v_m = p->tmp_m;
     scs_float *v_n = p->r;
-    cuda_memcpy(v_n, x, A->n * sizeof(scs_float), cuda_memcpy_host_to_device);
-    cuda_memcpy(v_m, y, A->m * sizeof(scs_float), cuda_memcpy_host_to_device);
+    cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
+    cudaMemcpy(v_m, y, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
     accum_by_a_gpu(p, v_n, v_m);
-    cuda_memcpy(y, v_m, A->m * sizeof(scs_float), cuda_memcpy_device_to_host);
+    cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
 char *get_lin_sys_method(const AMatrix *A, const Settings *s) {
@@ -110,42 +110,42 @@ char *get_lin_sys_summary(Priv *p, const Info *info) {
     return str;
 }
 
-void cuda_free_a_matrix(AMatrix *A) {
+void cudaFree_a_matrix(AMatrix *A) {
     if (A->x)
-        cuda_free(A->x);
+        cudaFree(A->x);
     if (A->i)
-        cuda_free(A->i);
+        cudaFree(A->i);
     if (A->p)
-        cuda_free(A->p);
+        cudaFree(A->p);
 }
 
 void free_priv(Priv *p) {
     if (p) {
         if (p->p)
-            cuda_free(p->p);
+            cudaFree(p->p);
         if (p->r)
-            cuda_free(p->r);
+            cudaFree(p->r);
         if (p->Gp)
-            cuda_free(p->Gp);
+            cudaFree(p->Gp);
         if (p->bg)
-            cuda_free(p->bg);
+            cudaFree(p->bg);
         if (p->tmp_m)
-            cuda_free(p->tmp_m);
+            cudaFree(p->tmp_m);
         if (p->z)
-            cuda_free(p->z);
+            cudaFree(p->z);
         if (p->M)
-            cuda_free(p->M);
+            cudaFree(p->M);
         if (p->Ag) {
-            cuda_free_a_matrix(p->Ag);
+            cudaFree_a_matrix(p->Ag);
             scs_free(p->Ag);
         }
         if (p->Agt) {
-            cuda_free_a_matrix(p->Agt);
+            cudaFree_a_matrix(p->Agt);
             scs_free(p->Agt);
         }
-        cusparse_destroy(p->cusparse_handle);
-        cublas_destroy(p->cublas_handle);
-        cuda_device_reset();
+        cusparseDestroy(p->cusparse_handle);
+        cublasDestroy(p->cublas_handle);
+        cudaDeviceReset();
         scs_free(p);
     }
 }
@@ -155,9 +155,9 @@ static void mat_vec(const AMatrix *A, const Settings *s, Priv *p,
                    const scs_float *x, scs_float *y) {
     /* x and y MUST already be loaded to GPU */
     scs_float *tmp_m = p->tmp_m; /* temp memory */
-    cuda_memset(tmp_m, 0, A->m * sizeof(scs_float));
+    cudaMemset(tmp_m, 0, A->m * sizeof(scs_float));
     accum_by_a_gpu(p, x, tmp_m);
-    cuda_memset(y, 0, A->n * sizeof(scs_float));
+    cudaMemset(y, 0, A->n * sizeof(scs_float));
     accum_by_atrans_gpu(p, tmp_m, y);
     CUBLAS(axpy)(p->cublas_handle, A->n, &(s->rho_x), x, 1, y, 1);
 }
@@ -176,7 +176,7 @@ void get_preconditioner(const AMatrix *A, const Settings *stgs, Priv *p) {
                     calc_norm_sq(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
         /* M[i] = 1; */
     }
-    cuda_memcpy(p->M, M, A->n * sizeof(scs_float), cuda_memcpy_host_to_device);
+    cudaMemcpy(p->M, M, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
     scs_free(M);
 
 #if EXTRAVERBOSE > 0
@@ -185,7 +185,7 @@ void get_preconditioner(const AMatrix *A, const Settings *stgs, Priv *p) {
 }
 
 Priv *init_priv(const AMatrix *A, const Settings *stgs) {
-    cuda_error_t err;
+    cudaError_t err;
     Priv *p = (Priv *)scs_calloc(1, sizeof(Priv));
     p->Annz = A->p[A->n];
     p->cublas_handle = 0;
@@ -196,15 +196,15 @@ Priv *init_priv(const AMatrix *A, const Settings *stgs) {
     p->tot_cg_its = 0;
 
     /* Get handle to the CUBLAS context */
-    cublas_create(&p->cublas_handle);
+    cublasCreate(&p->cublas_handle);
 
     /* Get handle to the CUSPARSE context */
-    cusparse_create(&p->cusparse_handle);
+    cusparseCreate(&p->cusparse_handle);
 
     /* Matrix description */
-    cusparse_create_mat_descr(&p->descr);
-    cusparse_set_mat_type(p->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
-    cusparse_set_mat_index_base(p->descr, CUSPARSE_INDEX_BASE_ZERO);
+    cusparseCreateMatDescr(&p->descr);
+    cusparseSetMatType(p->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(p->descr, CUSPARSE_INDEX_BASE_ZERO);
 
     AMatrix *Ag = (AMatrix *)scs_malloc(sizeof(AMatrix));
     Ag->n = A->n;
@@ -216,29 +216,29 @@ Priv *init_priv(const AMatrix *A, const Settings *stgs) {
     Agt->m = A->n;
     p->Agt = Agt;
 
-    cuda_malloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
-    cuda_malloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
-    cuda_malloc((void **)&Ag->x, (A->p[A->n]) * sizeof(scs_float));
+    cudaMalloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
+    cudaMalloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
+    cudaMalloc((void **)&Ag->x, (A->p[A->n]) * sizeof(scs_float));
 
-    cuda_malloc((void **)&p->p, A->n * sizeof(scs_float));
-    cuda_malloc((void **)&p->r, A->n * sizeof(scs_float));
-    cuda_malloc((void **)&p->Gp, A->n * sizeof(scs_float));
-    cuda_malloc((void **)&p->bg, (A->n + A->m) * sizeof(scs_float));
-    cuda_malloc((void **)&p->tmp_m,
+    cudaMalloc((void **)&p->p, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->r, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->Gp, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->bg, (A->n + A->m) * sizeof(scs_float));
+    cudaMalloc((void **)&p->tmp_m,
                A->m * sizeof(scs_float)); /* intermediate result */
-    cuda_malloc((void **)&p->z, A->n * sizeof(scs_float));
-    cuda_malloc((void **)&p->M, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->z, A->n * sizeof(scs_float));
+    cudaMalloc((void **)&p->M, A->n * sizeof(scs_float));
 
-    cuda_memcpy(Ag->i, A->i, (A->p[A->n]) * sizeof(scs_int),
-               cuda_memcpy_host_to_device);
-    cuda_memcpy(Ag->p, A->p, (A->n + 1) * sizeof(scs_int),
-               cuda_memcpy_host_to_device);
-    cuda_memcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float),
-               cuda_memcpy_host_to_device);
+    cudaMemcpy(Ag->i, A->i, (A->p[A->n]) * sizeof(scs_int),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(Ag->p, A->p, (A->n + 1) * sizeof(scs_int),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float),
+               cudaMemcpyHostToDevice);
 
-    cuda_malloc((void **)&Agt->i, (A->p[A->n]) * sizeof(scs_int));
-    cuda_malloc((void **)&Agt->p, (A->m + 1) * sizeof(scs_int));
-    cuda_malloc((void **)&Agt->x, (A->p[A->n]) * sizeof(scs_float));
+    cudaMalloc((void **)&Agt->i, (A->p[A->n]) * sizeof(scs_int));
+    cudaMalloc((void **)&Agt->p, (A->m + 1) * sizeof(scs_int));
+    cudaMalloc((void **)&Agt->x, (A->p[A->n]) * sizeof(scs_float));
 
     get_preconditioner(A, stgs, p);
 
@@ -248,19 +248,19 @@ Priv *init_priv(const AMatrix *A, const Settings *stgs) {
                       Ag->i, Agt->x, Agt->i, Agt->p, CUSPARSE_ACTION_NUMERIC,
                       CUSPARSE_INDEX_BASE_ZERO);
 
-    err = cuda_get_last_error();
-    if (err != cuda_success) {
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
         printf("%s:%d:%s\nERROR_CUDA: %s\n", __FILE__, __LINE__, __func__,
-               cuda_get_error_string(err));
+               cudaGetErrorString(err));
         free_priv(p);
         return SCS_NULL;
     }
     return p;
 }
 
-static void apply_pre_conditioner(cublas_handle_t cublas_handle, scs_float *M,
+static void apply_pre_conditioner(cublasHandle_t cublas_handle, scs_float *M,
                                 scs_float *z, scs_float *r, scs_int n) {
-    cuda_memcpy(z, r, n * sizeof(scs_float), cuda_memcpy_device_to_device);
+    cudaMemcpy(z, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
     CUBLAS(tbmv)(cublas_handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N,
                  CUBLAS_DIAG_NON_UNIT, n, 0, M, 1, z, 1);
 }
@@ -277,16 +277,16 @@ static scs_int pcg(const AMatrix *A, const Settings *stgs, Priv *pr,
     scs_float *r = pr->r;   /* cg residual */
     scs_float *z = pr->z;   /* preconditioned */
     scs_float *M = pr->M;   /* preconditioner */
-    cublas_handle_t cublas_handle = pr->cublas_handle;
+    cublasHandle_t cublas_handle = pr->cublas_handle;
 
     if (s == SCS_NULL) {
-        cuda_memcpy(r, bg, n * sizeof(scs_float), cuda_memcpy_device_to_device);
-        cuda_memset(bg, 0, n * sizeof(scs_float));
+        cudaMemcpy(r, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
+        cudaMemset(bg, 0, n * sizeof(scs_float));
     } else {
         /* p contains bg temporarily */
-        cuda_memcpy(p, bg, n * sizeof(scs_float), cuda_memcpy_device_to_device);
+        cudaMemcpy(p, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
         /* bg contains s */
-        cuda_memcpy(bg, s, n * sizeof(scs_float), cuda_memcpy_host_to_device);
+        cudaMemcpy(bg, s, n * sizeof(scs_float), cudaMemcpyHostToDevice);
         mat_vec(A, stgs, pr, bg, r);
         CUBLAS(axpy)(cublas_handle, n, &neg_onef, p, 1, r, 1);
         CUBLAS(scal)(cublas_handle, n, &neg_onef, r, 1);
@@ -304,7 +304,7 @@ static scs_int pcg(const AMatrix *A, const Settings *stgs, Priv *pr,
     apply_pre_conditioner(cublas_handle, M, z, r, n);
     CUBLAS(dot)(cublas_handle, n, r, 1, z, 1, &ipzr);
     /* put z in p, replacing temp mem */
-    cuda_memcpy(p, z, n * sizeof(scs_float), cuda_memcpy_device_to_device);
+    cudaMemcpy(p, z, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
 
     for (i = 0; i < max_its; ++i) {
         mat_vec(A, stgs, pr, p, Gp);
@@ -352,25 +352,25 @@ void accum_by_a_host(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y
 void test_gpu_mat_mul(const AMatrix *A, Priv *p, scs_float *b) {
     /* test to see if matrix multiplication codes agree */
     scs_float t[A->n + A->m], u[A->n + A->m], *bg;
-    cuda_malloc((void **)&bg, (A->n + A->m) * sizeof(scs_float));
+    cudaMalloc((void **)&bg, (A->n + A->m) * sizeof(scs_float));
 
-    cuda_memcpy(bg, b, (A->n + A->m) * sizeof(scs_float),
-               cuda_memcpy_host_to_device);
+    cudaMemcpy(bg, b, (A->n + A->m) * sizeof(scs_float),
+               cudaMemcpyHostToDevice);
     memcpy(t, b, (A->n + A->m) * sizeof(scs_float));
 
     accum_by_atrans_gpu(p, &(bg[A->n]), bg);
     accum_by_atrans_host(A, p, &(t[A->n]), t);
-    cuda_memcpy(u, bg, (A->n + A->m) * sizeof(scs_float),
-               cuda_memcpy_device_to_host);
+    cudaMemcpy(u, bg, (A->n + A->m) * sizeof(scs_float),
+               cudaMemcpyDeviceToHost);
     printf("A trans multiplication err %2.e\n", calc_norm_diff(u, t, A->n));
 
     accum_by_a_gpu(p, bg, &(bg[A->n]));
     accum_by_a_host(A, p, t, &(t[A->n]));
-    cuda_memcpy(u, bg, (A->n + A->m) * sizeof(scs_float),
-               cuda_memcpy_device_to_host);
+    cudaMemcpy(u, bg, (A->n + A->m) * sizeof(scs_float),
+               cudaMemcpyDeviceToHost);
     printf("A multiplcation err %2.e\n",
            calc_norm_diff(&(u[A->n]), &(t[A->n]), A->m));
-    cuda_free(bg);
+    cudaFree(bg);
 }
 #endif
 
@@ -394,15 +394,15 @@ scs_int solve_lin_sys(const AMatrix *A, const Settings *stgs, Priv *p,
 #endif
 
     /* all on GPU */
-    cuda_memcpy(bg, b, (A->n + A->m) * sizeof(scs_float),
-               cuda_memcpy_host_to_device);
+    cudaMemcpy(bg, b, (A->n + A->m) * sizeof(scs_float),
+               cudaMemcpyHostToDevice);
     accum_by_atrans_gpu(p, &(bg[A->n]), bg);
     /* solves (I+A'A)x = b, s warm start, solution stored in b */
     cg_its = pcg(A, stgs, p, s, bg, A->n, MAX(cg_tol, CG_BEST_TOL));
     CUBLAS(scal)(p->cublas_handle, A->m, &neg_onef, &(bg[A->n]), 1);
     accum_by_a_gpu(p, bg, &(bg[A->n]));
-    cuda_memcpy(b, bg, (A->n + A->m) * sizeof(scs_float),
-               cuda_memcpy_device_to_host);
+    cudaMemcpy(b, bg, (A->n + A->m) * sizeof(scs_float),
+               cudaMemcpyDeviceToHost);
 
     if (iter >= 0) {
         p->tot_cg_its += cg_its;
