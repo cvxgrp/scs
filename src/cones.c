@@ -389,7 +389,7 @@ Cone_work *init_cone(const Cone *k) {
 #if EXTRAVERBOSE > 0
   scs_printf("init_cone complete\n");
 #ifdef MATLAB_MEX_FILE
-  mex_eval_string("drawnow;");
+  mexEvalString("drawnow;");
 #endif
 #endif
   RETURN c;

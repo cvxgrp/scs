@@ -10,8 +10,8 @@
 #if defined MATLAB_MEX_FILE
 
 /* No header file available here; define the prototypes ourselves */
-extern int ut_is_interrupt_pending();
-extern int ut_set_interrupt_enabled(int);
+extern int utIsInterruptPending();
+extern int utSetInterruptEnabled(int);
 
 #elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)
 

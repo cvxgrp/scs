@@ -2,12 +2,12 @@
 #include "matrix.h"
 #include "glbopts.h"
 #include "scs.h"
-#include "linAlg.h"
+#include "lin_alg.h"
 #include "linsys/amatrix.h"
 
-void freeMex(Data *d, Cone *k);
+void free_mex(Data *d, Cone *k);
 
-scs_int parseWarmStart(const mxArray *p_mex, scs_float **p, scs_int l) {
+scs_int parse_warm_start(const mxArray *p_mex, scs_float **p, scs_int l) {
     *p = scs_calloc(l,
                     sizeof(scs_float)); /* this allocates memory used for Sol */
     if (p_mex == SCS_NULL) {
@@ -25,41 +25,41 @@ scs_int parseWarmStart(const mxArray *p_mex, scs_float **p, scs_int l) {
 
 #if !(DLONG > 0)
 /* this memory must be freed */
-scs_int *castToScsIntArr(mwIndex *arr, scs_int len) {
+scs_int *cast_to_scs_int_arr(mwIndex *arr, scs_int len) {
     scs_int i;
-    scs_int *arrOut = scs_malloc(sizeof(scs_int) * len);
+    scs_int *arr_out = scs_malloc(sizeof(scs_int) * len);
     for (i = 0; i < len; i++) {
-        arrOut[i] = (scs_int)arr[i];
+        arr_out[i] = (scs_int)arr[i];
     }
-    return arrOut;
+    return arr_out;
 }
 #endif
 
 #if FLOAT > 0
 /* this memory must be freed */
-scs_float *castToScsFloatArr(double *arr, scs_int len) {
+scs_float *cast_to_scs_float_arr(double *arr, scs_int len) {
     scs_int i;
-    scs_float *arrOut = scs_malloc(sizeof(scs_float) * len);
+    scs_float *arr_out = scs_malloc(sizeof(scs_float) * len);
     for (i = 0; i < len; i++) {
-        arrOut[i] = (scs_float)arr[i];
+        arr_out[i] = (scs_float)arr[i];
     }
-    return arrOut;
+    return arr_out;
 }
 
-double *castToDoubleArr(scs_float *arr, scs_int len) {
+double *cast_to_double_arr(scs_float *arr, scs_int len) {
     scs_int i;
-    double *arrOut = scs_malloc(sizeof(double) * len);
+    double *arr_out = scs_malloc(sizeof(double) * len);
     for (i = 0; i < len; i++) {
-        arrOut[i] = (double)arr[i];
+        arr_out[i] = (double)arr[i];
     }
-    return arrOut;
+    return arr_out;
 }
 #endif
 
-void setOutputField(mxArray **pout, scs_float *out, scs_int len) {
+void set_output_field(mxArray **pout, scs_float *out, scs_int len) {
     *pout = mxCreateDoubleMatrix(0, 0, mxREAL);
 #if FLOAT > 0
-    mxSetPr(*pout, castToDoubleArr(out, len));
+    mxSetPr(*pout, cast_to_double_arr(out, len));
     scs_free(out);
 #else
     mxSetPr(*pout, out);
@@ -100,10 +100,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const mxArray *settings;
 
     const mwSize one[1] = {1};
-    const int numInfoFields = 11;
-    const char *infoFields[] = {"iter",   "status",    "pobj",      "dobj",
-                                "resPri", "resDual",   "resInfeas", "resUnbdd",
-                                "relGap", "setupTime", "solveTime"};
+    const int num_info_fields = 11;
+    const char *info_fields[] = {"iter",   "status",    "pobj",      "dobj",
+                                "res_pri", "res_dual",   "res_infeas", "res_unbdd",
+                                "rel_gap", "setup_time", "solve_time"};
     mxArray *tmp;
 #if EXTRAVERBOSE > 0
     scs_printf("SIZE OF mwSize = %i\n", (int)sizeof(mwSize));
@@ -163,13 +163,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     d->n = (scs_int) * (mxGetDimensions(c_mex));
     d->m = (scs_int) * (mxGetDimensions(b_mex));
 #if FLOAT > 0
-    d->b = castToScsFloatArr(mxGetPr(b_mex), d->m);
-    d->c = castToScsFloatArr(mxGetPr(c_mex), d->n);
+    d->b = castTo_scs_float_arr(mxGetPr(b_mex), d->m);
+    d->c = cast_to_scs_float_arr(mxGetPr(c_mex), d->n);
 #else
     d->b = (scs_float *)mxGetPr(b_mex);
     d->c = (scs_float *)mxGetPr(c_mex);
 #endif
-    setDefaultSettings(d);
+    set_default_settings(d);
 
     /* settings */
     tmp = mxGetField(settings, 0, "alpha");
@@ -302,11 +302,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     A->p = (scs_int *)mxGetJc(A_mex);
     A->i = (scs_int *)mxGetIr(A_mex);
 #else
-    A->p = castToScsIntArr(mxGetJc(A_mex), A->n + 1);
-    A->i = castToScsIntArr(mxGetIr(A_mex), A->p[A->n]);
+    A->p = cast_to_scs_int_arr(mxGetJc(A_mex), A->n + 1);
+    A->i = cast_to_scs_int_arr(mxGetIr(A_mex), A->p[A->n]);
 #endif
 #if FLOAT > 0
-    A->x = castToScsFloatArr(mxGetPr(A_mex), A->p[A->n]);
+    A->x = cast_to_scs_float_arr(mxGetPr(A_mex), A->p[A->n]);
 #else
     A->x = (scs_float *)mxGetPr(A_mex);
 #endif
@@ -314,19 +314,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* warm-start inputs, allocates sol->x, ->y, ->s even if warm start not used
      */
     d->stgs->warm_start =
-        parseWarmStart((mxArray *)mxGetField(data, 0, "x"), &(sol.x), d->n);
+        parse_warm_start((mxArray *)mxGetField(data, 0, "x"), &(sol.x), d->n);
     d->stgs->warm_start |=
-        parseWarmStart((mxArray *)mxGetField(data, 0, "y"), &(sol.y), d->m);
+        parse_warm_start((mxArray *)mxGetField(data, 0, "y"), &(sol.y), d->m);
     d->stgs->warm_start |=
-        parseWarmStart((mxArray *)mxGetField(data, 0, "s"), &(sol.s), d->m);
+        parse_warm_start((mxArray *)mxGetField(data, 0, "s"), &(sol.s), d->m);
 
     status = scs(d, k, &sol, &info);
 
-    setOutputField(&plhs[0], sol.x, d->n);
-    setOutputField(&plhs[1], sol.y, d->m);
-    setOutputField(&plhs[2], sol.s, d->m);
+    set_output_field(&plhs[0], sol.x, d->n);
+    set_output_field(&plhs[1], sol.y, d->m);
+    set_output_field(&plhs[2], sol.s, d->m);
 
-    plhs[3] = mxCreateStructArray(1, one, numInfoFields, infoFields);
+    plhs[3] = mxCreateStructArray(1, one, num_info_fields, info_fields);
 
     mxSetField(plhs[3], 0, "status", mxCreateString(info.status));
 
@@ -343,40 +343,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     *mxGetPr(tmp) = info.dobj;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "resPri", tmp);
-    *mxGetPr(tmp) = info.resPri;
+    mxSetField(plhs[3], 0, "res_pri", tmp);
+    *mxGetPr(tmp) = info.res_pri;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "resDual", tmp);
-    *mxGetPr(tmp) = info.resDual;
+    mxSetField(plhs[3], 0, "res_dual", tmp);
+    *mxGetPr(tmp) = info.res_dual;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "resInfeas", tmp);
-    *mxGetPr(tmp) = info.resInfeas;
+    mxSetField(plhs[3], 0, "res_infeas", tmp);
+    *mxGetPr(tmp) = info.res_infeas;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "resUnbdd", tmp);
-    *mxGetPr(tmp) = info.resUnbdd;
+    mxSetField(plhs[3], 0, "res_unbdd", tmp);
+    *mxGetPr(tmp) = info.res_unbdd;
 
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "relGap", tmp);
-    *mxGetPr(tmp) = info.relGap;
+    mxSetField(plhs[3], 0, "rel_gap", tmp);
+    *mxGetPr(tmp) = info.rel_gap;
 
     /*info.time is millisecs - return value in secs */
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "setupTime", tmp);
-    *mxGetPr(tmp) = info.setupTime;
+    mxSetField(plhs[3], 0, "setup_time", tmp);
+    *mxGetPr(tmp) = info.setup_time;
 
     /*info.time is millisecs - return value in secs */
     tmp = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(plhs[3], 0, "solveTime", tmp);
-    *mxGetPr(tmp) = info.solveTime;
+    mxSetField(plhs[3], 0, "solve_time", tmp);
+    *mxGetPr(tmp) = info.solve_time;
 
-    freeMex(d, k);
+    free_mex(d, k);
     return;
 }
 
-void freeMex(Data *d, Cone *k) {
+void free_mex(Data *d, Cone *k) {
     if (k->q)
         scs_free(k->q);
     if (k->s)

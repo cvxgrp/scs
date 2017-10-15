@@ -203,7 +203,6 @@ for i=0:max_iters-1
     % ANDERSON:
     if true
         f = [u;v] - uv;
-        uv = [u;v];
         if size(F,2) >= anderson_lookback
             F = F(:, 2:end);
             G = G(:, 2:end);
@@ -224,7 +223,8 @@ for i=0:max_iters-1
         reg = [epp * eye(size(FtF) - 1) zeros(size(FtF, 2) - 1, 1); zeros(1, size(FtF, 1))];
         a_0 = (FtF + reg) \ ones(size(F,2),1);
         a = a_0 / sum(a_0);
-        uv = G*a;
+        beta = 0.5;
+        uv = (1-beta) * X * a + beta * G*a;
         %}
         %{
         disp('F')
@@ -262,15 +262,19 @@ for i=0:max_iters-1
             dX = -X(:,2:end) + X(:,1:end-1);
             dF = -F(:,2:end) + F(:,1:end-1);
             dG = -G(:,2:end) + G(:,1:end-1);
-            gg = -(dX'*dF) \ (dX'* F(:,end));
-            uv = G(:,end) - dG * gg;
+            gg = (dX'*dF) \ (dX'* F(:,end));
+            
+            beta = 1;
+            uv = beta * (G(:,end) - dG * gg) + (1-beta) *(X(:,end) - dX * gg);
             %}
             % type II
             %
             dF = -F(:,2:end) + F(:,1:end-1);
             dG = -G(:,2:end) + G(:,1:end-1);
             gg = dF \ F(:,end);
-            uv = G(:,end) - dG * gg;
+            beta = 1;
+            dX = -X(:,2:end) + X(:,1:end-1);
+            uv = beta * (G(:,end) - dG * gg) + (1-beta) *(X(:,end) - dX * gg);
             %}
         %end
         

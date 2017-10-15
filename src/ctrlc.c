@@ -1,9 +1,9 @@
 /*
  * Implements signal handling (ctrl-c) for SCS.
  *
- * Under Windows, we use set_console_ctrl_handler.
+ * Under Windows, we use SetConsoleCtrlHandler.
  * Under Unix systems, we use sigaction.
- * For Mex files, we use ut_set_interrupt_enabled/ut_is_interrupt_pending.
+ * For Mex files, we use utSetInterruptEnabled/utIsInterruptPending.
  *
  */
 
@@ -15,22 +15,22 @@
 
 static int istate;
 void start_interrupt_listener(void) {
-    istate = ut_set_interrupt_enabled(1);
+    istate = utSetInterruptEnabled(1);
 }
 
 void end_interrupt_listener(void) {
-    ut_set_interrupt_enabled(istate);
+    utSetInterruptEnabled(istate);
 }
 
 int is_interrupted(void) {
-    return ut_is_interrupt_pending();
+    return utIsInterruptPending();
 }
 
 #elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 
 static int int_detected;
-BOOL WINAPI handle_ctrlc(DWORD dw_ctrl_type) {
-    if (dw_ctrl_type != CTRL_C_EVENT)
+BOOL WINAPI handle_ctrlc(DWORD dwCtrlType) {
+    if (dwCtrlType != CTRL_C_EVENT)
         return FALSE;
     int_detected = 1;
     return TRUE;
@@ -38,11 +38,11 @@ BOOL WINAPI handle_ctrlc(DWORD dw_ctrl_type) {
 
 void start_interrupt_listener(void) {
     int_detected = 0;
-    set_console_ctrl_handler(handle_ctrlc, TRUE);
+    SetConsoleCtrlHandler(handle_ctrlc, TRUE);
 }
 
 void end_interrupt_listener(void) {
-    set_console_ctrl_handler(handle_ctrlc, FALSE);
+    SetConsoleCtrlHandler(handle_ctrlc, FALSE);
 }
 
 int is_interrupted(void) {
@@ -79,3 +79,4 @@ int is_interrupted(void) {
 #endif /* END IF MATLAB_MEX_FILE / WIN32 */
 
 #endif /* END IF CTRLC > 0 */
+

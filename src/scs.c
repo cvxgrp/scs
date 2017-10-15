@@ -110,7 +110,7 @@ static void print_init_header(const Data *d, const Cone *k) {
     scs_printf("%s", cone_str);
     scs_free(cone_str);
 #ifdef MATLAB_MEX_FILE
-    mex_eval_string("drawnow;");
+    mexEvalString("drawnow;");
 #endif
     RETURN;
 }
@@ -518,7 +518,7 @@ static void print_summary(Work *w, scs_int i, struct residuals *r,
 #endif
 
 #ifdef MATLAB_MEX_FILE
-    mex_eval_string("drawnow;");
+    mexEvalString("drawnow;");
 #endif
     RETURN;
 }
@@ -541,7 +541,7 @@ static void print_header(Work *w, const Cone *k) {
     }
     scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
-    mex_eval_string("drawnow;");
+    mexEvalString("drawnow;");
 #endif
     RETURN;
 }
@@ -651,7 +651,7 @@ static void print_footer(const Data *d, const Cone *k, Sol *sol, Work *w,
     }
     scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
-    mex_eval_string("drawnow;");
+    mexEvalString("drawnow;");
 #endif
     RETURN;
 }
