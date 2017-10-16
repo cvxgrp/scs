@@ -3,7 +3,7 @@ package org.scs;
 import java.util.Random;
 import java.util.TreeSet;
 
-public class AMatrix {
+public class ScsMatrix {
     /**
      * A matrix, column compressed sparse format, size m by n
      */
@@ -13,7 +13,7 @@ public class AMatrix {
     private int m;
     private int n;
 
-    public AMatrix(int m, int n, double[] v, int[] i, int[] p) {
+    public ScsMatrix(int m, int n, double[] v, int[] i, int[] p) {
         this.v = v;
         this.i = i;
         this.p = p;
@@ -63,17 +63,17 @@ public class AMatrix {
     /* used for generating random instances */
     private static final double DEFAULT_DENSITY = 0.25;
 
-    public static AMatrix generateRandomMatrix(int m, int n) {
+    public static ScsMatrix generateRandomMatrix(int m, int n) {
         return generateRandomMatrix(m, n, DEFAULT_DENSITY);
     }
 
-    public static AMatrix generateRandomMatrix(int m, int n, double density) {
+    public static ScsMatrix generateRandomMatrix(int m, int n, double density) {
         int col_nnz = Math.min(m, (int) (m * density));
         return generateRandomMatrix(m, n, col_nnz);
     }
 
-    public static AMatrix generateRandomMatrix(int m, int n, int col_nnz) {
-        AMatrix A = new AMatrix(m, n, new double[n * col_nnz], new int[n * col_nnz], new int[n + 1]);
+    public static ScsMatrix generateRandomMatrix(int m, int n, int col_nnz) {
+        ScsMatrix A = new ScsMatrix(m, n, new double[n * col_nnz], new int[n * col_nnz], new int[n + 1]);
         Random rng = new Random();
         A.p[0] = 0;
         for (int j = 0; j < n; j++) { /* column */

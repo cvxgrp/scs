@@ -1,29 +1,29 @@
 package org.scs;
 
-public class ConeProgram {
-    protected Data d;
-    protected Cone k;
-    protected Settings p;
-    protected IConeSolver solver;
+public class ScsConeProgram {
+    protected ScsData d;
+    protected ScsCone k;
+    protected ScsSettings p;
+    protected IScsConeSolver solver;
 
-    ConeProgram() {}
+    ScsConeProgram() {}
 
-    public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver) {
+    public ScsConeProgram(ScsData d, ScsCone k, ScsSettings p, IScsConeSolver solver) {
         this.d = d;
         this.k = k;
         this.p = p;
         this.solver = solver;
     }
 
-    public ConeProgram(AMatrix A, double[] b, double[] c, Cone k, Settings p, IConeSolver solver) {
-        this(new Data(A, b, c), k, p, solver);
+    public ScsConeProgram(ScsMatrix A, double[] b, double[] c, ScsCone k, ScsSettings p, IScsConeSolver solver) {
+        this(new ScsData(A, b, c), k, p, solver);
     }
 
-    public Solution solve() {
-        Solution sol = new Solution();
-        Info info = new Info();
+    public ScsSolutionution solve() {
+        ScsSolutionution sol = new ScsSolutionution();
+        ScsInfo info = new ScsInfo();
         solver.solve(d, k, p, sol, info);
-        sol.setInfo(info);
+        sol.setScsInfo(info);
         return sol;
     }
 }

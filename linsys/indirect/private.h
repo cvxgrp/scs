@@ -8,12 +8,12 @@
 #include "../common.h"
 #include "lin_alg.h"
 
-struct PRIVATE_DATA {
+struct SCS_LIN_SYS_WORK {
     scs_float *p; /* cg iterate  */
     scs_float *r; /* cg residual */
     scs_float *Gp;
     scs_float *tmp;
-    AMatrix *At;
+    ScsMatrix *At;
     /* preconditioning */
     scs_float *z;
     scs_float *M;

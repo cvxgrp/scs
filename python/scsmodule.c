@@ -24,7 +24,7 @@
 #define PyInt_Check PyLong_Check
 #endif
 
-struct ScsPyData {
+struct ScsPyScsData {
     PyArrayObject *Ax;
     PyArrayObject *Ai;
     PyArrayObject *Ap;
@@ -129,7 +129,7 @@ static scs_int getWarmStart(char *key, scs_float **x, scs_int l,
     return 0;
 }
 
-static int getConeArrDim(char *key, scs_int **varr, scs_int *vsize,
+static int getScsConeArrDim(char *key, scs_int **varr, scs_int *vsize,
                          PyObject *cone) {
     /* get cone['key'] */
     scs_int i, n = 0;
@@ -164,7 +164,7 @@ static int getConeArrDim(char *key, scs_int **varr, scs_int *vsize,
     return 0;
 }
 
-static int getConeFloatArr(char *key, scs_float **varr, scs_int *vsize,
+static int getScsConeFloatArr(char *key, scs_float **varr, scs_int *vsize,
                            PyObject *cone) {
     /* get cone['key'] */
     scs_int i, n = 0;
@@ -196,7 +196,7 @@ static int getConeFloatArr(char *key, scs_float **varr, scs_int *vsize,
     return 0;
 }
 
-static void freePyData(Data *d, Cone *k, struct ScsPyData *ps) {
+static void freePyScsData(ScsData *d, ScsCone *k, struct ScsPyScsData *ps) {
     if (ps->Ax) {
         Py_DECREF(ps->Ax);
     }
@@ -230,10 +230,10 @@ static void freePyData(Data *d, Cone *k, struct ScsPyData *ps) {
     }
 }
 
-static PyObject *finishWithErr(Data *d, Cone *k, struct ScsPyData *ps,
+static PyObject *finishWithErr(ScsData *d, ScsCone *k, struct ScsPyScsData *ps,
                                char *str) {
     PyErr_SetString(PyExc_ValueError, str);
-    freePyData(d, k, ps);
+    freePyScsData(d, k, ps);
     return SCS_NULL;
 }
 
@@ -250,16 +250,16 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     /* get the typenum for the primitive scs_int and scs_float types */
     int scs_intType = getIntType();
     int scs_floatType = getFloatType();
-    struct ScsPyData ps = {
+    struct ScsPyScsData ps = {
         SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL,
     };
     /* scs data structures */
-    Data *d = scs_calloc(1, sizeof(Data));
-    Cone *k = scs_calloc(1, sizeof(Cone));
+    ScsData *d = scs_calloc(1, sizeof(ScsData));
+    ScsCone *k = scs_calloc(1, sizeof(ScsCone));
 
-    AMatrix *A;
-    Sol sol = {0};
-    Info info;
+    ScsMatrix *A;
+    ScsSolution sol = {0};
+    ScsInfo info;
     char *kwlist[] = {"shape",     "Ax",    "Ai",   "Ap",      "b",
                       "c",         "cone",  "warm", "verbose", "normalize",
                       "max_iters", "scale", "eps",  "cg_rate", "alpha",
@@ -286,10 +286,10 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_intp veclen[1];
     PyObject *x, *y, *s, *returnDict, *infoDict;
 
-    d->stgs = scs_malloc(sizeof(Settings));
+    d->stgs = scs_malloc(sizeof(ScsSettings));
 
     /* set defaults */
-    setDefaultSettings(d);
+    setDefaultScsSettings(d);
 
     if (!PyArg_ParseTupleAndKeywords(
             args, kwargs, argparse_string, kwlist, &(d->m), &(d->n),
@@ -327,7 +327,7 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     ps.Ai = getContiguous(Ai, scs_intType);
     ps.Ap = getContiguous(Ap, scs_intType);
 
-    A = scs_malloc(sizeof(AMatrix));
+    A = scs_malloc(sizeof(ScsMatrix));
     A->n = d->n;
     A->m = d->m;
     A->x = (scs_float *)PyArray_DATA(ps.Ax);
@@ -363,13 +363,13 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     if (getPosIntParam("l", &(k->l), 0, cone) < 0) {
         return finishWithErr(d, k, &ps, "failed to parse cone field l");
     }
-    if (getConeArrDim("q", &(k->q), &(k->qsize), cone) < 0) {
+    if (getScsConeArrDim("q", &(k->q), &(k->qsize), cone) < 0) {
         return finishWithErr(d, k, &ps, "failed to parse cone field q");
     }
-    if (getConeArrDim("s", &(k->s), &(k->ssize), cone) < 0) {
+    if (getScsConeArrDim("s", &(k->s), &(k->ssize), cone) < 0) {
         return finishWithErr(d, k, &ps, "failed to parse cone field s");
     }
-    if (getConeFloatArr("p", &(k->p), &(k->psize), cone) < 0) {
+    if (getScsConeFloatArr("p", &(k->p), &(k->psize), cone) < 0) {
         return finishWithErr(d, k, &ps, "failed to parse cone field p");
     }
     if (getPosIntParam("ep", &(k->ep), 0, cone) < 0) {
@@ -424,7 +424,7 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     /*   return PyErr_NoMemory(); */
     /* memcpy(MAT_BUFD(x), mywork->x, n*sizeof(scs_float)); */
     veclen[0] = d->n;
-    x = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.x);
+    x = PyArray_SimpleNewFromScsData(1, veclen, scs_floatType, sol.x);
     PyArray_ENABLEFLAGS((PyArrayObject *)x, NPY_ARRAY_OWNDATA);
 
     /* y */
@@ -433,7 +433,7 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     /*   return PyErr_NoMemory(); */
     /* memcpy(MAT_BUFD(y), mywork->y, p*sizeof(scs_float)); */
     veclen[0] = d->m;
-    y = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.y);
+    y = PyArray_SimpleNewFromScsData(1, veclen, scs_floatType, sol.y);
     PyArray_ENABLEFLAGS((PyArrayObject *)y, NPY_ARRAY_OWNDATA);
 
     /* s */
@@ -442,7 +442,7 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     /*   return PyErr_NoMemory(); */
     /* memcpy(MAT_BUFD(s), mywork->s, m*sizeof(scs_float)); */
     veclen[0] = d->m;
-    s = PyArray_SimpleNewFromData(1, veclen, scs_floatType, sol.s);
+    s = PyArray_SimpleNewFromScsData(1, veclen, scs_floatType, sol.s);
     PyArray_ENABLEFLAGS((PyArrayObject *)s, NPY_ARRAY_OWNDATA);
 
     infoDict = Py_BuildValue(
@@ -463,7 +463,7 @@ static PyObject *csolve(PyObject *self, PyObject *args, PyObject *kwargs) {
     Py_DECREF(infoDict);
 
     /* no longer need pointers to arrays that held primitives */
-    freePyData(d, k, &ps);
+    freePyScsData(d, k, &ps);
     return returnDict;
 }
 

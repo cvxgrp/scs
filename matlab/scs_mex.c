@@ -5,11 +5,11 @@
 #include "lin_alg.h"
 #include "linsys/amatrix.h"
 
-void free_mex(Data *d, Cone *k);
+void free_mex(ScsData *d, ScsCone *k);
 
 scs_int parse_warm_start(const mxArray *p_mex, scs_float **p, scs_int l) {
     *p = scs_calloc(l,
-                    sizeof(scs_float)); /* this allocates memory used for Sol */
+                    sizeof(scs_float)); /* this allocates memory used for ScsSolution */
     if (p_mex == SCS_NULL) {
         return 0;
     } else if (mxIsSparse(p_mex) || (scs_int)*mxGetDimensions(p_mex) != l) {
@@ -71,11 +71,11 @@ void set_output_field(mxArray **pout, scs_float *out, scs_int len) {
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* matlab usage: [x,y,s,info] = scs(data,cone,settings); */
     scs_int i, ns, status;
-    Data *d;
-    Cone *k;
-    Sol sol = {0};
-    Info info;
-    AMatrix *A;
+    ScsData *d;
+    ScsCone *k;
+    ScsSolution sol = {0};
+    ScsInfo info;
+    ScsMatrix *A;
 
     const mxArray *data;
     const mxArray *A_mex;
@@ -117,16 +117,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nlhs > 4) {
         mexErrMsgTxt("scs returns up to 4 output arguments only.");
     }
-    d = mxMalloc(sizeof(Data));
-    d->stgs = mxMalloc(sizeof(Settings));
-    k = mxMalloc(sizeof(Cone));
+    d = mxMalloc(sizeof(ScsData));
+    d->stgs = mxMalloc(sizeof(ScsSettings));
+    k = mxMalloc(sizeof(ScsCone));
     data = prhs[0];
 
     A_mex = (mxArray *)mxGetField(data, 0, "A");
     if (A_mex == SCS_NULL) {
         scs_free(d);
         scs_free(k);
-        mexErrMsgTxt("Data struct must contain a `A` entry.");
+        mexErrMsgTxt("ScsData struct must contain a `A` entry.");
     }
     if (!mxIsSparse(A_mex)) {
         scs_free(d);
@@ -138,7 +138,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (b_mex == SCS_NULL) {
         scs_free(d);
         scs_free(k);
-        mexErrMsgTxt("Data struct must contain a `b` entry.");
+        mexErrMsgTxt("ScsData struct must contain a `b` entry.");
     }
     if (mxIsSparse(b_mex)) {
         scs_free(d);
@@ -150,7 +150,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (c_mex == SCS_NULL) {
         scs_free(d);
         scs_free(k);
-        mexErrMsgTxt("Data struct must contain a `c` entry.");
+        mexErrMsgTxt("ScsData struct must contain a `c` entry.");
     }
     if (mxIsSparse(c_mex)) {
         scs_free(d);
@@ -287,7 +287,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         k->p = SCS_NULL;
     }
 
-    A = scs_malloc(sizeof(AMatrix));
+    A = scs_malloc(sizeof(ScsMatrix));
     A->n = d->n;
     A->m = d->m;
 /* TODO:
@@ -376,7 +376,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     return;
 }
 
-void free_mex(Data *d, Cone *k) {
+void free_mex(ScsData *d, ScsCone *k) {
     if (k->q)
         scs_free(k->q);
     if (k->s)

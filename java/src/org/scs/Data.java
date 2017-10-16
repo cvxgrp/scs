@@ -1,20 +1,20 @@
 package org.scs;
 
-public class Data {
-    private AMatrix A;
+public class ScsData {
+    private ScsMatrix A;
     private double[] b;
     private double[] c;
 
-    public Data() {};
+    public ScsData() {};
 
-    public Data(AMatrix A, double[] b, double[] c) {
+    public ScsData(ScsMatrix A, double[] b, double[] c) {
         this.A = A;
         this.b = b;
         this.c = c;
     }
 
     // getters:
-    public AMatrix getA() {
+    public ScsMatrix getA() {
         return A;
     }
     public double[] getB() {
@@ -25,7 +25,7 @@ public class Data {
     }
 
     // setters:
-    public void setA(AMatrix A) {
+    public void setA(ScsMatrix A) {
         this.A = A;
     }
     public void setB(double[] b) {

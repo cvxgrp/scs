@@ -32,7 +32,7 @@ static scs_int scs_isnan(scs_float x) {
     RETURN(x == NAN || x != x);
 }
 
-static void free_work(Work *w) {
+static void free_work(ScsWork *w) {
   DEBUG_FUNC
   if (!w) {RETURN;}
   if (w->u)
@@ -68,10 +68,10 @@ static void free_work(Work *w) {
   RETURN;
 }
 
-static void print_init_header(const Data *d, const Cone *k) {
+static void print_init_header(const ScsData *d, const ScsCone *k) {
     DEBUG_FUNC
     scs_int i;
-    Settings *stgs = d->stgs;
+    ScsSettings *stgs = d->stgs;
     char *cone_str = get_cone_header(k);
     char *lin_sys_method = get_lin_sys_method(d->A, d->stgs);
 #ifdef LAPACK_LIB_FOUND
@@ -115,7 +115,7 @@ static void print_init_header(const Data *d, const Cone *k) {
     RETURN;
 }
 
-static void populate_on_failure(scs_int m, scs_int n, Sol *sol, Info *info,
+static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol, ScsInfo *info,
                               scs_int status_val, const char *msg) {
     DEBUG_FUNC
     if (info) {
@@ -147,7 +147,7 @@ static void populate_on_failure(scs_int m, scs_int n, Sol *sol, Info *info,
     RETURN;
 }
 
-static scs_int failure(Work *w, scs_int m, scs_int n, Sol *sol, Info *info,
+static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol, ScsInfo *info,
                        scs_int stint, const char *msg, const char *ststr) {
     DEBUG_FUNC
     scs_int status = stint;
@@ -157,7 +157,7 @@ static scs_int failure(Work *w, scs_int m, scs_int n, Sol *sol, Info *info,
     RETURN status;
 }
 
-static void warm_start_vars(Work *w, const Sol *sol) {
+static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
     DEBUG_FUNC
     scs_int i, n = w->n, m = w->m;
     memset(w->v, 0, n * sizeof(scs_float));
@@ -180,7 +180,7 @@ static void warm_start_vars(Work *w, const Sol *sol) {
     RETURN;
 }
 
-static scs_float calc_primal_resid(Work *w, const scs_float *x,
+static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
                                  const scs_float *s, const scs_float tau,
                                  scs_float *nm_axs) {
     DEBUG_FUNC
@@ -201,7 +201,7 @@ static scs_float calc_primal_resid(Work *w, const scs_float *x,
     RETURN SQRTF(pres); /* norm(Ax + s - b * tau) */
 }
 
-static scs_float calc_dual_resid(Work *w, const scs_float *y, const scs_float tau,
+static scs_float calc_dual_resid(ScsWork *w, const scs_float *y, const scs_float tau,
                                scs_float *nm_a_ty) {
     DEBUG_FUNC
     scs_int i;
@@ -221,7 +221,7 @@ static scs_float calc_dual_resid(Work *w, const scs_float *y, const scs_float ta
 }
 
 /* calculates un-normalized quantities */
-static void calc_residuals(Work *w, struct residuals *r, scs_int iter) {
+static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
     DEBUG_FUNC
     scs_float *x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
     scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, c_tx, b_ty;
@@ -261,7 +261,7 @@ static void calc_residuals(Work *w, struct residuals *r, scs_int iter) {
     RETURN;
 }
 
-static void cold_start_vars(Work *w) {
+static void cold_start_vars(ScsWork *w) {
     DEBUG_FUNC
     scs_int l = w->n + w->m + 1;
     memset(w->u, 0, l * sizeof(scs_float));
@@ -272,7 +272,7 @@ static void cold_start_vars(Work *w) {
 }
 
 /* status < 0 indicates failure */
-static scs_int project_lin_sys(Work *w, scs_int iter) {
+static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
     /* ut = u + v */
     DEBUG_FUNC
     scs_int n = w->n, m = w->m, l = n + m + 1, status;
@@ -293,7 +293,7 @@ static scs_int project_lin_sys(Work *w, scs_int iter) {
     RETURN status;
 }
 
-void print_sol(Work *w, Sol *sol, Info *info) {
+void print_sol(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     DEBUG_FUNC
     scs_int i;
     scs_printf("%s\n", info->status);
@@ -310,7 +310,7 @@ void print_sol(Work *w, Sol *sol, Info *info) {
     RETURN;
 }
 
-static void update_dual_vars(Work *w) {
+static void update_dual_vars(ScsWork *w) {
     DEBUG_FUNC
     scs_int i, n = w->n, l = n + w->m + 1;
     /* this does not relax 'x' variable */
@@ -322,7 +322,7 @@ static void update_dual_vars(Work *w) {
 }
 
 /* status < 0 indicates failure */
-static scs_int project_cones(Work *w, const Cone *k, scs_int iter) {
+static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
     DEBUG_FUNC
     scs_int i, n = w->n, l = n + w->m + 1, status;
     /* this does not relax 'x' variable */
@@ -341,7 +341,7 @@ static scs_int project_cones(Work *w, const Cone *k, scs_int iter) {
     RETURN status;
 }
 
-static scs_int indeterminate(Work *w, Sol *sol, Info *info) {
+static scs_int indeterminate(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     DEBUG_FUNC
     strcpy(info->status, "Indeterminate");
     scale_array(sol->x, NAN, w->n);
@@ -350,7 +350,7 @@ static scs_int indeterminate(Work *w, Sol *sol, Info *info) {
     RETURN SCS_INDETERMINATE;
 }
 
-static scs_int solved(Work *w, Sol *sol, Info *info, scs_float tau) {
+static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float tau) {
     DEBUG_FUNC
     scale_array(sol->x, 1.0 / tau, w->n);
     scale_array(sol->y, 1.0 / tau, w->m);
@@ -363,7 +363,7 @@ static scs_int solved(Work *w, Sol *sol, Info *info, scs_float tau) {
     RETURN SCS_SOLVED;
 }
 
-static scs_int infeasible(Work *w, Sol *sol, Info *info, scs_float b_ty) {
+static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float b_ty) {
     DEBUG_FUNC
     scale_array(sol->y, -1 / b_ty, w->m);
     scale_array(sol->x, NAN, w->n);
@@ -376,7 +376,7 @@ static scs_int infeasible(Work *w, Sol *sol, Info *info, scs_float b_ty) {
     RETURN SCS_INFEASIBLE;
 }
 
-static scs_int unbounded(Work *w, Sol *sol, Info *info, scs_float c_tx) {
+static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float c_tx) {
     DEBUG_FUNC
     scale_array(sol->x, -1 / c_tx, w->n);
     scale_array(sol->s, -1 / c_tx, w->m);
@@ -389,7 +389,7 @@ static scs_int unbounded(Work *w, Sol *sol, Info *info, scs_float c_tx) {
     RETURN SCS_UNBOUNDED;
 }
 
-static void sety(Work *w, Sol *sol) {
+static void sety(ScsWork *w, ScsSolution *sol) {
     DEBUG_FUNC
     if (!sol->y) {
         sol->y = scs_malloc(sizeof(scs_float) * w->m);
@@ -398,7 +398,7 @@ static void sety(Work *w, Sol *sol) {
     RETURN;
 }
 
-static void sets(Work *w, Sol *sol) {
+static void sets(ScsWork *w, ScsSolution *sol) {
     DEBUG_FUNC
     if (!sol->s) {
         sol->s = scs_malloc(sizeof(scs_float) * w->m);
@@ -407,7 +407,7 @@ static void sets(Work *w, Sol *sol) {
     RETURN;
 }
 
-static void setx(Work *w, Sol *sol) {
+static void setx(ScsWork *w, ScsSolution *sol) {
     DEBUG_FUNC
     if (!sol->x)
         sol->x = scs_malloc(sizeof(scs_float) * w->n);
@@ -427,7 +427,7 @@ scs_int is_unbounded_status(scs_int status) {
     RETURN status == SCS_UNBOUNDED || status == SCS_UNBOUNDED_INACCURATE;
 }
 
-static void get_info(Work *w, Sol *sol, Info *info, struct residuals *r,
+static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info, ScsResiduals *r,
                     scs_int iter) {
     DEBUG_FUNC
     info->iter = iter;
@@ -456,7 +456,7 @@ static void get_info(Work *w, Sol *sol, Info *info, struct residuals *r,
 }
 
 /* sets solutions, re-scales by inner prods if infeasible or unbounded */
-static void get_solution(Work *w, Sol *sol, Info *info, struct residuals *r,
+static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info, ScsResiduals *r,
                         scs_int iter) {
     DEBUG_FUNC
     scs_int l = w->n + w->m + 1;
@@ -490,7 +490,7 @@ static void get_solution(Work *w, Sol *sol, Info *info, struct residuals *r,
     RETURN;
 }
 
-static void print_summary(Work *w, scs_int i, struct residuals *r,
+static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
                          timer *solve_timer) {
     DEBUG_FUNC
     scs_printf("%*i|", (int)strlen(HEADER[0]), (int)i);
@@ -523,7 +523,7 @@ static void print_summary(Work *w, scs_int i, struct residuals *r,
     RETURN;
 }
 
-static void print_header(Work *w, const Cone *k) {
+static void print_header(ScsWork *w, const ScsCone *k) {
     DEBUG_FUNC
     scs_int i;
     if (w->stgs->warm_start)
@@ -546,7 +546,7 @@ static void print_header(Work *w, const Cone *k) {
     RETURN;
 }
 
-scs_float get_dual_cone_dist(const scs_float *y, const Cone *k, Cone_work *c,
+scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k, ScsConeWork *c,
                           scs_int m) {
     DEBUG_FUNC
     scs_float dist;
@@ -564,7 +564,7 @@ scs_float get_dual_cone_dist(const scs_float *y, const Cone *k, Cone_work *c,
 }
 
 /* via moreau */
-scs_float get_pri_cone_dist(const scs_float *s, const Cone *k, Cone_work *c,
+scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k, ScsConeWork *c,
                          scs_int m) {
     DEBUG_FUNC
     scs_float dist;
@@ -582,8 +582,8 @@ scs_float get_pri_cone_dist(const scs_float *s, const Cone *k, Cone_work *c,
     RETURN dist;
 }
 
-static void print_footer(const Data *d, const Cone *k, Sol *sol, Work *w,
-                        Info *info) {
+static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol, ScsWork *w,
+                        ScsInfo *info) {
     DEBUG_FUNC
     scs_int i;
     char *lin_sys_str = get_lin_sys_summary(w->p, info);
@@ -656,7 +656,7 @@ static void print_footer(const Data *d, const Cone *k, Sol *sol, Work *w,
     RETURN;
 }
 
-static scs_int has_converged(Work *w, struct residuals *r, scs_int iter) {
+static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
     DEBUG_FUNC
     scs_float eps = w->stgs->eps;
     if (r->res_pri < eps && r->res_dual < eps && r->rel_gap < eps) {
@@ -673,9 +673,9 @@ static scs_int has_converged(Work *w, struct residuals *r, scs_int iter) {
     RETURN 0;
 }
 
-static scs_int validate(const Data *d, const Cone *k) {
+static scs_int validate(const ScsData *d, const ScsCone *k) {
     DEBUG_FUNC
-    Settings *stgs = d->stgs;
+    ScsSettings *stgs = d->stgs;
     if (d->m <= 0 || d->n <= 0) {
         scs_printf("m and n must both be greater than 0; m = %li, n = %li\n",
                    (long)d->m, (long)d->n);
@@ -716,9 +716,9 @@ static scs_int validate(const Data *d, const Cone *k) {
     RETURN 0;
 }
 
-static Work *init_work(const Data *d, const Cone *k) {
+static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     DEBUG_FUNC
-    Work *w = scs_calloc(1, sizeof(Work));
+    ScsWork *w = scs_calloc(1, sizeof(ScsWork));
     scs_int l = d->n + d->m + 1;
     if (d->stgs->verbose) {
         print_init_header(d, k);
@@ -756,7 +756,7 @@ static Work *init_work(const Data *d, const Cone *k) {
             RETURN SCS_NULL;
         }
 #endif
-        w->scal = scs_malloc(sizeof(Scaling));
+        w->scal = scs_malloc(sizeof(ScsScaling));
         normalize_a(w->A, w->stgs, k, w->scal);
 #if EXTRAVERBOSE > 0
         print_array(w->scal->D, d->m, "D");
@@ -782,7 +782,7 @@ static Work *init_work(const Data *d, const Cone *k) {
     RETURN w;
 }
 
-static scs_int update_work(const Data *d, Work *w, const Sol *sol) {
+static scs_int update_work(const ScsData *d, ScsWork *w, const ScsSolution *sol) {
     DEBUG_FUNC
     /* before normalization */
     scs_int n = d->n;
@@ -824,11 +824,11 @@ static scs_int update_work(const Data *d, Work *w, const Sol *sol) {
     RETURN 0;
 }
 
-scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
+scs_int scs_solve(ScsWork *w, const ScsData *d, const ScsCone *k, ScsSolution *sol, ScsInfo *info) {
     DEBUG_FUNC
     scs_int i;
     timer solve_timer;
-    struct residuals r;
+    ScsResiduals r;
     scs_int l = w->m + w->n + 1;
     if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
         scs_printf("ERROR: SCS_NULL input\n");
@@ -898,7 +898,7 @@ scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info) {
     RETURN info->status_val;
 }
 
-void scs_finish(Work *w) {
+void scs_finish(ScsWork *w) {
     DEBUG_FUNC
     if (w) {
         finish_cone(w->cone_work);
@@ -918,16 +918,16 @@ void scs_finish(Work *w) {
     RETURN;
 }
 
-Work *scs_init(const Data *d, const Cone *k, Info *info) {
+ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info) {
     DEBUG_FUNC
 #if EXTRAVERBOSE > 1
     tic(&global_timer);
 #endif
-    Work *w;
+    ScsWork *w;
     timer init_timer;
     start_interrupt_listener();
     if (!d || !k || !info) {
-        scs_printf("ERROR: Missing Data, Cone or Info input\n");
+        scs_printf("ERROR: Missing ScsData, ScsCone or ScsInfo input\n");
         RETURN SCS_NULL;
     }
 #if EXTRAVERBOSE > 0
@@ -952,10 +952,10 @@ Work *scs_init(const Data *d, const Cone *k, Info *info) {
 }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
-scs_int scs(const Data *d, const Cone *k, Sol *sol, Info *info) {
+scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol, ScsInfo *info) {
     DEBUG_FUNC
     scs_int status;
-    Work *w = scs_init(d, k, info);
+    ScsWork *w = scs_init(d, k, info);
 #if EXTRAVERBOSE > 0
     scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
                sizeof(scs_int), sizeof(scs_float));

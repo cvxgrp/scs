@@ -19,10 +19,10 @@
 
 int main(int argc, char **argv) {
     scs_int n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
-    Cone *k;
-    Data *d;
-    Sol *sol, *opt_sol;
-    Info info = {0};
+    ScsCone *k;
+    ScsData *d;
+    ScsSolution *sol, *opt_sol;
+    ScsInfo info = {0};
     scs_float p_f, p_l;
     int seed = 0;
 
@@ -69,11 +69,11 @@ int main(int argc, char **argv) {
     srand(seed);
     scs_printf("seed : %i\n", seed);
 
-    k = scs_calloc(1, sizeof(Cone));
-    d = scs_calloc(1, sizeof(Data));
-    d->stgs = scs_calloc(1, sizeof(Settings));
-    sol = scs_calloc(1, sizeof(Sol));
-    opt_sol = scs_calloc(1, sizeof(Sol));
+    k = scs_calloc(1, sizeof(ScsCone));
+    d = scs_calloc(1, sizeof(ScsData));
+    d->stgs = scs_calloc(1, sizeof(ScsSettings));
+    sol = scs_calloc(1, sizeof(ScsSolution));
+    opt_sol = scs_calloc(1, sizeof(ScsSolution));
 
     m = 3 * n;
     col_nnz = (int)ceil(sqrt(n));
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     scs_printf("Col ptrs of A take %f GB of storage.\n\n",
                ((scs_float)n * sizeof(scs_int)) / POWF(2, 30));
 
-    printf("Cone information:\n");
+    printf("ScsCone information:\n");
     printf("Zero cone rows: %ld\n", (long)k->f);
     printf("LP cone rows: %ld\n", (long)k->l);
     printf(

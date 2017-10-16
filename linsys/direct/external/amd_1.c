@@ -38,7 +38,7 @@ GLOBAL void AMD_1
 			 * ideally slen = 1.2 * sum (Len) + 8n */
     Int S [ ],		/* size slen workspace */
     scs_float Control [ ],	/* input array of size AMD_CONTROL */
-    scs_float Info [ ]	/* output array of size AMD_INFO */
+    scs_float ScsInfo [ ]	/* output array of size AMD_INFO */
 )
 {
     Int i, j, k, p, pfree, iwlen, pj, p1, p2, pj2, *Iw, *Pe, *Nv, *Head,
@@ -176,5 +176,5 @@ GLOBAL void AMD_1
     /* --------------------------------------------------------------------- */
 
     AMD_2 (n, Pe, Iw, Len, iwlen, pfree,
-	Nv, Pinv, P, Head, Elen, Degree, W, Control, Info) ;
+	Nv, Pinv, P, Head, Elen, Degree, W, Control, ScsInfo) ;
 }

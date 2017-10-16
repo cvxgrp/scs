@@ -62,7 +62,7 @@ scs_int *getIntVectorFromList(SEXP list, const char *str, scs_int *len) {
     return INTEGER(vec);
 }
 
-SEXP populateInfoR(Info *info, scs_int *num_protectaddr) {
+SEXP populateScsInfoR(ScsInfo *info, scs_int *num_protectaddr) {
     scs_int num_protected = 0;
     SEXP infor, info_names, iter_r, status_r, statusVal_r, pobj_r, dobj_r,
         resPri_r, resDual_r, resInfeas_r, resUnbdd_r, relGap_r, setupTime_r,
@@ -155,12 +155,12 @@ SEXP scsr(SEXP data, SEXP cone, SEXP params) {
     SEXP ret, retnames, infor, xr, yr, sr;
 
     /* allocate memory */
-    Data *d = scs_malloc(sizeof(Data));
-    Cone *k = scs_malloc(sizeof(Cone));
-    Settings *stgs = scs_malloc(sizeof(Settings));
-    AMatrix *A = scs_malloc(sizeof(AMatrix));
-    Info *info = scs_calloc(1, sizeof(Info));
-    Sol *sol = scs_calloc(1, sizeof(Sol));
+    ScsData *d = scs_malloc(sizeof(ScsData));
+    ScsCone *k = scs_malloc(sizeof(ScsCone));
+    ScsSettings *stgs = scs_malloc(sizeof(ScsSettings));
+    ScsMatrix *A = scs_malloc(sizeof(ScsMatrix));
+    ScsInfo *info = scs_calloc(1, sizeof(ScsInfo));
+    ScsSolution *sol = scs_calloc(1, sizeof(ScsSolution));
 
     d->b = getFloatVectorFromList(data, "b", &len);
     d->c = getFloatVectorFromList(data, "c", &len);
@@ -198,7 +198,7 @@ SEXP scsr(SEXP data, SEXP cone, SEXP params) {
     /* solve! */
     scs(d, k, sol, info);
 
-    infor = populateInfoR(info, &num_protected);
+    infor = populateScsInfoR(info, &num_protected);
 
     PROTECT(ret = NEW_LIST(4));
     num_protected++;
@@ -228,7 +228,7 @@ SEXP scsr(SEXP data, SEXP cone, SEXP params) {
     scs_free(k);
     scs_free(stgs);
     scs_free(A);
-    freeSol(sol);
+    freeScsSolution(sol);
     UNPROTECT(num_protected);
     return ret;
 }

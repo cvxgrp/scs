@@ -1,6 +1,6 @@
 package org.scs;
 
-public class Cone {
+public class ScsCone {
     private int f;
     private int l;
     private int[] q;

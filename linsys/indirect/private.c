@@ -3,14 +3,14 @@
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
 
-char *get_lin_sys_method(const AMatrix *A, const Settings *s) {
+char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
     char *str = scs_malloc(sizeof(char) * 128);
     sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
             (long)A->p[A->n], s->cg_rate);
     return str;
 }
 
-char *get_lin_sys_summary(Priv *p, const Info *info) {
+char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info) {
     char *str = scs_malloc(sizeof(char) * 128);
     sprintf(str,
             "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
@@ -22,7 +22,7 @@ char *get_lin_sys_summary(Priv *p, const Info *info) {
 }
 
 /* M = inv ( diag ( RHO_X * I + A'A ) ) */
-void get_preconditioner(const AMatrix *A, const Settings *stgs, Priv *p) {
+void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p) {
     scs_int i;
     scs_float *M = p->M;
 
@@ -41,7 +41,7 @@ void get_preconditioner(const AMatrix *A, const Settings *stgs, Priv *p) {
 #endif
 }
 
-static void transpose(const AMatrix *A, Priv *p) {
+static void transpose(const ScsMatrix *A, ScsLinSysScsWork *p) {
     scs_int *Ci = p->At->i;
     scs_int *Cp = p->At->p;
     scs_float *Cx = p->At->x;
@@ -82,7 +82,7 @@ static void transpose(const AMatrix *A, Priv *p) {
 #endif
 }
 
-void free_priv(Priv *p) {
+void free_priv(ScsLinSysScsWork *p) {
     if (p) {
         if (p->p)
             scs_free(p->p);
@@ -93,7 +93,7 @@ void free_priv(Priv *p) {
         if (p->tmp)
             scs_free(p->tmp);
         if (p->At) {
-            AMatrix *At = p->At;
+            ScsMatrix *At = p->At;
             if (At->i)
                 scs_free(At->i);
             if (At->x)
@@ -111,7 +111,7 @@ void free_priv(Priv *p) {
 }
 
 /*y = (RHO_X * I + A'A)x */
-static void mat_vec(const AMatrix *A, const Settings *s, Priv *p,
+static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysScsWork *p,
                    const scs_float *x, scs_float *y) {
     scs_float *tmp = p->tmp;
     memset(tmp, 0, A->m * sizeof(scs_float));
@@ -121,12 +121,12 @@ static void mat_vec(const AMatrix *A, const Settings *s, Priv *p,
     add_scaled_array(y, x, A->n, s->rho_x);
 }
 
-void accum_by_atrans(const AMatrix *A, Priv *p, const scs_float *x,
+void accum_by_atrans(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x,
                    scs_float *y) {
     _accum_by_atrans(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accum_by_a(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
+void accum_by_a(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
     _accum_by_atrans(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
 }
 
@@ -140,15 +140,15 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
     }
 }
 
-Priv *init_priv(const AMatrix *A, const Settings *stgs) {
-    Priv *p = scs_calloc(1, sizeof(Priv));
+ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
+    ScsLinSysScsWork *p = scs_calloc(1, sizeof(ScsLinSysScsWork));
     p->p = scs_malloc((A->n) * sizeof(scs_float));
     p->r = scs_malloc((A->n) * sizeof(scs_float));
     p->Gp = scs_malloc((A->n) * sizeof(scs_float));
     p->tmp = scs_malloc((A->m) * sizeof(scs_float));
 
     /* memory for A transpose */
-    p->At = scs_malloc(sizeof(AMatrix));
+    p->At = scs_malloc(sizeof(ScsMatrix));
     p->At->m = A->n;
     p->At->n = A->m;
     p->At->i = scs_malloc((A->p[A->n]) * sizeof(scs_int));
@@ -172,7 +172,7 @@ Priv *init_priv(const AMatrix *A, const Settings *stgs) {
 }
 
 /* solves (I+A'A)x = b, s warm start, solution stored in b */
-static scs_int pcg(const AMatrix *A, const Settings *stgs, Priv *pr,
+static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *pr,
                    const scs_float *s, scs_float *b, scs_int max_its,
                    scs_float tol) {
     scs_int i, n = A->n;
@@ -223,7 +223,7 @@ static scs_int pcg(const AMatrix *A, const Settings *stgs, Priv *pr,
     return i;
 }
 
-scs_int solve_lin_sys(const AMatrix *A, const Settings *stgs, Priv *p,
+scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p,
                     scs_float *b, const scs_float *s, scs_int iter) {
     scs_int cg_its;
     timer linsys_timer;

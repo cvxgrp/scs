@@ -4,7 +4,7 @@
 #define MIN_SCALE (1e-3)
 #define MAX_SCALE (1e3)
 
-void normalize_b_c(Work *w) {
+void normalize_b_c(ScsWork *w) {
     scs_int i;
     scs_float nm, *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
     /* scale b */
@@ -23,7 +23,7 @@ void normalize_b_c(Work *w) {
     scale_array(c, w->sc_c * w->stgs->scale, w->n);
 }
 
-void calc_scaled_resids(Work *w, struct residuals *r) {
+void calc_scaled_resids(ScsWork *w, ScsResiduals *r) {
     scs_float *D = w->scal->D;
     scs_float *E = w->scal->E;
     scs_float *u = w->u;
@@ -59,7 +59,7 @@ void calc_scaled_resids(Work *w, struct residuals *r) {
     r->res_dual = sqrt(r->res_dual);
 }
 
-void normalize_warm_start(Work *w) {
+void normalize_warm_start(ScsWork *w) {
     scs_int i;
     scs_float *D = w->scal->D;
     scs_float *E = w->scal->E;
@@ -77,7 +77,7 @@ void normalize_warm_start(Work *w) {
     }
 }
 
-void un_normalize_sol(Work *w, Sol *sol) {
+void un_normalize_sol(ScsWork *w, ScsSolution *sol) {
     scs_int i;
     scs_float *D = w->scal->D;
     scs_float *E = w->scal->E;

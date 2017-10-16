@@ -1,6 +1,6 @@
 package org.scs;
 
-public class Info {
+public class ScsInfo {
     private int iter; /* number of iterations taken */
     private String status; /* status string, e.g. 'Solved' */
     private int statusVal; /* status as scs_int, defined below */

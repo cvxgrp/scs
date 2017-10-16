@@ -26,9 +26,9 @@ for j=1:NN
     end
     for i=1:length(K.s)
         if (K.s(i) > 0)
-            nmA = mean(twonorms(data.A(idx+1:idx+getSdConeSize(K.s(i)),:)'));
-            Dt = [Dt;nmA*ones(getSdConeSize(K.s(i)),1)];
-            idx = idx + getSdConeSize(K.s(i));
+            nmA = mean(twonorms(data.A(idx+1:idx+getSdScsConeSize(K.s(i)),:)'));
+            Dt = [Dt;nmA*ones(getSdScsConeSize(K.s(i)),1)];
+            idx = idx + getSdScsConeSize(K.s(i));
         end
     end
     for i=1:K.ep

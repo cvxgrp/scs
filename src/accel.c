@@ -12,7 +12,7 @@
  * robust methods if we wanted to.
  */
 
-struct SCS_ACCEL {
+struct SCS_ACCEL_WORK {
 #ifdef LAPACK_LIB_FOUND
   scs_float *d_f;
   scs_float *d_g;
@@ -50,7 +50,7 @@ void BLAS(rot)(const blasint *n, scs_float *x, const blasint *incx,
 scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
 
 /* d_f * sol = QR * sol = f */
-scs_float *solve_accel_linsys(Accel *a, scs_int len) {
+scs_float *solve_accel_linsys(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
   blasint twol = 2 * a->l;
   blasint one = 1;
@@ -78,7 +78,7 @@ scs_float *solve_accel_linsys(Accel *a, scs_int len) {
   RETURN a->sol;
 }
 
-void update_accel_params(Work *w, scs_int idx) {
+void update_accel_params(ScsWork *w, scs_int idx) {
   DEBUG_FUNC
   scs_float *d_f = w->accel->d_f;
   scs_float *d_g = w->accel->d_g;
@@ -110,9 +110,9 @@ void update_accel_params(Work *w, scs_int idx) {
   RETURN;
 }
 
-Accel *init_accel(Work *w) {
+ScsAccelWork *init_accel(ScsWork *w) {
   DEBUG_FUNC
-  Accel *a = scs_calloc(1, sizeof(Accel));
+  ScsAccelWork *a = scs_calloc(1, sizeof(ScsAccelWork));
   if (!a) {
     RETURN SCS_NULL;
   }
@@ -143,7 +143,7 @@ Accel *init_accel(Work *w) {
   RETURN a;
 }
 
-void qrfactorize(Accel *a) {
+void qrfactorize(ScsAccelWork *a) {
   DEBUG_FUNC
   scs_int l = a->l;
   scs_int i;
@@ -174,7 +174,7 @@ void qrfactorize(Accel *a) {
   RETURN;
 }
 
-void update_factorization(Accel *a, scs_int idx) {
+void update_factorization(ScsAccelWork *a, scs_int idx) {
   DEBUG_FUNC
   scs_float *Q = a->Q;
   scs_float *R = a->R;
@@ -245,7 +245,7 @@ void update_factorization(Accel *a, scs_int idx) {
   RETURN;
 }
 
-scs_int accelerate(Work *w, scs_int iter) {
+scs_int accelerate(ScsWork *w, scs_int iter) {
   DEBUG_FUNC
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
@@ -284,7 +284,7 @@ scs_int accelerate(Work *w, scs_int iter) {
   RETURN 0;
 }
 
-void free_accel(Accel *a) {
+void free_accel(ScsAccelWork *a) {
   DEBUG_FUNC
   if (a) {
     if (a->d_f) scs_free(a->d_f);
@@ -304,25 +304,25 @@ void free_accel(Accel *a) {
 
 #else
 
-Accel *init_accel(Work *w) {
-  Accel *a = scs_malloc(sizeof(Accel));
+ScsAccelWork *init_accel(ScsWork *w) {
+  ScsAccelWork *a = scs_malloc(sizeof(ScsAccelWork));
   a->total_accel_time = 0.0;
   RETURN a;
 }
 
-void free_accel(Accel *a) {
+void free_accel(ScsAccelWork *a) {
   if (a) {
     scs_free(a);
   }
 }
 
-scs_int accelerate(Work *w, scs_int iter) { RETURN 0; }
+scs_int accelerate(ScsWork *w, scs_int iter) { RETURN 0; }
 #endif
 
-char *get_accel_summary(const Info *info, Accel *a) {
+char *get_accel_summary(const ScsInfo *info, ScsAccelWork *a) {
   DEBUG_FUNC
   char *str = scs_malloc(sizeof(char) * 64);
-  sprintf(str, "\tAcceleration: avg step time: %1.2es\n",
+  sprintf(str, "\tScsAccelWorkeration: avg step time: %1.2es\n",
           a->total_accel_time / (info->iter + 1) / 1e3);
   a->total_accel_time = 0.0;
   RETURN str;

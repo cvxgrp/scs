@@ -32,7 +32,7 @@ typedef struct {
   scs_float *Xs, *Z, *e, *work;
   blasint *iwork, lwork, liwork;
 #endif
-} Cone_work;
+} ScsConeWork;
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -41,19 +41,19 @@ typedef struct {
  * returns length of boundaries array, boundaries malloc-ed here so should be
  * freed
  */
-scs_int get_cone_boundaries(const Cone *k, scs_int **boundaries);
+scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries);
 
-Cone_work *init_cone(const Cone *k);
-char *get_cone_header(const Cone *k);
-scs_int validate_cones(const Data *d, const Cone *k);
+ScsConeWork *init_cone(const ScsCone *k);
+char *get_cone_header(const ScsCone *k);
+scs_int validate_cones(const ScsData *d, const ScsCone *k);
 
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter < 0 for exact projection, warm_start contains guess
  of solution, can be SCS_NULL*/
-scs_int proj_dual_cone(scs_float *x, const Cone *k, Cone_work *c,
+scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                        const scs_float *warm_start, scs_int iter);
-void finish_cone(Cone_work *c);
-char *get_cone_summary(const Info *info, Cone_work *c);
+void finish_cone(ScsConeWork *c);
+char *get_cone_summary(const ScsInfo *info, ScsConeWork *c);
 
 #ifdef __cplusplus
 }

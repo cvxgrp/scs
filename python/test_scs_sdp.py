@@ -3,7 +3,7 @@ import platform
 ## import utilities to generate random cone probs:
 import sys
 sys.path.insert(0, '../examples/python')
-from genRandomConeProb import *
+from genRandomScsConeProb import *
 
 
 def import_error(msg):
@@ -56,7 +56,7 @@ num_infeas = 10
 
 opts={'max_iters':100000,'eps':1e-5} # better accuracy than default to ensure test pass
 K = {'f':10, 'l':25, 'q':[5, 10, 0 ,1], 's':[2, 1, 2, 0, 1, 10, 8], 'ep':0, 'ed':0, 'p':[0.25, -0.75, 0.33, -0.33, 0.2]}
-m = getConeDims(K)
+m = getScsConeDims(K)
 
 def test_feasible():
     for i in range(num_feas):

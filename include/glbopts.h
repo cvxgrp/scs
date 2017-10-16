@@ -131,13 +131,13 @@ typedef float scs_float;
 #define RETURN return
 #endif
 
-typedef struct SCS_PROBLEM_DATA Data;
-typedef struct SCS_SETTINGS Settings;
-typedef struct SCS_SOL_VARS Sol;
-typedef struct SCS_INFO Info;
-typedef struct SCS_SCALING Scaling;
-typedef struct SCS_WORK Work;
-typedef struct SCS_CONE Cone;
+typedef struct SCS_PROBLEM_DATA ScsData;
+typedef struct SCS_SETTINGS ScsSettings;
+typedef struct SCS_SOL_VARS ScsSolution;
+typedef struct SCS_INFO ScsInfo;
+typedef struct SCS_SCALING ScsScaling;
+typedef struct SCS_WORK ScsWork;
+typedef struct SCS_CONE ScsCone;
 
 #ifdef __cplusplus
 }

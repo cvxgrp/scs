@@ -1,6 +1,6 @@
 package org.scs;
 
-public interface IConeSolver {
-    public void solve(Data d, Cone k, Settings p, Solution sol, Info info);
+public interface IScsConeSolver {
+    public void solve(ScsData d, ScsCone k, ScsSettings p, ScsSolutionution sol, ScsInfo info);
     public String version();
 }

@@ -61,8 +61,8 @@ scs_float * getFloatArrayUsingGetter(JNIEnv * env, jobject obj, char * method, s
     return out;
 }
 
-Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
-    Cone * k = scs_calloc(1, sizeof(Cone));
+ScsCone * getScsConeStruct(JNIEnv * env, jobject coneJava) {
+    ScsCone * k = scs_calloc(1, sizeof(ScsCone));
     k->q = getIntArrayUsingGetter(env, coneJava, "getQ", &(k->qsize));
     k->s = getIntArrayUsingGetter(env, coneJava, "getS", &(k->ssize));
     k->l = getIntUsingGetter(env, coneJava, "getL");
@@ -73,9 +73,9 @@ Cone * getConeStruct(JNIEnv * env, jobject coneJava) {
     return k;
 }
 
-AMatrix * getAMatrix(JNIEnv *env, jobject AJava, scs_int m, scs_int n) {
+ScsMatrix * getScsMatrix(JNIEnv *env, jobject AJava, scs_int m, scs_int n) {
     scs_int leni, lenp, lenx;
-    AMatrix * A = scs_calloc(1, sizeof(AMatrix));
+    ScsMatrix * A = scs_calloc(1, sizeof(ScsMatrix));
     // populate A
     A->i = getIntArrayUsingGetter(env, AJava, "getRowIdxs", &leni);
     A->p = getIntArrayUsingGetter(env, AJava, "getColIdxs", &lenp);
@@ -85,8 +85,8 @@ AMatrix * getAMatrix(JNIEnv *env, jobject AJava, scs_int m, scs_int n) {
     return A;
 }
 
-void populateParams(JNIEnv * env, jobject paramsJava, Data * d) {
-    d->stgs = scs_malloc(sizeof(Settings));
+void populateParams(JNIEnv * env, jobject paramsJava, ScsData * d) {
+    d->stgs = scs_malloc(sizeof(ScsSettings));
     d->stgs->max_iters = getIntUsingGetter(env, paramsJava, "getMaxIters");
     d->stgs->eps = getFloatUsingGetter(env, paramsJava, "getEps");
     d->stgs->alpha = getFloatUsingGetter(env, paramsJava, "getAlpha");
@@ -98,13 +98,13 @@ void populateParams(JNIEnv * env, jobject paramsJava, Data * d) {
     d->stgs->warm_start = getBooleanUsingGetter(env, paramsJava, "isWarmStart");
 }
 
-Data * getDataStruct(JNIEnv * env, jobject AJava, jdoubleArray bJava, jdoubleArray cJava, jobject paramsJava) {
-    Data * d = scs_calloc(1, sizeof(Data));
+ScsData * getScsDataStruct(JNIEnv * env, jobject AJava, jdoubleArray bJava, jdoubleArray cJava, jobject paramsJava) {
+    ScsData * d = scs_calloc(1, sizeof(ScsData));
     d->b = (*env)->GetDoubleArrayElements(env, bJava, SCS_NULL);
     d->m = (*env)->GetArrayLength(env, bJava);
     d->c = (*env)->GetDoubleArrayElements(env, cJava, SCS_NULL);
     d->n = (*env)->GetArrayLength(env, cJava);
-    d->A = getAMatrix(env, AJava, d->m, d->n);
+    d->A = getScsMatrix(env, AJava, d->m, d->n);
     populateParams(env, paramsJava, d);
     return d;
 }
@@ -135,13 +135,13 @@ void setFloatUsingSetter(JNIEnv * env, jobject obj, scs_float f, char * method) 
     (*env)->CallVoidMethod(env, obj, mid, f);
 }
 
-void setSol(JNIEnv * env, jobject solJava, Data * d, Sol * sol) {
+void setScsSolution(JNIEnv * env, jobject solJava, ScsData * d, ScsSolution * sol) {
     setFloatArrayUsingSetter(env, solJava, sol->x, d->n, "setX");
     setFloatArrayUsingSetter(env, solJava, sol->y, d->m, "setY");
     setFloatArrayUsingSetter(env, solJava, sol->s, d->m, "setS");
 }
 
-void setInfo(JNIEnv * env, jobject infoJava, Info * info) {
+void setScsInfo(JNIEnv * env, jobject infoJava, ScsInfo * info) {
     setIntUsingSetter(env, infoJava, info->iter, "setIter");
     setIntUsingSetter(env, infoJava, info->statusVal, "setStatusVal");
     setStringUsingSetter(env, infoJava, info->status, "setStatus");
@@ -175,18 +175,18 @@ JNIEXPORT void JNICALL Java_org_scs_DirectSolver_csolve(JNIEnv *env, jclass claz
 {
     /* Parse out the data into C form, then pass to SCS, the convert solution back to java object */
     /* Assume AJava contains matrix in column compressed sparse format */
-    Data * d = getDataStruct(env, AJava, bJava, cJava, paramsJava);
-    Cone * k = getConeStruct(env, coneJava);
+    ScsData * d = getScsDataStruct(env, AJava, bJava, cJava, paramsJava);
+    ScsCone * k = getScsConeStruct(env, coneJava);
 
-    Sol * sol = scs_calloc(1, sizeof(Sol));
-    Info * info = scs_calloc(1, sizeof(Info));
+    ScsSolution * sol = scs_calloc(1, sizeof(ScsSolution));
+    ScsInfo * info = scs_calloc(1, sizeof(ScsInfo));
     scs(d, k, sol, info);
 
-    setSol(env, solJava, d, sol);
-    setInfo(env, infoJava, info);
+    setScsSolution(env, solJava, d, sol);
+    setScsInfo(env, infoJava, info);
 
-    freeData(d, k);
-    freeSol(sol);
+    freeScsData(d, k);
+    freeScsSolution(sol);
     scs_free(info);
 }
 

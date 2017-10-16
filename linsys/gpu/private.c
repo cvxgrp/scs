@@ -49,30 +49,30 @@ extern "C" {
     A'(n x m)       A  (m x n)      Agt     accum_by_a_gpu
 */
 
-void accum_by_atrans_gpu(const Priv *p, const scs_float *x, scs_float *y) {
+void accum_by_atrans_gpu(const ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
     /* y += A'*x
        x and y MUST be on GPU already
     */
     const scs_float onef = 1.0;
-    AMatrix *Ag = p->Ag;
+    ScsMatrix *Ag = p->Ag;
     CUSPARSE(csrmv)(p->cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, Ag->n,
                     Ag->m, p->Annz, &onef, p->descr, Ag->x, Ag->p, Ag->i, x,
                     &onef, y);
 }
 
-void accum_by_a_gpu(const Priv *p, const scs_float *x, scs_float *y) {
+void accum_by_a_gpu(const ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
     /* y += A*x
        x and y MUST be on GPU already
      */
     const scs_float onef = 1.0;
-    AMatrix *Agt = p->Agt;
+    ScsMatrix *Agt = p->Agt;
     CUSPARSE(csrmv)(p->cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, Agt->n,
                     Agt->m, p->Annz, &onef, p->descr, Agt->x, Agt->p, Agt->i, x,
                     &onef, y);
 }
 
 /* do not use within pcg, reuses memory */
-void accum_by_atrans(const AMatrix *A, Priv *p, const scs_float *x,
+void accum_by_atrans(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x,
                    scs_float *y) {
     scs_float *v_m = p->tmp_m;
     scs_float *v_n = p->r;
@@ -83,7 +83,7 @@ void accum_by_atrans(const AMatrix *A, Priv *p, const scs_float *x,
 }
 
 /* do not use within pcg, reuses memory */
-void accum_by_a(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
+void accum_by_a(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
     scs_float *v_m = p->tmp_m;
     scs_float *v_n = p->r;
     cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -92,14 +92,14 @@ void accum_by_a(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
     cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
-char *get_lin_sys_method(const AMatrix *A, const Settings *s) {
+char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
     char *str = (char *)scs_malloc(sizeof(char) * 128);
     sprintf(str, "sparse-indirect GPU, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
             (long)A->p[A->n], s->cg_rate);
     return str;
 }
 
-char *get_lin_sys_summary(Priv *p, const Info *info) {
+char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info) {
     char *str = (char *)scs_malloc(sizeof(char) * 128);
     sprintf(str,
             "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
@@ -110,7 +110,7 @@ char *get_lin_sys_summary(Priv *p, const Info *info) {
     return str;
 }
 
-void cudaFree_a_matrix(AMatrix *A) {
+void cudaFree_a_matrix(ScsMatrix *A) {
     if (A->x)
         cudaFree(A->x);
     if (A->i)
@@ -119,7 +119,7 @@ void cudaFree_a_matrix(AMatrix *A) {
         cudaFree(A->p);
 }
 
-void free_priv(Priv *p) {
+void free_priv(ScsLinSysScsWork *p) {
     if (p) {
         if (p->p)
             cudaFree(p->p);
@@ -151,7 +151,7 @@ void free_priv(Priv *p) {
 }
 
 /*y = (RHO_X * I + A'A)x */
-static void mat_vec(const AMatrix *A, const Settings *s, Priv *p,
+static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysScsWork *p,
                    const scs_float *x, scs_float *y) {
     /* x and y MUST already be loaded to GPU */
     scs_float *tmp_m = p->tmp_m; /* temp memory */
@@ -163,7 +163,7 @@ static void mat_vec(const AMatrix *A, const Settings *s, Priv *p,
 }
 
 /* M = inv ( diag ( RHO_X * I + A'A ) ) */
-void get_preconditioner(const AMatrix *A, const Settings *stgs, Priv *p) {
+void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p) {
     scs_int i;
     scs_float *M = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
 
@@ -184,9 +184,9 @@ void get_preconditioner(const AMatrix *A, const Settings *stgs, Priv *p) {
 #endif
 }
 
-Priv *init_priv(const AMatrix *A, const Settings *stgs) {
+ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
     cudaError_t err;
-    Priv *p = (Priv *)scs_calloc(1, sizeof(Priv));
+    ScsLinSysScsWork *p = (ScsLinSysScsWork *)scs_calloc(1, sizeof(ScsLinSysScsWork));
     p->Annz = A->p[A->n];
     p->cublas_handle = 0;
     p->cusparse_handle = 0;
@@ -206,12 +206,12 @@ Priv *init_priv(const AMatrix *A, const Settings *stgs) {
     cusparseSetMatType(p->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
     cusparseSetMatIndexBase(p->descr, CUSPARSE_INDEX_BASE_ZERO);
 
-    AMatrix *Ag = (AMatrix *)scs_malloc(sizeof(AMatrix));
+    ScsMatrix *Ag = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
     Ag->n = A->n;
     Ag->m = A->m;
     p->Ag = Ag;
 
-    AMatrix *Agt = (AMatrix *)scs_malloc(sizeof(AMatrix));
+    ScsMatrix *Agt = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
     Agt->n = A->m;
     Agt->m = A->n;
     p->Agt = Agt;
@@ -266,7 +266,7 @@ static void apply_pre_conditioner(cublasHandle_t cublas_handle, scs_float *M,
 }
 
 /* solves (I+A'A)x = b, s warm start, solution stored in bg (on GPU) */
-static scs_int pcg(const AMatrix *A, const Settings *stgs, Priv *pr,
+static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *pr,
                    const scs_float *s, scs_float *bg, scs_int max_its,
                    scs_float tol) {
     scs_int i, n = A->n;
@@ -340,16 +340,16 @@ static scs_int pcg(const AMatrix *A, const Settings *stgs, Priv *pr,
 }
 
 #ifdef TEST_GPU_MAT_MUL
-void accum_by_atrans_host(const AMatrix *A, Priv *p, const scs_float *x,
+void accum_by_atrans_host(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x,
                        scs_float *y) {
     _accum_by_atrans(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accum_by_a_host(const AMatrix *A, Priv *p, const scs_float *x, scs_float *y) {
+void accum_by_a_host(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
     _accum_by_a(A->n, A->x, A->i, A->p, x, y);
 }
 
-void test_gpu_mat_mul(const AMatrix *A, Priv *p, scs_float *b) {
+void test_gpu_mat_mul(const ScsMatrix *A, ScsLinSysScsWork *p, scs_float *b) {
     /* test to see if matrix multiplication codes agree */
     scs_float t[A->n + A->m], u[A->n + A->m], *bg;
     cudaMalloc((void **)&bg, (A->n + A->m) * sizeof(scs_float));
@@ -374,7 +374,7 @@ void test_gpu_mat_mul(const AMatrix *A, Priv *p, scs_float *b) {
 }
 #endif
 
-scs_int solve_lin_sys(const AMatrix *A, const Settings *stgs, Priv *p,
+scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p,
                     scs_float *b, const scs_float *s, scs_int iter) {
     scs_int cg_its;
     timer linsys_timer;

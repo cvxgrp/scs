@@ -19,15 +19,15 @@ extern "C" {
 struct SCS_PROBLEM_DATA {
     /* these cannot change for multiple runs for the same call to scs_init */
     scs_int m, n; /* A has m rows, n cols */
-    AMatrix *A;   /* A is supplied in data format specified by linsys solver */
+    ScsMatrix *A;   /* A is supplied in data format specified by linsys solver */
 
     /* these can change for multiple runs for the same call to scs_init */
     scs_float *b, *c; /* dense arrays for b (size m), c (size n) */
 
-    Settings *stgs; /* contains solver settings specified by user */
+    ScsSettings *stgs; /* contains solver settings specified by user */
 };
 
-/* Settings struct */
+/* ScsSettings struct */
 struct SCS_SETTINGS {
     /* settings parameters: default suggested input */
 
@@ -43,7 +43,7 @@ struct SCS_SETTINGS {
     scs_float cg_rate;  /* for indirect, tolerance goes down like
                            (1/iter)^cg_rate: 2 */
     scs_int verbose;    /* boolean, write out progress: 1 */
-    scs_int warm_start; /* boolean, warm start (put initial guess in Sol
+    scs_int warm_start; /* boolean, warm start (put initial guess in ScsSolution
                            struct): 0 */
     scs_int acceleration_lookback;
 };
@@ -82,11 +82,11 @@ struct SCS_SCALING {
  * scs_solve: can be called many times with different b,c data for one init call
  * scs_finish: cleans up the memory (one per init call)
  */
-Work *scs_init(const Data *d, const Cone *k, Info *info);
-scs_int scs_solve(Work *w, const Data *d, const Cone *k, Sol *sol, Info *info);
-void scs_finish(Work *w);
+ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info);
+scs_int scs_solve(ScsWork *w, const ScsData *d, const ScsCone *k, ScsSolution *sol, ScsInfo *info);
+void scs_finish(ScsWork *w);
 /* scs calls scs_init, scs_solve, and scs_finish */
-scs_int scs(const Data *d, const Cone *k, Sol *sol, Info *info);
+scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol, ScsInfo *info);
 const char *scs_version(void);
 
 /* the following structs are not exposed to user */
@@ -98,16 +98,16 @@ struct SCS_WORK {
     scs_float g_th, sc_b, sc_c, nm_b, nm_c;
     scs_float *b, *c;   /* (possibly normalized) b and c vectors */
     scs_int m, n;       /* A has m rows, n cols */
-    AMatrix *A;         /* (possibly normalized) A matrix */
-    Priv *p;            /* struct populated by linear system solver */
-    Accel *accel;       /* Struct for acceleration workspace */
-    Settings *stgs;     /* contains solver settings specified by user */
-    Scaling *scal;      /* contains the re-scaling data */
-    Cone_work *cone_work; /* workspace for the cone projection step */
+    ScsMatrix *A;         /* (possibly normalized) A matrix */
+    ScsLinSysScsWork *p;            /* struct populated by linear system solver */
+    ScsAccelWork *accel;       /* Struct for acceleration workspace */
+    ScsSettings *stgs;     /* contains solver settings specified by user */
+    ScsScaling *scal;      /* contains the re-scaling data */
+    ScsConeWork *cone_work; /* workspace for the cone projection step */
 };
 
 /* to hold residual information (unnormalized) */
-struct residuals {
+typedef struct {
     scs_int last_iter;
     scs_float res_dual;
     scs_float res_pri;
@@ -118,7 +118,7 @@ struct residuals {
     scs_float b_ty_by_tau; /* not divided by tau */
     scs_float tau;
     scs_float kap;
-};
+} ScsResiduals;
 
 #ifdef __cplusplus
 }

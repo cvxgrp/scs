@@ -27,7 +27,7 @@ density = 0.1;
 
 %%
 for i=1:size(sizes,1)
-    disp(sprintf('Solving %s l1 regularized logistic regresssion.',sze_str{i}))
+    disp(sprintf('ScsSolutionving %s l1 regularized logistic regresssion.',sze_str{i}))
     clearvars -except i sizes sze_str direct_data indirect_data save_results density run_scs_direct run_scs_indirect run_cvx cvx_use_solver
     
     str = ['data/l1logreg_' sze_str{i}];

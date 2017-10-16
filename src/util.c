@@ -75,7 +75,7 @@ scs_float strtoc(char *str, timer *t) {
     return time;
 }
 
-void print_cone_data(const Cone *k) {
+void print_cone_data(const ScsCone *k) {
     scs_int i;
     scs_printf("num zeros = %i\n", (int)k->f);
     scs_printf("num LP = %i\n", (int)k->l);
@@ -98,7 +98,7 @@ void print_cone_data(const Cone *k) {
     }
 }
 
-void print_work(const Work *w) {
+void print_work(const ScsWork *w) {
     scs_int i, l = w->n + w->m;
     scs_printf("\n u_t is \n");
     for (i = 0; i < l; i++) {
@@ -114,7 +114,7 @@ void print_work(const Work *w) {
     }
 }
 
-void print_data(const Data *d) {
+void print_data(const ScsData *d) {
     scs_printf("m = %i\n", (int)d->m);
     scs_printf("n = %i\n", (int)d->n);
 
@@ -147,7 +147,7 @@ void print_array(const scs_float *arr, scs_int n, const char *name) {
     scs_printf("\n");
 }
 
-void free_data(Data *d, Cone *k) {
+void free_data(ScsData *d, ScsCone *k) {
     if (d) {
         if (d->b)
             scs_free(d->b);
@@ -171,7 +171,7 @@ void free_data(Data *d, Cone *k) {
     }
 }
 
-void free_sol(Sol *sol) {
+void free_sol(ScsSolution *sol) {
     if (sol) {
         if (sol->x) {
             scs_free(sol->x);
@@ -187,7 +187,7 @@ void free_sol(Sol *sol) {
 }
 
 /* assumes d->stgs already allocated memory */
-void set_default_settings(Data *d) {
+void set_default_settings(ScsData *d) {
     d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
     d->stgs->eps = EPS;             /* convergence tolerance: 1e-3 */
     d->stgs->alpha = ALPHA;         /* relaxation parameter: 1.8 */

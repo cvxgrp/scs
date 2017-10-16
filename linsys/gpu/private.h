@@ -12,7 +12,7 @@
 #include <cusparse.h>
 #include <cublas_v2.h>
 
-struct PRIVATE_DATA {
+struct SCS_LIN_SYS_WORK {
     scs_int Annz; /* num non-zeros in A matrix */
     /* reporting */
     scs_int tot_cg_its;
@@ -29,8 +29,8 @@ struct PRIVATE_DATA {
     scs_float *tmp_m; /* m, used in mat_vec */
     scs_float *z;     /* preconditioned */
     scs_float *M;     /* preconditioner */
-    AMatrix *Ag;      /* A matrix on GPU */
-    AMatrix *Agt;     /* A trans matrix on GPU */
+    ScsMatrix *Ag;      /* A matrix on GPU */
+    ScsMatrix *Agt;     /* A trans matrix on GPU */
 };
 
 #endif

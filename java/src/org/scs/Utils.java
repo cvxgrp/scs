@@ -40,7 +40,7 @@ public class Utils {
         return a;
     }
 
-    public static double getScaledPriResidNorm(AMatrix A, double[] b, Solution sol) {
+    public static double getScaledPriResidNorm(ScsMatrix A, double[] b, ScsSolutionution sol) {
         double[] priResid = new double[A.getNumRows()];
         A.accumByA(sol.getX(), priResid);
         Utils.addScaledArray(sol.getS(), priResid, 1d);
@@ -48,7 +48,7 @@ public class Utils {
         return Utils.norm(priResid) / (1 + Utils.norm(b));
     }
 
-    public static double getScaledDualResidNorm(AMatrix A, double[] c, Solution sol) {
+    public static double getScaledDualResidNorm(ScsMatrix A, double[] c, ScsSolutionution sol) {
         double[] dualResid = new double[A.getNumCols()];
         A.accumByAtrans(sol.getY(), dualResid);
         Utils.addScaledArray(c, dualResid, 1d);

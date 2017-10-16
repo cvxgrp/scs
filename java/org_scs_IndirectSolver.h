@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     org_scs_IndirectSolver
  * Method:    csolve
- * Signature: (Lorg/scs/AMatrix;[D[DLorg/scs/Cone;Lorg/scs/Settings;Lorg/scs/Solution;Lorg/scs/Info;)V
+ * Signature: (Lorg/scs/ScsMatrix;[D[DLorg/scs/ScsCone;Lorg/scs/ScsSettings;Lorg/scs/ScsSolutionution;Lorg/scs/ScsInfo;)V
  */
 JNIEXPORT void JNICALL Java_org_scs_IndirectSolver_csolve
   (JNIEnv *, jclass, jobject, jdoubleArray, jdoubleArray, jobject, jobject, jobject, jobject);

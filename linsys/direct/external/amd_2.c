@@ -60,7 +60,7 @@ GLOBAL void AMD_2
 
     /* control parameters and output statistics */
     scs_float Control [ ],	/* array of size AMD_CONTROL */
-    scs_float Info [ ]	/* array of size AMD_INFO */
+    scs_float ScsInfo [ ]	/* array of size AMD_INFO */
 )
 {
 
@@ -277,8 +277,8 @@ GLOBAL void AMD_2
  *	assembly tree.  Note that i refers to a row/column in the original
  *	matrix, not the permuted matrix.
  *
- * Info:  A scs_float array of size AMD_INFO.  If present, (that is, not SCS_NULL),
- *	then statistics about the ordering are returned in the Info array.
+ * ScsInfo:  A scs_float array of size AMD_INFO.  If present, (that is, not SCS_NULL),
+ *	then statistics about the ordering are returned in the ScsInfo array.
  *	See amd.h for a description.
 
  * ----------------------------------------------------------------------------
@@ -1520,7 +1520,7 @@ GLOBAL void AMD_2
 	 * (degme+ndense)-by-(degme+ndense).
 	 */
 
-	if (Info != (scs_float *) SCS_NULL)
+	if (ScsInfo != (scs_float *) SCS_NULL)
 	{
 	    f = nvpiv ;
 	    r = degme + ndense ;
@@ -1556,7 +1556,7 @@ GLOBAL void AMD_2
 /* DONE SELECTING PIVOTS */
 /* ========================================================================= */
 
-    if (Info != (scs_float *) SCS_NULL)
+    if (ScsInfo != (scs_float *) SCS_NULL)
     {
 
 	/* count the work to factorize the ndense-by-ndense submatrix */
@@ -1578,28 +1578,28 @@ GLOBAL void AMD_2
 	nms_ldl += (s + lnzme)/2 ;
 
 	/* number of nz's in L (excl. diagonal) */
-	Info [AMD_LNZ] = lnz ;
+	ScsInfo [AMD_LNZ] = lnz ;
 
 	/* number of divide ops for LU and LDL' */
-	Info [AMD_NDIV] = ndiv ;
+	ScsInfo [AMD_NDIV] = ndiv ;
 
 	/* number of multiply-subtract pairs for LDL' */
-	Info [AMD_NMULTSUBS_LDL] = nms_ldl ;
+	ScsInfo [AMD_NMULTSUBS_LDL] = nms_ldl ;
 
 	/* number of multiply-subtract pairs for LU */
-	Info [AMD_NMULTSUBS_LU] = nms_lu ;
+	ScsInfo [AMD_NMULTSUBS_LU] = nms_lu ;
 
 	/* number of "dense" rows/columns */
-	Info [AMD_NDENSE] = ndense ;
+	ScsInfo [AMD_NDENSE] = ndense ;
 
 	/* largest front is dmax-by-dmax */
-	Info [AMD_DMAX] = dmax ;
+	ScsInfo [AMD_DMAX] = dmax ;
 
 	/* number of garbage collections in AMD */
-	Info [AMD_NCMPA] = ncmpa ;
+	ScsInfo [AMD_NCMPA] = ncmpa ;
 
 	/* successful ordering */
-	Info [AMD_STATUS] = AMD_OK ;
+	ScsInfo [AMD_STATUS] = AMD_OK ;
     }
 
 /* ========================================================================= */

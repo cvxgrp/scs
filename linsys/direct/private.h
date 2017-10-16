@@ -8,7 +8,7 @@
 #include "external/ldl.h"
 #include "../common.h"
 
-struct PRIVATE_DATA {
+struct SCS_LIN_SYS_WORK {
     cs *L;         /* KKT, and factorization matrix L resp. */
     scs_float *D;  /* diagonal matrix of factorization */
     scs_int *P;    /* permutation of KKT matrix for factorization */

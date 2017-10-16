@@ -12,11 +12,11 @@ public class ScsTestProblem {
             n = Integer.parseInt(args[1]);
         }
 
-        Settings p = new Settings();
-        Solution sol;
-        Data d = new Data();
-        IConeSolver isolver = new IndirectSolver();
-        IConeSolver dsolver = new DirectSolver();
+        ScsSettings p = new ScsSettings();
+        ScsSolutionution sol;
+        ScsData d = new ScsData();
+        IScsConeSolver isolver = new IndirectSolver();
+        IScsConeSolver dsolver = new DirectSolver();
         RandomLinearProgram cp = new RandomLinearProgram(m, n, d, p, isolver);
 
         sol = cp.solve();
@@ -38,13 +38,13 @@ public class ScsTestProblem {
         System.out.println("||A'y + c|| / (1 + ||c||)  = " + Utils.getScaledDualResidNorm(d.getA(), d.getC(), sol));
 
         /* extra info */
-        System.out.println("iters " + sol.getInfo().getIter());
-        System.out.println("status " + sol.getInfo().getStatus());
-        System.out.println("pobj " + sol.getInfo().getPobj());
-        System.out.println("dobj " + sol.getInfo().getDobj());
-        System.out.println("resPri " + sol.getInfo().getResPri());
-        System.out.println("resDual " + sol.getInfo().getResDual());
-        System.out.println("relGap " + sol.getInfo().getRelGap());
-        System.out.println("setup time " + sol.getInfo().getSetupTime());
+        System.out.println("iters " + sol.getScsInfo().getIter());
+        System.out.println("status " + sol.getScsInfo().getStatus());
+        System.out.println("pobj " + sol.getScsInfo().getPobj());
+        System.out.println("dobj " + sol.getScsInfo().getDobj());
+        System.out.println("resPri " + sol.getScsInfo().getResPri());
+        System.out.println("resDual " + sol.getScsInfo().getResDual());
+        System.out.println("relGap " + sol.getScsInfo().getRelGap());
+        System.out.println("setup time " + sol.getScsInfo().getSetupTime());
     }
 }

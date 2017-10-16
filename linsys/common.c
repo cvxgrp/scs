@@ -5,9 +5,9 @@
 #define MAX_SCALE (1e3)
 #define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
-scs_int copy_a_matrix(AMatrix **dstp, const AMatrix *src) {
+scs_int copy_a_matrix(ScsMatrix **dstp, const ScsMatrix *src) {
     scs_int Anz = src->p[src->n];
-    AMatrix *A = scs_calloc(1, sizeof(AMatrix));
+    ScsMatrix *A = scs_calloc(1, sizeof(ScsMatrix));
     if (!A)
         return 0;
     A->n = src->n;
@@ -25,7 +25,7 @@ scs_int copy_a_matrix(AMatrix **dstp, const AMatrix *src) {
     return 1;
 }
 
-scs_int validate_lin_sys(const AMatrix *A) {
+scs_int validate_lin_sys(const ScsMatrix *A) {
     scs_int i, r_max, Anz;
     if (!A->x || !A->i || !A->p) {
         scs_printf("data incompletely specified\n");
@@ -60,7 +60,7 @@ scs_int validate_lin_sys(const AMatrix *A) {
     return 0;
 }
 
-void free_a_matrix(AMatrix *A) {
+void free_a_matrix(ScsMatrix *A) {
     if (A->x)
         scs_free(A->x);
     if (A->i)
@@ -70,7 +70,7 @@ void free_a_matrix(AMatrix *A) {
     scs_free(A);
 }
 
-void print_a_matrix(const AMatrix *A) {
+void print_a_matrix(const ScsMatrix *A) {
     scs_int i, j;
     /* TODO: this is to prevent clogging stdout */
     if (A->p[A->n] < 2500) {
@@ -88,8 +88,8 @@ void print_a_matrix(const AMatrix *A) {
     }
 }
 
-void normalize_a(AMatrix *A, const Settings *stgs, const Cone *k,
-                Scaling *scal) {
+void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
+                ScsScaling *scal) {
     scs_float *D = scs_malloc(A->m * sizeof(scs_float));
     scs_float *E = scs_malloc(A->n * sizeof(scs_float));
     scs_float *Dt = scs_malloc(A->m * sizeof(scs_float));
@@ -212,7 +212,7 @@ void normalize_a(AMatrix *A, const Settings *stgs, const Cone *k,
 #endif
 }
 
-void un_normalize_a(AMatrix *A, const Settings *stgs, const Scaling *scal) {
+void un_normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsScaling *scal) {
     scs_int i, j;
     scs_float *D = scal->D;
     scs_float *E = scal->E;

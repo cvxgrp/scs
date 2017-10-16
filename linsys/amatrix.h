@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /* this struct defines the data matrix A */
-struct A_DATA_MATRIX {
+struct SCS_A_DATA_MATRIX  {
     /* A is supplied in column compressed format */
     scs_float *x; /* A values, size: NNZ A */
     scs_int *i;   /* A row index, size: NNZ A */

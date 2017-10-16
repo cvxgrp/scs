@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import scs
 from numpy import *
 from scipy import sparse, randn
-from genRandomConeProb import *
+from genRandomScsConeProb import *
 
 #############################################
 #  Uses scs to solve a random cone problem  #
@@ -17,7 +17,7 @@ def main():
 def solveFeasible():
     # cone:
     K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10, 'p':[-0.25, 0.5, 0.75, -0.33]}
-    m = getConeDims(K) 
+    m = getScsConeDims(K) 
     data, p_star = genFeasible(K, n = m//3, density = 0.01)
     params = {'normalize':True, 'scale':5, 'cg_rate':2}
     
@@ -37,7 +37,7 @@ def solveFeasible():
     
 def solveInfeasible():
     K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10, 'p':[-0.25, 0.5, 0.75, -0.33]}
-    m = getConeDims(K)
+    m = getScsConeDims(K)
     data = genInfeasible(K, n = m//3)
     params = {'normalize':True, 'scale':0.5, 'cg_rate':2}
     sol_i = scs.solve(data, K, use_indirect=True, **params)
@@ -45,7 +45,7 @@ def solveInfeasible():
 
 def solveUnbounded():
     K = {'f':10, 'l':15, 'q':[5, 10, 0 ,1], 's':[3, 4, 0, 0, 1], 'ep':10, 'ed':10, 'p':[-0.25, 0.5, 0.75, -0.33]}
-    m = getConeDims(K)
+    m = getScsConeDims(K)
     data = genUnbounded(K, n = m//3)
     params = {'normalize':True, 'scale':0.5, 'cg_rate':2}
     sol_i = scs.solve(data, K, use_indirect=True, **params)

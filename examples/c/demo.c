@@ -6,26 +6,26 @@
 #define RHOX (1e-3)
 #define TEST_WARM_START (1)
 
-scs_int read_in_data(FILE *fp, Data *d, Cone *k);
+scs_int read_in_data(FILE *fp, ScsData *d, ScsCone *k);
 scs_int open_file(scs_int argc, char **argv, scs_int idx,
                  const char *default_file, FILE **fb);
-/* void print_sol(Data * d, Sol * sol, Info * info); */
+/* void print_sol(ScsData * d, ScsSolution * sol, ScsInfo * info); */
 
 int main(int argc, char **argv) {
     FILE *fp;
-    Cone *k;
-    Data *d;
-    Work *w;
-    Sol *sol;
-    Info info = {0};
+    ScsCone *k;
+    ScsData *d;
+    ScsWork *w;
+    ScsSolution *sol;
+    ScsInfo info = {0};
     scs_int i;
 
     if (open_file(argc, argv, 1, DEMO_PATH, &fp) < 0)
         return -1;
 
-    k = scs_calloc(1, sizeof(Cone));
-    d = scs_calloc(1, sizeof(Data));
-    sol = scs_calloc(1, sizeof(Sol));
+    k = scs_calloc(1, sizeof(ScsCone));
+    d = scs_calloc(1, sizeof(ScsData));
+    sol = scs_calloc(1, sizeof(ScsSolution));
     if (read_in_data(fp, d, k) == -1) {
         printf("Error reading in data, aborting.\n");
         return -1;
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         scs_printf("solve %i times with warm-start and (if applicable) "
                    "factorization caching.\n",
                    NUM_TRIALS);
-        /* warm starts stored in Sol */
+        /* warm starts stored in ScsSolution */
         w = scs_init(d, k, &info);
         if (w) {
             for (i = 0; i < NUM_TRIALS; i++) {
@@ -62,11 +62,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-scs_int read_in_data(FILE *fp, Data *d, Cone *k) {
+scs_int read_in_data(FILE *fp, ScsData *d, ScsCone *k) {
     /* MATRIX IN DATA FILE MUST BE IN COLUMN COMPRESSED FORMAT */
     scs_int i, Anz;
-    AMatrix *A;
-    Settings *stgs = scs_malloc(sizeof(Settings));
+    ScsMatrix *A;
+    ScsSettings *stgs = scs_malloc(sizeof(ScsSettings));
     stgs->rho_x = RHOX;
     stgs->warm_start = 0;
     stgs->scale = 1;
@@ -174,7 +174,7 @@ scs_int read_in_data(FILE *fp, Data *d, Cone *k) {
             return -1;
         }
     }
-    A = malloc(sizeof(AMatrix));
+    A = malloc(sizeof(ScsMatrix));
     A->p = malloc(sizeof(scs_int) * (d->n + 1));
     for (i = 0; i < d->n + 1; i++) {
         if (fscanf(fp, INTRW, &A->p[i]) != 1) {

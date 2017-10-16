@@ -50,11 +50,11 @@ void perturb_vector(scs_float *v, scs_int l) {
     }
 }
 
-void gen_random_prob_data(scs_int nnz, scs_int col_nnz, Data *d, Cone *k,
-                       Sol *opt_sol) {
+void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
+                       ScsSolution *opt_sol) {
     scs_int n = d->n;
     scs_int m = d->m;
-    AMatrix *A = d->A = scs_calloc(1, sizeof(AMatrix));
+    ScsMatrix *A = d->A = scs_calloc(1, sizeof(ScsMatrix));
     scs_float *b = d->b = scs_calloc(m, sizeof(scs_float));
     scs_float *c = d->c = scs_calloc(n, sizeof(scs_float));
     scs_float *x = opt_sol->x = scs_calloc(n, sizeof(scs_float));

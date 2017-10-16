@@ -25,7 +25,7 @@ GLOBAL Int AMD_order
     const Int Ai [ ],
     Int P [ ],
     scs_float Control [ ],
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 )
 {
     Int *Len, *S, nz, i, *Pinv, info, status, *Rp, *Ri, *Cp, *Ci, ok ;
@@ -36,22 +36,22 @@ GLOBAL Int AMD_order
     AMD_debug_init ("amd") ;
 #endif
 
-    /* clear the Info array, if it exists */
-    info = Info != (scs_float *) SCS_NULL ;
+    /* clear the ScsInfo array, if it exists */
+    info = ScsInfo != (scs_float *) SCS_NULL ;
     if (info)
     {
 	for (i = 0 ; i < AMD_INFO ; i++)
 	{
-	    Info [i] = EMPTY ;
+	    ScsInfo [i] = EMPTY ;
 	}
-	Info [AMD_N] = n ;
-	Info [AMD_STATUS] = AMD_OK ;
+	ScsInfo [AMD_N] = n ;
+	ScsInfo [AMD_STATUS] = AMD_OK ;
     }
 
     /* make sure inputs exist and n is >= 0 */
     if (Ai == (Int *) SCS_NULL || Ap == (Int *) SCS_NULL || P == (Int *) SCS_NULL || n < 0)
     {
-	if (info) Info [AMD_STATUS] = AMD_INVALID ;
+	if (info) ScsInfo [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;	    /* arguments are invalid */
     }
 
@@ -63,11 +63,11 @@ GLOBAL Int AMD_order
     nz = Ap [n] ;
     if (info)
     {
-	Info [AMD_NZ] = nz ;
+	ScsInfo [AMD_NZ] = nz ;
     }
     if (nz < 0)
     {
-	if (info) Info [AMD_STATUS] = AMD_INVALID ;
+	if (info) ScsInfo [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;
     }
 
@@ -75,7 +75,7 @@ GLOBAL Int AMD_order
     if (((size_t) n) >= SIZE_T_MAX / sizeof (Int)
      || ((size_t) nz) >= SIZE_T_MAX / sizeof (Int))
     {
-	if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	return (AMD_OUT_OF_MEMORY) ;	    /* problem too large */
     }
 
@@ -84,7 +84,7 @@ GLOBAL Int AMD_order
 
     if (status == AMD_INVALID)
     {
-	if (info) Info [AMD_STATUS] = AMD_INVALID ;
+	if (info) ScsInfo [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;	    /* matrix is invalid */
     }
 
@@ -98,7 +98,7 @@ GLOBAL Int AMD_order
 	/* :: out of memory :: */
 	amd_free (Len) ;
 	amd_free (Pinv) ;
-	if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	return (AMD_OUT_OF_MEMORY) ;
     }
 
@@ -117,7 +117,7 @@ GLOBAL Int AMD_order
 	    amd_free (Ri) ;
 	    amd_free (Len) ;
 	    amd_free (Pinv) ;
-	    if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	    if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	    return (AMD_OUT_OF_MEMORY) ;
 	}
 	/* use Len and Pinv as workspace to create R = A' */
@@ -138,7 +138,7 @@ GLOBAL Int AMD_order
     /* determine the symmetry and count off-diagonal nonzeros in A+A' */
     /* --------------------------------------------------------------------- */
 
-    nzaat = AMD_aat (n, Cp, Ci, Len, P, Info) ;
+    nzaat = AMD_aat (n, Cp, Ci, Len, P, ScsInfo) ;
     AMD_DEBUG1 (("nzaat: %g\n", (scs_float) nzaat)) ;
     ASSERT ((MAX (nz-n, 0) <= nzaat) && (nzaat <= 2 * (size_t) nz)) ;
 
@@ -170,20 +170,20 @@ GLOBAL Int AMD_order
 	amd_free (Ri) ;
 	amd_free (Len) ;
 	amd_free (Pinv) ;
-	if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	return (AMD_OUT_OF_MEMORY) ;
     }
     if (info)
     {
 	/* memory usage, in bytes. */
-	Info [AMD_MEMORY] = mem * sizeof (Int) ;
+	ScsInfo [AMD_MEMORY] = mem * sizeof (Int) ;
     }
 
     /* --------------------------------------------------------------------- */
     /* order the matrix */
     /* --------------------------------------------------------------------- */
 
-    AMD_1 (n, Cp, Ci, P, Pinv, Len, slen, S, Control, Info) ;
+    AMD_1 (n, Cp, Ci, P, Pinv, Len, slen, S, Control, ScsInfo) ;
 
     /* --------------------------------------------------------------------- */
     /* free the workspace */
@@ -194,6 +194,6 @@ GLOBAL Int AMD_order
     amd_free (Len) ;
     amd_free (Pinv) ;
     amd_free (S) ;
-    if (info) Info [AMD_STATUS] = status ;
+    if (info) ScsInfo [AMD_STATUS] = status ;
     return (status) ;	    /* successful ordering */
 }

@@ -8,7 +8,7 @@ from scipy import sparse, randn
 
 
 def genFeasible(K, n, density):
-  m = getConeDims(K)
+  m = getScsConeDims(K)
   z = randn(m,)
   y = proj_dual_cone(z, K)  # y = s - z;
   s = y - z  # s = proj_cone(z,K)
@@ -24,7 +24,7 @@ def genFeasible(K, n, density):
 
 
 def genInfeasible(K, n):
-  m = getConeDims(K)
+  m = getScsConeDims(K)
 
   z = randn(m,)
   y = proj_dual_cone(z, K)  # y = s - z;
@@ -39,7 +39,7 @@ def genInfeasible(K, n):
 
 
 def genUnbounded(K, n):
-  m = getConeDims(K)
+  m = getScsConeDims(K)
 
   z = randn(m)
   s = proj_cone(z, K)
@@ -58,7 +58,7 @@ def pos(x):
   return (x + abs(x)) / 2
 
 
-def getConeDims(K):
+def getScsConeDims(K):
   l = K['f'] + K['l']
   for i in range(0, len(K['q'])):
     l = l + K['q'][i]

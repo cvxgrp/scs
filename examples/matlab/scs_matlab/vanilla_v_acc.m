@@ -3,7 +3,7 @@ K = struct('f',50,'l',300,'q',[10;40],'s',[20],'ep',0,'ed',0,'p',[]);
 
 density = 0.1; % A matrix density
 
-m = getConeDims(K);
+m = getScsConeDims(K);
 n = round(m/3);
 params = struct('use_indirect', 1, 'eps', 1e-6, 'normalize', 1, 'scale', 1, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5, 'gen_plots', 1);
 

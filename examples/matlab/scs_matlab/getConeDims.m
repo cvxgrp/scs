@@ -1,10 +1,10 @@
-function l = getConeDims(K)
+function l = getScsConeDims(K)
 l = K.f + K.l;
 for i=1:length(K.q)
     l = l + K.q(i);
 end
 for i=1:length(K.s)
-    l = l + getSdConeSize(K.s(i));
+    l = l + getSdScsConeSize(K.s(i));
 end
 l = l + K.ep * 3;
 l = l + K.ed * 3;

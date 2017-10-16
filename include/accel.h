@@ -3,11 +3,11 @@
 
 #include "glbopts.h"
 
-typedef struct SCS_ACCEL Accel;
+typedef struct SCS_ACCEL_WORK ScsAccelWork;
 
-Accel* init_accel(Work * w);
-void free_accel(Accel * a);
-scs_int accelerate(Work *w, scs_int iter);
-char *get_accel_summary(const Info *info, Accel *a);
+ScsAccelWork* init_accel(ScsWork * w);
+void free_accel(ScsAccelWork * a);
+scs_int accelerate(ScsWork *w, scs_int iter);
+char *get_accel_summary(const ScsInfo *info, ScsAccelWork *a);
 
 #endif

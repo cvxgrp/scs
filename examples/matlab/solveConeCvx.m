@@ -1,4 +1,4 @@
-function [x,y,s]=solveConeCvx(data,K,cs)
+function [x,y,s]=solveScsConeCvx(data,K,cs)
 if (K.ep>0 || K.ed>0)
     x = nan;
     y = nan;

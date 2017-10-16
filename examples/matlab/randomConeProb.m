@@ -25,7 +25,7 @@ K = struct('f',50,'l',60,'q',[0;1;0;2;100;20],'s',[0;2;1;2;20],'ep',10,'ed',15,'
 
 density = 0.1; % A matrix density
 
-m = getConeDims(K);
+m = getScsConeDims(K);
 n = round(m/3);
 params = struct('eps', 1e-3, 'normalize', 1, 'scale', 5, 'cg_rate',2, 'max_iters', 2500, 'alpha', 1.5);
 
@@ -45,7 +45,7 @@ if (gen_feasible)
     data.b = b;
     data.c = c;
     
-    %cd '../../matlab'; write_scs_data(data,K,params,'randomConeFeasible'); cd '../examples/matlab';
+    %cd '../../matlab'; write_scs_data(data,K,params,'randomScsConeFeasible'); cd '../examples/matlab';
     
     %indirect
     if (run_indirect)
@@ -63,7 +63,7 @@ if (gen_feasible)
         b'*y
         (b'*yd - b'*y) / (b'*y)
     end
-    if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+    if (run_cvx) [xc,yc,sc] = solveScsConeCvx(data,K,cvx_solver); end
     if (run_scs_matlab)
         params.use_indirect = true;
         [xi_m,yi_m,si_m,infoi_m] = scs_matlab(data,K,params);
@@ -103,7 +103,7 @@ if (gen_infeasible)
     if (run_direct) [xd,yd,sd,infod] = scs_direct(data,K,params); end
     
     % cvx:
-    if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+    if (run_cvx) [xc,yc,sc] = solveScsConeCvx(data,K,cvx_solver); end
     
     if(run_scs_matlab)
         params.use_indirect = true;
@@ -134,7 +134,7 @@ if(gen_unbounded)
     % direct:
     if (run_direct) [xd,yd,sd,infod] = scs_direct(data,K,params); end
     
-    if (run_cvx) [xc,yc,sc] = solveConeCvx(data,K,cvx_solver); end
+    if (run_cvx) [xc,yc,sc] = solveScsConeCvx(data,K,cvx_solver); end
     
     if(run_scs_matlab)
         params.use_indirect = true;

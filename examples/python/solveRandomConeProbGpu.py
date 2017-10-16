@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import scs
 from numpy import *
 from scipy import sparse, randn
-from genRandomConeProb import *
+from genRandomScsConeProb import *
 
 #############################################
 #  Uses scs to solve a random cone problem  #
@@ -27,7 +27,7 @@ def solveFeasible():
       'ed': 10,
       'p': [-0.25, 0.5, 0.75, -0.33]
   }
-  m = getConeDims(K)
+  m = getScsConeDims(K)
   data, p_star = genFeasible(K, n=m // 3, density=0.01)
   params = {'eps': 1e-3, 'normalize': True, 'scale': 5, 'cg_rate': 2}
 
@@ -49,7 +49,7 @@ def solveInfeasible():
       'ed': 10,
       'p': [-0.25, 0.5, 0.75, -0.33]
   }
-  m = getConeDims(K)
+  m = getScsConeDims(K)
   data = genInfeasible(K, n=m // 3)
   params = {'eps': 1e-4, 'normalize': True, 'scale': 0.5, 'cg_rate': 2}
   sol_i = scs.solve(data, K, gpu=True, **params)
@@ -65,7 +65,7 @@ def solveUnbounded():
       'ed': 10,
       'p': [-0.25, 0.5, 0.75, -0.33]
   }
-  m = getConeDims(K)
+  m = getScsConeDims(K)
   data = genUnbounded(K, n=m // 3)
   params = {'eps': 1e-4, 'normalize': True, 'scale': 0.5, 'cg_rate': 2}
   sol_i = scs.solve(data, K, gpu=True, **params)

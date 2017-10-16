@@ -1,13 +1,13 @@
 package org.scs;
 
-public class RandomLinearProgram extends ConeProgram {
+public class RandomLinearProgram extends ScsConeProgram {
     private double opt;
 
-    public RandomLinearProgram(int m, int n, Data d, Settings p, IConeSolver solver) {
+    public RandomLinearProgram(int m, int n, ScsData d, ScsSettings p, IScsConeSolver solver) {
         this.p = p;
         this.d = d;
         this.solver = solver;
-        k = new Cone();
+        k = new ScsCone();
         k.setL(m);
         double[] z = Utils.generateRandomDoubleArray(m);
         double[] s = new double[m];
@@ -17,7 +17,7 @@ public class RandomLinearProgram extends ConeProgram {
             y[i] = s[i] - z[i];
         }
 
-        AMatrix A = AMatrix.generateRandomMatrix(m, n);
+        ScsMatrix A = ScsMatrix.generateRandomMatrix(m, n);
         double[] x = Utils.generateRandomDoubleArray(n);
         double[] b = new double[m];
         A.accumByA(x, b);
@@ -37,7 +37,7 @@ public class RandomLinearProgram extends ConeProgram {
         return opt;
     }
 
-    public void setSolver(IConeSolver solver) {
+    public void setSolver(IScsConeSolver solver) {
         this.solver = solver;
     }
 }

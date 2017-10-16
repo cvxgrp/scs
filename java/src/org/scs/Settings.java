@@ -1,6 +1,6 @@
 package org.scs;
 
-public class Settings {
+public class ScsSettings {
     // set to defaults:
     private int maxIters = 2500;        /* maximum iterations to take: 2500 */
     private double eps = 1e-3;          /* convergence tolerance: 1e-3 */
@@ -10,7 +10,7 @@ public class Settings {
     private boolean verbose = true;     /* boolean, write out progress: 1 */
     private boolean normalize = true;   /* boolean, heuristic data rescaling: 1 */
     private double scale = 5;           /* if normalized, rescales by this factor: 5 */
-    private boolean warmStart = false;  /* boolean, warm start (put initial guess in Sol struct): 0 */
+    private boolean warmStart = false;  /* boolean, warm start (put initial guess in ScsSolution struct): 0 */
 
     // getters:
     public int getMaxIters() {

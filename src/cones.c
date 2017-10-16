@@ -31,7 +31,7 @@ static scs_int get_sd_cone_size(scs_int s) { RETURN(s * (s + 1)) / 2; }
  * RETURNs length of boundaries array, boundaries malloc-ed here so should be
  * freed
  */
-scs_int get_cone_boundaries(const Cone *k, scs_int **boundaries) {
+scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries) {
   scs_int i, count = 0;
   scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
   scs_int *b = scs_malloc(sizeof(scs_int) * len);
@@ -57,7 +57,7 @@ scs_int get_cone_boundaries(const Cone *k, scs_int **boundaries) {
   RETURN len;
 }
 
-scs_int get_full_cone_dims(const Cone *k) {
+scs_int get_full_cone_dims(const ScsCone *k) {
   scs_int i, c = 0;
   if (k->f) c += k->f;
   if (k->l) c += k->l;
@@ -77,7 +77,7 @@ scs_int get_full_cone_dims(const Cone *k) {
   RETURN c;
 }
 
-scs_int validate_cones(const Data *d, const Cone *k) {
+scs_int validate_cones(const ScsData *d, const ScsCone *k) {
   scs_int i;
   if (get_full_cone_dims(k) != d->m) {
     scs_printf("cone dimensions %li not equal to num rows in A = m = %li\n",
@@ -139,15 +139,15 @@ scs_int validate_cones(const Data *d, const Cone *k) {
   RETURN 0;
 }
 
-char *get_cone_summary(const Info *info, Cone_work *c) {
+char *get_cone_summary(const ScsInfo *info, ScsConeWork *c) {
   char *str = scs_malloc(sizeof(char) * 64);
-  sprintf(str, "\tCones: avg projection time: %1.2es\n",
+  sprintf(str, "\tScsCones: avg projection time: %1.2es\n",
           c->total_cone_time / (info->iter + 1) / 1e3);
   c->total_cone_time = 0.0;
   RETURN str;
 }
 
-void finish_cone(Cone_work *c) {
+void finish_cone(ScsConeWork *c) {
   DEBUG_FUNC
 #ifdef LAPACK_LIB_FOUND
   if (c->Xs) {
@@ -172,10 +172,10 @@ void finish_cone(Cone_work *c) {
   RETURN;
 }
 
-char *get_cone_header(const Cone *k) {
+char *get_cone_header(const ScsCone *k) {
   char *tmp = scs_malloc(sizeof(char) * 512);
   scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
-  sprintf(tmp, "Cones:");
+  sprintf(tmp, "ScsCones:");
   if (k->f) {
     sprintf(tmp + strlen(tmp), "\tprimal zero / dual free vars: %li\n",
             (long)k->f);
@@ -321,7 +321,7 @@ static scs_int proj_exp_cone(scs_float *v, scs_int iter) {
   RETURN 0;
 }
 
-scs_int set_up_sd_cone_work_space(Cone_work *c, const Cone *k) {
+scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #ifdef LAPACK_LIB_FOUND
   scs_int i;
   blasint n_max = 0;
@@ -373,8 +373,8 @@ scs_int set_up_sd_cone_work_space(Cone_work *c, const Cone *k) {
 #endif
 }
 
-Cone_work *init_cone(const Cone *k) {
-  Cone_work *c= scs_calloc(1, sizeof(Cone_work));
+ScsConeWork *init_cone(const ScsCone *k) {
+  ScsConeWork *c= scs_calloc(1, sizeof(ScsConeWork));
 #if EXTRAVERBOSE > 0
   scs_printf("init_cone\n");
 #endif
@@ -443,7 +443,7 @@ scs_int project_2x2_sdc(scs_float *X) {
 
 /* size of X is get_sd_cone_size(n) */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
-                                       Cone_work *c, const scs_int iter) {
+                                       ScsConeWork *c, const scs_int iter) {
 /* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
   scs_int i;
@@ -612,7 +612,7 @@ void proj_power_cone(scs_float *v, scs_float a) {
 /* outward facing cone projection routine, iter is outer algorithm iteration, if
    iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to SCS_NULL) */
-scs_int proj_dual_cone(scs_float *x, const Cone *k, Cone_work *c,
+scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                        const scs_float *warm_start, scs_int iter) {
   DEBUG_FUNC
   scs_int i;
