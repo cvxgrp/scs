@@ -322,7 +322,7 @@ scs_int accelerate(ScsWork *w, scs_int iter) { RETURN 0; }
 char *get_accel_summary(const ScsInfo *info, ScsAccelWork *a) {
   DEBUG_FUNC
   char *str = scs_malloc(sizeof(char) * 64);
-  sprintf(str, "\tScsAccelWorkeration: avg step time: %1.2es\n",
+  sprintf(str, "\tAcceleration: avg step time: %1.2es\n",
           a->total_accel_time / (info->iter + 1) / 1e3);
   a->total_accel_time = 0.0;
   RETURN str;

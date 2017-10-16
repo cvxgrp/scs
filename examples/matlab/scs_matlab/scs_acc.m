@@ -49,7 +49,7 @@ use_indirect = false;   % use conjugate gradient rather than direct method
 cg_rate = 2;            % max CG quitting tolerance
 extra_verbose = false;  % CG prints summary
 
-% ScsAccelWorkeration:
+% Acceleration:
 anderson_lookback = 10;
 
 % constants
@@ -69,7 +69,7 @@ if nargin==3
     if isfield(params,'use_indirect');use_indirect = params.use_indirect;end
     if isfield(params,'cg_rate');cg_rate = params.cg_rate;end
     if isfield(params,'extra_verbose');extra_verbose = params.extra_verbose;end
-    % ScsAccelWorkeration:
+    % Acceleration:
     if isfield(params,'anderson_lookback');anderson_lookback = params.anderson_lookback;end
 end
 %%

@@ -141,7 +141,7 @@ scs_int validate_cones(const ScsData *d, const ScsCone *k) {
 
 char *get_cone_summary(const ScsInfo *info, ScsConeWork *c) {
   char *str = scs_malloc(sizeof(char) * 64);
-  sprintf(str, "\tScsCones: avg projection time: %1.2es\n",
+  sprintf(str, "\tCones: avg projection time: %1.2es\n",
           c->total_cone_time / (info->iter + 1) / 1e3);
   c->total_cone_time = 0.0;
   RETURN str;
@@ -175,7 +175,7 @@ void finish_cone(ScsConeWork *c) {
 char *get_cone_header(const ScsCone *k) {
   char *tmp = scs_malloc(sizeof(char) * 512);
   scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
-  sprintf(tmp, "ScsCones:");
+  sprintf(tmp, "Cones:");
   if (k->f) {
     sprintf(tmp + strlen(tmp), "\tprimal zero / dual free vars: %li\n",
             (long)k->f);

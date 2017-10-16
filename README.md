@@ -278,7 +278,7 @@ to `double` and `int` respectively.
 
 The data matrix `A` is specified in column-compressed format and the vectors
 `b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
-(slack), and `y` (dual) are returned as dense arrays. ScsCones are specified as
+(slack), and `y` (dual) are returned as dense arrays. Cones are specified as
 the struct above, the rows of `A` must correspond to the cones in the
 exact order as specified by the cone struct (i.e. put linear cones before
 second-order cones etc.).
