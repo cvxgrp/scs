@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
     d->m = m;
     d->n = n;
     gen_random_prob_data(nnz, col_nnz, d, k, opt_sol);
-    set_default_settings(d);
+    set_default_scs_settings(d);
 
     scs_printf("true pri opt = %4f\n", inner_prod(d->c, opt_sol->x, d->n));
     scs_printf("true dua opt = %4f\n", -inner_prod(d->b, opt_sol->y, d->m));

@@ -7,8 +7,8 @@ from scipy import sparse, randn
 #############################################
 
 
-def genFeasible(K, n, density):
-  m = getScsConeDims(K)
+def gen_feasible(K, n, density):
+  m = get_scs_cone_dims(K)
   z = randn(m,)
   y = proj_dual_cone(z, K)  # y = s - z;
   s = y - z  # s = proj_cone(z,K)
@@ -23,8 +23,8 @@ def genFeasible(K, n, density):
   return data, dot(c, x)
 
 
-def genInfeasible(K, n):
-  m = getScsConeDims(K)
+def gen_infeasible(K, n):
+  m = get_scs_cone_dims(K)
 
   z = randn(m,)
   y = proj_dual_cone(z, K)  # y = s - z;
@@ -38,8 +38,8 @@ def genInfeasible(K, n):
   return data
 
 
-def genUnbounded(K, n):
-  m = getScsConeDims(K)
+def gen_unbounded(K, n):
+  m = get_scs_cone_dims(K)
 
   z = randn(m)
   s = proj_cone(z, K)
@@ -58,7 +58,7 @@ def pos(x):
   return (x + abs(x)) / 2
 
 
-def getScsConeDims(K):
+def get_scs_cone_dims(K):
   l = K['f'] + K['l']
   for i in range(0, len(K['q'])):
     l = l + K['q'][i]
@@ -179,16 +179,16 @@ def proj_pow(v, a):
   rh = abs(zh)
   r = rh / 2
   for iter in range(0, CONE_MAX_ITERS):
-    x = calcX(r, xh, rh, a)
-    y = calcX(r, yh, rh, 1 - a)
+    x = calc_x(r, xh, rh, a)
+    y = calc_x(r, yh, rh, 1 - a)
 
-    f = calcF(x, y, r, a)
+    f = calc_f(x, y, r, a)
     if abs(f) < CONE_TOL:
       break
 
     dxdr = calcdxdr(x, xh, rh, r, a)
     dydr = calcdxdr(y, yh, rh, r, (1 - a))
-    fp = calcFp(x, y, dxdr, dydr, a)
+    fp = calc_fp(x, y, dxdr, dydr, a)
 
     r = min(max(r - f / fp, 0), rh)
 
@@ -199,7 +199,7 @@ def proj_pow(v, a):
   return v
 
 
-def calcX(r, xh, rh, a):
+def calc_x(r, xh, rh, a):
   return max(0.5 * (xh + sqrt(xh * xh + 4 * a * (rh - r) * r)), 1e-12)
 
 
@@ -207,11 +207,11 @@ def calcdxdr(x, xh, rh, r, a):
   return a * (rh - 2 * r) / (2 * x - xh)
 
 
-def calcF(x, y, r, a):
+def calc_f(x, y, r, a):
   return (x**a) * (y**(1 - a)) - r
 
 
-def calcFp(x, y, dxdr, dydr, a):
+def calc_fp(x, y, dxdr, dydr, a):
   return (x**a) * (y**(1 - a)) * (a * dxdr / x + (1 - a) * dydr / y) - 1
 
 
@@ -234,32 +234,32 @@ def project_exp_bisection(v):
     return v
 
   x = copy(v)
-  ub, lb = getRhoUb(v)
+  ub, lb = get_rho_ub(v)
   for iter in range(0, 100):
     rho = (ub + lb) / 2
-    g, x = calcGrad(v, rho, x)
+    g, x = calc_grad(v, rho, x)
     if g > 0:
       lb = rho
     else:
       ub = rho
-    if (ub - lb < 1e-6):
+    if ub - lb < 1e-6:
       break
   return x
 
 
-def getRhoUb(v):
+def get_rho_ub(v):
   lb = 0
   rho = 2**(-3)
-  g, z = calcGrad(v, rho, v)
+  g, z = calc_grad(v, rho, v)
   while g > 0:
     lb = rho
     rho = rho * 2
-    g, z = calcGrad(v, rho, z)
+    g, z = calc_grad(v, rho, z)
   ub = rho
   return ub, lb
 
 
-def calcGrad(v, rho, warm_start):
+def calc_grad(v, rho, warm_start):
   x = solve_with_rho(v, rho, warm_start[1])
   if x[1] == 0:
     g = x[0]

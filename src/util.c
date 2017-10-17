@@ -187,7 +187,7 @@ void free_sol(ScsSolution *sol) {
 }
 
 /* assumes d->stgs already allocated memory */
-void set_default_settings(ScsData *d) {
+void set_default_scs_settings(ScsData *d) {
     d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
     d->stgs->eps = EPS;             /* convergence tolerance: 1e-3 */
     d->stgs->alpha = ALPHA;         /* relaxation parameter: 1.8 */
