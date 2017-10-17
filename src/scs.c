@@ -1,4 +1,9 @@
 #include "scs.h"
+#include "util.h"
+#include "ctrlc.h"
+#include "lin_sys.h"
+#include "lin_alg.h"
+#include "constants.h"
 #include "normalize.h"
 #include "accel.h"
 

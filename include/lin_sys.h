@@ -8,15 +8,6 @@ extern "C" {
 /* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND SCS_LIN_SYS_WORK
  * STRUCT */
 
-/* private data structs (that you define) containing any necessary data to solve
- * linear system, etc. */
-/* this defines the matrix A, only the linear system solver interacts with this
- * struct */
-typedef struct SCS_A_DATA_MATRIX  ScsMatrix;
-/* stores the necessary private workspace, only the linear system solver
- * interacts with this struct */
-typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
-
 /* initialize ScsLinSysWork structure and perform any necessary preprocessing */
 ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains

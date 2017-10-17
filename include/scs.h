@@ -7,13 +7,25 @@ extern "C" {
 
 #include "glbopts.h"
 #include <string.h>
-#include "cones.h"
-#include "lin_alg.h"
-#include "lin_sys.h"
-#include "util.h"
-#include "ctrlc.h"
-#include "constants.h"
-#include "accel.h"
+
+/* private data structs (that you define) containing any necessary data to solve
+ * linear system, etc. this defines the matrix A, only the linear system solver 
+ * interacts with this struct */
+typedef struct SCS_A_DATA_MATRIX  ScsMatrix;
+/* stores the necessary private workspace, only the linear system solver
+ * interacts with this struct */
+typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
+
+typedef struct SCS_PROBLEM_DATA ScsData;
+typedef struct SCS_SETTINGS ScsSettings;
+typedef struct SCS_SOL_VARS ScsSolution;
+typedef struct SCS_INFO ScsInfo;
+typedef struct SCS_SCALING ScsScaling;
+typedef struct SCS_WORK ScsWork;
+typedef struct SCS_RESIDUALS ScsResiduals;
+typedef struct SCS_CONE ScsCone;
+typedef struct SCS_ACCEL_WORK ScsAccelWork;
+typedef struct SCS_CONE_WORK ScsConeWork;
 
 /* struct containing problem data */
 struct SCS_PROBLEM_DATA {
@@ -123,7 +135,7 @@ struct SCS_WORK {
 };
 
 /* to hold residual information (unnormalized) */
-typedef struct {
+struct SCS_RESIDUALS {
     scs_int last_iter;
     scs_float res_dual;
     scs_float res_pri;
@@ -134,7 +146,8 @@ typedef struct {
     scs_float b_ty_by_tau; /* not divided by tau */
     scs_float tau;
     scs_float kap;
-} ScsResiduals;
+};
+
 
 #ifdef __cplusplus
 }

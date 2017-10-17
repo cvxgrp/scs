@@ -1,9 +1,8 @@
 #ifndef ACCEL_H_GUARD
 #define ACCEL_H_GUARD
 
+#include "scs.h"
 #include "glbopts.h"
-
-typedef struct SCS_ACCEL_WORK ScsAccelWork;
 
 ScsAccelWork* init_accel(ScsWork * w);
 void free_accel(ScsAccelWork * a);

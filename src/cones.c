@@ -1,5 +1,8 @@
 #include "scs.h"
+#include "cones.h"
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
+#include "lin_alg.h"
+#include "util.h"
 
 #define CONE_RATE (2)
 #define CONE_TOL (1e-8)

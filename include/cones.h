@@ -6,17 +6,18 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
+#include "scs.h"
 #include "scs_blas.h"
 
 /* private data to help cone projection step */
-typedef struct {
+struct SCS_CONE_WORK {
   scs_float total_cone_time;
 #ifdef LAPACK_LIB_FOUND
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
   blasint *iwork, lwork, liwork;
 #endif
-} ScsConeWork;
+};
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to

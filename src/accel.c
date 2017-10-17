@@ -1,6 +1,8 @@
-#include "accel.h"
 #include "scs.h"
+#include "accel.h"
+#include "lin_alg.h"
 #include "scs_blas.h"
+#include "util.h"
 
 /* This file uses Anderson acceleration to improve the convergence of the
  * ADMM iteration z^+ = \phi(z). At each iteration we need to solve a (small)
