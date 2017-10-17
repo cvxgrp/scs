@@ -105,7 +105,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 "res_pri", "res_dual",   "res_infeas", "res_unbdd",
                                 "rel_gap", "setup_time", "solve_time"};
     mxArray *tmp;
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("SIZE OF mwSize = %i\n", (int)sizeof(mwSize));
     scs_printf("SIZE OF mwIndex = %i\n", (int)sizeof(mwIndex));
 #endif

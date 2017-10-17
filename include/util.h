@@ -41,7 +41,7 @@ typedef struct timer {
 
 #endif
 
-#if EXTRAVERBOSE > 1
+#if EXTRA_VERBOSE > 1
 extern timer global_timer;
 #endif
 

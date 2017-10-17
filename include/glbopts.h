@@ -115,7 +115,7 @@ typedef float scs_float;
 #endif
 #endif
 
-#if EXTRAVERBOSE > 1
+#if EXTRA_VERBOSE > 1
 #if (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 #define __func__ __FUNCTION__
 #endif

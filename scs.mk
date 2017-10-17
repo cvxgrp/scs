@@ -101,9 +101,9 @@ OPT_FLAGS += -DTEST_GPU_MAT_MUL=$(TEST_GPU_MAT_MUL) # tests GPU matrix multiply 
 endif
 
 ### VERBOSITY LEVELS: 0,1,2
-EXTRAVERBOSE = 0
-ifneq ($(EXTRAVERBOSE), 0)
-OPT_FLAGS += -DEXTRAVERBOSE=$(EXTRAVERBOSE) # extra verbosity level
+EXTRA_VERBOSE = 0
+ifneq ($(EXTRA_VERBOSE), 0)
+OPT_FLAGS += -DEXTRA_VERBOSE=$(EXTRA_VERBOSE) # extra verbosity level
 endif
 
 ############ OPENMP: ############

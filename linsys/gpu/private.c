@@ -16,7 +16,7 @@ extern "C" {
         }                                                                      \
     } while (0)
 
-#ifndef EXTRAVERBOSE
+#ifndef EXTRA_VERBOSE
 #ifndef FLOAT
 #define CUBLAS(x) cublasD##x
 #define CUSPARSE(x) cusparseD##x
@@ -167,7 +167,7 @@ void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysSc
     scs_int i;
     scs_float *M = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
 
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("getting pre-conditioner\n");
 #endif
 
@@ -179,7 +179,7 @@ void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysSc
     cudaMemcpy(p->M, M, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
     scs_free(M);
 
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("finished getting pre-conditioner\n");
 #endif
 }
@@ -333,7 +333,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork
         CUBLAS(scal)(cublas_handle, n, &beta, p, 1);
         CUBLAS(axpy)(cublas_handle, n, &onef, z, 1, p, 1);
     }
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, nrm_r, (long)i + 1);
 #endif
     return i;
@@ -409,7 +409,7 @@ scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsW
     }
 
     p->total_solve_time += tocq(&linsys_timer);
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("linsys solve time: %1.2es\n", tocq(&linsys_timer) / 1e3);
 #endif
     return 0;

@@ -2,7 +2,7 @@
 #include "normalize.h"
 #include "accel.h"
 
-#ifndef EXTRAVERBOSE
+#ifndef EXTRA_VERBOSE
 /* if verbose print summary output every this num iterations */
 #define PRINT_INTERVAL 100
 /* check for convergence every this num iterations */
@@ -503,7 +503,7 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
     scs_printf("%*.2e ", (int)HSPACE, tocq(solve_timer) / 1e3);
     scs_printf("\n");
 
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("Norm u = %4f, ", calc_norm(w->u, w->n + w->m + 1));
     scs_printf("Norm u_t = %4f, ", calc_norm(w->u_t, w->n + w->m + 1));
     scs_printf("Norm v = %4f, ", calc_norm(w->v, w->n + w->m + 1));
@@ -554,7 +554,7 @@ scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k, ScsConeWork *
     memcpy(t, y, m * sizeof(scs_float));
     proj_dual_cone(t, k, c, SCS_NULL, -1);
     dist = calc_norm_inf_diff(t, y, m);
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     print_array(y, m, "y");
     print_array(t, m, "proj_y");
     scs_printf("dist = %4f\n", dist);
@@ -573,7 +573,7 @@ scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k, ScsConeWork *c
     scale_array(t, -1.0, m);
     proj_dual_cone(t, k, c, SCS_NULL, -1);
     dist = calc_norm_inf(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     print_array(s, m, "s");
     print_array(t, m, "(s - proj_s)");
     scs_printf("dist = %4f\n", dist);
@@ -758,7 +758,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
 #endif
         w->scal = scs_malloc(sizeof(ScsScaling));
         normalize_a(w->A, w->stgs, k, w->scal);
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
         print_array(w->scal->D, d->m, "D");
         scs_printf("norm D = %4f\n", calc_norm(w->scal->D, d->m));
         print_array(w->scal->E, d->n, "E");
@@ -793,7 +793,7 @@ static scs_int update_work(const ScsData *d, ScsWork *w, const ScsSolution *sol)
     memcpy(w->b, d->b, d->m * sizeof(scs_float));
     memcpy(w->c, d->c, d->n * sizeof(scs_float));
 
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     print_array(w->b, m, "b");
     scs_printf("pre-normalized norm b = %4f\n", calc_norm(w->b, m));
     print_array(w->c, n, "c");
@@ -801,7 +801,7 @@ static scs_int update_work(const ScsData *d, ScsWork *w, const ScsSolution *sol)
 #endif
     if (w->stgs->normalize) {
         normalize_b_c(w);
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
         print_array(w->b, m, "bn");
         scs_printf("sc_b = %4f\n", w->sc_b);
         scs_printf("post-normalized norm b = %4f\n", calc_norm(w->b, m));
@@ -920,7 +920,7 @@ void scs_finish(ScsWork *w) {
 
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info) {
     DEBUG_FUNC
-#if EXTRAVERBOSE > 1
+#if EXTRA_VERBOSE > 1
     tic(&global_timer);
 #endif
     ScsWork *w;
@@ -930,7 +930,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info) {
         scs_printf("ERROR: Missing ScsData, ScsCone or ScsInfo input\n");
         RETURN SCS_NULL;
     }
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     print_data(d);
     print_cone_data(k);
 #endif
@@ -956,7 +956,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol, ScsInfo *info)
     DEBUG_FUNC
     scs_int status;
     ScsWork *w = scs_init(d, k, info);
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
     scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
                sizeof(scs_int), sizeof(scs_float));
 #endif
