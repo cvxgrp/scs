@@ -7,10 +7,10 @@ from scipy import sparse
 
 #############################################
 #  Uses scs to solve:                       #
-#                                           # 
-#        min. ||x||_1                       # 
+#                                           #
+#        min. ||x||_1                       #
 #        s.t. Ax = b                        #
-#                                           #     
+#                                           #
 #############################################
 
 i = 50
@@ -19,14 +19,15 @@ q = 25 * i
 random.seed(0)
 
 A = sparse.rand(q, p, 0.01)
-Ae = sparse.hstack([A, sparse.csc_matrix((q, p))], format="csc")
+Ae = sparse.hstack([A, sparse.csc_matrix((q, p))], format='csc')
 h = np.zeros(2 * p)
 b = random.randn(q)
 bt = np.hstack([b, h])  # in cone formulation
 c = np.hstack([np.zeros(p), np.ones(p)])
 I = sparse.eye(p)
-G = sparse.vstack([sparse.hstack([I, -I]), sparse.hstack([-I, -I])], format("csc"))
-At = sparse.vstack([Ae, G], format="csc")  # in cone formulation
+G = sparse.vstack(
+    [sparse.hstack([I, -I]), sparse.hstack([-I, -I])], format('csc'))
+At = sparse.vstack([Ae, G], format='csc')  # in cone formulation
 
 # setup cone problem data
 data = {'A': At, 'b': bt, 'c': c}

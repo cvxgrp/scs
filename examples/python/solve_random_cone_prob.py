@@ -12,6 +12,8 @@ from gen_random_cone_prob import *
 def main():
   #random.seed(0)
   solve_feasible()
+  solve_infeasible()
+  solve_unbounded()
 
 
 def solve_feasible():
@@ -27,12 +29,7 @@ def solve_feasible():
   }
   m = get_scs_cone_dims(K)
   data, p_star = gen_feasible(K, n=m // 3, density=0.01)
-  params = {
-      'normalize': True,
-      'scale': 5,
-      'cg_rate': 2,
-      'acceleration_lookback': 0
-  }
+  params = {'normalize': True, 'scale': 5, 'cg_rate': 2}
 
   sol_i = scs.solve(data, K, use_indirect=True, **params)
   xi = sol_i['x']
@@ -48,21 +45,39 @@ def solve_feasible():
   print('pri error = ', (dot(data['c'], xd) - p_star) / p_star)
   print('dual error = ', (-dot(data['b'], yd) - p_star) / p_star)
 
-  params['acceleration_lookback'] = 30
-  sol_i = scs.solve(data, K, use_indirect=True, **params)
-  xi = sol_i['x']
-  yi = sol_i['y']
-  print('p*  = ', p_star)
-  print('pri error = ', (dot(data['c'], xi) - p_star) / p_star)
-  print('dual error = ', (-dot(data['b'], yi) - p_star) / p_star)
 
-  params['acceleration_lookback'] = 10
+def solve_infeasible():
+  K = {
+      'f': 10,
+      'l': 15,
+      'q': [5, 10, 0, 1],
+      's': [3, 4, 0, 0, 1],
+      'ep': 10,
+      'ed': 10,
+      'p': [-0.25, 0.5, 0.75, -0.33]
+  }
+  m = get_scs_cone_dims(K)
+  data = gen_infeasible(K, n=m // 3)
+  params = {'normalize': True, 'scale': 0.5, 'cg_rate': 2}
   sol_i = scs.solve(data, K, use_indirect=True, **params)
-  xi = sol_i['x']
-  yi = sol_i['y']
-  print('p*  = ', p_star)
-  print('pri error = ', (dot(data['c'], xi) - p_star) / p_star)
-  print('dual error = ', (-dot(data['b'], yi) - p_star) / p_star)
+  sol_d = scs.solve(data, K, use_indirect=False, **params)
+
+
+def solve_unbounded():
+  K = {
+      'f': 10,
+      'l': 15,
+      'q': [5, 10, 0, 1],
+      's': [3, 4, 0, 0, 1],
+      'ep': 10,
+      'ed': 10,
+      'p': [-0.25, 0.5, 0.75, -0.33]
+  }
+  m = get_scs_cone_dims(K)
+  data = gen_unbounded(K, n=m // 3)
+  params = {'normalize': True, 'scale': 0.5, 'cg_rate': 2}
+  sol_i = scs.solve(data, K, use_indirect=True, **params)
+  sol_d = scs.solve(data, K, use_indirect=False, **params)
 
 
 if __name__ == '__main__':
