@@ -15,21 +15,21 @@ extern "C" {
 typedef struct SCS_A_DATA_MATRIX  ScsMatrix;
 /* stores the necessary private workspace, only the linear system solver
  * interacts with this struct */
-typedef struct SCS_LIN_SYS_WORK ScsLinSysScsWork;
+typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
 
-/* initialize ScsLinSysScsWork structure and perform any necessary preprocessing */
-ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs);
+/* initialize ScsLinSysWork structure and perform any necessary preprocessing */
+ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains
  * warm-start, iter is current scs iteration count */
-scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p,
+scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *p,
                     scs_float *b, const scs_float *s, scs_int iter);
-/* frees ScsLinSysScsWork structure and allocated memory in ScsLinSysScsWork */
-void free_priv(ScsLinSysScsWork *p);
+/* frees ScsLinSysWork structure and allocated memory in ScsLinSysWork */
+void free_lin_sys_work(ScsLinSysWork *p);
 
 /* forms y += A'*x */
-void accum_by_atrans(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y);
+void accum_by_atrans(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x, scs_float *y);
 /* forms y += A*x */
-void accum_by_a(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y);
+void accum_by_a(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x, scs_float *y);
 
 /* returns negative num if input data is invalid */
 scs_int validate_lin_sys(const ScsMatrix *A);
@@ -39,7 +39,7 @@ scs_int validate_lin_sys(const ScsMatrix *A);
 char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs);
 /* returns string containing summary information about linear system solves, can
  * return null, if not null free will be called on output */
-char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info);
+char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info);
 
 /* Normalization routines, used if d->NORMALIZE is true */
 /* normalizes A matrix, sets w->E and w->D diagonal scaling matrices, Anew =

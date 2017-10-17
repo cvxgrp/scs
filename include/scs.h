@@ -48,6 +48,22 @@ struct SCS_SETTINGS {
     scs_int acceleration_lookback;
 };
 
+/* NB: rows of data matrix A must be specified in this exact order */
+struct SCS_CONE {
+  scs_int f;     /* number of linear equality constraints */
+  scs_int l;     /* length of LP cone */
+  scs_int *q;    /* array of second-order cone constraints */
+  scs_int qsize; /* length of SOC array */
+  scs_int *s;    /* array of SD constraints */
+  scs_int ssize; /* length of SD array */
+  scs_int ep;    /* number of primal exponential cone triples */
+  scs_int ed;    /* number of dual exponential cone triples */
+  scs_float *p;  /* array of power cone params, must be \in [-1, 1],
+                    negative values are interpreted as specifying the
+                    dual cone */
+  scs_int psize; /* number of (primal and dual) power cone triples */
+};
+
 /* contains primal-dual solution arrays */
 struct SCS_SOL_VARS {
     scs_float *x, *y, *s;
@@ -99,7 +115,7 @@ struct SCS_WORK {
     scs_float *b, *c;   /* (possibly normalized) b and c vectors */
     scs_int m, n;       /* A has m rows, n cols */
     ScsMatrix *A;         /* (possibly normalized) A matrix */
-    ScsLinSysScsWork *p;            /* struct populated by linear system solver */
+    ScsLinSysWork *p;            /* struct populated by linear system solver */
     ScsAccelWork *accel;       /* Struct for acceleration workspace */
     ScsSettings *stgs;     /* contains solver settings specified by user */
     ScsScaling *scal;      /* contains the re-scaling data */

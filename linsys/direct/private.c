@@ -6,7 +6,7 @@ char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
     return tmp;
 }
 
-char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info) {
+char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
     char *str = scs_malloc(sizeof(char) * 128);
     scs_int n = p->L->n;
     sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n",
@@ -15,7 +15,7 @@ char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info) {
     return str;
 }
 
-void free_priv(ScsLinSysScsWork *p) {
+void free_lin_sys_work(ScsLinSysWork *p) {
     if (p) {
         if (p->L)
             cs_spfree(p->L);
@@ -148,16 +148,16 @@ void LDLSolve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
     }
 }
 
-void accum_by_atrans(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x,
+void accum_by_atrans(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                    scs_float *y) {
     _accum_by_atrans(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accum_by_a(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
+void accum_by_a(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x, scs_float *y) {
     _accum_by_a(A->n, A->x, A->i, A->p, x, y);
 }
 
-scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p) {
+scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *p) {
     scs_float *info;
     scs_int *Pinv, amd_status, ldl_status;
     cs *C, *K = form_kkt(A, stgs);
@@ -187,8 +187,8 @@ scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork 
     return (ldl_status);
 }
 
-ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
-    ScsLinSysScsWork *p = scs_calloc(1, sizeof(ScsLinSysScsWork));
+ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
+    ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
     scs_int n_plus_m = A->n + A->m;
     p->P = scs_malloc(sizeof(scs_int) * n_plus_m);
     p->L = scs_malloc(sizeof(cs));
@@ -198,14 +198,14 @@ ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
     p->L->nz = -1;
 
     if (factorize(A, stgs, p) < 0) {
-        free_priv(p);
+        free_lin_sys_work(p);
         return SCS_NULL;
     }
     p->total_solve_time = 0.0;
     return p;
 }
 
-scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p,
+scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *p,
                     scs_float *b, const scs_float *s, scs_int iter) {
     /* returns solution to linear system */
     /* Ax = b with solution stored in b */

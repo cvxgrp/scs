@@ -10,7 +10,7 @@ char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
     return str;
 }
 
-char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info) {
+char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
     char *str = scs_malloc(sizeof(char) * 128);
     sprintf(str,
             "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
@@ -22,7 +22,7 @@ char *get_lin_sys_summary(ScsLinSysScsWork *p, const ScsInfo *info) {
 }
 
 /* M = inv ( diag ( RHO_X * I + A'A ) ) */
-void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p) {
+void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *p) {
     scs_int i;
     scs_float *M = p->M;
 
@@ -41,7 +41,7 @@ void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysSc
 #endif
 }
 
-static void transpose(const ScsMatrix *A, ScsLinSysScsWork *p) {
+static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
     scs_int *Ci = p->At->i;
     scs_int *Cp = p->At->p;
     scs_float *Cx = p->At->x;
@@ -82,7 +82,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysScsWork *p) {
 #endif
 }
 
-void free_priv(ScsLinSysScsWork *p) {
+void free_lin_sys_work(ScsLinSysWork *p) {
     if (p) {
         if (p->p)
             scs_free(p->p);
@@ -111,7 +111,7 @@ void free_priv(ScsLinSysScsWork *p) {
 }
 
 /*y = (RHO_X * I + A'A)x */
-static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysScsWork *p,
+static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysWork *p,
                    const scs_float *x, scs_float *y) {
     scs_float *tmp = p->tmp;
     memset(tmp, 0, A->m * sizeof(scs_float));
@@ -121,12 +121,12 @@ static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysScsWork *
     add_scaled_array(y, x, A->n, s->rho_x);
 }
 
-void accum_by_atrans(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x,
+void accum_by_atrans(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                    scs_float *y) {
     _accum_by_atrans(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accum_by_a(const ScsMatrix *A, ScsLinSysScsWork *p, const scs_float *x, scs_float *y) {
+void accum_by_a(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x, scs_float *y) {
     _accum_by_atrans(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
 }
 
@@ -140,8 +140,8 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
     }
 }
 
-ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
-    ScsLinSysScsWork *p = scs_calloc(1, sizeof(ScsLinSysScsWork));
+ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
+    ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
     p->p = scs_malloc((A->n) * sizeof(scs_float));
     p->r = scs_malloc((A->n) * sizeof(scs_float));
     p->Gp = scs_malloc((A->n) * sizeof(scs_float));
@@ -165,14 +165,14 @@ ScsLinSysScsWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
     p->tot_cg_its = 0;
     if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i ||
         !p->At->p || !p->At->x) {
-        free_priv(p);
+        free_lin_sys_work(p);
         return SCS_NULL;
     }
     return p;
 }
 
 /* solves (I+A'A)x = b, s warm start, solution stored in b */
-static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *pr,
+static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *pr,
                    const scs_float *s, scs_float *b, scs_int max_its,
                    scs_float tol) {
     scs_int i, n = A->n;
@@ -223,7 +223,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork
     return i;
 }
 
-scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysScsWork *p,
+scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *p,
                     scs_float *b, const scs_float *s, scs_int iter) {
     scs_int cg_its;
     timer linsys_timer;

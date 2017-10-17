@@ -910,7 +910,7 @@ void scs_finish(ScsWork *w) {
 #endif
         }
         if (w->p)
-            free_priv(w->p);
+            free_lin_sys_work(w->p);
         if (w->accel)
             free_accel(w->accel);
         free_work(w);
