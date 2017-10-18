@@ -9,7 +9,7 @@ extern "C" {
 #include <string.h>
 
 /* private data structs (that you define) containing any necessary data to solve
- * linear system, etc. this defines the matrix A, only the linear system solver 
+ * linear system, etc. this defines the matrix A, only the linear system solver
  * interacts with this struct */
 typedef struct SCS_A_DATA_MATRIX  ScsMatrix;
 /* stores the necessary private workspace, only the linear system solver
@@ -121,7 +121,7 @@ const char *scs_version(void);
 
 /* workspace for SCS */
 struct SCS_WORK {
-    scs_float *u, *v, *u_t, *u_prev, *v_prev; /* u_prev = u from previous iteration */
+    scs_float *u, *v, *u_t, *u_prev, *v_prev; /* x_prev = x from previous iteration */
     scs_float *h, *g, *pr, *dr;
     scs_float g_th, sc_b, sc_c, nm_b, nm_c;
     scs_float *b, *c;   /* (possibly normalized) b and c vectors */
