@@ -34,12 +34,12 @@ extern "C" {
 #endif
 
 #ifdef MATLAB_MEX_FILE
-typedef ptrdiff_t blasint;
+typedef ptrdiff_t blas_int;
 #elif defined BLAS64
 #include <stdint.h>
-typedef int64_t blasint;
+typedef int64_t blas_int;
 #else
-typedef int blasint;
+typedef int blas_int;
 #endif
 
 #ifdef __cplusplus

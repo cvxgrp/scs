@@ -12,17 +12,17 @@
 
 #ifdef LAPACK_LIB_FOUND
 void BLAS(syevr)(const char *jobz, const char *range, const char *uplo,
-                 blasint *n, scs_float *a, blasint *lda, scs_float *vl,
-                 scs_float *vu, blasint *il, blasint *iu, scs_float *abstol,
-                 blasint *m, scs_float *w, scs_float *z, blasint *ldz,
-                 blasint *isuppz, scs_float *work, blasint *lwork,
-                 blasint *iwork, blasint *liwork, blasint *info);
-void BLAS(syr)(const char *uplo, const blasint *n, const scs_float *alpha,
-               const scs_float *x, const blasint *incx, scs_float *a,
-               const blasint *lda);
-void BLAS(scal)(const blasint *n, const scs_float *sa, scs_float *sx,
-                const blasint *incx);
-scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
+                 blas_int *n, scs_float *a, blas_int *lda, scs_float *vl,
+                 scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
+                 blas_int *m, scs_float *w, scs_float *z, blas_int *ldz,
+                 blas_int *isuppz, scs_float *work, blas_int *lwork,
+                 blas_int *iwork, blas_int *liwork, blas_int *info);
+void BLAS(syr)(const char *uplo, const blas_int *n, const scs_float *alpha,
+               const scs_float *x, const blas_int *incx, scs_float *a,
+               const blas_int *lda);
+void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
+                const blas_int *incx);
+scs_float BLAS(nrm2)(const blas_int *n, scs_float *x, const blas_int *incx);
 #endif
 
 static scs_int get_sd_cone_size(scs_int s) { RETURN(s * (s + 1)) / 2; }
@@ -327,11 +327,11 @@ static scs_int proj_exp_cone(scs_float *v, scs_int iter) {
 scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #ifdef LAPACK_LIB_FOUND
   scs_int i;
-  blasint n_max = 0;
+  blas_int n_max = 0;
   scs_float eig_tol = 1e-8;
-  blasint neg_one = -1;
-  blasint m = 0;
-  blasint info;
+  blas_int neg_one = -1;
+  blas_int m = 0;
+  blas_int info;
   scs_float wkopt;
 #if EXTRA_VERBOSE > 0
 #define _STR_EXPAND(tok) #tok
@@ -341,7 +341,7 @@ scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   /* eigenvector decomp workspace */
   for (i = 0; i < k->ssize; ++i) {
     if (k->s[i] > n_max) {
-      n_max = (blasint)k->s[i];
+      n_max = (blas_int)k->s[i];
     }
   }
   c->Xs = scs_calloc(n_max * n_max, sizeof(scs_float));
@@ -357,9 +357,9 @@ scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     scs_printf("FATAL: syevr failure, info = %li\n", (long)info);
     RETURN - 1;
   }
-  c->lwork = (blasint)(wkopt + 0.01); /* 0.01 for int casting safety */
+  c->lwork = (blas_int)(wkopt + 0.01); /* 0.01 for int casting safety */
   c->work = scs_malloc(c->lwork * sizeof(scs_float));
-  c->iwork = scs_malloc(c->liwork * sizeof(blasint));
+  c->iwork = scs_malloc(c->liwork * sizeof(blas_int));
 
   if (!c->Xs || !c->Z || !c->e || !c->work || !c->iwork) {
     RETURN - 1;
@@ -450,11 +450,11 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 /* project onto the positive semi-definite cone */
 #ifdef LAPACK_LIB_FOUND
   scs_int i;
-  blasint one = 1;
-  blasint m = 0;
-  blasint nb = (blasint)n;
-  blasint nb_plus_one = (blasint)(n + 1);
-  blasint cone_sz = (blasint)(get_sd_cone_size(n));
+  blas_int one = 1;
+  blas_int m = 0;
+  blas_int nb = (blas_int)n;
+  blas_int nb_plus_one = (blas_int)(n + 1);
+  blas_int cone_sz = (blas_int)(get_sd_cone_size(n));
 
   scs_float sqrt2 = SQRTF(2.0);
   scs_float sqrt2Inv = 1.0 / sqrt2;
@@ -462,14 +462,14 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_float *Z = c->Z;
   scs_float *e = c->e;
   scs_float *work = c->work;
-  blasint *iwork = c->iwork;
-  blasint lwork = c->lwork;
-  blasint liwork = c->liwork;
+  blas_int *iwork = c->iwork;
+  blas_int lwork = c->lwork;
+  blas_int liwork = c->liwork;
 
   scs_float eig_tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 /
                                   POWF(iter + 1, CONE_RATE)); */
   scs_float zero = 0.0;
-  blasint info;
+  blas_int info;
   scs_float vupper;
 #endif
   if (n == 0) {

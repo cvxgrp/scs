@@ -32,31 +32,31 @@ struct SCS_ACCEL_WORK {
 };
 
 #ifdef LAPACK_LIB_FOUND
-void BLAS(gemv)(const char *trans, const blasint *m, const blasint *n,
-                const scs_float *alpha, const scs_float *a, const blasint *lda,
-                const scs_float *x, const blasint *incx, const scs_float *beta,
-                scs_float *y, const blasint *incy);
-void BLAS(geqrf)(blasint *m, blasint *n, scs_float *a, blasint *lda,
-                 scs_float *tau, scs_float *work, blasint *lwork,
-                 blasint *info);
-void BLAS(orgqr)(blasint *m, blasint *n, blasint *k, scs_float *a, blasint *lda,
-                 scs_float *tau, scs_float *work, blasint *lwork,
-                 blasint *info);
+void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
+                const scs_float *alpha, const scs_float *a, const blas_int *lda,
+                const scs_float *x, const blas_int *incx, const scs_float *beta,
+                scs_float *y, const blas_int *incy);
+void BLAS(geqrf)(blas_int *m, blas_int *n, scs_float *a, blas_int *lda,
+                 scs_float *tau, scs_float *work, blas_int *lwork,
+                 blas_int *info);
+void BLAS(orgqr)(blas_int *m, blas_int *n, blas_int *k, scs_float *a, blas_int *lda,
+                 scs_float *tau, scs_float *work, blas_int *lwork,
+                 blas_int *info);
 void BLAS(trsv)(const char *uplo, const char *trans, const char *diag,
-                blasint *n, scs_float *a, blasint *lda, scs_float *x,
-                blasint *incx);
+                blas_int *n, scs_float *a, blas_int *lda, scs_float *x,
+                blas_int *incx);
 void BLAS(rotg)(scs_float *a, scs_float *b, scs_float *c, scs_float *s);
-void BLAS(rot)(const blasint *n, scs_float *x, const blasint *incx,
-               scs_float *y, const blasint *incy, const scs_float *c,
+void BLAS(rot)(const blas_int *n, scs_float *x, const blas_int *incx,
+               scs_float *y, const blas_int *incy, const scs_float *c,
                const scs_float *s);
-scs_float BLAS(nrm2)(const blasint *n, scs_float *x, const blasint *incx);
+scs_float BLAS(nrm2)(const blas_int *n, scs_float *x, const blas_int *incx);
 
 /* d_f * sol = QR * sol = f */
 scs_float *solve_accel_linsys(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
-  blasint twol = 2 * a->l;
-  blasint one = 1;
-  blasint bk = (blasint)a->k;
+  blas_int twol = 2 * a->l;
+  blas_int one = 1;
+  blas_int bk = (blas_int)a->k;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
   scs_float neg_onef = -1.0;
@@ -149,18 +149,18 @@ void qrfactorize(ScsAccelWork *a) {
   DEBUG_FUNC
   scs_int l = a->l;
   scs_int i;
-  blasint twol = 2 * l;
-  blasint bk = (blasint)a->k;
-  blasint neg_one = -1;
-  blasint info;
-  blasint lwork;
+  blas_int twol = 2 * l;
+  blas_int bk = (blas_int)a->k;
+  blas_int neg_one = -1;
+  blas_int info;
+  blas_int lwork;
   scs_float worksize;
   scs_float *work;
   scs_float *tau = scs_malloc(a->k * sizeof(scs_float));
   scs_float *Q = a->Q;
   memcpy(Q, a->d_f, sizeof(scs_float) * a->k * 2 * a->l);
   BLAS(geqrf)(&twol, &bk, Q, &twol, tau, &worksize, &neg_one, &info);
-  lwork = (blasint)worksize;
+  lwork = (blas_int)worksize;
   work = scs_malloc(lwork * sizeof(scs_float));
   BLAS(geqrf)(&twol, &bk, Q, &twol, tau, work, &lwork, &info);
   scs_free(work);
@@ -168,7 +168,7 @@ void qrfactorize(ScsAccelWork *a) {
     memcpy(&(a->R[i * a->k]), &(Q[i * a->l * 2]), sizeof(scs_float) * (i + 1));
   }
   BLAS(orgqr)(&twol, &bk, &bk, Q, &twol, tau, &worksize, &neg_one, &info);
-  lwork = (blasint)worksize;
+  lwork = (blas_int)worksize;
   work = scs_malloc(lwork * sizeof(scs_float));
   BLAS(orgqr)(&twol, &bk, &bk, Q, &twol, tau, work, &lwork, &info);
   scs_free(work);
@@ -183,9 +183,9 @@ void update_factorization(ScsAccelWork *a, scs_int idx) {
   scs_float *u = a->delta;
   scs_float *w = a->scratch;
   scs_float *dummy_row = a->dummy_row;
-  blasint one = 1;
-  blasint bk = (blasint)a->k;
-  blasint twol = (blasint)2 * a->l;
+  blas_int one = 1;
+  blas_int bk = (blas_int)a->k;
+  blas_int twol = (blas_int)2 * a->l;
   scs_float zerof = 0.0;
   scs_float onef = 1.0;
   scs_float neg_onef = -1.0;

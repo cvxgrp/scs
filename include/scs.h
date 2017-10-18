@@ -142,8 +142,8 @@ struct SCS_RESIDUALS {
     scs_float res_infeas;
     scs_float res_unbdd;
     scs_float rel_gap;
-    scs_float c_tx_by_tau; /* not divided by tau */
-    scs_float b_ty_by_tau; /* not divided by tau */
+    scs_float ct_x_by_tau; /* not divided by tau */
+    scs_float bt_y_by_tau; /* not divided by tau */
     scs_float tau;
     scs_float kap;
 };

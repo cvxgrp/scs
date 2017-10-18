@@ -229,7 +229,7 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *y, const scs_float
 static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
     DEBUG_FUNC
     scs_float *x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
-    scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, c_tx, b_ty;
+    scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, ct_x, bt_y;
     scs_int n = w->n, m = w->m;
 
     /* checks if the residuals are unchanged by checking iteration */
@@ -245,24 +245,24 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
     nmpr_tau = calc_primal_resid(w, x, s, r->tau, &nm_axs_tau);
     nmdr_tau = calc_dual_resid(w, y, r->tau, &nm_a_ty_tau);
 
-    r->b_ty_by_tau =
+    r->bt_y_by_tau =
         inner_prod(y, w->b, m) /
         (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
-    r->c_tx_by_tau =
+    r->ct_x_by_tau =
         inner_prod(x, w->c, n) /
         (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
 
     r->res_infeas =
-        r->b_ty_by_tau < 0 ? w->nm_b * nm_a_ty_tau / -r->b_ty_by_tau : NAN;
+        r->bt_y_by_tau < 0 ? w->nm_b * nm_a_ty_tau / -r->bt_y_by_tau : NAN;
     r->res_unbdd =
-        r->c_tx_by_tau < 0 ? w->nm_c * nm_axs_tau / -r->c_tx_by_tau : NAN;
+        r->ct_x_by_tau < 0 ? w->nm_c * nm_axs_tau / -r->ct_x_by_tau : NAN;
 
-    b_ty = r->b_ty_by_tau / r->tau;
-    c_tx = r->c_tx_by_tau / r->tau;
+    bt_y = r->bt_y_by_tau / r->tau;
+    ct_x = r->ct_x_by_tau / r->tau;
 
     r->res_pri = nmpr_tau / (1 + w->nm_b) / r->tau;
     r->res_dual = nmdr_tau / (1 + w->nm_c) / r->tau;
-    r->rel_gap = ABS(c_tx + b_ty) / (1 + ABS(c_tx) + ABS(b_ty));
+    r->rel_gap = ABS(ct_x + bt_y) / (1 + ABS(ct_x) + ABS(bt_y));
     RETURN;
 }
 
@@ -368,9 +368,9 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float tau
     RETURN SCS_SOLVED;
 }
 
-static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float b_ty) {
+static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float bt_y) {
     DEBUG_FUNC
-    scale_array(sol->y, -1 / b_ty, w->m);
+    scale_array(sol->y, -1 / bt_y, w->m);
     scale_array(sol->x, NAN, w->n);
     scale_array(sol->s, NAN, w->m);
     if (info->status_val == 0) {
@@ -381,10 +381,10 @@ static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float
     RETURN SCS_INFEASIBLE;
 }
 
-static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float c_tx) {
+static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_float ct_x) {
     DEBUG_FUNC
-    scale_array(sol->x, -1 / c_tx, w->n);
-    scale_array(sol->s, -1 / c_tx, w->m);
+    scale_array(sol->x, -1 / ct_x, w->n);
+    scale_array(sol->s, -1 / ct_x, w->m);
     scale_array(sol->y, NAN, w->m);
     if (info->status_val == 0) {
         strcpy(info->status, "Unbounded/Inaccurate");
@@ -442,8 +442,8 @@ static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info, ScsResiduals *
         info->rel_gap = r->rel_gap;
         info->res_pri = r->res_pri;
         info->res_dual = r->res_dual;
-        info->pobj = r->c_tx_by_tau / r->tau;
-        info->dobj = -r->b_ty_by_tau / r->tau;
+        info->pobj = r->ct_x_by_tau / r->tau;
+        info->dobj = -r->bt_y_by_tau / r->tau;
     } else if (is_unbounded_status(info->status_val)) {
         info->rel_gap = NAN;
         info->res_pri = NAN;
@@ -476,17 +476,17 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info, ScsResidua
         } else if (calc_norm(w->u, l) <
                    INDETERMINATE_TOL * SQRTF((scs_float)l)) {
             info->status_val = indeterminate(w, sol, info);
-        } else if (r->b_ty_by_tau < r->c_tx_by_tau) {
-            info->status_val = infeasible(w, sol, info, r->b_ty_by_tau);
+        } else if (r->bt_y_by_tau < r->ct_x_by_tau) {
+            info->status_val = infeasible(w, sol, info, r->bt_y_by_tau);
         } else {
-            info->status_val = unbounded(w, sol, info, r->c_tx_by_tau);
+            info->status_val = unbounded(w, sol, info, r->ct_x_by_tau);
         }
     } else if (is_solved_status(info->status_val)) {
         info->status_val = solved(w, sol, info, r->tau);
     } else if (is_infeasible_status(info->status_val)) {
-        info->status_val = infeasible(w, sol, info, r->b_ty_by_tau);
+        info->status_val = infeasible(w, sol, info, r->bt_y_by_tau);
     } else {
-        info->status_val = unbounded(w, sol, info, r->c_tx_by_tau);
+        info->status_val = unbounded(w, sol, info, r->ct_x_by_tau);
     }
     if (w->stgs->normalize) {
         un_normalize_sol(w, sol);
@@ -502,8 +502,8 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
     scs_printf("%*.2e ", (int)HSPACE, r->res_pri);
     scs_printf("%*.2e ", (int)HSPACE, r->res_dual);
     scs_printf("%*.2e ", (int)HSPACE, r->rel_gap);
-    scs_printf("%*.2e ", (int)HSPACE, r->c_tx_by_tau / r->tau);
-    scs_printf("%*.2e ", (int)HSPACE, -r->b_ty_by_tau / r->tau);
+    scs_printf("%*.2e ", (int)HSPACE, r->ct_x_by_tau / r->tau);
+    scs_printf("%*.2e ", (int)HSPACE, -r->bt_y_by_tau / r->tau);
     scs_printf("%*.2e ", (int)HSPACE, r->kap / r->tau);
     scs_printf("%*.2e ", (int)HSPACE, tocq(solve_timer) / 1e3);
     scs_printf("\n");
