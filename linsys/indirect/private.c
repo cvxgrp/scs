@@ -140,7 +140,7 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
     }
 }
 
-ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
+ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
     ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
     p->p = scs_malloc((A->n) * sizeof(scs_float));
     p->r = scs_malloc((A->n) * sizeof(scs_float));

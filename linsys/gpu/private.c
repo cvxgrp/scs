@@ -184,7 +184,7 @@ void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWo
 #endif
 }
 
-ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
+ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
     cudaError_t err;
     ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
     p->Annz = A->p[A->n];

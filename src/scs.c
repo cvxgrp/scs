@@ -760,8 +760,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_cone failure\n");
     RETURN SCS_NULL;
   }
-  if (!(w->p = init_priv(w->A, w->stgs))) {
-    scs_printf("ERROR: init_priv failure\n");
+  if (!(w->p = init_lin_sys_work(w->A, w->stgs))) {
+    scs_printf("ERROR: init_lin_sys_work failure\n");
     RETURN SCS_NULL;
   }
   if (!(w->accel = init_accel(w))) {

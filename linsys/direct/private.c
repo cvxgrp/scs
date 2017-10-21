@@ -187,7 +187,7 @@ scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs, ScsLinSysWork *p)
     return (ldl_status);
 }
 
-ScsLinSysWork *init_priv(const ScsMatrix *A, const ScsSettings *stgs) {
+ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
     ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
     scs_int n_plus_m = A->n + A->m;
     p->P = scs_malloc(sizeof(scs_int) * n_plus_m);
