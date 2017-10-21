@@ -3,7 +3,7 @@
 
 #include "scs.h"
 #include "cones.h"
-#include "lin_alg.h"
+#include "linalg.h"
 #include "util.h"
 #include "linsys/amatrix.h"
 

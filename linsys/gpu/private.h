@@ -5,7 +5,7 @@
 #include "scs.h"
 #include "cs.h"
 #include "../common.h"
-#include "lin_alg.h"
+#include "linalg.h"
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>

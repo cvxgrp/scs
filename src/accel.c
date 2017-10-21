@@ -1,6 +1,6 @@
 #include "scs.h"
 #include "accel.h"
-#include "lin_alg.h"
+#include "linalg.h"
 #include "scs_blas.h"
 #include "util.h"
 

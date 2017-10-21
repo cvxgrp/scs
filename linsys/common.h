@@ -7,8 +7,8 @@ extern "C" {
 
 #include "scs.h"
 #include "amatrix.h"
-#include "lin_sys.h"
-#include "lin_alg.h"
+#include "linsys.h"
+#include "linalg.h"
 #include "util.h"
 
 void _accum_by_atrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,

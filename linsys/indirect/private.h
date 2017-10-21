@@ -6,7 +6,7 @@
 #include "cs.h"
 #include <math.h>
 #include "../common.h"
-#include "lin_alg.h"
+#include "linalg.h"
 
 struct SCS_LIN_SYS_WORK {
     scs_float *p; /* cg iterate  */

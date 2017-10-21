@@ -2,8 +2,8 @@
 #include "accel.h"
 #include "constants.h"
 #include "ctrlc.h"
-#include "lin_alg.h"
-#include "lin_sys.h"
+#include "linalg.h"
+#include "linsys.h"
 #include "normalize.h"
 #include "util.h"
 

@@ -1,6 +1,6 @@
 #include "scs.h"
 #include "normalize.h"
-#include "lin_alg.h"
+#include "linalg.h"
 
 #define MIN_SCALE (1e-3)
 #define MAX_SCALE (1e3)

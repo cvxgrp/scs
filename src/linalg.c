@@ -1,4 +1,4 @@
-#include "lin_alg.h"
+#include "linalg.h"
 #include <math.h>
 
 /* x = b*a */
