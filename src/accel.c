@@ -248,7 +248,7 @@ scs_int solve_with_gesv(ScsAccelWork * a, scs_int len) {
   scs_float negOnef = -1.0;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
-  scs_float * d_x = a->d_f;
+  scs_float * d_x = a->d_x;
   scs_float * d_f = a->d_f;
   //memset(a->mat, 0, len * len * sizeof(scs_float));
   /* 
