@@ -117,7 +117,7 @@ scs_int solve_with_gesv(ScsAccelWork * a, scs_int len) {
   blas_int twol = 2 * a->l;
   blas_int one = 1;
   blas_int blen = (blas_int) len;
-  scs_float negOnef = -1.0;
+  scs_float neg_onef = -1.0;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
   scs_float * d_x = a->d_x;
@@ -138,7 +138,7 @@ scs_int solve_with_gesv(ScsAccelWork * a, scs_int len) {
   /* sol = g */
   memcpy(a->sol, a->g, sizeof(scs_float) * 2 * a->l);
   /* sol = sol - dG * scratch */
-  BLAS(gemv)("NoTrans", &twol, &blen, &negOnef, a->d_g, &twol, a->scratch, &one, &onef, a->sol, &one);
+  BLAS(gemv)("NoTrans", &twol, &blen, &neg_onef, a->d_g, &twol, a->scratch, &one, &onef, a->sol, &one);
   RETURN (scs_int) info;
 }
 
