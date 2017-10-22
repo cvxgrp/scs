@@ -163,7 +163,8 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   memcpy(w->u, w->accel->sol, sizeof(scs_float) * l);
   memcpy(w->v, &(w->accel->sol[l]), sizeof(scs_float) * l);
   w->accel->total_accel_time += tocq(&accel_timer);
-  RETURN 0;
+  /* add check that info == 0 and fallback */
+  RETURN info;
 }
 
 void free_accel(ScsAccelWork *a) {
@@ -171,7 +172,7 @@ void free_accel(ScsAccelWork *a) {
   if (a) {
     if (a->d_f) scs_free(a->d_f);
     if (a->d_g) scs_free(a->d_g);
-    if (a->d_x) scs_free(a->d_g);
+    if (a->d_x) scs_free(a->d_x);
     if (a->f) scs_free(a->f);
     if (a->g) scs_free(a->g);
     if (a->x) scs_free(a->x);
