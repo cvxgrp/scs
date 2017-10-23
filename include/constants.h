@@ -22,10 +22,10 @@ extern "C" {
 #define SCS_SOLVED_INACCURATE (2)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
-#define MAX_ITERS (2500)
+#define MAX_ITERS (5000)
 #define EPS (1E-3)
 #define ALPHA (1.5)
-#define RHO_X (1E-3)
+#define RHO_X (1E-6)
 #define SCALE (1.0)
 #define CG_RATE (2.0)
 #define VERBOSE (1)
