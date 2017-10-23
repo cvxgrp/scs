@@ -19,7 +19,7 @@
 
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
-#define ITERATE_NORM (1000.)
+#define ITERATE_NORM (10.)
 
 timer global_timer;
 
