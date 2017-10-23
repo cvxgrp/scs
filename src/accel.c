@@ -190,10 +190,10 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   scs_int k = w->accel->k;
   scs_int info;
   timer accel_timer;
-  tic(&accel_timer);
   if (k <= 0) {
     RETURN 0;
   }
+  tic(&accel_timer);
   /* update df, d_g, d_x, f, g, x */
   update_accel_params(w, iter % k);
   if (iter == 0) {
