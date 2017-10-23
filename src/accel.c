@@ -163,6 +163,7 @@ scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   blas_int twol = 2 * a->l;
   blas_int one = 1;
   blas_int blen = (blas_int)len;
+  blas_int bk = (blas_int)a->k;
   scs_float neg_onef = -1.0;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
@@ -171,10 +172,10 @@ scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   scs_float *tmp = a->tmp;
   /* scratch = dX' f */
   BLAS(gemv)("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof, a->scratch, &one);
-  /* copy mat into tmp since tmp is destroyed by gesv */
+  /* copy mat into tmp since matrix is destroyed by gesv */
   memcpy(tmp, mat, a->k * a->k * sizeof(scs_float));
   /* scratch = (dX'dF) \ dX' f */
-  BLAS(gesv)(&blen, &one, tmp, &blen, a->ipiv, a->scratch, &blen, &info);
+  BLAS(gesv)(&blen, &one, tmp, &bk, a->ipiv, a->scratch, &blen, &info);
   /* sol = g */
   memcpy(a->sol, a->g, sizeof(scs_float) * 2 * a->l);
   /* sol = sol - dG * scratch */
@@ -195,7 +196,7 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   }
   /* update df, d_g, d_x, f, g, x */
   update_accel_params(w, iter % k);
-  if (iter < k + 1) {
+  if (iter == 0) {
     RETURN 0;
   }
   /* solve linear system, new point stored in sol */
