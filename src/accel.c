@@ -42,6 +42,12 @@ void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
 void BLAS(gesv)(blas_int *n, blas_int *nrhs, scs_float *a, blas_int *lda,
                 blas_int *ipiv, scs_float *b, blas_int *ldb, blas_int *info);
 
+void BLAS(gemm)(const char *transa, const char *transb, blas_int *m, blas_int *
+    n, blas_int *k, scs_float *alpha, scs_float *a, blas_int *lda,
+    scs_float *b, blas_int *ldb, scs_float *beta, scs_float *c, blas_int
+    *ldc);
+
+
 void update_mat(ScsAccelWork *a, scs_int idx) {
   /* use sol as scratch workspace here */
   scs_int i;
@@ -159,7 +165,7 @@ ScsAccelWork *init_accel(ScsWork *w) {
 
 scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
-  blas_int info;
+  blas_int info, i;
   blas_int twol = 2 * a->l;
   blas_int one = 1;
   blas_int blen = (blas_int)len;
@@ -171,11 +177,15 @@ scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   scs_float *mat = a->mat;
   scs_float *tmp = a->tmp;
   /* scratch = dX' f */
-  BLAS(gemv)("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof, a->scratch, &one);
-  /* copy mat into tmp since matrix is destroyed by gesv */
-  memcpy(tmp, mat, a->k * a->k * sizeof(scs_float));
+  BLAS(gemv)("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof, a->sol, &one);
+  BLAS(gemv)("Trans", &blen, &blen, &onef, mat, &bk, a->sol, &one, &zerof, a->scratch, &one);
+  BLAS(gemm)("Trans", "NoTrans", &blen, &blen, &blen, &onef, mat, &bk, mat, &bk, &zerof, tmp, &bk);
+  for (i=0; i<a->k; ++i){
+    tmp[i * a->k + i] += 1e-7;
+  }
   /* scratch = (dX'dF) \ dX' f */
   BLAS(gesv)(&blen, &one, tmp, &bk, a->ipiv, a->scratch, &blen, &info);
+  scs_printf("\t\t\tnorm gg %e\n", calc_norm(a->scratch, blen));
   /* sol = g */
   memcpy(a->sol, a->g, sizeof(scs_float) * 2 * a->l);
   /* sol = sol - dG * scratch */
