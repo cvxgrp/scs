@@ -8,7 +8,7 @@
 #include "linsys/amatrix.h"
 
 #define PI (3.141592654)
-#ifdef DLONG
+#ifdef LONG
 #ifdef _WIN64
 /* this is a Microsoft extension, but also works with min_g_w-w64 */
 #define INTRW "%I64d"

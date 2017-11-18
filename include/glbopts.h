@@ -54,7 +54,7 @@ extern "C" {
 #define scs_calloc(x, y) _scs_calloc(x, y)
 #define scs_realloc(x, y) _scs_realloc(x, y)
 
-#ifdef DLONG
+#ifdef LONG
 #ifdef _WIN64
 typedef __int64 scs_int;
 /* #define scs_int __int64 */

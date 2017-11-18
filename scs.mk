@@ -70,10 +70,10 @@ RANLIB = ranlib
 OPT_FLAGS =
 ########### OPTIONAL FLAGS ##########
 # these can all be override from the command line
-# e.g. make DLONG=1 will override the setting below
-DLONG = 0
-ifneq ($(DLONG), 0)
-OPT_FLAGS += -DDLONG=$(DLONG) # use longs rather than ints
+# e.g. make LONG=1 will override the setting below
+LONG = 0
+ifneq ($(LONG), 0)
+OPT_FLAGS += -DLONG=$(LONG) # use longs rather than ints
 endif
 CTRLC = 1
 ifneq ($(CTRLC), 0)
