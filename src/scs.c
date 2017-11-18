@@ -8,17 +8,18 @@
 #include "util.h"
 
 #if EXTRA_VERBOSE > 0
-/* if verbose print summary output every this num iterations */
+#define PRINT_INTERVAL 1
+#define CONVERGED_INTERVAL 1
+#else
+/* print summary output every this num iterations */
 #define PRINT_INTERVAL 100
 /* check for convergence every this num iterations */
 #define CONVERGED_INTERVAL 20
-#else
-#define PRINT_INTERVAL 1
-#define CONVERGED_INTERVAL 1
 #endif
 
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL 1e-9
+/* maintain the iterates at this l2 norm (due to homogeneity) */
 #define ITERATE_NORM (10.)
 
 timer global_timer;
