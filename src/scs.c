@@ -7,7 +7,7 @@
 #include "normalize.h"
 #include "util.h"
 
-#ifndef EXTRA_VERBOSE
+#if EXTRA_VERBOSE > 0
 /* if verbose print summary output every this num iterations */
 #define PRINT_INTERVAL 100
 /* check for convergence every this num iterations */
