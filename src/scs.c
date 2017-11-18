@@ -68,7 +68,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   ScsSettings *stgs = d->stgs;
   char *cone_str = get_cone_header(k);
   char *lin_sys_method = get_lin_sys_method(d->A, d->stgs);
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
 #else
   scs_int acceleration_lookback = -1;

@@ -12,7 +12,7 @@ extern "C" {
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
   scs_float total_cone_time;
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
   blas_int *iwork, lwork, liwork;

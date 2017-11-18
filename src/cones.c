@@ -10,7 +10,7 @@
 #define EXP_CONE_MAX_ITERS (100)
 #define POW_CONE_MAX_ITERS (20)
 
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
 void BLAS(syevr)(const char *jobz, const char *range, const char *uplo,
                  blas_int *n, scs_float *a, blas_int *lda, scs_float *vl,
                  scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
@@ -152,7 +152,7 @@ char *get_cone_summary(const ScsInfo *info, ScsConeWork *c) {
 
 void finish_cone(ScsConeWork *c) {
   DEBUG_FUNC
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   if (c->Xs) {
     scs_free(c->Xs);
   }
@@ -325,7 +325,7 @@ static scs_int proj_exp_cone(scs_float *v, scs_int iter) {
 }
 
 scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   scs_int i;
   blas_int n_max = 0;
   scs_float eig_tol = 1e-8;
@@ -448,7 +448,7 @@ scs_int project_2x2_sdc(scs_float *X) {
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                        ScsConeWork *c, const scs_int iter) {
 /* project onto the positive semi-definite cone */
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   scs_int i;
   blas_int one = 1;
   blas_int m = 0;
@@ -484,7 +484,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   if (n == 2) {
     RETURN project_2x2_sdc(X);
   }
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   /* expand lower triangular matrix to full matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),

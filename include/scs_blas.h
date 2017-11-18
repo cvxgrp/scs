@@ -1,7 +1,7 @@
 #ifndef SCS_BLAS_H_GUARD
 #define SCS_BLAS_H_GUARD
 
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +46,6 @@ typedef int blas_int;
 }
 #endif
 
-#endif /* LAPACK_LIB_FOUND */
+#endif /* USE_LAPACK */
 
 #endif /* SCS_BLAS_H_GUARD */

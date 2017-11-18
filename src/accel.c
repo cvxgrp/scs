@@ -15,7 +15,7 @@
  */
 
 struct SCS_ACCEL_WORK {
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
   scs_float *d_f;
   scs_float *d_g;
   scs_float *d_x;
@@ -34,7 +34,7 @@ struct SCS_ACCEL_WORK {
   scs_float total_accel_time;
 };
 
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
 void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
                 const scs_float *alpha, const scs_float *a, const blas_int *lda,
                 const scs_float *x, const blas_int *incx, const scs_float *beta,
