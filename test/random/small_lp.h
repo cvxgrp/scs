@@ -3,7 +3,7 @@
 #include "../minunit.h"
 #include "../problem_utils.h"
 
-static const char *small_lp() {
+static const char *small_lp(void) {
   ScsCone *k = scs_calloc(1, sizeof(ScsCone));
   ScsData *d = scs_calloc(1, sizeof(ScsData));
   ScsSolution *sol = scs_calloc(1, sizeof(ScsSolution));

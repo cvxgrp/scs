@@ -9,7 +9,7 @@
 
 int tests_run = 0;
 
-static const char *all_tests() {
+static const char *all_tests(void) {
   mu_run_test(small_lp);
   return 0;
 }
