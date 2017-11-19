@@ -8,12 +8,16 @@ SCS
 -->
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
-large-scale convex cone problems, based on our paper [Conic Optimization via Operator Splitting
-and Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
-and can be used in other C, C++, Python, Matlab, R, Julia, Java, and Scala
-programs via included interfaces (Julia interface available
-[here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
-convex optimization toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
+large-scale convex cone problems, based on our paper [Conic Optimization via
+Operator Splitting and Homogeneous Self-Dual
+Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
+and can be used in other C, C++,
+[Python](https://github.com/bodono/scs-python),
+[Matlab](https://github.com/bodono/scs-matlab),
+[R](https://github.com/bodono/scs-r),
+[Julia](https://github.com/JuliaOpt/SCS.jl), programs via the linked
+interfaces. It can also be called as a solver from convex optimization
+toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
@@ -311,6 +315,7 @@ In order to solve SDPs you must have BLAS and LAPACK installed.
 Edit `scs.mk` to set `USE_LAPACK = 1` and point to the location of these
 libraries. Without these you can still solve problems using the other cones.
 
+<!---
 ### Using SCS in Matlab
 Running `make_scs` in Matlab under the `matlab` folder will produce two mex
 files, one for each of the direct and indirect solvers.
@@ -413,4 +418,4 @@ are lists specifying the cone dimensions and input params respectively.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
-
+-->
