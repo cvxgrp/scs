@@ -17,26 +17,26 @@ typedef void *timer;
 /* Use Windows QueryPerformanceCounter for timing */
 #include <windows.h>
 typedef struct timer {
-    LARGE_INTEGER tic;
-    LARGE_INTEGER toc;
-    LARGE_INTEGER freq;
+  LARGE_INTEGER tic;
+  LARGE_INTEGER toc;
+  LARGE_INTEGER freq;
 } timer;
 
 #elif(defined __APPLE__)
 /* Use MAC OSX mach_time for timing */
 #include <mach/mach_time.h>
 typedef struct timer {
-    uint64_t tic;
-    uint64_t toc;
-    mach_timebase_info_data_t tinfo;
+  uint64_t tic;
+  uint64_t toc;
+  mach_timebase_info_data_t tinfo;
 } timer;
 
 #else
 /* Use POSIX clock_gettime() for timing on other machines */
 #include <time.h>
 typedef struct timer {
-    struct timespec tic;
-    struct timespec toc;
+  struct timespec tic;
+  struct timespec toc;
 } timer;
 
 #endif

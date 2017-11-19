@@ -25,7 +25,9 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 scs_float BLAS(nrm2)(const blas_int *n, scs_float *x, const blas_int *incx);
 #endif
 
-static scs_int get_sd_cone_size(scs_int s) { RETURN(s * (s + 1)) / 2; }
+static scs_int get_sd_cone_size(scs_int s) {
+  RETURN(s * (s + 1)) / 2;
+}
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -62,8 +64,10 @@ scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries) {
 
 scs_int get_full_cone_dims(const ScsCone *k) {
   scs_int i, c = 0;
-  if (k->f) c += k->f;
-  if (k->l) c += k->l;
+  if (k->f)
+    c += k->f;
+  if (k->l)
+    c += k->l;
   if (k->qsize && k->q) {
     for (i = 0; i < k->qsize; ++i) {
       c += k->q[i];
@@ -74,9 +78,12 @@ scs_int get_full_cone_dims(const ScsCone *k) {
       c += get_sd_cone_size(k->s[i]);
     }
   }
-  if (k->ed) c += 3 * k->ed;
-  if (k->ep) c += 3 * k->ep;
-  if (k->p) c += 3 * k->psize;
+  if (k->ed)
+    c += 3 * k->ed;
+  if (k->ep)
+    c += 3 * k->ep;
+  if (k->p)
+    c += 3 * k->psize;
   RETURN c;
 }
 
@@ -366,18 +373,16 @@ scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   }
   RETURN 0;
 #else
-  scs_printf(
-      "FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
-      "blas+lapack libraries\n");
-  scs_printf(
-      "Install blas+lapack and re-compile SCS with blas+lapack libray "
-      "locations\n");
+  scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
+             "blas+lapack libraries\n");
+  scs_printf("Install blas+lapack and re-compile SCS with blas+lapack libray "
+             "locations\n");
   RETURN - 1;
 #endif
 }
 
 ScsConeWork *init_cone(const ScsCone *k) {
-  ScsConeWork *c= scs_calloc(1, sizeof(ScsConeWork));
+  ScsConeWork *c = scs_calloc(1, sizeof(ScsConeWork));
 #if EXTRA_VERBOSE > 0
   scs_printf("init_cone\n");
 #endif
@@ -418,10 +423,9 @@ scs_int project_2x2_sdc(scs_float *X) {
   l2 = 0.5 * (a + d - rad);
 
 #if EXTRA_VERBOSE > 0
-  scs_printf(
-      "2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
-      "rad = %4f, l1 = %4f, l2 = %4f\n",
-      a, b, X[1], X[2], d, rad, l1, l2);
+  scs_printf("2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
+             "rad = %4f, l1 = %4f, l2 = %4f\n",
+             a, b, X[1], X[2], d, rad, l1, l2);
 #endif
 
   if (l2 >= 0) { /* both eigs positive already */
@@ -524,7 +528,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   print_array(e, m, "e");
   print_array(Z, m * n, "Z");
 #endif
-  if (info < 0) RETURN - 1;
+  if (info < 0)
+    RETURN - 1;
 
   memset(Xs, 0, n * n * sizeof(scs_float));
   for (i = 0; i < m; ++i) {
@@ -545,9 +550,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 #endif
 
 #else
-  scs_printf(
-      "FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
-      "libraries were linked!\n");
+  scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
+             "libraries were linked!\n");
   scs_printf("SCS will RETURN nonsense!\n");
   scale_array(X, NAN, n);
   RETURN - 1;
@@ -598,7 +602,8 @@ void proj_power_cone(scs_float *v, scs_float a) {
     y = pow_calc_x(r, yh, rh, 1 - a);
 
     f = pow_calc_f(x, y, r, a);
-    if (ABS(f) < CONE_TOL) break;
+    if (ABS(f) < CONE_TOL)
+      break;
 
     dxdr = pow_calcdxdr(x, xh, rh, r, a);
     dydr = pow_calcdxdr(y, yh, rh, r, (1 - a));
@@ -630,7 +635,8 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->l) {
     /* project onto positive orthant */
     for (i = count; i < count + k->l; ++i) {
-      if (x[i] < 0.0) x[i] = 0.0;
+      if (x[i] < 0.0)
+        x[i] = 0.0;
       /* x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
     }
     count += k->l;
@@ -647,7 +653,8 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
         continue;
       }
       if (k->q[i] == 1) {
-        if (x[count] < 0.0) x[count] = 0.0;
+        if (x[count] < 0.0)
+          x[count] = 0.0;
       } else {
         scs_float v1 = x[count];
         scs_float s = calc_norm(&(x[count + 1]), k->q[i] - 1);

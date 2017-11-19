@@ -56,14 +56,16 @@ void update_mat(ScsAccelWork *a, scs_int idx) {
   /* blas vars */
   blas_int twol = 2 * l;
   blas_int one = 1;
-  blas_int bk = (blas_int) a->k;
+  blas_int bk = (blas_int)a->k;
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
 
   scs_float ip = inner_prod(delta_x, delta_f, 2 * l);
-  BLAS(gemv)("Trans", &twol, &bk, &onef, d_x, &twol, delta_f, &one, &zerof, wrk, &one);
+  BLAS(gemv)("Trans", &twol, &bk, &onef, d_x, &twol, delta_f, &one, &zerof, wrk,
+             &one);
   add_scaled_array(&(mat[idx * k]), wrk, k, -1.0);
-  BLAS(gemv)("Trans", &twol, &bk, &onef, d_f, &twol, delta_x, &one, &zerof, wrk, &one);
+  BLAS(gemv)("Trans", &twol, &bk, &onef, d_f, &twol, delta_x, &one, &zerof, wrk,
+             &one);
   for (i = 0; i < k; ++i) {
     mat[i * k + idx] -= wrk[i];
   }
@@ -171,7 +173,8 @@ scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   scs_float *mat = a->mat;
   scs_float *tmp = a->tmp;
   /* scratch = dX' f */
-  BLAS(gemv)("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof, a->scratch, &one);
+  BLAS(gemv)("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof,
+             a->scratch, &one);
   /* copy mat into tmp since matrix is destroyed by gesv */
   memcpy(tmp, mat, a->k * a->k * sizeof(scs_float));
   /* scratch = (dX'dF) \ dX' f */
@@ -179,8 +182,8 @@ scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   /* sol = g */
   memcpy(a->sol, a->g, sizeof(scs_float) * 2 * a->l);
   /* sol = sol - dG * scratch */
-  BLAS(gemv)("NoTrans", &twol, &blen, &neg_onef, a->d_g, &twol, a->scratch, &one, &onef,
-   a->sol, &one);
+  BLAS(gemv)("NoTrans", &twol, &blen, &neg_onef, a->d_g, &twol, a->scratch,
+             &one, &onef, a->sol, &one);
   RETURN(scs_int) info;
 }
 
@@ -212,19 +215,32 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
 void free_accel(ScsAccelWork *a) {
   DEBUG_FUNC
   if (a) {
-    if (a->d_f) scs_free(a->d_f);
-    if (a->d_g) scs_free(a->d_g);
-    if (a->d_x) scs_free(a->d_x);
-    if (a->f) scs_free(a->f);
-    if (a->g) scs_free(a->g);
-    if (a->x) scs_free(a->x);
-    if (a->delta_f) scs_free(a->delta_f);
-    if (a->delta_x) scs_free(a->delta_x);
-    if (a->sol) scs_free(a->sol);
-    if (a->scratch) scs_free(a->scratch);
-    if (a->mat) scs_free(a->mat);
-    if (a->tmp) scs_free(a->tmp);
-    if (a->ipiv) scs_free(a->ipiv);
+    if (a->d_f)
+      scs_free(a->d_f);
+    if (a->d_g)
+      scs_free(a->d_g);
+    if (a->d_x)
+      scs_free(a->d_x);
+    if (a->f)
+      scs_free(a->f);
+    if (a->g)
+      scs_free(a->g);
+    if (a->x)
+      scs_free(a->x);
+    if (a->delta_f)
+      scs_free(a->delta_f);
+    if (a->delta_x)
+      scs_free(a->delta_x);
+    if (a->sol)
+      scs_free(a->sol);
+    if (a->scratch)
+      scs_free(a->scratch);
+    if (a->mat)
+      scs_free(a->mat);
+    if (a->tmp)
+      scs_free(a->tmp);
+    if (a->ipiv)
+      scs_free(a->ipiv);
     scs_free(a);
   }
   RETURN;
@@ -244,7 +260,9 @@ void free_accel(ScsAccelWork *a) {
   }
 }
 
-scs_int accelerate(ScsWork *w, scs_int iter) { RETURN 0; }
+scs_int accelerate(ScsWork *w, scs_int iter) {
+  RETURN 0;
+}
 #endif
 
 char *get_accel_summary(const ScsInfo *info, ScsAccelWork *a) {

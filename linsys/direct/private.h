@@ -9,12 +9,12 @@
 #include "../common.h"
 
 struct SCS_LIN_SYS_WORK {
-    cs *L;         /* KKT, and factorization matrix L resp. */
-    scs_float *D;  /* diagonal matrix of factorization */
-    scs_int *P;    /* permutation of KKT matrix for factorization */
-    scs_float *bp; /* workspace memory for solves */
-    /* reporting */
-    scs_float total_solve_time;
+  cs *L;         /* KKT, and factorization matrix L resp. */
+  scs_float *D;  /* diagonal matrix of factorization */
+  scs_int *P;    /* permutation of KKT matrix for factorization */
+  scs_float *bp; /* workspace memory for solves */
+  /* reporting */
+  scs_float total_solve_time;
 };
 
 #endif
