@@ -69,6 +69,12 @@ $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+# basic testing
+.PHONY: test
+test: $(OUT)/run_tests
+$(OUT)/run_tests: test/run_tests.c $(OUT)/libscsindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
 # REQUIRES GPU AND CUDA INSTALLED
 gpu: $(OUT)/demo_socp_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 
