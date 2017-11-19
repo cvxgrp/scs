@@ -15,10 +15,13 @@ static const char *small_lp(void) {
   scs_int m = 300;
   scs_int col_nnz = (scs_int)ceil(sqrt(n));
   scs_int nnz = n * col_nnz;
+  scs_int exitflag;
+  scs_float perr, derr;
+  scs_int success;
+
   d->stgs = scs_calloc(1, sizeof(ScsSettings));
   k->f = (scs_int)floor(m * p_f);
   k->l = m - k->f;
-  scs_int exitflag;
 
   srand(seed);
 
@@ -28,11 +31,16 @@ static const char *small_lp(void) {
   set_default_scs_settings(d);
 
   exitflag = scs(d, k, sol, &info);
+  perr = inner_prod(d->c, sol->x, d->n) - inner_prod(d->c, opt_sol->x, d->n);
+  derr = -inner_prod(d->b, sol->y, d->m) + inner_prod(d->b, opt_sol->y, d->m);
+  scs_printf("primal obj error %4e\n", perr);
+  scs_printf("dual obj error %4e\n", derr);
+
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
   free_data(d, k);
   free_sol(sol);
   free_sol(opt_sol);
-  mu_assert("small_lp: SCS failed to produce outputflag SCS_SOLVED",
-            exitflag == SCS_SOLVED);
+  mu_assert("small_lp: SCS failed to produce outputflag SCS_SOLVED", success);
   return 0;
 }
