@@ -309,7 +309,7 @@ each iteration. See run_scs.c for an example.
 To use your own linear system solver simply implement all the methods and the
 two structs in `include/linSys.h` and plug it in.
 
-**ScsSolutionving SDPs**
+**Solving SDPs**
 
 In order to solve SDPs you must have BLAS and LAPACK installed.
 Edit `scs.mk` to set `USE_LAPACK = 1` and point to the location of these
@@ -399,7 +399,7 @@ ScsConeProgram.solve();
 ```
 
 on your instance of `ScsConeProgram`, which will return an instance of
-`ScsSolutionution`, containing the solution and information about the run.
+`ScsSolution`, containing the solution and information about the run.
 
 ### Using SCS in R
 
