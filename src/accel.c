@@ -4,7 +4,7 @@
 #include "scs_blas.h"
 #include "util.h"
 
-/* This file uses Anderson acceleration to improve the convergence of the
+/* This file uses acceleration to improve the convergence of the
  * ADMM iteration z^+ = \phi(z). At each iteration we need to solve a (small)
  * linear system, we do this using LAPACK, first forming the normal equations
  * and using ?posv (fastest, but bad numerical stability), if that fails we
@@ -131,7 +131,7 @@ ScsAccelWork *init_accel(ScsWork *w) {
   }
   a->l = w->m + w->n + 1;
   /* k = lookback - 1 since we use the difference form
-     of anderson acceleration, and so there is one fewer var in lin sys.
+     of acceleration, and so there is one fewer var in lin sys.
      Use MIN to prevent not full rank matrices */
   a->k = MIN(w->n, w->stgs->acceleration_lookback - 1);
   if (a->k <= 0) {
