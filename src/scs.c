@@ -43,34 +43,46 @@ static void free_work(ScsWork *w) {
   if (!w) {
     RETURN;
   }
-  if (w->u){
+  if (w->u) {
     scs_free(w->u);
-    }
-  if (w->v){
-    scs_free(w->v);}
-  if (w->u_t){
-    scs_free(w->u_t);}
-  if (w->u_prev){
-    scs_free(w->u_prev);}
-  if (w->v_prev){
-    scs_free(w->v_prev);}
-  if (w->h){
-    scs_free(w->h);}
-  if (w->g){
-    scs_free(w->g);}
-  if (w->b){
-    scs_free(w->b);}
-  if (w->c){
-    scs_free(w->c);}
-  if (w->pr){
+  }
+  if (w->v) {
+    scs_free(w->v);
+  }
+  if (w->u_t) {
+    scs_free(w->u_t);
+  }
+  if (w->u_prev) {
+    scs_free(w->u_prev);
+  }
+  if (w->v_prev) {
+    scs_free(w->v_prev);
+  }
+  if (w->h) {
+    scs_free(w->h);
+  }
+  if (w->g) {
+    scs_free(w->g);
+  }
+  if (w->b) {
+    scs_free(w->b);
+  }
+  if (w->c) {
+    scs_free(w->c);
+  }
+  if (w->pr) {
     scs_free(w->pr);
-  if (w->dr){
-    scs_free(w->dr);}
+  }
+  if (w->dr) {
+    scs_free(w->dr);
+  }
   if (w->scal) {
-    if (w->scal->D){
-      scs_free(w->scal->D);}
-    if (w->scal->E)A{
-      scs_free(w->scal->E);}
+    if (w->scal->D) {
+      scs_free(w->scal->D);
+    }
+    if (w->scal->E) {
+      scs_free(w->scal->E);
+    }
     scs_free(w->scal);
   }
   scs_free(w);
@@ -140,16 +152,19 @@ static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
   }
   if (sol) {
     if (n > 0) {
-      if (!sol->x)
+      if (!sol->x) {
         sol->x = scs_malloc(sizeof(scs_float) * n);
+      }
       scale_array(sol->x, NAN, n);
     }
     if (m > 0) {
-      if (!sol->y)
+      if (!sol->y) {
         sol->y = scs_malloc(sizeof(scs_float) * m);
+      }
       scale_array(sol->y, NAN, m);
-      if (!sol->s)
+      if (!sol->s) {
         sol->s = scs_malloc(sizeof(scs_float) * m);
+      }
       scale_array(sol->s, NAN, m);
     }
   }
@@ -178,10 +193,12 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
   w->v[n + m] = 0.0;
 #ifndef NOVALIDATE
   for (i = 0; i < n + m + 1; ++i) {
-    if (scs_isnan(w->u[i]))
+    if (scs_isnan(w->u[i])) {
       w->u[i] = 0;
-    if (scs_isnan(w->v[i]))
+    }
+    if (scs_isnan(w->v[i])) {
       w->v[i] = 0;
+    }
   }
 #endif
   if (w->stgs->normalize) {
@@ -343,8 +360,9 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   /* u = [x;y;tau] */
   status = proj_dual_cone(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]), iter);
-  if (w->u[l - 1] < 0.0)
+  if (w->u[l - 1] < 0.0) {
     w->u[l - 1] = 0.0;
+  }
 
   RETURN status;
 }
@@ -420,8 +438,9 @@ static void sets(ScsWork *w, ScsSolution *sol) {
 
 static void setx(ScsWork *w, ScsSolution *sol) {
   DEBUG_FUNC
-  if (!sol->x)
+  if (!sol->x) {
     sol->x = scs_malloc(sizeof(scs_float) * w->n);
+  }
   memcpy(sol->x, w->u, w->n * sizeof(scs_float));
   RETURN;
 }
@@ -536,8 +555,9 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
 static void print_header(ScsWork *w, const ScsCone *k) {
   DEBUG_FUNC
   scs_int i;
-  if (w->stgs->warm_start)
+  if (w->stgs->warm_start) {
     scs_printf("SCS using variable warm-starting\n");
+  }
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -864,8 +884,9 @@ scs_int scs_solve(ScsWork *w, const ScsData *d, const ScsCone *k,
   r.last_iter = -1;
   update_work(d, w, sol);
 
-  if (w->stgs->verbose)
+  if (w->stgs->verbose) {
     print_header(w, k);
+  }
   /* scs: */
   for (i = 0; i < w->stgs->max_iters; ++i) {
     scs_float total_norm = SQRTF(calc_norm_sq(w->u, l) + calc_norm_sq(w->v, l));
@@ -915,8 +936,9 @@ scs_int scs_solve(ScsWork *w, const ScsData *d, const ScsCone *k,
   get_solution(w, sol, info, &r, i);
   info->solve_time = tocq(&solve_timer);
 
-  if (w->stgs->verbose)
+  if (w->stgs->verbose) {
     print_footer(d, k, sol, w, info);
+  }
   end_interrupt_listener();
   RETURN info->status_val;
 }
@@ -932,10 +954,12 @@ void scs_finish(ScsWork *w) {
       free_a_matrix(w->A);
 #endif
     }
-    if (w->p)
+    if (w->p) {
       free_lin_sys_work(w->p);
-    if (w->accel)
+    }
+    if (w->accel) {
       free_accel(w->accel);
+    }
     free_work(w);
   }
   RETURN;

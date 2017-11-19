@@ -17,14 +17,18 @@ char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
 
 void free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
-    if (p->L)
+    if (p->L) {
       cs_spfree(p->L);
-    if (p->P)
+    }
+    if (p->P) {
       scs_free(p->P);
-    if (p->D)
+    }
+    if (p->D) {
       scs_free(p->D);
-    if (p->bp)
+    }
+    if (p->bp) {
       scs_free(p->bp);
+    }
     scs_free(p);
   }
 }
@@ -109,8 +113,9 @@ scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
   *D = (scs_float *)scs_malloc(n * sizeof(scs_float));
 
   if (!(*D) || !(*L)->i || !(*L)->x || !Y || !Pattern || !Flag || !Lnz ||
-      !Parent)
+      !Parent) {
     return -1;
+  }
 
 #if EXTRA_VERBOSE > 0
   scs_printf("numeric factorization\n");
@@ -134,8 +139,9 @@ void LDLSolve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
   if (P == SCS_NULL) {
-    if (x != b) /* if they're different addresses */
+    if (x != b) { /* if they're different addresses */
       memcpy(x, b, n * sizeof(scs_float));
+    }
     LDL_lsolve(n, x, L->p, L->i, L->x);
     LDL_dsolve(n, x, D);
     LDL_ltsolve(n, x, L->p, L->i, L->x);
@@ -167,8 +173,9 @@ scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
     return -1;
   }
   amd_status = LDLInit(K, p->P, &info);
-  if (amd_status < 0)
+  if (amd_status < 0) {
     return (amd_status);
+  }
 #if EXTRA_VERBOSE > 0
   if (stgs->verbose) {
     scs_printf("Matrix factorization info:\n");

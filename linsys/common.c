@@ -8,16 +8,18 @@
 scs_int copy_a_matrix(ScsMatrix **dstp, const ScsMatrix *src) {
   scs_int Anz = src->p[src->n];
   ScsMatrix *A = scs_calloc(1, sizeof(ScsMatrix));
-  if (!A)
+  if (!A) {
     return 0;
+  }
   A->n = src->n;
   A->m = src->m;
   A->x = scs_malloc(sizeof(scs_float) * Anz); /* A values, size: NNZ A */
   A->i = scs_malloc(sizeof(scs_int) * Anz);   /* A row index, size: NNZ A */
   A->p = scs_malloc(sizeof(scs_int) *
                     (src->n + 1)); /* A column pointer, size: n+1 */
-  if (!A->x || !A->i || !A->p)
+  if (!A->x || !A->i || !A->p) {
     return 0;
+  }
   memcpy(A->x, src->x, sizeof(scs_float) * Anz);
   memcpy(A->i, src->i, sizeof(scs_int) * Anz);
   memcpy(A->p, src->p, sizeof(scs_int) * (src->n + 1));
@@ -50,8 +52,9 @@ scs_int validate_lin_sys(const ScsMatrix *A) {
   }
   r_max = 0;
   for (i = 0; i < Anz; ++i) {
-    if (A->i[i] > r_max)
+    if (A->i[i] > r_max) {
       r_max = A->i[i];
+    }
   }
   if (r_max > A->m - 1) {
     scs_printf("number of rows in A inconsistent with input dimension\n");
@@ -61,12 +64,15 @@ scs_int validate_lin_sys(const ScsMatrix *A) {
 }
 
 void free_a_matrix(ScsMatrix *A) {
-  if (A->x)
+  if (A->x) {
     scs_free(A->x);
-  if (A->i)
+  }
+  if (A->i) {
     scs_free(A->i);
-  if (A->p)
+  }
+  if (A->p) {
     scs_free(A->p);
+  }
   scs_free(A);
 }
 
@@ -141,10 +147,11 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
     }
 
     for (i = 0; i < A->m; ++i) {
-      if (D[i] < min_row_scale)
+      if (D[i] < min_row_scale) {
         D[i] = 1;
-      else if (D[i] > max_row_scale)
+      } else if (D[i] > max_row_scale) {
         D[i] = max_row_scale;
+      }
     }
 
     /* scale the rows with D */
@@ -157,10 +164,11 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
     for (i = 0; i < A->n; ++i) {
       c1 = A->p[i + 1] - A->p[i];
       e = calc_norm(&(A->x[A->p[i]]), c1);
-      if (e < min_col_scale)
+      if (e < min_col_scale) {
         e = 1;
-      else if (e > max_col_scale)
+      } else if (e > max_col_scale) {
         e = max_col_scale;
+      }
       scale_array(&(A->x[A->p[i]]), 1.0 / e, c1);
       E[i] = e;
     }

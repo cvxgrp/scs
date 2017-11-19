@@ -151,24 +151,30 @@ void print_array(const scs_float *arr, scs_int n, const char *name) {
 
 void free_data(ScsData *d, ScsCone *k) {
   if (d) {
-    if (d->b)
+    if (d->b) {
       scs_free(d->b);
-    if (d->c)
+    }
+    if (d->c) {
       scs_free(d->c);
-    if (d->stgs)
+    }
+    if (d->stgs) {
       scs_free(d->stgs);
+    }
     if (d->A) {
       free_a_matrix(d->A);
     }
     scs_free(d);
   }
   if (k) {
-    if (k->q)
+    if (k->q) {
       scs_free(k->q);
-    if (k->s)
+    }
+    if (k->s) {
       scs_free(k->s);
-    if (k->p)
+    }
+    if (k->p) {
       scs_free(k->p);
+    }
     scs_free(k);
   }
 }

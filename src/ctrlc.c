@@ -30,8 +30,9 @@ int is_interrupted(void) {
 
 static int int_detected;
 BOOL WINAPI handle_ctrlc(DWORD dwCtrlType) {
-  if (dwCtrlType != CTRL_C_EVENT)
+  if (dwCtrlType != CTRL_C_EVENT) {
     return FALSE;
+  }
   int_detected = 1;
   return TRUE;
 }

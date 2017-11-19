@@ -215,32 +215,45 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
 void free_accel(ScsAccelWork *a) {
   DEBUG_FUNC
   if (a) {
-    if (a->d_f)
+    if (a->d_f) {
       scs_free(a->d_f);
-    if (a->d_g)
+    }
+    if (a->d_g) {
       scs_free(a->d_g);
-    if (a->d_x)
+    }
+    if (a->d_x) {
       scs_free(a->d_x);
-    if (a->f)
+    }
+    if (a->f) {
       scs_free(a->f);
-    if (a->g)
+    }
+    if (a->g) {
       scs_free(a->g);
-    if (a->x)
+    }
+    if (a->x) {
       scs_free(a->x);
-    if (a->delta_f)
+    }
+    if (a->delta_f) {
       scs_free(a->delta_f);
-    if (a->delta_x)
+    }
+    if (a->delta_x) {
       scs_free(a->delta_x);
-    if (a->sol)
+    }
+    if (a->sol) {
       scs_free(a->sol);
-    if (a->scratch)
+    }
+    if (a->scratch) {
       scs_free(a->scratch);
-    if (a->mat)
+    }
+    if (a->mat) {
       scs_free(a->mat);
-    if (a->tmp)
+    }
+    if (a->tmp) {
       scs_free(a->tmp);
-    if (a->ipiv)
+    }
+    if (a->ipiv) {
       scs_free(a->ipiv);
+    }
     scs_free(a);
   }
   RETURN;

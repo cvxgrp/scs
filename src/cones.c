@@ -64,10 +64,12 @@ scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries) {
 
 scs_int get_full_cone_dims(const ScsCone *k) {
   scs_int i, c = 0;
-  if (k->f)
+  if (k->f) {
     c += k->f;
-  if (k->l)
+  }
+  if (k->l) {
     c += k->l;
+  }
   if (k->qsize && k->q) {
     for (i = 0; i < k->qsize; ++i) {
       c += k->q[i];
@@ -78,12 +80,15 @@ scs_int get_full_cone_dims(const ScsCone *k) {
       c += get_sd_cone_size(k->s[i]);
     }
   }
-  if (k->ed)
+  if (k->ed) {
     c += 3 * k->ed;
-  if (k->ep)
+  }
+  if (k->ep) {
     c += 3 * k->ep;
-  if (k->p)
+  }
+  if (k->p) {
     c += 3 * k->psize;
+  }
   RETURN c;
 }
 
@@ -528,8 +533,9 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   print_array(e, m, "e");
   print_array(Z, m * n, "Z");
 #endif
-  if (info < 0)
+  if (info < 0) {
     RETURN - 1;
+  }
 
   memset(Xs, 0, n * n * sizeof(scs_float));
   for (i = 0; i < m; ++i) {
@@ -584,8 +590,10 @@ void proj_power_cone(scs_float *v, scs_float a) {
   scs_float x, y, r;
   scs_int i;
   /* v in K_a */
-  if (xh >= 0 && yh >= 0 && CONE_THRESH + POWF(xh, a) * POWF(yh, (1 - a)) >= rh)
+  if (xh >= 0 && yh >= 0 &&
+      CONE_THRESH + POWF(xh, a) * POWF(yh, (1 - a)) >= rh) {
     RETURN;
+  }
 
   /* -v in K_a^* */
   if (xh <= 0 && yh <= 0 &&
@@ -602,8 +610,9 @@ void proj_power_cone(scs_float *v, scs_float a) {
     y = pow_calc_x(r, yh, rh, 1 - a);
 
     f = pow_calc_f(x, y, r, a);
-    if (ABS(f) < CONE_TOL)
+    if (ABS(f) < CONE_TOL) {
       break;
+    }
 
     dxdr = pow_calcdxdr(x, xh, rh, r, a);
     dydr = pow_calcdxdr(y, yh, rh, r, (1 - a));
@@ -635,8 +644,9 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->l) {
     /* project onto positive orthant */
     for (i = count; i < count + k->l; ++i) {
-      if (x[i] < 0.0)
+      if (x[i] < 0.0) {
         x[i] = 0.0;
+      }
       /* x[i] = (x[i] < 0.0) ? 0.0 : x[i]; */
     }
     count += k->l;
@@ -653,8 +663,9 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
         continue;
       }
       if (k->q[i] == 1) {
-        if (x[count] < 0.0)
+        if (x[count] < 0.0) {
           x[count] = 0.0;
+        }
       } else {
         scs_float v1 = x[count];
         scs_float s = calc_norm(&(x[count + 1]), k->q[i] - 1);
@@ -685,8 +696,9 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       if (k->s[i] == 0) {
         continue;
       }
-      if (proj_semi_definite_cone(&(x[count]), k->s[i], c, iter) < 0)
+      if (proj_semi_definite_cone(&(x[count]), k->s[i], c, iter) < 0) {
         RETURN - 1;
+      }
       count += get_sd_cone_size(k->s[i]);
     }
 #if EXTRA_VERBOSE > 0

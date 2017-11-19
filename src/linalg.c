@@ -46,8 +46,9 @@ scs_float calc_norm_inf(const scs_float *a, scs_int l) {
   scs_int i;
   for (i = 0; i < l; ++i) {
     tmp = ABS(a[i]);
-    if (tmp > max)
+    if (tmp > max) {
       max = tmp;
+    }
   }
   return max;
 }
@@ -77,8 +78,9 @@ scs_float calc_norm_inf_diff(const scs_float *a, const scs_float *b,
   scs_int i;
   for (i = 0; i < l; ++i) {
     tmp = ABS(a[i] - b[i]);
-    if (tmp > max)
+    if (tmp > max) {
       max = tmp;
+    }
   }
   return max;
 }

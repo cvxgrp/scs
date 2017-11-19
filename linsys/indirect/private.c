@@ -85,28 +85,37 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
 
 void free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
-    if (p->p)
+    if (p->p) {
       scs_free(p->p);
-    if (p->r)
+    }
+    if (p->r) {
       scs_free(p->r);
-    if (p->Gp)
+    }
+    if (p->Gp) {
       scs_free(p->Gp);
-    if (p->tmp)
+    }
+    if (p->tmp) {
       scs_free(p->tmp);
+    }
     if (p->At) {
       ScsMatrix *At = p->At;
-      if (At->i)
+      if (At->i) {
         scs_free(At->i);
-      if (At->x)
+      }
+      if (At->x) {
         scs_free(At->x);
-      if (At->p)
+      }
+      if (At->p) {
         scs_free(At->p);
+      }
       scs_free(At);
     }
-    if (p->z)
+    if (p->z) {
       scs_free(p->z);
-    if (p->M)
+    }
+    if (p->M) {
       scs_free(p->M);
+    }
     scs_free(p);
   }
 }
