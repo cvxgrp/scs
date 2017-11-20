@@ -46,9 +46,9 @@ extern timer global_timer;
 #endif
 
 /* these all return milli-seconds */
-void tic(timer *t);
-scs_float toc(timer *t);
-scs_float strtoc(char *str, timer *t);
+void scs_tic(timer *t);
+scs_float scs_toc(timer *t);
+scs_float scs_str_toc(char *str, timer *t);
 scs_float tocq(timer *t);
 
 void print_cone_data(const ScsCone *k);

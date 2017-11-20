@@ -110,7 +110,7 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
 
 #if EXTRA_VERBOSE > 0
   timer normalize_timer;
-  tic(&normalize_timer);
+  scs_tic(&normalize_timer);
   scs_printf("normalizing A\n");
   print_a_matrix(A);
 #endif
@@ -245,7 +245,7 @@ void _accum_by_atrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   scs_float yj;
 #if EXTRA_VERBOSE > 0
   timer mult_by_atrans_timer;
-  tic(&mult_by_atrans_timer);
+  scs_tic(&mult_by_atrans_timer);
 #endif
 #ifdef _OPENMP
 #pragma omp parallel for private(p, c1, c2, yj)
@@ -277,7 +277,7 @@ void _accum_by_a(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   scs_float xj;
 #if EXTRA_VERBOSE > 0
   timer mult_by_a_timer;
-  tic(&mult_by_a_timer);
+  scs_tic(&mult_by_a_timer);
 #endif
   /*#pragma omp parallel for private(p,c1,c2,xj)  */
   for (j = 0; j < n; j++) {

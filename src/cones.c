@@ -637,9 +637,9 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   timer cone_timer;
 #if EXTRA_VERBOSE > 0
   timer proj_timer;
-  tic(&proj_timer);
+  scs_tic(&proj_timer);
 #endif
-  tic(&cone_timer);
+  scs_tic(&cone_timer);
 
   if (k->l) {
     /* project onto positive orthant */
@@ -652,7 +652,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += k->l;
 #if EXTRA_VERBOSE > 0
     scs_printf("pos orthant proj time: %1.2es\n", tocq(&proj_timer) / 1e3);
-    tic(&proj_timer);
+    scs_tic(&proj_timer);
 #endif
   }
 
@@ -683,7 +683,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
 #if EXTRA_VERBOSE > 0
     scs_printf("SOC proj time: %1.2es\n", tocq(&proj_timer) / 1e3);
-    tic(&proj_timer);
+    scs_tic(&proj_timer);
 #endif
   }
 
@@ -703,7 +703,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
 #if EXTRA_VERBOSE > 0
     scs_printf("SD proj time: %1.2es\n", tocq(&proj_timer) / 1e3);
-    tic(&proj_timer);
+    scs_tic(&proj_timer);
 #endif
   }
 
@@ -735,7 +735,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->ep;
 #if EXTRA_VERBOSE > 0
     scs_printf("EP proj time: %1.2es\n", tocq(&proj_timer) / 1e3);
-    tic(&proj_timer);
+    scs_tic(&proj_timer);
 #endif
   }
 
@@ -750,7 +750,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->ed;
 #if EXTRA_VERBOSE > 0
     scs_printf("ED proj time: %1.2es\n", tocq(&proj_timer) / 1e3);
-    tic(&proj_timer);
+    scs_tic(&proj_timer);
 #endif
   }
 
@@ -783,7 +783,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->psize;
 #if EXTRA_VERBOSE > 0
     scs_printf("Power cone proj time: %1.2es\n", tocq(&proj_timer) / 1e3);
-    tic(&proj_timer);
+    scs_tic(&proj_timer);
 #endif
   }
   /* project onto OTHER cones */

@@ -57,7 +57,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
 #if EXTRA_VERBOSE > 0
   timer transpose_timer;
   scs_printf("transposing A\n");
-  tic(&transpose_timer);
+  scs_tic(&transpose_timer);
 #endif
 
   z = scs_calloc(m, sizeof(scs_int));
@@ -244,7 +244,7 @@ scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs,
       (iter < 0 ? CG_BEST_TOL
                 : CG_MIN_TOL / POWF((scs_float)iter + 1, stgs->cg_rate));
 
-  tic(&linsys_timer);
+  scs_tic(&linsys_timer);
   /* solves Mx = b, for x but stores result in b */
   /* s contains warm-start (if available) */
   accum_by_atrans(A, p, &(b[A->n]), b);

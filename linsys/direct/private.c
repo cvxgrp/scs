@@ -220,7 +220,7 @@ scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs,
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   timer linsys_timer;
-  tic(&linsys_timer);
+  scs_tic(&linsys_timer);
   LDLSolve(b, b, p->L, p->D, p->P, p->bp);
   p->total_solve_time += tocq(&linsys_timer);
 #if EXTRA_VERBOSE > 0

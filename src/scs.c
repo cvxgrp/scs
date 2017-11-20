@@ -879,7 +879,7 @@ scs_int scs_solve(ScsWork *w, const ScsData *d, const ScsCone *k,
   }
   /* initialize ctrl-c support */
   start_interrupt_listener();
-  tic(&solve_timer);
+  scs_tic(&solve_timer);
   info->status_val = SCS_UNFINISHED; /* not yet converged */
   r.last_iter = -1;
   update_work(d, w, sol);
@@ -968,7 +968,7 @@ void scs_finish(ScsWork *w) {
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info) {
   DEBUG_FUNC
 #if EXTRA_VERBOSE > 1
-  tic(&global_timer);
+  scs_tic(&global_timer);
 #endif
   ScsWork *w;
   timer init_timer;
@@ -987,9 +987,8 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info) {
     RETURN SCS_NULL;
   }
 #endif
-  tic(&init_timer);
+  scs_tic(&init_timer);
   w = init_work(d, k);
-  /* strtoc("init", &init_timer); */
   info->setup_time = tocq(&init_timer);
   if (d->stgs->verbose) {
     scs_printf("Setup time: %1.2es\n", info->setup_time / 1e3);
