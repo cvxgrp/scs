@@ -7,7 +7,7 @@ extern "C" {
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION                                                            \
-    ("1.2.7") /* string literals automatically null-terminated */
+  ("2.0.0") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE (-7)
@@ -22,8 +22,8 @@ extern "C" {
 #define SCS_SOLVED_INACCURATE (2)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
-#define MAX_ITERS (2500)
-#define EPS (1E-3)
+#define MAX_ITERS (5000)
+#define EPS (1E-5)
 #define ALPHA (1.5)
 #define RHO_X (1E-3)
 #define SCALE (1.0)
@@ -31,6 +31,7 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
+#define ACCELERATION_LOOKBACK (20)
 
 #ifdef __cplusplus
 }

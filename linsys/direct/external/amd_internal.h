@@ -146,7 +146,7 @@
 
 #include "amd.h"
 
-#if defined (DLONG) || defined (ZLONG)
+#if defined (LONG) || defined (ZLONG)
 
 #define Int SuiteSparse_long
 #define ID  SuiteSparse_long_id
@@ -208,7 +208,7 @@ GLOBAL size_t AMD_aat
     const Int Ai [ ],
     Int Len [ ],
     Int Tp [ ],
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 ) ;
 
 GLOBAL void AMD_1
@@ -222,7 +222,7 @@ GLOBAL void AMD_1
     Int slen,
     Int S [ ],
     scs_float Control [ ],
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 ) ;
 
 GLOBAL void AMD_postorder

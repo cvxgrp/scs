@@ -1,7 +1,7 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/cs.o src/linAlg.o src/ctrlc.o src/scs_version.o
+SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/cs.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
 
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
@@ -11,15 +11,14 @@ CUDAFLAGS += $(OPT_FLAGS)
 
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_SCS_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o)
-TARGETS = $(OUT)/demo_direct $(OUT)/demo_indirect $(OUT)/demo_SOCP_indirect $(OUT)/demo_SOCP_direct
+TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct
 
-.PHONY: default 
+.PHONY: default
 
 default: $(TARGETS) $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
 	@echo "****************************************************************************************"
 	@echo "Successfully compiled scs, copyright Brendan O'Donoghue 2012."
-	@echo "To test, type '$(OUT)/demo_direct' or '$(OUT)/demo_indirect',"
-	@echo "or '$(OUT)/demo_SOCP_indirect' to solve a random SOCP."
+	@echo "To test, type '$(OUT)/demo_socp_indirect' to solve a random SOCP."
 	@echo "**********************************************************************************"
 ifneq ($(USE_LAPACK), 0)
 	@echo "Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs"
@@ -36,8 +35,9 @@ endif
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
 src/util.o	: src/util.c include/util.h include/constants.h
 src/cones.o	: src/cones.c include/cones.h include/scs_blas.h
+src/accel.o	: src/accel.c include/accel.h include/scs_blas.h
 src/cs.o	: src/cs.c include/cs.h
-src/linAlg.o: src/linAlg.c include/linAlg.h
+src/linalg.o: src/linalg.c include/linalg.h
 src/ctrl.o  : src/ctrl.c include/ctrl.h
 src/scs_version.o: src/scs_version.c include/constants.h
 
@@ -63,20 +63,20 @@ $(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/com
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/demo_direct: examples/c/demo.c $(OUT)/libscsdir.a
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^ -o $@ $(LDFLAGS)
-
-$(OUT)/demo_indirect: examples/c/demo.c $(OUT)/libscsindir.a
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS)
-
-$(OUT)/demo_SOCP_direct: examples/c/randomSOCPProb.c $(OUT)/libscsdir.a
+$(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/demo_SOCP_indirect: examples/c/randomSOCPProb.c $(OUT)/libscsindir.a
+$(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+# basic testing
+.PHONY: test
+test: $(OUT)/run_tests
+$(OUT)/run_tests: test/run_tests.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: $(OUT)/demo_gpu $(OUT)/demo_SOCP_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
+gpu: $(OUT)/demo_socp_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 
 $(GPU)/private.o: $(GPU)/private.c
 	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
@@ -90,11 +90,8 @@ $(OUT)/libscsgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/demo_SOCP_gpu: examples/c/randomSOCPProb.c $(OUT)/libscsgpu.a
+$(OUT)/demo_socp_gpu: test/random_socp_prob.c $(OUT)/libscsgpu.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
-
-$(OUT)/demo_gpu: examples/c/demo.c $(OUT)/libscsgpu.$(SHARED)
-	$(CC) $(CFLAGS) -DDEMO_PATH="\"$(CURDIR)/examples/raw/demo_data\"" $^  -o $@ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge
 clean:
@@ -104,6 +101,6 @@ clean:
 	@rm -rf .idea
 	@rm -rf python/*.pyc
 	@rm -rf python/build
-purge: clean 
+purge: clean
 	@rm -rf $(OUT)
 

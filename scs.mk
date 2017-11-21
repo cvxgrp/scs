@@ -70,10 +70,10 @@ RANLIB = ranlib
 OPT_FLAGS =
 ########### OPTIONAL FLAGS ##########
 # these can all be override from the command line
-# e.g. make DLONG=1 will override the setting below
-DLONG = 0
-ifneq ($(DLONG), 0)
-OPT_FLAGS += -DDLONG=$(DLONG) # use longs rather than ints
+# e.g. make LONG=1 will override the setting below
+LONG = 0
+ifneq ($(LONG), 0)
+OPT_FLAGS += -DLONG=$(LONG) # use longs rather than ints
 endif
 CTRLC = 1
 ifneq ($(CTRLC), 0)
@@ -101,9 +101,9 @@ OPT_FLAGS += -DTEST_GPU_MAT_MUL=$(TEST_GPU_MAT_MUL) # tests GPU matrix multiply 
 endif
 
 ### VERBOSITY LEVELS: 0,1,2
-EXTRAVERBOSE = 0
-ifneq ($(EXTRAVERBOSE), 0)
-OPT_FLAGS += -DEXTRAVERBOSE=$(EXTRAVERBOSE) # extra verbosity level
+EXTRA_VERBOSE = 0
+ifneq ($(EXTRA_VERBOSE), 0)
+OPT_FLAGS += -DEXTRA_VERBOSE=$(EXTRA_VERBOSE) # extra verbosity level
 endif
 
 ############ OPENMP: ############
@@ -122,12 +122,12 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
-USE_LAPACK = 0
+USE_LAPACK = 1
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   BLASLDFLAGS = -lblas -llapack #-lgfortran
   LDFLAGS += $(BLASLDFLAGS)
-  OPT_FLAGS += -DLAPACK_LIB_FOUND
+  OPT_FLAGS += -DUSE_LAPACK
 
   BLAS64 = 0
   ifneq ($(BLAS64), 0)

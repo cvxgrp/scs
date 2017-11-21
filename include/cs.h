@@ -5,13 +5,13 @@
 
 typedef struct cs_sparse /* matrix in compressed-column or triplet form */
     {
-    scs_int nzmax; /* maximum number of entries */
-    scs_int m;     /* number of rows */
-    scs_int n;     /* number of columns */
-    scs_int *p;    /* column pointers (size n+1) or col indices (size nzmax) */
-    scs_int *i;    /* row indices, size nzmax */
-    scs_float *x;  /* numerical values, size nzmax */
-    scs_int nz;    /* # of entries in triplet matrix, -1 for compressed-col */
+  scs_int nzmax; /* maximum number of entries */
+  scs_int m;     /* number of rows */
+  scs_int n;     /* number of columns */
+  scs_int *p;    /* column pointers (size n+1) or col indices (size nzmax) */
+  scs_int *i;    /* row indices, size nzmax */
+  scs_float *x;  /* numerical values, size nzmax */
+  scs_int nz;    /* # of entries in triplet matrix, -1 for compressed-col */
 } cs;
 
 cs *cs_compress(const cs *T);

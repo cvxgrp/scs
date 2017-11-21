@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 
 /* User-callable.  Prints the output statistics for AMD.  See amd.h
- * for details.  If the Info array is not present, nothing is printed.
+ * for details.  If the ScsInfo array is not present, nothing is printed.
  */
 
 #include "amd_internal.h"
@@ -18,7 +18,7 @@
 
 GLOBAL void AMD_info
 (
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 )
 {
     scs_float n, ndiv, nmultsubs_ldl, nmultsubs_lu, lnz, lnzd ;
@@ -26,33 +26,33 @@ GLOBAL void AMD_info
     PRINTF (("\nAMD version %d.%d.%d, %s, results:\n",
 	AMD_MAIN_VERSION, AMD_SUB_VERSION, AMD_SUBSUB_VERSION, AMD_DATE)) ;
 
-    if (!Info)
+    if (!ScsInfo)
     {
 	return ;
     }
 
-    n = Info [AMD_N] ;
-    ndiv = Info [AMD_NDIV] ;
-    nmultsubs_ldl = Info [AMD_NMULTSUBS_LDL] ;
-    nmultsubs_lu = Info [AMD_NMULTSUBS_LU] ;
-    lnz = Info [AMD_LNZ] ;
+    n = ScsInfo [AMD_N] ;
+    ndiv = ScsInfo [AMD_NDIV] ;
+    nmultsubs_ldl = ScsInfo [AMD_NMULTSUBS_LDL] ;
+    nmultsubs_lu = ScsInfo [AMD_NMULTSUBS_LU] ;
+    lnz = ScsInfo [AMD_LNZ] ;
     lnzd = (n >= 0 && lnz >= 0) ? (n + lnz) : (-1) ;
 
     /* AMD return status */
     PRINTF (("    status: ")) ;
-    if (Info [AMD_STATUS] == AMD_OK)
+    if (ScsInfo [AMD_STATUS] == AMD_OK)
     {
 	PRINTF (("OK\n")) ;
     }
-    else if (Info [AMD_STATUS] == AMD_OUT_OF_MEMORY)
+    else if (ScsInfo [AMD_STATUS] == AMD_OUT_OF_MEMORY)
     {
 	PRINTF (("out of memory\n")) ;
     }
-    else if (Info [AMD_STATUS] == AMD_INVALID)
+    else if (ScsInfo [AMD_STATUS] == AMD_INVALID)
     {
 	PRINTF (("invalid matrix\n")) ;
     }
-    else if (Info [AMD_STATUS] == AMD_OK_BUT_JUMBLED)
+    else if (ScsInfo [AMD_STATUS] == AMD_OK_BUT_JUMBLED)
     {
 	PRINTF (("OK, but jumbled\n")) ;
     }
@@ -64,21 +64,21 @@ GLOBAL void AMD_info
     /* statistics about the input matrix */
     PRI ("    n, dimension of A:                                  %.20g\n", n);
     PRI ("    nz, number of nonzeros in A:                        %.20g\n",
-	Info [AMD_NZ]) ;
+	ScsInfo [AMD_NZ]) ;
     PRI ("    symmetry of A:                                      %.4f\n",
-	Info [AMD_SYMMETRY]) ;
+	ScsInfo [AMD_SYMMETRY]) ;
     PRI ("    number of nonzeros on diagonal:                     %.20g\n",
-	Info [AMD_NZDIAG]) ;
+	ScsInfo [AMD_NZDIAG]) ;
     PRI ("    nonzeros in pattern of A+A' (excl. diagonal):       %.20g\n",
-	Info [AMD_NZ_A_PLUS_AT]) ;
+	ScsInfo [AMD_NZ_A_PLUS_AT]) ;
     PRI ("    # dense rows/columns of A+A':                       %.20g\n",
-	Info [AMD_NDENSE]) ;
+	ScsInfo [AMD_NDENSE]) ;
 
     /* statistics about AMD's behavior  */
     PRI ("    memory used, in bytes:                              %.20g\n",
-	Info [AMD_MEMORY]) ;
+	ScsInfo [AMD_MEMORY]) ;
     PRI ("    # of memory compactions:                            %.20g\n",
-	Info [AMD_NCMPA]) ;
+	ScsInfo [AMD_NCMPA]) ;
 
     /* statistics about the ordering quality */
     PRINTF (("\n"
@@ -98,7 +98,7 @@ GLOBAL void AMD_info
     PRI ("    # multiply-subtract operations for LU:              %.20g\n",
 	nmultsubs_lu) ;
     PRI ("    max nz. in any column of L (incl. diagonal):        %.20g\n",
-	Info [AMD_DMAX]) ;
+	ScsInfo [AMD_DMAX]) ;
 
     /* total flop counts for various factorizations */
 

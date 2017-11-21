@@ -8,7 +8,7 @@
 
 #include "SuiteSparse_config.h"
 
-#ifdef DLONG
+#ifdef LONG
 #define LDL_int SuiteSparse_long
 #define LDL_ID SuiteSparse_long_id
 

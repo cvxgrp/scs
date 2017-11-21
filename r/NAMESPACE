@@ -1,3 +1,0 @@
-useDynLib(scs)
-import(Matrix)
-export(scs)

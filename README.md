@@ -2,20 +2,27 @@ SCS
 ====
 
 [![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
+
+<!--- remove appveyor since I don't know how to make it compile with lapack 
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
+-->
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
-large-scale convex cone problems, based on our paper [Conic Optimization via Operator Splitting
-and Homogeneous Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
-and can be used in other C, C++, Python, Matlab, R, Julia, Java, and Scala
-programs via included interfaces (Julia interface available
-[here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
-convex optimization toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
+large-scale convex cone problems, based on our paper [Conic Optimization via
+Operator Splitting and Homogeneous Self-Dual
+Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
+and can be used in other C, C++,
+[Python](https://github.com/bodono/scs-python),
+[Matlab](https://github.com/bodono/scs-matlab),
+[R](https://github.com/bodono/scs-r),
+[Julia](https://github.com/JuliaOpt/SCS.jl), programs via the linked
+interfaces. It can also be called as a solver from convex optimization
+toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
 
-The current version is `1.2.7`. If you wish to cite SCS, please use the following:
+The current version is `2.0.0`. If you wish to cite SCS, please use the following:
 ```
 @article{ocpb:16,
     author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
@@ -30,10 +37,10 @@ The current version is `1.2.7`. If you wish to cite SCS, please use the followin
 }
 @misc{scs,
     author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
-    title        = {{SCS}: Splitting Conic Solver, version 1.2.7},
+    title        = {{SCS}: Splitting Conic Solver, version 2.0.0},
     howpublished = {\url{https://github.com/cvxgrp/scs}},
-    month        = apr,
-    year         = 2016
+    month        = oct,
+    year         = 2017
 }
 ```
 
@@ -88,7 +95,7 @@ SCS assumes that the matrix variables and the input data corresponding to
 semidefinite cones have been vectorized by **scaling the off-diagonal entries by
 `sqrt(2)`** and stacking the lower triangular elements **column-wise**. For a `k x k`
 matrix variable (or data matrix) this operation would create a vector of length
-`k(k+1)/2`. Scaling by `sqrt(2)` is required to preserve the inner-product.
+`k(k+1)/2`. ScsScaling by `sqrt(2)` is required to preserve the inner-product.
 
 **To recover the matrix solution this operation must be inverted on the
 components of the vector returned by SCS corresponding to semidefinite cones**.
@@ -139,26 +146,26 @@ needed).
 
 These libraries (and `scs.h`) expose only four API functions:
 
-* `Work * scs_init(const Data * d, const Cone * k, Info * info);`
+* `ScsWork * scs_init(const ScsData * d, const ScsCone * k, ScsInfo * info);`
     
-    This initializes the Work struct containing the workspace that scs will
+    This initializes the ScsWork struct containing the workspace that scs will
     use, and performs the necessary preprocessing (e.g. matrix factorization).
     All inputs `d`, `k`, and `info` must be memory allocated before calling.
 
-* `scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info);`
+* `scs_int scs_solve(ScsWork * w, const ScsData * d, const ScsCone * k, ScsSolution * sol, ScsInfo * info);`
     
-    This solves the problem as defined by Data `d` and Cone `k` using the workspace
+    This solves the problem as defined by ScsData `d` and ScsCone `k` using the workspace
     in `w`. The solution is returned in `sol` and information about the solve
     is returned in `info` (outputs must have memory allocated before calling).
     None of the inputs can be NULL. You can call `scs_solve` many times for one
     call to `scs_init`, so long as the matrix `A`
     does not change (vectors `b` and `c` can change).
 
-* `void scs_finish(Work * w);`
+* `void scs_finish(ScsWork * w);`
     
     Called after all solves completed to free allocated memory and other cleanup.
 
-* `scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info);`
+* `scs_int scs(const ScsData * d, const ScsCone * k, ScsSolution * sol, ScsInfo * info);`
 
     Convenience method that simply calls all the above routines in order, for cases where
     the workspace does not need to be reused. All inputs must have memory allocated
@@ -167,19 +174,19 @@ These libraries (and `scs.h`) expose only four API functions:
 The relevant data structures are:
 ```C
 
-    typedef struct SCS_PROBLEM_DATA Data;
-    typedef struct SCS_SETTINGS Settings;
-    typedef struct SCS_SOL_VARS Sol;
-    typedef struct SCS_INFO Info;
-    typedef struct SCS_SCALING Scaling;
-    typedef struct SCS_WORK Work;
-    typedef struct SCS_CONE Cone;
+    typedef struct SCS_PROBLEM_DATA ScsData;
+    typedef struct SCS_SETTINGS ScsSettings;
+    typedef struct SCS_SOL_VARS ScsSolution;
+    typedef struct SCS_INFO ScsInfo;
+    typedef struct SCS_SCALING ScsScaling;
+    typedef struct SCS_WORK ScsWork;
+    typedef struct SCS_CONE ScsCone;
 
     /* defined in linSys.h, can be overriden by user */
-    typedef struct A_DATA_MATRIX AMatrix;
+    typedef struct SCS_A_DATA_MATRIX  ScsMatrix;
 
     /* this struct defines the data matrix A */
-    struct A_DATA_MATRIX {
+    struct SCS_A_DATA_MATRIX  {
         /* A is supplied in column compressed format */
         scs_float * x;      /* A values, size: NNZ A */
         scs_int * i;        /* A row index, size: NNZ A */
@@ -191,12 +198,12 @@ The relevant data structures are:
     struct SCS_PROBLEM_DATA {
         /* these cannot change for multiple runs for the same call to scs_init */
         scs_int m, n;       /* A has m rows, n cols */
-        AMatrix * A;        /* A is supplied in data format specified by linsys solver */
+        ScsMatrix * A;        /* A is supplied in data format specified by linsys solver */
 
         /* these can change for multiple runs for the same call to scs_init */
         scs_float * b, *c;  /* dense arrays for b (size m), c (size n) */
 
-        Settings * stgs;    /* contains solver settings specified by user */
+        ScsSettings * stgs;    /* contains solver settings specified by user */
     };
 
     /* struct containing solver settings */
@@ -214,7 +221,7 @@ The relevant data structures are:
         scs_float alpha;    /* relaxation parameter: 1.8 */
         scs_float cg_rate;  /* for indirect, tolerance goes down like (1/iter)^cg_rate: 2 */
         scs_int verbose;    /* boolean, write out progress: 1 */
-        scs_int warm_start; /* boolean, warm start (put initial guess in Sol struct): 0 */
+        scs_int warm_start; /* boolean, warm start (put initial guess in ScsSolution struct): 0 */
     };   
 
     /* contains primal-dual solution arrays */
@@ -286,7 +293,7 @@ second-order cones etc.).
 **Warm-start**
 
 You can warm-start SCS (supply a guess of the solution) by setting warm_start in
-Data to `1` and supplying the warm-starts in the Sol struct (`x`,`y`, and `s`). All
+ScsData to `1` and supplying the warm-starts in the ScsSolution struct (`x`,`y`, and `s`). All
 inputs must be warm-started if any one is. These
 are used to initialize the iterates in `scs_solve`.
  
@@ -308,6 +315,7 @@ In order to solve SDPs you must have BLAS and LAPACK installed.
 Edit `scs.mk` to set `USE_LAPACK = 1` and point to the location of these
 libraries. Without these you can still solve problems using the other cones.
 
+<!---
 ### Using SCS in Matlab
 Running `make_scs` in Matlab under the `matlab` folder will produce two mex
 files, one for each of the direct and indirect solvers.
@@ -377,21 +385,21 @@ link the dynamic libraries (`libscsjdir.*` `libscsjindir.*`):
 Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with libraries
 ```
 
-To solve a problem create a new instance of `ConeProgram` with constructor
+To solve a problem create a new instance of `ScsConeProgram` with constructor
 
 ```Java
-public ConeProgram(Data d, Cone k, Settings p, IConeSolver solver);
+public ScsConeProgram(ScsData d, ScsCone k, ScsSettings p, IScsConeSolver solver);
 ```
 
-where the `IConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
+where the `IScsConeSolver` interface can be one of `DirectSolver` or `IndirectSolver`.
 Then call
 
 ```Java
-ConeProgram.solve();
+ScsConeProgram.solve();
 ```
 
-on your instance of `ConeProgram`, which will return an instance of
-`Solution`, containing the solution and information about the run.
+on your instance of `ScsConeProgram`, which will return an instance of
+`ScsSolution`, containing the solution and information about the run.
 
 ### Using SCS in R
 
@@ -410,4 +418,4 @@ are lists specifying the cone dimensions and input params respectively.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
-
+-->

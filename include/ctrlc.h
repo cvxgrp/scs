@@ -15,7 +15,7 @@ extern int utSetInterruptEnabled(int);
 
 #elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)
 
-/* Use Windows SetConsoleCtrlHandler for signal handling */
+/* Use Windows set_console_ctrl_handler for signal handling */
 #include <windows.h>
 
 #else
@@ -26,16 +26,16 @@ extern int utSetInterruptEnabled(int);
 #endif
 
 /* METHODS are the same for both */
-void startInterruptListener(void);
-void endInterruptListener(void);
-int isInterrupted(void);
+void start_interrupt_listener(void);
+void end_interrupt_listener(void);
+int is_interrupted(void);
 
 #else /* CTRLC = 0 */
 
 /* No signal handling. */
-#define startInterruptListener()
-#define endInterruptListener()
-#define isInterrupted() 0
+#define start_interrupt_listener()
+#define end_interrupt_listener()
+#define is_interrupted() 0
 
 #endif /* END IF CTRLC > 0 */
 

@@ -1,7 +1,7 @@
 #ifndef SCS_BLAS_H_GUARD
 #define SCS_BLAS_H_GUARD
 
-#ifdef LAPACK_LIB_FOUND
+#ifdef USE_LAPACK
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,18 +34,18 @@ extern "C" {
 #endif
 
 #ifdef MATLAB_MEX_FILE
-typedef ptrdiff_t blasint;
+typedef ptrdiff_t blas_int;
 #elif defined BLAS64
 #include <stdint.h>
-typedef int64_t blasint;
+typedef int64_t blas_int;
 #else
-typedef int blasint;
+typedef int blas_int;
 #endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LAPACK_LIB_FOUND */
+#endif /* USE_LAPACK */
 
 #endif /* SCS_BLAS_H_GUARD */

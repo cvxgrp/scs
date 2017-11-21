@@ -53,7 +53,7 @@ int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
     const int Ai [ ],          /* row indices of A, of size nz = Ap [n] */
     int P [ ],                 /* output permutation, of size n */
     scs_float Control [ ],        /* input Control settings, of size AMD_CONTROL */
-    scs_float Info [ ]            /* output Info statistics, of size AMD_INFO */
+    scs_float ScsInfo [ ]            /* output ScsInfo statistics, of size AMD_INFO */
 ) ;
 
 SuiteSparse_long amd_l_order    /* see above for description of arguments */
@@ -63,7 +63,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
     const SuiteSparse_long Ai [ ],
     SuiteSparse_long P [ ],
     scs_float Control [ ],
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 ) ;
 
 /* Input arguments (not modified):
@@ -81,8 +81,8 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       P: an int/SuiteSparse_long array of size n, containing the output
  *           permutation. If row i is the kth pivot row, then P [k] = i.  In
  *           MATLAB notation, the reordered matrix is A (P,P).
- *       Info: a scs_float array of size AMD_INFO, containing statistical
- *           information.  Ignored if Info is SCS_NULL.
+ *       ScsInfo: a scs_float array of size AMD_INFO, containing statistical
+ *           information.  Ignored if ScsInfo is SCS_NULL.
  *
  * On input, the matrix A is stored in column-oriented form.  The row indices
  * of nonzero entries in column j are stored in Ai [Ap [j] ... Ap [j+1]-1].
@@ -99,7 +99,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  * in A.  The array Ap is of size n+1, and the array Ai is of size nz = Ap [n].
  * The matrix does not need to be symmetric, and the diagonal does not need to
  * be present (if diagonal entries are present, they are ignored except for
- * the output statistic Info [AMD_NZDIAG]).  The arrays Ai and Ap are not
+ * the output statistic ScsInfo [AMD_NZDIAG]).  The arrays Ai and Ap are not
  * modified.  This form of the Ap and Ai arrays to represent the nonzero
  * pattern of the matrix A is the same as that used internally by MATLAB.
  * If you wish to use a more flexible input structure, please see the
@@ -157,18 +157,18 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       Control [2..4] are not used in the current version, but may be used in
  *           future versions.
  *
- * The Info array provides statistics about the ordering on output.  If it is
+ * The ScsInfo array provides statistics about the ordering on output.  If it is
  * not present, the statistics are not returned.  This is not an error
  * condition.
  * 
- *       Info [AMD_STATUS]:  the return value of AMD, either AMD_OK,
+ *       ScsInfo [AMD_STATUS]:  the return value of AMD, either AMD_OK,
  *           AMD_OK_BUT_JUMBLED, AMD_OUT_OF_MEMORY, or AMD_INVALID.
  *
- *       Info [AMD_N]: n, the size of the input matrix
+ *       ScsInfo [AMD_N]: n, the size of the input matrix
  *
- *       Info [AMD_NZ]: the number of nonzeros in A, nz = Ap [n]
+ *       ScsInfo [AMD_NZ]: the number of nonzeros in A, nz = Ap [n]
  *
- *       Info [AMD_SYMMETRY]:  the symmetry of the matrix A.  It is the number
+ *       ScsInfo [AMD_SYMMETRY]:  the symmetry of the matrix A.  It is the number
  *           of "matched" off-diagonal entries divided by the total number of
  *           off-diagonal entries.  An entry A(i,j) is matched if A(j,i) is also
  *           an entry, for any pair (i,j) for which i != j.  In MATLAB notation,
@@ -176,29 +176,29 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *                B = tril (S, -1) + triu (S, 1) ;
  *                symmetry = nnz (B & B') / nnz (B) ;
  *
- *       Info [AMD_NZDIAG]: the number of entries on the diagonal of A.
+ *       ScsInfo [AMD_NZDIAG]: the number of entries on the diagonal of A.
  *
- *       Info [AMD_NZ_A_PLUS_AT]:  the number of nonzeros in A+A', excluding the
- *           diagonal.  If A is perfectly symmetric (Info [AMD_SYMMETRY] = 1)
- *           with a fully nonzero diagonal, then Info [AMD_NZ_A_PLUS_AT] = nz-n
+ *       ScsInfo [AMD_NZ_A_PLUS_AT]:  the number of nonzeros in A+A', excluding the
+ *           diagonal.  If A is perfectly symmetric (ScsInfo [AMD_SYMMETRY] = 1)
+ *           with a fully nonzero diagonal, then ScsInfo [AMD_NZ_A_PLUS_AT] = nz-n
  *           (the smallest possible value).  If A is perfectly unsymmetric
- *           (Info [AMD_SYMMETRY] = 0, for an upper triangular matrix, for
- *           example) with no diagonal, then Info [AMD_NZ_A_PLUS_AT] = 2*nz
+ *           (ScsInfo [AMD_SYMMETRY] = 0, for an upper triangular matrix, for
+ *           example) with no diagonal, then ScsInfo [AMD_NZ_A_PLUS_AT] = 2*nz
  *           (the largest possible value).
  *
- *       Info [AMD_NDENSE]: the number of "dense" rows/columns of A+A' that were
+ *       ScsInfo [AMD_NDENSE]: the number of "dense" rows/columns of A+A' that were
  *           removed from A prior to ordering.  These are placed last in the
  *           output order P.
  *
- *       Info [AMD_MEMORY]: the amount of memory used by AMD, in bytes.  In the
- *           current version, this is 1.2 * Info  [AMD_NZ_A_PLUS_AT] + 9*n
+ *       ScsInfo [AMD_MEMORY]: the amount of memory used by AMD, in bytes.  In the
+ *           current version, this is 1.2 * ScsInfo  [AMD_NZ_A_PLUS_AT] + 9*n
  *           times the size of an integer.  This is at most 2.4nz + 9n.  This
  *           excludes the size of the input arguments Ai, Ap, and P, which have
  *           a total size of nz + 2*n + 1 integers.
  *
- *       Info [AMD_NCMPA]: the number of garbage collections performed.
+ *       ScsInfo [AMD_NCMPA]: the number of garbage collections performed.
  *
- *       Info [AMD_LNZ]: the number of nonzeros in L (excluding the diagonal).
+ *       ScsInfo [AMD_LNZ]: the number of nonzeros in L (excluding the diagonal).
  *           This is a slight upper bound because mass elimination is combined
  *           with the approximate degree update.  It is a rough upper bound if
  *           there are many "dense" rows/columns.  The rest of the statistics,
@@ -206,20 +206,20 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *           The post-ordering of the assembly tree might also not exactly
  *           correspond to a true elimination tree postordering.
  *
- *       Info [AMD_NDIV]: the number of divide operations for a subsequent LDL'
+ *       ScsInfo [AMD_NDIV]: the number of divide operations for a subsequent LDL'
  *           or LU factorization of the permuted matrix A (P,P).
  *
- *       Info [AMD_NMULTSUBS_LDL]:  the number of multiply-subtract pairs for a
+ *       ScsInfo [AMD_NMULTSUBS_LDL]:  the number of multiply-subtract pairs for a
  *           subsequent LDL' factorization of A (P,P).
  *
- *       Info [AMD_NMULTSUBS_LU]:  the number of multiply-subtract pairs for a
+ *       ScsInfo [AMD_NMULTSUBS_LU]:  the number of multiply-subtract pairs for a
  *           subsequent LU factorization of A (P,P), assuming that no numerical
  *           pivoting is required.
  *
- *       Info [AMD_DMAX]:  the maximum number of nonzeros in any column of L,
+ *       ScsInfo [AMD_DMAX]:  the maximum number of nonzeros in any column of L,
  *           including the diagonal.
  *
- *       Info [14..19] are not used in the current version, but may be used in
+ *       ScsInfo [14..19] are not used in the current version, but may be used in
  *           future versions.
  */    
 
@@ -251,7 +251,7 @@ void amd_2
     int Degree [ ],
     int W [ ],
     scs_float Control [ ],
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 ) ;
 
 void amd_l2
@@ -270,7 +270,7 @@ void amd_l2
     SuiteSparse_long Degree [ ],
     SuiteSparse_long W [ ],
     scs_float Control [ ],
-    scs_float Info [ ]
+    scs_float ScsInfo [ ]
 ) ;
 
 /* ------------------------------------------------------------------------- */
@@ -321,7 +321,7 @@ EXTERN void *(*amd_calloc) (size_t, size_t) ;             /* pointer to calloc *
 EXTERN int (*amd_printf) (const char *, ...) ;            /* pointer to printf */
 
 /* ------------------------------------------------------------------------- */
-/* AMD Control and Info arrays */
+/* AMD Control and ScsInfo arrays */
 /* ------------------------------------------------------------------------- */
 
 /* amd_defaults:  sets the default control settings */
@@ -333,11 +333,11 @@ void amd_control    (scs_float Control [ ]) ;
 void amd_l_control  (scs_float Control [ ]) ;
 
 /* amd_info: prints the statistics */
-void amd_info       (scs_float Info [ ]) ;
-void amd_l_info     (scs_float Info [ ]) ;
+void amd_info       (scs_float ScsInfo [ ]) ;
+void amd_l_info     (scs_float ScsInfo [ ]) ;
 
 #define AMD_CONTROL 5          /* size of Control array */
-#define AMD_INFO 20            /* size of Info array */
+#define AMD_INFO 20            /* size of ScsInfo array */
 
 /* contents of Control */
 #define AMD_DENSE 0            /* "dense" if degree > Control [0] * sqrt (n) */
@@ -347,7 +347,7 @@ void amd_l_info     (scs_float Info [ ]) ;
 #define AMD_DEFAULT_DENSE 10.0          /* default "dense" degree 10*sqrt(n) */
 #define AMD_DEFAULT_AGGRESSIVE 1    /* do aggressive absorption by default */
 
-/* contents of Info */
+/* contents of ScsInfo */
 #define AMD_STATUS 0           /* return value of amd_order and amd_l_order */
 #define AMD_N 1                /* A is n-by-n */
 #define AMD_NZ 2      /* number of nonzeros in A */ 
