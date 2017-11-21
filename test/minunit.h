@@ -13,4 +13,3 @@
     if (message)                                                               \
       return message;                                                          \
   } while (0)
-extern int test_run;
