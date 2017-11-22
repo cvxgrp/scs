@@ -97,7 +97,7 @@ SCS assumes that the matrix variables and the input data corresponding to
 semidefinite cones have been vectorized by **scaling the off-diagonal entries by
 `sqrt(2)`** and stacking the lower triangular elements **column-wise**. For a `k
 x k` matrix variable (or data matrix) this operation would create a vector of
-length `k(k+1)/2`. ScsScaling by `sqrt(2)` is required to preserve the
+length `k(k+1)/2`. Scaling by `sqrt(2)` is required to preserve the
 inner-product.
 
 **To recover the matrix solution this operation must be inverted on the
@@ -119,7 +119,6 @@ and produces a vector consisting of
 vec(X) = (X11, sqrt(2)*X21, ..., sqrt(2)*Xk1, X22, sqrt(2)*X32, ..., Xkk).
 ```
 
-
 **Linear equation solvers**
 
 Each iteration of SCS requires the solution of a set of linear equations.  This
@@ -134,21 +133,27 @@ See [here](http://www.cise.ufl.edu/research/sparse/) for more information about
 these packages.
 
 ### Using SCS in C
-Typing `make` at the command line will compile the code and create
-SCS libraries in the `out` folder. It will also produce six demo binaries in the
-`out` folder named `demo_direct`, `demo_indirect`, `demo_gpu`, `demo_SOCP_direct`,
-`demo_SOCP_indirect`, and `demo_SOCP_gpu`.
+Typing `make` at the command line will compile the code and create SCS libraries
+in the `out` folder. To run the tests execute:
+```sh
+make
+make test
+out/run_tests
+```
 
-If `make` completes successfully, it will produce three static library files,
-`libscsdir.a`, `libscsindir.a`, and `libscsgpu.a` under the `out` folder and
-three dynamic library files `libscsdir.ext`, `libscsindir.ext`, and
-`libscsgpu.ext` (where `.ext` extension is platform dependent) in the same
-folder. To include the libraries in your own source code, compile with the
-linker option with `-L(PATH_TO_SCS)\out` and `-lscsdir` or `-lscsindir` (as
-needed).
+If `make` completes successfully, it will produce two static library files,
+`libscsdir.a`, `libscsindir.a`, and two dynamic library files `libscsdir.ext`,
+`libscsindir.ext` (where `.ext` extension is platform dependent) in the same
+folder. It will also produce two demo binaries in the `out` folder named
+`demo_socp_direct`, and `demo_socp_indirect`. If you have a GPU and have CUDA
+installed, you can also execture `make gpu` to compile SCS to run on the GPU
+which will create additional libraries and demo binaries in the `out` folder
+corresponding to the gpu version.
 
-The API and required data structures are defined in the file `include/scs.h`.
-The four main API functions are:
+To use the libraries in your own source code, compile your code with the linker
+option `-L(PATH_TO_SCS_LIBS)` and `-lscsdir` or `-lscsindir` (as needed).  The
+API and required data structures are defined in the file `include/scs.h`.  The
+four main API functions are:
 
 * `ScsWork * scs_init(const ScsData * d, const ScsCone * k, ScsInfo * info);`
 
@@ -176,35 +181,34 @@ The four main API functions are:
     cases where the workspace does not need to be reused. All inputs must have
     memory allocated before this call.
 
-The data matrix `A` is specified in column-compressed format and the vectors
-`b` and `c` are specified as dense arrays. The solutions `x` (primal), `s`
-(slack), and `y` (dual) are returned as dense arrays. Cones are specified as
-the struct above, the rows of `A` must correspond to the cones in the
+The data matrix `A` is specified in column-compressed format and the vectors `b`
+and `c` are specified as dense arrays. The solutions `x` (primal), `s` (slack),
+and `y` (dual) are returned as dense arrays. Cones are specified as the struct
+defined in `include/scs.h`, the rows of `A` must correspond to the cones in the
 exact order as specified by the cone struct (i.e. put linear cones before
 second-order cones etc.).
 
 **Warm-start**
 
-You can warm-start SCS (supply a guess of the solution) by setting warm_start in
-ScsData to `1` and supplying the warm-starts in the ScsSolution struct (`x`,`y`,
-and `s`). All inputs must be warm-started if any one is. These are used to
-initialize the iterates in `scs_solve`.
+You can warm-start SCS (supply a guess of the solution) by setting `warm_start`
+in the ScsData struct to `1` and supplying the warm-starts in the ScsSolution
+struct (`x`,`y`, and `s`). All inputs must be warm-started if any one is. These
+are used to initialize the iterates in `scs_solve`.
 
 **Re-using matrix factorization**
 
 If using the direct version you can factorize the matrix once and solve many
-times. Simply call scs_init once, and use `scs_solve` many times with the same
+times. Simply call `scs_init` once, and use `scs_solve` many times with the same
 workspace, changing the input data `b` and `c` (and optionally warm-starts) for
-each iteration. See run_scs.c for an example.
+each iteration.
 
 **Using your own linear system solver**
 
 To use your own linear system solver simply implement all the methods and the
-two structs in `include/linSys.h` and plug it in.
+two structs in `include/linsys.h` and plug it in.
 
-**Solving SDPs**
+**BLAS / LAPACK install error**
 
-In order to solve SDPs you must have BLAS and LAPACK installed.
-Edit `scs.mk` to set `USE_LAPACK = 1` and point to the location of these
-libraries. Without these you can still solve problems using the other cones.
-
+If you get an error like `cannot find -lblas` or `cannot find -llapack`, then
+you need to install blas and lapack and / or update your environment variables
+to point to the install locations.
