@@ -103,7 +103,7 @@ That is, the off-diagonal entries must be scaled by `1/sqrt(2)` and the upper
 triangular entries are filled in by copying the values of lower triangular
 entries.
 
-More explcitly, we want to express
+More explicitly, we want to express
 `Tr(C X)` as `vec(C)'*vec(X)`, where the `vec` operation takes the `k x k` matrix
 ```
 X = [ X11 X12 ... X1k
