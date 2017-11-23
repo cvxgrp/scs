@@ -62,7 +62,7 @@ scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries) {
   RETURN len;
 }
 
-scs_int get_full_cone_dims(const ScsCone *k) {
+static scs_int get_full_cone_dims(const ScsCone *k) {
   scs_int i, c = 0;
   if (k->f) {
     c += k->f;
@@ -229,7 +229,7 @@ char *get_cone_header(const ScsCone *k) {
   RETURN tmp;
 }
 
-scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
+static scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
   scs_int i;
   for (i = 0; i < ssize; i++) {
     if (s[i] > 2) {
@@ -239,7 +239,7 @@ scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
   RETURN 1; /* true */
 }
 
-scs_float exp_newton_one_d(scs_float rho, scs_float y_hat, scs_float z_hat) {
+static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat, scs_float z_hat) {
   scs_float t = MAX(-z_hat, 1e-6);
   scs_float f, fp;
   scs_int i;
@@ -260,13 +260,13 @@ scs_float exp_newton_one_d(scs_float rho, scs_float y_hat, scs_float z_hat) {
   RETURN t + z_hat;
 }
 
-void exp_solve_for_x_with_rho(scs_float *v, scs_float *x, scs_float rho) {
+static void exp_solve_for_x_with_rho(scs_float *v, scs_float *x, scs_float rho) {
   x[2] = exp_newton_one_d(rho, v[1], v[2]);
   x[1] = (x[2] - v[2]) * x[2] / rho;
   x[0] = v[0] - rho;
 }
 
-scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho) {
+static scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho) {
   exp_solve_for_x_with_rho(v, x, rho);
   if (x[1] <= 1e-12) {
     RETURN x[0];
@@ -274,7 +274,8 @@ scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho) {
   RETURN x[0] + x[1] * log(x[1] / x[2]);
 }
 
-void exp_get_rho_ub(scs_float *v, scs_float *x, scs_float *ub, scs_float *lb) {
+static void exp_get_rho_ub(scs_float *v, scs_float *x, scs_float *ub,
+                           scs_float *lb) {
   *lb = 0;
   *ub = 0.125;
   while (exp_calc_grad(v, x, *ub) > 0) {
@@ -284,7 +285,7 @@ void exp_get_rho_ub(scs_float *v, scs_float *x, scs_float *ub, scs_float *lb) {
 }
 
 /* project onto the exponential cone, v has dimension *exactly* 3 */
-static scs_int proj_exp_cone(scs_float *v, scs_int iter) {
+static scs_int proj_exp_cone(scs_float *v) {
   scs_int i;
   scs_float ub, lb, rho, g, x[3];
   scs_float r = v[0], s = v[1], t = v[2];
@@ -336,7 +337,7 @@ static scs_int proj_exp_cone(scs_float *v, scs_int iter) {
   RETURN 0;
 }
 
-scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
+static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #ifdef USE_LAPACK
   scs_int i;
   blas_int n_max = 0;
@@ -408,7 +409,7 @@ ScsConeWork *init_cone(const ScsCone *k) {
   RETURN c;
 }
 
-scs_int project_2x2_sdc(scs_float *X) {
+static scs_int project_2x2_sdc(scs_float *X) {
   scs_float a, b, d, l1, l2, x1, x2, rad;
   scs_float sqrt2 = SQRTF(2.0);
   a = X[0];
@@ -455,7 +456,7 @@ scs_int project_2x2_sdc(scs_float *X) {
 
 /* size of X is get_sd_cone_size(n) */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
-                                       ScsConeWork *c, const scs_int iter) {
+                                       ScsConeWork *c) {
 /* project onto the positive semi-definite cone */
 #ifdef USE_LAPACK
   scs_int i;
@@ -565,27 +566,27 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   RETURN 0;
 }
 
-scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh, scs_float a) {
+static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh, scs_float a) {
   scs_float x = 0.5 * (xh + SQRTF(xh * xh + 4 * a * (rh - r) * r));
   RETURN MAX(x, 1e-12);
 }
 
-scs_float pow_calcdxdr(scs_float x, scs_float xh, scs_float rh, scs_float r,
+static scs_float pow_calcdxdr(scs_float x, scs_float xh, scs_float rh, scs_float r,
                        scs_float a) {
   RETURN a *(rh - 2 * r) / (2 * x - xh);
 }
 
-scs_float pow_calc_f(scs_float x, scs_float y, scs_float r, scs_float a) {
+static scs_float pow_calc_f(scs_float x, scs_float y, scs_float r, scs_float a) {
   RETURN POWF(x, a) * POWF(y, (1 - a)) - r;
 }
 
-scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr, scs_float dydr,
+static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr, scs_float dydr,
                       scs_float a) {
   RETURN POWF(x, a) * POWF(y, (1 - a)) * (a * dxdr / x + (1 - a) * dydr / y) -
       1;
 }
 
-void proj_power_cone(scs_float *v, scs_float a) {
+static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
   scs_float x, y, r;
   scs_int i;
@@ -696,7 +697,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       if (k->s[i] == 0) {
         continue;
       }
-      if (proj_semi_definite_cone(&(x[count]), k->s[i], c, iter) < 0) {
+      if (proj_semi_definite_cone(&(x[count]), k->s[i], c) < 0) {
         RETURN - 1;
       }
       count += get_sd_cone_size(k->s[i]);
@@ -726,7 +727,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       s = x[idx + 1];
       t = x[idx + 2];
 
-      proj_exp_cone(&(x[idx]), iter);
+      proj_exp_cone(&(x[idx]));
 
       x[idx] -= r;
       x[idx + 1] -= s;
@@ -745,7 +746,7 @@ scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
 #pragma omp parallel for
 #endif
     for (i = 0; i < k->ed; ++i) {
-      proj_exp_cone(&(x[count + 3 * i]), iter);
+      proj_exp_cone(&(x[count + 3 * i]));
     }
     count += 3 * k->ed;
 #if EXTRA_VERBOSE > 0

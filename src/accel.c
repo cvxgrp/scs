@@ -42,7 +42,7 @@ void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
 void BLAS(gesv)(blas_int *n, blas_int *nrhs, scs_float *a, blas_int *lda,
                 blas_int *ipiv, scs_float *b, blas_int *ldb, blas_int *info);
 
-void update_mat(ScsAccelWork *a, scs_int idx) {
+static void update_mat(ScsAccelWork *a, scs_int idx) {
   /* use sol as scratch workspace here */
   scs_int i;
   scs_float *wrk = a->sol;
@@ -72,7 +72,7 @@ void update_mat(ScsAccelWork *a, scs_int idx) {
   mat[idx * k + idx] += ip;
 }
 
-void update_accel_params(ScsWork *w, scs_int idx) {
+static void update_accel_params(ScsWork *w, scs_int idx) {
   DEBUG_FUNC
   scs_float *d_f = w->accel->d_f;
   scs_float *d_g = w->accel->d_g;
@@ -159,7 +159,7 @@ ScsAccelWork *init_accel(ScsWork *w) {
   RETURN a;
 }
 
-scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
+static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
   blas_int info;
   blas_int twol = 2 * a->l;

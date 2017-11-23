@@ -175,7 +175,7 @@ static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysWork *p,
 }
 
 /* M = inv ( diag ( RHO_X * I + A'A ) ) */
-void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
+static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
                         ScsLinSysWork *p) {
   scs_int i;
   scs_float *M = (scs_float *)scs_malloc(A->n * sizeof(scs_float));

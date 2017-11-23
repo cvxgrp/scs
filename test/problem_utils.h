@@ -25,32 +25,12 @@
 #define FLOATRW "%f"
 #endif
 
+void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
+                          ScsSolution *opt_sol);
+
 /* uniform random number in [-1,1] */
-scs_float rand_scs_float(void) {
+static scs_float rand_scs_float(void) {
   return 2 * (((scs_float)rand()) / RAND_MAX) - 1;
-}
-
-/* normal random var */
-static scs_float U, V;
-static scs_int phase = 0;
-scs_float rand_gauss(void) {
-  scs_float Z;
-  if (phase == 0) {
-    U = (rand() + 1.) / (RAND_MAX + 2.);
-    V = rand() / (RAND_MAX + 1.);
-    Z = sqrt(-2 * log(U)) * sin(2 * PI * V);
-  } else
-    Z = sqrt(-2 * log(U)) * cos(2 * PI * V);
-
-  phase = 1 - phase;
-  return Z;
-}
-
-void perturb_vector(scs_float *v, scs_int l) {
-  scs_int i;
-  for (i = 0; i < l; i++) {
-    v[i] += 0.01 * rand_gauss();
-  }
 }
 
 void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,

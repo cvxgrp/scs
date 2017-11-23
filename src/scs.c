@@ -318,23 +318,6 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   RETURN status;
 }
 
-void print_sol(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  DEBUG_FUNC
-  scs_int i;
-  scs_printf("%s\n", info->status);
-  if (sol->x != SCS_NULL) {
-    for (i = 0; i < w->n; ++i) {
-      scs_printf("x[%i] = %4f\n", (int)i, sol->x[i]);
-    }
-  }
-  if (sol->y != SCS_NULL) {
-    for (i = 0; i < w->m; ++i) {
-      scs_printf("y[%i] = %4f\n", (int)i, sol->y[i]);
-    }
-  }
-  RETURN;
-}
-
 static void update_dual_vars(ScsWork *w) {
   DEBUG_FUNC
   scs_int i, n = w->n, l = n + w->m + 1;
@@ -445,15 +428,15 @@ static void setx(ScsWork *w, ScsSolution *sol) {
   RETURN;
 }
 
-scs_int is_solved_status(scs_int status) {
+static scs_int is_solved_status(scs_int status) {
   RETURN status == SCS_SOLVED || status == SCS_SOLVED_INACCURATE;
 }
 
-scs_int is_infeasible_status(scs_int status) {
+static scs_int is_infeasible_status(scs_int status) {
   RETURN status == SCS_INFEASIBLE || status == SCS_INFEASIBLE_INACCURATE;
 }
 
-scs_int is_unbounded_status(scs_int status) {
+static scs_int is_unbounded_status(scs_int status) {
   RETURN status == SCS_UNBOUNDED || status == SCS_UNBOUNDED_INACCURATE;
 }
 
@@ -576,7 +559,7 @@ static void print_header(ScsWork *w, const ScsCone *k) {
   RETURN;
 }
 
-scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
+static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
                              ScsConeWork *c, scs_int m) {
   DEBUG_FUNC
   scs_float dist;
@@ -594,7 +577,7 @@ scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
 }
 
 /* via moreau */
-scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
+static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
                             ScsConeWork *c, scs_int m) {
   DEBUG_FUNC
   scs_float dist;
@@ -855,7 +838,7 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
   RETURN 0;
 }
 
-scs_float iterate_norm_diff(ScsWork *w) {
+static scs_float iterate_norm_diff(ScsWork *w) {
   DEBUG_FUNC
   scs_int l = w->m + w->n + 1;
   scs_float u_norm_difference = calc_norm_diff(w->u, w->u_prev, l);

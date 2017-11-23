@@ -29,7 +29,7 @@ int is_interrupted(void) {
 #elif(defined _WIN32 || _WIN64 || defined _WINDLL)
 
 static int int_detected;
-BOOL WINAPI scs_handle_ctrlc(DWORD dwCtrlType) {
+static BOOL WINAPI scs_handle_ctrlc(DWORD dwCtrlType) {
   if (dwCtrlType != CTRL_C_EVENT) {
     return FALSE;
   }
@@ -55,7 +55,7 @@ int is_interrupted(void) {
 #include <signal.h>
 static int int_detected;
 struct sigaction oact;
-void scs_handle_ctrlc(int dummy) {
+static void scs_handle_ctrlc(int dummy) {
   int_detected = dummy ? dummy : -1;
 }
 

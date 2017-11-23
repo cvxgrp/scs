@@ -22,7 +22,7 @@ char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
 }
 
 /* M = inv ( diag ( RHO_X * I + A'A ) ) */
-void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
+static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
                         ScsLinSysWork *p) {
   scs_int i;
   scs_float *M = p->M;
