@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include "scs.h"
+
 /* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND SCS_LIN_SYS_WORK
  * STRUCT */
 

@@ -1,11 +1,11 @@
 #ifndef AMATRIX_H_GUARD
 #define AMATRIX_H_GUARD
 
-#include "glbopts.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "glbopts.h"
 
 /* this struct defines the data matrix A */
 struct SCS_A_DATA_MATRIX {
