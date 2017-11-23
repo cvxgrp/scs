@@ -588,7 +588,7 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr, scs_float
 
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
-  scs_float x, y, r;
+  scs_float x = 0.0, y = 0.0, r;
   scs_int i;
   /* v in K_a */
   if (xh >= 0 && yh >= 0 &&
