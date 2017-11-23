@@ -4,7 +4,7 @@
 #include "glbopts.h"
 #include "scs.h"
 #include "cs.h"
-#include "../common.h"
+#include "common.h"
 #include "linalg.h"
 
 #include <cuda.h>

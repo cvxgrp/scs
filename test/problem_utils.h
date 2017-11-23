@@ -5,7 +5,7 @@
 #include "cones.h"
 #include "linalg.h"
 #include "util.h"
-#include "linsys/amatrix.h"
+#include "amatrix.h"
 
 #define PI (3.141592654)
 #ifdef LONG

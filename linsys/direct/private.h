@@ -6,7 +6,7 @@
 #include "cs.h"
 #include "external/amd.h"
 #include "external/ldl.h"
-#include "../common.h"
+#include "common.h"
 
 struct SCS_LIN_SYS_WORK {
   cs *L;         /* KKT, and factorization matrix L resp. */

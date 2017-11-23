@@ -1,7 +1,7 @@
 #include "scs.h"
 #include "constants.h"
-#include "../minunit.h"
-#include "../problem_utils.h"
+#include "minunit.h"
+#include "problem_utils.h"
 
 static const char *small_lp(void) {
   ScsCone *k = scs_calloc(1, sizeof(ScsCone));
