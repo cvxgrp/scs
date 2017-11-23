@@ -39,7 +39,7 @@ static scs_int get_sd_cone_size(scs_int s) {
 scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries) {
   scs_int i, count = 0;
   scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
-  scs_int *b = scs_malloc(sizeof(scs_int) * len);
+  scs_int *b = (scs_int *)scs_malloc(sizeof(scs_int) * len);
   b[count] = k->f + k->l;
   count += 1;
   if (k->qsize > 0) {
@@ -155,7 +155,7 @@ scs_int validate_cones(const ScsData *d, const ScsCone *k) {
 }
 
 char *get_cone_summary(const ScsInfo *info, ScsConeWork *c) {
-  char *str = scs_malloc(sizeof(char) * 64);
+  char *str = (char *)scs_malloc(sizeof(char) * 64);
   sprintf(str, "\tCones: avg projection time: %1.2es\n",
           c->total_cone_time / (info->iter + 1) / 1e3);
   c->total_cone_time = 0.0;
@@ -188,7 +188,7 @@ void finish_cone(ScsConeWork *c) {
 }
 
 char *get_cone_header(const ScsCone *k) {
-  char *tmp = scs_malloc(sizeof(char) * 512);
+  char *tmp = (char *)scs_malloc(sizeof(char) * 512);
   scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
   sprintf(tmp, "Cones:");
   if (k->f) {
@@ -356,9 +356,9 @@ scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       n_max = (blas_int)k->s[i];
     }
   }
-  c->Xs = scs_calloc(n_max * n_max, sizeof(scs_float));
-  c->Z = scs_calloc(n_max * n_max, sizeof(scs_float));
-  c->e = scs_calloc(n_max, sizeof(scs_float));
+  c->Xs = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
+  c->Z = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
+  c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
 
   BLAS(syevr)
   ("Vectors", "All", "Lower", &n_max, c->Xs, &n_max, SCS_NULL, SCS_NULL,
@@ -370,8 +370,8 @@ scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     RETURN - 1;
   }
   c->lwork = (blas_int)(wkopt + 0.01); /* 0.01 for int casting safety */
-  c->work = scs_malloc(c->lwork * sizeof(scs_float));
-  c->iwork = scs_malloc(c->liwork * sizeof(blas_int));
+  c->work = (scs_float *)scs_malloc(c->lwork * sizeof(scs_float));
+  c->iwork = (blas_int *)scs_malloc(c->liwork * sizeof(blas_int));
 
   if (!c->Xs || !c->Z || !c->e || !c->work || !c->iwork) {
     RETURN - 1;
@@ -387,7 +387,7 @@ scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 }
 
 ScsConeWork *init_cone(const ScsCone *k) {
-  ScsConeWork *c = scs_calloc(1, sizeof(ScsConeWork));
+  ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
 #if EXTRA_VERBOSE > 0
   scs_printf("init_cone\n");
 #endif

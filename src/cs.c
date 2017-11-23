@@ -4,16 +4,6 @@
  Tim Davis et. al., for the full package please visit
  http://www.cise.ufl.edu/research/sparse/CSparse/ */
 
-/* wrapper for malloc */
-static void *cs_malloc(scs_int n, scs_int size) {
-  return (scs_malloc(n * size));
-}
-
-/* wrapper for calloc */
-static void *cs_calloc(scs_int n, scs_int size) {
-  return (scs_calloc(n, size));
-}
-
 /* wrapper for free */
 static void *cs_free(void *p) {
   if (p) {
@@ -34,7 +24,7 @@ cs *cs_compress(const cs *T) {
   Tx = T->x;
   nz = T->nz;
   C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
-  w = cs_calloc(n, sizeof(scs_int));           /* get workspace */
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int));           /* get workspace */
   if (!C || !w) {
     return (cs_done(C, w, SCS_NULL, 0));
   } /* out of memory */
@@ -61,7 +51,7 @@ cs *cs_done(cs *C, void *w, void *x, scs_int ok) {
 
 cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
                scs_int triplet) {
-  cs *A = cs_calloc(1, sizeof(cs)); /* allocate the cs struct */
+  cs *A = (cs *)scs_calloc(1, sizeof(cs)); /* allocate the cs struct */
   if (!A) {
     return (SCS_NULL);
   }         /* out of memory */
@@ -69,9 +59,9 @@ cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
   A->n = n;
   A->nzmax = nzmax = MAX(nzmax, 1);
   A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
-  A->p = cs_malloc(triplet ? nzmax : n + 1, sizeof(scs_int));
-  A->i = cs_malloc(nzmax, sizeof(scs_int));
-  A->x = values ? cs_malloc(nzmax, sizeof(scs_float)) : SCS_NULL;
+  A->p = (scs_int *)scs_malloc((triplet ? nzmax : n + 1) * sizeof(scs_int));
+  A->i = (scs_int *)scs_malloc(nzmax * sizeof(scs_int));
+  A->x = values ? (scs_float *)scs_malloc(nzmax * sizeof(scs_float)) : SCS_NULL;
   return ((!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A);
 }
 
@@ -106,7 +96,7 @@ scs_int *cs_pinv(scs_int const *p, scs_int n) {
   if (!p) {
     return (SCS_NULL);
   }                                     /* p = SCS_NULL denotes identity */
-  pinv = cs_malloc(n, sizeof(scs_int)); /* allocate result */
+  pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
   if (!pinv) {
     return (SCS_NULL);
   } /* out of memory */
@@ -124,7 +114,7 @@ cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
   Ai = A->i;
   Ax = A->x;
   C = cs_spalloc(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
-  w = cs_calloc(n, sizeof(scs_int)); /* get workspace */
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
   if (!C || !w) {
     return (cs_done(C, w, SCS_NULL, 0));
   } /* out of memory */

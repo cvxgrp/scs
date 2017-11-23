@@ -153,17 +153,17 @@ static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
   if (sol) {
     if (n > 0) {
       if (!sol->x) {
-        sol->x = scs_malloc(sizeof(scs_float) * n);
+        sol->x = (scs_float *)scs_malloc(sizeof(scs_float) * n);
       }
       scale_array(sol->x, NAN, n);
     }
     if (m > 0) {
       if (!sol->y) {
-        sol->y = scs_malloc(sizeof(scs_float) * m);
+        sol->y = (scs_float *)scs_malloc(sizeof(scs_float) * m);
       }
       scale_array(sol->y, NAN, m);
       if (!sol->s) {
-        sol->s = scs_malloc(sizeof(scs_float) * m);
+        sol->s = (scs_float *)scs_malloc(sizeof(scs_float) * m);
       }
       scale_array(sol->s, NAN, m);
     }
@@ -421,7 +421,7 @@ static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 static void sety(ScsWork *w, ScsSolution *sol) {
   DEBUG_FUNC
   if (!sol->y) {
-    sol->y = scs_malloc(sizeof(scs_float) * w->m);
+    sol->y = (scs_float *)scs_malloc(sizeof(scs_float) * w->m);
   }
   memcpy(sol->y, &(w->u[w->n]), w->m * sizeof(scs_float));
   RETURN;
@@ -430,7 +430,7 @@ static void sety(ScsWork *w, ScsSolution *sol) {
 static void sets(ScsWork *w, ScsSolution *sol) {
   DEBUG_FUNC
   if (!sol->s) {
-    sol->s = scs_malloc(sizeof(scs_float) * w->m);
+    sol->s = (scs_float *)scs_malloc(sizeof(scs_float) * w->m);
   }
   memcpy(sol->s, &(w->v[w->n]), w->m * sizeof(scs_float));
   RETURN;
@@ -439,7 +439,7 @@ static void sets(ScsWork *w, ScsSolution *sol) {
 static void setx(ScsWork *w, ScsSolution *sol) {
   DEBUG_FUNC
   if (!sol->x) {
-    sol->x = scs_malloc(sizeof(scs_float) * w->n);
+    sol->x = (scs_float *)scs_malloc(sizeof(scs_float) * w->n);
   }
   memcpy(sol->x, w->u, w->n * sizeof(scs_float));
   RETURN;
@@ -580,7 +580,7 @@ scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
                              ScsConeWork *c, scs_int m) {
   DEBUG_FUNC
   scs_float dist;
-  scs_float *t = scs_malloc(sizeof(scs_float) * m);
+  scs_float *t = (scs_float *)scs_malloc(sizeof(scs_float) * m);
   memcpy(t, y, m * sizeof(scs_float));
   proj_dual_cone(t, k, c, SCS_NULL, -1);
   dist = calc_norm_inf_diff(t, y, m);
@@ -598,7 +598,7 @@ scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
                             ScsConeWork *c, scs_int m) {
   DEBUG_FUNC
   scs_float dist;
-  scs_float *t = scs_malloc(sizeof(scs_float) * m);
+  scs_float *t = (scs_float *)scs_malloc(sizeof(scs_float) * m);
   memcpy(t, s, m * sizeof(scs_float));
   scale_array(t, -1.0, m);
   proj_dual_cone(t, k, c, SCS_NULL, -1);
@@ -748,7 +748,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
 
 static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   DEBUG_FUNC
-  ScsWork *w = scs_calloc(1, sizeof(ScsWork));
+  ScsWork *w = (ScsWork *)scs_calloc(1, sizeof(ScsWork));
   scs_int l = d->n + d->m + 1;
   if (d->stgs->verbose) {
     print_init_header(d, k);
@@ -762,17 +762,17 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->m = d->m;
   w->n = d->n;
   /* allocate workspace: */
-  w->u = scs_malloc(l * sizeof(scs_float));
-  w->v = scs_malloc(l * sizeof(scs_float));
-  w->u_t = scs_malloc(l * sizeof(scs_float));
-  w->u_prev = scs_malloc(l * sizeof(scs_float));
-  w->v_prev = scs_malloc(l * sizeof(scs_float));
-  w->h = scs_malloc((l - 1) * sizeof(scs_float));
-  w->g = scs_malloc((l - 1) * sizeof(scs_float));
-  w->pr = scs_malloc(d->m * sizeof(scs_float));
-  w->dr = scs_malloc(d->n * sizeof(scs_float));
-  w->b = scs_malloc(d->m * sizeof(scs_float));
-  w->c = scs_malloc(d->n * sizeof(scs_float));
+  w->u = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->v = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->u_t = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->u_prev = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->v_prev = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->h = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
+  w->g = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
+  w->pr = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
+  w->dr = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
+  w->b = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
+  w->c = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
       !w->dr || !w->b || !w->c) {
     scs_printf("ERROR: work memory allocation failure\n");
@@ -786,7 +786,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
       RETURN SCS_NULL;
     }
 #endif
-    w->scal = scs_malloc(sizeof(ScsScaling));
+    w->scal = (ScsScaling *)scs_malloc(sizeof(ScsScaling));
     normalize_a(w->A, w->stgs, k, w->scal);
 #if EXTRA_VERBOSE > 0
     print_array(w->scal->D, d->m, "D");

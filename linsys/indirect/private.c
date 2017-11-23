@@ -4,14 +4,14 @@
 #define CG_MIN_TOL 1e-1
 
 char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
-  char *str = scs_malloc(sizeof(char) * 128);
+  char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
           (long)A->p[A->n], stgs->cg_rate);
   return str;
 }
 
 char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
-  char *str = scs_malloc(sizeof(char) * 128);
+  char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str,
           "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
           (scs_float)p->tot_cg_its / (info->iter + 1),
@@ -60,7 +60,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
   scs_tic(&transpose_timer);
 #endif
 
-  z = scs_calloc(m, sizeof(scs_int));
+  z = (scs_int *)scs_calloc(m, sizeof(scs_int));
   for (i = 0; i < Ap[n]; i++)
     z[Ai[i]]++;        /* row counts */
   cs_cumsum(Cp, z, m); /* row pointers */
@@ -152,24 +152,24 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
 }
 
 ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
-  ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
-  p->p = scs_malloc((A->n) * sizeof(scs_float));
-  p->r = scs_malloc((A->n) * sizeof(scs_float));
-  p->Gp = scs_malloc((A->n) * sizeof(scs_float));
-  p->tmp = scs_malloc((A->m) * sizeof(scs_float));
+  ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  p->p = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
+  p->r = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
+  p->Gp = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
+  p->tmp = (scs_float *)scs_malloc((A->m) * sizeof(scs_float));
 
   /* memory for A transpose */
-  p->At = scs_malloc(sizeof(ScsMatrix));
+  p->At = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
   p->At->m = A->n;
   p->At->n = A->m;
-  p->At->i = scs_malloc((A->p[A->n]) * sizeof(scs_int));
-  p->At->p = scs_malloc((A->m + 1) * sizeof(scs_int));
-  p->At->x = scs_malloc((A->p[A->n]) * sizeof(scs_float));
+  p->At->i = (scs_int *)scs_malloc((A->p[A->n]) * sizeof(scs_int));
+  p->At->p = (scs_int *)scs_malloc((A->m + 1) * sizeof(scs_int));
+  p->At->x = (scs_float *)scs_malloc((A->p[A->n]) * sizeof(scs_float));
   transpose(A, p);
 
   /* preconditioner memory */
-  p->z = scs_malloc((A->n) * sizeof(scs_float));
-  p->M = scs_malloc((A->n) * sizeof(scs_float));
+  p->z = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
+  p->M = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
   get_preconditioner(A, stgs, p);
 
   p->total_solve_time = 0;

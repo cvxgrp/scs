@@ -57,19 +57,19 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
                           ScsSolution *opt_sol) {
   scs_int n = d->n;
   scs_int m = d->m;
-  ScsMatrix *A = d->A = scs_calloc(1, sizeof(ScsMatrix));
-  scs_float *b = d->b = scs_calloc(m, sizeof(scs_float));
-  scs_float *c = d->c = scs_calloc(n, sizeof(scs_float));
-  scs_float *x = opt_sol->x = scs_calloc(n, sizeof(scs_float));
-  scs_float *y = opt_sol->y = scs_calloc(m, sizeof(scs_float));
-  scs_float *s = opt_sol->s = scs_calloc(m, sizeof(scs_float));
+  ScsMatrix *A = d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  scs_float *b = d->b = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *c = d->c = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scs_float *x = opt_sol->x = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scs_float *y = opt_sol->y = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *s = opt_sol->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
   /* temporary variables */
-  scs_float *z = scs_calloc(m, sizeof(scs_float));
+  scs_float *z = (scs_float *)scs_calloc(m, sizeof(scs_float));
   scs_int i, j, r;
 
-  A->i = scs_calloc(nnz, sizeof(scs_int));
-  A->p = scs_calloc((n + 1), sizeof(scs_int));
-  A->x = scs_calloc(nnz, sizeof(scs_float));
+  A->i = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
+  A->p = (scs_int *)scs_calloc((n + 1), sizeof(scs_int));
+  A->x = (scs_float *)scs_calloc(nnz, sizeof(scs_float));
   A->n = d->n;
   A->m = d->m;
   /* y, s >= 0 and y'*s = 0 */

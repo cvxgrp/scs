@@ -69,11 +69,11 @@ int main(int argc, char **argv) {
   srand(seed);
   scs_printf("seed : %i\n", seed);
 
-  k = scs_calloc(1, sizeof(ScsCone));
-  d = scs_calloc(1, sizeof(ScsData));
-  d->stgs = scs_calloc(1, sizeof(ScsSettings));
-  sol = scs_calloc(1, sizeof(ScsSolution));
-  opt_sol = scs_calloc(1, sizeof(ScsSolution));
+  k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  d->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
 
   m = 3 * n;
   col_nnz = (int)ceil(sqrt(n));
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
   k->qsize = 0;
   q_num_rows = 3 * n - k->f - k->l;
-  k->q = scs_malloc(q_num_rows * sizeof(scs_int));
+  k->q = (scs_int *)scs_malloc(q_num_rows * sizeof(scs_int));
 
   while (q_num_rows > max_q) {
     int size;

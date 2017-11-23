@@ -1,13 +1,13 @@
 #include "private.h"
 
 char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
-  char *tmp = scs_malloc(sizeof(char) * 128);
+  char *tmp = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(tmp, "sparse-direct, nnz in A = %li", (long)A->p[A->n]);
   return tmp;
 }
 
 char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
-  char *str = scs_malloc(sizeof(char) * 128);
+  char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
   sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n",
           (long)(p->L->p[n] + n), p->total_solve_time / (info->iter + 1) / 1e3);
@@ -95,11 +95,11 @@ scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
 
 scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
   scs_int kk, n = A->n;
-  scs_int *Parent = scs_malloc(n * sizeof(scs_int));
-  scs_int *Lnz = scs_malloc(n * sizeof(scs_int));
-  scs_int *Flag = scs_malloc(n * sizeof(scs_int));
-  scs_int *Pattern = scs_malloc(n * sizeof(scs_int));
-  scs_float *Y = scs_malloc(n * sizeof(scs_float));
+  scs_int *Parent = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_int *Flag = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_int *Pattern = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_float *Y = (scs_float *)scs_malloc(n * sizeof(scs_float));
   (*L)->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
 
   /*scs_int Parent[n], Lnz[n], Flag[n], Pattern[n]; */
@@ -197,11 +197,11 @@ scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 }
 
 ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
-  ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
+  ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m;
-  p->P = scs_malloc(sizeof(scs_int) * n_plus_m);
-  p->L = scs_malloc(sizeof(cs));
-  p->bp = scs_malloc(n_plus_m * sizeof(scs_float));
+  p->P = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
+  p->L = (cs *)scs_malloc(sizeof(cs));
+  p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;

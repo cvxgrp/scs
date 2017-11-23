@@ -4,10 +4,10 @@
 #include "problem_utils.h"
 
 static const char *small_lp(void) {
-  ScsCone *k = scs_calloc(1, sizeof(ScsCone));
-  ScsData *d = scs_calloc(1, sizeof(ScsData));
-  ScsSolution *sol = scs_calloc(1, sizeof(ScsSolution));
-  ScsSolution *opt_sol = scs_calloc(1, sizeof(ScsSolution));
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsSolution *opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   ScsInfo info = {0};
   scs_float p_f = 0.1;
   int seed = 1234;
@@ -19,7 +19,7 @@ static const char *small_lp(void) {
   scs_float perr, derr;
   scs_int success;
 
-  d->stgs = scs_calloc(1, sizeof(ScsSettings));
+  d->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   k->f = (scs_int)floor(m * p_f);
   k->l = m - k->f;
 

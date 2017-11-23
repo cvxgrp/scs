@@ -125,7 +125,7 @@ void update_accel_params(ScsWork *w, scs_int idx) {
 
 ScsAccelWork *init_accel(ScsWork *w) {
   DEBUG_FUNC
-  ScsAccelWork *a = scs_calloc(1, sizeof(ScsAccelWork));
+  ScsAccelWork *a = (ScsAccelWork *)scs_calloc(1, sizeof(ScsAccelWork));
   if (!a) {
     RETURN SCS_NULL;
   }
@@ -137,19 +137,19 @@ ScsAccelWork *init_accel(ScsWork *w) {
   if (a->k <= 0) {
     RETURN a;
   }
-  a->d_f = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-  a->d_g = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-  a->d_x = scs_calloc(2 * a->l * a->k, sizeof(scs_float));
-  a->f = scs_calloc(2 * a->l, sizeof(scs_float));
-  a->g = scs_calloc(2 * a->l, sizeof(scs_float));
-  a->x = scs_calloc(2 * a->l, sizeof(scs_float));
-  a->delta_f = scs_calloc(2 * a->l, sizeof(scs_float));
-  a->delta_x = scs_calloc(2 * a->l, sizeof(scs_float));
-  a->mat = scs_calloc(a->k * a->k, sizeof(scs_float));
-  a->tmp = scs_calloc(a->k * a->k, sizeof(scs_float));
-  a->sol = scs_malloc(sizeof(scs_float) * 2 * a->l);
-  a->scratch = scs_malloc(sizeof(scs_float) * a->k);
-  a->ipiv = scs_malloc(sizeof(blas_int) * a->k);
+  a->d_f = (scs_float *)scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  a->d_g = (scs_float *)scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  a->d_x = (scs_float *)scs_calloc(2 * a->l * a->k, sizeof(scs_float));
+  a->f = (scs_float *)scs_calloc(2 * a->l, sizeof(scs_float));
+  a->g = (scs_float *)scs_calloc(2 * a->l, sizeof(scs_float));
+  a->x = (scs_float *)scs_calloc(2 * a->l, sizeof(scs_float));
+  a->delta_f = (scs_float *)scs_calloc(2 * a->l, sizeof(scs_float));
+  a->delta_x = (scs_float *)scs_calloc(2 * a->l, sizeof(scs_float));
+  a->mat = (scs_float *)scs_calloc(a->k * a->k, sizeof(scs_float));
+  a->tmp = (scs_float *)scs_calloc(a->k * a->k, sizeof(scs_float));
+  a->sol = (scs_float *)scs_malloc(sizeof(scs_float) * 2 * a->l);
+  a->scratch = (scs_float *)scs_malloc(sizeof(scs_float) * a->k);
+  a->ipiv = (blas_int *)scs_malloc(sizeof(blas_int) * a->k);
   a->total_accel_time = 0.0;
   if (!a->d_f || !a->d_g || !a->f || !a->g || !a->scratch || !a->sol ||
       !a->d_x || !a->x || !a->scratch || !a->ipiv || !a->mat) {
@@ -262,7 +262,7 @@ void free_accel(ScsAccelWork *a) {
 #else
 
 ScsAccelWork *init_accel(ScsWork *w) {
-  ScsAccelWork *a = scs_malloc(sizeof(ScsAccelWork));
+  ScsAccelWork *a = (ScsAccelWork *)scs_malloc(sizeof(ScsAccelWork));
   a->total_accel_time = 0.0;
   RETURN a;
 }
@@ -280,7 +280,7 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
 
 char *get_accel_summary(const ScsInfo *info, ScsAccelWork *a) {
   DEBUG_FUNC
-  char *str = scs_malloc(sizeof(char) * 64);
+  char *str = (char *)scs_malloc(sizeof(char) * 64);
   sprintf(str, "\tAcceleration: avg step time: %1.2es\n",
           a->total_accel_time / (info->iter + 1) / 1e3);
   a->total_accel_time = 0.0;
