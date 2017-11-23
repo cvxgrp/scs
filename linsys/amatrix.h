@@ -1,6 +1,8 @@
 #ifndef AMATRIX_H_GUARD
 #define AMATRIX_H_GUARD
 
+#include "glbopts.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
