@@ -1,6 +1,6 @@
 #include "private.h"
 
-char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
+char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
   char *tmp = scs_malloc(sizeof(char) * 128);
   sprintf(tmp, "sparse-direct, nnz in A = %li", (long)A->p[A->n]);
   return tmp;

@@ -94,10 +94,10 @@ void accum_by_a(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
   cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
-char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
+char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str, "sparse-indirect GPU, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
-          (long)A->p[A->n], s->cg_rate);
+          (long)A->p[A->n], stgs->cg_rate);
   return str;
 }
 

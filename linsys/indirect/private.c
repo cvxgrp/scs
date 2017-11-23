@@ -3,10 +3,10 @@
 #define CG_BEST_TOL 1e-9
 #define CG_MIN_TOL 1e-1
 
-char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *s) {
+char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
   char *str = scs_malloc(sizeof(char) * 128);
   sprintf(str, "sparse-indirect, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
-          (long)A->p[A->n], s->cg_rate);
+          (long)A->p[A->n], stgs->cg_rate);
   return str;
 }
 
