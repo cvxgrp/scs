@@ -52,11 +52,9 @@ void un_normalize_a(ScsMatrix *A, const ScsSettings *stgs,
 /* to free the memory allocated in ScsMatrix */
 void free_a_matrix(ScsMatrix *A);
 
-#ifdef COPYAMATRIX
 /* copies A (instead of in-place normalization), returns 0 for failure,
  * allocates memory for dstp	*/
 scs_int copy_a_matrix(ScsMatrix **dstp, const ScsMatrix *src);
-#endif
 
 #ifdef __cplusplus
 }
