@@ -201,6 +201,7 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   }
   /* solve linear system, new point stored in sol */
   info = solve_with_gesv(w->accel, MIN(iter, k));
+  w->accel->total_accel_time += tocq(&accel_timer);
   /* check that info == 0 and fallback otherwise */
   if (info != 0) {
     scs_printf("Call to accelerate failed with code %i, falling back to using "
@@ -210,7 +211,6 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   /* set [u;v] = sol */
   memcpy(w->u, w->accel->sol, sizeof(scs_float) * l);
   memcpy(w->v, &(w->accel->sol[l]), sizeof(scs_float) * l);
-  w->accel->total_accel_time += tocq(&accel_timer);
   RETURN info;
 }
 
