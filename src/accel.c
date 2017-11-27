@@ -4,14 +4,11 @@
 #include "scs_blas.h"
 #include "util.h"
 
-/* This file uses acceleration to improve the convergence of the
- * ADMM iteration z^+ = \phi(z). At each iteration we need to solve a (small)
- * linear system, we do this using LAPACK, first forming the normal equations
- * and using ?posv (fastest, but bad numerical stability), if that fails we
- * switch to using ?gels, which uses a QR factorization (slower, but better
- * numerically). If this fails then we just don't do any acceleration this
- * iteration, however we could fall back further to ?gelsy or other more
- * robust methods if we wanted to.
+/* This file uses acceleration to improve the convergence of the ADMM iteration
+ * z^+ = \phi(z). At each iteration we need to solve a (small) linear system, we
+ * do this using LAPACK ?gesv.  If this fails then we just don't do any
+ * acceleration this iteration, however we could fall back further to ?gelsy or
+ * other more robust methods if we wanted to.
  */
 
 struct SCS_ACCEL_WORK {
@@ -204,11 +201,16 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   }
   /* solve linear system, new point stored in sol */
   info = solve_with_gesv(w->accel, MIN(iter, k));
+  /* check that info == 0 and fallback otherwise */
+  if (info != 0) {
+    scs_printf("Call to accelerate failed with code %i, falling back to using "
+               "no acceleration\n", info);
+    RETURN 0;
+  }
   /* set [u;v] = sol */
   memcpy(w->u, w->accel->sol, sizeof(scs_float) * l);
   memcpy(w->v, &(w->accel->sol[l]), sizeof(scs_float) * l);
   w->accel->total_accel_time += tocq(&accel_timer);
-  /* add check that info == 0 and fallback */
   RETURN info;
 }
 
