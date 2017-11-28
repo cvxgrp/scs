@@ -54,7 +54,7 @@ extern "C" {
 #define scs_calloc(x, y) _scs_calloc(x, y)
 #define scs_realloc(x, y) _scs_realloc(x, y)
 
-#ifdef LONG
+#ifdef DLONG
 #ifdef _WIN64
 typedef __int64 scs_int;
 /* #define scs_int __int64 */
@@ -67,7 +67,7 @@ typedef int scs_int;
 /* #define scs_int int */
 #endif
 
-#ifndef FLOAT
+#ifndef SFLOAT
 typedef double scs_float;
 #ifndef NAN
 #define NAN ((scs_float)0x7ff8000000000000)
@@ -100,7 +100,7 @@ typedef float scs_float;
 #endif
 
 #ifndef POWF
-#ifdef FLOAT
+#ifdef SFLOAT
 #define POWF powf
 #else
 #define POWF pow
@@ -108,7 +108,7 @@ typedef float scs_float;
 #endif
 
 #ifndef SQRTF
-#ifdef FLOAT
+#ifdef SFLOAT
 #define SQRTF sqrtf
 #else
 #define SQRTF sqrt

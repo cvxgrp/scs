@@ -41,6 +41,7 @@ void BLAS(gesv)(blas_int *n, blas_int *nrhs, scs_float *a, blas_int *lda,
 
 static void update_mat(ScsAccelWork *a, scs_int idx) {
   /* use sol as scratch workspace here */
+  DEBUG_FUNC
   scs_int i;
   scs_float *wrk = a->sol;
   scs_float *d_f = a->d_f;
@@ -67,6 +68,7 @@ static void update_mat(ScsAccelWork *a, scs_int idx) {
     mat[i * k + idx] -= wrk[i];
   }
   mat[idx * k + idx] += ip;
+  RETURN;
 }
 
 static void update_accel_params(ScsWork *w, scs_int idx) {
@@ -204,8 +206,8 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   w->accel->total_accel_time += tocq(&accel_timer);
   /* check that info == 0 and fallback otherwise */
   if (info != 0) {
-    scs_printf("Call to accelerate failed with code %i, falling back to using "
-               "no acceleration\n", info);
+    scs_printf("Call to accelerate failed with code %li, falling back to using "
+               "no acceleration\n", (long)info);
     RETURN 0;
   }
   /* set [u;v] = sol */

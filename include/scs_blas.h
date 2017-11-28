@@ -15,7 +15,7 @@ extern "C" {
 /* annoying hack because some preprocessors can't handle empty macros */
 #if defined(NOBLASSUFFIX) && NOBLASSUFFIX > 0
 /* single or double precision */
-#ifndef FLOAT
+#ifndef SFLOAT
 #define BLAS(x) d##x
 #else
 #define BLAS(x) s##x
@@ -26,7 +26,7 @@ extern "C" {
 #define stitch_(pre, x, post) pre##x##post
 #define stitch__(pre, x, post) stitch_(pre, x, post)
 /* single or double precision */
-#ifndef FLOAT
+#ifndef SFLOAT
 #define BLAS(x) stitch__(d, x, BLASSUFFIX)
 #else
 #define BLAS(x) stitch__(s, x, BLASSUFFIX)

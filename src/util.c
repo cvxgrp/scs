@@ -14,15 +14,16 @@ scs_float tocq(timer *t) {
 #elif(defined _WIN32 || _WIN64 || defined _WINDLL)
 
 void scs_tic(timer *t) {
-  query_performance_frequency(&t->freq);
-  query_performance_counter(&t->tic);
+  QueryPerformanceFrequency(&t->freq);
+  QueryPerformanceCounter(&t->tic);
 }
 
 scs_float tocq(timer *t) {
-  query_performance_counter(&t->toc);
-  return (1e3 * (t->toc.quad_part - t->tic.quad_part) /
-          (scs_float)t->freq.quad_part);
+  QueryPerformanceCounter(&t->toc);
+  return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) /
+            (scs_float)t->freq.QuadPart);
 }
+
 #elif(defined __APPLE__)
 
 void scs_tic(timer *t) {
@@ -43,7 +44,9 @@ scs_float tocq(timer *t) {
 
   return (scs_float)duration / 1e6;
 }
+
 #else
+
 void scs_tic(timer *t) {
   clock_gettime(CLOCK_MONOTONIC, &t->tic);
 }
@@ -62,6 +65,7 @@ scs_float tocq(timer *t) {
   }
   return (scs_float)temp.tv_sec * 1e3 + (scs_float)temp.tv_nsec / 1e6;
 }
+
 #endif
 
 scs_float scs_toc(timer *t) {

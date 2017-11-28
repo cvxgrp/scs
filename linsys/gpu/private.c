@@ -17,7 +17,7 @@ extern "C" {
   } while (0)
 
 #ifndef EXTRA_VERBOSE
-#ifndef FLOAT
+#ifndef SFLOAT
 #define CUBLAS(x) cublasD##x
 #define CUSPARSE(x) cusparseD##x
 #else
@@ -25,7 +25,7 @@ extern "C" {
 #define CUSPARSE(x) cusparseS##x
 #endif
 #else
-#ifndef FLOAT
+#ifndef SFLOAT
 #define CUBLAS(x)                                                              \
   CUDA_CHECK_ERR;                                                              \
   cublasD##x

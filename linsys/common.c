@@ -14,10 +14,12 @@ scs_int copy_a_matrix(ScsMatrix **dstp, const ScsMatrix *src) {
   }
   A->n = src->n;
   A->m = src->m;
-  A->x = (scs_float *)scs_malloc(sizeof(scs_float) * Anz); /* A values, size: NNZ A */
-  A->i = (scs_int *)scs_malloc(sizeof(scs_int) * Anz);   /* A row index, size: NNZ A */
+  A->x = (scs_float *)scs_malloc(sizeof(scs_float) *
+                                 Anz); /* A values, size: NNZ A */
+  A->i = (scs_int *)scs_malloc(sizeof(scs_int) *
+                               Anz); /* A row index, size: NNZ A */
   A->p = (scs_int *)scs_malloc(sizeof(scs_int) *
-                    (src->n + 1)); /* A column pointer, size: n+1 */
+                               (src->n + 1)); /* A column pointer, size: n+1 */
   if (!A->x || !A->i || !A->p) {
     return 0;
   }
@@ -37,9 +39,10 @@ scs_int validate_lin_sys(const ScsMatrix *A) {
   /* detects some errors in A col ptrs: */
   for (i = 0; i < A->n; ++i) {
     if (A->p[i] == A->p[i + 1]) {
-      scs_printf("WARN: A->p (column pointers) not strictly increasing, "
-                 "column %li empty\n",
-                 (long)i);
+      scs_printf(
+          "WARN: A->p (column pointers) not strictly increasing, "
+          "column %li empty\n",
+          (long)i);
     } else if (A->p[i] > A->p[i + 1]) {
       scs_printf("ERROR: A->p (column pointers) decreasing\n");
       return -1;
@@ -76,6 +79,25 @@ void free_a_matrix(ScsMatrix *A) {
   }
   scs_free(A);
 }
+
+#if EXTRA_VERBOSE > 0
+static void print_a_matrix(const ScsMatrix *A) {
+  scs_int i, j;
+  /* TODO: this is to prevent clogging stdout */
+  if (A->p[A->n] < 2500) {
+    scs_printf("\n");
+    for (i = 0; i < A->n; ++i) {
+      scs_printf("Col %li: ", (long)i);
+      for (j = A->p[i]; j < A->p[i + 1]; j++) {
+        scs_printf("A[%li,%li] = %4f, ", (long)A->i[j], (long)i, A->x[j]);
+      }
+      scs_printf("norm col = %4f\n",
+                 calc_norm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+    }
+    scs_printf("norm A = %4f\n", calc_norm(A->x, A->p[A->n]));
+  }
+}
+#endif
 
 void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
                  ScsScaling *scal) {

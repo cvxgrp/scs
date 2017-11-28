@@ -220,11 +220,11 @@ char *get_cone_header(const ScsCone *k) {
   }
   if (k->ep || k->ed) {
     sprintf(tmp + strlen(tmp), "\texp vars: %li, dual exp vars: %li\n",
-            (long)3 * k->ep, (long)3 * k->ed);
+            (long)(3 * k->ep), (long)(3 * k->ed));
   }
   if (k->psize && k->p) {
     sprintf(tmp + strlen(tmp), "\tprimal + dual power vars: %li\n",
-            (long)3 * k->psize);
+            (long)(3 * k->psize));
   }
   RETURN tmp;
 }

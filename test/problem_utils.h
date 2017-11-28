@@ -8,7 +8,7 @@
 #include "amatrix.h"
 
 #define PI (3.141592654)
-#ifdef LONG
+#ifdef DLONG
 #ifdef _WIN64
 /* this is a Microsoft extension, but also works with min_g_w-w64 */
 #define INTRW "%I64d"
@@ -17,12 +17,6 @@
 #endif
 #else
 #define INTRW "%i"
-#endif
-
-#ifndef FLOAT
-#define FLOATRW "%lf"
-#else
-#define FLOATRW "%f"
 #endif
 
 void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,

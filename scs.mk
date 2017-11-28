@@ -5,6 +5,9 @@ UNAME = $(shell uname -s)
 endif
 
 CC = gcc
+# For cross-compiling with mingw use these.
+#CC = i686-w64-mingw32-gcc -m32
+#CC = x86_64-w64-mingw32-gcc-4.8
 CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
 
 # For GPU must add cuda libs to path, e.g.
@@ -19,7 +22,11 @@ else
 ifneq (, $(findstring MSYS, $(UNAME)))
 ISWINDOWS := 1
 else
+ifneq (, $(findstring mingw, $(CC)))
+ISWINDOWS := 1
+else
 ISWINDOWS := 0
+endif
 endif
 endif
 endif
@@ -35,8 +42,9 @@ ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
 LDFLAGS += -lm
 SHARED = dll
-SONAME = -soname #TODO: might not be correct
-CULDFLAGS = -L/usr/local/cuda/lib64 #TODO: probably doesn't work...
+SONAME = -soname
+#TODO: probably doesn't work:
+CULDFLAGS = -L/usr/local/cuda/lib64
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS += -lm -lrt
@@ -70,18 +78,18 @@ RANLIB = ranlib
 OPT_FLAGS =
 ########### OPTIONAL FLAGS ##########
 # these can all be override from the command line
-# e.g. make LONG=1 will override the setting below
-LONG = 0
-ifneq ($(LONG), 0)
-OPT_FLAGS += -DLONG=$(LONG) # use longs rather than ints
+# e.g. make DLONG=1 will override the setting below
+DLONG = 0
+ifneq ($(DLONG), 0)
+OPT_FLAGS += -DDLONG=$(DLONG) # use longs rather than ints
 endif
 CTRLC = 1
 ifneq ($(CTRLC), 0)
 OPT_FLAGS += -DCTRLC=$(CTRLC) # graceful interrupts with ctrl-c
 endif
-FLOAT = 0
-ifneq ($(FLOAT), 0)
-OPT_FLAGS += -DFLOAT=$(FLOAT) # use floats rather than doubles
+SFLOAT = 0
+ifneq ($(SFLOAT), 0)
+OPT_FLAGS += -DSFLOAT=$(SFLOAT) # use floats rather than doubles
 endif
 NOVALIDATE = 0
 ifneq ($(NOVALIDATE), 0)

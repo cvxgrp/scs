@@ -146,7 +146,7 @@
 
 #include "amd.h"
 
-#if defined (LONG) || defined (ZLONG)
+#if defined (DLONG) || defined (ZLONG)
 
 #define Int SuiteSparse_long
 #define ID  SuiteSparse_long_id

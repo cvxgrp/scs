@@ -86,7 +86,7 @@ cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
 
 scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
-#ifdef LONG
+#ifdef DLONG
   return (amd_l_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
 #else
   return (amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
@@ -179,7 +179,7 @@ scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 #if EXTRA_VERBOSE > 0
   if (stgs->verbose) {
     scs_printf("Matrix factorization info:\n");
-#ifdef LONG
+#ifdef DLONG
     amd_l_info(info);
 #else
     amd_info(info);
