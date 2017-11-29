@@ -20,7 +20,8 @@ install:
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
 
 build_script:
-  - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
+  - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\
+  - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\lib
   - dir C:\projects
   - set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
   - set PATH=%PATH%;C:\projects\openblas\64\bin
