@@ -24,6 +24,7 @@ build_script:
   - dir C:\projects
   - set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
   - set PATH=%PATH%;C:\projects\openblas\64\bin
+  - dir C:\projects\openblas\64\bin\
   - rename C:\projects\openblas\64\bin\openblas_5f998ef_gcc7_1_0.dll C:\projects\openblas\64\bin\openblas.dll
   - cd C:\projects\scs
   - dir C:\projects\openblas\64\bin
