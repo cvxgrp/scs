@@ -4,8 +4,8 @@ clone_folder: c:\projects\scs
 
 environment:
   global:
-      # Taken from scipy appveyor.yml.
     - OPENBLAS: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win
+
   matrix:
     - platform: x64
       ARCH: 64
