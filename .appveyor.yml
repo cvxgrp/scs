@@ -17,11 +17,12 @@ platform:
 
 install:
   - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS_64, 'c:\openblas.zip')
-  - ps: Expand-Archive c:\openblas.zip c:\projects
+  - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
 
 build_script:
   - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
   - dir C:\projects
   - set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
   - cd c:\projects\scs
-  - C:\MinGW\bin\mingw32-make.exe CC=gcc.exe BLASLDFLAGS="-LC:\projects -lopenblas"
+  - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas"
+  - out\run_tests
