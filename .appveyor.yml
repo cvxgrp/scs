@@ -33,7 +33,7 @@ build_script:
   - rename "C:\projects\openblas\64\bin\libopenblas_5f998ef_gcc7_1_0.dll" "libopenblas.dll"
   - cd C:\projects\scs
   - dir C:\projects\openblas\64\bin
-  - C:\MinGW\bin\mingw32-make.exe CC=gcc.exe USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas"
-  - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas"
+  - C:\MinGW\bin\mingw32-make.exe CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas"
+  - C:\MinGW\bin\mingw32-make.exe test CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas"
   - dir C:\projects\scs\out\
   - C:\projects\scs\out\run_tests.exe
