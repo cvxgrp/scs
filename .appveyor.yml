@@ -19,7 +19,8 @@ build_script:
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
   - set PATH=%PATH%;C:\msys%ARCH%\mingw%ARCH%\bin;C:\projects\openblas\%ARCH%\bin
   - dir C:\
-  - dir C:\msys32
+  - dir C:\MinGw
+  - dir C:\MinGw\bin
   - dir C:\msys%ARCH%\mingw%ARCH%\bin
   - echo %path%
   - cd C:\projects\scs
