@@ -25,7 +25,7 @@ build_script:
   - set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
   - set PATH=%PATH%;C:\projects\openblas\64\bin
   - dir C:\projects\openblas\64\bin\
-  - rename C:\projects\openblas\64\bin\libopenblas_5f998ef_gcc7_1_0.dll C:\projects\openblas\64\bin\libopenblas.dll
+  - rename "C:\projects\openblas\64\bin\libopenblas_5f998ef_gcc7_1_0.dll" "libopenblas.dll"
   - cd C:\projects\scs
   - dir C:\projects\openblas\64\bin
   - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas"
