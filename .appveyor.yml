@@ -23,7 +23,8 @@ build_script:
   - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
   - dir C:\projects
   - set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
-  - cd c:\projects\scs
+  - set PATH=%PATH%;C:\projects\openblas\64\bin
+  - cd C:\projects\scs
   - dir C:\projects\openblas\64\bin
   - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
   - C:\projects\scs\out\run_tests.exe
