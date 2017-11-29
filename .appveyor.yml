@@ -18,10 +18,10 @@ platform:
 install:
   - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS_64, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
-
-  - set PATH=%PATH%;C:\msys64\mingw64\bin
-  - set PATH=%PATH%;C:\projects\openblas\64\bin
+  - set PATH=%PATH%;C:\msys64\mingw64\bin;C:\projects\openblas\64\bin
   - cd C:\projects\scs
   - mingw32-make.exe CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
   - mingw32-make.exe test CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
+
+test_script:
   - C:\projects\scs\out\run_tests.exe
