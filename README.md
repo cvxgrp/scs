@@ -2,10 +2,7 @@ SCS
 ====
 
 [![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
-
-<!--- remove appveyor since I don't know how to make it compile with lapack yet
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
--->
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper [Conic Optimization via

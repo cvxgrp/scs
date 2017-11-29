@@ -16,9 +16,9 @@ platform:
   - x64
 
 install:
-  - ps: (new-object System.Net.WebClient).DownloadFile($OPENBLAS_64, 'c:\openblas.zip')
+  - ps: (new-object System.Net.WebClient).DownloadFile($env:$OPENBLAS_64, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects
 
 build_script:
   - cd c:\projects\scs
-  - $MINGW_64-make
+  - $env:$MINGW_64-make
