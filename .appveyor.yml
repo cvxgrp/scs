@@ -26,7 +26,5 @@ build_script:
   - cd c:\projects\scs
   - dir C:\projects\openblas\64\bin
   - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
-  - dir out
   - cd out
-  - rename run_tests run_tests.exe
   - run_tests.exe
