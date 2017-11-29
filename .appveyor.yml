@@ -6,6 +6,7 @@ environment:
   global:
     # Taken from scipy appveyor.yml.
     MINGW_32: C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin
+    C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
     MINGW_64: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
     OPENBLAS_32: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win32.zip
     OPENBLAS_64: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win64.zip
@@ -21,4 +22,4 @@ install:
 
 build_script:
   - cd c:\projects\scs
-  - C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\make.exe
+  - C:\MinGW\bin\make.exe
