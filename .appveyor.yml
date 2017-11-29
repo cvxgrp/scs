@@ -18,7 +18,7 @@ platform:
 install:
   - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS_64, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects
-  - ps: Get-ChileItem -Path C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
+  - ps: Get-ChildItem -Path C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
 
 build_script:
   - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
