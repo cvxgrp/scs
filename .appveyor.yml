@@ -26,6 +26,6 @@ build_script:
   - set PATH=%PATH%;C:\projects\openblas\64\bin
   - cd C:\projects\scs
   - dir C:\projects\openblas\64\bin
-  - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
+  - C:\MinGW\bin\mingw32-make.exe test CC=gcc.exe USE_LAPACK=0 BLASLDFLAGS="-LC:\projects\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
   - dir C:\projects\scs\out\
   - C:\projects\scs\out\run_tests.exe
