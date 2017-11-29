@@ -23,4 +23,4 @@ install:
 build_script:
   - dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\
   - cd c:\projects\scs
-  - C:\MinGW\bin\mingw32-make.exe CC=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\mingw-w64-x86_64-gcc BLASLDFLAGS="C:/"
+  - C:\MinGW\bin\mingw32-make.exe CC=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\gcc.exe BLASLDFLAGS="C:\projects -lopenblas"
