@@ -14,7 +14,7 @@ environment:
       ARCH: 32
 
 build_script:
-  - ps: $file = "($env:OPENBLAS)($env:ARCH).zip"
+  - ps: $file = $env:OPENBLAS + $env:ARCH + ".zip"
   - ps: (new-object System.Net.WebClient).DownloadFile($file, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
   - set PATH=%PATH%;C:\msys%ARCH%\mingw%ARCH%\bin;C:\projects\openblas\%ARCH%\bin
