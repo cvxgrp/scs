@@ -15,7 +15,7 @@ platform:
   #- x86
   - x64
 
-install:
+build_script:
   - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS_64, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
   - set PATH=%PATH%;C:\msys64\mingw64\bin;C:\projects\openblas\64\bin
