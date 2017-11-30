@@ -1,6 +1,10 @@
 #ifndef PRIV_H_GUARD
 #define PRIV_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "glbopts.h"
 #include "scs.h"
 #include "cs.h"
@@ -33,4 +37,7 @@ struct SCS_LIN_SYS_WORK {
   ScsMatrix *Agt;   /* A trans matrix on GPU */
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

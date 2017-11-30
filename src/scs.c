@@ -178,7 +178,7 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   scs_int status = stint;
   populate_on_failure(m, n, sol, info, status, ststr);
   scs_printf("Failure:%s\n", msg);
-  end_interrupt_listener();
+  scs_end_interrupt_listener();
   RETURN status;
 }
 
@@ -861,7 +861,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     RETURN SCS_FAILED;
   }
   /* initialize ctrl-c support */
-  start_interrupt_listener();
+  scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
   info->status_val = SCS_UNFINISHED; /* not yet converged */
   r.last_iter = -1;
@@ -895,7 +895,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
                      "error in accelerate", "Failure");
     }
 
-    if (is_interrupted()) {
+    if (scs_is_interrupted()) {
       RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
                      "Interrupted");
     }
@@ -922,7 +922,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   if (w->stgs->verbose) {
     print_footer(d, k, sol, w, info);
   }
-  end_interrupt_listener();
+  scs_end_interrupt_listener();
   RETURN info->status_val;
 }
 
@@ -955,7 +955,7 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
 #endif
   ScsWork *w;
   SCS(timer) init_timer;
-  start_interrupt_listener();
+  scs_start_interrupt_listener();
   if (!d || !k || !info) {
     scs_printf("ERROR: Missing ScsData, ScsCone or ScsInfo input\n");
     RETURN SCS_NULL;
@@ -976,7 +976,7 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
   if (d->stgs->verbose) {
     scs_printf("Setup time: %1.2es\n", info->setup_time / 1e3);
   }
-  end_interrupt_listener();
+  scs_end_interrupt_listener();
   RETURN w;
 }
 

@@ -5,6 +5,10 @@
 #ifndef CTRLC_H_GUARD
 #define CTRLC_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if CTRLC > 0
 
 #if defined MATLAB_MEX_FILE
@@ -26,17 +30,23 @@ extern int utSetInterruptEnabled(int);
 #endif
 
 /* METHODS are the same for both */
-void start_interrupt_listener(void);
-void end_interrupt_listener(void);
-int is_interrupted(void);
+void scs_start_interrupt_listener(void);
+void scs_end_interrupt_listener(void);
+int scs_is_interrupted(void);
 
 #else /* CTRLC = 0 */
 
+/* Simply to suppress empty translation unit warnings. */
+typedef int scs_make_iso_compilers_happy;
+
 /* No signal handling. */
-#define start_interrupt_listener()
-#define end_interrupt_listener()
-#define is_interrupted() 0
+#define scs_start_interrupt_listener()
+#define scs_end_interrupt_listener()
+#define scs_is_interrupted() 0
 
 #endif /* END IF CTRLC > 0 */
 
-#endif /* END IFDEF __TIMER_H__ */
+#ifdef __cplusplus
+}
+#endif
+#endif

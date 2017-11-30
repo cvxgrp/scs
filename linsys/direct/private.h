@@ -1,6 +1,10 @@
 #ifndef PRIV_H_GUARD
 #define PRIV_H_GUARD
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "glbopts.h"
 #include "scs.h"
 #include "cs.h"
@@ -17,4 +21,7 @@ struct SCS_LIN_SYS_WORK {
   scs_float total_solve_time;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

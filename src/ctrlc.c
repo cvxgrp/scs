@@ -14,15 +14,15 @@
 #ifdef MATLAB_MEX_FILE
 
 static int istate;
-void start_interrupt_listener(void) {
+void scs_start_interrupt_listener(void) {
   istate = utSetInterruptEnabled(1);
 }
 
-void end_interrupt_listener(void) {
+void scs_end_interrupt_listener(void) {
   utSetInterruptEnabled(istate);
 }
 
-int is_interrupted(void) {
+int scs_is_interrupted(void) {
   return utIsInterruptPending();
 }
 
@@ -37,16 +37,16 @@ static BOOL WINAPI scs_handle_ctrlc(DWORD dwCtrlType) {
   return TRUE;
 }
 
-void start_interrupt_listener(void) {
+void scs_start_interrupt_listener(void) {
   int_detected = 0;
   SetConsoleCtrlHandler(scs_handle_ctrlc, TRUE);
 }
 
-void end_interrupt_listener(void) {
+void scs_end_interrupt_listener(void) {
   SetConsoleCtrlHandler(scs_handle_ctrlc, FALSE);
 }
 
-int is_interrupted(void) {
+int scs_is_interrupted(void) {
   return int_detected;
 }
 
@@ -59,7 +59,7 @@ static void scs_handle_ctrlc(int dummy) {
   int_detected = dummy ? dummy : -1;
 }
 
-void start_interrupt_listener(void) {
+void scs_start_interrupt_listener(void) {
   struct sigaction act;
   int_detected = 0;
   act.sa_flags = 0;
@@ -68,12 +68,12 @@ void start_interrupt_listener(void) {
   sigaction(SIGINT, &act, &oact);
 }
 
-void end_interrupt_listener(void) {
+void scs_end_interrupt_listener(void) {
   struct sigaction act;
   sigaction(SIGINT, &oact, &act);
 }
 
-int is_interrupted(void) {
+int scs_is_interrupted(void) {
   return int_detected;
 }
 
