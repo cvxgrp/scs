@@ -650,9 +650,9 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m),
                SCS(dot)(sol->s, sol->y, d->m) / SCS(norm)(sol->s, d->m) /
                    SCS(norm)(sol->y, d->m));
-    scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->res_pri);
-    scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->res_dual);
-    scs_printf("|c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->rel_gap);
+    scs_printf("primal res: |Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->res_pri);
+    scs_printf("dual res:   |A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->res_dual);
+    scs_printf("rel gap:    |c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->rel_gap);
     for (i = 0; i < LINE_LEN; ++i) {
       scs_printf("-");
     }
