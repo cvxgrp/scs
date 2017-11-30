@@ -21,6 +21,7 @@ build_script:
   - echo %PATH%
   - dir C:\MinGw\bin
   - dir C:\msys64\mingw64\bin
+  - dir C:\msys64\mingw32\bin
   - cd C:\
   - dir libgfortran-4.dll /s
   - cd C:\projects\scs
