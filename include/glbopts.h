@@ -7,6 +7,10 @@ extern "C" {
 
 #include <math.h>
 
+#ifndef SCS
+#define SCS(x) scs_##x
+#endif
+
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -121,10 +125,10 @@ typedef float scs_float;
 #endif
 #define DEBUG_FUNC                                                             \
   scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n", __func__,  \
-             tocq(&global_timer), __FILE__, __LINE__);
+             SCS(tocq)(&global_timer), __FILE__, __LINE__);
 #define RETURN                                                                 \
   scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n",          \
-             __func__, tocq(&global_timer), __FILE__, __LINE__);               \
+             __func__, SCS(tocq)(&global_timer), __FILE__, __LINE__);               \
   return
 #else
 #define DEBUG_FUNC

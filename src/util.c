@@ -5,20 +5,20 @@
 /* return milli-seconds */
 #if (defined NOTIMER)
 
-void scs_tic(timer *t) {
+void SCS(tic)(SCS(timer) *t) {
 }
-scs_float tocq(timer *t) {
+scs_float SCS(tocq)(SCS(timer) *t) {
   return NAN;
 }
 
 #elif(defined _WIN32 || _WIN64 || defined _WINDLL)
 
-void scs_tic(timer *t) {
+void SCS(tic)(SCS(timer) *t) {
   QueryPerformanceFrequency(&t->freq);
   QueryPerformanceCounter(&t->tic);
 }
 
-scs_float tocq(timer *t) {
+scs_float SCS(tocq)(SCS(timer) *t) {
   QueryPerformanceCounter(&t->toc);
   return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) /
             (scs_float)t->freq.QuadPart);
@@ -26,12 +26,12 @@ scs_float tocq(timer *t) {
 
 #elif(defined __APPLE__)
 
-void scs_tic(timer *t) {
+void SCS(tic)(SCS(timer) *t) {
   /* read current clock cycles */
   t->tic = mach_absolute_time();
 }
 
-scs_float tocq(timer *t) {
+scs_float SCS(tocq)(SCS(timer) *t) {
   uint64_t duration; /* elapsed time in clock cycles*/
 
   t->toc = mach_absolute_time();
@@ -47,11 +47,11 @@ scs_float tocq(timer *t) {
 
 #else
 
-void scs_tic(timer *t) {
+void SCS(tic)(SCS(timer) *t) {
   clock_gettime(CLOCK_MONOTONIC, &t->tic);
 }
 
-scs_float tocq(timer *t) {
+scs_float SCS(tocq)(SCS(timer) *t) {
   struct timespec temp;
 
   clock_gettime(CLOCK_MONOTONIC, &t->toc);
@@ -68,19 +68,19 @@ scs_float tocq(timer *t) {
 
 #endif
 
-scs_float scs_toc(timer *t) {
-  scs_float time = tocq(t);
+scs_float SCS(toc)(SCS(timer) *t) {
+  scs_float time = SCS(tocq)(t);
   scs_printf("time: %8.4f milli-seconds.\n", time);
   return time;
 }
 
-scs_float scs_str_toc(char *str, timer *t) {
-  scs_float time = tocq(t);
+scs_float SCS(str_toc)(char *str, SCS(timer) *t) {
+  scs_float time = SCS(tocq)(t);
   scs_printf("%s - time: %8.4f milli-seconds.\n", str, time);
   return time;
 }
 
-void print_cone_data(const ScsCone *k) {
+void SCS(print_cone_data)(const ScsCone *k) {
   scs_int i;
   scs_printf("num zeros = %i\n", (int)k->f);
   scs_printf("num LP = %i\n", (int)k->l);
@@ -103,7 +103,7 @@ void print_cone_data(const ScsCone *k) {
   }
 }
 
-void print_work(const ScsWork *w) {
+void SCS(print_work)(const ScsWork *w) {
   scs_int i, l = w->n + w->m;
   scs_printf("\n u_t is \n");
   for (i = 0; i < l; i++) {
@@ -119,7 +119,7 @@ void print_work(const ScsWork *w) {
   }
 }
 
-void print_data(const ScsData *d) {
+void SCS(print_data)(const ScsData *d) {
   scs_printf("m = %i\n", (int)d->m);
   scs_printf("n = %i\n", (int)d->n);
 
@@ -136,7 +136,7 @@ void print_data(const ScsData *d) {
   scs_printf("scale = %4f\n", d->stgs->scale);
 }
 
-void print_array(const scs_float *arr, scs_int n, const char *name) {
+void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
   scs_int i, j, k = 0;
   scs_int num_on_one_line = 10;
   scs_printf("\n");
@@ -153,7 +153,7 @@ void print_array(const scs_float *arr, scs_int n, const char *name) {
   scs_printf("\n");
 }
 
-void free_data(ScsData *d, ScsCone *k) {
+void SCS(free_data)(ScsData *d, ScsCone *k) {
   if (d) {
     if (d->b) {
       scs_free(d->b);
@@ -165,7 +165,7 @@ void free_data(ScsData *d, ScsCone *k) {
       scs_free(d->stgs);
     }
     if (d->A) {
-      free_a_matrix(d->A);
+      SCS(free_a_matrix)(d->A);
     }
     scs_free(d);
   }
@@ -183,7 +183,7 @@ void free_data(ScsData *d, ScsCone *k) {
   }
 }
 
-void free_sol(ScsSolution *sol) {
+void SCS(free_sol)(ScsSolution *sol) {
   if (sol) {
     if (sol->x) {
       scs_free(sol->x);
@@ -199,7 +199,7 @@ void free_sol(ScsSolution *sol) {
 }
 
 /* assumes d->stgs already allocated memory */
-void set_default_scs_settings(ScsData *d) {
+void SCS(set_default_settings)(ScsData *d) {
   d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
   d->stgs->eps = EPS;             /* convergence tolerance: 1e-3 */
   d->stgs->alpha = ALPHA;         /* relaxation parameter: 1.8 */

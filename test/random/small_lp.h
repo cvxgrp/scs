@@ -28,19 +28,19 @@ static const char *small_lp(void) {
   d->m = m;
   d->n = n;
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol);
-  set_default_scs_settings(d);
+  SCS(set_default_settings)(d);
 
   exitflag = scs(d, k, sol, &info);
-  perr = scs_dot(d->c, sol->x, d->n) - scs_dot(d->c, opt_sol->x, d->n);
-  derr = -scs_dot(d->b, sol->y, d->m) + scs_dot(d->b, opt_sol->y, d->m);
+  perr = SCS(dot)(d->c, sol->x, d->n) - SCS(dot)(d->c, opt_sol->x, d->n);
+  derr = -SCS(dot)(d->b, sol->y, d->m) + SCS(dot)(d->b, opt_sol->y, d->m);
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
-  free_data(d, k);
-  free_sol(sol);
-  free_sol(opt_sol);
+  SCS(free_data)(d, k);
+  SCS(free_sol)(sol);
+  SCS(free_sol)(opt_sol);
   mu_assert("small_lp: SCS failed to produce outputflag SCS_SOLVED", success);
   return 0;
 }

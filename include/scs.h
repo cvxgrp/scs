@@ -29,11 +29,11 @@ typedef struct SCS_CONE_WORK ScsConeWork;
 
 /* struct containing problem data */
 struct SCS_PROBLEM_DATA {
-  /* these cannot change for multiple runs for the same call to scs_init */
+  /* these cannot change for multiple runs for the same call to SCS(init) */
   scs_int m, n; /* A has m rows, n cols */
   ScsMatrix *A; /* A is supplied in data format specified by linsys solver */
 
-  /* these can change for multiple runs for the same call to scs_init */
+  /* these can change for multiple runs for the same call to SCS(init) */
   scs_float *b, *c; /* dense arrays for b (size m), c (size n) */
 
   ScsSettings *stgs; /* contains solver settings specified by user */
@@ -43,12 +43,12 @@ struct SCS_PROBLEM_DATA {
 struct SCS_SETTINGS {
   /* settings parameters: default suggested input */
 
-  /* these *cannot* change for multiple runs with the same call to scs_init */
+  /* these *cannot* change for multiple runs with the same call to SCS(init) */
   scs_int normalize; /* boolean, heuristic data rescaling: 1 */
   scs_float scale;   /* if normalized, rescales by this factor: 5 */
   scs_float rho_x;   /* x equality constraint scaling: 1e-3 */
 
-  /* these can change for multiple runs with the same call to scs_init */
+  /* these can change for multiple runs with the same call to SCS(init) */
   scs_int max_iters;  /* maximum iterations to take: 2500 */
   scs_float eps;      /* convergence tolerance: 1e-3 */
   scs_float alpha;    /* relaxation parameter: 1.8 */
@@ -105,19 +105,18 @@ struct SCS_SCALING {
 
 /*
  * main library api's:
- * scs_init: allocates memory etc (direct version factorizes matrix [I A; A^T
- * -I])
- * scs_solve: can be called many times with different b,c data for one init call
- * scs_finish: cleans up the memory (one per init call)
+ * SCS(init): allocates memory etc (e.g., factorize matrix [I A; A^T -I])
+ * SCS(solve): can be called many times with different b,c data per init call
+ * SCS(finish): cleans up the memory (one per init call)
  */
-ScsWork *scs_init(const ScsData *d, const ScsCone *k, ScsInfo *info);
-scs_int scs_solve(ScsWork *w, const ScsData *d, const ScsCone *k,
+ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info);
+scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
                   ScsSolution *sol, ScsInfo *info);
-void scs_finish(ScsWork *w);
-/* scs calls scs_init, scs_solve, and scs_finish */
+void SCS(finish)(ScsWork *w);
+/* scs calls SCS(init), SCS(solve), and SCS(finish) */
 scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
             ScsInfo *info);
-const char *scs_version(void);
+const char *SCS(version)(void);
 
 /* the following structs are not exposed to user */
 

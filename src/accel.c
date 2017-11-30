@@ -58,10 +58,10 @@ static void update_mat(ScsAccelWork *a, scs_int idx) {
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
 
-  scs_float ip = scs_dot(delta_x, delta_f, 2 * l);
+  scs_float ip = SCS(dot)(delta_x, delta_f, 2 * l);
   BLAS(gemv)("Trans", &twol, &bk, &onef, d_x, &twol, delta_f, &one, &zerof, wrk,
              &one);
-  add_scaled_array(&(mat[idx * k]), wrk, k, -1.0);
+  SCS(add_scaled_array)(&(mat[idx * k]), wrk, k, -1.0);
   BLAS(gemv)("Trans", &twol, &bk, &onef, d_f, &twol, delta_x, &one, &zerof, wrk,
              &one);
   for (i = 0; i < k; ++i) {
@@ -91,9 +91,9 @@ static void update_accel_params(ScsWork *w, scs_int idx) {
   /* copy old col d_x into delta_x */
   memcpy(delta_x, &(d_x[idx * 2 * l]), sizeof(scs_float) * 2 * l);
   /* delta_f -= f_prev */
-  add_scaled_array(delta_f, f, 2 * l, -1.0);
+  SCS(add_scaled_array)(delta_f, f, 2 * l, -1.0);
   /* delta_x -= x_prev */
-  add_scaled_array(delta_x, x, 2 * l, -1.0);
+  SCS(add_scaled_array)(delta_x, x, 2 * l, -1.0);
 
   /* g = [u;v] */
   memcpy(g, w->u, sizeof(scs_float) * l);
@@ -103,26 +103,26 @@ static void update_accel_params(ScsWork *w, scs_int idx) {
   memcpy(&(x[l]), w->v_prev, sizeof(scs_float) * l);
   /* calculcate f = g - x */
   memcpy(f, g, sizeof(scs_float) * 2 * l);
-  add_scaled_array(f, x, 2 * l, -1.0);
+  SCS(add_scaled_array)(f, x, 2 * l, -1.0);
 
   /* delta_f += f */
-  add_scaled_array(delta_f, f, 2 * l, 1.0);
+  SCS(add_scaled_array)(delta_f, f, 2 * l, 1.0);
   /* delta_x += x */
-  add_scaled_array(delta_x, x, 2 * l, 1.0);
+  SCS(add_scaled_array)(delta_x, x, 2 * l, 1.0);
 
   /* update mat = d_x'*d_f using delta_x, delta_f */
   update_mat(w->accel, idx);
 
   /* idx col of d_g = g_prev - g */
-  add_scaled_array(&(d_g[idx * 2 * l]), g, 2 * l, -1);
+  SCS(add_scaled_array)(&(d_g[idx * 2 * l]), g, 2 * l, -1);
   /* idx col of d_f -= delta_f */
-  add_scaled_array(&(d_f[idx * 2 * l]), delta_f, 2 * l, -1);
+  SCS(add_scaled_array)(&(d_f[idx * 2 * l]), delta_f, 2 * l, -1);
   /* idx col of d_x -= delta_x */
-  add_scaled_array(&(d_x[idx * 2 * l]), delta_x, 2 * l, -1);
+  SCS(add_scaled_array)(&(d_x[idx * 2 * l]), delta_x, 2 * l, -1);
   RETURN;
 }
 
-ScsAccelWork *init_accel(ScsWork *w) {
+ScsAccelWork *SCS(init_accel)(ScsWork *w) {
   DEBUG_FUNC
   ScsAccelWork *a = (ScsAccelWork *)scs_calloc(1, sizeof(ScsAccelWork));
   if (!a) {
@@ -152,7 +152,7 @@ ScsAccelWork *init_accel(ScsWork *w) {
   a->total_accel_time = 0.0;
   if (!a->d_f || !a->d_g || !a->f || !a->g || !a->scratch || !a->sol ||
       !a->d_x || !a->x || !a->scratch || !a->ipiv || !a->mat) {
-    free_accel(a);
+    SCS(free_accel)(a);
     a = SCS_NULL;
   }
   RETURN a;
@@ -186,16 +186,16 @@ static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   RETURN(scs_int) info;
 }
 
-scs_int accelerate(ScsWork *w, scs_int iter) {
+scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   DEBUG_FUNC
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
   scs_int info;
-  timer accel_timer;
+  SCS(timer) accel_timer;
   if (k <= 0) {
     RETURN 0;
   }
-  scs_tic(&accel_timer);
+  SCS(tic)(&accel_timer);
   /* update df, d_g, d_x, f, g, x */
   update_accel_params(w, iter % k);
   if (iter == 0) {
@@ -203,10 +203,10 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   }
   /* solve linear system, new point stored in sol */
   info = solve_with_gesv(w->accel, MIN(iter, k));
-  w->accel->total_accel_time += tocq(&accel_timer);
+  w->accel->total_accel_time += SCS(tocq)(&accel_timer);
   /* check that info == 0 and fallback otherwise */
   if (info != 0) {
-    scs_printf("Call to accelerate failed with code %li, falling back to using "
+    scs_printf("Call to SCS(accelerate) failed with code %li, falling back to using "
                "no acceleration\n", (long)info);
     RETURN 0;
   }
@@ -216,7 +216,7 @@ scs_int accelerate(ScsWork *w, scs_int iter) {
   RETURN info;
 }
 
-void free_accel(ScsAccelWork *a) {
+void SCS(free_accel)(ScsAccelWork *a) {
   DEBUG_FUNC
   if (a) {
     if (a->d_f) {
@@ -265,24 +265,24 @@ void free_accel(ScsAccelWork *a) {
 
 #else
 
-ScsAccelWork *init_accel(ScsWork *w) {
+ScsAccelWork *SCS(init_accel)(ScsWork *w) {
   ScsAccelWork *a = (ScsAccelWork *)scs_malloc(sizeof(ScsAccelWork));
   a->total_accel_time = 0.0;
   RETURN a;
 }
 
-void free_accel(ScsAccelWork *a) {
+void SCS(free_accel)(ScsAccelWork *a) {
   if (a) {
     scs_free(a);
   }
 }
 
-scs_int accelerate(ScsWork *w, scs_int iter) {
+scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   RETURN 0;
 }
 #endif
 
-char *get_accel_summary(const ScsInfo *info, ScsAccelWork *a) {
+char *SCS(get_accel_summary)(const ScsInfo *info, ScsAccelWork *a) {
   DEBUG_FUNC
   char *str = (char *)scs_malloc(sizeof(char) * 64);
   sprintf(str, "\tAcceleration: avg step time: %1.2es\n",

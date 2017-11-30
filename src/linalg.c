@@ -2,7 +2,7 @@
 #include <math.h>
 
 /* x = b*a */
-void set_as_scaled_array(scs_float *x, const scs_float *a, const scs_float b,
+void SCS(set_as_scaled_array)(scs_float *x, const scs_float *a, const scs_float b,
                          scs_int len) {
   scs_int i;
   for (i = 0; i < len; ++i)
@@ -10,14 +10,14 @@ void set_as_scaled_array(scs_float *x, const scs_float *a, const scs_float b,
 }
 
 /* a *= b */
-void scale_array(scs_float *a, const scs_float b, scs_int len) {
+void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len) {
   scs_int i;
   for (i = 0; i < len; ++i)
     a[i] *= b;
 }
 
 /* x'*y */
-scs_float scs_dot(const scs_float *x, const scs_float *y, scs_int len) {
+scs_float SCS(dot)(const scs_float *x, const scs_float *y, scs_int len) {
   scs_int i;
   scs_float ip = 0.0;
   for (i = 0; i < len; ++i) {
@@ -27,7 +27,7 @@ scs_float scs_dot(const scs_float *x, const scs_float *y, scs_int len) {
 }
 
 /* ||v||_2^2 */
-scs_float calc_norm_sq(const scs_float *v, scs_int len) {
+scs_float SCS(norm_sq)(const scs_float *v, scs_int len) {
   scs_int i;
   scs_float nmsq = 0.0;
   for (i = 0; i < len; ++i) {
@@ -37,11 +37,11 @@ scs_float calc_norm_sq(const scs_float *v, scs_int len) {
 }
 
 /* ||v||_2 */
-scs_float calc_norm(const scs_float *v, scs_int len) {
-  return SQRTF(calc_norm_sq(v, len));
+scs_float SCS(norm)(const scs_float *v, scs_int len) {
+  return SQRTF(SCS(norm_sq)(v, len));
 }
 
-scs_float calc_norm_inf(const scs_float *a, scs_int l) {
+scs_float SCS(norm_inf)(const scs_float *a, scs_int l) {
   scs_float tmp, max = 0.0;
   scs_int i;
   for (i = 0; i < l; ++i) {
@@ -54,7 +54,7 @@ scs_float calc_norm_inf(const scs_float *a, scs_int l) {
 }
 
 /* saxpy a += sc*b */
-void add_scaled_array(scs_float *a, const scs_float *b, scs_int n,
+void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
                       const scs_float sc) {
   scs_int i;
   for (i = 0; i < n; ++i) {
@@ -62,7 +62,7 @@ void add_scaled_array(scs_float *a, const scs_float *b, scs_int n,
   }
 }
 
-scs_float calc_norm_diff(const scs_float *a, const scs_float *b, scs_int l) {
+scs_float SCS(norm_diff)(const scs_float *a, const scs_float *b, scs_int l) {
   scs_float nm_diff = 0.0, tmp;
   scs_int i;
   for (i = 0; i < l; ++i) {
@@ -72,7 +72,7 @@ scs_float calc_norm_diff(const scs_float *a, const scs_float *b, scs_int l) {
   return SQRTF(nm_diff);
 }
 
-scs_float calc_norm_inf_diff(const scs_float *a, const scs_float *b,
+scs_float SCS(norm_inf_diff)(const scs_float *a, const scs_float *b,
                              scs_int l) {
   scs_float tmp, max = 0.0;
   scs_int i;

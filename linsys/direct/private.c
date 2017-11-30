@@ -1,12 +1,12 @@
 #include "private.h"
 
-char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
+char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsSettings *stgs) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(tmp, "sparse-direct, nnz in A = %li", (long)A->p[A->n]);
   return tmp;
 }
 
-char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
+char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
   sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n",
@@ -15,10 +15,10 @@ char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
   return str;
 }
 
-void free_lin_sys_work(ScsLinSysWork *p) {
+void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
     if (p->L) {
-      cs_spfree(p->L);
+      SCS(cs_spfree)(p->L);
     }
     if (p->P) {
       scs_free(p->P);
@@ -45,7 +45,7 @@ cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   /* I at top left */
   const scs_int Anz = A->p[A->n];
   const scs_int Knzmax = A->n + A->m + Anz;
-  cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
+  cs *K = SCS(cs_spalloc)(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
   scs_printf("forming KKT\n");
@@ -79,8 +79,8 @@ cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   }
   /* assert kk == Knzmax */
   K->nz = Knzmax;
-  K_cs = cs_compress(K);
-  cs_spfree(K);
+  K_cs = SCS(cs_compress)(K);
+  SCS(cs_spfree)(K);
   return (K_cs);
 }
 
@@ -154,14 +154,14 @@ void LDLSolve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
   }
 }
 
-void accum_by_atrans(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
+void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
-  _accum_by_atrans(A->n, A->x, A->i, A->p, x, y);
+  SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accum_by_a(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
+void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                 scs_float *y) {
-  _accum_by_a(A->n, A->x, A->i, A->p, x, y);
+  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
 }
 
 scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
@@ -186,17 +186,17 @@ scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 #endif
   }
 #endif
-  Pinv = cs_pinv(p->P, A->n + A->m);
-  C = cs_symperm(K, Pinv, 1);
+  Pinv = SCS(cs_pinv)(p->P, A->n + A->m);
+  C = SCS(cs_symperm)(K, Pinv, 1);
   ldl_status = LDLFactor(C, SCS_NULL, SCS_NULL, &p->L, &p->D);
-  cs_spfree(C);
-  cs_spfree(K);
+  SCS(cs_spfree)(C);
+  SCS(cs_spfree)(K);
   scs_free(Pinv);
   scs_free(info);
   return (ldl_status);
 }
 
-ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsSettings *stgs) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m;
   p->P = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
@@ -207,24 +207,24 @@ ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
   p->L->nz = -1;
 
   if (factorize(A, stgs, p) < 0) {
-    free_lin_sys_work(p);
+    SCS(free_lin_sys_work)(p);
     return SCS_NULL;
   }
   p->total_solve_time = 0.0;
   return p;
 }
 
-scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs,
+scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
                       ScsLinSysWork *p, scs_float *b, const scs_float *s,
                       scs_int iter) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
-  timer linsys_timer;
-  scs_tic(&linsys_timer);
+  SCS(timer) linsys_timer;
+  SCS(tic)(&linsys_timer);
   LDLSolve(b, b, p->L, p->D, p->P, p->bp);
-  p->total_solve_time += tocq(&linsys_timer);
+  p->total_solve_time += SCS(tocq)(&linsys_timer);
 #if EXTRA_VERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", tocq(&linsys_timer) / 1e3);
+  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
 #endif
   return 0;
 }

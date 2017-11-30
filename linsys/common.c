@@ -6,7 +6,7 @@
 #define MAX_SCALE (1e3)
 #define NUM_SCALE_PASSES 1 /* additional passes don't help much */
 
-scs_int copy_a_matrix(ScsMatrix **dstp, const ScsMatrix *src) {
+scs_int SCS(copy_a_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   scs_int Anz = src->p[src->n];
   ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
@@ -30,7 +30,7 @@ scs_int copy_a_matrix(ScsMatrix **dstp, const ScsMatrix *src) {
   return 1;
 }
 
-scs_int validate_lin_sys(const ScsMatrix *A) {
+scs_int SCS(validate_lin_sys)(const ScsMatrix *A) {
   scs_int i, r_max, Anz;
   if (!A->x || !A->i || !A->p) {
     scs_printf("data incompletely specified\n");
@@ -67,7 +67,7 @@ scs_int validate_lin_sys(const ScsMatrix *A) {
   return 0;
 }
 
-void free_a_matrix(ScsMatrix *A) {
+void SCS(free_a_matrix)(ScsMatrix *A) {
   if (A->x) {
     scs_free(A->x);
   }
@@ -92,14 +92,14 @@ static void print_a_matrix(const ScsMatrix *A) {
         scs_printf("A[%li,%li] = %4f, ", (long)A->i[j], (long)i, A->x[j]);
       }
       scs_printf("norm col = %4f\n",
-                 calc_norm(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+                 SCS(norm)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
     }
-    scs_printf("norm A = %4f\n", calc_norm(A->x, A->p[A->n]));
+    scs_printf("norm A = %4f\n", SCS(norm)(A->x, A->p[A->n]));
   }
 }
 #endif
 
-void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
+void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
                  ScsScaling *scal) {
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
@@ -112,11 +112,11 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
             max_col_scale = MAX_SCALE * SQRTF((scs_float)A->m);
   scs_int i, j, l, count, delta, *boundaries, c1, c2;
   scs_float wrk, e;
-  scs_int num_boundaries = get_cone_boundaries(k, &boundaries);
+  scs_int num_boundaries = SCS(get_cone_boundaries)(k, &boundaries);
 
 #if EXTRA_VERBOSE > 0
-  timer normalize_timer;
-  scs_tic(&normalize_timer);
+  SCS(timer) normalize_timer;
+  SCS(tic)(&normalize_timer);
   scs_printf("normalizing A\n");
   print_a_matrix(A);
 #endif
@@ -169,13 +169,13 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
     /* calculate and scale by col norms, E */
     for (i = 0; i < A->n; ++i) {
       c1 = A->p[i + 1] - A->p[i];
-      e = calc_norm(&(A->x[A->p[i]]), c1);
+      e = SCS(norm)(&(A->x[A->p[i]]), c1);
       if (e < min_col_scale) {
         e = 1;
       } else if (e > max_col_scale) {
         e = max_col_scale;
       }
-      scale_array(&(A->x[A->p[i]]), 1.0 / e, c1);
+      SCS(scale_array)(&(A->x[A->p[i]]), 1.0 / e, c1);
       E[i] = e;
     }
 
@@ -207,12 +207,12 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
   scal->mean_norm_col_a = 0.0;
   for (i = 0; i < A->n; ++i) {
     c1 = A->p[i + 1] - A->p[i];
-    scal->mean_norm_col_a += calc_norm(&(A->x[A->p[i]]), c1) / A->n;
+    scal->mean_norm_col_a += SCS(norm)(&(A->x[A->p[i]]), c1) / A->n;
   }
 
   /* scale up by d->SCALE if not equal to 1 */
   if (stgs->scale != 1) {
-    scale_array(A->x, stgs->scale, A->p[A->n]);
+    SCS(scale_array)(A->x, stgs->scale, A->p[A->n]);
   }
 
   scal->D = Dt;
@@ -220,18 +220,18 @@ void normalize_a(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
 
 #if EXTRA_VERBOSE > 0
   scs_printf("finished normalizing A, time: %1.2es\n",
-             tocq(&normalize_timer) / 1e3);
+             SCS(tocq)(&normalize_timer) / 1e3);
   print_a_matrix(A);
 #endif
 }
 
-void un_normalize_a(ScsMatrix *A, const ScsSettings *stgs,
+void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
                     const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;
   for (i = 0; i < A->n; ++i) {
-    scale_array(&(A->x[A->p[i]]), E[i] / stgs->scale, A->p[i + 1] - A->p[i]);
+    SCS(scale_array)(&(A->x[A->p[i]]), E[i] / stgs->scale, A->p[i + 1] - A->p[i]);
   }
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
@@ -240,7 +240,7 @@ void un_normalize_a(ScsMatrix *A, const ScsSettings *stgs,
   }
 }
 
-void _accum_by_atrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
+void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                       const scs_float *x, scs_float *y) {
   /* y += A'*x
      A in column compressed format
@@ -250,8 +250,8 @@ void _accum_by_atrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   scs_int c1, c2;
   scs_float yj;
 #if EXTRA_VERBOSE > 0
-  timer mult_by_atrans_timer;
-  scs_tic(&mult_by_atrans_timer);
+  SCS(timer) mult_by_atrans_timer;
+  SCS(tic)(&mult_by_atrans_timer);
 #endif
 #ifdef _OPENMP
 #pragma omp parallel for private(p, c1, c2, yj)
@@ -267,11 +267,11 @@ void _accum_by_atrans(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   }
 #if EXTRA_VERBOSE > 0
   scs_printf("mult By A trans time: %1.2es\n",
-             tocq(&mult_by_atrans_timer) / 1e3);
+             SCS(tocq)(&mult_by_atrans_timer) / 1e3);
 #endif
 }
 
-void _accum_by_a(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
+void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                  const scs_float *x, scs_float *y) {
   /*y += A*x
     A in column compressed format
@@ -282,8 +282,8 @@ void _accum_by_a(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   scs_int c1, c2;
   scs_float xj;
 #if EXTRA_VERBOSE > 0
-  timer mult_by_a_timer;
-  scs_tic(&mult_by_a_timer);
+  SCS(timer) mult_by_a_timer;
+  SCS(tic)(&mult_by_a_timer);
 #endif
   /*#pragma omp parallel for private(p,c1,c2,xj)  */
   for (j = 0; j < n; j++) {
@@ -296,6 +296,6 @@ void _accum_by_a(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     }
   }
 #if EXTRA_VERBOSE > 0
-  scs_printf("mult By A time: %1.2es\n", tocq(&mult_by_a_timer) / 1e3);
+  scs_printf("mult By A time: %1.2es\n", SCS(tocq)(&mult_by_a_timer) / 1e3);
 #endif
 }

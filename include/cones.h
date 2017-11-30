@@ -26,19 +26,19 @@ struct SCS_CONE_WORK {
  * returns length of boundaries array, boundaries malloc-ed here so should be
  * freed
  */
-scs_int get_cone_boundaries(const ScsCone *k, scs_int **boundaries);
+scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries);
 
-ScsConeWork *init_cone(const ScsCone *k);
-char *get_cone_header(const ScsCone *k);
-scs_int validate_cones(const ScsData *d, const ScsCone *k);
+ScsConeWork *SCS(init_cone)(const ScsCone *k);
+char *SCS(get_cone_header)(const ScsCone *k);
+scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
 
 /* pass in iter to control how accurate the cone projection
  with iteration, set iter < 0 for exact projection, warm_start contains guess
  of solution, can be SCS_NULL*/
-scs_int proj_dual_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
+scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
                        const scs_float *warm_start, scs_int iter);
-void finish_cone(ScsConeWork *c);
-char *get_cone_summary(const ScsInfo *info, ScsConeWork *c);
+void SCS(finish_cone)(ScsConeWork *c);
+char *SCS(get_cone_summary)(const ScsInfo *info, ScsConeWork *c);
 
 #ifdef __cplusplus
 }

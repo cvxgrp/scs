@@ -45,11 +45,11 @@ extern "C" {
 /*
  CUDA matrix routines only for CSR, not CSC matrices:
     CSC             CSR             GPU     Mult
-    A (m x n)       A' (n x m)      Ag      accum_by_a_trans_gpu
-    A'(n x m)       A  (m x n)      Agt     accum_by_a_gpu
+    A (m x n)       A' (n x m)      Ag      SCS(accum_by_a)_trans_gpu
+    A'(n x m)       A  (m x n)      Agt     SCS(accum_by_a)_gpu
 */
 
-void accum_by_atrans_gpu(const ScsLinSysWork *p, const scs_float *x,
+void SCS(accum_by_atrans)_gpu(const ScsLinSysWork *p, const scs_float *x,
                          scs_float *y) {
   /* y += A'*x
      x and y MUST be on GPU already
@@ -61,7 +61,7 @@ void accum_by_atrans_gpu(const ScsLinSysWork *p, const scs_float *x,
                   &onef, y);
 }
 
-void accum_by_a_gpu(const ScsLinSysWork *p, const scs_float *x, scs_float *y) {
+void SCS(accum_by_a)_gpu(const ScsLinSysWork *p, const scs_float *x, scs_float *y) {
   /* y += A*x
      x and y MUST be on GPU already
    */
@@ -73,35 +73,35 @@ void accum_by_a_gpu(const ScsLinSysWork *p, const scs_float *x, scs_float *y) {
 }
 
 /* do not use within pcg, reuses memory */
-void accum_by_atrans(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
+void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
   scs_float *v_m = p->tmp_m;
   scs_float *v_n = p->r;
   cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
   cudaMemcpy(v_n, y, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
-  accum_by_atrans_gpu(p, v_m, v_n);
+  SCS(accum_by_atrans)_gpu(p, v_m, v_n);
   cudaMemcpy(y, v_n, A->n * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
 /* do not use within pcg, reuses memory */
-void accum_by_a(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
+void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                 scs_float *y) {
   scs_float *v_m = p->tmp_m;
   scs_float *v_n = p->r;
   cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
   cudaMemcpy(v_m, y, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
-  accum_by_a_gpu(p, v_n, v_m);
+  SCS(accum_by_a)_gpu(p, v_n, v_m);
   cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
-char *get_lin_sys_method(const ScsMatrix *A, const ScsSettings *stgs) {
+char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsSettings *stgs) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str, "sparse-indirect GPU, nnz in A = %li, CG tol ~ 1/iter^(%2.2f)",
           (long)A->p[A->n], stgs->cg_rate);
   return str;
 }
 
-char *get_lin_sys_summary(ScsLinSysWork *p, const ScsInfo *info) {
+char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str,
           "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
@@ -124,7 +124,7 @@ void cudaFree_a_matrix(ScsMatrix *A) {
   }
 }
 
-void free_lin_sys_work(ScsLinSysWork *p) {
+void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
     if (p->p) {
       cudaFree(p->p);
@@ -168,9 +168,9 @@ static void mat_vec(const ScsMatrix *A, const ScsSettings *s, ScsLinSysWork *p,
   /* x and y MUST already be loaded to GPU */
   scs_float *tmp_m = p->tmp_m; /* temp memory */
   cudaMemset(tmp_m, 0, A->m * sizeof(scs_float));
-  accum_by_a_gpu(p, x, tmp_m);
+  SCS(accum_by_a)_gpu(p, x, tmp_m);
   cudaMemset(y, 0, A->n * sizeof(scs_float));
-  accum_by_atrans_gpu(p, tmp_m, y);
+  SCS(accum_by_atrans)_gpu(p, tmp_m, y);
   CUBLAS(axpy)(p->cublas_handle, A->n, &(s->rho_x), x, 1, y, 1);
 }
 
@@ -186,7 +186,7 @@ static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
 
   for (i = 0; i < A->n; ++i) {
     M[i] = 1 / (stgs->rho_x +
-                calc_norm_sq(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+                SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
     /* M[i] = 1; */
   }
   cudaMemcpy(p->M, M, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -197,7 +197,7 @@ static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
 #endif
 }
 
-ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsSettings *stgs) {
   cudaError_t err;
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   p->Annz = A->p[A->n];
@@ -264,7 +264,7 @@ ScsLinSysWork *init_lin_sys_work(const ScsMatrix *A, const ScsSettings *stgs) {
   if (err != cudaSuccess) {
     printf("%s:%d:%s\nERROR_CUDA: %s\n", __FILE__, __LINE__, __func__,
            cudaGetErrorString(err));
-    free_lin_sys_work(p);
+    SCS(free_lin_sys_work)(p);
     return SCS_NULL;
   }
   return p;
@@ -352,14 +352,14 @@ static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs,
 }
 
 #ifdef TEST_GPU_MAT_MUL
-void accum_by_atrans_host(const ScsMatrix *A, ScsLinSysWork *p,
+void SCS(accum_by_atrans)_host(const ScsMatrix *A, ScsLinSysWork *p,
                           const scs_float *x, scs_float *y) {
-  _accum_by_atrans(A->n, A->x, A->i, A->p, x, y);
+  SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
 }
 
-void accum_by_a_host(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
+void SCS(accum_by_a)_host(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
-  _accum_by_a(A->n, A->x, A->i, A->p, x, y);
+  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
 }
 
 void test_gpu_mat_mul(const ScsMatrix *A, ScsLinSysWork *p, scs_float *b) {
@@ -370,33 +370,33 @@ void test_gpu_mat_mul(const ScsMatrix *A, ScsLinSysWork *p, scs_float *b) {
   cudaMemcpy(bg, b, (A->n + A->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
   memcpy(t, b, (A->n + A->m) * sizeof(scs_float));
 
-  accum_by_atrans_gpu(p, &(bg[A->n]), bg);
-  accum_by_atrans_host(A, p, &(t[A->n]), t);
+  SCS(accum_by_atrans)_gpu(p, &(bg[A->n]), bg);
+  SCS(accum_by_atrans)_host(A, p, &(t[A->n]), t);
   cudaMemcpy(u, bg, (A->n + A->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
-  printf("A trans multiplication err %2.e\n", calc_norm_diff(u, t, A->n));
+  printf("A trans multiplication err %2.e\n", SCS(norm_diff)(u, t, A->n));
 
-  accum_by_a_gpu(p, bg, &(bg[A->n]));
-  accum_by_a_host(A, p, t, &(t[A->n]));
+  SCS(accum_by_a)_gpu(p, bg, &(bg[A->n]));
+  SCS(accum_by_a)_host(A, p, t, &(t[A->n]));
   cudaMemcpy(u, bg, (A->n + A->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
   printf("A multiplcation err %2.e\n",
-         calc_norm_diff(&(u[A->n]), &(t[A->n]), A->m));
+         SCS(norm_diff)(&(u[A->n]), &(t[A->n]), A->m));
   cudaFree(bg);
 }
 #endif
 
-scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs,
+scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
                       ScsLinSysWork *p, scs_float *b, const scs_float *s,
                       scs_int iter) {
   scs_int cg_its;
-  timer linsys_timer;
+  SCS(timer) linsys_timer;
   scs_float *bg = p->bg;
   scs_float neg_onef = -1.0;
   scs_float cg_tol =
-      calc_norm(b, A->n) *
+      SCS(norm)(b, A->n) *
       (iter < 0 ? CG_BEST_TOL
                 : CG_MIN_TOL / POWF((scs_float)iter + 1, stgs->cg_rate));
 
-  scs_tic(&linsys_timer);
+  SCS(tic)(&linsys_timer);
 /* solves Mx = b, for x but stores result in b */
 /* s contains warm-start (if available) */
 
@@ -406,20 +406,20 @@ scs_int solve_lin_sys(const ScsMatrix *A, const ScsSettings *stgs,
 
   /* all on GPU */
   cudaMemcpy(bg, b, (A->n + A->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
-  accum_by_atrans_gpu(p, &(bg[A->n]), bg);
+  SCS(accum_by_atrans)_gpu(p, &(bg[A->n]), bg);
   /* solves (I+A'A)x = b, s warm start, solution stored in b */
   cg_its = pcg(A, stgs, p, s, bg, A->n, MAX(cg_tol, CG_BEST_TOL));
   CUBLAS(scal)(p->cublas_handle, A->m, &neg_onef, &(bg[A->n]), 1);
-  accum_by_a_gpu(p, bg, &(bg[A->n]));
+  SCS(accum_by_a)_gpu(p, bg, &(bg[A->n]));
   cudaMemcpy(b, bg, (A->n + A->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
 
   if (iter >= 0) {
     p->tot_cg_its += cg_its;
   }
 
-  p->total_solve_time += tocq(&linsys_timer);
+  p->total_solve_time += SCS(tocq)(&linsys_timer);
 #if EXTRA_VERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", tocq(&linsys_timer) / 1e3);
+  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
 #endif
   return 0;
 }
