@@ -266,10 +266,10 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   nmdr_tau = calc_dual_resid(w, y, r->tau, &nm_a_ty_tau);
 
   r->bt_y_by_tau =
-      inner_prod(y, w->b, m) /
+      scs_dot(y, w->b, m) /
       (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
   r->ct_x_by_tau =
-      inner_prod(x, w->c, n) /
+      scs_dot(x, w->c, n) /
       (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
 
   r->res_infeas =
@@ -308,12 +308,12 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 
   add_scaled_array(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
   add_scaled_array(w->u_t, w->h, l - 1,
-                   -inner_prod(w->u_t, w->g, l - 1) / (w->g_th + 1));
+                   -scs_dot(w->u_t, w->g, l - 1) / (w->g_th + 1));
   scale_array(&(w->u_t[n]), -1, m);
 
   status = solve_lin_sys(w->A, w->stgs, w->p, w->u_t, w->u, iter);
 
-  w->u_t[l - 1] += inner_prod(w->u_t, w->h, l - 1);
+  w->u_t[l - 1] += scs_dot(w->u_t, w->h, l - 1);
 
   RETURN status;
 }
@@ -636,19 +636,19 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("dist(y, K*) = %.4e\n",
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m));
     scs_printf("|A'y|_2 * |b|_2 = %.4e\n", info->res_infeas);
-    scs_printf("b'y = %.4f\n", inner_prod(d->b, sol->y, d->m));
+    scs_printf("b'y = %.4f\n", scs_dot(d->b, sol->y, d->m));
   } else if (is_unbounded_status(info->status_val)) {
     scs_printf("Certificate of dual infeasibility:\n");
     scs_printf("dist(s, K) = %.4e\n",
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m));
     scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->res_unbdd);
-    scs_printf("c'x = %.4f\n", inner_prod(d->c, sol->x, d->n));
+    scs_printf("c'x = %.4f\n", scs_dot(d->c, sol->x, d->n));
   } else {
     scs_printf("Error metrics:\n");
     scs_printf("dist(s, K) = %.4e, dist(y, K*) = %.4e, s'y/|s||y| = %.4e\n",
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m),
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m),
-               inner_prod(sol->s, sol->y, d->m) / calc_norm(sol->s, d->m) /
+               scs_dot(sol->s, sol->y, d->m) / calc_norm(sol->s, d->m) /
                    calc_norm(sol->y, d->m));
     scs_printf("|Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->res_pri);
     scs_printf("|A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->res_dual);
@@ -834,7 +834,7 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
   memcpy(w->g, w->h, (n + m) * sizeof(scs_float));
   solve_lin_sys(w->A, w->stgs, w->p, w->g, SCS_NULL, -1);
   scale_array(&(w->g[n]), -1, m);
-  w->g_th = inner_prod(w->h, w->g, n + m);
+  w->g_th = scs_dot(w->h, w->g, n + m);
   RETURN 0;
 }
 

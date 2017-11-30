@@ -58,7 +58,7 @@ static void update_mat(ScsAccelWork *a, scs_int idx) {
   scs_float onef = 1.0;
   scs_float zerof = 0.0;
 
-  scs_float ip = inner_prod(delta_x, delta_f, 2 * l);
+  scs_float ip = scs_dot(delta_x, delta_f, 2 * l);
   BLAS(gemv)("Trans", &twol, &bk, &onef, d_x, &twol, delta_f, &one, &zerof, wrk,
              &one);
   add_scaled_array(&(mat[idx * k]), wrk, k, -1.0);

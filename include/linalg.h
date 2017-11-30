@@ -11,7 +11,7 @@ extern "C" {
 void set_as_scaled_array(scs_float *x, const scs_float *a, const scs_float b,
                          scs_int len);
 void scale_array(scs_float *a, const scs_float b, scs_int len);
-scs_float inner_prod(const scs_float *x, const scs_float *y, scs_int len);
+scs_float scs_dot(const scs_float *x, const scs_float *y, scs_int len);
 scs_float calc_norm_sq(const scs_float *v, scs_int len);
 scs_float calc_norm(const scs_float *v, scs_int len);
 scs_float calc_norm_inf(const scs_float *a, scs_int l);

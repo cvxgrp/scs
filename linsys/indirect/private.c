@@ -214,7 +214,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs,
 
   for (i = 0; i < max_its; ++i) {
     mat_vec(A, stgs, pr, p, Gp);
-    alpha = ipzr / inner_prod(p, Gp, n);
+    alpha = ipzr / scs_dot(p, Gp, n);
     add_scaled_array(b, p, n, alpha);
     add_scaled_array(r, Gp, n, -alpha);
 

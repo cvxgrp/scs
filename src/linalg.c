@@ -17,7 +17,7 @@ void scale_array(scs_float *a, const scs_float b, scs_int len) {
 }
 
 /* x'*y */
-scs_float inner_prod(const scs_float *x, const scs_float *y, scs_int len) {
+scs_float scs_dot(const scs_float *x, const scs_float *y, scs_int len) {
   scs_int i;
   scs_float ip = 0.0;
   for (i = 0; i < len; ++i) {

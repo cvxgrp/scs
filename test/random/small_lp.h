@@ -31,8 +31,8 @@ static const char *small_lp(void) {
   set_default_scs_settings(d);
 
   exitflag = scs(d, k, sol, &info);
-  perr = inner_prod(d->c, sol->x, d->n) - inner_prod(d->c, opt_sol->x, d->n);
-  derr = -inner_prod(d->b, sol->y, d->m) + inner_prod(d->b, opt_sol->y, d->m);
+  perr = scs_dot(d->c, sol->x, d->n) - scs_dot(d->c, opt_sol->x, d->n);
+  derr = -scs_dot(d->b, sol->y, d->m) + scs_dot(d->b, opt_sol->y, d->m);
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
