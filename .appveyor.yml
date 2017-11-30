@@ -1,0 +1,27 @@
+clone_depth: 10
+
+clone_folder: c:\projects\scs
+
+# Openblas links from scipy appveyor.yml.
+environment:
+  matrix:
+    - platform: x64
+      ARCH: 64
+      BINPATH: C:\msys64\mingw64\bin
+      OPENBLAS: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win64.zip
+
+    - platform: x86
+      ARCH: 32
+      BINPATH: C:\MinGw\bin;C:\msys64\mingw32\bin
+      OPENBLAS: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win32.zip
+
+build_script:
+  - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
+  - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
+  - set PATH=%PATH%;%BINPATH%;C:\projects\openblas\%ARCH%\bin
+  - cd C:\projects\scs
+  - mingw32-make.exe CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
+  - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
+
+test_script:
+  - C:\projects\scs\out\run_tests.exe
