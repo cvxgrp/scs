@@ -1,26 +1,11 @@
 #include "scs.h"
+#include "glbopts.h"
 #include "accel.h"
-#include "constants.h"
 #include "ctrlc.h"
 #include "linalg.h"
 #include "linsys.h"
 #include "normalize.h"
 #include "util.h"
-
-#if EXTRA_VERBOSE > 0
-#define PRINT_INTERVAL 1
-#define CONVERGED_INTERVAL 1
-#else
-/* print summary output every this num iterations */
-#define PRINT_INTERVAL 100
-/* check for convergence every this num iterations */
-#define CONVERGED_INTERVAL 20
-#endif
-
-/* tolerance at which we declare problem indeterminate */
-#define INDETERMINATE_TOL 1e-9
-/* maintain the iterates at this l2 norm (due to homogeneity) */
-#define ITERATE_NORM (10.)
 
 SCS(timer) global_timer;
 

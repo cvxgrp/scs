@@ -11,6 +11,34 @@ extern "C" {
 #define SCS(x) scs_##x
 #endif
 
+/* SCS VERSION NUMBER ----------------------------------------------    */
+#define SCS_VERSION                                                            \
+  ("2.0.0") /* string literals automatically null-terminated */
+
+/* SCS returns one of the following integers:                           */
+#define SCS_INFEASIBLE_INACCURATE (-7)
+#define SCS_UNBOUNDED_INACCURATE (-6)
+#define SCS_SIGINT (-5)
+#define SCS_FAILED (-4)
+#define SCS_INDETERMINATE (-3)
+#define SCS_INFEASIBLE (-2) /* primal infeasible, dual unbounded   */
+#define SCS_UNBOUNDED (-1)  /* primal unbounded, dual infeasible   */
+#define SCS_UNFINISHED (0)  /* never returned, used as placeholder */
+#define SCS_SOLVED (1)
+#define SCS_SOLVED_INACCURATE (2)
+
+/* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
+#define MAX_ITERS (5000)
+#define EPS (1E-5)
+#define ALPHA (1.5)
+#define RHO_X (1E-3)
+#define SCALE (1.0)
+#define CG_RATE (2.0)
+#define VERBOSE (1)
+#define NORMALIZE (1)
+#define WARM_START (0)
+#define ACCELERATION_LOOKBACK (20)
+
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -137,6 +165,21 @@ typedef float scs_float;
 
 #define EPS_TOL (1E-18)
 #define SAFEDIV_POS(X, Y) ((Y) < EPS_TOL ? ((X) / EPS_TOL) : (X) / (Y))
+
+#if EXTRA_VERBOSE > 0
+#define PRINT_INTERVAL (1)
+#define CONVERGED_INTERVAL (1)
+#else
+/* print summary output every this num iterations */
+#define PRINT_INTERVAL (100)
+/* check for convergence every this num iterations */
+#define CONVERGED_INTERVAL (20)
+#endif
+
+/* tolerance at which we declare problem indeterminate */
+#define INDETERMINATE_TOL (1e-9)
+/* maintain the iterates at this l2 norm (due to homogeneity) */
+#define ITERATE_NORM (10.)
 
 #ifdef __cplusplus
 }

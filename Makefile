@@ -33,13 +33,13 @@ endif
 	$(CC) $(CFLAGS) -c $< -o $@
 
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
-src/util.o	: src/util.c include/util.h include/constants.h
+src/util.o	: src/util.c include/util.h include/glbopts.h
 src/cones.o	: src/cones.c include/cones.h include/scs_blas.h
 src/accel.o	: src/accel.c include/accel.h include/scs_blas.h
 src/cs.o	: src/cs.c include/cs.h
 src/linalg.o: src/linalg.c include/linalg.h
 src/ctrl.o  : src/ctrl.c include/ctrl.h
-src/scs_version.o: src/scs_version.c include/constants.h
+src/scs_version.o: src/scs_version.c include/glbopts.h
 
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h

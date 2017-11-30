@@ -1,6 +1,6 @@
+#include "glbopts.h"
 #include "util.h"
 #include "linsys.h"
-#include "constants.h"
 
 /* return milli-seconds */
 #if (defined NOTIMER)

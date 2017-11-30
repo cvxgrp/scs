@@ -85,7 +85,7 @@ struct SCS_SOL_VARS {
 struct SCS_INFO {
   scs_int iter;         /* number of iterations taken */
   char status[32];      /* status string, e.g. 'Solved' */
-  scs_int status_val;   /* status as scs_int, defined in constants.h */
+  scs_int status_val;   /* status as scs_int, defined in glbopts.h */
   scs_float pobj;       /* primal objective */
   scs_float dobj;       /* dual objective */
   scs_float res_pri;    /* primal equality residual */
