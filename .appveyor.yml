@@ -19,6 +19,10 @@ build_script:
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
   - set PATH=%PATH%;%BINPATH%;C:\projects\openblas\%ARCH%\bin
   - echo %PATH%
+  - dir C:\MinGw\bin
+  - dir C:\msys64\mingw64\bin
+  - cd C:\
+  - dir libgfortran-4.dll /s
   - cd C:\projects\scs
   - mingw32-make.exe CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
   - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
