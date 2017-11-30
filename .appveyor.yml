@@ -18,7 +18,8 @@ build_script:
   - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
   - set PATH=%PATH%;%BINPATH%;C:\projects\openblas\%ARCH%\bin
-  - echo $PATH
+  - echo %PATH%
+  - dir %BINPATH%
   - cd C:\projects\scs
   - mingw32-make.exe CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
   - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
