@@ -18,10 +18,13 @@ environment:
 build_script:
   - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
   - ps: Expand-Archive c:\openblas.zip c:\projects\openblas
+  - dir C:\projects\openblas\%ARCH%\bin\
+  - rename C:\projects\openblas\%ARCH%\bin\libopenblas_5f998ef_gcc7_1_0.dll libopenblas.dll
+  - dir C:\projects\openblas\%ARCH%\bin\
   - set PATH=%PATH%;%BINPATH%;C:\projects\openblas\%ARCH%\bin
   - cd C:\projects\scs
-  - mingw32-make.exe CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
-  - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
+  - mingw32-make.exe CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas"
+  - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas"
 
 test_script:
   - C:\projects\scs\out\run_tests.exe
