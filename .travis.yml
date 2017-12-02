@@ -1,12 +1,16 @@
 matrix:
   include:
     - os: linux
-      env: CC="clang -fsanitize=memory -fno-omit-frame-pointer" OPT="-O1"
+      compiler: clang
+      env: CFLAGS="clang -fsanitize=memory -fno-omit-frame-pointer" OPT="-O1"
     - os: linux
-      env: CC="clang -fsanitize=address -fno-omit-frame-pointer" OPT="-O1"
+      compiler: clang
+      env: CFLAGS="clang -fsanitize=address -fno-omit-frame-pointer" OPT="-O1"
     - os: linux
-      env: CC="clang -fsanitize=undefined -fno-omit-frame-pointer" OPT="-O1"
+      compiler: clang
+      env: CFLAGS="clang -fsanitize=undefined -fno-omit-frame-pointer" OPT="-O1"
     - os: linux
+      compiler: gcc
     - os: osx
 
 language: C
