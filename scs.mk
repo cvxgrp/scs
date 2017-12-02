@@ -55,7 +55,7 @@ endif
 endif
 
 # Add on default CFLAGS
-CFLAGS += -g -Wall -Wwrite-strings -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys
+CFLAGS += -g -Wall -Wwrite-strings -pedantic -O1 -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
