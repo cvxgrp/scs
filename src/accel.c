@@ -160,7 +160,7 @@ ScsAccelWork *SCS(init_accel)(ScsWork *w) {
 
 static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
-  blas_int info;
+  blas_int info = 0;
   blas_int twol = 2 * a->l;
   blas_int one = 1;
   blas_int blen = (blas_int)len;
@@ -190,7 +190,7 @@ scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   DEBUG_FUNC
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
-  scs_int info = 0;
+  scs_int info;
   SCS(timer) accel_timer;
   if (k <= 0) {
     RETURN 0;
