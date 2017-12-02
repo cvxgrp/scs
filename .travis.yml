@@ -1,17 +1,34 @@
-os:
-  - linux
-  - osx
+matrix:
+  include:
+    - os: linux
+      compiler: clang
+      env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
+    - os: linux
+      compiler: clang
+      env: CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+    - os: linux
+      compiler: clang
+      env: CFLAGS="-fsanitize=undefined -fno-omit-frame-pointer"
+    - os: linux
+      compiler: clang
+      env: CFLAGS="-fsanitize=thread -fno-omit-frame-pointer"
+    - os: linux
+      compiler: gcc
+    - os: osx
+
 language: C
-compiler:
-  - gcc
-  - clang
+
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       sudo apt-get install liblapack-dev;
     fi
+
 script:
-  - make test
-  - out/run_tests 
+  # Use -O1 for santizers to work.
+  - make OPT=-O1
+  - make test OPT=-O1
+  - out/run_tests
+
 notifications:
   email:
     - bodonoghue85@gmail.com

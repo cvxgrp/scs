@@ -160,7 +160,7 @@ ScsAccelWork *SCS(init_accel)(ScsWork *w) {
 
 static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
-  blas_int info;
+  blas_int info = 0;
   blas_int twol = 2 * a->l;
   blas_int one = 1;
   blas_int blen = (blas_int)len;

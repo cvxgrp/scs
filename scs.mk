@@ -4,7 +4,7 @@ else
 UNAME = $(shell uname -s)
 endif
 
-CC = gcc
+#CC = gcc
 # For cross-compiling with mingw use these.
 #CC = i686-w64-mingw32-gcc -m32
 #CC = x86_64-w64-mingw32-gcc-4.8
@@ -55,7 +55,8 @@ endif
 endif
 
 # Add on default CFLAGS
-CFLAGS += -g -Wall -Wwrite-strings -pedantic -O3 -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys
+OPT = -O3
+CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys $(OPT)
 ifneq ($(ISWINDOWS), 1)
 CFLAGS += -fPIC
 endif
