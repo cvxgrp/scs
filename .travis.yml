@@ -5,6 +5,8 @@ matrix:
     - os: linux
       env: CC="clang -fsanitize=address -fno-omit-frame-pointer" OPT="-O1"
     - os: linux
+      env: CC="clang -fsanitize=undefined -fno-omit-frame-pointer" OPT="-O1"
+    - os: linux
     - os: osx
 
 language: C
