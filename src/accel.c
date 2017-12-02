@@ -190,7 +190,7 @@ scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   DEBUG_FUNC
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
-  scs_int info;
+  scs_int info = 0;
   SCS(timer) accel_timer;
   if (k <= 0) {
     RETURN 0;
