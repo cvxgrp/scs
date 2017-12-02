@@ -2,13 +2,13 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: CFLAGS="clang -fsanitize=memory -fno-omit-frame-pointer" OPT="-O1"
+      env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
     - os: linux
       compiler: clang
-      env: CFLAGS="clang -fsanitize=address -fno-omit-frame-pointer" OPT="-O1"
+      env: CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
     - os: linux
       compiler: clang
-      env: CFLAGS="clang -fsanitize=undefined -fno-omit-frame-pointer" OPT="-O1"
+      env: CFLAGS="-fsanitize=undefined -fno-omit-frame-pointer"
     - os: linux
       compiler: gcc
     - os: osx
@@ -21,8 +21,8 @@ before_install:
     fi
 
 script:
-  - make
-  - make test
+  - make OPT=-O1
+  - make test OPT=-O1
   - out/run_tests
 
 notifications:
