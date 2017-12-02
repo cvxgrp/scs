@@ -1,22 +1,25 @@
-os:
-  - linux
-  - osx
+matrix:
+  - os: linux
+    env: CC="clang -fsanitize=memory -fno-omit-frame-pointer"
+    env: OPT=-O1
+  - os: linux
+    env: CC="clang -fsanitize=address -fno-omit-frame-pointer"
+    end: OPT=-01
+  - os: linux
+  - os: osx
+
 language: C
-compiler:
-  - gcc
-  - clang
+
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       sudo apt-get install liblapack-dev;
     fi
+
 script:
-  - make CC="clang -fsanitize=memory -fno-omit-frame-pointer"
-  - make CC="clang -fsanitize=memory -fno-omit-frame-pointer" test
-  - out/run_tests 
-  - make purge
-  - make CC="clang -fsanitize=address -fno-omit-frame-pointer"
-  - make CC="clang -fsanitize=address -fno-omit-frame-pointer" test
-  - out/run_tests 
+  - make
+  - make test
+  - out/run_tests
+
 notifications:
   email:
     - bodonoghue85@gmail.com
