@@ -10,8 +10,12 @@ before_install:
       sudo apt-get install liblapack-dev;
     fi
 script:
-  - make CC="clang -fsanitize=address -fsanitize=memory -fno-omit-frame-pointer"
-  - make CC="clang -fsanitize=address -fsanitize=memory -fno-omit-frame-pointer" test
+  - make CC="clang -fsanitize=memory -fno-omit-frame-pointer"
+  - make CC="clang -fsanitize=memory -fno-omit-frame-pointer" test
+  - out/run_tests 
+  - make purge
+  - make CC="clang -fsanitize=address -fno-omit-frame-pointer"
+  - make CC="clang -fsanitize=address -fno-omit-frame-pointer" test
   - out/run_tests 
 notifications:
   email:
