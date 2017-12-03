@@ -135,7 +135,7 @@ in the `out` folder. To run the tests execute:
 ```sh
 make
 make test
-./run_tests
+test/run_tests
 ```
 
 If `make` completes successfully, it will produce two static library files,
