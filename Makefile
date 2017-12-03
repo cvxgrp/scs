@@ -71,8 +71,10 @@ $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
 
 # basic testing
 .PHONY: test
-test: $(OUT)/run_tests
-$(OUT)/run_tests: test/run_tests.c $(OUT)/libscsindir.a
+test: $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
+$(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Itest
+$(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Itest
 
 # REQUIRES GPU AND CUDA INSTALLED

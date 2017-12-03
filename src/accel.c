@@ -52,7 +52,7 @@ static void update_mat(ScsAccelWork *a, scs_int idx) {
   scs_int l = a->l;
   scs_int k = a->k;
   /* blas vars */
-  blas_int twol = 2 * l;
+  blas_int twol = (blas_int)(2 * l);
   blas_int one = 1;
   blas_int bk = (blas_int)a->k;
   scs_float onef = 1.0;
@@ -161,7 +161,7 @@ ScsAccelWork *SCS(init_accel)(ScsWork *w) {
 static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
   blas_int info = 0;
-  blas_int twol = 2 * a->l;
+  blas_int twol = (blas_int)(2 * a->l);
   blas_int one = 1;
   blas_int blen = (blas_int)len;
   blas_int bk = (blas_int)a->k;
