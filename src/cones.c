@@ -479,7 +479,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_float eig_tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 /
                                   POWF(iter + 1, CONE_RATE)); */
   scs_float zero = 0.0;
-  blas_int info;
+  blas_int info = 0;
   scs_float vupper;
 #endif
   if (n == 0) {
