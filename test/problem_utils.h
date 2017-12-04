@@ -39,8 +39,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   scs_float *s = opt_sol->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
   /* temporary variables */
   scs_float *z = (scs_float *)scs_calloc(m, sizeof(scs_float));
-  scs_int i, j, r, ct, rn, rm;
-  scs_int *is = (scs_int *)scs_calloc(col_nnz, sizeof(scs_int));
+  scs_int i, j, r, rn, rm;
 
   A->i = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
   A->p = (scs_int *)scs_calloc((n + 1), sizeof(scs_int));
@@ -73,28 +72,22 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
       scs_printf("%ld%%\n", (long)(j * 100 / n));
     }
     r = 0;
-    for (ct = 0; ct < m && r < col_nnz; ++ct) {
+    for (i = 0; i < m && r < col_nnz; ++i) {
       /* generate a unique sorted array via Knuths alg */
-      rn = m - ct;
+      rn = m - i;
       rm = col_nnz - r;
       if ((rand() % rn) < rm) {
-        is[r++] = ct;
+        A->x[r + j * col_nnz] = rand_scs_float();
+        A->i[r + j * col_nnz] = i;
+        b[i] += A->x[r + j * col_nnz] * x[j];
+        c[j] -= A->x[r + j * col_nnz] * y[i];
+        r++;
       }
-    }
-    for (r = 0; r < col_nnz; r++) {
-      i = is[r];
-      A->x[r + j * col_nnz] = rand_scs_float();
-      A->i[r + j * col_nnz] = i;
-
-      b[i] += A->x[r + j * col_nnz] * x[j];
-
-      c[j] -= A->x[r + j * col_nnz] * y[i];
     }
     A->p[j + 1] = (j + 1) * col_nnz;
   }
   scs_printf("done\n");
   scs_free(z);
-  scs_free(is);
 }
 
 #endif
