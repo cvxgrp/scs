@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
   k->ep = 0;
   k->ed = 0;
 
-  scs_printf("\n_a is %ld by %ld, with %ld nonzeros per column.\n", (long)m,
+  scs_printf("\nA is %ld by %ld, with %ld nonzeros per column.\n", (long)m,
              (long)n, (long)col_nnz);
   scs_printf("A has %ld nonzeros (%f%% dense).\n", (long)nnz,
              100 * (scs_float)col_nnz / m);
