@@ -45,8 +45,8 @@ extern "C" {
 /*
  CUDA matrix routines only for CSR, not CSC matrices:
     CSC             CSR             GPU     Mult
-    A (m x n)       A' (n x m)      Ag      SCS(accum_by_a)_trans_gpu
-    A'(n x m)       A  (m x n)      Agt     SCS(accum_by_a)_gpu
+    A (m x n)       A' (n x m)      Ag      accum_by_a_trans_gpu
+    A'(n x m)       A  (m x n)      Agt     accum_by_a_gpu
 */
 
 static void accum_by_atrans_gpu(const ScsLinSysWork *p, const scs_float *x,
@@ -67,10 +67,18 @@ static void accum_by_a_gpu(const ScsLinSysWork *p, const scs_float *x,
      x and y MUST be on GPU already
    */
   const scs_float onef = 1.0;
+#if GPU_TRANSPOSE_MAT > 0
   ScsMatrix *Agt = p->Agt;
   CUSPARSE(csrmv)
   (p->cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, Agt->n, Agt->m,
    p->Annz, &onef, p->descr, Agt->x, Agt->p, Agt->i, x, &onef, y);
+#else
+  /* The A matrix idx pointers must be ORDERED */
+  ScsMatrix *Ag = p->Ag;
+  CUSPARSE(csrmv)
+  (p->cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE, Ag->n, Ag->m, p->Annz,
+   &onef, p->descr, Ag->x, Ag->p, Ag->i, x, &onef, y);
+#endif
 }
 
 /* do not use within pcg, reuses memory */
@@ -203,7 +211,6 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   cudaError_t err;
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   ScsMatrix *Ag = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
-  ScsMatrix *Agt = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
 
   p->Annz = A->p[A->n];
   p->cublas_handle = 0;
@@ -227,10 +234,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   Ag->n = A->n;
   Ag->m = A->m;
   p->Ag = Ag;
-
-  Agt->n = A->m;
-  Agt->m = A->n;
-  p->Agt = Agt;
+  p->Agt = SCS_NULL;
 
   cudaMalloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
   cudaMalloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
@@ -251,17 +255,21 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   cudaMemcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float),
              cudaMemcpyHostToDevice);
 
-  cudaMalloc((void **)&Agt->i, (A->p[A->n]) * sizeof(scs_int));
-  cudaMalloc((void **)&Agt->p, (A->m + 1) * sizeof(scs_int));
-  cudaMalloc((void **)&Agt->x, (A->p[A->n]) * sizeof(scs_float));
-
   get_preconditioner(A, stgs, p);
 
+#if GPU_TRANSPOSE_MAT > 0
+  p->Agt = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
+  p->Agt->n = A->m;
+  p->Agt->m = A->n;
+  cudaMalloc((void **)&p->Agt->i, (A->p[A->n]) * sizeof(scs_int));
+  cudaMalloc((void **)&p->Agt->p, (A->m + 1) * sizeof(scs_int));
+  cudaMalloc((void **)&p->Agt->x, (A->p[A->n]) * sizeof(scs_float));
   /* transpose Ag into Agt for faster multiplies */
   /* TODO: memory intensive, could perform transpose in CPU and copy to GPU */
   CUSPARSE(csr2csc)
-  (p->cusparse_handle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i, Agt->x,
-   Agt->i, Agt->p, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO);
+  (p->cusparse_handle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i, p->Agt->x,
+   p->Agt->i, p->Agt->p, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO);
+#endif
 
   err = cudaGetLastError();
   if (err != cudaSuccess) {

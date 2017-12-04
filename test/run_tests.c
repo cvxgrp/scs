@@ -3,6 +3,7 @@
 
 #include "minunit.h"
 #include "scs.h"
+#include "problem_utils.h"
 
 /* Include Tests */
 #include "problems/small_lp.h"

@@ -108,6 +108,10 @@ TEST_GPU_MAT_MUL = 0
 ifneq ($(TEST_GPU_MAT_MUL), 0)
 OPT_FLAGS += -DTEST_GPU_MAT_MUL=$(TEST_GPU_MAT_MUL) # tests GPU matrix multiply for correctness
 endif
+GPU_TRANSPOSE_MAT = 1
+ifneq ($(GPU_TRANSPOSE_MAT), 0)
+OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # tranpose A mat in GPU memory
+endif
 
 ### VERBOSITY LEVELS: 0,1,2
 EXTRA_VERBOSE = 0
