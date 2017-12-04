@@ -5,12 +5,14 @@
 #include "scs.h"
 
 /* Include Tests */
-#include "random/small_lp.h"
+#include "problems/small_lp.h"
+#include "problems/rob_gauss_cov_est.h"
 
 int tests_run = 0;
 
 static const char *all_tests(void) {
   mu_run_test(small_lp);
+  mu_run_test(rob_gauss_cov_est);
   return 0;
 }
 
