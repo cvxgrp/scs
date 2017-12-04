@@ -77,6 +77,11 @@ $(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
 $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Itest
 
+.PHONY: test_gpu
+test_gpu: $(OUT)/run_tests_gpu
+$(OUT)/run_tests_gpu: test/run_tests.c $(OUT)/libscsgpu.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
+
 # REQUIRES GPU AND CUDA INSTALLED
 gpu: $(OUT)/demo_socp_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
 

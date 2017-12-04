@@ -33,7 +33,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
+static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed KKT matrix
    * assumes column compressed form A matrix
@@ -84,7 +84,7 @@ cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   return (K_cs);
 }
 
-scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
+static scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
 #ifdef DLONG
   return (amd_l_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
@@ -93,7 +93,7 @@ scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
 #endif
 }
 
-scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
+static scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
   scs_int kk, n = A->n;
   scs_int *Parent = (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
@@ -134,7 +134,7 @@ scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
   return (kk - n);
 }
 
-void LDLSolve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
+static void LDLSolve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
               scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
@@ -164,7 +164,7 @@ void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
   SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
 }
 
-scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
+static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
                   ScsLinSysWork *p) {
   scs_float *info;
   scs_int *Pinv, amd_status, ldl_status;
