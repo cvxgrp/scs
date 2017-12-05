@@ -88,15 +88,13 @@ extern "C" {
 
 #ifdef DLONG
 #ifdef _WIN64
-typedef __int64 scs_int;
-/* #define scs_int __int64 */
+typedef int64_t scs_int;
+/* typedef __int64 scs_int; */
 #else
 typedef long scs_int;
-/* #define scs_int long */
 #endif
 #else
 typedef int scs_int;
-/* #define scs_int int */
 #endif
 
 #ifndef SFLOAT
