@@ -66,7 +66,7 @@ extern "C" {
 #define SuiteSparse_long_max LONG_MAX
 #define SuiteSparse_long_idd "ld"
 
-#endif
+/* #endif */
 #define SuiteSparse_long_id "%" SuiteSparse_long_idd
 #endif
 
