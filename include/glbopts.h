@@ -88,9 +88,7 @@ extern "C" {
 
 #ifdef DLONG
 #ifdef _WIN64
-#include <stdint.h>
-typedef int64_t scs_int;
-/* typedef __int64 scs_int; */
+typedef signed __int64 scs_int;
 #else
 typedef long scs_int;
 #endif
