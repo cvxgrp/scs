@@ -200,15 +200,15 @@ void SCS(free_sol)(ScsSolution *sol) {
 
 /* assumes d->stgs already allocated memory */
 void SCS(set_default_settings)(ScsData *d) {
-  d->stgs->max_iters = MAX_ITERS; /* maximum iterations to take: 2500 */
-  d->stgs->eps = EPS;             /* convergence tolerance: 1e-3 */
-  d->stgs->alpha = ALPHA;         /* relaxation parameter: 1.8 */
-  d->stgs->rho_x = RHO_X;         /* x equality constraint scaling: 1e-3 */
-  d->stgs->scale = SCALE;     /* if normalized, rescales by this factor: 1 */
-  d->stgs->cg_rate = CG_RATE; /* for indirect, tolerance goes down like
-                                 (1/iter)^CG_RATE: 2 */
-  d->stgs->verbose = VERBOSE; /* boolean, write out progress: 1 */
-  d->stgs->normalize = NORMALIZE; /* boolean, heuristic data rescaling: 1 */
+  /* These constants are defined in include/glbopts.h */
+  d->stgs->max_iters = MAX_ITERS;
+  d->stgs->eps = EPS;
+  d->stgs->alpha = ALPHA;
+  d->stgs->rho_x = RHO_X;
+  d->stgs->scale = SCALE;
+  d->stgs->cg_rate = CG_RATE;
+  d->stgs->verbose = VERBOSE;
+  d->stgs->normalize = NORMALIZE;
   d->stgs->warm_start = WARM_START;
   d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
 }
