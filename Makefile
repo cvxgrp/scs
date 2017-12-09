@@ -6,9 +6,6 @@ SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/cs.o src/linalg.o
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-CFLAGS += $(OPT_FLAGS)
-CUDAFLAGS += $(OPT_FLAGS)
-
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 DIRECT_SCS_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct

@@ -58,7 +58,7 @@ endif
 OPT = -O3
 override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys $(OPT)
 ifneq ($(ISWINDOWS), 1)
-CFLAGS += -fPIC
+override CFLAGS += -fPIC
 endif
 
 CULDFLAGS += -lcudart -lcublas -lcusparse
@@ -126,7 +126,7 @@ endif
 
 USE_OPENMP = 0
 ifneq ($(USE_OPENMP), 0)
-  CFLAGS += -fopenmp
+  override CFLAGS += -fopenmp
   LDFLAGS += -lgomp
 endif
 
@@ -173,3 +173,6 @@ endif
 
 # debug to see var values, e.g. 'make print-OBJECTS' shows OBJECTS value
 print-%: ; @echo $*=$($*)
+
+override CFLAGS += $(OPT_FLAGS)
+CUDAFLAGS += $(OPT_FLAGS)
