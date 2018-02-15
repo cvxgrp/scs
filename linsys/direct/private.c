@@ -84,7 +84,7 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   return (K_cs);
 }
 
-static scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
+static scs_int _ldl_init(cs *A, scs_int P[], scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
 #ifdef DLONG
   return (amd_l_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
@@ -93,7 +93,7 @@ static scs_int LDLInit(cs *A, scs_int P[], scs_float **info) {
 #endif
 }
 
-static scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
+static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
   scs_int kk, n = A->n;
   scs_int *Parent = (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
@@ -134,7 +134,7 @@ static scs_int LDLFactor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float *
   return (kk - n);
 }
 
-static void LDLSolve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
+static void _ldl_solve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
               scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
@@ -172,7 +172,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
   if (!K) {
     return -1;
   }
-  amd_status = LDLInit(K, p->P, &info);
+  amd_status = _ldl_init(K, p->P, &info);
   if (amd_status < 0) {
     return (amd_status);
   }
@@ -188,7 +188,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 #endif
   Pinv = SCS(cs_pinv)(p->P, A->n + A->m);
   C = SCS(cs_symperm)(K, Pinv, 1);
-  ldl_status = LDLFactor(C, SCS_NULL, SCS_NULL, &p->L, &p->D);
+  ldl_status = _ldl_factor(C, SCS_NULL, SCS_NULL, &p->L, &p->D);
   SCS(cs_spfree)(C);
   SCS(cs_spfree)(K);
   scs_free(Pinv);
@@ -221,7 +221,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   /* Ax = b with solution stored in b */
   SCS(timer) linsys_timer;
   SCS(tic)(&linsys_timer);
-  LDLSolve(b, b, p->L, p->D, p->P, p->bp);
+  _ldl_solve(b, b, p->L, p->D, p->P, p->bp);
   p->total_solve_time += SCS(tocq)(&linsys_timer);
 #if EXTRA_VERBOSE > 0
   scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
