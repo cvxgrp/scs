@@ -93,7 +93,8 @@ static scs_int _ldl_init(cs *A, scs_int P[], scs_float **info) {
 #endif
 }
 
-static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float **D) {
+static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L,
+                           scs_float **D) {
   scs_int kk, n = A->n;
   scs_int *Parent = (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
@@ -134,8 +135,8 @@ static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L, scs_float
   return (kk - n);
 }
 
-static void _ldl_solve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_int P[],
-              scs_float *bp) {
+static void _ldl_solve(scs_float *x, scs_float b[], cs *L, scs_float D[],
+                       scs_int P[], scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
   if (P == SCS_NULL) {
@@ -154,18 +155,18 @@ static void _ldl_solve(scs_float *x, scs_float b[], cs *L, scs_float D[], scs_in
   }
 }
 
-void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
-                     scs_float *y) {
+void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
+                          const scs_float *x, scs_float *y) {
   SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
 }
 
 void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
-                scs_float *y) {
+                     scs_float *y) {
   SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
 }
 
 static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
-                  ScsLinSysWork *p) {
+                         ScsLinSysWork *p) {
   scs_float *info;
   scs_int *Pinv, amd_status, ldl_status;
   cs *C, *K = form_kkt(A, stgs);
@@ -196,7 +197,8 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
   return (ldl_status);
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsSettings *stgs) {
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
+                                      const ScsSettings *stgs) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m;
   p->P = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
@@ -215,8 +217,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsSettings *stg
 }
 
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
-                      ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                      scs_int iter) {
+                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_int iter) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   SCS(timer) linsys_timer;

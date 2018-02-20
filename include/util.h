@@ -5,15 +5,15 @@
 extern "C" {
 #endif
 
-#include "scs.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "cones.h"
+#include "scs.h"
 
 /* timing code courtesty of A. Domahidi */
 #if (defined NOTIMER)
 typedef void *SCS(timer);
-#elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)
+#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 /* Use Windows QueryPerformanceCounter for timing */
 #include <windows.h>
 typedef struct SCS(timer) {
@@ -22,7 +22,7 @@ typedef struct SCS(timer) {
   LARGE_INTEGER freq;
 } SCS(timer);
 
-#elif(defined __APPLE__)
+#elif (defined __APPLE__)
 /* Use MAC OSX mach_time for timing */
 #include <mach/mach_time.h>
 typedef struct SCS(timer) {
@@ -46,10 +46,10 @@ extern SCS(timer) global_timer;
 #endif
 
 /* these all return milli-seconds */
-void SCS(tic)(SCS(timer) *t);
-scs_float SCS(toc)(SCS(timer) *t);
-scs_float SCS(str_toc)(char *str, SCS(timer) *t);
-scs_float SCS(tocq)(SCS(timer) *t);
+void SCS(tic)(SCS(timer) * t);
+scs_float SCS(toc)(SCS(timer) * t);
+scs_float SCS(str_toc)(char *str, SCS(timer) * t);
+scs_float SCS(tocq)(SCS(timer) * t);
 
 void SCS(print_cone_data)(const ScsCone *k);
 void SCS(print_data)(const ScsData *d);

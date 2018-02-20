@@ -30,16 +30,15 @@ cs *SCS(cs_compress)(const cs *T) {
   Tx = T->x;
   nz = T->nz;
   C = SCS(cs_spalloc)(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
-  w = (scs_int *)scs_calloc(n, sizeof(scs_int));           /* get workspace */
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int));    /* get workspace */
   if (!C || !w) {
     return (cs_done(C, w, SCS_NULL, 0));
   } /* out of memory */
   Cp = C->p;
   Ci = C->i;
   Cx = C->x;
-  for (k = 0; k < nz; k++)
-    w[Tj[k]]++;        /* column counts */
-  SCS(cs_cumsum)(Cp, w, n); /* column pointers */
+  for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
+  SCS(cs_cumsum)(Cp, w, n);            /* column pointers */
   for (k = 0; k < nz; k++) {
     Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
     if (Cx) {
@@ -50,7 +49,7 @@ cs *SCS(cs_compress)(const cs *T) {
 }
 
 cs *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-               scs_int triplet) {
+                    scs_int triplet) {
   cs *A = (cs *)scs_calloc(1, sizeof(cs)); /* allocate the cs struct */
   if (!A) {
     return (SCS_NULL);
@@ -95,14 +94,13 @@ scs_int *SCS(cs_pinv)(scs_int const *p, scs_int n) {
   scs_int k, *pinv;
   if (!p) {
     return (SCS_NULL);
-  }                                     /* p = SCS_NULL denotes identity */
+  } /* p = SCS_NULL denotes identity */
   pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
   if (!pinv) {
     return (SCS_NULL);
-  } /* out of memory */
-  for (k = 0; k < n; k++)
-    pinv[p[k]] = k; /* invert the permutation */
-  return (pinv);    /* return result */
+  }                                       /* out of memory */
+  for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
+  return (pinv);                          /* return result */
 }
 
 cs *SCS(cs_symperm)(const cs *A, const scs_int *pinv, scs_int values) {
@@ -113,7 +111,8 @@ cs *SCS(cs_symperm)(const cs *A, const scs_int *pinv, scs_int values) {
   Ap = A->p;
   Ai = A->i;
   Ax = A->x;
-  C = SCS(cs_spalloc)(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
+  C = SCS(cs_spalloc)(n, n, Ap[n], values && (Ax != SCS_NULL),
+                      0);                        /* alloc result*/
   w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
   if (!C || !w) {
     return (cs_done(C, w, SCS_NULL, 0));

@@ -59,11 +59,11 @@ static void update_mat(ScsAccelWork *a, scs_int idx) {
   scs_float zerof = 0.0;
 
   scs_float ip = SCS(dot)(delta_x, delta_f, 2 * l);
-  BLAS(gemv)("Trans", &twol, &bk, &onef, d_x, &twol, delta_f, &one, &zerof, wrk,
-             &one);
+  BLAS(gemv)
+  ("Trans", &twol, &bk, &onef, d_x, &twol, delta_f, &one, &zerof, wrk, &one);
   SCS(add_scaled_array)(&(mat[idx * k]), wrk, k, -1.0);
-  BLAS(gemv)("Trans", &twol, &bk, &onef, d_f, &twol, delta_x, &one, &zerof, wrk,
-             &one);
+  BLAS(gemv)
+  ("Trans", &twol, &bk, &onef, d_f, &twol, delta_x, &one, &zerof, wrk, &one);
   for (i = 0; i < k; ++i) {
     mat[i * k + idx] -= wrk[i];
   }
@@ -160,7 +160,7 @@ ScsAccelWork *SCS(init_accel)(ScsWork *w) {
 
 static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   DEBUG_FUNC
-  blas_int info = 0;
+  blas_int info = -1;
   blas_int twol = (blas_int)(2 * a->l);
   blas_int one = 1;
   blas_int blen = (blas_int)len;
@@ -172,8 +172,9 @@ static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   scs_float *mat = a->mat;
   scs_float *tmp = a->tmp;
   /* scratch = dX' f */
-  BLAS(gemv)("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof,
-             a->scratch, &one);
+  BLAS(gemv)
+  ("Trans", &twol, &blen, &onef, d_x, &twol, a->f, &one, &zerof, a->scratch,
+   &one);
   /* copy mat into tmp since matrix is destroyed by gesv */
   memcpy(tmp, mat, a->k * a->k * sizeof(scs_float));
   /* scratch = (dX'dF) \ dX' f */
@@ -181,8 +182,9 @@ static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   /* sol = g */
   memcpy(a->sol, a->g, sizeof(scs_float) * 2 * a->l);
   /* sol = sol - dG * scratch */
-  BLAS(gemv)("NoTrans", &twol, &blen, &neg_onef, a->d_g, &twol, a->scratch,
-             &one, &onef, a->sol, &one);
+  BLAS(gemv)
+  ("NoTrans", &twol, &blen, &neg_onef, a->d_g, &twol, a->scratch, &one, &onef,
+   a->sol, &one);
   RETURN(scs_int) info;
 }
 
@@ -190,7 +192,7 @@ scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   DEBUG_FUNC
   scs_int l = w->accel->l;
   scs_int k = w->accel->k;
-  scs_int info;
+  scs_int info = -1;
   SCS(timer) accel_timer;
   if (k <= 0) {
     RETURN 0;
@@ -206,8 +208,10 @@ scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   w->accel->total_accel_time += SCS(tocq)(&accel_timer);
   /* check that info == 0 and fallback otherwise */
   if (info != 0) {
-    scs_printf("Call to SCS(accelerate) failed with code %li, falling back to using "
-               "no acceleration\n", (long)info);
+    scs_printf(
+        "Call to SCS(accelerate) failed with code %li, falling back to using "
+        "no acceleration\n",
+        (long)info);
     RETURN 0;
   }
   /* set [u;v] = sol */
@@ -277,9 +281,7 @@ void SCS(free_accel)(ScsAccelWork *a) {
   }
 }
 
-scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
-  RETURN 0;
-}
+scs_int SCS(accelerate)(ScsWork *w, scs_int iter) { RETURN 0; }
 #endif
 
 char *SCS(get_accel_summary)(const ScsInfo *info, ScsAccelWork *a) {

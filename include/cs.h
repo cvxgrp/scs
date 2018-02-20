@@ -8,7 +8,7 @@ extern "C" {
 #include "glbopts.h"
 
 typedef struct SCS(cs_sparse) /* matrix in compressed-column or triplet form */
-    {
+{
   scs_int nzmax; /* maximum number of entries */
   scs_int m;     /* number of rows */
   scs_int n;     /* number of columns */
@@ -20,7 +20,7 @@ typedef struct SCS(cs_sparse) /* matrix in compressed-column or triplet form */
 
 cs *SCS(cs_compress)(const cs *T);
 cs *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-               scs_int triplet);
+                    scs_int triplet);
 cs *SCS(cs_spfree)(cs *A);
 scs_float SCS(cs_cumsum)(scs_int *p, scs_int *c, scs_int n);
 scs_int *SCS(cs_pinv)(scs_int const *p, scs_int n);

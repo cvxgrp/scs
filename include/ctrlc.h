@@ -17,7 +17,7 @@ extern "C" {
 extern int utIsInterruptPending();
 extern int utSetInterruptEnabled(int);
 
-#elif(defined _WIN32 || defined _WIN64 || defined _WINDLL)
+#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 
 /* Use Windows set_console_ctrl_handler for signal handling */
 #include <windows.h>

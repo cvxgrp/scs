@@ -1,7 +1,7 @@
 #include "scs.h"
-#include "glbopts.h"
 #include "accel.h"
 #include "ctrlc.h"
+#include "glbopts.h"
 #include "linalg.h"
 #include "linsys.h"
 #include "normalize.h"
@@ -88,9 +88,10 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
-  scs_printf("\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan "
-             "O'Donoghue, Stanford University, 2012-2017\n",
-             SCS(version)());
+  scs_printf(
+      "\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan "
+      "O'Donoghue, Stanford University, 2012-2017\n",
+      SCS(version)());
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -100,16 +101,17 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
     scs_free(lin_sys_method);
   }
   if (stgs->normalize) {
-    scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i, "
-               "scale = %2.2f\nacceleration_lookback = %i, rho_x = %.2e\n",
-               stgs->eps, stgs->alpha, (int)stgs->max_iters,
-               (int)stgs->normalize, stgs->scale, (int)acceleration_lookback,
-               stgs->rho_x);
+    scs_printf(
+        "eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i, "
+        "scale = %2.2f\nacceleration_lookback = %i, rho_x = %.2e\n",
+        stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
+        stgs->scale, (int)acceleration_lookback, stgs->rho_x);
   } else {
-    scs_printf("eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n"
-               "acceleration_lookback = %i, rho_x = %.2e\n",
-               stgs->eps, stgs->alpha, (int)stgs->max_iters,
-               (int)stgs->normalize, (int)acceleration_lookback, stgs->rho_x);
+    scs_printf(
+        "eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n"
+        "acceleration_lookback = %i, rho_x = %.2e\n",
+        stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
+        (int)acceleration_lookback, stgs->rho_x);
   }
   scs_printf("Variables n = %i, constraints m = %i\n", (int)d->n, (int)d->m);
   scs_printf("%s", cone_str);
@@ -292,8 +294,8 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
 
   SCS(add_scaled_array)(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
-  SCS(add_scaled_array)(w->u_t, w->h, l - 1,
-                   -SCS(dot)(w->u_t, w->g, l - 1) / (w->g_th + 1));
+  SCS(add_scaled_array)
+  (w->u_t, w->h, l - 1, -SCS(dot)(w->u_t, w->g, l - 1) / (w->g_th + 1));
   SCS(scale_array)(&(w->u_t[n]), -1, m);
 
   status = SCS(solve_lin_sys)(w->A, w->stgs, w->p, w->u_t, w->u, iter);
@@ -327,7 +329,8 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
               w->v[i];
   }
   /* u = [x;y;tau] */
-  status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]), iter);
+  status =
+      SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]), iter);
   if (w->u[l - 1] < 0.0) {
     w->u[l - 1] = 0.0;
   }
@@ -488,7 +491,7 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 }
 
 static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
-                          SCS(timer) *solve_timer) {
+                          SCS(timer) * solve_timer) {
   DEBUG_FUNC
   scs_printf("%*i|", (int)strlen(HEADER[0]), (int)i);
   scs_printf("%*.2e ", (int)HSPACE, r->res_pri);
@@ -545,7 +548,7 @@ static void print_header(ScsWork *w, const ScsCone *k) {
 }
 
 static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
-                             ScsConeWork *c, scs_int m) {
+                                    ScsConeWork *c, scs_int m) {
   DEBUG_FUNC
   scs_float dist;
   scs_float *t = (scs_float *)scs_malloc(sizeof(scs_float) * m);
@@ -563,7 +566,7 @@ static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
 
 /* via moreau */
 static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
-                            ScsConeWork *c, scs_int m) {
+                                   ScsConeWork *c, scs_int m) {
   DEBUG_FUNC
   scs_float dist;
   scs_float *t = (scs_float *)scs_malloc(sizeof(scs_float) * m);
@@ -635,9 +638,12 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m),
                SCS(dot)(sol->s, sol->y, d->m) / SCS(norm)(sol->s, d->m) /
                    SCS(norm)(sol->y, d->m));
-    scs_printf("primal res: |Ax + s - b|_2 / (1 + |b|_2) = %.4e\n", info->res_pri);
-    scs_printf("dual res:   |A'y + c|_2 / (1 + |c|_2) = %.4e\n", info->res_dual);
-    scs_printf("rel gap:    |c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n", info->rel_gap);
+    scs_printf("primal res: |Ax + s - b|_2 / (1 + |b|_2) = %.4e\n",
+               info->res_pri);
+    scs_printf("dual res:   |A'y + c|_2 / (1 + |c|_2) = %.4e\n",
+               info->res_dual);
+    scs_printf("rel gap:    |c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n",
+               info->rel_gap);
     for (i = 0; i < LINE_LEN; ++i) {
       scs_printf("-");
     }
@@ -835,7 +841,7 @@ static scs_float iterate_norm_diff(ScsWork *w) {
 }
 
 scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
-                  ScsSolution *sol, ScsInfo *info) {
+                   ScsSolution *sol, ScsInfo *info) {
   DEBUG_FUNC
   scs_int i;
   SCS(timer) solve_timer;

@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include "glbopts.h"
 #include <string.h>
+#include "glbopts.h"
 
 /* private data structs (that you define) containing any necessary data to solve
  * linear system, etc. this defines the matrix A, only the linear system solver
@@ -111,7 +111,7 @@ struct SCS_SCALING {
  */
 ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info);
 scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
-                  ScsSolution *sol, ScsInfo *info);
+                   ScsSolution *sol, ScsInfo *info);
 void SCS(finish)(ScsWork *w);
 /* scs calls SCS(init), SCS(solve), and SCS(finish) */
 scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,

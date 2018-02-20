@@ -100,7 +100,7 @@ static void print_a_matrix(const ScsMatrix *A) {
 #endif
 
 void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                 ScsScaling *scal) {
+                      ScsScaling *scal) {
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
@@ -226,12 +226,13 @@ void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
 }
 
 void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                    const ScsScaling *scal) {
+                         const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;
   for (i = 0; i < A->n; ++i) {
-    SCS(scale_array)(&(A->x[A->p[i]]), E[i] / stgs->scale, A->p[i + 1] - A->p[i]);
+    SCS(scale_array)
+    (&(A->x[A->p[i]]), E[i] / stgs->scale, A->p[i + 1] - A->p[i]);
   }
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
@@ -241,7 +242,7 @@ void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
 }
 
 void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                      const scs_float *x, scs_float *y) {
+                           const scs_float *x, scs_float *y) {
   /* y += A'*x
      A in column compressed format
      parallelizes over columns (rows of A')
@@ -272,7 +273,7 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 }
 
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                 const scs_float *x, scs_float *y) {
+                      const scs_float *x, scs_float *y) {
   /*y += A*x
     A in column compressed format
     this parallelizes over columns and uses

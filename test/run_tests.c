@@ -2,12 +2,12 @@
 #include <stdio.h>
 
 #include "minunit.h"
-#include "scs.h"
 #include "problem_utils.h"
+#include "scs.h"
 
 /* Include Tests */
-#include "problems/small_lp.h"
 #include "problems/rob_gauss_cov_est.h"
+#include "problems/small_lp.h"
 
 int tests_run = 0;
 

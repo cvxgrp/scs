@@ -1,6 +1,8 @@
-#include "scs.h"
 #include "glbopts.h"
 #include "minunit.h"
+#include "problem_utils.h"
+#include "scs.h"
+#include "util.h"
 
 static const char *small_lp(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));

@@ -5,12 +5,12 @@
 extern "C" {
 #endif
 
-#include "glbopts.h"
-#include "scs.h"
-#include "cs.h"
 #include <math.h>
 #include "common.h"
+#include "cs.h"
+#include "glbopts.h"
 #include "linalg.h"
+#include "scs.h"
 
 struct SCS_LIN_SYS_WORK {
   scs_float *p; /* cg iterate  */

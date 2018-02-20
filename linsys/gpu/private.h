@@ -5,16 +5,16 @@
 extern "C" {
 #endif
 
-#include "glbopts.h"
-#include "scs.h"
-#include "cs.h"
 #include "common.h"
+#include "cs.h"
+#include "glbopts.h"
 #include "linalg.h"
+#include "scs.h"
 
+#include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cusparse.h>
-#include <cublas_v2.h>
 
 struct SCS_LIN_SYS_WORK {
   scs_int Annz; /* num non-zeros in A matrix */

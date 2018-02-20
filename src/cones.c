@@ -1,7 +1,7 @@
-#include "scs.h"
 #include "cones.h"
-#include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "linalg.h"
+#include "scs.h"
+#include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
 #define CONE_RATE (2)
@@ -25,9 +25,7 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 scs_float BLAS(nrm2)(const blas_int *n, scs_float *x, const blas_int *incx);
 #endif
 
-static scs_int get_sd_cone_size(scs_int s) {
-  RETURN(s * (s + 1)) / 2;
-}
+static scs_int get_sd_cone_size(scs_int s) { RETURN(s * (s + 1)) / 2; }
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -239,7 +237,8 @@ static scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
   RETURN 1; /* true */
 }
 
-static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat, scs_float z_hat) {
+static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
+                                  scs_float z_hat) {
   scs_float t = MAX(-z_hat, 1e-6);
   scs_float f, fp;
   scs_int i;
@@ -260,7 +259,8 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat, scs_float z_ha
   RETURN t + z_hat;
 }
 
-static void exp_solve_for_x_with_rho(scs_float *v, scs_float *x, scs_float rho) {
+static void exp_solve_for_x_with_rho(scs_float *v, scs_float *x,
+                                     scs_float rho) {
   x[2] = exp_newton_one_d(rho, v[1], v[2]);
   x[1] = (x[2] - v[2]) * x[2] / rho;
   x[0] = v[0] - rho;
@@ -379,10 +379,12 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   }
   RETURN 0;
 #else
-  scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
-             "blas+lapack libraries\n");
-  scs_printf("Install blas+lapack and re-compile SCS with blas+lapack libray "
-             "locations\n");
+  scs_printf(
+      "FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
+      "blas+lapack libraries\n");
+  scs_printf(
+      "Install blas+lapack and re-compile SCS with blas+lapack libray "
+      "locations\n");
   RETURN - 1;
 #endif
 }
@@ -429,9 +431,10 @@ static scs_int project_2x2_sdc(scs_float *X) {
   l2 = 0.5 * (a + d - rad);
 
 #if EXTRA_VERBOSE > 0
-  scs_printf("2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
-             "rad = %4f, l1 = %4f, l2 = %4f\n",
-             a, b, X[1], X[2], d, rad, l1, l2);
+  scs_printf(
+      "2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
+      "rad = %4f, l1 = %4f, l2 = %4f\n",
+      a, b, X[1], X[2], d, rad, l1, l2);
 #endif
 
   if (l2 >= 0) { /* both eigs positive already */
@@ -557,8 +560,9 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 #endif
 
 #else
-  scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
-             "libraries were linked!\n");
+  scs_printf(
+      "FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
+      "libraries were linked!\n");
   scs_printf("SCS will RETURN nonsense!\n");
   SCS(scale_array)(X, NAN, n);
   RETURN - 1;
@@ -566,22 +570,24 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   RETURN 0;
 }
 
-static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh, scs_float a) {
+static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
+                            scs_float a) {
   scs_float x = 0.5 * (xh + SQRTF(xh * xh + 4 * a * (rh - r) * r));
   RETURN MAX(x, 1e-12);
 }
 
-static scs_float pow_calcdxdr(scs_float x, scs_float xh, scs_float rh, scs_float r,
-                       scs_float a) {
+static scs_float pow_calcdxdr(scs_float x, scs_float xh, scs_float rh,
+                              scs_float r, scs_float a) {
   RETURN a *(rh - 2 * r) / (2 * x - xh);
 }
 
-static scs_float pow_calc_f(scs_float x, scs_float y, scs_float r, scs_float a) {
+static scs_float pow_calc_f(scs_float x, scs_float y, scs_float r,
+                            scs_float a) {
   RETURN POWF(x, a) * POWF(y, (1 - a)) - r;
 }
 
-static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr, scs_float dydr,
-                      scs_float a) {
+static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
+                             scs_float dydr, scs_float a) {
   RETURN POWF(x, a) * POWF(y, (1 - a)) * (a * dxdr / x + (1 - a) * dydr / y) -
       1;
 }
@@ -631,7 +637,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
    iter < 0 then iter is ignored
     warm_start contains guess of projection (can be set to SCS_NULL) */
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                       const scs_float *warm_start, scs_int iter) {
+                            const scs_float *warm_start, scs_int iter) {
   DEBUG_FUNC
   scs_int i;
   scs_int count = (k->f ? k->f : 0);

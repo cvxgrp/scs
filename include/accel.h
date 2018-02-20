@@ -5,9 +5,8 @@
 extern "C" {
 #endif
 
-
-#include "scs.h"
 #include "glbopts.h"
+#include "scs.h"
 
 ScsAccelWork *SCS(init_accel)(ScsWork *w);
 void SCS(free_accel)(ScsAccelWork *a);

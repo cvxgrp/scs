@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
-#define SCS_VERSION                                                            \
+#define SCS_VERSION \
   ("2.0.2") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
@@ -50,17 +50,17 @@ extern "C" {
 #elif defined PYTHON
 #include <Python.h>
 #include <stdlib.h>
-#define scs_printf(...)                                                        \
-  {                                                                            \
-    PyGILState_STATE gilstate = PyGILState_Ensure();                           \
-    PySys_WriteStdout(__VA_ARGS__);                                            \
-    PyGILState_Release(gilstate);                                              \
+#define scs_printf(...)                              \
+  {                                                  \
+    PyGILState_STATE gilstate = PyGILState_Ensure(); \
+    PySys_WriteStdout(__VA_ARGS__);                  \
+    PyGILState_Release(gilstate);                    \
   }
 #define _scs_free free
 #define _scs_malloc malloc
 #define _scs_calloc calloc
 #define _scs_realloc realloc
-#elif(defined(USING_R))
+#elif (defined(USING_R))
 #include <R_ext/Print.h> /* Rprintf etc */
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,8 +79,8 @@ extern "C" {
 #define _scs_realloc realloc
 #endif
 
-#define scs_free(x)                                                            \
-  _scs_free(x);                                                                \
+#define scs_free(x) \
+  _scs_free(x);     \
   x = SCS_NULL
 #define scs_malloc(x) _scs_malloc(x)
 #define scs_calloc(x, y) _scs_calloc(x, y)
@@ -151,12 +151,12 @@ typedef float scs_float;
 #if (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 #define __func__ __FUNCTION__
 #endif
-#define DEBUG_FUNC                                                             \
-  scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n", __func__,  \
+#define DEBUG_FUNC                                                            \
+  scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n", __func__, \
              SCS(tocq)(&global_timer), __FILE__, __LINE__);
-#define RETURN                                                                 \
-  scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n",          \
-             __func__, SCS(tocq)(&global_timer), __FILE__, __LINE__);               \
+#define RETURN                                                        \
+  scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n", \
+             __func__, SCS(tocq)(&global_timer), __FILE__, __LINE__); \
   return
 #else
 #define DEBUG_FUNC

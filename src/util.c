@@ -1,37 +1,34 @@
-#include "glbopts.h"
 #include "util.h"
+#include "glbopts.h"
 #include "linsys.h"
 
 /* return milli-seconds */
 #if (defined NOTIMER)
 
-void SCS(tic)(SCS(timer) *t) {
-}
-scs_float SCS(tocq)(SCS(timer) *t) {
-  return NAN;
-}
+void SCS(tic)(SCS(timer) * t) {}
+scs_float SCS(tocq)(SCS(timer) * t) { return NAN; }
 
-#elif(defined _WIN32 || _WIN64 || defined _WINDLL)
+#elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 
-void SCS(tic)(SCS(timer) *t) {
+void SCS(tic)(SCS(timer) * t) {
   QueryPerformanceFrequency(&t->freq);
   QueryPerformanceCounter(&t->tic);
 }
 
-scs_float SCS(tocq)(SCS(timer) *t) {
+scs_float SCS(tocq)(SCS(timer) * t) {
   QueryPerformanceCounter(&t->toc);
   return (1e3 * (t->toc.QuadPart - t->tic.QuadPart) /
-            (scs_float)t->freq.QuadPart);
+          (scs_float)t->freq.QuadPart);
 }
 
-#elif(defined __APPLE__)
+#elif (defined __APPLE__)
 
-void SCS(tic)(SCS(timer) *t) {
+void SCS(tic)(SCS(timer) * t) {
   /* read current clock cycles */
   t->tic = mach_absolute_time();
 }
 
-scs_float SCS(tocq)(SCS(timer) *t) {
+scs_float SCS(tocq)(SCS(timer) * t) {
   uint64_t duration; /* elapsed time in clock cycles*/
 
   t->toc = mach_absolute_time();
@@ -47,11 +44,9 @@ scs_float SCS(tocq)(SCS(timer) *t) {
 
 #else
 
-void SCS(tic)(SCS(timer) *t) {
-  clock_gettime(CLOCK_MONOTONIC, &t->tic);
-}
+void SCS(tic)(SCS(timer) * t) { clock_gettime(CLOCK_MONOTONIC, &t->tic); }
 
-scs_float SCS(tocq)(SCS(timer) *t) {
+scs_float SCS(tocq)(SCS(timer) * t) {
   struct timespec temp;
 
   clock_gettime(CLOCK_MONOTONIC, &t->toc);
@@ -68,13 +63,13 @@ scs_float SCS(tocq)(SCS(timer) *t) {
 
 #endif
 
-scs_float SCS(toc)(SCS(timer) *t) {
+scs_float SCS(toc)(SCS(timer) * t) {
   scs_float time = SCS(tocq)(t);
   scs_printf("time: %8.4f milli-seconds.\n", time);
   return time;
 }
 
-scs_float SCS(str_toc)(char *str, SCS(timer) *t) {
+scs_float SCS(str_toc)(char *str, SCS(timer) * t) {
   scs_float time = SCS(tocq)(t);
   scs_printf("%s - time: %8.4f milli-seconds.\n", str, time);
   return time;
