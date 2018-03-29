@@ -11,6 +11,8 @@
  * other more robust methods if we wanted to.
  */
 
+#define MAX_ACCEL_PARAM_NORM 10.0
+
 struct SCS_ACCEL_WORK {
 #ifdef USE_LAPACK
   scs_float *d_f;
@@ -185,6 +187,12 @@ static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   BLAS(gemv)
   ("NoTrans", &twol, &blen, &neg_onef, a->d_g, &twol, a->scratch, &one, &onef,
    a->sol, &one);
+  #if EXTRA_VERBOSE > 0
+  scs_printf("norm of alphas %f\n", SCS(norm)(a->scratch, len));
+  #endif
+  if (SCS(norm)(a->scratch, len) >= MAX_ACCEL_PARAM_NORM) {
+    RETURN -1879;
+  }
   RETURN(scs_int) info;
 }
 
@@ -208,10 +216,12 @@ scs_int SCS(accelerate)(ScsWork *w, scs_int iter) {
   w->accel->total_accel_time += SCS(tocq)(&accel_timer);
   /* check that info == 0 and fallback otherwise */
   if (info != 0) {
+  #if EXTRA_VERBOSE > 0
     scs_printf(
         "Call to SCS(accelerate) failed with code %li, falling back to using "
         "no acceleration\n",
         (long)info);
+  #endif
     RETURN 0;
   }
   /* set [u;v] = sol */
