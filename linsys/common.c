@@ -2,9 +2,9 @@
 #include "linsys.h"
 /* contains routines common to direct and indirect sparse solvers */
 
-#define MIN_SCALE (1e-3)
-#define MAX_SCALE (1e3)
-#define NUM_SCALE_PASSES 1 /* additional passes don't help much */
+#define MIN_SCALE (1e-4)
+#define MAX_SCALE (1e4)
+#define NUM_SCALE_PASSES 10 /* additional passes don't help much */
 
 scs_int SCS(copy_a_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   scs_int Anz = src->p[src->n];
@@ -101,18 +101,15 @@ static void print_a_matrix(const ScsMatrix *A) {
 
 void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
                       ScsScaling *scal) {
+  DEBUG_FUNC
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_float *nms = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
-  scs_float min_row_scale = MIN_SCALE * SQRTF((scs_float)A->n),
-            max_row_scale = MAX_SCALE * SQRTF((scs_float)A->n);
-  scs_float min_col_scale = MIN_SCALE * SQRTF((scs_float)A->m),
-            max_col_scale = MAX_SCALE * SQRTF((scs_float)A->m);
-  scs_int i, j, l, count, delta, *boundaries, c1, c2;
-  scs_float wrk, e;
+  scs_int i, j, l, count, delta, *boundaries;
   scs_int num_boundaries = SCS(get_cone_boundaries)(k, &boundaries);
+  scs_float wrk;
 
 #if EXTRA_VERBOSE > 0
   SCS(timer) normalize_timer;
@@ -126,18 +123,24 @@ void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
     memset(E, 0, A->n * sizeof(scs_float));
     /* calculate row norms */
     for (i = 0; i < A->n; ++i) {
-      c1 = A->p[i];
-      c2 = A->p[i + 1];
-      for (j = c1; j < c2; ++j) {
-        wrk = A->x[j];
-        D[A->i[j]] += wrk * wrk;
+      for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+        D[A->i[j]] = MAX(D[A->i[j]], ABS(A->x[j]));
       }
     }
     for (i = 0; i < A->m; ++i) {
-      D[i] = SQRTF(D[i]); /* just the norms */
+      D[i] = SQRTF(D[i]);
+      D[i] = D[i] < MIN_SCALE ? 1.0 : D[i];
+      D[i] = D[i] > MAX_SCALE ? MAX_SCALE : D[i];
+    }
+    /* calculate col norms, E */
+    for (i = 0; i < A->n; ++i) {
+      E[i] = SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+      E[i] = SQRTF(E[i]);
+      E[i] = E[i] < MIN_SCALE ? 1.0 : E[i];
+      E[i] = E[i] > MAX_SCALE ? MAX_SCALE : E[i];
     }
 
-    /* mean of norms of rows across each cone  */
+    /* mean of D across each cone  */
     count = boundaries[0];
     for (i = 1; i < num_boundaries; ++i) {
       wrk = 0;
@@ -152,33 +155,19 @@ void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
       count += delta;
     }
 
-    for (i = 0; i < A->m; ++i) {
-      if (D[i] < min_row_scale) {
-        D[i] = 1;
-      } else if (D[i] > max_row_scale) {
-        D[i] = max_row_scale;
-      }
-    }
-
     /* scale the rows with D */
     for (i = 0; i < A->n; ++i) {
       for (j = A->p[i]; j < A->p[i + 1]; ++j) {
         A->x[j] /= D[A->i[j]];
       }
     }
-    /* calculate and scale by col norms, E */
+
+    /* scale the cols with E */
     for (i = 0; i < A->n; ++i) {
-      c1 = A->p[i + 1] - A->p[i];
-      e = SCS(norm)(&(A->x[A->p[i]]), c1);
-      if (e < min_col_scale) {
-        e = 1;
-      } else if (e > max_col_scale) {
-        e = max_col_scale;
-      }
-      SCS(scale_array)(&(A->x[A->p[i]]), 1.0 / e, c1);
-      E[i] = e;
+      SCS(scale_array)(&(A->x[A->p[i]]), 1.0 / E[i], A->p[i + 1] - A->p[i]);
     }
 
+    /* Accumulate scaling */
     for (i = 0; i < A->m; ++i) {
       Dt[i] = (l == 0) ? D[i] : Dt[i] * D[i];
     }
@@ -206,8 +195,8 @@ void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
   /* calculate mean of col norms of A */
   scal->mean_norm_col_a = 0.0;
   for (i = 0; i < A->n; ++i) {
-    c1 = A->p[i + 1] - A->p[i];
-    scal->mean_norm_col_a += SCS(norm)(&(A->x[A->p[i]]), c1) / A->n;
+    scal->mean_norm_col_a +=
+        SCS(norm)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]) / A->n;
   }
 
   /* scale up by d->SCALE if not equal to 1 */
@@ -223,6 +212,7 @@ void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
              SCS(tocq)(&normalize_timer) / 1e3);
   print_a_matrix(A);
 #endif
+  RETURN;
 }
 
 void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
