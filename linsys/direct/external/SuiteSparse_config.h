@@ -35,77 +35,98 @@
  * Author: Timothy A. Davis.
  */
 
-#ifndef _SUITESPARSECONFIG_H
-#define _SUITESPARSECONFIG_H
+#ifndef SUITESPARSE_CONFIG_H
+#define SUITESPARSE_CONFIG_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "glbopts.h"
-#include "ctrlc.h"
 #include <limits.h>
 #include <stdlib.h>
+#include "scs.h"
 
 /* ========================================================================== */
 /* === SuiteSparse_long ===================================================== */
 /* ========================================================================== */
 
-#ifndef SuiteSparse_long
+#define SuiteSparse_long scs_int
 
-/* #ifdef _WIN64
+#ifndef DLONG
 
-#define SuiteSparse_long __int64
+#ifdef _WIN64
+
+/* #define SuiteSparse_long __int64 */
 #define SuiteSparse_long_max _I64_MAX
 #define SuiteSparse_long_idd "I64d"
 
 #else
-*/
 
-#define SuiteSparse_long long
+/* #define SuiteSparse_long long */
 #define SuiteSparse_long_max LONG_MAX
 #define SuiteSparse_long_idd "ld"
 
-/* #endif */
-#define SuiteSparse_long_id "%" SuiteSparse_long_idd
 #endif
-
-/* For backward compatibility with prior versions of SuiteSparse.  The UF_*
- * macros are deprecated and will be removed in a future version. */
-#ifndef UF_long
-#define UF_long     SuiteSparse_long
-#define UF_long_max SuiteSparse_long_max
-#define UF_long_idd SuiteSparse_long_idd
-#define UF_long_id  SuiteSparse_long_id
+#define SuiteSparse_long_id "%" SuiteSparse_long_idd
 #endif
 
 /* ========================================================================== */
 /* === SuiteSparse_config parameters and functions ========================== */
 /* ========================================================================== */
 
-/* SuiteSparse-wide parameters will be placed in this struct. */
+/* SuiteSparse-wide parameters are placed in this struct.  It is meant to be
+   an extern, globally-accessible struct.  It is not meant to be updated
+   frequently by multiple threads.  Rather, if an application needs to modify
+   SuiteSparse_config, it should do it once at the beginning of the application,
+   before multiple threads are launched.
 
-typedef struct SuiteSparse_config_struct
+   The intent of these function pointers is that they not be used in your
+   application directly, except to assign them to the desired user-provided
+   functions.  Rather, you should use the
+ */
+
+struct SuiteSparse_config_struct
 {
-    void *(*malloc_memory) (size_t) ;           /* pointer to malloc */
-    void *(*realloc_memory) (void *, size_t) ;  /* pointer to realloc */
-    void (*free_memory) (void *) ;              /* pointer to free */
-    void *(*calloc_memory) (size_t, size_t) ;   /* pointer to calloc */
+    void *(*malloc_func) (size_t) ;             /* pointer to malloc */
+    void *(*calloc_func) (size_t, size_t) ;     /* pointer to calloc */
+    void *(*realloc_func) (void *, size_t) ;    /* pointer to realloc */
+    void (*free_func) (void *) ;                /* pointer to free */
+    int (*printf_func) (const char *, ...) ;    /* pointer to printf */
+    scs_float (*hypot_func) (scs_float, scs_float) ;     /* pointer to hypot */
+    int (*divcomplex_func) (scs_float, scs_float, scs_float, scs_float, scs_float *, scs_float *);
+} ;
 
-} SuiteSparse_config ;
+extern struct SuiteSparse_config_struct SuiteSparse_config ;
+
+void SuiteSparse_start ( void ) ;   /* called to start SuiteSparse */
+
+void SuiteSparse_finish ( void ) ;  /* called to finish SuiteSparse */
 
 void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 (
     size_t nitems,          /* number of items to malloc (>=1 is enforced) */
-    size_t size_of_item,    /* sizeof each item */
-    int *ok,                /* TRUE if successful, FALSE otherwise */
-    SuiteSparse_config *config        /* SuiteSparse-wide configuration */
+    size_t size_of_item     /* sizeof each item */
 ) ;
 
-void *SuiteSparse_free      /* always returns SCS_NULL */
+void *SuiteSparse_calloc    /* pointer to allocated block of memory */
 (
-    void *p,                /* block to free */
-    SuiteSparse_config *config        /* SuiteSparse-wide configuration */
+    size_t nitems,          /* number of items to calloc (>=1 is enforced) */
+    size_t size_of_item     /* sizeof each item */
+) ;
+
+void *SuiteSparse_realloc   /* pointer to reallocated block of memory, or
+                               to original block if the realloc failed. */
+(
+    size_t nitems_new,      /* new number of items in the object */
+    size_t nitems_old,      /* old number of items in the object */
+    size_t size_of_item,    /* sizeof each item */
+    void *p,                /* old object to reallocate */
+    int *ok                 /* 1 if successful, 0 otherwise */
+) ;
+
+void *SuiteSparse_free      /* always returns NULL */
+(
+    void *p                 /* block to free */
 ) ;
 
 void SuiteSparse_tic    /* start the timer */
@@ -123,8 +144,16 @@ scs_float SuiteSparse_time  /* returns current wall clock time in seconds */
     void
 ) ;
 
-/* SCS: disabling this timing code */
-#define NTIMER
+/* returns sqrt (x^2 + y^2), computed reliably */
+scs_float SuiteSparse_hypot (scs_float x, scs_float y) ;
+
+/* complex division of c = a/b */
+int SuiteSparse_divcomplex
+(
+    scs_float ar, scs_float ai,	/* real and imaginary parts of a */
+    scs_float br, scs_float bi,	/* real and imaginary parts of b */
+    scs_float *cr, scs_float *ci	/* real and imaginary parts of c */
+) ;
 
 /* determine which timer to use, if any */
 #ifndef NTIMER
@@ -135,6 +164,15 @@ scs_float SuiteSparse_time  /* returns current wall clock time in seconds */
 #endif
 #endif
 
+/* SuiteSparse printf macro */
+#define SUITESPARSE_PRINTF(params) \
+{ \
+    if (SuiteSparse_config.printf_func != NULL) \
+    { \
+        (void) (SuiteSparse_config.printf_func) params ; \
+    } \
+}
+
 /* ========================================================================== */
 /* === SuiteSparse version ================================================== */
 /* ========================================================================== */
@@ -143,39 +181,68 @@ scs_float SuiteSparse_time  /* returns current wall clock time in seconds */
  * which must be used together (UMFPACK requires AMD, CHOLMOD requires AMD,
  * COLAMD, CAMD, and CCOLAMD, etc).  A version number is provided here for the
  * collection itself.  The versions of packages within each version of
- * SuiteSparse are meant to work together.  Combining one packge from one
+ * SuiteSparse are meant to work together.  Combining one package from one
  * version of SuiteSparse, with another package from another version of
  * SuiteSparse, may or may not work.
  *
  * SuiteSparse contains the following packages:
  *
- *  SuiteSparse_config version 4.0.2 (version always the same as SuiteSparse)
- *  AMD             version 2.3.1
- *  BTF             version 1.2.0
- *  CAMD            version 2.3.1
- *  CCOLAMD         version 2.8.0
- *  CHOLMOD         version 2.0.1
- *  COLAMD          version 2.8.0
- *  CSparse         version 3.1.1
- *  CXSparse        version 3.1.1
- *  KLU             version 1.2.1
- *  LDL             version 2.1.0
- *  RBio            version 2.1.1
- *  SPQR            version 1.3.1 (full name is SuiteSparseQR)
- *  UMFPACK         version 5.6.1
+ *  SuiteSparse_config version 5.1.0 (version always the same as SuiteSparse)
+ *  GraphBLAS       version 1.1.0
+ *  ssget           version 2.0.0
+ *  AMD             version 2.4.6
+ *  BTF             version 1.2.6
+ *  CAMD            version 2.4.6
+ *  CCOLAMD         version 2.9.6
+ *  CHOLMOD         version 3.0.11
+ *  COLAMD          version 2.9.6
+ *  CSparse         version 3.2.0
+ *  CXSparse        version 3.2.0
+ *  GPUQREngine     version 1.0.5
+ *  KLU             version 1.3.8
+ *  LDL             version 2.2.6
+ *  RBio            version 2.2.6
+ *  SPQR            version 2.0.8
+ *  SuiteSparse_GPURuntime  version 1.0.5
+ *  UMFPACK         version 5.7.6
  *  MATLAB_Tools    various packages & M-files
+ *  xerbla          version 1.0.3
  *
  * Other package dependencies:
  *  BLAS            required by CHOLMOD and UMFPACK
  *  LAPACK          required by CHOLMOD
- *  METIS 4.0.1     required by CHOLMOD (optional) and KLU (optional)
+ *  METIS 5.1.0     required by CHOLMOD (optional) and KLU (optional)
+ *  CUBLAS, CUDART  NVIDIA libraries required by CHOLMOD and SPQR when
+ *                  they are compiled with GPU acceleration.
  */
 
-#define SUITESPARSE_DATE "July 17, 2012"
+int SuiteSparse_version     /* returns SUITESPARSE_VERSION */
+(
+    /* output, not defined on input.  Not used if NULL.  Returns
+       the three version codes in version [0..2]:
+       version [0] is SUITESPARSE_MAIN_VERSION
+       version [1] is SUITESPARSE_SUB_VERSION
+       version [2] is SUITESPARSE_SUBSUB_VERSION
+       */
+    int version [3]
+) ;
+
+/* Versions prior to 4.2.0 do not have the above function.  The following
+   code fragment will work with any version of SuiteSparse:
+
+   #ifdef SUITESPARSE_HAS_VERSION_FUNCTION
+   v = SuiteSparse_version (NULL) ;
+   #else
+   v = SUITESPARSE_VERSION ;
+   #endif
+*/
+#define SUITESPARSE_HAS_VERSION_FUNCTION
+
+#define SUITESPARSE_DATE "Dec 1, 2017"
 #define SUITESPARSE_VER_CODE(main,sub) ((main) * 1000 + (sub))
-#define SUITESPARSE_MAIN_VERSION 4
-#define SUITESPARSE_SUB_VERSION 0
-#define SUITESPARSE_SUBSUB_VERSION 2
+#define SUITESPARSE_MAIN_VERSION 5
+#define SUITESPARSE_SUB_VERSION 1
+#define SUITESPARSE_SUBSUB_VERSION 0
 #define SUITESPARSE_VERSION \
     SUITESPARSE_VER_CODE(SUITESPARSE_MAIN_VERSION,SUITESPARSE_SUB_VERSION)
 

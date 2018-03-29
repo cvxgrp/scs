@@ -11,20 +11,6 @@
 /* This file is for internal use in AMD itself, and does not normally need to
  * be included in user code (it is included in UMFPACK, however).   All others
  * should use amd.h instead.
- *
- * The following compile-time definitions affect how AMD is compiled.
- *
- *      -DNPRINT
- *
- *          Disable all printing.  stdio.h will not be included.  Printing can
- *          be re-enabled at run-time by setting the global pointer amd_printf
- *          to printf (or mexPrintf for a MATLAB mexFunction).
- *
- *      -DNMALLOC
- *
- *          No memory manager is defined at compile-time.  You MUST define the
- *          function pointers amd_malloc, amd_free, amd_realloc, and
- *          amd_calloc at run-time for AMD to work properly.
  */
 
 /* ========================================================================= */
@@ -92,6 +78,14 @@
 #undef FLIP
 #endif
 
+#ifdef MAX
+#undef MAX
+#endif
+
+#ifdef MIN
+#undef MIN
+#endif
+
 #ifdef EMPTY
 #undef EMPTY
 #endif
@@ -112,6 +106,10 @@
 #define FLIP(i) (-(i)-2)
 #define UNFLIP(i) ((i < EMPTY) ? FLIP (i) : (i))
 
+/* for integer MAX/MIN, or for scs_floats when we don't care how NaN's behave: */
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+
 /* logical expression of p implies q: */
 #define IMPLIES(p,q) (!(p) || (q))
 
@@ -130,6 +128,15 @@
 #define GLOBAL
 #define EMPTY (-1)
 
+/* Note that Linux's gcc 2.96 defines NULL as ((void *) 0), but other */
+/* compilers (even gcc 2.95.2 on Solaris) define NULL as 0 or (0).  We */
+/* need to use the ANSI standard value of 0. */
+#ifdef NULL
+#undef NULL
+#endif
+
+#define NULL 0
+
 /* largest value of size_t */
 #ifndef SIZE_T_MAX
 #ifdef SIZE_MAX
@@ -146,30 +153,7 @@
 
 #include "amd.h"
 
-#if defined (DLONG) || defined (ZLONG)
-
-#define Int SuiteSparse_long
-#define ID  SuiteSparse_long_id
-#define Int_MAX SuiteSparse_long_max
-
-#define AMD_order amd_l_order
-#define AMD_defaults amd_l_defaults
-#define AMD_control amd_l_control
-#define AMD_info amd_l_info
-#define AMD_1 amd_l1
-#define AMD_2 amd_l2
-#define AMD_valid amd_l_valid
-#define AMD_aat amd_l_aat
-#define AMD_postorder amd_l_postorder
-#define AMD_post_tree amd_l_post_tree
-#define AMD_dump amd_l_dump
-#define AMD_debug amd_l_debug
-#define AMD_debug_init amd_l_debug_init
-#define AMD_preprocess amd_l_preprocess
-
-#else
-
-#define Int int
+#define Int scs_int
 #define ID "%d"
 #define Int_MAX INT_MAX
 
@@ -188,15 +172,6 @@
 #define AMD_debug_init amd_debug_init
 #define AMD_preprocess amd_preprocess
 
-#endif
-
-/* ========================================================================= */
-/* === PRINTF macro ======================================================== */
-/* ========================================================================= */
-
-/* All output goes through the PRINTF macro.  */
-#define PRINTF(params) { if (amd_printf != SCS_NULL) (void) amd_printf params ; }
-
 /* ------------------------------------------------------------------------- */
 /* AMD routine definitions (not user-callable) */
 /* ------------------------------------------------------------------------- */
@@ -208,7 +183,7 @@ GLOBAL size_t AMD_aat
     const Int Ai [ ],
     Int Len [ ],
     Int Tp [ ],
-    scs_float ScsInfo [ ]
+    scs_float Info [ ]
 ) ;
 
 GLOBAL void AMD_1
@@ -222,7 +197,7 @@ GLOBAL void AMD_1
     Int slen,
     Int S [ ],
     scs_float Control [ ],
-    scs_float ScsInfo [ ]
+    scs_float Info [ ]
 ) ;
 
 GLOBAL void AMD_postorder
@@ -307,11 +282,11 @@ GLOBAL void AMD_dump
 #define ASSERT(expression) (assert (expression))
 #endif
 
-#define AMD_DEBUG0(params) { PRINTF (params) ; }
-#define AMD_DEBUG1(params) { if (AMD_debug >= 1) PRINTF (params) ; }
-#define AMD_DEBUG2(params) { if (AMD_debug >= 2) PRINTF (params) ; }
-#define AMD_DEBUG3(params) { if (AMD_debug >= 3) PRINTF (params) ; }
-#define AMD_DEBUG4(params) { if (AMD_debug >= 4) PRINTF (params) ; }
+#define AMD_DEBUG0(params) { SUITESPARSE_PRINTF (params) ; }
+#define AMD_DEBUG1(params) { if (AMD_debug >= 1) SUITESPARSE_PRINTF (params) ; }
+#define AMD_DEBUG2(params) { if (AMD_debug >= 2) SUITESPARSE_PRINTF (params) ; }
+#define AMD_DEBUG3(params) { if (AMD_debug >= 3) SUITESPARSE_PRINTF (params) ; }
+#define AMD_DEBUG4(params) { if (AMD_debug >= 4) SUITESPARSE_PRINTF (params) ; }
 
 #else
 

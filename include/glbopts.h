@@ -89,14 +89,17 @@ extern "C" {
 #ifdef DLONG
 #ifdef _WIN64
 /* getting strange signed / unsigned errors here, just use long */
-typedef long scs_int;
+/* typedef long scs_int; */
+#define scs_int long
 /* #include <stdint.h> */
 /* typedef int64_t blas_int; */
 #else
-typedef long scs_int;
+/* typedef long scs_int; */
+#define scs_int long
 #endif
 #else
-typedef int scs_int;
+#define scs_int int
+/* typedef int scs_int; */
 #endif
 
 #ifndef SFLOAT
@@ -108,7 +111,8 @@ typedef double scs_float;
 #define INFINITY NAN
 #endif
 #else
-typedef float scs_float;
+/* typedef float scs_float; */
+#define scs_float float
 #ifndef NAN
 #define NAN ((float)0x7fc00000)
 #endif

@@ -60,7 +60,7 @@ GLOBAL void AMD_2
 
     /* control parameters and output statistics */
     scs_float Control [ ],	/* array of size AMD_CONTROL */
-    scs_float ScsInfo [ ]	/* array of size AMD_INFO */
+    scs_float Info [ ]	/* array of size AMD_INFO */
 )
 {
 
@@ -215,7 +215,7 @@ GLOBAL void AMD_2
  *	Iw [pfree..iwlen-1] is always the unused part of Iw.
  *
  * Control:  A scs_float array of size AMD_CONTROL containing input parameters
- *	that affect how the ordering is computed.  If SCS_NULL, then default
+ *	that affect how the ordering is computed.  If NULL, then default
  *	settings are used.
  *
  *	Control [AMD_DENSE] is used to determine whether or not a given input
@@ -277,8 +277,8 @@ GLOBAL void AMD_2
  *	assembly tree.  Note that i refers to a row/column in the original
  *	matrix, not the permuted matrix.
  *
- * ScsInfo:  A scs_float array of size AMD_INFO.  If present, (that is, not SCS_NULL),
- *	then statistics about the ordering are returned in the ScsInfo array.
+ * Info:  A scs_float array of size AMD_INFO.  If present, (that is, not NULL),
+ *	then statistics about the ordering are returned in the Info array.
  *	See amd.h for a description.
 
  * ----------------------------------------------------------------------------
@@ -582,7 +582,7 @@ GLOBAL void AMD_2
     lemax = 0 ;
 
     /* get control parameters */
-    if (Control != (scs_float *) SCS_NULL)
+    if (Control != (scs_float *) NULL)
     {
 	alpha = Control [AMD_DENSE] ;
 	aggressive = (Control [AMD_AGGRESSIVE] != 0) ;
@@ -1520,7 +1520,7 @@ GLOBAL void AMD_2
 	 * (degme+ndense)-by-(degme+ndense).
 	 */
 
-	if (ScsInfo != (scs_float *) SCS_NULL)
+	if (Info != (scs_float *) NULL)
 	{
 	    f = nvpiv ;
 	    r = degme + ndense ;
@@ -1556,7 +1556,7 @@ GLOBAL void AMD_2
 /* DONE SELECTING PIVOTS */
 /* ========================================================================= */
 
-    if (ScsInfo != (scs_float *) SCS_NULL)
+    if (Info != (scs_float *) NULL)
     {
 
 	/* count the work to factorize the ndense-by-ndense submatrix */
@@ -1578,28 +1578,28 @@ GLOBAL void AMD_2
 	nms_ldl += (s + lnzme)/2 ;
 
 	/* number of nz's in L (excl. diagonal) */
-	ScsInfo [AMD_LNZ] = lnz ;
+	Info [AMD_LNZ] = lnz ;
 
 	/* number of divide ops for LU and LDL' */
-	ScsInfo [AMD_NDIV] = ndiv ;
+	Info [AMD_NDIV] = ndiv ;
 
 	/* number of multiply-subtract pairs for LDL' */
-	ScsInfo [AMD_NMULTSUBS_LDL] = nms_ldl ;
+	Info [AMD_NMULTSUBS_LDL] = nms_ldl ;
 
 	/* number of multiply-subtract pairs for LU */
-	ScsInfo [AMD_NMULTSUBS_LU] = nms_lu ;
+	Info [AMD_NMULTSUBS_LU] = nms_lu ;
 
 	/* number of "dense" rows/columns */
-	ScsInfo [AMD_NDENSE] = ndense ;
+	Info [AMD_NDENSE] = ndense ;
 
 	/* largest front is dmax-by-dmax */
-	ScsInfo [AMD_DMAX] = dmax ;
+	Info [AMD_DMAX] = dmax ;
 
 	/* number of garbage collections in AMD */
-	ScsInfo [AMD_NCMPA] = ncmpa ;
+	Info [AMD_NCMPA] = ncmpa ;
 
 	/* successful ordering */
-	ScsInfo [AMD_STATUS] = AMD_OK ;
+	Info [AMD_STATUS] = AMD_OK ;
     }
 
 /* ========================================================================= */

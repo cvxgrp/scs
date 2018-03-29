@@ -86,11 +86,7 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
 
 static scs_int _ldl_init(cs *A, scs_int P[], scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
-#ifdef DLONG
-  return (amd_l_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
-#else
   return (amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
-#endif
 }
 
 static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L,
@@ -180,11 +176,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 #if EXTRA_VERBOSE > 0
   if (stgs->verbose) {
     scs_printf("Matrix factorization info:\n");
-#ifdef DLONG
-    amd_l_info(info);
-#else
     amd_info(info);
-#endif
   }
 #endif
   Pinv = SCS(cs_pinv)(p->P, A->n + A->m);

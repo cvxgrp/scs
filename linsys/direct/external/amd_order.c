@@ -25,7 +25,7 @@ GLOBAL Int AMD_order
     const Int Ai [ ],
     Int P [ ],
     scs_float Control [ ],
-    scs_float ScsInfo [ ]
+    scs_float Info [ ]
 )
 {
     Int *Len, *S, nz, i, *Pinv, info, status, *Rp, *Ri, *Cp, *Ci, ok ;
@@ -36,22 +36,22 @@ GLOBAL Int AMD_order
     AMD_debug_init ("amd") ;
 #endif
 
-    /* clear the ScsInfo array, if it exists */
-    info = ScsInfo != (scs_float *) SCS_NULL ;
+    /* clear the Info array, if it exists */
+    info = Info != (scs_float *) NULL ;
     if (info)
     {
 	for (i = 0 ; i < AMD_INFO ; i++)
 	{
-	    ScsInfo [i] = EMPTY ;
+	    Info [i] = EMPTY ;
 	}
-	ScsInfo [AMD_N] = n ;
-	ScsInfo [AMD_STATUS] = AMD_OK ;
+	Info [AMD_N] = n ;
+	Info [AMD_STATUS] = AMD_OK ;
     }
 
     /* make sure inputs exist and n is >= 0 */
-    if (Ai == (Int *) SCS_NULL || Ap == (Int *) SCS_NULL || P == (Int *) SCS_NULL || n < 0)
+    if (Ai == (Int *) NULL || Ap == (Int *) NULL || P == (Int *) NULL || n < 0)
     {
-	if (info) ScsInfo [AMD_STATUS] = AMD_INVALID ;
+	if (info) Info [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;	    /* arguments are invalid */
     }
 
@@ -63,11 +63,11 @@ GLOBAL Int AMD_order
     nz = Ap [n] ;
     if (info)
     {
-	ScsInfo [AMD_NZ] = nz ;
+	Info [AMD_NZ] = nz ;
     }
     if (nz < 0)
     {
-	if (info) ScsInfo [AMD_STATUS] = AMD_INVALID ;
+	if (info) Info [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;
     }
 
@@ -75,7 +75,7 @@ GLOBAL Int AMD_order
     if (((size_t) n) >= SIZE_T_MAX / sizeof (Int)
      || ((size_t) nz) >= SIZE_T_MAX / sizeof (Int))
     {
-	if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	return (AMD_OUT_OF_MEMORY) ;	    /* problem too large */
     }
 
@@ -84,21 +84,21 @@ GLOBAL Int AMD_order
 
     if (status == AMD_INVALID)
     {
-	if (info) ScsInfo [AMD_STATUS] = AMD_INVALID ;
+	if (info) Info [AMD_STATUS] = AMD_INVALID ;
 	return (AMD_INVALID) ;	    /* matrix is invalid */
     }
 
     /* allocate two size-n integer workspaces */
-    Len = amd_malloc (n * sizeof (Int)) ;
-    Pinv = amd_malloc (n * sizeof (Int)) ;
+    Len  = SuiteSparse_malloc (n, sizeof (Int)) ;
+    Pinv = SuiteSparse_malloc (n, sizeof (Int)) ;
     mem += n ;
     mem += n ;
     if (!Len || !Pinv)
     {
 	/* :: out of memory :: */
-	amd_free (Len) ;
-	amd_free (Pinv) ;
-	if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	SuiteSparse_free (Len) ;
+	SuiteSparse_free (Pinv) ;
+	if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	return (AMD_OUT_OF_MEMORY) ;
     }
 
@@ -106,18 +106,18 @@ GLOBAL Int AMD_order
     {
 	/* sort the input matrix and remove duplicate entries */
 	AMD_DEBUG1 (("Matrix is jumbled\n")) ;
-	Rp = amd_malloc ((n+1) * sizeof (Int)) ;
-	Ri = amd_malloc (MAX (nz,1) * sizeof (Int)) ;
+	Rp = SuiteSparse_malloc (n+1, sizeof (Int)) ;
+	Ri = SuiteSparse_malloc (nz,  sizeof (Int)) ;
 	mem += (n+1) ;
 	mem += MAX (nz,1) ;
 	if (!Rp || !Ri)
 	{
 	    /* :: out of memory :: */
-	    amd_free (Rp) ;
-	    amd_free (Ri) ;
-	    amd_free (Len) ;
-	    amd_free (Pinv) ;
-	    if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	    SuiteSparse_free (Rp) ;
+	    SuiteSparse_free (Ri) ;
+	    SuiteSparse_free (Len) ;
+	    SuiteSparse_free (Pinv) ;
+	    if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	    return (AMD_OUT_OF_MEMORY) ;
 	}
 	/* use Len and Pinv as workspace to create R = A' */
@@ -128,8 +128,8 @@ GLOBAL Int AMD_order
     else
     {
 	/* order the input matrix as-is.  No need to compute R = A' first */
-	Rp = SCS_NULL ;
-	Ri = SCS_NULL ;
+	Rp = NULL ;
+	Ri = NULL ;
 	Cp = (Int *) Ap ;
 	Ci = (Int *) Ai ;
     }
@@ -138,7 +138,7 @@ GLOBAL Int AMD_order
     /* determine the symmetry and count off-diagonal nonzeros in A+A' */
     /* --------------------------------------------------------------------- */
 
-    nzaat = AMD_aat (n, Cp, Ci, Len, P, ScsInfo) ;
+    nzaat = AMD_aat (n, Cp, Ci, Len, P, Info) ;
     AMD_DEBUG1 (("nzaat: %g\n", (scs_float) nzaat)) ;
     ASSERT ((MAX (nz-n, 0) <= nzaat) && (nzaat <= 2 * (size_t) nz)) ;
 
@@ -146,7 +146,7 @@ GLOBAL Int AMD_order
     /* allocate workspace for matrix, elbow room, and 6 size-n vectors */
     /* --------------------------------------------------------------------- */
 
-    S = SCS_NULL ;
+    S = NULL ;
     slen = nzaat ;			/* space for matrix */
     ok = ((slen + nzaat/5) >= slen) ;	/* check for size_t overflow */
     slen += nzaat/5 ;			/* add elbow room */
@@ -160,40 +160,40 @@ GLOBAL Int AMD_order
     ok = ok && (slen < Int_MAX) ;	/* S[i] for Int i must be OK */
     if (ok)
     {
-	S = amd_malloc (slen * sizeof (Int)) ;
+	S = SuiteSparse_malloc (slen, sizeof (Int)) ;
     }
     AMD_DEBUG1 (("slen %g\n", (scs_float) slen)) ;
     if (!S)
     {
 	/* :: out of memory :: (or problem too large) */
-	amd_free (Rp) ;
-	amd_free (Ri) ;
-	amd_free (Len) ;
-	amd_free (Pinv) ;
-	if (info) ScsInfo [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
+	SuiteSparse_free (Rp) ;
+	SuiteSparse_free (Ri) ;
+	SuiteSparse_free (Len) ;
+	SuiteSparse_free (Pinv) ;
+	if (info) Info [AMD_STATUS] = AMD_OUT_OF_MEMORY ;
 	return (AMD_OUT_OF_MEMORY) ;
     }
     if (info)
     {
 	/* memory usage, in bytes. */
-	ScsInfo [AMD_MEMORY] = mem * sizeof (Int) ;
+	Info [AMD_MEMORY] = mem * sizeof (Int) ;
     }
 
     /* --------------------------------------------------------------------- */
     /* order the matrix */
     /* --------------------------------------------------------------------- */
 
-    AMD_1 (n, Cp, Ci, P, Pinv, Len, slen, S, Control, ScsInfo) ;
+    AMD_1 (n, Cp, Ci, P, Pinv, Len, slen, S, Control, Info) ;
 
     /* --------------------------------------------------------------------- */
     /* free the workspace */
     /* --------------------------------------------------------------------- */
 
-    amd_free (Rp) ;
-    amd_free (Ri) ;
-    amd_free (Len) ;
-    amd_free (Pinv) ;
-    amd_free (S) ;
-    if (info) ScsInfo [AMD_STATUS] = status ;
+    SuiteSparse_free (Rp) ;
+    SuiteSparse_free (Ri) ;
+    SuiteSparse_free (Len) ;
+    SuiteSparse_free (Pinv) ;
+    SuiteSparse_free (S) ;
+    if (info) Info [AMD_STATUS] = status ;
     return (status) ;	    /* successful ordering */
 }

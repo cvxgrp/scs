@@ -7,7 +7,9 @@ SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
 AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
-DIRECT_SCS_OBJECTS = $(DIRSRCEXT)/ldl.o $(AMD_SOURCE:.c=.o)
+SSCFG_SOURCE = $(DIRSRCEXT)/SuiteSparse_config.c
+LDL_SOURCE = $(DIRSRCEXT)/ldl.c
+DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o) $(SSCFG_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct
 
 .PHONY: default

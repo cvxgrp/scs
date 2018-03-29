@@ -46,7 +46,7 @@ GLOBAL Int AMD_valid
 {
     Int nz, j, p1, p2, ilast, i, p, result = AMD_OK ;
 
-    if (n_row < 0 || n_col < 0 || Ap == SCS_NULL || Ai == SCS_NULL)
+    if (n_row < 0 || n_col < 0 || Ap == NULL || Ai == NULL)
     {
 	return (AMD_INVALID) ;
     }

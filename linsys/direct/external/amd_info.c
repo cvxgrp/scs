@@ -9,79 +9,79 @@
 /* ------------------------------------------------------------------------- */
 
 /* User-callable.  Prints the output statistics for AMD.  See amd.h
- * for details.  If the ScsInfo array is not present, nothing is printed.
+ * for details.  If the Info array is not present, nothing is printed.
  */
 
 #include "amd_internal.h"
 
-#define PRI(format,x) { if (x >= 0) { PRINTF ((format, x)) ; }}
+#define PRI(format,x) { if (x >= 0) { SUITESPARSE_PRINTF ((format, x)) ; }}
 
 GLOBAL void AMD_info
 (
-    scs_float ScsInfo [ ]
+    scs_float Info [ ]
 )
 {
     scs_float n, ndiv, nmultsubs_ldl, nmultsubs_lu, lnz, lnzd ;
 
-    PRINTF (("\nAMD version %d.%d.%d, %s, results:\n",
+    SUITESPARSE_PRINTF (("\nAMD version %d.%d.%d, %s, results:\n",
 	AMD_MAIN_VERSION, AMD_SUB_VERSION, AMD_SUBSUB_VERSION, AMD_DATE)) ;
 
-    if (!ScsInfo)
+    if (!Info)
     {
 	return ;
     }
 
-    n = ScsInfo [AMD_N] ;
-    ndiv = ScsInfo [AMD_NDIV] ;
-    nmultsubs_ldl = ScsInfo [AMD_NMULTSUBS_LDL] ;
-    nmultsubs_lu = ScsInfo [AMD_NMULTSUBS_LU] ;
-    lnz = ScsInfo [AMD_LNZ] ;
+    n = Info [AMD_N] ;
+    ndiv = Info [AMD_NDIV] ;
+    nmultsubs_ldl = Info [AMD_NMULTSUBS_LDL] ;
+    nmultsubs_lu = Info [AMD_NMULTSUBS_LU] ;
+    lnz = Info [AMD_LNZ] ;
     lnzd = (n >= 0 && lnz >= 0) ? (n + lnz) : (-1) ;
 
     /* AMD return status */
-    PRINTF (("    status: ")) ;
-    if (ScsInfo [AMD_STATUS] == AMD_OK)
+    SUITESPARSE_PRINTF (("    status: ")) ;
+    if (Info [AMD_STATUS] == AMD_OK)
     {
-	PRINTF (("OK\n")) ;
+	SUITESPARSE_PRINTF (("OK\n")) ;
     }
-    else if (ScsInfo [AMD_STATUS] == AMD_OUT_OF_MEMORY)
+    else if (Info [AMD_STATUS] == AMD_OUT_OF_MEMORY)
     {
-	PRINTF (("out of memory\n")) ;
+	SUITESPARSE_PRINTF (("out of memory\n")) ;
     }
-    else if (ScsInfo [AMD_STATUS] == AMD_INVALID)
+    else if (Info [AMD_STATUS] == AMD_INVALID)
     {
-	PRINTF (("invalid matrix\n")) ;
+	SUITESPARSE_PRINTF (("invalid matrix\n")) ;
     }
-    else if (ScsInfo [AMD_STATUS] == AMD_OK_BUT_JUMBLED)
+    else if (Info [AMD_STATUS] == AMD_OK_BUT_JUMBLED)
     {
-	PRINTF (("OK, but jumbled\n")) ;
+	SUITESPARSE_PRINTF (("OK, but jumbled\n")) ;
     }
     else
     {
-	PRINTF (("unknown\n")) ;
+	SUITESPARSE_PRINTF (("unknown\n")) ;
     }
 
     /* statistics about the input matrix */
     PRI ("    n, dimension of A:                                  %.20g\n", n);
     PRI ("    nz, number of nonzeros in A:                        %.20g\n",
-	ScsInfo [AMD_NZ]) ;
+	Info [AMD_NZ]) ;
     PRI ("    symmetry of A:                                      %.4f\n",
-	ScsInfo [AMD_SYMMETRY]) ;
+	Info [AMD_SYMMETRY]) ;
     PRI ("    number of nonzeros on diagonal:                     %.20g\n",
-	ScsInfo [AMD_NZDIAG]) ;
+	Info [AMD_NZDIAG]) ;
     PRI ("    nonzeros in pattern of A+A' (excl. diagonal):       %.20g\n",
-	ScsInfo [AMD_NZ_A_PLUS_AT]) ;
+	Info [AMD_NZ_A_PLUS_AT]) ;
     PRI ("    # dense rows/columns of A+A':                       %.20g\n",
-	ScsInfo [AMD_NDENSE]) ;
+	Info [AMD_NDENSE]) ;
 
     /* statistics about AMD's behavior  */
     PRI ("    memory used, in bytes:                              %.20g\n",
-	ScsInfo [AMD_MEMORY]) ;
+	Info [AMD_MEMORY]) ;
     PRI ("    # of memory compactions:                            %.20g\n",
-	ScsInfo [AMD_NCMPA]) ;
+	Info [AMD_NCMPA]) ;
 
     /* statistics about the ordering quality */
-    PRINTF (("\n"
+    SUITESPARSE_PRINTF (("\n"
 	"    The following approximate statistics are for a subsequent\n"
 	"    factorization of A(P,P) + A(P,P)'.  They are slight upper\n"
 	"    bounds if there are no dense rows/columns in A+A', and become\n"
@@ -98,13 +98,13 @@ GLOBAL void AMD_info
     PRI ("    # multiply-subtract operations for LU:              %.20g\n",
 	nmultsubs_lu) ;
     PRI ("    max nz. in any column of L (incl. diagonal):        %.20g\n",
-	ScsInfo [AMD_DMAX]) ;
+	Info [AMD_DMAX]) ;
 
     /* total flop counts for various factorizations */
 
     if (n >= 0 && ndiv >= 0 && nmultsubs_ldl >= 0 && nmultsubs_lu >= 0)
     {
-	PRINTF (("\n"
+	SUITESPARSE_PRINTF (("\n"
 	"    chol flop count for real A, sqrt counted as 1 flop: %.20g\n"
 	"    LDL' flop count for real A:                         %.20g\n"
 	"    LDL' flop count for complex A:                      %.20g\n"

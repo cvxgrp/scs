@@ -24,7 +24,7 @@ GLOBAL size_t AMD_aat	/* returns nz in A+A' */
     const Int Ai [ ],
     Int Len [ ],	/* Len [j]: length of column j of A+A', excl diagonal*/
     Int Tp [ ],		/* workspace of size n */
-    scs_float ScsInfo [ ]
+    scs_float Info [ ]
 )
 {
     Int p1, p2, p, i, j, pj, pj2, k, nzdiag, nzboth, nz ;
@@ -37,14 +37,14 @@ GLOBAL size_t AMD_aat	/* returns nz in A+A' */
     ASSERT (AMD_valid (n, n, Ap, Ai) == AMD_OK) ;
 #endif
 
-    if (ScsInfo != (scs_float *) SCS_NULL)
+    if (Info != (scs_float *) NULL)
     {
-	/* clear the ScsInfo array, if it exists */
+	/* clear the Info array, if it exists */
 	for (i = 0 ; i < AMD_INFO ; i++)
 	{
-	    ScsInfo [i] = EMPTY ;
+	    Info [i] = EMPTY ;
 	}
-	ScsInfo [AMD_STATUS] = AMD_OK ;
+	Info [AMD_STATUS] = AMD_OK ;
     }
 
     for (k = 0 ; k < n ; k++)
@@ -170,14 +170,14 @@ GLOBAL size_t AMD_aat	/* returns nz in A+A' */
     AMD_DEBUG1 (("   nzboth: "ID" nz: "ID" nzdiag: "ID" symmetry: %g\n",
 		nzboth, nz, nzdiag, sym)) ;
 
-    if (ScsInfo != (scs_float *) SCS_NULL)
+    if (Info != (scs_float *) NULL)
     {
-	ScsInfo [AMD_STATUS] = AMD_OK ;
-	ScsInfo [AMD_N] = n ;
-	ScsInfo [AMD_NZ] = nz ;
-	ScsInfo [AMD_SYMMETRY] = sym ;	    /* symmetry of pattern of A */
-	ScsInfo [AMD_NZDIAG] = nzdiag ;	    /* nonzeros on diagonal of A */
-	ScsInfo [AMD_NZ_A_PLUS_AT] = nzaat ;   /* nonzeros in A+A' */
+	Info [AMD_STATUS] = AMD_OK ;
+	Info [AMD_N] = n ;
+	Info [AMD_NZ] = nz ;
+	Info [AMD_SYMMETRY] = sym ;	    /* symmetry of pattern of A */
+	Info [AMD_NZDIAG] = nzdiag ;	    /* nonzeros on diagonal of A */
+	Info [AMD_NZ_A_PLUS_AT] = nzaat ;   /* nonzeros in A+A' */
     }
 
     return (nzaat) ;

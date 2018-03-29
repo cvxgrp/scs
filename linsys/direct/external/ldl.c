@@ -83,7 +83,7 @@
  * ldl_numeric assume their inputs are valid.  You can check your own inputs
  * prior to calling these routines with the ldl_valid_perm and ldl_valid_matrix
  * routines.  Except for the two ldl_valid_* routines, no routine checks to see
- * if the array arguments are present (non-SCS_NULL).  Like all C routines, no
+ * if the array arguments are present (non-NULL).  Like all C routines, no
  * routine can determine if the arrays are long enough and don't overlap.
  *
  * The ldl_numeric does check the numerical factorization, however.  It returns
@@ -169,11 +169,11 @@
  *
  * One workspace vector (Flag) of size n is required.
  *
- * If P is SCS_NULL, then it is ignored.  The factorization will be LDL' = A.
+ * If P is NULL, then it is ignored.  The factorization will be LDL' = A.
  * Pinv is not computed.  In this case, neither P nor Pinv are required by
  * ldl_numeric.
  *
- * If P is not SCS_NULL, then it is assumed to be a valid permutation.  If
+ * If P is not NULL, then it is assumed to be a valid permutation.  If
  * row and column j of A is the kth pivot, the P [k] = j.  The factorization
  * will be LDL' = PAP', or A (p,p) in MATLAB notation.  The inverse permutation
  * Pinv is computed, where Pinv [j] = k if P [k] = j.  In this case, both P
@@ -194,7 +194,7 @@ void LDL_symbolic
     LDL_int Lnz [ ],	/* output of size n, not defined on input */
     LDL_int Flag [ ],	/* workspace of size n, not defn. on input or output */
     LDL_int P [ ],	/* optional input of size n */
-    LDL_int Pinv [ ]	/* optional output of size n (used if P is not SCS_NULL) */
+    LDL_int Pinv [ ]	/* optional output of size n (used if P is not NULL) */
 )
 {
     LDL_int i, k, p, kk, p2 ;
@@ -273,11 +273,7 @@ LDL_int LDL_numeric	/* returns n if successful, k if D (k,k) is zero */
     LDL_int i, k, p, kk, p2, len, top ;
     for (k = 0 ; k < n ; k++)
     {
-	if(scs_is_interrupted()) {
-        scs_printf("interrupt detected in factorization\n");
-        return -1;
-    }
-    /* compute nonzero Pattern of kth row of L, in topological order */
+	/* compute nonzero Pattern of kth row of L, in topological order */
 	Y [k] = 0.0 ;		    /* Y(0:k) is now all zero */
 	top = n ;		    /* stack for pattern is empty */
 	Flag [k] = k ;		    /* mark node k as visited */
@@ -329,22 +325,22 @@ LDL_int LDL_numeric	/* returns n if successful, k if D (k,k) is zero */
 
 void LDL_lsolve
 (
- LDL_int n,		/* L is n-by-n, where n >= 0 */
- scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
- LDL_int Lp [ ],	/* input of size n+1, not modified */
- LDL_int Li [ ],	/* input of size lnz=Lp[n], not modified */
- scs_float Lx [ ]	/* input of size lnz=Lp[n], not modified */
- )
+    LDL_int n,		/* L is n-by-n, where n >= 0 */
+    scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
+    LDL_int Lp [ ],	/* input of size n+1, not modified */
+    LDL_int Li [ ],	/* input of size lnz=Lp[n], not modified */
+    scs_float Lx [ ]	/* input of size lnz=Lp[n], not modified */
+)
 {
-  LDL_int j, p, p2 ;
-  for (j = 0 ; j < n ; j++)
-  {
-    p2 = Lp [j+1] ;
-    for (p = Lp [j] ; p < p2 ; p++)
+    LDL_int j, p, p2 ;
+    for (j = 0 ; j < n ; j++)
     {
-      X [Li [p]] -= Lx [p] * X [j] ;
+	p2 = Lp [j+1] ;
+	for (p = Lp [j] ; p < p2 ; p++)
+	{
+	    X [Li [p]] -= Lx [p] * X [j] ;
+	}
     }
-  }
 }
 
 
@@ -362,7 +358,7 @@ void LDL_dsolve
     LDL_int j ;
     for (j = 0 ; j < n ; j++)
     {
-    	X [j] /= D [j] ;
+	X [j] /= D [j] ;
     }
 }
 
@@ -373,22 +369,22 @@ void LDL_dsolve
 
 void LDL_ltsolve
 (
- LDL_int n,		/* L is n-by-n, where n >= 0 */
- scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
- LDL_int Lp [ ],	/* input of size n+1, not modified */
- LDL_int Li [ ],	/* input of size lnz=Lp[n], not modified */
- scs_float Lx [ ]	/* input of size lnz=Lp[n], not modified */
- )
+    LDL_int n,		/* L is n-by-n, where n >= 0 */
+    scs_float X [ ],	/* size n.  right-hand-side on input, soln. on output */
+    LDL_int Lp [ ],	/* input of size n+1, not modified */
+    LDL_int Li [ ],	/* input of size lnz=Lp[n], not modified */
+    scs_float Lx [ ]	/* input of size lnz=Lp[n], not modified */
+)
 {
-  LDL_int j, p, p2 ;
-  for (j = n-1 ; j >= 0 ; j--)
-  {
-    p2 = Lp [j+1] ;
-    for (p = Lp [j] ; p < p2 ; p++)
+    int j, p, p2 ;
+    for (j = n-1 ; j >= 0 ; j--)
     {
-      X [j] -= Lx [p] * X [Li [p]] ;
+	p2 = Lp [j+1] ;
+	for (p = Lp [j] ; p < p2 ; p++)
+	{
+	    X [j] -= Lx [p] * X [Li [p]] ;
+	}
     }
-  }
 }
 
 
@@ -450,7 +446,7 @@ LDL_int LDL_valid_perm	    /* returns 1 if valid, 0 otherwise */
     }
     if (!P)
     {
-	return (1) ;	    /* If SCS_NULL, P is assumed to be the identity perm. */
+	return (1) ;	    /* If NULL, P is assumed to be the identity perm. */
     }
     for (j = 0 ; j < n ; j++)
     {
