@@ -56,6 +56,7 @@ extern "C" {
     PySys_WriteStdout(__VA_ARGS__);                  \
     PyGILState_Release(gilstate);                    \
   }
+#define _scs_printf printf
 #define _scs_free free
 #define _scs_malloc malloc
 #define _scs_calloc calloc
@@ -77,6 +78,11 @@ extern "C" {
 #define _scs_malloc malloc
 #define _scs_calloc calloc
 #define _scs_realloc realloc
+#endif
+
+/* Only required for SuiteSparse compatibility: */
+#ifndef _scs_printf
+#define _scs_printf scs_printf
 #endif
 
 #define scs_free(x) \
