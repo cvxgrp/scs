@@ -19,7 +19,7 @@ toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
 
-The current version is `2.0.3`. If you wish to cite SCS, please use the
+The current version is `2.1.0`. If you wish to cite SCS, please use the
 following:
 ```
 @article{ocpb:16,
@@ -35,7 +35,7 @@ following:
 }
 @misc{scs,
     author       = {B. O'Donoghue and E. Chu and N. Parikh and S. Boyd},
-    title        = {{SCS}: Splitting Conic Solver, version 2.0.3},
+    title        = {{SCS}: Splitting Conic Solver, version 2.1.0},
     howpublished = {\url{https://github.com/cvxgrp/scs}},
     month        = nov,
     year         = 2017
