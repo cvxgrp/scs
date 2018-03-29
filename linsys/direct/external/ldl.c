@@ -273,6 +273,10 @@ LDL_int LDL_numeric	/* returns n if successful, k if D (k,k) is zero */
     LDL_int i, k, p, kk, p2, len, top ;
     for (k = 0 ; k < n ; k++)
     {
+      if(scs_is_interrupted()) {
+        scs_printf("interrupt detected in factorization\n");
+        return -1;
+      }
 	/* compute nonzero Pattern of kth row of L, in topological order */
 	Y [k] = 0.0 ;		    /* Y(0:k) is now all zero */
 	top = n ;		    /* stack for pattern is empty */

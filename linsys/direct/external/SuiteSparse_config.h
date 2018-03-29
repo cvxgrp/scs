@@ -45,6 +45,7 @@ extern "C" {
 #include <limits.h>
 #include <stdlib.h>
 #include "scs.h"
+#include "ctrlc.h"
 
 /* ========================================================================== */
 /* === SuiteSparse_long ===================================================== */
@@ -155,6 +156,7 @@ int SuiteSparse_divcomplex
     scs_float *cr, scs_float *ci	/* real and imaginary parts of c */
 ) ;
 
+#define NTIMER
 /* determine which timer to use, if any */
 #ifndef NTIMER
 #ifdef _POSIX_C_SOURCE
