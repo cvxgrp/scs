@@ -90,7 +90,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   }
   scs_printf(
       "\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan "
-      "O'Donoghue, Stanford University, 2012-2017\n",
+      "O'Donoghue, Stanford University, 2012-2018\n",
       SCS(version)());
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
