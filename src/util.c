@@ -129,6 +129,8 @@ void SCS(print_data)(const ScsData *d) {
   scs_printf("rho_x = %4f\n", d->stgs->rho_x);
   scs_printf("cg_rate = %4f\n", d->stgs->cg_rate);
   scs_printf("scale = %4f\n", d->stgs->scale);
+  scs_printf("write_data_filename = %s\n",
+             (char *)d->stgs->write_data_filename);
 }
 
 void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
@@ -206,4 +208,5 @@ void SCS(set_default_settings)(ScsData *d) {
   d->stgs->normalize = NORMALIZE;
   d->stgs->warm_start = WARM_START;
   d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
+  d->stgs->write_data_filename = WRITE_DATA_FILENAME;
 }

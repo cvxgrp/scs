@@ -1,6 +1,7 @@
 #include "scs.h"
 #include "accel.h"
 #include "ctrlc.h"
+#include "rw.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "linsys.h"
@@ -962,6 +963,9 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
   }
 #endif
   SCS(tic)(&init_timer);
+  if (d->stgs->write_data_filename) {
+    SCS(write_data)(d, k);
+  }
   w = init_work(d, k);
   info->setup_time = SCS(tocq)(&init_timer);
   if (d->stgs->verbose) {
