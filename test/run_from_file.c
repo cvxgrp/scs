@@ -1,5 +1,6 @@
 #include "scs.h"
 #include "rw.h"
+#include "util.h"
 
 /* Simple helper function to run problems from data files */
 /* Mostly useful for debugging */
