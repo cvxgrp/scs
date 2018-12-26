@@ -111,17 +111,9 @@ static ScsData * read_scs_data(FILE *fin) {
   d->c = scs_calloc(d->n, sizeof(scs_float));
   fread(d->b, sizeof(scs_float), d->m, fin);
   fread(d->c, sizeof(scs_float), d->n, fin);
+  d->stgs = read_scs_stgs(fin);
+  d->A = read_amatrix(fin);
   RETURN d;
-}
-
-
-void SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
-  FILE* fin = fopen(filename, "rb");
-  scs_printf("fin %i\n", fin);
-  scs_printf("reading data from %s\n", filename);
-  *k = read_scs_cone(fin);
-  *d = read_scs_data(fin);
-  fclose(fin);
 }
 
 void SCS(write_data)(const ScsData *d, const ScsCone *k) {
@@ -130,4 +122,12 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k) {
   write_scs_cone(k, fout);
   write_scs_data(d, fout);
   fclose(fout);
+}
+
+void SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
+  FILE* fin = fopen(filename, "rb");
+  scs_printf("reading data from %s\n", filename);
+  *k = read_scs_cone(fin);
+  *d = read_scs_data(fin);
+  fclose(fin);
 }

@@ -10,7 +10,7 @@ AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
 SSCFG_SOURCE = $(DIRSRCEXT)/SuiteSparse_config.c
 LDL_SOURCE = $(DIRSRCEXT)/ldl.c
 DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o) $(SSCFG_SOURCE:.c=.o)
-TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct
+TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct $(OUT)/run_from_file_indirect $(OUT)/run_from_file_direct
 
 .PHONY: default
 
@@ -67,6 +67,12 @@ $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OUT)/run_from_file_indirect: test/run_from_file.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # basic testing

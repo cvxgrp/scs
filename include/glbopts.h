@@ -38,7 +38,7 @@ extern "C" {
 #define NORMALIZE (1)
 #define WARM_START (0)
 #define ACCELERATION_LOOKBACK (20)
-#define WRITE_DATA_FILENAME ("TMP")
+#define WRITE_DATA_FILENAME (0)
 
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
