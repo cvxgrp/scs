@@ -52,7 +52,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   fwrite(&(s->verbose), sizeof(scs_int), 1, fout);
   fwrite(&warm_start, sizeof(scs_int), 1, fout);
   fwrite(&(s->acceleration_lookback), sizeof(scs_int), 1, fout);
-  /* Do not write the data_write_filename */
+  /* Do not write the write_data_filename */
 }
 
 static ScsSettings * read_scs_stgs(FILE *fin) {
@@ -118,7 +118,11 @@ static ScsData * read_scs_data(FILE *fin) {
 
 void SCS(write_data)(const ScsData *d, const ScsCone *k) {
   FILE* fout = fopen(d->stgs->write_data_filename, "wb");
+  unsigned long scs_int_sz = sizeof(scs_int);
+  unsigned long scs_float_sz = sizeof(scs_float);
   scs_printf("writing data to %s\n", d->stgs->write_data_filename);
+  fwrite(&(scs_int_sz), sizeof(unsigned long), 1, fout);
+  fwrite(&(scs_float_sz), sizeof(unsigned long), 1, fout);
   write_scs_cone(k, fout);
   write_scs_data(d, fout);
   fclose(fout);
@@ -127,6 +131,20 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k) {
 void SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
   FILE* fin = fopen(filename, "rb");
   scs_printf("reading data from %s\n", filename);
+  unsigned long file_int_sz;
+  unsigned long file_float_sz;
+  fread(&(file_int_sz), sizeof(unsigned long), 1, fin);
+  fread(&(file_float_sz), sizeof(unsigned long), 1, fin);
+
+  if (file_int_sz != sizeof(scs_int)) {
+    scs_printf("Error, file int size is %lu, but scs expects int size %lu\n",
+        file_int_sz, sizeof(scs_int));
+  }
+  if (file_float_sz != sizeof(scs_float )) {
+    scs_printf("Error, file float size is %lu, but scs expects float size %lu\n",
+        file_float_sz, sizeof(scs_float));
+  }
+
   *k = read_scs_cone(fin);
   *d = read_scs_data(fin);
   fclose(fin);

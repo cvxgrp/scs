@@ -2,7 +2,7 @@
 #include "rw.h"
 #include "util.h"
 
-#define OPT (-1.393043)
+#define OPT (2.212621)
 
 static const char *small_random_socp(void) {
   ScsData *d;
