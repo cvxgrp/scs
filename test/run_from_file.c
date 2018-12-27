@@ -14,7 +14,11 @@ int main(int argc, char **argv) {
       return -1;
     }
     char * filename = argv[1];
-    SCS(read_data)(filename, &d, &k);
+    scs_int read_status = SCS(read_data)(filename, &d, &k);
+    if (read_status < 0) {
+      scs_printf("Data read failure, exit.\n");
+      return -1;
+    }
     sol = scs_calloc(1, sizeof(ScsSolution));
     scs(d, k, sol, &info);
     SCS(free_data)(d, k);

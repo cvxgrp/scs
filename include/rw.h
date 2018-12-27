@@ -9,7 +9,7 @@ extern "C" {
 #include "scs.h"
 
 void SCS(write_data)(const ScsData *d, const ScsCone *k);
-void SCS(read_data)(const char * filename, ScsData **d, ScsCone **k);
+scs_int SCS(read_data)(const char * filename, ScsData **d, ScsCone **k);
 
 #ifdef __cplusplus
 }

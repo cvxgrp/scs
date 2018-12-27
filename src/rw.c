@@ -128,7 +128,7 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k) {
   fclose(fout);
 }
 
-void SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
+scs_int SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
   FILE* fin = fopen(filename, "rb");
   scs_printf("reading data from %s\n", filename);
   unsigned long file_int_sz;
@@ -137,15 +137,22 @@ void SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
   fread(&(file_float_sz), sizeof(unsigned long), 1, fin);
 
   if (file_int_sz != sizeof(scs_int)) {
-    scs_printf("Error, file int size is %lu, but scs expects int size %lu\n",
+    scs_printf("Error, sizeof(file int) is %lu, but scs expects sizeof(int) "
+        "%lu, scs should be recompiled with correct flags.\n",
         file_int_sz, sizeof(scs_int));
+    fclose(fin);
+    RETURN -1;
   }
   if (file_float_sz != sizeof(scs_float )) {
-    scs_printf("Error, file float size is %lu, but scs expects float size %lu\n",
+    scs_printf("Error, sizeof(file float) is %lu, but scs expects "
+        "sizeof(float) %lu, scs should be recompiled with the correct flags.\n",
         file_float_sz, sizeof(scs_float));
+    fclose(fin);
+    RETURN -1;
   }
 
   *k = read_scs_cone(fin);
   *d = read_scs_data(fin);
   fclose(fin);
+  RETURN 0;
 }
