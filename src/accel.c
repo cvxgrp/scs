@@ -11,7 +11,7 @@
  * other more robust methods if we wanted to.
  */
 
-#define MAX_ACCEL_PARAM_NORM 10.0
+#define MAX_ACCEL_PARAM_NORM (10.0)
 
 struct SCS_ACCEL_WORK {
 #ifdef USE_LAPACK
@@ -191,7 +191,7 @@ static scs_int solve_with_gesv(ScsAccelWork *a, scs_int len) {
   scs_printf("norm of alphas %f\n", SCS(norm)(a->scratch, len));
   #endif
   if (SCS(norm)(a->scratch, len) >= MAX_ACCEL_PARAM_NORM) {
-    RETURN -1879;
+    RETURN -999;
   }
   RETURN(scs_int) info;
 }

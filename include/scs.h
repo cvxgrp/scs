@@ -123,8 +123,8 @@ const char *SCS(version)(void);
 
 /* workspace for SCS */
 struct SCS_WORK {
-  scs_float *u, *v, *u_t, *u_prev,
-      *v_prev; /* x_prev = x from previous iteration */
+  /* x_prev = x from previous iteration */
+  scs_float *u, *v, *u_t, *u_prev, *v_prev;
   scs_float *h, *g, *pr, *dr;
   scs_float g_th, sc_b, sc_c, nm_b, nm_c;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */

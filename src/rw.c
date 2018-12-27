@@ -129,10 +129,14 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k) {
 }
 
 scs_int SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
-  FILE* fin = fopen(filename, "rb");
-  scs_printf("reading data from %s\n", filename);
   unsigned long file_int_sz;
   unsigned long file_float_sz;
+  FILE* fin = fopen(filename, "rb");
+  if (!fin) {
+    scs_printf("Error reading file %s\n", filename);
+    RETURN -1;
+  }
+  scs_printf("Reading data from %s\n", filename);
   fread(&(file_int_sz), sizeof(unsigned long), 1, fin);
   fread(&(file_float_sz), sizeof(unsigned long), 1, fin);
 
