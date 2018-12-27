@@ -37,7 +37,7 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
-#define ACCELERATION_LOOKBACK (20)
+#define ACCELERATION_LOOKBACK (5)
 #define WRITE_DATA_FILENAME (0)
 
 /* redefine printfs and memory allocators as needed */

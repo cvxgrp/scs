@@ -864,6 +864,16 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   }
   /* scs: */
   for (i = 0; i < w->stgs->max_iters; ++i) {
+
+    /* accelerate here so that last step always projection onto cone */
+    /* this ensures the returned iterates always satisfy conic constraints */
+    if (i > 0 && SCS(accelerate)(w, i - 1) != 0) {
+      /* i - 1 as if we accelerated at the end of the last step */
+      RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
+          "error in accelerate", "Failure");
+    }
+
+    /* scs is homogeneous so scale the iterates to keep norm reasonable */
     scs_float total_norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
     SCS(scale_array)(w->u, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
     SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
@@ -881,11 +891,6 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     }
 
     update_dual_vars(w);
-
-    if (SCS(accelerate)(w, i) != 0) {
-      RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                     "error in accelerate", "Failure");
-    }
 
     if (scs_is_interrupted()) {
       RETURN failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",

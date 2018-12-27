@@ -131,10 +131,8 @@ ScsAccelWork *SCS(init_accel)(ScsWork *w) {
     RETURN SCS_NULL;
   }
   a->l = w->m + w->n + 1;
-  /* k = lookback - 1 since we use the difference form
-     of acceleration, and so there is one fewer var in lin sys.
-     Use MIN to prevent not full rank matrices */
-  a->k = MIN(w->n, w->stgs->acceleration_lookback - 1);
+  /* Use MIN to prevent not full rank matrices */
+  a->k = MIN(w->n, w->stgs->acceleration_lookback);
   if (a->k <= 0) {
     RETURN a;
   }
