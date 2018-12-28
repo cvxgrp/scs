@@ -15,22 +15,86 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   return str;
 }
 
+/* wrapper for free */
+static void *cs_free(void *p) {
+  if (p) {
+    scs_free(p);
+  }                  /* free p if it is not already SCS_NULL */
+  return SCS_NULL; /* return SCS_NULL to simplify the use of cs_free */
+}
+
+static cs *cs_spfree(cs *A) {
+  if (!A) {
+    return SCS_NULL;
+  } /* do nothing if A already SCS_NULL */
+  cs_free(A->p);
+  cs_free(A->i);
+  cs_free(A->x);
+  return (cs *)cs_free(A); /* free the cs struct and return SCS_NULL */
+}
+
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
     if (p->L) {
-      SCS(cs_spfree)(p->L);
+      cs_spfree(p->L);
     }
     if (p->P) {
       scs_free(p->P);
     }
-    if (p->D) {
-      scs_free(p->D);
+    if (p->Dinv) {
+      scs_free(p->Dinv);
     }
     if (p->bp) {
       scs_free(p->bp);
     }
     scs_free(p);
   }
+}
+
+static cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
+                    scs_int triplet) {
+  cs *A = (cs *)scs_calloc(1, sizeof(cs)); /* allocate the cs struct */
+  if (!A) {
+    return SCS_NULL;
+  }         /* out of memory */
+  A->m = m; /* define dimensions and nzmax */
+  A->n = n;
+  A->nzmax = nzmax = MAX(nzmax, 1);
+  A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
+  A->p = (scs_int *)scs_malloc((triplet ? nzmax : n + 1) * sizeof(scs_int));
+  A->i = (scs_int *)scs_malloc(nzmax * sizeof(scs_int));
+  A->x = values ? (scs_float *)scs_malloc(nzmax * sizeof(scs_float)) : SCS_NULL;
+  return (!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A;
+}
+
+/* C = compressed-column form of a triplet matrix T */
+static cs cs_compress(const cs *T) {
+  scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
+  scs_float *Cx, *Tx;
+  cs *C;
+  m = T->m;
+  n = T->n;
+  Ti = T->i;
+  Tj = T->p;
+  Tx = T->x;
+  nz = T->nz;
+  C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int));    /* get workspace */
+  if (!C || !w) {
+    return cs_done(C, w, SCS_NULL, 0);
+  } /* out of memory */
+  Cp = C->p;
+  Ci = C->i;
+  Cx = C->x;
+  for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
+  SCS(cs_cumsum)(Cp, w, n);            /* column pointers */
+  for (k = 0; k < nz; k++) {
+    Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
+    if (Cx) {
+      Cx[p] = Tx[k];
+    }
+  }
+  return cs_done(C, w, SCS_NULL, 1); /* success; free w and return C */
 }
 
 static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
@@ -45,7 +109,7 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   /* I at top left */
   const scs_int Anz = A->p[A->n];
   const scs_int Knzmax = A->n + A->m + Anz;
-  cs *K = SCS(cs_spalloc)(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
+  cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
   scs_printf("forming KKT\n");
@@ -79,9 +143,9 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   }
   /* assert kk == Knzmax */
   K->nz = Knzmax;
-  K_cs = SCS(cs_compress)(K);
-  SCS(cs_spfree)(K);
-  return (K_cs);
+  K_cs = cs_compress(K);
+  cs_spfree(K);
+  return K_cs;
 }
 
 static scs_int _ldl_init(cs *A, scs_int *P, scs_float **info) {
@@ -89,42 +153,49 @@ static scs_int _ldl_init(cs *A, scs_int *P, scs_float **info) {
   return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
-static scs_int _ldl_factor(cs *A, cs **L, scs_float **D) {
-  scs_int kk, n = A->n;
-  scs_int *Parent = (scs_int *)scs_malloc(n * sizeof(scs_int));
+static scs_int _ldl_factor(cs *A, cs **L, scs_float **Dinv) {
+  scs_int factor_status, n = A->n;
+  scs_int *etree= (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_int *Flag = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_int *Pattern = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_float *Y = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  scs_int *iwork= (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_float *D, *fwork;
+  scs_int *bwork;
   (*L)->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
+  (*L)->nzmax = QDLDL_etree(n, A->p, A->i, work, Lnz, etree);
+  if ((*L)->nzmax < 0) {
+    scs_printf("Error in elimination tree calculation.\n");
+    scs_free(Lnz);
+    scs_free(iwork);
+    scs_free(etree);
+    scs_free((*L)->p);
+    return (*L)->nzmax;
+  }
 
-  LDL_symbolic(n, A->p, A->i, (*L)->p, Parent, Lnz, Flag, P, Pinv);
-
-  (*L)->nzmax = *((*L)->p + n);
   (*L)->x = (scs_float *)scs_malloc((*L)->nzmax * sizeof(scs_float));
   (*L)->i = (scs_int *)scs_malloc((*L)->nzmax * sizeof(scs_int));
-  *D = (scs_float *)scs_malloc(n * sizeof(scs_float));
-
-  if (!(*D) || !(*L)->i || !(*L)->x || !Y || !Pattern || !Flag || !Lnz ||
-      !Parent) {
-    return -1;
-  }
+  *Dinv = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  D = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  bwork = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  fwork = (scs_float *)scs_malloc(n * sizeof(scs_float));
 
 #if EXTRA_VERBOSE > 0
   scs_printf("numeric factorization\n");
 #endif
-  kk = LDL_numeric(n, A->p, A->i, A->x, (*L)->p, Parent, Lnz, (*L)->i, (*L)->x,
-                   *D, Y, Pattern, Flag, P, Pinv);
+  factor_status = QDLDL_factor(n, A->p, A->i, A->x,
+                                 L->p, L->i, L->x,
+                                 D, Dinv, Lnz,
+                                 etree, bwork, iwork, fwork);
 #if EXTRA_VERBOSE > 0
   scs_printf("finished numeric factorization\n");
 #endif
 
-  scs_free(Parent);
   scs_free(Lnz);
-  scs_free(Flag);
-  scs_free(Pattern);
-  scs_free(Y);
-  return (kk - n);
+  scs_free(iwork);
+  scs_free(etree);
+  scs_free(D);
+  scs_free(bwork);
+  scs_free(fwork);
+  return factor_status;
 }
 
 static void _ldl_perm(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
@@ -137,12 +208,11 @@ static void _ldl_permt(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
     for (j = 0 ; j < n ; j++) x[P[j]] = b[j];
 }
 
-
 static void _ldl_solve(scs_float *x, scs_float *b, cs *L, scs_float *Dinv,
                        scs_int *P, scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
-  if (P == SCS_NULL) {
+  if (!P) {
     if (x != b) { /* if they're different addresses */
       memcpy(x, b, n * sizeof(scs_float));
     }
@@ -164,17 +234,69 @@ void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
   SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
 }
 
-scs_int *SCS(cs_pinv)(scs_int const *p, scs_int n) {
+static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   scs_int k, *pinv;
   if (!p) {
-    return (SCS_NULL);
+    return SCS_NULL;
   } /* p = SCS_NULL denotes identity */
   pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
   if (!pinv) {
-    return (SCS_NULL);
+    return SCS_NULL;
   }                                       /* out of memory */
   for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
-  return (pinv);                          /* return result */
+  return pinv;                          /* return result */
+}
+
+static cs * cs_done(cs *C, void *w, void *x, scs_int ok) {
+  cs_free(w); /* free workspace */
+  cs_free(x);
+  return ok ? C : cs_spfree(C); /* return result if OK, else free it */
+}
+
+static cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
+  scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
+  scs_float *Cx, *Ax;
+  cs *C;
+  n = A->n;
+  Ap = A->p;
+  Ai = A->i;
+  Ax = A->x;
+  C = cs_spalloc(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
+  if (!C || !w) {
+    return cs_done(C, w, SCS_NULL, 0);
+  } /* out of memory */
+  Cp = C->p;
+  Ci = C->i;
+  Cx = C->x;
+  for (j = 0; j < n; j++) /* count entries in each column of C */
+  {
+    j2 = pinv ? pinv[j] : j; /* column j of A is column j2 of C */
+    for (p = Ap[j]; p < Ap[j + 1]; p++) {
+      i = Ai[p];
+      if (i > j) {
+        continue;
+      }                        /* skip lower triangular part of A */
+      i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
+      w[MAX(i2, j2)]++;        /* column count of C */
+    }
+  }
+  SCS(cs_cumsum)(Cp, w, n); /* compute column pointers of C */
+  for (j = 0; j < n; j++) {
+    j2 = pinv ? pinv[j] : j; /* column j of A is column j2 of C */
+    for (p = Ap[j]; p < Ap[j + 1]; p++) {
+      i = Ai[p];
+      if (i > j) {
+        continue;
+      }                        /* skip lower triangular part of A*/
+      i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
+      Ci[q = w[MAX(i2, j2)]++] = MIN(i2, j2);
+      if (Cx) {
+        Cx[q] = Ax[p];
+      }
+    }
+  }
+  return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
 }
 
 static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
@@ -187,7 +309,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
   }
   amd_status = _ldl_init(K, p->P, &info);
   if (amd_status < 0) {
-    return (amd_status);
+    return amd_status;
   }
 #if EXTRA_VERBOSE > 0
   if (stgs->verbose) {
@@ -195,14 +317,14 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
     amd_info(info);
   }
 #endif
-  Pinv = SCS(cs_pinv)(p->P, A->n + A->m);
-  C = SCS(cs_symperm)(K, Pinv, 1);
-  ldl_status = _ldl_factor(C, &p->L, &p->D);
-  SCS(cs_spfree)(C);
-  SCS(cs_spfree)(K);
+  Pinv = cs_pinv(p->P, A->n + A->m);
+  C = cs_symperm(K, Pinv, 1);
+  ldl_status = _ldl_factor(C, &p->L, &p->Dinv);
+  cs_spfree(C);
+  cs_spfree(K);
   scs_free(Pinv);
   scs_free(info);
-  return (ldl_status);
+  return ldl_status;
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
@@ -231,7 +353,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   /* Ax = b with solution stored in b */
   SCS(timer) linsys_timer;
   SCS(tic)(&linsys_timer);
-  _ldl_solve(b, b, p->L, p->D, p->P, p->bp);
+  _ldl_solve(b, b, p->L, p->Dinv, p->P, p->bp);
   p->total_solve_time += SCS(tocq)(&linsys_timer);
 #if EXTRA_VERBOSE > 0
   scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);

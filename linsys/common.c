@@ -262,6 +262,24 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 #endif
 }
 
+
+scs_float SCS(cs_cumsum)(scs_int *p, scs_int *c, scs_int n) {
+  scs_int i, nz = 0;
+  scs_float nz2 = 0;
+  if (!p || !c) {
+    return (-1);
+  } /* check inputs */
+  for (i = 0; i < n; i++) {
+    p[i] = nz;
+    nz += c[i];
+    nz2 += c[i]; /* also in scs_float to avoid scs_int overflow */
+    c[i] = p[i]; /* also copy p[0..n-1] back into c[0..n-1]*/
+  }
+  p[n] = nz;
+  return (nz2); /* return sum (c [0..n-1]) */
+}
+
+
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                       const scs_float *x, scs_float *y) {
   /*y += A*x

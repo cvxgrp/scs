@@ -1,7 +1,7 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/rw.o src/cs.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
 
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)

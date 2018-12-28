@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "common.h"
-#include "cs.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "scs.h"

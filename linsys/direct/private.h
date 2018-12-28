@@ -6,19 +6,17 @@ extern "C" {
 #endif
 
 #include "common.h"
-#include "cs.h"
-#include "external/amd.h"
-#include "external/ldl.h"
+#include "external/amd/include/amd.h"
+#include "external/qdldl/include/qdldl.h"
 #include "glbopts.h"
 #include "scs.h"
 
 struct SCS_LIN_SYS_WORK {
-  cs *L;         /* KKT, and factorization matrix L resp. */
-  scs_float *D;  /* diagonal matrix of factorization */
-  scs_int *P;    /* permutation of KKT matrix for factorization */
-  scs_float *bp; /* workspace memory for solves */
-  /* reporting */
-  scs_float total_solve_time;
+  cs *L;            /* KKT, and factorization matrix L resp. */
+  scs_float *Dinv;  /* inverse diagonal matrix of factorization */
+  scs_int *P;       /* permutation of KKT matrix for factorization */
+  scs_float *bp;    /* workspace memory for solves */
+  scs_float total_solve_time; /* reporting */
 };
 
 #ifdef __cplusplus
