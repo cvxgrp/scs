@@ -6,10 +6,9 @@ SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/rw.o src/linalg.o
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
-SSCFG_SOURCE = $(DIRSRCEXT)/SuiteSparse_config.c
-LDL_SOURCE = $(DIRSRCEXT)/ldl.c
-DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o) $(SSCFG_SOURCE:.c=.o)
+AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd/*.c)
+LDL_SOURCE = $(DIRSRCEXT)/qdldl/qdldl.c
+DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct $(OUT)/run_from_file_indirect $(OUT)/run_from_file_direct
 
 .PHONY: default

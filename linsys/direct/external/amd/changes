@@ -1,0 +1,11 @@
+Flatten out all .c and .h to single dir.
+All files: double -> scs_float.
+  git grep -l 'double' | xargs sed -i 's/double/scs_float/g'
+SuiteSparse_config.h: add '#include "scs.h"'
+                      add '#include "ctrlc.h"'
+                      add '#define SuiteSparse_long scs_int'
+                      disable timer #define NTIMER
+SuiteSparse_config.c: replace *alloc and printf in 2 structs.
+amd_internal.h: remove all refs to long version, int -> scs_int
+amd_global.c: add typedef to rm warning
+amd.h: int -> scs_int.h

@@ -1,5 +1,16 @@
 #include "private.h"
 
+struct SPARSE_MATRIX /* matrix in compressed-column or triplet form */
+{
+  scs_int nzmax; /* maximum number of entries */
+  scs_int m;     /* number of rows */
+  scs_int n;     /* number of columns */
+  scs_int *p;    /* column pointers (size n+1) or col indices (size nzmax) */
+  scs_int *i;    /* row indices, size nzmax */
+  scs_float *x;  /* numerical values, size nzmax */
+  scs_int nz;    /* # of entries in triplet matrix, -1 for compressed-col */
+};
+
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsSettings *stgs) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(tmp, "sparse-direct, nnz in A = %li", (long)A->p[A->n]);
@@ -23,14 +34,14 @@ static void *cs_free(void *p) {
   return SCS_NULL; /* return SCS_NULL to simplify the use of cs_free */
 }
 
-static cs *cs_spfree(cs *A) {
+static _cs *cs_spfree(_cs *A) {
   if (!A) {
     return SCS_NULL;
   } /* do nothing if A already SCS_NULL */
   cs_free(A->p);
   cs_free(A->i);
   cs_free(A->x);
-  return (cs *)cs_free(A); /* free the cs struct and return SCS_NULL */
+  return (_cs *)cs_free(A); /* free the _cs struct and return SCS_NULL */
 }
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
@@ -51,9 +62,9 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-static cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
+static _cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
                     scs_int triplet) {
-  cs *A = (cs *)scs_calloc(1, sizeof(cs)); /* allocate the cs struct */
+  _cs *A = (_cs *)scs_calloc(1, sizeof(_cs)); /* allocate the _cs struct */
   if (!A) {
     return SCS_NULL;
   }         /* out of memory */
@@ -67,11 +78,17 @@ static cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
   return (!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A;
 }
 
+static _cs *cs_done(_cs *C, void *w, void *x, scs_int ok) {
+  cs_free(w); /* free workspace */
+  cs_free(x);
+  return ok ? C : cs_spfree(C); /* return result if OK, else free it */
+}
+
 /* C = compressed-column form of a triplet matrix T */
-static cs cs_compress(const cs *T) {
+static _cs *cs_compress(const _cs *T) {
   scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
   scs_float *Cx, *Tx;
-  cs *C;
+  _cs *C;
   m = T->m;
   n = T->n;
   Ti = T->i;
@@ -87,7 +104,7 @@ static cs cs_compress(const cs *T) {
   Ci = C->i;
   Cx = C->x;
   for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
-  SCS(cs_cumsum)(Cp, w, n);            /* column pointers */
+  SCS(cumsum)(Cp, w, n);            /* column pointers */
   for (k = 0; k < nz; k++) {
     Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
     if (Cx) {
@@ -97,7 +114,7 @@ static cs cs_compress(const cs *T) {
   return cs_done(C, w, SCS_NULL, 1); /* success; free w and return C */
 }
 
-static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
+static _cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed KKT matrix
    * assumes column compressed form A matrix
@@ -105,11 +122,11 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
    * forms upper triangular part of [I A'; A -I]
    */
   scs_int j, k, kk;
-  cs *K_cs;
+  _cs *K_cs;
   /* I at top left */
   const scs_int Anz = A->p[A->n];
   const scs_int Knzmax = A->n + A->m + Anz;
-  cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
+  _cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
   scs_printf("forming KKT\n");
@@ -148,20 +165,20 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   return K_cs;
 }
 
-static scs_int _ldl_init(cs *A, scs_int *P, scs_float **info) {
+static scs_int _ldl_init(_cs *A, scs_int *P, scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
   return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
-static scs_int _ldl_factor(cs *A, cs **L, scs_float **Dinv) {
+static scs_int _ldl_factor(_cs *A, _cs **L, scs_float **Dinv) {
   scs_int factor_status, n = A->n;
   scs_int *etree= (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_int *iwork= (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_int *iwork= (scs_int *)scs_malloc(3 * n * sizeof(scs_int));
   scs_float *D, *fwork;
   scs_int *bwork;
   (*L)->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
-  (*L)->nzmax = QDLDL_etree(n, A->p, A->i, work, Lnz, etree);
+  (*L)->nzmax = QDLDL_etree(n, A->p, A->i, iwork, Lnz, etree);
   if ((*L)->nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
     scs_free(Lnz);
@@ -182,8 +199,8 @@ static scs_int _ldl_factor(cs *A, cs **L, scs_float **Dinv) {
   scs_printf("numeric factorization\n");
 #endif
   factor_status = QDLDL_factor(n, A->p, A->i, A->x,
-                                 L->p, L->i, L->x,
-                                 D, Dinv, Lnz,
+                                 (*L)->p, (*L)->i, (*L)->x,
+                                 D, *Dinv, Lnz,
                                  etree, bwork, iwork, fwork);
 #if EXTRA_VERBOSE > 0
   scs_printf("finished numeric factorization\n");
@@ -208,7 +225,7 @@ static void _ldl_permt(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
     for (j = 0 ; j < n ; j++) x[P[j]] = b[j];
 }
 
-static void _ldl_solve(scs_float *x, scs_float *b, cs *L, scs_float *Dinv,
+static void _ldl_solve(scs_float *x, scs_float *b, _cs *L, scs_float *Dinv,
                        scs_int *P, scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
@@ -216,7 +233,7 @@ static void _ldl_solve(scs_float *x, scs_float *b, cs *L, scs_float *Dinv,
     if (x != b) { /* if they're different addresses */
       memcpy(x, b, n * sizeof(scs_float));
     }
-    QDLDL_solve(n, L->p, L->i, x>x, Dinv, x);
+    QDLDL_solve(n, L->p, L->i, L->x, Dinv, x);
   } else {
     _ldl_perm(n, bp, b, P);
     QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
@@ -247,16 +264,10 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   return pinv;                          /* return result */
 }
 
-static cs * cs_done(cs *C, void *w, void *x, scs_int ok) {
-  cs_free(w); /* free workspace */
-  cs_free(x);
-  return ok ? C : cs_spfree(C); /* return result if OK, else free it */
-}
-
-static cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
+static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
   scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
   scs_float *Cx, *Ax;
-  cs *C;
+  _cs *C;
   n = A->n;
   Ap = A->p;
   Ai = A->i;
@@ -281,7 +292,7 @@ static cs *cs_symperm(const cs *A, const scs_int *pinv, scs_int values) {
       w[MAX(i2, j2)]++;        /* column count of C */
     }
   }
-  SCS(cs_cumsum)(Cp, w, n); /* compute column pointers of C */
+  SCS(cumsum)(Cp, w, n); /* compute column pointers of C */
   for (j = 0; j < n; j++) {
     j2 = pinv ? pinv[j] : j; /* column j of A is column j2 of C */
     for (p = Ap[j]; p < Ap[j + 1]; p++) {
@@ -303,7 +314,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
                          ScsLinSysWork *p) {
   scs_float *info;
   scs_int *Pinv, amd_status, ldl_status;
-  cs *C, *K = form_kkt(A, stgs);
+  _cs *C, *K = form_kkt(A, stgs);
   if (!K) {
     return -1;
   }
@@ -332,7 +343,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m;
   p->P = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
-  p->L = (cs *)scs_malloc(sizeof(cs));
+  p->L = (_cs *)scs_malloc(sizeof(_cs));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;

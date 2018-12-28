@@ -1,6 +1,8 @@
 #ifndef QDLDL_TYPES_H
 # define QDLDL_TYPES_H
 
+#include "glbopts.h"
+
 # ifdef __cplusplus
 extern "C" {
 # endif /* ifdef __cplusplus */
