@@ -20,12 +20,12 @@
 
 GLOBAL void AMD_defaults
 (
-    scs_float Control [ ]
+    double Control [ ]
 )
 {
     Int i ;
 
-    if (Control != (scs_float *) NULL)
+    if (Control != (double *) NULL)
     {
 	for (i = 0 ; i < AMD_CONTROL ; i++)
 	{

@@ -18,10 +18,10 @@
 
 GLOBAL void AMD_info
 (
-    scs_float Info [ ]
+    double Info [ ]
 )
 {
-    scs_float n, ndiv, nmultsubs_ldl, nmultsubs_lu, lnz, lnzd ;
+    double n, ndiv, nmultsubs_ldl, nmultsubs_lu, lnz, lnzd ;
 
     SUITESPARSE_PRINTF (("\nAMD version %d.%d.%d, %s, results:\n",
 	AMD_MAIN_VERSION, AMD_SUB_VERSION, AMD_SUBSUB_VERSION, AMD_DATE)) ;

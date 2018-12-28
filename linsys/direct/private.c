@@ -84,13 +84,12 @@ static cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
   return (K_cs);
 }
 
-static scs_int _ldl_init(cs *A, scs_int P[], scs_float **info) {
+static scs_int _ldl_init(cs *A, scs_int *P, scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
-  return (amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info));
+  return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
-static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L,
-                           scs_float **D) {
+static scs_int _ldl_factor(cs *A, cs **L, scs_float **D) {
   scs_int kk, n = A->n;
   scs_int *Parent = (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
@@ -98,9 +97,6 @@ static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L,
   scs_int *Pattern = (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_float *Y = (scs_float *)scs_malloc(n * sizeof(scs_float));
   (*L)->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
-
-  /*scs_int Parent[n], Lnz[n], Flag[n], Pattern[n]; */
-  /*scs_float Y[n]; */
 
   LDL_symbolic(n, A->p, A->i, (*L)->p, Parent, Lnz, Flag, P, Pinv);
 
@@ -131,23 +127,30 @@ static scs_int _ldl_factor(cs *A, scs_int P[], scs_int Pinv[], cs **L,
   return (kk - n);
 }
 
-static void _ldl_solve(scs_float *x, scs_float b[], cs *L, scs_float D[],
-                       scs_int P[], scs_float *bp) {
+static void _ldl_perm(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
+    scs_int j;
+    for (j = 0 ; j < n ; j++) x[j] = b[P[j]];
+}
+
+static void _ldl_permt(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
+    scs_int j;
+    for (j = 0 ; j < n ; j++) x[P[j]] = b[j];
+}
+
+
+static void _ldl_solve(scs_float *x, scs_float *b, cs *L, scs_float *Dinv,
+                       scs_int *P, scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
   if (P == SCS_NULL) {
     if (x != b) { /* if they're different addresses */
       memcpy(x, b, n * sizeof(scs_float));
     }
-    LDL_lsolve(n, x, L->p, L->i, L->x);
-    LDL_dsolve(n, x, D);
-    LDL_ltsolve(n, x, L->p, L->i, L->x);
+    QDLDL_solve(n, L->p, L->i, x>x, Dinv, x);
   } else {
-    LDL_perm(n, bp, b, P);
-    LDL_lsolve(n, bp, L->p, L->i, L->x);
-    LDL_dsolve(n, bp, D);
-    LDL_ltsolve(n, bp, L->p, L->i, L->x);
-    LDL_permt(n, x, bp, P);
+    _ldl_perm(n, bp, b, P);
+    QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
+    _ldl_permt(n, x, bp, P);
   }
 }
 
@@ -159,6 +162,19 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
 void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
   SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
+}
+
+scs_int *SCS(cs_pinv)(scs_int const *p, scs_int n) {
+  scs_int k, *pinv;
+  if (!p) {
+    return (SCS_NULL);
+  } /* p = SCS_NULL denotes identity */
+  pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
+  if (!pinv) {
+    return (SCS_NULL);
+  }                                       /* out of memory */
+  for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
+  return (pinv);                          /* return result */
 }
 
 static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
@@ -181,7 +197,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 #endif
   Pinv = SCS(cs_pinv)(p->P, A->n + A->m);
   C = SCS(cs_symperm)(K, Pinv, 1);
-  ldl_status = _ldl_factor(C, SCS_NULL, SCS_NULL, &p->L, &p->D);
+  ldl_status = _ldl_factor(C, &p->L, &p->D);
   SCS(cs_spfree)(C);
   SCS(cs_spfree)(K);
   scs_free(Pinv);

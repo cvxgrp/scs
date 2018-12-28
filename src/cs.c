@@ -90,19 +90,6 @@ scs_float SCS(cs_cumsum)(scs_int *p, scs_int *c, scs_int n) {
   return (nz2); /* return sum (c [0..n-1]) */
 }
 
-scs_int *SCS(cs_pinv)(scs_int const *p, scs_int n) {
-  scs_int k, *pinv;
-  if (!p) {
-    return (SCS_NULL);
-  } /* p = SCS_NULL denotes identity */
-  pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
-  if (!pinv) {
-    return (SCS_NULL);
-  }                                       /* out of memory */
-  for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
-  return (pinv);                          /* return result */
-}
-
 cs *SCS(cs_symperm)(const cs *A, const scs_int *pinv, scs_int values) {
   scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
   scs_float *Cx, *Ax;

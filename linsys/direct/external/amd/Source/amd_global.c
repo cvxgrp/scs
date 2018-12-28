@@ -12,5 +12,3 @@
    amd_realloc, amd_calloc, and amd_printf functions.  They are now replaced
    by functions defined in SuiteSparse_config/SuiteSparse_config.c.
  */
-/* Simply to suppress empty translation unit warnings. */
-typedef int scs_amd_make_iso_compilers_happy;

@@ -12,7 +12,7 @@
  * factorization of P*A*P' has fewer nonzeros and takes less work than the
  * Cholesky factorization of A.  If A is not symmetric, then it performs its
  * ordering on the matrix A+A'.  Two sets of user-callable routines are
- * provided, one for scs_int integers and the other for SuiteSparse_long integers.
+ * provided, one for int integers and the other for SuiteSparse_long integers.
  *
  * The method is based on the approximate minimum degree algorithm, discussed
  * in Amestoy, Davis, and Duff, "An approximate degree ordering algorithm",
@@ -45,15 +45,15 @@ extern "C" {
 
 #include "SuiteSparse_config.h"
 
-scs_int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
+int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
                                 * AMD_INVALID, or AMD_OUT_OF_MEMORY */
 (
-    scs_int n,                     /* A is n-by-n.  n must be >= 0. */
-    const scs_int Ap [ ],          /* column pointers for A, of size n+1 */
-    const scs_int Ai [ ],          /* row indices of A, of size nz = Ap [n] */
-    scs_int P [ ],                 /* output permutation, of size n */
-    scs_float Control [ ],        /* input Control settings, of size AMD_CONTROL */
-    scs_float Info [ ]            /* output Info statistics, of size AMD_INFO */
+    int n,                     /* A is n-by-n.  n must be >= 0. */
+    const int Ap [ ],          /* column pointers for A, of size n+1 */
+    const int Ai [ ],          /* row indices of A, of size nz = Ap [n] */
+    int P [ ],                 /* output permutation, of size n */
+    double Control [ ],        /* input Control settings, of size AMD_CONTROL */
+    double Info [ ]            /* output Info statistics, of size AMD_INFO */
 ) ;
 
 SuiteSparse_long amd_l_order    /* see above for description of arguments */
@@ -62,8 +62,8 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
     const SuiteSparse_long Ap [ ],
     const SuiteSparse_long Ai [ ],
     SuiteSparse_long P [ ],
-    scs_float Control [ ],
-    scs_float Info [ ]
+    double Control [ ],
+    double Info [ ]
 ) ;
 
 /* Input arguments (not modified):
@@ -73,7 +73,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *              pointers of A.
  *       Ai: an int/SuiteSparse_long array of size nz, containing the row
  *              indices of A, where nz = Ap [n].
- *       Control:  a scs_float array of size AMD_CONTROL, containing control
+ *       Control:  a double array of size AMD_CONTROL, containing control
  *           parameters.  Defaults are used if Control is NULL.
  *
  * Output arguments (not defined on input):
@@ -81,7 +81,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *       P: an int/SuiteSparse_long array of size n, containing the output
  *           permutation. If row i is the kth pivot row, then P [k] = i.  In
  *           MATLAB notation, the reordered matrix is A (P,P).
- *       Info: a scs_float array of size AMD_INFO, containing statistical
+ *       Info: a double array of size AMD_INFO, containing statistical
  *           information.  Ignored if Info is NULL.
  *
  * On input, the matrix A is stored in column-oriented form.  The row indices
@@ -93,7 +93,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  * of the matrix is created (where these conditions do hold), and the copy is
  * ordered.  This feature is new to v2.0 (v1.2 and earlier required this
  * condition to hold for the input matrix).
- *
+ * 
  * Row indices must be in the range 0 to
  * n-1.  Ap [0] must be zero, and thus nz = Ap [n] is the number of nonzeros
  * in A.  The array Ap is of size n+1, and the array Ai is of size nz = Ap [n].
@@ -160,7 +160,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  * The Info array provides statistics about the ordering on output.  If it is
  * not present, the statistics are not returned.  This is not an error
  * condition.
- *
+ * 
  *       Info [AMD_STATUS]:  the return value of AMD, either AMD_OK,
  *           AMD_OK_BUT_JUMBLED, AMD_OUT_OF_MEMORY, or AMD_INVALID.
  *
@@ -221,7 +221,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  *
  *       Info [14..19] are not used in the current version, but may be used in
  *           future versions.
- */
+ */    
 
 /* ------------------------------------------------------------------------- */
 /* direct interface to AMD */
@@ -237,21 +237,21 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
 
 void amd_2
 (
-    scs_int n,
-    scs_int Pe [ ],
-    scs_int Iw [ ],
-    scs_int Len [ ],
-    scs_int iwlen,
-    scs_int pfree,
-    scs_int Nv [ ],
-    scs_int Next [ ],
-    scs_int Last [ ],
-    scs_int Head [ ],
-    scs_int Elen [ ],
-    scs_int Degree [ ],
-    scs_int W [ ],
-    scs_float Control [ ],
-    scs_float Info [ ]
+    int n,
+    int Pe [ ],
+    int Iw [ ],
+    int Len [ ],
+    int iwlen,
+    int pfree,
+    int Nv [ ],
+    int Next [ ], 
+    int Last [ ],
+    int Head [ ],
+    int Elen [ ],
+    int Degree [ ],
+    int W [ ],
+    double Control [ ],
+    double Info [ ]
 ) ;
 
 void amd_l2
@@ -263,14 +263,14 @@ void amd_l2
     SuiteSparse_long iwlen,
     SuiteSparse_long pfree,
     SuiteSparse_long Nv [ ],
-    SuiteSparse_long Next [ ],
+    SuiteSparse_long Next [ ], 
     SuiteSparse_long Last [ ],
     SuiteSparse_long Head [ ],
     SuiteSparse_long Elen [ ],
     SuiteSparse_long Degree [ ],
     SuiteSparse_long W [ ],
-    scs_float Control [ ],
-    scs_float Info [ ]
+    double Control [ ],
+    double Info [ ]
 ) ;
 
 /* ------------------------------------------------------------------------- */
@@ -287,12 +287,12 @@ void amd_l2
  * NOTE: this routine returned TRUE/FALSE in v1.2 and earlier.
  */
 
-scs_int amd_valid
+int amd_valid
 (
-    scs_int n_row,                 /* # of rows */
-    scs_int n_col,                 /* # of columns */
-    const scs_int Ap [ ],          /* column pointers, of size n_col+1 */
-    const scs_int Ai [ ]           /* row indices, of size Ap [n_col] */
+    int n_row,                 /* # of rows */
+    int n_col,                 /* # of columns */
+    const int Ap [ ],          /* column pointers, of size n_col+1 */
+    const int Ai [ ]           /* row indices, of size Ap [n_col] */
 ) ;
 
 SuiteSparse_long amd_l_valid
@@ -314,16 +314,16 @@ SuiteSparse_long amd_l_valid
 /* ------------------------------------------------------------------------- */
 
 /* amd_defaults:  sets the default control settings */
-void amd_defaults   (scs_float Control [ ]) ;
-void amd_l_defaults (scs_float Control [ ]) ;
+void amd_defaults   (double Control [ ]) ;
+void amd_l_defaults (double Control [ ]) ;
 
 /* amd_control: prints the control settings */
-void amd_control    (scs_float Control [ ]) ;
-void amd_l_control  (scs_float Control [ ]) ;
+void amd_control    (double Control [ ]) ;
+void amd_l_control  (double Control [ ]) ;
 
 /* amd_info: prints the statistics */
-void amd_info       (scs_float Info [ ]) ;
-void amd_l_info     (scs_float Info [ ]) ;
+void amd_info       (double Info [ ]) ;
+void amd_l_info     (double Info [ ]) ;
 
 #define AMD_CONTROL 5          /* size of Control array */
 #define AMD_INFO 20            /* size of Info array */
@@ -339,7 +339,7 @@ void amd_l_info     (scs_float Info [ ]) ;
 /* contents of Info */
 #define AMD_STATUS 0           /* return value of amd_order and amd_l_order */
 #define AMD_N 1                /* A is n-by-n */
-#define AMD_NZ 2      /* number of nonzeros in A */
+#define AMD_NZ 2      /* number of nonzeros in A */ 
 #define AMD_SYMMETRY 3         /* symmetry of pattern (1 is sym., 0 is unsym.) */
 #define AMD_NZDIAG 4           /* # of entries on diagonal */
 #define AMD_NZ_A_PLUS_AT 5  /* nz in A+A' */
