@@ -1,7 +1,7 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
 
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
@@ -33,7 +33,7 @@ endif
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
 src/util.o	: src/util.c include/util.h include/glbopts.h
 src/cones.o	: src/cones.c include/cones.h include/scs_blas.h
-src/accel.o	: src/accel.c include/accel.h include/scs_blas.h
+src/aa.o	: src/aa.c include/aa.h include/scs_blas.h
 src/rw.o	: src/rw.c include/rw.h
 src/cs.o	: src/cs.c include/cs.h
 src/linalg.o: src/linalg.c include/linalg.h

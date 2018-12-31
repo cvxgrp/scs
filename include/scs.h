@@ -7,6 +7,7 @@ extern "C" {
 
 #include <string.h>
 #include "glbopts.h"
+#include "aa.h"
 
 /* private data structs (that you define) containing any necessary data to solve
  * linear system, etc. this defines the matrix A, only the linear system solver
@@ -131,10 +132,10 @@ struct SCS_WORK {
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
   ScsLinSysWork *p;       /* struct populated by linear system solver */
-  ScsAccelWork *accel;    /* Struct for acceleration workspace */
   ScsSettings *stgs;      /* contains solver settings specified by user */
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
+  AaWork *accel;          /* Struct for acceleration workspace */
 };
 
 /* to hold residual information (unnormalized) */

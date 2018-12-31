@@ -1,5 +1,5 @@
 #include "scs.h"
-#include "accel.h"
+#include "aa.h"
 #include "ctrlc.h"
 #include "rw.h"
 #include "glbopts.h"
@@ -32,18 +32,20 @@ static void free_work(ScsWork *w) {
   if (w->u) {
     scs_free(w->u);
   }
-  if (w->v) {
-    scs_free(w->v);
-  }
   if (w->u_t) {
     scs_free(w->u_t);
   }
   if (w->u_prev) {
     scs_free(w->u_prev);
   }
+  /* Don't need these because u,v and u_prev, v_prev are contiguous in mem
+  if (w->v) {
+    scs_free(w->v);
+  }
   if (w->v_prev) {
     scs_free(w->v_prev);
   }
+  */
   if (w->h) {
     scs_free(w->h);
   }
@@ -584,13 +586,20 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   RETURN dist;
 }
 
+static char * get_accel_summary(ScsInfo * info, scs_float total_accel_time) {
+  char *str = (char *)scs_malloc(sizeof(char) * 64);
+  sprintf(str, "\tAcceleration: avg step time: %1.2es\n",
+          total_accel_time / (info->iter + 1) / 1e3);
+  return str;
+}
+
 static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
-                         ScsWork *w, ScsInfo *info) {
+                         ScsWork *w, ScsInfo *info, scs_float total_accel_time) {
   DEBUG_FUNC
   scs_int i;
   char *lin_sys_str = SCS(get_lin_sys_summary)(w->p, info);
   char *cone_str = SCS(get_cone_summary)(info, w->cone_work);
-  char *accel_str = SCS(get_accel_summary)(info, w->accel);
+  char *accel_str = get_accel_summary(info, total_accel_time);
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -737,22 +746,23 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->m = d->m;
   w->n = d->n;
   /* allocate workspace: */
-  w->u = (scs_float *)scs_malloc(l * sizeof(scs_float));
-  w->v = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->u = (scs_float *)scs_malloc(2 * l * sizeof(scs_float));
   w->u_t = (scs_float *)scs_malloc(l * sizeof(scs_float));
-  w->u_prev = (scs_float *)scs_malloc(l * sizeof(scs_float));
-  w->v_prev = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->u_prev = (scs_float *)scs_malloc(2 * l * sizeof(scs_float));
   w->h = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->g = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->pr = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
   w->dr = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   w->b = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
   w->c = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
-  if (!w->u || !w->v || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
+  if (!w->u || !w->u_t || !w->u_prev || !w->h || !w->g || !w->pr ||
       !w->dr || !w->b || !w->c) {
     scs_printf("ERROR: work memory allocation failure\n");
     RETURN SCS_NULL;
   }
+  /* make u,v and u_prev,v_prev contiguous in memory */
+  w->v = &(w->u[l]);
+  w->v_prev = &(w->u_prev[l]);
   w->A = d->A;
   if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
@@ -780,7 +790,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     RETURN SCS_NULL;
   }
-  if (!(w->accel = SCS(init_accel)(w))) {
+  if (!(w->accel = aa_init(2 * (w->m + w->n + 1), w->stgs->acceleration_lookback, AA_TYPE_1))) {
     scs_printf("ERROR: init_accel failure\n");
     RETURN SCS_NULL;
   }
@@ -845,7 +855,8 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
                    ScsSolution *sol, ScsInfo *info) {
   DEBUG_FUNC
   scs_int i;
-  SCS(timer) solve_timer;
+  SCS(timer) solve_timer, accel_timer;
+  scs_float total_accel_time = 0.0;
   ScsResiduals r;
   scs_int l = w->m + w->n + 1;
   if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
@@ -867,11 +878,15 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
 
     /* accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
-    if (i > 0 && SCS(accelerate)(w, i - 1) != 0) {
-      /* i - 1 as if we accelerated at the end of the last step */
+    /* this relies on the fact that u and v are contiguous in memory */
+    SCS(tic)(&accel_timer);
+    if (i > 0 && aa_apply(w->u, w->u_prev, w->accel) != 0) {
+      /*
       RETURN failure(w, w->m, w->n, sol, info, SCS_FAILED,
           "error in accelerate", "Failure");
+      */
     }
+    total_accel_time += SCS(tocq)(&accel_timer);
 
     /* scs is homogeneous so scale the iterates to keep norm reasonable */
     scs_float total_norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
@@ -917,7 +932,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   info->solve_time = SCS(tocq)(&solve_timer);
 
   if (w->stgs->verbose) {
-    print_footer(d, k, sol, w, info);
+    print_footer(d, k, sol, w, info, total_accel_time);
   }
   scs_end_interrupt_listener();
   RETURN info->status_val;
@@ -938,7 +953,7 @@ void SCS(finish)(ScsWork *w) {
       SCS(free_lin_sys_work)(w->p);
     }
     if (w->accel) {
-      SCS(free_accel)(w->accel);
+      aa_finish(w->accel);
     }
     free_work(w);
   }
