@@ -37,7 +37,7 @@ static scs_int get_sd_cone_size(scs_int s) { RETURN(s * (s + 1)) / 2; }
 scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries) {
   scs_int i, count = 0;
   scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
-  scs_int *b = (scs_int *)scs_malloc(sizeof(scs_int) * len);
+  scs_int *b = (scs_int *)scs_calloc(len, sizeof(scs_int));
   b[count] = k->f + k->l;
   count += 1;
   if (k->qsize > 0) {
@@ -372,8 +372,8 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     RETURN - 1;
   }
   c->lwork = (blas_int)(wkopt + 0.01); /* 0.01 for int casting safety */
-  c->work = (scs_float *)scs_malloc(c->lwork * sizeof(scs_float));
-  c->iwork = (blas_int *)scs_malloc(c->liwork * sizeof(blas_int));
+  c->work = (scs_float *)scs_calloc(c->lwork, sizeof(scs_float));
+  c->iwork = (blas_int *)scs_calloc(c->liwork, sizeof(blas_int));
 
   if (!c->Xs || !c->Z || !c->e || !c->work || !c->iwork) {
     RETURN - 1;
