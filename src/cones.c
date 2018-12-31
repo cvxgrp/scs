@@ -360,6 +360,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   c->Xs = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
   c->Z = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
   c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
+  c->liwork = 0;
 
   BLAS(syevr)
   ("Vectors", "All", "Lower", &n_max, c->Xs, &n_max, SCS_NULL, SCS_NULL,
