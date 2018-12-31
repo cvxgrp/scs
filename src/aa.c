@@ -129,7 +129,7 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   BLAS(gemv)
   ("Trans", &bl, &blen, &onef, a->type1 ? a->S : a->Y, &bl, a->g, &one, &zerof,
    a->work, &one);
-  /* work = M \ work, where M = S'Y  or M = Y'Y */
+  /* work = M \ work, where M = S'Y or M = Y'Y */
   BLAS(gesv)(&blen, &one, a->M, &bk, a->ipiv, a->work, &blen, &info);
   nrm = BLAS(nrm2)(&bk, a->work, &one);
   if (info < 0 || nrm >= MAX_AA_NRM) {
