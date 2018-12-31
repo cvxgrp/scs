@@ -499,9 +499,9 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     RETURN project_2x2_sdc(X);
   }
 #ifdef USE_LAPACK
-  /* expand lower triangular matrix to full matrix */
 
   memset(Xs, 0, n * n * sizeof(scs_float));
+  /* expand lower triangular matrix to full matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
            (n - i) * sizeof(scs_float));

@@ -1,8 +1,8 @@
 matrix:
   include:
-    - os: linux
-      compiler: clang
-      env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
+    # - os: linux
+    #   compiler: clang
+    #   env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
     - os: linux
       compiler: clang
       env: CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
