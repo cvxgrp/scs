@@ -345,7 +345,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   blas_int neg_one = -1;
   blas_int m = 0;
   blas_int info = 0;
-  scs_float wkopt;
+  scs_float wkopt = 0.0;
 #if EXTRA_VERBOSE > 0
 #define _STR_EXPAND(tok) #tok
 #define _STR(tok) _STR_EXPAND(tok)
