@@ -484,7 +484,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                   POWF(iter + 1, CONE_RATE)); */
   scs_float zero = 0.0;
   blas_int info = 0;
-  scs_float vupper;
+  scs_float vupper = 0.0;
 #endif
   if (n == 0) {
     RETURN 0;
