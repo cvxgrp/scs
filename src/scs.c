@@ -86,7 +86,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
 #ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
 #else
-  scs_int acceleration_lookback = -1;
+  scs_int acceleration_lookback = 0;
 #endif
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -790,7 +790,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     RETURN SCS_NULL;
   }
-  if (!(w->accel = aa_init(2 * (w->m + w->n + 1), w->stgs->acceleration_lookback, AA_TYPE_1))) {
+  if (!(w->accel = aa_init(2 * (w->m + w->n + 1), ABS(w->stgs->acceleration_lookback), w->stgs->acceleration_lookback >= 0))) {
     scs_printf("ERROR: init_accel failure\n");
     RETURN SCS_NULL;
   }

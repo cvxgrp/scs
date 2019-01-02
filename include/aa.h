@@ -46,7 +46,7 @@ aa_int aa_apply(aa_float *f, const aa_float *x, AaWork *a);
  */
 void aa_finish(AaWork *a);
 
-#define MAX_AA_NRM (1000.0)
+#define MAX_AA_NRM (1e4)
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 

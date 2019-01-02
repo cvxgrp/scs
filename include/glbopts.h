@@ -11,9 +11,6 @@ extern "C" {
 #define SCS(x) scs_##x
 #endif
 
-/* AA type */
-#define AA_TYPE_1 (0)
-
 /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION \
   ("2.1.0") /* string literals automatically null-terminated */
