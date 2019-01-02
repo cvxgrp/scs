@@ -2,8 +2,7 @@
 #include "linalg.h"
 #include "scs.h"
 
-#define MIN_SCALE (1e-3)
-#define MAX_SCALE (1e3)
+#define MIN_SCALE (1e-6)
 
 void SCS(normalize_b_c)(ScsWork *w) {
   scs_int i;
