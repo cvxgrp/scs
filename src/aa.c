@@ -45,10 +45,10 @@ void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
                 aa_float *y, const blas_int *incy);
 void BLAS(gesv)(blas_int *n, blas_int *nrhs, aa_float *a, blas_int *lda,
                 blas_int *ipiv, aa_float *b, blas_int *ldb, blas_int *info);
-void BLAS(gemm)(const char *transa, const char *transb, aa_int *m, aa_int *n,
-                aa_int *k, aa_float *alpha, aa_float *a, aa_int *lda,
-                aa_float *b, aa_int *ldb, aa_float *beta, aa_float *c,
-                aa_int *ldc);
+void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
+                blas_int *n, blas_int *k, aa_float *alpha, aa_float *a,
+                blas_int *lda, aa_float *b, blas_int *ldb, aa_float *beta,
+                aa_float *c, blas_int *ldc);
 
 /* sets a->M to S'Y or Y'Y depending on type of aa used */
 static void set_m(AaWork *a) {
@@ -133,7 +133,8 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   BLAS(gesv)(&blen, &one, a->M, &bk, a->ipiv, a->work, &blen, &info);
   nrm = BLAS(nrm2)(&bk, a->work, &one);
   if (info < 0 || nrm >= MAX_AA_NRM) {
-    printf("Error in AA type %i, iter: %i, info: %i, norm %.2e\n", a->type1 ? 1 : 2, a->iter, info, nrm);
+    printf("Error in AA type %i, iter: %i, info: %i, norm %.2e\n",
+           a->type1 ? 1 : 2, (int)a->iter, (int)info, nrm);
     return -1;
   }
   /* if solve was successful then set f -= D * work */
