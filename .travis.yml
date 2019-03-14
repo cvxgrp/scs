@@ -1,8 +1,8 @@
 matrix:
   include:
-    - os: linux
-      compiler: clang
-      env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
+    # - os: linux
+    #   compiler: clang
+    #   env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
     - os: linux
       compiler: clang
       env: CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
@@ -24,9 +24,9 @@ before_install:
     fi
 
 script:
-  # Use -O1 for santizers to work.
-  - make OPT=-O1
-  - make test OPT=-O1
+  # Use -O0 for santizers to work.
+  - make OPT=-O0
+  - make test OPT=-O0
   - test/run_tests
 
 notifications:

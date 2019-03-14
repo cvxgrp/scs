@@ -15,6 +15,7 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                            const scs_float *x, scs_float *y);
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                       const scs_float *x, scs_float *y);
+scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 
 #ifdef __cplusplus
 }

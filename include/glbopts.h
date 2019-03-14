@@ -13,7 +13,7 @@ extern "C" {
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
 #define SCS_VERSION \
-  ("2.0.3") /* string literals automatically null-terminated */
+  ("2.1.0") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
 #define SCS_INFEASIBLE_INACCURATE (-7)
@@ -37,7 +37,8 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
-#define ACCELERATION_LOOKBACK (20)
+#define ACCELERATION_LOOKBACK (10)
+#define WRITE_DATA_FILENAME (0)
 
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE

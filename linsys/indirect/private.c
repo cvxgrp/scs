@@ -62,7 +62,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
 
   z = (scs_int *)scs_calloc(m, sizeof(scs_int));
   for (i = 0; i < Ap[n]; i++) z[Ai[i]]++; /* row counts */
-  SCS(cs_cumsum)(Cp, z, m);               /* row pointers */
+  SCS(cumsum)(Cp, z, m);               /* row pointers */
 
   for (j = 0; j < n; j++) {
     c1 = Ap[j];

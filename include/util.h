@@ -10,7 +10,7 @@ extern "C" {
 #include "cones.h"
 #include "scs.h"
 
-/* timing code courtesty of A. Domahidi */
+/* timing code courtesy of A. Domahidi */
 #if (defined NOTIMER)
 typedef void *SCS(timer);
 #elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)

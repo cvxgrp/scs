@@ -1,0 +1,4 @@
+flatten into one dir
+create qdldl_types.h from template file
+add 'include "glbopts.h"' to qdldl_types.h
+manually insert scs types into qdldl_types.h

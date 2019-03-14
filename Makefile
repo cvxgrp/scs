@@ -1,16 +1,15 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/accel.o src/cs.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
 
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd_*.c)
-SSCFG_SOURCE = $(DIRSRCEXT)/SuiteSparse_config.c
-LDL_SOURCE = $(DIRSRCEXT)/ldl.c
-DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o) $(SSCFG_SOURCE:.c=.o)
-TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct
+AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd/*.c)
+LDL_SOURCE = $(DIRSRCEXT)/qdldl/qdldl.c
+DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o)
+TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct $(OUT)/run_from_file_indirect $(OUT)/run_from_file_direct
 
 .PHONY: default
 
@@ -34,7 +33,8 @@ endif
 src/scs.o	: $(SRC_FILES) $(INC_FILES)
 src/util.o	: src/util.c include/util.h include/glbopts.h
 src/cones.o	: src/cones.c include/cones.h include/scs_blas.h
-src/accel.o	: src/accel.c include/accel.h include/scs_blas.h
+src/aa.o	: src/aa.c include/aa.h include/scs_blas.h
+src/rw.o	: src/rw.c include/rw.h
 src/cs.o	: src/cs.c include/cs.h
 src/linalg.o: src/linalg.c include/linalg.h
 src/ctrl.o  : src/ctrl.c include/ctrl.h
@@ -66,6 +66,12 @@ $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OUT)/run_from_file_indirect: test/run_from_file.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # basic testing

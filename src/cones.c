@@ -37,7 +37,7 @@ static scs_int get_sd_cone_size(scs_int s) { RETURN(s * (s + 1)) / 2; }
 scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries) {
   scs_int i, count = 0;
   scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
-  scs_int *b = (scs_int *)scs_malloc(sizeof(scs_int) * len);
+  scs_int *b = (scs_int *)scs_calloc(len, sizeof(scs_int));
   b[count] = k->f + k->l;
   count += 1;
   if (k->qsize > 0) {
@@ -345,7 +345,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   blas_int neg_one = -1;
   blas_int m = 0;
   blas_int info = 0;
-  scs_float wkopt;
+  scs_float wkopt = 0.0;
 #if EXTRA_VERBOSE > 0
 #define _STR_EXPAND(tok) #tok
 #define _STR(tok) _STR_EXPAND(tok)
@@ -360,6 +360,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   c->Xs = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
   c->Z = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
   c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
+  c->liwork = 0;
 
   BLAS(syevr)
   ("Vectors", "All", "Lower", &n_max, c->Xs, &n_max, SCS_NULL, SCS_NULL,
@@ -371,8 +372,8 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     RETURN - 1;
   }
   c->lwork = (blas_int)(wkopt + 0.01); /* 0.01 for int casting safety */
-  c->work = (scs_float *)scs_malloc(c->lwork * sizeof(scs_float));
-  c->iwork = (blas_int *)scs_malloc(c->liwork * sizeof(blas_int));
+  c->work = (scs_float *)scs_calloc(c->lwork, sizeof(scs_float));
+  c->iwork = (blas_int *)scs_calloc(c->liwork, sizeof(blas_int));
 
   if (!c->Xs || !c->Z || !c->e || !c->work || !c->iwork) {
     RETURN - 1;
@@ -483,7 +484,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                   POWF(iter + 1, CONE_RATE)); */
   scs_float zero = 0.0;
   blas_int info = 0;
-  scs_float vupper;
+  scs_float vupper = 0.0;
 #endif
   if (n == 0) {
     RETURN 0;
@@ -498,6 +499,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     RETURN project_2x2_sdc(X);
   }
 #ifdef USE_LAPACK
+
+  memset(Xs, 0, n * n * sizeof(scs_float));
   /* expand lower triangular matrix to full matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
