@@ -855,7 +855,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   DEBUG_FUNC
   scs_int i;
   SCS(timer) solve_timer, accel_timer;
-  scs_float total_accel_time = 0.0;
+  scs_float total_accel_time = 0.0, total_norm;
   ScsResiduals r;
   scs_int l = w->m + w->n + 1;
   if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
@@ -888,7 +888,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     total_accel_time += SCS(tocq)(&accel_timer);
 
     /* scs is homogeneous so scale the iterates to keep norm reasonable */
-    scs_float total_norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
+    total_norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
     SCS(scale_array)(w->u, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
     SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
 
