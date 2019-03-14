@@ -154,6 +154,7 @@
 #include "amd.h"
 
 #define Int scs_int
+#define uInt uscs_int
 #define ID "%d"
 #define Int_MAX INT_MAX
 

@@ -10,8 +10,8 @@ extern "C" {
 #include <string.h>
 #include "glbopts.h"
 
-#define aa_float scs_float
-#define aa_int scs_int
+typedef scs_float aa_float;
+typedef scs_int aa_int;
 
 typedef struct ACCEL_WORK AaWork;
 
