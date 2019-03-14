@@ -88,6 +88,15 @@ or a certificate of infeasibility otherwise. See
 [here](http://web.stanford.edu/~boyd/cvxbook/) for more details about
 cone programming and certificates of infeasibility.
 
+**Anderson Acceleration**
+
+By default SCS uses Anderson acceleration (AA) to speed up convergence. The
+number of iterates that SCS uses in the AA calculation can be controlled by the
+parameter `acceleration_lookback` in the settings struct. It defaults to 10.  AA
+is available as a standalone package [here](https://github.com/cvxgrp/aa).  More
+details are available in our paper on AA
+[here](https://stanford.edu/~boyd/papers/nonexp_global_aa1.html).
+
 **Semidefinite Programming**
 
 SCS assumes that the matrix variables and the input data corresponding to
@@ -124,10 +133,9 @@ solver which uses a cached LDL factorization and an indirect solver based on
 conjugate gradients. The indirect solver can be run on either the cpu or
 gpu.
 
-The direct solver uses the LDL and AMD packages numerical linear
-algebra packages by Timothy Davis and others, the necessary files are included.
-See [here](http://www.cise.ufl.edu/research/sparse/) for more information about
-these packages.
+The direct solver uses external numerical linear algebra packages:
+* [QDLDL](https://github.com/oxfordcontrol/qdldl)
+* [AMD](http://www.cise.ufl.edu/research/sparse/).
 
 ### Using SCS in C
 Typing `make` at the command line will compile the code and create SCS libraries
