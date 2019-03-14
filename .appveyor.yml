@@ -26,6 +26,7 @@ build_script:
   - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
 
 test_script:
+  - dir libgfortran /s C:\
   - C:\cygwin%ARCH%\bin\cygcheck C:/projects/scs/out/run_tests_indirect.exe
   - C:\cygwin%ARCH%\bin\cygcheck C:/projects/scs/out/run_tests_direct.exe
   - sh C:\projects\scs\test\run_tests
