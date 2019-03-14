@@ -7,6 +7,16 @@
  * do this using LAPACK ?gesv.
  */
 
+#ifndef USE_LAPACK
+
+typedef void * ACCEL_WORK;
+
+AaWork *aa_init(aa_int dim, aa_int aa_mem, aa_int type1) { return SCS_NULL; }
+aa_int aa_apply(aa_float *f, const aa_float *x, AaWork *a) { return 0; }
+void aa_finish(AaWork *a) {}
+
+#else
+
 /* contains the necessary parameters to perform aa at each step */
 struct ACCEL_WORK {
   aa_int type1; /* bool, if true type 1 aa otherwise type 2 */
@@ -237,3 +247,5 @@ void aa_finish(AaWork *a) {
   }
   return;
 }
+
+#endif
