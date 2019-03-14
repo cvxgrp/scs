@@ -95,6 +95,7 @@ extern "C" {
 
 #ifdef DLONG
 #ifdef _WIN64
+#include <stdint.h>
 typedef int64_t scs_int;
 typedef uint64_t uscs_int;
 #else
