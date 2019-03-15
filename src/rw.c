@@ -4,6 +4,7 @@
 #include "amatrix.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 /* writes/reads problem data to/from filename */
 /* This is a VERY naive implementation, doesn't care about portability etc */
@@ -118,39 +119,39 @@ static ScsData * read_scs_data(FILE *fin) {
 
 void SCS(write_data)(const ScsData *d, const ScsCone *k) {
   FILE* fout = fopen(d->stgs->write_data_filename, "wb");
-  unsigned long scs_int_sz = (unsigned long)sizeof(scs_int);
-  unsigned long scs_float_sz = (unsigned long)sizeof(scs_float);
+  uint32_t scs_int_sz = (uint32_t)sizeof(scs_int);
+  uint32_t scs_float_sz = (uint32_t)sizeof(scs_float);
   scs_printf("writing data to %s\n", d->stgs->write_data_filename);
-  fwrite(&(scs_int_sz), sizeof(unsigned long), 1, fout);
-  fwrite(&(scs_float_sz), sizeof(unsigned long), 1, fout);
+  fwrite(&(scs_int_sz), sizeof(uint32_t), 1, fout);
+  fwrite(&(scs_float_sz), sizeof(uint32_t), 1, fout);
   write_scs_cone(k, fout);
   write_scs_data(d, fout);
   fclose(fout);
 }
 
 scs_int SCS(read_data)(const char * filename, ScsData ** d, ScsCone ** k) {
-  unsigned long file_int_sz;
-  unsigned long file_float_sz;
+  uint32_t file_int_sz;
+  uint32_t file_float_sz;
   FILE* fin = fopen(filename, "rb");
   if (!fin) {
     scs_printf("Error reading file %s\n", filename);
     RETURN -1;
   }
   scs_printf("Reading data from %s\n", filename);
-  fread(&(file_int_sz), sizeof(unsigned long), 1, fin);
-  fread(&(file_float_sz), sizeof(unsigned long), 1, fin);
+  fread(&(file_int_sz), sizeof(uint32_t), 1, fin);
+  fread(&(file_float_sz), sizeof(uint32_t), 1, fin);
 
-  if (file_int_sz != (unsigned long)sizeof(scs_int)) {
+  if (file_int_sz != (uint32_t)sizeof(scs_int)) {
     scs_printf("Error, sizeof(file int) is %lu, but scs expects sizeof(int) "
         "%lu, scs should be recompiled with correct flags.\n",
-        file_int_sz, (unsigned long)sizeof(scs_int));
+        (unsigned long)file_int_sz, (unsigned long)sizeof(scs_int));
     fclose(fin);
     RETURN -1;
   }
-  if (file_float_sz != (unsigned long)sizeof(scs_float )) {
+  if (file_float_sz != (uint32_t)sizeof(scs_float )) {
     scs_printf("Error, sizeof(file float) is %lu, but scs expects "
         "sizeof(float) %lu, scs should be recompiled with the correct flags.\n",
-        file_float_sz, (unsigned long)sizeof(scs_float));
+        (unsigned long)file_float_sz, (unsigned long)sizeof(scs_float));
     fclose(fin);
     RETURN -1;
   }
