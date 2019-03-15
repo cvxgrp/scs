@@ -1,4 +1,5 @@
 #include "qdldl.h"
+#include "ctrlc.h"
 
 #define QDLDL_UNKNOWN (-1)
 #define QDLDL_USED (1)
@@ -138,6 +139,10 @@ QDLDL_int QDLDL_factor(const QDLDL_int    n,
   //Start from 1 here. The upper LH corner is trivially 0
   //in L b/c we are only computing the subdiagonal elements
   for(k = 1; k < n; k++){
+    if(scs_is_interrupted()) {
+      scs_printf("interrupt detected in factorization\n");
+      return -1;
+    }
 
     //NB : For each k, we compute a solution to
     //y = L(0:(k-1),0:k-1))\b, where b is the kth
