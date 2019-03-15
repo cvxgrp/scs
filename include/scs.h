@@ -59,7 +59,7 @@ struct SCS_SETTINGS {
   scs_int warm_start; /* boolean, warm start (put initial guess in ScsSolution
                          struct): 0 */
   scs_int acceleration_lookback; /* memory for acceleration */
-  char* write_data_filename; /* string, if set will dump data */
+  const char* write_data_filename; /* string, if set will dump data */
 };
 
 /* NB: rows of data matrix A must be specified in this exact order */

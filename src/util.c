@@ -22,6 +22,7 @@ scs_float SCS(tocq)(SCS(timer) * t) {
 }
 
 #elif (defined __APPLE__)
+#include <stdint.h>
 
 void SCS(tic)(SCS(timer) * t) {
   /* read current clock cycles */

@@ -97,16 +97,12 @@ extern "C" {
 #ifdef _WIN64
 /* #include <stdint.h> */
 /* typedef int64_t scs_int; */
-/* typedef uint64_t uscs_int; */
 typedef long scs_int;
-typedef unsigned long uscs_int;
 #else
 typedef long scs_int;
-typedef unsigned long uscs_int;
 #endif
 #else
 typedef int scs_int;
-typedef unsigned int uscs_int;
 #endif
 
 #ifndef SFLOAT
