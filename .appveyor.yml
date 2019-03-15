@@ -22,8 +22,8 @@ build_script:
   - echo %PATH%
   - dir C:\projects\openblas\%ARCH%\bin
   - cd C:\projects\scs
-  - mingw32-make.exe CC="gcc.exe -m%ARCH%" EXTRA_VERBOSE=999 USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
-  - mingw32-make.exe test CC="gcc.exe -m%ARCH%" EXTRA_VERBOSE=999 USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
+  - mingw32-make.exe CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
+  - mingw32-make.exe test CC="gcc.exe -m%ARCH%" USE_LAPACK=1 BLASLDFLAGS="-LC:\projects\openblas\%ARCH%\bin -lopenblas_5f998ef_gcc7_1_0"
 
 test_script:
   - C:\cygwin64\bin\cygcheck C:/projects/scs/out/run_tests_indirect.exe
