@@ -13,14 +13,20 @@
 
 #ifdef MATLAB_MEX_FILE
 
+extern bool utIsInterruptPending(void);
+extern bool utSetInterruptEnabled(bool);
+
 static int istate;
-void scs_start_interrupt_listener(void) { istate = utSetInterruptEnabled(1); }
+void scs_start_interrupt_listener(void) {
+  istate = (int)utSetInterruptEnabled(true);
+}
 
-void scs_end_interrupt_listener(void) { utSetInterruptEnabled(istate); }
+void scs_end_interrupt_listener(void) { utSetInterruptEnabled((bool)istate); }
 
-int scs_is_interrupted(void) { return utIsInterruptPending(); }
+int scs_is_interrupted(void) { return (int)utIsInterruptPending(); }
 
 #elif (defined _WIN32 || _WIN64 || defined _WINDLL)
+#include <windows.h>
 
 static int int_detected;
 static BOOL WINAPI scs_handle_ctrlc(DWORD dwCtrlType) {
