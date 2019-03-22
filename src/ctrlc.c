@@ -12,6 +12,7 @@
 #if CTRLC > 0
 
 #ifdef MATLAB_MEX_FILE
+#include <stdbool.h>
 
 extern bool utIsInterruptPending(void);
 extern bool utSetInterruptEnabled(bool);
