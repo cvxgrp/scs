@@ -5,6 +5,8 @@
 /* Simple helper function to run problems from data files */
 /* Mostly useful for debugging */
 int main(int argc, char **argv) {
+    char * filename;
+    scs_int read_status;
     ScsData *d;
     ScsCone *k;
     ScsSolution *sol;
@@ -13,8 +15,8 @@ int main(int argc, char **argv) {
       scs_printf("Need to specify a filename, exit.\n");
       return -1;
     }
-    char * filename = argv[1];
-    scs_int read_status = SCS(read_data)(filename, &d, &k);
+    filename = argv[1];
+    read_status = SCS(read_data)(filename, &d, &k);
     if (read_status < 0) {
       scs_printf("Data read failure, exit.\n");
       return -1;
