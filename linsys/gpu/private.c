@@ -166,7 +166,6 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     }
     cusparseDestroy(p->cusparse_handle);
     cublasDestroy(p->cublas_handle);
-    cudaDeviceReset();
     scs_free(p);
   }
 }
