@@ -166,6 +166,8 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     }
     cusparseDestroy(p->cusparse_handle);
     cublasDestroy(p->cublas_handle);
+    /* Don't reset because it interferes with other GPU programs. */
+    /* cudaDeviceReset(); */
     scs_free(p);
   }
 }
