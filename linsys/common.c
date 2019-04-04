@@ -37,19 +37,21 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A) {
     return -1;
   }
   /* detects some errors in A col ptrs: */
-  for (i = 0; i < A->n; ++i) {
-    if (A->p[i] == A->p[i + 1]) {
-      scs_printf(
-          "WARN: A->p (column pointers) not strictly increasing, "
-          "column %li empty\n",
-          (long)i);
-    } else if (A->p[i] > A->p[i + 1]) {
-      scs_printf("ERROR: A->p (column pointers) decreasing\n");
-      return -1;
+  Anz = A->p[A->n];
+  if (Anz > 0) {
+    for (i = 0; i < A->n; ++i) {
+      if (A->p[i] == A->p[i + 1]) {
+        scs_printf(
+            "WARN: A->p (column pointers) not strictly increasing, "
+            "column %li empty\n",
+            (long)i);
+      } else if (A->p[i] > A->p[i + 1]) {
+        scs_printf("ERROR: A->p (column pointers) decreasing\n");
+        return -1;
+      }
     }
   }
-  Anz = A->p[A->n];
-  if (((scs_float)Anz / A->m > A->n) || (Anz <= 0)) {
+  if (((scs_float)Anz / A->m > A->n) || (Anz < 0)) {
     scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n",
                (long)Anz);
     return -1;
