@@ -101,8 +101,8 @@ static void print_a_matrix(const ScsMatrix *A) {
 }
 #endif
 
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                      ScsScaling *scal) {
+void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
+                       const ScsCone *k, ScsScaling *scal) {
   DEBUG_FUNC
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
@@ -217,8 +217,8 @@ void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
   RETURN;
 }
 
-void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                         const ScsScaling *scal) {
+void SCS(_un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
+                          const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;
