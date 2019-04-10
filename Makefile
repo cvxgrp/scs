@@ -116,3 +116,11 @@ clean:
 purge: clean
 	@rm -rf $(OUT)
 
+INSTALL_INC_FILES = include/aa.h include/glbopts.h include/scs.h
+INSTALL_TARGETS = $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
+
+.PHONY: install
+install: $(INSTALL_INC_FILES) $(INSTALL_TARGETS)
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/include/scs/ $(DESTDIR)$(PREFIX)/lib/
+	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(DESTDIR)$(PREFIX)/include/scs/
+	$(INSTALL) -m 644 $(INSTALL_TARGETS) $(DESTDIR)$(PREFIX)/lib/

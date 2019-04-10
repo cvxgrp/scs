@@ -75,6 +75,11 @@ AR = ar
 ARFLAGS = rv
 ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
+INSTALL = install
+
+ifeq ($(PREFIX),)
+  PREFIX = /usr/local
+endif
 
 OPT_FLAGS =
 ########### OPTIONAL FLAGS ##########
