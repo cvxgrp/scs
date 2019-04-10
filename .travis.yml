@@ -28,6 +28,7 @@ script:
   - make OPT=-O0
   - make test OPT=-O0
   - test/run_tests
+  - sudo make install OPT=-O0
 
 notifications:
   email:
