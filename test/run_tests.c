@@ -22,11 +22,11 @@ static const char *all_tests(void) {
 int main(void) {
   const char *result = all_tests();
   if (result != 0) {
-    printf("%s\n", result);
+    scs_printf("%s\n", result);
   } else {
-    printf("ALL TESTS PASSED\n");
+    scs_printf("ALL TESTS PASSED\n");
   }
-  printf("Tests run: %d\n", tests_run);
+  scs_printf("Tests run: %d\n", tests_run);
 
   return result != 0;
 }

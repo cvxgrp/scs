@@ -143,8 +143,10 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   BLAS(gesv)(&blen, &one, a->M, &bk, a->ipiv, a->work, &blen, &info);
   nrm = BLAS(nrm2)(&bk, a->work, &one);
   if (info < 0 || nrm >= MAX_AA_NRM) {
-    printf("Error in AA type %i, iter: %i, info: %i, norm %.2e\n",
+    #if EXTRA_VERBOSE > 0
+    scs_printf("Error in AA type %i, iter: %i, info: %i, norm %.2e\n",
            a->type1 ? 1 : 2, (int)a->iter, (int)info, nrm);
+    #endif
     return -1;
   }
   /* if solve was successful then set f -= D * work */
@@ -159,7 +161,7 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
 AaWork *aa_init(aa_int l, aa_int aa_mem, aa_int type1) {
   AaWork *a = (AaWork *)calloc(1, sizeof(AaWork));
   if (!a) {
-    printf("Failed to allocate memory for AA.\n");
+    scs_printf("Failed to allocate memory for AA.\n");
     return (void *)0;
   }
   a->type1 = type1;
