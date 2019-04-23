@@ -116,11 +116,20 @@ clean:
 purge: clean
 	@rm -rf $(OUT)
 
-INSTALL_INC_FILES = include/aa.h include/glbopts.h include/scs.h
-INSTALL_TARGETS = $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
+INSTALL_INC_FILES = $(INC_FILES)
 
-.PHONY: install
+INSTALL_TARGETS = $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
+INSTALL_GPU_TARGETS = $(OUT)/libscsgpu.a $(OUT)/libscsgpu.$(SHARED)
+
+INSTALL_INC_DIR = $(DESTDIR)$(PREFIX)/include/scs/
+INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/lib/
+
+.PHONY: install install_gpu
 install: $(INSTALL_INC_FILES) $(INSTALL_TARGETS)
-	$(INSTALL) -d $(DESTDIR)$(PREFIX)/include/scs/ $(DESTDIR)$(PREFIX)/lib/
-	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(DESTDIR)$(PREFIX)/include/scs/
-	$(INSTALL) -m 644 $(INSTALL_TARGETS) $(DESTDIR)$(PREFIX)/lib/
+	$(INSTALL) -d $(INSTALL_INC_DIR) $(INSTALL_LIB_DIR)
+	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(INSTALL_INC_DIR)
+	$(INSTALL) -m 644 $(INSTALL_TARGETS) $(INSTALL_LIB_DIR)
+install_gpu: $(INSTALL_INC_FILES) $(INSTALL_GPU_TARGETS)
+	$(INSTALL) -d $(INSTALL_INC_DIR) $(INSTALL_LIB_DIR)
+	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(INSTALL_INC_DIR)
+	$(INSTALL) -m 644 $(INSTALL_GPU_TARGETS) $(INSTALL_LIB_DIR)
