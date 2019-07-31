@@ -125,9 +125,9 @@ const char *SCS(version)(void);
 /* workspace for SCS */
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
-  scs_float *u, *v, *u_t, *u_prev, *v_prev;
+  scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev;
   scs_float *h, *g, *pr, *dr;
-  scs_float g_th, sc_b, sc_c, nm_b, nm_c;
+  scs_float g_th, sc_b, sc_c, nm_b, nm_c, best_max_residual;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
