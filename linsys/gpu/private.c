@@ -61,6 +61,58 @@ static void accum_by_atrans_gpu(const ScsLinSysWork *p, const scs_float *x,
    &onef, p->descr, Ag->x, Ag->p, Ag->i, x, &onef, y);
 }
 
+static void mul_by_a_gpu_TEST(const ScsLinSysWork *p, const scs_float *x,
+                              scs_float *y, scs_int rhs_cols) {
+  /* y += A*x
+     x and y MUST be on GPU already
+   */
+  const scs_float zerof = 0.0;
+  const scs_float onef = 1.0;
+  ScsMatrix *Agt = p->Agt;
+  CUSPARSE(csrmm)
+  (p->cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, Agt->n, rhs_cols,
+   Agt->m, p->Annz, &onef, p->descr, Agt->x, Agt->p, Agt->i, x, Agt->m, &zerof,
+   y, Agt->n);
+  /*
+  CUSPARSE(csrmv)
+  (p->cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, Agt->n, Agt->m,
+   p->Annz, &onef, p->descr, Agt->x, Agt->p, Agt->i, x, &onef, y);
+  CUDA_CHECK_ERR;
+  */
+}
+
+#define STEPS 1000
+#define NUM_TESTS 10
+
+#ifdef TEST_GPU_MAT_MUL
+static void test_gpu_mat_mul(const ScsMatrix *A, ScsLinSysWork *p,
+                             scs_float *b) {
+  /* test to see if matrix multiplication codes agree */
+  scs_int n = A->n, m = A->m, i, j;
+  scs_float *bg, *out;
+  SCS(timer) timer;
+  cudaMalloc((void **)&bg, (1 + STEPS * NUM_TESTS) * n * sizeof(scs_float));
+  cudaMalloc((void **)&out, (1 + STEPS * NUM_TESTS) * m * sizeof(scs_float));
+  for (j = 0; j < 1 + NUM_TESTS * STEPS; j++) {
+    cudaMemcpy(&bg[j * n], b, n * sizeof(scs_float), cudaMemcpyHostToDevice);
+  }
+  //CUBLAS(dot)(p->cublas_handle, n * (1 + NUM_TESTS * STEPS), bg, 1, bg, 1, &nrm);
+  //cudaMemcpy(outhost, out, (1 + i * STEPS) * m * sizeof(scs_float), cudaMemcpyDeviceToHost);
+  cudaDeviceSynchronize();
+  for (i = 0; i <= NUM_TESTS; i++) {
+    SCS(tic)(&timer);
+    mul_by_a_gpu_TEST(p, bg, out, 1 + i * STEPS);
+    //CUBLAS(dot)(p->cublas_handle, m * (1 + i * STEPS), out, 1, out, 1, &nrm);
+    //cudaMemcpy(outhost, out, (1 + i * STEPS) * m * sizeof(scs_float), cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
+    scs_printf("Time for %i: %1.6e\n", 1 + i * STEPS, SCS(tocq)(&timer) / 1e3);
+  }
+  cudaFree(bg);
+  cudaFree(out);
+}
+#endif
+
+
 static void accum_by_a_gpu(const ScsLinSysWork *p, const scs_float *x,
                            scs_float *y) {
   /* y += A*x
@@ -364,40 +416,6 @@ static scs_int pcg(const ScsMatrix *A, const ScsSettings *stgs,
   return i;
 }
 
-#ifdef TEST_GPU_MAT_MUL
-static void accum_by_atrans_host(const ScsMatrix *A, ScsLinSysWork *p,
-                                 const scs_float *x, scs_float *y) {
-  SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
-}
-
-static void accum_by_a_host(const ScsMatrix *A, ScsLinSysWork *p,
-                            const scs_float *x, scs_float *y) {
-  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
-}
-
-static void test_gpu_mat_mul(const ScsMatrix *A, ScsLinSysWork *p,
-                             scs_float *b) {
-  /* test to see if matrix multiplication codes agree */
-  scs_float t[A->n + A->m], u[A->n + A->m], *bg;
-  cudaMalloc((void **)&bg, (A->n + A->m) * sizeof(scs_float));
-
-  cudaMemcpy(bg, b, (A->n + A->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
-  memcpy(t, b, (A->n + A->m) * sizeof(scs_float));
-
-  accum_by_atrans_gpu(p, &(bg[A->n]), bg);
-  accum_by_atrans_host(A, p, &(t[A->n]), t);
-  cudaMemcpy(u, bg, (A->n + A->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
-  scs_printf("A trans multiplication err %2.e\n", SCS(norm_diff)(u, t, A->n));
-
-  accum_by_a_gpu(p, bg, &(bg[A->n]));
-  accum_by_a_host(A, p, t, &(t[A->n]));
-  cudaMemcpy(u, bg, (A->n + A->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
-  scs_printf("A multiplcation err %2.e\n",
-             SCS(norm_diff)(&(u[A->n]), &(t[A->n]), A->m));
-  cudaFree(bg);
-}
-#endif
-
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
                            ScsLinSysWork *p, scs_float *b, const scs_float *s,
                            scs_int iter) {
@@ -410,14 +428,12 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
       (iter < 0 ? CG_BEST_TOL
                 : CG_MIN_TOL / POWF((scs_float)iter + 1., stgs->cg_rate));
 
-  SCS(tic)(&linsys_timer);
-  /* solves Mx = b, for x but stores result in b */
-  /* s contains warm-start (if available) */
-
 #ifdef TEST_GPU_MAT_MUL
   test_gpu_mat_mul(A, p, b);
 #endif
-
+  SCS(tic)(&linsys_timer);
+  /* solves Mx = b, for x but stores result in b */
+  /* s contains warm-start (if available) */
   /* all on GPU */
   cudaMemcpy(bg, b, (A->n + A->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
   accum_by_atrans_gpu(p, &(bg[A->n]), bg);
@@ -432,14 +448,12 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   }
 
   p->total_solve_time += SCS(tocq)(&linsys_timer);
-#if EXTRAVERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
-#endif
+  scs_printf("linsys solve time: %1.6es\n", SCS(tocq)(&linsys_timer) / 1e3);
   return 0;
 }
 
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                      const ScsCone *k, ScsScaling *scal) {
+void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
+                      ScsScaling *scal) {
   SCS(_normalize_a)(A, stgs, k, scal);
 }
 
