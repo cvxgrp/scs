@@ -74,6 +74,9 @@ $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 $(OUT)/run_from_file_indirect: test/run_from_file.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+$(OUT)/run_from_file_gpu: test/run_from_file.c $(OUT)/libscsgpu.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+
 # basic testing
 .PHONY: test
 test: $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
@@ -88,7 +91,7 @@ $(OUT)/run_tests_gpu: test/run_tests.c $(OUT)/libscsgpu.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
 
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: $(OUT)/demo_socp_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a
+gpu: $(OUT)/demo_socp_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a $(OUT)/run_from_file_gpu
 
 $(GPU)/private.o: $(GPU)/private.c
 	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
