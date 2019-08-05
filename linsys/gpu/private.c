@@ -448,7 +448,6 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   }
 
   p->total_solve_time += SCS(tocq)(&linsys_timer);
-  scs_printf("linsys solve time: %1.6es\n", SCS(tocq)(&linsys_timer) / 1e3);
   return 0;
 }
 
