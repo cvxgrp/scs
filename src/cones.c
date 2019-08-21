@@ -384,7 +384,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       "FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
       "blas+lapack libraries\n");
   scs_printf(
-      "Install blas+lapack and re-compile SCS with blas+lapack libray "
+      "Install blas+lapack and re-compile SCS with blas+lapack library "
       "locations\n");
   RETURN - 1;
 #endif
