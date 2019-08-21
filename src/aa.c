@@ -206,45 +206,19 @@ aa_int aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
 
 void aa_finish(AaWork *a) {
   if (a) {
-    if (a->x) {
-      free(a->x);
-    }
-    if (a->f) {
-      free(a->f);
-    }
-    if (a->g) {
-      free(a->g);
-    }
-    if (a->g_prev) {
-      free(a->g_prev);
-    }
-    if (a->y) {
-      free(a->y);
-    }
-    if (a->s) {
-      free(a->s);
-    }
-    if (a->d) {
-      free(a->d);
-    }
-    if (a->Y) {
-      free(a->Y);
-    }
-    if (a->S) {
-      free(a->S);
-    }
-    if (a->D) {
-      free(a->D);
-    }
-    if (a->M) {
-      free(a->M);
-    }
-    if (a->work) {
-      free(a->work);
-    }
-    if (a->ipiv) {
-      free(a->ipiv);
-    }
+    free(a->x);
+    free(a->f);
+    free(a->g);
+    free(a->g_prev);
+    free(a->y);
+    free(a->s);
+    free(a->d);
+    free(a->Y);
+    free(a->S);
+    free(a->D);
+    free(a->M);
+    free(a->work);
+    free(a->ipiv);
     free(a);
   }
   return;
