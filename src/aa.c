@@ -67,7 +67,6 @@ static void set_m(AaWork *a) {
   BLAS(gemm)
   ("Trans", "No", &bk, &bk, &bl, &onef, a->type1 ? a->S : a->Y, &bl, a->Y, &bl,
    &zerof, a->M, &bk);
-  return;
 }
 
 /* updates the workspace parameters for aa for this iteration */
@@ -125,7 +124,6 @@ static void update_accel_params(const aa_float *x, const aa_float *f,
   memcpy(a->g_prev, a->g, sizeof(aa_float) * l);
 
   /* g_prev set for next iter here */
-  return;
 }
 
 /* solves the system of equations to perform the aa update
@@ -221,7 +219,6 @@ void aa_finish(AaWork *a) {
     free(a->ipiv);
     free(a);
   }
-  return;
 }
 
 #endif

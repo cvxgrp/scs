@@ -153,22 +153,6 @@ typedef float scs_float;
 #endif
 #endif
 
-#if EXTRA_VERBOSE > 1
-#if (defined _WIN32 || defined _WIN64 || defined _WINDLL)
-#define __func__ __FUNCTION__
-#endif
-#define DEBUG_FUNC                                                            \
-  scs_printf("IN function: %s, time: %4f ms, file: %s, line: %i\n", __func__, \
-             SCS(tocq)(&global_timer), __FILE__, __LINE__);
-#define RETURN                                                        \
-  scs_printf("EXIT function: %s, time: %4f ms, file: %s, line: %i\n", \
-             __func__, SCS(tocq)(&global_timer), __FILE__, __LINE__); \
-  return
-#else
-#define DEBUG_FUNC
-#define RETURN return
-#endif
-
 #define EPS_TOL (1E-18)
 #define SAFEDIV_POS(X, Y) ((Y) < EPS_TOL ? ((X) / EPS_TOL) : (X) / (Y))
 
