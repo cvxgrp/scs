@@ -153,7 +153,8 @@ folder. It will also produce two demo binaries in the `out` folder named
 `demo_socp_direct`, and `demo_socp_indirect`. If you have a GPU and have CUDA
 installed, you can also execture `make gpu` to compile SCS to run on the GPU
 which will create additional libraries and demo binaries in the `out` folder
-corresponding to the gpu version.
+corresponding to the gpu version. Note that the GPU version requires 32 bit
+ints, which can be enforced by compiling with `DLONG=0`.
 
 To use the libraries in your own source code, compile your code with the linker
 option `-L(PATH_TO_SCS_LIBS)` and `-lscsdir` or `-lscsindir` (as needed).  The
