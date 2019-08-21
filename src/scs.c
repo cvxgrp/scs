@@ -27,61 +27,29 @@ static scs_int scs_isnan(scs_float x) {
 
 static void free_work(ScsWork *w) {
   DEBUG_FUNC
-  if (!w) {
-    RETURN;
-  }
-  if (w->u) {
+  if (w) {
     scs_free(w->u);
-  }
-  if (w->u_best) {
     scs_free(w->u_best);
-  }
-  if (w->u_t) {
     scs_free(w->u_t);
-  }
-  if (w->u_prev) {
     scs_free(w->u_prev);
-  }
-  /* Don't need these because u*, v* are contiguous in mem
-  if (w->v) {
-    scs_free(w->v);
-  }
-  if (w->v_best) {
-    scs_free(w->v_best);
-  }
-  if (w->v_prev) {
-    scs_free(w->v_prev);
-  }
-  */
-  if (w->h) {
+    /* Don't need these because u*, v* are contiguous in mem
+      scs_free(w->v);
+      scs_free(w->v_best);
+      scs_free(w->v_prev);
+    */
     scs_free(w->h);
-  }
-  if (w->g) {
     scs_free(w->g);
-  }
-  if (w->b) {
     scs_free(w->b);
-  }
-  if (w->c) {
     scs_free(w->c);
-  }
-  if (w->pr) {
     scs_free(w->pr);
-  }
-  if (w->dr) {
     scs_free(w->dr);
-  }
-  if (w->scal) {
-    if (w->scal->D) {
+    if (w->scal) {
       scs_free(w->scal->D);
-    }
-    if (w->scal->E) {
       scs_free(w->scal->E);
+      scs_free(w->scal);
     }
-    scs_free(w->scal);
+    scs_free(w);
   }
-  scs_free(w);
-  RETURN;
 }
 
 static void print_init_header(const ScsData *d, const ScsCone *k) {

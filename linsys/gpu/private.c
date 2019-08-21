@@ -122,40 +122,20 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 }
 
 static void cuda_free_a_matrix(ScsMatrix *A) {
-  if (A->x) {
     cudaFree(A->x);
-  }
-  if (A->i) {
     cudaFree(A->i);
-  }
-  if (A->p) {
     cudaFree(A->p);
-  }
 }
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
-    if (p->p) {
       cudaFree(p->p);
-    }
-    if (p->r) {
       cudaFree(p->r);
-    }
-    if (p->Gp) {
       cudaFree(p->Gp);
-    }
-    if (p->bg) {
       cudaFree(p->bg);
-    }
-    if (p->tmp_m) {
       cudaFree(p->tmp_m);
-    }
-    if (p->z) {
       cudaFree(p->z);
-    }
-    if (p->M) {
       cudaFree(p->M);
-    }
     if (p->Ag) {
       cuda_free_a_matrix(p->Ag);
       scs_free(p->Ag);

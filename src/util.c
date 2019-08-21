@@ -1,4 +1,5 @@
 #include "util.h"
+
 #include "glbopts.h"
 #include "linsys.h"
 
@@ -153,45 +154,27 @@ void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
 
 void SCS(free_data)(ScsData *d, ScsCone *k) {
   if (d) {
-    if (d->b) {
-      scs_free(d->b);
-    }
-    if (d->c) {
-      scs_free(d->c);
-    }
-    if (d->stgs) {
-      scs_free(d->stgs);
-    }
+    scs_free(d->b);
+    scs_free(d->c);
+    scs_free(d->stgs);
     if (d->A) {
       SCS(free_a_matrix)(d->A);
     }
     scs_free(d);
   }
   if (k) {
-    if (k->q) {
-      scs_free(k->q);
-    }
-    if (k->s) {
-      scs_free(k->s);
-    }
-    if (k->p) {
-      scs_free(k->p);
-    }
+    scs_free(k->q);
+    scs_free(k->s);
+    scs_free(k->p);
     scs_free(k);
   }
 }
 
 void SCS(free_sol)(ScsSolution *sol) {
   if (sol) {
-    if (sol->x) {
-      scs_free(sol->x);
-    }
-    if (sol->y) {
-      scs_free(sol->y);
-    }
-    if (sol->s) {
-      scs_free(sol->s);
-    }
+    scs_free(sol->x);
+    scs_free(sol->y);
+    scs_free(sol->s);
     scs_free(sol);
   }
 }

@@ -1,4 +1,5 @@
 #include "common.h"
+
 #include "linsys.h"
 /* contains routines common to direct and indirect sparse solvers */
 
@@ -70,16 +71,12 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A) {
 }
 
 void SCS(free_a_matrix)(ScsMatrix *A) {
-  if (A->x) {
+  if (A) {
     scs_free(A->x);
-  }
-  if (A->i) {
     scs_free(A->i);
-  }
-  if (A->p) {
     scs_free(A->p);
+    scs_free(A);
   }
-  scs_free(A);
 }
 
 #if EXTRA_VERBOSE > 0
@@ -101,8 +98,8 @@ static void print_a_matrix(const ScsMatrix *A) {
 }
 #endif
 
-void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                       const ScsCone *k, ScsScaling *scal) {
+void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
+                       ScsScaling *scal) {
   DEBUG_FUNC
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
@@ -264,7 +261,6 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 #endif
 }
 
-
 scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n) {
   scs_int i, nz = 0;
   scs_float nz2 = 0;
@@ -280,7 +276,6 @@ scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n) {
   p[n] = nz;
   return nz2; /* return sum (c [0..n-1]) */
 }
-
 
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                       const scs_float *x, scs_float *y) {

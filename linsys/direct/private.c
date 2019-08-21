@@ -30,7 +30,7 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 static void *cs_free(void *p) {
   if (p) {
     scs_free(p);
-  }                  /* free p if it is not already SCS_NULL */
+  }                /* free p if it is not already SCS_NULL */
   return SCS_NULL; /* return SCS_NULL to simplify the use of cs_free */
 }
 
@@ -46,24 +46,16 @@ static _cs *cs_spfree(_cs *A) {
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
-    if (p->L) {
-      cs_spfree(p->L);
-    }
-    if (p->P) {
-      scs_free(p->P);
-    }
-    if (p->Dinv) {
-      scs_free(p->Dinv);
-    }
-    if (p->bp) {
-      scs_free(p->bp);
-    }
+    cs_spfree(p->L);
+    scs_free(p->P);
+    scs_free(p->Dinv);
+    scs_free(p->bp);
     scs_free(p);
   }
 }
 
 static _cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-                    scs_int triplet) {
+                       scs_int triplet) {
   _cs *A = (_cs *)scs_calloc(1, sizeof(_cs)); /* allocate the _cs struct */
   if (!A) {
     return SCS_NULL;
@@ -95,8 +87,8 @@ static _cs *cs_compress(const _cs *T) {
   Tj = T->p;
   Tx = T->x;
   nz = T->nz;
-  C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
-  w = (scs_int *)scs_calloc(n, sizeof(scs_int));    /* get workspace */
+  C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0);   /* allocate result */
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
   if (!C || !w) {
     return cs_done(C, w, SCS_NULL, 0);
   } /* out of memory */
@@ -104,7 +96,7 @@ static _cs *cs_compress(const _cs *T) {
   Ci = C->i;
   Cx = C->x;
   for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
-  SCS(cumsum)(Cp, w, n);            /* column pointers */
+  SCS(cumsum)(Cp, w, n);               /* column pointers */
   for (k = 0; k < nz; k++) {
     Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
     if (Cx) {
@@ -172,9 +164,9 @@ static scs_int _ldl_init(_cs *A, scs_int *P, scs_float **info) {
 
 static scs_int _ldl_factor(_cs *A, _cs **L, scs_float **Dinv) {
   scs_int factor_status, n = A->n;
-  scs_int *etree= (scs_int *)scs_malloc(n * sizeof(scs_int));
+  scs_int *etree = (scs_int *)scs_malloc(n * sizeof(scs_int));
   scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_int *iwork= (scs_int *)scs_malloc(3 * n * sizeof(scs_int));
+  scs_int *iwork = (scs_int *)scs_malloc(3 * n * sizeof(scs_int));
   scs_float *D, *fwork;
   scs_int *bwork;
   (*L)->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
@@ -198,10 +190,8 @@ static scs_int _ldl_factor(_cs *A, _cs **L, scs_float **Dinv) {
 #if EXTRA_VERBOSE > 0
   scs_printf("numeric factorization\n");
 #endif
-  factor_status = QDLDL_factor(n, A->p, A->i, A->x,
-                                 (*L)->p, (*L)->i, (*L)->x,
-                                 D, *Dinv, Lnz,
-                                 etree, bwork, iwork, fwork);
+  factor_status = QDLDL_factor(n, A->p, A->i, A->x, (*L)->p, (*L)->i, (*L)->x,
+                               D, *Dinv, Lnz, etree, bwork, iwork, fwork);
 #if EXTRA_VERBOSE > 0
   scs_printf("finished numeric factorization\n");
 #endif
@@ -215,14 +205,14 @@ static scs_int _ldl_factor(_cs *A, _cs **L, scs_float **Dinv) {
   return factor_status;
 }
 
-static void _ldl_perm(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
-    scs_int j;
-    for (j = 0 ; j < n ; j++) x[j] = b[P[j]];
+static void _ldl_perm(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
+  scs_int j;
+  for (j = 0; j < n; j++) x[j] = b[P[j]];
 }
 
-static void _ldl_permt(scs_int n, scs_float * x,	scs_float * b, scs_int * P) {
-    scs_int j;
-    for (j = 0 ; j < n ; j++) x[P[j]] = b[j];
+static void _ldl_permt(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
+  scs_int j;
+  for (j = 0; j < n; j++) x[P[j]] = b[j];
 }
 
 static void _ldl_solve(scs_float *x, scs_float *b, _cs *L, scs_float *Dinv,
@@ -261,7 +251,7 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
     return SCS_NULL;
   }                                       /* out of memory */
   for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
-  return pinv;                          /* return result */
+  return pinv;                            /* return result */
 }
 
 static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
@@ -372,8 +362,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   return 0;
 }
 
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                       const ScsCone *k, ScsScaling *scal) {
+void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
+                      ScsScaling *scal) {
   SCS(_normalize_a)(A, stgs, k, scal);
 }
 

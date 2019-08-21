@@ -62,7 +62,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
 
   z = (scs_int *)scs_calloc(m, sizeof(scs_int));
   for (i = 0; i < Ap[n]; i++) z[Ai[i]]++; /* row counts */
-  SCS(cumsum)(Cp, z, m);               /* row pointers */
+  SCS(cumsum)(Cp, z, m);                  /* row pointers */
 
   for (j = 0; j < n; j++) {
     c1 = Ap[j];
@@ -84,37 +84,18 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
-    if (p->p) {
-      scs_free(p->p);
-    }
-    if (p->r) {
-      scs_free(p->r);
-    }
-    if (p->Gp) {
-      scs_free(p->Gp);
-    }
-    if (p->tmp) {
-      scs_free(p->tmp);
-    }
+    scs_free(p->p);
+    scs_free(p->r);
+    scs_free(p->Gp);
+    scs_free(p->tmp);
     if (p->At) {
-      ScsMatrix *At = p->At;
-      if (At->i) {
-        scs_free(At->i);
-      }
-      if (At->x) {
-        scs_free(At->x);
-      }
-      if (At->p) {
-        scs_free(At->p);
-      }
-      scs_free(At);
+      scs_free(p->At->i);
+      scs_free(p->At->x);
+      scs_free(p->At->p);
+      scs_free(p->At);
     }
-    if (p->z) {
-      scs_free(p->z);
-    }
-    if (p->M) {
-      scs_free(p->M);
-    }
+    scs_free(p->z);
+    scs_free(p->M);
     scs_free(p);
   }
 }
@@ -264,8 +245,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   return 0;
 }
 
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                       const ScsCone *k, ScsScaling *scal) {
+void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
+                      ScsScaling *scal) {
   SCS(_normalize_a)(A, stgs, k, scal);
 }
 
