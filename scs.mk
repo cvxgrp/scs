@@ -65,10 +65,12 @@ CULDFLAGS += -lcudart -lcublas -lcusparse
 CUDAFLAGS = $(CFLAGS) -I/usr/local/cuda/include -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 LINSYS = linsys
-DIRSRC = $(LINSYS)/direct
-DIRSRCEXT = $(DIRSRC)/external
-INDIRSRC = $(LINSYS)/indirect
-GPU = $(LINSYS)/gpu
+DIRSRC = $(LINSYS)/cpu/direct
+INDIRSRC = $(LINSYS)/cpu/indirect
+GPUDIR = $(LINSYS)/gpu/direct
+GPUINDIR = $(LINSYS)/gpu/indirect
+
+EXTSRC = $(LINSYS)/external
 
 OUT = out
 AR = ar

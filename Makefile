@@ -6,9 +6,10 @@ SCS_OBJECTS = src/scs.o src/util.o src/cones.o src/aa.o src/rw.o src/linalg.o sr
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
-AMD_SOURCE = $(wildcard $(DIRSRCEXT)/amd/*.c)
-LDL_SOURCE = $(DIRSRCEXT)/qdldl/qdldl.c
-DIRECT_SCS_OBJECTS = $(LDL_SOURCE:.c=.o) $(AMD_SOURCE:.c=.o)
+AMD_SOURCE = $(wildcard $(EXTSRC)/amd/*.c)
+LDL_SOURCE = $(EXTSRC)/qdldl/qdldl.c
+AMD_OBJS = $(AMD_SOURCE:.c=.o)
+LDL_OBJS = $(LDL_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct $(OUT)/run_from_file_indirect $(OUT)/run_from_file_direct
 
 .PHONY: default
@@ -42,23 +43,23 @@ src/scs_version.o: src/scs_version.c include/glbopts.h
 
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
-$(LINSYS)/common.o: $(LINSYS)/common.c $(LINSYS)/common.h
+$(LINSYS)/amatrix.o: $(LINSYS)/amatrix.c $(LINSYS)/amatrix.h
 
-$(OUT)/libscsdir.a: $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
+$(OUT)/libscsdir.a: $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/amatrix.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscsindir.a: $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
+$(OUT)/libscsindir.a: $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/amatrix.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscsdir.$(SHARED): $(SCS_OBJECTS) $(DIRSRC)/private.o $(DIRECT_SCS_OBJECTS) $(LINSYS)/common.o
+$(OUT)/libscsdir.$(SHARED): $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/amatrix.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/common.o
+$(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/amatrix.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS)
 
@@ -74,7 +75,7 @@ $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 $(OUT)/run_from_file_indirect: test/run_from_file.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/run_from_file_gpu: test/run_from_file.c $(OUT)/libscsgpu.a
+$(OUT)/run_from_file_gpu: test/run_from_file.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 # basic testing
@@ -86,31 +87,52 @@ $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Itest
 
 .PHONY: test_gpu
-test_gpu: $(OUT)/run_tests_gpu
-$(OUT)/run_tests_gpu: test/run_tests.c $(OUT)/libscsgpu.a
+test_gpu: $(OUT)/run_tests_gpu_direct $(OUT)/run_tests_gpu_indirect
+$(OUT)/run_tests_gpu_indirect: test/run_tests.c $(OUT)/libscsgpuindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
+$(OUT)/run_tests_gpu_direct: test/run_tests.c $(OUT)/libscsgpudir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
 
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: $(OUT)/demo_socp_gpu $(OUT)/libscsgpu.$(SHARED) $(OUT)/libscsgpu.a $(OUT)/run_from_file_gpu
+gpu: gpu_direct gpu_indirect
 
-$(GPU)/private.o: $(GPU)/private.c
-	$(CUCC) -c -o $(GPU)/private.o $^ $(CUDAFLAGS)
+gpu_direct: $(OUT)/demo_socp_gpu_direct $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpudir.a $(OUT)/run_from_file_gpu_direct
+gpu_indirect: $(OUT)/demo_socp_gpu_indirect $(OUT)/libscsgpuindir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/run_from_file_gpu_indirect
 
-$(OUT)/libscsgpu.$(SHARED): $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
+$(GPUDIR)/private.o: $(GPUDIR)/private.c
+	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
+
+$(GPUINDIR)/private.o: $(GPUINDIR)/private.c
+	$(CUCC) -c -o $(GPUINDIR)/private.o $^ $(CUDAFLAGS)
+
+
+$(OUT)/libscsgpudir.$(SHARED): $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
-$(OUT)/libscsgpu.a: $(SCS_OBJECTS) $(GPU)/private.o $(LINSYS)/common.o
+$(OUT)/libscsgpudir.a: $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/demo_socp_gpu: test/random_socp_prob.c $(OUT)/libscsgpu.a
+$(OUT)/libscsgpuindir.$(SHARED): $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+
+$(OUT)/libscsgpuindir.a: $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o
+	mkdir -p $(OUT)
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
+
+$(OUT)/demo_socp_gpu_direct: test/random_socp_prob.c $(OUT)/libscsgpudir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+
+$(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(DIRECT_SCS_OBJECTS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPU)/*.o
+	@rm -rf $(TARGETS) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
@@ -122,7 +144,7 @@ purge: clean
 INSTALL_INC_FILES = $(INC_FILES)
 
 INSTALL_TARGETS = $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
-INSTALL_GPU_TARGETS = $(OUT)/libscsgpu.a $(OUT)/libscsgpu.$(SHARED)
+INSTALL_GPU_TARGETS = $(OUT)/libscsgpudir.a $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED)
 
 INSTALL_INC_DIR = $(DESTDIR)$(PREFIX)/include/scs/
 INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/lib/
