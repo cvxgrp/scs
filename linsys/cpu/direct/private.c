@@ -221,7 +221,7 @@ static void _ldl_solve(scs_float *b, _cs *L, scs_float *Dinv, scs_int *P,
   scs_int n = L->n;
   _ldl_perm(n, bp, b, P);
   QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
-  _ldl_permt(n, x, bp, P);
+  _ldl_permt(n, b, bp, P);
 }
 
 void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
