@@ -99,27 +99,29 @@ gpu: gpu_direct gpu_indirect
 gpu_direct: $(OUT)/demo_socp_gpu_direct $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpudir.a $(OUT)/run_from_file_gpu_direct
 gpu_indirect: $(OUT)/demo_socp_gpu_indirect $(OUT)/libscsgpuindir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/run_from_file_gpu_indirect
 
+$(LINSYS)/gpu/gpu.o: $(LINSYS)/gpu/gpu.c
+	$(CUCC) -c -o $@ $^ $(CUDAFLAGS)
+
 $(GPUDIR)/private.o: $(GPUDIR)/private.c
 	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
 
 $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
 	$(CUCC) -c -o $(GPUINDIR)/private.o $^ $(CUDAFLAGS)
 
-
-$(OUT)/libscsgpudir.$(SHARED): $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o
+$(OUT)/libscsgpudir.$(SHARED): $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
-$(OUT)/libscsgpudir.a: $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o
+$(OUT)/libscsgpudir.a: $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscsgpuindir.$(SHARED): $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o
+$(OUT)/libscsgpuindir.$(SHARED): $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
-$(OUT)/libscsgpuindir.a: $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o
+$(OUT)/libscsgpuindir.a: $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@

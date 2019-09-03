@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-#include "common.h"
+#include "amatrix.h"
+#include "gpu.h"
 #include "external/amd/amd.h"
 #include "glbopts.h"
 #include "linalg.h"
