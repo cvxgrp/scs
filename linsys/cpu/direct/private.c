@@ -215,20 +215,13 @@ static void _ldl_permt(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
   for (j = 0; j < n; j++) x[P[j]] = b[j];
 }
 
-static void _ldl_solve(scs_float *x, scs_float *b, _cs *L, scs_float *Dinv,
-                       scs_int *P, scs_float *bp) {
+static void _ldl_solve(scs_float *b, _cs *L, scs_float *Dinv, scs_int *P,
+                       scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
-  if (!P) {
-    if (x != b) { /* if they're different addresses */
-      memcpy(x, b, n * sizeof(scs_float));
-    }
-    QDLDL_solve(n, L->p, L->i, L->x, Dinv, x);
-  } else {
-    _ldl_perm(n, bp, b, P);
-    QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
-    _ldl_permt(n, x, bp, P);
-  }
+  _ldl_perm(n, bp, b, P);
+  QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
+  _ldl_permt(n, x, bp, P);
 }
 
 void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
@@ -354,7 +347,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   /* Ax = b with solution stored in b */
   SCS(timer) linsys_timer;
   SCS(tic)(&linsys_timer);
-  _ldl_solve(b, b, p->L, p->Dinv, p->P, p->bp);
+  _ldl_solve(b, p->L, p->Dinv, p->P, p->bp);
   p->total_solve_time += SCS(tocq)(&linsys_timer);
 #if EXTRA_VERBOSE > 0
   scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
