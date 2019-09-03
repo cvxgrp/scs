@@ -62,13 +62,15 @@ override CFLAGS += -fPIC
 endif
 
 CULDFLAGS += -lcudart -lcublas -lcusparse
-CUDAFLAGS = $(CFLAGS) -I/usr/local/cuda/include -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
+CUDAFLAGS = $(CFLAGS) -Ilinsys/gpu -I/usr/local/cuda/include -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 LINSYS = linsys
-DIRSRC = $(LINSYS)/direct
-DIRSRCEXT = $(DIRSRC)/external
-INDIRSRC = $(LINSYS)/indirect
-GPU = $(LINSYS)/gpu
+DIRSRC = $(LINSYS)/cpu/direct
+INDIRSRC = $(LINSYS)/cpu/indirect
+GPUDIR = $(LINSYS)/gpu/direct
+GPUINDIR = $(LINSYS)/gpu/indirect
+
+EXTSRC = $(LINSYS)/external
 
 OUT = out
 AR = ar
@@ -108,10 +110,6 @@ endif
 COPYAMATRIX = 1
 ifneq ($(COPYAMATRIX), 0)
 OPT_FLAGS += -DCOPYAMATRIX=$(COPYAMATRIX) # if normalize, copy A
-endif
-TEST_GPU_MAT_MUL = 0
-ifneq ($(TEST_GPU_MAT_MUL), 0)
-OPT_FLAGS += -DTEST_GPU_MAT_MUL=$(TEST_GPU_MAT_MUL) # tests GPU matrix multiply for correctness
 endif
 GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)

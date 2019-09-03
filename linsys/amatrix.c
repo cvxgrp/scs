@@ -1,5 +1,5 @@
 /* contains routines common to direct and indirect sparse solvers */
-#include "common.h"
+#include "amatrix.h"
 
 #include "linsys.h"
 
