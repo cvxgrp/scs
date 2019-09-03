@@ -87,35 +87,37 @@ $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -Itest
 
 .PHONY: test_gpu
-test_gpu: $(OUT)/run_tests_gpu_direct $(OUT)/run_tests_gpu_indirect
+test_gpu: $(OUT)/run_tests_gpu_indirect # $(OUT)/run_tests_gpu_direct
+
 $(OUT)/run_tests_gpu_indirect: test/run_tests.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
-$(OUT)/run_tests_gpu_direct: test/run_tests.c $(OUT)/libscsgpudir.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
+
+# $(OUT)/run_tests_gpu_direct: test/run_tests.c $(OUT)/libscsgpudir.a
+# 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS) -Itest
 
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: gpu_direct gpu_indirect
+gpu: gpu_indirect # gpu_direct
 
-gpu_direct: $(OUT)/demo_socp_gpu_direct $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpudir.a $(OUT)/run_from_file_gpu_direct
+# gpu_direct: $(OUT)/demo_socp_gpu_direct $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpudir.a $(OUT)/run_from_file_gpu_direct
 gpu_indirect: $(OUT)/demo_socp_gpu_indirect $(OUT)/libscsgpuindir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/run_from_file_gpu_indirect
 
 $(LINSYS)/gpu/gpu.o: $(LINSYS)/gpu/gpu.c
 	$(CUCC) -c -o $@ $^ $(CUDAFLAGS)
 
-$(GPUDIR)/private.o: $(GPUDIR)/private.c
-	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
+# $(GPUDIR)/private.o: $(GPUDIR)/private.c
+# 	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
 
 $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
 	$(CUCC) -c -o $(GPUINDIR)/private.o $^ $(CUDAFLAGS)
 
-$(OUT)/libscsgpudir.$(SHARED): $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
-	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+# $(OUT)/libscsgpudir.$(SHARED): $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
+#	 mkdir -p $(OUT)
+# 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
-$(OUT)/libscsgpudir.a: $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
-	mkdir -p $(OUT)
-	$(ARCHIVE) $@ $^
-	- $(RANLIB) $@
+# $(OUT)/libscsgpudir.a: $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
+#  	mkdir -p $(OUT)
+# 	$(ARCHIVE) $@ $^
+# 	- $(RANLIB) $@
 
 $(OUT)/libscsgpuindir.$(SHARED): $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
@@ -126,8 +128,8 @@ $(OUT)/libscsgpuindir.a: $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/demo_socp_gpu_direct: test/random_socp_prob.c $(OUT)/libscsgpudir.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+# $(OUT)/demo_socp_gpu_direct: test/random_socp_prob.c $(OUT)/libscsgpudir.a
+# 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
@@ -146,7 +148,7 @@ purge: clean
 INSTALL_INC_FILES = $(INC_FILES)
 
 INSTALL_TARGETS = $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
-INSTALL_GPU_TARGETS = $(OUT)/libscsgpudir.a $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED)
+INSTALL_GPU_TARGETS = $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED) # $(OUT)/libscsgpudir.a $(OUT)/libscsgpudir.$(SHARED)
 
 INSTALL_INC_DIR = $(DESTDIR)$(PREFIX)/include/scs/
 INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/lib/
