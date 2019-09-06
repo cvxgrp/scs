@@ -36,23 +36,26 @@ ifeq ($(UNAME), Darwin)
 LDFLAGS += -lm
 SHARED = dylib
 SONAME = -install_name
-CULDFLAGS = -L/usr/local/cuda/lib
 else
 ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
 LDFLAGS += -lm
 SHARED = dll
 SONAME = -soname
-#TODO: probably doesn't work:
-CULDFLAGS = -L/usr/local/cuda/lib64
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS += -lm -lrt
 SHARED = so
 SONAME = -soname
-CULDFLAGS = -L/usr/local/cuda/lib64
 endif
 endif
+
+#TODO: check if this works for all platforms:
+ifeq ($(CUDA_PATH), )
+CUDA_PATH=/usr/local/cuda
+endif
+CULDFLAGS = -L$(CUDA_PATH)/lib -L$(CUDA_PATH)/lib64 -lcudart -lcublas -lcusparse
+CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 # Add on default CFLAGS
 OPT = -O3
@@ -60,9 +63,6 @@ override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-pr
 ifneq ($(ISWINDOWS), 1)
 override CFLAGS += -fPIC
 endif
-
-CULDFLAGS += -lcudart -lcublas -lcusparse
-CUDAFLAGS = $(CFLAGS) -Ilinsys/gpu -I/usr/local/cuda/include -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 LINSYS = linsys
 DIRSRC = $(LINSYS)/cpu/direct
