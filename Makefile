@@ -75,7 +75,7 @@ $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 $(OUT)/run_from_file_indirect: test/run_from_file.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/run_from_file_gpu: test/run_from_file.c $(OUT)/libscsgpuindir.a
+$(OUT)/run_from_file_gpu_indirect: test/run_from_file.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 # basic testing
