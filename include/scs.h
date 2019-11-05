@@ -118,7 +118,10 @@ void SCS(finish)(ScsWork *w);
 /* scs calls SCS(init), SCS(solve), and SCS(finish) */
 scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
             ScsInfo *info);
+
 const char *SCS(version)(void);
+size_t SCS(sizeof_int)(void);
+size_t SCS(sizeof_float)(void);
 
 /* the following structs are not exposed to user */
 
