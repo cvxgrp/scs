@@ -12,7 +12,9 @@ and can be used in other C, C++,
 [Python](https://github.com/bodono/scs-python),
 [Matlab](https://github.com/bodono/scs-matlab),
 [R](https://github.com/bodono/scs-r),
-[Julia](https://github.com/JuliaOpt/SCS.jl), programs via the linked
+[Julia](https://github.com/JuliaOpt/SCS.jl), and
+[Ruby](https://github.com/ankane/scs),
+programs via the linked
 interfaces. It can also be called as a solver from convex optimization
 toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
