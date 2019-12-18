@@ -747,7 +747,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   if (!(w->accel =
             aa_init(2 * (w->m + w->n + 1), ABS(w->stgs->acceleration_lookback),
                     w->stgs->acceleration_lookback >= 0))) {
-    scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
+    if (w->stgs->verbose) {
+      scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
+    }
   }
   return w;
 }
