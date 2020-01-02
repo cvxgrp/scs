@@ -604,9 +604,9 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                    SCS(norm)(sol->y, d->m));
     scs_printf("primal res: |Ax + s - b|_2 / (1 + |b|_2) = %.4e\n",
                info->res_pri);
-    scs_printf("dual res:   |A'y + c|_2 / (1 + |c|_2) = %.4e\n",
+    scs_printf("dual res:   |Px + A'y + c|_2 / (1 + |c|_2) = %.4e\n",
                info->res_dual);
-    scs_printf("rel gap:    |c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n",
+    scs_printf("rel gap:    |x'Px + c'x + b'y| / (1 + |0.5 * x'Px + c'x| + |0.5 * x'Px + b'y|) = %.4e\n",
                info->rel_gap);
     for (i = 0; i < LINE_LEN; ++i) {
       scs_printf("-");
@@ -650,6 +650,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
     scs_printf("WARN: m less than n, problem likely degenerate\n");
     /* return -1; */
   }
+  // TODO validate P
   if (SCS(validate_lin_sys)(d->A) < 0) {
     scs_printf("invalid linear system input data\n");
     return -1;
@@ -718,6 +719,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->v_best = &(w->u_best[l]);
   w->v_prev = &(w->u_prev[l]);
   w->A = d->A;
+  //TODO
+  w->P = d->P;
+
   if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
     if (!SCS(copy_a_matrix)(&(w->A), d->A)) {
@@ -740,7 +744,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
-  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->stgs))) {
+  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }

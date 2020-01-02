@@ -12,7 +12,7 @@ extern "C" {
 /* private data structs (that you define) containing any necessary data to solve
  * linear system, etc. this defines the matrix A, only the linear system solver
  * interacts with this struct */
-typedef struct SCS_A_DATA_MATRIX ScsMatrix;
+typedef struct SCS_MATRIX ScsMatrix;
 /* stores the necessary private workspace, only the linear system solver
  * interacts with this struct */
 typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
@@ -33,6 +33,7 @@ struct SCS_PROBLEM_DATA {
   /* these cannot change for multiple runs for the same call to SCS(init) */
   scs_int m, n; /* A has m rows, n cols */
   ScsMatrix *A; /* A is supplied in data format specified by linsys solver */
+  ScsMatrix *P; /* P is supplied in data format specified by linsys solver */
 
   /* these can change for multiple runs for the same call to SCS(init) */
   scs_float *b, *c; /* dense arrays for b (size m), c (size n) */
@@ -134,6 +135,7 @@ struct SCS_WORK {
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
+  ScsMatrix *P;           /* (possibly normalized) P matrix */
   ScsLinSysWork *p;       /* struct populated by linear system solver */
   ScsSettings *stgs;      /* contains solver settings specified by user */
   ScsScaling *scal;       /* contains the re-scaling data */

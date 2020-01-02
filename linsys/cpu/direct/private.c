@@ -106,18 +106,19 @@ static _cs *cs_compress(const _cs *T) {
   return cs_done(C, w, SCS_NULL, 1); /* success; free w and return C */
 }
 
-static _cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
+static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P, const ScsSettings *s) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed KKT matrix
    * assumes column compressed form A matrix
    *
-   * forms upper triangular part of [I A'; A -I]
+   * forms upper triangular part of [I+P A'; A -I]
    */
   scs_int j, k, kk;
   _cs *K_cs;
-  /* I at top left */
   const scs_int Anz = A->p[A->n];
-  const scs_int Knzmax = A->n + A->m + Anz;
+  const scs_int Pnz = P->p[P->n];
+  // TODO
+  const scs_int Knzmax = A->n + A->m + Anz + Pnz;
   _cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
@@ -128,11 +129,28 @@ static _cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
     return SCS_NULL;
   }
   kk = 0;
-  for (k = 0; k < A->n; k++) {
-    K->i[kk] = k;
-    K->p[kk] = k;
-    K->x[kk] = s->rho_x;
-    kk++;
+  /* P is upper triangular */
+  /* (I + P) at top left */
+  for (j = 0; j < P->n; j++) { /* cols */
+    /* zero column in P */
+    if (P->p[j] == P->p[j + 1]) {
+      K->i[kk] = j;
+      K->p[kk] = j;
+      K->x[kk] = s->rho_x;
+      kk++;
+      continue;
+    }
+    /* for P to be PSD it must have non-zero diagonal if non-zero column */
+    for (k = P->p[j]; k < P->p[j + 1]; k++) { /* rows */
+      K->p[kk] = j; 
+      K->i[kk] = P->i[k]; 
+      if (P->i[k] == j) {
+        K->x[kk] = P->x[k] + s->rho_x;
+      } else {
+        K->x[kk] = P->x[k];
+      }
+      kk++;
+    }
   }
   /* A^T at top right : CCS: */
   for (j = 0; j < A->n; j++) {
@@ -293,11 +311,11 @@ static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
   return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
 }
 
-static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
-                         ScsLinSysWork *p) {
+static scs_int factorize(const ScsMatrix *A, const ScsMatrix *P, 
+                         const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_float *info;
   scs_int *Pinv, amd_status, ldl_status;
-  _cs *C, *K = form_kkt(A, stgs);
+  _cs *C, *K = form_kkt(A, P, stgs);
   if (!K) {
     return -1;
   }
@@ -322,6 +340,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
+                                      const ScsMatrix *P,
                                       const ScsSettings *stgs) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m;
@@ -332,7 +351,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   p->L->n = n_plus_m;
   p->L->nz = -1;
 
-  if (factorize(A, stgs, p) < 0) {
+  if (factorize(A, P, stgs, p) < 0) {
     SCS(free_lin_sys_work)(p);
     return SCS_NULL;
   }

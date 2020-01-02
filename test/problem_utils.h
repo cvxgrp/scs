@@ -19,9 +19,6 @@
 #define INTRW "%i"
 #endif
 
-void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
-                          ScsSolution *opt_sol);
-
 /* uniform random number in [-1,1] */
 static scs_float rand_scs_float(void) {
   return 2 * (((scs_float)rand()) / RAND_MAX) - 1;
@@ -32,6 +29,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   scs_int n = d->n;
   scs_int m = d->m;
   ScsMatrix *A = d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  ScsMatrix *P = d->P = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   scs_float *b = d->b = (scs_float *)scs_calloc(m, sizeof(scs_float));
   scs_float *c = d->c = (scs_float *)scs_calloc(n, sizeof(scs_float));
   scs_float *x = opt_sol->x = (scs_float *)scs_calloc(n, sizeof(scs_float));
@@ -40,6 +38,12 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   /* temporary variables */
   scs_float *z = (scs_float *)scs_calloc(m, sizeof(scs_float));
   scs_int i, j, r, rn, rm;
+
+  P->i = (scs_int *)scs_calloc(n, sizeof(scs_int));
+  P->p = (scs_int *)scs_calloc((n + 1), sizeof(scs_int));
+  P->x = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  P->n = d->n;
+  P->m = d->n;
 
   A->i = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
   A->p = (scs_int *)scs_calloc((n + 1), sizeof(scs_int));

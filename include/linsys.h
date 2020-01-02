@@ -11,7 +11,7 @@ extern "C" {
  * STRUCT */
 
 /* initialize ScsLinSysWork structure and perform any necessary preprocessing */
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       const ScsSettings *stgs);
 /* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains
  * warm-start, iter is current scs iteration count */
