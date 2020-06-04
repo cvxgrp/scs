@@ -625,15 +625,16 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
 
 static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float eps = w->stgs->eps;
-  if (r->res_pri < eps && r->res_dual < eps && r->rel_gap < eps) {
+  if (isless(r->res_pri, eps) && isless(r->res_dual, eps) &&
+      isless(r->rel_gap, eps)) {
     return SCS_SOLVED;
   }
   /* Add iter > 0 to avoid strange edge case where infeasible point found
    * right at start of run `out/demo_SOCP_indirect 2 0.1 0.3 1506264403` */
-  if (r->res_unbdd < eps && iter > 0) {
+  if (isless(r->res_unbdd, eps) && iter > 0) {
     return SCS_UNBOUNDED;
   }
-  if (r->res_infeas < eps && iter > 0) {
+  if (isless(r->res_infeas, eps) && iter > 0) {
     return SCS_INFEASIBLE;
   }
   return 0;
