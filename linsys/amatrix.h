@@ -23,7 +23,7 @@ struct SCS_A_DATA_MATRIX {
 void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                            const scs_float *x, scs_float *y);
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                      const scs_float *x, scs_float *y);
+                      const scs_float *x, scs_float *y, scs_int skip_diag);
 void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
                        ScsScaling *scal);
 void SCS(_un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,

@@ -33,6 +33,7 @@ struct SCS_PROBLEM_DATA {
   /* these cannot change for multiple runs for the same call to SCS(init) */
   scs_int m, n; /* A has m rows, n cols */
   ScsMatrix *A; /* A is supplied in data format specified by linsys solver */
+  ScsMatrix *P; /* P is supplied in data format specified by linsys solver */
 
   /* these can change for multiple runs for the same call to SCS(init) */
   scs_float *b, *c; /* dense arrays for b (size m), c (size n) */
@@ -130,15 +131,17 @@ struct SCS_WORK {
   /* x_prev = x from previous iteration */
   scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev;
   scs_float *h, *g, *pr, *dr;
-  scs_float g_th, sc_b, sc_c, nm_b, nm_c, best_max_residual;
+  scs_float sc_b, sc_c, nm_b, nm_c, best_max_residual;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
+  ScsMatrix *P;           /* (possibly normalized) P matrix */
   ScsLinSysWork *p;       /* struct populated by linear system solver */
   ScsSettings *stgs;      /* contains solver settings specified by user */
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
   AaWork *accel;          /* Struct for acceleration workspace */
+  scs_float nm_g_sq;         /* ||g||^2, used in root_plus routine */
 };
 
 /* to hold residual information (unnormalized) */

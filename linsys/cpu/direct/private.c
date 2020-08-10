@@ -47,7 +47,7 @@ static _cs *cs_spfree(_cs *A) {
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
     cs_spfree(p->L);
-    scs_free(p->P);
+    scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
     scs_free(p);
@@ -106,52 +106,99 @@ static _cs *cs_compress(const _cs *T) {
   return cs_done(C, w, SCS_NULL, 1); /* success; free w and return C */
 }
 
-static _cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
+static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
+                     const ScsSettings *s) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed KKT matrix
    * assumes column compressed form A matrix
    *
-   * forms upper triangular part of [I A'; A -I]
+   * forms upper triangular part of [(I + P)  A'; A -I]
+   * P : n x x, A: m x n.
    */
-  scs_int j, k, kk;
+  scs_int i, j, k, kk;
   _cs *K_cs;
-  /* I at top left */
-  const scs_int Anz = A->p[A->n];
-  const scs_int Knzmax = A->n + A->m + Anz;
-  _cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
+  scs_int n = A->n;
+  scs_int m = A->m;
+  scs_int Anz = A->p[n];
+  scs_int Knzmax;
+  if (P) {
+    /* Upper bound P + I upper trianglar component as Pnz/2 + n */
+    Knzmax = n + m + Anz + P->p[n];
+  } else {
+    Knzmax = n + m + Anz;
+  }
+  _cs *K = cs_spalloc(m + n, m + n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
   scs_printf("forming KKT\n");
 #endif
-
+  /* Here we generate a triplet matrix and then compress to CSC */
   if (!K) {
     return SCS_NULL;
   }
-  kk = 0;
-  for (k = 0; k < A->n; k++) {
-    K->i[kk] = k;
-    K->p[kk] = k;
-    K->x[kk] = s->rho_x;
-    kk++;
+
+  kk = 0; /* element counter */
+  if (P) {
+    /* I + P in top left */
+    for (j = 0; j < P->n; j++) { /* cols */
+      /* empty column, add diagonal  */
+      if (P->p[j] == P->p[j + 1]) {
+        K->i[kk] = j;
+        K->p[kk] = j;
+        K->x[kk] = s->rho_x;
+        kk++;
+      }
+      for (k = P->p[j]; k < P->p[j + 1]; k++) {
+        i = P->i[k]; /* row */
+        if (i > j) { /* only upper triangular needed */
+          break;
+        }
+        K->i[kk] = i;
+        K->p[kk] = j;
+        K->x[kk] = P->x[k];
+        if (i == j) {
+          /* P has diagonal element */
+          K->x[kk] += s->rho_x;
+        }
+        kk++;
+        /* reached the end without adding diagonal, do it now */
+        if ((i < j) && (k + 1 == P->p[j + 1] || P->i[k + 1] > j)) {
+          K->i[kk] = j;
+          K->p[kk] = j;
+          K->x[kk] = s->rho_x;
+          kk++;
+        }
+      }
+    }
+  } else {
+    /* I in top left */
+    for (k = 0; k < A->n; k++) {
+      K->i[kk] = k;
+      K->p[kk] = k;
+      K->x[kk] = s->rho_x;
+      kk++;
+    }
   }
-  /* A^T at top right : CCS: */
-  for (j = 0; j < A->n; j++) {
+
+  /* A^T at top right */
+  for (j = 0; j < n; j++) {
     for (k = A->p[j]; k < A->p[j + 1]; k++) {
-      K->p[kk] = A->i[k] + A->n;
+      K->p[kk] = A->i[k] + n;
       K->i[kk] = j;
       K->x[kk] = A->x[k];
       kk++;
     }
   }
+
   /* -I at bottom right */
-  for (k = 0; k < A->m; k++) {
-    K->i[kk] = k + A->n;
-    K->p[kk] = k + A->n;
+  for (k = 0; k < m; k++) {
+    K->i[kk] = k + n;
+    K->p[kk] = k + n;
     K->x[kk] = -1;
     kk++;
   }
-  /* assert kk == Knzmax */
-  K->nz = Knzmax;
+
+  K->nz = kk;
   K_cs = cs_compress(K);
   cs_spfree(K);
   return K_cs;
@@ -231,7 +278,7 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
 
 void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
-  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
+  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y, 0);
 }
 
 static scs_int *cs_pinv(scs_int const *p, scs_int n) {
@@ -293,15 +340,15 @@ static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
   return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
 }
 
-static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
-                         ScsLinSysWork *p) {
+static scs_int factorize(const ScsMatrix *A, const ScsMatrix *P,
+                         const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_float *info;
   scs_int *Pinv, amd_status, ldl_status;
-  _cs *C, *K = form_kkt(A, stgs);
+  _cs *C, *K = form_kkt(A, P, stgs);
   if (!K) {
     return -1;
   }
-  amd_status = _ldl_init(K, p->P, &info);
+  amd_status = _ldl_init(K, p->perm, &info);
   if (amd_status < 0) {
     return amd_status;
   }
@@ -311,7 +358,7 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
     amd_info(info);
   }
 #endif
-  Pinv = cs_pinv(p->P, A->n + A->m);
+  Pinv = cs_pinv(p->perm, A->n + A->m);
   C = cs_symperm(K, Pinv, 1);
   ldl_status = _ldl_factor(C, &p->L, &p->Dinv);
   cs_spfree(C);
@@ -321,33 +368,34 @@ static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
   return ldl_status;
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       const ScsSettings *stgs) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m;
-  p->P = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
+  p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
   p->L = (_cs *)scs_malloc(sizeof(_cs));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;
-
-  if (factorize(A, stgs, p) < 0) {
-    SCS(free_lin_sys_work)(p);
+  if (factorize(A, P, stgs, p) < 0) {
+    scs_printf("Error in factorize\n")
+    /* XXX this is broken somehow */
+    //SCS(free_lin_sys_work)(p);
     return SCS_NULL;
   }
   p->total_solve_time = 0.0;
   return p;
 }
 
-scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_int iter) {
+scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
+                           const ScsSettings *stgs, ScsLinSysWork *p,
+                           scs_float *b, const scs_float *s, scs_int iter) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   SCS(timer) linsys_timer;
   SCS(tic)(&linsys_timer);
-  _ldl_solve(b, p->L, p->Dinv, p->P, p->bp);
+  _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   p->total_solve_time += SCS(tocq)(&linsys_timer);
 #if EXTRA_VERBOSE > 0
   scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);

@@ -162,14 +162,16 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
 }
 
 static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
-                                   const scs_float *s, const scs_float tau,
+                                   const scs_float *s_plus_y,
+                                   const scs_float *y, const scs_float tau,
                                    scs_float *nm_axs) {
   scs_int i;
   scs_float pres = 0, scale, *pr = w->pr;
   *nm_axs = 0;
   memset(pr, 0, w->m * sizeof(scs_float));
   SCS(accum_by_a)(w->A, w->p, x, pr);
-  SCS(add_scaled_array)(pr, s, w->m, 1.0); /* pr = Ax + s */
+  SCS(add_scaled_array)(pr, s_plus_y, w->m, 1.0); /* pr = Ax + s + y */
+  SCS(add_scaled_array)(pr, y, w->m, -1.0);       /* pr = Ax + s */
   for (i = 0; i < w->m; ++i) {
     scale = w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1;
     scale = scale * scale;
@@ -180,13 +182,17 @@ static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
   return SQRTF(pres); /* SCS(norm)(Ax + s - b * tau) */
 }
 
-static scs_float calc_dual_resid(ScsWork *w, const scs_float *y,
-                                 const scs_float tau, scs_float *nm_a_ty) {
+static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
+                                 const scs_float *y, const scs_float tau,
+                                 scs_float *nm_a_ty) {
   scs_int i;
   scs_float dres = 0, scale, *dr = w->dr;
   *nm_a_ty = 0;
   memset(dr, 0, w->n * sizeof(scs_float));
   SCS(accum_by_atrans)(w->A, w->p, y, dr); /* dr = A'y */
+  if (w->P) {
+    SCS(accum_by_p)(w->P, w->p, x, dr); /* dr = Px + A'y */
+  }
   for (i = 0; i < w->n; ++i) {
     scale = w->stgs->normalize ? w->scal->E[i] / (w->sc_c * w->stgs->scale) : 1;
     scale = scale * scale;
@@ -194,13 +200,14 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *y,
     dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
   }
   *nm_a_ty = SQRTF(*nm_a_ty);
-  return SQRTF(dres); /* SCS(norm)(A'y + c * tau) */
+  return SQRTF(dres); /* SCS(norm)(Px + A'y + c * tau) */
 }
 
 /* calculates un-normalized quantities */
 static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
-  scs_float *x = w->u, *y = &(w->u[w->n]), *s = &(w->v[w->n]);
+  scs_float *x = w->u, *y = &(w->u[w->n]);
   scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, ct_x, bt_y;
+  scs_float xt_p_x = 0.;
   scs_int n = w->n, m = w->m;
 
   /* checks if the residuals are unchanged by checking iteration */
@@ -210,11 +217,12 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   r->last_iter = iter;
 
   r->tau = ABS(w->u[n + m]);
+  /* XXX */
   r->kap = ABS(w->v[n + m]) /
            (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
 
-  nmpr_tau = calc_primal_resid(w, x, s, r->tau, &nm_axs_tau);
-  nmdr_tau = calc_dual_resid(w, y, r->tau, &nm_a_ty_tau);
+  nmpr_tau = calc_primal_resid(w, x, &(w->v[w->n]), y, r->tau, &nm_axs_tau);
+  nmdr_tau = calc_dual_resid(w, x, y, r->tau, &nm_a_ty_tau);
 
   r->bt_y_by_tau =
       SCS(dot)(y, w->b, m) /
@@ -231,9 +239,14 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   bt_y = SAFEDIV_POS(r->bt_y_by_tau, r->tau);
   ct_x = SAFEDIV_POS(r->ct_x_by_tau, r->tau);
 
+  if (w->P) {
+    xt_p_x = SCS(quad_form)(w->P, x);
+    xt_p_x = SAFEDIV_POS(xt_p_x, r->tau * r->tau);
+  }
   r->res_pri = SAFEDIV_POS(nmpr_tau / (1 + w->nm_b), r->tau);
   r->res_dual = SAFEDIV_POS(nmdr_tau / (1 + w->nm_c), r->tau);
-  r->rel_gap = ABS(ct_x + bt_y) / (1 + ABS(ct_x) + ABS(bt_y));
+  r->rel_gap =
+      ABS(xt_p_x + ct_x + bt_y) / (1 + ABS(xt_p_x) + ABS(ct_x) + ABS(bt_y));
 }
 
 static void cold_start_vars(ScsWork *w) {
@@ -244,48 +257,65 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = SQRTF((scs_float)l);
 }
 
+static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
+                           scs_float eta) {
+  scs_float a, b, c, tau;
+  scs_int k = w->m + w->n;
+  a = 1 + w->nm_g_sq;
+  b = SCS(dot)(mu, w->g, k) - 2 * SCS(dot)(p, w->g, k) - eta;
+  c = SCS(dot)(p, p, k) - SCS(dot)(p, mu, k);
+  tau = (-b + SQRTF(b * b - 4 * a * c)) / (2 * a);
+#if EXTRA_VERBOSE > 3
+  scs_printf("a %g\n", a);
+  scs_printf("b %g\n", b);
+  scs_printf("c %g\n", c);
+  scs_printf("eta %g\n", eta);
+  scs_printf("tau %g\n", tau);
+  scs_float tau_no_p =
+      (eta + SCS(dot)(p, w->h, k)) / (1 + SCS(dot)(w->h, w->g, k));
+  scs_printf("tau_no_p %g\n", tau_no_p);
+#endif
+  return tau;
+}
+
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
-  /* ut = u + v */
-
   scs_int n = w->n, m = w->m, l = n + m + 1, status;
-  memcpy(w->u_t, w->u, l * sizeof(scs_float));
-  SCS(add_scaled_array)(w->u_t, w->v, l, 1.0);
-
-  SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
-
-  SCS(add_scaled_array)(w->u_t, w->h, l - 1, -w->u_t[l - 1]);
-  SCS(add_scaled_array)
-  (w->u_t, w->h, l - 1, -SCS(dot)(w->u_t, w->g, l - 1) / (w->g_th + 1));
-  SCS(scale_array)(&(w->u_t[n]), -1, m);
-
-  status = SCS(solve_lin_sys)(w->A, w->stgs, w->p, w->u_t, w->u, iter);
-
-  w->u_t[l - 1] += SCS(dot)(w->u_t, w->h, l - 1);
-
+  memcpy(w->u_t, w->v, l * sizeof(scs_float));
+  SCS(scale_array)(&(w->u_t[n]), -1., m);
+  status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->u, iter);
+  w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
+  SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);
   return status;
 }
 
 static void update_dual_vars(ScsWork *w) {
   scs_int i, n = w->n, l = n + w->m + 1;
   /* this does not relax 'x' variable */
+  /* XXX
   for (i = n; i < l; ++i) {
     w->v[i] += (w->u[i] - w->stgs->alpha * w->u_t[i] -
                 (1.0 - w->stgs->alpha) * w->u_prev[i]);
+  }
+  */
+  for (i = 0; i < l; ++i) {
+    w->v[i] += w->u[i] - w->u_t[i];
   }
 }
 
 /* status < 0 indicates failure */
 static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
-  scs_int i, n = w->n, l = n + w->m + 1, status;
+  scs_int i, n = w->n, l = w->n + w->m + 1, status;
   /* this does not relax 'x' variable */
-  for (i = 0; i < n; ++i) {
-    w->u[i] = w->u_t[i] - w->v[i];
+  for (i = 0; i < l; ++i) {
+    w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
+  /* XXX
   for (i = n; i < l; ++i) {
     w->u[i] = w->stgs->alpha * w->u_t[i] + (1 - w->stgs->alpha) * w->u_prev[i] -
               w->v[i];
   }
+  */
   /* u = [x;y;tau] */
   status =
       SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]), iter);
@@ -311,6 +341,7 @@ static void sety(ScsWork *w, ScsSolution *sol) {
   memcpy(sol->y, &(w->u[w->n]), w->m * sizeof(scs_float));
 }
 
+/* XXX fix */
 static void sets(ScsWork *w, ScsSolution *sol) {
   if (!sol->s) {
     sol->s = (scs_float *)scs_malloc(sizeof(scs_float) * w->m);
@@ -604,9 +635,9 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                    SCS(norm)(sol->y, d->m));
     scs_printf("primal res: |Ax + s - b|_2 / (1 + |b|_2) = %.4e\n",
                info->res_pri);
-    scs_printf("dual res:   |A'y + c|_2 / (1 + |c|_2) = %.4e\n",
+    scs_printf("dual res: |Px + A'y + c|_2 / (1 + |c|_2) = %.4e\n",
                info->res_dual);
-    scs_printf("rel gap:    |c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n",
+    scs_printf("rel gap: | x'Px + c'x + b'y| / (1 + |c'x| + |b'y|) = %.4e\n",
                info->rel_gap);
     for (i = 0; i < LINE_LEN; ++i) {
       scs_printf("-");
@@ -651,7 +682,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
     scs_printf("WARN: m less than n, problem likely degenerate\n");
     /* return -1; */
   }
-  if (SCS(validate_lin_sys)(d->A) < 0) {
+  if (SCS(validate_lin_sys)(d->A, d->P) < 0) {
     scs_printf("invalid linear system input data\n");
     return -1;
   }
@@ -719,34 +750,41 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->v_best = &(w->u_best[l]);
   w->v_prev = &(w->u_prev[l]);
   w->A = d->A;
+  w->P = d->P;
+  /*
   if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
-    if (!SCS(copy_a_matrix)(&(w->A), d->A)) {
+    if (!SCS(copy_matrix)(&(w->A), d->A)) {
       scs_printf("ERROR: copy A matrix failed\n");
+      return SCS_NULL;
+    }
+    if (!SCS(copy_matrix)(&(w->P), d->P)) {
+      scs_printf("ERROR: copy P matrix failed\n");
       return SCS_NULL;
     }
 #endif
     w->scal = (ScsScaling *)scs_malloc(sizeof(ScsScaling));
     SCS(normalize_a)(w->A, w->stgs, k, w->scal);
+    SCS(normalize_p)(w->P, w->stgs, k, w->scal);
 #if EXTRA_VERBOSE > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("SCS(norm) D = %4f\n", SCS(norm)(w->scal->D, d->m));
     SCS(print_array)(w->scal->E, d->n, "E");
     scs_printf("SCS(norm) E = %4f\n", SCS(norm)(w->scal->E, d->n));
 #endif
-  } else {
-    w->scal = SCS_NULL;
-  }
+  } else { */
+  w->scal = SCS_NULL;
+  /* } */
   if (!(w->cone_work = SCS(init_cone)(k))) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
-  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->stgs))) {
+  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
   if (!(w->accel =
-            aa_init(2 * (w->m + w->n + 1), ABS(w->stgs->acceleration_lookback),
+            aa_init((w->m + w->n + 1), ABS(w->stgs->acceleration_lookback),
                     w->stgs->acceleration_lookback >= 0))) {
     if (w->stgs->verbose) {
       scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
@@ -788,12 +826,16 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
   } else {
     cold_start_vars(w);
   }
+
+  /* h = [c;b] */
   memcpy(w->h, w->c, n * sizeof(scs_float));
   memcpy(&(w->h[n]), w->b, m * sizeof(scs_float));
+
+  /* g = (I + M)^{-1} h */
   memcpy(w->g, w->h, (n + m) * sizeof(scs_float));
-  SCS(solve_lin_sys)(w->A, w->stgs, w->p, w->g, SCS_NULL, -1);
-  SCS(scale_array)(&(w->g[n]), -1, m);
-  w->g_th = SCS(dot)(w->h, w->g, n + m);
+  SCS(scale_array)(&(w->g[n]), -1., m);
+  SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, -1);
+  w->nm_g_sq = SCS(dot)(w->g, w->g, n + m);
   return 0;
 }
 
@@ -909,8 +951,10 @@ void SCS(finish)(ScsWork *w) {
     if (w->stgs && w->stgs->normalize) {
 #ifndef COPYAMATRIX
       SCS(un_normalize_a)(w->A, w->stgs, w->scal);
+      /* XXXXXXXXXXXXXX */
+      // SCS(un_normalize_p)(w->P, w->stgs, w->scal);
 #else
-      SCS(free_a_matrix)(w->A);
+      SCS(free_scs_matrix)(w->A);
 #endif
     }
     if (w->p) {

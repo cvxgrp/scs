@@ -28,16 +28,17 @@ extern "C" {
 #define SCS_SOLVED_INACCURATE (2)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
-#define MAX_ITERS (5000)
+#define MAX_ITERS (50)
 #define EPS (1E-5)
-#define ALPHA (1.5)
-#define RHO_X (1E-3)
+#define ALPHA (1.)
+#define RHO_X (1.)
 #define SCALE (1.0)
 #define CG_RATE (2.0)
 #define VERBOSE (1)
-#define NORMALIZE (1)
+/* XXXXXXXXXXXXXXXXXXXXXXX */
+#define NORMALIZE (0)
 #define WARM_START (0)
-#define ACCELERATION_LOOKBACK (10)
+#define ACCELERATION_LOOKBACK (0)
 #define WRITE_DATA_FILENAME (0)
 
 /* redefine printfs and memory allocators as needed */

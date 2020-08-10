@@ -7,7 +7,7 @@
 #define MAX_SCALE (1e4)
 #define NUM_SCALE_PASSES 10 /* additional passes don't help much */
 
-scs_int SCS(copy_a_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
+scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   scs_int Anz = src->p[src->n];
   ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
@@ -31,8 +31,8 @@ scs_int SCS(copy_a_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   return 1;
 }
 
-scs_int SCS(validate_lin_sys)(const ScsMatrix *A) {
-  scs_int i, r_max, Anz;
+scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
+  scs_int i, j, r_max, Anz;
   if (!A->x || !A->i || !A->p) {
     scs_printf("data incompletely specified\n");
     return -1;
@@ -67,10 +67,29 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A) {
     scs_printf("number of rows in A inconsistent with input dimension\n");
     return -1;
   }
+  if (P) {
+    if (P->n != A->n) {
+      scs_printf("P dimension = %li, inconsistent with n = %li\n", (long)P->n,
+                 (long)A->n);
+      return -1;
+    }
+    if (P->m != P->n) {
+      scs_printf("P is not square\n");
+      return -1;
+    }
+    for (j = 0; j < P->n; j++) { /* cols */
+      for (i = P->p[j]; i < P->p[j + 1]; i++) {
+        if (P->i[i] > j) { /* if row > */
+          scs_printf("P is not upper triangular\n");
+          return -1;
+        }
+      }
+    }
+  }
   return 0;
 }
 
-void SCS(free_a_matrix)(ScsMatrix *A) {
+void SCS(free_scs_matrix)(ScsMatrix *A) {
   if (A) {
     scs_free(A->x);
     scs_free(A->i);
@@ -228,6 +247,22 @@ void SCS(_un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
   }
 }
 
+scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n) {
+  scs_int i, nz = 0;
+  scs_float nz2 = 0;
+  if (!p || !c) {
+    return (-1);
+  } /* check inputs */
+  for (i = 0; i < n; i++) {
+    p[i] = nz;
+    nz += c[i];
+    nz2 += c[i]; /* also in scs_float to avoid scs_int overflow */
+    c[i] = p[i]; /* also copy p[0..n-1] back into c[0..n-1]*/
+  }
+  p[n] = nz;
+  return nz2; /* return sum (c [0..n-1]) */
+}
+
 void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                            const scs_float *x, scs_float *y) {
   /* y += A'*x
@@ -259,47 +294,60 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 #endif
 }
 
-scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n) {
-  scs_int i, nz = 0;
-  scs_float nz2 = 0;
-  if (!p || !c) {
-    return (-1);
-  } /* check inputs */
-  for (i = 0; i < n; i++) {
-    p[i] = nz;
-    nz += c[i];
-    nz2 += c[i]; /* also in scs_float to avoid scs_int overflow */
-    c[i] = p[i]; /* also copy p[0..n-1] back into c[0..n-1]*/
-  }
-  p[n] = nz;
-  return nz2; /* return sum (c [0..n-1]) */
-}
-
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                      const scs_float *x, scs_float *y) {
+                      const scs_float *x, scs_float *y, scs_int skip_diag) {
   /*y += A*x
     A in column compressed format
-    this parallelizes over columns and uses
-    pragma atomic to prevent concurrent writes to y
    */
-  scs_int p, j;
-  scs_int c1, c2;
-  scs_float xj;
+  scs_int p, j, i;
 #if EXTRA_VERBOSE > 0
   SCS(timer) mult_by_a_timer;
   SCS(tic)(&mult_by_a_timer);
 #endif
-  /*#pragma omp parallel for private(p,c1,c2,xj)  */
-  for (j = 0; j < n; j++) {
-    xj = x[j];
-    c1 = Ap[j];
-    c2 = Ap[j + 1];
-    for (p = c1; p < c2; p++) {
-      /*#pragma omp atomic */
-      y[Ai[p]] += Ax[p] * xj;
+  /* have skip_diag out here for compiler optimization */
+  if (skip_diag) {
+    for (j = 0; j < n; j++) { /* col */
+      for (p = Ap[j]; p < Ap[j + 1]; p++) {
+        i = Ai[p]; /* row */
+        if (i != j) {
+          y[i] += Ax[p] * x[j];
+        }
+      }
+    }
+  } else {
+    for (j = 0; j < n; j++) { /* col */
+      for (p = Ap[j]; p < Ap[j + 1]; p++) {
+        i = Ai[p]; /* row */
+        y[i] += Ax[p] * x[j];
+      }
     }
   }
 #if EXTRA_VERBOSE > 0
   scs_printf("mult By A time: %1.2es\n", SCS(tocq)(&mult_by_a_timer) / 1e3);
 #endif
+}
+
+/* Since P is upper triangular need to be clever here */
+void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
+                     scs_float *y) {
+  /* y += P_upper x but skip diagonal entries*/
+  SCS(_accum_by_a)(P->n, P->x, P->i, P->p, x, y, 1);
+  /* y += P_lower x */
+  SCS(_accum_by_atrans)(P->n, P->x, P->i, P->p, x, y);
+}
+
+scs_float SCS(quad_form)(const ScsMatrix *P, const scs_float *x) {
+  scs_int i, j, k;
+  scs_float quad_form = 0.;
+  for (j = 0; j < P->n; j++) { /* col */
+    for (k = P->p[j]; k < P->p[j + 1]; k++) {
+      i = P->i[k];  /* row */
+      if (i == j) { /* diagonal */
+        quad_form += P->x[k] * x[i] * x[i];
+      } else { /* off-diagonal */
+        quad_form += 2 * P->x[k] * x[i] * x[j];
+      }
+    }
+  }
+  return quad_form;
 }

@@ -153,7 +153,7 @@ INSTALL_GPU_TARGETS = $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED) # 
 INSTALL_INC_DIR = $(DESTDIR)$(PREFIX)/include/scs/
 INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/lib/
 
-.PHONY: install install_gpu
+.PHONY: install install_gpu direct indirect
 install: $(INSTALL_INC_FILES) $(INSTALL_TARGETS)
 	$(INSTALL) -d $(INSTALL_INC_DIR) $(INSTALL_LIB_DIR)
 	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(INSTALL_INC_DIR)
@@ -162,3 +162,5 @@ install_gpu: $(INSTALL_INC_FILES) $(INSTALL_GPU_TARGETS)
 	$(INSTALL) -d $(INSTALL_INC_DIR) $(INSTALL_LIB_DIR)
 	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(INSTALL_INC_DIR)
 	$(INSTALL) -m 644 $(INSTALL_GPU_TARGETS) $(INSTALL_LIB_DIR)
+direct:$(OUT)/libscsdir.$(SHARED) $(OUT)/demo_socp_direct $(OUT)/run_from_file_direct $(OUT)/run_tests_direct
+indirect:$(OUT)/libscsindir.$(SHARED) $(OUT)/demo_socp_indirect $(OUT)/run_from_file_indirect $(OUT)/run_tests_indirect
