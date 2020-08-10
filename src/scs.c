@@ -783,9 +783,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
-  if (!(w->accel =
-            aa_init((w->m + w->n + 1), ABS(w->stgs->acceleration_lookback),
-                    w->stgs->acceleration_lookback >= 0))) {
+  if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
+                           w->stgs->acceleration_lookback >= 0))) {
     if (w->stgs->verbose) {
       scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
     }
@@ -883,9 +882,8 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
-    /* this relies on the fact that u and v are contiguous in memory */
     SCS(tic)(&accel_timer);
-    if (i > 0 && aa_apply(w->u, w->u_prev, w->accel) != 0) {
+    if (i > 0 && aa_apply(w->v, w->v_prev, w->accel) != 0) {
       /*
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
           "error in accelerate", "Failure");
@@ -898,6 +896,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     SCS(scale_array)(w->u, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
     SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
 
+    /* XXX rm this? */
     memcpy(w->u_prev, w->u, l * sizeof(scs_float));
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
