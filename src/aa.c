@@ -109,7 +109,7 @@ static void update_accel_params(const aa_float *x, const aa_float *f,
   /* copy d into idx col of D */
   memcpy(&(a->D[idx * l]), a->d, sizeof(aa_float) * l);
 
-  /* Y, S,D correct here */
+  /* Y, S, D correct here */
 
   memcpy(a->f, f, sizeof(aa_float) * l);
   memcpy(a->x, x, sizeof(aa_float) * l);

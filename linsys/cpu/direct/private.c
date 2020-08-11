@@ -11,9 +11,11 @@ struct SPARSE_MATRIX /* matrix in compressed-column or triplet form */
   scs_int nz;    /* # of entries in triplet matrix, -1 for compressed-col */
 };
 
-char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsSettings *stgs) {
+char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
+                              const ScsSettings *stgs) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(tmp, "sparse-direct, nnz in A = %li", (long)A->p[A->n]);
+  sprintf(tmp, "sparse-direct, nnz in A = %li, nnz in P = %li",
+          (long)A->p[A->n], P ? (long)P->p[P->n] : 0l);
   return tmp;
 }
 
@@ -113,7 +115,7 @@ static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
    * assumes column compressed form A matrix
    *
    * forms upper triangular part of [(I + P)  A'; A -I]
-   * P : n x x, A: m x n.
+   * P : n x n, A: m x n.
    */
   scs_int i, j, k, kk;
   _cs *K_cs;
@@ -122,7 +124,7 @@ static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
   scs_int Anz = A->p[n];
   scs_int Knzmax;
   if (P) {
-    /* Upper bound P + I upper trianglar component as Pnz/2 + n */
+    /* Upper bound P + I upper trianglar component as Pnz + n */
     Knzmax = n + m + Anz + P->p[n];
   } else {
     Knzmax = n + m + Anz;
@@ -380,9 +382,9 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->L->nz = -1;
   if (factorize(A, P, stgs, p) < 0) {
     scs_printf("Error in factorize\n")
-    /* XXX this is broken somehow */
-    //SCS(free_lin_sys_work)(p);
-    return SCS_NULL;
+        /* XXX this is broken somehow */
+        // SCS(free_lin_sys_work)(p);
+        return SCS_NULL;
   }
   p->total_solve_time = 0.0;
   return p;
@@ -403,12 +405,12 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   return 0;
 }
 
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                      ScsScaling *scal) {
-  SCS(_normalize_a)(A, stgs, k, scal);
+void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
+                    const ScsCone *k, ScsScaling *scal) {
+  SCS(_normalize)(A, P, stgs, k, scal);
 }
 
-void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                         const ScsScaling *scal) {
-  SCS(_un_normalize_a)(A, stgs, scal);
+void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
+                       const ScsScaling *scal) {
+  SCS(_un_normalize)(A, P, stgs, scal);
 }

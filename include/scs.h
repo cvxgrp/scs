@@ -129,7 +129,7 @@ size_t SCS(sizeof_float)(void);
 /* workspace for SCS */
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
-  scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev;
+  scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev, *rsk;
   scs_float *h, *g, *pr, *dr;
   scs_float sc_b, sc_c, nm_b, nm_c, best_max_residual;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
@@ -141,7 +141,7 @@ struct SCS_WORK {
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
   AaWork *accel;          /* Struct for acceleration workspace */
-  scs_float nm_g_sq;         /* ||g||^2, used in root_plus routine */
+  scs_float root_plus_a;  /* used in root_plus routine */
 };
 
 /* to hold residual information (unnormalized) */

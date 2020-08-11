@@ -99,7 +99,7 @@ void SCS(free_scs_matrix)(ScsMatrix *A) {
 }
 
 #if EXTRA_VERBOSE > 0
-static void print_a_matrix(const ScsMatrix *A) {
+static void print_matrix(const ScsMatrix *A) {
   scs_int i, j;
   /* TODO: this is to prevent clogging stdout */
   if (A->p[A->n] < 2500) {
@@ -117,8 +117,8 @@ static void print_a_matrix(const ScsMatrix *A) {
 }
 #endif
 
-void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                       ScsScaling *scal) {
+void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
+                     const ScsCone *k, ScsScaling *scal) {
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
@@ -132,7 +132,7 @@ void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
   SCS(timer) normalize_timer;
   SCS(tic)(&normalize_timer);
   scs_printf("normalizing A\n");
-  print_a_matrix(A);
+  print_matrix(A);
 #endif
 
   for (l = 0; l < NUM_SCALE_PASSES; ++l) {
@@ -227,12 +227,12 @@ void SCS(_normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
 #if EXTRA_VERBOSE > 0
   scs_printf("finished normalizing A, time: %1.2es\n",
              SCS(tocq)(&normalize_timer) / 1e3);
-  print_a_matrix(A);
+  print_matrix(A);
 #endif
 }
 
-void SCS(_un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                          const ScsScaling *scal) {
+void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
+                        const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;
