@@ -15,12 +15,12 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   }
   A->n = src->n;
   A->m = src->m;
-  A->x = (scs_float *)scs_malloc(sizeof(scs_float) *
-                                 Anz); /* A values, size: NNZ A */
-  A->i = (scs_int *)scs_malloc(sizeof(scs_int) *
-                               Anz); /* A row index, size: NNZ A */
-  A->p = (scs_int *)scs_malloc(sizeof(scs_int) *
-                               (src->n + 1)); /* A column pointer, size: n+1 */
+  /* A values, size: NNZ A */
+  A->x = (scs_float *)scs_malloc(sizeof(scs_float) * Anz);
+  /* A row index, size: NNZ A */
+  A->i = (scs_int *)scs_malloc(sizeof(scs_int) * Anz);
+  /* A column pointer, size: n+1 */
+  A->p = (scs_int *)scs_malloc(sizeof(scs_int) * (src->n + 1));
   if (!A->x || !A->i || !A->p) {
     return 0;
   }
@@ -330,6 +330,7 @@ void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 /* Since P is upper triangular need to be clever here */
 void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
+  /* returns y += P x */
   /* y += P_upper x but skip diagonal entries*/
   SCS(_accum_by_a)(P->n, P->x, P->i, P->p, x, y, 1);
   /* y += P_lower x */

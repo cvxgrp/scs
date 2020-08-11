@@ -381,10 +381,10 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->L->n = n_plus_m;
   p->L->nz = -1;
   if (factorize(A, P, stgs, p) < 0) {
-    scs_printf("Error in factorize\n")
-        /* XXX this is broken somehow */
-        // SCS(free_lin_sys_work)(p);
-        return SCS_NULL;
+    scs_printf("Error in factorize\n");
+    /* XXX this is broken somehow */
+    // SCS(free_lin_sys_work)(p);
+    return SCS_NULL;
   }
   p->total_solve_time = 0.0;
   return p;

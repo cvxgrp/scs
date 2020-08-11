@@ -272,18 +272,19 @@ static scs_float dot_with_rho_x(ScsWork *w, const scs_float *x,
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   scs_float b, c, tau, a = w->root_plus_a;
-  scs_int k = w->m + w->n;
   b = dot_with_rho_x(w, mu, w->g) - 2 * dot_with_rho_x(w, p, w->g) - eta;
   c = dot_with_rho_x(w, p, p) - dot_with_rho_x(w, p, mu);
   tau = (-b + SQRTF(b * b - 4 * a * c)) / (2 * a);
 #if EXTRA_VERBOSE > 3
-  scs_printf(
-      "root_plus: a: %g, b: %g, c: %g, eta: %g, tau: %g, tau no p: %g\n", a, b,
-      c, eta, tau,
-      MAX(0., (eta + SCS(dot)(p, w->h, k)) / (1 + SCS(dot)(w->h, w->g, k))));
+  scs_printf("root_plus: a: %g, b: %g, c: %g, eta: %g, tau: %g, tau no p: %g\n",
+             a, b, c, eta, tau,
+             MAX(0., (eta + SCS(dot)(p, w->h, w->m + w->n)) /
+                         (1 + SCS(dot)(w->h, w->g, w->m + w->n))));
 #endif
   return tau;
 }
+
+// XXXX this warm start no longer best
 
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
@@ -291,7 +292,8 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   SCS(scale_array)(&(w->u_t[n]), -1., m);
-  status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->u, iter);
+  /* use u as warm start, if used */
+  status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->v, iter);
   w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
   SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);
   return status;
@@ -767,7 +769,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
       scs_printf("ERROR: copy A matrix failed\n");
       return SCS_NULL;
     }
-    if (!SCS(copy_matrix)(&(w->P), d->P)) {
+    if (w->P && !SCS(copy_matrix)(&(w->P), d->P)) {
       scs_printf("ERROR: copy P matrix failed\n");
       return SCS_NULL;
     }
