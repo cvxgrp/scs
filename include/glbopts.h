@@ -35,8 +35,7 @@ extern "C" {
 #define SCALE (1.0)
 #define CG_RATE (2.0)
 #define VERBOSE (1)
-/* XXXXXXXXXXXXXXXXXXXXXXX */
-#define NORMALIZE (0)
+#define NORMALIZE (1)
 #define WARM_START (0)
 #define ACCELERATION_LOOKBACK (10)
 #define WRITE_DATA_FILENAME (0)

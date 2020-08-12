@@ -101,8 +101,8 @@ void SCS(free_scs_matrix)(ScsMatrix *A) {
 #if EXTRA_VERBOSE > 0
 static void print_matrix(const ScsMatrix *A) {
   scs_int i, j;
-  /* TODO: this is to prevent clogging stdout */
-  if (A->p[A->n] < 2500) {
+  /* TODO: this limit of 250 is to prevent clogging stdout */
+  if (A->p[A->n] < 250) {
     scs_printf("\n");
     for (i = 0; i < A->n; ++i) {
       scs_printf("Col %li: ", (long)i);
@@ -117,6 +117,7 @@ static void print_matrix(const ScsMatrix *A) {
 }
 #endif
 
+/* Ruiz style rescaling using inf norms */
 void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
                      const ScsCone *k, ScsScaling *scal) {
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
@@ -124,17 +125,43 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_float *nms = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
-  scs_int i, j, l, count, delta, *boundaries;
+  scs_int i, j, kk, l, count, delta, *boundaries;
   scs_int num_boundaries = SCS(get_cone_boundaries)(k, &boundaries);
   scs_float wrk;
 
 #if EXTRA_VERBOSE > 0
   SCS(timer) normalize_timer;
   SCS(tic)(&normalize_timer);
-  scs_printf("normalizing A\n");
+  scs_printf("normalizing A and P\n");
   print_matrix(A);
+  if (P) print_matrix(P);
 #endif
 
+  /* Will rescale as P -> EPE, A -> DAE.
+   * Essentially trying to rescale this matrix:
+   * [P A']   with   [E  0] on both sides (D, E diagonal)
+   * [A 0 ]          [0  D]
+   *
+   * which results in
+   * [EPE EA'D]
+   * [DAE  0  ]
+   *
+   * In other words D rescales the rows of A
+   *                E rescales the cols of A and rows/cols of P
+   *
+   * will set D^-1 = inf norm of rows of A
+   *          E^-1 = inf norm of cols of [P]
+   *                                     [A]
+   *
+   * main complication is that D has to respect cone boundaries
+   *
+   * TODO: for b and c need to use this:
+   * [P  A' c]
+   * [A  0  b]
+   * [c' b' 0]
+   *
+   *
+   * */
   for (l = 0; l < NUM_SCALE_PASSES; ++l) {
     memset(D, 0, A->m * sizeof(scs_float));
     memset(E, 0, A->n * sizeof(scs_float));
@@ -144,14 +171,33 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
         D[A->i[j]] = MAX(D[A->i[j]], ABS(A->x[j]));
       }
     }
+
     for (i = 0; i < A->m; ++i) {
       D[i] = SQRTF(D[i]);
       D[i] = D[i] < MIN_SCALE ? 1.0 : D[i];
       D[i] = D[i] > MAX_SCALE ? MAX_SCALE : D[i];
     }
+
+    if (P) {
+      /* compute inf norm of cols of P (symmetric upper triangular) */
+      /* E = inf norm of cols of P */
+      /* Compute maximum across columns */
+      /* P(i, j) contributes to col j and col i (row i) due to symmetry */
+      for (j = 0; j < P->n; j++) { /* cols */
+        for (kk = P->p[j]; kk < P->p[j + 1]; kk++) {
+          i = P->i[kk]; /* row */
+          wrk = ABS(P->x[kk]);
+          E[j] = MAX(wrk, E[j]);
+          if (i != j) {
+            E[i] = MAX(wrk, E[i]);
+          }
+        }
+      }
+    }
+
     /* calculate col norms, E */
     for (i = 0; i < A->n; ++i) {
-      E[i] = SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+      E[i] = MAX(E[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
       E[i] = SQRTF(E[i]);
       E[i] = E[i] < MIN_SCALE ? 1.0 : E[i];
       E[i] = E[i] > MAX_SCALE ? MAX_SCALE : E[i];
@@ -172,16 +218,29 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
       count += delta;
     }
 
-    /* scale the rows with D */
+    /* scale the rows of A with D */
     for (i = 0; i < A->n; ++i) {
       for (j = A->p[i]; j < A->p[i + 1]; ++j) {
         A->x[j] /= D[A->i[j]];
       }
     }
 
-    /* scale the cols with E */
+    /* scale the cols of A with E */
     for (i = 0; i < A->n; ++i) {
       SCS(scale_array)(&(A->x[A->p[i]]), 1.0 / E[i], A->p[i + 1] - A->p[i]);
+    }
+
+    if (P) {
+      /* scale the rows of P with E */
+      for (i = 0; i < P->n; ++i) {
+        for (j = P->p[i]; j < P->p[i + 1]; ++j) {
+          P->x[j] /= E[P->i[j]];
+        }
+      }
+      /* scale the cols of P with E */
+      for (i = 0; i < P->n; ++i) {
+        SCS(scale_array)(&(P->x[P->p[i]]), 1.0 / E[i], P->p[i + 1] - P->p[i]);
+      }
     }
 
     /* Accumulate scaling */
@@ -219,15 +278,17 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   /* scale up by d->SCALE if not equal to 1 */
   if (stgs->scale != 1) {
     SCS(scale_array)(A->x, stgs->scale, A->p[A->n]);
+    SCS(scale_array)(P->x, stgs->scale, P->p[P->n]);
   }
 
   scal->D = Dt;
   scal->E = Et;
 
 #if EXTRA_VERBOSE > 0
-  scs_printf("finished normalizing A, time: %1.2es\n",
+  scs_printf("finished normalizing A and P, time: %1.2es\n",
              SCS(tocq)(&normalize_timer) / 1e3);
   print_matrix(A);
+  print_matrix(P);
 #endif
 }
 
@@ -243,6 +304,17 @@ void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
       A->x[j] *= D[A->i[j]];
+    }
+  }
+  if (P) {
+    for (i = 0; i < P->n; ++i) {
+      SCS(scale_array)
+      (&(P->x[P->p[i]]), E[i] / stgs->scale, P->p[i + 1] - P->p[i]);
+    }
+    for (i = 0; i < P->n; ++i) {
+      for (j = P->p[i]; j < P->p[i + 1]; ++j) {
+        P->x[j] *= E[P->i[j]];
+      }
     }
   }
 }
@@ -289,7 +361,7 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     y[j] = yj;
   }
 #if EXTRA_VERBOSE > 0
-  scs_printf("mult By A trans time: %1.2es\n",
+  scs_printf("trans mat mul time: %1.2es\n",
              SCS(tocq)(&mult_by_atrans_timer) / 1e3);
 #endif
 }
@@ -323,7 +395,7 @@ void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     }
   }
 #if EXTRA_VERBOSE > 0
-  scs_printf("mult By A time: %1.2es\n", SCS(tocq)(&mult_by_a_timer) / 1e3);
+  scs_printf("mat mult time: %1.2es\n", SCS(tocq)(&mult_by_a_timer) / 1e3);
 #endif
 }
 
@@ -337,6 +409,7 @@ void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
   SCS(_accum_by_atrans)(P->n, P->x, P->i, P->p, x, y);
 }
 
+/* x' P x , P symetric upper triangular */
 scs_float SCS(quad_form)(const ScsMatrix *P, const scs_float *x) {
   scs_int i, j, k;
   scs_float quad_form = 0.;

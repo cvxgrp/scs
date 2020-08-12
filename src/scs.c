@@ -239,6 +239,9 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   if (w->P) {
     xt_p_x = SCS(quad_form)(w->P, x);
     xt_p_x = SAFEDIV_POS(xt_p_x, r->tau * r->tau);
+    if (w->stgs->normalize) {
+      xt_p_x = xt_p_x / (w->sc_b * w->sc_b * w->stgs->scale);
+    }
   }
   r->res_pri = SAFEDIV_POS(nmpr_tau / (1 + w->nm_b), r->tau);
   r->res_dual = SAFEDIV_POS(nmdr_tau / (1 + w->nm_c), r->tau);
@@ -284,15 +287,13 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   return tau;
 }
 
-// XXXX this warm start no longer best
-
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status;
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   SCS(scale_array)(&(w->u_t[n]), -1., m);
-  /* use u as warm start, if used */
+  /* use v as warm start, if used */
   status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->v, iter);
   w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
   SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);

@@ -31,9 +31,8 @@ static scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
 /*
  * boundaries will contain array of indices of rows of A corresponding to
  * cone boundaries, boundaries[0] is starting index for cones of size strictly
- * larger than 1
- * returns length of boundaries array, boundaries malloc-ed here so should be
- * freed
+ * larger than 1. returns length of boundaries array, boundaries malloc-ed here
+ * so should be freed
  */
 scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries) {
   scs_int i, count = 0;
