@@ -290,7 +290,7 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
 }
 
 /*
- * Forms a warm start for the linear solve step using the output of the cone 
+ * Forms a warm start for the linear solve step using the output of the cone
  * projection step.
  */
 static void compute_warm_start_lin_sys(ScsWork *w) {

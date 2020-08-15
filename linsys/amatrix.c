@@ -7,6 +7,10 @@
 #define MAX_SCALE (1e4)
 #define NUM_SCALE_PASSES 10 /* additional passes don't help much */
 
+/* Typically l2 equilibration works better than l1 (Ruiz) */
+/* Though more experimentation is needed */
+/* #define RUIZ 1 */
+
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   scs_int Anz = src->p[src->n];
   ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
@@ -132,7 +136,7 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_int i, j, kk, l, count, delta, *boundaries;
   scs_int num_boundaries = SCS(get_cone_boundaries)(k, &boundaries);
-  scs_float wrk, a_inf, p_inf;
+  scs_float wrk, norm_a, norm_p;
 
 #if EXTRA_VERBOSE > 0
   SCS(timer) normalize_timer;
@@ -142,43 +146,51 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   if (P) print_matrix(P);
 #endif
 
-  /* Will rescale as P -> EPE, A -> DAE.
-   * Essentially trying to rescale this matrix:
-   *
-   * [P  A' c]   with   [E  0  0] on both sides (D, E diagonal)
-   * [A  0  b]          [0  D  0]
-   * [c' b' 0]          [0  0  1]
-   *
-   * which results in:
-   *
-   * [EPE EA'D  Ec]
-   * [DAE  0    Db]
-   * [c'E  b'D   0]
-   *
-   * (Though we don't use b and c to pick D, E so that we can reuse the same
-   * factorization for many b,c combinations).
-   *
-   * In other words D rescales the rows of A
-   *                E rescales the cols of A and rows/cols of P
-   *
-   * will repeatedly set D^-1 = inf norm of rows of A
-   *                     E^-1 = inf norm of cols of [P]
-   *                                                [A]
-   *
-   * The main complication is that D has to respect cone boundaries.
-   *
-   * */
+/* Will rescale as P -> EPE, A -> DAE.
+ * Essentially trying to rescale this matrix:
+ *
+ * [P  A' c]   with   [E  0  0] on both sides (D, E diagonal)
+ * [A  0  b]          [0  D  0]
+ * [c' b' 0]          [0  0  1]
+ *
+ * which results in:
+ *
+ * [EPE EA'D  Ec]
+ * [DAE  0    Db]
+ * [c'E  b'D   0]
+ *
+ * (Though we don't use b and c to pick D, E so that we can reuse the same
+ * factorization for many b,c combinations).
+ *
+ * In other words D rescales the rows of A
+ *                E rescales the cols of A and rows/cols of P
+ *
+ * will repeatedly set D^-1 = inf norm of rows of A
+ *                     E^-1 = inf norm of cols of [P]
+ *                                                [A]
+ *
+ * The main complication is that D has to respect cone boundaries.
+ *
+ * */
 
-  /* First balance A and P */
-  a_inf = SCS(norm_inf)(A->x, A->p[A->n]);
-  a_inf = apply_limit(a_inf);
+/* Balance A and P to begin */
+#ifdef RUIZ
+  norm_a = SCS(norm_inf)(A->x, A->p[A->n]);
+#else
+  norm_a = SCS(norm)(A->x, A->p[A->n]); /* should be square to approx A'A ? */
+#endif
+  norm_a = apply_limit(norm_a);
   scal->scale_p = 0.;
   if (P) {
-    p_inf = SCS(norm_inf)(P->x, P->p[P->n]);
+#ifdef RUIZ
+    norm_p = SCS(norm_inf)(P->x, P->p[P->n]);
+#else
+    norm_p = SCS(norm)(P->x, P->p[P->n]);
+#endif
     /* If P is set but is zero then same as not set */
-    if (p_inf > 0.) {
-      p_inf = apply_limit(p_inf);
-      scal->scale_p = a_inf / p_inf;
+    if (norm_p > 0.) {
+      norm_p = apply_limit(norm_p);
+      scal->scale_p = norm_a / norm_p;
       SCS(scale_array)(P->x, scal->scale_p, P->p[P->n]);
     }
   }
@@ -189,12 +201,39 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
     /* calculate row norms */
     for (i = 0; i < A->n; ++i) {
       for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+#ifdef RUIZ
         D[A->i[j]] = MAX(D[A->i[j]], ABS(A->x[j]));
+#else
+        D[A->i[j]] += A->x[j] * A->x[j];
+#endif
       }
     }
 
+    /* accumulate D across each cone  */
+    count = boundaries[0];
+    for (i = 1; i < num_boundaries; ++i) {
+      delta = boundaries[i];
+#ifdef RUIZ
+      wrk = SCS(norm_inf)(&(D[count]), delta);
+#else
+      wrk = 0;
+      for (j = count; j < count + delta; ++j) {
+        wrk += D[j];
+      }
+      wrk /= delta;
+#endif
+      for (j = count; j < count + delta; ++j) {
+        D[j] = wrk;
+      }
+      count += delta;
+    }
+
     for (i = 0; i < A->m; ++i) {
+#ifdef RUIZ
       D[i] = apply_limit(SQRTF(D[i]));
+#else
+      D[i] = apply_limit(SQRTF(SQRTF(D[i])));
+#endif
     }
 
     if (P) {
@@ -206,29 +245,30 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
         for (kk = P->p[j]; kk < P->p[j + 1]; kk++) {
           i = P->i[kk]; /* row */
           wrk = ABS(P->x[kk]);
+#ifdef RUIZ
           E[j] = MAX(wrk, E[j]);
           if (i != j) {
             E[i] = MAX(wrk, E[i]);
           }
+#else
+          E[j] += wrk * wrk;
+          if (i != j) {
+            E[i] += wrk * wrk;
+          }
+#endif
         }
       }
     }
 
     /* calculate col norms, E */
     for (i = 0; i < A->n; ++i) {
+#ifdef RUIZ
       E[i] = MAX(E[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
       E[i] = apply_limit(SQRTF(E[i]));
-    }
-
-    /* max of D across each cone  */
-    count = boundaries[0];
-    for (i = 1; i < num_boundaries; ++i) {
-      delta = boundaries[i];
-      wrk = SCS(norm_inf)(&(D[count]), delta);
-      for (j = count; j < count + delta; ++j) {
-        D[j] = wrk;
-      }
-      count += delta;
+#else
+      E[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+      E[i] = apply_limit(SQRTF(SQRTF(E[i])));
+#endif
     }
 
     /* scale the rows of A with D */
@@ -268,8 +308,11 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_free(D);
   scs_free(E);
 
-  scal->norm_inf_a = SCS(norm_inf)(A->x, A->p[A->n]);
-
+#ifdef RUIZ
+  scal->norm_a = SCS(norm_inf)(A->x, A->p[A->n]);
+#else
+  scal->norm_a = SCS(norm)(A->x, A->p[A->n]);
+#endif
   /* scale up by d->SCALE if not equal to 1 */
   if (stgs->scale != 1) {
     SCS(scale_array)(A->x, stgs->scale, A->p[A->n]);

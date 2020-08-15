@@ -4,6 +4,16 @@
 
 #define MIN_SCALE (1e-4)
 
+/* Typically l2 equilibration works better than l1 (Ruiz) */
+/* Though more experimentation is needed */
+/* #define RUIZ 1 */
+
+#ifdef RUIZ
+#define _NORM SCS(norm_inf)
+#else
+#define _NORM SCS(norm)
+#endif
+
 void SCS(normalize_b_c)(ScsWork *w) {
   scs_int i;
   scs_float nm, *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
@@ -11,8 +21,8 @@ void SCS(normalize_b_c)(ScsWork *w) {
   for (i = 0; i < w->m; ++i) {
     b[i] /= D[i];
   }
-  nm = SCS(norm_inf)(b, w->m);
-  w->sc_b = w->scal->norm_inf_a / MAX(nm, MIN_SCALE);
+  nm = _NORM(b, w->m);
+  w->sc_b = w->scal->norm_a / MAX(nm, MIN_SCALE);
   /* scale c */
   for (i = 0; i < w->n; ++i) {
     c[i] /= E[i];
@@ -20,8 +30,8 @@ void SCS(normalize_b_c)(ScsWork *w) {
   if (w->P && w->scal->scale_p > 0) {
     w->sc_c = w->scal->scale_p;
   } else{
-    nm = SCS(norm_inf)(c, w->n);
-    w->sc_c = w->scal->norm_inf_a / MAX(nm, MIN_SCALE);
+    nm = _NORM(c, w->n);
+    w->sc_c = w->scal->norm_a / MAX(nm, MIN_SCALE);
   }
   SCS(scale_array)(b, w->sc_b * w->stgs->scale, w->m);
   SCS(scale_array)(c, w->sc_c * w->stgs->scale, w->n);
