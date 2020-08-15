@@ -37,6 +37,7 @@ static void free_work(ScsWork *w) {
     scs_free(w->g);
     scs_free(w->b);
     scs_free(w->c);
+    scs_free(w->ls_ws);
     scs_free(w->pr);
     scs_free(w->dr);
     if (w->scal) {
@@ -237,10 +238,11 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   ct_x = SAFEDIV_POS(r->ct_x_by_tau, r->tau);
 
   if (w->P) {
+    /* handle case where scale_p = 0 */
     xt_p_x = SCS(quad_form)(w->P, x);
     xt_p_x = SAFEDIV_POS(xt_p_x, r->tau * r->tau);
     if (w->stgs->normalize) {
-      xt_p_x = xt_p_x / (w->sc_b * w->sc_b * w->stgs->scale);
+      xt_p_x /= (w->sc_c * w->sc_b * w->stgs->scale);
     }
   }
   r->res_pri = SAFEDIV_POS(nmpr_tau / (1 + w->nm_b), r->tau);
@@ -287,14 +289,27 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   return tau;
 }
 
+/*
+ * Forms a warm start for the linear solve step using the output of the cone 
+ * projection step.
+ */
+static void compute_warm_start_lin_sys(ScsWork *w) {
+  scs_int len = w->m + w->n;
+  memcpy(w->ls_ws, w->u, len * sizeof(scs_float));
+  SCS(add_scaled_array)(w->ls_ws, w->g, len, w->u[len]);
+}
+
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status;
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   SCS(scale_array)(&(w->u_t[n]), -1., m);
-  /* use v as warm start, if used */
-  status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->v, iter);
+  /* compute warm start, if used */
+  compute_warm_start_lin_sys(w);
+  /* now w->ls_ws contains warm start */
+  status =
+      SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->ls_ws, iter);
   w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
   SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);
   return status;
@@ -749,6 +764,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->rsk = (scs_float *)scs_malloc(l * sizeof(scs_float));
   w->h = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->g = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
+  w->ls_ws = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->pr = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
   w->dr = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   w->b = (scs_float *)scs_malloc(d->m * sizeof(scs_float));

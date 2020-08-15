@@ -103,7 +103,8 @@ struct SCS_INFO {
 /* contains normalization variables */
 struct SCS_SCALING {
   scs_float *D, *E; /* for normalization */
-  scs_float mean_norm_row_a, mean_norm_col_a;
+  scs_float norm_inf_a;
+  scs_float scale_p;
 };
 
 /*
@@ -130,7 +131,7 @@ size_t SCS(sizeof_float)(void);
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
   scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev, *rsk;
-  scs_float *h, *g, *pr, *dr;
+  scs_float *h, *g, *pr, *dr, *ls_ws;
   scs_float sc_b, sc_c, nm_b, nm_c, best_max_residual;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */

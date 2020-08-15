@@ -117,6 +117,12 @@ static void print_matrix(const ScsMatrix *A) {
 }
 #endif
 
+static inline scs_float apply_limit(scs_float x) {
+  x = x < MIN_SCALE ? 1.0 : x;
+  x = x > MAX_SCALE ? MAX_SCALE : x;
+  return x;
+}
+
 /* Ruiz style rescaling using inf norms */
 void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
                      const ScsCone *k, ScsScaling *scal) {
@@ -124,10 +130,9 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
-  scs_float *nms = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scs_int i, j, kk, l, count, delta, *boundaries;
   scs_int num_boundaries = SCS(get_cone_boundaries)(k, &boundaries);
-  scs_float wrk;
+  scs_float wrk, a_inf, p_inf;
 
 #if EXTRA_VERBOSE > 0
   SCS(timer) normalize_timer;
@@ -139,29 +144,45 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
 
   /* Will rescale as P -> EPE, A -> DAE.
    * Essentially trying to rescale this matrix:
-   * [P A']   with   [E  0] on both sides (D, E diagonal)
-   * [A 0 ]          [0  D]
    *
-   * which results in
-   * [EPE EA'D]
-   * [DAE  0  ]
+   * [P  A' c]   with   [E  0  0] on both sides (D, E diagonal)
+   * [A  0  b]          [0  D  0]
+   * [c' b' 0]          [0  0  1]
+   *
+   * which results in:
+   *
+   * [EPE EA'D  Ec]
+   * [DAE  0    Db]
+   * [c'E  b'D   0]
+   *
+   * (Though we don't use b and c to pick D, E so that we can reuse the same
+   * factorization for many b,c combinations).
    *
    * In other words D rescales the rows of A
    *                E rescales the cols of A and rows/cols of P
    *
-   * will set D^-1 = inf norm of rows of A
-   *          E^-1 = inf norm of cols of [P]
-   *                                     [A]
+   * will repeatedly set D^-1 = inf norm of rows of A
+   *                     E^-1 = inf norm of cols of [P]
+   *                                                [A]
    *
-   * main complication is that D has to respect cone boundaries
-   *
-   * TODO: for b and c need to use this:
-   * [P  A' c]
-   * [A  0  b]
-   * [c' b' 0]
-   *
+   * The main complication is that D has to respect cone boundaries.
    *
    * */
+
+  /* First balance A and P */
+  a_inf = SCS(norm_inf)(A->x, A->p[A->n]);
+  a_inf = apply_limit(a_inf);
+  scal->scale_p = 0.;
+  if (P) {
+    p_inf = SCS(norm_inf)(P->x, P->p[P->n]);
+    /* If P is set but is zero then same as not set */
+    if (p_inf > 0.) {
+      p_inf = apply_limit(p_inf);
+      scal->scale_p = a_inf / p_inf;
+      SCS(scale_array)(P->x, scal->scale_p, P->p[P->n]);
+    }
+  }
+
   for (l = 0; l < NUM_SCALE_PASSES; ++l) {
     memset(D, 0, A->m * sizeof(scs_float));
     memset(E, 0, A->n * sizeof(scs_float));
@@ -173,9 +194,7 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
     }
 
     for (i = 0; i < A->m; ++i) {
-      D[i] = SQRTF(D[i]);
-      D[i] = D[i] < MIN_SCALE ? 1.0 : D[i];
-      D[i] = D[i] > MAX_SCALE ? MAX_SCALE : D[i];
+      D[i] = apply_limit(SQRTF(D[i]));
     }
 
     if (P) {
@@ -198,20 +217,14 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
     /* calculate col norms, E */
     for (i = 0; i < A->n; ++i) {
       E[i] = MAX(E[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
-      E[i] = SQRTF(E[i]);
-      E[i] = E[i] < MIN_SCALE ? 1.0 : E[i];
-      E[i] = E[i] > MAX_SCALE ? MAX_SCALE : E[i];
+      E[i] = apply_limit(SQRTF(E[i]));
     }
 
-    /* mean of D across each cone  */
+    /* max of D across each cone  */
     count = boundaries[0];
     for (i = 1; i < num_boundaries; ++i) {
-      wrk = 0;
       delta = boundaries[i];
-      for (j = count; j < count + delta; ++j) {
-        wrk += D[j];
-      }
-      wrk /= delta;
+      wrk = SCS(norm_inf)(&(D[count]), delta);
       for (j = count; j < count + delta; ++j) {
         D[j] = wrk;
       }
@@ -255,30 +268,14 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_free(D);
   scs_free(E);
 
-  /* calculate mean of row norms of A */
-  for (i = 0; i < A->n; ++i) {
-    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-      wrk = A->x[j];
-      nms[A->i[j]] += wrk * wrk;
-    }
-  }
-  scal->mean_norm_row_a = 0.0;
-  for (i = 0; i < A->m; ++i) {
-    scal->mean_norm_row_a += SQRTF(nms[i]) / A->m;
-  }
-  scs_free(nms);
-
-  /* calculate mean of col norms of A */
-  scal->mean_norm_col_a = 0.0;
-  for (i = 0; i < A->n; ++i) {
-    scal->mean_norm_col_a +=
-        SCS(norm)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]) / A->n;
-  }
+  scal->norm_inf_a = SCS(norm_inf)(A->x, A->p[A->n]);
 
   /* scale up by d->SCALE if not equal to 1 */
   if (stgs->scale != 1) {
     SCS(scale_array)(A->x, stgs->scale, A->p[A->n]);
-    SCS(scale_array)(P->x, stgs->scale, P->p[P->n]);
+    if (P) {
+      SCS(scale_array)(P->x, stgs->scale, P->p[P->n]);
+    }
   }
 
   scal->D = Dt;
@@ -288,7 +285,11 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_printf("finished normalizing A and P, time: %1.2es\n",
              SCS(tocq)(&normalize_timer) / 1e3);
   print_matrix(A);
-  print_matrix(P);
+  scs_printf("inf norm A %1.2e\n", SCS(norm_inf)(A->x, A->p[A->n]));
+  if (P) {
+    print_matrix(P);
+    scs_printf("inf norm P %1.2e\n", SCS(norm_inf)(P->x, P->p[P->n]));
+  }
 #endif
 }
 

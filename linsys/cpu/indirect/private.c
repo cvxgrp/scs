@@ -190,7 +190,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   scs_float *z = pr->z;   /* for preconditioning */
   scs_float *M = pr->M;   /* inverse diagonal preconditioner */
 
-  if (s == SCS_NULL) {
+  if (!s) {
     /* take s = 0 */
     /* r = b */
     memcpy(r, b, n * sizeof(scs_float));

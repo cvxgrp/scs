@@ -2,28 +2,27 @@
 #include "linalg.h"
 #include "scs.h"
 
-#define MIN_SCALE (1e-6)
+#define MIN_SCALE (1e-4)
 
 void SCS(normalize_b_c)(ScsWork *w) {
   scs_int i;
-  /* scs_float nm; */
-  scs_float *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
+  scs_float nm, *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
   /* scale b */
   for (i = 0; i < w->m; ++i) {
     b[i] /= D[i];
   }
-  /* nm = SCS(norm)(b, w->m); */
-  /* XXX need to scale P with this */
-  /* w->sc_b = w->scal->mean_norm_col_a / MAX(nm, MIN_SCALE); */
-  w->sc_b = 1.;
+  nm = SCS(norm_inf)(b, w->m);
+  w->sc_b = w->scal->norm_inf_a / MAX(nm, MIN_SCALE);
   /* scale c */
   for (i = 0; i < w->n; ++i) {
     c[i] /= E[i];
   }
-  /* XXX need to scale P with this */
-  /* nm = SCS(norm)(c, w->n); */
-  /* w->sc_c = w->scal->mean_norm_row_a / MAX(nm, MIN_SCALE); */
-  w->sc_c = 1.;
+  if (w->P && w->scal->scale_p > 0) {
+    w->sc_c = w->scal->scale_p;
+  } else{
+    nm = SCS(norm_inf)(c, w->n);
+    w->sc_c = w->scal->norm_inf_a / MAX(nm, MIN_SCALE);
+  }
   SCS(scale_array)(b, w->sc_b * w->stgs->scale, w->m);
   SCS(scale_array)(c, w->sc_c * w->stgs->scale, w->n);
 }
