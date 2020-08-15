@@ -317,7 +317,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 
 /* compute the [r;s;kappa] iterate */
 /* rsk = u^{k+1} + v^k - 2 u_t^{k+1} */
-/* since it depends on v^k MUST be called before update_dual_vars */
+/* since it depends on v^k MUST be called before update_dual_vars is done */
 /* effect of w->stgs->alpha is cancelled out */
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->n + w->m + 1;
@@ -329,6 +329,8 @@ static void compute_rsk(ScsWork *w) {
 static void update_dual_vars(ScsWork *w) {
   scs_int i, n = w->n, l = n + w->m + 1;
   scs_float a = w->stgs->alpha;
+  /* compute and store [r;s;kappa] */
+  compute_rsk(w);
   /* don't relax x variable */
   for (i = 0; i < n; ++i) {
     w->v[i] += w->u[i] - w->u_t[i];
@@ -905,18 +907,8 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   if (w->stgs->verbose) {
     print_header(w, k);
   }
-  /* scs: */
+  /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
-    /* accelerate here so that last step always projection onto cone */
-    /* this ensures the returned iterates always satisfy conic constraints */
-    SCS(tic)(&accel_timer);
-    if (i > 0 && aa_apply(w->v, w->v_prev, w->accel) != 0) {
-      /*
-      return failure(w, w->m, w->n, sol, info, SCS_FAILED,
-          "error in accelerate", "Failure");
-      */
-    }
-    total_accel_time += SCS(tocq)(&accel_timer);
 
     /* scs is homogeneous so scale the iterates to keep norm reasonable */
     total_norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
@@ -936,13 +928,13 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
                      "error in project_cones", "Failure");
     }
 
-    compute_rsk(w);
     update_dual_vars(w);
 
     if (scs_is_interrupted()) {
       return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
                      "Interrupted");
     }
+
     if (i % CONVERGED_INTERVAL == 0 || iterate_norm_diff(w) < 1e-10) {
       calc_residuals(w, &r, i);
       if ((info->status_val = has_converged(w, &r, i)) != 0) {
@@ -956,7 +948,18 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       update_best_iterate(w, &r);
       print_summary(w, i, &r, &solve_timer);
     }
+
+    /* Finally apply any acceleration */
+    SCS(tic)(&accel_timer);
+    if (aa_apply(w->v, w->v_prev, w->accel) != 0) {
+      /*
+      return failure(w, w->m, w->n, sol, info, SCS_FAILED,
+          "error in accelerate", "Failure");
+      */
+    }
+    total_accel_time += SCS(tocq)(&accel_timer);
   }
+
   if (w->stgs->verbose) {
     calc_residuals(w, &r, i);
     print_summary(w, i, &r, &solve_timer);
@@ -968,6 +971,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   if (w->stgs->verbose) {
     print_footer(d, k, sol, w, info, total_accel_time);
   }
+
   scs_end_interrupt_listener();
   return info->status_val;
 }
