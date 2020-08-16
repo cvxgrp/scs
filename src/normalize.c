@@ -4,7 +4,7 @@
 
 #define MIN_SCALE (1e-4)
 
-/* Typically l2 equilibration works better than l1 (Ruiz) */
+/* Typically l2 equilibration works better than l_inf (Ruiz) */
 /* Though more experimentation is needed */
 /* #define RUIZ 1 */
 

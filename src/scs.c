@@ -909,10 +909,8 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   }
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
-
-    /* scs is homogeneous so scale the iterates to keep norm reasonable */
-    total_norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
-    SCS(scale_array)(w->u, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
+    /* scs is homogeneous so scale the iterate to keep norm reasonable */
+    total_norm = SCS(norm)(w->v, l);
     SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
 
     /* XXX rm this? */

@@ -7,7 +7,7 @@
 #define MAX_SCALE (1e4)
 #define NUM_SCALE_PASSES 10 /* additional passes don't help much */
 
-/* Typically l2 equilibration works better than l1 (Ruiz) */
+/* Typically l2 equilibration works better than l_inf (Ruiz) */
 /* Though more experimentation is needed */
 /* #define RUIZ 1 */
 
