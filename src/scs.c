@@ -200,7 +200,7 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
 static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float *x = w->u, *y = &(w->u[w->n]);
   scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, ct_x, bt_y;
-  scs_float xt_p_x = 0., sq_xt_p_x;
+  scs_float xt_p_x = 0.;
   scs_int n = w->n, m = w->m;
 
   /* checks if the residuals are unchanged by checking iteration */
@@ -241,8 +241,8 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
 
   r->res_unbdd = NAN;
   if (r->ct_x_by_tau < 0) {
-    sq_xt_p_x = SQRTF(xt_p_x) / -r->ct_x_by_tau;
-    r->res_unbdd = MAX(sq_xt_p_x, w->nm_c * nm_axs_tau / -r->ct_x_by_tau);
+    r->sq_xt_p_x = SQRTF(MAX(xt_p_x / 2 / -r->ct_x_by_tau, 0.));
+    r->res_unbdd = w->nm_c * nm_axs_tau / -r->ct_x_by_tau;
   }
 
   bt_y = SAFEDIV_POS(r->bt_y_by_tau, r->tau);
@@ -461,6 +461,7 @@ static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->iter = iter;
   info->res_infeas = r->res_infeas;
   info->res_unbdd = r->res_unbdd;
+  info->res_unbdd_sq_xt_p_x = r->sq_xt_p_x;
   if (is_solved_status(info->status_val)) {
     info->rel_gap = r->rel_gap;
     info->res_pri = r->res_pri;
@@ -538,6 +539,7 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
              SCS(norm_diff)(w->u, w->u_t, w->n + w->m + 1));
   scs_printf("res_infeas = %1.2e, ", r->res_infeas);
   scs_printf("res_unbdd = %1.2e\n", r->res_unbdd);
+  scs_printf("sq_xt_p_x = %1.2e\n", r->sq_xt_p_x);
 #endif
 
 #ifdef MATLAB_MEX_FILE
@@ -656,7 +658,8 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("Certificate of dual infeasibility:\n");
     scs_printf("dist(s, K) = %.4e\n",
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m));
-    scs_printf("|Ax + s|_2 * |c|_2 = %.4e\n", info->res_unbdd);
+    scs_printf("|Ax + s|_2 * |c|_2 = %.4e, (x'Px/2)^(1/2) = %.4e\n",
+               info->res_unbdd, info->res_unbdd_sq_xt_p_x);
     scs_printf("c'x = %.4f\n", SCS(dot)(d->c, sol->x, d->n));
   } else {
     scs_printf("Error metrics:\n");
@@ -695,7 +698,7 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
   }
   /* Add iter > 0 to avoid strange edge case where infeasible point found
    * right at start of run `out/demo_SOCP_indirect 2 0.1 0.3 1506264403` */
-  if (isless(r->res_unbdd, eps) && iter > 0) {
+  if (isless(r->res_unbdd, eps) && isless(r->sq_xt_p_x, eps) && iter > 0) {
     return SCS_UNBOUNDED;
   }
   if (isless(r->res_infeas, eps) && iter > 0) {

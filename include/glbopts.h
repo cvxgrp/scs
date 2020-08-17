@@ -168,8 +168,8 @@ typedef float scs_float;
 
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL (1e-9)
-/* maintain the iterates at this l2 norm (due to homogeneity) */
-#define ITERATE_NORM (10.)
+/* maintain the iterates at l2norm =  ITERATE_NORM * sqrt(n+m+1) */
+#define ITERATE_NORM (1.)
 
 #ifdef __cplusplus
 }
