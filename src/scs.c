@@ -28,11 +28,9 @@ static void free_work(ScsWork *w) {
     scs_free(w->u_best);
     scs_free(w->u_t);
     scs_free(w->u_prev);
-    /* Don't need these because u*, v* are contiguous in mem
-      scs_free(w->v);
-      scs_free(w->v_best);
-      scs_free(w->v_prev);
-    */
+    scs_free(w->v);
+    scs_free(w->v_best);
+    scs_free(w->v_prev);
     scs_free(w->h);
     scs_free(w->g);
     scs_free(w->b);
@@ -74,19 +72,11 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
     scs_printf("Lin-sys: %s\n", lin_sys_method);
     scs_free(lin_sys_method);
   }
-  if (stgs->normalize) {
-    scs_printf(
-        "eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i, "
-        "scale = %2.2f\nacceleration_lookback = %i, rho_x = %.2e\n",
-        stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
-        stgs->scale, (int)acceleration_lookback, stgs->rho_x);
-  } else {
-    scs_printf(
-        "eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i\n"
-        "acceleration_lookback = %i, rho_x = %.2e\n",
-        stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
-        (int)acceleration_lookback, stgs->rho_x);
-  }
+  scs_printf(
+      "eps = %.2e, alpha = %.2f, max_iters = %i, normalize = %i, "
+      "scale = %2.2f\nacceleration_lookback = %i, rho_x = %.2e\n",
+      stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
+      stgs->scale, (int)acceleration_lookback, stgs->rho_x);
   scs_printf("Variables n = %i, constraints m = %i\n", (int)d->n, (int)d->m);
   scs_printf("%s", cone_str);
   scs_free(cone_str);
@@ -172,8 +162,11 @@ static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
   SCS(accum_by_a)(w->A, w->p, x, pr);
   SCS(add_scaled_array)(pr, s, w->m, 1.0); /* pr = Ax + s */
   for (i = 0; i < w->m; ++i) {
-    scale = w->stgs->normalize ? w->scal->D[i] / (w->sc_b * w->stgs->scale) : 1;
-    scale = scale * scale;
+    scale = 1.;
+    if (w->stgs->normalize) {
+      scale = w->scal->D[i] / (w->sc_b * w->stgs->scale);
+      scale = scale * scale;
+    }
     *nm_axs += (pr[i] * pr[i]) * scale;
     pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
   }
@@ -181,20 +174,21 @@ static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
   return SQRTF(pres); /* SCS(norm)(Ax + s - b * tau) */
 }
 
+/* we assume w->dr contains unnormalized Px when this is called */
 static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
                                  const scs_float *y, const scs_float tau,
                                  scs_float *nm_a_ty) {
   scs_int i;
   scs_float dres = 0, scale, *dr = w->dr;
   *nm_a_ty = 0;
-  memset(dr, 0, w->n * sizeof(scs_float));
-  SCS(accum_by_atrans)(w->A, w->p, y, dr); /* dr = A'y */
-  if (w->P) {
-    SCS(accum_by_p)(w->P, w->p, x, dr); /* dr = Px + A'y */
-  }
+  /* initially dr = Px */
+  SCS(accum_by_atrans)(w->A, w->p, y, dr); /* dr = Px + A'y */
   for (i = 0; i < w->n; ++i) {
-    scale = w->stgs->normalize ? w->scal->E[i] / (w->sc_c * w->stgs->scale) : 1;
-    scale = scale * scale;
+    scale = 1.;
+    if (w->stgs->normalize) {
+      scale = w->scal->E[i] / (w->sc_c * w->stgs->scale);
+      scale = scale * scale;
+    }
     *nm_a_ty += (dr[i] * dr[i]) * scale;
     dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
   }
@@ -206,7 +200,7 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
 static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float *x = w->u, *y = &(w->u[w->n]);
   scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, ct_x, bt_y;
-  scs_float xt_p_x = 0.;
+  scs_float xt_p_x = 0., sq_xt_p_x;
   scs_int n = w->n, m = w->m;
 
   /* checks if the residuals are unchanged by checking iteration */
@@ -215,36 +209,46 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   }
   r->last_iter = iter;
 
+  memset(w->dr, 0, w->n * sizeof(scs_float));
+  /* fills w->dr with UNnormalized P * x */
+  if (w->P) {
+    /* dr = P * x */
+    SCS(accum_by_p)(w->P, w->p, x, w->dr);
+    /* xt_p_x = x' P x */
+    xt_p_x = SCS(dot)(w->dr, x, w->n);
+  }
+
   r->tau = ABS(w->u[n + m]);
-  r->kap = ABS(w->rsk[n + m]) /
-           (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+  r->kap = ABS(w->rsk[n + m]);
 
   nmpr_tau = calc_primal_resid(w, x, &(w->rsk[w->n]), r->tau, &nm_axs_tau);
   nmdr_tau = calc_dual_resid(w, x, y, r->tau, &nm_a_ty_tau);
 
-  r->bt_y_by_tau =
-      SCS(dot)(y, w->b, m) /
-      (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
-  r->ct_x_by_tau =
-      SCS(dot)(x, w->c, n) /
-      (w->stgs->normalize ? (w->stgs->scale * w->sc_c * w->sc_b) : 1);
+  r->bt_y_by_tau = SCS(dot)(y, w->b, m);
+  r->ct_x_by_tau = SCS(dot)(x, w->c, n);
 
-  r->res_infeas =
-      r->bt_y_by_tau < 0 ? w->nm_b * nm_a_ty_tau / -r->bt_y_by_tau : NAN;
-  r->res_unbdd =
-      r->ct_x_by_tau < 0 ? w->nm_c * nm_axs_tau / -r->ct_x_by_tau : NAN;
+  if (w->stgs->normalize) {
+    r->kap /= w->stgs->scale * w->sc_c * w->sc_b;
+    r->bt_y_by_tau /= w->stgs->scale * w->sc_c * w->sc_b;
+    r->ct_x_by_tau /= w->stgs->scale * w->sc_c * w->sc_b;
+    xt_p_x /= (w->sc_c * w->sc_b * w->stgs->scale);
+  }
+
+  r->res_infeas = NAN;
+  if (r->bt_y_by_tau < 0) {
+    r->res_infeas = w->nm_b * nm_a_ty_tau / -r->bt_y_by_tau;
+  }
+
+  r->res_unbdd = NAN;
+  if (r->ct_x_by_tau < 0) {
+    sq_xt_p_x = SQRTF(xt_p_x) / -r->ct_x_by_tau;
+    r->res_unbdd = MAX(sq_xt_p_x, w->nm_c * nm_axs_tau / -r->ct_x_by_tau);
+  }
 
   bt_y = SAFEDIV_POS(r->bt_y_by_tau, r->tau);
   ct_x = SAFEDIV_POS(r->ct_x_by_tau, r->tau);
+  xt_p_x = SAFEDIV_POS(xt_p_x, r->tau * r->tau);
 
-  if (w->P) {
-    /* handle case where scale_p = 0 */
-    xt_p_x = SCS(quad_form)(w->P, x);
-    xt_p_x = SAFEDIV_POS(xt_p_x, r->tau * r->tau);
-    if (w->stgs->normalize) {
-      xt_p_x /= (w->sc_c * w->sc_b * w->stgs->scale);
-    }
-  }
   r->res_pri = SAFEDIV_POS(nmpr_tau / (1 + w->nm_b), r->tau);
   r->res_dual = SAFEDIV_POS(nmdr_tau / (1 + w->nm_c), r->tau);
   r->rel_gap =
@@ -758,15 +762,17 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->n = d->n;
   w->best_max_residual = INFINITY;
   /* allocate workspace: */
-  /* u* include v* values */
-  w->u = (scs_float *)scs_malloc(2 * l * sizeof(scs_float));
-  w->u_best = (scs_float *)scs_malloc(2 * l * sizeof(scs_float));
+  w->u = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->u_best = (scs_float *)scs_malloc(l * sizeof(scs_float));
   w->u_t = (scs_float *)scs_malloc(l * sizeof(scs_float));
-  w->u_prev = (scs_float *)scs_malloc(2 * l * sizeof(scs_float));
+  w->u_prev = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->v = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->v_prev = (scs_float *)scs_malloc(l * sizeof(scs_float));
+  w->v_best = (scs_float *)scs_malloc(l * sizeof(scs_float));
   w->rsk = (scs_float *)scs_malloc(l * sizeof(scs_float));
   w->h = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->g = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
-  w->ls_ws = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->ls_ws = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->pr = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
   w->dr = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   w->b = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
@@ -777,9 +783,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     return SCS_NULL;
   }
   /* make u,v and u_prev,v_prev contiguous in memory */
-  w->v = &(w->u[l]);
-  w->v_best = &(w->u_best[l]);
-  w->v_prev = &(w->u_prev[l]);
   w->A = d->A;
   w->P = d->P;
   if (w->stgs->normalize) {

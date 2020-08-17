@@ -26,14 +26,14 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p);
 /* forms y += A'*x */
 void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
                           const scs_float *x, scs_float *y);
+
 /* forms y += A*x */
 void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y);
+
 /* forms y += P*x */
 void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y);
-/* returns x'P*x */
-scs_float SCS(quad_form)(const ScsMatrix *P, const scs_float *x);
 
 /* returns negative num if input data is invalid */
 scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P);

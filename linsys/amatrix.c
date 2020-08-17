@@ -454,19 +454,3 @@ void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
   SCS(_accum_by_atrans)(P->n, P->x, P->i, P->p, x, y);
 }
 
-/* x' P x , P symetric upper triangular */
-scs_float SCS(quad_form)(const ScsMatrix *P, const scs_float *x) {
-  scs_int i, j, k;
-  scs_float quad_form = 0.;
-  for (j = 0; j < P->n; j++) { /* col */
-    for (k = P->p[j]; k < P->p[j + 1]; k++) {
-      i = P->i[k];  /* row */
-      if (i == j) { /* diagonal */
-        quad_form += P->x[k] * x[i] * x[i];
-      } else { /* off-diagonal */
-        quad_form += 2 * P->x[k] * x[i] * x[j];
-      }
-    }
-  }
-  return quad_form;
-}
