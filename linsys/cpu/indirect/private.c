@@ -1,13 +1,14 @@
 #include "private.h"
 
-#define CG_BEST_TOL 1e-9
-#define CG_MIN_TOL 1e-1
+#define CG_BEST_TOL 1e-12
+#define CG_MIN_TOL 1.
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str,
-          "sparse-indirect, nnz in A = %li, nnz in P = %li, cg_rate = %2.2f",
+          "sparse-indirect, nnz in A = %li, nnz in P = "
+          "%li\n\t cg_rate = %2.2f",
           (long)A->p[A->n], P ? (long)P->p[P->n] : 0l, stgs->cg_rate);
   return str;
 }
@@ -237,23 +238,32 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   return i;
 }
 
+/* solves Mx = b, for x but stores result in b */
+/* s contains warm-start (if available) */
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
                            scs_float *b, const scs_float *s, scs_int iter) {
   scs_int cg_its;
+  scs_float cg_tol;
   SCS(timer) linsys_timer;
-  scs_float cg_tol =
-      SCS(norm)(b, A->n) *
-      (iter < 0 ? CG_BEST_TOL
-                : CG_MIN_TOL / POWF((scs_float)iter + 1, stgs->cg_rate));
+
+  if (SCS(norm)(b, A->n) <= 1e-18) {
+    memset(b, 0, A->n * sizeof(scs_float));
+    return 0;
+  }
+
+  if (iter < 0) {
+    cg_tol = CG_BEST_TOL;
+  } else {
+    cg_tol = SCS(norm)(b, A->n) * CG_MIN_TOL /
+             POWF((scs_float)iter + 1, stgs->cg_rate);
+  }
 
   SCS(tic)(&linsys_timer);
-  /* solves Mx = b, for x but stores result in b */
-  /* s contains warm-start (if available) */
   SCS(accum_by_atrans)(A, p, &(b[A->n]), b);
   /* solves (I + P + A'A)x = b, s warm start, solution stored in b */
-  /* set max_its to 10 * n (though in theory n is enough for any tol) */
-  cg_its = pcg(A, P, stgs, p, s, b, 10 * A->n, MAX(cg_tol, CG_BEST_TOL));
+  /* set max_its to 2 * n (though in theory n is enough for any tol) */
+  cg_its = pcg(A, P, stgs, p, s, b, 2 * A->n, MAX(cg_tol, CG_BEST_TOL));
   SCS(scale_array)(&(b[A->n]), -1, A->m);
   SCS(accum_by_a)(A, p, b, &(b[A->n]));
 

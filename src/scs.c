@@ -766,7 +766,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->rsk = (scs_float *)scs_malloc(l * sizeof(scs_float));
   w->h = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->g = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
-  w->ls_ws = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
+  w->ls_ws = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->pr = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
   w->dr = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   w->b = (scs_float *)scs_malloc(d->m * sizeof(scs_float));

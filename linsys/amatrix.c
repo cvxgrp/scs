@@ -165,9 +165,9 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
  * In other words D rescales the rows of A
  *                E rescales the cols of A and rows/cols of P
  *
- * will repeatedly set D^-1 = inf norm of rows of A
- *                     E^-1 = inf norm of cols of [P]
- *                                                [A]
+ * will repeatedly set D^-1 ~ norm of rows of A
+ *                     E^-1 ~ norm of cols of [P]
+ *                                            [A]
  *
  * The main complication is that D has to respect cone boundaries.
  *
@@ -204,7 +204,8 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
 #ifdef RUIZ
         D[A->i[j]] = MAX(D[A->i[j]], ABS(A->x[j]));
 #else
-        D[A->i[j]] += A->x[j] * A->x[j];
+        /* l2 normalization row norms sqrt(n / m) */
+        D[A->i[j]] += A->m * A->x[j] * A->x[j] / A->n;
 #endif
       }
     }
