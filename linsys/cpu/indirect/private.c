@@ -1,7 +1,7 @@
 #include "private.h"
 
 #define CG_BEST_TOL 1e-12
-#define CG_MIN_TOL 1.
+#define CG_BASE_TOL 1.
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
@@ -255,7 +255,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   if (iter < 0) {
     cg_tol = CG_BEST_TOL;
   } else {
-    cg_tol = SCS(norm)(b, A->n) * CG_MIN_TOL /
+    cg_tol = SCS(norm)(b, A->n) * CG_BASE_TOL /
              POWF((scs_float)iter + 1, stgs->cg_rate);
   }
 
