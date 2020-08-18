@@ -630,7 +630,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("hit max_iters, returning best iterate\n");
   }
   scs_printf("\nstatus:  %s\n", info->status);
-  scs_printf("timings: total: %1.2es, setup: %1.2es, solve: %1.2es\n",
+  scs_printf("timings: total: %1.2es = setup: %1.2es + solve: %1.2es\n",
              (info->setup_time + info->solve_time) / 1e3,
              info->setup_time / 1e3, info->solve_time / 1e3);
   scs_printf("\t lin-sys: %1.2es, cones: %1.2es, accel: %1.2es\n",
