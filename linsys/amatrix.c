@@ -142,8 +142,12 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   SCS(timer) normalize_timer;
   SCS(tic)(&normalize_timer);
   scs_printf("normalizing A and P\n");
+  scs_printf("A:\n");
   print_matrix(A);
-  if (P) print_matrix(P);
+  if (P) {
+    scs_printf("P:\n");
+    print_matrix(P);
+  }
 #endif
 
 /* Will rescale as P -> EPE, A -> DAE.

@@ -1,3 +1,4 @@
+#include <limits.h>
 #include "private.h"
 
 #define CG_BEST_TOL 1e-12
@@ -7,20 +8,17 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str,
-          "sparse-indirect, nnz in A = %li, nnz in P = "
-          "%li\n\t cg_rate = %2.2f",
+          "lin-sys:  sparse-indirect\n\t  nnz(A): %li, nnz(P): "
+          "%li, cg_rate: %2.2f\n",
           (long)A->p[A->n], P ? (long)P->p[P->n] : 0l, stgs->cg_rate);
   return str;
 }
 
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(str,
-          "\tLin-sys: avg # CG iterations: %2.2f, avg solve time: %1.2es\n",
-          (scs_float)p->tot_cg_its / (info->iter + 1),
-          p->total_solve_time / (info->iter + 1) / 1e3);
+  sprintf(str, "lin-sys: avg cg its: %2.2f\n",
+          (scs_float)p->tot_cg_its / (info->iter + 1));
   p->tot_cg_its = 0;
-  p->total_solve_time = 0;
   return str;
 }
 
@@ -168,7 +166,6 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->M = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
   get_preconditioner(A, P, stgs, p);
 
-  p->total_solve_time = 0;
   p->tot_cg_its = 0;
   if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p ||
       !p->At->x) {
@@ -243,9 +240,8 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
                            scs_float *b, const scs_float *s, scs_int iter) {
-  scs_int cg_its;
+  scs_int cg_its, max_iters;
   scs_float cg_tol;
-  SCS(timer) linsys_timer;
 
   if (SCS(norm)(b, A->n) <= 1e-18) {
     memset(b, 0, A->n * sizeof(scs_float));
@@ -254,16 +250,17 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
 
   if (iter < 0) {
     cg_tol = CG_BEST_TOL;
+    max_iters = INT_MAX;
   } else {
     cg_tol = SCS(norm)(b, A->n) * CG_BASE_TOL /
              POWF((scs_float)iter + 1, stgs->cg_rate);
+    /* set max_its to 3 * n (though in theory n is enough for any tol) */
+    max_iters = 3 * A->n;
   }
 
-  SCS(tic)(&linsys_timer);
   SCS(accum_by_atrans)(A, p, &(b[A->n]), b);
   /* solves (I + P + A'A)x = b, s warm start, solution stored in b */
-  /* set max_its to 2 * n (though in theory n is enough for any tol) */
-  cg_its = pcg(A, P, stgs, p, s, b, 2 * A->n, MAX(cg_tol, CG_BEST_TOL));
+  cg_its = pcg(A, P, stgs, p, s, b, max_iters, MAX(cg_tol, CG_BEST_TOL));
   SCS(scale_array)(&(b[A->n]), -1, A->m);
   SCS(accum_by_a)(A, p, b, &(b[A->n]));
 
@@ -271,10 +268,6 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
     p->tot_cg_its += cg_its;
   }
 
-  p->total_solve_time += SCS(tocq)(&linsys_timer);
-#if EXTRA_VERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
-#endif
   return 0;
 }
 

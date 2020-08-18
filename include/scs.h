@@ -87,19 +87,19 @@ struct SCS_SOL_VARS {
 
 /* contains terminating information */
 struct SCS_INFO {
-  scs_int iter;                  /* number of iterations taken */
-  char status[32];               /* status string, e.g. 'Solved' */
-  scs_int status_val;            /* status as scs_int, defined in glbopts.h */
-  scs_float pobj;                /* primal objective */
-  scs_float dobj;                /* dual objective */
-  scs_float res_pri;             /* primal equality residual */
-  scs_float res_dual;            /* dual equality residual */
-  scs_float res_infeas;          /* infeasibility cert residual */
-  scs_float res_unbdd;           /* unbounded cert residual */
-  scs_float res_unbdd_sq_xt_p_x; /* sqrt(x' P x / 2) */
-  scs_float rel_gap;             /* relative duality gap */
-  scs_float setup_time;          /* time taken for setup phase (milliseconds) */
-  scs_float solve_time;          /* time taken for solve phase (milliseconds) */
+  scs_int iter;         /* number of iterations taken */
+  char status[32];      /* status string, e.g. 'Solved' */
+  scs_int status_val;   /* status as scs_int, defined in glbopts.h */
+  scs_float pobj;       /* primal objective */
+  scs_float dobj;       /* dual objective */
+  scs_float res_pri;    /* primal equality residual */
+  scs_float res_dual;   /* dual equality residual */
+  scs_float res_infeas; /* infeasibility cert residual */
+  scs_float res_unbdd;  /* unbounded cert residual */
+  scs_float xt_p_x;     /* x' Px */
+  scs_float rel_gap;    /* relative duality gap */
+  scs_float setup_time; /* time taken for setup phase (milliseconds) */
+  scs_float solve_time; /* time taken for solve phase (milliseconds) */
 };
 
 /* contains normalization variables */
@@ -153,7 +153,8 @@ struct SCS_RESIDUALS {
   scs_float res_pri;
   scs_float res_infeas;
   scs_float res_unbdd;
-  scs_float sq_xt_p_x; /* for unbounded: sqrt(x' P x / 2) */
+  scs_float xt_p_x;      /* x' P x */
+  scs_float xt_p_x_ctau; /* for unbounded: x' P x / (c'x)^2 */
   scs_float rel_gap;
   scs_float ct_x_by_tau; /* not divided by tau */
   scs_float bt_y_by_tau; /* not divided by tau */

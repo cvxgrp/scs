@@ -152,14 +152,6 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
   return 0;
 }
 
-char *SCS(get_cone_summary)(const ScsInfo *info, ScsConeWork *c) {
-  char *str = (char *)scs_malloc(sizeof(char) * 64);
-  sprintf(str, "\tCones: avg projection time: %1.2es\n",
-          c->total_cone_time / (info->iter + 1) / 1e3);
-  c->total_cone_time = 0.0;
-  return str;
-}
-
 void SCS(finish_cone)(ScsConeWork *c) {
 #ifdef USE_LAPACK
   if (c->Xs) {
@@ -186,13 +178,13 @@ void SCS(finish_cone)(ScsConeWork *c) {
 char *SCS(get_cone_header)(const ScsCone *k) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 512);
   scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
-  sprintf(tmp, "Cones:");
+  sprintf(tmp, "cones: ");
   if (k->f) {
-    sprintf(tmp + strlen(tmp), "\tprimal zero / dual free vars: %li\n",
+    sprintf(tmp + strlen(tmp), "\t  f: primal zero / dual free vars: %li\n",
             (long)k->f);
   }
   if (k->l) {
-    sprintf(tmp + strlen(tmp), "\tlinear vars: %li\n", (long)k->l);
+    sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
   }
   soc_vars = 0;
   soc_blks = 0;
@@ -201,7 +193,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     for (i = 0; i < k->qsize; i++) {
       soc_vars += k->q[i];
     }
-    sprintf(tmp + strlen(tmp), "\tsoc vars: %li, soc blks: %li\n",
+    sprintf(tmp + strlen(tmp), "\t  q: soc vars: %li, soc blks: %li\n",
             (long)soc_vars, (long)soc_blks);
   }
   sd_vars = 0;
@@ -211,15 +203,15 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     for (i = 0; i < k->ssize; i++) {
       sd_vars += get_sd_cone_size(k->s[i]);
     }
-    sprintf(tmp + strlen(tmp), "\tsd vars: %li, sd blks: %li\n", (long)sd_vars,
-            (long)sd_blks);
+    sprintf(tmp + strlen(tmp), "\t  s: sd vars: %li, sd blks: %li\n",
+            (long)sd_vars, (long)sd_blks);
   }
   if (k->ep || k->ed) {
-    sprintf(tmp + strlen(tmp), "\texp vars: %li, dual exp vars: %li\n",
+    sprintf(tmp + strlen(tmp), "\t  e: exp vars: %li, dual exp vars: %li\n",
             (long)(3 * k->ep), (long)(3 * k->ed));
   }
   if (k->psize && k->p) {
-    sprintf(tmp + strlen(tmp), "\tprimal + dual power vars: %li\n",
+    sprintf(tmp + strlen(tmp), "\t  p: primal + dual power vars: %li\n",
             (long)(3 * k->psize));
   }
   return tmp;
@@ -393,7 +385,6 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k) {
 #if EXTRA_VERBOSE > 0
   scs_printf("init_cone\n");
 #endif
-  c->total_cone_time = 0.0;
   if (k->ssize && k->s) {
     if (!is_simple_semi_definite_cone(k->s, k->ssize) &&
         set_up_sd_cone_work_space(c, k) < 0) {
@@ -641,12 +632,10 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
                             const scs_float *warm_start, scs_int iter) {
   scs_int i;
   scs_int count = (k->f ? k->f : 0);
-  SCS(timer) cone_timer;
 #if EXTRA_VERBOSE > 0
   SCS(timer) proj_timer;
   SCS(tic)(&proj_timer);
 #endif
-  SCS(tic)(&cone_timer);
 
   if (k->l) {
     /* project onto positive orthant */
@@ -794,8 +783,5 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
 #endif
   }
   /* project onto OTHER cones */
-  if (c) {
-    c->total_cone_time += SCS(tocq)(&cone_timer);
-  }
   return 0;
 }

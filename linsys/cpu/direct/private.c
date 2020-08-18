@@ -14,7 +14,7 @@ struct SPARSE_MATRIX /* matrix in compressed-column or triplet form */
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(tmp, "sparse-direct, nnz in A = %li, nnz in P = %li",
+  sprintf(tmp, "lin-sys:  sparse-direct\n\t  nnz(A): %li, nnz(P): %li\n",
           (long)A->p[A->n], P ? (long)P->p[P->n] : 0l);
   return tmp;
 }
@@ -22,9 +22,7 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
-  sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n",
-          (long)(p->L->p[n] + n), p->total_solve_time / (info->iter + 1) / 1e3);
-  p->total_solve_time = 0;
+  sprintf(str, "lin-sys: nnz(L): %li\n", (long)(p->L->p[n] + n));
   return str;
 }
 
@@ -386,7 +384,6 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
     // SCS(free_lin_sys_work)(p);
     return SCS_NULL;
   }
-  p->total_solve_time = 0.0;
   return p;
 }
 
@@ -395,13 +392,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            scs_float *b, const scs_float *s, scs_int iter) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
-  SCS(timer) linsys_timer;
-  SCS(tic)(&linsys_timer);
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
-  p->total_solve_time += SCS(tocq)(&linsys_timer);
-#if EXTRA_VERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
-#endif
   return 0;
 }
 

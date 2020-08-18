@@ -11,7 +11,6 @@ extern "C" {
 
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
-  scs_float total_cone_time;
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
@@ -38,7 +37,6 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
                             const scs_float *warm_start, scs_int iter);
 void SCS(finish_cone)(ScsConeWork *c);
-char *SCS(get_cone_summary)(const ScsInfo *info, ScsConeWork *c);
 
 #ifdef __cplusplus
 }
