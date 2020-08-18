@@ -550,7 +550,7 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
   scs_printf("|u - u_t| = %1.2e, ",
              SCS(norm_diff)(w->u, w->u_t, w->n + w->m + 1));
   scs_printf("res_infeas = %1.2e, ", r->res_infeas);
-  scs_printf("res_unbdd = %1.2e\n", r->res_unbdd);
+  scs_printf("res_unbdd = %1.2e, ", r->res_unbdd);
   scs_printf("xt_p_x_ctau = %1.2e\n", r->xt_p_x_ctau);
 #endif
 
@@ -688,8 +688,8 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
   }
   /* Add iter > 0 to avoid strange edge case where infeasible point found
    * right at start of run `out/demo_SOCP_indirect 2 0.1 0.3 1506264403` */
-  if (isless(r->res_unbdd, eps) && isless(SQRTF(r->xt_p_x_ctau), eps) &&
-      iter > 0) {
+  if (isless(r->res_unbdd, eps) &&
+      isless(SQRTF(MAX(r->xt_p_x_ctau, 0.)), eps) && iter > 0) {
     return SCS_UNBOUNDED;
   }
   if (isless(r->res_infeas, eps) && iter > 0) {
