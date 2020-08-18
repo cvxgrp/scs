@@ -36,6 +36,7 @@ static void free_work(ScsWork *w) {
     scs_free(w->b);
     scs_free(w->c);
     scs_free(w->ls_ws);
+    scs_free(w->px);
     scs_free(w->pr);
     scs_free(w->dr);
     if (w->scal) {
@@ -156,41 +157,41 @@ static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
                                    const scs_float *s, const scs_float tau,
                                    scs_float *nm_axs) {
   scs_int i;
-  scs_float pres = 0, scale, *pr = w->pr;
+  scs_float ax_s_sbctau, scale_i, pres = 0, *pr = w->pr;
   *nm_axs = 0;
   memset(pr, 0, w->m * sizeof(scs_float));
   SCS(accum_by_a)(w->A, w->p, x, pr);
   SCS(add_scaled_array)(pr, s, w->m, 1.0); /* pr = Ax + s */
   for (i = 0; i < w->m; ++i) {
-    scale = 1.;
+    scale_i = 1.;
     if (w->stgs->normalize) {
-      scale = w->scal->D[i] / (w->sc_b * w->stgs->scale);
-      scale = scale * scale;
+      scale_i = w->scal->D[i] / (w->scal->dual_scale * w->stgs->scale);
     }
-    *nm_axs += (pr[i] * pr[i]) * scale;
-    pres += (pr[i] - w->b[i] * tau) * (pr[i] - w->b[i] * tau) * scale;
+    *nm_axs += (pr[i] * scale_i) * (pr[i] * scale_i); /* ||Ax + s|| */
+    ax_s_sbctau = (pr[i] - w->b[i] * tau) * scale_i;
+    pres += ax_s_sbctau * ax_s_sbctau;
   }
   *nm_axs = SQRTF(*nm_axs);
   return SQRTF(pres); /* SCS(norm)(Ax + s - b * tau) */
 }
 
-/* we assume w->dr contains unnormalized Px when this is called */
+/* we assume w->px contains unnormalized Px when this is called */
 static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
                                  const scs_float *y, const scs_float tau,
                                  scs_float *nm_a_ty) {
   scs_int i;
-  scs_float dres = 0, scale, *dr = w->dr;
+  scs_float px_aty_ctau, scale_i, dres = 0, *dr = w->dr, *px = w->px;
   *nm_a_ty = 0;
-  /* initially dr = Px */
-  SCS(accum_by_atrans)(w->A, w->p, y, dr); /* dr = Px + A'y */
+  memset(w->dr, 0, w->n * sizeof(scs_float));
+  SCS(accum_by_atrans)(w->A, w->p, y, dr); /* dr = A'y */
   for (i = 0; i < w->n; ++i) {
-    scale = 1.;
+    scale_i = 1.;
     if (w->stgs->normalize) {
-      scale = w->scal->E[i] / (w->sc_c * w->stgs->scale);
-      scale = scale * scale;
+      scale_i = w->scal->E[i] / (w->scal->primal_scale * w->stgs->scale);
     }
-    *nm_a_ty += (dr[i] * dr[i]) * scale;
-    dres += (dr[i] + w->c[i] * tau) * (dr[i] + w->c[i] * tau) * scale;
+    *nm_a_ty += (dr[i] * scale_i) * (dr[i] * scale_i); /* ||A' y|| */
+    px_aty_ctau = (px[i] + dr[i] + w->c[i] * tau) * scale_i;
+    dres += px_aty_ctau * px_aty_ctau;
   }
   *nm_a_ty = SQRTF(*nm_a_ty);
   return SQRTF(dres); /* SCS(norm)(Px + A'y + c * tau) */
@@ -209,13 +210,13 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   }
   r->last_iter = iter;
 
-  memset(w->dr, 0, w->n * sizeof(scs_float));
-  /* fills w->dr with UNnormalized P * x */
+  memset(w->px, 0, w->n * sizeof(scs_float));
+  /* fills w->px with UNnormalized P * x */
   if (w->P) {
-    /* dr = P * x */
-    SCS(accum_by_p)(w->P, w->p, x, w->dr);
-    /* xt_p_x = x' P x */
-    xt_p_x = SCS(dot)(w->dr, x, w->n);
+    /* px = P * x */
+    SCS(accum_by_p)(w->P, w->p, x, w->px);
+    /* xt_p_x = x' P x , unnormalized */
+    xt_p_x = SCS(dot)(w->px, x, w->n);
   }
 
   r->tau = ABS(w->u[n + m]);
@@ -228,10 +229,12 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   r->ct_x_by_tau = SCS(dot)(x, w->c, n);
 
   if (w->stgs->normalize) {
-    r->kap /= w->stgs->scale * w->sc_c * w->sc_b;
-    r->bt_y_by_tau /= w->stgs->scale * w->sc_c * w->sc_b;
-    r->ct_x_by_tau /= w->stgs->scale * w->sc_c * w->sc_b;
-    xt_p_x /= (w->sc_c * w->sc_b * w->stgs->scale);
+    r->kap /= (w->stgs->scale * w->scal->primal_scale * w->scal->dual_scale);
+    r->bt_y_by_tau /=
+        (w->stgs->scale * w->scal->primal_scale * w->scal->dual_scale);
+    r->ct_x_by_tau /=
+        (w->stgs->scale * w->scal->primal_scale * w->scal->dual_scale);
+    xt_p_x /= (w->scal->primal_scale * w->scal->dual_scale * w->stgs->scale);
   }
 
   r->res_infeas = NAN;
@@ -240,8 +243,11 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   }
 
   r->res_unbdd = NAN;
+  r->sq_xt_p_x = NAN;
   if (r->ct_x_by_tau < 0) {
-    r->sq_xt_p_x = SQRTF(MAX(xt_p_x / 2 / -r->ct_x_by_tau, 0.));
+    /* sqrt(x'Px) / (c'x) */
+    r->sq_xt_p_x = SQRTF(MAX(xt_p_x, 0.)) / -r->ct_x_by_tau;
+    /* |c||Ax + s| / (c'x) */
     r->res_unbdd = w->nm_c * nm_axs_tau / -r->ct_x_by_tau;
   }
 
@@ -658,7 +664,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("Certificate of dual infeasibility:\n");
     scs_printf("dist(s, K) = %.4e\n",
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m));
-    scs_printf("|Ax + s|_2 * |c|_2 = %.4e, (x'Px/2)^(1/2) = %.4e\n",
+    scs_printf("|Ax + s|_2 * |c|_2 = %.4e, (x'Px)^(1/2) = %.4e\n",
                info->res_unbdd, info->res_unbdd_sq_xt_p_x);
     scs_printf("c'x = %.4f\n", SCS(dot)(d->c, sol->x, d->n));
   } else {
@@ -776,6 +782,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->h = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->g = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
   w->ls_ws = (scs_float *)scs_malloc((l - 1) * sizeof(scs_float));
+  w->px = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   w->pr = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
   w->dr = (scs_float *)scs_malloc(d->n * sizeof(scs_float));
   w->b = (scs_float *)scs_malloc(d->m * sizeof(scs_float));
@@ -848,10 +855,10 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
     SCS(normalize_b_c)(w);
 #if EXTRA_VERBOSE > 0
     SCS(print_array)(w->b, m, "bn");
-    scs_printf("sc_b = %4f\n", w->sc_b);
+    scs_printf("dual scale= %4f\n", w->scal->dual_scale);
     scs_printf("post-normalized norm b = %4f\n", SCS(norm)(w->b, m));
     SCS(print_array)(w->c, n, "cn");
-    scs_printf("sc_c = %4f\n", w->sc_c);
+    scs_printf("primal scale= %4f\n", w->scal->primal_scale);
     scs_printf("post-normalized norm c = %4f\n", SCS(norm)(w->c, n));
 #endif
   }

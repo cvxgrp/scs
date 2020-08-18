@@ -180,7 +180,9 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   norm_a = SCS(norm)(A->x, A->p[A->n]); /* should be square to approx A'A ? */
 #endif
   norm_a = apply_limit(norm_a);
-  scal->scale_p = 0.;
+  scal->primal_scale = -1.;
+  scal->dual_scale = -1.;
+
   if (P) {
 #ifdef RUIZ
     norm_p = SCS(norm_inf)(P->x, P->p[P->n]);
@@ -190,8 +192,10 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
     /* If P is set but is zero then same as not set */
     if (norm_p > 0.) {
       norm_p = apply_limit(norm_p);
-      scal->scale_p = norm_a / norm_p;
-      SCS(scale_array)(P->x, scal->scale_p, P->p[P->n]);
+      scal->primal_scale = norm_a / norm_p;
+      /* XXX best choice ? */
+      scal->dual_scale = 1.;
+      SCS(scale_array)(P->x, scal->primal_scale / scal->dual_scale, P->p[P->n]);
     }
   }
 
@@ -309,6 +313,7 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_free(D);
   scs_free(E);
 
+/* XXX norm a probably not right for both b and c later */
 #ifdef RUIZ
   scal->norm_a = SCS(norm_inf)(A->x, A->p[A->n]);
 #else
@@ -453,4 +458,3 @@ void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
   /* y += P_lower x */
   SCS(_accum_by_atrans)(P->n, P->x, P->i, P->p, x, y);
 }
-
