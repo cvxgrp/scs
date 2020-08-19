@@ -98,15 +98,22 @@ static ScsMatrix *read_amatrix(FILE *fin) {
 }
 
 static void write_scs_data(const ScsData *d, FILE *fout) {
+  scs_int has_p = d->P ? 1 : 0;
   fwrite(&(d->m), sizeof(scs_int), 1, fout);
   fwrite(&(d->n), sizeof(scs_int), 1, fout);
   fwrite(d->b, sizeof(scs_float), d->m, fout);
   fwrite(d->c, sizeof(scs_float), d->n, fout);
   write_scs_stgs(d->stgs, fout);
   write_amatrix(d->A, fout);
+  /* write has P bit */
+  fwrite(&has_p, sizeof(scs_int), 1, fout);
+  if (d->P) {
+    write_amatrix(d->P, fout);
+  }
 }
 
 static ScsData *read_scs_data(FILE *fin) {
+  scs_int has_p;
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   fread(&(d->m), sizeof(scs_int), 1, fin);
   fread(&(d->n), sizeof(scs_int), 1, fin);
@@ -116,6 +123,9 @@ static ScsData *read_scs_data(FILE *fin) {
   fread(d->c, sizeof(scs_float), d->n, fin);
   d->stgs = read_scs_stgs(fin);
   d->A = read_amatrix(fin);
+  /* If has_p bit is not set or this hits end of file then has_p = 0 */
+  has_p &= fread(&has_p, sizeof(scs_int), 1, fin);
+  d->P = has_p ? read_amatrix(fin) : SCS_NULL;
   return d;
 }
 
@@ -145,16 +155,16 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
 
   if (file_int_sz != (uint32_t)sizeof(scs_int)) {
     scs_printf(
-        "Error, sizeof(file int) is %lu, but scs expects sizeof(int) "
-        "%lu, scs should be recompiled with correct flags.\n",
+        "Error, sizeof(file int) is %lu, but scs expects sizeof(int) %lu, "
+        "scs should be recompiled with correct flags.\n",
         (unsigned long)file_int_sz, (unsigned long)sizeof(scs_int));
     fclose(fin);
     return -1;
   }
   if (file_float_sz != (uint32_t)sizeof(scs_float)) {
     scs_printf(
-        "Error, sizeof(file float) is %lu, but scs expects "
-        "sizeof(float) %lu, scs should be recompiled with the correct flags.\n",
+        "Error, sizeof(file float) is %lu, but scs expects sizeof(float) %lu, "
+        "scs should be recompiled with the correct flags.\n",
         (unsigned long)file_float_sz, (unsigned long)sizeof(scs_float));
     fclose(fin);
     return -1;
