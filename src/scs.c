@@ -77,9 +77,10 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_printf(
       "settings: eps: %.2e, alpha: %.2f, max_iters: %i,\n"
       "\t  normalize: %i, scale: %.2f, rho_x: %.2e,\n"
-      "\t  acceleration_lookback: %i\n",
+      "\t  acceleration_lookback: %i, warm_start: %i\n",
       stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
-      stgs->scale, stgs->rho_x, (int)acceleration_lookback);
+      stgs->scale, stgs->rho_x, (int)acceleration_lookback,
+      (int)stgs->warm_start);
   if (lin_sys_method) {
     scs_printf("%s", lin_sys_method);
     scs_free(lin_sys_method);
@@ -418,10 +419,10 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->y, SAFEDIV_POS(1.0, r->tau), w->m);
   SCS(scale_array)(sol->s, SAFEDIV_POS(1.0, r->tau), w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "solved / inaccurate");
+    strcpy(info->status, "Solved/Inaccurate");
     return SCS_SOLVED_INACCURATE;
   }
-  strcpy(info->status, "solved");
+  strcpy(info->status, "Solved");
   return SCS_SOLVED;
 }
 
@@ -431,10 +432,10 @@ static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->s, NAN, w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "infeasible / inaccurate");
+    strcpy(info->status, "Infeasible/Inaccurate");
     return SCS_INFEASIBLE_INACCURATE;
   }
-  strcpy(info->status, "infeasible");
+  strcpy(info->status, "Infeasible");
   return SCS_INFEASIBLE;
 }
 
@@ -444,10 +445,10 @@ static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->s, -1 / ct_x, w->m);
   SCS(scale_array)(sol->y, NAN, w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "unbounded / inaccurate");
+    strcpy(info->status, "Unbounded/Inaccurate");
     return SCS_UNBOUNDED_INACCURATE;
   }
-  strcpy(info->status, "unbounded");
+  strcpy(info->status, "Unbounded");
   return SCS_UNBOUNDED;
 }
 
@@ -558,9 +559,6 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
 
 static void print_header(ScsWork *w, const ScsCone *k) {
   scs_int i;
-  if (w->stgs->warm_start) {
-    scs_printf("SCS using variable warm-starting\n");
-  }
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
