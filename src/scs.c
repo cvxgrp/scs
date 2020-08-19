@@ -31,6 +31,7 @@ static void free_work(ScsWork *w) {
     scs_free(w->v);
     scs_free(w->v_best);
     scs_free(w->v_prev);
+    scs_free(w->rsk);
     scs_free(w->h);
     scs_free(w->g);
     scs_free(w->b);
@@ -62,7 +63,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
     scs_printf("-");
   }
   scs_printf(
-      "\n\tSCS v%s - Splitting Conic Solver\n\t(c) Brendan "
+      "\n\t\tSCS v%s - Splitting Conic Solver\n\t (c) Brendan "
       "O'Donoghue, Stanford University, 2012\n",
       SCS(version)());
   for (i = 0; i < LINE_LEN; ++i) {
@@ -341,7 +342,7 @@ static void compute_rsk(ScsWork *w) {
 }
 
 static void update_dual_vars(ScsWork *w) {
-  scs_int i, n = w->n, l = n + w->m + 1;
+  scs_int i, l = w->n + w->m + 1;
   scs_float a = w->stgs->alpha;
   /* compute and store [r;s;kappa] */
   compute_rsk(w);
