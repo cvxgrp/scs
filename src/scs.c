@@ -367,7 +367,7 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
 }
 
 static scs_int indeterminate(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  strcpy(info->status, "Indeterminate");
+  strcpy(info->status, "indeterminate");
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->y, NAN, w->m);
   SCS(scale_array)(sol->s, NAN, w->m);
@@ -419,10 +419,10 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->y, SAFEDIV_POS(1.0, r->tau), w->m);
   SCS(scale_array)(sol->s, SAFEDIV_POS(1.0, r->tau), w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "Solved/Inaccurate");
+    strcpy(info->status, "solved / inaccurate");
     return SCS_SOLVED_INACCURATE;
   }
-  strcpy(info->status, "Solved");
+  strcpy(info->status, "solved");
   return SCS_SOLVED;
 }
 
@@ -432,10 +432,10 @@ static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->s, NAN, w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "Infeasible/Inaccurate");
+    strcpy(info->status, "infeasible / inaccurate");
     return SCS_INFEASIBLE_INACCURATE;
   }
-  strcpy(info->status, "Infeasible");
+  strcpy(info->status, "infeasible");
   return SCS_INFEASIBLE;
 }
 
@@ -445,10 +445,10 @@ static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->s, -1 / ct_x, w->m);
   SCS(scale_array)(sol->y, NAN, w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "Unbounded/Inaccurate");
+    strcpy(info->status, "unbounded / inaccurate");
     return SCS_UNBOUNDED_INACCURATE;
   }
-  strcpy(info->status, "Unbounded");
+  strcpy(info->status, "unbounded");
   return SCS_UNBOUNDED;
 }
 
