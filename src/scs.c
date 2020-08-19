@@ -663,12 +663,12 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("dual res: |Px+A'y+c|_2/(1+|c|_2) = %.4e\n", info->res_dual);
     scs_printf("rel gap: |x'Px+c'x+b'y|/(1+|x'Px|+|c'x|+|b'y|) = %.4e\n",
                info->rel_gap);
-    for (i = 0; i < LINE_LEN; ++i) {
-      scs_printf("-");
-    }
-    scs_printf("\n");
-    scs_printf("optimal objective = %.6f\n", info->pobj);
   }
+  for (i = 0; i < LINE_LEN; ++i) {
+    scs_printf("-");
+  }
+  scs_printf("\n");
+  scs_printf("optimal objective = %.6f\n", info->pobj);
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("=");
   }
