@@ -63,7 +63,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
     scs_printf("-");
   }
   scs_printf(
-      "\n\t\tSCS v%s - Splitting Conic Solver\n\t (c) Brendan "
+      "\n\t       SCS v%s - Splitting Conic Solver\n\t(c) Brendan "
       "O'Donoghue, Stanford University, 2012\n",
       SCS(version)());
   for (i = 0; i < LINE_LEN; ++i) {
@@ -652,7 +652,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("      (x'Px)^(1/2) = %.4e\n", SQRTF(MAX(info->xt_p_x, 0.)));
     scs_printf("      c'x = %.4f\n", SCS(dot)(d->c, sol->x, d->n));
   } else {
-    scs_printf("cone: dist(s, K) = %.4e, dist(y, K*) = %.4e\n",
+    scs_printf("cones: dist(s, K) = %.4e, dist(y, K*) = %.4e\n",
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m),
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m));
     scs_printf("comp slack: s'y/|s||y| = %.4e\n",
