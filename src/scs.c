@@ -330,7 +330,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 }
 
 /* compute the [r;s;kappa] iterate */
-/* rsk = u^{k+1} + v^k - 2 u_t^{k+1} */
+/* rsk^{k+1} = u^{k+1} + v^k - 2 u_t^{k+1} */
 /* since it depends on v^k MUST be called before update_dual_vars is done */
 /* effect of w->stgs->alpha is cancelled out */
 static void compute_rsk(ScsWork *w) {
@@ -345,11 +345,7 @@ static void update_dual_vars(ScsWork *w) {
   scs_float a = w->stgs->alpha;
   /* compute and store [r;s;kappa] */
   compute_rsk(w);
-  /* don't relax x variable */
-  for (i = 0; i < n; ++i) {
-    w->v[i] += w->u[i] - w->u_t[i];
-  }
-  for (i = n; i < l; ++i) {
+  for (i = 0; i < l; ++i) {
     w->v[i] += a * (w->u[i] - w->u_t[i]);
   }
 }
@@ -626,10 +622,11 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
+  scs_printf("\n");
   if (info->iter == w->stgs->max_iters) {
     scs_printf("hit max_iters, returning best iterate\n");
   }
-  scs_printf("\nstatus:  %s\n", info->status);
+  scs_printf("status:  %s\n", info->status);
   scs_printf("timings: total: %1.2es = setup: %1.2es + solve: %1.2es\n",
              (info->setup_time + info->solve_time) / 1e3,
              info->setup_time / 1e3, info->solve_time / 1e3);
@@ -670,7 +667,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
       scs_printf("-");
     }
     scs_printf("\n");
-    scs_printf("opt* = %.6f\n", info->pobj);
+    scs_printf("optimal objective = %.6f\n", info->pobj);
   }
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("=");

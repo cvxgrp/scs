@@ -31,8 +31,7 @@ static const char *small_lp(void) {
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol);
   SCS(set_default_settings)(d);
 
-  /* this test fails with the default choice of 10 */
-  d->stgs->acceleration_lookback = 20;
+  d->stgs->acceleration_lookback = 10;
 
   exitflag = scs(d, k, sol, &info);
   perr = SCS(dot)(d->c, sol->x, d->n) - SCS(dot)(d->c, opt_sol->x, d->n);
