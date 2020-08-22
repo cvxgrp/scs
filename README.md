@@ -137,7 +137,7 @@ gpu.
 
 The direct solver uses external numerical linear algebra packages:
 * [QDLDL](https://github.com/oxfordcontrol/qdldl)
-* [AMD](http://www.cise.ufl.edu/research/sparse/).
+* [AMD](https://github.com/DrTimothyAldenDavis/SuiteSparse).
 
 ### Using SCS in C
 Typing `make` at the command line will compile the code and create SCS libraries
