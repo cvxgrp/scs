@@ -66,11 +66,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
    b = A*x + s
    */
   A->p[0] = 0;
-  scs_printf("Generating random matrix:\n");
   for (j = 0; j < n; j++) { /* column */
-    if (j * 100 % n == 0 && (j * 100 / n) % 10 == 0) {
-      scs_printf("%ld%%\n", (long)(j * 100 / n));
-    }
     r = 0;
     for (i = 0; i < m && r < col_nnz; ++i) {
       /* generate a unique sorted array via Knuths alg */
@@ -86,7 +82,6 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
     }
     A->p[j + 1] = (j + 1) * col_nnz;
   }
-  scs_printf("done\n");
   scs_free(z);
 }
 

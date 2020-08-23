@@ -66,6 +66,9 @@ $(OUT)/libscsindir.$(SHARED): $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/ama
 $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+$(OUT)/test_failure_rate: test/test_failure_rate.c $(OUT)/libscsdir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
 $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
