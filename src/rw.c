@@ -37,7 +37,7 @@ static ScsCone *read_scs_cone(FILE *fin) {
   fread(&(k->ep), sizeof(scs_int), 1, fin);
   fread(&(k->ed), sizeof(scs_int), 1, fin);
   fread(&(k->psize), sizeof(scs_int), 1, fin);
-  k->p = scs_calloc(k->psize, sizeof(scs_int));
+  k->p = scs_calloc(k->psize, sizeof(scs_float));
   fread(k->p, sizeof(scs_float), k->psize, fin);
   return k;
 }
