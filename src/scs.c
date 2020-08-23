@@ -295,7 +295,7 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   scs_float b, c, tau, a = w->root_plus_a;
   b = dot_with_rho_x(w, mu, w->g) - 2 * dot_with_rho_x(w, p, w->g) - eta;
   c = dot_with_rho_x(w, p, p) - dot_with_rho_x(w, p, mu);
-  tau = (-b + SQRTF(b * b - 4 * a * c)) / (2 * a);
+  tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
 #if EXTRA_VERBOSE > 3
   scs_printf("root_plus: a: %g, b: %g, c: %g, eta: %g, tau: %g, tau no p: %g\n",
              a, b, c, eta, tau,
