@@ -113,7 +113,7 @@ static void write_scs_data(const ScsData *d, FILE *fout) {
 }
 
 static ScsData *read_scs_data(FILE *fin) {
-  scs_int has_p;
+  scs_int has_p = 0;
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   fread(&(d->m), sizeof(scs_int), 1, fin);
   fread(&(d->n), sizeof(scs_int), 1, fin);
