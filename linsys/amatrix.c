@@ -323,14 +323,6 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
 #else
   scal->norm_a = SCS(norm)(A->x, A->p[A->n]);
 #endif
-  /* scale up by d->SCALE if not equal to 1 */
-  if (stgs->scale != 1) {
-    SCS(scale_array)(A->x, stgs->scale, A->p[A->n]);
-    if (P) {
-      SCS(scale_array)(P->x, stgs->scale, P->p[P->n]);
-    }
-  }
-
   scal->D = Dt;
   scal->E = Et;
 
@@ -353,7 +345,7 @@ void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   scs_float *E = scal->E;
   for (i = 0; i < A->n; ++i) {
     SCS(scale_array)
-    (&(A->x[A->p[i]]), E[i] / stgs->scale, A->p[i + 1] - A->p[i]);
+    (&(A->x[A->p[i]]), E[i], A->p[i + 1] - A->p[i]);
   }
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
@@ -363,7 +355,7 @@ void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
   if (P) {
     for (i = 0; i < P->n; ++i) {
       SCS(scale_array)
-      (&(P->x[P->p[i]]), E[i] / stgs->scale, P->p[i + 1] - P->p[i]);
+      (&(P->x[P->p[i]]), E[i], P->p[i + 1] - P->p[i]);
     }
     for (i = 0; i < P->n; ++i) {
       for (j = P->p[i]; j < P->p[i + 1]; ++j) {

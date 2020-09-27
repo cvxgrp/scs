@@ -22,7 +22,7 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   return str;
 }
 
-/* M = inv ( diag ( RHO_X * I + P + A'A ) ) */
+/* M = inv ( diag ( RHO_X * I + P + scale * A'A ) ) */
 static void get_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
                                const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_int i, k;
@@ -33,7 +33,7 @@ static void get_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
 #endif
 
   for (i = 0; i < A->n; ++i) { /* cols */
-    M[i] = stgs->rho_x + SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    M[i] = stgs->rho_x + stgs->scale * SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
     if (P) {
       for (k = P->p[i]; k < P->p[i + 1]; k++) {
         /* diagonal element only */
@@ -109,7 +109,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-/*y = (RHO_X * I + P + A'A)x */
+/*y = (RHO_X * I + P + scale * A'A)x */
 static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
                     const ScsSettings *s, ScsLinSysWork *p, const scs_float *x,
                     scs_float *y) {
@@ -120,8 +120,9 @@ static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
     SCS(accum_by_p)(P, p, x, y); /* y = Px */
   }
   SCS(accum_by_a)(A, p, x, z);                 /* z = Ax */
-  SCS(accum_by_atrans)(A, p, z, y);            /* y += A'z, y = Px + A'Ax */
-  SCS(add_scaled_array)(y, x, A->n, s->rho_x); /* y = RHO_X * x + Px + A'A x */
+  SCS(scale_array)(z, s->scale, A->m);         /* z = scale * Ax */
+  SCS(accum_by_atrans)(A, p, z, y);            /* y += A'z, y = Px + scale * A'Ax */
+  SCS(add_scaled_array)(y, x, A->n, s->rho_x); /* y = rho_x * x + Px + scale * A'A x */
 }
 
 void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
@@ -175,7 +176,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   return p;
 }
 
-/* solves (I + P + A'A)x = b, s warm start, solution stored in b */
+/* solves (rho_x * I + P + scale * A'A)x = b, s warm start, solution stored in b */
 static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
                    const ScsSettings *stgs, ScsLinSysWork *pr,
                    const scs_float *s, scs_float *b, scs_int max_its,
@@ -237,6 +238,16 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
 
 /* solves Mx = b, for x but stores result in b */
 /* s contains warm-start (if available) */
+/*
+ * [x] = [rho_x I + P       A'   ]^{-1} [rx]
+ * [y]   [     A        -I / scale]      [ry]
+ *
+ * becomes:
+ *
+ * x = (rho_x I + P + scale * A'A)^{-1} (rx + scale * A'ry)
+ * y = scale * (Ax - ry)
+ *
+*/
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
                            scs_float *b, const scs_float *s, scs_int iter) {
@@ -258,12 +269,14 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
     max_iters = 3 * A->n;
   }
 
-  SCS(accum_by_atrans)(A, p, &(b[A->n]), b);
-  /* solves (I + P + A'A)x = b, s warm start, solution stored in b */
-  cg_its = pcg(A, P, stgs, p, s, b, max_iters, MAX(cg_tol, CG_BEST_TOL));
-  SCS(scale_array)(&(b[A->n]), -1, A->m);
-  SCS(accum_by_a)(A, p, b, &(b[A->n]));
-
+  /* b = [rx; ry] */
+  SCS(scale_array)(&(b[A->n]), stgs->scale, A->m);  /* b[n:] = scale * ry */
+  SCS(accum_by_atrans)(A, p, &(b[A->n]), b); /* b[:n] = rx + scale * A'ry */
+  /* solves (rho_x I + P + scale A'A)x = b, s warm start, solution stored in b */
+  cg_its = pcg(A, P, stgs, p, s, b, max_iters, MAX(cg_tol, CG_BEST_TOL)); /* b[:n] = x */
+  SCS(scale_array)(&(b[A->n]), -1. / stgs->scale, A->m);  /* b[n:] = -ry */
+  SCS(accum_by_a)(A, p, b, &(b[A->n])); /* b[n:] = Ax - ry */
+  SCS(scale_array)(&(b[A->n]), stgs->scale, A->m); /* b[n:] = scale * (Ax - ry) = y */
   if (iter >= 0) {
     p->tot_cg_its += cg_its;
   }

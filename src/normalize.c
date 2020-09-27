@@ -34,8 +34,8 @@ void SCS(normalize_b_c)(ScsWork *w) {
     nm = _NORM(c, w->n);
     w->scal->primal_scale = w->scal->norm_a / MAX(nm, MIN_SCALE);
   }
-  SCS(scale_array)(b, w->scal->dual_scale * w->stgs->scale, w->m);
-  SCS(scale_array)(c, w->scal->primal_scale * w->stgs->scale, w->n);
+  SCS(scale_array)(b, w->scal->dual_scale, w->m);
+  SCS(scale_array)(c, w->scal->primal_scale, w->n);
 }
 
 void SCS(normalize_warm_start)(ScsWork *w) {
@@ -52,7 +52,7 @@ void SCS(normalize_warm_start)(ScsWork *w) {
     y[i] *= (D[i] * w->scal->primal_scale);
   }
   for (i = 0; i < w->m; ++i) {
-    s[i] /= (D[i] / (w->scal->dual_scale * w->stgs->scale));
+    s[i] /= (D[i] / w->scal->dual_scale);
   }
 }
 
@@ -67,6 +67,6 @@ void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol) {
     sol->y[i] /= (D[i] * w->scal->primal_scale);
   }
   for (i = 0; i < w->m; ++i) {
-    sol->s[i] *= D[i] / (w->scal->dual_scale * w->stgs->scale);
+    sol->s[i] *= (D[i] / w->scal->dual_scale);
   }
 }

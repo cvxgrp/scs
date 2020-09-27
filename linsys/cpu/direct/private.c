@@ -171,7 +171,7 @@ static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
       }
     }
   } else {
-    /* I in top left */
+    /* rho_x * I in top left */
     for (k = 0; k < A->n; k++) {
       K->i[kk] = k;
       K->p[kk] = k;
@@ -190,11 +190,11 @@ static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
-  /* -I at bottom right */
+  /* -scale^-1 * I at bottom right */
   for (k = 0; k < m; k++) {
     K->i[kk] = k + n;
     K->p[kk] = k + n;
-    K->x[kk] = -1;
+    K->x[kk] = -1. / s->scale;
     kk++;
   }
 
