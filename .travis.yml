@@ -3,16 +3,16 @@ matrix:
     # - os: linux
     #   compiler: clang
     #   env: CFLAGS="-fsanitize=memory -fno-omit-frame-pointer"
-    - os: linux
+    - os: Linux
       compiler: clang
       env: CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
-    - os: linux
+    - os: Linux
       compiler: clang
       env: CFLAGS="-fsanitize=undefined -fno-omit-frame-pointer"
-    - os: linux
+    - os: Linux
       compiler: clang
       env: CFLAGS="-fsanitize=thread -fno-omit-frame-pointer"
-    - os: linux
+    - os: Linux
       compiler: gcc
     - os: osx
 
