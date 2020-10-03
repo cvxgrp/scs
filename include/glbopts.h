@@ -28,8 +28,8 @@ extern "C" {
 #define SCS_SOLVED_INACCURATE (2)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
-#define MAX_ITERS (5000)
-#define EPS (1E-5)
+#define MAX_ITERS (10000)
+#define EPS (1E-4)
 #define ALPHA (1.5)
 #define RHO_X (1E-3)
 #define SCALE (10.0)
