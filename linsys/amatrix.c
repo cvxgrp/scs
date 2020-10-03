@@ -128,29 +128,127 @@ static inline scs_float apply_limit(scs_float x) {
   return x;
 }
 
-/* Ruiz style rescaling using inf norms */
-void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                     const ScsCone *k, ScsScaling *scal, ScsConeWork * c) {
-  scs_int i, j, kk, l, count, delta;
-  scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
-  scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
-  scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
-  scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
+static void rescaling(ScsMatrix *A, ScsMatrix *P, scs_float *Dt, scs_float *Et,
+                      scs_float * D, scs_float * E, ScsConeWork * c,
+                      scs_int ruiz) {
+  scs_int i, j, kk, count, delta;
   scs_int * boundaries = c->cone_boundaries;
   scs_int cone_boundaries_len = c->cone_boundaries_len;
-  scs_float wrk, norm_a, norm_p;
-
-#if EXTRA_VERBOSE > 0
-  SCS(timer) normalize_timer;
-  SCS(tic)(&normalize_timer);
-  scs_printf("normalizing A and P\n");
-  scs_printf("A:\n");
-  print_matrix(A);
-  if (P) {
-    scs_printf("P:\n");
-    print_matrix(P);
+  scs_float wrk;
+  memset(D, 0, A->m * sizeof(scs_float));
+  memset(E, 0, A->n * sizeof(scs_float));
+  /* calculate row norms */
+  for (i = 0; i < A->n; ++i) {
+    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+      if (ruiz > 0) {
+        D[A->i[j]] = MAX(D[A->i[j]], ABS(A->x[j]));
+      } else {
+        D[A->i[j]] += A->x[j] * A->x[j];
+      }
+    }
   }
-#endif
+
+  /* accumulate D across each cone  */
+  count = boundaries[0];
+  for (i = 1; i < cone_boundaries_len; ++i) {
+    delta = boundaries[i];
+    if (ruiz > 0) {
+      wrk = SCS(norm_inf)(&(D[count]), delta);
+    } else {
+    wrk = 0;
+    for (j = count; j < count + delta; ++j) {
+      wrk += D[j];
+    }
+    wrk /= delta;
+    }
+    for (j = count; j < count + delta; ++j) {
+      D[j] = wrk;
+    }
+    count += delta;
+  }
+
+  if (ruiz == 0) {
+  /* for l2 we need this to stop the factors blowing up */
+  SCS(scale_array)(D, ((scs_float) A->m) / A->n, A->m);
+  }
+
+  for (i = 0; i < A->m; ++i) {
+    if (ruiz > 0) {
+      D[i] = apply_limit(SQRTF(D[i]));
+    } else {
+      D[i] = apply_limit(SQRTF(SQRTF(D[i])));
+    }
+  }
+
+  if (P) {
+    /* compute norm of cols of P (symmetric upper triangular) */
+    /* E = norm of cols of P */
+    /* Compute maximum across columns */
+    /* P(i, j) contributes to col j and col i (row i) due to symmetry */
+    for (j = 0; j < P->n; j++) { /* cols */
+      for (kk = P->p[j]; kk < P->p[j + 1]; kk++) {
+        i = P->i[kk]; /* row */
+        wrk = ABS(P->x[kk]);
+        if (ruiz > 0) {
+          E[j] = MAX(wrk, E[j]);
+          if (i != j) {
+            E[i] = MAX(wrk, E[i]);
+          }
+        } else {
+          E[j] += wrk * wrk;
+          if (i != j) {
+            E[i] += wrk * wrk;
+          }
+        }
+      }
+    }
+  }
+
+  /* calculate col norms, E */
+  for (i = 0; i < A->n; ++i) {
+    if (ruiz > 0) {
+      E[i] = MAX(E[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+      E[i] = apply_limit(SQRTF(E[i]));
+    } else {
+      E[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+      E[i] = apply_limit(SQRTF(SQRTF(E[i])));
+    }
+  }
+
+  /* scale the rows of A with D */
+  for (i = 0; i < A->n; ++i) {
+    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+      A->x[j] /= D[A->i[j]];
+    }
+  }
+
+  /* scale the cols of A with E */
+  for (i = 0; i < A->n; ++i) {
+    SCS(scale_array)(&(A->x[A->p[i]]), 1.0 / E[i], A->p[i + 1] - A->p[i]);
+  }
+
+  if (P) {
+    /* scale the rows of P with E */
+    for (i = 0; i < P->n; ++i) {
+      for (j = P->p[i]; j < P->p[i + 1]; ++j) {
+        P->x[j] /= E[P->i[j]];
+      }
+    }
+    /* scale the cols of P with E */
+    for (i = 0; i < P->n; ++i) {
+      SCS(scale_array)(&(P->x[P->p[i]]), 1.0 / E[i], P->p[i + 1] - P->p[i]);
+    }
+  }
+
+  /* Accumulate scaling */
+  for (i = 0; i < A->m; ++i) {
+    Dt[i] /= D[i];
+  }
+  for (i = 0; i < A->n; ++i) {
+    Et[i] /= E[i];
+  }
+}
+
 
 /* Will rescale as P -> EPE, A -> DAE.
  * Essentially trying to rescale this matrix:
@@ -177,7 +275,27 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
  *
  * The main complication is that D has to respect cone boundaries.
  *
- * */
+ */
+void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
+                     const ScsCone *k, ScsScaling *scal, ScsConeWork * c) {
+  scs_int i;
+  scs_float norm_a, norm_p;
+  scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
+  scs_float *E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
+  scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
+  scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
+
+#if EXTRA_VERBOSE > 0
+  SCS(timer) normalize_timer;
+  SCS(tic)(&normalize_timer);
+  scs_printf("normalizing A and P\n");
+  scs_printf("A:\n");
+  print_matrix(A);
+  if (P) {
+    scs_printf("P:\n");
+    print_matrix(P);
+  }
+#endif
 
 /* Balance A and P to begin */
 #if RUIZ > 0
@@ -205,123 +323,18 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
     }
   }
 
-  for (l = 0; l < NUM_RUIZ_PASSES; ++l) {
-  //}
-  //for (l = 0; l < NUM_L2_PASSES; ++l) {
-  //}
-    memset(D, 0, A->m * sizeof(scs_float));
-    memset(E, 0, A->n * sizeof(scs_float));
-    /* calculate row norms */
-    for (i = 0; i < A->n; ++i) {
-      for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-#if RUIZ > 0
-        D[A->i[j]] = MAX(D[A->i[j]], ABS(A->x[j]));
-#else
-        /* l2 normalize row norms to be O( 1 ) */
-        D[A->i[j]] += A->x[j] * A->x[j];
-#endif
-      }
-    }
-
-    /* accumulate D across each cone  */
-    count = boundaries[0];
-    for (i = 1; i < cone_boundaries_len; ++i) {
-      delta = boundaries[i];
-#if RUIZ > 0
-      wrk = SCS(norm_inf)(&(D[count]), delta);
-#else
-      wrk = 0;
-      for (j = count; j < count + delta; ++j) {
-        wrk += D[j];
-      }
-      wrk /= delta;
-#endif
-      for (j = count; j < count + delta; ++j) {
-        D[j] = wrk;
-      }
-      count += delta;
-    }
-
-#if RUIZ == 0
-    /* for l2 we need this to stop the factors blowing up */
-    SCS(scale_array)(D, ((scs_float) A->m) / A->n, A->m);
-#endif
-
-    for (i = 0; i < A->m; ++i) {
-#if RUIZ > 0
-      D[i] = apply_limit(SQRTF(D[i]));
-#else
-      D[i] = apply_limit(SQRTF(SQRTF(D[i])));
-#endif
-    }
-
-    if (P) {
-      /* compute norm of cols of P (symmetric upper triangular) */
-      /* E = norm of cols of P */
-      /* Compute maximum across columns */
-      /* P(i, j) contributes to col j and col i (row i) due to symmetry */
-      for (j = 0; j < P->n; j++) { /* cols */
-        for (kk = P->p[j]; kk < P->p[j + 1]; kk++) {
-          i = P->i[kk]; /* row */
-          wrk = ABS(P->x[kk]);
-#if RUIZ > 0
-          E[j] = MAX(wrk, E[j]);
-          if (i != j) {
-            E[i] = MAX(wrk, E[i]);
-          }
-#else
-          E[j] += wrk * wrk;
-          if (i != j) {
-            E[i] += wrk * wrk;
-          }
-#endif
-        }
-      }
-    }
-
-    /* calculate col norms, E */
-    for (i = 0; i < A->n; ++i) {
-#if RUIZ > 0
-      E[i] = MAX(E[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
-      E[i] = apply_limit(SQRTF(E[i]));
-#else
-      E[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
-      E[i] = apply_limit(SQRTF(SQRTF(E[i])));
-#endif
-    }
-
-    /* scale the rows of A with D */
-    for (i = 0; i < A->n; ++i) {
-      for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-        A->x[j] /= D[A->i[j]];
-      }
-    }
-
-    /* scale the cols of A with E */
-    for (i = 0; i < A->n; ++i) {
-      SCS(scale_array)(&(A->x[A->p[i]]), 1.0 / E[i], A->p[i + 1] - A->p[i]);
-    }
-
-    if (P) {
-      /* scale the rows of P with E */
-      for (i = 0; i < P->n; ++i) {
-        for (j = P->p[i]; j < P->p[i + 1]; ++j) {
-          P->x[j] /= E[P->i[j]];
-        }
-      }
-      /* scale the cols of P with E */
-      for (i = 0; i < P->n; ++i) {
-        SCS(scale_array)(&(P->x[P->p[i]]), 1.0 / E[i], P->p[i + 1] - P->p[i]);
-      }
-    }
-
-    /* Accumulate scaling */
-    for (i = 0; i < A->m; ++i) {
-      Dt[i] = (l == 0) ? 1. / D[i] : Dt[i] / D[i];
-    }
-    for (i = 0; i < A->n; ++i) {
-      Et[i] = (l == 0) ? 1. / E[i] : Et[i] / E[i];
-    }
+  /* init D, E */
+  for (i = 0; i < A->m; ++i) {
+    Dt[i] = 1.;
+  }
+  for (i = 0; i < A->n; ++i) {
+    Et[i] = 1.;
+  }
+  for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
+    rescaling(A, P, Dt, Et, D, E, c, 1); /* ruiz = 1 */
+  }
+  for (i = 0; i < NUM_L2_PASSES; ++i) {
+    rescaling(A, P, Dt, Et, D, E, c, 0); /* ruiz = 0 */
   }
   scs_free(D);
   scs_free(E);
