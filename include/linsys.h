@@ -47,13 +47,11 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
 
 /* Normalization routines, used if d->NORMALIZE is true */
-/* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices, Anew
- * = d->SCALE * (D^-1)*A*(E^-1) (different to paper which is D*A*E) D and E must
- * be all positive entries, D must satisfy cone boundaries must set
- * (scal->norm_inf_a inf norm of normalized A) THEN scale resulting A by
- * d->SCALE */
+/* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices, 
+ * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
+ * boundaries */
 void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                    const ScsCone *k, ScsScaling *scal);
+                    const ScsCone *k, ScsScaling *scal, ScsConeWork * c);
 
 /* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
 void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,

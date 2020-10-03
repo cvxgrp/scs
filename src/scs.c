@@ -170,7 +170,7 @@ static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
   for (i = 0; i < w->m; ++i) {
     scale_i = 1.;
     if (w->stgs->normalize) {
-      scale_i = w->scal->D[i] / w->scal->dual_scale;
+      scale_i = 1. / w->scal->D[i] / w->scal->dual_scale;
     }
     *nm_axs += (pr[i] * scale_i) * (pr[i] * scale_i); /* ||Ax + s|| */
     ax_s_sbctau = (pr[i] - w->b[i] * tau) * scale_i;
@@ -192,7 +192,7 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
   for (i = 0; i < w->n; ++i) {
     scale_i = 1.;
     if (w->stgs->normalize) {
-      scale_i = w->scal->E[i] / w->scal->primal_scale;
+      scale_i = 1. / w->scal->E[i] / w->scal->primal_scale;
     }
     *nm_a_ty += (dr[i] * scale_i) * (dr[i] * scale_i); /* ||A' y|| */
     px_aty_ctau = (px[i] + dr[i] + w->c[i] * tau) * scale_i;
@@ -785,7 +785,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: work memory allocation failure\n");
     return SCS_NULL;
   }
-  /* make u,v and u_prev,v_prev contiguous in memory */
+  if (!(w->cone_work = SCS(init_cone)(k))) {
+    scs_printf("ERROR: init_cone failure\n");
+    return SCS_NULL;
+  }
   w->A = d->A;
   w->P = d->P;
   if (w->stgs->normalize) {
@@ -800,7 +803,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     }
 #endif
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-    SCS(normalize)(w->A, w->P, w->stgs, k, w->scal);
+    SCS(normalize)(w->A, w->P, w->stgs, k, w->scal, w->cone_work);
 #if EXTRA_VERBOSE > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
@@ -810,17 +813,13 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   } else {
     w->scal = SCS_NULL;
   }
-  if (!(w->cone_work = SCS(init_cone)(k))) {
-    scs_printf("ERROR: init_cone failure\n");
-    return SCS_NULL;
-  }
   if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
   /* hack: negative acceleration_lookback interpreted as type-I */
   if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-                           w->stgs->acceleration_lookback <= 0, ETA))) {
+                           w->stgs->acceleration_lookback < 0, ETA))) {
     if (w->stgs->verbose) {
       scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
     }

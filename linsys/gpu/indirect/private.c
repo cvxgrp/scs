@@ -297,7 +297,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   }
 
   p->total_solve_time += SCS(tocq)(&linsys_timer);
-#if EXTRAVERBOSE > 0
+#if EXTRA_VERBOSE > 0
   scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
 #endif
   return 0;

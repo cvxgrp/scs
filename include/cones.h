@@ -11,21 +11,19 @@ extern "C" {
 
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
+/*
+ * cone_boundaries will contain array of indices of rows of A corresponding to
+ * cone boundaries, boundaries[0] is starting index for cones of size larger
+ * than 1
+ */
+  scs_int cone_boundaries_len;
+  scs_int * cone_boundaries; 
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
   blas_int *iwork, lwork, liwork;
 #endif
 };
-
-/*
- * boundaries will contain array of indices of rows of A corresponding to
- * cone boundaries, boundaries[0] is starting index for cones of size larger
- * than 1
- * returns length of boundaries array, boundaries malloc-ed here so should be
- * freed
- */
-scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries);
 
 ScsConeWork *SCS(init_cone)(const ScsCone *k);
 char *SCS(get_cone_header)(const ScsCone *k);

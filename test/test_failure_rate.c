@@ -4,6 +4,8 @@
 #include "problem_utils.h"
 #include "scs.h"
 
+#define RESOLVE_VERBOSE 1
+
 /*
  create data for problem:
 
@@ -132,6 +134,12 @@ int main(int argc, char **argv) {
     if (info.status_val == 2 || info.status_val < 0) {
       /* scs_printf("%i\n", seed); */
       num_failures += 1;
+      /* resolve with verbose on */
+      #if RESOLVE_VERBOSE > 0
+      scs_printf("\n");
+      d->stgs->verbose = 1;
+      scs(d, k, sol, &info);
+      #endif
     }
 
     sum_log_iter += log(info.iter);

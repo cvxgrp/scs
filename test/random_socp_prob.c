@@ -11,7 +11,7 @@
 
  where K is a product of zero, linear, and second-order cones. A is a sparse
  matrix in
- CSC format. A is 3n by n with about sqrt(n) nonzeros per column.
+ CSC format. A is factor * n by n with about sqrt(n) nonzeros per column.
 
  Construct data in such a way that the problem is primal and dual
  feasible and thus bounded.
@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
   ScsSolution *sol, *opt_sol;
   ScsInfo info = {0};
   scs_float p_f, p_l;
+  scs_int factor = 4;
   int seed = 0;
 
   /* default parameters */
@@ -78,22 +79,22 @@ int main(int argc, char **argv) {
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
 
-  m = 3 * n;
+  m = factor * n;
   col_nnz = (int)ceil(sqrt(n));
   nnz = n * col_nnz;
 
-  max_q = (scs_int)ceil(3 * n / log(3 * n));
+  max_q = (scs_int)ceil(factor * n / log(factor * n));
 
   if (p_f + p_l > 1.0) {
     printf("error: p_f + p_l > 1.0!\n");
     return 1;
   }
 
-  k->f = (scs_int)floor(3 * n * p_f);
-  k->l = (scs_int)floor(3 * n * p_l);
+  k->f = (scs_int)floor(factor * n * p_f);
+  k->l = (scs_int)floor(factor * n * p_l);
 
   k->qsize = 0;
-  q_num_rows = 3 * n - k->f - k->l;
+  q_num_rows = factor * n - k->f - k->l;
   k->q = (scs_int *)scs_malloc(q_num_rows * sizeof(scs_int));
 
   while (q_num_rows > max_q) {

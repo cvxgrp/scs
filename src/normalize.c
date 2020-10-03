@@ -7,9 +7,9 @@
 
 /* Typically l2 equilibration works better than l_inf (Ruiz) */
 /* Though more experimentation is needed */
-/* #define RUIZ 1 */
+#define RUIZ 0
 
-#ifdef RUIZ
+#if RUIZ > 0
 #define _NORM SCS(norm_inf)
 #else
 #define _NORM SCS(norm)
@@ -20,7 +20,7 @@ void SCS(normalize_b_c)(ScsWork *w) {
   scs_float nm, *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
   /* scale b */
   for (i = 0; i < w->m; ++i) {
-    b[i] /= D[i];
+    b[i] *= D[i];
   }
   if (!w->P || w->scal->dual_scale <= 0.) {
     nm = _NORM(b, w->m);
@@ -28,7 +28,7 @@ void SCS(normalize_b_c)(ScsWork *w) {
   }
   /* scale c */
   for (i = 0; i < w->n; ++i) {
-    c[i] /= E[i];
+    c[i] *= E[i];
   }
   if (!w->P || w->scal->primal_scale <= 0.) {
     nm = _NORM(c, w->n);
@@ -49,10 +49,10 @@ void SCS(normalize_warm_start)(ScsWork *w) {
     x[i] *= (E[i] * w->scal->dual_scale);
   }
   for (i = 0; i < w->m; ++i) {
-    y[i] *= (D[i] * w->scal->primal_scale);
+    y[i] /= (D[i] / w->scal->primal_scale);
   }
   for (i = 0; i < w->m; ++i) {
-    s[i] /= (D[i] / w->scal->dual_scale);
+    s[i] *= (D[i] * w->scal->dual_scale);
   }
 }
 
@@ -61,12 +61,12 @@ void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol) {
   scs_float *D = w->scal->D;
   scs_float *E = w->scal->E;
   for (i = 0; i < w->n; ++i) {
-    sol->x[i] /= (E[i] * w->scal->dual_scale);
+    sol->x[i] *= (E[i] / w->scal->dual_scale);
   }
   for (i = 0; i < w->m; ++i) {
-    sol->y[i] /= (D[i] * w->scal->primal_scale);
+    sol->y[i] *= (D[i] / w->scal->primal_scale);
   }
   for (i = 0; i < w->m; ++i) {
-    sol->s[i] *= (D[i] / w->scal->dual_scale);
+    sol->s[i] /= (D[i] * w->scal->dual_scale);
   }
 }

@@ -285,8 +285,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
 }
 
 void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                    const ScsCone *k, ScsScaling *scal) {
-  SCS(_normalize)(A, P, stgs, k, scal);
+                    const ScsCone *k, ScsScaling *scal, ScsConeWork * c) {
+  SCS(_normalize)(A, P, stgs, k, scal, c);
 }
 
 void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,

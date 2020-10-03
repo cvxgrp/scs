@@ -34,10 +34,10 @@ static scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
  * larger than 1. returns length of boundaries array, boundaries malloc-ed here
  * so should be freed
  */
-scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries) {
+static void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   scs_int i, count = 0;
-  scs_int len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
-  scs_int *b = (scs_int *)scs_calloc(len, sizeof(scs_int));
+  c->cone_boundaries_len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
+  scs_int *b = (scs_int *)scs_calloc(c->cone_boundaries_len, sizeof(scs_int));
   b[count] = k->f + k->l;
   count += 1;
   if (k->qsize > 0) {
@@ -56,8 +56,8 @@ scs_int SCS(get_cone_boundaries)(const ScsCone *k, scs_int **boundaries) {
     b[count + i] = 3;
   }
   count += k->psize;
-  *boundaries = b;
-  return len;
+  c->cone_boundaries = b;
+  return;
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
@@ -170,6 +170,9 @@ void SCS(finish_cone)(ScsConeWork *c) {
     scs_free(c->iwork);
   }
 #endif
+  if (c->cone_boundaries) {
+    scs_free(c->cone_boundaries);
+  }
   if (c) {
     scs_free(c);
   }
@@ -392,6 +395,7 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k) {
       return SCS_NULL;
     }
   }
+  set_cone_boundaries(k, c);
 #if EXTRA_VERBOSE > 0
   scs_printf("init_cone complete\n");
 #ifdef MATLAB_MEX_FILE
