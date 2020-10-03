@@ -36,6 +36,8 @@ int main(int argc, char **argv) {
 
   switch (argc) {
     /* no break */
+    case 6:
+      seed = atoi(argv[5]);
     case 5:
       max_seeds = atoi(argv[4]);
     case 4:
@@ -47,23 +49,14 @@ int main(int argc, char **argv) {
       break;
     default:
       scs_printf(
-          "usage:\t%s n p_f p_l max_seeds\n"
+          "usage:\tn p_f p_l max_seeds seed\n"
           "\tcreates an SOCP with n variables where p_f fraction of "
           "rows correspond\n"
           "\tto equality constraints, p_l fraction of rows correspond "
           "to LP constraints,\n"
           "\tand the remaining percentage of rows are involved in "
           "second-order\n"
-          "\tcone constraints.\n",
-          argv[0]);
-      scs_printf(
-          "\nusage:\t%s n p_f p_l\n"
-          "\tdefaults the seed to the system time\n",
-          argv[0]);
-      scs_printf(
-          "\nusage:\t%s n\n"
-          "\tdefaults to using p_f = 0.1 and p_l = 0.3\n",
-          argv[0]);
+          "\tcone constraints.\n");
       return 0;
   }
 
