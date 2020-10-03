@@ -818,8 +818,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
+  /* hack: negative acceleration_lookback interpreted as type-I */
   if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-                           w->stgs->acceleration_lookback >= 0))) {
+                           w->stgs->acceleration_lookback <= 0, ETA))) {
     if (w->stgs->verbose) {
       scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
     }
