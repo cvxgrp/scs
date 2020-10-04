@@ -161,6 +161,9 @@ void SCS(free_data)(ScsData *d, ScsCone *k) {
     if (d->A) {
       SCS(free_scs_matrix)(d->A);
     }
+    if (d->P) {
+      SCS(free_scs_matrix)(d->P);
+    }
     scs_free(d);
   }
   if (k) {
