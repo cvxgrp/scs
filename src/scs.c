@@ -350,7 +350,7 @@ static void compute_rsk(ScsWork *w) {
     w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) / w->stgs->scale;
   }
   /* kappa */
-  w->rsk[l] = w->v[l] + w->u[l] - 2 * w->u_t[l];
+  w->rsk[l-1] = w->v[l-1] + w->u[l-1] - 2 * w->u_t[l-1];
 }
 
 static void update_dual_vars(ScsWork *w) {
