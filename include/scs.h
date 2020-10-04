@@ -66,18 +66,20 @@ struct SCS_SETTINGS {
 
 /* NB: rows of data matrix A must be specified in this exact order */
 struct SCS_CONE {
-  scs_int f;     /* number of linear equality constraints */
-  scs_int l;     /* length of LP cone */
-  scs_int *q;    /* array of second-order cone constraints */
-  scs_int qsize; /* length of SOC array */
-  scs_int *s;    /* array of SD constraints */
-  scs_int ssize; /* length of SD array */
-  scs_int ep;    /* number of primal exponential cone triples */
-  scs_int ed;    /* number of dual exponential cone triples */
-  scs_float *p;  /* array of power cone params, must be \in [-1, 1],
-                    negative values are interpreted as specifying the
-                    dual cone */
-  scs_int psize; /* number of (primal and dual) power cone triples */
+  scs_int f;          /* number of linear equality constraints */
+  scs_int l;          /* length of LP cone */
+  scs_float *bu, *bl; /* upper/lower box values, length = bsize - 1 */
+  scs_int bsize;      /* length of box cone constraint, including scale t */
+  scs_int *q;         /* array of second-order cone constraints */
+  scs_int qsize;      /* length of SOC array */
+  scs_int *s;         /* array of SD constraints */
+  scs_int ssize;      /* length of SD array */
+  scs_int ep;         /* number of primal exponential cone triples */
+  scs_int ed;         /* number of dual exponential cone triples */
+  scs_float *p;       /* array of power cone params, must be \in [-1, 1],
+                         negative values are interpreted as specifying the
+                         dual cone */
+  scs_int psize;      /* number of (primal and dual) power cone triples */
 };
 
 /* contains primal-dual solution arrays */

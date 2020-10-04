@@ -34,6 +34,8 @@ static scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
  * larger than 1. returns length of boundaries array, boundaries malloc-ed here
  * so should be freed
  */
+
+// XXX TODO: update for box cone
 static void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   scs_int i, count = 0;
   c->cone_boundaries_len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
@@ -61,19 +63,13 @@ static void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
-  scs_int i, c = 0;
-  if (k->f) {
-    c += k->f;
-  }
-  if (k->l) {
-    c += k->l;
-  }
-  if (k->qsize && k->q) {
+  scs_int i, c = k->f + k->l + k->bsize;
+  if (k->qsize) {
     for (i = 0; i < k->qsize; ++i) {
       c += k->q[i];
     }
   }
-  if (k->ssize && k->s) {
+  if (k->ssize) {
     for (i = 0; i < k->ssize; ++i) {
       c += get_sd_cone_size(k->s[i]);
     }
@@ -98,48 +94,60 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
     return -1;
   }
   if (k->f && k->f < 0) {
-    scs_printf("free cone error\n");
+    scs_printf("free cone dimension error\n");
     return -1;
   }
   if (k->l && k->l < 0) {
-    scs_printf("lp cone error\n");
+    scs_printf("lp cone dimension error\n");
     return -1;
+  }
+  if (k->bsize) {
+    if (k->bsize < 0) {
+      scs_printf("box cone dimension error\n");
+      return -1;
+    }
+    for (i = 0; i < k->bsize - 1; ++i) {
+      if (k->bl > k->bu) {
+        scs_printf("box lower bound larger than upper bound\n");
+        return -1;
+      }
+    }
   }
   if (k->qsize && k->q) {
     if (k->qsize < 0) {
-      scs_printf("soc cone error\n");
+      scs_printf("soc cone dimension error\n");
       return -1;
     }
     for (i = 0; i < k->qsize; ++i) {
       if (k->q[i] < 0) {
-        scs_printf("soc cone error\n");
+        scs_printf("soc cone dimension error\n");
         return -1;
       }
     }
   }
   if (k->ssize && k->s) {
     if (k->ssize < 0) {
-      scs_printf("sd cone error\n");
+      scs_printf("sd cone dimension error\n");
       return -1;
     }
     for (i = 0; i < k->ssize; ++i) {
       if (k->s[i] < 0) {
-        scs_printf("sd cone error\n");
+        scs_printf("sd cone dimension error\n");
         return -1;
       }
     }
   }
   if (k->ed && k->ed < 0) {
-    scs_printf("ep cone error\n");
+    scs_printf("ep cone dimension error\n");
     return -1;
   }
   if (k->ep && k->ep < 0) {
-    scs_printf("ed cone error\n");
+    scs_printf("ed cone dimension error\n");
     return -1;
   }
   if (k->psize && k->p) {
     if (k->psize < 0) {
-      scs_printf("power cone error\n");
+      scs_printf("power cone dimension error\n");
       return -1;
     }
     for (i = 0; i < k->psize; ++i) {
@@ -188,6 +196,9 @@ char *SCS(get_cone_header)(const ScsCone *k) {
   }
   if (k->l) {
     sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
+  }
+  if (k->bsize) {
+    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)k->bsize);
   }
   soc_vars = 0;
   soc_blks = 0;
@@ -588,6 +599,39 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
          1;
 }
 
+// TODO NORMALIZATION NEEDS TO BE INCORPORATED HERE:
+
+/* project onto { (s,t) | t * l <= s <= t * u, t >= 0 }, Newton's method on t */
+/* st = [s ; t], total length = bsize */
+static void proj_box_cone(scs_float *st, scs_float *bl,
+                          scs_float *bu, scs_int bsize) {
+  scs_float gt, ht, t = MAX(st[bsize], 0.);
+  scs_int iter, j;
+  /* should only require about 5 - 10 iterations */
+  for (iter = 0; iter < 100; iter++) {
+    gt = t - st[bsize]; /* gradient */
+    ht = 1.; /* hessian */
+    for (j = 0; j < bsize - 1; j++) { /* bsize - 1 since last entry is t */
+      if (st[j] > t * bu[j]) {
+        gt += (t * bu[j] - st[j]) * bu[j]; /* gradient */
+        ht += bu[j] * bu[j]; /* hessian */
+      }
+      else if (st[j] < t * bl[j]) {
+        gt += (t * bl[j] - st[j]) * bl[j]; /* gradient */
+        ht += bl[j] * bl[j]; /* hessian */
+      }
+    }
+    t = MAX(t - gt / ht, 0.); /* newton step */
+    if (ABS(gt / (ht + 1e-6)) < 1e-12) { break; }
+  }
+  scs_printf("box cone iters %i\n", iter);
+  for (j = 0; j < bsize; j++) {
+    st[j] = MAX(MIN(st[j], t * bu[j]), t * bl[j]);
+  }
+  st[bsize] = t;
+  return;
+}
+
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
   scs_float x = 0.0, y = 0.0, r;
@@ -631,7 +675,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* outward facing cone projection routine, iter is outer algorithm iteration, if
    iter < 0 then iter is ignored
-    warm_start contains guess of projection (can be set to SCS_NULL) */
+   warm_start contains guess of projection (can be set to SCS_NULL) */
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
                             const scs_float *warm_start, scs_int iter) {
   scs_int i;
@@ -652,6 +696,15 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += k->l;
 #if EXTRA_VERBOSE > 0
     scs_printf("pos orthant proj time: %1.2es\n", SCS(tocq)(&proj_timer) / 1e3);
+    SCS(tic)(&proj_timer);
+#endif
+  }
+
+  if (k->bsize) {
+    proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize);
+    count += k->bsize;
+#if EXTRA_VERBOSE > 0
+    scs_printf("box proj time: %1.2es\n", SCS(tocq)(&proj_timer) / 1e3);
     SCS(tic)(&proj_timer);
 #endif
   }
