@@ -81,6 +81,7 @@ void SCS(print_cone_data)(const ScsCone *k) {
   scs_int i;
   scs_printf("num zeros = %i\n", (int)k->f);
   scs_printf("num LP = %i\n", (int)k->l);
+  scs_printf("num box cone= %i\n", (int)k->bsize);
   scs_printf("num SOCs = %i\n", (int)k->qsize);
   scs_printf("soc array:\n");
   for (i = 0; i < k->qsize; i++) {
@@ -141,13 +142,13 @@ void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
   scs_printf("\n");
   for (i = 0; i < n / num_on_one_line; ++i) {
     for (j = 0; j < num_on_one_line; ++j) {
-      scs_printf("%s[%li] = %4f, ", name, (long)k, arr[k]);
+      scs_printf("%s[%li] = %4f; ", name, (long)k, arr[k]);
       k++;
     }
     scs_printf("\n");
   }
   for (j = k; j < n; ++j) {
-    scs_printf("%s[%li] = %4f, ", name, (long)j, arr[j]);
+    scs_printf("%s[%li] = %4f; ", name, (long)j, arr[j]);
   }
   scs_printf("\n");
 }
@@ -163,6 +164,8 @@ void SCS(free_data)(ScsData *d, ScsCone *k) {
     scs_free(d);
   }
   if (k) {
+    scs_free(k->bu);
+    scs_free(k->bl);
     scs_free(k->q);
     scs_free(k->s);
     scs_free(k->p);

@@ -1,5 +1,4 @@
 #include "cones.h"
-
 #include "linalg.h"
 #include "scs.h"
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
@@ -107,7 +106,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       return -1;
     }
     for (i = 0; i < k->bsize - 1; ++i) {
-      if (k->bl > k->bu) {
+      if (k->bl[i] > k->bu[i]) {
         scs_printf("box lower bound larger than upper bound\n");
         return -1;
       }
@@ -603,32 +602,45 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
 
 /* project onto { (s,t) | t * l <= s <= t * u, t >= 0 }, Newton's method on t */
 /* st = [s ; t], total length = bsize */
-static void proj_box_cone(scs_float *st, scs_float *bl,
+/* uses Moreau since \Pi_K*(x) = \Pi_K(-x) + x */
+static void proj_box_dual_cone(scs_float *st, scs_float *bl,
                           scs_float *bu, scs_int bsize) {
-  scs_float gt, ht, t = MAX(st[bsize], 0.);
+  scs_float gt, ht, t_prev, t = MAX(-st[bsize - 1], 0.);
   scs_int iter, j;
-  /* should only require about 5 - 10 iterations */
+#if EXTRA_VERBOSE > 0
+  SCS(print_array)(bu, bsize - 1, "u");
+  SCS(print_array)(bl, bsize - 1, "l");
+  SCS(print_array)(st, bsize, "st");
+#endif
+  /* should only require about 5 iterations */
   for (iter = 0; iter < 100; iter++) {
-    gt = t - st[bsize]; /* gradient */
+    t_prev = t;
+    gt = t + st[bsize - 1]; /* gradient */
     ht = 1.; /* hessian */
     for (j = 0; j < bsize - 1; j++) { /* bsize - 1 since last entry is t */
-      if (st[j] > t * bu[j]) {
-        gt += (t * bu[j] - st[j]) * bu[j]; /* gradient */
+      if (-st[j] > t * bu[j]) {
+        gt += (t * bu[j] + st[j]) * bu[j]; /* gradient */
         ht += bu[j] * bu[j]; /* hessian */
       }
-      else if (st[j] < t * bl[j]) {
-        gt += (t * bl[j] - st[j]) * bl[j]; /* gradient */
+      else if (-st[j] < t * bl[j]) {
+        gt += (t * bl[j] + st[j]) * bl[j]; /* gradient */
         ht += bl[j] * bl[j]; /* hessian */
       }
     }
-    t = MAX(t - gt / ht, 0.); /* newton step */
-    if (ABS(gt / (ht + 1e-6)) < 1e-12) { break; }
+#if EXTRA_VERBOSE > 5
+    scs_printf("t %4f, gt %4f, ht %4f\n", t, gt, ht);
+#endif
+    t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
+    if (ABS(gt / (ht + 1e-6)) < 1e-12 || ABS(t - t_prev) < 1e-12) { break; }
   }
-  scs_printf("box cone iters %i\n", iter);
-  for (j = 0; j < bsize; j++) {
-    st[j] = MAX(MIN(st[j], t * bu[j]), t * bl[j]);
+  for (j = 0; j < bsize - 1; j++) {
+    st[j] += MAX(MIN(-st[j], t * bu[j]), t * bl[j]);
   }
-  st[bsize] = t;
+  st[bsize - 1] += t;
+#if EXTRA_VERBOSE > 0
+  scs_printf("box cone iters %i\n", (int)iter);
+  SCS(print_array)(st, bsize, "st_+");
+#endif
   return;
 }
 
@@ -701,7 +713,8 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
   }
 
   if (k->bsize) {
-    proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize);
+    /* project onto this cone using Moreau */
+    proj_box_dual_cone(&(x[count]), k->bl, k->bu, k->bsize);
     count += k->bsize;
 #if EXTRA_VERBOSE > 0
     scs_printf("box proj time: %1.2es\n", SCS(tocq)(&proj_timer) / 1e3);

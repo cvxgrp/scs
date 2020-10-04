@@ -680,7 +680,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
   scs_printf("\n");
   scs_printf("optimal objective = %.6f\n", info->pobj);
   for (i = 0; i < LINE_LEN; ++i) {
-    scs_printf("=");
+    scs_printf("-");
   }
   scs_printf("\n");
 #ifdef MATLAB_MEX_FILE
