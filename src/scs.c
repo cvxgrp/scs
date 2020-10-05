@@ -716,7 +716,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
     return -1;
   }
   if (d->m < d->n) {
-    scs_printf("WARN: m less than n, problem likely degenerate\n");
+    /* scs_printf("WARN: m less than n, problem likely degenerate\n"); */
     /* return -1; */
   }
   if (SCS(validate_lin_sys)(d->A, d->P) < 0) {
