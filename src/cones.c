@@ -105,7 +105,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
     }
     for (i = 0; i < k->bsize - 1; ++i) {
       if (k->bl[i] > k->bu[i]) {
-        scs_printf("box lower bound larger than upper bound\n");
+        scs_printf("infeasible: box lower bound larger than upper bound\n");
         return -1;
       }
     }
