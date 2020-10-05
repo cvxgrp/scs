@@ -33,7 +33,8 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
  with iteration, set iter < 0 for exact projection, warm_start contains guess
  of solution, can be SCS_NULL*/
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                            const scs_float *warm_start, scs_int iter);
+                            const scs_float *warm_start, scs_int iter,
+                            const scs_float *D);
 void SCS(finish_cone)(ScsConeWork *c);
 
 #ifdef __cplusplus

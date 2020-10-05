@@ -59,7 +59,7 @@ aa_float tocq(timer *t) {
 
 aa_float toc(const char *str, timer *t) {
   aa_float time = tocq(t);
-  printf("%s - time: %8.4f milli-seconds.\n", str, time);
+  scs_printf("%s - time: %8.4f milli-seconds.\n", str, time);
   return time;
 }
 
@@ -143,7 +143,7 @@ static void set_m(AaWork *a, aa_int len) {
     nrm_s = BLAS(nrm2)(&btotal, a->S, &one);
     r = a->eta * (nrm_y * nrm_y + nrm_s * nrm_s);
     #if EXTRA_VERBOSE > 5
-    printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n", a->iter,
+    scs_printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n", a->iter,
             len, nrm_y, nrm_s, r);
     #endif
     for (i = 0; i < len; ++i){
@@ -244,12 +244,12 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   BLAS(gesv)(&blen, &one, a->M, &blen, a->ipiv, a->work, &blen, &info);
   nrm = BLAS(nrm2)(&bmem, a->work, &one);
   #if EXTRA_VERBOSE > 10
-  printf("AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
+  scs_printf("AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
           a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
   #endif
   if (info < 0 || nrm >= MAX_AA_NRM) {
     #if EXTRA_VERBOSE > 0
-    printf("Error in AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
+    scs_printf("Error in AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
             a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
     #endif
     /* to restart we simply set a->iter = 0 */
@@ -270,7 +270,7 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float eta) {
   AaWork *a = (AaWork *)calloc(1, sizeof(AaWork));
   if (!a) {
-    printf("Failed to allocate memory for AA.\n");
+    scs_printf("Failed to allocate memory for AA.\n");
     return (void *)0;
   }
   a->type1 = type1;
