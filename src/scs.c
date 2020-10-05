@@ -668,8 +668,9 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m),
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m));
     scs_printf("comp slack: s'y/|s||y| = %.4e\n",
-               SCS(dot)(sol->s, sol->y, d->m) / SCS(norm)(sol->s, d->m) /
-                   SCS(norm)(sol->y, d->m));
+               SCS(dot)(sol->s, sol->y, d->m) /
+               MAX(1e-9, SCS(norm)(sol->s, d->m)) /
+               MAX(1e-9, SCS(norm)(sol->y, d->m)));
     scs_printf("primal res: |Ax+s-b|_2/(1+|b|_2) = %.4e\n", info->res_pri);
     scs_printf("dual res: |Px+A'y+c|_2/(1+|c|_2) = %.4e\n", info->res_dual);
     scs_printf("rel gap: |x'Px+c'x+b'y|/(1+|x'Px|+|c'x|+|b'y|) = %.4e\n",
