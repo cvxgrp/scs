@@ -606,7 +606,7 @@ static void proj_box_dual_cone(scs_float *xt, const scs_float *bl,
                                const scs_float * D) {
   scs_float gt, ht, dl, du, t_prev, t = MAX(-xt[bsize - 1], 0.);
   scs_int iter, j;
-#if EXTRA_VERBOSE > 0
+#if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
   SCS(print_array)(xt, bsize, "xt");
@@ -637,10 +637,17 @@ static void proj_box_dual_cone(scs_float *xt, const scs_float *bl,
   for (j = 0; j < bsize - 1; j++) {
     dl = D ? D[j] * bl[j] / D[bsize-1] : bl[j];
     du = D ? D[j] * bu[j] / D[bsize-1] : bu[j];
-    xt[j] += MAX(MIN(-xt[j], t * du), t * dl);
+    if (-xt[j] > t * du) {
+      xt[j] += t * du;
+    }
+    else if (-xt[j] < t * dl) {
+      xt[j] += t * dl;
+    } else {
+      xt[j] = 0;
+    }
   }
   xt[bsize - 1] += t;
-#if EXTRA_VERBOSE > 0
+#if EXTRA_VERBOSE > 10
   scs_printf("box cone iters %i\n", (int)iter);
   SCS(print_array)(xt, bsize, "xt_+");
 #endif
