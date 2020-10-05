@@ -276,8 +276,8 @@ static void rescaling(ScsMatrix *A, ScsMatrix *P, scs_float *Dt, scs_float *Et,
  * The main complication is that D has to respect cone boundaries.
  *
  */
-void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                     const ScsCone *k, ScsScaling *scal, ScsConeWork * c) {
+void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
+                     ScsScaling *scal, ScsConeWork * c) {
   scs_int i;
   scs_float norm_a, norm_p;
   scs_float *D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
@@ -363,8 +363,7 @@ void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
 #endif
 }
 
-void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                        const ScsScaling *scal) {
+void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;

@@ -47,9 +47,11 @@ static _cs *cs_spfree(_cs *A) {
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
     cs_spfree(p->L);
+    cs_spfree(p->kkt);
     scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
+    scs_free(p->scale_idxs);
     scs_free(p);
   }
 }
@@ -77,7 +79,7 @@ static _cs *cs_done(_cs *C, void *w, void *x, scs_int ok) {
 }
 
 /* C = compressed-column form of a triplet matrix T */
-static _cs *cs_compress(const _cs *T) {
+static _cs *cs_compress(const _cs *T, scs_int *idx_mapping) {
   scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
   scs_float *Cx, *Tx;
   _cs *C;
@@ -99,6 +101,7 @@ static _cs *cs_compress(const _cs *T) {
   SCS(cumsum)(Cp, w, n);               /* column pointers */
   for (k = 0; k < nz; k++) {
     Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
+    idx_mapping[k] = p;         /* old to new indices */
     if (Cx) {
       Cx[p] = Tx[k];
     }
@@ -107,30 +110,31 @@ static _cs *cs_compress(const _cs *T) {
 }
 
 static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                     const ScsSettings *s) {
+                     const ScsSettings *s, scs_int *scale_idxs) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
-   * forms column compressed KKT matrix
+   * forms column compressed kkt matrix
    * assumes column compressed form A matrix
    *
    * forms upper triangular part of [(I + P)  A'; A -I]
    * P : n x n, A: m x n.
    */
   scs_int i, j, k, kk;
-  _cs *K_cs;
+  _cs *K_cs, *K;
   scs_int n = A->n;
   scs_int m = A->m;
   scs_int Anz = A->p[n];
   scs_int Knzmax;
+  scs_int *idx_mapping;
   if (P) {
     /* Upper bound P + I upper trianglar component as Pnz + n */
     Knzmax = n + m + Anz + P->p[n];
   } else {
     Knzmax = n + m + Anz;
   }
-  _cs *K = cs_spalloc(m + n, m + n, Knzmax, 1, 1);
+  K = cs_spalloc(m + n, m + n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
-  scs_printf("forming KKT\n");
+  scs_printf("forming kkt\n");
 #endif
   /* Here we generate a triplet matrix and then compress to CSC */
   if (!K) {
@@ -195,12 +199,18 @@ static _cs *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
     K->i[kk] = k + n;
     K->p[kk] = k + n;
     K->x[kk] = -1. / s->scale;
+    scale_idxs[k] = kk; /* store the indices where scale occurs */
     kk++;
   }
 
   K->nz = kk;
-  K_cs = cs_compress(K);
+  idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
+  K_cs = cs_compress(K, idx_mapping);
+  for (i = 0; i < A->m; i++) {
+    scale_idxs[i] = idx_mapping[scale_idxs[i]];
+  }
   cs_spfree(K);
+  scs_free(idx_mapping);
   return K_cs;
 }
 
@@ -294,7 +304,8 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   return pinv;                            /* return result */
 }
 
-static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
+static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int *idx_mapping,
+                       scs_int values) {
   scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
   scs_float *Cx, *Ax;
   _cs *C;
@@ -335,22 +346,23 @@ static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
       if (Cx) {
         Cx[q] = Ax[p];
       }
+      idx_mapping[p] = q; /* old to new indices */
     }
   }
   return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
 }
 
-static scs_int factorize(const ScsMatrix *A, const ScsMatrix *P,
+static _cs * permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
                          const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_float *info;
-  scs_int *Pinv, amd_status, ldl_status;
-  _cs *C, *K = form_kkt(A, P, stgs);
-  if (!K) {
-    return -1;
+  scs_int *Pinv, amd_status, *idx_mapping, i;
+  _cs *kkt_perm, *kkt = form_kkt(A, P, stgs, p->scale_idxs);
+  if (!kkt) {
+    return SCS_NULL;
   }
-  amd_status = _ldl_init(K, p->perm, &info);
+  amd_status = _ldl_init(kkt, p->perm, &info);
   if (amd_status < 0) {
-    return amd_status;
+    return SCS_NULL;
   }
 #if EXTRA_VERBOSE > 0
   if (stgs->verbose) {
@@ -359,26 +371,52 @@ static scs_int factorize(const ScsMatrix *A, const ScsMatrix *P,
   }
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
-  C = cs_symperm(K, Pinv, 1);
-  ldl_status = _ldl_factor(C, &p->L, &p->Dinv);
-  cs_spfree(C);
-  cs_spfree(K);
+  idx_mapping = (scs_int *)scs_malloc(kkt->nz * sizeof(scs_int));
+  kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
+  for (i = 0; i < A->m; i++){
+    p->scale_idxs[i] = idx_mapping[p->scale_idxs[i]];
+  }
+  cs_spfree(kkt);
   scs_free(Pinv);
   scs_free(info);
-  return ldl_status;
+  scs_free(idx_mapping);
+  return kkt_perm;
+}
+
+scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
+  /* XXX update */
+  return (factor > 5. || factor < 0.2);
+}
+
+void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
+                              const ScsSettings *stgs, ScsLinSysWork *p) {
+  scs_int i, ldl_status;
+  for (i = 0; i < A->m; ++i) {
+    p->kkt->x[p->scale_idxs[i]] = -1.0 / stgs->scale;
+  }
+  ldl_status = _ldl_factor(p->kkt, &p->L, &p->Dinv);
+  if (ldl_status < 0) {
+    scs_printf("Error in factorize\n");
+    /* XXX this is broken somehow */
+    // SCS(free_lin_sys_work)(p);
+    return;
+  }
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       const ScsSettings *stgs) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
-  scs_int n_plus_m = A->n + A->m;
+  scs_int n_plus_m = A->n + A->m, ldl_status;
   p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
   p->L = (_cs *)scs_malloc(sizeof(_cs));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
+  p->scale_idxs = (scs_int *)scs_malloc(A->m * sizeof(scs_int));
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;
-  if (factorize(A, P, stgs, p) < 0) {
+  p->kkt = permute_kkt(A, P, stgs, p);
+  ldl_status = _ldl_factor(p->kkt, &p->L, &p->Dinv);
+  if (ldl_status < 0) {
     scs_printf("Error in factorize\n");
     /* XXX this is broken somehow */
     // SCS(free_lin_sys_work)(p);
@@ -396,12 +434,11 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   return 0;
 }
 
-void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                    const ScsCone *k, ScsScaling *scal, ScsConeWork * c) {
-  SCS(_normalize)(A, P, stgs, k, scal, c);
+void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
+                    ScsScaling *scal, ScsConeWork * c) {
+  SCS(_normalize)(A, P, k, scal, c);
 }
 
-void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                       const ScsScaling *scal) {
-  SCS(_un_normalize)(A, P, stgs, scal);
+void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
+  SCS(_un_normalize)(A, P, scal);
 }

@@ -47,15 +47,14 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
 
 /* Normalization routines, used if d->NORMALIZE is true */
-/* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices, 
+/* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
-void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                    const ScsCone *k, ScsScaling *scal, ScsConeWork * c);
+void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
+                    ScsScaling *scal, ScsConeWork * c);
 
 /* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
-void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                       const ScsScaling *scal);
+void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);
 
 /* to free the memory allocated in a ScsMatrix (called on A and P at finish) */
 void SCS(free_scs_matrix)(ScsMatrix *A);
@@ -63,6 +62,11 @@ void SCS(free_scs_matrix)(ScsMatrix *A);
 /* copies A (instead of in-place normalization), returns 0 for failure,
  * allocates memory for dstp	*/
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
+
+/* XXX */
+scs_int SCS(should_update_scale)(scs_float factor, scs_int iter);
+void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
+                              const ScsSettings *stgs, ScsLinSysWork *p);
 
 #ifdef __cplusplus
 }

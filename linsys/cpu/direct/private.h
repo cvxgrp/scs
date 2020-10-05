@@ -13,10 +13,11 @@ extern "C" {
 
 typedef struct SPARSE_MATRIX _cs;
 struct SCS_LIN_SYS_WORK {
-  _cs *L;            /* KKT, and factorization matrix L resp. */
+  _cs *kkt, *L;            /* KKT, and factorization matrix L resp. */
   scs_float *Dinv;  /* inverse diagonal matrix of factorization */
   scs_int *perm;       /* permutation of KKT matrix for factorization */
   scs_float *bp;    /* workspace memory for solves */
+  scs_int *scale_idxs;
 };
 
 #ifdef __cplusplus

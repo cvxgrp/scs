@@ -38,6 +38,7 @@ extern "C" {
 #define NORMALIZE (1)
 #define WARM_START (0)
 #define ACCELERATION_LOOKBACK (10)
+#define ADAPTIVE_SCALING (1)
 #define WRITE_DATA_FILENAME (0)
 
 /* redefine printfs and memory allocators as needed */

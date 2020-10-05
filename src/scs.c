@@ -764,6 +764,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->stgs = d->stgs;
   w->m = d->m;
   w->n = d->n;
+  w->last_scale_update_iter = 0;
+  w->log_scale_factor_mean = 0.;
   w->best_max_residual = INFINITY;
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -805,7 +807,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     }
 #endif
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-    SCS(normalize)(w->A, w->P, w->stgs, k, w->scal, w->cone_work);
+    SCS(normalize)(w->A, w->P, k, w->scal, w->cone_work);
 #if EXTRA_VERBOSE > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
@@ -894,6 +896,28 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
   }
 }
 
+static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
+  scs_float factor;
+  scs_int iters_since_last_update = iter - w->last_scale_update_iter;
+  w->log_scale_factor_mean *= iters_since_last_update;
+  /* higher scale makes res_pri go down faster, so increase is res_pri larger */
+  w->log_scale_factor_mean += log(r->res_pri / r->res_dual);
+  w->log_scale_factor_mean /= (iters_since_last_update + 1);
+  /* XXX: bound this ? */
+  factor = SQRTF(exp(w->log_scale_factor_mean));
+  scs_printf("factor %4f\n", factor);
+  if (SCS(should_update_scale(factor, iter))) {
+    w->stgs->scale *= factor;
+    w->log_scale_factor_mean = 0;
+    w->last_scale_update_iter = iter;
+
+    SCS(update_linsys_scale)(w->A, w->P, w->stgs, w->p);
+
+    /* XXX update v somehow? */
+    return;
+  }
+}
+
 scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
                    ScsSolution *sol, ScsInfo *info) {
   scs_int i;
@@ -971,6 +995,11 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       */
     }
     total_accel_time += SCS(tocq)(&accel_timer);
+
+    /* if residuals are fresh then maybe compute new scale */
+    if (i == r.last_iter) {
+      maybe_update_scale(w, &r, i);
+    }
   }
 
   if (w->stgs->verbose) {

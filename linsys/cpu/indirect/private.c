@@ -22,8 +22,8 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   return str;
 }
 
-/* M = inv ( diag ( RHO_X * I + P + scale * A'A ) ) */
-static void get_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
+/* M = inv ( diag ( rho_x * I + P + scale * A'A ) ) */
+static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
                                const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_int i, k;
   scs_float *M = p->M;
@@ -111,7 +111,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
 
 /*y = (RHO_X * I + P + scale * A'A)x */
 static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
-                    const ScsSettings *s, ScsLinSysWork *p, const scs_float *x,
+                    const ScsSettings *stgs, ScsLinSysWork *p, const scs_float *x,
                     scs_float *y) {
   scs_float *z = p->tmp;
   memset(z, 0, A->m * sizeof(scs_float)); /* z = 0 */
@@ -119,10 +119,10 @@ static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
   if (P) {
     SCS(accum_by_p)(P, p, x, y); /* y = Px */
   }
-  SCS(accum_by_a)(A, p, x, z);                 /* z = Ax */
-  SCS(scale_array)(z, s->scale, A->m);         /* z = scale * Ax */
-  SCS(accum_by_atrans)(A, p, z, y);            /* y += A'z, y = Px + scale * A'Ax */
-  SCS(add_scaled_array)(y, x, A->n, s->rho_x); /* y = rho_x * x + Px + scale * A'A x */
+  SCS(accum_by_a)(A, p, x, z);                    /* z = Ax */
+  SCS(scale_array)(z, stgs->scale, A->m);         /* z = scale * Ax */
+  SCS(accum_by_atrans)(A, p, z, y);               /* y += A'z, y = Px + scale * A'Ax */
+  SCS(add_scaled_array)(y, x, A->n, stgs->rho_x); /* y = rho_x * x + Px + scale * A'A x */
 }
 
 void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
@@ -145,6 +145,16 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
   }
 }
 
+scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
+  return (factor > 5. || factor < 0.2);
+}
+
+void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
+                              const ScsSettings *stgs, ScsLinSysWork *p) {
+  set_preconditioner(A, P, stgs, p);
+}
+
+
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       const ScsSettings *stgs) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
@@ -165,7 +175,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   /* preconditioner memory */
   p->z = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
   p->M = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
-  get_preconditioner(A, P, stgs, p);
+  set_preconditioner(A, P, stgs, p);
 
   p->tot_cg_its = 0;
   if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p ||
@@ -284,12 +294,11 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   return 0;
 }
 
-void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                    const ScsCone *k, ScsScaling *scal, ScsConeWork * c) {
-  SCS(_normalize)(A, P, stgs, k, scal, c);
+void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
+                    ScsScaling *scal, ScsConeWork * c) {
+  SCS(_normalize)(A, P, k, scal, c);
 }
 
-void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsSettings *stgs,
-                       const ScsScaling *scal) {
-  SCS(_un_normalize)(A, P, stgs, scal);
+void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
+  SCS(_un_normalize)(A, P, scal);
 }

@@ -198,5 +198,6 @@ void SCS(set_default_settings)(ScsData *d) {
   d->stgs->normalize = NORMALIZE;
   d->stgs->warm_start = WARM_START;
   d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
+  d->stgs->adaptive_scaling = ADAPTIVE_SCALING;
   d->stgs->write_data_filename = WRITE_DATA_FILENAME;
 }
