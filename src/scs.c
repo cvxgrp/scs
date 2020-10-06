@@ -767,7 +767,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->m = d->m;
   w->n = d->n;
   w->last_scale_update_iter = 0;
-  w->log_scale_factor_mean = 0.;
+  w->sum_log_scale_factor = 0.;
+  w->n_log_scale_factor = 0;
   w->best_max_residual = INFINITY;
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -903,25 +904,47 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
   }
 }
 
+// TODO move:
+#define RESCALING_MIN_ITERS (100)
+
 static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float factor;
-  // TODO XXX
-  scs_int iters_since_last_update = (iter - w->last_scale_update_iter) / 20;
-  w->log_scale_factor_mean *= iters_since_last_update;
+  scs_int i;
+  scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   /* higher scale makes res_pri go down faster, so increase is res_pri larger */
-  w->log_scale_factor_mean += log(r->res_pri / r->res_dual);
-  w->log_scale_factor_mean /= (iters_since_last_update + 1);
+  w->sum_log_scale_factor += log(r->res_pri / r->res_dual);
+  w->n_log_scale_factor++;
+
   /* TODO should we bound this factor? */
-  factor = SQRTF(exp(w->log_scale_factor_mean));
-  if (SCS(should_update_scale(factor, iter))) {
+  factor = SQRTF(exp(w->sum_log_scale_factor / w->n_log_scale_factor));
+
+  /* need at least RESCALING_MIN_ITERS since last update */
+  if (iters_since_last_update < RESCALING_MIN_ITERS) {
+    return;
+  }
+  /* TODO update disabled if problem appears infeasible / unbounded */
+  if (r->tau == 0) {
+    return;
+  }
+  if (SCS(should_update_scale(factor, iters_since_last_update))) {
     w->stgs->scale *= factor;
-    w->log_scale_factor_mean = 0;
+    w->sum_log_scale_factor = 0;
+    w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
     SCS(update_linsys_scale)(w->A, w->P, w->stgs, w->p);
+
     /* update pre-solved quantities */
     update_work_cache(w);
+
     /* reset acceleration so that old iterates aren't affecting new values */
     aa_reset(w->accel);
+
+    /* update v, using fact that rsk, u, u_t vector should be the same */
+    /* solve: D^+ (v^+ + u - 2u_t) = rsk v^+ = (D^+)^-1 rsk + 2u_t - u */
+    /* only elements with scale on diag */
+    for (i = w->n; i < w->n + w->m; i++) {
+      w->v[i] = w->stgs->scale * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
+    }
     return;
   }
 }
@@ -1006,7 +1029,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     total_accel_time += SCS(tocq)(&accel_timer);
 
     /* if residuals are fresh then maybe compute new scale */
-    if (i == r.last_iter) {
+    if (w->stgs->adaptive_scaling && i == r.last_iter) {
       maybe_update_scale(w, &r, i);
     }
   }

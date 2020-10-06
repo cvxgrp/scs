@@ -137,8 +137,8 @@ struct SCS_WORK {
   scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev, *rsk;
   scs_float *h, *g, *pr, *dr, *px, *ls_ws;
   scs_float nm_b, nm_c, best_max_residual;
-  scs_float log_scale_factor_mean;
-  scs_int last_scale_update_iter;
+  scs_float sum_log_scale_factor;
+  scs_int last_scale_update_iter, n_log_scale_factor;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
