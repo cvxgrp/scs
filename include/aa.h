@@ -48,7 +48,16 @@ aa_int aa_apply(aa_float *f, const aa_float *x, AaWork *a);
  */
 void aa_finish(AaWork *a);
 
-#define MAX_AA_NRM (1e3)
+/* Reset Anderson Acceleration.
+ *
+ * Resets AA, uses original parameters, reuses original memory allocations.
+ *
+ * Args:
+ *  a: aa workspace from aa_init.
+ */
+void aa_reset(AaWork *a);
+
+#define MAX_AA_NRM (1e2)
 #define ETA (1E-8)
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))

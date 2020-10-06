@@ -386,7 +386,7 @@ static csc * permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 
 scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
   /* XXX update */
-  return (factor > 5 || factor < 0.2);
+  return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
 void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,

@@ -14,7 +14,7 @@ SCS(timer) global_timer;
 /* printing header */
 static const char *HEADER[] = {
     " Iter ",    " pri res ", " dua res ", " rel gap ",
-    "   obj   ", " kap/tau ", " time (s)",
+    "   obj   ", "  scale  ", " time (s)",
 };
 static const scs_int HSPACE = 9;
 static const scs_int HEADER_LEN = 7;
@@ -545,7 +545,7 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
   scs_printf("%*.2e ", (int)HSPACE, r->res_dual);
   scs_printf("%*.2e ", (int)HSPACE, r->rel_gap);
   scs_printf("%*.2e ", (int)HSPACE, pobj);
-  scs_printf("%*.2e ", (int)HSPACE, SAFEDIV_POS(r->kap, r->tau));
+  scs_printf("%*.2e ", (int)HSPACE, w->stgs->scale);
   scs_printf("%*.2e ", (int)HSPACE, SCS(tocq)(solve_timer) / 1e3);
   scs_printf("\n");
 
@@ -833,6 +833,15 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   return w;
 }
 
+static void update_work_cache(ScsWork * w) {
+  /* g = (I + M)^{-1} h */
+  memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
+  SCS(scale_array)(&(w->g[w->n]), -1., w->m);
+  SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, -1);
+  w->root_plus_a = 1 + dot_with_diag_scaling(w, w->g, w->g);
+  return;
+}
+
 static scs_int update_work(const ScsData *d, ScsWork *w,
                            const ScsSolution *sol) {
   /* before normalization */
@@ -870,14 +879,10 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
   /* h = [c;b] */
   memcpy(w->h, w->c, n * sizeof(scs_float));
   memcpy(&(w->h[n]), w->b, m * sizeof(scs_float));
-
-  /* g = (I + M)^{-1} h */
-  memcpy(w->g, w->h, (n + m) * sizeof(scs_float));
-  SCS(scale_array)(&(w->g[n]), -1., m);
-  SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, -1);
-  w->root_plus_a = 1 + dot_with_diag_scaling(w, w->g, w->g);
+  update_work_cache(w);
   return 0;
 }
+
 
 static scs_float iterate_norm_diff(ScsWork *w) {
   scs_int l = w->m + w->n + 1;
@@ -906,27 +911,17 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   /* higher scale makes res_pri go down faster, so increase is res_pri larger */
   w->log_scale_factor_mean += log(r->res_pri / r->res_dual);
   w->log_scale_factor_mean /= (iters_since_last_update + 1);
-  //scs_printf("ratio %4f\n", log(r->res_pri / r->res_dual));
-  //scs_printf("log_scale_factor_mean %4f\n", w->log_scale_factor_mean);
-  //scs_printf("iters_since_last_update %i\n", iters_since_last_update);
-  /* XXX: bound this ? */
+  /* TODO should we bound this factor? */
   factor = SQRTF(exp(w->log_scale_factor_mean));
-  //scs_printf("factor %4f\n", factor);
   if (SCS(should_update_scale(factor, iter))) {
     w->stgs->scale *= factor;
-    scs_printf("new scale %4f\n", w->stgs->scale);
     w->log_scale_factor_mean = 0;
     w->last_scale_update_iter = iter;
-
     SCS(update_linsys_scale)(w->A, w->P, w->stgs, w->p);
-    /* g = (I + M)^{-1} h */
-    memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
-    SCS(scale_array)(&(w->g[w->n]), -1., w->m);
-    SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, -1);
-    w->root_plus_a = 1 + dot_with_diag_scaling(w, w->g, w->g);
-
-    /* XXX reset aa? */
-    /* XXX update v somehow? */
+    /* update pre-solved quantities */
+    update_work_cache(w);
+    /* reset acceleration so that old iterates aren't affecting new values */
+    aa_reset(w->accel);
     return;
   }
 }

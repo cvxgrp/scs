@@ -147,7 +147,7 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
 }
 
 scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
-  return (factor > 3 || factor < 0.33);
+  return (factor > SQRTF(10.) || factor < 1.0 / SQRTF(10.));
 }
 
 void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
