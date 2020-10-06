@@ -588,6 +588,7 @@ static void print_header(ScsWork *w, const ScsCone *k) {
 #endif
 }
 
+// XXX norm inf change?
 static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
                                     ScsConeWork *c, scs_int m) {
   scs_float dist;
@@ -605,6 +606,7 @@ static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
 }
 
 /* via moreau */
+// XXX norm inf change?
 static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
                                    ScsConeWork *c, scs_int m) {
   scs_float dist;
@@ -898,21 +900,32 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
 
 static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float factor;
-  scs_int iters_since_last_update = iter - w->last_scale_update_iter;
+  // TODO XXX
+  scs_int iters_since_last_update = (iter - w->last_scale_update_iter) / 20;
   w->log_scale_factor_mean *= iters_since_last_update;
   /* higher scale makes res_pri go down faster, so increase is res_pri larger */
   w->log_scale_factor_mean += log(r->res_pri / r->res_dual);
   w->log_scale_factor_mean /= (iters_since_last_update + 1);
+  //scs_printf("ratio %4f\n", log(r->res_pri / r->res_dual));
+  //scs_printf("log_scale_factor_mean %4f\n", w->log_scale_factor_mean);
+  //scs_printf("iters_since_last_update %i\n", iters_since_last_update);
   /* XXX: bound this ? */
   factor = SQRTF(exp(w->log_scale_factor_mean));
-  scs_printf("factor %4f\n", factor);
+  //scs_printf("factor %4f\n", factor);
   if (SCS(should_update_scale(factor, iter))) {
     w->stgs->scale *= factor;
+    scs_printf("new scale %4f\n", w->stgs->scale);
     w->log_scale_factor_mean = 0;
     w->last_scale_update_iter = iter;
 
     SCS(update_linsys_scale)(w->A, w->P, w->stgs, w->p);
+    /* g = (I + M)^{-1} h */
+    memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
+    SCS(scale_array)(&(w->g[w->n]), -1., w->m);
+    SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, -1);
+    w->root_plus_a = 1 + dot_with_diag_scaling(w, w->g, w->g);
 
+    /* XXX reset aa? */
     /* XXX update v somehow? */
     return;
   }
@@ -921,7 +934,7 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
 scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
                    ScsSolution *sol, ScsInfo *info) {
   scs_int i;
-  scs_float total_norm;
+  scs_float v_norm;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
             total_lin_sys_time = 0.0;
@@ -941,11 +954,12 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   if (w->stgs->verbose) {
     print_header(w, k);
   }
+
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
-    total_norm = SCS(norm)(w->v, l);
-    SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / total_norm, l);
+    v_norm = SCS(norm)(w->v, l);
+    SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
 
     /* XXX rm this? */
     memcpy(w->u_prev, w->u, l * sizeof(scs_float));
@@ -1024,7 +1038,7 @@ void SCS(finish)(ScsWork *w) {
     SCS(finish_cone)(w->cone_work);
     if (w->stgs && w->stgs->normalize) {
 #ifndef COPYAMATRIX
-      SCS(un_normalize)(w->A, w->P, w->stgs, w->scal);
+      SCS(un_normalize)(w->A, w->P, w->scal);
 #else
       SCS(free_scs_matrix)(w->A);
       SCS(free_scs_matrix)(w->P);

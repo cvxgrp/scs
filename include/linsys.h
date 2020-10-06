@@ -53,7 +53,7 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
 void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
                     ScsScaling *scal, ScsConeWork * c);
 
-/* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
+/* unnormalizes A matrix, unnormalizes by w->D and w->E */
 void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);
 
 /* to free the memory allocated in a ScsMatrix (called on A and P at finish) */

@@ -2,7 +2,7 @@
 #include "private.h"
 
 #define CG_BEST_TOL 1e-12
-#define CG_BASE_TOL 1.
+#define CG_BASE_TOL 1e-6
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
@@ -33,7 +33,8 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
 #endif
 
   for (i = 0; i < A->n; ++i) { /* cols */
-    M[i] = stgs->rho_x + stgs->scale * SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    M[i] = stgs->rho_x + stgs->scale * SCS(norm_sq)(&(A->x[A->p[i]]),
+                                                    A->p[i + 1] - A->p[i]);
     if (P) {
       for (k = P->p[i]; k < P->p[i + 1]; k++) {
         /* diagonal element only */
@@ -109,10 +110,10 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-/*y = (RHO_X * I + P + scale * A'A)x */
+/*y = (rho_x * I + P + scale * A'A)x */
 static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
-                    const ScsSettings *stgs, ScsLinSysWork *p, const scs_float *x,
-                    scs_float *y) {
+                    const ScsSettings *stgs, ScsLinSysWork *p,
+                    const scs_float *x, scs_float *y) {
   scs_float *z = p->tmp;
   memset(z, 0, A->m * sizeof(scs_float)); /* z = 0 */
   memset(y, 0, A->n * sizeof(scs_float)); /* y = 0 */
@@ -146,7 +147,7 @@ static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
 }
 
 scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
-  return (factor > 5. || factor < 0.2);
+  return (factor > 3 || factor < 0.33);
 }
 
 void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
