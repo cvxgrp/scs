@@ -64,6 +64,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   fwrite(&warm_start, sizeof(scs_int), 1, fout);
   fwrite(&(s->acceleration_lookback), sizeof(scs_int), 1, fout);
   /* Do not write the write_data_filename */
+  /* Do not write the log_csv_filename */
 }
 
 static ScsSettings *read_scs_stgs(FILE *fin) {
@@ -182,4 +183,16 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
   *d = read_scs_data(fin);
   fclose(fin);
   return 0;
+}
+
+void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
+                          const ScsResiduals * r, scs_int iter,
+                          SCS(timer) * solve_timer) {
+  FILE *fout = fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
+  if (iter == 0) {
+    fprintf(fout, "iter, res pri, res dual, scale, time (s)\n");
+  }
+  fprintf(fout, "%i, %.8e, %.8e, %.8e, %.8e\n", iter, r->res_pri, r->res_dual,
+          w->stgs->scale, SCS(tocq)(solve_timer) / 1e3);
+  fclose(fout);
 }

@@ -62,7 +62,8 @@ struct SCS_SETTINGS {
                          struct): 0 */
   scs_int acceleration_lookback;   /* memory for acceleration */
   scs_int adaptive_scaling; /* whether to adaptively update the scale param */
-  const char *write_data_filename; /* string, if set will dump data */
+  const char *write_data_filename; /* string, if set will dump raw prob data */
+  const char *log_csv_filename; /* string, if set will log solve */
 };
 
 /* NB: rows of data matrix A must be specified in this exact order */

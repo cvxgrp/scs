@@ -134,6 +134,8 @@ void SCS(print_data)(const ScsData *d) {
   scs_printf("scale = %4f\n", d->stgs->scale);
   scs_printf("write_data_filename = %s\n",
              (char *)d->stgs->write_data_filename);
+  scs_printf("log_csv_filename = %s\n",
+             (char *)d->stgs->log_csv_filename);
 }
 
 void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
@@ -200,4 +202,5 @@ void SCS(set_default_settings)(ScsData *d) {
   d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
   d->stgs->adaptive_scaling = ADAPTIVE_SCALING;
   d->stgs->write_data_filename = WRITE_DATA_FILENAME;
+  d->stgs->log_csv_filename = LOG_CSV_FILENAME;
 }

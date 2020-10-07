@@ -1030,6 +1030,12 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     if (w->stgs->adaptive_scaling && i == r.last_iter) {
       maybe_update_scale(w, &r, i);
     }
+    // XXX is this the right place to do this?
+    if (w->stgs->log_csv_filename) {
+      /* calc residuals every iter if logging to csv */
+      calc_residuals(w, &r, i);
+      SCS(log_data_to_csv)(d, k, w, &r, i, &solve_timer);
+    }
   }
 
   if (w->stgs->verbose) {

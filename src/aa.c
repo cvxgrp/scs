@@ -245,12 +245,12 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   nrm = BLAS(nrm2)(&bmem, a->work, &one);
   #if EXTRA_VERBOSE > 10
   scs_printf("AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
-          a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
+             a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
   #endif
   if (info < 0 || nrm >= MAX_AA_NRM) {
     #if EXTRA_VERBOSE > 0
     scs_printf("Error in AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
-            a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
+               a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
     #endif
     /* reset aa for stability */
     aa_reset(a);
