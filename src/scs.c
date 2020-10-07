@@ -76,11 +76,11 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_free(cone_str);
   scs_printf(
       "settings: eps: %.2e, alpha: %.2f, max_iters: %i,\n"
-      "\t  normalize: %i, scale: %.2f, rho_x: %.2e,\n"
-      "\t  acceleration_lookback: %i, warm_start: %i\n",
+      "\t  normalize: %i, scale: %.2f, adaptive_scaling: %i,\n"
+      "\t  acceleration_lookback: %i, warm_start: %i\n", /*, rho_x: %.2e\n", */
       stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
-      stgs->scale, stgs->rho_x, (int)acceleration_lookback,
-      (int)stgs->warm_start);
+      stgs->scale, (int)stgs->adaptive_scaling, (int)acceleration_lookback,
+      (int)stgs->warm_start); /* , stgs->rho_x); */
   if (lin_sys_method) {
     scs_printf("%s", lin_sys_method);
     scs_free(lin_sys_method);
