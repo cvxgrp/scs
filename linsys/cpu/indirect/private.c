@@ -1,8 +1,8 @@
 #include <limits.h>
 #include "private.h"
 
-#define CG_BEST_TOL 1e-12
-#define CG_BASE_TOL 1e-6
+#define CG_BEST_TOL (1e-12)
+#define CG_BASE_TOL (1.)
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
@@ -285,6 +285,10 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   SCS(accum_by_atrans)(A, p, &(b[A->n]), b); /* b[:n] = rx + scale * A'ry */
   /* solves (rho_x I + P + scale A'A)x = b, s warm start, solution stored in b */
   cg_its = pcg(A, P, stgs, p, s, b, max_iters, MAX(cg_tol, CG_BEST_TOL)); /* b[:n] = x */
+#if EXTRA_VERBOSE > 10
+  scs_printf("cg_tol %.3e\n", cg_tol);
+  scs_printf("cg_its %i\n", cg_its);
+#endif
   SCS(scale_array)(&(b[A->n]), -1. / stgs->scale, A->m);  /* b[n:] = -ry */
   SCS(accum_by_a)(A, p, b, &(b[A->n])); /* b[n:] = Ax - ry */
   SCS(scale_array)(&(b[A->n]), stgs->scale, A->m); /* b[n:] = scale * (Ax - ry) = y */

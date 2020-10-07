@@ -13,7 +13,7 @@ SCS(timer) global_timer;
 
 /* printing header */
 static const char *HEADER[] = {
-    " Iter ",    " pri res ", " dua res ", " rel gap ",
+    " iter ",    " pri res ", " dua res ", " rel gap ",
     "   obj   ", "  scale  ", " time (s)",
 };
 static const scs_int HSPACE = 9;
@@ -305,27 +305,17 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   return tau;
 }
 
-/*
- * Forms a warm start for the linear solve step using the output of the cone
- * projection step.
- */
-static void compute_warm_start_lin_sys(ScsWork *w) {
-  scs_int len = w->m + w->n;
-  memcpy(w->ls_ws, w->u, len * sizeof(scs_float));
-  SCS(add_scaled_array)(w->ls_ws, w->g, len, w->u[len]);
-}
-
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status;
+  scs_float * warm_start = (iter > 0 ? w->ls_ws : SCS_NULL);
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   SCS(scale_array)(&(w->u_t[n]), -1. / w->stgs->scale, m);
-  /* compute warm start, if used */
-  compute_warm_start_lin_sys(w);
-  /* now w->ls_ws contains warm start */
   status =
-      SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, w->ls_ws, iter);
+      SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, warm_start, iter);
+  /* store warm start for next iteration */
+  memcpy(w->ls_ws, w->u_t, (l - 1) * sizeof(scs_float));
   w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
   SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);
   return status;
@@ -911,6 +901,11 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float factor;
   scs_int i;
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
+  /* TODO update disabled if problem appears infeasible / unbounded */
+  if (r->tau < 1e-12) {
+    return;
+  }
+
   /* higher scale makes res_pri go down faster, so increase is res_pri larger */
   w->sum_log_scale_factor += log(r->res_pri / r->res_dual);
   w->n_log_scale_factor++;
@@ -918,16 +913,18 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   /* TODO should we bound this factor? */
   factor = SQRTF(exp(w->sum_log_scale_factor / w->n_log_scale_factor));
 
+  /*
+  scs_printf("res_pri %.2e\n", r->res_pri);
+  scs_printf("res_dual %.2e\n", r->res_dual);
+  scs_printf("factor %4f\n", factor);
+  */
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
     return;
   }
-  /* TODO update disabled if problem appears infeasible / unbounded */
-  if (r->tau == 0) {
-    return;
-  }
   if (SCS(should_update_scale(factor, iters_since_last_update))) {
     w->stgs->scale *= factor;
+    //scs_printf("rescale, new scale %4f\n", w->stgs->scale);
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
@@ -1029,6 +1026,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     total_accel_time += SCS(tocq)(&accel_timer);
 
     /* if residuals are fresh then maybe compute new scale */
+    // XXX is this the right place to do this?
     if (w->stgs->adaptive_scaling && i == r.last_iter) {
       maybe_update_scale(w, &r, i);
     }

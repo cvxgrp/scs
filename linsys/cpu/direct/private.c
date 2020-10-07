@@ -23,7 +23,8 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
-  sprintf(str, "lin-sys: nnz(L): %li\n", (long)(p->L->p[n] + n));
+  sprintf(str, "lin-sys: nnz(L): %li, factorizations %i\n",
+                (long)(p->L->p[n] + n), (int) p->factorizations);
   return str;
 }
 
@@ -260,6 +261,7 @@ static scs_int ldl_factor(ScsLinSysWork *p) {
 #if EXTRA_VERBOSE > 0
   scs_printf("finished numeric factorization\n");
 #endif
+  p->factorizations++;
   return factor_status;
 }
 
@@ -412,6 +414,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->L = (csc *)scs_malloc(sizeof(csc));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
   p->scale_idxs = (scs_int *)scs_malloc(A->m * sizeof(scs_int));
+  p->factorizations = 0;
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;
