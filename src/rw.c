@@ -190,9 +190,21 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
                           SCS(timer) * solve_timer) {
   FILE *fout = fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
   if (iter == 0) {
-    fprintf(fout, "iter, res pri, res dual, scale, time (s)\n");
+    fprintf(fout, "iter,res_pri,res_dual,rel_gap,res_infeas,res_unbdd,"
+                  "pobj,dobj,tau,kap,scale,time,\n");
   }
-  fprintf(fout, "%i, %.8e, %.8e, %.8e, %.8e\n", iter, r->res_pri, r->res_dual,
-          w->stgs->scale, SCS(tocq)(solve_timer) / 1e3);
+  fprintf(fout, "%li,", (long)iter);
+  fprintf(fout, "%.16e,", r->res_pri);
+  fprintf(fout, "%.16e,", r->res_dual);
+  fprintf(fout, "%.16e,", r->rel_gap);
+  fprintf(fout, "%.16e,", r->res_infeas);
+  fprintf(fout, "%.16e,", r->res_unbdd);
+  fprintf(fout, "%.16e,", r->pobj);
+  fprintf(fout, "%.16e,", r->dobj);
+  fprintf(fout, "%.16e,", r->tau);
+  fprintf(fout, "%.16e,", r->kap);
+  fprintf(fout, "%.16e,", w->stgs->scale);
+  fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
+  fprintf(fout, "\n");
   fclose(fout);
 }

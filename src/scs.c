@@ -265,6 +265,9 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   r->res_dual = SAFEDIV_POS(nmdr_tau / (1 + w->nm_c), r->tau);
   r->rel_gap =
       ABS(xt_p_x + ct_x + bt_y) / (1 + ABS(xt_p_x) + ABS(ct_x) + ABS(bt_y));
+
+  r->pobj = r->xt_p_x / 2. + SAFEDIV_POS(r->ct_x_by_tau, r->tau);
+  r->dobj = -r->xt_p_x / 2. - SAFEDIV_POS(r->bt_y_by_tau, r->tau);
 }
 
 static void cold_start_vars(ScsWork *w) {
@@ -529,12 +532,11 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
 static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
                           SCS(timer) * solve_timer) {
-  scs_float pobj = r->xt_p_x / 2. + SAFEDIV_POS(r->ct_x_by_tau, r->tau);
   scs_printf("%*i|", (int)strlen(HEADER[0]), (int)i);
   scs_printf("%*.2e ", (int)HSPACE, r->res_pri);
   scs_printf("%*.2e ", (int)HSPACE, r->res_dual);
   scs_printf("%*.2e ", (int)HSPACE, r->rel_gap);
-  scs_printf("%*.2e ", (int)HSPACE, pobj);
+  scs_printf("%*.2e ", (int)HSPACE, r->pobj);
   scs_printf("%*.2e ", (int)HSPACE, w->stgs->scale);
   scs_printf("%*.2e ", (int)HSPACE, SCS(tocq)(solve_timer) / 1e3);
   scs_printf("\n");
@@ -1036,6 +1038,13 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       calc_residuals(w, &r, i);
       SCS(log_data_to_csv)(d, k, w, &r, i, &solve_timer);
     }
+  }
+
+  // XXX is this the right place to do this?
+  if (w->stgs->log_csv_filename) {
+    /* calc residuals every iter if logging to csv */
+    calc_residuals(w, &r, i);
+    SCS(log_data_to_csv)(d, k, w, &r, i, &solve_timer);
   }
 
   if (w->stgs->verbose) {
