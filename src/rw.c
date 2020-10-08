@@ -15,8 +15,8 @@ static void write_scs_cone(const ScsCone *k, FILE *fout) {
   fwrite(&(k->f), sizeof(scs_int), 1, fout);
   fwrite(&(k->l), sizeof(scs_int), 1, fout);
   fwrite(&(k->bsize), sizeof(scs_int), 1, fout);
-  fwrite(k->bl, sizeof(scs_float), k->bsize-1, fout);
-  fwrite(k->bu, sizeof(scs_float), k->bsize-1, fout);
+  fwrite(k->bl, sizeof(scs_float), MAX(k->bsize-1, 0), fout);
+  fwrite(k->bu, sizeof(scs_float), MAX(k->bsize-1, 0), fout);
   fwrite(&(k->qsize), sizeof(scs_int), 1, fout);
   fwrite(k->q, sizeof(scs_int), k->qsize, fout);
   fwrite(&(k->ssize), sizeof(scs_int), 1, fout);
@@ -32,10 +32,10 @@ static ScsCone *read_scs_cone(FILE *fin) {
   fread(&(k->f), sizeof(scs_int), 1, fin);
   fread(&(k->l), sizeof(scs_int), 1, fin);
   fread(&(k->bsize), sizeof(scs_int), 1, fin);
-  k->bl = scs_calloc(k->bsize-1, sizeof(scs_float));
-  k->bu = scs_calloc(k->bsize-1, sizeof(scs_float));
-  fread(k->bl, sizeof(scs_float), k->bsize-1, fin);
-  fread(k->bu, sizeof(scs_float), k->bsize-1, fin);
+  k->bl = scs_calloc(MAX(k->bsize-1, 0), sizeof(scs_float));
+  k->bu = scs_calloc(MAX(k->bsize-1, 0), sizeof(scs_float));
+  fread(k->bl, sizeof(scs_float), MAX(k->bsize-1, 0), fin);
+  fread(k->bu, sizeof(scs_float), MAX(k->bsize-1, 0), fin);
   fread(&(k->qsize), sizeof(scs_int), 1, fin);
   k->q = scs_calloc(k->qsize, sizeof(scs_int));
   fread(k->q, sizeof(scs_int), k->qsize, fin);
@@ -63,6 +63,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   fwrite(&(s->verbose), sizeof(scs_int), 1, fout);
   fwrite(&warm_start, sizeof(scs_int), 1, fout);
   fwrite(&(s->acceleration_lookback), sizeof(scs_int), 1, fout);
+  fwrite(&(s->adaptive_scaling), sizeof(scs_int), 1, fout);
   /* Do not write the write_data_filename */
   /* Do not write the log_csv_filename */
 }
@@ -79,6 +80,7 @@ static ScsSettings *read_scs_stgs(FILE *fin) {
   fread(&(s->verbose), sizeof(scs_int), 1, fin);
   fread(&(s->warm_start), sizeof(scs_int), 1, fin);
   fread(&(s->acceleration_lookback), sizeof(scs_int), 1, fin);
+  fread(&(s->adaptive_scaling), sizeof(scs_int), 1, fin);
   return s;
 }
 
@@ -140,11 +142,15 @@ static ScsData *read_scs_data(FILE *fin) {
 
 void SCS(write_data)(const ScsData *d, const ScsCone *k) {
   FILE *fout = fopen(d->stgs->write_data_filename, "wb");
-  uint32_t scs_int_sz = (uint32_t)sizeof(scs_int);
-  uint32_t scs_float_sz = (uint32_t)sizeof(scs_float);
+  uint32_t scs_int_sz = (uint32_t)SCS(sizeof_int)();
+  uint32_t scs_float_sz = (uint32_t)SCS(sizeof_float)();
+  const char *scs_version = SCS_VERSION;
+  uint32_t scs_version_sz = (uint32_t)strlen(scs_version);
   scs_printf("writing data to %s\n", d->stgs->write_data_filename);
   fwrite(&(scs_int_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_float_sz), sizeof(uint32_t), 1, fout);
+  fwrite(&(scs_version_sz), sizeof(uint32_t), 1, fout);
+  fwrite(scs_version, 1, scs_version_sz, fout);
   write_scs_cone(k, fout);
   write_scs_data(d, fout);
   fclose(fout);
@@ -153,6 +159,8 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k) {
 scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
   uint32_t file_int_sz;
   uint32_t file_float_sz;
+  uint32_t file_version_sz;
+  char file_version[16];
   FILE *fin = fopen(filename, "rb");
   if (!fin) {
     scs_printf("Error reading file %s\n", filename);
@@ -161,7 +169,6 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
   scs_printf("Reading data from %s\n", filename);
   fread(&(file_int_sz), sizeof(uint32_t), 1, fin);
   fread(&(file_float_sz), sizeof(uint32_t), 1, fin);
-
   if (file_int_sz != (uint32_t)sizeof(scs_int)) {
     scs_printf(
         "Error, sizeof(file int) is %lu, but scs expects sizeof(int) %lu, "
@@ -178,7 +185,16 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
     fclose(fin);
     return -1;
   }
-
+  fread(&(file_version_sz), sizeof(uint32_t), 1, fin);
+  fread(file_version, 1, file_version_sz, fin);
+  file_version[file_version_sz] = '\0';
+  if (strcmp(file_version, SCS_VERSION) != 0) {
+    scs_printf("************************************************************\n"
+               "Warning: SCS file version %s, this is SCS version %s.\n"
+               "The file reading / writing logic might have changed.\n"
+               "************************************************************\n",
+               file_version, SCS_VERSION);
+  }
   *k = read_scs_cone(fin);
   *d = read_scs_data(fin);
   fclose(fin);
@@ -189,9 +205,11 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
                           const ScsResiduals * r, scs_int iter,
                           SCS(timer) * solve_timer) {
   FILE *fout = fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
+  scs_int l = w->m + w->n + 1;
   if (iter == 0) {
     fprintf(fout, "iter,res_pri,res_dual,rel_gap,res_infeas,res_unbdd,"
-                  "pobj,dobj,tau,kap,scale,time,\n");
+                  "pobj,dobj,tau,kap,scale,nrm_diff_u_ut,nrm_diff_u_u_prev,"
+                  "nrm_diff_v_v_prev,time,\n");
   }
   fprintf(fout, "%li,", (long)iter);
   fprintf(fout, "%.16e,", r->res_pri);
@@ -204,6 +222,9 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", r->tau);
   fprintf(fout, "%.16e,", r->kap);
   fprintf(fout, "%.16e,", w->stgs->scale);
+  fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_t, l));
+  fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_prev, l));
+  fprintf(fout, "%.16e,", SCS(norm_diff)(w->v, w->v_prev, l));
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
   fprintf(fout, "\n");
   fclose(fout);

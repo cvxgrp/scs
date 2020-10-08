@@ -118,6 +118,9 @@ int main(int argc, char **argv) {
   k->ssize = 0;
   k->ep = 0;
   k->ed = 0;
+  k->bsize = 0;
+  k->bu = SCS_NULL;
+  k->bl = SCS_NULL;
 
   scs_printf("\nA is %ld by %ld, with %ld nonzeros per column.\n", (long)m,
              (long)n, (long)col_nnz);
