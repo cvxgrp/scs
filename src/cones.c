@@ -596,35 +596,35 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
          1;
 }
 
-/* project onto { (x,t) | t * l <= x <= t * u, t >= 0 }, Newton's method on t
-   xt = [x ; t], total length = bsize
-   uses Moreau since \Pi_K*(xt) = \Pi_K(-xt) + xt
+/* project onto { (t, x) | t * l <= x <= t * u, t >= 0 }, Newton's method on t
+   tx = [t; x], total length = bsize
+   uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
    D contains equilibration scaling matrix, can be SCS_NULL
 */
-static void proj_box_dual_cone(scs_float *xt, const scs_float *bl,
+static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
                                const scs_float * D) {
-  scs_float gt, ht, dl, du, t_prev, t = MAX(-xt[bsize - 1], 0.);
-  scs_int iter, j;
+  scs_float gt, ht, dl, du, t_prev, t = MAX(-tx[0], 0.), *x = &(tx[1]);
+  scs_int iter, j, max_iter = 100;
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
-  SCS(print_array)(xt, bsize, "xt");
+  SCS(print_array)(tx, bsize, "tx");
 #endif
   /* should only require about 5 iterations */
-  for (iter = 0; iter < 100; iter++) {
+  for (iter = 0; iter < max_iter; iter++) {
     t_prev = t;
-    gt = t + xt[bsize - 1]; /* gradient */
+    gt = t + tx[0]; /* gradient */
     ht = 1.; /* hessian */
-    for (j = 0; j < bsize - 1; j++) { /* bsize - 1 since last entry is t */
-      dl = D ? D[j] * bl[j] / D[bsize-1] : bl[j];
-      du = D ? D[j] * bu[j] / D[bsize-1] : bu[j];
-      if (-xt[j] > t * du) {
-        gt += (t * du + xt[j]) * du; /* gradient */
+    for (j = 0; j < bsize - 1; j++) {
+      dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
+      du = D ? D[j+1] * bu[j] / D[0] : bu[j];
+      if (-x[j] > t * du) {
+        gt += (t * du + x[j]) * du; /* gradient */
         ht += du * du; /* hessian */
       }
-      else if (-xt[j] < t * dl) {
-        gt += (t * dl + xt[j]) * dl; /* gradient */
+      else if (-x[j] < t * dl) {
+        gt += (t * dl + x[j]) * dl; /* gradient */
         ht += dl * dl; /* hessian */
       }
     }
@@ -634,22 +634,25 @@ static void proj_box_dual_cone(scs_float *xt, const scs_float *bl,
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
     if (ABS(gt / (ht + 1e-6)) < 1e-12 || ABS(t - t_prev) < 1e-12) { break; }
   }
+  if (iter == max_iter) {
+    scs_printf("warning: box cone projection took maximum %i iters\n", iter);
+  }
   for (j = 0; j < bsize - 1; j++) {
-    dl = D ? D[j] * bl[j] / D[bsize-1] : bl[j];
-    du = D ? D[j] * bu[j] / D[bsize-1] : bu[j];
-    if (-xt[j] > t * du) {
-      xt[j] += t * du;
+    dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
+    du = D ? D[j+1] * bu[j] / D[0] : bu[j];
+    if (-x[j] > t * du) {
+      x[j] += t * du;
     }
-    else if (-xt[j] < t * dl) {
-      xt[j] += t * dl;
+    else if (-x[j] < t * dl) {
+      x[j] += t * dl;
     } else {
-      xt[j] = 0;
+      x[j] = 0;
     }
   }
-  xt[bsize - 1] += t;
+  tx[0] += t;
 #if EXTRA_VERBOSE > 10
   scs_printf("box cone iters %i\n", (int)iter);
-  SCS(print_array)(xt, bsize, "xt_+");
+  SCS(print_array)(tx, bsize, "tx_+");
 #endif
   return;
 }
