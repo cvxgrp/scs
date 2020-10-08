@@ -143,8 +143,8 @@ static void set_m(AaWork *a, aa_int len) {
     nrm_s = BLAS(nrm2)(&btotal, a->S, &one);
     r = a->eta * (nrm_y * nrm_y + nrm_s * nrm_s);
     #if EXTRA_VERBOSE > 5
-    scs_printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n", a->iter,
-            len, nrm_y, nrm_s, r);
+    scs_printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n",
+                a->iter, len, nrm_y, nrm_s, r);
     #endif
     for (i = 0; i < len; ++i){
       a->M[i + len * i] += r;
