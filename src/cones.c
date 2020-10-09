@@ -635,7 +635,7 @@ static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
     if (ABS(gt / (ht + 1e-6)) < 1e-12 || ABS(t - t_prev) < 1e-12) { break; }
   }
   if (iter == max_iter) {
-    scs_printf("warning: box cone projection took maximum %i iters\n", iter);
+    scs_printf("warning: box cone proj took maximum %i iters\n", (int)iter);
   }
   for (j = 0; j < bsize - 1; j++) {
     dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
@@ -707,7 +707,7 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
                             const scs_float *warm_start, scs_int iter,
                             const scs_float *D) {
   scs_int i;
-  scs_int count = (k->f ? k->f : 0);
+  scs_int count = k->f;
 #if EXTRA_VERBOSE > 0
   SCS(timer) proj_timer;
   SCS(tic)(&proj_timer);

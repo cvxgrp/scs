@@ -168,6 +168,10 @@ struct SCS_RESIDUALS {
   scs_float dobj;
   scs_float tau;
   scs_float kap;
+  scs_float nm_ax;
+  scs_float nm_ax_s;
+  scs_float nm_aty;
+  scs_float nm_px;
 };
 
 #ifdef __cplusplus

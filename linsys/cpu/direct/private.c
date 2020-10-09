@@ -23,7 +23,7 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
-  sprintf(str, "lin-sys: nnz(L): %li, factorizations %i\n",
+  sprintf(str, "lin-sys: nnz(L): %li, factorizations: %i\n",
                 (long)(p->L->p[n] + n), (int) p->factorizations);
   return str;
 }

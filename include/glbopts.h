@@ -155,6 +155,8 @@ typedef float scs_float;
 #endif
 #endif
 
+#define RESCALING_MIN_ITERS (50)
+
 #define EPS_TOL (1E-18)
 #define SAFEDIV_POS(X, Y) ((Y) < EPS_TOL ? ((X) / EPS_TOL) : (X) / (Y))
 
@@ -165,7 +167,7 @@ typedef float scs_float;
 /* print summary output every this num iterations */
 #define PRINT_INTERVAL (100)
 /* check for convergence every this num iterations */
-#define CONVERGED_INTERVAL (20)
+#define CONVERGED_INTERVAL (25)
 #endif
 
 /* tolerance at which we declare problem indeterminate */

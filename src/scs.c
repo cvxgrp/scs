@@ -159,34 +159,37 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
 }
 
 static scs_float calc_primal_resid(ScsWork *w, const scs_float *x,
-                                   const scs_float *s, const scs_float tau,
-                                   scs_float *nm_axs) {
+                                   const scs_float *s, ScsResiduals *r) {
   scs_int i;
-  scs_float ax_s_sbctau, scale_i, pres = 0, *pr = w->pr;
-  *nm_axs = 0;
+  scs_float ax_s_btau, scale_i, pres = 0, *pr = w->pr, tau = r->tau;
+  r->nm_ax_s = 0;
+  r->nm_ax = 0;
   memset(pr, 0, w->m * sizeof(scs_float));
-  SCS(accum_by_a)(w->A, w->p, x, pr);
-  SCS(add_scaled_array)(pr, s, w->m, 1.0); /* pr = Ax + s */
+  SCS(accum_by_a)(w->A, w->p, x, pr); /* pr = Ax */
   for (i = 0; i < w->m; ++i) {
     scale_i = 1.;
     if (w->stgs->normalize) {
       scale_i = 1. / w->scal->D[i] / w->scal->dual_scale;
     }
-    *nm_axs += (pr[i] * scale_i) * (pr[i] * scale_i); /* ||Ax + s|| */
-    ax_s_sbctau = (pr[i] - w->b[i] * tau) * scale_i;
-    pres += ax_s_sbctau * ax_s_sbctau;
+    /* ||Ax + s|| */
+    r->nm_ax_s += ((pr[i] + s[i]) * scale_i) * ((pr[i] + s[i]) * scale_i);
+    /* ||Ax|| */
+    r->nm_ax += (pr[i] * scale_i) * (pr[i] * scale_i);
+    ax_s_btau = (pr[i] + s[i] - w->b[i] * tau) * scale_i;
+    pres += ax_s_btau * ax_s_btau;
   }
-  *nm_axs = SQRTF(*nm_axs);
+  r->nm_ax_s = SQRTF(r->nm_ax_s);
+  r->nm_ax = SQRTF(r->nm_ax);
   return SQRTF(pres); /* SCS(norm)(Ax + s - b * tau) */
 }
 
 /* we assume w->px contains unnormalized Px when this is called */
 static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
-                                 const scs_float *y, const scs_float tau,
-                                 scs_float *nm_a_ty) {
+                                 const scs_float *y, ScsResiduals *r) {
   scs_int i;
-  scs_float px_aty_ctau, scale_i, dres = 0, *dr = w->dr, *px = w->px;
-  *nm_a_ty = 0;
+  scs_float px_aty_ctau, scale_i, dres = 0, *dr = w->dr, *px = w->px, tau = r->tau;
+  r->nm_aty = 0;
+  r->nm_px = 0;
   memset(w->dr, 0, w->n * sizeof(scs_float));
   SCS(accum_by_atrans)(w->A, w->p, y, dr); /* dr = A'y */
   for (i = 0; i < w->n; ++i) {
@@ -194,18 +197,20 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
     if (w->stgs->normalize) {
       scale_i = 1. / w->scal->E[i] / w->scal->primal_scale;
     }
-    *nm_a_ty += (dr[i] * scale_i) * (dr[i] * scale_i); /* ||A' y|| */
+    r->nm_aty += (dr[i] * scale_i) * (dr[i] * scale_i); /* ||A' y|| */
+    r->nm_px = (px[i] * scale_i) * (px[i] * scale_i);
     px_aty_ctau = (px[i] + dr[i] + w->c[i] * tau) * scale_i;
     dres += px_aty_ctau * px_aty_ctau;
   }
-  *nm_a_ty = SQRTF(*nm_a_ty);
+  r->nm_aty = SQRTF(r->nm_aty);
+  r->nm_px = SQRTF(r->nm_px);
   return SQRTF(dres); /* SCS(norm)(Px + A'y + c * tau) */
 }
 
 /* calculates un-normalized quantities */
 static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float *x = w->u, *y = &(w->u[w->n]);
-  scs_float nmpr_tau, nmdr_tau, nm_axs_tau, nm_a_ty_tau, ct_x, bt_y;
+  scs_float nmpr_tau, nmdr_tau, ct_x, bt_y;
   scs_float xt_p_x = 0.;
   scs_int n = w->n, m = w->m;
 
@@ -227,8 +232,8 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
   r->tau = ABS(w->u[n + m]);
   r->kap = ABS(w->rsk[n + m]);
 
-  nmpr_tau = calc_primal_resid(w, x, &(w->rsk[w->n]), r->tau, &nm_axs_tau);
-  nmdr_tau = calc_dual_resid(w, x, y, r->tau, &nm_a_ty_tau);
+  nmpr_tau = calc_primal_resid(w, x, &(w->rsk[w->n]), r);
+  nmdr_tau = calc_dual_resid(w, x, y, r);
 
   r->bt_y_by_tau = SCS(dot)(y, w->b, m);
   r->ct_x_by_tau = SCS(dot)(x, w->c, n);
@@ -244,7 +249,7 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
 
   r->res_infeas = NAN;
   if (r->bt_y_by_tau < 0) {
-    r->res_infeas = w->nm_b * nm_a_ty_tau / -r->bt_y_by_tau;
+    r->res_infeas = w->nm_b * r->nm_aty / -r->bt_y_by_tau;
   }
 
   r->res_unbdd = NAN;
@@ -253,7 +258,7 @@ static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
     /* sqrt(x'Px) / (c'x) */
     r->xt_p_x_ctau = xt_p_x / r->ct_x_by_tau / r->ct_x_by_tau;
     /* |c||Ax + s| / (c'x) */
-    r->res_unbdd = w->nm_c * nm_axs_tau / -r->ct_x_by_tau;
+    r->res_unbdd = w->nm_c * r->nm_ax_s / -r->ct_x_by_tau;
   }
 
   bt_y = SAFEDIV_POS(r->bt_y_by_tau, r->tau);
@@ -896,40 +901,51 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
   }
 }
 
-// TODO move:
-#define RESCALING_MIN_ITERS (100)
-
+#define MAX_SCALE_VALUE (1e5)
+#define MIN_SCALE_VALUE (1e-5)
 static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
-  scs_float factor;
+  scs_float factor, new_scale;
   scs_int i;
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
-  /* TODO update disabled if problem appears infeasible / unbounded */
+  /* TODO this probably isn't numerically stable */
+  scs_float relative_res_pri = SAFEDIV_POS(r->res_pri, r->nm_ax);
+  /* TODO update to include Px? */
+  scs_float relative_res_dual = SAFEDIV_POS(r->res_dual, r->nm_aty);
+
+  /* TODO should we disable if problem appears infeasible / unbounded? */
+  /*
   if (r->tau < 1e-12) {
     return;
   }
+  */
 
-  /* higher scale makes res_pri go down faster, so increase is res_pri larger */
-  w->sum_log_scale_factor += log(r->res_pri / r->res_dual);
+  /* we use SAFEDIV_POS to compute the residuals so this is safe */
+  /* higher scale makes res_pri go down faster, so increase if res_pri larger */
+  w->sum_log_scale_factor += log(relative_res_pri / relative_res_dual);
   w->n_log_scale_factor++;
 
   /* TODO should we bound this factor? */
-  factor = SQRTF(exp(w->sum_log_scale_factor / w->n_log_scale_factor));
+  factor = SQRTF(exp(w->sum_log_scale_factor /
+                (scs_float)(w->n_log_scale_factor)));
 
-  /*
-  scs_printf("res_pri %.2e\n", r->res_pri);
-  scs_printf("res_dual %.2e\n", r->res_dual);
-  scs_printf("factor %4f\n", factor);
-  */
+#if EXTRA_VERBOSE > 5
+  scs_printf("relative_res_pri %.2e, relative_res_dual %.2e, factor %4f\n",
+              relative_res_pri, relative_res_dual, factor);
+#endif
+
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
     return;
   }
+  new_scale = MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
+  if (new_scale == w->stgs->scale) {
+    return;
+  }
   if (SCS(should_update_scale(factor, iters_since_last_update))) {
-    w->stgs->scale *= factor;
-    //scs_printf("rescale, new scale %4f\n", w->stgs->scale);
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
+    w->stgs->scale = new_scale;
     SCS(update_linsys_scale)(w->A, w->P, w->stgs, w->p);
 
     /* update pre-solved quantities */
@@ -938,8 +954,8 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
     /* reset acceleration so that old iterates aren't affecting new values */
     aa_reset(w->accel);
 
-    /* update v, using fact that rsk, u, u_t vector should be the same */
-    /* solve: D^+ (v^+ + u - 2u_t) = rsk v^+ = (D^+)^-1 rsk + 2u_t - u */
+    /* update v, using fact that rsk, u, u_t vectors should be the same */
+    /* solve: D^+ (v^+ + u - 2u_t) = rsk v^+ = (D^+)^-1 rsk + 2u_t - u  */
     /* only elements with scale on diag */
     for (i = w->n; i < w->n + w->m; i++) {
       w->v[i] = w->stgs->scale * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
