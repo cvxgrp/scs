@@ -250,7 +250,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
 /* solves Mx = b, for x but stores result in b */
 /* s contains warm-start (if available) */
 /*
- * [x] = [rho_x I + P       A'   ]^{-1} [rx]
+ * [x] = [rho_x I + P       A'    ]^{-1} [rx]
  * [y]   [     A        -I / scale]      [ry]
  *
  * becomes:
@@ -265,8 +265,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   scs_int cg_its, max_iters;
   scs_float cg_tol;
 
-  if (SCS(norm)(b, A->n) <= 1e-18) {
-    memset(b, 0, A->n * sizeof(scs_float));
+  if (SCS(norm)(b, A->n + A->m) <= 1e-18) {
+    memset(b, 0, (A->n + A->m) * sizeof(scs_float));
     return 0;
   }
 
@@ -274,8 +274,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
     cg_tol = CG_BEST_TOL;
     max_iters = INT_MAX;
   } else {
-    cg_tol = SCS(norm)(b, A->n) * CG_BASE_TOL /
-             POWF((scs_float)iter + 1, stgs->cg_rate);
+    cg_tol = MAX(CG_BEST_TOL, SCS(norm)(b, A->n) * CG_BASE_TOL /
+                 POWF((scs_float)iter + 1, stgs->cg_rate));
     /* set max_its to 3 * n (though in theory n is enough for any tol) */
     max_iters = 3 * A->n;
   }
