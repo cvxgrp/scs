@@ -4,9 +4,9 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
-#define CONE_RATE (2)
-#define CONE_TOL (1e-8)
-#define CONE_THRESH (1e-6)
+/* #define CONE_RATE (2) */
+#define CONE_TOL (1e-10)
+#define CONE_THRESH (1e-8)
 #define EXP_CONE_MAX_ITERS (100)
 #define POW_CONE_MAX_ITERS (20)
 
@@ -256,6 +256,9 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
     } else if (ABS(f) < CONE_TOL) {
       break;
     }
+  }
+  if (i == EXP_CONE_MAX_ITERS) {
+    scs_printf("warning: exp cone proj took maximum %i iters\n", (int)i);
   }
   return t + z_hat;
 }
