@@ -149,7 +149,6 @@ struct SCS_WORK {
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
   AaWork *accel;          /* Struct for acceleration workspace */
-  scs_float root_plus_a;  /* used in root_plus routine */
 };
 
 /* to hold residual information (unnormalized) */

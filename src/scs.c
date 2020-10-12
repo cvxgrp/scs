@@ -286,7 +286,7 @@ static void cold_start_vars(ScsWork *w) {
 /* utility function that scales first n entries in inner prod by rho_x */
 /* and last m entries by 1 / scale, assumes length of array is n + m */
 static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
-                                const scs_float *y) {
+                                       const scs_float *y) {
   scs_int i, n = w->n, len = w->n + w->m;
   scs_float ip = 0.0;
   for (i = 0; i < n; ++i) {
@@ -298,10 +298,15 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
   return ip;
 }
 
+#define TAU_FACTOR (1e2)
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float b, c, tau, a = w->root_plus_a;
-  b = dot_with_diag_scaling(w, mu, w->g) - 2 * dot_with_diag_scaling(w, p, w->g) - eta;
+  scs_float b, c, tau, a, tau_scale;
+  tau_scale = TAU_FACTOR * w->stgs->scale;
+  a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
+  eta *= tau_scale;
+  b = (dot_with_diag_scaling(w, mu, w->g) -
+       2 * dot_with_diag_scaling(w, p, w->g) - eta);
   c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
   tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
 #if EXTRA_VERBOSE > 3
@@ -836,7 +841,6 @@ static void update_work_cache(ScsWork * w) {
   memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
   SCS(scale_array)(&(w->g[w->n]), -1., w->m);
   SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, -1);
-  w->root_plus_a = 1 + dot_with_diag_scaling(w, w->g, w->g);
   return;
 }
 
@@ -913,11 +917,9 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float relative_res_dual = SAFEDIV_POS(r->res_dual, r->nm_aty);
 
   /* TODO should we disable if problem appears infeasible / unbounded? */
-  /*
   if (r->tau < 1e-12) {
     return;
   }
-  */
 
   /* we use SAFEDIV_POS to compute the residuals so this is safe */
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
