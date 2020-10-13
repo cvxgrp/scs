@@ -7,7 +7,7 @@
 /* #define CONE_RATE (2) */
 #define CONE_TOL (1e-10)
 #define CONE_THRESH (1e-8)
-#define EXP_CONE_MAX_ITERS (100)
+#define EXP_CONE_MAX_ITERS (1000)
 #define POW_CONE_MAX_ITERS (20)
 
 #ifdef USE_LAPACK

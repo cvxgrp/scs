@@ -323,14 +323,19 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status;
-  scs_float * warm_start = (iter > 0 ? w->ls_ws : SCS_NULL);
+  scs_float * warm_start = SCS_NULL;
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   SCS(scale_array)(&(w->u_t[n]), -1. / w->stgs->scale, m);
-  status =
-      SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, warm_start, iter);
-  /* store warm start for next iteration */
-  memcpy(w->ls_ws, w->u_t, (l - 1) * sizeof(scs_float));
+
+  /* compute warm start using the cone projection output */
+  if (iter > 0) {
+    warm_start = w->ls_ws;
+    memcpy(warm_start, w->u, (l - 1) * sizeof(scs_float));
+    SCS(add_scaled_array)(warm_start, w->g, l - 1, w->u[l - 1]);
+  }
+  status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, warm_start,
+                              iter);
   w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
   SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);
   return status;
