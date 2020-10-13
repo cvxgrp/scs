@@ -135,7 +135,7 @@ size_t SCS(sizeof_float)(void);
 /* workspace for SCS */
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
-  scs_float *u, *u_best, *v, *v_best, *u_t, *u_prev, *v_prev, *rsk;
+  scs_float *u, *u_best, *v, *u_t, *u_prev, *v_prev, *rsk, *rsk_best;
   scs_float *h, *g, *pr, *dr, *px, *ls_ws;
   scs_float nm_b, nm_c, best_max_residual;
   scs_float sum_log_scale_factor;

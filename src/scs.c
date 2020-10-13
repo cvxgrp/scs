@@ -29,9 +29,9 @@ static void free_work(ScsWork *w) {
     scs_free(w->u_t);
     scs_free(w->u_prev);
     scs_free(w->v);
-    scs_free(w->v_best);
     scs_free(w->v_prev);
     scs_free(w->rsk);
+    scs_free(w->rsk_best);
     scs_free(w->h);
     scs_free(w->g);
     scs_free(w->b);
@@ -208,14 +208,16 @@ static scs_float calc_dual_resid(ScsWork *w, const scs_float *x,
 }
 
 /* calculates un-normalized quantities */
-static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter) {
+static void calc_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
+                           scs_int force) {
   scs_float *x = w->u, *y = &(w->u[w->n]);
   scs_float nmpr_tau, nmdr_tau, ct_x, bt_y;
   scs_float xt_p_x = 0.;
   scs_int n = w->n, m = w->m;
 
   /* checks if the residuals are unchanged by checking iteration */
-  if (r->last_iter == iter) {
+  /* force being set will force this to compute the residuals anyway */
+  if (!force && r->last_iter == iter) {
     return;
   }
   r->last_iter = iter;
@@ -417,15 +419,14 @@ static scs_float get_max_residual(ScsResiduals *r) {
 
 static void copy_from_best_iterate(ScsWork *w) {
   memcpy(w->u, w->u_best, (w->m + w->n + 1) * sizeof(scs_float));
-  memcpy(w->v, w->v_best, (w->m + w->n + 1) * sizeof(scs_float));
+  memcpy(w->rsk, w->rsk_best, (w->m + w->n + 1) * sizeof(scs_float));
 }
 
 static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                       ScsResiduals *r, scs_int iter) {
   if (w->best_max_residual < get_max_residual(r)) {
-    r->last_iter = -1; /* Forces residual recomputation. */
     copy_from_best_iterate(w);
-    calc_residuals(w, r, iter);
+    calc_residuals(w, r, iter, 1); /* 1 forces residual recomputation. */
     setx(w, sol);
     sety(w, sol);
     sets(w, sol);
@@ -512,7 +513,7 @@ static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                          ScsResiduals *r, scs_int iter) {
   scs_int l = w->n + w->m + 1;
-  calc_residuals(w, r, iter);
+  calc_residuals(w, r, iter, 0);
   setx(w, sol);
   sety(w, sol);
   sets(w, sol);
@@ -779,8 +780,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->u_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->v = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->v_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
-  w->v_best = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->rsk = (scs_float *)scs_calloc(l, sizeof(scs_float));
+  w->rsk_best = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->ls_ws = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
@@ -901,7 +902,7 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
   if (w->best_max_residual > max_residual) {
     w->best_max_residual = max_residual;
     memcpy(w->u_best, w->u, (w->m + w->n + 1) * sizeof(scs_float));
-    memcpy(w->v_best, w->v, (w->m + w->n + 1) * sizeof(scs_float));
+    memcpy(w->rsk_best, w->rsk, (w->m + w->n + 1) * sizeof(scs_float));
   }
 }
 
@@ -1022,7 +1023,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     }
 
     if (i % CONVERGED_INTERVAL == 0 || iterate_norm_diff(w) < 1e-10) {
-      calc_residuals(w, &r, i);
+      calc_residuals(w, &r, i, 0);
       if ((info->status_val = has_converged(w, &r, i)) != 0) {
         break;
       }
@@ -1030,7 +1031,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     }
 
     if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-      calc_residuals(w, &r, i);
+      calc_residuals(w, &r, i, 0);
       update_best_iterate(w, &r);
       print_summary(w, i, &r, &solve_timer);
     }
@@ -1053,7 +1054,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     // XXX is this the right place to do this?
     if (w->stgs->log_csv_filename) {
       /* calc residuals every iter if logging to csv */
-      calc_residuals(w, &r, i);
+      calc_residuals(w, &r, i, 0);
       SCS(log_data_to_csv)(d, k, w, &r, i, &solve_timer);
     }
   }
@@ -1061,12 +1062,12 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   // XXX is this the right place to do this?
   if (w->stgs->log_csv_filename) {
     /* calc residuals every iter if logging to csv */
-    calc_residuals(w, &r, i);
+    calc_residuals(w, &r, i, 0);
     SCS(log_data_to_csv)(d, k, w, &r, i, &solve_timer);
   }
 
   if (w->stgs->verbose) {
-    calc_residuals(w, &r, i);
+    calc_residuals(w, &r, i, 0);
     print_summary(w, i, &r, &solve_timer);
   }
   /* populate solution vectors (unnormalized) and info */
