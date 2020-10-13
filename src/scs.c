@@ -373,8 +373,8 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
   /* u = [x;y;tau] */
-  st = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]), iter,
-                           w->scal->D);
+  st = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]),
+                           w->scal, iter);
   if (w->u[l - 1] < 0.0) {
     w->u[l - 1] = 0.0;
   }
@@ -596,7 +596,7 @@ static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, y, m * sizeof(scs_float));
-  SCS(proj_dual_cone)(t, k, c, SCS_NULL, -1, SCS_NULL);
+  SCS(proj_dual_cone)(t, k, c, SCS_NULL, SCS_NULL, -1);
   dist = SCS(norm_inf_diff)(t, y, m);
 #if EXTRA_VERBOSE > 0
   SCS(print_array)(y, m, "y");
@@ -615,7 +615,7 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, s, m * sizeof(scs_float));
   SCS(scale_array)(t, -1.0, m);
-  SCS(proj_dual_cone)(t, k, c, SCS_NULL, -1, SCS_NULL);
+  SCS(proj_dual_cone)(t, k, c, SCS_NULL, SCS_NULL, -1);
   dist = SCS(norm_inf)(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
 #if EXTRA_VERBOSE > 0
   SCS(print_array)(s, m, "s");

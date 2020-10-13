@@ -707,10 +707,11 @@ static void proj_power_cone(scs_float *v, scs_float a) {
    D contains scaling matrix, some cones can make use of it
 */
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                            const scs_float *warm_start, scs_int iter,
-                            const scs_float *D) {
+                            const scs_float *warm_start, ScsScaling *scaling,
+                            scs_int iter) {
   scs_int i;
   scs_int count = k->f;
+  scs_float *D = scaling ? scaling->D : SCS_NULL;
 #if EXTRA_VERBOSE > 0
   SCS(timer) proj_timer;
   SCS(tic)(&proj_timer);
