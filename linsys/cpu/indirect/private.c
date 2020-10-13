@@ -26,25 +26,22 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
                                const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_int i, k;
-  scs_float *M = p->M;
 
 #if EXTRA_VERBOSE > 0
   scs_printf("getting pre-conditioner\n");
 #endif
 
   for (i = 0; i < A->n; ++i) { /* cols */
-    M[i] = stgs->rho_x + stgs->scale * SCS(norm_sq)(&(A->x[A->p[i]]),
-                                                    A->p[i + 1] - A->p[i]);
+    p->diagAtA[i] = SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
     if (P) {
       for (k = P->p[i]; k < P->p[i + 1]; k++) {
         /* diagonal element only */
         if (P->i[k] == i) { /* row == col */
-          M[i] += P->x[k];
+          p->diagP[i] = P->x[k];
           break;
         }
       }
     }
-    M[i] = 1. / M[i];
   }
 
 #if EXTRA_VERBOSE > 0
@@ -105,12 +102,13 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
       scs_free(p->At);
     }
     scs_free(p->z);
-    scs_free(p->M);
+    scs_free(p->diagAtA);
+    scs_free(p->diagP);
     scs_free(p);
   }
 }
 
-/*y = (rho_x * I + P + scale * A'A)x */
+/* y = (rho_x * I + P + scale * A'A) x */
 static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
                     const ScsSettings *stgs, ScsLinSysWork *p,
                     const scs_float *x, scs_float *y) {
@@ -136,11 +134,13 @@ void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
   SCS(_accum_by_atrans)(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
 }
 
-static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
-                                  scs_int n) {
+static void apply_pre_conditioner(scs_float *z, scs_float *r,
+                                  scs_int n, const ScsSettings *stgs,
+                                  ScsLinSysWork *pr) {
   scs_int i;
   for (i = 0; i < n; ++i) {
-    z[i] = r[i] * M[i];
+    /* z[i] = r[i] * M[i]; */
+    z[i] = r[i] / (stgs->rho_x + pr->diagP[i] + stgs->scale * pr->diagAtA[i]);
   }
 }
 
@@ -148,10 +148,9 @@ scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
   return (factor > SQRTF(10.) || factor < 1.0 / SQRTF(10.));
 }
 
+/* no need to update anything in this case */
 void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
-                              const ScsSettings *stgs, ScsLinSysWork *p) {
-  set_preconditioner(A, P, stgs, p);
-}
+                              const ScsSettings *stgs, ScsLinSysWork *p) {}
 
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
@@ -172,8 +171,10 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   transpose(A, p);
 
   /* preconditioner memory */
-  p->z = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
-  p->M = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
+  p->z = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  p->diagAtA = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  /* calloc in case P is NULL */
+  p->diagP = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   set_preconditioner(A, P, stgs, p);
 
   p->tot_cg_its = 0;
@@ -196,7 +197,6 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   scs_float *Gp = pr->Gp; /* updated CG direction */
   scs_float *r = pr->r;   /* cg residual */
   scs_float *z = pr->z;   /* for preconditioning */
-  scs_float *M = pr->M;   /* inverse diagonal preconditioner */
 
   if (!s) {
     /* take s = 0 */
@@ -221,7 +221,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   }
 
   /* z = M r (M is inverse preconditioner) */
-  apply_pre_conditioner(M, z, r, n);
+  apply_pre_conditioner(z, r, n, stgs, pr);
   /* ztr = z'r */
   ztr = SCS(dot)(z, r, n);
   /* p = z */
@@ -245,7 +245,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
       return i + 1;
     }
     /* z = M r (M is inverse preconditioner) */
-    apply_pre_conditioner(M, z, r, n);
+    apply_pre_conditioner(z, r, n, stgs, pr);
     ztr_prev = ztr;
     /* ztr = z'r */
     ztr = SCS(dot)(z, r, n);

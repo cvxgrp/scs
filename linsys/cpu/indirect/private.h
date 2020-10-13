@@ -19,7 +19,8 @@ struct SCS_LIN_SYS_WORK {
   ScsMatrix *At;
   /* preconditioning */
   scs_float *z;
-  scs_float *M;
+  scs_float *diagAtA;
+  scs_float *diagP;
   /* reporting */
   scs_int tot_cg_its;
 };
