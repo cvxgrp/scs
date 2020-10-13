@@ -137,12 +137,10 @@ void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
 }
 
 static void apply_pre_conditioner(scs_float *M, scs_float *z, scs_float *r,
-                                  scs_int n, scs_float *ipzr) {
+                                  scs_int n) {
   scs_int i;
-  *ipzr = 0;
   for (i = 0; i < n; ++i) {
     z[i] = r[i] * M[i];
-    *ipzr += z[i] * r[i];
   }
 }
 
@@ -193,7 +191,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
                    const scs_float *s, scs_float *b, scs_int max_its,
                    scs_float tol) {
   scs_int i, n = A->n;
-  scs_float ipzr, ipzr_old, alpha;
+  scs_float ztr, ztr_prev, alpha;
   scs_float *p = pr->p;   /* cg direction */
   scs_float *Gp = pr->Gp; /* updated CG direction */
   scs_float *r = pr->r;   /* cg residual */
@@ -210,9 +208,9 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
     /* r = Mat * s */
     mat_vec(A, P, stgs, pr, s, r);
     /* r = Mat * s - b */
-    SCS(add_scaled_array)(r, b, n, -1);
+    SCS(add_scaled_array)(r, b, n, -1.);
     /* r = b - Mat * s */
-    SCS(scale_array)(r, -1, n);
+    SCS(scale_array)(r, -1., n);
     /* b = s */
     memcpy(b, s, n * sizeof(scs_float));
   }
@@ -222,13 +220,21 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
     return 0;
   }
 
-  apply_pre_conditioner(M, z, r, n, &ipzr);
+  /* z = M r (M is inverse preconditioner) */
+  apply_pre_conditioner(M, z, r, n);
+  /* ztr = z'r */
+  ztr = SCS(dot)(z, r, n);
+  /* p = z */
   memcpy(p, z, n * sizeof(scs_float));
 
   for (i = 0; i < max_its; ++i) {
+    /* Gp = G p */
     mat_vec(A, P, stgs, pr, p, Gp);
-    alpha = ipzr / SCS(dot)(p, Gp, n);
+    /* alpha = z'r / p'G p */
+    alpha = ztr / SCS(dot)(p, Gp, n);
+    /* b += alpha * p */
     SCS(add_scaled_array)(b, p, n, alpha);
+    /* r -= alpha * G p */
     SCS(add_scaled_array)(r, Gp, n, -alpha);
 
 #if EXTRA_VERBOSE > 0
@@ -238,11 +244,15 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
     if (SCS(norm)(r, n) < tol) {
       return i + 1;
     }
-    ipzr_old = ipzr;
-    apply_pre_conditioner(M, z, r, n, &ipzr);
-
-    SCS(scale_array)(p, ipzr / ipzr_old, n);
-    SCS(add_scaled_array)(p, z, n, 1);
+    /* z = M r (M is inverse preconditioner) */
+    apply_pre_conditioner(M, z, r, n);
+    ztr_prev = ztr;
+    /* ztr = z'r */
+    ztr = SCS(dot)(z, r, n);
+    /* p = beta * p, where beta = ztr / ztr_prev */
+    SCS(scale_array)(p, ztr / ztr_prev, n);
+    /* p = z + beta * p */
+    SCS(add_scaled_array)(p, z, n, 1.);
   }
   return i;
 }
