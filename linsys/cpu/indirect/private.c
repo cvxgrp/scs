@@ -273,39 +273,34 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
                            scs_float *b, const scs_float *s, scs_int iter) {
   scs_int cg_its, max_iters;
-  scs_float cg_tol;
+  scs_float cg_tol = CG_BEST_TOL;
 
   if (SCS(norm)(b, A->n + A->m) <= 1e-18) {
     memset(b, 0, (A->n + A->m) * sizeof(scs_float));
     return 0;
   }
 
-  if (iter < 0) {
-    cg_tol = CG_BEST_TOL;
-    max_iters = INT_MAX;
-  } else {
-    cg_tol = MAX(CG_BEST_TOL, SCS(norm)(b, A->n) * CG_BASE_TOL /
-                 POWF((scs_float)iter + 1, stgs->cg_rate));
-    /* set max_its to 3 * n (though in theory n is enough for any tol) */
-    max_iters = 3 * A->n;
-  }
-
   /* b = [rx; ry] */
   SCS(scale_array)(&(b[A->n]), stgs->scale, A->m);  /* b[n:] = scale * ry */
   SCS(accum_by_atrans)(A, p, &(b[A->n]), b); /* b[:n] = rx + scale * A'ry */
+  if (iter >= 0) {
+    cg_tol = MAX(CG_BEST_TOL, SCS(norm)(b, A->n) * CG_BASE_TOL /
+                 POWF((scs_float)iter + 1, stgs->cg_rate));
+  }
+  /* set max_its to 2 * n (though in theory n is enough for any tol) */
+  max_iters = 2 * A->n;
   /* solves (rho_x I + P + scale A'A)x = b, s warm start, solution stored in b */
-  cg_its = pcg(A, P, stgs, p, s, b, max_iters, MAX(cg_tol, CG_BEST_TOL)); /* b[:n] = x */
-#if EXTRA_VERBOSE > 10
-  scs_printf("cg_tol %.3e\n", cg_tol);
-  scs_printf("cg_its %i\n", cg_its);
-#endif
+  cg_its = pcg(A, P, stgs, p, s, b, max_iters, cg_tol); /* b[:n] = x */
   SCS(scale_array)(&(b[A->n]), -1. / stgs->scale, A->m);  /* b[n:] = -ry */
   SCS(accum_by_a)(A, p, b, &(b[A->n])); /* b[n:] = Ax - ry */
   SCS(scale_array)(&(b[A->n]), stgs->scale, A->m); /* b[n:] = scale * (Ax - ry) = y */
   if (iter >= 0) {
     p->tot_cg_its += cg_its;
   }
-
+#if EXTRA_VERBOSE > 10
+  scs_printf("cg_tol %.3e\n", cg_tol);
+  scs_printf("cg_its %i\n", cg_its);
+#endif
   return 0;
 }
 
