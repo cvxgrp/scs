@@ -172,16 +172,13 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
 static void populate_norms(scs_float *vec, scs_int len, scs_float * scale_vec,
                            scs_float scale, scs_float tau,
                            scs_float *l2_norm_ptr, scs_float *linf_norm_ptr) {
-  scs_float l2_norm, linf_norm;
   if (scale_vec) {
-    l2_norm = SCS(inv_scaled_norm)(vec, len, scale_vec) / scale;
-    linf_norm = SCS(inv_scaled_norm_inf)(vec, len, scale_vec) / scale;
+    *l2_norm_ptr = SCS(inv_scaled_norm)(vec, len, scale_vec) / scale;
+    *linf_norm_ptr = SCS(inv_scaled_norm_inf)(vec, len, scale_vec) / scale;
   } else {
-    l2_norm = SCS(norm)(vec, len) / scale;
-    linf_norm = SCS(norm_inf)(vec, len) / scale;
+    *l2_norm_ptr = SCS(norm)(vec, len) / scale;
+    *linf_norm_ptr = SCS(norm_inf)(vec, len) / scale;
   }
-  *l2_norm_ptr = SAFEDIV_POS(l2_norm, tau);
-  *linf_norm_ptr = SAFEDIV_POS(linf_norm, tau);
 }
 
 /* calculates un-normalized residual quantities */
@@ -236,6 +233,9 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   /* unnormalized here */
   populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_pri_resid, &r->linf_norm_pri_resid);
 
+  r->l2_norm_pri_resid = SAFEDIV_POS(r->l2_norm_pri_resid, r->tau);
+  r->linf_norm_pri_resid = SAFEDIV_POS(r->linf_norm_pri_resid, r->tau);
+
   /**************** DUAL *********************/
   memset(px, 0, n * sizeof(scs_float));
   if (w->P) {
@@ -262,6 +262,9 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   SCS(add_scaled_array)(wrk_n, w->c, n, r->tau);
   /* unnormalized here */
   populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_dual_resid, &r->linf_norm_dual_resid);
+
+  r->l2_norm_dual_resid = SAFEDIV_POS(r->l2_norm_dual_resid, r->tau);
+  r->linf_norm_dual_resid = SAFEDIV_POS(r->linf_norm_dual_resid, r->tau);
 
   r->bty_by_tau = SCS(dot)(y, w->b, m);
   r->ctx_by_tau = SCS(dot)(x, w->c, n);
