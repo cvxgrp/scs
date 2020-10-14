@@ -209,7 +209,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   if (iter == 0) {
     fprintf(fout, "iter,res_pri,res_dual,rel_gap,res_infeas,res_unbdd,"
                   "pobj,dobj,tau,kap,scale,nrm_diff_u_ut,nrm_diff_u_u_prev,"
-                  "nrm_diff_v_v_prev,time,\n");
+                  "nrm_diff_v_v_prev,aa_norm,time,\n");
   }
   fprintf(fout, "%li,", (long)iter);
   fprintf(fout, "%.16e,", r->res_pri);
@@ -225,6 +225,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_t, l));
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_prev, l));
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->v, w->v_prev, l));
+  fprintf(fout, "%.16e,", r->aa_norm);
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
   fprintf(fout, "\n");
   fclose(fout);

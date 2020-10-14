@@ -51,7 +51,7 @@ scs_float SCS(norm_inf)(const scs_float *a, scs_int l) {
   return max;
 }
 
-/* saxpy a += sc*b */
+/* axpy a += sc*b */
 void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
                            const scs_float sc) {
   scs_int i;

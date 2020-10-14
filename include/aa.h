@@ -37,9 +37,9 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float eta);
  *  a: aa workspace from aa_init
  *
  * Returns:
- *  int, a value of 0 is success, <0 is failure at which point f is unchanged
+ *  float, norm of aa residual, <0 is failure at which point f is unchanged
  */
-aa_int aa_apply(aa_float *f, const aa_float *x, AaWork *a);
+aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a);
 
 /* Finish Anderson Acceleration, clears memory.
  *

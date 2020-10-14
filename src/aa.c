@@ -255,13 +255,13 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
     /* reset aa for stability */
     aa_reset(a);
     TIME_TOC
-    return -1;
+    return -nrm;
   }
   /* if solve was successful then set f -= D * work */
   BLAS(gemv)("NoTrans", &bdim, &blen, &neg_onef, a->D, &bdim, a->work, &one,
              &onef, f, &one);
   TIME_TOC
-  return (aa_int)info;
+  return nrm;
 }
 
 /*
@@ -302,27 +302,27 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float eta) {
   return a;
 }
 
-aa_int aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
+aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
   TIME_TIC
-  aa_int status;
+  aa_float aa_norm;
   aa_int len = MIN(a->iter, a->mem);
   if (a->mem <= 0) {
-    return 0;
+    return 0.;
   }
   if (a->iter == 0) {
     /* if first iteration then seed params for next iter */
     init_accel_params(x, f, a);
     a->iter++;
     TIME_TOC
-    return 0;
+    return 0.;
   }
   /* set various accel quantities */
   update_accel_params(x, f, a, len);
   /* solve linear system, new point overwrites f if successful */
-  status = solve(f, a, len);
+  aa_norm = solve(f, a, len);
   a->iter++;
   TIME_TOC
-  return status;
+  return aa_norm;
 }
 
 void aa_finish(AaWork *a) {

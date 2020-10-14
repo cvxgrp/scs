@@ -136,8 +136,8 @@ size_t SCS(sizeof_float)(void);
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
   scs_float *u, *u_best, *v, *u_t, *u_prev, *v_prev, *rsk, *rsk_best;
-  scs_float *h, *g, *pr, *dr, *px, *ls_ws;
-  scs_float nm_b, nm_c, best_max_residual;
+  scs_float *h, *g, *ls_ws, *wrkspc;
+  scs_float l2_norm_b, l2_norm_c, best_max_residual;
   scs_float sum_log_scale_factor;
   scs_int last_scale_update_iter, n_log_scale_factor;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
@@ -154,23 +154,43 @@ struct SCS_WORK {
 /* to hold residual information (unnormalized) */
 struct SCS_RESIDUALS {
   scs_int last_iter;
-  scs_float res_dual;
-  scs_float res_pri;
+  scs_float l2_norm_pri_resid;
+  scs_float linf_norm_pri_resid;
+  scs_float l2_norm_dual_resid;
+  scs_float linf_norm_dual_resid;
   scs_float res_infeas;
   scs_float res_unbdd;
   scs_float xt_p_x;      /* x' P x */
   scs_float xt_p_x_ctau; /* for unbounded: x' P x / (c'x)^2 */
-  scs_float rel_gap;
-  scs_float ct_x_by_tau; /* not divided by tau */
-  scs_float bt_y_by_tau; /* not divided by tau */
+  scs_float gap;
+  scs_float ctx;
+  scs_float ctx_by_tau;
+  scs_float bty;
+  scs_float bty_by_tau;
   scs_float pobj;
   scs_float dobj;
   scs_float tau;
   scs_float kap;
-  scs_float nm_ax;
-  scs_float nm_ax_s;
-  scs_float nm_aty;
-  scs_float nm_px;
+  scs_float l2_norm_ax;
+  scs_float linf_norm_ax;
+  scs_float l2_norm_ax_s;
+  scs_float linf_norm_ax_s;
+  scs_float l2_norm_aty;
+  scs_float linf_norm_aty;
+  scs_float l2_norm_px;
+  scs_float linf_norm_px;
+  scs_float l2_norm_x;
+  scs_float linf_norm_x;
+  scs_float l2_norm_y;
+  scs_float linf_norm_y;
+  scs_float l2_norm_s;
+  scs_float linf_norm_s;
+  /* log aa norm */
+  scs_float aa_norm;
+  /* XXX remove these */
+  scs_float res_pri;
+  scs_float res_dual;
+  scs_float rel_gap;
 };
 
 #ifdef __cplusplus
