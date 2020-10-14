@@ -19,6 +19,14 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
                            const scs_float sc);
 scs_float SCS(norm_diff)(const scs_float *a, const scs_float *b, scs_int l);
 scs_float SCS(norm_inf_diff)(const scs_float *a, const scs_float *b, scs_int l);
+scs_float SCS(inv_scaled_norm)(const scs_float *v, scs_int len,
+                               const scs_float * sc);
+scs_float SCS(inv_scaled_norm_inf)(const scs_float *v, scs_int len,
+                                   const scs_float * sc);
+scs_float SCS(scaled_norm)(const scs_float *v, scs_int len,
+                           const scs_float * sc);
+scs_float SCS(scaled_norm_inf)(const scs_float *v, scs_int len,
+                               const scs_float * sc);
 
 #ifdef __cplusplus
 }

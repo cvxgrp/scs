@@ -155,32 +155,19 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
     SCS(normalize_warm_start)(w);
   }
 }
-/* XXX move these */
-scs_float SCS(inv_sc_norm_sq)(const scs_float *v, scs_int len,
-                              const scs_float * sc) {
-  scs_int i;
-  scs_float nmsq = 0.0;
-  for (i = 0; i < len; ++i) {
-    nmsq += v[i] * v[i] / sc[i] / sc[i];
+
+static scs_float get_max_residual(ScsResiduals *r) {
+  return MAX(r->rel_gap, MAX(r->res_pri, r->res_dual));
+}
+
+static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
+  scs_float max_residual = get_max_residual(r);
+  if (w->best_max_residual > max_residual) {
+    w->best_max_residual = max_residual;
+    memcpy(w->u_best, w->u, (w->m + w->n + 1) * sizeof(scs_float));
+    memcpy(w->rsk_best, w->rsk, (w->m + w->n + 1) * sizeof(scs_float));
   }
-  return nmsq;
 }
-
-scs_float SCS(inv_sc_norm)(const scs_float *v, scs_int len,
-                           const scs_float * sc) {
-  return SQRTF(SCS(inv_sc_norm_sq)(v, len, sc));
-}
-
-scs_float SCS(inv_sc_norm_inf)(const scs_float *v, scs_int len,
-                              const scs_float * sc) {
-  scs_int i;
-  scs_float nm = 0.0;
-  for (i = 0; i < len; ++i) {
-    nm = MAX(nm, v[i] / sc[i]);
-  }
-  return nm;
-}
-
 
 /* calculates un-normalized residual quantities */
 static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
@@ -206,7 +193,6 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->tau = ABS(w->u[n + m]);
   r->kap = ABS(w->rsk[n + m]);
 
-  // XXX need safediv pos
   // XXX need normalize=False
 
   /**************** PRIMAL *********************/
@@ -214,45 +200,62 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   /* wrk_m = Ax */
   SCS(accum_by_a)(w->A, w->p, x, wrk_m);
   /* unnormalized here */
-  r->l2_norm_ax = SCS(inv_sc_norm)(wrk_m, m, D) / dual_scale;
-  r->linf_norm_ax = SCS(inv_sc_norm_inf)(wrk_m, m, D) / dual_scale;
+  r->l2_norm_ax = SCS(inv_scaled_norm)(wrk_m, m, D) / dual_scale;
+  r->linf_norm_ax = SCS(inv_scaled_norm_inf)(wrk_m, m, D) / dual_scale;
+  r->l2_norm_ax = SAFEDIV_POS(r->l2_norm_ax, r->tau);
+  r->linf_norm_ax = SAFEDIV_POS(r->linf_norm_ax, r->tau);
 
   /* wrk_m = Ax + s */
   SCS(add_scaled_array)(wrk_m, s, m, 1.);
   /* unnormalized here */
-  r->l2_norm_ax_s = SCS(inv_sc_norm)(wrk_m, m, D) / dual_scale;
-  r->linf_norm_ax_s = SCS(inv_sc_norm_inf)(wrk_m, m, D) / dual_scale;
+  r->l2_norm_ax_s = SCS(inv_scaled_norm)(wrk_m, m, D) / dual_scale;
+  r->linf_norm_ax_s = SCS(inv_scaled_norm_inf)(wrk_m, m, D) / dual_scale;
+  r->l2_norm_ax_s = SAFEDIV_POS(r->l2_norm_ax_s, r->tau);
+  r->linf_norm_ax_s = SAFEDIV_POS(r->linf_norm_ax_s, r->tau);
 
   /* wrk_m = Ax + s - b */
-  SCS(add_scaled_array)(wrk_m, w->b, m, -1.);
+  SCS(add_scaled_array)(wrk_m, w->b, m, -r->tau);
   /* unnormalized here */
-  r->l2_norm_pri_resid = SCS(inv_sc_norm)(wrk_m, m, D) / dual_scale;
-  r->linf_norm_pri_resid = SCS(inv_sc_norm_inf)(wrk_m, m, D) / dual_scale;
-
+  r->l2_norm_pri_resid = SCS(inv_scaled_norm)(wrk_m, m, D) / dual_scale;
+  r->linf_norm_pri_resid = SCS(inv_scaled_norm_inf)(wrk_m, m, D) / dual_scale;
+  r->l2_norm_pri_resid = SAFEDIV_POS(r->l2_norm_pri_resid, r->tau);
+  r->linf_norm_pri_resid = SAFEDIV_POS(r->linf_norm_pri_resid, r->tau);
 
   /**************** DUAL *********************/
   memset(px, 0, n * sizeof(scs_float));
-  /* px = Px */
-  SCS(accum_by_p)(w->P, w->p, x, px);
-  r->xt_p_x = SCS(dot)(px, x, n);
-  /* unnormalized here */
-  r->l2_norm_px = SCS(inv_sc_norm)(px, n, E) / primal_scale;
-  r->linf_norm_px = SCS(inv_sc_norm_inf)(px, n, E) / primal_scale;
+  if (w->P) {
+    /* px = Px */
+    SCS(accum_by_p)(w->P, w->p, x, px);
+    r->xt_p_x = SCS(dot)(px, x, n);
+    /* unnormalized here */
+    r->l2_norm_px = SCS(inv_scaled_norm)(px, n, E) / primal_scale;
+    r->linf_norm_px = SCS(inv_scaled_norm_inf)(px, n, E) / primal_scale;
+    r->l2_norm_px = SAFEDIV_POS(r->l2_norm_px, r->tau);
+    r->linf_norm_px = SAFEDIV_POS(r->linf_norm_px, r->tau);
+  } else {
+    r->xt_p_x = 0.;
+    r->l2_norm_px = 0.;
+    r->linf_norm_px = 0.;
+  }
 
   memset(wrk_n, 0, n * sizeof(scs_float));
   /* wrk_n = A'y */
   SCS(accum_by_atrans)(w->A, w->p, y, wrk_n);
   /* unnormalized here */
-  r->l2_norm_aty = SCS(inv_sc_norm)(wrk_n, n, E) / primal_scale;
-  r->linf_norm_aty = SCS(inv_sc_norm_inf)(wrk_n, n, E) / primal_scale;
+  r->l2_norm_aty = SCS(inv_scaled_norm)(wrk_n, n, E) / primal_scale;
+  r->linf_norm_aty = SCS(inv_scaled_norm_inf)(wrk_n, n, E) / primal_scale;
+  r->l2_norm_aty = SAFEDIV_POS(r->l2_norm_aty, r->tau);
+  r->linf_norm_aty = SAFEDIV_POS(r->linf_norm_aty, r->tau);
 
   /* wrk_n = Px + A'y */
   SCS(add_scaled_array)(wrk_n, px, n, 1.);
-  /* Px + A'y + c */
-  SCS(add_scaled_array)(wrk_n, w->c, n, 1.);
+  /* wrk_n = Px + A'y + c */
+  SCS(add_scaled_array)(wrk_n, w->c, n, r->tau);
   /* unnormalized here */
-  r->l2_norm_pri_resid = SCS(inv_sc_norm)(wrk_n, n, E) / primal_scale;
-  r->linf_norm_pri_resid = SCS(inv_sc_norm_inf)(wrk_n, n, E) / primal_scale;
+  r->l2_norm_dual_resid = SCS(inv_scaled_norm)(wrk_n, n, E) / primal_scale;
+  r->linf_norm_dual_resid = SCS(inv_scaled_norm_inf)(wrk_n, n, E) / primal_scale;
+  r->l2_norm_dual_resid = SAFEDIV_POS(r->l2_norm_dual_resid, r->tau);
+  r->linf_norm_dual_resid = SAFEDIV_POS(r->linf_norm_dual_resid, r->tau);
 
   r->bty_by_tau = SCS(dot)(y, w->b, m);
   r->ctx_by_tau = SCS(dot)(x, w->c, n);
@@ -265,6 +268,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
     r->xt_p_x /= scale;
   }
 
+  // XXX need to unnormalize
   r->l2_norm_x = SCS(norm)(x, n);
   r->linf_norm_x = SCS(norm_inf)(x, n);
   r->l2_norm_y = SCS(norm)(y, m);
@@ -274,7 +278,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
 
   r->res_infeas = NAN;
   if (r->bty_by_tau < 0) {
-    r->res_infeas = w->l2_norm_b * r->l2_norm_aty / -r->bty;
+    r->res_infeas = w->l2_norm_b * r->l2_norm_aty / -r->bty_by_tau;
   }
 
   r->res_unbdd = NAN;
@@ -299,6 +303,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->res_pri = r->l2_norm_pri_resid / (1 + w->l2_norm_b);
   r->res_dual = r->l2_norm_dual_resid / (1 + w->l2_norm_c);
   r->rel_gap = r->gap / (1 + ABS(r->xt_p_x) + ABS(r->ctx) + ABS(r->bty));
+  update_best_iterate(w, r);
 }
 
 static void cold_start_vars(ScsWork *w) {
@@ -440,10 +445,6 @@ static void setx(ScsWork *w, ScsSolution *sol) {
     sol->x = (scs_float *)scs_calloc(w->n, sizeof(scs_float));
   }
   memcpy(sol->x, w->u, w->n * sizeof(scs_float));
-}
-
-static scs_float get_max_residual(ScsResiduals *r) {
-  return MAX(r->rel_gap, MAX(r->res_pri, r->res_dual));
 }
 
 static void copy_from_best_iterate(ScsWork *w) {
@@ -730,6 +731,7 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
       isless(r->rel_gap, eps)) {
     return SCS_SOLVED;
   }
+  //XXX check this
   /* Add iter > 0 to avoid strange edge case where infeasible point found
    * right at start of run `out/demo_SOCP_indirect 2 0.1 0.3 1506264403` */
   if (isless(r->res_unbdd, eps) &&
@@ -923,15 +925,7 @@ static scs_float iterate_norm_diff(ScsWork *w) {
   return norm_diff / norm;
 }
 
-static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
-  scs_float max_residual = get_max_residual(r);
-  if (w->best_max_residual > max_residual) {
-    w->best_max_residual = max_residual;
-    memcpy(w->u_best, w->u, (w->m + w->n + 1) * sizeof(scs_float));
-    memcpy(w->rsk_best, w->rsk, (w->m + w->n + 1) * sizeof(scs_float));
-  }
-}
-
+// XXX move these
 #define MAX_SCALE_VALUE (1e5)
 #define MIN_SCALE_VALUE (1e-5)
 static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
@@ -1053,12 +1047,10 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       if ((info->status_val = has_converged(w, &r, i)) != 0) {
         break;
       }
-      update_best_iterate(w, &r);
     }
 
     if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
       populate_residuals(w, &r, i, 0);
-      update_best_iterate(w, &r);
       print_summary(w, i, &r, &solve_timer);
     }
 
