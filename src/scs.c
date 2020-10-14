@@ -169,6 +169,21 @@ static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
   }
 }
 
+static void populate_norms(scs_float *vec, scs_int len, scs_float * scale_vec,
+                           scs_float scale, scs_float tau,
+                           scs_float *l2_norm_ptr, scs_float *linf_norm_ptr) {
+  scs_float l2_norm, linf_norm;
+  if (scale_vec) {
+    l2_norm = SCS(inv_scaled_norm)(vec, len, scale_vec) / scale;
+    linf_norm = SCS(inv_scaled_norm_inf)(vec, len, scale_vec) / scale;
+  } else {
+    l2_norm = SCS(norm)(vec, len) / scale;
+    linf_norm = SCS(norm_inf)(vec, len) / scale;
+  }
+  *l2_norm_ptr = SAFEDIV_POS(l2_norm, tau);
+  *linf_norm_ptr = SAFEDIV_POS(linf_norm, tau);
+}
+
 /* calculates un-normalized residual quantities */
 static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
                                scs_int force) {
@@ -178,10 +193,19 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   scs_float *wrk_n  = w->wrkspc; /* length n */
   scs_float *wrk_m  = &(w->wrkspc[n]); /* length m */
   scs_float *px = &(w->wrkspc[n + m]); /* length n */
-  scs_float *E = w->scal->E, *D = w->scal->D;
-  scs_float primal_scale = w->scal->primal_scale;
-  scs_float dual_scale = w->scal->dual_scale;
-  scs_float scale;
+  scs_float *E, *D, scale, primal_scale, dual_scale;
+
+  if (w->stgs->normalize) {
+    primal_scale = w->scal->primal_scale;
+    dual_scale = w->scal->dual_scale;
+    D = w->scal->D;
+    E = w->scal->E;
+  } else {
+    primal_scale = 1.;
+    dual_scale = 1.;
+    D = SCS_NULL;
+    E = SCS_NULL;
+  }
 
   /* checks if the residuals are unchanged by checking iteration */
   /* force being set will force this to compute the residuals anyway */
@@ -200,26 +224,17 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   /* wrk_m = Ax */
   SCS(accum_by_a)(w->A, w->p, x, wrk_m);
   /* unnormalized here */
-  r->l2_norm_ax = SCS(inv_scaled_norm)(wrk_m, m, D) / dual_scale;
-  r->linf_norm_ax = SCS(inv_scaled_norm_inf)(wrk_m, m, D) / dual_scale;
-  r->l2_norm_ax = SAFEDIV_POS(r->l2_norm_ax, r->tau);
-  r->linf_norm_ax = SAFEDIV_POS(r->linf_norm_ax, r->tau);
+  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_ax, &r->linf_norm_ax);
 
   /* wrk_m = Ax + s */
   SCS(add_scaled_array)(wrk_m, s, m, 1.);
   /* unnormalized here */
-  r->l2_norm_ax_s = SCS(inv_scaled_norm)(wrk_m, m, D) / dual_scale;
-  r->linf_norm_ax_s = SCS(inv_scaled_norm_inf)(wrk_m, m, D) / dual_scale;
-  r->l2_norm_ax_s = SAFEDIV_POS(r->l2_norm_ax_s, r->tau);
-  r->linf_norm_ax_s = SAFEDIV_POS(r->linf_norm_ax_s, r->tau);
+  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_ax_s, &r->linf_norm_ax_s);
 
   /* wrk_m = Ax + s - b */
   SCS(add_scaled_array)(wrk_m, w->b, m, -r->tau);
   /* unnormalized here */
-  r->l2_norm_pri_resid = SCS(inv_scaled_norm)(wrk_m, m, D) / dual_scale;
-  r->linf_norm_pri_resid = SCS(inv_scaled_norm_inf)(wrk_m, m, D) / dual_scale;
-  r->l2_norm_pri_resid = SAFEDIV_POS(r->l2_norm_pri_resid, r->tau);
-  r->linf_norm_pri_resid = SAFEDIV_POS(r->linf_norm_pri_resid, r->tau);
+  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_pri_resid, &r->linf_norm_pri_resid);
 
   /**************** DUAL *********************/
   memset(px, 0, n * sizeof(scs_float));
@@ -228,10 +243,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
     SCS(accum_by_p)(w->P, w->p, x, px);
     r->xt_p_x = SCS(dot)(px, x, n);
     /* unnormalized here */
-    r->l2_norm_px = SCS(inv_scaled_norm)(px, n, E) / primal_scale;
-    r->linf_norm_px = SCS(inv_scaled_norm_inf)(px, n, E) / primal_scale;
-    r->l2_norm_px = SAFEDIV_POS(r->l2_norm_px, r->tau);
-    r->linf_norm_px = SAFEDIV_POS(r->linf_norm_px, r->tau);
+    populate_norms(px, n, E, primal_scale, r->tau, &r->l2_norm_px, &r->linf_norm_px);
   } else {
     r->xt_p_x = 0.;
     r->l2_norm_px = 0.;
@@ -242,39 +254,39 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   /* wrk_n = A'y */
   SCS(accum_by_atrans)(w->A, w->p, y, wrk_n);
   /* unnormalized here */
-  r->l2_norm_aty = SCS(inv_scaled_norm)(wrk_n, n, E) / primal_scale;
-  r->linf_norm_aty = SCS(inv_scaled_norm_inf)(wrk_n, n, E) / primal_scale;
-  r->l2_norm_aty = SAFEDIV_POS(r->l2_norm_aty, r->tau);
-  r->linf_norm_aty = SAFEDIV_POS(r->linf_norm_aty, r->tau);
+  populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_aty, &r->linf_norm_aty);
 
   /* wrk_n = Px + A'y */
   SCS(add_scaled_array)(wrk_n, px, n, 1.);
   /* wrk_n = Px + A'y + c */
   SCS(add_scaled_array)(wrk_n, w->c, n, r->tau);
   /* unnormalized here */
-  r->l2_norm_dual_resid = SCS(inv_scaled_norm)(wrk_n, n, E) / primal_scale;
-  r->linf_norm_dual_resid = SCS(inv_scaled_norm_inf)(wrk_n, n, E) / primal_scale;
-  r->l2_norm_dual_resid = SAFEDIV_POS(r->l2_norm_dual_resid, r->tau);
-  r->linf_norm_dual_resid = SAFEDIV_POS(r->linf_norm_dual_resid, r->tau);
+  populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_dual_resid, &r->linf_norm_dual_resid);
 
   r->bty_by_tau = SCS(dot)(y, w->b, m);
   r->ctx_by_tau = SCS(dot)(x, w->c, n);
 
-  if (w->stgs->normalize) {
-    scale = w->scal->primal_scale * w->scal->dual_scale;
-    r->kap /= scale;
-    r->bty_by_tau /= scale;
-    r->ctx_by_tau /= scale;
-    r->xt_p_x /= scale;
-  }
+  scale = w->scal->primal_scale * w->scal->dual_scale;
+  r->kap /= scale;
+  r->bty_by_tau /= scale;
+  r->ctx_by_tau /= scale;
+  r->xt_p_x /= scale;
 
-  // XXX need to unnormalize
-  r->l2_norm_x = SCS(norm)(x, n);
-  r->linf_norm_x = SCS(norm_inf)(x, n);
-  r->l2_norm_y = SCS(norm)(y, m);
-  r->linf_norm_y = SCS(norm_inf)(y, m);
-  r->l2_norm_s = SCS(norm)(s, m);
-  r->linf_norm_s = SCS(norm_inf)(s, m);
+  if (D && E) {
+    r->l2_norm_x = dual_scale * SCS(scaled_norm)(x, n, E);
+    r->linf_norm_x = dual_scale * SCS(scaled_norm_inf)(x, n, E);
+    r->l2_norm_y = primal_scale * SCS(scaled_norm)(y, m, D);
+    r->linf_norm_y = primal_scale * SCS(scaled_norm_inf)(y, m, D);
+    r->l2_norm_s = dual_scale * SCS(inv_scaled_norm)(s, m, D);
+    r->linf_norm_s = dual_scale * SCS(inv_scaled_norm_inf)(s, m, D);
+  } else {
+    r->l2_norm_x = SCS(norm)(x, n);
+    r->linf_norm_x = SCS(norm_inf)(x, n);
+    r->l2_norm_y = SCS(norm)(y, m);
+    r->linf_norm_y = SCS(norm_inf)(y, m);
+    r->l2_norm_s = SCS(norm)(s, m);
+    r->linf_norm_s = SCS(norm_inf)(s, m);
+  }
 
   r->res_infeas = NAN;
   if (r->bty_by_tau < 0) {
