@@ -220,17 +220,20 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   /* wrk_m = Ax */
   SCS(accum_by_a)(w->A, w->p, x, wrk_m);
   /* unnormalized here */
-  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_ax, &r->linf_norm_ax);
+  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_ax_tau,
+                 &r->linf_norm_ax_tau);
 
   /* wrk_m = Ax + s */
   SCS(add_scaled_array)(wrk_m, s, m, 1.);
   /* unnormalized here */
-  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_ax_s, &r->linf_norm_ax_s);
+  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_ax_s_tau,
+                 &r->linf_norm_ax_s_tau);
 
   /* wrk_m = Ax + s - b */
   SCS(add_scaled_array)(wrk_m, w->b, m, -r->tau);
   /* unnormalized here */
-  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_pri_resid, &r->linf_norm_pri_resid);
+  populate_norms(wrk_m, m, D, dual_scale, r->tau, &r->l2_norm_pri_resid,
+                 &r->linf_norm_pri_resid);
 
   r->l2_norm_pri_resid = SAFEDIV_POS(r->l2_norm_pri_resid, r->tau);
   r->linf_norm_pri_resid = SAFEDIV_POS(r->linf_norm_pri_resid, r->tau);
@@ -240,74 +243,77 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   if (w->P) {
     /* px = Px */
     SCS(accum_by_p)(w->P, w->p, x, px);
-    r->xt_p_x = SCS(dot)(px, x, n);
+    r->xt_p_x_tau = SCS(dot)(px, x, n);
     /* unnormalized here */
-    populate_norms(px, n, E, primal_scale, r->tau, &r->l2_norm_px, &r->linf_norm_px);
+    populate_norms(px, n, E, primal_scale, r->tau, &r->l2_norm_px_tau,
+                   &r->linf_norm_px_tau);
   } else {
-    r->xt_p_x = 0.;
-    r->l2_norm_px = 0.;
-    r->linf_norm_px = 0.;
+    r->xt_p_x_tau = 0.;
+    r->l2_norm_px_tau = 0.;
+    r->linf_norm_px_tau = 0.;
   }
 
   memset(wrk_n, 0, n * sizeof(scs_float));
   /* wrk_n = A'y */
   SCS(accum_by_atrans)(w->A, w->p, y, wrk_n);
   /* unnormalized here */
-  populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_aty, &r->linf_norm_aty);
+  populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_aty_tau,
+                 &r->linf_norm_aty_tau);
 
   /* wrk_n = Px + A'y */
   SCS(add_scaled_array)(wrk_n, px, n, 1.);
   /* wrk_n = Px + A'y + c */
   SCS(add_scaled_array)(wrk_n, w->c, n, r->tau);
   /* unnormalized here */
-  populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_dual_resid, &r->linf_norm_dual_resid);
+  populate_norms(wrk_n, n, E, primal_scale, r->tau, &r->l2_norm_dual_resid,
+                 &r->linf_norm_dual_resid);
 
   r->l2_norm_dual_resid = SAFEDIV_POS(r->l2_norm_dual_resid, r->tau);
   r->linf_norm_dual_resid = SAFEDIV_POS(r->linf_norm_dual_resid, r->tau);
 
   /*************** OTHERS *****************/
-  r->bty_by_tau = SCS(dot)(y, w->b, m);
-  r->ctx_by_tau = SCS(dot)(x, w->c, n);
+  r->bty_tau = SCS(dot)(y, w->b, m);
+  r->ctx_tau = SCS(dot)(x, w->c, n);
 
   scale = primal_scale * dual_scale;
   r->kap /= scale;
-  r->bty_by_tau /= scale;
-  r->ctx_by_tau /= scale;
-  r->xt_p_x /= scale;
+  r->bty_tau /= scale;
+  r->ctx_tau /= scale;
+  r->xt_p_x_tau /= scale;
 
   if (D && E) {
-    r->l2_norm_x = dual_scale * SCS(scaled_norm)(x, n, E);
-    r->linf_norm_x = dual_scale * SCS(scaled_norm_inf)(x, n, E);
-    r->l2_norm_y = primal_scale * SCS(scaled_norm)(y, m, D);
-    r->linf_norm_y = primal_scale * SCS(scaled_norm_inf)(y, m, D);
-    r->l2_norm_s = dual_scale * SCS(inv_scaled_norm)(s, m, D);
-    r->linf_norm_s = dual_scale * SCS(inv_scaled_norm_inf)(s, m, D);
+    r->l2_norm_x_tau = dual_scale * SCS(scaled_norm)(x, n, E);
+    r->linf_norm_x_tau = dual_scale * SCS(scaled_norm_inf)(x, n, E);
+    r->l2_norm_y_tau = primal_scale * SCS(scaled_norm)(y, m, D);
+    r->linf_norm_y_tau = primal_scale * SCS(scaled_norm_inf)(y, m, D);
+    r->l2_norm_s_tau = dual_scale * SCS(inv_scaled_norm)(s, m, D);
+    r->linf_norm_s_tau = dual_scale * SCS(inv_scaled_norm_inf)(s, m, D);
   } else {
-    r->l2_norm_x = SCS(norm)(x, n);
-    r->linf_norm_x = SCS(norm_inf)(x, n);
-    r->l2_norm_y = SCS(norm)(y, m);
-    r->linf_norm_y = SCS(norm_inf)(y, m);
-    r->l2_norm_s = SCS(norm)(s, m);
-    r->linf_norm_s = SCS(norm_inf)(s, m);
+    r->l2_norm_x_tau = SCS(norm)(x, n);
+    r->linf_norm_x_tau = SCS(norm_inf)(x, n);
+    r->l2_norm_y_tau = SCS(norm)(y, m);
+    r->linf_norm_y_tau = SCS(norm_inf)(y, m);
+    r->l2_norm_s_tau = SCS(norm)(s, m);
+    r->linf_norm_s_tau = SCS(norm_inf)(s, m);
   }
 
   r->res_infeas = NAN;
-  if (r->bty_by_tau < 0) {
-    r->res_infeas = w->l2_norm_b * r->l2_norm_aty / -r->bty_by_tau;
+  if (r->bty_tau < 0) {
+    r->res_infeas = w->l2_norm_b * r->l2_norm_aty_tau / -r->bty_tau;
   }
 
   r->res_unbdd = NAN;
-  r->xt_p_x_ctau = NAN;
-  if (r->ctx_by_tau < 0) {
+  r->xt_p_x_csq = NAN;
+  if (r->ctx_tau < 0) {
     /* x'Px / (c'x)^2 */
-    r->xt_p_x_ctau = r->xt_p_x / r->ctx_by_tau / r->ctx_by_tau;
+    r->xt_p_x_csq = r->xt_p_x_tau / r->ctx_tau / r->ctx_tau;
     /* |c||Ax + s| / (c'x) */
-    r->res_unbdd = w->l2_norm_c * r->l2_norm_ax_s / -r->ctx_by_tau;
+    r->res_unbdd = w->l2_norm_c * r->l2_norm_ax_s_tau / -r->ctx_tau;
   }
 
-  r->bty = SAFEDIV_POS(r->bty_by_tau, r->tau);
-  r->ctx = SAFEDIV_POS(r->ctx_by_tau, r->tau);
-  r->xt_p_x = SAFEDIV_POS(r->xt_p_x, r->tau * r->tau);
+  r->bty = SAFEDIV_POS(r->bty_tau, r->tau);
+  r->ctx = SAFEDIV_POS(r->ctx_tau, r->tau);
+  r->xt_p_x = SAFEDIV_POS(r->xt_p_x_tau, r->tau * r->tau);
 
   r->gap = ABS(r->xt_p_x + r->ctx + r->bty);
   r->pobj = r->xt_p_x / 2. + r->ctx;
@@ -540,7 +546,7 @@ static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     info->rel_gap = NAN;
     info->res_pri = NAN;
     info->res_dual = NAN;
-    info->xt_p_x = r->xt_p_x_ctau;
+    info->xt_p_x = r->xt_p_x_csq;
     info->pobj = -INFINITY;
     info->dobj = -INFINITY;
   } else if (is_infeasible_status(info->status_val)) {
@@ -567,17 +573,17 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       info->status_val = solved(w, sol, info, r, iter);
     } else if (SCS(norm)(w->u, l) < INDETERMINATE_TOL * SQRTF((scs_float)l)) {
       info->status_val = indeterminate(w, sol, info);
-    } else if (r->bty_by_tau < r->ctx_by_tau) {
-      info->status_val = infeasible(w, sol, info, r->bty_by_tau);
+    } else if (r->bty_tau < r->ctx_tau) {
+      info->status_val = infeasible(w, sol, info, r->bty_tau);
     } else {
-      info->status_val = unbounded(w, sol, info, r->ctx_by_tau);
+      info->status_val = unbounded(w, sol, info, r->ctx_tau);
     }
   } else if (is_solved_status(info->status_val)) {
     info->status_val = solved(w, sol, info, r, iter);
   } else if (is_infeasible_status(info->status_val)) {
-    info->status_val = infeasible(w, sol, info, r->bty_by_tau);
+    info->status_val = infeasible(w, sol, info, r->bty_tau);
   } else {
-    info->status_val = unbounded(w, sol, info, r->ctx_by_tau);
+    info->status_val = unbounded(w, sol, info, r->ctx_tau);
   }
   if (w->stgs->normalize) {
     SCS(un_normalize_sol)(w, sol);
@@ -608,7 +614,7 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
              SCS(norm_diff)(w->u, w->u_t, w->n + w->m + 1));
   scs_printf("res_infeas = %1.2e, ", r->res_infeas);
   scs_printf("res_unbdd = %1.2e, ", r->res_unbdd);
-  scs_printf("xt_p_x_ctau = %1.2e\n", r->xt_p_x_ctau);
+  scs_printf("xt_p_x_csq = %1.2e\n", r->xt_p_x_csq);
 #endif
 
 #ifdef MATLAB_MEX_FILE
@@ -749,7 +755,7 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
   /* Add iter > 0 to avoid strange edge case where infeasible point found
    * right at start of run `out/demo_SOCP_indirect 2 0.1 0.3 1506264403` */
   if (isless(r->res_unbdd, eps) &&
-      isless(SQRTF(MAX(r->xt_p_x_ctau, 0.)), eps) && iter > 0) {
+      isless(SQRTF(MAX(r->xt_p_x_csq, 0.)), eps) && iter > 0) {
     return SCS_UNBOUNDED;
   }
   if (isless(r->res_infeas, eps) && iter > 0) {

@@ -151,40 +151,42 @@ struct SCS_WORK {
   AaWork *accel;          /* Struct for acceleration workspace */
 };
 
-/* to hold residual information (unnormalized) */
+/* to hold residual information, all are unnormalized */
+/* quantities ending in _tau have not had tau divided out */
 struct SCS_RESIDUALS {
   scs_int last_iter;
-  scs_float l2_norm_pri_resid;
+  scs_float l2_norm_pri_resid;  /* primal residual */
   scs_float linf_norm_pri_resid;
-  scs_float l2_norm_dual_resid;
+  scs_float l2_norm_dual_resid; /* dual residual */
   scs_float linf_norm_dual_resid;
   scs_float res_infeas;
   scs_float res_unbdd;
-  scs_float xt_p_x;      /* x' P x */
-  scs_float xt_p_x_ctau; /* for unbounded: x' P x / (c'x)^2 */
-  scs_float gap;
+  scs_float xt_p_x;     /* x' P x */
+  scs_float xt_p_x_tau;
+  scs_float xt_p_x_csq; /* for unbounded: x' P x / (c'x)^2 */
+  scs_float gap; /* primal obj - dual obj */
   scs_float ctx;
-  scs_float ctx_by_tau;
+  scs_float ctx_tau;
   scs_float bty;
-  scs_float bty_by_tau;
-  scs_float pobj;
-  scs_float dobj;
+  scs_float bty_tau;
+  scs_float pobj; /* primal objective */
+  scs_float dobj; /* dual objective */
   scs_float tau;
   scs_float kap;
-  scs_float l2_norm_ax;
-  scs_float linf_norm_ax;
-  scs_float l2_norm_ax_s;
-  scs_float linf_norm_ax_s;
-  scs_float l2_norm_aty;
-  scs_float linf_norm_aty;
-  scs_float l2_norm_px;
-  scs_float linf_norm_px;
-  scs_float l2_norm_x;
-  scs_float linf_norm_x;
-  scs_float l2_norm_y;
-  scs_float linf_norm_y;
-  scs_float l2_norm_s;
-  scs_float linf_norm_s;
+  scs_float l2_norm_ax_tau;
+  scs_float linf_norm_ax_tau;
+  scs_float l2_norm_ax_s_tau;
+  scs_float linf_norm_ax_s_tau;
+  scs_float l2_norm_aty_tau;
+  scs_float linf_norm_aty_tau;
+  scs_float l2_norm_px_tau;
+  scs_float linf_norm_px_tau;
+  scs_float l2_norm_x_tau;
+  scs_float linf_norm_x_tau;
+  scs_float l2_norm_y_tau;
+  scs_float linf_norm_y_tau;
+  scs_float l2_norm_s_tau;
+  scs_float linf_norm_s_tau;
   /* log aa norm */
   scs_float aa_norm;
   /* XXX remove these */
