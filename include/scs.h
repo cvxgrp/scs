@@ -148,7 +148,7 @@ struct SCS_WORK {
   ScsSettings *stgs;      /* contains solver settings specified by user */
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
-  AaWork *accel;          /* Struct for acceleration workspace */
+  AaWork *accel;          /* struct for acceleration workspace */
   /* workspace for computing residuals */
   scs_float *ax, *ax_s, *px, *aty, *pri_resid, *dual_resid;
   ScsSolution *sol; /* track x,y,s as alg progresses */
