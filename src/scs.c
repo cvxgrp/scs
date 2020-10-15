@@ -182,6 +182,7 @@ static void populate_norms(scs_float *vec, scs_int len, scs_float * scale_vec,
 }
 
 /* calculates un-normalized residual quantities */
+/* this is somewhat slow but not a bottleneck */
 static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
                                scs_int force) {
   scs_int n = w->n, m = w->m;
@@ -213,8 +214,6 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
 
   r->tau = ABS(w->u[n + m]);
   r->kap = ABS(w->rsk[n + m]);
-
-  // XXX need normalize=False
 
   /**************** PRIMAL *********************/
   memset(wrk_m, 0, m * sizeof(scs_float));
@@ -266,10 +265,11 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->l2_norm_dual_resid = SAFEDIV_POS(r->l2_norm_dual_resid, r->tau);
   r->linf_norm_dual_resid = SAFEDIV_POS(r->linf_norm_dual_resid, r->tau);
 
+  /*************** OTHERS *****************/
   r->bty_by_tau = SCS(dot)(y, w->b, m);
   r->ctx_by_tau = SCS(dot)(x, w->c, n);
 
-  scale = w->scal->primal_scale * w->scal->dual_scale;
+  scale = primal_scale * dual_scale;
   r->kap /= scale;
   r->bty_by_tau /= scale;
   r->ctx_by_tau /= scale;
@@ -300,7 +300,6 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->xt_p_x_ctau = NAN;
   if (r->ctx_by_tau < 0) {
     /* x'Px / (c'x)^2 */
-    /* XXX fix this: */
     r->xt_p_x_ctau = r->xt_p_x / r->ctx_by_tau / r->ctx_by_tau;
     /* |c||Ax + s| / (c'x) */
     r->res_unbdd = w->l2_norm_c * r->l2_norm_ax_s / -r->ctx_by_tau;
@@ -314,7 +313,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->pobj = r->xt_p_x / 2. + r->ctx;
   r->dobj = -r->xt_p_x / 2. - r->bty;
 
-  /* XXX remove these */
+  /* XXX remove these eventually */
   r->res_pri = r->l2_norm_pri_resid / (1 + w->l2_norm_b);
   r->res_dual = r->l2_norm_dual_resid / (1 + w->l2_norm_c);
   r->rel_gap = r->gap / (1 + ABS(r->xt_p_x) + ABS(r->ctx) + ABS(r->bty));
@@ -344,11 +343,11 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
   return ip;
 }
 
-#define TAU_FACTOR (1e2)
+#define TAU_FACTOR (1e1)
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
-  tau_scale = TAU_FACTOR * w->stgs->scale;
+  tau_scale = TAU_FACTOR; //* w->stgs->scale;
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   eta *= tau_scale;
   b = (dot_with_diag_scaling(w, mu, w->g) -
@@ -948,9 +947,9 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_int i;
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   /* TODO this probably isn't numerically stable */
-  scs_float relative_res_pri = SAFEDIV_POS(r->res_pri, r->l2_norm_ax);
+  scs_float relative_res_pri = r->res_pri; //SAFEDIV_POS(r->res_pri, r->l2_norm_ax);
   /* TODO update to include Px? */
-  scs_float relative_res_dual = SAFEDIV_POS(r->res_dual, r->l2_norm_aty);
+  scs_float relative_res_dual = r->res_dual; //SAFEDIV_POS(r->res_dual, r->l2_norm_aty);
 
   /* TODO should we disable if problem appears infeasible / unbounded? */
   if (r->tau < 1e-12) {
