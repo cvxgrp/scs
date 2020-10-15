@@ -151,8 +151,8 @@ struct SCS_WORK {
   AaWork *accel;          /* Struct for acceleration workspace */
 };
 
-/* to hold residual information, all are unnormalized */
-/* quantities ending in _tau have not had tau divided out */
+/* to hold residual information, *all are unnormalized* */
+/* quantities ending in _tau have *not* had tau divided out */
 struct SCS_RESIDUALS {
   scs_int last_iter;
   scs_float l2_norm_pri_resid;  /* primal residual */
