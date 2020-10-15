@@ -99,9 +99,9 @@ struct SCS_INFO {
   scs_float res_pri;    /* primal equality residual */
   scs_float res_dual;   /* dual equality residual */
   scs_float res_infeas; /* infeasibility cert residual */
-  scs_float res_unbdd;  /* unbounded cert residual */
-  scs_float xt_p_x;     /* x' Px */
-  scs_float rel_gap;    /* relative duality gap */
+  scs_float res_unbdd_a;/* unbounded cert residual */
+  scs_float res_unbdd_p;/* unbounded cert residual */
+  scs_float gap;        /* relative duality gap */
   scs_float setup_time; /* time taken for setup phase (milliseconds) */
   scs_float solve_time; /* time taken for solve phase (milliseconds) */
 };
@@ -137,7 +137,7 @@ struct SCS_WORK {
   /* x_prev = x from previous iteration */
   scs_float *u, *u_best, *v, *u_t, *u_prev, *v_prev, *rsk, *rsk_best;
   scs_float *h, *g, *ls_ws;
-  scs_float l2_b, l2_c, best_max_residual;
+  scs_float b_norm, c_norm, best_max_residual;
   scs_float sum_log_scale_factor;
   scs_int last_scale_update_iter, n_log_scale_factor;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
@@ -151,6 +151,7 @@ struct SCS_WORK {
   AaWork *accel;          /* Struct for acceleration workspace */
   /* workspace for computing residuals */
   scs_float *ax, *ax_s, *px, *aty, *pri_resid, *dual_resid;
+  ScsSolution *sol; /* track x,y,s as alg progresses */
 };
 
 /* to hold residual information, *all are unnormalized* */
@@ -159,7 +160,6 @@ struct SCS_RESIDUALS {
   scs_int last_iter;
   scs_float xt_p_x;     /* x' P x */
   scs_float xt_p_x_tau;
-  scs_float xt_p_x_csq; /* for unbounded: x' P x / (c'x)^2 */
   scs_float gap; /* primal obj - dual obj */
   scs_float ctx;
   scs_float ctx_tau;
@@ -174,7 +174,8 @@ struct SCS_RESIDUALS {
   scs_float res_dual;
   scs_float rel_gap;
   scs_float res_infeas;
-  scs_float res_unbdd;
+  scs_float res_unbdd_p;
+  scs_float res_unbdd_a;
 };
 
 #ifdef __cplusplus

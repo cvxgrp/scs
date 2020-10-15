@@ -207,33 +207,17 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   FILE *fout = fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
   scs_int l = w->m + w->n + 1;
   if (iter == 0) {
-    fprintf(fout, "iter,res_pri,res_dual,rel_gap,res_infeas,res_unbdd,"
+    fprintf(fout, "iter,res_pri,res_dual,rel_gap,res_infeas,res_unbdd_a,res_unbdd_p"
                   "pobj,dobj,tau,kap,scale,nrm_diff_u_ut,nrm_diff_u_u_prev,"
                   "nrm_diff_v_v_prev,aa_norm,time,\n");
   }
-  /*
-  if (D && E) {
-    l2_x_tau = dual_scale * SCS(scaled_norm)(x, n, E);
-    linf_x_tau = dual_scale * SCS(scaled_norm_inf)(x, n, E);
-    l2_y_tau = primal_scale * SCS(scaled_norm)(y, m, D);
-    linf_y_tau = primal_scale * SCS(scaled_norm_inf)(y, m, D);
-    l2_s_tau = dual_scale * SCS(inv_scaled_norm)(s, m, D);
-    linf_s_tau = dual_scale * SCS(inv_scaled_norm_inf)(s, m, D);
-  } else {
-    l2_x_tau = SCS(norm)(x, n);
-    linf_x_tau = SCS(norm_inf)(x, n);
-    l2_y_tau = SCS(norm)(y, m);
-    linf_y_tau = SCS(norm_inf)(y, m);
-    l2_s_tau = SCS(norm)(s, m);
-    linf_s_tau = SCS(norm_inf)(s, m);
-  }
-  */
   fprintf(fout, "%li,", (long)iter);
   fprintf(fout, "%.16e,", r->res_pri);
   fprintf(fout, "%.16e,", r->res_dual);
   fprintf(fout, "%.16e,", r->rel_gap);
   fprintf(fout, "%.16e,", r->res_infeas);
-  fprintf(fout, "%.16e,", r->res_unbdd);
+  fprintf(fout, "%.16e,", r->res_unbdd_a);
+  fprintf(fout, "%.16e,", r->res_unbdd_p);
   fprintf(fout, "%.16e,", r->pobj);
   fprintf(fout, "%.16e,", r->dobj);
   fprintf(fout, "%.16e,", r->tau);
