@@ -12,7 +12,8 @@ extern "C" {
 
 /* initialize ScsLinSysWork structure and perform any necessary preprocessing */
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const ScsSettings *stgs);
+                                      const ScsSettings *stgs,
+                                      scs_float *rho_y_vec);
 
 /* solves [(d->rho_x * I + P)  A' ; A  -I] x = b for x, stores result in b, s
  * contains warm-start, iter is current scs iteration count */
@@ -64,9 +65,10 @@ void SCS(free_scs_matrix)(ScsMatrix *A);
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
 
 /* XXX */
-scs_int SCS(should_update_scale)(scs_float factor, scs_int iter);
-void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
-                              const ScsSettings *stgs, ScsLinSysWork *p);
+scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter);
+void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
+                                  const ScsSettings *stgs, ScsLinSysWork *p,
+                                  scs_float *rho_y_vec);
 
 #ifdef __cplusplus
 }

@@ -42,6 +42,7 @@ static void free_work(ScsWork *w) {
     scs_free(w->dual_resid);
     scs_free(w->b);
     scs_free(w->c);
+    scs_free(w->rho_y_vec);
     scs_free(w->ls_ws);
     if (w->scal) {
       scs_free(w->scal->D);
@@ -301,8 +302,8 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = SQRTF((scs_float)l);
 }
 
-/* utility function that scales first n entries in inner prod by rho_x */
-/* and last m entries by 1 / scale, assumes length of array is n + m */
+/* utility function that scales first n entries in inner prod by rho_x   */
+/* and last m entries by 1 / rho_y_vec, assumes length of array is n + m */
 static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
                                        const scs_float *y) {
   scs_int i, n = w->n, len = w->n + w->m;
@@ -311,7 +312,7 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
     ip += w->stgs->rho_x * x[i] * y[i];
   }
   for (i = n; i < len; ++i) {
-    ip += x[i] * y[i] / w->stgs->scale;
+    ip += x[i] * y[i] / w->rho_y_vec[i - n];
   }
   return ip;
 }
@@ -320,7 +321,7 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
-  tau_scale = TAU_FACTOR; //* w->stgs->scale;
+  tau_scale = TAU_FACTOR; // XXX
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   eta *= tau_scale;
   b = (dot_with_diag_scaling(w, mu, w->g) -
@@ -338,12 +339,13 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
 
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
-  scs_int n = w->n, m = w->m, l = n + m + 1, status;
+  scs_int n = w->n, m = w->m, l = n + m + 1, status, i;
   scs_float * warm_start = SCS_NULL;
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
-  SCS(scale_array)(&(w->u_t[n]), -1. / w->stgs->scale, m);
-
+  for (i = n; i < l - 1 ; ++i) {
+    w->u_t[i] /= -w->rho_y_vec[i - n];
+  }
   /* compute warm start using the cone projection output */
   if (iter > 0) {
     warm_start = w->ls_ws;
@@ -373,10 +375,10 @@ static void compute_rsk(ScsWork *w) {
 #endif
   /* s */
   for (i = w->n; i < l-1; ++i) {
-    w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) / w->stgs->scale;
+    w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) / w->rho_y_vec[i - w->n];
   }
   /* kappa */
-  w->rsk[l-1] = w->v[l-1] + w->u[l-1] - 2 * w->u_t[l-1];
+  w->rsk[l - 1] = w->v[l-1] + w->u[l-1] - 2 * w->u_t[l-1];
 }
 
 static void update_dual_vars(ScsWork *w) {
@@ -775,6 +777,17 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
   return 0;
 }
 
+// XXX move to cones.c?
+static void set_rho_y_vec(ScsWork *w, const ScsCone *k) {
+  scs_int i;
+  for (i = 0; i < k->f; ++i) {
+    w->rho_y_vec[i] = 1. / w->stgs->rho_x;
+  }
+  for (i = k->f; i < w->m; ++i) {
+    w->rho_y_vec[i] = w->stgs->scale;
+  }
+}
+
 static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   ScsWork *w = (ScsWork *)scs_calloc(1, sizeof(ScsWork));
   scs_int l = d->n + d->m + 1;
@@ -813,6 +826,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->dual_resid = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   w->b = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   w->c = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
+  w->rho_y_vec = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   w->sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   w->sol->x = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   w->sol->s = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
@@ -827,6 +841,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   }
   w->A = d->A;
   w->P = d->P;
+  set_rho_y_vec(w, k);
   if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
     if (!SCS(copy_matrix)(&(w->A), d->A)) {
@@ -849,7 +864,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   } else {
     w->scal = SCS_NULL;
   }
-  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs))) {
+  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs, w->rho_y_vec))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
@@ -926,7 +941,8 @@ static scs_float iterate_norm_diff(ScsWork *w) {
 // XXX move these
 #define MAX_SCALE_VALUE (1e5)
 #define MIN_SCALE_VALUE (1e-5)
-static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
+static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
+                               const ScsCone *k, scs_int iter) {
   scs_float factor, new_scale;
   scs_int i;
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
@@ -962,12 +978,13 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
   if (new_scale == w->stgs->scale) {
     return;
   }
-  if (SCS(should_update_scale(factor, iters_since_last_update))) {
+  if (SCS(should_update_rho_y_vec(factor, iters_since_last_update))) {
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
     w->stgs->scale = new_scale;
-    SCS(update_linsys_scale)(w->A, w->P, w->stgs, w->p);
+    set_rho_y_vec(w, k);
+    SCS(update_linsys_rho_y_vec)(w->A, w->P, w->stgs, w->p, w->rho_y_vec);
 
     /* update pre-solved quantities */
     update_work_cache(w);
@@ -979,7 +996,7 @@ static void maybe_update_scale(ScsWork *w, ScsResiduals *r, scs_int iter) {
     /* solve: D^+ (v^+ + u - 2u_t) = rsk v^+ = (D^+)^-1 rsk + 2u_t - u  */
     /* only elements with scale on diag */
     for (i = w->n; i < w->n + w->m; i++) {
-      w->v[i] = w->stgs->scale * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
+      w->v[i] = w->rho_y_vec[i - w->n] * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
     }
     return;
   }
@@ -1066,7 +1083,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     /* if residuals are fresh then maybe compute new scale */
     // XXX is this the right place to do this?
     if (w->stgs->adaptive_scaling && i == r.last_iter) {
-      maybe_update_scale(w, &r, i);
+      maybe_update_scale(w, &r, k, i);
     }
     // XXX is this the right place to do this?
     if (w->stgs->log_csv_filename) {

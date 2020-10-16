@@ -53,7 +53,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
-    scs_free(p->scale_idxs);
+    scs_free(p->rho_y_vec_idxs);
     scs_free(p->Lnz);
     scs_free(p->iwork);
     scs_free(p->etree);
@@ -118,7 +118,8 @@ static csc *cs_compress(const csc *T, scs_int *idx_mapping) {
 }
 
 static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                     const ScsSettings *s, scs_int *scale_idxs) {
+                     const ScsSettings *s, scs_float * rho_y_vec,
+                     scs_int *rho_y_vec_idxs) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed kkt matrix
    * assumes column compressed form A matrix
@@ -202,19 +203,19 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
-  /* -scale^-1 * I at bottom right */
+  /* -rho_y_vec^-1 * I at bottom right */
   for (k = 0; k < m; k++) {
     K->i[kk] = k + n;
     K->p[kk] = k + n;
-    K->x[kk] = -1. / s->scale;
-    scale_idxs[k] = kk; /* store the indices where scale occurs */
+    K->x[kk] = -1. / rho_y_vec[k];
+    rho_y_vec_idxs[k] = kk; /* store the indices where rho_y_vec occurs */
     kk++;
   }
   K->nz = kk;
   idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
   Kcsc = cs_compress(K, idx_mapping);
   for (i = 0; i < A->m; i++) {
-    scale_idxs[i] = idx_mapping[scale_idxs[i]];
+    rho_y_vec_idxs[i] = idx_mapping[rho_y_vec_idxs[i]];
   }
   cs_spfree(K);
   scs_free(idx_mapping);
@@ -355,11 +356,12 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
   return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
 }
 
-static csc * permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                         const ScsSettings *stgs, ScsLinSysWork *p) {
+static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
+                        const ScsSettings *stgs, ScsLinSysWork *p,
+                        scs_float *rho_y_vec) {
   scs_float *info;
   scs_int *Pinv, amd_status, *idx_mapping, i;
-  csc *kkt_perm, *kkt = form_kkt(A, P, stgs, p->scale_idxs);
+  csc *kkt_perm, *kkt = form_kkt(A, P, stgs, rho_y_vec, p->rho_y_vec_idxs);
   if (!kkt) {
     return SCS_NULL;
   }
@@ -377,7 +379,7 @@ static csc * permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   idx_mapping = (scs_int *)scs_malloc(kkt->nzmax * sizeof(scs_int));
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
   for (i = 0; i < A->m; i++){
-    p->scale_idxs[i] = idx_mapping[p->scale_idxs[i]];
+    p->rho_y_vec_idxs[i] = idx_mapping[p->rho_y_vec_idxs[i]];
   }
   cs_spfree(kkt);
   scs_free(Pinv);
@@ -386,16 +388,17 @@ static csc * permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-scs_int SCS(should_update_scale)(scs_float factor, scs_int iter) {
+scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter) {
   /* XXX update */
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
-void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
-                              const ScsSettings *stgs, ScsLinSysWork *p) {
+void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
+                                  const ScsSettings *stgs, ScsLinSysWork *p,
+                                  scs_float *rho_y_vec) {
   scs_int i, ldl_status;
   for (i = 0; i < A->m; ++i) {
-    p->kkt->x[p->scale_idxs[i]] = -1.0 / stgs->scale;
+    p->kkt->x[p->rho_y_vec_idxs[i]] = -1.0 / rho_y_vec[i];
   }
   ldl_status = ldl_factor(p);
   if (ldl_status < 0) {
@@ -407,18 +410,19 @@ void SCS(update_linsys_scale)(const ScsMatrix *A, const ScsMatrix *P,
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const ScsSettings *stgs) {
+                                      const ScsSettings *stgs,
+                                      scs_float *rho_y_vec) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
   p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
   p->L = (csc *)scs_malloc(sizeof(csc));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
-  p->scale_idxs = (scs_int *)scs_malloc(A->m * sizeof(scs_int));
+  p->rho_y_vec_idxs = (scs_int *)scs_malloc(A->m * sizeof(scs_int));
   p->factorizations = 0;
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;
-  p->kkt = permute_kkt(A, P, stgs, p);
+  p->kkt = permute_kkt(A, P, stgs, p, rho_y_vec);
   ldl_prepare_status = ldl_prepare(p);
   ldl_status = ldl_factor(p);
   if (ldl_prepare_status < 0 || ldl_status < 0) {
