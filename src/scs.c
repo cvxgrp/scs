@@ -59,6 +59,7 @@ static void free_work(ScsWork *w) {
   }
 }
 
+// XXX move this:
 #ifdef L2_RES_NORM
 #define NORM SCS(norm)
 #else
@@ -781,7 +782,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
 static void set_rho_y_vec(ScsWork *w, const ScsCone *k) {
   scs_int i;
   for (i = 0; i < k->f; ++i) {
-    w->rho_y_vec[i] = 1. / w->stgs->rho_x;
+    w->rho_y_vec[i] = MAX(1, w->stgs->scale); // 1. / w->stgs->rho_x;
   }
   for (i = k->f; i < w->m; ++i) {
     w->rho_y_vec[i] = w->stgs->scale;
@@ -947,15 +948,16 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
   scs_int i;
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   /* TODO this probably isn't numerically stable */
-  scs_float relative_res_pri = r->res_pri; //SAFEDIV_POS(r->res_pri, r->l2_ax);
+  scs_float relative_res_pri = NORM(w->pri_resid, w->n); //SAFEDIV_POS(r->res_pri, r->l2_ax);
   /* TODO update to include Px? */
-  scs_float relative_res_dual = r->res_dual; //SAFEDIV_POS(r->res_dual, r->l2_aty);
+  scs_float relative_res_dual = NORM(w->dual_resid, w->n); //SAFEDIV_POS(r->res_dual, r->l2_aty);
 
   /* TODO should we disable if problem appears infeasible / unbounded? */
+  /*
   if (r->tau < 1e-12) {
     return;
   }
-
+  */
   /* we use SAFEDIV_POS to compute the residuals so this is safe */
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri / relative_res_dual);

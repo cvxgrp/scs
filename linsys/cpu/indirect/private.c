@@ -293,7 +293,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
                            scs_float *b, const scs_float *s, scs_int iter) {
-  scs_int cg_its, max_iters;
+  scs_int cg_its, max_iters = INT_MAX;
   scs_float cg_tol = CG_BEST_TOL;
 
   if (SCS(norm)(b, A->n + A->m) <= 1e-18) {
@@ -309,9 +309,9 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   if (iter >= 0) {
     cg_tol = MAX(CG_BEST_TOL, SCS(norm)(b, A->n) * CG_BASE_TOL /
                  POWF((scs_float)iter + 1, stgs->cg_rate));
+    /* set max_iters to 100 * n (though in theory n is enough for any tol) */
+    max_iters = 100 * A->n;
   }
-  /* set max_its to 2 * n (though in theory n is enough for any tol) */
-  max_iters = 2 * A->n;
   /* solves (rho_x I + P + A' R A)x = b, s warm start, solution stored in b */
   cg_its = pcg(A, P, stgs, p, s, b, max_iters, cg_tol); /* b[:n] = x */
 
@@ -323,7 +323,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   }
 #if EXTRA_VERBOSE > 10
   scs_printf("cg_tol %.3e\n", cg_tol);
-  scs_printf("cg_its %i\n", cg_its);
+  scs_printf("cg_its %i\n", (int)cg_its);
 #endif
   return 0;
 }

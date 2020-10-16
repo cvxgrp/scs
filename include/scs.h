@@ -149,22 +149,21 @@ struct SCS_WORK {
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
   AaWork *accel;          /* struct for acceleration workspace */
-  /* workspace for computing residuals */
+  /* workspace for computing residuals, tau *not* divided out */
   scs_float *ax, *ax_s, *px, *aty, *pri_resid, *dual_resid;
-  ScsSolution *sol; /* track x,y,s as alg progresses */
+  ScsSolution *sol; /* track x,y,s as alg progresses, tau *not* divided out */
 };
 
 /* to hold residual information, *all are unnormalized* */
-/* quantities ending in _tau have *not* had tau divided out */
 struct SCS_RESIDUALS {
   scs_int last_iter;
-  scs_float xt_p_x;     /* x' P x */
-  scs_float xt_p_x_tau;
+  scs_float xt_p_x;     /* x' P x  */
+  scs_float xt_p_x_tau; /* tau^2 *not* divided out */
   scs_float gap; /* primal obj - dual obj */
   scs_float ctx;
-  scs_float ctx_tau;
+  scs_float ctx_tau;  /* tau *not* divided out */
   scs_float bty;
-  scs_float bty_tau;
+  scs_float bty_tau;  /* tau *not* divided out */
   scs_float pobj; /* primal objective */
   scs_float dobj; /* dual objective */
   scs_float tau;

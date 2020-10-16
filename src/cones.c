@@ -518,9 +518,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   BLAS(scal)(&nb, &sqrt2, Xs, &nb_plus_one); /* not n_squared */
 
   /* max-eig upper bounded by frobenius norm */
-  vupper = 1.1 * sqrt2 *
-           BLAS(nrm2)(&cone_sz, X,
-                      &one); /* mult by factor to make sure is upper bound */
+  /* mult by factor to make sure is upper bound */
+  vupper = 1.1 * sqrt2 * BLAS(nrm2)(&cone_sz, X, &one);
   vupper = MAX(vupper, 0.01);
 #if EXTRA_VERBOSE > 0
   SCS(print_array)(Xs, n * n, "Xs");
