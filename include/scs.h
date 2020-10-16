@@ -172,7 +172,6 @@ struct SCS_RESIDUALS {
   scs_float aa_norm; /* anderson acceleration norm */
   scs_float res_pri;
   scs_float res_dual;
-  scs_float rel_gap;
   scs_float res_infeas;
   scs_float res_unbdd_p;
   scs_float res_unbdd_a;

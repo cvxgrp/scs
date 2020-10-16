@@ -178,7 +178,7 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
 
 // XXX fix this:
 static scs_float get_max_residual(ScsResiduals *r) {
-  return MAX(r->rel_gap, MAX(r->res_pri, r->res_dual));
+  return MAX(r->gap, MAX(r->res_pri, r->res_dual));
 }
 
 static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
