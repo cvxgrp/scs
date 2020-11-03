@@ -5,9 +5,9 @@
 #include "util.h"
 
 /* #define CONE_RATE (2) */
-#define CONE_TOL (1e-10)
+#define CONE_TOL (1e-9)
 #define CONE_THRESH (1e-8)
-#define EXP_CONE_MAX_ITERS (1000)
+#define EXP_CONE_MAX_ITERS (50)
 #define POW_CONE_MAX_ITERS (20)
 
 #ifdef USE_LAPACK
@@ -24,6 +24,25 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
 scs_float BLAS(nrm2)(const blas_int *n, scs_float *x, const blas_int *incx);
 #endif
+
+// XXX add a comment about this
+void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
+                        scs_int m) {
+  scs_int i, count = 0;
+  /* f cone */
+  for (i = 0; i < k->f; ++i) {
+    rho_y_vec[i] = MAX(1, scale);
+  }
+  count += k->f;
+  /* others */
+  for (i = count; i < m; ++i) {
+    rho_y_vec[i] = scale;
+  }
+  /* Note, if updating this to use different scales for other cones (e.g. box)
+   * then you must be careful to also include the effect of the rho_y_vec
+   * in the actual projection operator.
+   */
+}
 
 static scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
 
@@ -239,8 +258,8 @@ static scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
 }
 
 static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
-                                  scs_float z_hat) {
-  scs_float t = MAX(-z_hat, 1e-6);
+                                  scs_float z_hat, scs_float w){
+  scs_float t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
   scs_float f, fp;
   scs_int i;
   for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
@@ -250,28 +269,35 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
     t = t - f / fp;
 
     if (t <= -z_hat) {
-      return 0;
+      t = -z_hat;
+      break;
     } else if (t <= 0) {
-      return z_hat;
-    } else if (ABS(f) < CONE_TOL) {
+      t = 0;
+      break;
+    } else if (SQRTF(f * f / fp) < CONE_TOL) {
       break;
     }
   }
+#if EXTRA_VERBOSE > 1
   if (i == EXP_CONE_MAX_ITERS) {
-    scs_printf("warning: exp cone proj took maximum %i iters\n", (int)i);
+    scs_printf("warning: exp cone newton step took maximum %i iters\n", (int)i);
+    scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e\n", rho, y_hat,
+                z_hat, w);
   }
+#endif
   return t + z_hat;
 }
 
 static void exp_solve_for_x_with_rho(scs_float *v, scs_float *x,
-                                     scs_float rho) {
-  x[2] = exp_newton_one_d(rho, v[1], v[2]);
+                                     scs_float rho, scs_float w) {
+  x[2] = exp_newton_one_d(rho, v[1], v[2], w);
   x[1] = (x[2] - v[2]) * x[2] / rho;
   x[0] = v[0] - rho;
 }
 
-static scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho) {
-  exp_solve_for_x_with_rho(v, x, rho);
+static scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho,
+                               scs_float w) {
+  exp_solve_for_x_with_rho(v, x, rho, w);
   if (x[1] <= 1e-12) {
     return x[0];
   }
@@ -282,7 +308,7 @@ static void exp_get_rho_ub(scs_float *v, scs_float *x, scs_float *ub,
                            scs_float *lb) {
   *lb = 0;
   *ub = 0.125;
-  while (exp_calc_grad(v, x, *ub) > 0) {
+  while (exp_calc_grad(v, x, *ub, v[1]) > 0) {
     *lb = *ub;
     (*ub) *= 2;
   }
@@ -320,7 +346,7 @@ static scs_int proj_exp_cone(scs_float *v) {
   exp_get_rho_ub(v, x, &ub, &lb); /* get starting upper and lower bounds */
   for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
     rho = (ub + lb) / 2;          /* halfway between upper and lower bounds */
-    g = exp_calc_grad(v, x, rho); /* calculates gradient wrt dual var */
+    g = exp_calc_grad(v, x, rho, x[1]); /* calculates gradient wrt dual var */
     if (g > 0) {
       lb = rho;
     } else {
@@ -330,11 +356,9 @@ static scs_int proj_exp_cone(scs_float *v) {
       break;
     }
   }
-  /*
-#if EXTRA_VERBOSE > 0
-  scs_printf("exponential cone proj iters %i\n", i);
+#if EXTRA_VERBOSE > 25
+  scs_printf("exponential cone proj iters %i\n", (int)i);
 #endif
-   */
   v[0] = x[0];
   v[1] = x[1];
   v[2] = x[2];
