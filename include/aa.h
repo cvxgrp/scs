@@ -58,7 +58,8 @@ void aa_finish(AaWork *a);
 void aa_reset(AaWork *a);
 
 #define MAX_AA_NRM (1e2)
-#define ETA (1E-8)
+//XXX rename
+#define ETA (1E-9)
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
