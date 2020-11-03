@@ -207,7 +207,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   FILE *fout = fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
   scs_int l = w->m + w->n + 1;
   if (iter == 0) {
-    fprintf(fout, "iter,res_pri,res_dual,gap,res_infeas,res_unbdd_a,res_unbdd_p"
+    fprintf(fout, "iter,res_pri,res_dual,gap,res_infeas,res_unbdd_a,res_unbdd_p,"
                   "pobj,dobj,tau,kap,scale,nrm_diff_u_ut,nrm_diff_u_u_prev,"
                   "nrm_diff_v_v_prev,aa_norm,time,\n");
   }
