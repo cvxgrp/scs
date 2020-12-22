@@ -153,7 +153,7 @@ If `make` completes successfully, it will produce two static library files,
 `libscsindir.ext` (where `.ext` extension is platform dependent) in the same
 folder. It will also produce two demo binaries in the `out` folder named
 `demo_socp_direct`, and `demo_socp_indirect`. If you have a GPU and have CUDA
-installed, you can also execture `make gpu` to compile SCS to run on the GPU
+installed, you can also execute `make gpu` to compile SCS to run on the GPU
 which will create additional libraries and demo binaries in the `out` folder
 corresponding to the gpu version. Note that the GPU version requires 32 bit
 ints, which can be enforced by compiling with `DLONG=0`.
