@@ -127,6 +127,8 @@ void SCS(print_data)(const ScsData *d) {
   scs_printf("warm_start = %i\n", (int)d->stgs->warm_start);
   scs_printf("acceleration_lookback = %i\n",
              (int)d->stgs->acceleration_lookback);
+  scs_printf("acceleration_interval = %i\n",
+             (int)d->stgs->acceleration_interval);
   scs_printf("eps = %4f\n", d->stgs->eps);
   scs_printf("alpha = %4f\n", d->stgs->alpha);
   scs_printf("rho_x = %4f\n", d->stgs->rho_x);
@@ -200,6 +202,7 @@ void SCS(set_default_settings)(ScsData *d) {
   d->stgs->normalize = NORMALIZE;
   d->stgs->warm_start = WARM_START;
   d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
+  d->stgs->acceleration_interval = ACCELERATION_INTERVAL;
   d->stgs->adaptive_scaling = ADAPTIVE_SCALING;
   d->stgs->write_data_filename = WRITE_DATA_FILENAME;
   d->stgs->log_csv_filename = LOG_CSV_FILENAME;

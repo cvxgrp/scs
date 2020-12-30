@@ -27,6 +27,19 @@
 #include "aa.h"
 #include "scs_blas.h"
 
+#ifndef USE_LAPACK
+
+typedef void * ACCEL_WORK;
+
+AaWork *aa_init(aa_int dim, aa_int aa_mem, aa_int type1, aa_float eta) {
+  return SCS_NULL;
+}
+aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) { return 0; }
+void aa_finish(AaWork *a) {}
+void aa_reset(AaWork *a) {}
+
+#else
+
 #if PROFILING > 0
 
 #define TIME_TIC \
@@ -350,3 +363,5 @@ void aa_reset(AaWork *a) {
   a->iter = 0;
   return;
 }
+
+#endif

@@ -37,7 +37,8 @@ extern "C" {
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
-#define ACCELERATION_LOOKBACK (10)
+#define ACCELERATION_LOOKBACK (20)
+#define ACCELERATION_INTERVAL (50)
 #define ADAPTIVE_SCALING (1)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
@@ -155,6 +156,7 @@ typedef float scs_float;
 #endif
 #endif
 
+/* how many iterations between heuristic residual rescaling */
 #define RESCALING_MIN_ITERS (50)
 
 #define EPS_TOL (1E-18)
@@ -174,6 +176,17 @@ typedef float scs_float;
 #define INDETERMINATE_TOL (1e-9)
 /* maintain the iterates at l2norm =  ITERATE_NORM * sqrt(n+m+1) */
 #define ITERATE_NORM (1.)
+
+/* Use the L2-norm or Linf-norm */
+#define USE_L2_RES_NORM (0)
+#if USE_L2_RES_NORM > 0
+#define NORM SCS(norm)
+#else
+#define NORM SCS(norm_inf)
+#endif
+
+
+
 
 #ifdef __cplusplus
 }

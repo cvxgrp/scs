@@ -61,6 +61,7 @@ struct SCS_SETTINGS {
   scs_int warm_start; /* boolean, warm start (put initial guess in ScsSolution
                          struct): 0 */
   scs_int acceleration_lookback;   /* memory for acceleration */
+  scs_int acceleration_interval;   /* interval to apply acceleration */
   scs_int adaptive_scaling; /* whether to adaptively update the scale param */
   const char *write_data_filename; /* string, if set will dump raw prob data */
   const char *log_csv_filename; /* string, if set will log solve */

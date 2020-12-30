@@ -59,16 +59,6 @@ static void free_work(ScsWork *w) {
   }
 }
 
-//#define L2_RES_NORM 1
-
-// XXX move this:
-#ifdef L2_RES_NORM
-#define NORM SCS(norm)
-#else
-#define NORM SCS(norm_inf)
-#endif
-
-
 static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_int i;
   ScsSettings *stgs = d->stgs;
@@ -76,8 +66,10 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   char *lin_sys_method = SCS(get_lin_sys_method)(d->A, d->P, d->stgs);
 #ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
+  scs_int acceleration_interval = stgs->acceleration_interval;
 #else
   scs_int acceleration_lookback = 0;
+  scs_int acceleration_interval = 0;
 #endif
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -97,10 +89,12 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_printf(
       "settings: eps: %.2e, alpha: %.2f, max_iters: %i,\n"
       "\t  normalize: %i, scale: %.2f, adaptive_scaling: %i,\n"
-      "\t  acceleration_lookback: %i, warm_start: %i\n", /*, rho_x: %.2e\n", */
+      "\t  acceleration_lookback: %i, acceleration_interval: %i,\n"
+      "\t  warm_start: %i\n", /*, rho_x: %.2e\n", */
       stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
       stgs->scale, (int)stgs->adaptive_scaling, (int)acceleration_lookback,
-      (int)stgs->warm_start); /* , stgs->rho_x); */
+      (int)acceleration_interval, (int)stgs->warm_start);
+      /* , stgs->rho_x); */
   if (lin_sys_method) {
     scs_printf("%s", lin_sys_method);
     scs_free(lin_sys_method);
@@ -1069,10 +1063,8 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       print_summary(w, i, &r, &solve_timer);
     }
 
-// XXX: make this a param:
-#define ACCEL_INTERVAL (25)
     /* Finally apply any acceleration */
-    if (i % ACCEL_INTERVAL == 0) {
+    if (i % w->stgs->acceleration_interval == 0) {
       SCS(tic)(&accel_timer);
       r.aa_norm = aa_apply(w->v, w->v_prev, w->accel);
       /*
