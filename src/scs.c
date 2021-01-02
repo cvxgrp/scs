@@ -87,13 +87,15 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_printf("%s", cone_str);
   scs_free(cone_str);
   scs_printf(
-      "settings: eps: %.2e, alpha: %.2f, max_iters: %i,\n"
-      "\t  normalize: %i, scale: %.2f, adaptive_scaling: %i,\n"
-      "\t  acceleration_lookback: %i, acceleration_interval: %i,\n"
-      "\t  warm_start: %i\n", /*, rho_x: %.2e\n", */
-      stgs->eps, stgs->alpha, (int)stgs->max_iters, (int)stgs->normalize,
-      stgs->scale, (int)stgs->adaptive_scaling, (int)acceleration_lookback,
-      (int)acceleration_interval, (int)stgs->warm_start);
+      "settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e,\n"
+      "\t  alpha: %.2f, scale: %.2f, adaptive_scaling: %i\n"
+      "\t  max_iters: %i, normalize: %i, warm_start: %i,\n"
+      "\t  acceleration_lookback: %i, acceleration_interval: %i,\n",
+      /*, rho_x: %.2e\n", */
+      stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas,
+      stgs->alpha, stgs->scale, (int)stgs->adaptive_scaling,
+      (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start,
+      (int)acceleration_lookback, (int)acceleration_interval);
       /* , stgs->rho_x); */
   if (lin_sys_method) {
     scs_printf("%s", lin_sys_method);
@@ -326,8 +328,6 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
   return ip;
 }
 
-// XXX move this, is this the best factor:
-#define TAU_FACTOR (10.)
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
@@ -723,15 +723,15 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
 }
 
 static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
-  scs_float eps = w->stgs->eps;
-  scs_float eps_rel = eps; /* TODO expose this as setting */
-  scs_float eps_infeas = eps; /* TODO expose this as setting */
+  scs_float eps_abs = w->stgs->eps_abs;
+  scs_float eps_rel = w->stgs->eps_rel;
+  scs_float eps_infeas = w->stgs->eps_infeas;
   scs_float grl = MAX(MAX(ABS(r->xt_p_x), ABS(r->ctx)), ABS(r->bty));
   scs_float prl = MAX(MAX(w->b_norm, NORM(w->sol->s, w->m)), NORM(w->ax, w->m));
   scs_float drl = MAX(MAX(w->c_norm, NORM(w->px, w->n)), NORM(w->aty, w->n));
-  if (isless(r->res_pri, eps + eps_rel * prl) &&
-      isless(r->res_dual, eps + eps_rel * drl) &&
-      isless(r->gap, eps + eps_rel * grl)) {
+  if (isless(r->res_pri, eps_abs + eps_rel * prl) &&
+      isless(r->res_dual, eps_abs + eps_rel * drl) &&
+      isless(r->gap, eps_abs + eps_rel * grl)) {
     return SCS_SOLVED;
   }
   // XXX is this right?:
@@ -768,8 +768,16 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
     scs_printf("max_iters must be positive\n");
     return -1;
   }
-  if (stgs->eps <= 0) {
-    scs_printf("eps tolerance must be positive\n");
+  if (stgs->eps_abs <= 0) {
+    scs_printf("eps_abs tolerance must be positive\n");
+    return -1;
+  }
+  if (stgs->eps_rel <= 0) {
+    scs_printf("eps_rel tolerance must be positive\n");
+    return -1;
+  }
+  if (stgs->eps_infeas <= 0) {
+    scs_printf("eps_infeas tolerance must be positive\n");
     return -1;
   }
   if (stgs->alpha <= 0 || stgs->alpha >= 2) {
@@ -947,10 +955,14 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   // XXX test this:
   /* ||Ax + s - b * tau|| */
-  scs_float relative_res_pri = NORM(w->pri_resid, w->m) / MAX(MAX(NORM(w->ax, w->m), NORM(w->sol->s, w->m)), w->b_norm * r->tau);
+  scs_float relative_res_pri = NORM(w->pri_resid, w->m) /
+    MAX(MAX(MAX(NORM(w->ax, w->m), NORM(w->sol->s, w->m)), w->b_norm * r->tau),
+    r->tau + r->kap);
 
   /* ||Px + A'y + c * tau|| */
-  scs_float relative_res_dual = NORM(w->dual_resid, w->n) / MAX(MAX(NORM(w->px, w->n), NORM(w->aty, w->n)), w->c_norm * r->tau);
+  scs_float relative_res_dual = NORM(w->dual_resid, w->n) /
+    MAX(MAX(MAX(NORM(w->px, w->n), NORM(w->aty, w->n)), w->c_norm * r->tau),
+    r->tau + r->kap);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri / relative_res_dual);
@@ -962,6 +974,13 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
 #if EXTRA_VERBOSE > 5
   scs_printf("relative_res_pri %.2e, relative_res_dual %.2e, factor %4f\n",
               relative_res_pri, relative_res_dual, factor);
+  scs_printf("tau %.2e, kap %.2e\n", r->tau, r->kap);
+  scs_printf("primal: resid %.2e, ax %.2e, s %.2e, b*tau %.2e\n",
+              NORM(w->pri_resid, w->m), NORM(w->ax, w->m),
+              NORM(w->sol->s, w->m), w->b_norm * r->tau);
+  scs_printf("dual : resid %.2e, px %.2e, aty %.2e, c*tau %.2e\n",
+              NORM(w->dual_resid, w->n), NORM(w->px, w->n), NORM(w->aty, w->n),
+              w->c_norm * r->tau);
 #endif
 
   /* need at least RESCALING_MIN_ITERS since last update */

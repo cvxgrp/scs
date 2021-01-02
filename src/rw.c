@@ -57,7 +57,9 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   fwrite(&(s->scale), sizeof(scs_float), 1, fout);
   fwrite(&(s->rho_x), sizeof(scs_float), 1, fout);
   fwrite(&(s->max_iters), sizeof(scs_int), 1, fout);
-  fwrite(&(s->eps), sizeof(scs_float), 1, fout);
+  fwrite(&(s->eps_abs), sizeof(scs_float), 1, fout);
+  fwrite(&(s->eps_rel), sizeof(scs_float), 1, fout);
+  fwrite(&(s->eps_infeas), sizeof(scs_float), 1, fout);
   fwrite(&(s->alpha), sizeof(scs_float), 1, fout);
   fwrite(&(s->cg_rate), sizeof(scs_float), 1, fout);
   fwrite(&(s->verbose), sizeof(scs_int), 1, fout);
@@ -75,7 +77,9 @@ static ScsSettings *read_scs_stgs(FILE *fin) {
   fread(&(s->scale), sizeof(scs_float), 1, fin);
   fread(&(s->rho_x), sizeof(scs_float), 1, fin);
   fread(&(s->max_iters), sizeof(scs_int), 1, fin);
-  fread(&(s->eps), sizeof(scs_float), 1, fin);
+  fread(&(s->eps_abs), sizeof(scs_float), 1, fin);
+  fread(&(s->eps_rel), sizeof(scs_float), 1, fin);
+  fread(&(s->eps_infeas), sizeof(scs_float), 1, fin);
   fread(&(s->alpha), sizeof(scs_float), 1, fin);
   fread(&(s->cg_rate), sizeof(scs_float), 1, fin);
   fread(&(s->verbose), sizeof(scs_int), 1, fin);

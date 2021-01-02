@@ -29,7 +29,9 @@ extern "C" {
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
 #define MAX_ITERS (10000)
-#define EPS (1E-4)
+#define EPS_REL (1E-4)
+#define EPS_ABS (1E-4)
+#define EPS_INFEAS (1E-5)
 #define ALPHA (1.5)
 #define RHO_X (1E-6)
 #define SCALE (1.0)
@@ -157,7 +159,7 @@ typedef float scs_float;
 #endif
 
 /* how many iterations between heuristic residual rescaling */
-#define RESCALING_MIN_ITERS (50)
+#define RESCALING_MIN_ITERS (100)
 
 #define EPS_TOL (1E-18)
 #define SAFEDIV_POS(X, Y) ((Y) < EPS_TOL ? ((X) / EPS_TOL) : (X) / (Y))
@@ -185,8 +187,8 @@ typedef float scs_float;
 #define NORM SCS(norm_inf)
 #endif
 
-
-
+/* XXX explain this, is this the best factor? */
+#define TAU_FACTOR (10.0)
 
 #ifdef __cplusplus
 }

@@ -129,7 +129,9 @@ void SCS(print_data)(const ScsData *d) {
              (int)d->stgs->acceleration_lookback);
   scs_printf("acceleration_interval = %i\n",
              (int)d->stgs->acceleration_interval);
-  scs_printf("eps = %4f\n", d->stgs->eps);
+  scs_printf("eps_abs = %4f\n", d->stgs->eps_abs);
+  scs_printf("eps_rel = %4f\n", d->stgs->eps_rel);
+  scs_printf("eps_infeas = %4f\n", d->stgs->eps_infeas);
   scs_printf("alpha = %4f\n", d->stgs->alpha);
   scs_printf("rho_x = %4f\n", d->stgs->rho_x);
   scs_printf("cg_rate = %4f\n", d->stgs->cg_rate);
@@ -193,7 +195,9 @@ void SCS(free_sol)(ScsSolution *sol) {
 void SCS(set_default_settings)(ScsData *d) {
   /* These constants are defined in include/glbopts.h */
   d->stgs->max_iters = MAX_ITERS;
-  d->stgs->eps = EPS;
+  d->stgs->eps_abs = EPS_ABS;
+  d->stgs->eps_rel = EPS_REL;
+  d->stgs->eps_infeas = EPS_INFEAS;
   d->stgs->alpha = ALPHA;
   d->stgs->rho_x = RHO_X;
   d->stgs->scale = SCALE;

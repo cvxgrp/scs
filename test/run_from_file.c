@@ -12,8 +12,12 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->rho_x = atof(val);
   } else if (strcmp(param, "max_iters") == 0) {
     s->max_iters = atoi(val);
-  } else if (strcmp(param, "eps") == 0) {
-    s->eps = atof(val);
+  } else if (strcmp(param, "eps_abs") == 0) {
+    s->eps_abs = atof(val);
+  } else if (strcmp(param, "eps_rel") == 0) {
+    s->eps_rel = atof(val);
+  } else if (strcmp(param, "eps_infeas") == 0) {
+    s->eps_infeas = atof(val);
   } else if (strcmp(param, "alpha") == 0) {
     s->alpha = atof(val);
   } else if (strcmp(param, "cg_rate") == 0) {
