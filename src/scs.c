@@ -768,15 +768,15 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
     scs_printf("max_iters must be positive\n");
     return -1;
   }
-  if (stgs->eps_abs <= 0) {
+  if (stgs->eps_abs < 0) {
     scs_printf("eps_abs tolerance must be positive\n");
     return -1;
   }
-  if (stgs->eps_rel <= 0) {
+  if (stgs->eps_rel < 0) {
     scs_printf("eps_rel tolerance must be positive\n");
     return -1;
   }
-  if (stgs->eps_infeas <= 0) {
+  if (stgs->eps_infeas < 0) {
     scs_printf("eps_infeas tolerance must be positive\n");
     return -1;
   }
