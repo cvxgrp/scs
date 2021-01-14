@@ -31,7 +31,7 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
   scs_int i, count = 0;
   /* f cone */
   for (i = 0; i < k->f; ++i) {
-    rho_y_vec[i] = MAX(1, scale);
+    rho_y_vec[i] = 1000. * scale;
   }
   count += k->f;
   /* others */
@@ -630,8 +630,10 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
 static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
                                const scs_float * D) {
-  scs_float gt, ht, dl, du, t_prev, t = MAX(-tx[0], 0.), *x = &(tx[1]);
+  scs_float gt, ht, dl, du, t_prev, *x = &(tx[1]);
   scs_int iter, j, max_iter = 100;
+  /* use 1e-12 here instead of zero to handle cases with u or l being INF */
+  scs_float t = MAX(-tx[0], 1e-12);
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
@@ -654,7 +656,7 @@ static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
         ht += dl * dl; /* hessian */
       }
     }
-#if EXTRA_VERBOSE > 5
+#if EXTRA_VERBOSE > 3
     scs_printf("t %4f, gt %4f, ht %4f\n", t, gt, ht);
 #endif
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
@@ -676,8 +678,10 @@ static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
     }
   }
   tx[0] += t;
-#if EXTRA_VERBOSE > 10
+#if EXTRA_VERBOSE > 3
   scs_printf("box cone iters %i\n", (int)iter);
+#endif
+#if EXTRA_VERBOSE > 10
   SCS(print_array)(tx, bsize, "tx_+");
 #endif
   return;
