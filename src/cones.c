@@ -627,37 +627,42 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
    uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
    D contains equilibration scaling matrix, can be SCS_NULL
 */
+#define MAX_BOX_VAL (1e15)
 static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
                                const scs_float * D) {
-  scs_float gt, ht, dl, du, t_prev, *x = &(tx[1]);
+  scs_float gt, ht, dl, du, t_prev, t = MAX(-tx[0], 0.), *x = &(tx[1]);
   scs_int iter, j, max_iter = 100;
-  /* use 1e-12 here instead of zero to handle cases with u or l being INF */
-  scs_float t = MAX(-tx[0], 1e-12);
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
   SCS(print_array)(tx, bsize, "tx");
 #endif
-  /* should only require about 5 iterations */
+  /* should only require about 5 iterations maximum */
   for (iter = 0; iter < max_iter; iter++) {
     t_prev = t;
     gt = t + tx[0]; /* gradient */
     ht = 1.; /* hessian */
     for (j = 0; j < bsize - 1; j++) {
-      dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
-      du = D ? D[j+1] * bu[j] / D[0] : bu[j];
-      if (-x[j] > t * du) {
-        gt += (t * du + x[j]) * du; /* gradient */
-        ht += du * du; /* hessian */
+      if (bu[j] < MAX_BOX_VAL) { /* if > than this consider to be infinity */
+        du = D ? D[j+1] * bu[j] / D[0] : bu[j];
+        if (-x[j] > t * du) {
+          gt += (t * du + x[j]) * du; /* gradient */
+          ht += du * du; /* hessian */
+          continue;
+        }
       }
-      else if (-x[j] < t * dl) {
-        gt += (t * dl + x[j]) * dl; /* gradient */
-        ht += dl * dl; /* hessian */
+      if (bl[j] > -MAX_BOX_VAL) {  /* if < than this consider to be -infinity */
+        dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
+        if (-x[j] < t * dl) {
+          gt += (t * dl + x[j]) * dl; /* gradient */
+          ht += dl * dl; /* hessian */
+        }
       }
     }
 #if EXTRA_VERBOSE > 3
-    scs_printf("t %4f, gt %4f, ht %4f\n", t, gt, ht);
+    scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n",
+      MAX(t - gt / MAX(ht, 1e-8), 0.), t, gt, ht);
 #endif
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
     if (ABS(gt / (ht + 1e-6)) < 1e-12 || ABS(t - t_prev) < 1e-12) { break; }
@@ -666,16 +671,21 @@ static void proj_box_dual_cone(scs_float *tx, const scs_float *bl,
     scs_printf("warning: box cone proj took maximum %i iters\n", (int)iter);
   }
   for (j = 0; j < bsize - 1; j++) {
-    dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
-    du = D ? D[j+1] * bu[j] / D[0] : bu[j];
-    if (-x[j] > t * du) {
-      x[j] += t * du;
+    if (bu[j] < MAX_BOX_VAL) { /* if > than this consider to be infinity */
+      du = D ? D[j+1] * bu[j] / D[0] : bu[j];
+      if (-x[j] > t * du) {
+        x[j] += t * du;
+        continue;
+      }
     }
-    else if (-x[j] < t * dl) {
-      x[j] += t * dl;
-    } else {
-      x[j] = 0;
+    if (bl[j] > -MAX_BOX_VAL) {  /* if < than this consider to be -infinity */
+      dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
+      if (-x[j] < t * dl) {
+        x[j] += t * dl;
+        continue;
+      }
     }
+    x[j] = 0; /* otherwise */
   }
   tx[0] += t;
 #if EXTRA_VERBOSE > 3
