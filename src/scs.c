@@ -403,17 +403,15 @@ static void update_dual_vars(ScsWork *w) {
 
 /* status < 0 indicates failure */
 static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
-  scs_int i, n = w->n, l = w->n + w->m + 1, st;
+  scs_int i, n = w->n, l = w->n + w->m + 1, status;
   for (i = 0; i < l; ++i) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
   /* u = [x;y;tau] */
-  st = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]),
-                           w->scal, iter);
-  if (w->u[l - 1] < 0.0) {
-    w->u[l - 1] = 0.0;
-  }
-  return st;
+  status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]),
+                                w->scal, iter);
+  w->u[l - 1]  = MAX(w->u[l - 1], 0.0);
+  return status;
 }
 
 static scs_int indeterminate(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
@@ -842,7 +840,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: work memory allocation failure\n");
     return SCS_NULL;
   }
-  if (!(w->cone_work = SCS(init_cone)(k))) {
+  if (!(w->cone_work = SCS(init_cone)(k, w->m))) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }

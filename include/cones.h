@@ -18,8 +18,8 @@ struct SCS_CONE_WORK {
  */
   scs_int cone_boundaries_len;
   scs_int * cone_boundaries;
-  scs_int m; /* total length of cones */
-  scs_float *s; /* used for Moreau in projection */
+  scs_int cone_len; /* total length of cones */
+  scs_float *s; /* used for Moreau decomposition in projection */
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
@@ -27,7 +27,7 @@ struct SCS_CONE_WORK {
 #endif
 };
 
-ScsConeWork *SCS(init_cone)(const ScsCone *k);
+ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int cone_len);
 char *SCS(get_cone_header)(const ScsCone *k);
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
 

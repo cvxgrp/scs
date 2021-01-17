@@ -39,6 +39,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   scs_float *s = opt_sol->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
   /* temporary variables */
   scs_float *z = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  ScsConeWork *tmp_cone_work;
   scs_int i, j, r, rn, rm;
 
   A->i = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
@@ -50,8 +51,9 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   for (i = 0; i < m; i++) {
     y[i] = z[i] = rand_scs_float();
   }
-
-  SCS(proj_dual_cone)(y, k, SCS_NULL, SCS_NULL, SCS_NULL, -1);
+  tmp_cone_work = SCS(init_cone)(k, m);
+  SCS(proj_dual_cone)(y, k, tmp_cone_work, SCS_NULL, SCS_NULL, -1);
+  SCS(finish_cone(tmp_cone_work));
 
   for (i = 0; i < m; i++) {
     b[i] = s[i] = y[i] - z[i];
