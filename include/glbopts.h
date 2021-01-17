@@ -169,7 +169,7 @@ typedef float scs_float;
 #define CONVERGED_INTERVAL (1)
 #else
 /* print summary output every this num iterations */
-#define PRINT_INTERVAL (100)
+#define PRINT_INTERVAL (250)
 /* check for convergence every this num iterations */
 #define CONVERGED_INTERVAL (25)
 #endif
@@ -188,7 +188,7 @@ typedef float scs_float;
 #endif
 
 /* XXX explain this, is this the best factor? */
-#define TAU_FACTOR (10.0)
+#define TAU_FACTOR (1.0)
 
 #ifdef __cplusplus
 }

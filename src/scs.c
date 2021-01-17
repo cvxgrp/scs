@@ -1,5 +1,4 @@
 #include "scs.h"
-
 #include "aa.h"
 #include "ctrlc.h"
 #include "glbopts.h"
@@ -88,7 +87,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_free(cone_str);
   scs_printf(
       "settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e,\n"
-      "\t  alpha: %.2f, scale: %.2f, adaptive_scaling: %i\n"
+      "\t  alpha: %.2f, scale: %.2e, adaptive_scaling: %i,\n"
       "\t  max_iters: %i, normalize: %i, warm_start: %i,\n"
       "\t  acceleration_lookback: %i, acceleration_interval: %i,\n",
       /*, rho_x: %.2e\n", */
@@ -176,6 +175,7 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
 }
 
 // XXX fix this:
+//XXX THIS IS A MAJOR BUG:
 static scs_float get_max_residual(ScsResiduals *r) {
   return MAX(r->gap, MAX(r->res_pri, r->res_dual));
 }
@@ -331,6 +331,7 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
+  return 1.;
   tau_scale = TAU_FACTOR * w->stgs->scale; // XXX
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   eta *= tau_scale;
@@ -369,11 +370,11 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   return status;
 }
 
-/* compute the [r;s;kappa] iterate */
-/* rsk^{k+1} = u^{k+1} + v^k - 2 u_t^{k+1} */
-/* uses Moreau decomposition to get projection onto dual cone */
-/* since it depends on v^k MUST be called before update_dual_vars is done */
-/* effect of w->stgs->alpha is cancelled out */
+/* compute the [r;s;kappa] iterate
+   rsk^{k+1} = u^{k+1} + v^k - 2 * u_t^{k+1}
+   uses Moreau decomposition to get projection onto dual cone
+   since it depends on v^k MUST be called before update_dual_vars is done
+   effect of w->stgs->alpha is cancelled out */
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->m + w->n + 1;
   /* r, should = 0 */
@@ -384,11 +385,11 @@ static void compute_rsk(ScsWork *w) {
   scs_printf("norm(r) = %1.3f\n", NORM(w->rsk, w->n));
 #endif
   /* s */
-  for (i = w->n; i < l-1; ++i) {
+  for (i = w->n; i < l - 1; ++i) {
     w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) / w->rho_y_vec[i - w->n];
   }
   /* kappa */
-  w->rsk[l - 1] = w->v[l-1] + w->u[l-1] - 2 * w->u_t[l-1];
+  w->rsk[l - 1] = w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1];
 }
 
 static void update_dual_vars(ScsWork *w) {
@@ -451,7 +452,8 @@ static void copy_from_best_iterate(ScsWork *w) {
 
 static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                       ScsResiduals *r, scs_int iter) {
-  if (w->best_max_residual < get_max_residual(r)) {
+  //XXX THIS IS A MAJOR BUG:
+  if (0 && w->best_max_residual < get_max_residual(r)) {
     copy_from_best_iterate(w);
     populate_residuals(w, r, iter, 1); /* 1 forces residual recomputation. */
     setx(w, sol);
@@ -462,7 +464,7 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->y, SAFEDIV_POS(1.0, r->tau), w->m);
   SCS(scale_array)(sol->s, SAFEDIV_POS(1.0, r->tau), w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "solved / inaccurate");
+    strcpy(info->status, "solved (inaccurate)");
     return SCS_SOLVED_INACCURATE;
   }
   strcpy(info->status, "solved");
@@ -475,7 +477,7 @@ static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->s, NAN, w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "infeasible / inaccurate");
+    strcpy(info->status, "infeasible (inaccurate)");
     return SCS_INFEASIBLE_INACCURATE;
   }
   strcpy(info->status, "infeasible");
@@ -488,7 +490,7 @@ static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->s, -1 / ct_x, w->m);
   SCS(scale_array)(sol->y, NAN, w->m);
   if (info->status_val == 0) {
-    strcpy(info->status, "unbounded / inaccurate");
+    strcpy(info->status, "unbounded (inaccurate)");
     return SCS_UNBOUNDED_INACCURATE;
   }
   strcpy(info->status, "unbounded");
@@ -724,13 +726,16 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float eps_abs = w->stgs->eps_abs;
   scs_float eps_rel = w->stgs->eps_rel;
   scs_float eps_infeas = w->stgs->eps_infeas;
-  scs_float grl = MAX(MAX(ABS(r->xt_p_x), ABS(r->ctx)), ABS(r->bty));
-  scs_float prl = MAX(MAX(w->b_norm, NORM(w->sol->s, w->m)), NORM(w->ax, w->m));
-  scs_float drl = MAX(MAX(w->c_norm, NORM(w->px, w->n)), NORM(w->aty, w->n));
-  if (isless(r->res_pri, eps_abs + eps_rel * prl) &&
-      isless(r->res_dual, eps_abs + eps_rel * drl) &&
-      isless(r->gap, eps_abs + eps_rel * grl)) {
-    return SCS_SOLVED;
+  scs_float grl, prl, drl;
+  if (r->tau > 0.) {
+    grl = MAX(MAX(ABS(r->xt_p_x) / r->tau, ABS(r->ctx)), ABS(r->bty)) / r->tau;
+    prl = MAX(MAX(w->b_norm * r->tau, NORM(w->sol->s, w->m)), NORM(w->ax, w->m)) / r->tau;
+    drl = MAX(MAX(w->c_norm * r->tau, NORM(w->px, w->n)), NORM(w->aty, w->n)) / r->tau;
+    if (isless(r->res_pri, eps_abs + eps_rel * prl) &&
+        isless(r->res_dual, eps_abs + eps_rel * drl) &&
+        isless(r->gap, eps_abs + eps_rel * grl)) {
+      return SCS_SOLVED;
+    }
   }
   // XXX is this right?:
   if (isless(r->res_unbdd_a, eps_infeas) &&
@@ -953,14 +958,21 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   // XXX test this:
   /* ||Ax + s - b * tau|| */
+  /*
   scs_float relative_res_pri = NORM(w->pri_resid, w->m) /
     MAX(MAX(MAX(NORM(w->ax, w->m), NORM(w->sol->s, w->m)), w->b_norm * r->tau),
     r->tau + r->kap);
-
+  */
+  scs_float relative_res_pri = NORM(w->pri_resid, w->m) /
+    MAX(MAX(NORM(w->ax, w->m), NORM(w->sol->s, w->m)), w->b_norm * r->tau);
   /* ||Px + A'y + c * tau|| */
+  /*
   scs_float relative_res_dual = NORM(w->dual_resid, w->n) /
     MAX(MAX(MAX(NORM(w->px, w->n), NORM(w->aty, w->n)), w->c_norm * r->tau),
     r->tau + r->kap);
+  */
+  scs_float relative_res_dual = NORM(w->dual_resid, w->n) /
+    MAX(MAX(NORM(w->px, w->n), NORM(w->aty, w->n)), w->c_norm * r->tau);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri / relative_res_dual);
@@ -1040,8 +1052,10 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
-    v_norm = SCS(norm)(w->v, l);
-    SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
+    //v_norm = SCS(norm)(w->v, l);
+    //SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
+
+    SCS(scale_array)(w->v, w->v[l-1], l);
 
     /* XXX rm this? */
     memcpy(w->u_prev, w->u, l * sizeof(scs_float));
@@ -1050,22 +1064,22 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                     "error in project_lin_sys", "Failure");
+                     "error in project_lin_sys", "failure");
     }
     total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
 
     SCS(tic)(&cone_timer);
     if (project_cones(w, k, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
-                     "error in project_cones", "Failure");
+                     "error in project_cones", "failure");
     }
     total_cone_time += SCS(tocq)(&cone_timer);
 
     update_dual_vars(w);
 
     if (scs_is_interrupted()) {
-      return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "Interrupted",
-                     "Interrupted");
+      return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "interrupted",
+                     "interrupted");
     }
 
     if (i % CONVERGED_INTERVAL == 0 || iterate_norm_diff(w) < 1e-10) {
@@ -1087,7 +1101,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       /*
       if (r->aa_norm < 0) {
         return failure(w, w->m, w->n, sol, info, SCS_FAILED,
-            "error in accelerate", "Failure");
+            "error in accelerate", "failure");
       }
       */
       total_accel_time += SCS(tocq)(&accel_timer);
@@ -1196,7 +1210,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     status = info->status_val;
   } else {
     status = failure(SCS_NULL, d ? d->m : -1, d ? d->n : -1, sol, info,
-                     SCS_FAILED, "could not initialize work", "Failure");
+                     SCS_FAILED, "could not initialize work", "failure");
   }
   SCS(finish)(w);
   return status;
