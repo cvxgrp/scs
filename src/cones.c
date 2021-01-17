@@ -34,11 +34,6 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
     rho_y_vec[i] = 1000. * scale;
   }
   count += k->f;
-
-  //if (k->bsize > 0) {
-  //  rho_y_vec[count] = 1000. * scale; /* first element of b cone is 1 */
-  //  count += 1; /* only the first element */
-  //}
   /* others */
   for (i = count; i < m; ++i) {
     rho_y_vec[i] = scale;
@@ -662,7 +657,7 @@ static void proj_box_cone(scs_float *tx, const scs_float *bl,
         }
       }
     }
-#if EXTRA_VERBOSE > -1
+#if EXTRA_VERBOSE > 3
     scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n",
       MAX(t - gt / MAX(ht, 1e-8), 0.), t, gt, ht);
 #endif
@@ -690,7 +685,7 @@ static void proj_box_cone(scs_float *tx, const scs_float *bl,
     /* x[j] unchanged otherwise */
   }
   tx[0] = t;
-#if EXTRA_VERBOSE > -1
+#if EXTRA_VERBOSE > 3
   scs_printf("box cone iters %i\n", (int)iter);
 #endif
 #if EXTRA_VERBOSE > 10
