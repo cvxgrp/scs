@@ -24,8 +24,8 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                            const scs_float *x, scs_float *y);
 void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
                       const scs_float *x, scs_float *y, scs_int skip_diag);
-void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
-                     ScsScaling *scal, ScsConeWork * c);
+void SCS(_normalize)(ScsMatrix *A, ScsMatrix *P, ScsScaling *scal,
+                     const ScsConeWork * c);
 void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);
 scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 

@@ -15,29 +15,6 @@
 #define _NORM SCS(norm)
 #endif
 
-void SCS(normalize_b_c)(ScsWork *w) {
-  scs_int i;
-  scs_float nm, *D = w->scal->D, *E = w->scal->E, *b = w->b, *c = w->c;
-  /* scale b */
-  for (i = 0; i < w->m; ++i) {
-    b[i] *= D[i];
-  }
-  if (!w->P || w->scal->dual_scale <= 0.) {
-    nm = _NORM(b, w->m);
-    w->scal->dual_scale = w->scal->norm_a / MAX(nm, MIN_SCALE);
-  }
-  /* scale c */
-  for (i = 0; i < w->n; ++i) {
-    c[i] *= E[i];
-  }
-  if (!w->P || w->scal->primal_scale <= 0.) {
-    nm = _NORM(c, w->n);
-    w->scal->primal_scale = w->scal->norm_a / MAX(nm, MIN_SCALE);
-  }
-  SCS(scale_array)(b, w->scal->dual_scale, w->m);
-  SCS(scale_array)(c, w->scal->primal_scale, w->n);
-}
-
 void SCS(normalize_warm_start)(ScsWork *w) {
   scs_int i;
   scs_float *D = w->scal->D;

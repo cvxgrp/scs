@@ -855,6 +855,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   }
   w->A = d->A;
   w->P = d->P;
+  w->b_norm = NORM(d->b, w->m);
+  w->c_norm = NORM(d->c, w->n);
+  memcpy(w->b, d->b, d->m * sizeof(scs_float));
+  memcpy(w->c, d->c, d->n * sizeof(scs_float));
   SCS(set_rho_y_vec)(k, w->stgs->scale, w->rho_y_vec, w->m);
   if (w->stgs->normalize) {
 #ifdef COPYAMATRIX
@@ -868,7 +872,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     }
 #endif
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-    SCS(normalize)(w->A, w->P, k, w->scal, w->cone_work);
+    SCS(normalize)(w->P, w->A, w->b, w->c, w->scal, w->cone_work);
 #if EXTRA_VERBOSE > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
@@ -905,29 +909,6 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
   /* before normalization */
   scs_int n = d->n;
   scs_int m = d->m;
-
-  w->b_norm = NORM(d->b, m);
-  w->c_norm = NORM(d->c, n);
-  memcpy(w->b, d->b, d->m * sizeof(scs_float));
-  memcpy(w->c, d->c, d->n * sizeof(scs_float));
-
-#if EXTRA_VERBOSE > 0
-  SCS(print_array)(w->b, m, "b");
-  scs_printf("pre-normalized norm b = %4f\n", SCS(norm)(w->b, m));
-  SCS(print_array)(w->c, n, "c");
-  scs_printf("pre-normalized norm c = %4f\n", SCS(norm)(w->c, n));
-#endif
-  if (w->stgs->normalize) {
-    SCS(normalize_b_c)(w);
-#if EXTRA_VERBOSE > 0
-    SCS(print_array)(w->b, m, "bn");
-    scs_printf("dual scale= %4f\n", w->scal->dual_scale);
-    scs_printf("post-normalized norm b = %4f\n", SCS(norm)(w->b, m));
-    SCS(print_array)(w->c, n, "cn");
-    scs_printf("primal scale= %4f\n", w->scal->primal_scale);
-    scs_printf("post-normalized norm c = %4f\n", SCS(norm)(w->c, n));
-#endif
-  }
   if (w->stgs->warm_start) {
     warm_start_vars(w, sol);
   } else {

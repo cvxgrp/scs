@@ -51,8 +51,8 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
 /* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
-void SCS(normalize)(ScsMatrix *A, ScsMatrix *P, const ScsCone *k,
-                    ScsScaling *scal, ScsConeWork * c);
+void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
+                    ScsScaling *scal, const ScsConeWork * cone);
 
 /* unnormalizes A matrix, unnormalizes by w->D and w->E */
 void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);
