@@ -328,10 +328,13 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
   return ip;
 }
 
+#define FEASIBLE_ONLY (0)
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float b, c, tau, a, tau_scale;
+#if FEASIBLE_ONLY > 0
   return 1.;
+#else
+  scs_float b, c, tau, a, tau_scale;
   tau_scale = TAU_FACTOR * w->stgs->scale; // XXX
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   eta *= tau_scale;
@@ -340,12 +343,13 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
   tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
 #if EXTRA_VERBOSE > 3
-  scs_printf("root_plus: a: %g, b: %g, c: %g, eta: %g, tau: %g, tau no p: %g\n",
-             a, b, c, eta, tau,
+  scs_printf("root_plus: a: %g, b: %g, c: %g, eta: %g, tau_scale: %g, tau: %g, tau no p: %g\n",
+             a, b, c, eta, tau_scale, tau,
              MAX(0., (eta + SCS(dot)(p, w->h, w->m + w->n)) /
                          (1 + SCS(dot)(w->h, w->g, w->m + w->n))));
 #endif
   return tau;
+#endif
 }
 
 /* status < 0 indicates failure */
@@ -410,8 +414,8 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   /* u = [x;y;tau] */
   status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]),
-                                w->scal, iter);
-  w->u[l - 1]  = MAX(w->u[l - 1], 0.0);
+                               w->scal, iter);
+  w->u[l - 1] = MAX(w->u[l - 1], 0.);
   return status;
 }
 
@@ -712,7 +716,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("-");
   }
   scs_printf("\n");
-  scs_printf("optimal objective = %.6f\n", info->pobj);
+  scs_printf("objective = %.6f\n", info->pobj);
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -1055,7 +1059,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     //v_norm = SCS(norm)(w->v, l);
     //SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
 
-    SCS(scale_array)(w->v, w->v[l-1], l);
+    SCS(scale_array)(w->v, 1. / w->v[l-1], l);
 
     /* XXX rm this? */
     memcpy(w->u_prev, w->u, l * sizeof(scs_float));
