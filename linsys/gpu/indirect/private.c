@@ -136,9 +136,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   Ag->Annz = A->p[A->n];
   Ag->descr = 0;
   /* Matrix description */
-  cusparseCreateMatDescr(&Ag->descr);
-  cusparseSetMatType(Ag->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
-  cusparseSetMatIndexBase(Ag->descr, CUSPARSE_INDEX_BASE_ZERO);
+
   p->Ag = Ag;
   p->Agt = SCS_NULL;
 
@@ -161,27 +159,50 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   cudaMemcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float),
              cudaMemcpyHostToDevice);
 
+  cusparseCreateCsr
+  (&Ag->descr, Ag->n, Ag->m, Ag->Annz, Ag->p, Ag->i, Ag->x,
+    SCS_CUSPARSE_INDEX, SCS_CUSPARSE_INDEX,
+    CUSPARSE_INDEX_BASE_ZERO, SCS_CUDA_FLOAT);
+
   get_preconditioner(A, stgs, p);
 
 #if GPU_TRANSPOSE_MAT > 0
+  size_t bufferSize = 0;
+  void *tmpBuffer = SCS_NULL;
+
   p->Agt = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
   p->Agt->n = A->m;
   p->Agt->m = A->n;
   p->Agt->Annz = A->p[A->n];
   p->Agt->descr = 0;
   /* Matrix description */
-  cusparseCreateMatDescr(&p->Agt->descr);
-  cusparseSetMatType(p->Agt->descr, CUSPARSE_MATRIX_TYPE_GENERAL);
-  cusparseSetMatIndexBase(p->Agt->descr, CUSPARSE_INDEX_BASE_ZERO);
 
   cudaMalloc((void **)&p->Agt->i, (A->p[A->n]) * sizeof(scs_int));
   cudaMalloc((void **)&p->Agt->p, (A->m + 1) * sizeof(scs_int));
   cudaMalloc((void **)&p->Agt->x, (A->p[A->n]) * sizeof(scs_float));
   /* transpose Ag into Agt for faster multiplies */
   /* TODO: memory intensive, could perform transpose in CPU and copy to GPU */
-  CUSPARSE(csr2csc)
-  (p->cusparse_handle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i, p->Agt->x,
-   p->Agt->i, p->Agt->p, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO);
+  cusparseCsr2cscEx2_bufferSize
+  (p->cusparse_handle, A->n, A->m, A->p[A->n],
+    Ag->x, Ag->p, Ag->i,
+    p->Agt->x, p->Agt->p, p->Agt->i,
+    SCS_CUDA_FLOAT, CUSPARSE_ACTION_NUMERIC,
+    CUSPARSE_INDEX_BASE_ZERO, SCS_CSR2CSC_ALG,
+    &bufferSize);
+  cudaMalloc(&tmpBuffer, bufferSize);
+  cusparseCsr2cscEx2
+  (p->cusparse_handle, A->n, A->m, A->p[A->n],
+    Ag->x, Ag->p, Ag->i,
+    p->Agt->x, p->Agt->p, p->Agt->i,
+    SCS_CUDA_FLOAT, CUSPARSE_ACTION_NUMERIC,
+    CUSPARSE_INDEX_BASE_ZERO, SCS_CSR2CSC_ALG,
+    tmpBuffer);
+  cudaFree(tmpBuffer);
+  cusparseCreateCsr
+  (&p->Agt->descr, p->Agt->n, p->Agt->m, p->Agt->Annz,
+    p->Agt->p, p->Agt->i, p->Agt->x,
+    SCS_CUSPARSE_INDEX, SCS_CUSPARSE_INDEX,
+    CUSPARSE_INDEX_BASE_ZERO, SCS_CUDA_FLOAT);
 #endif
 
   err = cudaGetLastError();
