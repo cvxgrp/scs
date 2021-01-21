@@ -112,7 +112,7 @@ struct SCS_INFO {
 /* contains normalization variables */
 struct SCS_SCALING {
   scs_float *D, *E; /* for normalization */
-  scs_float primal_scale, dual_scale;
+  scs_float norm_a, primal_scale, dual_scale;
 };
 
 /*
