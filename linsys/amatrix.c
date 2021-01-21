@@ -256,28 +256,24 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
     scal->E[i] /= Et[i];
   }
 
-  /* XXX incorporate A / P ? */
   norm_c = SCS(norm_inf)(c, A->n);
   /* primal scale */
   if (norm_c > 0.) {
     primal_scale = apply_limit(1. / norm_c);
     /* scale P */
-    if (P) {
-      SCS(scale_array)(P->x, primal_scale, P->p[P->n]);
-    }
+    SCS(scale_array)(P->x, 1.0 / primal_scale, P->p[P->n + 1]);
     /* scale c */
-    SCS(scale_array)(c, primal_scale, A->n);
+    SCS(scale_array)(c, 1.0 / primal_scale, A->n);
     /* Accumulate scaling */
     scal->primal_scale *= primal_scale;
   }
 
-  /* XXX incorporate A / P ? */
   norm_b = SCS(norm_inf)(b, A->m);
   /* dual scale */
   if (norm_b > 0.) {
     dual_scale = apply_limit(1. / norm_b);
     /* scale b */
-    SCS(scale_array)(b, dual_scale, A->m);
+    SCS(scale_array)(b, 1.0 / dual_scale, A->m);
     /* Accumulate scaling */
     scal->dual_scale *= dual_scale;
   }
@@ -365,8 +361,6 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   for (i = 0; i < A->n; ++i) {
     scal->E[i] = 1.;
   }
-  scal->primal_scale = 1.;
-  scal->dual_scale = 1.;
   for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
     rescaling(P, A, b, c, scal, Dt, Et, cone, 1); /* ruiz = 1 */
   }

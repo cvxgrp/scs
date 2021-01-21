@@ -59,7 +59,7 @@ CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long #
 
 # Add on default CFLAGS
 OPT = -O3
-override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys $(OPT)
+override CFLAGS += -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys $(OPT)
 ifneq ($(ISWINDOWS), 1)
 override CFLAGS += -fPIC
 endif
