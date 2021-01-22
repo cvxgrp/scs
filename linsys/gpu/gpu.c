@@ -13,13 +13,13 @@ void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const scs_float *x,
   cusparseCreateDnVec(&dnVecX, Ag->m, (void *) x, SCS_CUDA_FLOAT);
   cusparseCreateDnVec(&dnVecY, Ag->n, (void *) y, SCS_CUDA_FLOAT);
 
-  cusparseSpMV_bufferSize
+  CUSPARSE_GEN(SpMV_bufferSize)
   (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
     &onef, Ag->descr, dnVecX, &onef, dnVecY,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
     &bufferSize);
   cudaMalloc(&tmpBuffer, bufferSize); 
-  cusparseSpMV
+  CUSPARSE_GEN(SpMV)
   (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
     &onef, Ag->descr, dnVecX, &onef, dnVecY,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
@@ -45,13 +45,13 @@ void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const scs_float *x,
   cusparseCreateDnVec(&dnVecX, Ag->n, (void *) x, SCS_CUDA_FLOAT);
   cusparseCreateDnVec(&dnVecY, Ag->m, (void *) y, SCS_CUDA_FLOAT);
 
-  cusparseSpMV_bufferSize
+  CUSPARSE_GEN(SpMV_bufferSize)
   (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE,
     &onef, Ag->descr, dnVecX, &onef, dnVecY,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
     &bufferSize);
   cudaMalloc(&tmpBuffer, bufferSize);
-  cusparseSpMV
+  CUSPARSE_GEN(SpMV)
   (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE,
     &onef, Ag->descr, dnVecX, &onef, dnVecY,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,

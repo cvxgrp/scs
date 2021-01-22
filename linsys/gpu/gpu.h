@@ -34,6 +34,7 @@ extern "C" {
 #define CUBLAS(x) cublasS##x
 #define CUSPARSE(x) cusparseS##x
 #endif
+#define CUSPARSE_GEN(x) cusparse##x
 #else
 #ifndef SFLOAT
 #define CUBLAS(x) \
@@ -50,6 +51,9 @@ extern "C" {
   CUDA_CHECK_ERR;   \
   cusparseS##x
 #endif
+#define CUSPARSE_GEN(x) \
+  CUDA_CHECK_ERR;       \
+  cusparse##x
 #endif
 
 #ifndef SFLOAT
