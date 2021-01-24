@@ -3,8 +3,8 @@
 
 #include "linsys.h"
 
-#define MIN_SCALE (1e-4)
-#define MAX_SCALE (1e4)
+#define MIN_SCALE (1e-6)
+#define MAX_SCALE (1e6)
 #define NUM_RUIZ_PASSES (10) /* additional passes don't help much */
 #define NUM_L2_PASSES (0)
 
@@ -123,7 +123,7 @@ static void print_matrix(const ScsMatrix *A) {
 #endif
 
 static inline scs_float apply_limit(scs_float x) {
-  x = x < MIN_SCALE ? 1.0 : x;
+  x = x < MIN_SCALE ? MIN_SCALE : x;
   x = x > MAX_SCALE ? MAX_SCALE : x;
   return x;
 }
@@ -134,7 +134,7 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scs_int i, j, kk, count, delta;
   scs_int * boundaries = cone->cone_boundaries;
   scs_int cone_boundaries_len = cone->cone_boundaries_len;
-  scs_float wrk, primal_scale, dual_scale, norm_b, norm_c;
+  scs_float wrk, primal_scale, dual_scale, norm_b, norm_c, norm_a, norm_p, nm;
 
   /* initialize D */
   for (i = 0; i < A->m; ++i) {
@@ -164,7 +164,8 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   }
 
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = apply_limit(SQRTF(Dt[i]));
+    /* want limit applied to final scal->D */
+    Dt[i] = scal->D[i] / apply_limit(scal->D[i] / SQRTF(Dt[i]));
   }
 
   if (P) {
@@ -187,7 +188,8 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   /* calculate col norms, E */
   for (i = 0; i < A->n; ++i) {
     Et[i] = MAX(Et[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
-    Et[i] = apply_limit(SQRTF(Et[i]));
+    /* want limit applied to final scal->E */
+    Et[i] = scal->E[i] / apply_limit(scal->E[i] / SQRTF(Et[i]));
   }
 
   /* scale the rows of A with D */
@@ -234,9 +236,12 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
 
   /* XXX incorporate A / P ? */
   norm_c = SCS(norm_inf)(c, A->n);
+  norm_a = SCS(norm_inf)(A->x, A->p[A->n]);
+  norm_p = P ? SCS(norm_inf)(P->x, P->p[P->n]) : 0.;
   /* primal scale */
   if (norm_c > 0.) {
-    primal_scale = 0.001 * apply_limit(1. / norm_c);
+    nm = MAX(norm_a, MAX(norm_c, norm_p));
+    primal_scale = apply_limit(1. / nm);
     /* scale P */
     if (P) {
       SCS(scale_array)(P->x, primal_scale, P->p[P->n]);
@@ -247,11 +252,17 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
     scal->primal_scale *= primal_scale;
   }
 
-  /* XXX incorporate A / P ? */
+  /* XXX not sure if this is the best choice for dual_scale, maybe use 1? */
   norm_b = SCS(norm_inf)(b, A->m);
+  //norm_p = P ? SCS(norm_inf)(P->x, P->p[P->n]) : 0.;
   /* dual scale */
   if (norm_b > 0.) {
-    dual_scale = apply_limit(1. / norm_b);
+    nm = MAX(norm_a, norm_b);
+    dual_scale = apply_limit(1. / nm);
+    /* scale P */
+    if (P) {
+      SCS(scale_array)(P->x, 1 / dual_scale, P->p[P->n]);
+    }
     /* scale b */
     SCS(scale_array)(b, dual_scale, A->m);
     /* Accumulate scaling */
@@ -300,7 +311,7 @@ scs_float min(const scs_float *a, scs_int l) {
 void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
                     ScsScaling *scal, const ScsConeWork * cone) {
   scs_int i;
-  scs_float norm_a, norm_p;
+  //scs_float nm, norm_a, norm_p;
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scal->D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));

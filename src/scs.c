@@ -330,11 +330,14 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
 
 #define FEASIBLE_ONLY (0)
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
-                           scs_float eta) {
+                           scs_float eta, scs_int iter) {
 #if FEASIBLE_ONLY > 0
   return 1.;
 #else
   scs_float b, c, tau, a, tau_scale;
+  if (iter < 10) {
+    return 1.;
+  }
   tau_scale = TAU_FACTOR * w->stgs->scale; // XXX
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   eta *= tau_scale;
@@ -369,7 +372,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   }
   status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, warm_start,
                               iter);
-  w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1]);
+  w->u_t[l - 1] = root_plus(w, w->u_t, w->v, w->v[l - 1], iter);
   SCS(add_scaled_array)(w->u_t, w->g, l - 1, -w->u_t[l - 1]);
   return status;
 }

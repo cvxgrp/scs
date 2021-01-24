@@ -628,7 +628,8 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
 static void proj_box_cone(scs_float *tx, const scs_float *bl,
                           const scs_float *bu, scs_int bsize,
                           const scs_float * D) {
-  scs_float gt, ht, dl, du, t_prev, t = MAX(tx[0], 0.), *x = &(tx[1]);
+  scs_float gt, ht, dl, du, t_prev, max_val;
+  scs_float t = MAX(tx[0], 0.), *x = &(tx[1]);
   scs_int iter, j, max_iter = 100;
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
@@ -657,11 +658,10 @@ static void proj_box_cone(scs_float *tx, const scs_float *bl,
         }
       }
     }
-#if EXTRA_VERBOSE > 3
-    scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n",
-      MAX(t - gt / MAX(ht, 1e-8), 0.), t, gt, ht);
-#endif
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
+#if EXTRA_VERBOSE > 3
+    scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n", t, t_prev, gt, ht);
+#endif
     if (ABS(gt / (ht + 1e-6)) < 1e-12 || ABS(t - t_prev) < 1e-12) { break; }
   }
   if (iter == max_iter) {

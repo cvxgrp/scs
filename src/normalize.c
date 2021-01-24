@@ -3,18 +3,6 @@
 #include "linalg.h"
 #include "scs.h"
 
-#define MIN_SCALE (1e-4)
-
-/* Typically l2 equilibration works better than l_inf (Ruiz) */
-/* Though more experimentation is needed */
-#define RUIZ 0
-
-#if RUIZ > 0
-#define _NORM SCS(norm_inf)
-#else
-#define _NORM SCS(norm)
-#endif
-
 void SCS(normalize_warm_start)(ScsWork *w) {
   scs_int i;
   scs_float *D = w->scal->D;
