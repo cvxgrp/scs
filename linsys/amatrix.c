@@ -356,8 +356,8 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
     }
   }
 */
-  scs_printf("norm_b %g\n", SCS(norm_inf)(b, A->m));
-  scs_printf("norm_c %g\n", SCS(norm_inf)(c, A->n));
+  // scs_printf("norm_b %g\n", SCS(norm_inf)(b, A->m));
+  // scs_printf("norm_c %g\n", SCS(norm_inf)(c, A->n));
 
   /* init D, E */
   for (i = 0; i < A->m; ++i) {
@@ -384,7 +384,7 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
 */
   //SCS(print_array)(scal->D, A->m, "D");
   //SCS(print_array)(scal->E, A->n, "E");
-
+  /*
   scs_printf("primal_scale %g\n", scal->primal_scale);
   scs_printf("dual_scale %g\n", scal->dual_scale);
   scs_printf("norm_b %g\n", SCS(norm_inf)(b, A->m));
@@ -393,6 +393,7 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scs_printf("norm E %g\n", SCS(norm_inf)(scal->E, A->n));
   scs_printf("min D %g\n", min(scal->D, A->m));
   scs_printf("min E %g\n", min(scal->E, A->n));
+  */
   /*
   for (i = 0; i < P->n; ++i) {
       scs_printf("norm P col %i, %g\n", i, SCS(norm_inf)(&(P->x[P->p[i]]),
