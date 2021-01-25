@@ -1040,10 +1040,10 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
-    //v_norm = SCS(norm)(w->v, l);
-    //SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
+    v_norm = SCS(norm)(w->v, l);
+    SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
 
-    SCS(scale_array)(w->v, 1. / w->v[l-1], l);
+    //SCS(scale_array)(w->v, 1. / w->v[l-1], l);
 
     /* XXX rm this? */
     memcpy(w->u_prev, w->u, l * sizeof(scs_float));

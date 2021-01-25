@@ -661,8 +661,13 @@ static void proj_box_cone(scs_float *tx, const scs_float *bl,
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
 #if EXTRA_VERBOSE > 3
     scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n", t, t_prev, gt, ht);
+    scs_printf("ABS(gt / (ht + 1e-6)) %.4e, ABS(t - t_prev) %.4e\n",
+                ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
 #endif
-    if (ABS(gt / (ht + 1e-6)) < 1e-12 || ABS(t - t_prev) < 1e-12) { break; }
+    if (ABS(gt / MAX(ht, 1e-6)) < 1e-12 * MAX(t, 1.) ||
+        ABS(t - t_prev) < 1e-12 * MAX(t, 1.)) {
+      break;
+    }
   }
   if (iter == max_iter) {
     scs_printf("warning: box cone proj took maximum %i iters\n", (int)iter);
