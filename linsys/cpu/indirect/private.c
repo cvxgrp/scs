@@ -2,7 +2,15 @@
 #include "private.h"
 
 #define CG_BEST_TOL (1e-12)
-#define CG_BASE_TOL (1.)
+#define CG_BASE_TOL (10.)
+
+/* Use the L2-norm or Linf-norm */
+#define USE_L2_TOL_CG_NORM (0)
+#if USE_L2_TOL_CG_NORM > 0
+#define CG_NORM SCS(norm)
+#else
+#define CG_NORM SCS(norm_inf)
+#endif
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
@@ -235,7 +243,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   }
 
   /* check to see if we need to run CG at all */
-  if (SCS(norm)(r, n) < MIN(tol, 1e-18)) {
+  if (CG_NORM(r, n) < MIN(tol, 1e-12)) {
     return 0;
   }
 
@@ -256,11 +264,11 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
     /* r -= alpha * G p */
     SCS(add_scaled_array)(r, Gp, n, -alpha);
 
-#if EXTRA_VERBOSE > 0
-    scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, SCS(norm)(r, n),
+#if EXTRA_VERBOSE > 1
+    scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, CG_NORM(r, n),
                (long)i + 1);
 #endif
-    if (SCS(norm)(r, n) < tol) {
+    if (CG_NORM(r, n) < tol) {
       return i + 1;
     }
     /* z = M r (M is inverse preconditioner) */
@@ -296,7 +304,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   scs_int cg_its, max_iters = INT_MAX;
   scs_float cg_tol = CG_BEST_TOL;
 
-  if (SCS(norm)(b, A->n + A->m) <= 1e-18) {
+  if (CG_NORM(b, A->n + A->m) <= 1e-18) {
     memset(b, 0, (A->n + A->m) * sizeof(scs_float));
     return 0;
   }
@@ -307,7 +315,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   scale_by_diag_r(p->tmp, A->m, p); /* tmp = R * ry */
   SCS(accum_by_atrans)(A, p, p->tmp, b); /* b[:n] = rx + A' R ry */
   if (iter >= 0) {
-    cg_tol = MAX(CG_BEST_TOL, SCS(norm)(b, A->n) * CG_BASE_TOL /
+    cg_tol = MAX(CG_BEST_TOL, CG_NORM(b, A->n) * CG_BASE_TOL /
                  POWF((scs_float)iter + 1, stgs->cg_rate));
     /* set max_iters to 100 * n (though in theory n is enough for any tol) */
     max_iters = 100 * A->n;
