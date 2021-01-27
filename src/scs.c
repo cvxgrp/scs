@@ -966,11 +966,10 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
   w->n_log_scale_factor++;
 
-  /*
   factor = SQRTF(exp(w->sum_log_scale_factor /
                 (scs_float)(w->n_log_scale_factor)));
-  */
-  factor = exp(w->sum_log_scale_factor / (scs_float)(w->n_log_scale_factor));
+
+  // factor = exp(w->sum_log_scale_factor / (scs_float)(w->n_log_scale_factor));
 
 #if EXTRA_VERBOSE > 5
   scs_printf("relative_res_pri %.2e, relative_res_dual %.2e, factor %4f\n",
