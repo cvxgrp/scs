@@ -188,7 +188,7 @@ typedef float scs_float;
 #endif
 
 /* XXX explain this, is this the best factor? */
-#define TAU_FACTOR (1.0)
+#define TAU_FACTOR (10.0)
 
 #ifdef __cplusplus
 }
