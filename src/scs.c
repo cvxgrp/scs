@@ -735,7 +735,9 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
   scs_float eps_infeas = w->stgs->eps_infeas;
   scs_float grl, prl, drl;
   if (r->tau > 0.) {
-    grl = MAX(MAX(ABS(r->xt_p_x) / r->tau, ABS(r->ctx)), ABS(r->bty)) / r->tau;
+    /* xt_p_x, ctx, bty already have tau divided out */
+    grl = MAX(MAX(ABS(r->xt_p_x), ABS(r->ctx)), ABS(r->bty));
+    /* s, ax, px, aty do *not* have tau divided out, so need to divide */
     prl = MAX(MAX(w->b_norm * r->tau, NORM(w->sol->s, w->m)), NORM(w->ax, w->m)) / r->tau;
     drl = MAX(MAX(w->c_norm * r->tau, NORM(w->px, w->n)), NORM(w->aty, w->n)) / r->tau;
     if (isless(r->res_pri, eps_abs + eps_rel * prl) &&
