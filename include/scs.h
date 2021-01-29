@@ -155,6 +155,8 @@ struct SCS_WORK {
   /* workspace for computing residuals, tau *not* divided out */
   scs_float *ax, *ax_s, *px, *aty, *pri_resid, *dual_resid;
   ScsSolution *sol; /* track x,y,s as alg progresses, tau *not* divided out */
+  scs_int *cone_boundaries; /* array with boundaries of cones */
+  scs_int cone_boundaries_len; /* total length of cones */
 };
 
 /* to hold residual information, *all are unnormalized* */

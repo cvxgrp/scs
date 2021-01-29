@@ -52,7 +52,8 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
 void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
-                    ScsScaling *scal, const ScsConeWork * cone);
+                    ScsScaling *scal, scs_int *cone_boundaries,
+                    scs_int cone_boundaries_len);
 
 /* unnormalizes A matrix, unnormalizes by w->D and w->E */
 void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);

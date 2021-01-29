@@ -130,10 +130,8 @@ static inline scs_float apply_limit(scs_float x) {
 
 static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
                       ScsScaling *scal, scs_float *Dt, scs_float *Et,
-                      const ScsConeWork * cone) {
+                      scs_int * boundaries, scs_int cone_boundaries_len) {
   scs_int i, j, kk, count, delta;
-  scs_int * boundaries = cone->cone_boundaries;
-  scs_int cone_boundaries_len = cone->cone_boundaries_len;
   scs_float wrk, primal_scale, dual_scale, norm_b, norm_c, norm_a, norm_p, nm;
 
   /* initialize D */
@@ -309,7 +307,8 @@ scs_float min(const scs_float *a, scs_int l) {
  *
  */
 void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
-                    ScsScaling *scal, const ScsConeWork * cone) {
+                    ScsScaling *scal, scs_int *cone_boundaries,
+                    scs_int cone_boundaries_len) {
   scs_int i;
   //scs_float nm, norm_a, norm_p;
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
@@ -369,7 +368,7 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scal->primal_scale = 1.0;
   scal->dual_scale = 1.;
   for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
-    rescaling(P, A, b, c, scal, Dt, Et, cone);
+    rescaling(P, A, b, c, scal, Dt, Et, cone_boundaries, cone_boundaries_len);
   }
   scs_free(Dt);
   scs_free(Et);

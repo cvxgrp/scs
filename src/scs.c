@@ -43,6 +43,9 @@ static void free_work(ScsWork *w) {
     scs_free(w->c);
     scs_free(w->rho_y_vec);
     scs_free(w->ls_ws);
+    if (w->cone_boundaries) {
+      scs_free(w->cone_boundaries);
+    }
     if (w->scal) {
       scs_free(w->scal->D);
       scs_free(w->scal->E);
@@ -417,7 +420,7 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   /* u = [x;y;tau] */
   status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, &(w->u_prev[n]),
-                               w->scal, iter);
+                               iter);
   w->u[l - 1] = MAX(w->u[l - 1], 0.);
   return status;
 }
@@ -631,7 +634,7 @@ static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, y, m * sizeof(scs_float));
-  SCS(proj_dual_cone)(t, k, c, SCS_NULL, SCS_NULL, -1);
+  SCS(proj_dual_cone)(t, k, c, SCS_NULL, -1);
   dist = SCS(norm_inf_diff)(t, y, m);
 #if EXTRA_VERBOSE > 0
   SCS(print_array)(y, m, "y");
@@ -650,7 +653,7 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, s, m * sizeof(scs_float));
   SCS(scale_array)(t, -1.0, m);
-  SCS(proj_dual_cone)(t, k, c, SCS_NULL, SCS_NULL, -1);
+  SCS(proj_dual_cone)(t, k, c, SCS_NULL, -1);
   dist = SCS(norm_inf)(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
 #if EXTRA_VERBOSE > 0
   SCS(print_array)(s, m, "s");
@@ -850,12 +853,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->sol->x = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   w->sol->s = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   w->sol->y = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
+  /* this needs mem w->cone_boundaries_len < d->m (set later) */
   if (!w->c) {
     scs_printf("ERROR: work memory allocation failure\n");
-    return SCS_NULL;
-  }
-  if (!(w->cone_work = SCS(init_cone)(k, w->m))) {
-    scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
   w->A = d->A;
@@ -876,8 +876,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
       return SCS_NULL;
     }
 #endif
+    /* this allocates memory that must be freed */
+    w->cone_boundaries_len = SCS(set_cone_boundaries)(k, &w->cone_boundaries);
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-    SCS(normalize)(w->P, w->A, w->b, w->c, w->scal, w->cone_work);
+    SCS(normalize)(w->P, w->A, w->b, w->c, w->scal, w->cone_boundaries, w->cone_boundaries_len);
 #if EXTRA_VERBOSE > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
@@ -885,7 +887,13 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("norm(E) = %4f\n", SCS(norm)(w->scal->E, d->n));
 #endif
   } else {
+    w->cone_boundaries_len = 0;
+    w->cone_boundaries = SCS_NULL;
     w->scal = SCS_NULL;
+  }
+  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
+    scs_printf("ERROR: init_cone failure\n");
+    return SCS_NULL;
   }
   if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs, w->rho_y_vec))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");

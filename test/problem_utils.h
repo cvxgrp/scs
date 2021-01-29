@@ -51,8 +51,8 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   for (i = 0; i < m; i++) {
     y[i] = z[i] = rand_scs_float();
   }
-  tmp_cone_work = SCS(init_cone)(k, m);
-  SCS(proj_dual_cone)(y, k, tmp_cone_work, SCS_NULL, SCS_NULL, -1);
+  tmp_cone_work = SCS(init_cone)(k, SCS_NULL, m);
+  SCS(proj_dual_cone)(y, k, tmp_cone_work, SCS_NULL, -1);
   SCS(finish_cone(tmp_cone_work));
 
   for (i = 0; i < m; i++) {

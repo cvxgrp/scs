@@ -44,18 +44,19 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
    */
 }
 
-static scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
+static inline scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
  * cone boundaries, boundaries[0] is starting index for cones of size strictly
  * larger than 1, boundaries malloc-ed here so should be freed.
  */
-static void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
+scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
   scs_int i, s_cone_sz, count = 0;
-  c->cone_boundaries_len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
-  scs_int *b = (scs_int *)scs_calloc(c->cone_boundaries_len, sizeof(scs_int));
-  b[count] = k->f + k->l + k->bsize; /* cones can be scaled independently */
+  scs_int cone_boundaries_len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
+  scs_int *b = (scs_int *)scs_calloc(cone_boundaries_len, sizeof(scs_int));
+  /* cones that can be scaled independently */
+  b[count] = k->f + k->l + k->bsize;
   count += 1; /* started at 0 now move to first entry */
   for (i = 0; i < k->qsize; ++i) {
     b[count + i] = k->q[i];
@@ -77,7 +78,8 @@ static void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   }
   count += k->psize;
   /* other cones */
-  c->cone_boundaries = b;
+  *cone_boundaries = b;
+  return cone_boundaries_len;
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
@@ -199,8 +201,11 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->s) {
     scs_free(c->s);
   }
-  if (c->cone_boundaries) {
-    scs_free(c->cone_boundaries);
+  if (c->bu) {
+    scs_free(c->bu);
+  }
+  if (c->bl) {
+    scs_free(c->bl);
   }
   if (c) {
     scs_free(c);
@@ -423,21 +428,6 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #endif
 }
 
-ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int cone_len) {
-  ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
-  c->cone_len = cone_len;
-  c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
-  set_cone_boundaries(k, c);
-  if (k->ssize && k->s) {
-    if (!is_simple_semi_definite_cone(k->s, k->ssize) &&
-        set_up_sd_cone_work_space(c, k) < 0) {
-      SCS(finish_cone)(c);
-      return SCS_NULL;
-    }
-  }
-  return c;
-}
-
 static scs_int project_2x2_sdc(scs_float *X) {
   scs_float a, b, d, l1, l2, x1, x2, rad;
   scs_float sqrt2 = SQRTF(2.0);
@@ -625,37 +615,47 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
    D contains equilibration scaling matrix, can be SCS_NULL
 */
 #define MAX_BOX_VAL (1e15)
-static void proj_box_cone(scs_float *tx, const scs_float *bl,
+static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
+  scs_int j;
+  for (j = 0; j < bsize - 1; j++) {
+    if (c->bu[j] >= MAX_BOX_VAL) {
+      c->bu[j] = INFINITY;
+    } else {
+      c->bu[j] = D ? D[j+1] * c->bu[j] / D[0] : c->bu[j];
+    }
+    if (c->bl[j] <= -MAX_BOX_VAL) {
+      c->bl[j] = -INFINITY;
+    } else {
+      c->bl[j] = D ? D[j+1] * c->bl[j] / D[0] : c->bl[j];
+    }
+  }
+}
+
+
+static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                           const scs_float *bu, scs_int bsize,
-                          const scs_float * D) {
-  scs_float gt, ht, dl, du, t_prev, max_val;
-  scs_float t = MAX(tx[0], 0.), *x = &(tx[1]);
+                          scs_float t_warm_start) {
+  scs_float gt, ht, t_prev, max_val;
+  scs_float t = t_warm_start, *x = &(tx[1]);
   scs_int iter, j, max_iter = 100;
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
   SCS(print_array)(tx, bsize, "tx");
 #endif
-  /* should only require about 5 iterations maximum */
+  /* should only require about 5 or so iterations */
   for (iter = 0; iter < max_iter; iter++) {
     t_prev = t;
     gt = t - tx[0]; /* gradient */
     ht = 1.; /* hessian */
     for (j = 0; j < bsize - 1; j++) {
-      if (bu[j] < MAX_BOX_VAL) { /* if > than this consider to be infinity */
-        du = D ? D[j+1] * bu[j] / D[0] : bu[j];
-        if (x[j] > t * du) {
-          gt += (t * du - x[j]) * du; /* gradient */
-          ht += du * du; /* hessian */
-          continue;
-        }
+      if (x[j] > t * bu[j]) {
+        gt += (t * bu[j] - x[j]) * bu[j]; /* gradient */
+        ht += bu[j] * bu[j]; /* hessian */
       }
-      if (bl[j] > -MAX_BOX_VAL) { /* if < than this consider to be -infinity */
-        dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
-        if (x[j] < t * dl) {
-          gt += (t * dl - x[j]) * dl; /* gradient */
-          ht += dl * dl; /* hessian */
-        }
+      else if (x[j] < t * bl[j]) {
+        gt += (t * bl[j] - x[j]) * bl[j]; /* gradient */
+        ht += bl[j] * bl[j]; /* hessian */
       }
     }
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
@@ -673,19 +673,11 @@ static void proj_box_cone(scs_float *tx, const scs_float *bl,
     scs_printf("warning: box cone proj took maximum %i iters\n", (int)iter);
   }
   for (j = 0; j < bsize - 1; j++) {
-    if (bu[j] < MAX_BOX_VAL) { /* if > than this consider to be infinity */
-      du = D ? D[j+1] * bu[j] / D[0] : bu[j];
-      if (x[j] > t * du) {
-        x[j] = t * du;
-        continue;
-      }
+    if (x[j] > t * bu[j]) {
+      x[j] = t * bu[j];
     }
-    if (bl[j] > -MAX_BOX_VAL) {  /* if < than this consider to be -infinity */
-      dl = D ? D[j+1] * bl[j] / D[0] : bl[j];
-      if (x[j] < t * dl) {
-        x[j] = t * dl;
-        continue;
-      }
+    else if (x[j] < t * bl[j]) {
+      x[j] = t * bl[j];
     }
     /* x[j] unchanged otherwise */
   }
@@ -696,7 +688,7 @@ static void proj_box_cone(scs_float *tx, const scs_float *bl,
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(tx, bsize, "tx_+");
 #endif
-  return;
+  return t;
 }
 
 /* project onto SOC of size q*/
@@ -765,11 +757,9 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* project onto the primal K cone in the paper */
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                         const scs_float *warm_start, ScsScaling *scaling,
-                         scs_int iter) {
+                         const scs_float *warm_start, scs_int iter) {
   scs_int i;
   scs_int count = 0;
-  scs_float *D = scaling ? scaling->D : SCS_NULL;
 
   if (k->f) {
     /* project onto primal zero / dual free cone */
@@ -787,7 +777,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
 
   if (k->bsize) {
     /* project onto box cone */
-    proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize, D ? &(D[count]) : D);
+    c->box_t_warm_start = proj_box_cone(&(x[count]), c->bl, c->bu, k->bsize, c->box_t_warm_start);
     count += k->bsize;
   }
 
@@ -889,21 +879,43 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   return 0;
 }
 
+ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int cone_len) {
+  ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
+  c->cone_len = cone_len;
+  c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
+  if (k->bsize && k->bu && k->bl) {
+    c->box_t_warm_start = 0.;
+    c->bu = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
+    c->bl = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
+    memcpy(c->bu, k->bu, (k->bsize - 1) * sizeof(scs_float));
+    memcpy(c->bl, k->bl, (k->bsize - 1) * sizeof(scs_float));
+    /* also does some sanitation */
+    normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): scal, k->bsize);
+  }
+  if (k->ssize && k->s) {
+    if (!is_simple_semi_definite_cone(k->s, k->ssize) &&
+        set_up_sd_cone_work_space(c, k) < 0) {
+      SCS(finish_cone)(c);
+      return SCS_NULL;
+    }
+  }
+  return c;
+}
+
 /* outward facing cone projection routine, iter is outer algorithm iteration, if
    iter < 0 then iter is ignored
    warm_start contains guess of projection (can be set to SCS_NULL)
    D contains scaling matrix, some cones can make use of it
 */
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                            const scs_float *warm_start, ScsScaling *scaling,
-                            scs_int iter) {
+                            const scs_float *warm_start, scs_int iter) {
   scs_int status;
   /* copy x, s = x */
   memcpy(c->s, x, c->cone_len * sizeof(scs_float));
   /* negate x -> -x */
   SCS(scale_array)(x, -1., c->cone_len);
   /* project -x onto cone, x -> Pi_K(-x) */
-  status = proj_cone(x, k, c, warm_start, scaling, iter);
+  status = proj_cone(x, k, c, warm_start, iter);
   /* return Pi_K*(x) = s + Pi_K(-x) */
   SCS(add_scaled_array)(x, c->s, c->cone_len, 1.);
   return status;
