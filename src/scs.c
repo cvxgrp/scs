@@ -99,6 +99,9 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
       (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start,
       (int)acceleration_lookback, (int)acceleration_interval);
       /* , stgs->rho_x); */
+  if (stgs->time_limit_secs) {
+    scs_printf("\t  time_limit_secs: %.2e,\n", stgs->time_limit_secs);
+  }
   if (lin_sys_method) {
     scs_printf("%s", lin_sys_method);
     scs_free(lin_sys_method);
@@ -677,7 +680,10 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
   }
   scs_printf("\n");
   if (info->iter == w->stgs->max_iters) {
-    scs_printf("hit max_iters, returning best iterate\n");
+    scs_printf("Hit max_iters, returning best iterate.\n");
+  }
+  else if (w->time_limit_reached) {
+    scs_printf("Reached time limit, returning best iterate.\n");
   }
   scs_printf("status:  %s\n", info->status);
   scs_printf("timings: total: %1.2es = setup: %1.2es + solve: %1.2es\n",
@@ -827,6 +833,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->last_scale_update_iter = 0;
   w->sum_log_scale_factor = 0.;
   w->n_log_scale_factor = 0;
+  w->time_limit_reached = 0;
   w->best_max_residual = INFINITY;
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -1117,6 +1124,12 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       /* calc residuals every iter if logging to csv */
       populate_residuals(w, &r, i, 0);
       SCS(log_data_to_csv)(d, k, w, &r, i, &solve_timer);
+    }
+    if (w->stgs->time_limit_secs) {
+      if (SCS(tocq)(&solve_timer) > 1000. * w->stgs->time_limit_secs) {
+        w->time_limit_reached = 1;
+        break;
+      }
     }
   }
 

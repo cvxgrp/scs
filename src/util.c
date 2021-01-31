@@ -210,4 +210,5 @@ void SCS(set_default_settings)(ScsData *d) {
   d->stgs->adaptive_scaling = ADAPTIVE_SCALING;
   d->stgs->write_data_filename = WRITE_DATA_FILENAME;
   d->stgs->log_csv_filename = LOG_CSV_FILENAME;
+  d->stgs->time_limit_secs = TIME_LIMIT_SECS;
 }

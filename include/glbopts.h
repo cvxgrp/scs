@@ -44,6 +44,7 @@ extern "C" {
 #define ADAPTIVE_SCALING (1)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
+#define TIME_LIMIT_SECS (0.)
 
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE

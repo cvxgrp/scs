@@ -890,7 +890,7 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int co
     memcpy(c->bu, k->bu, (k->bsize - 1) * sizeof(scs_float));
     memcpy(c->bl, k->bl, (k->bsize - 1) * sizeof(scs_float));
     /* also does some sanitation */
-    normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): scal, k->bsize);
+    normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): SCS_NULL, k->bsize);
   }
   if (k->ssize && k->s) {
     if (!is_simple_semi_definite_cone(k->s, k->ssize) &&

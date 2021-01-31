@@ -269,8 +269,9 @@ static void rescaling(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
 }
 
 /* XXX rm */
+/*
 scs_float min(const scs_float *a, scs_int l) {
-  scs_float tmp, min = 999999;
+  scs_float tmp, min = -INFINITY;
   scs_int i;
   for (i = 0; i < l; ++i) {
     if (a[i] < min) {
@@ -279,6 +280,7 @@ scs_float min(const scs_float *a, scs_int l) {
   }
   return min;
 }
+*/
 
 
 /* Will rescale as P -> EPE, A -> DAE, c -> Ec, b -> Db.

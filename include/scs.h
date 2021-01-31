@@ -59,6 +59,7 @@ struct SCS_SETTINGS {
   scs_float alpha;      /* relaxation parameter: 1.8 */
   scs_float cg_rate;    /* for indirect, tolerance goes down like
                            (1/iter)^cg_rate: 2 */
+  scs_float time_limit_secs; /* time limit in secs (can be fractional) */
   scs_int verbose;      /* boolean, write out progress: 1 */
   scs_int warm_start;   /* boolean, warm start (put initial guess in ScsSolution
                            struct): 0 */
@@ -142,7 +143,7 @@ struct SCS_WORK {
   scs_float *h, *g, *ls_ws, *rho_y_vec;
   scs_float b_norm, c_norm, best_max_residual;
   scs_float sum_log_scale_factor;
-  scs_int last_scale_update_iter, n_log_scale_factor;
+  scs_int last_scale_update_iter, n_log_scale_factor, time_limit_reached;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
