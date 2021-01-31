@@ -238,8 +238,14 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
   L->nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
   if (L->nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
+    if(L->nzmax == -1){
+      scs_printf("Matrix is not perfectly upper triangular.\n");
+    } else if(L->nzmax == -2){
+      scs_printf("Integer overflow in L nonzero count.\n");
+    }
     return L->nzmax;
   }
+
   L->x = (scs_float *)scs_malloc(L->nzmax * sizeof(scs_float));
   L->i = (scs_int *)scs_malloc(L->nzmax * sizeof(scs_int));
   p->Dinv = (scs_float *)scs_malloc(n * sizeof(scs_float));
@@ -250,7 +256,7 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
 }
 
 /* can call many times */
-static scs_int ldl_factor(ScsLinSysWork *p) {
+static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
   scs_int factor_status;
   csc * kkt = p->kkt, * L = p->L;
 #if EXTRA_VERBOSE > 0
@@ -260,8 +266,15 @@ static scs_int ldl_factor(ScsLinSysWork *p) {
                                p->D, p->Dinv, p->Lnz, p->etree, p->bwork,
                                p->iwork, p->fwork);
 #if EXTRA_VERBOSE > 0
-  scs_printf("finished numeric factorization\n");
+  scs_printf("finished numeric factorization.\n");
 #endif
+  if (factor_status < 0) {
+    scs_printf("Error in LDL factorization when computing the nonzero elements. There are zeros in the diagonal matrix.\n");
+  } else if (factor_status < num_vars) {
+    scs_printf("Error in LDL factorization when computing the nonzero elements. The problem seems to be non-convex.\n");
+    scs_printf("factor_status: %i, num_vars: %i\n", factor_status, num_vars);
+      return -1;
+  }
   p->factorizations++;
   return factor_status;
 }
@@ -367,6 +380,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   }
   amd_status = _ldl_init(kkt, p->perm, &info);
   if (amd_status < 0) {
+    scs_printf("AMD permutatation error.\n");
     return SCS_NULL;
   }
 #if EXTRA_VERBOSE > 0
@@ -400,9 +414,9 @@ void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
   for (i = 0; i < A->m; ++i) {
     p->kkt->x[p->rho_y_vec_idxs[i]] = -1.0 / rho_y_vec[i];
   }
-  ldl_status = ldl_factor(p);
+  ldl_status = ldl_factor(p, A->n);
   if (ldl_status < 0) {
-    scs_printf("Error in factorize\n");
+    scs_printf("Error in LDL factorization when updating.\n");
     /* XXX this is broken somehow */
     // SCS(free_lin_sys_work)(p);
     return;
@@ -424,9 +438,9 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->L->nz = -1;
   p->kkt = permute_kkt(A, P, stgs, p, rho_y_vec);
   ldl_prepare_status = ldl_prepare(p);
-  ldl_status = ldl_factor(p);
+  ldl_status = ldl_factor(p, A->n);
   if (ldl_prepare_status < 0 || ldl_status < 0) {
-    scs_printf("Error in factorize\n");
+    scs_printf("Error in LDL initial factorization.\n");
     // SCS(free_lin_sys_work)(p);
     return SCS_NULL;
   }
