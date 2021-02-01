@@ -635,8 +635,7 @@ static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                           const scs_float *bu, scs_int bsize,
                           scs_float t_warm_start) {
-  scs_float gt, ht, t_prev, max_val;
-  scs_float t = t_warm_start, *x = &(tx[1]);
+  scs_float gt, ht, t_prev, t = t_warm_start, *x = &(tx[1]);
   scs_int iter, j, max_iter = 100;
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
@@ -757,7 +756,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* project onto the primal K cone in the paper */
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                         const scs_float *warm_start, scs_int iter) {
+                         scs_int normalize) {
   scs_int i;
   scs_int count = 0;
 
@@ -777,7 +776,13 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
 
   if (k->bsize) {
     /* project onto box cone */
-    c->box_t_warm_start = proj_box_cone(&(x[count]), c->bl, c->bu, k->bsize, c->box_t_warm_start);
+    if (normalize) {
+      c->box_t_warm_start = proj_box_cone(&(x[count]), c->bl, c->bu, k->bsize,
+                                          c->box_t_warm_start);
+    } else {
+      c->box_t_warm_start = proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize,
+                                          c->box_t_warm_start);
+    }
     count += k->bsize;
   }
 
@@ -885,12 +890,14 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int co
   c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
   if (k->bsize && k->bu && k->bl) {
     c->box_t_warm_start = 0.;
-    c->bu = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
-    c->bl = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
-    memcpy(c->bu, k->bu, (k->bsize - 1) * sizeof(scs_float));
-    memcpy(c->bl, k->bl, (k->bsize - 1) * sizeof(scs_float));
-    /* also does some sanitation */
-    normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): SCS_NULL, k->bsize);
+    if (scal) {
+      c->bu = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
+      c->bl = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
+      memcpy(c->bu, k->bu, (k->bsize - 1) * sizeof(scs_float));
+      memcpy(c->bl, k->bl, (k->bsize - 1) * sizeof(scs_float));
+      /* also does some sanitizing */
+      normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): SCS_NULL, k->bsize);
+    }
   }
   if (k->ssize && k->s) {
     if (!is_simple_semi_definite_cone(k->s, k->ssize) &&
@@ -902,20 +909,19 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int co
   return c;
 }
 
-/* outward facing cone projection routine, iter is outer algorithm iteration, if
-   iter < 0 then iter is ignored
-   warm_start contains guess of projection (can be set to SCS_NULL)
-   D contains scaling matrix, some cones can make use of it
+/* outward facing cone projection routine
+   performs projection in-place
+   if normalize > 0 then will use normalized (equilibrated) cones if applicable.
 */
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                            const scs_float *warm_start, scs_int iter) {
+                            scs_int normalize) {
   scs_int status;
   /* copy x, s = x */
   memcpy(c->s, x, c->cone_len * sizeof(scs_float));
   /* negate x -> -x */
   SCS(scale_array)(x, -1., c->cone_len);
   /* project -x onto cone, x -> Pi_K(-x) */
-  status = proj_cone(x, k, c, warm_start, iter);
+  status = proj_cone(x, k, c, normalize);
   /* return Pi_K*(x) = s + Pi_K(-x) */
   SCS(add_scaled_array)(x, c->s, c->cone_len, 1.);
   return status;
