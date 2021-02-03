@@ -334,14 +334,10 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
   return ip;
 }
 
-#define FEASIBLE_ONLY (0)
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta, scs_int iter) {
-#if FEASIBLE_ONLY > 0
-  return 1.;
-#else
   scs_float b, c, tau, a, tau_scale;
-  if (iter < 10) {
+  if (iter < FEASIBLE_ITERS) {
     return 1.;
   }
   tau_scale = TAU_FACTOR * w->stgs->scale; // XXX
@@ -358,7 +354,6 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                          (1 + SCS(dot)(w->h, w->g, w->m + w->n))));
 #endif
   return tau;
-#endif
 }
 
 /* status < 0 indicates failure */
@@ -423,7 +418,12 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   /* u = [x;y;tau] */
   status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, w->stgs->normalize);
-  w->u[l - 1] = MAX(w->u[l - 1], 0.);
+  if (iter < FEASIBLE_ITERS) {
+    w->u[l - 1] = 1.0;
+    return 1.;
+  } else {
+    w->u[l - 1] = MAX(w->u[l - 1], 0.);
+  }
   return status;
 }
 
@@ -1057,7 +1057,10 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
     v_norm = SCS(norm)(w->v, l);
-    SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
+
+    if (i >= FEASIBLE_ITERS) {
+      SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
+    }
 
     //SCS(scale_array)(w->v, 1. / w->v[l-1], l);
 
