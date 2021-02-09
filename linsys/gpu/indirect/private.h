@@ -28,6 +28,9 @@ struct SCS_LIN_SYS_WORK {
   /* CUDA */
   cublasHandle_t cublas_handle;
   cusparseHandle_t cusparse_handle;
+  /* CUSPARSE buffer */
+  size_t buffer_size;
+  void *buffer;
 };
 
 #ifdef __cplusplus

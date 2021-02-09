@@ -91,10 +91,12 @@ typedef struct SCS_GPU_A_DATA_MATRIX {
 } ScsGpuMatrix;
 
 void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *A, const scs_float *x,
-                               scs_float *y, cusparseHandle_t cusparse_handle);
+                               scs_float *y, cusparseHandle_t cusparse_handle,
+                               size_t *buffer_size, void **buffer);
 
 void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *A, const scs_float *x,
-                          scs_float *y, cusparseHandle_t cusparse_handle);
+                          scs_float *y, cusparseHandle_t cusparse_handle,
+                          size_t *buffer_size, void **buffer);
 
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A);
 
