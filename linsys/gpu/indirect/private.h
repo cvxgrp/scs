@@ -28,6 +28,11 @@ struct SCS_LIN_SYS_WORK {
   /* CUDA */
   cublasHandle_t cublas_handle;
   cusparseHandle_t cusparse_handle;
+  /* CUSPARSE */
+  size_t buffer_size;
+  void *buffer;
+  cusparseDnVecDescr_t dn_vec_m; /* Dense vector of length m */
+  cusparseDnVecDescr_t dn_vec_n; /* Dense vector of length n */
 };
 
 #ifdef __cplusplus
