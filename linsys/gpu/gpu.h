@@ -34,6 +34,7 @@ extern "C" {
 #define CUBLAS(x) cublasS##x
 #define CUSPARSE(x) cusparseS##x
 #endif
+#define CUSPARSE_GEN(x) cusparse##x
 #else
 #ifndef SFLOAT
 #define CUBLAS(x) \
@@ -50,7 +51,25 @@ extern "C" {
   CUDA_CHECK_ERR;   \
   cusparseS##x
 #endif
+#define CUSPARSE_GEN(x) \
+  CUDA_CHECK_ERR;       \
+  cusparse##x
 #endif
+
+#ifndef SFLOAT
+#define SCS_CUDA_FLOAT CUDA_R_64F
+#else
+#define SCS_CUDA_FLOAT CUDA_R_32F
+#endif
+
+#ifndef DLONG
+#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_32I
+#else
+#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_64I
+#endif
+
+#define SCS_CSRMV_ALG CUSPARSE_CSRMV_ALG1
+#define SCS_CSR2CSC_ALG CUSPARSE_CSR2CSC_ALG1
 
 /*
  CUDA matrix routines only for CSR, not CSC matrices:
@@ -68,14 +87,16 @@ typedef struct SCS_GPU_A_DATA_MATRIX {
   scs_int m, n; /* m rows, n cols */
   scs_int Annz; /* num non-zeros in A matrix */
   /* CUDA */
-  cusparseMatDescr_t descr;
+  cusparseSpMatDescr_t descr;
 } ScsGpuMatrix;
 
-void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *A, const scs_float *x,
-                               scs_float *y, cusparseHandle_t cusparse_handle);
+void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
+                               cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
+                               size_t *buffer_size, void **buffer);
 
-void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *A, const scs_float *x,
-                          scs_float *y, cusparseHandle_t cusparse_handle);
+void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
+                          cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
+                          size_t *buffer_size, void **buffer);
 
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A);
 
