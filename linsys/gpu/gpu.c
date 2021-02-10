@@ -1,21 +1,17 @@
 #include "gpu.h"
 
-void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const scs_float *x,
-                               scs_float *y, cusparseHandle_t cusparse_handle,
+void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
+                               cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
                                size_t *buffer_size, void **buffer) {
   /* y += A'*x
      x and y MUST be on GPU already
   */
   const scs_float onef = 1.0;
-  cusparseDnVecDescr_t dn_vec_x = SCS_NULL, dn_vec_y = SCS_NULL;
   size_t new_buffer_size = 0;
-
-  cusparseCreateDnVec(&dn_vec_x, Ag->m, (void *) x, SCS_CUDA_FLOAT);
-  cusparseCreateDnVec(&dn_vec_y, Ag->n, (void *) y, SCS_CUDA_FLOAT);
 
   CUSPARSE_GEN(SpMV_bufferSize)
   (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-    &onef, Ag->descr, dn_vec_x, &onef, dn_vec_y,
+    &onef, Ag->descr, x, &onef, y,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
     &new_buffer_size);
 
@@ -29,32 +25,25 @@ void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const scs_float *x,
 
   CUSPARSE_GEN(SpMV)
   (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-    &onef, Ag->descr, dn_vec_x, &onef, dn_vec_y,
+    &onef, Ag->descr, x, &onef, y,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
     buffer);
-
-  cusparseDestroyDnVec(dn_vec_x);
-  cusparseDestroyDnVec(dn_vec_y);
 }
 
-void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const scs_float *x,
-                          scs_float *y, cusparseHandle_t cusparse_handle,
+void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
+                          cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
                           size_t *buffer_size, void **buffer) {
   /* y += A*x
      x and y MUST be on GPU already
    */
   const scs_float onef = 1.0;
-  cusparseDnVecDescr_t dn_vec_x = SCS_NULL, dn_vec_y = SCS_NULL;
   size_t new_buffer_size = 0;
 
   /* The A matrix idx pointers must be ORDERED */
 
-  cusparseCreateDnVec(&dn_vec_x, Ag->n, (void *) x, SCS_CUDA_FLOAT);
-  cusparseCreateDnVec(&dn_vec_y, Ag->m, (void *) y, SCS_CUDA_FLOAT);
-
   CUSPARSE_GEN(SpMV_bufferSize)
   (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE,
-    &onef, Ag->descr, dn_vec_x, &onef, dn_vec_y,
+    &onef, Ag->descr, x, &onef, y,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
     &new_buffer_size);
 
@@ -68,12 +57,9 @@ void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const scs_float *x,
 
   CUSPARSE_GEN(SpMV)
   (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE,
-    &onef, Ag->descr, dn_vec_x, &onef, dn_vec_y,
+    &onef, Ag->descr, x, &onef, y,
     SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
     buffer);
-
-  cusparseDestroyDnVec(dn_vec_x);
-  cusparseDestroyDnVec(dn_vec_y);
 }
 
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A) {

@@ -10,7 +10,14 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
   scs_float *v_n = p->r;
   cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
   cudaMemcpy(v_n, y, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
-  SCS(_accum_by_atrans_gpu)(p->Ag, v_m, v_n, p->cusparse_handle, &p->buffer_size, &p->buffer);
+
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) v_m);
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) v_n);
+  SCS(_accum_by_atrans_gpu)(
+    p->Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
+
   cudaMemcpy(y, v_n, A->n * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
@@ -21,11 +28,21 @@ void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
   scs_float *v_n = p->r;
   cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
   cudaMemcpy(v_m, y, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
+
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) v_m);
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) v_n);
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(_accum_by_atrans_gpu)(p->Agt, v_n, v_m, p->cusparse_handle, &p->buffer_size, &p->buffer);
+  SCS(_accum_by_atrans_gpu)(
+    p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
 #else
-  SCS(_accum_by_a_gpu)(p->Ag, v_n, v_m, p->cusparse_handle, &p->buffer_size, &p->buffer);
+  SCS(_accum_by_a_gpu)(
+    p->Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
 #endif
+
   cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
 }
 
@@ -67,6 +84,8 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     if (p->buffer != SCS_NULL) {
       cudaFree(p->buffer);
     }
+    cusparseDestroyDnVec(p->dn_vec_m);
+    cusparseDestroyDnVec(p->dn_vec_n);
     cusparseDestroy(p->cusparse_handle);
     cublasDestroy(p->cublas_handle);
     /* Don't reset because it interferes with other GPU programs. */
@@ -82,14 +101,29 @@ static void mat_vec(const ScsGpuMatrix *A, const ScsSettings *s,
   scs_float *tmp_m = p->tmp_m; /* temp memory */
   cudaMemset(tmp_m, 0, A->m * sizeof(scs_float));
 
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) tmp_m);
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) x);
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(_accum_by_atrans_gpu)(p->Agt, x, tmp_m, p->cusparse_handle, &p->buffer_size,  &p->buffer);
+  SCS(_accum_by_atrans_gpu)(
+    p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
 #else
-  SCS(_accum_by_a_gpu)(A, x, tmp_m, p->cusparse_handle, &p->buffer_size, &p->buffer);
+  SCS(_accum_by_a_gpu)(
+    A, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
 #endif
 
   cudaMemset(y, 0, A->n * sizeof(scs_float));
-  SCS(_accum_by_atrans_gpu)(A, tmp_m, y, p->cusparse_handle, &p->buffer_size,  &p->buffer);
+
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) tmp_m);
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) y);
+  SCS(_accum_by_atrans_gpu)(
+    A, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
+
   CUBLAS(axpy)(p->cublas_handle, A->n, &(s->rho_x), x, 1, y, 1);
 }
 
@@ -121,6 +155,11 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   cudaError_t err;
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   ScsGpuMatrix *Ag = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
+  
+  /* Used for initializing dense vectors */
+  scs_float *tmp_null_n = SCS_NULL;
+  scs_float *tmp_null_m = SCS_NULL;
+
 #if GPU_TRANSPOSE_MAT > 0
   size_t new_buffer_size = 0;
 #endif
@@ -172,6 +211,13 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   (&Ag->descr, Ag->n, Ag->m, Ag->Annz, Ag->p, Ag->i, Ag->x,
     SCS_CUSPARSE_INDEX, SCS_CUSPARSE_INDEX,
     CUSPARSE_INDEX_BASE_ZERO, SCS_CUDA_FLOAT);
+
+  cudaMalloc((void **)&tmp_null_n, A->n * sizeof(scs_float));
+  cudaMalloc((void **)&tmp_null_m, A->m * sizeof(scs_float));
+  cusparseCreateDnVec(&p->dn_vec_n, Ag->n, tmp_null_n, SCS_CUDA_FLOAT);
+  cusparseCreateDnVec(&p->dn_vec_m, Ag->m, tmp_null_m, SCS_CUDA_FLOAT);
+  cudaFree(tmp_null_n);
+  cudaFree(tmp_null_m);
 
   get_preconditioner(A, stgs, p);
 
@@ -326,15 +372,30 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   SCS(tic)(&linsys_timer);
   /* all on GPU */
   cudaMemcpy(bg, b, (Ag->n + Ag->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
-  SCS(_accum_by_atrans_gpu)(Ag, &(bg[Ag->n]), bg, p->cusparse_handle, &p->buffer_size,  &p->buffer);
+
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) &(bg[Ag->n]));
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) bg);
+  SCS(_accum_by_atrans_gpu)(
+    Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
+
   /* solves (I+A'A)x = b, s warm start, solution stored in b */
   cg_its = pcg(p->Ag, stgs, p, s, bg, Ag->n, MAX(cg_tol, CG_BEST_TOL));
   CUBLAS(scal)(p->cublas_handle, Ag->m, &neg_onef, &(bg[Ag->n]), 1);
 
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) &(bg[Ag->n]));
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) bg);
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(_accum_by_atrans_gpu)(p->Agt, bg, &(bg[Ag->n]), p->cusparse_handle, &p->buffer_size,  &p->buffer);
+  SCS(_accum_by_atrans_gpu)(
+    p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
 #else
-  SCS(_accum_by_a_gpu)(Ag, bg, &(bg[Ag->n]), p->cusparse_handle, &p->buffer_size, &p->buffer);
+  SCS(_accum_by_a_gpu)(
+    Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+    &p->buffer_size, &p->buffer
+  );
 #endif
 
   cudaMemcpy(b, bg, (Ag->n + Ag->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
