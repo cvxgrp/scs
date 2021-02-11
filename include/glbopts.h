@@ -56,19 +56,30 @@ extern "C" {
 #define _scs_realloc mxRealloc
 #elif defined PYTHON
 #include <Python.h>
-#include <stdlib.h>
 #define scs_printf(...)                              \
   {                                                  \
     PyGILState_STATE gilstate = PyGILState_Ensure(); \
     PySys_WriteStdout(__VA_ARGS__);                  \
     PyGILState_Release(gilstate);                    \
   }
-#define _scs_printf printf
-#define _scs_free free
-#define _scs_malloc malloc
-#define _scs_calloc calloc
-#define _scs_realloc realloc
-#elif (defined(USING_R))
+/* only for SuiteSparse */
+#define _scs_printf PySys_WriteStdout
+#if PY_MAJOR_VERSION >= 3
+#define _scs_free PyMem_RawFree
+#define _scs_malloc PyMem_RawMalloc
+#define _scs_realloc PyMem_RawRealloc
+#define _scs_calloc PyMem_RawCalloc
+#else
+#define _scs_free PyMem_Free
+#define _scs_malloc PyMem_Malloc
+#define _scs_realloc PyMem_Realloc
+static inline void * _scs_calloc(size_t count, size_t size) {
+  void *obj = PyMem_Malloc(count * size);
+  memset(obj, 0, count * size);
+  return obj;
+}
+#endif
+#elif defined R_LANG
 #include <R_ext/Print.h> /* Rprintf etc */
 #include <stdio.h>
 #include <stdlib.h>
@@ -100,13 +111,14 @@ extern "C" {
 #define scs_realloc(x, y) _scs_realloc(x, y)
 
 #ifdef DLONG
-#ifdef _WIN64
+/*#ifdef _WIN64
 #include <stdint.h>
 typedef int64_t scs_int;
-/* typedef long scs_int; */
 #else
 typedef long scs_int;
 #endif
+*/
+typedef long long scs_int;
 #else
 typedef int scs_int;
 #endif
@@ -159,6 +171,7 @@ typedef float scs_float;
 #endif
 #endif
 
+/* XXX explain this */
 #define FEASIBLE_ITERS (10)
 
 /* how many iterations between heuristic residual rescaling */

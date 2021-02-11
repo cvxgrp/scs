@@ -291,7 +291,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
     //r->res_unbdd_p = NORM(px, n) / -r->ctx_tau;
   }
   /* XXX remove this: */
-  /* 
+  /*
   scs_printf("tau %.2e\n", r->tau);
   scs_printf("dual_resid %.2e\n", SCS(norm_inf)(dual_resid, n) / -(r->bty_tau + r->ctx_tau));
   scs_printf("pri_resid %.2e\n", SCS(norm_inf)(pri_resid, m) / -(r->bty_tau + r->ctx_tau));
@@ -1061,17 +1061,29 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
+    /* XXX should this be before or after accel? */
     v_norm = SCS(norm)(w->v, l);
-
     if (i >= FEASIBLE_ITERS) {
       SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
     }
-
-    //SCS(scale_array)(w->v, 1. / w->v[l-1], l);
-
     /* XXX rm this? */
     memcpy(w->u_prev, w->u, l * sizeof(scs_float));
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
+
+    /* accelerate here so that last step always projection onto cone */
+    /* this ensures the returned iterates always satisfy conic constraints */
+    if (i > 0 && i % w->stgs->acceleration_interval == 0) {
+      SCS(tic)(&accel_timer);
+      r.aa_norm = aa_apply(w->v, w->v_prev, w->accel);
+      /*
+      if (r->aa_norm < 0) {
+        return failure(w, w->m, w->n, sol, info, SCS_FAILED,
+            "error in accelerate", "failure");
+      }
+      */
+      total_accel_time += SCS(tocq)(&accel_timer);
+    }
+
 
     SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
@@ -1104,19 +1116,6 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
       populate_residuals(w, &r, i, 0);
       print_summary(w, i, &r, &solve_timer);
-    }
-
-    /* Finally apply any acceleration */
-    if (i % w->stgs->acceleration_interval == 0) {
-      SCS(tic)(&accel_timer);
-      r.aa_norm = aa_apply(w->v, w->v_prev, w->accel);
-      /*
-      if (r->aa_norm < 0) {
-        return failure(w, w->m, w->n, sol, info, SCS_FAILED,
-            "error in accelerate", "failure");
-      }
-      */
-      total_accel_time += SCS(tocq)(&accel_timer);
     }
 
     /* if residuals are fresh then maybe compute new scale */
