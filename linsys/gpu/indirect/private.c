@@ -94,15 +94,26 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-/*y = (RHO_X * I + A'A)x */
+static void scale_by_diag_r(scs_float *vec, scs_int m, ScsLinSysWork *p) {
+  scs_float onef = 1.0;
+  scs_float zerof = 0.0;
+  CUBLAS(sbmv)
+    (p->cublas_handle, CUBLAS_FILL_MODE_LOWER, m, 0, &onef, p->rho_y_vec_g, 1, vec, 1, &zerof, SCS_NULL, 0);
+}
+
+/* y = (rho_x * I + P + A' R A) x */
 static void mat_vec(const ScsGpuMatrix *A, const ScsSettings *s,
                     ScsLinSysWork *p, const scs_float *x, scs_float *y) {
   /* x and y MUST already be loaded to GPU */
-  scs_float *tmp_m = p->tmp_m; /* temp memory */
-  cudaMemset(tmp_m, 0, A->m * sizeof(scs_float));
-
-  cusparseDnVecSetValues(p->dn_vec_m, (void *) tmp_m);
+  scs_float *z= p->tmp_m; /* temp memory */
+  cudaMemset(z, 0, A->m * sizeof(scs_float));
+  cudaMemset(y, 0, A->n * sizeof(scs_float));
+  if (P) {
+    SCS(accum_by_p)(P, p, x, y); /* y = Px */
+  }
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) z);
   cusparseDnVecSetValues(p->dn_vec_n, (void *) x);
+  /* z = Ax */
 #if GPU_TRANSPOSE_MAT > 0
   SCS(_accum_by_atrans_gpu)(
     p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
@@ -115,15 +126,17 @@ static void mat_vec(const ScsGpuMatrix *A, const ScsSettings *s,
   );
 #endif
 
-  cudaMemset(y, 0, A->n * sizeof(scs_float));
+  /* z = R A x */
+  scale_by_diag_r(z, A->m, p);
 
-  cusparseDnVecSetValues(p->dn_vec_m, (void *) tmp_m);
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) z);
   cusparseDnVecSetValues(p->dn_vec_n, (void *) y);
+  /* y += A'z, y = Px + A' R Ax */
   SCS(_accum_by_atrans_gpu)(
     A, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle,
     &p->buffer_size, &p->buffer
   );
-
+  /* y += rho_x * x = rho_x * x + Px + A' R A x */
   CUBLAS(axpy)(p->cublas_handle, A->n, &(s->rho_x), x, 1, y, 1);
 }
 
@@ -155,7 +168,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
   cudaError_t err;
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   ScsGpuMatrix *Ag = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
-  
+
   /* Used for initializing dense vectors */
   scs_float *tmp_null_n = SCS_NULL;
   scs_float *tmp_null_m = SCS_NULL;
@@ -357,35 +370,69 @@ static scs_int pcg(const ScsGpuMatrix *A, const ScsSettings *stgs,
   return i;
 }
 
-scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_int iter) {
-  scs_int cg_its;
-  SCS(timer) linsys_timer;
-  scs_float *bg = p->bg;
+/* solves Mx = b, for x but stores result in b */
+/* s contains warm-start (if available) */
+/*
+ * [x] = [rho_x I + P     A' ]^{-1} [rx]
+ * [y]   [     A        -R^-1]      [ry]
+ *
+ * R = diag(rho_y_vec)
+ *
+ * becomes:
+ *
+ * x = (rho_x I + P + A' R A)^{-1} (rx + A' R ry)
+ * y = R (Ax - ry)
+ *
+ */
+scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
+                           const ScsSettings *stgs,i ScsLinSysWork *p,
+                           scs_float *b, const scs_float *s, scs_int iter) {
+  scs_int cg_its, max_iters = INT_MAX;
+  scs_float cg_tol = CG_BEST_TOL;
   scs_float neg_onef = -1.0;
+  /* these are on GPU */
+  scs_float *bg = p->bg;
+  scs_float *R = p->R;
+  scs_float *tmp_m = p->tmp_m
   ScsGpuMatrix *Ag = p->Ag;
-  scs_float cg_tol =
-      SCS(norm)(b, Ag->n) *
-      (iter < 0 ? CG_BEST_TOL
-                : CG_MIN_TOL / POWF((scs_float)iter + 1., stgs->cg_rate));
-  SCS(tic)(&linsys_timer);
-  /* all on GPU */
-  cudaMemcpy(bg, b, (Ag->n + Ag->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
+  ScsGpuMatrix *Pg = p->Pg;
 
-  cusparseDnVecSetValues(p->dn_vec_m, (void *) &(bg[Ag->n]));
-  cusparseDnVecSetValues(p->dn_vec_n, (void *) bg);
+  if (CG_NORM(b, A->n + A->m) <= 1e-18) {
+    memset(b, 0, (A->n + A->m) * sizeof(scs_float));
+    return 0;
+  }
+
+  /* bg = b = [rx; ry] */
+  cudaMemcpy(bg, b, (Ag->n + Ag->m) * sizeof(scs_float), cudaMemcpyHostToDevice);
+  /* tmp = ry */
+  cudaMemcpy(tmp_m, &(b[Ag->n]), Ag/* tmp = R * ry */->m * sizeof(scs_float), cudaMemcpyDeviceToDevice);
+  /* tmp = R * ry */
+  scale_by_diag_r(tmp_m, A->m, p);
+
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) tmp_m); /* R * ry */
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) bg); /* rx */
+  /* bg[:n] = rx + A' R ry */
   SCS(_accum_by_atrans_gpu)(
     Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle,
     &p->buffer_size, &p->buffer
   );
 
-  /* solves (I+A'A)x = b, s warm start, solution stored in b */
-  cg_its = pcg(p->Ag, stgs, p, s, bg, Ag->n, MAX(cg_tol, CG_BEST_TOL));
-  CUBLAS(scal)(p->cublas_handle, Ag->m, &neg_onef, &(bg[Ag->n]), 1);
+  if (iter >= 0) {
+    cg_tol = MAX(CG_BEST_TOL, CG_NORM(b, Ag->n) * CG_BASE_TOL /
+                 POWF((scs_float)iter + 1, stgs->cg_rate));
+    /* set max_iters to 100 * n (though in theory n is enough for any tol) */
+    max_iters = 100 * Ag->n;
+  }
 
-  cusparseDnVecSetValues(p->dn_vec_m, (void *) &(bg[Ag->n]));
-  cusparseDnVecSetValues(p->dn_vec_n, (void *) bg);
+  /* solves (rho_x I + P + A' R A)x = bg, s warm start, solution stored in bg */
+  cg_its = pcg(Ag, Pg, stgs, p, s, bg, max_iters, cg_tol); /* bg[:n] = x */
+
+  /* bg[n:] = -ry */
+  CUBLAS(scal)(p->cublas_handle, Ag->m, &neg_onef, &(bg[Ag->n]), 1);
+  cusparseDnVecSetValues(p->dn_vec_m, (void *) &(bg[Ag->n])); /* -ry */
+  cusparseDnVecSetValues(p->dn_vec_n, (void *) bg); /* x */
+
+  /* b[n:] = Ax - ry */
 #if GPU_TRANSPOSE_MAT > 0
   SCS(_accum_by_atrans_gpu)(
     p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
@@ -398,15 +445,15 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
   );
 #endif
 
+  /* bg[n:] = R (Ax - ry) = y */
+  scale_by_diag_r(&(bg[A->n]), A->m, p);
+
+  /* copy bg = [x; y] back to b */
   cudaMemcpy(b, bg, (Ag->n + Ag->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
 
   if (iter >= 0) {
     p->tot_cg_its += cg_its;
   }
 
-  p->total_solve_time += SCS(tocq)(&linsys_timer);
-#if EXTRA_VERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
-#endif
   return 0;
 }

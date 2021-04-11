@@ -297,7 +297,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
  * x = (rho_x I + P + A' R A)^{-1} (rx + A' R ry)
  * y = R (Ax - ry)
  *
-*/
+ */
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
                            scs_float *b, const scs_float *s, scs_int iter) {
@@ -311,9 +311,12 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
 
   /* use p->tmp here, and in mat_vec, can do both since they don't overlap */
   /* b = [rx; ry] */
-  memcpy(p->tmp, &(b[A->n]), A->m * sizeof(scs_float)); /* tmp = ry */
-  scale_by_diag_r(p->tmp, A->m, p); /* tmp = R * ry */
-  SCS(accum_by_atrans)(A, p, p->tmp, b); /* b[:n] = rx + A' R ry */
+  /* tmp = ry */
+  memcpy(p->tmp, &(b[A->n]), A->m * sizeof(scs_float));
+  /* tmp = R * ry */
+  scale_by_diag_r(p->tmp, A->m, p);
+  /* b[:n] = rx + A' R ry */
+  SCS(accum_by_atrans)(A, p, p->tmp, b);
   if (iter >= 0) {
     cg_tol = MAX(CG_BEST_TOL, CG_NORM(b, A->n) * CG_BASE_TOL /
                  POWF((scs_float)iter + 1, stgs->cg_rate));
@@ -323,9 +326,12 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   /* solves (rho_x I + P + A' R A)x = b, s warm start, solution stored in b */
   cg_its = pcg(A, P, stgs, p, s, b, max_iters, cg_tol); /* b[:n] = x */
 
-  SCS(scale_array)(&(b[A->n]), -1., A->m);  /* b[n:] = -ry */
-  SCS(accum_by_a)(A, p, b, &(b[A->n])); /* b[n:] = Ax - ry */
-  scale_by_diag_r(&(b[A->n]), A->m, p); /* b[n:] = R (Ax - ry) = y */
+  /* b[n:] = -ry */
+  SCS(scale_array)(&(b[A->n]), -1., A->m);
+  /* b[n:] = Ax - ry */
+  SCS(accum_by_a)(A, p, b, &(b[A->n]));
+  /* b[n:] = R (Ax - ry) = y */
+  scale_by_diag_r(&(b[A->n]), A->m, p);
   if (iter >= 0) {
     p->tot_cg_its += cg_its;
   }

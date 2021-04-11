@@ -69,12 +69,3 @@ void SCS(free_gpu_matrix)(ScsGpuMatrix *A) {
   cusparseDestroySpMat(A->descr);
 }
 
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                      ScsScaling *scal) {
-  SCS(_normalize_a)(A, stgs, k, scal);
-}
-
-void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                         const ScsScaling *scal) {
-  SCS(_un_normalize_a)(A, stgs, scal);
-}
