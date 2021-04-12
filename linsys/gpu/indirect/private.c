@@ -163,11 +163,39 @@ static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
 #endif
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
-                                      const ScsSettings *stgs) {
+/* P comes in upper triangular, expand to full */
+static csc *fill_p_matrix(const csc *P) {
+  Pnzmax = 2 * P->p[n]; /* upper bound */
+  P_T = cs_spalloc(n, n, Pnzmax, 1, 1);
+  kk = 0;
+  for (j = 0; j < P->n; j++) { /* cols */
+    for (k = P->p[j]; k < P->p[j + 1]; k++) {
+      i = P->i[k]; /* row */
+      if (i > j) { /* only upper triangular needed */
+        break;
+      }
+      P_T->i[kk] = i;
+      P_T->p[kk] = j;
+      P_T->x[kk] = P->x[k];
+      if (i != j) { /* not diagonal */
+        P_T->i[kk+1] = j;
+        P_T->p[kk+1] = i;
+        P_T->x[kk+1] = P->x[k];
+      }
+      kk += 2;
+    }
+  }
+  return cs_compress(P, SCS_NULL);
+}
+
+
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
+                                      const ScsSettings *stgs,
+                                      scs_float *rho_y_vec) {
   cudaError_t err;
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   ScsGpuMatrix *Ag = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
+  ScsGpuMatrix *Pg = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
 
   /* Used for initializing dense vectors */
   scs_float *tmp_null_n = SCS_NULL;
@@ -176,6 +204,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
 #if GPU_TRANSPOSE_MAT > 0
   size_t new_buffer_size = 0;
 #endif
+
+  P_full = fill_p_matrix();
 
   p->cublas_handle = 0;
   p->cusparse_handle = 0;

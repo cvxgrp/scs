@@ -5,14 +5,13 @@
 extern "C" {
 #endif
 
+#include "csparse.h"
 #include "amatrix.h"
 #include "external/amd/amd.h"
 #include "external/qdldl/qdldl.h"
 #include "glbopts.h"
 #include "scs.h"
 
-/* compressed sparse column matrix */
-typedef struct SPARSE_MATRIX csc;
 struct SCS_LIN_SYS_WORK {
   csc *kkt, *L;            /* KKT, and factorization matrix L resp. */
   scs_float *Dinv;  /* inverse diagonal matrix of factorization */

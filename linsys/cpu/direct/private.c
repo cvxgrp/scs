@@ -1,17 +1,5 @@
 #include "private.h"
 
-/* compressed sparse column matrix */
-struct SPARSE_MATRIX /* matrix in compressed-column or triplet form */
-{
-  scs_int nzmax; /* maximum number of entries */
-  scs_int m;     /* number of rows */
-  scs_int n;     /* number of columns */
-  scs_int *p;    /* column pointers (size n+1) or col indices (size nzmax) */
-  scs_int *i;    /* row indices, size nzmax */
-  scs_float *x;  /* numerical values, size nzmax */
-  scs_int nz;    /* # of entries in triplet matrix, -1 for compressed-col */
-};
-
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
                               const ScsSettings *stgs) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 128);
@@ -28,28 +16,10 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   return str;
 }
 
-/* wrapper for free */
-static void *cs_free(void *p) {
-  if (p) {
-    scs_free(p);
-  }                /* free p if it is not already SCS_NULL */
-  return SCS_NULL; /* return SCS_NULL to simplify the use of cs_free */
-}
-
-static csc *cs_spfree(csc *A) {
-  if (!A) {
-    return SCS_NULL;
-  } /* do nothing if A already SCS_NULL */
-  cs_free(A->p);
-  cs_free(A->i);
-  cs_free(A->x);
-  return (csc *)cs_free(A); /* free the csc struct and return SCS_NULL */
-}
-
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
-    cs_spfree(p->L);
-    cs_spfree(p->kkt);
+    SCS(cs_spfree)(p->L);
+    SCS(cs_spfree)(p->kkt);
     scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
@@ -62,59 +32,6 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     scs_free(p->fwork);
     scs_free(p);
   }
-}
-
-static csc *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-                       scs_int triplet) {
-  csc *A = (csc *)scs_calloc(1, sizeof(csc)); /* allocate the csc struct */
-  if (!A) {
-    return SCS_NULL;
-  }         /* out of memory */
-  A->m = m; /* define dimensions and nzmax */
-  A->n = n;
-  A->nzmax = nzmax = MAX(nzmax, 1);
-  A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
-  A->p = (scs_int *)scs_malloc((triplet ? nzmax : n + 1) * sizeof(scs_int));
-  A->i = (scs_int *)scs_malloc(nzmax * sizeof(scs_int));
-  A->x = values ? (scs_float *)scs_malloc(nzmax * sizeof(scs_float)) : SCS_NULL;
-  return (!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A;
-}
-
-static csc *cs_done(csc *C, void *w, void *x, scs_int ok) {
-  cs_free(w); /* free workspace */
-  cs_free(x);
-  return ok ? C : cs_spfree(C); /* return result if OK, else free it */
-}
-
-/* C = compressed-column form of a triplet matrix T */
-static csc *cs_compress(const csc *T, scs_int *idx_mapping) {
-  scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
-  scs_float *Cx, *Tx;
-  csc *C;
-  m = T->m;
-  n = T->n;
-  Ti = T->i;
-  Tj = T->p;
-  Tx = T->x;
-  nz = T->nz;
-  C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0);   /* allocate result */
-  w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
-  if (!C || !w) {
-    return cs_done(C, w, SCS_NULL, 0);
-  } /* out of memory */
-  Cp = C->p;
-  Ci = C->i;
-  Cx = C->x;
-  for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
-  SCS(cumsum)(Cp, w, n);               /* column pointers */
-  for (k = 0; k < nz; k++) {
-    Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
-    idx_mapping[k] = p;         /* old to new indices */
-    if (Cx) {
-      Cx[p] = Tx[k];
-    }
-  }
-  return cs_done(C, w, SCS_NULL, 1); /* success; free w and return C */
 }
 
 static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
@@ -135,12 +52,12 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
   scs_int Knzmax;
   scs_int *idx_mapping;
   if (P) {
-    /* Upper bound P + I upper trianglar component as Pnz + n */
+    /* Upper bound P + I upper triangular component as Pnz + n */
     Knzmax = n + m + Anz + P->p[n];
   } else {
     Knzmax = n + m + Anz;
   }
-  K = cs_spalloc(m + n, m + n, Knzmax, 1, 1);
+  K = SCS(cs_spalloc)(m + n, m + n, Knzmax, 1, 1);
 
 #if EXTRA_VERBOSE > 0
   scs_printf("forming kkt\n");
@@ -213,11 +130,11 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
   }
   K->nz = kk;
   idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
-  Kcsc = cs_compress(K, idx_mapping);
+  Kcsc = SCS(cs_compress)(K, idx_mapping);
   for (i = 0; i < A->m; i++) {
     rho_y_vec_idxs[i] = idx_mapping[rho_y_vec_idxs[i]];
   }
-  cs_spfree(K);
+  SCS(cs_spfree)(K);
   scs_free(idx_mapping);
   return Kcsc;
 }
@@ -330,10 +247,10 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
   Ap = A->p;
   Ai = A->i;
   Ax = A->x;
-  C = cs_spalloc(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
+  C = SCS(cs_spalloc)(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
   w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
   if (!C || !w) {
-    return cs_done(C, w, SCS_NULL, 0);
+    return SCS(cs_done)(C, w, SCS_NULL, 0);
   } /* out of memory */
   Cp = C->p;
   Ci = C->i;
@@ -366,7 +283,7 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
       idx_mapping[p] = q; /* old to new indices */
     }
   }
-  return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
+  return SCS(cs_done)(C, w, SCS_NULL, 1); /* success; free workspace, return C */
 }
 
 static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
@@ -395,7 +312,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   for (i = 0; i < A->m; i++){
     p->rho_y_vec_idxs[i] = idx_mapping[p->rho_y_vec_idxs[i]];
   }
-  cs_spfree(kkt);
+  SCS(cs_spfree)(kkt);
   scs_free(Pinv);
   scs_free(info);
   scs_free(idx_mapping);
