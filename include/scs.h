@@ -57,8 +57,6 @@ struct SCS_SETTINGS {
   scs_float eps_rel;    /* relative convergence tolerance: 1e-4 */
   scs_float eps_infeas; /* infeasible convergence tolerance: 1e-5 */
   scs_float alpha;      /* relaxation parameter: 1.8 */
-  scs_float cg_rate;    /* for indirect, tolerance goes down like
-                           (1/iter)^cg_rate: 2 */
   scs_float time_limit_secs; /* time limit in secs (can be fractional) */
   scs_int verbose;      /* boolean, write out progress: 1 */
   scs_int warm_start;   /* boolean, warm start (put initial guess in ScsSolution
@@ -95,19 +93,21 @@ struct SCS_SOL_VARS {
 
 /* contains terminating information */
 struct SCS_INFO {
-  scs_int iter;         /* number of iterations taken */
-  char status[64];      /* status string, e.g. 'Solved' */
-  scs_int status_val;   /* status as scs_int, defined in glbopts.h */
-  scs_float pobj;       /* primal objective */
-  scs_float dobj;       /* dual objective */
-  scs_float res_pri;    /* primal equality residual */
-  scs_float res_dual;   /* dual equality residual */
-  scs_float res_infeas; /* infeasibility cert residual */
-  scs_float res_unbdd_a;/* unbounded cert residual */
-  scs_float res_unbdd_p;/* unbounded cert residual */
-  scs_float gap;        /* relative duality gap */
-  scs_float setup_time; /* time taken for setup phase (milliseconds) */
-  scs_float solve_time; /* time taken for solve phase (milliseconds) */
+  scs_int iter;          /* number of iterations taken */
+  char status[64];       /* status string, e.g. 'Solved' */
+  scs_int status_val;    /* status as scs_int, defined in glbopts.h */
+  scs_int scale_updates; /* number of updates to scale */
+  scs_float pobj;        /* primal objective */
+  scs_float dobj;        /* dual objective */
+  scs_float res_pri;     /* primal equality residual */
+  scs_float res_dual;    /* dual equality residual */
+  scs_float res_infeas;  /* infeasibility cert residual */
+  scs_float res_unbdd_a; /* unbounded cert residual */
+  scs_float res_unbdd_p; /* unbounded cert residual */
+  scs_float gap;         /* relative duality gap */
+  scs_float setup_time;  /* time taken for setup phase (milliseconds) */
+  scs_float solve_time;  /* time taken for solve phase (milliseconds) */
+  scs_float scale;       /* (final) scale parameter */
 };
 
 /* contains normalization variables */
@@ -143,7 +143,8 @@ struct SCS_WORK {
   scs_float *h, *g, *ls_ws, *rho_y_vec;
   scs_float b_norm, c_norm, best_max_residual;
   scs_float sum_log_scale_factor;
-  scs_int last_scale_update_iter, n_log_scale_factor, time_limit_reached;
+  scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
+  scs_int time_limit_reached;
   scs_float *b, *c;       /* (possibly normalized) b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
@@ -155,6 +156,7 @@ struct SCS_WORK {
   AaWork *accel;          /* struct for acceleration workspace */
   /* workspace for computing residuals, tau *not* divided out */
   scs_float *ax, *ax_s, *px, *aty, *pri_resid, *dual_resid;
+  scs_float *normalized_pri_resid, *normalized_dual_resid;
   ScsSolution *sol; /* track x,y,s as alg progresses, tau *not* divided out */
   scs_int *cone_boundaries; /* array with boundaries of cones */
   scs_int cone_boundaries_len; /* total length of cones */

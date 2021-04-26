@@ -16,10 +16,10 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       scs_float *rho_y_vec);
 
 /* solves [(d->rho_x * I + P)  A' ; A  -I] x = b for x, stores result in b, s
- * contains warm-start, iter is current scs iteration count */
+ * contains warm-start, tol is tolerance to solve linear sys */
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
-                           scs_float *b, const scs_float *s, scs_int iter);
+                           scs_float *b, const scs_float *s, scs_float tol);
 
 /* frees ScsLinSysWork structure and allocated memory in ScsLinSysWork */
 void SCS(free_lin_sys_work)(ScsLinSysWork *p);

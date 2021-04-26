@@ -11,8 +11,8 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
-  sprintf(str, "lin-sys: nnz(L): %li, factorizations: %i\n",
-                (long)(p->L->p[n] + n), (int) p->factorizations);
+  sprintf(str, "lin-sys: nnz(L): %li\n",
+                (long)(p->L->p[n] + n));
   return str;
 }
 
@@ -366,7 +366,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
 
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            const ScsSettings *stgs, ScsLinSysWork *p,
-                           scs_float *b, const scs_float *s, scs_int iter) {
+                           scs_float *b, const scs_float *s, scs_float tol) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);

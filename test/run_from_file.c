@@ -20,8 +20,6 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->eps_infeas = atof(val);
   } else if (strcmp(param, "alpha") == 0) {
     s->alpha = atof(val);
-  } else if (strcmp(param, "cg_rate") == 0) {
-    s->cg_rate = atof(val);
   } else if (strcmp(param, "verbose") == 0) {
     s->verbose = atoi(val);
   } else if (strcmp(param, "acceleration_lookback") == 0) {

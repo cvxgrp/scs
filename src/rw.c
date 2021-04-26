@@ -61,7 +61,6 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   fwrite(&(s->eps_rel), sizeof(scs_float), 1, fout);
   fwrite(&(s->eps_infeas), sizeof(scs_float), 1, fout);
   fwrite(&(s->alpha), sizeof(scs_float), 1, fout);
-  fwrite(&(s->cg_rate), sizeof(scs_float), 1, fout);
   fwrite(&(s->verbose), sizeof(scs_int), 1, fout);
   fwrite(&warm_start, sizeof(scs_int), 1, fout);
   fwrite(&(s->acceleration_lookback), sizeof(scs_int), 1, fout);
@@ -81,7 +80,6 @@ static ScsSettings *read_scs_stgs(FILE *fin) {
   fread(&(s->eps_rel), sizeof(scs_float), 1, fin);
   fread(&(s->eps_infeas), sizeof(scs_float), 1, fin);
   fread(&(s->alpha), sizeof(scs_float), 1, fin);
-  fread(&(s->cg_rate), sizeof(scs_float), 1, fin);
   fread(&(s->verbose), sizeof(scs_int), 1, fin);
   fread(&(s->warm_start), sizeof(scs_int), 1, fin);
   fread(&(s->acceleration_lookback), sizeof(scs_int), 1, fin);

@@ -134,7 +134,6 @@ void SCS(print_data)(const ScsData *d) {
   scs_printf("eps_infeas = %4f\n", d->stgs->eps_infeas);
   scs_printf("alpha = %4f\n", d->stgs->alpha);
   scs_printf("rho_x = %4f\n", d->stgs->rho_x);
-  scs_printf("cg_rate = %4f\n", d->stgs->cg_rate);
   scs_printf("scale = %4f\n", d->stgs->scale);
   scs_printf("write_data_filename = %s\n",
              (char *)d->stgs->write_data_filename);
@@ -201,7 +200,6 @@ void SCS(set_default_settings)(ScsData *d) {
   d->stgs->alpha = ALPHA;
   d->stgs->rho_x = RHO_X;
   d->stgs->scale = SCALE;
-  d->stgs->cg_rate = CG_RATE;
   d->stgs->verbose = VERBOSE;
   d->stgs->normalize = NORMALIZE;
   d->stgs->warm_start = WARM_START;
