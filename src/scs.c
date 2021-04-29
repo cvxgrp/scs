@@ -973,6 +973,7 @@ static scs_float iterate_norm_diff(ScsWork *w) {
 // XXX move these
 #define MAX_SCALE_VALUE (1e6)
 #define MIN_SCALE_VALUE (1e-6)
+#define SCALE_CACHE_CLEAR_ITERS (INFINITY)
 static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
                                const ScsCone *k, scs_int iter) {
   scs_float factor, new_scale;
@@ -980,19 +981,9 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   // XXX test this:
   /* pri_resid = ||Ax + s - b * tau|| */
-  /*
-  scs_float relative_res_pri = NORM(w->pri_resid, w->m) /
-    MAX(MAX(MAX(NORM(w->ax, w->m), NORM(w->sol->s, w->m)), w->b_norm * r->tau),
-    r->tau + r->kap);
-  */
   scs_float relative_res_pri = NORM(w->pri_resid, w->m) /
     MAX(MAX(NORM(w->ax, w->m), NORM(w->sol->s, w->m)), w->b_norm * r->tau);
   /* dual_resid = ||Px + A'y + c * tau|| */
-  /*
-  scs_float relative_res_dual = NORM(w->dual_resid, w->n) /
-    MAX(MAX(MAX(NORM(w->px, w->n), NORM(w->aty, w->n)), w->c_norm * r->tau),
-    r->tau + r->kap);
-  */
   scs_float relative_res_dual = NORM(w->dual_resid, w->n) /
     MAX(MAX(NORM(w->px, w->n), NORM(w->aty, w->n)), w->c_norm * r->tau);
 
@@ -1003,13 +994,15 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
   factor = SQRTF(exp(w->sum_log_scale_factor /
                 (scs_float)(w->n_log_scale_factor)));
 
-  // factor = exp(w->sum_log_scale_factor / (scs_float)(w->n_log_scale_factor));
-
-#if EXTRA_VERBOSE > 1
+#if EXTRA_VERBOSE > 3
+  scs_printf("************************************************************\n");
+  scs_printf("scale %4f\n", w->stgs->scale);
+  scs_printf("iter %i, n_log_scale_factor %i\n", (int)iter, (int)w->n_log_scale_factor);
+  scs_printf("sum_log_scale_factor %.3e\n", w->sum_log_scale_factor);
   scs_printf("relative_res_pri %.2e, relative_res_dual %.2e, factor %4f\n",
               relative_res_pri, relative_res_dual, factor);
-  scs_printf("relative_res_pri / relative_res_dual  %.2e\n",
-              relative_res_pri / relative_res_dual);
+  scs_printf("SQRTF(relative_res_pri / relative_res_dual)  %.2e\n",
+              SQRTF(relative_res_pri / relative_res_dual));
   scs_printf("tau %.2e, kap %.2e\n", r->tau, r->kap);
   scs_printf("primal: resid %.2e, ax %.2e, s %.2e, b*tau %.2e\n",
               NORM(w->pri_resid, w->m), NORM(w->ax, w->m),
@@ -1048,7 +1041,11 @@ static void maybe_update_scale(ScsWork *w, const ScsResiduals *r,
     for (i = w->n; i < w->n + w->m; i++) {
       w->v[i] = w->rho_y_vec[i - w->n] * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
     }
-    return;
+  } else if (w->n_log_scale_factor > SCALE_CACHE_CLEAR_ITERS) {
+    /* periodically clear the 'memory' of the factor scales */
+    w->sum_log_scale_factor = 0;
+    w->n_log_scale_factor = 0;
+    w->last_scale_update_iter = iter;
   }
 }
 
