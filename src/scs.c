@@ -93,16 +93,18 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_printf("%s", cone_str);
   scs_free(cone_str);
   scs_printf(
-      "settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e,\n"
-      "\t  alpha: %.2f, scale: %.2e, adaptive_scaling: %i,\n"
-      "\t  max_iters: %i, normalize: %i, warm_start: %i,\n"
-      "\t  acceleration_lookback: %i, acceleration_interval: %i,\n",
+      "settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e\n"
+      "\t  alpha: %.2f, scale: %.2e, adaptive_scaling: %i\n"
+      "\t  max_iters: %i, normalize: %i, warm_start: %i\n",
       /*, rho_x: %.2e\n", */
       stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas,
       stgs->alpha, stgs->scale, (int)stgs->adaptive_scaling,
-      (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start,
-      (int)acceleration_lookback, (int)acceleration_interval);
+      (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start);
       /* , stgs->rho_x); */
+  if (stgs->acceleration_lookback > 0) {
+    scs_printf("\t  acceleration_lookback: %i, acceleration_interval: %i\n",
+      (int)acceleration_lookback, (int)acceleration_interval);
+  }
   if (stgs->time_limit_secs) {
     scs_printf("\t  time_limit_secs: %.2e,\n", stgs->time_limit_secs);
   }
