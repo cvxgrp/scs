@@ -321,7 +321,10 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 
 scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter) {
   /* XXX update */
+  /*
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
+  */
+  return (factor > 2. || factor < 0.5);
 }
 
 void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
