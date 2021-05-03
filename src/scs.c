@@ -287,6 +287,7 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
 
   r->res_infeas = NAN;
   if (r->bty_tau < 0) {
+    //r->res_infeas = NORM(aty, n);
     r->res_infeas = NORM(aty, n) / -r->bty_tau;
   }
 
@@ -294,11 +295,11 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->res_unbdd_p = NAN;
   if (r->ctx_tau < 0) {
     // XXX
-    r->res_unbdd_a = NORM(ax_s, n);
-    r->res_unbdd_p = NORM(px, n);
-    //r->res_unbdd_a = NORM(ax_s, n) / -r->ctx_tau;
+    //r->res_unbdd_a = NORM(ax_s, n);
+    //r->res_unbdd_p = NORM(px, n);
+    r->res_unbdd_a = NORM(ax_s, n) / -r->ctx_tau;
     //r->res_unbdd_p = SQRTF(MAX(r->xt_p_x_tau / r->ctx_tau / r->ctx_tau, 0.));
-    //r->res_unbdd_p = NORM(px, n) / -r->ctx_tau;
+    r->res_unbdd_p = NORM(px, n) / -r->ctx_tau;
   }
   /* XXX remove this: */
   /*
@@ -499,7 +500,7 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
 static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                           scs_float bt_y) {
-  /* SCS(scale_array)(sol->y, -1 / bt_y, w->m); */
+  SCS(scale_array)(sol->y, -1 / bt_y, w->m);
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->s, NAN, w->m);
   if (info->status_val == 0) {
@@ -512,10 +513,8 @@ static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
 static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                          scs_float ct_x) {
-  /*
   SCS(scale_array)(sol->x, -1 / ct_x, w->n);
   SCS(scale_array)(sol->s, -1 / ct_x, w->m);
-  */
   SCS(scale_array)(sol->y, NAN, w->m);
   if (info->status_val == 0) {
     strcpy(info->status, "unbounded (inaccurate)");
@@ -771,11 +770,20 @@ static scs_int has_converged(ScsWork *w, ScsResiduals *r, scs_int iter) {
     }
   }
   // XXX is this right?:
+  /*
   if (isless(r->res_unbdd_a, eps_infeas * NORM(w->sol->x, w->n)) &&
       isless(r->res_unbdd_p, eps_infeas * NORM(w->sol->x, w->n))) {
     return SCS_UNBOUNDED;
   }
   if (isless(r->res_infeas, eps_infeas * NORM(w->sol->y, w->n))) {
+    return SCS_INFEASIBLE;
+  }
+  */
+  if (isless(r->res_unbdd_a, eps_infeas) &&
+      isless(r->res_unbdd_p, eps_infeas)) {
+    return SCS_UNBOUNDED;
+  }
+  if (isless(r->res_infeas, eps_infeas)) {
     return SCS_INFEASIBLE;
   }
   return 0;
