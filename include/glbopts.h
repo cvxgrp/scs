@@ -16,6 +16,8 @@ extern "C" {
   ("3.0.0") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
+#define SCS_TIME_LIMIT (-9)
+#define SCS_MAX_ITERS (-8)
 #define SCS_INFEASIBLE_INACCURATE (-7)
 #define SCS_UNBOUNDED_INACCURATE (-6)
 #define SCS_SIGINT (-5)
@@ -28,7 +30,7 @@ extern "C" {
 #define SCS_SOLVED_INACCURATE (2)
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
-#define MAX_ITERS (10000)
+#define MAX_ITERS (100000)
 #define EPS_REL (1E-4)
 #define EPS_ABS (1E-4)
 #define EPS_INFEAS (1E-5)

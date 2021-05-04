@@ -28,13 +28,10 @@ static scs_int scs_isnan(scs_float x) { return (x == NAN || x != x); }
 static void free_work(ScsWork *w) {
   if (w) {
     scs_free(w->u);
-    scs_free(w->u_best);
     scs_free(w->u_t);
-    scs_free(w->u_prev);
     scs_free(w->v);
     scs_free(w->v_prev);
     scs_free(w->rsk);
-    scs_free(w->rsk_best);
     scs_free(w->h);
     scs_free(w->g);
     scs_free(w->ax);
@@ -186,21 +183,6 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
   }
 }
 
-// XXX fix this:
-//XXX THIS IS A MAJOR BUG:
-static scs_float get_max_residual(ScsResiduals *r) {
-  return MAX(r->gap, MAX(r->res_pri, r->res_dual));
-}
-
-static void update_best_iterate(ScsWork *w, ScsResiduals *r) {
-  scs_float max_residual = get_max_residual(r);
-  if (w->best_max_residual > max_residual) {
-    w->best_max_residual = max_residual;
-    memcpy(w->u_best, w->u, (w->m + w->n + 1) * sizeof(scs_float));
-    memcpy(w->rsk_best, w->rsk, (w->m + w->n + 1) * sizeof(scs_float));
-  }
-}
-
 /* calculates un-normalized residual quantities */
 /* this is somewhat slow but not a bottleneck */
 static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
@@ -319,8 +301,6 @@ static void populate_residuals(ScsWork *w, ScsResiduals *r, scs_int iter,
   r->gap = ABS(r->xt_p_x + r->ctx + r->bty);
   r->pobj = r->xt_p_x / 2. + r->ctx;
   r->dobj = -r->xt_p_x / 2. - r->bty;
-
-  update_best_iterate(w, r);
 }
 
 static void cold_start_vars(ScsWork *w) {
@@ -442,14 +422,6 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   return status;
 }
 
-static scs_int indeterminate(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  strcpy(info->status, "indeterminate");
-  SCS(scale_array)(sol->x, NAN, w->n);
-  SCS(scale_array)(sol->y, NAN, w->m);
-  SCS(scale_array)(sol->s, NAN, w->m);
-  return SCS_INDETERMINATE;
-}
-
 static void sety(ScsWork *w, ScsSolution *sol) {
   if (!sol->y) {
     sol->y = (scs_float *)scs_calloc(w->m, sizeof(scs_float));
@@ -472,21 +444,8 @@ static void setx(ScsWork *w, ScsSolution *sol) {
   memcpy(sol->x, w->u, w->n * sizeof(scs_float));
 }
 
-static void copy_from_best_iterate(ScsWork *w) {
-  memcpy(w->u, w->u_best, (w->m + w->n + 1) * sizeof(scs_float));
-  memcpy(w->rsk, w->rsk_best, (w->m + w->n + 1) * sizeof(scs_float));
-}
-
 static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                       ScsResiduals *r, scs_int iter) {
-  //XXX THIS IS A MAJOR BUG:
-  if (0 && w->best_max_residual < get_max_residual(r)) {
-    copy_from_best_iterate(w);
-    populate_residuals(w, r, iter, 1); /* 1 forces residual recomputation. */
-    setx(w, sol);
-    sety(w, sol);
-    sets(w, sol);
-  }
   SCS(scale_array)(sol->x, SAFEDIV_POS(1.0, r->tau), w->n);
   SCS(scale_array)(sol->y, SAFEDIV_POS(1.0, r->tau), w->m);
   SCS(scale_array)(sol->s, SAFEDIV_POS(1.0, r->tau), w->m);
@@ -568,28 +527,34 @@ static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 /* sets solutions, re-scales by inner prods if infeasible or unbounded */
 static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                          ScsResiduals *r, scs_int iter) {
-  scs_int l = w->n + w->m + 1;
+  if (info->status_val == SCS_UNFINISHED) {
+    /* failed to converge within limits */
+    if (iter == w->stgs->max_iters) {
+      populate_on_failure(w->m, w->n, sol, info, SCS_MAX_ITERS, "hit max_iters");
+    }
+    else if (w->time_limit_reached) {
+      populate_on_failure(w->m, w->n, sol, info, SCS_TIME_LIMIT, "hit time_limit_secs");
+    }
+    else {
+      scs_printf("Error: should not be in this state (1).\n");
+    }
+    return;
+  }
   populate_residuals(w, r, iter, 0);
   setx(w, sol);
   sety(w, sol);
   sets(w, sol);
-  if (info->status_val == SCS_UNFINISHED) {
-    /* not yet converged, take best guess */
-    if (r->tau > INDETERMINATE_TOL && r->tau > r->kap) {
-      info->status_val = solved(w, sol, info, r, iter);
-    } else if (SCS(norm)(w->u, l) < INDETERMINATE_TOL * SQRTF((scs_float)l)) {
-      info->status_val = indeterminate(w, sol, info);
-    } else if (r->bty_tau < r->ctx_tau) {
-      info->status_val = infeasible(w, sol, info, r->bty_tau);
-    } else {
-      info->status_val = unbounded(w, sol, info, r->ctx_tau);
-    }
-  } else if (is_solved_status(info->status_val)) {
+  if (is_solved_status(info->status_val)) {
     info->status_val = solved(w, sol, info, r, iter);
-  } else if (is_infeasible_status(info->status_val)) {
+  }
+  else if (is_infeasible_status(info->status_val)) {
     info->status_val = infeasible(w, sol, info, r->bty_tau);
-  } else {
+  }
+  else if (is_unbounded_status(info->status_val)) {
     info->status_val = unbounded(w, sol, info, r->ctx_tau);
+  }
+  else {
+      scs_printf("Error: should not be in this state (2).\n");
   }
   if (w->stgs->normalize) {
     SCS(un_normalize_sol)(w, sol);
@@ -614,8 +579,6 @@ static void print_summary(ScsWork *w, scs_int i, ScsResiduals *r,
   scs_printf("Norm v = %4f, ", SCS(norm)(w->v, w->n + w->m + 1));
   scs_printf("tau = %4f, ", w->u[w->n + w->m]);
   scs_printf("kappa = %4f, ", w->rsk[w->n + w->m]);
-  scs_printf("|u - u_prev| = %1.2e, ",
-             SCS(norm_diff)(w->u, w->u_prev, w->n + w->m + 1));
   scs_printf("|u - u_t| = %1.2e, ",
              SCS(norm_diff)(w->u, w->u_t, w->n + w->m + 1));
   scs_printf("res_infeas = %1.2e, ", r->res_infeas);
@@ -693,12 +656,6 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("-");
   }
   scs_printf("\n");
-  if (info->iter == w->stgs->max_iters) {
-    scs_printf("Hit max_iters, returning best iterate.\n");
-  }
-  else if (w->time_limit_reached) {
-    scs_printf("Reached time limit, returning best iterate.\n");
-  }
   scs_printf("status:  %s\n", info->status);
   scs_printf("timings: total: %1.2es = setup: %1.2es + solve: %1.2es\n",
              (info->setup_time + info->solve_time) / 1e3,
@@ -858,16 +815,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->n_log_scale_factor = 0;
   w->scale_updates = 0;
   w->time_limit_reached = 0;
-  w->best_max_residual = INFINITY;
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
-  w->u_best = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->u_t = (scs_float *)scs_calloc(l, sizeof(scs_float));
-  w->u_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->v = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->v_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->rsk = (scs_float *)scs_calloc(l, sizeof(scs_float));
-  w->rsk_best = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->ls_ws = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
@@ -968,17 +921,6 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
   return 0;
 }
 
-/*
-static scs_float iterate_norm_diff(ScsWork *w) {
-  scs_int l = w->m + w->n + 1;
-  scs_float u_norm_difference = SCS(norm_diff)(w->u, w->u_prev, l);
-  scs_float v_norm_difference = SCS(norm_diff)(w->v, w->v_prev, l);
-  scs_float norm = SQRTF(SCS(norm_sq)(w->u, l) + SCS(norm_sq)(w->v, l));
-  scs_float norm_diff = SQRTF(u_norm_difference * u_norm_difference +
-                              v_norm_difference * v_norm_difference);
-  return norm_diff / norm;
-}
-*/
 
 // XXX move these
 #define MAX_SCALE_VALUE (1e6)
@@ -1106,8 +1048,6 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       //total_accel_time += SCS(tocq)(&accel_timer);
     }
     /* XXX rm this? */
-    //memcpy(w->u_prev, w->u, l * sizeof(scs_float));
-    //u_prev deleted
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
     //SCS(tic)(&lin_sys_timer);

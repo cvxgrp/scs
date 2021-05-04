@@ -94,7 +94,7 @@ struct SCS_SOL_VARS {
 /* contains terminating information */
 struct SCS_INFO {
   scs_int iter;          /* number of iterations taken */
-  char status[64];       /* status string, e.g. 'Solved' */
+  char status[64];       /* status string, e.g. 'solved' */
   scs_int status_val;    /* status as scs_int, defined in glbopts.h */
   scs_int scale_updates; /* number of updates to scale */
   scs_float pobj;        /* primal objective */
