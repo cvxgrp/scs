@@ -155,7 +155,7 @@ static void set_m(AaWork *a, aa_int len) {
     nrm_y = BLAS(nrm2)(&btotal, a->Y, &one);
     nrm_s = BLAS(nrm2)(&btotal, a->S, &one);
     r = a->eta * (nrm_y * nrm_y + nrm_s * nrm_s);
-    #if EXTRA_VERBOSE > 5
+    #if EXTRA_VERBOSE > 1
     scs_printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n",
                 a->iter, len, nrm_y, nrm_s, r);
     #endif
@@ -248,22 +248,21 @@ static void update_accel_params(const aa_float *x, const aa_float *f,
 static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   TIME_TIC
   blas_int info = -1, bdim = (blas_int)(a->dim), one = 1, blen = (blas_int)len;
-  blas_int bmem = (blas_int)a->mem;
   aa_float neg_onef = -1.0, onef = 1.0, zerof = 0.0, nrm;
   /* work = S'g or Y'g */
   BLAS(gemv)("Trans", &bdim, &blen, &onef, a->type1 ? a->S : a->Y, &bdim, a->g,
               &one, &zerof, a->work, &one);
   /* work = M \ work, where update_accel_params has set M = S'Y or M = Y'Y */
   BLAS(gesv)(&blen, &one, a->M, &blen, a->ipiv, a->work, &blen, &info);
-  nrm = BLAS(nrm2)(&bmem, a->work, &one);
-  #if EXTRA_VERBOSE > 10
+  nrm = BLAS(nrm2)(&blen, a->work, &one);
+  #if EXTRA_VERBOSE > 5
   scs_printf("AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
-             a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
+             a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)info, nrm);
   #endif
   if (info < 0 || nrm >= MAX_AA_NRM) {
-    #if EXTRA_VERBOSE > 0
+    #if EXTRA_VERBOSE > 1
     scs_printf("Error in AA type %i, iter: %i, len %i, info: %i, norm %.2e\n",
-               a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, nrm);
+               a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)info, nrm);
     #endif
     /* reset aa for stability */
     aa_reset(a);
@@ -360,6 +359,9 @@ void aa_finish(AaWork *a) {
 
 void aa_reset(AaWork *a) {
   /* to reset we simply set a->iter = 0 */
+  #if EXTRA_VERBOSE > 1
+  scs_printf("AA reset\n");
+  #endif
   a->iter = 0;
   return;
 }
