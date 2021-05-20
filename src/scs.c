@@ -1037,7 +1037,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     /* accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
     if (i > 0 && i % w->stgs->acceleration_interval == 0) {
-      //SCS(tic)(&accel_timer);
+      SCS(tic)(&accel_timer);
       r.aa_norm = aa_apply(w->v, w->v_prev, w->accel);
       /*
       if (r->aa_norm < 0) {
@@ -1045,24 +1045,24 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
             "error in accelerate", "failure");
       }
       */
-      //total_accel_time += SCS(tocq)(&accel_timer);
+      total_accel_time += SCS(tocq)(&accel_timer);
     }
     /* XXX rm this? */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
-    //SCS(tic)(&lin_sys_timer);
+    SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
                      "error in project_lin_sys", "failure");
     }
-    //total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
+    total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
 
-    //SCS(tic)(&cone_timer);
+    SCS(tic)(&cone_timer);
     if (project_cones(w, k, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
                      "error in project_cones", "failure");
     }
-    //total_cone_time += SCS(tocq)(&cone_timer);
+    total_cone_time += SCS(tocq)(&cone_timer);
 
     update_dual_vars(w);
 

@@ -4,8 +4,8 @@
 
 #define MIN_SCALE (1e-4)
 #define MAX_SCALE (1e4)
-#define NUM_RUIZ_PASSES (25) /* additional passes don't help much */
-#define NUM_L2_PASSES (0) /* do one or zero, not more since not stable */
+#define NUM_RUIZ_PASSES (10) /* additional passes don't help much */
+#define NUM_L2_PASSES (1) /* do one or zero, not more since not stable */
 
 
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
@@ -264,7 +264,7 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
 }
 
 static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
-                    scs_float *c, scs_float *Dt, scs_float *Et, scs_float *s,
+                    scs_float *c, scs_float *Dt, scs_float *Et, scs_float s,
                     ScsScaling *scal, scs_int * boundaries,
                     scs_int cone_boundaries_len) {
   scs_int i, j;
@@ -311,8 +311,8 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
   }
 
   /* Apply scaling */
-  SCS(scale_array)(c, *s, A->n);
-  SCS(scale_array)(b, *s, A->m);
+  SCS(scale_array)(c, s, A->n);
+  SCS(scale_array)(b, s, A->m);
   /* no need to scale P since primal_scale = dual_scale */
   /*
   if (P) {
@@ -322,9 +322,8 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
   */
 
   /* Accumulate scaling */
-  scal->primal_scale *= *s;
-  scal->dual_scale *= *s;
-
+  scal->primal_scale *= s;
+  scal->dual_scale *= s;
 }
 
 
@@ -382,11 +381,11 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scal->dual_scale = 1.;
   for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
     compute_ruiz_mats(P, A, b, c, Dt, Et, &s, cone_boundaries, cone_boundaries_len);
-    rescale(P, A, b, c, Dt, Et, &s, scal, cone_boundaries, cone_boundaries_len);
+    rescale(P, A, b, c, Dt, Et, s, scal, cone_boundaries, cone_boundaries_len);
   }
   for (i = 0; i < NUM_L2_PASSES; ++i) {
     compute_l2_mats(P, A, b, c, Dt, Et, &s, cone_boundaries, cone_boundaries_len);
-    rescale(P, A, b, c, Dt, Et, &s, scal, cone_boundaries, cone_boundaries_len);
+    rescale(P, A, b, c, Dt, Et, s, scal, cone_boundaries, cone_boundaries_len);
   }
   scs_free(Dt);
   scs_free(Et);
