@@ -238,7 +238,7 @@ make install
 You may also want to compile the tests. In this case when you configure the project,
 please call the following command
 ```
-cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DBUILD_TESTING:ON ../
+cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DBUILD_TESTING=ON ../
 make
 ctest
 ```
