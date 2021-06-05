@@ -98,7 +98,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
       stgs->alpha, stgs->scale, (int)stgs->adaptive_scaling,
       (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start);
       /* , stgs->rho_x); */
-  if (stgs->acceleration_lookback > 0) {
+  if (stgs->acceleration_lookback != 0) {
     scs_printf("\t  acceleration_lookback: %i, acceleration_interval: %i\n",
       (int)acceleration_lookback, (int)acceleration_interval);
   }
