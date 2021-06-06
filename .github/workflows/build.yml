@@ -16,7 +16,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: make CC="gcc.exe" 
+      - run: make
       - run: make test
       - run: test/run_tests
+        env:
+          CC:"gcc.exe"
 
