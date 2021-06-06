@@ -208,18 +208,33 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
 void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
                           const ScsResiduals * r, scs_int iter,
                           SCS(timer) * solve_timer) {
-  FILE *fout = fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
+  /* if iter 0 open to write, else open to append */
+  FILE *fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
+  if (!fout) {
+    scs_printf("Error: Could not open %s for writing\n",
+                d->stgs->log_csv_filename);
+    return;
+  }
   scs_int l = w->m + w->n + 1;
   if (iter == 0) {
-    /* do not end in comma so that csv parsing is correct */
-    fprintf(fout, "iter,res_pri,res_dual,gap,res_infeas,res_unbdd_a,res_unbdd_p,"
-                  "pobj,dobj,tau,kap,scale,nrm_diff_u_ut,"
-                  "nrm_diff_v_v_prev,aa_norm,time\n");
+    /* need to end in comma so that csv parsing is correct */
+    fprintf(fout, "iter,res_pri,res_dual,gap,"
+                  "pri_resid_nrm_inf,dual_resid_nrm_inf,"
+                  "pri_resid_nrm_2,dual_resid_nrm_2,"
+                  "res_infeas,res_unbdd_a,res_unbdd_p,"
+                  "pobj,dobj,tau,kap,scale,"
+                  "diff_u_ut_nrm_2,diff_v_v_prev_nrm_2,"
+                  "diff_u_ut_nrm_inf,diff_v_v_prev_nrm_inf,"
+                  "aa_norm,time,\n");
   }
   fprintf(fout, "%li,", (long)iter);
   fprintf(fout, "%.16e,", r->res_pri);
   fprintf(fout, "%.16e,", r->res_dual);
   fprintf(fout, "%.16e,", r->gap);
+  fprintf(fout, "%.16e,", SCS(norm_inf)(w->pri_resid, w->m));
+  fprintf(fout, "%.16e,", SCS(norm_inf)(w->dual_resid, w->n));
+  fprintf(fout, "%.16e,", SCS(norm)(w->pri_resid, w->m));
+  fprintf(fout, "%.16e,", SCS(norm)(w->dual_resid, w->n));
   fprintf(fout, "%.16e,", r->res_infeas);
   fprintf(fout, "%.16e,", r->res_unbdd_a);
   fprintf(fout, "%.16e,", r->res_unbdd_p);
@@ -230,6 +245,8 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", w->stgs->scale);
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_t, l));
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->v, w->v_prev, l));
+  fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->u, w->u_t, l));
+  fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->v, w->v_prev, l));
   fprintf(fout, "%.16e,", r->aa_norm);
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
   fprintf(fout, "\n");
