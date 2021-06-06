@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - run: echo $PWD
       - run: make
       - run: make test
       - run: test/run_tests
