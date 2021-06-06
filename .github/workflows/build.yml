@@ -17,7 +17,7 @@ jobs:
           submodules: true
       - run: echo $PATH
       - run: make
-          shell: bash
+        shell: bash
       - run: make test
       - run: test/run_tests
 
