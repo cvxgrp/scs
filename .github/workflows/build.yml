@@ -16,5 +16,6 @@ jobs:
         with:
           submodules: true
       - run: make
-
+      - run: make test
+      - run: test/run_tests
 
