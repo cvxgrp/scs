@@ -9,15 +9,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
-        #os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: Install-Package OpenBlas
-      - run: make CC="gcc.exe"
-      - run: make test CC="gcc.exe"
+      - run: make
+      - run: make test
       - run: test/run_tests
 
