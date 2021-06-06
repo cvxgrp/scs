@@ -6,6 +6,7 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build
+    shell: bash
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
