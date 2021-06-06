@@ -16,8 +16,7 @@ jobs:
         with:
           submodules: true
       - run: echo $PATH
-      - run: make
-        shell: bash
+      - run: make USE_LAPACK=0
       - run: make test
       - run: test/run_tests
 
