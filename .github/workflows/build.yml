@@ -16,8 +16,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: $(CC) src/scs.c -Iinclude
-      - run: echo $PATH
+      - run: echo $(CC)
+      - run: $(CC) src\scs.c -Iinclude
       - run: make USE_LAPACK=0
       - run: make test
       - run: test/run_tests
