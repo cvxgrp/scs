@@ -15,7 +15,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - if: runner.os == 'Windows'
         shell: pwsh
       - run: echo $PWD
       - run: make
