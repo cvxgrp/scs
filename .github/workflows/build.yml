@@ -16,7 +16,7 @@ jobs:
         with:
           submodules: true
       - run: echo $PWD
-      - run: make
+      - run: make -d
       - run: make test
       - run: test/run_tests
 
