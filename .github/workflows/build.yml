@@ -6,7 +6,6 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build
-    shell: bash
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,6 +17,7 @@ jobs:
           submodules: true
       - run: echo $PATH
       - run: make
+          shell: bash
       - run: make test
       - run: test/run_tests
 
