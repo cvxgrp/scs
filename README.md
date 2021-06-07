@@ -1,8 +1,8 @@
 SCS
 ====
 
-[![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
-[![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm/branch/master?svg=true)](https://ci.appveyor.com/project/bodono/scs/branch/master)
+![Build Status](https://github.com/cvxgrp/scs/actions/workflows/build.yml/badge.svg)
+
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper [Conic Optimization via
@@ -220,3 +220,49 @@ two structs in `include/linsys.h` and plug it in.
 If you get an error like `cannot find -lblas` or `cannot find -llapack`, then
 you need to install blas and lapack and / or update your environment variables
 to point to the install locations.
+
+### Using SCS with cmake
+
+Thanks to [`CMake`](http://cmake.org) buildsystem, scs can be easily compiled
+and linked by other `CMake` projects. To use the `cmake` buld system please run
+the following commands:
+```
+cd scs
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> ../
+make
+make install
+```
+
+You may also want to compile the tests. In this case when you configure the project,
+please call the following command
+```
+cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DBUILD_TESTING=ON ../
+make
+ctest
+```
+
+By default the build-system will compile the library as `shared`. If you want to
+compile it as `static`, please call the following command when you configure the
+project
+```
+cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -BUILD_SHARED_LIBS=OFF ../
+make
+```
+
+The `cmake` build-system exports two CMake targets called `scs::scsdir` and
+`scs::scsindir` which can be imported using the `find_package` CMake command
+and used by calling `target_link_libraries` as in the following example:
+```cmake
+cmake_minimum_required(VERSION 3.0)
+project(myproject)
+find_package(scs REQUIRED)
+add_executable(example example.cpp)
+
+# To use the direct method
+target_link_libraries(example scs::scsdir)
+
+# To use the indirect method
+target_link_libraries(example scs::scsindir)
+```
