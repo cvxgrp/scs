@@ -62,6 +62,9 @@ static const char *rob_gauss_cov_est(void) {
   k->psize = psize;
 
   SCS(set_default_settings)(d);
+  d->stgs->eps_abs = 1e-6;
+  d->stgs->eps_rel = 1e-6;
+  d->stgs->eps_infeas = 1e-9;
 
   exitflag = scs(d, k, sol, &info);
 
