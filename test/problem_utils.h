@@ -6,6 +6,7 @@
 #include "linalg.h"
 #include "scs.h"
 #include "util.h"
+#include "rng.h"
 
 #define PI (3.141592654)
 #ifdef DLONG
@@ -19,16 +20,13 @@
 #define INTRW "%i"
 #endif
 
-void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
-                          ScsSolution *opt_sol);
-
 /* uniform random number in [-1,1] */
 static scs_float rand_scs_float(void) {
-  return 2 * (((scs_float)rand()) / RAND_MAX) - 1;
+  return 2 * (((scs_float)ran_arr_next()) / RAND_MAX) - 1;
 }
 
 void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
-                          ScsSolution *opt_sol) {
+                          ScsSolution *opt_sol, scs_int seed) {
   scs_int n = d->n;
   scs_int m = d->m;
   ScsMatrix *A = d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
@@ -67,6 +65,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
    c = -A'*y
    b = A*x + s
    */
+  ran_start(seed);
   A->p[0] = 0;
   for (j = 0; j < n; j++) { /* column */
     r = 0;
@@ -74,7 +73,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
       /* generate a unique sorted array via Knuths alg */
       rn = m - i;
       rm = col_nnz - r;
-      if ((rand() % rn) < rm) {
+      if ((ran_arr_next() % rn) < rm) {
         A->x[r + j * col_nnz] = rand_scs_float();
         A->i[r + j * col_nnz] = i;
         b[i] += A->x[r + j * col_nnz] * x[j];

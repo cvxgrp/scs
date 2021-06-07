@@ -13,7 +13,9 @@
 int tests_run = 0;
 
 static const char *all_tests(void) {
+  scs_printf("small_lp\n");
   mu_run_test(small_lp);
+  scs_printf("rob_gauss_cov_est\n");
   mu_run_test(rob_gauss_cov_est);
   /* mu_run_test(small_random_socp); */
   return 0;

@@ -24,11 +24,9 @@ static const char *small_lp(void) {
   k->f = (scs_int)floor(m * p_f);
   k->l = m - k->f;
 
-  srand(seed);
-
   d->m = m;
   d->n = n;
-  gen_random_prob_data(nnz, col_nnz, d, k, opt_sol);
+  gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
   SCS(set_default_settings)(d);
 
   exitflag = scs(d, k, sol, &info);

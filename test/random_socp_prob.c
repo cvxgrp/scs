@@ -70,7 +70,6 @@ int main(int argc, char **argv) {
           argv[0]);
       return 0;
   }
-  srand(seed);
   scs_printf("seed : %i\n", seed);
 
   k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
@@ -148,7 +147,7 @@ int main(int argc, char **argv) {
   /* set up SCS structures */
   d->m = m;
   d->n = n;
-  gen_random_prob_data(nnz, col_nnz, d, k, opt_sol);
+  gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
   SCS(set_default_settings)(d);
 
   /* d->stgs->write_data_filename = "random_socp_prob"; */
