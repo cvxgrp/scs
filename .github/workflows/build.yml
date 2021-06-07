@@ -5,8 +5,6 @@ on: [push, pull_request]
 
 jobs:
   linux:
-    strategy:
-      fail-fast: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,20 +13,15 @@ jobs:
       - run: make test
       - run: test/run_tests
 
-  windows:
-    strategy:
-      fail-fast: false
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: choco install clapack
-      - run: make
-      - run: make test
-      - run: test/run_tests
+  #  runs-on: windows-latest
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - run: choco install clapack
+  #    - run: make
+  #    - run: make test
+  #    - run: test/run_tests
 
   mac:
-    strategy:
-      fail-fast: false
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
