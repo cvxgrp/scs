@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install libopenblas-dev
+      - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: make
       - run: make test
       - run: test/run_tests
@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - run: choco install openblas -y
+      - run: choco install clapack
       - run: make
       - run: make test
       - run: test/run_tests
@@ -32,7 +32,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: brew install openblas
+      - run: brew install openblas lapack
       - run: make
       - run: make test
       - run: test/run_tests
