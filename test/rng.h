@@ -85,7 +85,7 @@ void ran_start(seed)    /* do this before using ran_array */
 }
 
 #define ran_arr_next() (*ran_arr_ptr>=0? *ran_arr_ptr++: ran_arr_cycle())
-long ran_arr_cycle()
+long ran_arr_cycle(void)
 {
   if (ran_arr_ptr==&ran_arr_dummy)
     ran_start(314159L); /* the user forgot to initialize */

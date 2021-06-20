@@ -139,13 +139,15 @@ size_t SCS(sizeof_float)(void);
 /* workspace for SCS */
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
-  scs_float *u, *u_best, *v, *u_t, *v_prev, *rsk, *rsk_best;
-  scs_float *h, *g, *ls_ws, *rho_y_vec;
-  scs_float b_norm, c_norm, best_max_residual;
-  scs_float sum_log_scale_factor;
-  scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
-  scs_int time_limit_reached;
-  scs_float *b, *c;       /* (possibly normalized) b and c vectors */
+  scs_int time_limit_reached; /* set if the time-limit is reached */
+  scs_float *u, *v, *u_t, *v_prev, *rsk;
+  scs_float *h; /* h = [c; b] */
+  scs_float *g; /* g = (I + M)^{-1} h */
+  scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
+  scs_float *rho_y_vec; /* XXX explain this */
+  AaWork *accel;          /* struct for acceleration workspace */
+  scs_float *b_orig, *c_orig;       /* original b and c vectors */
+  scs_float *b_normalized, *c_normalized;    /* normalized b and c vectors */
   scs_int m, n;           /* A has m rows, n cols */
   ScsMatrix *A;           /* (possibly normalized) A matrix */
   ScsMatrix *P;           /* (possibly normalized) P matrix */
@@ -153,35 +155,40 @@ struct SCS_WORK {
   ScsSettings *stgs;      /* contains solver settings specified by user */
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */
-  AaWork *accel;          /* struct for acceleration workspace */
-  /* workspace for computing residuals, tau *not* divided out */
-  scs_float *ax, *ax_s, *px, *aty, *pri_resid, *dual_resid;
-  scs_float *normalized_pri_resid, *normalized_dual_resid;
-  ScsSolution *sol; /* track x,y,s as alg progresses, tau *not* divided out */
   scs_int *cone_boundaries; /* array with boundaries of cones */
   scs_int cone_boundaries_len; /* total length of cones */
+  /* normalized and unnormalized residuals */
+  ScsResiduals *r_orig, *r_normalized;
+  /* track x,y,s as alg progresses, tau *not* divided out */
+  ScsSolution *xys_orig, *xys_normalized;
+  /* updating scale params workspace */
+  scs_float sum_log_scale_factor;
+  scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
+  /* aa norm stat */
+  scs_float aa_norm;
 };
 
 /* to hold residual information, *all are unnormalized* */
 struct SCS_RESIDUALS {
   scs_int last_iter;
   scs_float xt_p_x;     /* x' P x  */
-  scs_float xt_p_x_tau; /* tau^2 *not* divided out */
-  scs_float gap; /* primal obj - dual obj */
+  scs_float xt_p_x_tau; /* x'Px * tau^2 *not* divided out */
   scs_float ctx;
   scs_float ctx_tau;  /* tau *not* divided out */
   scs_float bty;
   scs_float bty_tau;  /* tau *not* divided out */
   scs_float pobj; /* primal objective */
   scs_float dobj; /* dual objective */
+  scs_float gap; /* pobj - dobj */
   scs_float tau;
   scs_float kap;
-  scs_float aa_norm; /* anderson acceleration norm */
   scs_float res_pri;
   scs_float res_dual;
   scs_float res_infeas;
   scs_float res_unbdd_p;
   scs_float res_unbdd_a;
+  /* tau NOT divided out */
+  scs_float *ax, *ax_s, *px, *aty, *ax_s_btau, *px_aty_ctau;
 };
 
 #ifdef __cplusplus

@@ -4,7 +4,7 @@
 
 #define MIN_SCALE (1e-4)
 #define MAX_SCALE (1e4)
-#define NUM_RUIZ_PASSES (10) /* additional passes don't help much */
+#define NUM_RUIZ_PASSES (25) /* additional passes don't help much */
 #define NUM_L2_PASSES (1) /* do one or zero, not more since not stable */
 
 
@@ -327,7 +327,7 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
 }
 
 
-/* Will rescale as P -> EPE, A -> DAE, c -> Ec, b -> Db.
+/* Will rescale as P -> EPE, A -> DAE, c -> Ec, b -> Db, in-place.
  * Essentially trying to rescale this matrix:
  *
  * [P  A' c]   with   [E  0  0] on both sides (D, E diagonal)

@@ -206,8 +206,8 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
 }
 
 void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
-                          const ScsResiduals * r, scs_int iter,
-                          SCS(timer) * solve_timer) {
+                          scs_int iter, SCS(timer) * solve_timer) {
+  ScsResiduals *r = w->r_orig;
   /* if iter 0 open to write, else open to append */
   FILE *fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
   if (!fout) {
@@ -231,10 +231,10 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", r->res_pri);
   fprintf(fout, "%.16e,", r->res_dual);
   fprintf(fout, "%.16e,", r->gap);
-  fprintf(fout, "%.16e,", SCS(norm_inf)(w->pri_resid, w->m));
-  fprintf(fout, "%.16e,", SCS(norm_inf)(w->dual_resid, w->n));
-  fprintf(fout, "%.16e,", SCS(norm)(w->pri_resid, w->m));
-  fprintf(fout, "%.16e,", SCS(norm)(w->dual_resid, w->n));
+  fprintf(fout, "%.16e,", SCS(norm_inf)(r->ax_s_btau, w->m));
+  fprintf(fout, "%.16e,", SCS(norm_inf)(r->px_aty_ctau, w->n));
+  fprintf(fout, "%.16e,", SCS(norm)(r->ax_s_btau, w->m));
+  fprintf(fout, "%.16e,", SCS(norm)(r->px_aty_ctau, w->n));
   fprintf(fout, "%.16e,", r->res_infeas);
   fprintf(fout, "%.16e,", r->res_unbdd_a);
   fprintf(fout, "%.16e,", r->res_unbdd_p);
@@ -247,7 +247,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->v, w->v_prev, l));
   fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->u, w->u_t, l));
   fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->v, w->v_prev, l));
-  fprintf(fout, "%.16e,", r->aa_norm);
+  fprintf(fout, "%.16e,", w->aa_norm);
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
   fprintf(fout, "\n");
   fclose(fout);

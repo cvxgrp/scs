@@ -9,8 +9,8 @@ extern "C" {
 
 void SCS(normalize_warm_start)(ScsWork *w);
 void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol);
-void SCS(un_normalize_pri_resid)(ScsWork *w, scs_float *r);
-void SCS(un_normalize_dual_resid)(ScsWork *w, scs_float *r);
+void SCS(un_normalize_primal)(ScsWork *w, scs_float *r);
+void SCS(un_normalize_dual)(ScsWork *w, scs_float *r);
 
 #ifdef __cplusplus
 }

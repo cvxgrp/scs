@@ -12,8 +12,7 @@ extern "C" {
 void SCS(write_data)(const ScsData *d, const ScsCone *k);
 scs_int SCS(read_data)(const char * filename, ScsData **d, ScsCone **k);
 void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
-                          const ScsResiduals * r, scs_int iter,
-                          SCS(timer) * solve_timer);
+                          scs_int iter, SCS(timer) * solve_timer);
 
 #ifdef __cplusplus
 }

@@ -36,7 +36,7 @@ void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol) {
   }
 }
 
-void SCS(un_normalize_pri_resid)(ScsWork *w, scs_float *r) {
+void SCS(un_normalize_primal)(ScsWork *w, scs_float *r) {
   scs_int i;
   scs_float *D = w->scal->D;
   for (i = 0; i < w->m; ++i) {
@@ -44,7 +44,7 @@ void SCS(un_normalize_pri_resid)(ScsWork *w, scs_float *r) {
   }
 }
 
-void SCS(un_normalize_dual_resid)(ScsWork *w, scs_float *r) {
+void SCS(un_normalize_dual)(ScsWork *w, scs_float *r) {
   scs_int i;
   scs_float *E = w->scal->E;
   for (i = 0; i < w->n; ++i) {

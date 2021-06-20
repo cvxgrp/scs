@@ -875,10 +875,6 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       }
     }
     count += 3 * k->psize;
-#if EXTRA_VERBOSE > 0
-    scs_printf("Power cone proj time: %1.2es\n", SCS(tocq)(&proj_timer) / 1e3);
-    SCS(tic)(&proj_timer);
-#endif
   }
   /* project onto OTHER cones */
   return 0;
