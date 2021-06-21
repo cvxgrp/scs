@@ -193,18 +193,9 @@ static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
 static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   r->res_pri = SAFEDIV_POS(NORM(r->ax_s_btau, m), r->tau);
   r->res_dual = SAFEDIV_POS(NORM(r->px_aty_ctau, n), r->tau);
-
-  r->res_infeas = NAN;
-  if (r->bty_tau < 0) {
-    r->res_infeas = NORM(r->aty, n) / -r->bty_tau;
-  }
-
-  r->res_unbdd_a = NAN;
-  r->res_unbdd_p = NAN;
-  if (r->ctx_tau < 0) {
-    r->res_unbdd_a = NORM(r->ax_s, n) / -r->ctx_tau;
-    r->res_unbdd_p = NORM(r->px, n) / -r->ctx_tau;
-  }
+  r->res_infeas = NORM(r->aty, n);
+  r->res_unbdd_a = NORM(r->ax_s, n);
+  r->res_unbdd_p = NORM(r->px, n);
 }
 
 static void unnormalize_residuals(ScsWork *w) {
@@ -217,12 +208,12 @@ static void unnormalize_residuals(ScsWork *w) {
   r->tau = r_n->tau;
 
   /* mem copy arrays */
-  memcpy(r->ax, r_n->ax, w->m);
-  memcpy(r->ax_s, r_n->ax_s, w->m);
-  memcpy(r->ax_s_btau, r_n->ax_s_btau, w->m);
-  memcpy(r->aty, r_n->aty, w->n);
-  memcpy(r->px, r_n->px, w->n);
-  memcpy(r->px_aty_ctau, r_n->px_aty_ctau, w->n);
+  memcpy(r->ax, r_n->ax, w->m * sizeof(scs_float));
+  memcpy(r->ax_s, r_n->ax_s, w->m * sizeof(scs_float));
+  memcpy(r->ax_s_btau, r_n->ax_s_btau, w->m * sizeof(scs_float));
+  memcpy(r->aty, r_n->aty, w->n * sizeof(scs_float));
+  memcpy(r->px, r_n->px, w->n * sizeof(scs_float));
+  memcpy(r->px_aty_ctau, r_n->px_aty_ctau, w->n * sizeof(scs_float));
 
   /* unnormalize */
   r->kap = r_n->kap / pd;
@@ -248,8 +239,9 @@ static void unnormalize_residuals(ScsWork *w) {
 
 /* calculates un-normalized residual quantities */
 /* this is somewhat slow but not a bottleneck */
-static void populate_residual_struct(ScsWork *w, scs_int iter, scs_int force) {
+static void populate_residual_struct(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m;
+  /* normalized x,y,s terms */
   scs_float *x = w->xys_normalized->x;
   scs_float *y = w->xys_normalized->y;
   scs_float *s = w->xys_normalized->s;
@@ -257,7 +249,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter, scs_int force) {
 
   /* checks if the residuals are unchanged by checking iteration */
   /* force being set will force this to compute the residuals anyway */
-  if (!force && r->last_iter == iter) {
+  if (r->last_iter == iter) {
     return;
   }
   r->last_iter = iter;
@@ -319,9 +311,9 @@ static void populate_residual_struct(ScsWork *w, scs_int iter, scs_int force) {
   compute_residuals(r, m, n);
 
   if (w->stgs->normalize) {
-    memcpy(w->xys_orig->x, w->xys_normalized->x, n);
-    memcpy(w->xys_orig->y, w->xys_normalized->y, m);
-    memcpy(w->xys_orig->s, w->xys_normalized->s, m);
+    memcpy(w->xys_orig->x, w->xys_normalized->x, n * sizeof(scs_float));
+    memcpy(w->xys_orig->y, w->xys_normalized->y, m * sizeof(scs_float));
+    memcpy(w->xys_orig->s, w->xys_normalized->s, m * sizeof(scs_float));
     SCS(un_normalize_sol)(w, w->xys_orig);
     unnormalize_residuals(w);
   }
@@ -471,7 +463,7 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(scale_array)(sol->x, SAFEDIV_POS(1.0, w->r_orig->tau), w->n);
   SCS(scale_array)(sol->y, SAFEDIV_POS(1.0, w->r_orig->tau), w->m);
   SCS(scale_array)(sol->s, SAFEDIV_POS(1.0, w->r_orig->tau), w->m);
-  if (info->status_val == 0) {
+  if (info->status_val == SCS_UNFINISHED) {
     strcpy(info->status, "solved (inaccurate)");
     return SCS_SOLVED_INACCURATE;
   }
@@ -480,10 +472,10 @@ static scs_int solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 }
 
 static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  SCS(scale_array)(sol->y, -1 / w->r_orig->bty, w->m);
+  SCS(scale_array)(sol->y, -1 / w->r_orig->bty_tau, w->m);
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->s, NAN, w->m);
-  if (info->status_val == 0) {
+  if (info->status_val == SCS_UNFINISHED) {
     strcpy(info->status, "infeasible (inaccurate)");
     return SCS_INFEASIBLE_INACCURATE;
   }
@@ -492,10 +484,10 @@ static scs_int infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 }
 
 static scs_int unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  SCS(scale_array)(sol->x, -1 / w->r_orig->ctx, w->n);
-  SCS(scale_array)(sol->s, -1 / w->r_orig->ctx, w->m);
+  SCS(scale_array)(sol->x, -1 / w->r_orig->ctx_tau, w->n);
+  SCS(scale_array)(sol->s, -1 / w->r_orig->ctx_tau, w->m);
   SCS(scale_array)(sol->y, NAN, w->m);
-  if (info->status_val == 0) {
+  if (info->status_val == SCS_UNFINISHED) {
     strcpy(info->status, "unbounded (inaccurate)");
     return SCS_UNBOUNDED_INACCURATE;
   }
@@ -560,10 +552,13 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     }
     return;
   }
-  populate_residual_struct(w, iter, 0);
+  populate_residual_struct(w, iter);
   setx(w, sol);
   sety(w, sol);
   sets(w, sol);
+  if (w->stgs->normalize) {
+    SCS(un_normalize_sol)(w, sol);
+  }
   if (is_solved_status(info->status_val)) {
     info->status_val = solved(w, sol, info, iter);
   }
@@ -574,10 +569,7 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     info->status_val = unbounded(w, sol, info);
   }
   else {
-      scs_printf("Error: should not be in this state (2).\n");
-  }
-  if (w->stgs->normalize) {
-    SCS(un_normalize_sol)(w, sol);
+    scs_printf("Error: should not be in this state (2).\n");
   }
   get_info(w, sol, info, iter);
 }
@@ -597,13 +589,19 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("Norm u = %4f, ", SCS(norm)(w->u, w->n + w->m + 1));
   scs_printf("Norm u_t = %4f, ", SCS(norm)(w->u_t, w->n + w->m + 1));
   scs_printf("Norm v = %4f, ", SCS(norm)(w->v, w->n + w->m + 1));
+  scs_printf("Norm x = %4f, ", SCS(norm)(w->xys_orig->x, w->n));
+  scs_printf("Norm y = %4f, ", SCS(norm)(w->xys_orig->y,  w->m));
+  scs_printf("Norm s = %4f, ", SCS(norm)(w->xys_orig->s, w->m));
+  scs_printf("Norm |Ax + s| = %1.2e, ", SCS(norm)(r->ax_s, w->m));
   scs_printf("tau = %4f, ", w->u[w->n + w->m]);
   scs_printf("kappa = %4f, ", w->rsk[w->n + w->m]);
   scs_printf("|u - u_t| = %1.2e, ",
              SCS(norm_diff)(w->u, w->u_t, w->n + w->m + 1));
   scs_printf("res_infeas = %1.2e, ", r->res_infeas);
   scs_printf("res_unbdd_a = %1.2e, ", r->res_unbdd_a);
-  scs_printf("res_unbdd_p = %1.2e\n", r->res_unbdd_p);
+  scs_printf("res_unbdd_p = %1.2e, ", r->res_unbdd_p);
+  scs_printf("ctx_tau = %1.2e, ", r->ctx_tau);
+  scs_printf("bty_tau = %1.2e\n", r->bty_tau);
 #endif
 
 #ifdef MATLAB_MEX_FILE
@@ -754,11 +752,11 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
       return SCS_SOLVED;
     }
   }
-  if (isless(r->res_unbdd_a, eps_infeas) &&
-      isless(r->res_unbdd_p, eps_infeas)) {
+  if (isless(r->res_unbdd_a, eps_infeas * (-r->ctx_tau)) &&
+      isless(r->res_unbdd_p, eps_infeas * (-r->ctx_tau))) {
     return SCS_UNBOUNDED;
   }
-  if (isless(r->res_infeas, eps_infeas)) {
+  if (isless(r->res_infeas, eps_infeas * (-r->bty_tau))) {
     return SCS_INFEASIBLE;
   }
   return 0;
@@ -1072,7 +1070,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   }
 
   /* SCS */
-  populate_residual_struct(w, -1, 0);
+  populate_residual_struct(w, -1);
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
     /* XXX should this be before or after accel? */
@@ -1117,7 +1115,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
         return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "interrupted",
                      "interrupted");
       }
-      populate_residual_struct(w, i, 0);
+      populate_residual_struct(w, i);
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }
@@ -1130,7 +1128,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     }
 
     if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-      populate_residual_struct(w, i, 0);
+      populate_residual_struct(w, i);
       print_summary(w, i, &solve_timer);
     }
 
@@ -1142,7 +1140,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     // XXX is this the right place to do this?
     if (w->stgs->log_csv_filename) {
       /* calc residuals every iter if logging to csv */
-      populate_residual_struct(w, i, 0);
+      populate_residual_struct(w, i);
       SCS(log_data_to_csv)(d, k, w, i, &solve_timer);
     }
   }
@@ -1150,12 +1148,12 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   // XXX is this the right place to do this?
   if (w->stgs->log_csv_filename) {
     /* calc residuals every iter if logging to csv */
-    populate_residual_struct(w, i, 0);
+    populate_residual_struct(w, i);
     SCS(log_data_to_csv)(d, k, w, i, &solve_timer);
   }
 
   if (w->stgs->verbose) {
-    populate_residual_struct(w, i, 0);
+    populate_residual_struct(w, i);
     print_summary(w, i, &solve_timer);
   }
   /* populate solution vectors (unnormalized) and info */

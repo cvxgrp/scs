@@ -327,7 +327,7 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
 }
 
 
-/* Will rescale as P -> EPE, A -> DAE, c -> Ec, b -> Db, in-place.
+/* Will rescale as P -> EPE, A -> DAE, c -> sEc, b -> sDb, in-place.
  * Essentially trying to rescale this matrix:
  *
  * [P  A' c]   with   [E  0  0] on both sides (D, E diagonal)

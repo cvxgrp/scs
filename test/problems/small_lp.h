@@ -28,6 +28,8 @@ static const char *small_lp(void) {
   d->n = n;
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
   SCS(set_default_settings)(d);
+  d->stgs->eps_abs = 1e-5;
+  d->stgs->eps_rel = 1e-5;
 
   exitflag = scs(d, k, sol, &info);
   perr = SCS(dot)(d->c, sol->x, d->n) - SCS(dot)(d->c, opt_sol->x, d->n);
