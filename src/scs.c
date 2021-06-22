@@ -248,7 +248,6 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   ScsResiduals *r = w->r_normalized; /* normalized residuals */
 
   /* checks if the residuals are unchanged by checking iteration */
-  /* force being set will force this to compute the residuals anyway */
   if (r->last_iter == iter) {
     return;
   }
@@ -271,7 +270,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   SCS(add_scaled_array)(r->ax_s, s, m, 1.);
 
   memcpy(r->ax_s_btau, r->ax_s, m * sizeof(scs_float));
-  /* >ax_s_btau = Ax + s - b * tau */
+  /* ax_s_btau = Ax + s - b * tau */
   SCS(add_scaled_array)(r->ax_s_btau, w->b_normalized, m, -r->tau);
 
   /**************** DUAL *********************/

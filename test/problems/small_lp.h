@@ -19,6 +19,7 @@ static const char *small_lp(void) {
   scs_int exitflag;
   scs_float perr, derr;
   scs_int success;
+  const char * fail;
 
   d->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   k->f = (scs_int)floor(m * p_f);
@@ -39,9 +40,10 @@ static const char *small_lp(void) {
 
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
+  mu_assert("small_lp: SCS failed to produce outputflag SCS_SOLVED", success);
+  fail = verify_solution_correct(d, k, &info, sol);
   SCS(free_data)(d, k);
   SCS(free_sol)(sol);
   SCS(free_sol)(opt_sol);
-  mu_assert("small_lp: SCS failed to produce outputflag SCS_SOLVED", success);
-  return 0;
+  return fail;
 }
