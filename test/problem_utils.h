@@ -99,7 +99,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
   scs_float *primal = scs_calloc(m, sizeof(scs_float));
   scs_float *dual = scs_calloc(n, sizeof(scs_float));
   scs_float *px = scs_calloc(n, sizeof(scs_float));
-  
+
   scs_float res_pri, res_dual, res_infeas, res_unbdd_a, res_unbdd_p;
   scs_float ctx, bty, xt_p_x, gap, pobj, dobj;
 
@@ -115,7 +115,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
   /* Ax + s - b * tau */
   SCS(add_scaled_array)(primal, b, m, -1.0);
 
-  res_pri = NORM(primal, m); 
+  res_pri = NORM(primal, m);
 
   /**************** DUAL *********************/
   memset(px, 0, n * sizeof(scs_float));
@@ -123,7 +123,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
     /* px = Px */
     SCS(accum_by_p)(d->P, SCS_NULL, x, px);
     xt_p_x = SCS(dot)(px, x, n);
-    res_unbdd_p = NORM(px, n); 
+    res_unbdd_p = NORM(px, n);
   } else{
     xt_p_x = 0;
     res_unbdd_p = 0;
@@ -132,13 +132,13 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
   memset(dual, 0, n * sizeof(scs_float));
   /* aty = A'y */
   SCS(accum_by_atrans)(d->A, SCS_NULL, y, dual);
-  res_unbdd_a = NORM(dual, n);  
+  res_unbdd_a = NORM(dual, n);
 
   /* Px + A'y */
   SCS(add_scaled_array)(dual, px, n, 1.);
   /* Px + A'y + c */
   SCS(add_scaled_array)(dual, c, n, 1.0);
-  
+
   res_dual = NORM(dual, n);
 
   /**************** OTHERS *****************/
