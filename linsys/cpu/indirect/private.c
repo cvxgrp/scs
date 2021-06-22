@@ -148,7 +148,11 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
 
 void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
-  SCS(_accum_by_atrans)(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
+  if (p) {
+    SCS(_accum_by_atrans)(p->At->n, p->At->x, p->At->i, p->At->p, x, y);
+  } else {
+    SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y, 0);
+  }
 }
 
 static void apply_pre_conditioner(scs_float *z, scs_float *r,

@@ -41,7 +41,7 @@ static const char *small_lp(void) {
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
   mu_assert("small_lp: SCS failed to produce outputflag SCS_SOLVED", success);
-  fail = verify_solution_correct(d, k, &info, sol);
+  fail = verify_solution_correct(d, k, &info, sol, exitflag);
   SCS(free_data)(d, k);
   SCS(free_sol)(sol);
   SCS(free_sol)(opt_sol);

@@ -7,6 +7,7 @@
 #include "scs.h"
 #include "util.h"
 #include "rng.h"
+#include "minunit.h"
 
 #define PI (3.141592654)
 #ifdef DLONG
@@ -86,8 +87,32 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   scs_free(z);
 }
 
+static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
+                                    ScsConeWork *c, scs_int m) {
+  scs_float dist;
+  scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  memcpy(t, y, m * sizeof(scs_float));
+  SCS(proj_dual_cone)(t, k, c, 0);
+  dist = SCS(norm_inf_diff)(t, y, m);
+  scs_free(t);
+  return dist;
+}
 
-const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, ScsSolution *sol) {
+/* via moreau */
+static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
+                                   ScsConeWork *c, scs_int m) {
+  scs_float dist;
+  scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  memcpy(t, s, m * sizeof(scs_float));
+  SCS(scale_array)(t, -1.0, m);
+  SCS(proj_dual_cone)(t, k, c, 0);
+  dist = SCS(norm_inf)(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
+  scs_free(t);
+  return dist;
+}
+
+
+const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, ScsSolution *sol, scs_int status) {
   scs_int n = d->n, m = d->m;
   scs_float *x = sol->x;
   scs_float *y = sol->y;
@@ -101,7 +126,11 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
   scs_float *px = scs_calloc(n, sizeof(scs_float));
 
   scs_float res_pri, res_dual, res_infeas, res_unbdd_a, res_unbdd_p;
-  scs_float ctx, bty, xt_p_x, gap, pobj, dobj;
+  scs_float ctx, bty, xt_p_x, gap, pobj, dobj, sty;
+
+  scs_float sdist = NAN, ydist = NAN;
+
+  ScsConeWork * cone_work = SCS(init_cone)(k, SCS_NULL, m);
 
   /**************** PRIMAL *********************/
   memset(primal, 0, m * sizeof(scs_float));
@@ -141,7 +170,18 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
 
   res_dual = NORM(dual, n);
 
+  /**************** CONES *****************/
+
+  if (status == SCS_SOLVED || status == SCS_UNBOUNDED) {
+    sdist = get_pri_cone_dist(sol->s, k, cone_work, m);
+  }
+  if (status == SCS_SOLVED || status == SCS_INFEASIBLE) {
+    ydist = get_dual_cone_dist(sol->y, k, cone_work, m);
+  }
+
   /**************** OTHERS *****************/
+  sty = SCS(dot)(y, s, m);
+
   bty = SCS(dot)(y, b, m);
   ctx = SCS(dot)(x, c, n);
 
@@ -149,21 +189,34 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info, Sc
   pobj = xt_p_x / 2. + ctx;
   dobj = -xt_p_x / 2. - bty;
 
-  /**************** ASSERTS *****************/
-
-  mu_assert("Primal residual wrong", ABS(res_pri - info->res_pri) < 1e-10);
-  mu_assert("Dual residual wrong", ABS(res_dual - info->res_dual) < 1e-10);
-  mu_assert("Infeas wrong", ABS(res_infeas - info->res_infeas) < 1e-10);
-  mu_assert("Unbdd_a wrong", ABS(res_unbdd_a - info->res_unbdd_a) < 1e-10);
-  mu_assert("Unbdd_p wrong", ABS(res_unbdd_p - info->res_unbdd_p) < 1e-10);
-  mu_assert("Gap wrong", ABS(gap - info->gap) < 1e-10);
-  mu_assert("Primal obj wrong", ABS(pobj - info->pobj) < 1e-10);
-  mu_assert("Dual obj wrong", ABS(dobj - info->dobj) < 1e-10);
-
   /**************** CLEANUP *****************/
   scs_free(primal);
   scs_free(dual);
   scs_free(px);
+  SCS(finish_cone)(cone_work);
+
+  /**************** ASSERTS *****************/
+  if (status == SCS_SOLVED) {
+    mu_assert("Primal residual ERROR", ABS(res_pri - info->res_pri) < 1e-10);
+    mu_assert("Dual residual ERROR", ABS(res_dual - info->res_dual) < 1e-10);
+    mu_assert("Gap ERROR", ABS(gap - info->gap) < 1e-10);
+    mu_assert("Primal obj ERROR", ABS(pobj - info->pobj) < 1e-10);
+    mu_assert("Dual obj ERROR", ABS(dobj - info->dobj) < 1e-10);
+    mu_assert("Complementary slackness ERROR", ABS(sty) < 1e-10);
+    mu_assert("s cone dist ERROR", ABS(sdist) < 1e-10);
+    mu_assert("y cone dist ERROR", ABS(ydist) < 1e-10);
+  } else if (status == SCS_INFEASIBLE) {
+    mu_assert("Infeas ERROR", ABS(res_infeas - info->res_infeas) < 1e-10);
+    mu_assert("ctx ERROR", ABS(ctx + 1) < 1e-10);
+    mu_assert("y cone dist ERROR", ABS(ydist) < 1e-10);
+  } else if (status == SCS_UNBOUNDED) {
+    mu_assert("Unbdd_a ERROR", ABS(res_unbdd_a - info->res_unbdd_a) < 1e-10);
+    mu_assert("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p) < 1e-10);
+    mu_assert("bty ERROR", ABS(bty + 1) < 1e-10);
+    mu_assert("s cone dist ERROR", ABS(sdist) < 1e-10);
+  } else {
+    return "INVALID STATUS";
+  }
   return 0;
 }
 
