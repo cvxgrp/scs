@@ -35,6 +35,7 @@ static const char *rob_gauss_cov_est(void) {
   scs_int exitflag;
   scs_float perr, derr;
   scs_int success;
+  const char * fail;
 
   d->m = m;
   d->n = n;
@@ -76,13 +77,13 @@ static const char *rob_gauss_cov_est(void) {
 
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
+  mu_assert("rob_gauss_cov_est: SCS failed to produce outputflag SCS_SOLVED",
+            success);
+  fail = verify_solution_correct(d, k, &info, sol, exitflag);
   SCS(free_sol)(sol);
   scs_free(d->A);
   scs_free(k);
   scs_free(d->stgs);
   scs_free(d);
-
-  mu_assert("rob_gauss_cov_est: SCS failed to produce outputflag SCS_SOLVED",
-            success);
-  return 0;
+  return fail;
 }

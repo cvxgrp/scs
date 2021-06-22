@@ -1,6 +1,10 @@
 /* Taken from http://www.jera.com/techinfo/jtns/jtn002.html */
 
 /* Simple Macros for testing */
+#define mu_assert_less(message, a, b) \
+  do {                           \
+    if (a > b){ scs_printf("%s: %1.3e > %1.3e\n", message, a, b); return message; } \
+  } while (0)
 #define mu_assert(message, test) \
   do {                           \
     if (!(test)) return message; \
