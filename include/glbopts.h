@@ -172,8 +172,8 @@ typedef float scs_float;
 #endif
 #endif
 
-/* XXX explain this */
-#define FEASIBLE_ITERS (10)
+/* Force SCS to treat the problem as feasible for this many iters */
+#define FEASIBLE_ITERS (1)
 
 /* how many iterations between heuristic residual rescaling */
 #define RESCALING_MIN_ITERS (100)

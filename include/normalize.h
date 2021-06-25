@@ -7,7 +7,7 @@ extern "C" {
 
 #include "scs.h"
 
-void SCS(normalize_warm_start)(ScsWork *w);
+void SCS(normalize_sol)(ScsWork *w, ScsSolution *sol);
 void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol);
 void SCS(un_normalize_primal)(ScsWork *w, scs_float *r);
 void SCS(un_normalize_dual)(ScsWork *w, scs_float *r);

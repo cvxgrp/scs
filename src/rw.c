@@ -208,6 +208,7 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
 void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
                           scs_int iter, SCS(timer) * solve_timer) {
   ScsResiduals *r = w->r_orig;
+  ScsResiduals *r_n = w->r_normalized;
   /* if iter 0 open to write, else open to append */
   FILE *fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
   if (!fout) {
@@ -218,14 +219,43 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   scs_int l = w->m + w->n + 1;
   if (iter == 0) {
     /* need to end in comma so that csv parsing is correct */
-    fprintf(fout, "iter,res_pri,res_dual,gap,"
-                  "pri_resid_nrm_inf,dual_resid_nrm_inf,"
-                  "pri_resid_nrm_2,dual_resid_nrm_2,"
-                  "res_infeas,res_unbdd_a,res_unbdd_p,"
-                  "pobj,dobj,tau,kap,scale,"
-                  "diff_u_ut_nrm_2,diff_v_v_prev_nrm_2,"
-                  "diff_u_ut_nrm_inf,diff_v_v_prev_nrm_inf,"
-                  "aa_norm,time,\n");
+    fprintf(fout, "iter,"
+                  "res_pri,"
+                  "res_dual,"
+                  "gap,"
+                  "ax_s_btau_nrm_inf,"
+                  "px_aty_ctau_nrm_inf,"
+                  "ax_s_btau_nrm_2,"
+                  "px_aty_ctau_nrm_2,"
+                  "res_infeas,"
+                  "res_unbdd_a,"
+                  "res_unbdd_p,"
+                  "pobj,"
+                  "dobj,"
+                  "tau,"
+                  "kap,"
+                  "res_pri_normalized,"
+                  "res_dual_normalized,"
+                  "gap_normalized,"
+                  "ax_s_btau_nrm_inf_normalized,"
+                  "px_aty_ctau_nrm_inf_normalized,"
+                  "ax_s_btau_nrm_2_normalized,"
+                  "px_aty_ctau_nrm_2_normalized,"
+                  "res_infeas_normalized,"
+                  "res_unbdd_a_normalized,"
+                  "res_unbdd_p_normalized,"
+                  "pobj_normalized,"
+                  "dobj_normalized,"
+                  "tau_normalized,"
+                  "kap_normalized,"
+                  "scale,"
+                  "diff_u_ut_nrm_2,"
+                  "diff_v_v_prev_nrm_2,"
+                  "diff_u_ut_nrm_inf,"
+                  "diff_v_v_prev_nrm_inf,"
+                  "aa_norm,"
+                  "time,"
+                  "\n");
   }
   fprintf(fout, "%li,", (long)iter);
   fprintf(fout, "%.16e,", r->res_pri);
@@ -242,6 +272,20 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", r->dobj);
   fprintf(fout, "%.16e,", r->tau);
   fprintf(fout, "%.16e,", r->kap);
+  fprintf(fout, "%.16e,", r_n->res_pri);
+  fprintf(fout, "%.16e,", r_n->res_dual);
+  fprintf(fout, "%.16e,", r_n->gap);
+  fprintf(fout, "%.16e,", SCS(norm_inf)(r_n->ax_s_btau, w->m));
+  fprintf(fout, "%.16e,", SCS(norm_inf)(r_n->px_aty_ctau, w->n));
+  fprintf(fout, "%.16e,", SCS(norm)(r_n->ax_s_btau, w->m));
+  fprintf(fout, "%.16e,", SCS(norm)(r_n->px_aty_ctau, w->n));
+  fprintf(fout, "%.16e,", r_n->res_infeas);
+  fprintf(fout, "%.16e,", r_n->res_unbdd_a);
+  fprintf(fout, "%.16e,", r_n->res_unbdd_p);
+  fprintf(fout, "%.16e,", r_n->pobj);
+  fprintf(fout, "%.16e,", r_n->dobj);
+  fprintf(fout, "%.16e,", r_n->tau);
+  fprintf(fout, "%.16e,", r_n->kap);
   fprintf(fout, "%.16e,", w->stgs->scale);
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_t, l));
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->v, w->v_prev, l));

@@ -166,27 +166,24 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   return status;
 }
 
-// XXX this is wrong now:
-static void warm_start_vars(ScsWork *w, const ScsSolution *sol) {
-  scs_int i, n = w->n, m = w->m;
-  memset(w->v, 0, n * sizeof(scs_float));
-  memcpy(w->u, sol->x, n * sizeof(scs_float));
-  memcpy(&(w->u[n]), sol->y, m * sizeof(scs_float));
-  memcpy(&(w->v[n]), sol->s, m * sizeof(scs_float));
-  w->u[n + m] = 1.0;
-  w->v[n + m] = 0.0;
-#ifndef NOVALIDATE
-  for (i = 0; i < n + m + 1; ++i) {
-    if (scs_isnan(w->u[i])) {
-      w->u[i] = 0;
-    }
-    if (scs_isnan(w->v[i])) {
-      w->v[i] = 0;
-    }
-  }
-#endif
+/* given x,y,s warm start, set v = [x; R*s + y; 1]
+ * where R = diag(w->rho_y_vec).
+ */
+static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
+  scs_int n = w->n, m = w->m, i;
+  scs_float * v = w->v;
+  /* normalize the warm-start */
   if (w->stgs->normalize) {
-    SCS(normalize_warm_start)(w);
+    SCS(normalize_sol)(w, sol);
+  }
+  memcpy(v, sol->x, n * sizeof(scs_float));
+  for (i = 0; i < m; ++i) {
+    v[i + n] = sol->y[i] + w->rho_y_vec[i] * sol->s[i];
+  }
+  v[n + m] = 1.0;
+  /* un-normalize so sol unchanged */
+  if (w->stgs->normalize) {
+    SCS(un_normalize_sol)(w, sol);
   }
 }
 
@@ -394,12 +391,11 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->m + w->n + 1;
   /* r, should = 0 */
+  /*
   for (i = 0; i < w->n; ++i) {
     w->rsk[i] = w->stgs->rho_x * (w->v[i] + w->u[i] - 2 * w->u_t[i]);
   }
-#if EXTRA_VERBOSE > 4
-  scs_printf("norm(r) = %1.3f\n", NORM(w->rsk, w->n));
-#endif
+  */
   /* s */
   for (i = w->n; i < l - 1; ++i) {
     w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) / w->rho_y_vec[i - w->n];
@@ -936,8 +932,7 @@ static void update_work_cache(ScsWork * w) {
   return;
 }
 
-static scs_int update_work(const ScsData *d, ScsWork *w,
-                           const ScsSolution *sol) {
+static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
   /* before normalization */
   scs_int n = d->n;
   scs_int m = d->m;
@@ -960,54 +955,43 @@ static scs_int update_work(const ScsData *d, ScsWork *w,
 #define MIN_SCALE_VALUE (1e-6)
 #define SCALE_CACHE_CLEAR_ITERS (INFINITY)
 #define SCALE_NORM SCS(norm)
+//#define SCALE_NORM NORM
 static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
   /* XXX should these be _normalized ? */
+
+  /*
   ScsResiduals *r = w->r_orig;
   ScsSolution *xys= w->xys_orig;
   scs_float *b = w->b_orig;
   scs_float *c = w->c_orig;
+  */
+  ScsResiduals *r = w->r_normalized;
+  ScsSolution *xys= w->xys_normalized;
+  scs_float *b = w->b_normalized;
+  scs_float *c = w->c_normalized;
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   // XXX test this:
   // SAFEDIV?
   /* ||Ax + s - b * tau|| */
-  scs_float relative_res_pri = SCALE_NORM(r->ax_s_btau, w->m) /
-    MAX(MAX(SCALE_NORM(r->ax, w->m), SCALE_NORM(xys->s, w->m)), SCALE_NORM(b, w->m) * r->tau);
+  //scs_float relative_res_pri = SCALE_NORM(r->ax_s_btau, w->m) /
+  //  MAX(MAX(SCALE_NORM(r->ax, w->m), SCALE_NORM(xys->s, w->m)), SCALE_NORM(b, w->m) * r->tau);
   /* ||Px + A'y + c * tau|| */
-  scs_float relative_res_dual = SCALE_NORM(r->px_aty_ctau, w->n) /
-    MAX(MAX(SCALE_NORM(r->px, w->n), SCALE_NORM(r->aty, w->n)),  SCALE_NORM(c, w->n) * r->tau);
+  //scs_float relative_res_dual = SCALE_NORM(r->px_aty_ctau, w->n) /
+  //  MAX(MAX(SCALE_NORM(r->px, w->n), SCALE_NORM(r->aty, w->n)),  SCALE_NORM(c, w->n) * r->tau);
 
-  //scs_float relative_res_pri = SCALE_NORM(w->pri_resid, w->m);
-  //scs_float relative_res_dual = SCALE_NORM(w->dual_resid, w->n);
-  //scs_float relative_res_pri = SCALE_NORM(w->r_normalized->ax_s_btau, w->m);
-  //scs_float relative_res_dual = SCALE_NORM(w->r_normalized->px_aty_ctau, w->n);
+  scs_float relative_res_pri = SCALE_NORM(r->ax_s_btau, w->m);
+  scs_float relative_res_dual = SCALE_NORM(r->px_aty_ctau, w->n);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
   w->n_log_scale_factor++;
 
+  /* geometric mean */
   factor = SQRTF(exp(w->sum_log_scale_factor /
                 (scs_float)(w->n_log_scale_factor)));
-
-#if EXTRA_VERBOSE > 3
-  scs_printf("************************************************************\n");
-  scs_printf("scale %4f\n", w->stgs->scale);
-  scs_printf("iter %i, n_log_scale_factor %i\n", (int)iter, (int)w->n_log_scale_factor);
-  scs_printf("sum_log_scale_factor %.3e\n", w->sum_log_scale_factor);
-  scs_printf("relative_res_pri %.2e, relative_res_dual %.2e, factor %4f\n",
-              relative_res_pri, relative_res_dual, factor);
-  scs_printf("SQRTF(relative_res_pri / relative_res_dual)  %.2e\n",
-              SQRTF(relative_res_pri / relative_res_dual));
-  scs_printf("tau %.2e, kap %.2e\n", w->r_orig->tau, w->r_orig->kap);
-  scs_printf("primal: resid %.2e, ax %.2e, s %.2e, b*tau %.2e\n",
-              w->r_orig->res_pri, NORM(w->r_orig->ax, w->m),
-              NORM(w->xys_orig->s, w->m), NORM(b, w->m) * w->r_orig->tau);
-  scs_printf("dual : resid %.2e, px %.2e, aty %.2e, c*tau %.2e\n",
-              w->r_orig->res_dual, NORM(w->r_orig->px, w->n),
-              NORM(w->r_orig->aty, w->n), NORM(c, w->n) * w->r_orig->tau);
-#endif
 
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
@@ -1069,7 +1053,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   }
 
   /* SCS */
-  populate_residual_struct(w, -1);
+  //populate_residual_struct(w, -1);
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
     /* XXX should this be before or after accel? */
@@ -1090,7 +1074,6 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
       */
       total_accel_time += SCS(tocq)(&accel_timer);
     }
-    /* XXX rm this? */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
     SCS(tic)(&lin_sys_timer);
@@ -1204,12 +1187,10 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
   SCS(print_data)(d);
   SCS(print_cone_data)(k);
 #endif
-#ifndef NOVALIDATE
   if (validate(d, k) < 0) {
     scs_printf("ERROR: Validation returned failure\n");
     return SCS_NULL;
   }
-#endif
   SCS(tic)(&init_timer);
   if (d->stgs->write_data_filename) {
     SCS(write_data)(d, k);

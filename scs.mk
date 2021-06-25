@@ -99,10 +99,6 @@ SFLOAT = 0
 ifneq ($(SFLOAT), 0)
 OPT_FLAGS += -DSFLOAT=$(SFLOAT) # use floats rather than doubles
 endif
-NOVALIDATE = 0
-ifneq ($(NOVALIDATE), 0)
-OPT_FLAGS += -DNOVALIDATE=$(NOVALIDATE)$ # remove data validation step
-endif
 NOTIMER = 0
 ifneq ($(NOTIMER), 0)
 OPT_FLAGS += -DNOTIMER=$(NOTIMER) # no timing, times reported as nan
