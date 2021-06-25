@@ -23,9 +23,6 @@ static const scs_int HSPACE = 9;
 static const scs_int HEADER_LEN = 7;
 static const scs_int LINE_LEN = 66;
 
-static scs_int scs_isnan(scs_float x) { return (x == NAN || x != x); }
-
-
 static void free_residuals(ScsResiduals * r) {
   if (r) {
     scs_free(r->ax);
@@ -954,36 +951,23 @@ static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
 #define MAX_SCALE_VALUE (1e6)
 #define MIN_SCALE_VALUE (1e-6)
 #define SCALE_CACHE_CLEAR_ITERS (INFINITY)
-#define SCALE_NORM SCS(norm)
-//#define SCALE_NORM NORM
+#define SCALE_NORM NORM
 static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
-  /* XXX should these be _normalized ? */
 
-  /*
   ScsResiduals *r = w->r_orig;
   ScsSolution *xys= w->xys_orig;
   scs_float *b = w->b_orig;
   scs_float *c = w->c_orig;
-  */
-  ScsResiduals *r = w->r_normalized;
-  ScsSolution *xys= w->xys_normalized;
-  scs_float *b = w->b_normalized;
-  scs_float *c = w->c_normalized;
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
-  // XXX test this:
-  // SAFEDIV?
   /* ||Ax + s - b * tau|| */
-  //scs_float relative_res_pri = SCALE_NORM(r->ax_s_btau, w->m) /
-  //  MAX(MAX(SCALE_NORM(r->ax, w->m), SCALE_NORM(xys->s, w->m)), SCALE_NORM(b, w->m) * r->tau);
+  scs_float relative_res_pri = SAFEDIV_POS(SCALE_NORM(r->ax_s_btau, w->m),
+    MAX(MAX(SCALE_NORM(r->ax, w->m), SCALE_NORM(xys->s, w->m)), SCALE_NORM(b, w->m) * r->tau));
   /* ||Px + A'y + c * tau|| */
-  //scs_float relative_res_dual = SCALE_NORM(r->px_aty_ctau, w->n) /
-  //  MAX(MAX(SCALE_NORM(r->px, w->n), SCALE_NORM(r->aty, w->n)),  SCALE_NORM(c, w->n) * r->tau);
-
-  scs_float relative_res_pri = SCALE_NORM(r->ax_s_btau, w->m);
-  scs_float relative_res_dual = SCALE_NORM(r->px_aty_ctau, w->n);
+  scs_float relative_res_dual = SAFEDIV_POS(SCALE_NORM(r->px_aty_ctau, w->n),
+    MAX(MAX(SCALE_NORM(r->px, w->n), SCALE_NORM(r->aty, w->n)),  SCALE_NORM(c, w->n) * r->tau));
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
@@ -1022,11 +1006,6 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     for (i = w->n; i < w->n + w->m; i++) {
       w->v[i] = w->rho_y_vec[i - w->n] * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
     }
-  } else if (w->n_log_scale_factor > SCALE_CACHE_CLEAR_ITERS) {
-    /* periodically clear the 'memory' of the factor scales */
-    w->sum_log_scale_factor = 0;
-    w->n_log_scale_factor = 0;
-    w->last_scale_update_iter = iter;
   }
 }
 

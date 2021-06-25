@@ -7,7 +7,8 @@
 /* #define CONE_RATE (2) */
 #define CONE_TOL (1e-9)
 #define CONE_THRESH (1e-8)
-#define EXP_CONE_MAX_ITERS (50)
+#define EXP_CONE_MAX_ITERS (100)
+#define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_MAX_ITERS (20)
 
 #ifdef USE_LAPACK
@@ -288,13 +289,13 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
       break;
     }
   }
-#if EXTRA_VERBOSE > 1
+/* #if EXTRA_VERBOSE > 1 */
   if (i == EXP_CONE_MAX_ITERS) {
-    scs_printf("warning: exp cone newton step took maximum %i iters\n", (int)i);
+    scs_printf("warning: exp cone newton step hit maximum %i iters\n", (int)i);
     scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e\n", rho, y_hat,
                 z_hat, w);
   }
-#endif
+/* #endif */
   return t + z_hat;
 }
 
@@ -614,6 +615,7 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
    uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
    D contains equilibration scaling matrix, can be SCS_NULL
 */
+// XXX move this:
 #define MAX_BOX_VAL (1e15)
 static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
   scs_int j;
@@ -636,14 +638,14 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                           const scs_float *bu, scs_int bsize,
                           scs_float t_warm_start) {
   scs_float gt, ht, t_prev, t = t_warm_start, *x = &(tx[1]);
-  scs_int iter, j, max_iter = 100;
+  scs_int iter, j;
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
   SCS(print_array)(tx, bsize, "tx");
 #endif
   /* should only require about 5 or so iterations */
-  for (iter = 0; iter < max_iter; iter++) {
+  for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
     gt = t - tx[0]; /* gradient */
     ht = 1.; /* hessian */
@@ -664,12 +666,12 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                 ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
 #endif
     if (ABS(gt / MAX(ht, 1e-6)) < 1e-12 * MAX(t, 1.) ||
-        ABS(t - t_prev) < 1e-12 * MAX(t, 1.)) {
+        ABS(t - t_prev) < 1e-10 * MAX(t, 1.)) {
       break;
     }
   }
-  if (iter == max_iter) {
-    scs_printf("warning: box cone proj took maximum %i iters\n", (int)iter);
+  if (iter == BOX_CONE_MAX_ITERS) {
+    scs_printf("warning: box cone proj hit maximum %i iters\n", (int)iter);
   }
   for (j = 0; j < bsize - 1; j++) {
     if (x[j] > t * bu[j]) {
@@ -682,7 +684,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   }
   tx[0] = t;
 #if EXTRA_VERBOSE > 3
-  scs_printf("box cone iters %i\n", (int)iter);
+  scs_printf("box cone iters %i\n", (int)iter + 1);
 #endif
 #if EXTRA_VERBOSE > 10
   SCS(print_array)(tx, bsize, "tx_+");

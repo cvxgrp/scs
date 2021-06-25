@@ -223,9 +223,9 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj), 1e-10);
     mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj), 1e-10);
     /* slightly looser tol */
-    mu_assert_less("Complementary slackness ERROR", ABS(sty), 1e-7);
-    mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-7);
-    mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-7);
+    mu_assert_less("Complementary slackness ERROR", ABS(sty), 1e-6);
+    mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-6);
+    mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-6);
 
     mu_assert_less("Primal feas ERROR", res_pri,
                     stgs->eps_abs + stgs->eps_rel * prl);
@@ -236,7 +236,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
   } else if (status == SCS_INFEASIBLE) {
     mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-10);
     mu_assert_less("ctx ERROR", ABS(ctx + 1), 1e-10);
-    mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-7);
+    mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-6);
     mu_assert_less("Infeas invalid ERROR", res_infeas, stgs->eps_infeas);
 
   } else if (status == SCS_UNBOUNDED) {
@@ -245,7 +245,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
     mu_assert_less("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p),
                     1e-10);
     mu_assert_less("bty ERROR", ABS(bty + 1), 1e-10);
-    mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-7);
+    mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-6);
     mu_assert_less("Unbounded P invalid ERROR", res_unbdd_p, stgs->eps_infeas);
     mu_assert_less("Unbounded A invalid ERROR", res_unbdd_a, stgs->eps_infeas);
 
