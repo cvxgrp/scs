@@ -38,7 +38,7 @@ extern "C" {
 #define MAX_ITERS (100000)
 #define EPS_REL (1E-4)
 #define EPS_ABS (1E-4)
-#define EPS_INFEAS (1E-5)
+#define EPS_INFEAS (1E-7)
 #define ALPHA (1.5)
 #define RHO_X (1E-6)
 #define SCALE (0.1)
