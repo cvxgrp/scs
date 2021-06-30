@@ -647,8 +647,8 @@ static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
    uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
 */
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
-                          const scs_float *bu, scs_int bsize,
-                          scs_float t_warm_start) {
+                               const scs_float *bu, scs_int bsize,
+                               scs_float t_warm_start) {
   scs_float gt, ht, t_prev, t = t_warm_start, *x = &(tx[1]);
   scs_int iter, j;
 #if VERBOSITY > 10
@@ -673,12 +673,13 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     }
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
 #if VERBOSITY > 3
-    scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n", t, t_prev, gt, ht);
+    scs_printf("t warm start: %1.3e, t[0]: %1.3e\n", t_warm_start, tx[0]);
+    scs_printf("t_new %1.3e, t_prev %1.3e, gt %1.3e, ht %1.3e\n", t, t_prev, gt, ht);
     scs_printf("ABS(gt / (ht + 1e-6)) %.4e, ABS(t - t_prev) %.4e\n",
                 ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
 #endif
     if (ABS(gt / MAX(ht, 1e-6)) < 1e-12 * MAX(t, 1.) ||
-        ABS(t - t_prev) < 1e-10 * MAX(t, 1.)) {
+        ABS(t - t_prev) < 1e-11 * MAX(t, 1.)) {
       break;
     }
   }
@@ -899,7 +900,7 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int co
   c->cone_len = cone_len;
   c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
   if (k->bsize && k->bu && k->bl) {
-    c->box_t_warm_start = 0.;
+    c->box_t_warm_start = 1.;
     if (scal) {
       c->bu = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
       c->bl = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
