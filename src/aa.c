@@ -31,7 +31,8 @@
 
 typedef void * ACCEL_WORK;
 
-AaWork *aa_init(aa_int dim, aa_int aa_mem, aa_int type1, aa_float eta) {
+AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
+                aa_float relaxation, aa_int verbosity) {
   return SCS_NULL;
 }
 aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) { return 0; }
