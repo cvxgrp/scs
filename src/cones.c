@@ -4,12 +4,14 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
-/* #define CONE_RATE (2) */
 #define CONE_TOL (1e-9)
 #define CONE_THRESH (1e-8)
 #define EXP_CONE_MAX_ITERS (100)
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_MAX_ITERS (20)
+
+/* Box cone limits (+ or -) taken to be INF */
+#define MAX_BOX_VAL (1e15)
 
 #ifdef USE_LAPACK
 void BLAS(syevr)(const char *jobz, const char *range, const char *uplo,
@@ -26,12 +28,14 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 scs_float BLAS(nrm2)(const blas_int *n, scs_float *x, const blas_int *incx);
 #endif
 
-// XXX add a comment about this
+/* set the vector of rho y terms, based on scale and cones */
 void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
                         scs_int m) {
   scs_int i, count = 0;
   /* f cone */
   for (i = 0; i < k->f; ++i) {
+    /* set rho_y large for f, similar to rho_x term, since f is free cone */
+    /* in dual this effectively decreases penalty on those entries */
     rho_y_vec[i] = 1000. * scale;
   }
   count += k->f;
@@ -330,8 +334,7 @@ static scs_int proj_exp_cone(scs_float *v) {
   scs_int i;
   scs_float ub, lb, rho, g, x[3];
   scs_float r = v[0], s = v[1], t = v[2];
-  scs_float tol = CONE_TOL; /* iter < 0 ? CONE_TOL : MAX(CONE_TOL, 1 /
-                               POWF((iter + 1), CONE_RATE)); */
+  scs_float tol = CONE_TOL;
 
   /* v in cl(Kexp) */
   if ((s * exp(r / s) - t <= CONE_THRESH && s > 0) ||
@@ -610,13 +613,19 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
          1;
 }
 
-/* project onto { (t, x) | t * l <= x <= t * u, t >= 0 }, Newton's method on t
-   tx = [t; x], total length = bsize
-   uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
-   D contains equilibration scaling matrix, can be SCS_NULL
-*/
-// XXX move this:
-#define MAX_BOX_VAL (1e15)
+/*
+ * Routine to scale the limits of the box cone by the scaling diagonal mat D > 0
+ *
+ *  want (t, s) \in K <==> (t', s') \in K'
+ *
+ *  (t', s') = (d0 * t, D s) (overloading D to mean D[1:])
+ *    (up to scalar scaling factor which we can ignore due to conic prooperty)
+ *
+ *   K = { (t, s) | t * l <= s <= t * u, t >= 0 } =>
+ *       { (t, s) | d0 * t * D l / d0 <= D s <= d0 * t D u / d0, t >= 0 } =>
+ *       { (t', s') | t' * l' <= s' <= t' u', t >= 0 } = K'
+ *  where l' = D l  / d0, u' = D u / d0.
+ */
 static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
   scs_int j;
   for (j = 0; j < bsize - 1; j++) {
@@ -633,7 +642,10 @@ static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
   }
 }
 
-
+/* project onto { (t, s) | t * l <= s <= t * u, t >= 0 }, Newton's method on t
+   tx = [t; s], total length = bsize
+   uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
+*/
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                           const scs_float *bu, scs_int bsize,
                           scs_float t_warm_start) {

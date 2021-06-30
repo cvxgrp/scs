@@ -65,8 +65,10 @@ void SCS(free_scs_matrix)(ScsMatrix *A);
  * allocates memory for dstp	*/
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
 
-/* XXX */
+/* rho y vector of parameters, when `scale` changes these are called */
+/* lin sys determines when to update based on how large/small factor is */
 scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter);
+/* update the linsys workspace when new rho_y_vec determined (refactorize) */
 void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
                                   const ScsSettings *stgs, ScsLinSysWork *p,
                                   scs_float *rho_y_vec);

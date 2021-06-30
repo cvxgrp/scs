@@ -8,10 +8,6 @@
 #include "rw.h"
 #include "util.h"
 
-
-#define LIN_SYS_BEST_TOL (1e-12)
-#define LIN_SYS_TOL_FACTOR (0.5)
-
 SCS(timer) global_timer;
 
 /* printing header */
@@ -912,12 +908,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     return SCS_NULL;
   }
   /* hack: negative acceleration_lookback interpreted as type-I */
-  /* XXX */
-  #define RELAXATION (0.5)
-  #define ETA (1e-9)
   if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-                           w->stgs->acceleration_lookback < 0, ETA, RELAXATION,
-                           VERBOSITY))) {
+                           w->stgs->acceleration_lookback < 0,
+                           AA_REGULARIZATION, AA_RELAXATION, VERBOSITY))) {
     if (w->stgs->verbose) {
       scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
     }
@@ -951,11 +944,6 @@ static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
 }
 
 
-// XXX move these
-#define MAX_SCALE_VALUE (1e6)
-#define MIN_SCALE_VALUE (1e-6)
-#define SCALE_CACHE_CLEAR_ITERS (INFINITY)
-#define SCALE_NORM NORM
 static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
@@ -1036,12 +1024,11 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
   }
 
   /* SCS */
-  //populate_residual_struct(w, -1);
   for (i = 0; i < w->stgs->max_iters; ++i) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
-    /* XXX should this be before or after accel? */
+    /* this should this be before applying any acceleration */
     if (i >= FEASIBLE_ITERS) {
-      v_norm = SCS(norm)(w->v, l);
+      v_norm = SCS(norm)(w->v, l); /* always l2 norm */
       SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
     }
     /* accelerate here so that last step always projection onto cone */
@@ -1098,11 +1085,11 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     }
 
     /* if residuals are fresh then maybe compute new scale */
-    // XXX is this the right place to do this?
     if (w->stgs->adaptive_scaling && i == w->r_orig->last_iter) {
       maybe_update_scale(w, k, i);
     }
-    // XXX is this the right place to do this?
+
+    /* Log *after* updating scale so residual recalc does not affect alg */
     if (w->stgs->log_csv_filename) {
       /* calc residuals every iter if logging to csv */
       populate_residual_struct(w, i);
@@ -1110,7 +1097,6 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     }
   }
 
-  // XXX is this the right place to do this?
   if (w->stgs->log_csv_filename) {
     /* calc residuals every iter if logging to csv */
     populate_residual_struct(w, i);
@@ -1121,6 +1107,7 @@ scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
     populate_residual_struct(w, i);
     print_summary(w, i, &solve_timer);
   }
+
   /* populate solution vectors (unnormalized) and info */
   get_solution(w, sol, info, i);
   info->solve_time = SCS(tocq)(&solve_timer);

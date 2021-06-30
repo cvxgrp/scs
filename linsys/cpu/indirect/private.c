@@ -1,8 +1,7 @@
 #include <limits.h>
 #include "private.h"
 
-#define CG_BASE_TOL (10.)
-
+/* norm to use when deciding convergence */
 #ifndef CG_NORM
 #define CG_NORM NORM
 #endif
@@ -24,11 +23,11 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   return str;
 }
 
-/* M = inv ( diag ( rho_x * I + P + A' R A ) ) */
+/* set M = inv ( diag ( rho_x * I + P + A' R A ) ) */
 static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
                                const ScsSettings *stgs, ScsLinSysWork *p) {
   scs_int i, k;
-  scs_float *M = p->M, at_r_a;
+  scs_float *M = p->M;
 
 #if VERBOSITY > 0
   scs_printf("getting pre-conditioner\n");
@@ -36,12 +35,11 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
 
   for (i = 0; i < A->n; ++i) { /* cols */
     M[i] = stgs->rho_x;
-    at_r_a = 0.;
+    /* diag(A' R A) */
     for (k = A->p[i]; k < A->p[i + 1]; ++k) {
-      // XXX check that this is correct:
-      at_r_a += p->rho_y_vec[A->i[k]] *  A->x[k] * A->x[k];
+      /* A->i[k] is row of entry k with value A->x[k] */
+      M[i] += p->rho_y_vec[A->i[k]] * A->x[k] * A->x[k];
     }
-    M[i] += at_r_a;
     if (P) {
       for (k = P->p[i]; k < P->p[i + 1]; k++) {
         /* diagonal element only */
@@ -53,7 +51,6 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
     }
     M[i] = 1. / M[i];
   }
-
 #if VERBOSITY > 0
   scs_printf("finished getting pre-conditioner\n");
 #endif
@@ -241,7 +238,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   }
 
   /* check to see if we need to run CG at all */
-  if (CG_NORM(r, n) < MIN(tol, 1e-12)) {
+  if (CG_NORM(r, n) < MAX(tol, 1e-12)) {
     return 0;
   }
 
@@ -262,7 +259,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
     /* r -= alpha * G p */
     SCS(add_scaled_array)(r, Gp, n, -alpha);
 
-#if VERBOSITY > 1
+#if VERBOSITY > 3
     scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, CG_NORM(r, n),
                (long)i + 1);
 #endif
@@ -301,7 +298,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            scs_float *b, const scs_float *s, scs_float tol) {
   scs_int cg_its, max_iters;
 
-  if (CG_NORM(b, A->n + A->m) <= 1e-18) {
+  if (CG_NORM(b, A->n + A->m) <= 1e-12) {
     memset(b, 0, (A->n + A->m) * sizeof(scs_float));
     return 0;
   }
@@ -326,7 +323,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   /* b[n:] = R (Ax - ry) = y */
   scale_by_diag_r(&(b[A->n]), A->m, p);
   p->tot_cg_its += cg_its;
-#if VERBOSITY > 10
+#if VERBOSITY > 1
   scs_printf("tol %.3e\n", tol);
   scs_printf("cg_its %i\n", (int)cg_its);
 #endif

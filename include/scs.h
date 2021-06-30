@@ -144,7 +144,7 @@ struct SCS_WORK {
   scs_float *h; /* h = [c; b] */
   scs_float *g; /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
-  scs_float *rho_y_vec; /* XXX explain this */
+  scs_float *rho_y_vec; /* vector of rho y parameters (affects cone project) */
   AaWork *accel;          /* struct for acceleration workspace */
   scs_float *b_orig, *c_orig;       /* original b and c vectors */
   scs_float *b_normalized, *c_normalized;    /* normalized b and c vectors */

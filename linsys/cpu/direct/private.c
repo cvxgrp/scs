@@ -319,10 +319,9 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
+/* will update if the factor is outside of range */
 scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter) {
-  /* XXX update */
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
-  //return (factor > 2.0 || factor < 0.5);
 }
 
 void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
@@ -335,8 +334,8 @@ void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
   ldl_status = ldl_factor(p, A->n);
   if (ldl_status < 0) {
     scs_printf("Error in LDL factorization when updating.\n");
-    /* XXX this is broken somehow */
-    // SCS(free_lin_sys_work)(p);
+    /* TODO: this is broken somehow */
+    /* SCS(free_lin_sys_work)(p); */
     return;
   }
 }
@@ -359,7 +358,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   ldl_status = ldl_factor(p, A->n);
   if (ldl_prepare_status < 0 || ldl_status < 0) {
     scs_printf("Error in LDL initial factorization.\n");
-    // SCS(free_lin_sys_work)(p);
+    /* TODO: this is broken somehow */
+    /* SCS(free_lin_sys_work)(p); */
     return SCS_NULL;
   }
   return p;

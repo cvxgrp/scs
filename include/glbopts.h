@@ -29,6 +29,11 @@ extern "C" {
 #define SCS_SOLVED (1)
 #define SCS_SOLVED_INACCURATE (2)
 
+/* verbosity level */
+#ifndef VERBOSITY
+#define VERBOSITY (0)
+#endif
+
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
 #define MAX_ITERS (100000)
 #define EPS_REL (1E-4)
@@ -41,7 +46,7 @@ extern "C" {
 #define NORMALIZE (1)
 #define WARM_START (0)
 #define ACCELERATION_LOOKBACK (0)
-#define ACCELERATION_INTERVAL (50)
+#define ACCELERATION_INTERVAL (1)
 #define ADAPTIVE_SCALING (1)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
@@ -204,12 +209,25 @@ typedef float scs_float;
 #define NORM SCS(norm_inf)
 #endif
 
-/* XXX explain this, is this the best factor? */
+/* Factor which is scales tau in the linear system update */
+/* Larger factors prevent tau from moving as much */
 #define TAU_FACTOR (10.0)
 
-#ifndef VERBOSITY
-#define VERBOSITY (0)
-#endif
+/* Anderson acceleration parameters: */
+#define AA_RELAXATION (1.0)
+#define AA_REGULARIZATION (1e-9)
+
+/* Scale updating parameters */
+#define MAX_SCALE_VALUE (1e6)
+#define MIN_SCALE_VALUE (1e-6)
+#define SCALE_NORM NORM /* what norm to use when computing the scale factor */
+
+/* Linear system tolerances, only used with indirect */
+#define LIN_SYS_BEST_TOL (1e-12)
+/* This scales the current residuals to get the tolerance we solve the
+ * linear system to at each iteration. Lower factors require more CG steps
+ * but give better accuracy */
+#define LIN_SYS_TOL_FACTOR (0.1)
 
 #ifdef __cplusplus
 }
