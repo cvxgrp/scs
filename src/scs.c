@@ -331,7 +331,7 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
 
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
-  tau_scale = TAU_FACTOR * w->stgs->scale; // XXX
+  tau_scale = TAU_FACTOR; /* TAU_FACTOR * w->stgs->scale; */
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   eta *= tau_scale;
   b = (dot_with_diag_scaling(w, mu, w->g) -

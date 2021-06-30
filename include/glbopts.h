@@ -177,7 +177,9 @@ typedef float scs_float;
 #endif
 #endif
 
-/* Force SCS to treat the problem as feasible for this many iters */
+/* Force SCS to treat the problem as (non-homogeneous) feasible for this many */
+/* iters. This acts like a warm-start that biases towards feasibility, which */
+/* is the most common use-case */
 #define FEASIBLE_ITERS (1)
 
 /* how many iterations between heuristic residual rescaling */
@@ -211,7 +213,7 @@ typedef float scs_float;
 
 /* Factor which is scales tau in the linear system update */
 /* Larger factors prevent tau from moving as much */
-#define TAU_FACTOR (10.0)
+#define TAU_FACTOR (1.0)
 
 /* Anderson acceleration parameters: */
 #define AA_RELAXATION (1.0)
