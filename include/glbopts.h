@@ -41,7 +41,7 @@ extern "C" {
 #define EPS_INFEAS (1E-5)
 #define ALPHA (1.5)
 #define RHO_X (1E-6)
-#define SCALE (1.0)
+#define SCALE (0.1)
 #define VERBOSE (1)
 #define NORMALIZE (1)
 #define WARM_START (0)
