@@ -342,7 +342,7 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float et
        2 * dot_with_diag_scaling(w, p, w->g) - eta);
   c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
   tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
-#if EXTRA_VERBOSE > 3
+#if VERBOSITY > 3
   scs_printf("root_plus: a: %g, b: %g, c: %g, eta: %g, tau_scale: %g, tau: %g, tau no p: %g\n",
              a, b, c, eta, tau_scale, tau,
              MAX(0., (eta + SCS(dot)(p, w->h, w->m + w->n)) /
@@ -577,7 +577,7 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("%*.2e ", (int)HSPACE, SCS(tocq)(solve_timer) / 1e3);
   scs_printf("\n");
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("Norm u = %4f, ", SCS(norm)(w->u, w->n + w->m + 1));
   scs_printf("Norm u_t = %4f, ", SCS(norm)(w->u_t, w->n + w->m + 1));
   scs_printf("Norm v = %4f, ", SCS(norm)(w->v, w->n + w->m + 1));
@@ -627,7 +627,7 @@ static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
   memcpy(t, y, m * sizeof(scs_float));
   SCS(proj_dual_cone)(t, k, c, 0);
   dist = SCS(norm_inf_diff)(t, y, m);
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(print_array)(y, m, "y");
   SCS(print_array)(t, m, "proj_y");
   scs_printf("dist = %4f\n", dist);
@@ -645,7 +645,7 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   SCS(scale_array)(t, -1.0, m);
   SCS(proj_dual_cone)(t, k, c, 0);
   dist = SCS(norm_inf)(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(print_array)(s, m, "s");
   SCS(print_array)(t, m, "(s - proj_s)");
   scs_printf("dist = %4f\n", dist);
@@ -890,7 +890,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
     SCS(normalize)(w->P, w->A, w->b_normalized, w->c_normalized, w->scal,
                    w->cone_boundaries, w->cone_boundaries_len);
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
     SCS(print_array)(w->scal->E, d->n, "E");
@@ -912,8 +912,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     return SCS_NULL;
   }
   /* hack: negative acceleration_lookback interpreted as type-I */
+  /* XXX */
+  #define RELAXATION (0.5)
+  #define ETA (1e-9)
   if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-                           w->stgs->acceleration_lookback > 0, ETA))) {
+                           w->stgs->acceleration_lookback < 0, ETA, RELAXATION,
+                           VERBOSITY))) {
     if (w->stgs->verbose) {
       scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
     }
@@ -1152,7 +1156,7 @@ void SCS(finish)(ScsWork *w) {
 }
 
 ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
-#if EXTRA_VERBOSE > 1
+#if VERBOSITY > 1
   SCS(tic)(&global_timer);
 #endif
   ScsWork *w;
@@ -1162,7 +1166,7 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
     scs_printf("ERROR: Missing ScsData, ScsCone or ScsInfo input\n");
     return SCS_NULL;
   }
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(print_data)(d);
   SCS(print_cone_data)(k);
 #endif
@@ -1185,7 +1189,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
             ScsInfo *info) {
   scs_int status;
   ScsWork *w = SCS(init)(d, k, info);
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
              sizeof(scs_int), sizeof(scs_float));
 #endif

@@ -364,7 +364,7 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scal->D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scal->E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
 
-#if EXTRA_VERBOSE > 5
+#if VERBOSITY > 5
   SCS(timer) normalize_timer;
   SCS(tic)(&normalize_timer);
   scs_printf("normalizing A and P\n");
@@ -390,7 +390,7 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scs_free(Dt);
   scs_free(Et);
 
-#if EXTRA_VERBOSE > 5
+#if VERBOSITY > 5
   scs_printf("finished normalizing A and P, time: %1.2es\n",
              SCS(tocq)(&normalize_timer) / 1e3);
   scs_printf("inf norm A %1.2e\n", SCS(norm_inf)(A->x, A->p[A->n]));
@@ -441,7 +441,7 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   scs_int p, j;
   scs_int c1, c2;
   scs_float yj;
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(timer) mult_by_atrans_timer;
   SCS(tic)(&mult_by_atrans_timer);
 #endif
@@ -457,7 +457,7 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     }
     y[j] = yj;
   }
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("trans mat mul time: %1.2es\n",
              SCS(tocq)(&mult_by_atrans_timer) / 1e3);
 #endif
@@ -469,7 +469,7 @@ void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
     A in column compressed format
    */
   scs_int p, j, i;
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(timer) mult_by_a_timer;
   SCS(tic)(&mult_by_a_timer);
 #endif
@@ -491,7 +491,7 @@ void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
       }
     }
   }
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("mat mult time: %1.2es\n", SCS(tocq)(&mult_by_a_timer) / 1e3);
 #endif
 }

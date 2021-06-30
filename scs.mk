@@ -113,9 +113,9 @@ OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # tranpose A mat in GPU me
 endif
 
 ### VERBOSITY LEVELS: 0,1,2
-EXTRA_VERBOSE = 0
-ifneq ($(EXTRA_VERBOSE), 0)
-OPT_FLAGS += -DEXTRA_VERBOSE=$(EXTRA_VERBOSE) # extra verbosity level
+VERBOSITY = 0
+ifneq ($(VERBOSITY), 0)
+OPT_FLAGS += -DVERBOSITY=$(VERBOSITY) # extra verbosity level
 endif
 
 ############ OPENMP: ############

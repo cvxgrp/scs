@@ -30,7 +30,7 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
   scs_int i, k;
   scs_float *M = p->M, at_r_a;
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("getting pre-conditioner\n");
 #endif
 
@@ -54,7 +54,7 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
     M[i] = 1. / M[i];
   }
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("finished getting pre-conditioner\n");
 #endif
 }
@@ -71,7 +71,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
   scs_float *Ax = A->x;
 
   scs_int i, j, q, *z, c1, c2;
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(timer) transpose_timer;
   scs_printf("transposing A\n");
   SCS(tic)(&transpose_timer);
@@ -93,7 +93,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
   }
   scs_free(z);
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("finished transposing A, time: %1.2es\n",
              SCS(tocq)(&transpose_timer) / 1e3);
 #endif
@@ -262,7 +262,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
     /* r -= alpha * G p */
     SCS(add_scaled_array)(r, Gp, n, -alpha);
 
-#if EXTRA_VERBOSE > 1
+#if VERBOSITY > 1
     scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, CG_NORM(r, n),
                (long)i + 1);
 #endif
@@ -326,7 +326,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   /* b[n:] = R (Ax - ry) = y */
   scale_by_diag_r(&(b[A->n]), A->m, p);
   p->tot_cg_its += cg_its;
-#if EXTRA_VERBOSE > 10
+#if VERBOSITY > 10
   scs_printf("tol %.3e\n", tol);
   scs_printf("cg_its %i\n", (int)cg_its);
 #endif

@@ -59,7 +59,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
   }
   K = SCS(cs_spalloc)(m + n, m + n, Knzmax, 1, 1);
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("forming kkt\n");
 #endif
   /* Here we generate a triplet matrix and then compress to CSC */
@@ -176,13 +176,13 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
 static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
   scs_int factor_status;
   csc * kkt = p->kkt, * L = p->L;
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("numeric factorization\n");
 #endif
   factor_status = QDLDL_factor(kkt->n, kkt->p, kkt->i, kkt->x, L->p, L->i, L->x,
                                p->D, p->Dinv, p->Lnz, p->etree, p->bwork,
                                p->iwork, p->fwork);
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("finished numeric factorization.\n");
 #endif
   if (factor_status < 0) {
@@ -300,7 +300,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
     scs_printf("AMD permutatation error.\n");
     return SCS_NULL;
   }
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   if (stgs->verbose) {
     scs_printf("Matrix factorization info:\n");
     amd_info(info);

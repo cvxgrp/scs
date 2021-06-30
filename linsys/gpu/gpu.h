@@ -26,7 +26,7 @@ extern "C" {
     }                                                                     \
   } while (0)
 
-#ifndef EXTRA_VERBOSE
+#ifndef VERBOSITY
 #ifndef SFLOAT
 #define CUBLAS(x) cublasD##x
 #define CUSPARSE(x) cusparseD##x

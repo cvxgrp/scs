@@ -181,7 +181,7 @@ typedef float scs_float;
 #define EPS_TOL (1E-18)
 #define SAFEDIV_POS(X, Y) ((Y) < EPS_TOL ? ((X) / EPS_TOL) : (X) / (Y))
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
 #define PRINT_INTERVAL (1)
 #define CONVERGED_INTERVAL (1)
 #else
@@ -206,6 +206,10 @@ typedef float scs_float;
 
 /* XXX explain this, is this the best factor? */
 #define TAU_FACTOR (10.0)
+
+#ifndef VERBOSITY
+#define VERBOSITY (0)
+#endif
 
 #ifdef __cplusplus
 }

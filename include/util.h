@@ -41,7 +41,7 @@ typedef struct SCS(timer) {
 
 #endif
 
-#if EXTRA_VERBOSE > 1
+#if VERBOSITY > 1
 extern SCS(timer) global_timer;
 #endif
 

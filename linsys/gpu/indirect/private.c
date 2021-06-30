@@ -146,7 +146,7 @@ static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
   scs_int i;
   scs_float *M = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("getting pre-conditioner\n");
 #endif
 
@@ -158,7 +158,7 @@ static void get_preconditioner(const ScsMatrix *A, const ScsSettings *stgs,
   cudaMemcpy(p->M, M, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
   scs_free(M);
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("finished getting pre-conditioner\n");
 #endif
 }
@@ -394,7 +394,7 @@ static scs_int pcg(const ScsGpuMatrix *A, const ScsSettings *stgs,
     CUBLAS(scal)(cublas_handle, n, &beta, p, 1);
     CUBLAS(axpy)(cublas_handle, n, &onef, z, 1, p, 1);
   }
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, nrm_r, (long)i + 1);
 #endif
   return i;

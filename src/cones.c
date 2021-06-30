@@ -289,7 +289,7 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
       break;
     }
   }
-/* #if EXTRA_VERBOSE > 1 */
+/* #if VERBOSITY > 1 */
   if (i == EXP_CONE_MAX_ITERS) {
     scs_printf("warning: exp cone newton step hit maximum %i iters\n", (int)i);
     scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e\n", rho, y_hat,
@@ -367,7 +367,7 @@ static scs_int proj_exp_cone(scs_float *v) {
       break;
     }
   }
-#if EXTRA_VERBOSE > 25
+#if VERBOSITY > 25
   scs_printf("exponential cone proj iters %i\n", (int)i);
 #endif
   v[0] = x[0];
@@ -385,7 +385,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   blas_int m = 0;
   blas_int info = 0;
   scs_float wkopt = 0.0;
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
 #define _STR_EXPAND(tok) #tok
 #define _STR(tok) _STR_EXPAND(tok)
   scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
@@ -448,7 +448,7 @@ static scs_int project_2x2_sdc(scs_float *X) {
   l1 = 0.5 * (a + d + rad);
   l2 = 0.5 * (a + d - rad);
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   scs_printf(
       "2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
       "rad = %4f, l1 = %4f, l2 = %4f\n",
@@ -533,7 +533,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* mult by factor to make sure is upper bound */
   vupper = 1.1 * sqrt2 * BLAS(nrm2)(&cone_sz, X, &one);
   vupper = MAX(vupper, 0.01);
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(print_array)(Xs, n * n, "Xs");
   SCS(print_array)(X, get_sd_cone_size(n), "X");
 #endif
@@ -542,7 +542,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   ("Vectors", "VInterval", "Lower", &nb, Xs, &nb, &zero, &vupper, SCS_NULL,
    SCS_NULL, &eig_tol, &m, e, Z, &nb, SCS_NULL, work, &lwork, iwork, &liwork,
    &info);
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   if (info != 0) {
     scs_printf("WARN: LAPACK syevr error, info = %i\n", info);
   }
@@ -572,7 +572,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
            (n - i) * sizeof(scs_float));
   }
 
-#if EXTRA_VERBOSE > 0
+#if VERBOSITY > 0
   SCS(print_array)(Xs, n * n, "Xs");
   SCS(print_array)(X, get_sd_cone_size(n), "X");
 #endif
@@ -639,7 +639,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                           scs_float t_warm_start) {
   scs_float gt, ht, t_prev, t = t_warm_start, *x = &(tx[1]);
   scs_int iter, j;
-#if EXTRA_VERBOSE > 10
+#if VERBOSITY > 10
   SCS(print_array)(bu, bsize - 1, "u");
   SCS(print_array)(bl, bsize - 1, "l");
   SCS(print_array)(tx, bsize, "tx");
@@ -660,7 +660,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
       }
     }
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
-#if EXTRA_VERBOSE > 3
+#if VERBOSITY > 3
     scs_printf("t_new %4f, t_prev %4f, gt %4f, ht %4f\n", t, t_prev, gt, ht);
     scs_printf("ABS(gt / (ht + 1e-6)) %.4e, ABS(t - t_prev) %.4e\n",
                 ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
@@ -683,10 +683,10 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     /* x[j] unchanged otherwise */
   }
   tx[0] = t;
-#if EXTRA_VERBOSE > 3
+#if VERBOSITY > 3
   scs_printf("box cone iters %i\n", (int)iter + 1);
 #endif
-#if EXTRA_VERBOSE > 10
+#if VERBOSITY > 10
   SCS(print_array)(tx, bsize, "tx_+");
 #endif
   return t;
