@@ -12,14 +12,13 @@ extern "C" {
 
 /* initialize ScsLinSysWork structure and perform any necessary preprocessing */
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const ScsSettings *stgs,
-                                      scs_float *rho_y_vec);
+                                      scs_float *rho_y_vec, scs_float rho_x);
 
 /* solves [(d->rho_x * I + P)  A' ; A  -I] x = b for x, stores result in b, s
  * contains warm-start, tol is tolerance to solve linear sys */
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
-                           const ScsSettings *stgs, ScsLinSysWork *p,
-                           scs_float *b, const scs_float *s, scs_float tol);
+                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol);
 
 /* frees ScsLinSysWork structure and allocated memory in ScsLinSysWork */
 void SCS(free_lin_sys_work)(ScsLinSysWork *p);
@@ -41,8 +40,7 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P);
 
 /* returns string describing method, can return null, if not null free will be
  * called on output */
-char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P,
-                              const ScsSettings *stgs);
+char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P);
 /* returns string containing summary information about linear system solves, can
  * return null, if not null free will be called on output */
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
@@ -70,8 +68,7 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
 scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter);
 /* update the linsys workspace when new rho_y_vec determined (refactorize) */
 void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
-                                  const ScsSettings *stgs, ScsLinSysWork *p,
-                                  scs_float *rho_y_vec);
+                                  ScsLinSysWork *p, scs_float *rho_y_vec);
 
 #ifdef __cplusplus
 }

@@ -23,6 +23,7 @@ struct SCS_LIN_SYS_WORK {
   /* reporting */
   scs_int tot_cg_its;
   scs_float *rho_y_vec;
+  scs_float rho_x;
 };
 
 #ifdef __cplusplus

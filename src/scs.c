@@ -66,7 +66,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   scs_int i;
   ScsSettings *stgs = d->stgs;
   char *cone_str = SCS(get_cone_header)(k);
-  char *lin_sys_method = SCS(get_lin_sys_method)(d->A, d->P, d->stgs);
+  char *lin_sys_method = SCS(get_lin_sys_method)(d->A, d->P);
 #ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
   scs_int acceleration_interval = stgs->acceleration_interval;
@@ -366,7 +366,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
             NORM(w->r_normalized->px_aty_ctau, w->n));
   tol = MAX(LIN_SYS_BEST_TOL, tol * LIN_SYS_TOL_FACTOR);
   #endif
-  status = SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->u_t, warm_start, tol);
+  status = SCS(solve_lin_sys)(w->A, w->P, w->p, w->u_t, warm_start, tol);
   if (iter < FEASIBLE_ITERS) {
     w->u_t[l - 1] = 1.;
   } else {
@@ -903,7 +903,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
-  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->stgs, w->rho_y_vec))) {
+  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
@@ -922,7 +922,7 @@ static void update_work_cache(ScsWork * w) {
   /* g = (I + M)^{-1} h */
   memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
   SCS(scale_array)(&(w->g[w->n]), -1., w->m);
-  SCS(solve_lin_sys)(w->A, w->P, w->stgs, w->p, w->g, SCS_NULL, LIN_SYS_BEST_TOL);
+  SCS(solve_lin_sys)(w->A, w->P, w->p, w->g, SCS_NULL, LIN_SYS_BEST_TOL);
   return;
 }
 
@@ -984,7 +984,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->last_scale_update_iter = iter;
     w->stgs->scale = new_scale;
     SCS(set_rho_y_vec)(k, w->stgs->scale, w->rho_y_vec, w->m);
-    SCS(update_linsys_rho_y_vec)(w->A, w->P, w->stgs, w->p, w->rho_y_vec);
+    SCS(update_linsys_rho_y_vec)(w->A, w->P, w->p, w->rho_y_vec);
 
     /* update pre-solved quantities */
     update_work_cache(w);
