@@ -678,6 +678,10 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     scs_printf("ABS(gt / (ht + 1e-6)) %.4e, ABS(t - t_prev) %.4e\n",
                 ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
 #endif
+    /* TODO: sometimes this check can fail (ie, declare convergence before it
+     * should) if ht is very large, which can happen with some pathological
+     * problems.
+     */
     if (ABS(gt / MAX(ht, 1e-6)) < 1e-12 * MAX(t, 1.) ||
         ABS(t - t_prev) < 1e-11 * MAX(t, 1.)) {
       break;

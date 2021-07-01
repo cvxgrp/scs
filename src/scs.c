@@ -333,17 +333,11 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float et
   scs_float b, c, tau, a, tau_scale;
   tau_scale = TAU_FACTOR; /* TAU_FACTOR * w->stgs->scale; */
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
-  eta *= tau_scale;
   b = (dot_with_diag_scaling(w, mu, w->g) -
-       2 * dot_with_diag_scaling(w, p, w->g) - eta);
+       2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
   c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
   tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
-#if VERBOSITY > 3
-  scs_printf("root_plus: a: %g, b: %g, c: %g, eta: %g, tau_scale: %g, tau: %g, tau no p: %g\n",
-             a, b, c, eta, tau_scale, tau,
-             MAX(0., (eta + SCS(dot)(p, w->h, w->m + w->n)) /
-                         (1 + SCS(dot)(w->h, w->g, w->m + w->n))));
-#endif
+  scs_printf("tau: %1.4e\n", tau);
   return tau;
 }
 

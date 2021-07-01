@@ -213,7 +213,7 @@ typedef float scs_float;
 
 /* Factor which is scales tau in the linear system update */
 /* Larger factors prevent tau from moving as much */
-#define TAU_FACTOR (1.0)
+#define TAU_FACTOR (10.0)
 
 /* Anderson acceleration parameters: */
 #define AA_RELAXATION (1.0)
