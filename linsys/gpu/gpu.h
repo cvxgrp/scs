@@ -19,41 +19,51 @@ extern "C" {
 
 #define CUDA_CHECK_ERR                                                    \
   do {                                                                    \
+    cudaDeviceSynchronize();                                              \
     cudaError_t err = cudaGetLastError();                                 \
     if (err != cudaSuccess) {                                             \
-      printf("%s:%d:%s\n ERROR_CUDA: %s\n", __FILE__, __LINE__, __func__, \
-             cudaGetErrorString(err));                                    \
+      scs_printf("%s:%d:%s\n ERROR_CUDA (#): %s\n", __FILE__, __LINE__,   \
+                 __func__, cudaGetErrorString(err));                      \
     }                                                                     \
   } while (0)
 
-#ifndef VERBOSITY
-#ifndef SFLOAT
-#define CUBLAS(x) cublasD##x
-#define CUSPARSE(x) cusparseD##x
+
+#if VERBOSITY == 0
+  #ifndef SFLOAT
+    #define CUBLAS(x) cublasD##x
+    #define CUBLASI(x) cublasId##x
+    #define CUSPARSE(x) cusparseD##x
+  #else
+    #define CUBLAS(x) cublasS##x
+    #define CUBLASI(x) cublasIs##x
+    #define CUSPARSE(x) cusparseS##x
+  #endif
+  #define CUSPARSE_GEN(x) cusparse##x
 #else
-#define CUBLAS(x) cublasS##x
-#define CUSPARSE(x) cusparseS##x
-#endif
-#define CUSPARSE_GEN(x) cusparse##x
-#else
-#ifndef SFLOAT
-#define CUBLAS(x) \
-  CUDA_CHECK_ERR; \
-  cublasD##x
-#define CUSPARSE(x) \
-  CUDA_CHECK_ERR;   \
-  cusparseD##x
-#else
-#define CUBLAS(x) \
-  CUDA_CHECK_ERR; \
-  cublasS##x
-#define CUSPARSE(x) \
-  CUDA_CHECK_ERR;   \
-  cusparseS##x
-#endif
-#define CUSPARSE_GEN(x) \
-  CUDA_CHECK_ERR;       \
-  cusparse##x
+  #ifndef SFLOAT
+    #define CUBLAS(x)   \
+      CUDA_CHECK_ERR;   \
+      cublasD##x
+    #define CUBLASI(x)  \
+      CUDA_CHECK_ERR;   \
+      cublasId##x
+    #define CUSPARSE(x) \
+      CUDA_CHECK_ERR;   \
+      cusparseD##x
+  #else
+    #define CUBLAS(x)   \
+      CUDA_CHECK_ERR;   \
+      cublasS##x
+    #define CUBLASI(x)  \
+      CUDA_CHECK_ERR;   \
+      cublasIs##x
+    #define CUSPARSE(x) \
+      CUDA_CHECK_ERR;   \
+      cusparseS##x
+  #endif
+  #define CUSPARSE_GEN(x) \
+    CUDA_CHECK_ERR;       \
+    cusparse##x
 #endif
 
 #ifndef SFLOAT

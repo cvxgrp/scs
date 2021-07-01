@@ -11,7 +11,6 @@ extern "C" {
 #include "scs.h"
 #include "csparse.h"
 
-
 struct SCS_LIN_SYS_WORK {
   /* reporting */
   scs_int tot_cg_its;
