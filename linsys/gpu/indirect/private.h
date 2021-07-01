@@ -9,6 +9,7 @@ extern "C" {
 #include "glbopts.h"
 #include "linalg.h"
 #include "scs.h"
+#include "csparse.h"
 
 
 struct SCS_LIN_SYS_WORK {
@@ -24,15 +25,16 @@ struct SCS_LIN_SYS_WORK {
   scs_float *M;     /* preconditioner */
   ScsGpuMatrix *Ag;    /* A matrix on GPU */
   ScsGpuMatrix *Agt;   /* A trans matrix on GPU */
-  ScsGpuMatrix *P;     /* P matrix on GPU */
+  ScsGpuMatrix *Pg;     /* P matrix on GPU */
   /* CUDA */
   cublasHandle_t cublas_handle;
   cusparseHandle_t cusparse_handle;
   /* CUSPARSE */
   size_t buffer_size;
   void *buffer;
-  cusparseDnVecDescr_t dn_vec_m; /* Dense vector of length m */
-  cusparseDnVecDescr_t dn_vec_n; /* Dense vector of length n */
+  cusparseDnVecDescr_t dn_vec_m;   /* Dense vector of length m */
+  cusparseDnVecDescr_t dn_vec_n;   /* Dense vector of length n */
+  cusparseDnVecDescr_t dn_vec_n_p; /* Dense vector of length n */
 
   /* rho terms */
   scs_float rho_x;

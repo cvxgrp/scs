@@ -68,6 +68,9 @@ void SCS(accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
 /* This assumes that P has been made full (ie not triangular) and uses the
  * fact that the GPU is faster for general sparse matrices than for symmetric
  */
+/* y += P*x
+   x and y MUST be on GPU already
+ */
 void SCS(accum_by_p_gpu)(const ScsGpuMatrix *Pg, const cusparseDnVecDescr_t x,
                           cusparseDnVecDescr_t y,
                           cusparseHandle_t cusparse_handle,
