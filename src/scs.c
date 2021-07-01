@@ -337,7 +337,6 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float et
        2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
   c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
   tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
-  scs_printf("tau: %1.4e\n", tau);
   return tau;
 }
 
