@@ -12,6 +12,7 @@ extern "C" {
 #include "scs.h"
 
 struct SCS_LIN_SYS_WORK {
+  scs_int n, m;
   scs_float *p; /* cg iterate  */
   scs_float *r; /* cg residual */
   scs_float *Gp;

@@ -115,7 +115,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
 
 static void scale_by_diag_r(scs_float *vec, ScsLinSysWork *p) {
   scs_int i;
-  for (i = 0; i < p->A->m; ++i) {
+  for (i = 0; i < p->m; ++i) {
     vec[i] *= p->rho_y_vec[i];
   }
 }
@@ -174,6 +174,8 @@ void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       scs_float *rho_y_vec, scs_float rho_x) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  p->m = A->m;
+  p->n = A->n;
   p->rho_x = rho_x;
 
   p->p = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
