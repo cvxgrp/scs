@@ -113,9 +113,9 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-static void scale_by_diag_r(scs_float *vec, scs_int m, ScsLinSysWork *p) {
+static void scale_by_diag_r(scs_float *vec, ScsLinSysWork *p) {
   scs_int i;
-  for (i = 0; i < m; ++i) {
+  for (i = 0; i < p->A->m; ++i) {
     vec[i] *= p->rho_y_vec[i];
   }
 }
@@ -130,7 +130,7 @@ static void mat_vec(const ScsMatrix *A, const ScsMatrix *P,
     SCS(accum_by_p)(P, p, x, y); /* y = Px */
   }
   SCS(accum_by_a)(A, p, x, z); /* z = Ax */
-  scale_by_diag_r(z, A->m, p); /* z = R A x */
+  scale_by_diag_r(z, p); /* z = R A x */
   SCS(accum_by_atrans)(A, p, z, y); /* y += A'z, y = Px + A' R Ax */
   SCS(add_scaled_array)(y, x, A->n, p->rho_x);
   /* y = rho_x * x + Px + A' R A x */
@@ -247,7 +247,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P,
   memcpy(p, z, n * sizeof(scs_float));
 
   for (i = 0; i < max_its; ++i) {
-    /* Gp = Mat p */
+    /* Gp = Mat * p */
     mat_vec(A, P, pr, p, Gp);
     /* alpha = z'r / p'G p */
     alpha = ztr / SCS(dot)(p, Gp, n);
@@ -305,7 +305,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   /* tmp = ry */
   memcpy(p->tmp, &(b[A->n]), A->m * sizeof(scs_float));
   /* tmp = R * ry */
-  scale_by_diag_r(p->tmp, A->m, p);
+  scale_by_diag_r(p->tmp, p);
   /* b[:n] = rx + A' R ry */
   SCS(accum_by_atrans)(A, p, p->tmp, b);
   /* set max_iters to 10 * n (though in theory n is enough for any tol) */
@@ -318,7 +318,7 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   /* b[n:] = Ax - ry */
   SCS(accum_by_a)(A, p, b, &(b[A->n]));
   /* b[n:] = R (Ax - ry) = y */
-  scale_by_diag_r(&(b[A->n]), A->m, p);
+  scale_by_diag_r(&(b[A->n]), p);
   p->tot_cg_its += cg_its;
 #if VERBOSITY > 1
   scs_printf("tol %.3e\n", tol);

@@ -78,23 +78,27 @@ extern "C" {
     A'(n x m)       A  (m x n)      Agt     accum_by_a_gpu
 */
 
-/* this struct defines the data matrix A on GPU */
-typedef struct SCS_GPU_A_DATA_MATRIX {
+/* this struct defines the data matrix on GPU */
+typedef struct SCS_GPU_DATA_MATRIX {
   /* A is supplied in column compressed format */
-  scs_float *x; /* A values, size: NNZ A */
-  scs_int *i;   /* A row index, size: NNZ A */
-  scs_int *p;   /* A column pointer, size: n+1 */
+  scs_float *x; /* values, size: NNZ */
+  scs_int *i;   /* row index, size: NNZ */
+  scs_int *p;   /* column pointer, size: n+1 */
   scs_int m, n; /* m rows, n cols */
-  scs_int Annz; /* num non-zeros in A matrix */
+  scs_int nnz; /* num non-zeros in matrix */
   /* CUDA */
   cusparseSpMatDescr_t descr;
 } ScsGpuMatrix;
 
-void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
+void SCS(accum_by_atrans_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
                                cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
                                size_t *buffer_size, void **buffer);
 
-void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
+void SCS(accum_by_a_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
+                          cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
+                          size_t *buffer_size, void **buffer);
+
+void SCS(accum_by_p_gpu)(const ScsGpuMatrix *P, const cusparseDnVecDescr_t x,
                           cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
                           size_t *buffer_size, void **buffer);
 
