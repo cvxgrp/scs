@@ -137,6 +137,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     cudaFree(p->tmp_m);
     cudaFree(p->z);
     cudaFree(p->M);
+    cudaFree(p->rho_y_vec_gpu);
     if (p->Pg) {
       SCS(free_gpu_matrix)(p->Pg);
       scs_free(p->Pg);
@@ -216,11 +217,13 @@ static void mat_vec(const ScsGpuMatrix *A, const ScsGpuMatrix *P,
   CUBLAS(axpy)(p->cublas_handle, A->n, &(p->rho_x), x, 1, y, 1);
 }
 
-/* P comes in upper triangular, expand to full */
+/* P comes in upper triangular, expand to full
+ * First compute triplet version of full matrix, then compress to csc
+ * */
 static csc *fill_p_matrix(const ScsMatrix *P) {
   scs_int i, j, k, kk;
   scs_int Pnzmax = 2 * P->p[P->n]; /* upper bound */
-  csc * P_T = SCS(cs_spalloc)(P->n, P->n, Pnzmax, 1, 1);
+  csc *P_tmp = SCS(cs_spalloc)(P->n, P->n, Pnzmax, 1, 1);
   kk = 0;
   for (j = 0; j < P->n; j++) { /* cols */
     for (k = P->p[j]; k < P->p[j + 1]; k++) {
@@ -228,18 +231,21 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
       if (i > j) { /* only upper triangular needed */
         break;
       }
-      P_T->i[kk] = i;
-      P_T->p[kk] = j;
-      P_T->x[kk] = P->x[k];
-      if (i != j) { /* not diagonal */
-        P_T->i[kk+1] = j;
-        P_T->p[kk+1] = i;
-        P_T->x[kk+1] = P->x[k];
+      P_tmp->i[kk] = i;
+      P_tmp->p[kk] = j;
+      P_tmp->x[kk] = P->x[k];
+      kk++;
+      if (i == j) { /* diagonal */
+        continue;
       }
-      kk += 2;
+      P_tmp->i[kk+1] = j;
+      P_tmp->p[kk+1] = i;
+      P_tmp->x[kk+1] = P->x[k];
+      kk++;
     }
   }
-  return SCS(cs_compress)(P_T, SCS_NULL);
+  P_tmp->nz = kk;
+  return SCS(cs_compress)(P_tmp, SCS_NULL);
 }
 
 
@@ -301,21 +307,21 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
     CUSPARSE_INDEX_BASE_ZERO, SCS_CUDA_FLOAT);
 
   if (P) {
-    P_full = fill_p_matrix(P);
-    Pg->n = P->n;
-    Pg->m = P->m;
-    Pg->nnz = P->p[P->n];
-    Pg->descr = 0;
     Pg = (ScsGpuMatrix *)scs_calloc(1, sizeof(ScsGpuMatrix));
-    cudaMalloc((void **)&Pg->i, (P->p[P->n]) * sizeof(scs_int));
-    cudaMalloc((void **)&Pg->p, (P->n + 1) * sizeof(scs_int));
-    cudaMalloc((void **)&Pg->x, (P->p[P->n]) * sizeof(scs_float));
+    P_full = fill_p_matrix(P);
+    Pg->n = P_full->n;
+    Pg->m = P_full->m;
+    Pg->nnz = P_full->p[P_full->n];
+    Pg->descr = 0;
+    cudaMalloc((void **)&Pg->i, (P_full->p[P_full->n]) * sizeof(scs_int));
+    cudaMalloc((void **)&Pg->p, (P_full->n + 1) * sizeof(scs_int));
+    cudaMalloc((void **)&Pg->x, (P_full->p[P_full->n]) * sizeof(scs_float));
 
-    cudaMemcpy(Pg->i, P->i, (P->p[P->n]) * sizeof(scs_int),
+    cudaMemcpy(Pg->i, P_full->i, (P_full->p[P_full->n]) * sizeof(scs_int),
                cudaMemcpyHostToDevice);
-    cudaMemcpy(Pg->p, P->p, (P->n + 1) * sizeof(scs_int),
+    cudaMemcpy(Pg->p, P_full->p, (P_full->n + 1) * sizeof(scs_int),
                cudaMemcpyHostToDevice);
-    cudaMemcpy(Pg->x, P->x, (P->p[P->n]) * sizeof(scs_float),
+    cudaMemcpy(Pg->x, P_full->x, (P_full->p[P_full->n]) * sizeof(scs_float),
                cudaMemcpyHostToDevice);
 
     cusparseCreateCsr(&Pg->descr, Pg->n, Pg->m, Pg->nnz, Pg->p, Pg->i, Pg->x,

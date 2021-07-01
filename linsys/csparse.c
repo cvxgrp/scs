@@ -3,7 +3,7 @@
 #include "csparse.h"
 
 csc *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-                       scs_int triplet) {
+                     scs_int triplet) {
   csc *A = (csc *)scs_calloc(1, sizeof(csc)); /* allocate the csc struct */
   if (!A) {
     return SCS_NULL;
