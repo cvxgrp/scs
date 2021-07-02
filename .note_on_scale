@@ -32,8 +32,12 @@ We take R = [rho_x * I_n           0        0]
 
 where I_n is nxn identity, rho_x \in \reals, rho_y_vec \in \reals^m and d \in
 \reals. The rho_y_vec term includes the effect of the parameter `scale', which
-is updated heuristically to improve convergence. Let R_x = rho_x * I_n
-and R_y = diag(rho_y_vec).
+is updated heuristically to improve convergence. Basically 
+
+    rho_y_vec \approx 1/scale * I
+
+So as scale increases, rho_y_vec decreases and vice-versa.
+Denote by R_x = rho_x * I_n and R_y = diag(rho_y_vec).
 
 *Linear equation to be solved:
 
