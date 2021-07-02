@@ -336,7 +336,7 @@ static inline scs_float get_tau_scale(ScsWork *w) {
 
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
-  tau_scale = get_tau_scale(w); 
+  tau_scale = get_tau_scale(w);
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   b = (dot_with_diag_scaling(w, mu, w->g) -
        2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
@@ -361,8 +361,10 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   SCS(add_scaled_array)(warm_start, w->g, l - 1, w->u[l - 1]);
   /* use normalized residuals to compute tolerance */
   tol = MIN(NORM(w->r_normalized->ax_s_btau, w->m),
-            NORM(w->r_normalized->px_aty_ctau, w->n));
-  tol = MAX(LIN_SYS_BEST_TOL, tol * LIN_SYS_TOL_FACTOR);
+            NORM(w->r_normalized->px_aty_ctau, w->n)) * LIN_SYS_TOL_FACTOR;
+  /* tol ~ O(1/k^(1+eps)) guarantees convergence */
+  tol = MIN(tol, NORM(w->u_t, w->n) / POWF(iter + 1, 2));
+  tol = MAX(LIN_SYS_BEST_TOL, tol);
   #endif
   status = SCS(solve_lin_sys)(w->A, w->P, w->p, w->u_t, warm_start, tol);
   if (iter < FEASIBLE_ITERS) {
@@ -378,7 +380,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
    rsk^{k+1} = R ( u^{k+1} + v^k - 2 * u_t^{k+1} )
    uses Moreau decomposition to get projection onto dual cone
    since it depends on v^k MUST be called before update_dual_vars is done
-   effect of w->stgs->alpha is cancelled out 
+   effect of w->stgs->alpha is cancelled out
    see .note_on_scale.
 */
 static void compute_rsk(ScsWork *w) {
@@ -556,6 +558,7 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     info->status_val = unbounded(w, sol, info);
   }
   else {
+    /* If failed we have already left this function */
     scs_printf("Error: should not be in this state (2).\n");
   }
   get_info(w, sol, info, iter);
@@ -687,7 +690,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("cert: |Ax+s| = %.2e\n", info->res_unbdd_a);
     scs_printf("      |Px| = %.2e\n", info->res_unbdd_p);
     scs_printf("      c'x = %.2f\n", SCS(dot)(d->c, sol->x, d->n));
-  } else {
+  } else if (is_solved_status(info->status_val)) {
     scs_printf("cones: dist(s, K) = %.2e, dist(y, K*) = %.2e\n",
                get_pri_cone_dist(sol->s, k, w->cone_work, d->m),
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m));
@@ -699,7 +702,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                info->gap);
     scs_printf("pri res: |Ax+s-b| = %.2e, ", info->res_pri);
     scs_printf("dua res: |Px+A'y+c| = %.2e\n", info->res_dual);
-  }
+  } else { /* A failure mode (eg hit max_iters) */ }
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
