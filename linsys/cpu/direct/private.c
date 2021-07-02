@@ -119,11 +119,11 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
-  /* -rho_y_vec^-1 * I at bottom right */
+  /* -rho_y_vec * I at bottom right */
   for (k = 0; k < m; k++) {
     K->i[kk] = k + n;
     K->p[kk] = k + n;
-    K->x[kk] = -1. / rho_y_vec[k];
+    K->x[kk] = -rho_y_vec[k];
     rho_y_vec_idxs[k] = kk; /* store the indices where rho_y_vec occurs */
     kk++;
   }
@@ -324,7 +324,7 @@ void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
                                   ScsLinSysWork *p, scs_float *rho_y_vec) {
   scs_int i, ldl_status;
   for (i = 0; i < A->m; ++i) {
-    p->kkt->x[p->rho_y_vec_idxs[i]] = -1.0 / rho_y_vec[i];
+    p->kkt->x[p->rho_y_vec_idxs[i]] = -rho_y_vec[i];
   }
   ldl_status = ldl_factor(p, A->n);
   if (ldl_status < 0) {

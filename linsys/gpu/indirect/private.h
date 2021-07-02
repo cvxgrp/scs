@@ -37,7 +37,8 @@ struct SCS_LIN_SYS_WORK {
 
   /* rho terms */
   scs_float rho_x;
-  scs_float *rho_y_vec_gpu; /* rho_y_vec on GPU */
+  scs_float *inv_rho_y_vec;     /* inverse rho_y_vec */
+  scs_float *inv_rho_y_vec_gpu; /* inverse rho_y_vec on GPU */
 };
 
 #ifdef __cplusplus

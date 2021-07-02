@@ -34,14 +34,15 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
   scs_int i, count = 0;
   /* f cone */
   for (i = 0; i < k->f; ++i) {
-    /* set rho_y large for f, similar to rho_x term, since f is free cone */
-    /* in dual this effectively decreases penalty on those entries */
-    rho_y_vec[i] = 1000. * scale;
+    /* set rho_y small for f, similar to rho_x term, since f is free cone */
+    /* this effectively decreases penalty on those entries */
+    /* and lets them be determined entirely by the linear system solve */
+    rho_y_vec[i] = 1.0 / (1000. * scale);
   }
   count += k->f;
   /* others */
   for (i = count; i < m; ++i) {
-    rho_y_vec[i] = scale;
+    rho_y_vec[i] = 1.0 / scale;
   }
   /* Note, if updating this to use different scales for other cones (e.g. box)
    * then you must be careful to also include the effect of the rho_y_vec

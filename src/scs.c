@@ -159,7 +159,7 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   return status;
 }
 
-/* given x,y,s warm start, set v = [x; R*s + y; 1]
+/* given x,y,s warm start, set v = [x; s / R + y; 1]
  * where R = diag(w->rho_y_vec).
  */
 static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
@@ -171,7 +171,7 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   }
   memcpy(v, sol->x, n * sizeof(scs_float));
   for (i = 0; i < m; ++i) {
-    v[i + n] = sol->y[i] + w->rho_y_vec[i] * sol->s[i];
+    v[i + n] = sol->y[i] + sol->s[i] / w->rho_y_vec[i];
   }
   v[n + m] = 1.0;
   /* un-normalize so sol unchanged */
@@ -316,6 +316,7 @@ static void cold_start_vars(ScsWork *w) {
 
 /* utility function that scales first n entries in inner prod by rho_x   */
 /* and last m entries by 1 / rho_y_vec, assumes length of array is n + m */
+/* See .note_on_scale in repo for explanation */
 static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
                                        const scs_float *y) {
   scs_int i, n = w->n, len = w->n + w->m;
@@ -324,14 +325,18 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
     ip += w->stgs->rho_x * x[i] * y[i];
   }
   for (i = n; i < len; ++i) {
-    ip += x[i] * y[i] / w->rho_y_vec[i - n];
+    ip += x[i] * y[i] * w->rho_y_vec[i - n];
   }
   return ip;
 }
 
+static inline scs_float get_tau_scale(ScsWork *w) {
+  return TAU_FACTOR; /* TAU_FACTOR * w->stgs->scale; */
+}
+
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
-  tau_scale = TAU_FACTOR; /* TAU_FACTOR * w->stgs->scale; */
+  tau_scale = get_tau_scale(w); 
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   b = (dot_with_diag_scaling(w, mu, w->g) -
        2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
@@ -347,7 +352,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   for (i = n; i < l - 1 ; ++i) {
-    w->u_t[i] /= -w->rho_y_vec[i - n];
+    w->u_t[i] *= -w->rho_y_vec[i - n];
   }
   #if INDIRECT > 0
   /* compute warm start using the cone projection output */
@@ -370,13 +375,15 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 }
 
 /* compute the [r;s;kappa] iterate
-   rsk^{k+1} = u^{k+1} + v^k - 2 * u_t^{k+1}
+   rsk^{k+1} = R ( u^{k+1} + v^k - 2 * u_t^{k+1} )
    uses Moreau decomposition to get projection onto dual cone
    since it depends on v^k MUST be called before update_dual_vars is done
-   effect of w->stgs->alpha is cancelled out */
+   effect of w->stgs->alpha is cancelled out 
+   see .note_on_scale.
+*/
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->m + w->n + 1;
-  /* r, should = 0 */
+  /* r, should = 0 so skip */
   /*
   for (i = 0; i < w->n; ++i) {
     w->rsk[i] = w->stgs->rho_x * (w->v[i] + w->u[i] - 2 * w->u_t[i]);
@@ -384,10 +391,10 @@ static void compute_rsk(ScsWork *w) {
   */
   /* s */
   for (i = w->n; i < l - 1; ++i) {
-    w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) / w->rho_y_vec[i - w->n];
+    w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) * w->rho_y_vec[i - w->n];
   }
-  /* kappa */
-  w->rsk[l - 1] = w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1];
+  /* kappa, incorporates tau scaling parameter */
+  w->rsk[l - 1] = get_tau_scale(w) * (w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1]);
 }
 
 static void update_dual_vars(ScsWork *w) {
@@ -410,7 +417,6 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, w->stgs->normalize);
   if (iter < FEASIBLE_ITERS) {
     w->u[l - 1] = 1.0;
-    return 1.;
   } else {
     w->u[l - 1] = MAX(w->u[l - 1], 0.);
   }
@@ -986,10 +992,10 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     aa_reset(w->accel);
 
     /* update v, using fact that rsk, u, u_t vectors should be the same */
-    /* solve: D^+ (v^+ + u - 2u_t) = rsk v^+ = (D^+)^-1 rsk + 2u_t - u  */
+    /* solve: R (v^+ + u - 2u_t) = rsk => v^+ = R^-1 rsk + 2u_t - u  */
     /* only elements with scale on diag */
     for (i = w->n; i < w->n + w->m; i++) {
-      w->v[i] = w->rho_y_vec[i - w->n] * w->rsk[i] + 2 * w->u_t[i] - w->u[i];
+      w->v[i] = w->rsk[i] / w->rho_y_vec[i - w->n] + 2 * w->u_t[i] - w->u[i];
     }
   }
 }
