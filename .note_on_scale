@@ -73,7 +73,7 @@ v^{k+1} = R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \rightarrow F(u^\star)
 
 tau^2 (d + r' R r) + tau (r' R \mu^k - 2 r' R p^k - d \eta^k) + p^k R (p^k - \mu^k) = 0
 
-other than rsk (which does not affect the alg) this is the *only* place
+other than kappa (which does not affect the alg) this is the *only* place
 where 'd' appears, so we have a lot of flexibility in how to choose it.
 `d' is determined by `TAU_FACTOR' in the code.
 
