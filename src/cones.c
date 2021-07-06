@@ -832,7 +832,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
      * \Pi_C^*(y) = y + \Pi_C(-y)
      */
 #ifdef _OPENMP
-#pragma omp parallel for private(r, s, t, idx)
+#pragma omp parallel for
 #endif
     for (i = 0; i < k->ep; ++i) {
       proj_exp_cone(&(x[count + 3 * i]));
