@@ -851,7 +851,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     scs_float r, s, t;
     SCS(scale_array)(&(x[count]), -1, 3 * k->ed); /* x = -x; */
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for private(r, s, t, idx)
 #endif
     for (i = 0; i < k->ed; ++i) {
       idx = count + 3 * i;
