@@ -304,14 +304,14 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
   return t + z_hat;
 }
 
-static void exp_solve_for_x_with_rho(scs_float *v, scs_float *x,
+static void exp_solve_for_x_with_rho(const scs_float *v, scs_float *x,
                                      scs_float rho, scs_float w) {
   x[2] = exp_newton_one_d(rho, v[1], v[2], w);
   x[1] = (x[2] - v[2]) * x[2] / rho;
   x[0] = v[0] - rho;
 }
 
-static scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho,
+static scs_float exp_calc_grad(const scs_float *v, scs_float *x, scs_float rho,
                                scs_float w) {
   exp_solve_for_x_with_rho(v, x, rho, w);
   if (x[1] <= 1e-12) {
@@ -320,7 +320,7 @@ static scs_float exp_calc_grad(scs_float *v, scs_float *x, scs_float rho,
   return x[0] + x[1] * log(x[1] / x[2]);
 }
 
-static void exp_get_rho_ub(scs_float *v, scs_float *x, scs_float *ub,
+static void exp_get_rho_ub(const scs_float *v, scs_float *x, scs_float *ub,
                            scs_float *lb) {
   *lb = 0;
   *ub = 0.125;
@@ -371,9 +371,13 @@ static scs_int proj_exp_cone(scs_float *v) {
       break;
     }
   }
-#if VERBOSITY > 25
+#if VERBOSITY > 10
   scs_printf("exponential cone proj iters %i\n", (int)i);
 #endif
+  if (i == EXP_CONE_MAX_ITERS) {
+    scs_printf("warning: exp cone outer step hit maximum %i iters\n", (int)i);
+    scs_printf("r=%1.5e; s=%1.5e; t=%1.5e\n", r, s, t);
+  }
   v[0] = x[0];
   v[1] = x[1];
   v[2] = x[2];
