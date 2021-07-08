@@ -344,8 +344,8 @@ static scs_int proj_exp_cone(scs_float *v) {
   }
 
   /* -v in Kexp^* */
-  if ((-r < 0 && r * exp(s / r) + exp(1) * t <= CONE_THRESH) ||
-      (-r == 0 && -s >= 0 && -t >= 0)) {
+  if ((r > 0 && r * exp(s / r) + exp(1) * t <= CONE_THRESH) ||
+      (r == 0 && s <= 0 && t <= 0)) {
     memset(v, 0, 3 * sizeof(scs_float));
     return 0;
   }
