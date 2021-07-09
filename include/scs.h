@@ -72,8 +72,8 @@ struct SCS_SETTINGS {
 struct SCS_CONE {
   scs_int f;          /* number of linear equality constraints */
   scs_int l;          /* length of LP cone */
-  scs_float *bu, *bl; /* upper/lower box values, length = bsize - 1 */
-  scs_int bsize;      /* length of box cone constraint, including scale t */
+  scs_float *bu, *bl; /* upper/lower box values, len(bu) = len(bl) = bsize */
+  scs_int bsize;      /* length of box cone arrays (does not include scale t) */
   scs_int *q;         /* array of second-order cone constraints */
   scs_int qsize;      /* length of SOC array */
   scs_int *s;         /* array of SD constraints */

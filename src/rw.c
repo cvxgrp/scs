@@ -15,8 +15,8 @@ static void write_scs_cone(const ScsCone *k, FILE *fout) {
   fwrite(&(k->f), sizeof(scs_int), 1, fout);
   fwrite(&(k->l), sizeof(scs_int), 1, fout);
   fwrite(&(k->bsize), sizeof(scs_int), 1, fout);
-  fwrite(k->bl, sizeof(scs_float), MAX(k->bsize-1, 0), fout);
-  fwrite(k->bu, sizeof(scs_float), MAX(k->bsize-1, 0), fout);
+  fwrite(k->bl, sizeof(scs_float), k->bsize, fout);
+  fwrite(k->bu, sizeof(scs_float), k->bsize, fout);
   fwrite(&(k->qsize), sizeof(scs_int), 1, fout);
   fwrite(k->q, sizeof(scs_int), k->qsize, fout);
   fwrite(&(k->ssize), sizeof(scs_int), 1, fout);
@@ -32,10 +32,10 @@ static ScsCone *read_scs_cone(FILE *fin) {
   fread(&(k->f), sizeof(scs_int), 1, fin);
   fread(&(k->l), sizeof(scs_int), 1, fin);
   fread(&(k->bsize), sizeof(scs_int), 1, fin);
-  k->bl = scs_calloc(MAX(k->bsize-1, 0), sizeof(scs_float));
-  k->bu = scs_calloc(MAX(k->bsize-1, 0), sizeof(scs_float));
-  fread(k->bl, sizeof(scs_float), MAX(k->bsize-1, 0), fin);
-  fread(k->bu, sizeof(scs_float), MAX(k->bsize-1, 0), fin);
+  k->bl = scs_calloc(k->bsize, sizeof(scs_float));
+  k->bu = scs_calloc(k->bsize, sizeof(scs_float));
+  fread(k->bl, sizeof(scs_float), k->bsize, fin);
+  fread(k->bu, sizeof(scs_float), k->bsize, fin);
   fread(&(k->qsize), sizeof(scs_int), 1, fin);
   k->q = scs_calloc(k->qsize, sizeof(scs_int));
   fread(k->q, sizeof(scs_int), k->qsize, fin);

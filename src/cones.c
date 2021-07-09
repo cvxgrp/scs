@@ -62,7 +62,7 @@ scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
   scs_int cone_boundaries_len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
   scs_int *b = (scs_int *)scs_calloc(cone_boundaries_len, sizeof(scs_int));
   /* cones that can be scaled independently */
-  b[count] = k->f + k->l + k->bsize;
+  b[count] = k->f + k->l + (k->bsize ? k->bsize + 1 : 0);
   count += 1; /* started at 0 now move to first entry */
   for (i = 0; i < k->qsize; ++i) {
     b[count + i] = k->q[i];
@@ -89,7 +89,7 @@ scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
-  scs_int i, c = k->f + k->l + k->bsize;
+  scs_int i, c = k->f + k->l + (k->bsize ? k->bsize + 1 : 0);
   if (k->qsize) {
     for (i = 0; i < k->qsize; ++i) {
       c += k->q[i];
@@ -132,7 +132,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       scs_printf("box cone dimension error\n");
       return -1;
     }
-    for (i = 0; i < k->bsize - 1; ++i) {
+    for (i = 0; i < k->bsize; ++i) {
       if (k->bl[i] > k->bu[i]) {
         scs_printf("infeasible: box lower bound larger than upper bound\n");
         return -1;
@@ -230,7 +230,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
   }
   if (k->bsize) {
-    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)k->bsize);
+    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)(k->bsize+1));
   }
   soc_vars = 0;
   soc_blks = 0;
@@ -633,7 +633,7 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
  */
 static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
   scs_int j;
-  for (j = 0; j < bsize - 1; j++) {
+  for (j = 0; j < bsize; j++) {
     if (c->bu[j] >= MAX_BOX_VAL) {
       c->bu[j] = INFINITY;
     } else {
@@ -648,7 +648,7 @@ static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
 }
 
 /* project onto { (t, s) | t * l <= s <= t * u, t >= 0 }, Newton's method on t
-   tx = [t; s], total length = bsize
+   tx = [t; s], total length = bsize + 1
    uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
 */
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
@@ -657,16 +657,16 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   scs_float gt, ht, t_prev, t = t_warm_start, *x = &(tx[1]);
   scs_int iter, j;
 #if VERBOSITY > 10
-  SCS(print_array)(bu, bsize - 1, "u");
-  SCS(print_array)(bl, bsize - 1, "l");
-  SCS(print_array)(tx, bsize, "tx");
+  SCS(print_array)(bu, bsize, "u");
+  SCS(print_array)(bl, bsize, "l");
+  SCS(print_array)(tx, bsize + 1, "tx");
 #endif
   /* should only require about 5 or so iterations */
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
     gt = t - tx[0]; /* gradient */
     ht = 1.; /* hessian */
-    for (j = 0; j < bsize - 1; j++) {
+    for (j = 0; j < bsize; j++) {
       if (x[j] > t * bu[j]) {
         gt += (t * bu[j] - x[j]) * bu[j]; /* gradient */
         ht += bu[j] * bu[j]; /* hessian */
@@ -695,7 +695,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   if (iter == BOX_CONE_MAX_ITERS) {
     scs_printf("warning: box cone proj hit maximum %i iters\n", (int)iter);
   }
-  for (j = 0; j < bsize - 1; j++) {
+  for (j = 0; j < bsize; j++) {
     if (x[j] > t * bu[j]) {
       x[j] = t * bu[j];
     }
@@ -709,7 +709,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   scs_printf("box cone iters %i\n", (int)iter + 1);
 #endif
 #if VERBOSITY > 10
-  SCS(print_array)(tx, bsize, "tx_+");
+  SCS(print_array)(tx, bsize + 1, "tx_+");
 #endif
   return t;
 }
@@ -807,7 +807,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       c->box_t_warm_start = proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize,
                                           c->box_t_warm_start);
     }
-    count += k->bsize;
+    count += k->bsize + 1; /* since b = (t,s), len(s) = bsize */
   }
 
   if (k->qsize && k->q) {
@@ -911,10 +911,10 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int co
   if (k->bsize && k->bu && k->bl) {
     c->box_t_warm_start = 1.;
     if (scal) {
-      c->bu = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
-      c->bl = (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
-      memcpy(c->bu, k->bu, (k->bsize - 1) * sizeof(scs_float));
-      memcpy(c->bl, k->bl, (k->bsize - 1) * sizeof(scs_float));
+      c->bu = (scs_float *)scs_calloc(k->bsize, sizeof(scs_float));
+      c->bl = (scs_float *)scs_calloc(k->bsize, sizeof(scs_float));
+      memcpy(c->bu, k->bu, k->bsize * sizeof(scs_float));
+      memcpy(c->bl, k->bl, k->bsize * sizeof(scs_float));
       /* also does some sanitizing */
       normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): SCS_NULL, k->bsize);
     }
