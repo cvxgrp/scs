@@ -18,7 +18,8 @@ programs via the linked
 interfaces. It can also be called as a solver from convex optimization
 toolboxes [CVX](http://cvxr.com/cvx/) (3.0 or later),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
-[Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
+[Convex.jl](https://github.com/jump-dev/Convex.jl),
+[JuMP.jl](https://github.com/jump-dev/JuMP.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
 
 The current version is `3.0.0`. If you wish to cite SCS, please use the
