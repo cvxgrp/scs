@@ -1,7 +1,7 @@
 **Please read this first**
 
 If you are have a problem that SCS struggles with you can pass a string to the
-`write_data_filename' argument and SCS will dump a file containing the problem
+`write_data_filename` argument and SCS will dump a file containing the problem
 to disk. You can send this file to us or attach to this bug report for easy
 reproduction of the issue.
 
