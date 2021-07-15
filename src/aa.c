@@ -162,8 +162,8 @@ static void set_m(AaWork *a, aa_int len) {
     nrm_s = BLAS(nrm2)(&btotal, a->S, &one);
     r = a->regularization * (nrm_y * nrm_y + nrm_s * nrm_s);
     if (a->verbosity > 2) {
-      printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n",
-              a->iter, len, nrm_y, nrm_s, r);
+      printf("iter: %li, len: %li, norm: Y %.2e, norm: S %.2e, r: %.2e\n",
+              (long)a->iter, (long)len, nrm_y, nrm_s, r);
     }
     for (i = 0; i < len; ++i) {
       a->M[i + len * i] += r;

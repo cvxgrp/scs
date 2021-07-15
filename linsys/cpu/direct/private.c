@@ -188,7 +188,7 @@ static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
     scs_printf("Error in LDL factorization when computing the nonzero elements. There are zeros in the diagonal matrix.\n");
   } else if (factor_status < num_vars) {
     scs_printf("Error in LDL factorization when computing the nonzero elements. The problem seems to be non-convex.\n");
-    scs_printf("factor_status: %i, num_vars: %i\n", factor_status, num_vars);
+    scs_printf("factor_status: %li, num_vars: %li\n", (long)factor_status, (long)num_vars);
       return -1;
   }
   p->factorizations++;
