@@ -15,7 +15,7 @@ static const char *qafiro_tiny_qp(void) {
   scs_float perr, derr;
   scs_int success;
   const char * fail;
-  
+
   /* data */
   scs_float Ax[] = {-1.   , -1.06 , -1.   , -0.301, -1.   ,  1.   ,  1.   , -1.   ,
         1.   ,  1.   , -1.   ,  1.   , -1.   , -1.   , -1.   , -1.06 ,

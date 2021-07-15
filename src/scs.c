@@ -183,9 +183,16 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
 static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   r->res_pri = SAFEDIV_POS(NORM(r->ax_s_btau, m), r->tau);
   r->res_dual = SAFEDIV_POS(NORM(r->px_aty_ctau, n), r->tau);
-  r->res_infeas = NORM(r->aty, n);
-  r->res_unbdd_a = NORM(r->ax_s, n);
-  r->res_unbdd_p = NORM(r->px, n);
+  r->res_unbdd_a = NAN;
+  r->res_unbdd_p = NAN;
+  r->res_infeas = NAN;
+  if (r->ctx_tau < 0) {
+    r->res_unbdd_a = SAFEDIV_POS(NORM(r->ax_s, n), -r->ctx_tau);
+    r->res_unbdd_p = SAFEDIV_POS(NORM(r->px, n), -r->ctx_tau);
+  }
+  if (r->bty_tau < 0) {
+    r->res_infeas = SAFEDIV_POS(NORM(r->aty, n), -r->bty_tau);
+  }
 }
 
 static void unnormalize_residuals(ScsWork *w) {
@@ -742,11 +749,11 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
       return SCS_SOLVED;
     }
   }
-  if (isless(r->res_unbdd_a, eps_infeas * (-r->ctx_tau)) &&
-      isless(r->res_unbdd_p, eps_infeas * (-r->ctx_tau))) {
+  if (isless(r->res_unbdd_a, eps_infeas) &&
+      isless(r->res_unbdd_p, eps_infeas)) {
     return SCS_UNBOUNDED;
   }
-  if (isless(r->res_infeas, eps_infeas * (-r->bty_tau))) {
+  if (isless(r->res_infeas, eps_infeas)) {
     return SCS_INFEASIBLE;
   }
   return 0;

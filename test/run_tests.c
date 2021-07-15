@@ -10,6 +10,8 @@
 #include "problems/rob_gauss_cov_est.h"
 #include "problems/hs21_tiny_qp.h"
 #include "problems/qafiro_tiny_qp.h"
+#include "problems/infeasible_tiny_qp.h"
+#include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
 
@@ -22,6 +24,10 @@ static const char *all_tests(void) {
   mu_run_test(hs21_tiny_qp);
   scs_printf("qafiro_tiny_qp\n");
   mu_run_test(qafiro_tiny_qp);
+  scs_printf("infeasible_tiny_qp\n");
+  mu_run_test(infeasible_tiny_qp);
+  scs_printf("unbounded_tiny_qp\n");
+  mu_run_test(unbounded_tiny_qp);
   return 0;
 }
 

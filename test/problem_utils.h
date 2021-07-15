@@ -147,10 +147,10 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
   /* Ax + s */
   SCS(add_scaled_array)(primal, s, m, 1.);
 
-  /* infeasible residual */
-  res_infeas = NORM(primal, m);
+  /* unbounded residual |Ax + s| */
+  res_unbdd_a = NORM(primal, m);
 
-  /* Ax + s - b * tau */
+  /* Ax + s - b */
   SCS(add_scaled_array)(primal, b, m, -1.0);
 
   res_pri = NORM(primal, m);
@@ -170,7 +170,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
   memset(aty, 0, n * sizeof(scs_float));
   /* aty = A'y */
   SCS(accum_by_atrans)(d->A, SCS_NULL, y, aty);
-  res_unbdd_a = NORM(aty, n);
+  res_infeas = NORM(aty, n);
 
   memcpy(dual, aty, n * sizeof(scs_float));
   /* Px + A'y */
@@ -216,12 +216,12 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
   /**************** ASSERTS *****************/
   if (status == SCS_SOLVED) {
     mu_assert_less("Primal residual ERROR", ABS(res_pri - info->res_pri),
-                    1e-10);
+                    1e-14);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
-                    1e-10);
-    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-10);
-    mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj), 1e-10);
-    mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj), 1e-10);
+                    1e-14);
+    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-14);
+    mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj), 1e-14);
+    mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj), 1e-14);
     /* slightly looser tol */
     mu_assert_less("Complementary slackness ERROR", ABS(sty), 1e-6);
     mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-6);
@@ -234,17 +234,17 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
     mu_assert_less("Gap ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
 
   } else if (status == SCS_INFEASIBLE) {
-    mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-10);
-    mu_assert_less("ctx ERROR", ABS(ctx + 1), 1e-10);
+    mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-8);
+    mu_assert_less("ctx ERROR", ABS(ctx + 1), 1e-14);
     mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-6);
     mu_assert_less("Infeas invalid ERROR", res_infeas, stgs->eps_infeas);
 
   } else if (status == SCS_UNBOUNDED) {
     mu_assert_less("Unbdd_a ERROR", ABS(res_unbdd_a - info->res_unbdd_a),
-                    1e-10);
+                    1e-8);
     mu_assert_less("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p),
-                    1e-10);
-    mu_assert_less("bty ERROR", ABS(bty + 1), 1e-10);
+                    1e-8);
+    mu_assert_less("bty ERROR", ABS(bty + 1), 1e-14);
     mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-6);
     mu_assert_less("Unbounded P invalid ERROR", res_unbdd_p, stgs->eps_infeas);
     mu_assert_less("Unbounded A invalid ERROR", res_unbdd_a, stgs->eps_infeas);

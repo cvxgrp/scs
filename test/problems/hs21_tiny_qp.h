@@ -15,7 +15,7 @@ static const char *hs21_tiny_qp(void) {
   scs_float perr, derr;
   scs_int success;
   const char * fail;
-  
+
   /* data */
   scs_float Ax[] = {-10.,  -1.,   1.,  -1.};
   scs_int Ai[] = {1, 2, 1, 3};
@@ -83,7 +83,7 @@ static const char *hs21_tiny_qp(void) {
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
   fail = verify_solution_correct(d, k, &info, sol, exitflag);
-  
+
   /* test warm-starting */
   d->stgs->warm_start = 1;
   exitflag = scs(d, k, sol, &info);
