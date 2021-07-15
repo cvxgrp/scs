@@ -104,7 +104,7 @@ struct SCS_INFO {
   scs_float res_infeas;  /* infeasibility cert residual */
   scs_float res_unbdd_a; /* unbounded cert residual */
   scs_float res_unbdd_p; /* unbounded cert residual */
-  scs_float gap;         /* relative duality gap */
+  scs_float gap;         /* duality gap */
   scs_float setup_time;  /* time taken for setup phase (milliseconds) */
   scs_float solve_time;  /* time taken for solve phase (milliseconds) */
   scs_float scale;       /* (final) scale parameter */
