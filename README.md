@@ -200,7 +200,7 @@ second-order cones etc.).
 **Warm-start**
 
 You can warm-start SCS (supply a guess of the solution) by setting `warm_start`
-in the ScsData struct to `1` and supplying the warm-starts in the ScsSolution
+in the ScsSettings struct to `1` and supplying the warm-starts in the ScsSolution
 struct (`x`,`y`, and `s`). All inputs must be warm-started if any one is. These
 are used to initialize the iterates in `scs_solve`.
 
