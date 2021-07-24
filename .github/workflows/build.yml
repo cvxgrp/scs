@@ -1,0 +1,21 @@
+---
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - run: make
+      - run: make test
+      - run: test/run_tests
+
