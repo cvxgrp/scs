@@ -1,5 +1,6 @@
-SCS
-====
+<h1 align="center" margin=0px>
+<img src="https://github.com/cvxgrp/scs/blob/master/docs/scs_logo.png" alt="A cone intersecting a polyhedron" width="600">
+</h1>
 
 [![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
 <!--[![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm/branch/master?svg=true)](https://ci.appveyor.com/project/bodono/scs/branch/master)-->
