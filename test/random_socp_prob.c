@@ -1,5 +1,5 @@
 #include <time.h> /* to seed random */
-#include "amatrix.h"
+#include "matrix.h"
 #include "problem_utils.h"
 #include "scs.h"
 
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
   d->m = m;
   d->n = n;
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
-  SCS(set_default_settings)(d);
+  SCS(set_default_settings)(d->stgs);
 
   /* d->stgs->write_data_filename = "random_socp_prob"; */
 

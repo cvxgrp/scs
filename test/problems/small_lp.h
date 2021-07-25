@@ -28,7 +28,7 @@ static const char *small_lp(void) {
   d->m = m;
   d->n = n;
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
-  SCS(set_default_settings)(d);
+  SCS(set_default_settings)(d->stgs);
   d->stgs->eps_abs = 1e-5;
   d->stgs->eps_rel = 1e-5;
 

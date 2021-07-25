@@ -24,5 +24,6 @@ github:
 	@make html
 	@cp -a _build/html/. ../docs/
 	@touch ../docs/.nojekyll
+	@rm -rf doxygen_out/*
 	@make clean
 

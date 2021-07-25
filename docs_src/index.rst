@@ -10,6 +10,8 @@
 
 .. title:: SCS
 
+**A fast, reliable, free, and open-source convex optimization solver.**
+
 SCS (Splitting Conic Solver) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper.
 
@@ -60,6 +62,7 @@ guide </contributing/index>`.
    install/index
    help/index
    api/index
+   blas_lapack/index
    examples/index
    contributing/index
    citing/index

@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "amatrix.h"
 #include "scs.h"
+#include "linalg.h"
 #include "util.h"
 
 /* writes/reads problem data to/from filename */

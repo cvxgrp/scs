@@ -1,6 +1,7 @@
 /* contains routines common to direct and indirect sparse solvers */
-#include "amatrix.h"
+#include "matrix.h"
 #include "linsys.h"
+#include "linalg.h"
 
 #define MIN_SCALE (1e-4)
 #define MAX_SCALE (1e4)
@@ -406,7 +407,7 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
 #endif
 }
 
-void SCS(_un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
+void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;

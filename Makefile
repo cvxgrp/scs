@@ -49,24 +49,24 @@ src/scs_version.o: src/scs_version.c include/glbopts.h
 
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
-$(LINSYS)/amatrix.o: $(LINSYS)/amatrix.c $(LINSYS)/amatrix.h
+$(LINSYS)/matrix.o: $(LINSYS)/matrix.c $(LINSYS)/matrix.h
 $(LINSYS)/csparse.o: $(LINSYS)/csparse.c $(LINSYS)/csparse.h
 
-$(OUT)/libscsdir.a: $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/csparse.o
+$(OUT)/libscsdir.a: $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscsindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/amatrix.o $(LINSYS)/csparse.o
+$(OUT)/libscsindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscsdir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/csparse.o
+$(OUT)/libscsdir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libscsindir.$(SHARED): $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/amatrix.o $(LINSYS)/csparse.o
+$(OUT)/libscsindir.$(SHARED): $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS)
 
@@ -117,20 +117,20 @@ $(LINSYS)/gpu/gpu.o: $(LINSYS)/gpu/gpu.c
 $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
 	$(CUCC) -c -o $(GPUINDIR)/private.o $^ $(CUDAFLAGS)
 
-# $(OUT)/libscsgpudir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
+# $(OUT)/libscsgpudir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/matrix.o $(LINSYS)/gpu/gpu.o
 #	 mkdir -p $(OUT)
 # 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
-# $(OUT)/libscsgpudir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/amatrix.o $(LINSYS)/gpu/gpu.o
+# $(OUT)/libscsgpudir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/matrix.o $(LINSYS)/gpu/gpu.o
 #  	mkdir -p $(OUT)
 # 	$(ARCHIVE) $@ $^
 # 	- $(RANLIB) $@
 
-$(OUT)/libscsgpuindir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
+$(OUT)/libscsgpuindir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/matrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
-$(OUT)/libscsgpuindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/amatrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
+$(OUT)/libscsgpuindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/matrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@

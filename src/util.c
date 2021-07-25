@@ -190,23 +190,23 @@ void SCS(free_sol)(ScsSolution *sol) {
   }
 }
 
-/* assumes d->stgs already allocated memory */
-void SCS(set_default_settings)(ScsData *d) {
+/* assumes stgs already allocated memory */
+void SCS(set_default_settings)(ScsSettings *stgs) {
   /* These constants are defined in include/glbopts.h */
-  d->stgs->max_iters = MAX_ITERS;
-  d->stgs->eps_abs = EPS_ABS;
-  d->stgs->eps_rel = EPS_REL;
-  d->stgs->eps_infeas = EPS_INFEAS;
-  d->stgs->alpha = ALPHA;
-  d->stgs->rho_x = RHO_X;
-  d->stgs->scale = SCALE;
-  d->stgs->verbose = VERBOSE;
-  d->stgs->normalize = NORMALIZE;
-  d->stgs->warm_start = WARM_START;
-  d->stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
-  d->stgs->acceleration_interval = ACCELERATION_INTERVAL;
-  d->stgs->adaptive_scaling = ADAPTIVE_SCALING;
-  d->stgs->write_data_filename = WRITE_DATA_FILENAME;
-  d->stgs->log_csv_filename = LOG_CSV_FILENAME;
-  d->stgs->time_limit_secs = TIME_LIMIT_SECS;
+  stgs->max_iters = MAX_ITERS;
+  stgs->eps_abs = EPS_ABS;
+  stgs->eps_rel = EPS_REL;
+  stgs->eps_infeas = EPS_INFEAS;
+  stgs->alpha = ALPHA;
+  stgs->rho_x = RHO_X;
+  stgs->scale = SCALE;
+  stgs->verbose = VERBOSE;
+  stgs->normalize = NORMALIZE;
+  stgs->warm_start = WARM_START;
+  stgs->acceleration_lookback = ACCELERATION_LOOKBACK;
+  stgs->acceleration_interval = ACCELERATION_INTERVAL;
+  stgs->adaptive_scaling = ADAPTIVE_SCALING;
+  stgs->write_data_filename = WRITE_DATA_FILENAME;
+  stgs->log_csv_filename = LOG_CSV_FILENAME;
+  stgs->time_limit_secs = TIME_LIMIT_SECS;
 }

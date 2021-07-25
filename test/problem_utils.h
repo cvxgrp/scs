@@ -1,7 +1,8 @@
 #ifndef PUTILS_H_GUARD
 #define PUTILS_H_GUARD
 
-#include "amatrix.h"
+#include "linsys.h"
+#include "matrix.h"
 #include "cones.h"
 #include "linalg.h"
 #include "scs.h"

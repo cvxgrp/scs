@@ -1,3 +1,4 @@
+#include "linsys.h"
 #include "private.h"
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {

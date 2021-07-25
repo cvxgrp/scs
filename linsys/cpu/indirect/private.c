@@ -1,4 +1,5 @@
 #include <limits.h>
+#include "linsys.h"
 #include "private.h"
 
 /* norm to use when deciding convergence */

@@ -3,3 +3,4 @@
 Install
 =======
 TODO
+Compilation flags.

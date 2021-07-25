@@ -1,4 +1,4 @@
-#include "amatrix.h"
+#include "matrix.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "minunit.h"
@@ -107,7 +107,7 @@ static const char *qafiro_tiny_qp(void) {
   k->bu = bu;
   k->f = f;
 
-  SCS(set_default_settings)(d);
+  SCS(set_default_settings)(d->stgs);
   d->stgs->eps_abs = 1e-6;
   d->stgs->eps_rel = 1e-6;
   d->stgs->eps_infeas = 1e-9;

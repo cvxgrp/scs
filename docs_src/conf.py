@@ -14,6 +14,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import subprocess
 
 # -- Project information -----------------------------------------------------
 
@@ -31,7 +32,7 @@ release = __version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax']
+extensions = ['sphinx.ext.mathjax', 'breathe']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -59,7 +60,7 @@ html_theme = 'alabaster'
 html_favicon = '_static/favicon.ico'
 html_theme_options = {
     #'logo_only': True,
-    #'display_version': False,
+    #'display_version': True,
     'github_banner': True,
     'github_user': 'cvxgrp',
     'github_repo': 'scs',
@@ -71,6 +72,11 @@ html_theme_options = {
 
 rst_epilog = '.. |version| replace:: %s' % __version__ 
 
+# Breathe docs
+subprocess.call('doxygen Doxyfile', shell=True)
+
+breathe_projects = {"scs": "doxygen_out/xml/"}
+breathe_default_project = "scs"
 
 #def setup(app):
 #    app.add_css_file('css/scs_theme.css')

@@ -1,4 +1,4 @@
-#include "amatrix.h"
+#include "matrix.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "minunit.h"
@@ -65,7 +65,7 @@ static const char *rob_gauss_cov_est(void) {
   k->p = p;
   k->psize = psize;
 
-  SCS(set_default_settings)(d);
+  SCS(set_default_settings)(d->stgs);
   d->stgs->eps_abs = 1e-6;
   d->stgs->eps_rel = 1e-6;
   d->stgs->eps_infeas = 1e-9;
