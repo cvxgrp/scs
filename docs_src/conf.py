@@ -55,7 +55,7 @@ html_sidebars = {
 
 html_theme = 'alabaster'
 
-#html_logo = '_static/scs.png'
+#html_logo = '_static/scs_logo.png'
 html_favicon = '_static/favicon.ico'
 html_theme_options = {
     #'logo_only': True,
