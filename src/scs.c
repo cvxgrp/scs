@@ -832,6 +832,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     return SCS_NULL;
   }
   /* get settings and dims from data struct */
+  w->d = d;
+  w->k = k;
   w->stgs = d->stgs;
   w->m = d->m;
   w->n = d->n;
@@ -1010,18 +1012,20 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
 }
 
-scs_int SCS(solve)(ScsWork *w, const ScsData *d, const ScsCone *k,
-                   ScsSolution *sol, ScsInfo *info) {
+scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo * info) {
   scs_int i;
   scs_float v_norm;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
             total_lin_sys_time = 0.0;
-  scs_int l = w->m + w->n + 1;
-  if (!d || !k || !sol || !info || !w || !d->b || !d->c) {
-    scs_printf("ERROR: SCS_NULL input\n");
+  if (!sol || !w || !info) {
+    scs_printf("ERROR: missing ScsWork, ScsSolution or ScsInfo input\n");
     return SCS_FAILED;
   }
+  scs_int l = w->m + w->n + 1;
+  const ScsData * d = w->d;
+  const ScsCone * k = w->k;
+  info->setup_time = w->setup_time;
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
@@ -1151,15 +1155,15 @@ void SCS(finish)(ScsWork *w) {
   }
 }
 
-ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
+ScsWork *SCS(init)(const ScsData *d, const ScsCone *k) {
 #if VERBOSITY > 1
   SCS(tic)(&global_timer);
 #endif
   ScsWork *w;
   SCS(timer) init_timer;
   scs_start_interrupt_listener();
-  if (!d || !k || !info) {
-    scs_printf("ERROR: Missing ScsData, ScsCone or ScsInfo input\n");
+  if (!d || !k) {
+    scs_printf("ERROR: Missing ScsData or ScsCone input\n");
     return SCS_NULL;
   }
 #if VERBOSITY > 0
@@ -1175,7 +1179,7 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
     SCS(write_data)(d, k);
   }
   w = init_work(d, k);
-  info->setup_time = SCS(tocq)(&init_timer);
+  w->setup_time = SCS(tocq)(&init_timer);
   scs_end_interrupt_listener();
   return w;
 }
@@ -1184,13 +1188,13 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, ScsInfo *info) {
 scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
             ScsInfo *info) {
   scs_int status;
-  ScsWork *w = SCS(init)(d, k, info);
+  ScsWork *w = SCS(init)(d, k);
 #if VERBOSITY > 0
   scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
              sizeof(scs_int), sizeof(scs_float));
 #endif
   if (w) {
-    SCS(solve)(w, d, k, sol, info);
+    SCS(solve)(w, sol, info);
     status = info->status_val;
   } else {
     status = failure(SCS_NULL, d ? d->m : -1, d ? d->n : -1, sol, info,

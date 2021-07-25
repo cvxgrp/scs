@@ -1,0 +1,5 @@
+.. _solver:
+
+Solver
+===============
+TODO

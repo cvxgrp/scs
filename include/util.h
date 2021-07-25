@@ -55,7 +55,6 @@ void SCS(print_cone_data)(const ScsCone *k);
 void SCS(print_data)(const ScsData *d);
 void SCS(print_work)(const ScsWork *w);
 void SCS(print_array)(const scs_float *arr, scs_int n, const char *name);
-void SCS(set_default_settings)(ScsData *d);
 void SCS(free_sol)(ScsSolution *sol);
 void SCS(free_data)(ScsData *d, ScsCone *k);
 

@@ -17,21 +17,21 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'scs'
+project = 'SCS'
 copyright = "2021, Brendan O'Donoghue"
 author = "Brendan O'Donoghue"
 
 # The full version, including alpha/beta/rc tags
-release = '3.0.0'
+__version__ = "3.0.0"
 
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-]
+extensions = ['sphinx.ext.mathjax']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -40,24 +40,40 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+pygments_style = 'sphinx'
 
+html_sidebars = {
+   '**': [
+       'about.html', 'navigation.html', 'searchbox.html',
+   ]
+}
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
 
-html_logo = '_static/scs.png'
-html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-}
+html_theme = 'alabaster'
+
+#html_logo = '_static/scs.png'
 html_favicon = '_static/favicon.ico'
+html_theme_options = {
+    #'logo_only': True,
+    #'display_version': False,
+    'github_banner': True,
+    'github_user': 'cvxgrp',
+    'github_repo': 'scs',
+    'github_button': False,
+    #'html_show_sourcelink' = False,
+    #'github_type': 'star',
+    #'travis_button': False,
+}
 
-def setup(app):
-    app.add_css_file('css/scs_theme.css')
+rst_epilog = '.. |version| replace:: %s' % __version__ 
+
+
+#def setup(app):
+#    app.add_css_file('css/scs_theme.css')
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
