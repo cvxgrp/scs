@@ -1,5 +1,6 @@
-SCS
-====
+<h1 align="center" margin=0px>
+<img src="https://github.com/cvxgrp/scs/blob/master/docs/scs_logo.png" alt="Intersection of a cone and a polyhedron" width="450">
+</h1>
 
 ![Build Status](https://github.com/cvxgrp/scs/actions/workflows/build.yml/badge.svg)
 
