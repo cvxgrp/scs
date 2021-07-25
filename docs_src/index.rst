@@ -8,11 +8,9 @@
   :alt: SCS
   :align: center
 
-Welcome to SCS
-====================
+.. title:: SCS
 
-**Convex optimization, for everyone.**
-SCS (`splitting conic solver`) is a numerical optimization package for solving
+SCS (Splitting Conic Solver) is a numerical optimization package for solving
 large-scale convex cone problems, based on our paper.
 
 .. math::
@@ -29,6 +27,8 @@ large-scale convex cone problems, based on our paper.
                       &  s \in \mathcal{K}
   \end{array}
   \end{array}
+
+with variables :math:`x \in \mathbf{R}^n` and.
 
 **Current version**
 The current version is |version|
