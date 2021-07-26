@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include <math.h>
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "scs.h"

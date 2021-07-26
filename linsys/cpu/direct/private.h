@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "csparse.h"
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "external/amd/amd.h"
 #include "external/qdldl/qdldl.h"
 #include "glbopts.h"

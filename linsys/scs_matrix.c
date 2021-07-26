@@ -1,5 +1,5 @@
 /* contains routines common to direct and indirect sparse solvers */
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "linsys.h"
 #include "linalg.h"
 

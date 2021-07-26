@@ -18,7 +18,7 @@
 
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
-#include "matrix.h"
+#include "scs_matrix.h"
 #endif
 
 #ifndef NULL

@@ -2,7 +2,7 @@
 #define PUTILS_H_GUARD
 
 #include "linsys.h"
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "cones.h"
 #include "linalg.h"
 #include "scs.h"

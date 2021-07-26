@@ -9,7 +9,7 @@ extern "C" {
 
 #include "aa.h"
 #include "glbopts.h"
-#include "matrix.h"  /* defines ScsMatrix struct */
+#include "scs_matrix.h"  /* defines ScsMatrix struct */
 
 /* stores the necessary private workspace, only the linear system solver
  * interacts with this struct */

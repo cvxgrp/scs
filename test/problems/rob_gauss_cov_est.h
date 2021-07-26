@@ -1,4 +1,4 @@
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "minunit.h"

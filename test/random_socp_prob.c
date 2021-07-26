@@ -1,5 +1,5 @@
 #include <time.h> /* to seed random */
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "problem_utils.h"
 #include "scs.h"
 

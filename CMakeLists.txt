@@ -107,7 +107,7 @@ set(${PROJECT_NAME}_SRC
   src/scs.c
   src/scs_version.c
   src/util.c
-  ${LINSYS}/matrix.c)
+  ${LINSYS}/scs_matrix.c)
 
 # Common header files
 set(${PROJECT_NAME}_HDR
@@ -122,7 +122,7 @@ set(${PROJECT_NAME}_HDR
   include/scs.h
   include/scs_blas.h
   include/util.h
-  ${LINSYS}/matrix.h)
+  ${LINSYS}/scs_matrix.h)
 
 # get all the c file in amd/external
 file(GLOB ${PROJECT_NAME}_AMD_EXTERNAL_SRC

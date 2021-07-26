@@ -66,7 +66,7 @@
 /* ------------------------------------------------------------------------- */
 
 #ifdef MATLAB_MEX_FILE
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "mex.h"
 #endif
 

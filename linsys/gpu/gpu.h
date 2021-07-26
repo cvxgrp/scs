@@ -10,7 +10,7 @@ extern "C" {
 #include <cuda_runtime_api.h>
 #include <cusparse.h>
 
-#include "matrix.h"
+#include "scs_matrix.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "linsys.h"
