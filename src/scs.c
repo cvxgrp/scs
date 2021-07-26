@@ -367,11 +367,13 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   memcpy(warm_start, w->u, (l - 1) * sizeof(scs_float));
   SCS(add_scaled_array)(warm_start, w->g, l - 1, w->u[l - 1]);
   /* use normalized residuals to compute tolerance */
-  tol = MIN(NORM(w->r_normalized->ax_s_btau, w->m),
-            NORM(w->r_normalized->px_aty_ctau, w->n)) * LIN_SYS_TOL_FACTOR;
+  tol = SQRTF(CG_NORM(w->r_normalized->ax_s_btau, w->m) *
+              CG_NORM(w->r_normalized->px_aty_ctau, w->n)) * CG_TOL_FACTOR;
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
-  tol = MIN(tol, NORM(w->u_t, w->n) / POWF(iter + 1, 2));
-  tol = MAX(LIN_SYS_BEST_TOL, tol);
+  /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
+   * should be approximately equal to the true solution */
+  tol = MIN(tol, CG_NORM(warm_start, w->n) / POWF((scs_float)iter + 1, CG_RATE));
+  tol = MAX(CG_BEST_TOL, tol);
   #endif
   status = SCS(solve_lin_sys)(w->A, w->P, w->p, w->u_t, warm_start, tol);
   if (iter < FEASIBLE_ITERS) {
@@ -933,7 +935,7 @@ static void update_work_cache(ScsWork * w) {
   /* g = (I + M)^{-1} h */
   memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
   SCS(scale_array)(&(w->g[w->n]), -1., w->m);
-  SCS(solve_lin_sys)(w->A, w->P, w->p, w->g, SCS_NULL, LIN_SYS_BEST_TOL);
+  SCS(solve_lin_sys)(w->A, w->P, w->p, w->g, SCS_NULL, CG_BEST_TOL);
   return;
 }
 

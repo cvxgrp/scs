@@ -2,11 +2,6 @@
 #include "linsys.h"
 #include "private.h"
 
-/* norm to use when deciding convergence */
-#ifndef CG_NORM
-#define CG_NORM NORM
-#endif
-
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str,

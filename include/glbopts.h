@@ -200,16 +200,12 @@ typedef float scs_float;
 
 /* tolerance at which we declare problem indeterminate */
 #define INDETERMINATE_TOL (1e-9)
-/* maintain the iterates at l2norm =  ITERATE_NORM * sqrt(n+m+1) */
+/* maintain the iterates at L2 norm =  ITERATE_NORM * sqrt(n+m+1) */
 #define ITERATE_NORM (1.)
 
-/* Use the L2-norm or Linf-norm */
-#define USE_L2_RES_NORM (0)
-#if USE_L2_RES_NORM > 0
-#define NORM SCS(norm)
-#else
+/* Which norm to use throughout SCS */
+/* #define NORM SCS(norm) */
 #define NORM SCS(norm_inf)
-#endif
 
 /* Factor which is scales tau in the linear system update */
 /* Larger factors prevent tau from moving as much */
@@ -224,12 +220,21 @@ typedef float scs_float;
 #define MIN_SCALE_VALUE (1e-6)
 #define SCALE_NORM NORM /* what norm to use when computing the scale factor */
 
+/* CG == Conjugate gradient */
 /* Linear system tolerances, only used with indirect */
-#define LIN_SYS_BEST_TOL (1e-12)
+#define CG_BEST_TOL (1e-12)
 /* This scales the current residuals to get the tolerance we solve the
  * linear system to at each iteration. Lower factors require more CG steps
  * but give better accuracy */
-#define LIN_SYS_TOL_FACTOR (0.1)
+#define CG_TOL_FACTOR (0.1)
+
+/* norm to use when deciding CG convergence */
+#ifndef CG_NORM
+#define CG_NORM SCS(norm_inf)
+#endif
+/* cg tol ~ O(1/k^(CG_RATE)) */
+#define CG_RATE (2)
+
 
 #ifdef __cplusplus
 }
