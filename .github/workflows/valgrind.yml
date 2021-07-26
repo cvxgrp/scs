@@ -1,0 +1,14 @@
+---
+name: Valgrind 
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt-get install libopenblas-dev liblapack-dev valgrind
+      - run: make
+      - run: make test
+      - run: valgrind test/run_tests
