@@ -365,14 +365,16 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   /* compute warm start using the cone projection output */
   warm_start = w->lin_sys_warm_start;
   memcpy(warm_start, w->u, (l - 1) * sizeof(scs_float));
+  /* warm_start = u[:n] + tau * g[:n] */
   SCS(add_scaled_array)(warm_start, w->g, l - 1, w->u[l - 1]);
   /* use normalized residuals to compute tolerance */
-  tol = SQRTF(CG_NORM(w->r_normalized->ax_s_btau, w->m) *
-              CG_NORM(w->r_normalized->px_aty_ctau, w->n)) * CG_TOL_FACTOR;
+  tol = MIN(CG_NORM(w->r_normalized->ax_s_btau, w->m),
+            CG_NORM(w->r_normalized->px_aty_ctau, w->n));
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
-  tol = MIN(tol, CG_NORM(warm_start, w->n) / POWF((scs_float)iter + 1, CG_RATE));
+  tol = CG_TOL_FACTOR * MIN(tol,
+        CG_NORM(warm_start, w->n) / POWF((scs_float)iter + 1, CG_RATE));
   tol = MAX(CG_BEST_TOL, tol);
   #endif
   status = SCS(solve_lin_sys)(w->A, w->P, w->p, w->u_t, warm_start, tol);

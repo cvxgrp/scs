@@ -226,14 +226,14 @@ typedef float scs_float;
 /* This scales the current residuals to get the tolerance we solve the
  * linear system to at each iteration. Lower factors require more CG steps
  * but give better accuracy */
-#define CG_TOL_FACTOR (0.1)
+#define CG_TOL_FACTOR (0.2)
 
 /* norm to use when deciding CG convergence */
 #ifndef CG_NORM
 #define CG_NORM SCS(norm_inf)
 #endif
 /* cg tol ~ O(1/k^(CG_RATE)) */
-#define CG_RATE (2)
+#define CG_RATE (1.5)
 
 
 #ifdef __cplusplus
