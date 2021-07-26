@@ -65,7 +65,7 @@ Basic types
 The most basic types are
 
 * :code:`scs_int`: can be :code:`long` or :code:`int` if the compiler flag :code:`DLONG` is set or not
-* :code:`scs_float`: can be a :code:`double` or a :code:`float` if the compiler flag :code:`DFLOAT` is set or not.
+* :code:`scs_float`: can be a :code:`double` or a :code:`float` if the compiler flag :code:`SFLOAT` is set or not.
 
 
 The relevant structures used in the API are
