@@ -11,4 +11,4 @@ jobs:
       - run: sudo apt-get install libopenblas-dev liblapack-dev valgrind
       - run: make
       - run: make test
-      - run: valgrind test/run_tests
+      - run: valgrind --leak-check=full --show-reachable=yes --error-exitcode=1 test/run_tests
