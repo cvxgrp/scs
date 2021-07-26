@@ -2,10 +2,7 @@
 #include "private.h"
 
 /* norm to use when deciding convergence */
-#ifndef CG_NORM
-#define CG_NORM NORM
-#endif
-
+/* should be consistent with CG_NORM in glbopts.h */
 #define USE_L2_NORM (0)
 
 static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
