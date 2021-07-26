@@ -82,30 +82,30 @@ typedef struct {
 /** Cone data. NB: rows of data matrix A must be specified in this exact order */
 typedef struct {
   /** number of linear equality constraints */
-  scs_int f;          
+  scs_int f;
   /** length of LP cone */
-  scs_int l;          
+  scs_int l;
   /** upper/lower box values, len(bu) = len(bl) = bsize */
-  scs_float *bu, *bl; 
+  scs_float *bu, *bl;
   /** length of box cone arrays (does not include scale t) */
-  scs_int bsize;      
+  scs_int bsize;
   /** array of second-order cone constraints */
-  scs_int *q;         
+  scs_int *q;
   /** length of SOC array */
-  scs_int qsize;      
+  scs_int qsize;
   /** array of semidefinite cone constraints */
-  scs_int *s;         
+  scs_int *s;
   /** length of semidefinite constraints array */
-  scs_int ssize;      
+  scs_int ssize;
   /** number of primal exponential cone triples */
-  scs_int ep;         
+  scs_int ep;
   /** number of dual exponential cone triples */
-  scs_int ed;         
-  /** array of power cone params, must be in [-1, 1], negative values are 
+  scs_int ed;
+  /** array of power cone params, must be in [-1, 1], negative values are
    * interpreted as specifying the dual cone */
-  scs_float *p;       
-  /** number of (primal and dual) power cone triples */   
-  scs_int psize;      
+  scs_float *p;
+  /** number of (primal and dual) power cone triples */
+  scs_int psize;
 } ScsCone;
 
 /** contains primal-dual solution arrays */
@@ -121,35 +121,35 @@ typedef struct {
 /** contains terminating information */
 typedef struct {
   /** number of iterations taken */
-  scs_int iter;          
+  scs_int iter;
   /** status string, e.g. 'solved' */
-  char status[64];       
+  char status[64];
   /** status as scs_int, defined in glbopts.h */
-  scs_int status_val;    
+  scs_int status_val;
   /** number of updates to scale */
-  scs_int scale_updates; 
+  scs_int scale_updates;
   /** primal objective */
-  scs_float pobj;        
+  scs_float pobj;
   /** dual objective */
-  scs_float dobj;        
+  scs_float dobj;
   /** primal equality residual */
-  scs_float res_pri;     
+  scs_float res_pri;
   /** dual equality residual */
-  scs_float res_dual;    
+  scs_float res_dual;
   /** infeasibility cert residual */
-  scs_float res_infeas;  
+  scs_float res_infeas;
   /** unbounded cert residual */
-  scs_float res_unbdd_a; 
+  scs_float res_unbdd_a;
   /** unbounded cert residual */
-  scs_float res_unbdd_p; 
+  scs_float res_unbdd_p;
   /** duality gap */
-  scs_float gap;         
+  scs_float gap;
   /** time taken for setup phase (milliseconds) */
-  scs_float setup_time;  
+  scs_float setup_time;
   /** time taken for solve phase (milliseconds) */
-  scs_float solve_time;  
+  scs_float solve_time;
   /** (final) scale parameter */
-  scs_float scale;       
+  scs_float scale;
 } ScsInfo;
 
 /* the following structs are not exposed to user */
