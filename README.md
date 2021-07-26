@@ -147,7 +147,8 @@ in the `out` folder. To run the tests execute:
 ```sh
 make
 make test
-test/run_tests
+out/run_tests_direct  # test direct solver
+out/run_tests_indirect  # test indirect solver
 ```
 
 If `make` completes successfully, it will produce two static library files,
