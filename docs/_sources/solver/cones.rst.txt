@@ -1,0 +1,5 @@
+.. _cones:
+
+Cones
+=====
+TODO
