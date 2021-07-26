@@ -1030,7 +1030,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo * info) {
   const ScsData * d = w->d;
   const ScsCone * k = w->k;
   /* TODO delete me */
-  scs_int* XXX = scs_calloc(10 * sizeof(scs_int));
+  scs_int* XXX = scs_calloc(10, sizeof(scs_int));
+  XXX[0] = 1;
   info->setup_time = w->setup_time;
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
