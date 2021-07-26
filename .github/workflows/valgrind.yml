@@ -1,5 +1,5 @@
 ---
-name: Valgrind 
+name: Valgrind
 
 on: [push, pull_request]
 
@@ -11,5 +11,5 @@ jobs:
       - run: sudo apt-get install libopenblas-dev liblapack-dev valgrind
       - run: make
       - run: make test
-      - run: valgrind --leak-check=full --show-reachable=yes --error-exitcode=1 out/run_tests_direct 
-      - run: valgrind --leak-check=full --show-reachable=yes --error-exitcode=1 out/run_tests_indirect 
+      - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_direct
+      - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_indirect

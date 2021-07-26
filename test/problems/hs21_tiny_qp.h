@@ -25,8 +25,8 @@ static const char *hs21_tiny_qp(void) {
   scs_int Pi[] = {0, 1};
   scs_int Pp[] = {0, 1, 2};
 
-  scs_float b[] = {1.0, 0.0, 0.0};
-  scs_float c[] ={0., 0.};
+  scs_float b[] = {1., 0., 0., 0.};
+  scs_float c[] = {0., 0.};
 
   scs_int m = 4;
   scs_int n = 2;
