@@ -43,11 +43,11 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 
-html_sidebars = {
-   '**': [
-       'about.html', 'navigation.html', 'searchbox.html',
-   ]
-}
+#html_sidebars = {
+#   '**': [
+#       'about.html', 'navigation.html', 'searchbox.html',
+#   ]
+#}
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -68,6 +68,7 @@ html_theme_options = {
     #'html_show_sourcelink' = False,
     #'github_type': 'star',
     #'travis_button': False,
+    'analytics_id': 'UA-203326834-1',
 }
 
 rst_epilog = '.. |version| replace:: %s' % __version__ 

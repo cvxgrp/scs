@@ -1,5 +1,0 @@
-.. _settings:
-
-Settings
-========
-TODO

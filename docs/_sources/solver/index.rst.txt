@@ -4,8 +4,20 @@ Solver
 ===============
 TODO
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
+Primal or dual infeasibility
+----------------------------
 
-   termination.rst
+Cones
+-----
+
+Settings
+--------
+
+Termination criteria
+--------------------
+
+Acceleration
+------------
+
+Compile flags
+-------------
