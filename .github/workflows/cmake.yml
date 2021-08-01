@@ -1,5 +1,5 @@
 ---
-name: Cmake 
+name: Cmake
 
 on: [push, pull_request]
 
@@ -9,9 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: sudo apt-get install libopenblas-dev liblapack-dev
-      - run: mkdir build 
+      - run: mkdir build
       - run: ls -al
-      - run: cd build 
+      - run: cd build
+      - run: ls -al
       - run: cmake -DBUILD_TESTING=ON ..
       - run: make
       - run: make install
@@ -22,9 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: brew install openblas lapack
-      - run: mkdir build 
+      - run: mkdir build
       - run: ls -al
-      - run: cd build 
+      - run: cd build
       - run: cmake -DBUILD_TESTING=ON ..
       - run: make
       - run: make install
