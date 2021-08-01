@@ -502,6 +502,12 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
     return 0;
   }
 
+  if (tol <= 0.) {
+    scs_printf("Warning: tol = %4f <= 0, likely compiled without setting "
+               "INDIRECT flag.\n",
+               tol);
+  }
+
   /* bg = b = [rx; ry] */
   cudaMemcpy(bg, b, (Ag->n + Ag->m) * sizeof(scs_float),
              cudaMemcpyHostToDevice);

@@ -353,7 +353,8 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status, i;
-  scs_float *warm_start = SCS_NULL, tol = 0.;
+  scs_float *warm_start = SCS_NULL;
+  scs_float tol = -1.0; /* only used for indirect methods, overriden later */
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
   for (i = n; i < l - 1; ++i) {

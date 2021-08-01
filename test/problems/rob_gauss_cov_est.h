@@ -87,8 +87,8 @@ static const char *rob_gauss_cov_est(void) {
   /* test warm-starting */
   d->stgs->warm_start = 1;
   exitflag = scs(d, k, sol, &info);
-  /* 25 iters should be enough if warm-started */
-  mu_assert("rob_gauss_cov_est: warm-start failure", info.iter <= 50);
+  /* 100 iters should be enough if warm-started */
+  mu_assert("rob_gauss_cov_est: warm-start failure", info.iter <= 100);
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
   mu_assert("rob_gauss_cov_est: SCS failed to produce outputflag SCS_SOLVED",

@@ -107,6 +107,7 @@ set(${PROJECT_NAME}_SRC
   src/scs.c
   src/scs_version.c
   src/util.c
+  ${LINSYS}/csparse.c
   ${LINSYS}/scs_matrix.c)
 
 # Common header files
@@ -122,6 +123,7 @@ set(${PROJECT_NAME}_HDR
   include/scs.h
   include/scs_blas.h
   include/util.h
+  ${LINSYS}/csparse.h
   ${LINSYS}/scs_matrix.h)
 
 # get all the c file in amd/external
@@ -194,11 +196,8 @@ add_library(${${PROJECT_NAME}_INDIRECT}
   ${${PROJECT_NAME}_HDR}
   ${${PROJECT_NAME}_SRC}
   ${INDIRSRC}/private.c
+  ${INDIRSRC}/private.h
   ${${${PROJECT_NAME}_INDIRECT}_HDR}
-  ${EXTERNAL}/qdldl/qdldl.c
-  ${${PROJECT_NAME}_AMD_EXTERNAL_SRC}
-  ${${PROJECT_NAME}_AMD_EXTERNAL_HDR}
-  ${${PROJECT_NAME}_LDL_EXTERNAL_SRC}
   )
 
 
@@ -210,7 +209,7 @@ target_include_directories(${${PROJECT_NAME}_INDIRECT} PUBLIC
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
-target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE -DUSE_LAPACK)
+target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE -DUSE_LAPACK -DINDIRECT)
 
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_INDIRECT} PUBLIC

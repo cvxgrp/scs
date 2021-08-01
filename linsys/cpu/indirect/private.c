@@ -293,6 +293,11 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            scs_float tol) {
   scs_int cg_its, max_iters;
 
+  if (tol <= 0.) {
+    scs_printf("Warning: tol = %4f <= 0, likely compiled without setting "
+               "INDIRECT flag.\n", tol);
+  }
+
   if (CG_NORM(b, A->n + A->m) <= 1e-12) {
     memset(b, 0, (A->n + A->m) * sizeof(scs_float));
     return 0;
