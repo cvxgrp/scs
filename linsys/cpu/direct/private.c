@@ -1,5 +1,5 @@
-#include "linsys.h"
 #include "private.h"
+#include "linsys.h"
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 128);
@@ -11,8 +11,7 @@ char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
-  sprintf(str, "lin-sys: nnz(L): %li\n",
-                (long)(p->L->p[n] + n));
+  sprintf(str, "lin-sys: nnz(L): %li\n", (long)(p->L->p[n] + n));
   return str;
 }
 
@@ -35,7 +34,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
 }
 
 static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                     scs_float * rho_y_vec, scs_int *rho_y_vec_idxs,
+                     scs_float *rho_y_vec, scs_int *rho_y_vec_idxs,
                      scs_float rho_x) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed kkt matrix
@@ -155,9 +154,9 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
   L->nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
   if (L->nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
-    if(L->nzmax == -1){
+    if (L->nzmax == -1) {
       scs_printf("Matrix is not perfectly upper triangular.\n");
-    } else if(L->nzmax == -2){
+    } else if (L->nzmax == -2) {
       scs_printf("Integer overflow in L nonzero count.\n");
     }
     return L->nzmax;
@@ -175,22 +174,25 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
 /* can call many times */
 static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
   scs_int factor_status;
-  csc * kkt = p->kkt, * L = p->L;
+  csc *kkt = p->kkt, *L = p->L;
 #if VERBOSITY > 0
   scs_printf("numeric factorization\n");
 #endif
-  factor_status = QDLDL_factor(kkt->n, kkt->p, kkt->i, kkt->x, L->p, L->i, L->x,
-                               p->D, p->Dinv, p->Lnz, p->etree, p->bwork,
-                               p->iwork, p->fwork);
+  factor_status =
+      QDLDL_factor(kkt->n, kkt->p, kkt->i, kkt->x, L->p, L->i, L->x, p->D,
+                   p->Dinv, p->Lnz, p->etree, p->bwork, p->iwork, p->fwork);
 #if VERBOSITY > 0
   scs_printf("finished numeric factorization.\n");
 #endif
   if (factor_status < 0) {
-    scs_printf("Error in LDL factorization when computing the nonzero elements. There are zeros in the diagonal matrix.\n");
+    scs_printf("Error in LDL factorization when computing the nonzero "
+               "elements. There are zeros in the diagonal matrix.\n");
   } else if (factor_status < num_vars) {
-    scs_printf("Error in LDL factorization when computing the nonzero elements. The problem seems to be non-convex.\n");
-    scs_printf("factor_status: %li, num_vars: %li\n", (long)factor_status, (long)num_vars);
-      return -1;
+    scs_printf("Error in LDL factorization when computing the nonzero "
+               "elements. The problem seems to be non-convex.\n");
+    scs_printf("factor_status: %li, num_vars: %li\n", (long)factor_status,
+               (long)num_vars);
+    return -1;
   }
   p->factorizations++;
   return factor_status;
@@ -198,12 +200,14 @@ static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
 
 static void _ldl_perm(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
   scs_int j;
-  for (j = 0; j < n; j++) x[j] = b[P[j]];
+  for (j = 0; j < n; j++)
+    x[j] = b[P[j]];
 }
 
 static void _ldl_permt(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
   scs_int j;
-  for (j = 0; j < n; j++) x[P[j]] = b[j];
+  for (j = 0; j < n; j++)
+    x[P[j]] = b[j];
 }
 
 static void _ldl_solve(scs_float *b, csc *L, scs_float *Dinv, scs_int *P,
@@ -233,9 +237,10 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
   if (!pinv) {
     return SCS_NULL;
-  }                                       /* out of memory */
-  for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
-  return pinv;                            /* return result */
+  } /* out of memory */
+  for (k = 0; k < n; k++)
+    pinv[p[k]] = k; /* invert the permutation */
+  return pinv;      /* return result */
 }
 
 static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
@@ -247,7 +252,8 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
   Ap = A->p;
   Ai = A->i;
   Ax = A->x;
-  C = SCS(cs_spalloc)(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
+  C = SCS(cs_spalloc)(n, n, Ap[n], values && (Ax != SCS_NULL),
+                      0);                        /* alloc result*/
   w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
   if (!C || !w) {
     return SCS(cs_done)(C, w, SCS_NULL, 0);
@@ -283,7 +289,8 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
       idx_mapping[p] = q; /* old to new indices */
     }
   }
-  return SCS(cs_done)(C, w, SCS_NULL, 1); /* success; free workspace, return C */
+  return SCS(cs_done)(C, w, SCS_NULL,
+                      1); /* success; free workspace, return C */
 }
 
 static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
@@ -300,13 +307,13 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 #if VERBOSITY > 0
-    scs_printf("Matrix factorization info:\n");
-    amd_info(info);
+  scs_printf("Matrix factorization info:\n");
+  amd_info(info);
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
   idx_mapping = (scs_int *)scs_malloc(kkt->nzmax * sizeof(scs_int));
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
-  for (i = 0; i < A->m; i++){
+  for (i = 0; i < A->m; i++) {
     p->rho_y_vec_idxs[i] = idx_mapping[p->rho_y_vec_idxs[i]];
   }
   SCS(cs_spfree)(kkt);
@@ -369,4 +376,3 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
 }
-

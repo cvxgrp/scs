@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
-#define SCS_VERSION \
+#define SCS_VERSION                                                            \
   ("3.0.0") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
@@ -62,11 +62,11 @@ extern "C" {
 #define _scs_realloc mxRealloc
 #elif defined PYTHON
 #include <Python.h>
-#define scs_printf(...)                              \
-  {                                                  \
-    PyGILState_STATE gilstate = PyGILState_Ensure(); \
-    PySys_WriteStdout(__VA_ARGS__);                  \
-    PyGILState_Release(gilstate);                    \
+#define scs_printf(...)                                                        \
+  {                                                                            \
+    PyGILState_STATE gilstate = PyGILState_Ensure();                           \
+    PySys_WriteStdout(__VA_ARGS__);                                            \
+    PyGILState_Release(gilstate);                                              \
   }
 /* only for SuiteSparse */
 #define _scs_printf PySys_WriteStdout
@@ -79,7 +79,7 @@ extern "C" {
 #define _scs_free PyMem_Free
 #define _scs_malloc PyMem_Malloc
 #define _scs_realloc PyMem_Realloc
-static inline void * _scs_calloc(size_t count, size_t size) {
+static inline void *_scs_calloc(size_t count, size_t size) {
   void *obj = PyMem_Malloc(count * size);
   memset(obj, 0, count * size);
   return obj;
@@ -109,8 +109,8 @@ static inline void * _scs_calloc(size_t count, size_t size) {
 #define _scs_printf scs_printf
 #endif
 
-#define scs_free(x) \
-  _scs_free(x);     \
+#define scs_free(x)                                                            \
+  _scs_free(x);                                                                \
   x = SCS_NULL
 #define scs_malloc(x) _scs_malloc(x)
 #define scs_calloc(x, y) _scs_calloc(x, y)
@@ -234,7 +234,6 @@ typedef float scs_float;
 #endif
 /* cg tol ~ O(1/k^(CG_RATE)) */
 #define CG_RATE (1.5)
-
 
 #ifdef __cplusplus
 }

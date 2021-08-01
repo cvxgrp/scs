@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "scs.h"
 #include "linalg.h"
+#include "scs.h"
 #include "util.h"
 
 /* writes/reads problem data to/from filename */
@@ -210,10 +210,10 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   ScsResiduals *r = w->r_orig;
   ScsResiduals *r_n = w->r_normalized;
   /* if iter 0 open to write, else open to append */
-  FILE *fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w": "a");
+  FILE *fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w" : "a");
   if (!fout) {
     scs_printf("Error: Could not open %s for writing\n",
-                d->stgs->log_csv_filename);
+               d->stgs->log_csv_filename);
     return;
   }
   scs_int l = w->m + w->n + 1;

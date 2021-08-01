@@ -5,10 +5,10 @@
 extern "C" {
 #endif
 
+#include "glbopts.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "glbopts.h"
 
 typedef scs_float aa_float;
 typedef scs_int aa_int;

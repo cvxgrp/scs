@@ -9,7 +9,7 @@ extern "C" {
 
 #include "aa.h"
 #include "glbopts.h"
-#include "scs_matrix.h"  /* defines ScsMatrix struct */
+#include "scs_matrix.h" /* defines ScsMatrix struct */
 
 /* stores the necessary private workspace, only the linear system solver
  * interacts with this struct */
@@ -64,9 +64,9 @@ typedef struct {
 /** struct containing problem data */
 typedef struct {
   /** A has m rows */
-	scs_int m;
+  scs_int m;
   /** A has n cols, P has n cols and n rows */
-	scs_int n;
+  scs_int n;
   /** A is supplied in CSC format (size m x n) */
   ScsMatrix *A;
   /** P is supplied in CSC format (size n x n) */
@@ -79,7 +79,8 @@ typedef struct {
   ScsSettings *stgs;
 } ScsData;
 
-/** Cone data. NB: rows of data matrix A must be specified in this exact order */
+/** Cone data. NB: rows of data matrix A must be specified in this exact order
+ */
 typedef struct {
   /** number of linear equality constraints */
   scs_int f;
@@ -166,12 +167,12 @@ typedef struct {
   scs_float xt_p_x;     /* x' P x  */
   scs_float xt_p_x_tau; /* x'Px * tau^2 *not* divided out */
   scs_float ctx;
-  scs_float ctx_tau;  /* tau *not* divided out */
+  scs_float ctx_tau; /* tau *not* divided out */
   scs_float bty;
-  scs_float bty_tau;  /* tau *not* divided out */
-  scs_float pobj; /* primal objective */
-  scs_float dobj; /* dual objective */
-  scs_float gap; /* pobj - dobj */
+  scs_float bty_tau; /* tau *not* divided out */
+  scs_float pobj;    /* primal objective */
+  scs_float dobj;    /* dual objective */
+  scs_float gap;     /* pobj - dobj */
   scs_float tau;
   scs_float kap;
   scs_float res_pri;
@@ -188,21 +189,21 @@ typedef struct {
   /* x_prev = x from previous iteration */
   scs_int time_limit_reached; /* set if the time-limit is reached */
   scs_float *u, *v, *u_t, *v_prev, *rsk;
-  scs_float *h; /* h = [c; b] */
-  scs_float *g; /* g = (I + M)^{-1} h */
+  scs_float *h;                  /* h = [c; b] */
+  scs_float *g;                  /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *rho_y_vec; /* vector of rho y parameters (affects cone project) */
-  AaWork *accel;          /* struct for acceleration workspace */
-  scs_float *b_orig, *c_orig;       /* original b and c vectors */
-  scs_float *b_normalized, *c_normalized;    /* normalized b and c vectors */
-  scs_int m, n;           /* A has m rows, n cols */
-  ScsMatrix *A;           /* (possibly normalized) A matrix */
-  ScsMatrix *P;           /* (possibly normalized) P matrix */
-  ScsLinSysWork *p;       /* struct populated by linear system solver */
-  ScsSettings *stgs;      /* contains solver settings specified by user */
-  ScsScaling *scal;       /* contains the re-scaling data */
-  ScsConeWork *cone_work; /* workspace for the cone projection step */
-  scs_int *cone_boundaries; /* array with boundaries of cones */
+  AaWork *accel;        /* struct for acceleration workspace */
+  scs_float *b_orig, *c_orig;             /* original b and c vectors */
+  scs_float *b_normalized, *c_normalized; /* normalized b and c vectors */
+  scs_int m, n;                           /* A has m rows, n cols */
+  ScsMatrix *A;                           /* (possibly normalized) A matrix */
+  ScsMatrix *P;                           /* (possibly normalized) P matrix */
+  ScsLinSysWork *p;            /* struct populated by linear system solver */
+  ScsSettings *stgs;           /* contains solver settings specified by user */
+  ScsScaling *scal;            /* contains the re-scaling data */
+  ScsConeWork *cone_work;      /* workspace for the cone projection step */
+  scs_int *cone_boundaries;    /* array with boundaries of cones */
   scs_int cone_boundaries_len; /* total length of cones */
   /* normalized and unnormalized residuals */
   ScsResiduals *r_orig, *r_normalized;
@@ -213,9 +214,9 @@ typedef struct {
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
   /* aa norm stat */
   scs_float aa_norm;
-  scs_float setup_time;  /* time taken for setup phase (milliseconds) */
-  const ScsData * d;
-  const ScsCone * k;
+  scs_float setup_time; /* time taken for setup phase (milliseconds) */
+  const ScsData *d;
+  const ScsCone *k;
 } ScsWork;
 
 /*
@@ -259,7 +260,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info);
  * @param  w  Workspace allocated by init, will be deallocated.
  */
 void SCS(finish)(ScsWork *w);
-
 
 /**
  * Solve quadratic cone program defined by data in d and cone k.

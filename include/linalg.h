@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include <math.h>
 #include "scs.h"
+#include <math.h>
 
 void SCS(set_as_scaled_array)(scs_float *x, const scs_float *a,
                               const scs_float b, scs_int len);

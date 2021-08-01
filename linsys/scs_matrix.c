@@ -1,13 +1,12 @@
 /* contains routines common to direct and indirect sparse solvers */
 #include "scs_matrix.h"
-#include "linsys.h"
 #include "linalg.h"
+#include "linsys.h"
 
 #define MIN_SCALE (1e-4)
 #define MAX_SCALE (1e4)
 #define NUM_RUIZ_PASSES (25) /* additional passes don't help much */
-#define NUM_L2_PASSES (1) /* do one or zero, not more since not stable */
-
+#define NUM_L2_PASSES (1)    /* do one or zero, not more since not stable */
 
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   scs_int Anz = src->p[src->n];
@@ -44,10 +43,9 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
   if (Anz > 0) {
     for (i = 0; i < A->n; ++i) {
       if (A->p[i] == A->p[i + 1]) {
-        scs_printf(
-            "WARN: A->p (column pointers) not strictly increasing, "
-            "column %li empty\n",
-            (long)i);
+        scs_printf("WARN: A->p (column pointers) not strictly increasing, "
+                   "column %li empty\n",
+                   (long)i);
       } else if (A->p[i] > A->p[i + 1]) {
         scs_printf("ERROR: A->p (column pointers) decreasing\n");
         return -1;
@@ -109,8 +107,8 @@ static inline scs_float apply_limit(scs_float x) {
 
 static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
                               scs_float *c, scs_float *Dt, scs_float *Et,
-                              scs_float *s,
-                              scs_int *boundaries, scs_int cone_boundaries_len) {
+                              scs_float *s, scs_int *boundaries,
+                              scs_int cone_boundaries_len) {
   scs_int i, j, kk, count, delta;
   scs_float wrk;
 
@@ -183,8 +181,8 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
 
 static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
                             scs_float *c, scs_float *Dt, scs_float *Et,
-                            scs_float *s,
-                            scs_int *boundaries, scs_int cone_boundaries_len) {
+                            scs_float *s, scs_int *boundaries,
+                            scs_int cone_boundaries_len) {
   scs_int i, j, kk, count, delta;
   scs_float wrk, norm_c, norm_b;
 
@@ -203,7 +201,7 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
     }
   }
   for (i = 0; i < A->m; ++i) {
-      Dt[i] = SQRTF(Dt[i]); /* l2 norm of rows */
+    Dt[i] = SQRTF(Dt[i]); /* l2 norm of rows */
   }
 
   /* accumulate D across each cone  */
@@ -264,10 +262,9 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
   *s = SAFEDIV_POS(1.0, SQRTF(apply_limit(*s)));
 }
 
-static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
-                    scs_float *c, scs_float *Dt, scs_float *Et, scs_float s,
-                    ScsScaling *scal, scs_int * boundaries,
-                    scs_int cone_boundaries_len) {
+static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
+                    scs_float *Dt, scs_float *Et, scs_float s, ScsScaling *scal,
+                    scs_int *boundaries, scs_int cone_boundaries_len) {
   scs_int i, j;
   /* scale the rows of A with D */
   for (i = 0; i < A->n; ++i) {
@@ -327,7 +324,6 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b,
   scal->dual_scale *= s;
 }
 
-
 /* Will rescale as P -> EPE, A -> DAE, c -> sEc, b -> sDb, in-place.
  * Essentially trying to rescale this matrix:
  *
@@ -381,11 +377,13 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scal->primal_scale = 1.;
   scal->dual_scale = 1.;
   for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
-    compute_ruiz_mats(P, A, b, c, Dt, Et, &s, cone_boundaries, cone_boundaries_len);
+    compute_ruiz_mats(P, A, b, c, Dt, Et, &s, cone_boundaries,
+                      cone_boundaries_len);
     rescale(P, A, b, c, Dt, Et, s, scal, cone_boundaries, cone_boundaries_len);
   }
   for (i = 0; i < NUM_L2_PASSES; ++i) {
-    compute_l2_mats(P, A, b, c, Dt, Et, &s, cone_boundaries, cone_boundaries_len);
+    compute_l2_mats(P, A, b, c, Dt, Et, &s, cone_boundaries,
+                    cone_boundaries_len);
     rescale(P, A, b, c, Dt, Et, s, scal, cone_boundaries, cone_boundaries_len);
   }
   scs_free(Dt);

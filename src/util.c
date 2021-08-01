@@ -6,8 +6,11 @@
 /* return milli-seconds */
 #if (defined NOTIMER)
 
-void SCS(tic)(SCS(timer) * t) {}
-scs_float SCS(tocq)(SCS(timer) * t) { return NAN; }
+void SCS(tic)(SCS(timer) * t) {
+}
+scs_float SCS(tocq)(SCS(timer) * t) {
+  return NAN;
+}
 
 #elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 
@@ -46,7 +49,9 @@ scs_float SCS(tocq)(SCS(timer) * t) {
 
 #else
 
-void SCS(tic)(SCS(timer) * t) { clock_gettime(CLOCK_MONOTONIC, &t->tic); }
+void SCS(tic)(SCS(timer) * t) {
+  clock_gettime(CLOCK_MONOTONIC, &t->tic);
+}
 
 scs_float SCS(tocq)(SCS(timer) * t) {
   struct timespec temp;
@@ -137,8 +142,7 @@ void SCS(print_data)(const ScsData *d) {
   scs_printf("scale = %4f\n", d->stgs->scale);
   scs_printf("write_data_filename = %s\n",
              (char *)d->stgs->write_data_filename);
-  scs_printf("log_csv_filename = %s\n",
-             (char *)d->stgs->log_csv_filename);
+  scs_printf("log_csv_filename = %s\n", (char *)d->stgs->log_csv_filename);
 }
 
 void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {

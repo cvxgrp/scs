@@ -19,7 +19,7 @@ static const scs_int HSPACE = 9;
 static const scs_int HEADER_LEN = 7;
 static const scs_int LINE_LEN = 66;
 
-static void free_residuals(ScsResiduals * r) {
+static void free_residuals(ScsResiduals *r) {
   if (r) {
     scs_free(r->ax);
     scs_free(r->ax_s);
@@ -77,10 +77,9 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
-  scs_printf(
-      "\n\t       SCS v%s - Splitting Conic Solver\n\t(c) Brendan "
-      "O'Donoghue, Stanford University, 2012\n",
-      SCS(version)());
+  scs_printf("\n\t       SCS v%s - Splitting Conic Solver\n\t(c) Brendan "
+             "O'Donoghue, Stanford University, 2012\n",
+             SCS(version)());
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -89,18 +88,17 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
              (int)d->m);
   scs_printf("%s", cone_str);
   scs_free(cone_str);
-  scs_printf(
-      "settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e\n"
-      "\t  alpha: %.2f, scale: %.2e, adaptive_scaling: %i\n"
-      "\t  max_iters: %i, normalize: %i, warm_start: %i\n",
-      /*, rho_x: %.2e\n", */
-      stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas,
-      stgs->alpha, stgs->scale, (int)stgs->adaptive_scaling,
-      (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start);
-      /* , stgs->rho_x); */
+  scs_printf("settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e\n"
+             "\t  alpha: %.2f, scale: %.2e, adaptive_scaling: %i\n"
+             "\t  max_iters: %i, normalize: %i, warm_start: %i\n",
+             /*, rho_x: %.2e\n", */
+             stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas, stgs->alpha,
+             stgs->scale, (int)stgs->adaptive_scaling, (int)stgs->max_iters,
+             (int)stgs->normalize, (int)stgs->warm_start);
+  /* , stgs->rho_x); */
   if (stgs->acceleration_lookback != 0) {
     scs_printf("\t  acceleration_lookback: %i, acceleration_interval: %i\n",
-      (int)acceleration_lookback, (int)acceleration_interval);
+               (int)acceleration_lookback, (int)acceleration_interval);
   }
   if (stgs->time_limit_secs) {
     scs_printf("\t  time_limit_secs: %.2e,\n", stgs->time_limit_secs);
@@ -164,7 +162,7 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
  */
 static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   scs_int n = w->n, m = w->m, i;
-  scs_float * v = w->v;
+  scs_float *v = w->v;
   /* normalize the warm-start */
   if (w->stgs->normalize) {
     SCS(normalize_sol)(w, sol);
@@ -197,7 +195,7 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
 
 static void unnormalize_residuals(ScsWork *w) {
   ScsResiduals *r_n = w->r_normalized; /* normalized residuals */
-  ScsResiduals *r = w->r_orig; /* original problem residuals */
+  ScsResiduals *r = w->r_orig;         /* original problem residuals */
   scs_float pd = w->scal->primal_scale * w->scal->dual_scale;
 
   /* copy vars */
@@ -295,7 +293,6 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   r->bty_tau = SCS(dot)(y, w->b_normalized, m);
   r->ctx_tau = SCS(dot)(x, w->c_normalized, n);
 
-
   r->bty = SAFEDIV_POS(r->bty_tau, r->tau);
   r->ctx = SAFEDIV_POS(r->ctx_tau, r->tau);
   r->xt_p_x = SAFEDIV_POS(r->xt_p_x_tau, r->tau * r->tau);
@@ -341,7 +338,8 @@ static inline scs_float get_tau_scale(ScsWork *w) {
   return TAU_FACTOR; /* TAU_FACTOR * w->stgs->scale; */
 }
 
-static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float eta) {
+static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
+                           scs_float eta) {
   scs_float b, c, tau, a, tau_scale;
   tau_scale = get_tau_scale(w);
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
@@ -355,13 +353,13 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu, scs_float et
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status, i;
-  scs_float * warm_start = SCS_NULL, tol = 0.;
+  scs_float *warm_start = SCS_NULL, tol = 0.;
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
   SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
-  for (i = n; i < l - 1 ; ++i) {
+  for (i = n; i < l - 1; ++i) {
     w->u_t[i] *= -w->rho_y_vec[i - n];
   }
-  #if INDIRECT > 0
+#if INDIRECT > 0
   /* compute warm start using the cone projection output */
   warm_start = w->lin_sys_warm_start;
   memcpy(warm_start, w->u, (l - 1) * sizeof(scs_float));
@@ -373,10 +371,10 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
-  tol = CG_TOL_FACTOR * MIN(tol,
-        CG_NORM(warm_start, w->n) / POWF((scs_float)iter + 1, CG_RATE));
+  tol = CG_TOL_FACTOR * MIN(tol, CG_NORM(warm_start, w->n) /
+                                     POWF((scs_float)iter + 1, CG_RATE));
   tol = MAX(CG_BEST_TOL, tol);
-  #endif
+#endif
   status = SCS(solve_lin_sys)(w->A, w->P, w->p, w->u_t, warm_start, tol);
   if (iter < FEASIBLE_ITERS) {
     w->u_t[l - 1] = 1.;
@@ -407,7 +405,8 @@ static void compute_rsk(ScsWork *w) {
     w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) * w->rho_y_vec[i - w->n];
   }
   /* kappa, incorporates tau scaling parameter */
-  w->rsk[l - 1] = get_tau_scale(w) * (w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1]);
+  w->rsk[l - 1] =
+      get_tau_scale(w) * (w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1]);
 }
 
 static void update_dual_vars(ScsWork *w) {
@@ -507,7 +506,8 @@ static scs_int is_unbounded_status(scs_int status) {
   return status == SCS_UNBOUNDED || status == SCS_UNBOUNDED_INACCURATE;
 }
 
-static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_int iter) {
+static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info,
+                     scs_int iter) {
   ScsResiduals *r = w->r_orig;
   info->iter = iter;
   info->res_infeas = r->res_infeas;
@@ -542,12 +542,12 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   if (info->status_val == SCS_UNFINISHED) {
     /* failed to converge within limits */
     if (iter == w->stgs->max_iters) {
-      populate_on_failure(w->m, w->n, sol, info, SCS_MAX_ITERS, "hit max_iters");
-    }
-    else if (w->time_limit_reached) {
-      populate_on_failure(w->m, w->n, sol, info, SCS_TIME_LIMIT, "hit time_limit_secs");
-    }
-    else {
+      populate_on_failure(w->m, w->n, sol, info, SCS_MAX_ITERS,
+                          "hit max_iters");
+    } else if (w->time_limit_reached) {
+      populate_on_failure(w->m, w->n, sol, info, SCS_TIME_LIMIT,
+                          "hit time_limit_secs");
+    } else {
       scs_printf("Error: should not be in this state (1).\n");
     }
     return;
@@ -561,14 +561,11 @@ static void get_solution(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   }
   if (is_solved_status(info->status_val)) {
     info->status_val = solved(w, sol, info, iter);
-  }
-  else if (is_infeasible_status(info->status_val)) {
+  } else if (is_infeasible_status(info->status_val)) {
     info->status_val = infeasible(w, sol, info);
-  }
-  else if (is_unbounded_status(info->status_val)) {
+  } else if (is_unbounded_status(info->status_val)) {
     info->status_val = unbounded(w, sol, info);
-  }
-  else {
+  } else {
     /* If failed we have already left this function */
     scs_printf("Error: should not be in this state (2).\n");
   }
@@ -591,7 +588,7 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("Norm u_t = %4f, ", SCS(norm)(w->u_t, w->n + w->m + 1));
   scs_printf("Norm v = %4f, ", SCS(norm)(w->v, w->n + w->m + 1));
   scs_printf("Norm x = %4f, ", SCS(norm)(w->xys_orig->x, w->n));
-  scs_printf("Norm y = %4f, ", SCS(norm)(w->xys_orig->y,  w->m));
+  scs_printf("Norm y = %4f, ", SCS(norm)(w->xys_orig->y, w->m));
   scs_printf("Norm s = %4f, ", SCS(norm)(w->xys_orig->s, w->m));
   scs_printf("Norm |Ax + s| = %1.2e, ", SCS(norm)(r->ax_s, w->m));
   scs_printf("tau = %4f, ", w->u[w->n + w->m]);
@@ -707,13 +704,13 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                get_dual_cone_dist(sol->y, k, w->cone_work, d->m));
     scs_printf("comp slack: s'y/|s||y| = %.2e, ",
                SCS(dot)(sol->s, sol->y, d->m) /
-               MAX(1e-9, SCS(norm)(sol->s, d->m)) /
-               MAX(1e-9, SCS(norm)(sol->y, d->m)));
-    scs_printf("gap: |x'Px+c'x+b'y| = %.2e\n",
-               info->gap);
+                   MAX(1e-9, SCS(norm)(sol->s, d->m)) /
+                   MAX(1e-9, SCS(norm)(sol->y, d->m)));
+    scs_printf("gap: |x'Px+c'x+b'y| = %.2e\n", info->gap);
     scs_printf("pri res: |Ax+s-b| = %.2e, ", info->res_pri);
     scs_printf("dua res: |Px+A'y+c| = %.2e\n", info->res_dual);
-  } else { /* A failure mode (eg hit max_iters) */ }
+  } else { /* A failure mode (eg hit max_iters) */
+  }
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -743,10 +740,11 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
     /* xt_p_x, ctx, bty already have tau divided out */
     grl = MAX(MAX(ABS(r->xt_p_x), ABS(r->ctx)), ABS(r->bty));
     /* s, ax, px, aty do *not* have tau divided out, so need to divide */
-    prl = MAX(MAX(NORM(b, w->m) * r->tau,
-              NORM(s, w->m)), NORM(r->ax, w->m)) / r->tau;
-    drl = MAX(MAX(NORM(c, w->n) * r->tau,
-              NORM(r->px, w->n)), NORM(r->aty, w->n)) / r->tau;
+    prl = MAX(MAX(NORM(b, w->m) * r->tau, NORM(s, w->m)), NORM(r->ax, w->m)) /
+          r->tau;
+    drl = MAX(MAX(NORM(c, w->n) * r->tau, NORM(r->px, w->n)),
+              NORM(r->aty, w->n)) /
+          r->tau;
     if (isless(r->res_pri, eps_abs + eps_rel * prl) &&
         isless(r->res_dual, eps_abs + eps_rel * drl) &&
         isless(r->gap, eps_abs + eps_rel * grl)) {
@@ -814,7 +812,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
 }
 
 static ScsResiduals *init_residuals(const ScsData *d) {
-  ScsResiduals * r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
+  ScsResiduals *r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
   r->last_iter = -1;
   r->ax = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
@@ -899,8 +897,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     /* this allocates memory that must be freed */
     w->cone_boundaries_len = SCS(set_cone_boundaries)(k, &w->cone_boundaries);
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-    SCS(normalize)(w->P, w->A, w->b_normalized, w->c_normalized, w->scal,
-                   w->cone_boundaries, w->cone_boundaries_len);
+    SCS(normalize)
+    (w->P, w->A, w->b_normalized, w->c_normalized, w->scal, w->cone_boundaries,
+     w->cone_boundaries_len);
 #if VERBOSITY > 0
     SCS(print_array)(w->scal->D, d->m, "D");
     scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
@@ -918,7 +917,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
-  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
+  if (!(w->p =
+            SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
@@ -933,7 +933,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   return w;
 }
 
-static void update_work_cache(ScsWork * w) {
+static void update_work_cache(ScsWork *w) {
   /* g = (I + M)^{-1} h */
   memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
   SCS(scale_array)(&(w->g[w->n]), -1., w->m);
@@ -958,37 +958,41 @@ static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
   return 0;
 }
 
-
 static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
 
   ScsResiduals *r = w->r_orig;
-  ScsSolution *xys= w->xys_orig;
+  ScsSolution *xys = w->xys_orig;
   scs_float *b = w->b_orig;
   scs_float *c = w->c_orig;
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   /* ||Ax + s - b * tau|| */
-  scs_float relative_res_pri = SAFEDIV_POS(SCALE_NORM(r->ax_s_btau, w->m),
-    MAX(MAX(SCALE_NORM(r->ax, w->m), SCALE_NORM(xys->s, w->m)), SCALE_NORM(b, w->m) * r->tau));
+  scs_float relative_res_pri =
+      SAFEDIV_POS(SCALE_NORM(r->ax_s_btau, w->m),
+                  MAX(MAX(SCALE_NORM(r->ax, w->m), SCALE_NORM(xys->s, w->m)),
+                      SCALE_NORM(b, w->m) * r->tau));
   /* ||Px + A'y + c * tau|| */
-  scs_float relative_res_dual = SAFEDIV_POS(SCALE_NORM(r->px_aty_ctau, w->n),
-    MAX(MAX(SCALE_NORM(r->px, w->n), SCALE_NORM(r->aty, w->n)),  SCALE_NORM(c, w->n) * r->tau));
+  scs_float relative_res_dual =
+      SAFEDIV_POS(SCALE_NORM(r->px_aty_ctau, w->n),
+                  MAX(MAX(SCALE_NORM(r->px, w->n), SCALE_NORM(r->aty, w->n)),
+                      SCALE_NORM(c, w->n) * r->tau));
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
   w->n_log_scale_factor++;
 
   /* geometric mean */
-  factor = SQRTF(exp(w->sum_log_scale_factor /
-                (scs_float)(w->n_log_scale_factor)));
+  factor =
+      SQRTF(exp(w->sum_log_scale_factor / (scs_float)(w->n_log_scale_factor)));
 
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
     return;
   }
-  new_scale = MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
+  new_scale =
+      MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
   if (new_scale == w->stgs->scale) {
     return;
   }
@@ -1016,7 +1020,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
 }
 
-scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo * info) {
+scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   scs_int i;
   scs_float v_norm;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
@@ -1027,8 +1031,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo * info) {
     return SCS_FAILED;
   }
   scs_int l = w->m + w->n + 1;
-  const ScsData * d = w->d;
-  const ScsCone * k = w->k;
+  const ScsData *d = w->d;
+  const ScsCone *k = w->k;
   info->setup_time = w->setup_time;
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
@@ -1082,7 +1086,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo * info) {
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
         return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "interrupted",
-                     "interrupted");
+                       "interrupted");
       }
       populate_residual_struct(w, i);
       if ((info->status_val = has_converged(w, i)) != 0) {

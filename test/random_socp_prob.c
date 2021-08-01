@@ -1,7 +1,7 @@
-#include <time.h> /* to seed random */
-#include "scs_matrix.h"
 #include "problem_utils.h"
 #include "scs.h"
+#include "scs_matrix.h"
+#include <time.h> /* to seed random */
 
 /*
  create data for problem:
@@ -33,42 +33,39 @@ int main(int argc, char **argv) {
   seed = time(SCS_NULL);
 
   switch (argc) {
-    case 5:
-      seed = atoi(argv[4]);
-    /* no break */
-    case 4:
-      p_f = atof(argv[2]);
-      p_l = atof(argv[3]);
-    /* no break */
-    case 2:
-      n = atoi(argv[1]);
-      break;
-    default:
-      scs_printf(
-          "usage:\t%s n p_f p_l s\n"
-          "\tcreates an SOCP with n variables where p_f fraction of "
-          "rows correspond\n"
-          "\tto equality constraints, p_l fraction of rows correspond "
-          "to LP constraints,\n"
-          "\tand the remaining percentage of rows are involved in "
-          "second-order\n"
-          "\tcone constraints. the random number generator is seeded "
-          "with s.\n"
-          "\tnote that p_f + p_l should be less than or equal to 1, "
-          "and that\n"
-          "\tp_f should be less than .33, since that corresponds to "
-          "as many equality\n"
-          "\tconstraints as variables.\n",
-          argv[0]);
-      scs_printf(
-          "\nusage:\t%s n p_f p_l\n"
-          "\tdefaults the seed to the system time\n",
-          argv[0]);
-      scs_printf(
-          "\nusage:\t%s n\n"
-          "\tdefaults to using p_f = 0.1 and p_l = 0.3\n",
-          argv[0]);
-      return 0;
+  case 5:
+    seed = atoi(argv[4]);
+  /* no break */
+  case 4:
+    p_f = atof(argv[2]);
+    p_l = atof(argv[3]);
+  /* no break */
+  case 2:
+    n = atoi(argv[1]);
+    break;
+  default:
+    scs_printf("usage:\t%s n p_f p_l s\n"
+               "\tcreates an SOCP with n variables where p_f fraction of "
+               "rows correspond\n"
+               "\tto equality constraints, p_l fraction of rows correspond "
+               "to LP constraints,\n"
+               "\tand the remaining percentage of rows are involved in "
+               "second-order\n"
+               "\tcone constraints. the random number generator is seeded "
+               "with s.\n"
+               "\tnote that p_f + p_l should be less than or equal to 1, "
+               "and that\n"
+               "\tp_f should be less than .33, since that corresponds to "
+               "as many equality\n"
+               "\tconstraints as variables.\n",
+               argv[0]);
+    scs_printf("\nusage:\t%s n p_f p_l\n"
+               "\tdefaults the seed to the system time\n",
+               argv[0]);
+    scs_printf("\nusage:\t%s n\n"
+               "\tdefaults to using p_f = 0.1 and p_l = 0.3\n",
+               argv[0]);
+    return 0;
   }
   scs_printf("seed : %i\n", seed);
 

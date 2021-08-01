@@ -50,7 +50,9 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
    */
 }
 
-static inline scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
+static inline scs_int get_sd_cone_size(scs_int s) {
+  return (s * (s + 1)) / 2;
+}
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -59,7 +61,8 @@ static inline scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
  */
 scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
   scs_int i, s_cone_sz, count = 0;
-  scs_int cone_boundaries_len = 1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
+  scs_int cone_boundaries_len =
+      1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
   scs_int *b = (scs_int *)scs_calloc(cone_boundaries_len, sizeof(scs_int));
   /* cones that can be scaled independently */
   b[count] = k->f + k->l + (k->bsize ? k->bsize + 1 : 0);
@@ -230,7 +233,8 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
   }
   if (k->bsize) {
-    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)(k->bsize+1));
+    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n",
+            (long)(k->bsize + 1));
   }
   soc_vars = 0;
   soc_blks = 0;
@@ -274,7 +278,7 @@ static scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
 }
 
 static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
-                                  scs_float z_hat, scs_float w){
+                                  scs_float z_hat, scs_float w) {
   scs_float t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
   scs_float f, fp;
   scs_int i;
@@ -294,13 +298,13 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
       break;
     }
   }
-/* #if VERBOSITY > 1 */
+  /* #if VERBOSITY > 1 */
   if (i == EXP_CONE_MAX_ITERS) {
     scs_printf("warning: exp cone newton step hit maximum %i iters\n", (int)i);
     scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e\n", rho, y_hat,
-                z_hat, w);
+               z_hat, w);
   }
-/* #endif */
+  /* #endif */
   return t + z_hat;
 }
 
@@ -360,7 +364,7 @@ static scs_int proj_exp_cone(scs_float *v) {
   /* iterative procedure to find projection, bisects on dual variable: */
   exp_get_rho_ub(v, x, &ub, &lb); /* get starting upper and lower bounds */
   for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
-    rho = (ub + lb) / 2;          /* halfway between upper and lower bounds */
+    rho = (ub + lb) / 2; /* halfway between upper and lower bounds */
     g = exp_calc_grad(v, x, rho, x[1]); /* calculates gradient wrt dual var */
     if (g > 0) {
       lb = rho;
@@ -427,12 +431,10 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   }
   return 0;
 #else
-  scs_printf(
-      "FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
-      "blas+lapack libraries\n");
-  scs_printf(
-      "Install blas+lapack and re-compile SCS with blas+lapack library "
-      "locations\n");
+  scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
+             "blas+lapack libraries\n");
+  scs_printf("Install blas+lapack and re-compile SCS with blas+lapack library "
+             "locations\n");
   return -1;
 #endif
 }
@@ -457,10 +459,9 @@ static scs_int project_2x2_sdc(scs_float *X) {
   l2 = 0.5 * (a + d - rad);
 
 #if VERBOSITY > 0
-  scs_printf(
-      "2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
-      "rad = %4f, l1 = %4f, l2 = %4f\n",
-      a, b, X[1], X[2], d, rad, l1, l2);
+  scs_printf("2x2 SD: a = %4f, b = %4f, (X[1] = %4f, X[2] = %4f), d = %4f, "
+             "rad = %4f, l1 = %4f, l2 = %4f\n",
+             a, b, X[1], X[2], d, rad, l1, l2);
 #endif
 
   if (l2 >= 0) { /* both eigs positive already */
@@ -586,9 +587,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 #endif
 
 #else
-  scs_printf(
-      "FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
-      "libraries were linked!\n");
+  scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
+             "libraries were linked!\n");
   scs_printf("SCS will return nonsense!\n");
   SCS(scale_array)(X, NAN, n);
   return -1;
@@ -631,18 +631,18 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
  *       { (t', s') | t' * l' <= s' <= t' u', t >= 0 } = K'
  *  where l' = D l  / d0, u' = D u / d0.
  */
-static void normalize_box_cone(ScsConeWork * c, scs_float *D, scs_int bsize) {
+static void normalize_box_cone(ScsConeWork *c, scs_float *D, scs_int bsize) {
   scs_int j;
   for (j = 0; j < bsize; j++) {
     if (c->bu[j] >= MAX_BOX_VAL) {
       c->bu[j] = INFINITY;
     } else {
-      c->bu[j] = D ? D[j+1] * c->bu[j] / D[0] : c->bu[j];
+      c->bu[j] = D ? D[j + 1] * c->bu[j] / D[0] : c->bu[j];
     }
     if (c->bl[j] <= -MAX_BOX_VAL) {
       c->bl[j] = -INFINITY;
     } else {
-      c->bl[j] = D ? D[j+1] * c->bl[j] / D[0] : c->bl[j];
+      c->bl[j] = D ? D[j + 1] * c->bl[j] / D[0] : c->bl[j];
     }
   }
 }
@@ -665,23 +665,23 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
     gt = t - tx[0]; /* gradient */
-    ht = 1.; /* hessian */
+    ht = 1.;        /* hessian */
     for (j = 0; j < bsize; j++) {
       if (x[j] > t * bu[j]) {
         gt += (t * bu[j] - x[j]) * bu[j]; /* gradient */
-        ht += bu[j] * bu[j]; /* hessian */
-      }
-      else if (x[j] < t * bl[j]) {
+        ht += bu[j] * bu[j];              /* hessian */
+      } else if (x[j] < t * bl[j]) {
         gt += (t * bl[j] - x[j]) * bl[j]; /* gradient */
-        ht += bl[j] * bl[j]; /* hessian */
+        ht += bl[j] * bl[j];              /* hessian */
       }
     }
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
 #if VERBOSITY > 3
     scs_printf("t warm start: %1.3e, t[0]: %1.3e\n", t_warm_start, tx[0]);
-    scs_printf("t_new %1.3e, t_prev %1.3e, gt %1.3e, ht %1.3e\n", t, t_prev, gt, ht);
+    scs_printf("t_new %1.3e, t_prev %1.3e, gt %1.3e, ht %1.3e\n", t, t_prev, gt,
+               ht);
     scs_printf("ABS(gt / (ht + 1e-6)) %.4e, ABS(t - t_prev) %.4e\n",
-                ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
+               ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
 #endif
     /* TODO: sometimes this check can fail (ie, declare convergence before it
      * should) if ht is very large, which can happen with some pathological
@@ -698,8 +698,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   for (j = 0; j < bsize; j++) {
     if (x[j] > t * bu[j]) {
       x[j] = t * bu[j];
-    }
-    else if (x[j] < t * bl[j]) {
+    } else if (x[j] < t * bl[j]) {
       x[j] = t * bl[j];
     }
     /* x[j] unchanged otherwise */
@@ -715,7 +714,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
 }
 
 /* project onto SOC of size q*/
-static void proj_soc(scs_float * x, scs_int q) {
+static void proj_soc(scs_float *x, scs_int q) {
   if (q == 0) {
     return;
   }
@@ -904,7 +903,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   return 0;
 }
 
-ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int cone_len) {
+ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal,
+                            scs_int cone_len) {
   ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
   c->cone_len = cone_len;
   c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
@@ -916,7 +916,8 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal, scs_int co
       memcpy(c->bu, k->bu, k->bsize * sizeof(scs_float));
       memcpy(c->bl, k->bl, k->bsize * sizeof(scs_float));
       /* also does some sanitizing */
-      normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]): SCS_NULL, k->bsize);
+      normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]) : SCS_NULL,
+                         k->bsize);
     }
   }
   if (k->ssize && k->s) {
@@ -946,4 +947,3 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
   SCS(add_scaled_array)(x, c->s, c->cone_len, 1.);
   return status;
 }
-

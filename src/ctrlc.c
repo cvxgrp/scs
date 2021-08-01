@@ -22,9 +22,13 @@ void scs_start_interrupt_listener(void) {
   istate = (int)utSetInterruptEnabled(true);
 }
 
-void scs_end_interrupt_listener(void) { utSetInterruptEnabled((bool)istate); }
+void scs_end_interrupt_listener(void) {
+  utSetInterruptEnabled((bool)istate);
+}
 
-int scs_is_interrupted(void) { return (int)utIsInterruptPending(); }
+int scs_is_interrupted(void) {
+  return (int)utIsInterruptPending();
+}
 
 #elif (defined _WIN32 || _WIN64 || defined _WINDLL)
 #include <windows.h>
@@ -47,14 +51,18 @@ void scs_end_interrupt_listener(void) {
   SetConsoleCtrlHandler(scs_handle_ctrlc, FALSE);
 }
 
-int scs_is_interrupted(void) { return int_detected; }
+int scs_is_interrupted(void) {
+  return int_detected;
+}
 
 #else /* Unix */
 
 #include <signal.h>
 static int int_detected;
 struct sigaction oact;
-static void scs_handle_ctrlc(int dummy) { int_detected = dummy ? dummy : -1; }
+static void scs_handle_ctrlc(int dummy) {
+  int_detected = dummy ? dummy : -1;
+}
 
 void scs_start_interrupt_listener(void) {
   struct sigaction act;
@@ -70,7 +78,9 @@ void scs_end_interrupt_listener(void) {
   sigaction(SIGINT, &oact, &act);
 }
 
-int scs_is_interrupted(void) { return int_detected; }
+int scs_is_interrupted(void) {
+  return int_detected;
+}
 
 #endif /* END IF MATLAB_MEX_FILE / WIN32 */
 

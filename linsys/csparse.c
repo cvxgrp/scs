@@ -35,19 +35,22 @@ csc *SCS(cs_compress)(const csc *T, scs_int *idx_mapping) {
   Tj = T->p;
   Tx = T->x;
   nz = T->nz;
-  C = SCS(cs_spalloc)(m, n, nz, Tx != SCS_NULL, 0);   /* allocate result */
-  w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
+  C = SCS(cs_spalloc)(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
+  w = (scs_int *)scs_calloc(n, sizeof(scs_int));    /* get workspace */
   if (!C || !w) {
     return SCS(cs_done)(C, w, SCS_NULL, 0);
   } /* out of memory */
   Cp = C->p;
   Ci = C->i;
   Cx = C->x;
-  for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
-  SCS(cumsum)(Cp, w, n);               /* column pointers */
+  for (k = 0; k < nz; k++)
+    w[Tj[k]]++;          /* column counts */
+  SCS(cumsum)(Cp, w, n); /* column pointers */
   for (k = 0; k < nz; k++) {
     Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
-    if(idx_mapping) { idx_mapping[k] = p; }     /* old to new indices */
+    if (idx_mapping) {
+      idx_mapping[k] = p;
+    } /* old to new indices */
     if (Cx) {
       Cx[p] = Tx[k];
     }
@@ -88,4 +91,3 @@ csc *SCS(cs_spfree)(csc *A) {
   SCS(cs_free)(A->x);
   return (csc *)SCS(cs_free)(A); /* free the csc struct and return SCS_NULL */
 }
-

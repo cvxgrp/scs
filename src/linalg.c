@@ -5,13 +5,15 @@
 void SCS(set_as_scaled_array)(scs_float *x, const scs_float *a,
                               const scs_float b, scs_int len) {
   scs_int i;
-  for (i = 0; i < len; ++i) x[i] = b * a[i];
+  for (i = 0; i < len; ++i)
+    x[i] = b * a[i];
 }
 
 /* a *= b */
 void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len) {
   scs_int i;
-  for (i = 0; i < len; ++i) a[i] *= b;
+  for (i = 0; i < len; ++i)
+    a[i] *= b;
 }
 
 /* x'*y */

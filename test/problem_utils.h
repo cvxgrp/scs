@@ -1,14 +1,14 @@
 #ifndef PUTILS_H_GUARD
 #define PUTILS_H_GUARD
 
-#include "linsys.h"
-#include "scs_matrix.h"
 #include "cones.h"
 #include "linalg.h"
-#include "scs.h"
-#include "util.h"
-#include "rng.h"
+#include "linsys.h"
 #include "minunit.h"
+#include "rng.h"
+#include "scs.h"
+#include "scs_matrix.h"
+#include "util.h"
 
 #define PI (3.141592654)
 #ifdef DLONG
@@ -112,9 +112,8 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   return dist;
 }
 
-
-const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
-                                     ScsSolution *sol, scs_int status) {
+const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsInfo *info,
+                                    ScsSolution *sol, scs_int status) {
   scs_int n = d->n, m = d->m;
   scs_float *x = sol->x;
   scs_float *y = sol->y;
@@ -137,7 +136,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
 
   scs_float sdist = NAN, ydist = NAN;
 
-  ScsConeWork * cone_work = SCS(init_cone)(k, SCS_NULL, m);
+  ScsConeWork *cone_work = SCS(init_cone)(k, SCS_NULL, m);
 
   /**************** PRIMAL *********************/
   memset(ax, 0, m * sizeof(scs_float));
@@ -163,7 +162,7 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
     SCS(accum_by_p)(d->P, SCS_NULL, x, px);
     xt_p_x = SCS(dot)(px, x, n);
     res_unbdd_p = NORM(px, n);
-  } else{
+  } else {
     xt_p_x = 0;
     res_unbdd_p = 0;
   }
@@ -217,9 +216,9 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
   /**************** ASSERTS *****************/
   if (status == SCS_SOLVED) {
     mu_assert_less("Primal residual ERROR", ABS(res_pri - info->res_pri),
-                    1e-14);
+                   1e-14);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
-                    1e-14);
+                   1e-14);
     mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-14);
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj), 1e-14);
     mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj), 1e-14);
@@ -229,9 +228,9 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
     mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-6);
 
     mu_assert_less("Primal feas ERROR", res_pri,
-                    stgs->eps_abs + stgs->eps_rel * prl);
+                   stgs->eps_abs + stgs->eps_rel * prl);
     mu_assert_less("Dual feas ERROR", res_dual,
-                    stgs->eps_abs + stgs->eps_rel * drl);
+                   stgs->eps_abs + stgs->eps_rel * drl);
     mu_assert_less("Gap ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
 
   } else if (status == SCS_INFEASIBLE) {
@@ -241,10 +240,8 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
     mu_assert_less("Infeas invalid ERROR", res_infeas, stgs->eps_infeas);
 
   } else if (status == SCS_UNBOUNDED) {
-    mu_assert_less("Unbdd_a ERROR", ABS(res_unbdd_a - info->res_unbdd_a),
-                    1e-8);
-    mu_assert_less("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p),
-                    1e-8);
+    mu_assert_less("Unbdd_a ERROR", ABS(res_unbdd_a - info->res_unbdd_a), 1e-8);
+    mu_assert_less("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p), 1e-8);
     mu_assert_less("bty ERROR", ABS(bty + 1), 1e-14);
     mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-6);
     mu_assert_less("Unbounded P invalid ERROR", res_unbdd_p, stgs->eps_infeas);
@@ -255,6 +252,5 @@ const char * verify_solution_correct(ScsData * d, ScsCone * k, ScsInfo *info,
   }
   return 0;
 }
-
 
 #endif

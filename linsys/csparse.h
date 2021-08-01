@@ -29,7 +29,6 @@ scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 void *SCS(cs_free)(void *p);
 csc *SCS(cs_spfree)(csc *A);
 
-
 #ifdef __cplusplus
 }
 #endif

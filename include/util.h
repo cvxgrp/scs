@@ -5,10 +5,10 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "cones.h"
 #include "scs.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 /* timing code courtesy of A. Domahidi */
 #if (defined NOTIMER)

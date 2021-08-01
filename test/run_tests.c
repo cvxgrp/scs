@@ -6,11 +6,11 @@
 #include "scs.h"
 
 /* Include Tests */
-#include "problems/small_lp.h"
-#include "problems/rob_gauss_cov_est.h"
 #include "problems/hs21_tiny_qp.h"
-#include "problems/qafiro_tiny_qp.h"
 #include "problems/infeasible_tiny_qp.h"
+#include "problems/qafiro_tiny_qp.h"
+#include "problems/rob_gauss_cov_est.h"
+#include "problems/small_lp.h"
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;

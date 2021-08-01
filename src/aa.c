@@ -29,22 +29,26 @@
 
 #ifndef USE_LAPACK
 
-typedef void * ACCEL_WORK;
+typedef void *ACCEL_WORK;
 
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
                 aa_float relaxation, aa_int verbosity) {
   return SCS_NULL;
 }
-aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) { return 0; }
-void aa_finish(AaWork *a) {}
-void aa_reset(AaWork *a) {}
+aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
+  return 0;
+}
+void aa_finish(AaWork *a) {
+}
+void aa_reset(AaWork *a) {
+}
 
 #else
 
 #if PROFILING > 0
 
-#define TIME_TIC \
-  timer __t;     \
+#define TIME_TIC                                                               \
+  timer __t;                                                                   \
   tic(&__t);
 #define TIME_TOC toc(__func__, &__t);
 
@@ -54,7 +58,9 @@ typedef struct timer {
   struct timespec toc;
 } timer;
 
-void tic(timer *t) { clock_gettime(CLOCK_MONOTONIC, &t->tic); }
+void tic(timer *t) {
+  clock_gettime(CLOCK_MONOTONIC, &t->tic);
+}
 
 aa_float tocq(timer *t) {
   struct timespec temp;
@@ -84,7 +90,6 @@ aa_float toc(const char *str, timer *t) {
 
 #endif
 
-
 /* BLAS functions used */
 aa_float BLAS(nrm2)(blas_int *n, aa_float *x, blas_int *incx);
 void BLAS(axpy)(blas_int *n, aa_float *a, const aa_float *x, blas_int *incx,
@@ -110,13 +115,13 @@ void BLAS(scal)(const blas_int *n, const aa_float *a, aa_float *x,
 
 /* contains the necessary parameters to perform aa at each step */
 struct ACCEL_WORK {
-  aa_int type1; /* bool, if true type 1 aa otherwise type 2 */
-  aa_int mem;   /* aa memory */
-  aa_int dim;   /* variable dimension */
-  aa_int iter;  /* current iteration */
+  aa_int type1;     /* bool, if true type 1 aa otherwise type 2 */
+  aa_int mem;       /* aa memory */
+  aa_int dim;       /* variable dimension */
+  aa_int iter;      /* current iteration */
   aa_int verbosity; /* verbosity level, 0 is no printing */
 
-  aa_float relaxation; /* relaxation x and f, beta in some papers */
+  aa_float relaxation;     /* relaxation x and f, beta in some papers */
   aa_float regularization; /* regularization */
 
   aa_float *x; /* x input to map*/
@@ -152,8 +157,9 @@ static void set_m(AaWork *a, aa_int len) {
   blas_int blen = (blas_int)len, btotal = (blas_int)(a->dim * len);
   aa_float onef = 1.0, zerof = 0.0;
   /* if len < mem this only uses len cols */
-  BLAS(gemm)("Trans", "No", &blen, &blen, &bdim, &onef, a->type1 ? a->S : a->Y,
-              &bdim, a->Y, &bdim, &zerof, a->M, &blen);
+  BLAS(gemm)
+  ("Trans", "No", &blen, &blen, &bdim, &onef, a->type1 ? a->S : a->Y, &bdim,
+   a->Y, &bdim, &zerof, a->M, &blen);
   if (a->regularization > 0) {
     /* TODO: this regularization doesn't make much sense for type-I */
     /* but we do it anyway since it seems to help */
@@ -163,7 +169,7 @@ static void set_m(AaWork *a, aa_int len) {
     r = a->regularization * (nrm_y * nrm_y + nrm_s * nrm_s);
     if (a->verbosity > 2) {
       printf("iter: %li, len: %li, norm: Y %.2e, norm: S %.2e, r: %.2e\n",
-              (long)a->iter, (long)len, nrm_y, nrm_s, r);
+             (long)a->iter, (long)len, nrm_y, nrm_s, r);
     }
     for (i = 0; i < len; ++i) {
       a->M[i + len * i] += r;
@@ -174,8 +180,7 @@ static void set_m(AaWork *a, aa_int len) {
 }
 
 /* initialize accel params, in particular x_prev, f_prev, g_prev */
-static void init_accel_params(const aa_float *x, const aa_float *f,
-                              AaWork *a) {
+static void init_accel_params(const aa_float *x, const aa_float *f, AaWork *a) {
   blas_int bdim = (blas_int)a->dim;
   aa_float neg_onef = -1.0;
   blas_int one = 1;
@@ -190,8 +195,8 @@ static void init_accel_params(const aa_float *x, const aa_float *f,
 }
 
 /* updates the workspace parameters for aa for this iteration */
-static void update_accel_params(const aa_float *x, const aa_float *f,
-                                AaWork *a, aa_int len) {
+static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
+                                aa_int len) {
   /* at the start a->x = x_prev and a->f = f_prev */
   TIME_TIC
   aa_int idx = (a->iter - 1) % a->mem;
@@ -264,19 +269,20 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   aa_float one_m_relaxation = 1. - a->relaxation;
 
   /* work = S'g or Y'g */
-  BLAS(gemv)("Trans", &bdim, &blen, &onef, a->type1 ? a->S : a->Y, &bdim, a->g,
-              &one, &zerof, a->work, &one);
+  BLAS(gemv)
+  ("Trans", &bdim, &blen, &onef, a->type1 ? a->S : a->Y, &bdim, a->g, &one,
+   &zerof, a->work, &one);
   /* work = M \ work, where update_accel_params has set M = S'Y or M = Y'Y */
   BLAS(gesv)(&blen, &one, a->M, &blen, a->ipiv, a->work, &blen, &info);
   aa_norm = BLAS(nrm2)(&blen, a->work, &one);
   if (a->verbosity > 1) {
     printf("AA type %i, iter: %i, len %i, info: %i, aa_norm %.2e\n",
-            a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, aa_norm);
+           a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)info, aa_norm);
   }
   if (info < 0 || aa_norm >= MAX_AA_NORM) {
     if (a->verbosity > 0) {
       printf("Error in AA type %i, iter: %i, len %i, info: %i, aa_norm %.2e\n",
-              a->type1 ? 1 : 2, (int)a->iter, (int) len, (int)info, aa_norm);
+             a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)info, aa_norm);
     }
     /* reset aa for stability */
     aa_reset(a);
@@ -288,14 +294,16 @@ static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
   /* f = (1-relaxation) * \sum_i a_i x_i + relaxation * \sum_i a_i f_i */
 
   /* first set f -= D * work */
-  BLAS(gemv)("NoTrans", &bdim, &blen, &neg_onef, a->D, &bdim, a->work, &one,
-             &onef, f, &one);
+  BLAS(gemv)
+  ("NoTrans", &bdim, &blen, &neg_onef, a->D, &bdim, a->work, &one, &onef, f,
+   &one);
 
   /* if relaxation is not 1 then need to incorporate */
   if (a->relaxation != 1.0) {
     /* x_work = x - S * work */
-    BLAS(gemv)("NoTrans", &bdim, &blen, &neg_onef, a->S, &bdim, a->work, &one,
-               &onef, a->x_work, &one);
+    BLAS(gemv)
+    ("NoTrans", &bdim, &blen, &neg_onef, a->S, &bdim, a->work, &one, &onef,
+     a->x_work, &one);
     /* f = relaxation * f */
     BLAS(scal)(&blen, &a->relaxation, f, &one);
     /* f += (1 - relaxation) * x_work */
