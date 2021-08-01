@@ -1,5 +1,5 @@
 ---
-name: Build
+name: Cmake 
 
 on: [push, pull_request]
 
@@ -12,7 +12,7 @@ jobs:
       - run: mkdir build 
       - run: ls -al
       - run: cd build 
-      - run: cmake -DBUILD_TESTING=ON ../
+      - run: cmake -DBUILD_TESTING=ON ..
       - run: make
       - run: make install
       - run: ctest --output-on-failure
@@ -25,7 +25,7 @@ jobs:
       - run: mkdir build 
       - run: ls -al
       - run: cd build 
-      - run: cmake -DBUILD_TESTING=ON ../
+      - run: cmake -DBUILD_TESTING=ON ..
       - run: make
       - run: make install
       - run: ctest --output-on-failure
