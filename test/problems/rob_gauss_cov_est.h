@@ -196,10 +196,6 @@ static const char *rob_gauss_cov_est(void) {
   scs_free(stgs);
   scs_free(d);
 
-  k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
-  d = (ScsData *)scs_calloc(1, sizeof(ScsData));
-  stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
-
   SCS(read_data)("rob_gauss_cov_est", &d, &k, &stgs);
   stgs->max_iters = 1000;
   /* solve with read data */
