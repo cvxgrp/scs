@@ -13,11 +13,107 @@ Cones
 Settings
 --------
 
+.. list-table::
+   :widths: 20 20 20 20 20
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - Description
+     - Permitted values
+     - Default
+   * - :code:`normalize`
+     - :code:`scs_int`
+     - Whether to perform heuristic data rescaling.
+     - True/False
+     - 1
+   * - :code:`scale`
+     - :code:`scs_float`
+     - Dual scaling factor (the important one).
+     - :math:`(0, \infty)`
+     - 0.1
+   * - :code:`adaptive_scaling`
+     - :code:`scs_int`
+     - Whether to heuristically adapt :code:`scale` through the solve.
+     - True/False
+     - 1
+   * - :code:`rho_x`
+     - :code:`scs_float`
+     - Primal scale factor (less important one).
+     - :math:`(0, \infty)`
+     - 1e-6
+   * - :code:`max_iters`
+     - :code:`scs_int`
+     - Maximum number of iterations to run.
+     - :math:`\mathbf{N}`
+     - 1e5
+   * - :code:`eps_abs`
+     - :code:`scs_float`
+     - Absolute feasibility tolerance.
+     - :math:`(0, \infty)`
+     - 1e-4
+   * - :code:`eps_rel`
+     - :code:`scs_float`
+     - Relative feasibility tolerance.
+     - :math:`(0, \infty)`
+     - 1e-4
+   * - :code:`eps_infeas`
+     - :code:`scs_float`
+     - Infeasibility tolerance (primal and dual).
+     - :math:`(0, \infty)`
+     - 1e-7
+   * - :code:`alpha`
+     - :code:`scs_float`
+     - Douglas-Rachford relaxation parameter.
+     - :math:`(0, 2)`
+     - 1.5
+   * - :code:`time_limit_secs`
+     - :code:`scs_float`
+     - Time limit for solve run in seconds (can be fractional). :code:`0` is interpreted as no limit.
+     - :math:`[0, \infty)`
+     - 0
+   * - :code:`verbose`
+     - :code:`scs_int`
+     - Whether to print solver output to stdout.
+     - True/False
+     - 1
+   * - :code:`warm_start`
+     - :code:`scs_int`
+     - Set to True if you initialize the solver with a guess of the solution (see below).
+     - True/False
+     - 0
+   * - :code:`acceleration_lookback`
+     - :code:`scs_int`
+     - How much memory to use for Anderson acceleration. More memory requires more time to compute but can give more reliable steps. :code:`0` disables it.
+     - :math:`\mathbf{N}`
+     - 0
+   * - :code:`acceleration_interval`
+     - :code:`scs_int`
+     - Run Anderson acceleration every this number of iterations.
+     - :math:`\mathbf{N}`
+     - 1
+   * - :code:`write_data_filename`
+     - :code:`char *`
+     - If this is set the problem data is dumped to this filename.
+     - Any filename
+     - NULL
+   * - :code:`log_csv_filename`
+     - :code:`char *` 
+     - If this is set SCS will write csv logs of various quantities through the solver. Doing this makes the solver much slower.
+     - Any filename
+     - NULL
+
+
 Termination criteria
 --------------------
 
 Acceleration
 ------------
+
+Warm-starting
+-------------
+
+SCS supports warm-starting the solver with a guess of the solution.
 
 Compile flags
 -------------

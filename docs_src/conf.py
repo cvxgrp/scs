@@ -15,6 +15,7 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import subprocess
+import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
 
@@ -26,6 +27,7 @@ author = "Brendan O'Donoghue"
 __version__ = "3.0.0"
 
 release = __version__
+version = __version__
 
 # -- General configuration ---------------------------------------------------
 
@@ -54,17 +56,22 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-#html_logo = '_static/scs_logo.png'
+def setup(app):
+    app.add_css_file('css/scs_theme.css')
+
+html_logo = '_static/scs_logo.png'
 html_favicon = '_static/favicon.ico'
 html_theme_options = {
-    #'logo_only': True,
-    #'display_version': True,
-    'github_banner': True,
-    'github_user': 'cvxgrp',
-    'github_repo': 'scs',
-    'github_button': False,
+    'logo_only': True,
+    'display_version': True,
+    #'github_banner': True,
+    #'github_user': 'cvxgrp',
+    #'github_repo': 'scs',
+    #'github_button': False,
     #'html_show_sourcelink' = False,
     #'github_type': 'star',
     #'travis_button': False,
@@ -78,10 +85,6 @@ subprocess.call('doxygen Doxyfile', shell=True)
 
 breathe_projects = {"scs": "doxygen_out/xml/"}
 breathe_default_project = "scs"
-
-#def setup(app):
-#    app.add_css_file('css/scs_theme.css')
-
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

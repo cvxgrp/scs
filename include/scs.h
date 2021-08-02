@@ -22,32 +22,30 @@ typedef struct SCS_CONE_WORK ScsConeWork;
 
 /** struct containing all settings */
 typedef struct {
-  /* settings parameters: default suggested input */
-
   /* these *cannot* change for multiple runs with the same call to SCS(init) */
   /** heuristic data rescaling */
   scs_int normalize;
-  /** if normalized, rescales by this factor: 5 */
+  /** if normalized, rescales by this factor */
   scs_float scale;
-  /** x equality constraint scaling: 1e-3 */
+  /** x equality constraint scaling */
   scs_float rho_x;
 
   /* these can change for multiple runs with the same call to SCS(init) */
-  /** maximum iterations to take: 2500 */
+  /** maximum iterations to take */
   scs_int max_iters;
-  /** absolute convergence tolerance: 1e-4 */
+  /** absolute convergence tolerance */
   scs_float eps_abs;
-  /** relative convergence tolerance: 1e-4 */
+  /** relative convergence tolerance */
   scs_float eps_rel;
-  /** infeasible convergence tolerance: 1e-5 */
+  /** infeasible convergence tolerance */
   scs_float eps_infeas;
-  /** relaxation parameter: 1.8 */
+  /** relaxation parameter */
   scs_float alpha;
   /** time limit in secs (can be fractional) */
   scs_float time_limit_secs;
-  /** boolean, write out progress: 1 */
+  /** boolean, write out progress */
   scs_int verbose;
-  /** boolean, warm start (put initial guess in ScsSolution struct): 0 */
+  /** boolean, warm start (put initial guess in ScsSolution struct) */
   scs_int warm_start;
   /** memory for acceleration */
   scs_int acceleration_lookback;
