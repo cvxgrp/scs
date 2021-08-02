@@ -117,10 +117,6 @@ static const char *hs21_tiny_qp_rw(void) {
             success);
 
   SCS(free_sol)(sol);
-  SCS(free_scs_matrix)(d->A);
-  SCS(free_scs_matrix)(d->P);
-  scs_free(k);
-  scs_free(stgs);
-  scs_free(d);
+  SCS(free_data)(d, k, stgs);
   return fail;
 }
