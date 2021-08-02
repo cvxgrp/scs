@@ -233,27 +233,27 @@ typedef struct {
  * - solve the first linear system
  *
  *
- * @param  `d` 		 Problem data
- * @param  `k` 		 Cone data
- * @param  `stgs`  SCS solver settings
- * @return         Solver work struct
+ * @param  d 		 Problem data
+ * @param  k 		 Cone data
+ * @param  stgs  SCS solver settings
+ * @return       Solver work struct
  */
 ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
  * Solve quadratic cone program initialized by SCS(init).
  *
- * @param  `w`     Workspace allocated by init
- * @param  `sol` 	 Solver solution struct, will contain solution at termination
- * @param  `info`  Solver info reporting
- * @return         Flag containing problem status (see \a glbopts.h)
+ * @param  w     Workspace allocated by init
+ * @param  sol 	 Solver solution struct, will contain solution at termination
+ * @param  info  Solver info reporting
+ * @return       Flag containing problem status (see \a glbopts.h)
  */
 scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info);
 
 /**
  * Clean up allocated SCS workspace.
  *
- * @param  `w`  Workspace allocated by init, will be deallocated.
+ * @param  w  Workspace allocated by init, will be deallocated.
  */
 void SCS(finish)(ScsWork *w);
 
@@ -262,12 +262,12 @@ void SCS(finish)(ScsWork *w);
  *
  * All the inputs must already be allocated in memory before calling.
  *
- * @param  `d` 		 Problem data
- * @param  `k` 		 Cone data
- * @param  `stgs`  SCS solver settings
- * @param  `sol`   Solution will be stored here
- * @param  `info`  Information about the solve will be stored here
- * @return         Flag that determines solve type (see \a glbopts.h)
+ * @param  d 		 Problem data
+ * @param  k 		 Cone data
+ * @param  stgs  SCS solver settings
+ * @param  sol   Solution will be stored here
+ * @param  info  Information about the solve will be stored here
+ * @return       Flag that determines solve type (see \a glbopts.h)
  */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
