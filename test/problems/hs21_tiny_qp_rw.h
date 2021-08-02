@@ -86,8 +86,6 @@ static const char *hs21_tiny_qp_rw(void) {
   k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
-  d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
-  d->P = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
 
   SCS(read_data)("hs21_tiny_qp", &d, &k, &stgs);
   stgs->max_iters = 1000;
