@@ -27,12 +27,13 @@ body {
     color: rgb(0, 0, 0);
 }
 
-.wy-nav-top a{
-    color: rgb(0, 0, 0);
+.wy-nav-top {
+    color: rgb(245, 245, 245);
+    background-color: rgb(245, 245, 245);
 }
 
-.wy-nav-top {
-    background-color: rgb(255, 255, 255);
+.wy-nav-top i{
+    color: rgb(46, 118, 176);
 }
 
 /* Navigation bar text */

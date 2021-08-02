@@ -51,12 +51,9 @@ scs_float SCS(toc)(SCS(timer) * t);
 scs_float SCS(str_toc)(char *str, SCS(timer) * t);
 scs_float SCS(tocq)(SCS(timer) * t);
 
-void SCS(print_cone_data)(const ScsCone *k);
-void SCS(print_data)(const ScsData *d);
-void SCS(print_work)(const ScsWork *w);
 void SCS(print_array)(const scs_float *arr, scs_int n, const char *name);
 void SCS(free_sol)(ScsSolution *sol);
-void SCS(free_data)(ScsData *d, ScsCone *k);
+void SCS(free_data)(ScsData *d, ScsCone *k, ScsSettings *stgs);
 
 #ifdef __cplusplus
 }

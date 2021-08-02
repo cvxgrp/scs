@@ -20,18 +20,6 @@ body {
     border-radius: 2px;
 }
 
-/* override table width restrictions */
-.wy-table-responsive table td, .wy-table-responsive table th {
-    white-space: normal;
-}
-
-.wy-table-responsive {
-    margin-bottom: 24px;
-    max-width: 100%;
-    overflow: visible;
-}
-
-
 div[class^='highlight'] pre {
     font-family: 'Inconsolata', monospace;
     font-size: 16px;
@@ -195,10 +183,7 @@ p.breathe-sectiondef-title.rubric {
     display: inline;
 }*/
 
-/*dt {
- *    display: inline-block !important;
- *}
- */
+
 /* Remove line block indentation */
 .rst-content .line-block {
     margin-bottom: 0px !important;

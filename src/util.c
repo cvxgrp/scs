@@ -82,69 +82,6 @@ scs_float SCS(str_toc)(char *str, SCS(timer) * t) {
   return time;
 }
 
-void SCS(print_cone_data)(const ScsCone *k) {
-  scs_int i;
-  scs_printf("num zeros = %i\n", (int)k->f);
-  scs_printf("num LP = %i\n", (int)k->l);
-  scs_printf("num box cone= %i\n", (int)k->bsize);
-  scs_printf("num SOCs = %i\n", (int)k->qsize);
-  scs_printf("soc array:\n");
-  for (i = 0; i < k->qsize; i++) {
-    scs_printf("%i\n", (int)k->q[i]);
-  }
-  scs_printf("num SDCs = %i\n", (int)k->ssize);
-  scs_printf("sdc array:\n");
-  for (i = 0; i < k->ssize; i++) {
-    scs_printf("%i\n", (int)k->s[i]);
-  }
-  scs_printf("num ep = %i\n", (int)k->ep);
-  scs_printf("num ed = %i\n", (int)k->ed);
-  scs_printf("num PCs = %i\n", (int)k->psize);
-  scs_printf("pow array:\n");
-  for (i = 0; i < k->psize; i++) {
-    scs_printf("%4f\n", (double)k->p[i]);
-  }
-}
-
-void SCS(print_work)(const ScsWork *w) {
-  scs_int i, l = w->n + w->m;
-  scs_printf("\n u_t is \n");
-  for (i = 0; i < l; i++) {
-    scs_printf("%f\n", w->u_t[i]);
-  }
-  scs_printf("\n u is \n");
-  for (i = 0; i < l; i++) {
-    scs_printf("%f\n", w->u[i]);
-  }
-  scs_printf("\n v is \n");
-  for (i = 0; i < l; i++) {
-    scs_printf("%f\n", w->v[i]);
-  }
-}
-
-void SCS(print_data)(const ScsData *d) {
-  scs_printf("m = %i\n", (int)d->m);
-  scs_printf("n = %i\n", (int)d->n);
-
-  scs_printf("max_iters = %i\n", (int)d->stgs->max_iters);
-  scs_printf("verbose = %i\n", (int)d->stgs->verbose);
-  scs_printf("normalize = %i\n", (int)d->stgs->normalize);
-  scs_printf("warm_start = %i\n", (int)d->stgs->warm_start);
-  scs_printf("acceleration_lookback = %i\n",
-             (int)d->stgs->acceleration_lookback);
-  scs_printf("acceleration_interval = %i\n",
-             (int)d->stgs->acceleration_interval);
-  scs_printf("eps_abs = %4f\n", d->stgs->eps_abs);
-  scs_printf("eps_rel = %4f\n", d->stgs->eps_rel);
-  scs_printf("eps_infeas = %4f\n", d->stgs->eps_infeas);
-  scs_printf("alpha = %4f\n", d->stgs->alpha);
-  scs_printf("rho_x = %4f\n", d->stgs->rho_x);
-  scs_printf("scale = %4f\n", d->stgs->scale);
-  scs_printf("write_data_filename = %s\n",
-             (char *)d->stgs->write_data_filename);
-  scs_printf("log_csv_filename = %s\n", (char *)d->stgs->log_csv_filename);
-}
-
 void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
   scs_int i, j, k = 0;
   scs_int num_on_one_line = 10;
@@ -162,11 +99,10 @@ void SCS(print_array)(const scs_float *arr, scs_int n, const char *name) {
   scs_printf("\n");
 }
 
-void SCS(free_data)(ScsData *d, ScsCone *k) {
+void SCS(free_data)(ScsData *d, ScsCone *k, ScsSettings *stgs) {
   if (d) {
     scs_free(d->b);
     scs_free(d->c);
-    scs_free(d->stgs);
     if (d->A) {
       SCS(free_scs_matrix)(d->A);
     }
@@ -182,6 +118,9 @@ void SCS(free_data)(ScsData *d, ScsCone *k) {
     scs_free(k->s);
     scs_free(k->p);
     scs_free(k);
+  }
+  if (stgs) {
+    scs_free(stgs);
   }
 }
 
@@ -203,7 +142,7 @@ void SCS(set_default_settings)(ScsSettings *stgs) {
   stgs->eps_infeas = EPS_INFEAS;
   stgs->alpha = ALPHA;
   stgs->rho_x = RHO_X;
-  stgs->scale = SCALE;
+  stgs->init_scale = INIT_SCALE;
   stgs->verbose = VERBOSE;
   stgs->normalize = NORMALIZE;
   stgs->warm_start = WARM_START;

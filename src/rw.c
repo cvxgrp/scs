@@ -54,7 +54,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   /* Warm start to false for now */
   scs_int warm_start = 0;
   fwrite(&(s->normalize), sizeof(scs_int), 1, fout);
-  fwrite(&(s->scale), sizeof(scs_float), 1, fout);
+  fwrite(&(s->init_scale), sizeof(scs_float), 1, fout);
   fwrite(&(s->rho_x), sizeof(scs_float), 1, fout);
   fwrite(&(s->max_iters), sizeof(scs_int), 1, fout);
   fwrite(&(s->eps_abs), sizeof(scs_float), 1, fout);
@@ -73,7 +73,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
 static ScsSettings *read_scs_stgs(FILE *fin) {
   ScsSettings *s = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   fread(&(s->normalize), sizeof(scs_int), 1, fin);
-  fread(&(s->scale), sizeof(scs_float), 1, fin);
+  fread(&(s->init_scale), sizeof(scs_float), 1, fin);
   fread(&(s->rho_x), sizeof(scs_float), 1, fin);
   fread(&(s->max_iters), sizeof(scs_int), 1, fin);
   fread(&(s->eps_abs), sizeof(scs_float), 1, fin);
@@ -118,7 +118,6 @@ static void write_scs_data(const ScsData *d, FILE *fout) {
   fwrite(&(d->n), sizeof(scs_int), 1, fout);
   fwrite(d->b, sizeof(scs_float), d->m, fout);
   fwrite(d->c, sizeof(scs_float), d->n, fout);
-  write_scs_stgs(d->stgs, fout);
   write_amatrix(d->A, fout);
   /* write has P bit */
   fwrite(&has_p, sizeof(scs_int), 1, fout);
@@ -136,7 +135,6 @@ static ScsData *read_scs_data(FILE *fin) {
   d->c = scs_calloc(d->n, sizeof(scs_float));
   fread(d->b, sizeof(scs_float), d->m, fin);
   fread(d->c, sizeof(scs_float), d->n, fin);
-  d->stgs = read_scs_stgs(fin);
   d->A = read_amatrix(fin);
   /* If has_p bit is not set or this hits end of file then has_p = 0 */
   has_p &= fread(&has_p, sizeof(scs_int), 1, fin);
@@ -144,23 +142,26 @@ static ScsData *read_scs_data(FILE *fin) {
   return d;
 }
 
-void SCS(write_data)(const ScsData *d, const ScsCone *k) {
-  FILE *fout = fopen(d->stgs->write_data_filename, "wb");
+void SCS(write_data)(const ScsData *d, const ScsCone *k,
+                     const ScsSettings *stgs) {
+  FILE *fout = fopen(stgs->write_data_filename, "wb");
   uint32_t scs_int_sz = (uint32_t)SCS(sizeof_int)();
   uint32_t scs_float_sz = (uint32_t)SCS(sizeof_float)();
   const char *scs_version = SCS_VERSION;
   uint32_t scs_version_sz = (uint32_t)strlen(scs_version);
-  scs_printf("writing data to %s\n", d->stgs->write_data_filename);
+  scs_printf("writing data to %s\n", stgs->write_data_filename);
   fwrite(&(scs_int_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_float_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_version_sz), sizeof(uint32_t), 1, fout);
   fwrite(scs_version, 1, scs_version_sz, fout);
   write_scs_cone(k, fout);
   write_scs_data(d, fout);
+  write_scs_stgs(stgs, fout);
   fclose(fout);
 }
 
-scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
+scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
+                       ScsSettings **stgs) {
   uint32_t file_int_sz;
   uint32_t file_float_sz;
   uint32_t file_version_sz;
@@ -201,19 +202,21 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k) {
   }
   *k = read_scs_cone(fin);
   *d = read_scs_data(fin);
+  *stgs = read_scs_stgs(fin);
   fclose(fin);
   return 0;
 }
 
-void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
+void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k,
+                          const ScsSettings *stgs, const ScsWork *w,
                           scs_int iter, SCS(timer) * solve_timer) {
   ScsResiduals *r = w->r_orig;
   ScsResiduals *r_n = w->r_normalized;
   /* if iter 0 open to write, else open to append */
-  FILE *fout = fopen(d->stgs->log_csv_filename, iter == 0 ? "w" : "a");
+  FILE *fout = fopen(stgs->log_csv_filename, iter == 0 ? "w" : "a");
   if (!fout) {
     scs_printf("Error: Could not open %s for writing\n",
-               d->stgs->log_csv_filename);
+               stgs->log_csv_filename);
     return;
   }
   scs_int l = w->m + w->n + 1;
@@ -286,7 +289,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k, const ScsWork *w,
   fprintf(fout, "%.16e,", r_n->dobj);
   fprintf(fout, "%.16e,", r_n->tau);
   fprintf(fout, "%.16e,", r_n->kap);
-  fprintf(fout, "%.16e,", w->stgs->scale);
+  fprintf(fout, "%.16e,", w->scale);
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->u, w->u_t, l));
   fprintf(fout, "%.16e,", SCS(norm_diff)(w->v, w->v_prev, l));
   fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->u, w->u_t, l));

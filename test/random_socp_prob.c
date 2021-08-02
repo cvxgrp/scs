@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
   scs_int n, m, col_nnz, nnz, i, q_total, q_num_rows, max_q;
   ScsCone *k;
   ScsData *d;
+  ScsSettings *stgs;
   ScsSolution *sol, *opt_sol;
   ScsInfo info = {0};
   scs_float p_f, p_l;
@@ -71,7 +72,7 @@ int main(int argc, char **argv) {
 
   k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   d = (ScsData *)scs_calloc(1, sizeof(ScsData));
-  d->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
 
@@ -145,14 +146,14 @@ int main(int argc, char **argv) {
   d->m = m;
   d->n = n;
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
-  SCS(set_default_settings)(d->stgs);
+  SCS(set_default_settings)(stgs);
 
-  /* d->stgs->write_data_filename = "random_socp_prob"; */
+  /* stgs->write_data_filename = "random_socp_prob"; */
 
   scs_printf("true pri opt = %4f\n", SCS(dot)(d->c, opt_sol->x, d->n));
   scs_printf("true dua opt = %4f\n", -SCS(dot)(d->b, opt_sol->y, d->m));
   /* solve! */
-  scs(d, k, sol, &info);
+  scs(d, k, stgs, sol, &info);
   scs_printf("true pri opt = %4f\n", SCS(dot)(d->c, opt_sol->x, d->n));
   scs_printf("true dua opt = %4f\n", -SCS(dot)(d->b, opt_sol->y, d->m));
 
@@ -163,7 +164,7 @@ int main(int argc, char **argv) {
     scs_printf("scs dua obj = %4f\n", -SCS(dot)(d->b, sol->y, d->m));
   }
 
-  SCS(free_data)(d, k);
+  SCS(free_data)(d, k, stgs);
   SCS(free_sol)(sol);
   SCS(free_sol)(opt_sol);
 

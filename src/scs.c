@@ -62,9 +62,9 @@ static void free_work(ScsWork *w) {
   }
 }
 
-static void print_init_header(const ScsData *d, const ScsCone *k) {
+static void print_init_header(const ScsData *d, const ScsCone *k,
+                              const ScsSettings *stgs) {
   scs_int i;
-  ScsSettings *stgs = d->stgs;
   char *cone_str = SCS(get_cone_header)(k);
   char *lin_sys_method = SCS(get_lin_sys_method)(d->A, d->P);
 #ifdef USE_LAPACK
@@ -93,8 +93,8 @@ static void print_init_header(const ScsData *d, const ScsCone *k) {
              "\t  max_iters: %i, normalize: %i, warm_start: %i\n",
              /*, rho_x: %.2e\n", */
              stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas, stgs->alpha,
-             stgs->scale, (int)stgs->adaptive_scaling, (int)stgs->max_iters,
-             (int)stgs->normalize, (int)stgs->warm_start);
+             stgs->init_scale, (int)stgs->adaptive_scaling,
+             (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start);
   /* , stgs->rho_x); */
   if (stgs->acceleration_lookback != 0) {
     scs_printf("\t  acceleration_lookback: %i, acceleration_interval: %i\n",
@@ -335,7 +335,7 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
 }
 
 static inline scs_float get_tau_scale(ScsWork *w) {
-  return TAU_FACTOR; /* TAU_FACTOR * w->stgs->scale; */
+  return TAU_FACTOR; /* TAU_FACTOR * w->scale; */
 }
 
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
@@ -514,7 +514,7 @@ static void get_info(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->res_infeas = r->res_infeas;
   info->res_unbdd_a = r->res_unbdd_a;
   info->res_unbdd_p = r->res_unbdd_p;
-  info->scale = w->stgs->scale;
+  info->scale = w->scale;
   info->scale_updates = w->scale_updates;
   if (is_solved_status(info->status_val)) {
     info->gap = r->gap;
@@ -580,7 +580,7 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("%*.2e ", (int)HSPACE, r->res_dual);
   scs_printf("%*.2e ", (int)HSPACE, r->gap);
   scs_printf("%*.2e ", (int)HSPACE, r->pobj);
-  scs_printf("%*.2e ", (int)HSPACE, w->stgs->scale);
+  scs_printf("%*.2e ", (int)HSPACE, w->scale);
   scs_printf("%*.2e ", (int)HSPACE, SCS(tocq)(solve_timer) / 1e3);
   scs_printf("\n");
 
@@ -762,8 +762,8 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
   return 0;
 }
 
-static scs_int validate(const ScsData *d, const ScsCone *k) {
-  ScsSettings *stgs = d->stgs;
+static scs_int validate(const ScsData *d, const ScsCone *k,
+                        const ScsSettings *stgs) {
   if (d->m <= 0 || d->n <= 0) {
     scs_printf("m and n must both be greater than 0; m = %li, n = %li\n",
                (long)d->m, (long)d->n);
@@ -805,7 +805,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k) {
     scs_printf("rho_x must be positive (1e-3 works well).\n");
     return -1;
   }
-  if (stgs->scale <= 0) {
+  if (stgs->init_scale <= 0) {
     scs_printf("scale must be positive (1 works well).\n");
     return -1;
   }
@@ -824,11 +824,12 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
+static ScsWork *init_work(const ScsData *d, const ScsCone *k,
+                          const ScsSettings *stgs) {
   ScsWork *w = (ScsWork *)scs_calloc(1, sizeof(ScsWork));
   scs_int l = d->n + d->m + 1;
-  if (d->stgs->verbose) {
-    print_init_header(d, k);
+  if (stgs->verbose) {
+    print_init_header(d, k, stgs);
   }
   if (!w) {
     scs_printf("ERROR: allocating work failure\n");
@@ -837,7 +838,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   /* get settings and dims from data struct */
   w->d = d;
   w->k = k;
-  w->stgs = d->stgs;
+  w->stgs = stgs;
+  w->scale = stgs->init_scale;
   w->m = d->m;
   w->n = d->n;
   w->last_scale_update_iter = 0;
@@ -871,7 +873,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k) {
   w->c_normalized = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
   memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
-  SCS(set_rho_y_vec)(k, w->stgs->scale, w->rho_y_vec, w->m);
+  SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
 
   if (!w->c_normalized) {
     scs_printf("ERROR: work memory allocation failure\n");
@@ -992,9 +994,8 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
     return;
   }
-  new_scale =
-      MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
-  if (new_scale == w->stgs->scale) {
+  new_scale = MIN(MAX(w->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
+  if (new_scale == w->scale) {
     return;
   }
   if (SCS(should_update_rho_y_vec(factor, iters_since_last_update))) {
@@ -1002,8 +1003,8 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
-    w->stgs->scale = new_scale;
-    SCS(set_rho_y_vec)(k, w->stgs->scale, w->rho_y_vec, w->m);
+    w->scale = new_scale;
+    SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
     SCS(update_linsys_rho_y_vec)(w->A, w->P, w->p, w->rho_y_vec);
 
     /* update pre-solved quantities */
@@ -1034,6 +1035,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   scs_int l = w->m + w->n + 1;
   const ScsData *d = w->d;
   const ScsCone *k = w->k;
+  const ScsSettings *stgs = w->stgs;
   info->setup_time = w->setup_time;
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
@@ -1115,14 +1117,14 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     if (w->stgs->log_csv_filename) {
       /* calc residuals every iter if logging to csv */
       populate_residual_struct(w, i);
-      SCS(log_data_to_csv)(d, k, w, i, &solve_timer);
+      SCS(log_data_to_csv)(d, k, stgs, w, i, &solve_timer);
     }
   }
 
   if (w->stgs->log_csv_filename) {
     /* calc residuals every iter if logging to csv */
     populate_residual_struct(w, i);
-    SCS(log_data_to_csv)(d, k, w, i, &solve_timer);
+    SCS(log_data_to_csv)(d, k, stgs, w, i, &solve_timer);
   }
 
   if (w->stgs->verbose) {
@@ -1164,7 +1166,8 @@ void SCS(finish)(ScsWork *w) {
   }
 }
 
-ScsWork *SCS(init)(const ScsData *d, const ScsCone *k) {
+ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
+                   const ScsSettings *stgs) {
 #if VERBOSITY > 1
   SCS(tic)(&global_timer);
 #endif
@@ -1175,29 +1178,25 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k) {
     scs_printf("ERROR: Missing ScsData or ScsCone input\n");
     return SCS_NULL;
   }
-#if VERBOSITY > 0
-  SCS(print_data)(d);
-  SCS(print_cone_data)(k);
-#endif
-  if (validate(d, k) < 0) {
+  if (validate(d, k, stgs) < 0) {
     scs_printf("ERROR: Validation returned failure\n");
     return SCS_NULL;
   }
   SCS(tic)(&init_timer);
-  if (d->stgs->write_data_filename) {
-    SCS(write_data)(d, k);
+  if (stgs->write_data_filename) {
+    SCS(write_data)(d, k, stgs);
   }
-  w = init_work(d, k);
+  w = init_work(d, k, stgs);
   w->setup_time = SCS(tocq)(&init_timer);
   scs_end_interrupt_listener();
   return w;
 }
 
 /* this just calls SCS(init), SCS(solve), and SCS(finish) */
-scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
-            ScsInfo *info) {
+scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
+            ScsSolution *sol, ScsInfo *info) {
   scs_int status;
-  ScsWork *w = SCS(init)(d, k);
+  ScsWork *w = SCS(init)(d, k, stgs);
 #if VERBOSITY > 0
   scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
              sizeof(scs_int), sizeof(scs_float));

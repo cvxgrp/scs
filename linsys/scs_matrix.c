@@ -2,6 +2,7 @@
 #include "scs_matrix.h"
 #include "linalg.h"
 #include "linsys.h"
+#include "util.h"
 
 #define MIN_SCALE (1e-4)
 #define MAX_SCALE (1e4)

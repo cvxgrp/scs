@@ -1,5 +1,6 @@
 #include "private.h"
 #include "linsys.h"
+#include "util.h"
 #include <limits.h>
 
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {
@@ -295,7 +296,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
 
   if (tol <= 0.) {
     scs_printf("Warning: tol = %4f <= 0, likely compiled without setting "
-               "INDIRECT flag.\n", tol);
+               "INDIRECT flag.\n",
+               tol);
   }
 
   if (CG_NORM(b, A->n + A->m) <= 1e-12) {

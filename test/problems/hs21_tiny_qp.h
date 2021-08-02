@@ -1,23 +1,23 @@
-#include "scs_matrix.h"
 #include "glbopts.h"
 #include "linalg.h"
 #include "minunit.h"
 #include "scs.h"
+#include "scs_matrix.h"
 #include "util.h"
-
 
 static const char *hs21_tiny_qp(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   ScsInfo info = {0};
   scs_int exitflag;
   scs_float perr, derr;
   scs_int success;
-  const char * fail;
+  const char *fail;
 
   /* data */
-  scs_float Ax[] = {-10.,  -1.,   1.,  -1.};
+  scs_float Ax[] = {-10., -1., 1., -1.};
   scs_int Ai[] = {1, 2, 1, 3};
   scs_int Ap[] = {0, 2, 4};
 
@@ -43,7 +43,6 @@ static const char *hs21_tiny_qp(void) {
   d->b = b;
   d->c = c;
 
-  d->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   d->P = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
 
@@ -65,12 +64,12 @@ static const char *hs21_tiny_qp(void) {
   k->bl = bl;
   k->bu = bu;
 
-  SCS(set_default_settings)(d->stgs);
-  d->stgs->eps_abs = 1e-6;
-  d->stgs->eps_rel = 1e-6;
-  d->stgs->eps_infeas = 1e-9;
+  SCS(set_default_settings)(stgs);
+  stgs->eps_abs = 1e-6;
+  stgs->eps_rel = 1e-6;
+  stgs->eps_infeas = 1e-9;
 
-  exitflag = scs(d, k, sol, &info);
+  exitflag = scs(d, k, stgs, sol, &info);
 
   perr = info.pobj - opt;
   derr = info.dobj - opt;
@@ -82,11 +81,11 @@ static const char *hs21_tiny_qp(void) {
 
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
-  fail = verify_solution_correct(d, k, &info, sol, exitflag);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
   /* test warm-starting */
-  d->stgs->warm_start = 1;
-  exitflag = scs(d, k, sol, &info);
+  stgs->warm_start = 1;
+  exitflag = scs(d, k, stgs, sol, &info);
   /* 25 iters should be enough if warm-started */
   mu_assert("hs21_tiny_qp: warm-start failure", info.iter <= 25);
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
@@ -98,7 +97,7 @@ static const char *hs21_tiny_qp(void) {
   scs_free(d->A);
   scs_free(d->P);
   scs_free(k);
-  scs_free(d->stgs);
+  scs_free(stgs);
   scs_free(d);
   return fail;
 }

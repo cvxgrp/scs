@@ -112,8 +112,9 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   return dist;
 }
 
-const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsInfo *info,
-                                    ScsSolution *sol, scs_int status) {
+const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
+                                    ScsInfo *info, ScsSolution *sol,
+                                    scs_int status) {
   scs_int n = d->n, m = d->m;
   scs_float *x = sol->x;
   scs_float *y = sol->y;
@@ -121,8 +122,6 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsInfo *info,
 
   scs_float *c = d->c;
   scs_float *b = d->b;
-
-  ScsSettings *stgs = d->stgs;
 
   scs_float *primal = scs_calloc(m, sizeof(scs_float));
   scs_float *ax = scs_calloc(m, sizeof(scs_float));

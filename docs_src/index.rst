@@ -32,6 +32,8 @@ large-scale convex cone problems, based on our paper.
 
 with variables :math:`x \in \mathbf{R}^n` and.
 
+P positive semidefinit upper trianfular
+
 **Current version**
 The current version is |version|
 

@@ -7,6 +7,7 @@
 
 /* Include Tests */
 #include "problems/hs21_tiny_qp.h"
+#include "problems/hs21_tiny_qp_rw.h"
 #include "problems/infeasible_tiny_qp.h"
 #include "problems/qafiro_tiny_qp.h"
 #include "problems/rob_gauss_cov_est.h"
@@ -22,6 +23,8 @@ static const char *all_tests(void) {
   mu_run_test(rob_gauss_cov_est);
   scs_printf("hs21_tiny_qp\n");
   mu_run_test(hs21_tiny_qp);
+  scs_printf("hs21_tiny_qp_rw\n");
+  mu_run_test(hs21_tiny_qp_rw);
   scs_printf("qafiro_tiny_qp\n");
   mu_run_test(qafiro_tiny_qp);
   scs_printf("infeasible_tiny_qp\n");

@@ -23,14 +23,14 @@ typedef struct SCS_CONE_WORK ScsConeWork;
 /** struct containing all settings */
 typedef struct {
   /* these *cannot* change for multiple runs with the same call to SCS(init) */
-  /** heuristic data rescaling */
+  /** whether to heuristically rescale the data before solve */
   scs_int normalize;
-  /** if normalized, rescales by this factor */
-  scs_float scale;
-  /** x equality constraint scaling */
+  /** initial dual scaling factor (may be updated if adaptive_scaling is on) */
+  scs_float init_scale;
+  /** whether to adaptively update `scale` */
+  scs_int adaptive_scaling;
+  /** primal constraint scaling factor */
   scs_float rho_x;
-
-  /* these can change for multiple runs with the same call to SCS(init) */
   /** maximum iterations to take */
   scs_int max_iters;
   /** absolute convergence tolerance */
@@ -39,54 +39,50 @@ typedef struct {
   scs_float eps_rel;
   /** infeasible convergence tolerance */
   scs_float eps_infeas;
-  /** relaxation parameter */
+  /** Douglas-Rachford relaxation parameter */
   scs_float alpha;
   /** time limit in secs (can be fractional) */
   scs_float time_limit_secs;
-  /** boolean, write out progress */
+  /** whether to log progress to stdout */
   scs_int verbose;
-  /** boolean, warm start (put initial guess in ScsSolution struct) */
+  /** whether to use warm start (put initial guess in ScsSolution struct) */
   scs_int warm_start;
   /** memory for acceleration */
   scs_int acceleration_lookback;
   /** interval to apply acceleration */
   scs_int acceleration_interval;
-  /** whether to adaptively update the scale param */
-  scs_int adaptive_scaling;
-  /** string, if set will dump raw prob data */
+  /** string, if set will dump raw prob data to this file */
   const char *write_data_filename;
-  /** string, if set will log solve */
+  /** string, if set will log solve data to this csv file (slows solve a lot) */
   const char *log_csv_filename;
 } ScsSettings;
 
 /** struct containing problem data */
 typedef struct {
-  /** A has m rows */
+  /** A has `m` rows */
   scs_int m;
-  /** A has n cols, P has n cols and n rows */
+  /** A has `n` cols, P has `n` cols and `n` rows */
   scs_int n;
-  /** A is supplied in CSC format (size m x n) */
+  /** A is supplied in CSC format (size `m` x `n`) */
   ScsMatrix *A;
-  /** P is supplied in CSC format (size n x n) */
+  /** P is supplied in CSC format, must be upper triangular  (size `n` x `n`) */
   ScsMatrix *P;
-  /** dense array for b (size m) */
+  /** dense array for b (size `m`) */
   scs_float *b;
-  /** dense array for c (size n) */
+  /** dense array for c (size `n`) */
   scs_float *c;
-  /** contains solver settings specified by user */
-  ScsSettings *stgs;
 } ScsData;
 
-/** Cone data. NB: rows of data matrix A must be specified in this exact order
+/** Cone data. NB: rows of data matrix `A` must be specified in this exact order
  */
 typedef struct {
-  /** number of linear equality constraints */
+  /** number of linear equality constraints (primal zero, dual free) */
   scs_int f;
-  /** length of LP cone */
+  /** number of positive orthant cones */
   scs_int l;
-  /** upper/lower box values, len(bu) = len(bl) = bsize */
+  /** upper/lower box values, `len(bu) = len(bl) = bsize` */
   scs_float *bu, *bl;
-  /** length of box cone arrays (does not include scale t) */
+  /** length of box cone arrays (does not include scale `t`) */
   scs_int bsize;
   /** array of second-order cone constraints */
   scs_int *q;
@@ -100,7 +96,7 @@ typedef struct {
   scs_int ep;
   /** number of dual exponential cone triples */
   scs_int ed;
-  /** array of power cone params, must be in [-1, 1], negative values are
+  /** array of power cone params, must be in `[-1, 1]`, negative values are
    * interpreted as specifying the dual cone */
   scs_float *p;
   /** number of (primal and dual) power cone triples */
@@ -198,7 +194,6 @@ typedef struct {
   ScsMatrix *A;                           /* (possibly normalized) A matrix */
   ScsMatrix *P;                           /* (possibly normalized) P matrix */
   ScsLinSysWork *p;            /* struct populated by linear system solver */
-  ScsSettings *stgs;           /* contains solver settings specified by user */
   ScsScaling *scal;            /* contains the re-scaling data */
   ScsConeWork *cone_work;      /* workspace for the cone projection step */
   scs_int *cone_boundaries;    /* array with boundaries of cones */
@@ -213,8 +208,10 @@ typedef struct {
   /* aa norm stat */
   scs_float aa_norm;
   scs_float setup_time; /* time taken for setup phase (milliseconds) */
+  scs_float scale;      /* current scale parameter */
   const ScsData *d;
   const ScsCone *k;
+  const ScsSettings *stgs; /* contains solver settings specified by user */
 } ScsWork;
 
 /*
@@ -238,9 +235,10 @@ typedef struct {
  *
  * @param  d 		 Problem data
  * @param  k 		 Cone data
+ * @param  stgs  SCS solver settings
  * @return       Solver work struct
  */
-ScsWork *SCS(init)(const ScsData *d, const ScsCone *k);
+ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
  * Solve quadratic cone program initialized by SCS(init).
@@ -266,12 +264,13 @@ void SCS(finish)(ScsWork *w);
  *
  * @param  d 		 Problem data
  * @param  k 		 Cone data
+ * @param  stgs  SCS solver settings
  * @param  sol   Solution will be stored here
  * @param  info  Information about the solve will be stored here
  * @return       Flag that determines solve type (see \a glbopts.h)
  */
-scs_int scs(const ScsData *d, const ScsCone *k, ScsSolution *sol,
-            ScsInfo *info);
+scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
+            ScsSolution *sol, ScsInfo *info);
 
 /**
  * Helper function to set all settings to default values (see \a glbopts.h)

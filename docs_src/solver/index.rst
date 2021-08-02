@@ -27,14 +27,14 @@ Settings
      - Whether to perform heuristic data rescaling.
      - True/False
      - 1
-   * - :code:`scale`
+   * - :code:`init_scale`
      - :code:`scs_float`
-     - Dual scaling factor (the important one).
+     - Initial dual scaling factor (the important one).
      - :math:`(0, \infty)`
      - 0.1
    * - :code:`adaptive_scaling`
      - :code:`scs_int`
-     - Whether to heuristically adapt :code:`scale` through the solve.
+     - Whether to heuristically adapt :code:`init_scale` through the solve.
      - True/False
      - 1
    * - :code:`rho_x`
