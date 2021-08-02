@@ -219,7 +219,7 @@ static const char *rob_gauss_cov_est(void) {
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
   SCS(free_sol)(sol);
-  scs_free(d->A);
+  SCS(free_scs_matrix)(d->A);
   scs_free(k);
   scs_free(stgs);
   scs_free(d);
