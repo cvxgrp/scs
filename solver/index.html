@@ -101,7 +101,10 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Solver</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#primal-or-dual-infeasibility">Primal or dual infeasibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cones">Cones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cones">Cones</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#semidefinite-cone">Semidefinite cone</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#settings">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#acceleration">Acceleration</a></li>
@@ -227,7 +230,7 @@ orthants, then SOCs, etc.</p>
 </tr>
 <tr class="row-even"><td><p>Positive semidefinite cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">s,</span> <span class="pre">ssize</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">s,</span> <span class="pre">ssize</span></code> see note below</p></td>
 </tr>
 <tr class="row-odd"><td><p>Exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y&gt;0  \}\)</span></p></td>
@@ -247,6 +250,30 @@ orthants, then SOCs, etc.</p>
 </tr>
 </tbody>
 </table>
+<div class="section" id="semidefinite-cone">
+<h3>Semidefinite cone<a class="headerlink" href="#semidefinite-cone" title="Permalink to this headline">¶</a></h3>
+<p>SCS assumes that the matrix variables and the input data corresponding to
+semidefinite cones have been vectorized by scaling the off-diagonal entries by
+<span class="math notranslate nohighlight">\(\sqrt{2}\)</span> and stacking the lower triangular elements column-wise. For a <span class="math notranslate nohighlight">\(k \times k\)</span>
+matrix variable (or data matrix) this operation would create a vector of length
+<span class="math notranslate nohighlight">\(k(k+1)/2\)</span>. Scaling by <span class="math notranslate nohighlight">\(\sqrt{2}\)</span> is required to preserve the inner-product.</p>
+<p>To recover the matrix solution this operation must be inverted on the components
+of the vector returned by SCS corresponding to semidefinite cones. That is, the
+off-diagonal entries must be scaled by <span class="math notranslate nohighlight">\(1/\sqrt{2}\)</span> and the upper triangular
+entries are filled in by copying the values of lower triangular entries.</p>
+<p>More explicitly, we want to express <span class="math notranslate nohighlight">\(Tr(C X)\)</span> as <span class="math notranslate nohighlight">\(\text{vec}(C)^\top \text{vec}(X)\)</span>,
+where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> operation takes the <span class="math notranslate nohighlight">\(k \times k\)</span> matrix</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}X =  \begin{bmatrix}
+        X_{11} &amp; X_{12} &amp; \ldots &amp; X_{1k}  \\
+        X_{21} &amp; X_{22} &amp; \ldots &amp; X_{2k}  \\
+        \vdots &amp; \vdots &amp; \ddots &amp; \vdots  \\
+        X_{k1} &amp; X_{k2} &amp; \ldots &amp; X_{kk}  \\
+      \end{bmatrix}\end{split}\]</div>
+<p>and produces a vector consisting of the lower triangular elements scaled and arranged as</p>
+<div class="math notranslate nohighlight">
+\[\text{vec}(X) = (X_{11}, \sqrt{2} X_{21}, ..., \sqrt{2} X_{k1}, X_{22}, \sqrt{2}X_{32}, ..., \sqrt{2}X_{k(k-1)}, X_{kk}).\]</div>
+</div>
 </div>
 <div class="section" id="settings">
 <h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h2>
