@@ -1,5 +1,0 @@
-.. _citing:
-
-Citing
-===============
-TODO

@@ -1,4 +1,6 @@
 *.iml
+docs/
+docs/*
 examples/DIMACS/
 local.mk
 sftp-config.json
