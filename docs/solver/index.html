@@ -192,6 +192,62 @@
 </section>
 <section id="cones">
 <h2>Cones<a class="headerlink" href="#cones" title="Permalink to this headline">¶</a></h2>
+<p>The cone K can be any Cartesian product of the following primitive cones.
+<strong>Note</strong>:The rows of the data matrix <code class="code docutils literal notranslate"><span class="pre">A</span></code> correspond to the cones in <code class="code docutils literal notranslate"><span class="pre">K</span></code>. The rows of
+<code class="code docutils literal notranslate"><span class="pre">A</span></code> must be in the order of the cones given above, i.e., first come the rows that
+correspond to the zero/free cones, then those that correspond to the positive
+orthants, then SOCs, etc.</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Entries in <code class="code docutils literal notranslate"><span class="pre">ScsCone</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Zero cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{s \mid s = 0 \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">z</span></code>, length of cone</p></td>
+</tr>
+<tr class="row-odd"><td><p>Positive orthant</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{s \mid s \geq 0 \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">l</span></code>, length of cone</p></td>
+</tr>
+<tr class="row-even"><td><p>Box cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^n \mid t l \leq s \leq t u  \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">bu,</span> <span class="pre">bl,</span> <span class="pre">bsize</span></code>, <span class="math notranslate nohighlight">\(u,l\)</span> arrays of len <code class="code docutils literal notranslate"><span class="pre">bsize</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Second-order cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^n\mid \|s\|_2 \leq t  \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">q,</span> <span class="pre">qsize</span></code>, array of SOC sizes of len <code class="code docutils literal notranslate"><span class="pre">qsize</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Positive semidefinite cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">s,</span> <span class="pre">ssize</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Exponential cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y&gt;0  \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">ep</span></code>, number of cone triples</p></td>
+</tr>
+<tr class="row-even"><td><p>Dual exponential cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{  (u,v,w)\in \mathbf{R}^3 \mid −u e^{v/u} \leq e w, u&lt;0 \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">ed</span></code>, number of cone triples</p></td>
+</tr>
+<tr class="row-odd"><td><p>Power cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|, x \geq 0, y\geq 0\}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">p,</span> <span class="pre">psize</span></code> array of powers</p></td>
+</tr>
+<tr class="row-even"><td><p>Dual power cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{ (u,v,w)\in \mathbf{R}^3 \mid (u/p)^p (v/(1-p))^{1-p} \geq |w|, u\geq 0, v\geq 0 \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">p,</span> <span class="pre">psize</span></code></p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="settings">
 <h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h2>
@@ -218,15 +274,15 @@
 <td><p>True/False</p></td>
 <td><p>1</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">init_scale</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Dual scaling factor (the important one).</p></td>
+<td><p>Initial dual <code class="code docutils literal notranslate"><span class="pre">scale</span></code> factor (the important one).</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
 <td><p>0.1</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">adaptive_scaling</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Whether to heuristically adapt <code class="code docutils literal notranslate"><span class="pre">scale</span></code> through the solve.</p></td>
+<td><p>Whether to heuristically adapt dual <code class="code docutils literal notranslate"><span class="pre">scale</span></code> through the solve.</p></td>
 <td><p>True/False</p></td>
 <td><p>1</p></td>
 </tr>

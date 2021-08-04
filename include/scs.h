@@ -77,7 +77,7 @@ typedef struct {
  */
 typedef struct {
   /** number of linear equality constraints (primal zero, dual free) */
-  scs_int f;
+  scs_int z;
   /** number of positive orthant cones */
   scs_int l;
   /** upper/lower box values, `len(bu) = len(bl) = bsize` */

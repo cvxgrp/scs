@@ -33,13 +33,13 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
                         scs_int m) {
   scs_int i, count = 0;
   /* f cone */
-  for (i = 0; i < k->f; ++i) {
+  for (i = 0; i < k->z; ++i) {
     /* set rho_y small for f, similar to rho_x term, since f is free cone */
     /* this effectively decreases penalty on those entries */
     /* and lets them be determined entirely by the linear system solve */
     rho_y_vec[i] = 1.0 / (1000. * scale);
   }
-  count += k->f;
+  count += k->z;
   /* others */
   for (i = count; i < m; ++i) {
     rho_y_vec[i] = 1.0 / scale;
@@ -65,7 +65,7 @@ scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
       1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
   scs_int *b = (scs_int *)scs_calloc(cone_boundaries_len, sizeof(scs_int));
   /* cones that can be scaled independently */
-  b[count] = k->f + k->l + (k->bsize ? k->bsize + 1 : 0);
+  b[count] = k->z + k->l + (k->bsize ? k->bsize + 1 : 0);
   count += 1; /* started at 0 now move to first entry */
   for (i = 0; i < k->qsize; ++i) {
     b[count + i] = k->q[i];
@@ -92,7 +92,7 @@ scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
-  scs_int i, c = k->f + k->l + (k->bsize ? k->bsize + 1 : 0);
+  scs_int i, c = k->z + k->l + (k->bsize ? k->bsize + 1 : 0);
   if (k->qsize) {
     for (i = 0; i < k->qsize; ++i) {
       c += k->q[i];
@@ -122,7 +122,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
                (long)get_full_cone_dims(k), (long)d->m);
     return -1;
   }
-  if (k->f && k->f < 0) {
+  if (k->z && k->z < 0) {
     scs_printf("free cone dimension error\n");
     return -1;
   }
@@ -225,9 +225,9 @@ char *SCS(get_cone_header)(const ScsCone *k) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 512);
   scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
   sprintf(tmp, "cones: ");
-  if (k->f) {
+  if (k->z) {
     sprintf(tmp + strlen(tmp), "\t  f: primal zero / dual free vars: %li\n",
-            (long)k->f);
+            (long)k->z);
   }
   if (k->l) {
     sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
@@ -783,10 +783,10 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   scs_int i;
   scs_int count = 0;
 
-  if (k->f) {
+  if (k->z) {
     /* project onto primal zero / dual free cone */
-    memset(x, 0, k->f * sizeof(scs_float));
-    count += k->f;
+    memset(x, 0, k->z * sizeof(scs_float));
+    count += k->z;
   }
 
   if (k->l) {
@@ -916,7 +916,7 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal,
       memcpy(c->bu, k->bu, k->bsize * sizeof(scs_float));
       memcpy(c->bl, k->bl, k->bsize * sizeof(scs_float));
       /* also does some sanitizing */
-      normalize_box_cone(c, scal ? &(scal->D[k->f + k->l]) : SCS_NULL,
+      normalize_box_cone(c, scal ? &(scal->D[k->z + k->l]) : SCS_NULL,
                          k->bsize);
     }
   }

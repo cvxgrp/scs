@@ -12,7 +12,7 @@
 /* This is a VERY naive implementation, doesn't care about portability etc */
 
 static void write_scs_cone(const ScsCone *k, FILE *fout) {
-  fwrite(&(k->f), sizeof(scs_int), 1, fout);
+  fwrite(&(k->z), sizeof(scs_int), 1, fout);
   fwrite(&(k->l), sizeof(scs_int), 1, fout);
   fwrite(&(k->bsize), sizeof(scs_int), 1, fout);
   fwrite(k->bl, sizeof(scs_float), k->bsize, fout);
@@ -29,7 +29,7 @@ static void write_scs_cone(const ScsCone *k, FILE *fout) {
 
 static ScsCone *read_scs_cone(FILE *fin) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
-  fread(&(k->f), sizeof(scs_int), 1, fin);
+  fread(&(k->z), sizeof(scs_int), 1, fin);
   fread(&(k->l), sizeof(scs_int), 1, fin);
   fread(&(k->bsize), sizeof(scs_int), 1, fin);
   k->bl = scs_calloc(k->bsize, sizeof(scs_float));

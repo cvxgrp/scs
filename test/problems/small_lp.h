@@ -22,8 +22,8 @@ static const char *small_lp(void) {
   scs_int success;
   const char *fail;
 
-  k->f = (scs_int)floor(m * p_f);
-  k->l = m - k->f;
+  k->z = (scs_int)floor(m * p_f);
+  k->l = m - k->z;
 
   d->m = m;
   d->n = n;

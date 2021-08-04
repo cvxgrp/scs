@@ -86,7 +86,7 @@ static const char *qafiro_tiny_qp(void) {
                     1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20,
                     1e+20, 1e+20, 1e+20};
   scs_int bsize = 51;
-  scs_int f = 8;
+  scs_int z = 8;
 
   scs_float opt = -1.5907818;
   /* end data */
@@ -116,7 +116,7 @@ static const char *qafiro_tiny_qp(void) {
   k->bsize = bsize;
   k->bl = bl;
   k->bu = bu;
-  k->f = f;
+  k->z = z;
 
   SCS(set_default_settings)(stgs);
   stgs->eps_abs = 1e-6;

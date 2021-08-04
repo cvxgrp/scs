@@ -117,7 +117,7 @@ static const char *rob_gauss_cov_est(void) {
   scs_int m = 45;
   scs_int n = 30;
 
-  scs_int f = 19;
+  scs_int z = 19;
   scs_int l = 7;
   scs_int *q = SCS_NULL;
   scs_int qsize = 0;
@@ -144,7 +144,7 @@ static const char *rob_gauss_cov_est(void) {
   d->A->i = Ai;
   d->A->p = Ap;
 
-  k->f = f;
+  k->z = z;
   k->l = l;
   k->q = q;
   k->qsize = qsize;

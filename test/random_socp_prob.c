@@ -87,11 +87,11 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  k->f = (scs_int)floor(factor * n * p_f);
+  k->z = (scs_int)floor(factor * n * p_f);
   k->l = (scs_int)floor(factor * n * p_l);
 
   k->qsize = 0;
-  q_num_rows = factor * n - k->f - k->l;
+  q_num_rows = factor * n - k->z - k->l;
   k->q = (scs_int *)scs_malloc(q_num_rows * sizeof(scs_int));
 
   while (q_num_rows > max_q) {
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
              ((scs_float)n * sizeof(scs_int)) / POWF(2, 30));
 
   printf("ScsCone information:\n");
-  printf("Zero cone rows: %ld\n", (long)k->f);
+  printf("Zero cone rows: %ld\n", (long)k->z);
   printf("LP cone rows: %ld\n", (long)k->l);
   printf("Number of second-order cones: %ld, covering %ld rows, with sizes\n[",
          (long)k->qsize, (long)q_total);
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
   }
   printf("]\n");
   printf("Number of rows covered is %ld out of %ld.\n\n",
-         (long)(q_total + k->f + k->l), (long)m);
+         (long)(q_total + k->z + k->l), (long)m);
 
   /* set up SCS structures */
   d->m = m;
