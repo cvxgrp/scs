@@ -80,8 +80,10 @@ typedef struct {
   scs_int z;
   /** number of positive orthant cones */
   scs_int l;
-  /** upper/lower box values, `len(bu) = len(bl) = bsize` */
-  scs_float *bu, *bl;
+  /** upper box values, `len(bu) = len(bl) = bsize` */
+  scs_float *bu;
+  /** lower box values, `len(bu) = len(bl) = bsize` */
+  scs_float *bl;
   /** length of box cone arrays (does not include scale `t`) */
   scs_int bsize;
   /** array of second-order cone constraints */
