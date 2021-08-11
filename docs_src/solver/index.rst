@@ -2,184 +2,84 @@
 
 Solver
 ===============
-TODO
 
-Primal or dual infeasibility
-----------------------------
 
-Cones
------
-The cone K can be any Cartesian product of the following primitive cones.
-**Note**:The rows of the data matrix :code:`A` correspond to the cones in :code:`K`. The rows of
-:code:`A` must be in the order of the cones given above, i.e., first come the rows that
-correspond to the zero/free cones, then those that correspond to the positive
-orthants, then SOCs, etc.
+:ref:`Termination Criteria <termination>`
 
-.. list-table::
-   :widths: 40 30 30
-   :header-rows: 1
+:ref:`Cones <cones>`
 
-   * - Name
-     - Description
-     - Entries in :code:`ScsCone`
+:ref:`Settings <settings>`
 
-   * - Zero cone
-     - :math:`\{s \mid s = 0 \}`
-     - :code:`z`, length of cone
-   * - Positive orthant
-     - :math:`\{s \mid s \geq 0 \}`
-     - :code:`l`, length of cone
-   * - Box cone
-     - :math:`\{(t, s) \in \mathbf{R} \times \mathbf{R}^n \mid t l \leq s \leq t u  \}`
-     - :code:`bu, bl, bsize`, :math:`u,l` arrays of len :code:`bsize`
-   * - Second-order cone
-     - :math:`\{(t, s) \in \mathbf{R} \times \mathbf{R}^n\mid \|s\|_2 \leq t  \}`
-     - :code:`q, qsize`, array of SOC sizes of len :code:`qsize`
-   * - Positive semidefinite cone
-     - :math:`\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}`
-     - :code:`s, ssize` see note below
-   * - Exponential cone
-     - :math:`\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \}`
-     - :code:`ep`, number of cone triples
-   * - Dual exponential cone
-     - :math:`\{  (u,v,w)\in \mathbf{R}^3 \mid −u e^{v/u} \leq e w, u<0 \}`
-     - :code:`ed`, number of cone triples
-   * - Power cone
-     - :math:`\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|\}`
-     - :code:`p, psize` array of powers
-   * - Dual power cone
-     - :math:`\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}`
-     - :code:`p, psize`
+.. toctree::
+   :maxdepth: 2
+   :hidden:
 
-Semidefinite cone
-^^^^^^^^^^^^^^^^^^^^^^^^
+   cones.rst
+   termination.rst
+   settings.rst
 
-SCS assumes that the matrix variables and the input data corresponding to
-semidefinite cones have been vectorized by scaling the off-diagonal entries by
-:math:`\sqrt{2}` and stacking the lower triangular elements column-wise. For a :math:`k \times k`
-matrix variable (or data matrix) this operation would create a vector of length
-:math:`k(k+1)/2`. Scaling by :math:`\sqrt{2}` is required to preserve the inner-product.
-
-To recover the matrix solution this operation must be inverted on the components
-of the vector returned by SCS corresponding to semidefinite cones. That is, the
-off-diagonal entries must be scaled by :math:`1/\sqrt{2}` and the upper triangular
-entries are filled in by copying the values of lower triangular entries.
-
-More explicitly, we want to express :math:`Tr(C X)` as :math:`\text{vec}(C)^\top \text{vec}(X)`,
-where the :math:`\text{vec}` operation takes the :math:`k \times k` matrix
+When strong duality holds, the Karush-Kuhn-Tucker (KKT) conditions
+are necessary and sufficient for
+optimality (link boyd book). They are given by
 
 .. math::
+  Ax + s = b, \quad Px + A^\top y + c= 0,\quad s \in \mathcal{K}, \quad y \in \mathcal{K}^*,\quad  s \perp y.
 
-  X =  \begin{bmatrix}
-          X_{11} & X_{12} & \ldots & X_{1k}  \\
-          X_{21} & X_{22} & \ldots & X_{2k}  \\
-          \vdots & \vdots & \ddots & \vdots  \\
-          X_{k1} & X_{k2} & \ldots & X_{kk}  \\
-        \end{bmatrix}
-
-and produces a vector consisting of the lower triangular elements scaled and arranged as
+These are primal feasibility, dual feasibility, primal and dual cone members hip, and complementary slackness.  The complementary slackness condition is equivalent to a zero \emph{duality gap} condition at any optimal point, that is for :math:`(x,y,s)` that satisfy the KKT conditions we have
 
 .. math::
-
-  \text{vec}(X) = (X_{11}, \sqrt{2} X_{21}, ..., \sqrt{2} X_{k1}, X_{22}, \sqrt{2}X_{32}, ..., \sqrt{2}X_{k(k-1)}, X_{kk}).
-
-
-Settings
---------
-
-.. list-table::
-   :widths: 20 20 20 20 20
-   :header-rows: 1
-
-   * - Name
-     - Type
-     - Description
-     - Permitted values
-     - Default
-   * - :code:`normalize`
-     - :code:`scs_int`
-     - Whether to perform heuristic data rescaling.
-     - True/False
-     - 1
-   * - :code:`init_scale`
-     - :code:`scs_float`
-     - Initial dual :code:`scale` factor (the important one).
-     - :math:`(0, \infty)`
-     - 0.1
-   * - :code:`adaptive_scaling`
-     - :code:`scs_int`
-     - Whether to heuristically adapt dual :code:`scale` through the solve.
-     - True/False
-     - 1
-   * - :code:`rho_x`
-     - :code:`scs_float`
-     - Primal scale factor (less important one).
-     - :math:`(0, \infty)`
-     - 1e-6
-   * - :code:`max_iters`
-     - :code:`scs_int`
-     - Maximum number of iterations to run.
-     - :math:`\mathbf{N}`
-     - 1e5
-   * - :code:`eps_abs`
-     - :code:`scs_float`
-     - Absolute feasibility tolerance.
-     - :math:`(0, \infty)`
-     - 1e-4
-   * - :code:`eps_rel`
-     - :code:`scs_float`
-     - Relative feasibility tolerance.
-     - :math:`(0, \infty)`
-     - 1e-4
-   * - :code:`eps_infeas`
-     - :code:`scs_float`
-     - Infeasibility tolerance (primal and dual).
-     - :math:`(0, \infty)`
-     - 1e-7
-   * - :code:`alpha`
-     - :code:`scs_float`
-     - Douglas-Rachford relaxation parameter.
-     - :math:`(0, 2)`
-     - 1.5
-   * - :code:`time_limit_secs`
-     - :code:`scs_float`
-     - Time limit for solve run in seconds (can be fractional). :code:`0` is interpreted as no limit.
-     - :math:`[0, \infty)`
-     - 0
-   * - :code:`verbose`
-     - :code:`scs_int`
-     - Whether to print solver output to stdout.
-     - True/False
-     - 1
-   * - :code:`warm_start`
-     - :code:`scs_int`
-     - Set to True if you initialize the solver with a guess of the solution (see below).
-     - True/False
-     - 0
-   * - :code:`acceleration_lookback`
-     - :code:`scs_int`
-     - How much memory to use for Anderson acceleration. More memory requires more time to compute but can give more reliable steps. :code:`0` disables it.
-     - :math:`\mathbf{N}`
-     - 0
-   * - :code:`acceleration_interval`
-     - :code:`scs_int`
-     - Run Anderson acceleration every this number of iterations.
-     - :math:`\mathbf{N}`
-     - 1
-   * - :code:`write_data_filename`
-     - :code:`char *`
-     - If this is set the problem data is dumped to this filename.
-     - Any filename
-     - NULL
-   * - :code:`log_csv_filename`
-     - :code:`char *`
-     - If this is set SCS will write csv logs of various quantities through the solver. Doing this makes the solver much slower.
-     - Any filename
-     - NULL
-
+  s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.
 
 Termination criteria
 --------------------
+The iterates produced by SCS _always_ satisfy :math:`s \in \mathcal{K}, y \in \mathcal{K}^*, s \perp y`.
+Therefore to say that a problem is solved we need to check if the primal
+residual,
+dual residual, and duality gap are all below a certain tolerance. Specifically,
+SCS terminates when it has found :math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m`, and :math:`y \in \mathbf{R}^m` that satisfy
+
+.. math::
+  \begin{align}
+  \|Ax + s - b\|_\infty &\leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty) \\
+  \|Px + A^\top y - c \|_\infty &\leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty) \\
+  |x^\top Px + c^\top x + b^\top y| &\leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),
+  \end{align}
+
+where :math:`\epsilon_\mathrm{abs}>0` and :math:`\epsilon_\mathrm{rel}>0` are user defined
+:ref:`settings`.
+
+
+Primal or dual infeasibility
+----------------------------
+SCS is able to robustly detect primal or dual infeasibility in those cases.
+Any :math:`y \in \mathbf{R}^m` that satisfies
+
+.. math::
+  A^\top y = 0,\  y \in \mathcal{K}^*,\ b^\top y < 0
+
+acts a certificate that the quadratic cone program is primal infeasible (dual unbounded). On the other hand, if we can find :math:`x \in \mathbf{R}^n` such
+that
+
+.. math::
+  Px = 0,\ -Ax\in \mathcal{K},\ c^\top x < 0
+
+then this is a certificate that the problem is dual infeasible (primal
+unbounded.
+
+Since the cone memberships are always guaranteed by the iterates, SCS
+declares a problem infeasible when it finds :math:`y \in \mathbf{R}^m` that satisfies
+
+.. math::
+  b^\top y = -1, \quad \|A^\top y\|_\infty < \epsilon_\mathrm{infeas}.
+
+Similarly, SCS v3.0 declares dual infeasibility when it finds :math:`x \in
+\mathbf{R}^n`, :math:`s \in \mathbf{R}^m` that satisfy
+
+.. math::
+  c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) < \epsilon_\mathrm{infeas}
+
+where :math:`\epsilon_\mathrm{infeas}` is a user-defined :ref:`setting`.
+
 
 Acceleration
 ------------
@@ -191,3 +91,76 @@ SCS supports warm-starting the solver with a guess of the solution.
 
 Compile flags
 -------------
+
+Others are not exposed but defined in :code:`glbopts.h`.
+Can be overriden via the command line XXX.
+
+
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 1
+
+   * - Name
+     - Description
+     - Permitted values
+     - Default
+   * - :code:`DLONG`
+     - Use long (64 bit) integers
+     - True/False
+     - 0
+   * - :code:`SFLOAT`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`CTRLC`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`NOTIMER`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`COPYAMATRIX`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`GPU_TRANSOSE_MAT`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`VERBOSITY`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`USE_LAPACK`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`USE_OPENMP`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`BLAS64`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`NOBLASSUFFIX`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`BLASSUFFIX`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`MATLAB_MEX_FILE`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`PYTHON`
+     - iXXX
+     - True/False
+     - 0
+   * - :code:`USING_R`
+     - iXXX
+     - True/False
+     - 0

@@ -21,18 +21,18 @@ Helper functions
 ..
   lower level:
   .. doxygenfunction:: scs_init
-  
+
   |
-  
+
   .. doxygenfunction:: scs_solve
-  
+
   |
-  
+
   .. doxygenfunction:: scs_finish
 
 Exit flags
 -----------
-The integer values that SCS can return are documented below. 
+The integer values that SCS can return are documented below.
 
 .. list-table::
    :widths: 50 10 40
@@ -47,7 +47,7 @@ The integer values that SCS can return are documented below.
    * - Solved (inaccurate)
      - 2
      - :code:`SCS_SOLVED_INACCURATE`
-   * - Unfinished (should never be returned) 
+   * - Unfinished (should never be returned)
      - 0
      - :code:`SCS_UNFINISHED`
    * - Unbounded
@@ -112,6 +112,8 @@ Cone
 .. doxygenstruct:: ScsCone
    :members:
 
+
+.. _ScsSettings:
 
 Settings
 ^^^^^^^^

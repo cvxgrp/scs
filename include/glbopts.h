@@ -215,7 +215,7 @@ typedef float scs_float;
 #define AA_RELAXATION (1.0)
 #define AA_REGULARIZATION (1e-9)
 
-/* Scale updating parameters */
+/* (Dual) Scale updating parameters */
 #define MAX_SCALE_VALUE (1e6)
 #define MIN_SCALE_VALUE (1e-6)
 #define SCALE_NORM NORM /* what norm to use when computing the scale factor */
