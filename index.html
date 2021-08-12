@@ -102,10 +102,11 @@
 <li class="toctree-l1"><a class="reference internal" href="install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help/index.html">Getting help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citing/index.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing/index.html">Citing SCS</a></li>
 </ul>
 
             
@@ -174,33 +175,98 @@
            <div itemprop="articleBody">
             
   <a class="reference internal image-reference" href="_images/scs_logo.png"><img alt="SCS" class="align-center" src="_images/scs_logo.png" style="width: 400px;" /></a>
-<p><strong>A fast, reliable, free, and open-source convex optimization solver.</strong></p>
-<p>SCS (Splitting Conic Solver) is a numerical optimization package for solving
-large-scale convex cone problems, based on our paper.</p>
+<p class="centered">
+<strong><strong>A fast, reliable, and open-source convex optimization solver.</strong></strong></p><p>SCS (Splitting Conic Solver) is a numerical optimization package for solving
+large-scale quadratic cone problems. It solves primal problems of the form</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{array}{lcr}
 \begin{array}{ll}
-  \mbox{minimize} &amp; \frac{1}{2} x^T P x + c^T x \\
-  \mbox{subject to} &amp;  A x + s = b\\
-                    &amp;  s \in \mathcal{K}
+\mbox{minimize} &amp; (1/2)x^\top  P x + c^\top  x\\
+\mbox{subject to} &amp;  Ax + s = b\\
+  &amp; s \in \mathcal{K}
 \end{array}
 &amp;\quad&amp;
 \begin{array}{ll}
-  \mbox{minimize} &amp; \frac{1}{2} x^T P x + c^T x \\
-  \mbox{subject to} &amp;  A x + s = b\\
-                    &amp;  s \in \mathcal{K}
+\mbox{maximize} &amp; -(1/2)x^\top  P x - b^\top  y\\
+\mbox{subject to} &amp;  Px + A^\top y + c = 0\\
+  &amp; y \in \mathcal{K}^*
 \end{array}
 \end{array}\end{split}\]</div>
-<p>with variables <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> and.</p>
-<p>P positive semidefinit upper trianfular</p>
-<p><strong>Current version</strong>
-The current version is 3.0.0</p>
-<p><strong>Code</strong>
-TODO</p>
-<p><strong>Features</strong>
-TODO</p>
-<p><strong>License</strong>
-TODO</p>
+<p>over variables</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span></p></td>
+<td><p>primal variable</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span></p></td>
+<td><p>slack variable</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span></p></td>
+<td><p>dual variable</p></td>
+</tr>
+</tbody>
+</table>
+<p>with data</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 71%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(A \in \mathbf{R}^{m \times n}\)</span></p></td>
+<td><p>sparse data matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(P \in \mathbf{S}_+^{n}\)</span></p></td>
+<td><p>sparse <strong>symmetric positive semidefinite</strong> matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(c \in \mathbf{R}^n\)</span></p></td>
+<td><p>dense primal cost vector</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(b \in \mathbf{R}^m\)</span></p></td>
+<td><p>dense dual cost vector</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\mathcal{K} \subseteq \mathbf{R}^m\)</span></p></td>
+<td><p>nonempty, closed, convex cone, see <a class="reference internal" href="solver/cones.html#cones"><span class="std std-ref">Cones</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\mathcal{K}^* \subseteq \mathbf{R}^m\)</span></p></td>
+<td><p>dual cone to <span class="math notranslate nohighlight">\(\mathcal{K}\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>At termination SCS will either return points <span class="math notranslate nohighlight">\((x^\star,y^\star,s^\star)\)</span> that satisfies
+the <a class="reference internal" href="solver/index.html#solver"><span class="std std-ref">optimality conditions</span></a> to the desired accuracy, or a certificate
+of <span class="xref std std-ref">primal or dual infeasibility</span> to the designated infeasibility accuracy.</p>
+<p>Loosely speaking, <span class="math notranslate nohighlight">\(P, A, b, c, \mathcal{K} \rightarrow (x^\star, y^\star, s^\star)\)</span>.</p>
+<p>The current version is 3.0.0</p>
+<p>The code is freely available on <a class="reference external" href="https://github.com/cvxgrp/scs">GitHub</a>.</p>
+<div class="section" id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<dl class="glossary simple">
+<dt id="term-Fast">Fast<a class="headerlink" href="#term-Fast" title="Permalink to this term">¶</a></dt><dd><p>SCS only requires a single sparse matrix factorization</p>
+</dd>
+<dt id="term-Flexible">Flexible<a class="headerlink" href="#term-Flexible" title="Permalink to this term">¶</a></dt><dd><p>Cones</p>
+</dd>
+<dt id="term-Free-and-open-source">Free and open source<a class="headerlink" href="#term-Free-and-open-source" title="Permalink to this term">¶</a></dt><dd><p>SCS is distributed under the permissive <a class="reference external" href="https://github.com/cvxgrp/scs/blob/master/LICENSE.txt">MIT license</a>.</p>
+</dd>
+<dt id="term-Accelerated">Accelerated<a class="headerlink" href="#term-Accelerated" title="Permalink to this term">¶</a></dt><dd><p>SCS includes Anderson acceleration that can accelerate convergence to high accuracy solutions.</p>
+</dd>
+<dt id="term-Detects-infeasibility">Detects infeasibility<a class="headerlink" href="#term-Detects-infeasibility" title="Permalink to this term">¶</a></dt><dd><p>SCS uses a homogeneous embedding and so can robustly and reliably detect infeasible problems.</p>
+</dd>
+<dt id="term-Language-bindings">Language bindings<a class="headerlink" href="#term-Language-bindings" title="Permalink to this term">¶</a></dt><dd><p>SCS has bindings to many languages, including C, Python, Julia, R, MATLAB, and Ruby.</p>
+</dd>
+<dt id="term-Warm-starts">Warm starts<a class="headerlink" href="#term-Warm-starts" title="Permalink to this term">¶</a></dt><dd><p>It can be easily warm-started and the matrix factorization can be cached.</p>
+</dd>
+<dt id="term-Matrix-free">Matrix-free<a class="headerlink" href="#term-Matrix-free" title="Permalink to this term">¶</a></dt><dd><p>SCS has an indirect linear system solver</p>
+</dd>
+<dt id="term-Supported">Supported<a class="headerlink" href="#term-Supported" title="Permalink to this term">¶</a></dt><dd><p>SCS is a supported solver in parser-solvers CVX, CVXPY, YALMIP,</p>
+</dd>
+<dt id="term-Battle-tested">Battle-tested<a class="headerlink" href="#term-Battle-tested" title="Permalink to this term">¶</a></dt><dd><p>SCS was the first open-source solver available based on ADMM and is in wide-usage in industry and academia.</p>
+</dd>
+</dl>
 <p><strong>Development.</strong></p>
 <p>SCS is a community project, built from the contributions of many
 researchers and engineers. The primary maintainer is
@@ -208,6 +274,7 @@ researchers and engineers. The primary maintainer is
 We appreciate all contributions. To get involved, see our <a class="reference internal" href="contributing/index.html"><span class="doc">contributing
 guide</span></a>.</p>
 <div class="toctree-wrapper compound">
+</div>
 </div>
 
 

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Citing &mdash; SCS 3.0.0 documentation</title>
+  <title>Citing SCS &mdash; SCS 3.0.0 documentation</title>
   
 
   
@@ -101,10 +101,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Citing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Citing SCS</a></li>
 </ul>
 
             
@@ -153,7 +154,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Citing</li>
+      <li>Citing SCS</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -172,9 +173,68 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="citing">
-<span id="id1"></span><h1>Citing<a class="headerlink" href="#citing" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+  <div class="section" id="citing-scs">
+<span id="citing"></span><h1>Citing SCS<a class="headerlink" href="#citing-scs" title="Permalink to this headline">¶</a></h1>
+<p>If you wish to cite SCS, please use any of the following:</p>
+<dl class="glossary">
+<dt id="term-Original-paper">Original paper<a class="headerlink" href="#term-Original-paper" title="Permalink to this term">¶</a></dt><dd><p>Main algorithm description, derivation, and initial numerical results <a class="reference external" href="https://web.stanford.edu/~boyd/papers/pdf/scs.pdf">paper</a>.</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>@article<span class="nb">{</span>ocpb:16,
+    author       = <span class="nb">{</span>Brendan O&#39;Donoghue and Eric Chu and Neal Parikh and Stephen Boyd<span class="nb">}</span>,
+    title        = <span class="nb">{</span>Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding<span class="nb">}</span>,
+    journal      = <span class="nb">{</span>Journal of Optimization Theory and Applications<span class="nb">}</span>,
+    month        = <span class="nb">{</span>June<span class="nb">}</span>,
+    year         = <span class="nb">{</span>2016<span class="nb">}</span>,
+    volume       = <span class="nb">{</span>169<span class="nb">}</span>,
+    number       = <span class="nb">{</span>3<span class="nb">}</span>,
+    pages        = <span class="nb">{</span>1042-1068<span class="nb">}</span>,
+    url          = <span class="nb">{</span>http://stanford.edu/~boyd/papers/scs.html<span class="nb">}</span>,
+<span class="nb">}</span>
+</pre></div>
+</div>
+</dd>
+<dt id="term-Latest-extension">Latest extension<a class="headerlink" href="#term-Latest-extension" title="Permalink to this term">¶</a></dt><dd><p>The paper that derived the extension to quadratics and describes the ‘modern’ version of the algorithm is available <a class="reference external" href="https://stanford.edu/~boyd/papers/pdf/XXX.pdf">here</a>.</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>@article<span class="nb">{</span>odonoghue:21,
+    author       = <span class="nb">{</span>Brendan O&#39;Donoghue<span class="nb">}</span>,
+    title        = <span class="nb">{</span>Operator Splitting for a Homogeneous Embedding of the Linear Complementarity Problem<span class="nb">}</span>,
+    journal      = <span class="nb">{{</span>SIAM<span class="nb">}</span> Journal on Optimization<span class="nb">}</span>,
+    month        = <span class="nb">{</span>August<span class="nb">}</span>,
+    year         = <span class="nb">{</span>2021<span class="nb">}</span>,
+    volume       = <span class="nb">{</span>31<span class="nb">}</span>,
+    issue        = <span class="nb">{</span>3<span class="nb">}</span>,
+    pages        = <span class="nb">{</span>1999-2023<span class="nb">}</span>,
+<span class="nb">}</span>
+</pre></div>
+</div>
+</dd>
+<dt id="term-Software">Software<a class="headerlink" href="#term-Software" title="Permalink to this term">¶</a></dt><dd><p>If you need to cite a particular version of the SCS software (e.g., for replication purposes) the latest version can be cited as:</p>
+<blockquote>
+<div><div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>@misc<span class="nb">{</span>scs,
+    author       = <span class="nb">{</span>Brendan O&#39;Donoghue and Eric Chu and Neal Parikh and Stephen Boyd<span class="nb">}</span>,
+    title        = <span class="nb">{{</span>SCS<span class="nb">}</span>: Splitting Conic Solver, version 3.0.0<span class="nb">}</span>,
+    howpublished = <span class="nb">{</span><span class="k">\url</span><span class="nb">{</span>https://github.com/cvxgrp/scs<span class="nb">}}</span>,
+    month        = nov,
+    year         = 2021
+<span class="nb">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+<dt id="term-Anderson-Acceleration">Anderson Acceleration<a class="headerlink" href="#term-Anderson-Acceleration" title="Permalink to this term">¶</a></dt><dd><p>The acceleration scheme we use is described in the <a class="reference external" href="https://stanford.edu/~boyd/papers/pdf/XXX.pdf">paper</a>.</p>
+<blockquote>
+<div><div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>@article<span class="nb">{</span>aa2020,
+  title=<span class="nb">{</span>Globally Convergent <span class="nb">{</span>type--I<span class="nb">}</span> <span class="nb">{</span>A<span class="nb">}</span>nderson Acceleration for Non-Smooth Fixed-Point Iterations<span class="nb">}</span>,
+  author=<span class="nb">{</span>Junzi Zhang and Brendan O&#39;Donoghue and Stephen Boyd<span class="nb">}</span>,
+  journal=<span class="nb">{{</span>SIAM<span class="nb">}</span> Journal on Optimization<span class="nb">}</span>,
+  volume=<span class="nb">{</span>30<span class="nb">}</span>,
+  number=<span class="nb">{</span>4<span class="nb">}</span>,
+  pages=<span class="nb">{</span>3170--3197<span class="nb">}</span>,
+  year=<span class="nb">{</span>2020<span class="nb">}</span>
+<span class="nb">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+</dl>
 </div>
 
 

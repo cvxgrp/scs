@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Scaling &mdash; SCS 3.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/scs_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SCS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Scaling</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/solver/scale.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scaling">
+<span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline">¶</a></h1>
+<p>In this note we derive the update equations when using a non-identity scaling.
+Solving LCP(M, q), using <a class="reference external" href="https://arxiv.org/pdf/2004.02177.pdf">https://arxiv.org/pdf/2004.02177.pdf</a>.</p>
+<p>DR splitting is:</p>
+<p>tilde u^{k+1} = (I + F)^{-1} w^k
+u^{k+1} = (I + G)^{-1} (2 tilde u^{k+1} - w^k)
+w^{k+1} = w^k + alpha * (u^{k+1} - tilde u^{k+1})</p>
+<p>yielding w^k rightarrow u^star + F(u^star) where 0 in F(u^star) + G(u^star).</p>
+<p>Now consider diagonal matrix R instead of I, the above becomes:</p>
+<p>tilde u^{k+1} = (R + F)^{-1} R w^k
+u^{k+1} = (R + G)^{-1} R (2 tilde u^{k+1} - w^k)
+w^{k+1} = w^k + alpha * (u^{k+1} - tilde u^{k+1})</p>
+<p>w^k rightarrow u^star + R^{-1} F(u^star) where 0 in F(u^star) + G(u^star).</p>
+<p>In SCS, F = mathcal{Q} and G = I_C. R has to be chosen so that the cone
+projection is preserved. To do this we ensure that the entries of R &gt; 0
+corresponding to each cone are constant within that cone. This means that
+R does not affect the cone projection in any way, since:</p>
+<blockquote>
+<div><p>x = (r I + partial I_C)^{-1} (r y)</p>
+</div></blockquote>
+<p>=&gt;   0 in r(x - y) + partial I_C(x)
+=&gt; min_x || x - y ||^2 s.t. x in C.</p>
+<dl class="simple">
+<dt>We take R = [rho_x * I_n           0        0]</dt><dd><p>[ 0           diag(rho_y_vec)   0]
+[ 0                    0        d]</p>
+</dd>
+</dl>
+<p>where I_n is nxn identity, rho_x in reals, rho_y_vec in reals^m and d in
+reals. The rho_y_vec term includes the effect of the parameter <a href="#id2"><span class="problematic" id="id3">`</span></a>scale’, which
+is updated heuristically to improve convergence. Basically</p>
+<blockquote>
+<div><p>rho_y_vec approx 1/scale * I</p>
+</div></blockquote>
+<p>So as scale increases, rho_y_vec decreases and vice-versa.
+Denote by R_x = rho_x * I_n and R_y = diag(rho_y_vec).</p>
+<p><a href="#id4"><span class="problematic" id="id5">*</span></a>Linear equation to be solved:</p>
+<dl class="simple">
+<dt>z = p^k - r tau, where</dt><dd><p>p^k = (R + M)^{-1} R mu^k     ** this is solved at every iteration
+r   = (R + M)^{-1} q           ** R does <em>not</em> appear before q here.</p>
+</dd>
+</dl>
+<p>Now consider z = (R + M)^{-1} R mu</p>
+<dl class="simple">
+<dt>recall M = [ P   A’]</dt><dd><p>[-A   0 ]</p>
+</dd>
+<dt>so want to solve [z_x] = [R_x + P   A’]^{-1} [q_x]</dt><dd><p>[z_y]   [  -A     R_y]      [q_y]</p>
+</dd>
+</dl>
+<p>which is quasidefinite if we negate the bottom row:</p>
+<blockquote>
+<div><p>[z_x] = [R_x + P   A’]^{-1} [ q_x]
+[z_y]   [  A     -R_y]      [-q_y]</p>
+</div></blockquote>
+<p>A direct method factorizes the above matrix.</p>
+<dl class="simple">
+<dt>An indirect method can solve via:</dt><dd><dl class="simple">
+<dt>(R_x + P + A’ R_y^{-1} A) z_x = q_x - A’ R_y^{-1} q_y</dt><dd><p>z_y = R_y^{-1}(A z_x + q_y).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><a href="#id6"><span class="problematic" id="id7">*</span></a>Obtaining the v^k = [r^k;s^k;kappa^k] vector:</p>
+<p>v^{k+1} = R( u^{k+1} + w^k - 2 tilde u^{k+1} ) rightarrow F(u^star)</p>
+<p><a href="#id8"><span class="problematic" id="id9">*</span></a>root_plus function:</p>
+<p>tau^2 (d + r’ R r) + tau (r’ R mu^k - 2 r’ R p^k - d eta^k) + p^k R (p^k - mu^k) = 0</p>
+<p>other than kappa (which does not affect the alg) this is the <em>only</em> place
+where ‘d’ appears, so we have a lot of flexibility in how to choose it.
+<a href="#id10"><span class="problematic" id="id11">`</span></a>d’ is determined by <a href="#id12"><span class="problematic" id="id13">`</span></a>TAU_FACTOR’ in the code.</p>
+<p>(see the <a href="#id14"><span class="problematic" id="id15">`</span></a>dot_with_diag_scaling’ function in src/scs.c).</p>
+<p><a href="#id16"><span class="problematic" id="id17">*</span></a>Projecting onto to the cone unaffacted (see previous discussion).</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Brendan O&#39;Donoghue.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-203326834-1', 'auto');
+    
+    ga('send', 'pageview');
+    </script>
+
+    
+   
+
+</body>
+</html>
