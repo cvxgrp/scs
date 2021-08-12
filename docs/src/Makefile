@@ -20,10 +20,9 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 docs:
-	@rm -f ../*.html
 	@make html
-	@cp -a _build/html/. ../docs/
-	@touch ../docs/.nojekyll
+	@cp -a _build/html/. ..
+	@touch ../.nojekyll
 	@rm -rf doxygen_out/*
 	@make clean
 

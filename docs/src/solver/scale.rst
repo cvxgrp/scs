@@ -1,3 +1,8 @@
+.. _scaling:
+
+Scaling
+-------------
+
 In this note we derive the update equations when using a non-identity scaling.
 Solving LCP(M, q), using https://arxiv.org/pdf/2004.02177.pdf.
 

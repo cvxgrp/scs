@@ -30,6 +30,8 @@ Helper functions
 
   .. doxygenfunction:: scs_finish
 
+.. _exit_flags:
+
 Exit flags
 -----------
 The integer values that SCS can return are documented below.
@@ -92,11 +94,15 @@ Types
 
 The relevant structures used in the API are
 
+.. _ScsData:
+
 Data
 ^^^^
 
 .. doxygenstruct:: ScsData
    :members:
+
+.. _ScsMatrix:
 
 Matrices
 ^^^^^^^^
@@ -106,12 +112,13 @@ The matrices are defined in `Compressed Sparse Column (CSC) format <https://peop
 .. doxygenstruct:: ScsMatrix
    :members:
 
+.. _ScsCone:
+
 Cone
 ^^^^
 
 .. doxygenstruct:: ScsCone
    :members:
-
 
 .. _ScsSettings:
 
@@ -121,11 +128,15 @@ Settings
 .. doxygenstruct:: ScsSettings
   :members:
 
+.. _ScsSolution:
+
 Solution
 ^^^^^^^^
 
 .. doxygenstruct:: ScsSolution
    :members:
+
+.. _ScsInfo:
 
 Info
 ^^^^^

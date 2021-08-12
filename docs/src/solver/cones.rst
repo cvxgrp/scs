@@ -10,12 +10,12 @@ correspond to the zero/free cones, then those that correspond to the positive
 orthants, then SOCs, etc.
 
 .. list-table::
-   :widths: 40 30 30
+   :widths: 30 30 40
    :header-rows: 1
 
    * - Name
      - Description
-     - Entries in :code:`ScsCone`
+     - Entries in :ref:`ScsCone <ScsCone>`
 
    * - Zero cone
      - :math:`\{s \mid s = 0 \}`
@@ -31,12 +31,12 @@ orthants, then SOCs, etc.
      - :code:`q, qsize`, array of SOC sizes of len :code:`qsize`
    * - Positive semidefinite cone
      - :math:`\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}`
-     - :code:`s, ssize` see note below
+     - :code:`s, ssize` see :ref:`note <sdcone>` 
    * - Exponential cone
      - :math:`\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \}`
      - :code:`ep`, number of cone triples
    * - Dual exponential cone
-     - :math:`\{  (u,v,w)\in \mathbf{R}^3 \mid −u e^{v/u} \leq e w, u<0 \}`
+     - :math:`\{  (u,v,w)\in \mathbf{R}^3 \mid -u e^{v/u} \leq e w, u<0 \}`
      - :code:`ed`, number of cone triples
    * - Power cone
      - :math:`\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|\}`
@@ -44,6 +44,8 @@ orthants, then SOCs, etc.
    * - Dual power cone
      - :math:`\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}`
      - :code:`p, psize`
+
+.. _sdcone:
 
 Semidefinite cone
 ^^^^^^^^^^^^^^^^^^^^^^^^
