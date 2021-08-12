@@ -16,7 +16,7 @@ jobs:
           pip install sphinx sphinx-rtd-theme breathe
       - name: Build docs
         run: |
-          cd docs_src && make docs && touch ../docs/.nojekyll
+          cd docs/src && make docs && touch ../.nojekyll
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
