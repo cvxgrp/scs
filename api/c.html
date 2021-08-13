@@ -102,28 +102,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">C / C++</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#main-solver-api">Main solver API</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#helper-functions">Helper functions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#other-languages">Other languages</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">C / C++</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#main-solver-api">Main solver API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exit-flags">Exit flags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#basic-types">Basic types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#types">Types</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#exit-flags">Exit flags</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#basic-types">Basic types</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#types">Types</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#data">Data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#matrices">Matrices</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#cone">Cone</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#settings">Settings</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#solution">Solution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#info">Info</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#work">Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python.html">Python</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matlab.html">MATLAB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="julia.html">Julia</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="python.html">Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
-<li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
@@ -205,16 +196,40 @@
 <div class="section" id="main-solver-api">
 <span id="c-main-api"></span><h2>Main solver API<a class="headerlink" href="#main-solver-api" title="Permalink to this headline">¶</a></h2>
 <p>The main C API is imported from the header <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “scs” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
-</div>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv43scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo">
+<span id="_CPPv33scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo"></span><span id="_CPPv23scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo"></span><span id="scs__ScsDataCP.ScsConeCP.ScsSettingsCP.ScsSolutionP.ScsInfoP"></span><span class="target" id="scs_8h_1acd26da2b245ff5341bce5e3b6a803356"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsData" title="ScsData"><span class="n"><span class="pre">ScsData</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">d</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsCone" title="ScsCone"><span class="n"><span class="pre">ScsCone</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">k</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span>, <a class="reference internal" href="#_CPPv411ScsSolution" title="ScsSolution"><span class="n"><span class="pre">ScsSolution</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">sol</span></span>, <a class="reference internal" href="#_CPPv47ScsInfo" title="ScsInfo"><span class="n"><span class="pre">ScsInfo</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">info</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv43scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Solve quadratic cone program defined by data in d and cone k.</p>
+<p>All the inputs must already be allocated in memory before calling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> – Problem data </p></li>
+<li><p><strong>k</strong> – Cone data </p></li>
+<li><p><strong>stgs</strong> – SCS solver settings </p></li>
+<li><p><strong>sol</strong> – Solution will be stored here </p></li>
+<li><p><strong>info</strong> – Information about the solve will be stored here </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Flag that determines solve type (see <em>glbopts.h</em>) </p>
+</dd>
+</dl>
+</dd></dl>
+
 <div class="section" id="helper-functions">
 <h3>Helper functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “scs_set_default_settings” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
-</div>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424scs_set_default_settingsP11ScsSettings">
+<span id="_CPPv324scs_set_default_settingsP11ScsSettings"></span><span id="_CPPv224scs_set_default_settingsP11ScsSettings"></span><span id="scs_set_default_settings__ScsSettingsP"></span><span class="target" id="scs_8h_1aaa770d8e5840e9dcbd92c5b16ce74bc7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_set_default_settings</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424scs_set_default_settingsP11ScsSettings" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Helper function to set all settings to default values (see <em>glbopts.h</em>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>stgs</strong> – Settings struct that will be populated </p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="exit-flags">
@@ -297,55 +312,434 @@
 <p>The relevant structures used in the API are</p>
 <div class="section" id="data">
 <span id="scsdata"></span><h3>Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsData” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv47ScsData">
+<span id="_CPPv37ScsData"></span><span id="_CPPv27ScsData"></span><span id="ScsData"></span><span class="target" id="struct_scs_data"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsData</span></span></span><a class="headerlink" href="#_CPPv47ScsData" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>struct containing problem data </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsData1mE">
+<span id="_CPPv3N7ScsData1mE"></span><span id="_CPPv2N7ScsData1mE"></span><span id="ScsData::m__scs_int"></span><span class="target" id="struct_scs_data_1aa0ad823c8208574214f38a783e2ad4e1"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">m</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1mE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A has <code class="docutils literal notranslate"><span class="pre">m</span></code> rows </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsData1nE">
+<span id="_CPPv3N7ScsData1nE"></span><span id="_CPPv2N7ScsData1nE"></span><span id="ScsData::n__scs_int"></span><span class="target" id="struct_scs_data_1a1e33f582a084060935d773ae0d3fe048"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1nE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A has <code class="docutils literal notranslate"><span class="pre">n</span></code> cols, P has <code class="docutils literal notranslate"><span class="pre">n</span></code> cols and <code class="docutils literal notranslate"><span class="pre">n</span></code> rows </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsData1AE">
+<span id="_CPPv3N7ScsData1AE"></span><span id="_CPPv2N7ScsData1AE"></span><span id="ScsData::A__ScsMatrixP"></span><span class="target" id="struct_scs_data_1a61f4e659362b25d373e5bd23fc16fe38"></span><a class="reference internal" href="#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">A</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1AE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A is supplied in CSC format (size <code class="docutils literal notranslate"><span class="pre">m</span></code> x <code class="docutils literal notranslate"><span class="pre">n</span></code>) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsData1PE">
+<span id="_CPPv3N7ScsData1PE"></span><span id="_CPPv2N7ScsData1PE"></span><span id="ScsData::P__ScsMatrixP"></span><span class="target" id="struct_scs_data_1a77fd6df51a73bf2c465a3d718964479a"></span><a class="reference internal" href="#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">P</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1PE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>P is supplied in CSC format, must be upper triangular (size <code class="docutils literal notranslate"><span class="pre">n</span></code> x <code class="docutils literal notranslate"><span class="pre">n</span></code>) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsData1bE">
+<span id="_CPPv3N7ScsData1bE"></span><span id="_CPPv2N7ScsData1bE"></span><span id="ScsData::b__scs_floatP"></span><span class="target" id="struct_scs_data_1a1a95a0a75f9a8782d20f1e2c872cb3c9"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">b</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1bE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>dense array for b (size <code class="docutils literal notranslate"><span class="pre">m</span></code>) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsData1cE">
+<span id="_CPPv3N7ScsData1cE"></span><span id="_CPPv2N7ScsData1cE"></span><span id="ScsData::c__scs_floatP"></span><span class="target" id="struct_scs_data_1aacc52838f93eaf56507b13744cf7530e"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">c</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1cE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>dense array for c (size <code class="docutils literal notranslate"><span class="pre">n</span></code>) </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="matrices">
 <span id="scsmatrix"></span><h3>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h3>
 <p>The matrices are defined in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsMatrix” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv49ScsMatrix">
+<span id="_CPPv39ScsMatrix"></span><span id="_CPPv29ScsMatrix"></span><span id="ScsMatrix"></span><span class="target" id="struct_scs_matrix"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsMatrix</span></span></span><a class="headerlink" href="#_CPPv49ScsMatrix" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>this struct defines the data matrices and is supplied in column compressed format: <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html</a> </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1xE">
+<span id="_CPPv3N9ScsMatrix1xE"></span><span id="_CPPv2N9ScsMatrix1xE"></span><span id="ScsMatrix::x__scs_floatP"></span><span class="target" id="struct_scs_matrix_1a3905b92026499c1f3a1925a7f4dac856"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">x</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1xE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>matrix values, size: number of non-zeros </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1iE">
+<span id="_CPPv3N9ScsMatrix1iE"></span><span id="_CPPv2N9ScsMatrix1iE"></span><span id="ScsMatrix::i__scs_intP"></span><span class="target" id="struct_scs_matrix_1a9a529e08729eab41729e458ce43dcf57"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">i</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1iE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>matrix row indices, size: number of non-zeros </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1pE">
+<span id="_CPPv3N9ScsMatrix1pE"></span><span id="_CPPv2N9ScsMatrix1pE"></span><span id="ScsMatrix::p__scs_intP"></span><span class="target" id="struct_scs_matrix_1a554713f4cd5a35fd93b3039c223314ba"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">p</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1pE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>matrix column pointers, size: <code class="docutils literal notranslate"><span class="pre">n+1</span></code> </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1mE">
+<span id="_CPPv3N9ScsMatrix1mE"></span><span id="_CPPv2N9ScsMatrix1mE"></span><span id="ScsMatrix::m__scs_int"></span><span class="target" id="struct_scs_matrix_1a98fbc612985028a7790d286ebd8b74e2"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">m</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1mE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of rows </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1nE">
+<span id="_CPPv3N9ScsMatrix1nE"></span><span id="_CPPv2N9ScsMatrix1nE"></span><span id="ScsMatrix::n__scs_int"></span><span class="target" id="struct_scs_matrix_1ac50dcdaac67999cfff3662f388c9bd0d"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1nE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of columns </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="cone">
 <span id="scscone"></span><h3>Cone<a class="headerlink" href="#cone" title="Permalink to this headline">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsCone” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv47ScsCone">
+<span id="_CPPv37ScsCone"></span><span id="_CPPv27ScsCone"></span><span id="ScsCone"></span><span class="target" id="struct_scs_cone"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsCone</span></span></span><a class="headerlink" href="#_CPPv47ScsCone" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Cone data. NB: rows of data matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> must be specified in this exact order </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1zE">
+<span id="_CPPv3N7ScsCone1zE"></span><span id="_CPPv2N7ScsCone1zE"></span><span id="ScsCone::z__scs_int"></span><span class="target" id="struct_scs_cone_1ac6922fe401650f91caa751f3267c71c5"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">z</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1zE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of linear equality constraints (primal zero, dual free) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1lE">
+<span id="_CPPv3N7ScsCone1lE"></span><span id="_CPPv2N7ScsCone1lE"></span><span id="ScsCone::l__scs_int"></span><span class="target" id="struct_scs_cone_1a681372640b8fac21a74ff7d0afba173d"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">l</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1lE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of positive orthant cones </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone2buE">
+<span id="_CPPv3N7ScsCone2buE"></span><span id="_CPPv2N7ScsCone2buE"></span><span id="ScsCone::bu__scs_floatP"></span><span class="target" id="struct_scs_cone_1a96281da59ac051ef9e49ca401eaaa7b5"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">bu</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone2buE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>upper box values, <code class="docutils literal notranslate"><span class="pre">len(bu)</span> <span class="pre">=</span> <span class="pre">len(bl)</span> <span class="pre">=</span> <span class="pre">bsize</span></code> </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone2blE">
+<span id="_CPPv3N7ScsCone2blE"></span><span id="_CPPv2N7ScsCone2blE"></span><span id="ScsCone::bl__scs_floatP"></span><span class="target" id="struct_scs_cone_1af94a23afc9e1e514d451420ab465143c"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">bl</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone2blE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>lower box values, <code class="docutils literal notranslate"><span class="pre">len(bu)</span> <span class="pre">=</span> <span class="pre">len(bl)</span> <span class="pre">=</span> <span class="pre">bsize</span></code> </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone5bsizeE">
+<span id="_CPPv3N7ScsCone5bsizeE"></span><span id="_CPPv2N7ScsCone5bsizeE"></span><span id="ScsCone::bsize__scs_int"></span><span class="target" id="struct_scs_cone_1aaf6a208d6887d703b3da772e96c9e94d"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bsize</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone5bsizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>length of box cone arrays (does not include scale <code class="docutils literal notranslate"><span class="pre">t</span></code>) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1qE">
+<span id="_CPPv3N7ScsCone1qE"></span><span id="_CPPv2N7ScsCone1qE"></span><span id="ScsCone::q__scs_intP"></span><span class="target" id="struct_scs_cone_1a4ec650e0813fab72ad255d8ecaa73f8e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">q</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1qE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>array of second-order cone constraints </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone5qsizeE">
+<span id="_CPPv3N7ScsCone5qsizeE"></span><span id="_CPPv2N7ScsCone5qsizeE"></span><span id="ScsCone::qsize__scs_int"></span><span class="target" id="struct_scs_cone_1ac912d73b8dd087ddf0e0c6c5f39fc740"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">qsize</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone5qsizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>length of SOC array </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1sE">
+<span id="_CPPv3N7ScsCone1sE"></span><span id="_CPPv2N7ScsCone1sE"></span><span id="ScsCone::s__scs_intP"></span><span class="target" id="struct_scs_cone_1a8439d6bb734309682da2cee78283475e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">s</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1sE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>array of semidefinite cone constraints </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone5ssizeE">
+<span id="_CPPv3N7ScsCone5ssizeE"></span><span id="_CPPv2N7ScsCone5ssizeE"></span><span id="ScsCone::ssize__scs_int"></span><span class="target" id="struct_scs_cone_1ae6e4e62cbcd10d3bb731def2a31ccda7"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ssize</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone5ssizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>length of semidefinite constraints array </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone2epE">
+<span id="_CPPv3N7ScsCone2epE"></span><span id="_CPPv2N7ScsCone2epE"></span><span id="ScsCone::ep__scs_int"></span><span class="target" id="struct_scs_cone_1a9b658c756284f3afad6186432b9b2ee1"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ep</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone2epE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of primal exponential cone triples </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone2edE">
+<span id="_CPPv3N7ScsCone2edE"></span><span id="_CPPv2N7ScsCone2edE"></span><span id="ScsCone::ed__scs_int"></span><span class="target" id="struct_scs_cone_1a3b39a5f93c37b2d29cc7f27eb9c0c032"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ed</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone2edE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of dual exponential cone triples </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1pE">
+<span id="_CPPv3N7ScsCone1pE"></span><span id="_CPPv2N7ScsCone1pE"></span><span id="ScsCone::p__scs_floatP"></span><span class="target" id="struct_scs_cone_1af10de865b1a76694b2369fcba61e842f"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">p</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1pE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>array of power cone params, must be in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>, negative values are interpreted as specifying the dual cone </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsCone5psizeE">
+<span id="_CPPv3N7ScsCone5psizeE"></span><span id="_CPPv2N7ScsCone5psizeE"></span><span id="ScsCone::psize__scs_int"></span><span class="target" id="struct_scs_cone_1a39ae8f7a6788544bae4fb305b2c8b49f"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">psize</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone5psizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of (primal and dual) power cone triples </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="settings">
 <span id="scssettings"></span><h3>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsSettings” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv411ScsSettings">
+<span id="_CPPv311ScsSettings"></span><span id="_CPPv211ScsSettings"></span><span id="ScsSettings"></span><span class="target" id="struct_scs_settings"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSettings</span></span></span><a class="headerlink" href="#_CPPv411ScsSettings" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>struct containing all settings </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings9normalizeE">
+<span id="_CPPv3N11ScsSettings9normalizeE"></span><span id="_CPPv2N11ScsSettings9normalizeE"></span><span id="ScsSettings::normalize__scs_int"></span><span class="target" id="struct_scs_settings_1adde12365a494d540101d4227dab13a18"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">normalize</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings9normalizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether to heuristically rescale the data before solve </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings10init_scaleE">
+<span id="_CPPv3N11ScsSettings10init_scaleE"></span><span id="_CPPv2N11ScsSettings10init_scaleE"></span><span id="ScsSettings::init_scale__scs_float"></span><span class="target" id="struct_scs_settings_1a100b7cf5f57192ee6b006da429aa9723"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">init_scale</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings10init_scaleE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>initial dual scaling factor (may be updated if adaptive_scaling is on) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings16adaptive_scalingE">
+<span id="_CPPv3N11ScsSettings16adaptive_scalingE"></span><span id="_CPPv2N11ScsSettings16adaptive_scalingE"></span><span id="ScsSettings::adaptive_scaling__scs_int"></span><span class="target" id="struct_scs_settings_1a943a090c9d7935ddf776a51c650353eb"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adaptive_scaling</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings16adaptive_scalingE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether to adaptively update <code class="docutils literal notranslate"><span class="pre">scale</span></code> </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings5rho_xE">
+<span id="_CPPv3N11ScsSettings5rho_xE"></span><span id="_CPPv2N11ScsSettings5rho_xE"></span><span id="ScsSettings::rho_x__scs_float"></span><span class="target" id="struct_scs_settings_1a8d9538a4016c862f544fae86858eb378"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rho_x</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings5rho_xE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>primal constraint scaling factor </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings9max_itersE">
+<span id="_CPPv3N11ScsSettings9max_itersE"></span><span id="_CPPv2N11ScsSettings9max_itersE"></span><span id="ScsSettings::max_iters__scs_int"></span><span class="target" id="struct_scs_settings_1a1ae1728151be99b3f0d8853c614627eb"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_iters</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings9max_itersE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>maximum iterations to take </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings7eps_absE">
+<span id="_CPPv3N11ScsSettings7eps_absE"></span><span id="_CPPv2N11ScsSettings7eps_absE"></span><span id="ScsSettings::eps_abs__scs_float"></span><span class="target" id="struct_scs_settings_1ab689a1a138eab38c1171831d09d8bfd3"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">eps_abs</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings7eps_absE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>absolute convergence tolerance </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings7eps_relE">
+<span id="_CPPv3N11ScsSettings7eps_relE"></span><span id="_CPPv2N11ScsSettings7eps_relE"></span><span id="ScsSettings::eps_rel__scs_float"></span><span class="target" id="struct_scs_settings_1a1970c2376c0c5a7076a07c66199ecd15"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">eps_rel</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings7eps_relE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>relative convergence tolerance </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings10eps_infeasE">
+<span id="_CPPv3N11ScsSettings10eps_infeasE"></span><span id="_CPPv2N11ScsSettings10eps_infeasE"></span><span id="ScsSettings::eps_infeas__scs_float"></span><span class="target" id="struct_scs_settings_1ac615fa0b6eca766044e205be39351e8b"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">eps_infeas</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings10eps_infeasE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>infeasible convergence tolerance </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings5alphaE">
+<span id="_CPPv3N11ScsSettings5alphaE"></span><span id="_CPPv2N11ScsSettings5alphaE"></span><span id="ScsSettings::alpha__scs_float"></span><span class="target" id="struct_scs_settings_1afd89acae2fe12e5e36f0fbdafd68b6d1"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alpha</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings5alphaE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Douglas-Rachford relaxation parameter </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings15time_limit_secsE">
+<span id="_CPPv3N11ScsSettings15time_limit_secsE"></span><span id="_CPPv2N11ScsSettings15time_limit_secsE"></span><span id="ScsSettings::time_limit_secs__scs_float"></span><span class="target" id="struct_scs_settings_1a2a166c20871e3c96f9f7a163699c4d16"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">time_limit_secs</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings15time_limit_secsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>time limit in secs (can be fractional) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings7verboseE">
+<span id="_CPPv3N11ScsSettings7verboseE"></span><span id="_CPPv2N11ScsSettings7verboseE"></span><span id="ScsSettings::verbose__scs_int"></span><span class="target" id="struct_scs_settings_1a5d066e6c38e3547139f7842f313f91ef"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">verbose</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings7verboseE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether to log progress to stdout </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings10warm_startE">
+<span id="_CPPv3N11ScsSettings10warm_startE"></span><span id="_CPPv2N11ScsSettings10warm_startE"></span><span id="ScsSettings::warm_start__scs_int"></span><span class="target" id="struct_scs_settings_1af1086d138c50ed09a80d4fe4f2b11543"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">warm_start</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings10warm_startE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether to use warm start (put initial guess in <a class="reference internal" href="#struct_scs_solution"><span class="std std-ref">ScsSolution</span></a> struct) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings21acceleration_lookbackE">
+<span id="_CPPv3N11ScsSettings21acceleration_lookbackE"></span><span id="_CPPv2N11ScsSettings21acceleration_lookbackE"></span><span id="ScsSettings::acceleration_lookback__scs_int"></span><span class="target" id="struct_scs_settings_1a493462ada611f12889b7570feed4b4f0"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_lookback</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings21acceleration_lookbackE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>memory for acceleration </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings21acceleration_intervalE">
+<span id="_CPPv3N11ScsSettings21acceleration_intervalE"></span><span id="_CPPv2N11ScsSettings21acceleration_intervalE"></span><span id="ScsSettings::acceleration_interval__scs_int"></span><span class="target" id="struct_scs_settings_1a9ee32ae3b1f60ad00c8498796cb6c166"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_interval</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings21acceleration_intervalE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>interval to apply acceleration </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings19write_data_filenameE">
+<span id="_CPPv3N11ScsSettings19write_data_filenameE"></span><span id="_CPPv2N11ScsSettings19write_data_filenameE"></span><span id="ScsSettings::write_data_filename__cCP"></span><span class="target" id="struct_scs_settings_1a167de72c9887564aac8d3a806144669d"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">write_data_filename</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings19write_data_filenameE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>string, if set will dump raw prob data to this file </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings16log_csv_filenameE">
+<span id="_CPPv3N11ScsSettings16log_csv_filenameE"></span><span id="_CPPv2N11ScsSettings16log_csv_filenameE"></span><span id="ScsSettings::log_csv_filename__cCP"></span><span class="target" id="struct_scs_settings_1a3eb87e609ef062ef1a30a3c6bf7b9d15"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">log_csv_filename</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings16log_csv_filenameE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>string, if set will log solve data to this csv file (slows solve a lot) </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="solution">
 <span id="scssolution"></span><h3>Solution<a class="headerlink" href="#solution" title="Permalink to this headline">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsSolution” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv411ScsSolution">
+<span id="_CPPv311ScsSolution"></span><span id="_CPPv211ScsSolution"></span><span id="ScsSolution"></span><span class="target" id="struct_scs_solution"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSolution</span></span></span><a class="headerlink" href="#_CPPv411ScsSolution" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>contains primal-dual solution arrays </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSolution1xE">
+<span id="_CPPv3N11ScsSolution1xE"></span><span id="_CPPv2N11ScsSolution1xE"></span><span id="ScsSolution::x__scs_floatP"></span><span class="target" id="struct_scs_solution_1a655d98b6096451355a5d9862e854ad3e"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">x</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSolution1xE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>primal variable </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSolution1yE">
+<span id="_CPPv3N11ScsSolution1yE"></span><span id="_CPPv2N11ScsSolution1yE"></span><span id="ScsSolution::y__scs_floatP"></span><span class="target" id="struct_scs_solution_1a26f3d210490a20299f493698658c5b2f"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">y</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSolution1yE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>dual variable </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSolution1sE">
+<span id="_CPPv3N11ScsSolution1sE"></span><span id="_CPPv2N11ScsSolution1sE"></span><span id="ScsSolution::s__scs_floatP"></span><span class="target" id="struct_scs_solution_1ae104c406b1c56a37b7453be06193a1a7"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">s</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSolution1sE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>slack variable </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="info">
 <span id="scsinfo"></span><h3>Info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsInfo” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv47ScsInfo">
+<span id="_CPPv37ScsInfo"></span><span id="_CPPv27ScsInfo"></span><span id="ScsInfo"></span><span class="target" id="struct_scs_info"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsInfo</span></span></span><a class="headerlink" href="#_CPPv47ScsInfo" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>contains terminating information </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo4iterE">
+<span id="_CPPv3N7ScsInfo4iterE"></span><span id="_CPPv2N7ScsInfo4iterE"></span><span id="ScsInfo::iter__scs_int"></span><span class="target" id="struct_scs_info_1af6a27e1b7ca55b9fd6708d961a544c0e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">iter</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo4iterE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of iterations taken </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo6statusE">
+<span id="_CPPv3N7ScsInfo6statusE"></span><span id="_CPPv2N7ScsInfo6statusE"></span><span id="ScsInfo::status__cA"></span><span class="target" id="struct_scs_info_1a7670cce032fa21ffcf5c85abac655d75"></span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">status</span></span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">64</span></span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#_CPPv4N7ScsInfo6statusE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>status string, e.g. ‘solved’ </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo10status_valE">
+<span id="_CPPv3N7ScsInfo10status_valE"></span><span id="_CPPv2N7ScsInfo10status_valE"></span><span id="ScsInfo::status_val__scs_int"></span><span class="target" id="struct_scs_info_1a57cdaad22ef83459346f6903474d8822"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">status_val</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo10status_valE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>status as scs_int, defined in glbopts.h </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo13scale_updatesE">
+<span id="_CPPv3N7ScsInfo13scale_updatesE"></span><span id="_CPPv2N7ScsInfo13scale_updatesE"></span><span id="ScsInfo::scale_updates__scs_int"></span><span class="target" id="struct_scs_info_1a5a60367d92ef672fdb99a23bc999e826"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scale_updates</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo13scale_updatesE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of updates to scale </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo4pobjE">
+<span id="_CPPv3N7ScsInfo4pobjE"></span><span id="_CPPv2N7ScsInfo4pobjE"></span><span id="ScsInfo::pobj__scs_float"></span><span class="target" id="struct_scs_info_1a604e1346e121816d4ec117cda93f919e"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pobj</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo4pobjE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>primal objective </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo4dobjE">
+<span id="_CPPv3N7ScsInfo4dobjE"></span><span id="_CPPv2N7ScsInfo4dobjE"></span><span id="ScsInfo::dobj__scs_float"></span><span class="target" id="struct_scs_info_1ae2c1d05865c2b66246bb50f1779853fb"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dobj</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo4dobjE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>dual objective </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo7res_priE">
+<span id="_CPPv3N7ScsInfo7res_priE"></span><span id="_CPPv2N7ScsInfo7res_priE"></span><span id="ScsInfo::res_pri__scs_float"></span><span class="target" id="struct_scs_info_1afd4a53c87a9d2a1705976336bc985cc0"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_pri</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo7res_priE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>primal equality residual </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo8res_dualE">
+<span id="_CPPv3N7ScsInfo8res_dualE"></span><span id="_CPPv2N7ScsInfo8res_dualE"></span><span id="ScsInfo::res_dual__scs_float"></span><span class="target" id="struct_scs_info_1ad3b3eb95e8f6b787c5f79c3ed151561e"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_dual</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo8res_dualE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>dual equality residual </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo3gapE">
+<span id="_CPPv3N7ScsInfo3gapE"></span><span id="_CPPv2N7ScsInfo3gapE"></span><span id="ScsInfo::gap__scs_float"></span><span class="target" id="struct_scs_info_1adddc865afba89562e7eab60e94ac7039"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">gap</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo3gapE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>duality gap </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo10res_infeasE">
+<span id="_CPPv3N7ScsInfo10res_infeasE"></span><span id="_CPPv2N7ScsInfo10res_infeasE"></span><span id="ScsInfo::res_infeas__scs_float"></span><span class="target" id="struct_scs_info_1aaf9d4f24f8c7fef81ca8a6c91d3a2f58"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_infeas</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo10res_infeasE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>infeasibility cert residual </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo11res_unbdd_aE">
+<span id="_CPPv3N7ScsInfo11res_unbdd_aE"></span><span id="_CPPv2N7ScsInfo11res_unbdd_aE"></span><span id="ScsInfo::res_unbdd_a__scs_float"></span><span class="target" id="struct_scs_info_1a992a0e6ffd063b53bc96e69068def6de"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_unbdd_a</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo11res_unbdd_aE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>unbounded cert residual </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo11res_unbdd_pE">
+<span id="_CPPv3N7ScsInfo11res_unbdd_pE"></span><span id="_CPPv2N7ScsInfo11res_unbdd_pE"></span><span id="ScsInfo::res_unbdd_p__scs_float"></span><span class="target" id="struct_scs_info_1a85be8e12fbe37b2b4850f1c80832370e"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">res_unbdd_p</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo11res_unbdd_pE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>unbounded cert residual </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo10setup_timeE">
+<span id="_CPPv3N7ScsInfo10setup_timeE"></span><span id="_CPPv2N7ScsInfo10setup_timeE"></span><span id="ScsInfo::setup_time__scs_float"></span><span class="target" id="struct_scs_info_1a368c0b96caee09382c42e92e40ca4353"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setup_time</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo10setup_timeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>time taken for setup phase (milliseconds) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo10solve_timeE">
+<span id="_CPPv3N7ScsInfo10solve_timeE"></span><span id="_CPPv2N7ScsInfo10solve_timeE"></span><span id="ScsInfo::solve_time__scs_float"></span><span class="target" id="struct_scs_info_1ae23962a94d7384a56540c30439da4fa4"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">solve_time</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo10solve_timeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>time taken for solve phase (milliseconds) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7ScsInfo5scaleE">
+<span id="_CPPv3N7ScsInfo5scaleE"></span><span id="_CPPv2N7ScsInfo5scaleE"></span><span id="ScsInfo::scale__scs_float"></span><span class="target" id="struct_scs_info_1a3db28116a26b68bad22b76e3626ccdfd"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scale</span></span></span><a class="headerlink" href="#_CPPv4N7ScsInfo5scaleE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>(final) scale parameter </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="work">
 <h3>Work<a class="headerlink" href="#work" title="Permalink to this headline">¶</a></h3>
 <p>The user should not need to interact with the <code class="code docutils literal notranslate"><span class="pre">ScsWork</span></code> struct,
 which contains the internal workspace allocated and maintained by SCS.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsWork” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
-</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv47ScsWork">
+<span id="_CPPv37ScsWork"></span><span id="_CPPv27ScsWork"></span><span id="ScsWork"></span><span class="target" id="struct_scs_work"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsWork</span></span></span><a class="headerlink" href="#_CPPv47ScsWork" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
 </div>
 </div>
 </div>

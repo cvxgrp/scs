@@ -3,11 +3,8 @@
 Cones
 -----
 
-The cone K can be any Cartesian product of the following primitive cones.
-**Note**:The rows of the data matrix :code:`A` correspond to the cones in :code:`K`. The rows of
-:code:`A` must be in the order of the cones given above, i.e., first come the rows that
-correspond to the zero/free cones, then those that correspond to the positive
-orthants, then SOCs, etc.
+The cone :math:`\mathcal{K}` can be any Cartesian product of the following primitive cones.
+
 
 .. list-table::
    :widths: 30 30 40
@@ -44,6 +41,13 @@ orthants, then SOCs, etc.
    * - Dual power cone
      - :math:`\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}`
      - :code:`p, psize`
+
+
+**Note**:
+The rows of the data matrix :math:`A` correspond to the cones in :math:`\mathcal{K}`. The rows of
+:math:`A` must be in the order of the cones given above, i.e., first come the rows that
+correspond to the zero cones, then those that correspond to the positive
+orthants, then the box cone, etc.
 
 .. _sdcone:
 

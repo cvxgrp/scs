@@ -100,15 +100,17 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Solver</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html">Termination Criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#primal-or-dual-infeasibility">Primal or dual infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#acceleration">Acceleration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#warm-starting">Warm-starting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#warm-starting">Warm-starting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scale.html">Scaling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -188,63 +190,39 @@
             
   <div class="section" id="solver">
 <span id="id1"></span><h1>Solver<a class="headerlink" href="#solver" title="Permalink to this headline">¶</a></h1>
-<p><span class="xref std std-ref">Termination Criteria</span></p>
-<p><a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a></p>
-<p><a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a></p>
-<div class="toctree-wrapper compound">
-</div>
-<p>When strong duality holds, the Karush-Kuhn-Tucker (KKT) conditions
-are necessary and sufficient for
-optimality (link boyd book). They are given by</p>
-<div class="math notranslate nohighlight">
-\[Ax + s = b, \quad Px + A^\top y + c= 0,\quad s \in \mathcal{K}, \quad y \in \mathcal{K}^*,\quad  s \perp y.\]</div>
-<p>These are primal feasibility, dual feasibility, primal and dual cone members hip, and complementary slackness.  The complementary slackness condition is equivalent to a zero emph{duality gap} condition at any optimal point, that is for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy the KKT conditions we have</p>
-<div class="math notranslate nohighlight">
-\[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
-<div class="section" id="termination-criteria">
-<h2>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline">¶</a></h2>
-<p>The iterates produced by SCS _always_ satisfy <span class="math notranslate nohighlight">\(s \in \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>.
-Therefore to say that a problem is solved we need to check if the primal
-residual,
-dual residual, and duality gap are all below a certain tolerance. Specifically,
-SCS terminates when it has found <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span>, and <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfy</p>
+<p>SCS is derived as Douglas-Rachford splitting applied to a homogeneous embedding
+of the quadratic cone program. The high level algorithm is as follows,
+from an initial <span class="math notranslate nohighlight">\(w^0\)</span> for <span class="math notranslate nohighlight">\(k=0,1,\ldots\)</span> do</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
-\|Ax + s - b\|_\infty &amp;\leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty) \\
-\|Px + A^\top y - c \|_\infty &amp;\leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty) \\
-|x^\top Px + c^\top x + b^\top y| &amp;\leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),
+\tilde u^{k+1} &amp;= (I + \mathcal{Q})^{-1} w^k\\
+u^{k+1} &amp;= \Pi_{\mathcal{C}_+}(2\tilde u^{k+1} - w^k)\\
+w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1}
 \end{align}\end{split}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs}&gt;0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel}&gt;0\)</span> are user defined
-<a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
-</div>
-<div class="section" id="primal-or-dual-infeasibility">
-<h2>Primal or dual infeasibility<a class="headerlink" href="#primal-or-dual-infeasibility" title="Permalink to this headline">¶</a></h2>
-<p>SCS is able to robustly detect primal or dual infeasibility in those cases.
-Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
+<p>and <span class="math notranslate nohighlight">\(u^k \rightarrow u^\star\)</span> from which we can recover the optimal solution
+or the certificate of infeasibility. The algorithm consists of three steps.
+The first step involves <span class="xref std std-ref">solving a linear system</span> of equations:</p>
 <div class="math notranslate nohighlight">
-\[A^\top y = 0,\  y \in \mathcal{K}^*,\ b^\top y &lt; 0\]</div>
-<p>acts a certificate that the quadratic cone program is primal infeasible (dual unbounded). On the other hand, if we can find <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> such
-that</p>
+\[\begin{split}\begin{bmatrix} I + P &amp; A^T  \\ A &amp; -I \end{bmatrix}\begin{bmatrix} x \\ y
+\end{bmatrix} = \begin{bmatrix} \mu_x \\ -\mu_y \end{bmatrix},\end{split}\]</div>
+<p>The second step is the Euclidean projection onto a convex <a class="reference internal" href="cones.html#cones"><span class="std std-ref">cone</span></a>, ie,</p>
 <div class="math notranslate nohighlight">
-\[Px = 0,\ -Ax\in \mathcal{K},\ c^\top x &lt; 0\]</div>
-<p>then this is a certificate that the problem is dual infeasible (primal
-unbounded.</p>
-<p>Since the cone memberships are always guaranteed by the iterates, SCS
-declares a problem infeasible when it finds <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
-<div class="math notranslate nohighlight">
-\[b^\top y = -1, \quad \|A^\top y\|_\infty &lt; \epsilon_\mathrm{infeas}.\]</div>
-<p>Similarly, SCS v3.0 declares dual infeasibility when it finds <span class="math notranslate nohighlight">\(x \in
-\mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
-<div class="math notranslate nohighlight">
-\[c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) &lt; \epsilon_\mathrm{infeas}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas}\)</span> is a user-defined <span class="xref std std-ref">setting</span>.</p>
-</div>
+\[\begin{split}\begin{array}{ll}
+\mbox{minimize} &amp; \| z - z_0\|_2^2 \\
+\mbox{subject to } &amp; z \in \mathcal{K}
+\end{array}\end{split}\]</div>
+<p>Most cone projection operators have relatively simple projection operators.</p>
+<p><a class="reference internal" href="termination.html#termination"><span class="std std-ref">Termination Criteria</span></a></p>
+<p><a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a></p>
+<p><a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a></p>
 <div class="section" id="acceleration">
 <h2>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="warm-starting">
 <h2>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline">¶</a></h2>
 <p>SCS supports warm-starting the solver with a guess of the solution.</p>
+<div class="toctree-wrapper compound">
+</div>
 </div>
 </div>
 

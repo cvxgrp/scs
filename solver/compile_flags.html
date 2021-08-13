@@ -38,6 +38,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -99,15 +100,17 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html">Termination Criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Compile flags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#termination-criteria">Termination criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#primal-or-dual-infeasibility">Primal or dual infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Compile flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scale.html">Scaling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -189,8 +192,11 @@
             
   <div class="section" id="compile-flags">
 <span id="id1"></span><h1>Compile flags<a class="headerlink" href="#compile-flags" title="Permalink to this headline">¶</a></h1>
-<p>Others are not exposed but defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.
-Can be overriden via the command line XXX.</p>
+<p>Typically the user will not need to interact with these flags, but we document them
+here for completeness.  Note this list is not exhaustive, others are not exposed
+but defined in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>.  The list below are defined in
+<code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code> and can be overridden via the command line when compiling by
+executing, e.g., <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">DLONG=1</span></code>, to set the <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> flag to True.</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
 <col style="width: 25%" />
@@ -207,77 +213,77 @@ Can be overriden via the command line XXX.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">DLONG</span></code></p></td>
-<td><p>Use long (64 bit) integers</p></td>
+<td><p>If True use 64 bit integers, else 32 bit</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>If True use 32 bit floats, else 64 bit</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">CTRLC</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>Listen to CTRL-C interruptions</p></td>
 <td><p>True/False</p></td>
-<td><p>0</p></td>
+<td><p>1</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">NOTIMER</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>Disables code timing</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">COPYAMATRIX</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>Make a copy of A in memory</p></td>
 <td><p>True/False</p></td>
-<td><p>0</p></td>
+<td><p>1</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">GPU_TRANSOSE_MAT</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>If on GPU store A transpose in memory</p></td>
 <td><p>True/False</p></td>
-<td><p>0</p></td>
+<td><p>1</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">VERBOSITY</span></code></p></td>
-<td><p>iXXX</p></td>
-<td><p>True/False</p></td>
+<td><p>Verbosity level (for debugging)</p></td>
+<td><p><span class="math notranslate nohighlight">\(\mathbf{N}\)</span></p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>Whether to link in <span class="xref std std-ref">BLAS/LAPACK</span></p></td>
 <td><p>True/False</p></td>
-<td><p>0</p></td>
+<td><p>1</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_OPENMP</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>Use openmp to parallelize some computation</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>The BLAS library is 64 bits</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>The BLAS library has no function name suffix</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code></p></td>
-<td><p>iXXX</p></td>
-<td><p>True/False</p></td>
-<td><p>0</p></td>
+<td><p>The BLAS library uses this suffix</p></td>
+<td><p>String</p></td>
+<td><p>‘_’</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>If compiling for use in MATLAB</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>If compiling for use in python</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USING_R</span></code></p></td>
-<td><p>iXXX</p></td>
+<td><p>If compiling for use in Rlang</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>

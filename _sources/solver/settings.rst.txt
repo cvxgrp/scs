@@ -3,7 +3,8 @@
 Settings
 --------
 
-These are set in the :ref:`ScsSettings <ScsSettings>` struct.
+These settings control how SCS behaves during a solve.
+They are set in the :ref:`ScsSettings <ScsSettings>` struct.
 
 .. list-table::
    :widths: 20 20 20 20 20

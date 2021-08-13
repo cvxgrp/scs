@@ -69,9 +69,6 @@ At termination SCS will either return points :math:`(x^\star,y^\star,s^\star)` t
 the :ref:`optimality conditions <solver>` to the desired accuracy, or a certificate
 of :ref:`primal or dual infeasibility` to the designated infeasibility accuracy.
 
-Loosely speaking, :math:`P, A, b, c, \mathcal{K} \rightarrow (x^\star, y^\star, s^\star)`.
-
-
 The current version is |version|
 
 The code is freely available on `GitHub <https://github.com/cvxgrp/scs>`_. 

@@ -38,13 +38,14 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Install" href="../install/index.html" />
+    <link rel="next" title="Scaling" href="scale.html" />
     <link rel="prev" title="Compile flags" href="compile_flags.html" /> 
 </head>
 
@@ -99,15 +100,17 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html">Termination Criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Return information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#termination-criteria">Termination criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#primal-or-dual-infeasibility">Primal or dual infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Return information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scale.html">Scaling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -189,12 +192,13 @@
             
   <div class="section" id="return-information">
 <span id="info"></span><h1>Return information<a class="headerlink" href="#return-information" title="Permalink to this headline">¶</a></h1>
-<p>See the <a class="reference internal" href="../api/c.html#scsinfo"><span class="std std-ref">ScsInfo</span></a> struct.</p>
+<p>When SCS terminates it will return an <a class="reference internal" href="../api/c.html#scsinfo"><span class="std std-ref">ScsInfo</span></a> struct containing
+the following fields.</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 50%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 70%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -216,52 +220,52 @@
 <td><p>Status integer <a class="reference internal" href="../api/c.html#exit-flags"><span class="std std-ref">exit flag</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale_updates</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of updates to the scale parameter</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">pobj</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Primal objective</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">dobj</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Dual objective</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">res_pri</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Primal residual (see <span class="xref std std-ref">termination conditions</span>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">res_dual</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Dual residual (see <span class="xref std std-ref">termination conditions</span>)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">res_infeas</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">gap</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Duality gap  (see <span class="xref std std-ref">termination conditions</span>)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">res_unbbd_a</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">res_infeas</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Primal infeasibility residual (see <span class="xref std std-ref">termination conditions</span>)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">res_unbdd_p</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">res_unbbd_a</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Dual infeasibility residual involving <span class="math notranslate nohighlight">\(A\)</span> (see <span class="xref std std-ref">termination conditions</span>)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">gap</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">res_unbdd_p</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Dual infeasibility residual involving <span class="math notranslate nohighlight">\(P\)</span> (see <span class="xref std std-ref">termination conditions</span>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">setup_time</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Time taken for setup (milliseconds)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">solve_time</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Time taken for solve (milliseconds)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
-<td><p>XXX</p></td>
-<td><p>XXX</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Final scale parameter (useful for initializing next solve)</p></td>
 </tr>
 </tbody>
 </table>
@@ -273,7 +277,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../install/index.html" class="btn btn-neutral float-right" title="Install" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="scale.html" class="btn btn-neutral float-right" title="Scaling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="compile_flags.html" class="btn btn-neutral float-left" title="Compile flags" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

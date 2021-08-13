@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Termination Criteria &mdash; SCS 3.0.0 documentation</title>
+  <title>Optimality conditions &mdash; SCS 3.0.0 documentation</title>
   
 
   
@@ -38,6 +38,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -99,15 +100,21 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Termination Criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#termination-criteria">Termination criteria</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#primal-or-dual-infeasibility">Primal or dual infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Optimality conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#termination-criteria">Termination criteria</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Optimality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#infeasibility">Infeasibility</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scale.html">Scaling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -168,7 +175,7 @@
         
           <li><a href="index.html">Solver</a> &raquo;</li>
         
-      <li>Termination Criteria</li>
+      <li>Optimality conditions</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -187,9 +194,64 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="termination-criteria">
-<h1>Termination Criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+  <div class="section" id="optimality-conditions">
+<span id="optimality"></span><h1>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Permalink to this headline">¶</a></h1>
+<p>When strong duality holds, the Karush-Kuhn-Tucker (KKT) conditions
+are <a class="reference external" href="https://web.stanford.edu/~boyd/cvxbook/">necessary and sufficient for optimality</a>. They are given by</p>
+<div class="math notranslate nohighlight">
+\[Ax + s = b, \quad Px + A^\top y + c= 0,\quad s \in \mathcal{K}, \quad y \in \mathcal{K}^*,\quad  s \perp y.\]</div>
+<p>These are primal feasibility, dual feasibility, primal and dual cone membership,
+and complementary slackness.  The complementary slackness condition is
+equivalent to a zero <em>duality gap</em> condition at any optimal point, that is
+for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy the KKT conditions we have</p>
+<div class="math notranslate nohighlight">
+\[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
+<p>On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
+Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
+<div class="math notranslate nohighlight">
+\[A^\top y = 0,\  y \in \mathcal{K}^*,\ b^\top y &lt; 0\]</div>
+<p>acts a certificate that the quadratic cone program is primal infeasible (dual unbounded). On the other hand, if we can find <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> such
+that</p>
+<div class="math notranslate nohighlight">
+\[Px = 0,\ -Ax\in \mathcal{K},\ c^\top x &lt; 0\]</div>
+<p>then this is a certificate that the problem is dual infeasible (primal
+unbounded).</p>
+</div>
+<div class="section" id="termination-criteria">
+<span id="termination"></span><h1>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>Optimality<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>The iterates produced by SCS <em>always</em> satisfy the conic constraints <span class="math notranslate nohighlight">\(s \in
+\mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>.  Therefore to say that a problem
+is solved we need to check if the primal residual, dual residual, and duality
+gap are all below a certain tolerance. Specifically, SCS terminates when it has
+found <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span>, and <span class="math notranslate nohighlight">\(y \in
+\mathbf{R}^m\)</span> that satisfy the following residual bounds.</p>
+<p>Primal residual:</p>
+<div class="math notranslate nohighlight">
+\[\|Ax + s - b\|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty)\]</div>
+<p>Dual residual:</p>
+<div class="math notranslate nohighlight">
+\[\|Px + A^\top y - c \|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty)\]</div>
+<p>Duality gap:</p>
+<div class="math notranslate nohighlight">
+\[|x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs}&gt;0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel}&gt;0\)</span> are user defined
+<a class="reference internal" href="settings.html#settings"><span class="std std-ref">settings</span></a>.</p>
+</div>
+<div class="section" id="infeasibility">
+<span id="id2"></span><h2>Infeasibility<a class="headerlink" href="#infeasibility" title="Permalink to this headline">¶</a></h2>
+<p>Since the conic constraints are always guaranteed by the iterates (i.e., <span class="math notranslate nohighlight">\(s \in
+\mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
+declares a problem primal infeasible when it finds <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
+<div class="math notranslate nohighlight">
+\[b^\top y = -1, \quad \|A^\top y\|_\infty &lt; \epsilon_\mathrm{infeas}.\]</div>
+<p>Similarly, SCS declares dual infeasibility when it finds <span class="math notranslate nohighlight">\(x \in
+\mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
+<div class="math notranslate nohighlight">
+\[c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) &lt; \epsilon_\mathrm{infeas}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas}\)</span> is a user-defined <a class="reference internal" href="settings.html#settings"><span class="std std-ref">setting</span></a>.</p>
+</div>
 </div>
 
 

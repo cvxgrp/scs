@@ -3,8 +3,11 @@
 Compile flags
 -------------
 
-Others are not exposed but defined in :code:`glbopts.h`.
-Can be overriden via the command line XXX.
+Typically the user will not need to interact with these flags, but we document them
+here for completeness.  Note this list is not exhaustive, others are not exposed
+but defined in :code:`include/glbopts.h`.  The list below are defined in
+:code:`scs.mk` and can be overridden via the command line when compiling by
+executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
 
 
 .. list-table::
@@ -16,62 +19,62 @@ Can be overriden via the command line XXX.
      - Permitted values
      - Default
    * - :code:`DLONG`
-     - Use long (64 bit) integers
+     - If True use 64 bit integers, else 32 bit
      - True/False
      - 0
    * - :code:`SFLOAT`
-     - iXXX
+     - If True use 32 bit floats, else 64 bit
      - True/False
      - 0
    * - :code:`CTRLC`
-     - iXXX
+     - Listen to CTRL-C interruptions
      - True/False
-     - 0
+     - 1
    * - :code:`NOTIMER`
-     - iXXX
+     - Disables code timing
      - True/False
      - 0
    * - :code:`COPYAMATRIX`
-     - iXXX
+     - Make a copy of A in memory
      - True/False
-     - 0
+     - 1
    * - :code:`GPU_TRANSOSE_MAT`
-     - iXXX
+     - If on GPU store A transpose in memory
      - True/False
-     - 0
+     - 1
    * - :code:`VERBOSITY`
-     - iXXX
-     - True/False
+     - Verbosity level (for debugging)
+     - :math:`\mathbf{N}`
      - 0
    * - :code:`USE_LAPACK`
-     - iXXX
+     - Whether to link in :ref:`BLAS/LAPACK <lapack>`
      - True/False
-     - 0
+     - 1
    * - :code:`USE_OPENMP`
-     - iXXX
+     - Use openmp to parallelize some computation
      - True/False
      - 0
    * - :code:`BLAS64`
-     - iXXX
+     - The BLAS library is 64 bits
      - True/False
      - 0
    * - :code:`NOBLASSUFFIX`
-     - iXXX
+     - The BLAS library has no function name suffix
      - True/False
      - 0
    * - :code:`BLASSUFFIX`
-     - iXXX
-     - True/False
-     - 0
+     - The BLAS library uses this suffix
+     - String
+     - '_'
    * - :code:`MATLAB_MEX_FILE`
-     - iXXX
+     - If compiling for use in MATLAB
      - True/False
      - 0
    * - :code:`PYTHON`
-     - iXXX
+     - If compiling for use in python
      - True/False
      - 0
    * - :code:`USING_R`
-     - iXXX
+     - If compiling for use in Rlang
      - True/False
      - 0
