@@ -2,12 +2,12 @@
 
 Return information
 ------------------
-
-See the :ref:`ScsInfo <scsinfo>` struct.
+When SCS terminates it will return an :ref:`ScsInfo <scsinfo>` struct containing
+the following fields.
 
 
 .. list-table::
-   :widths: 25 25 50
+   :widths: 15 15 70
    :header-rows: 1
 
    * - Name
@@ -23,39 +23,39 @@ See the :ref:`ScsInfo <scsinfo>` struct.
      - :code:`scs_int`
      - Status integer :ref:`exit flag <exit_flags>`
    * - :code:`scale_updates`
-     - XXX
-     - XXX
+     - :code:`scs_int` 
+     - Number of updates to the scale parameter
    * - :code:`pobj`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Primal objective 
    * - :code:`dobj`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Dual objective 
    * - :code:`res_pri`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Primal residual (see :ref:`termination conditions <terminations>`)
    * - :code:`res_dual`
-     - XXX
-     - XXX
-   * - :code:`res_infeas`
-     - XXX
-     - XXX
-   * - :code:`res_unbbd_a`
-     - XXX
-     - XXX
-   * - :code:`res_unbdd_p`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Dual residual (see :ref:`termination conditions <terminations>`)
    * - :code:`gap`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Duality gap  (see :ref:`termination conditions <terminations>`)
+   * - :code:`res_infeas`
+     - :code:`scs_float` 
+     - Primal infeasibility residual (see :ref:`termination conditions <terminations>`)
+   * - :code:`res_unbbd_a`
+     - :code:`scs_float` 
+     - Dual infeasibility residual involving :math:`A` (see :ref:`termination conditions <terminations>`)
+   * - :code:`res_unbdd_p`
+     - :code:`scs_float` 
+     - Dual infeasibility residual involving :math:`P` (see :ref:`termination conditions <terminations>`)
    * - :code:`setup_time`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Time taken for setup (milliseconds) 
    * - :code:`solve_time`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Time taken for solve (milliseconds) 
    * - :code:`scale`
-     - XXX
-     - XXX
+     - :code:`scs_float` 
+     - Final scale parameter (useful for initializing next solve)
 

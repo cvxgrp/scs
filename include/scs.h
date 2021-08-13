@@ -133,14 +133,14 @@ typedef struct {
   scs_float res_pri;
   /** dual equality residual */
   scs_float res_dual;
+  /** duality gap */
+  scs_float gap;
   /** infeasibility cert residual */
   scs_float res_infeas;
   /** unbounded cert residual */
   scs_float res_unbdd_a;
   /** unbounded cert residual */
   scs_float res_unbdd_p;
-  /** duality gap */
-  scs_float gap;
   /** time taken for setup phase (milliseconds) */
   scs_float setup_time;
   /** time taken for solve phase (milliseconds) */
