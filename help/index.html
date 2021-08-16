@@ -176,7 +176,16 @@
             
   <div class="section" id="getting-help">
 <span id="help"></span><h1>Getting help<a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<p>Currently the easiest way to get support is to file a <a class="reference external" href="https://github.com/cvxgrp/scs/issues">GitHub issue</a></p>
+<p>If you are have a problem that SCS struggles with you can set the
+<code class="code docutils literal notranslate"><span class="pre">write_data_filename</span></code> field in the <a class="reference internal" href="../solver/settings.html#settings"><span class="std std-ref">settings</span></a> and SCS will
+dump a file containing the problem data to disk under that filename. Zip the
+file and <a class="reference external" href="mailto:bodonoghue85&#37;&#52;&#48;gmail&#46;com">email it to us</a> or attach it to the
+GitHub issue. This makes it much easier for us to reproduce the issue.</p>
+<p>A common cause of issues is not linking <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS/LAPACK libraries</span></a>
+correctly. If you are having this issue please search for resources on
+installing and linking these libraries first. You can try <a class="reference external" href="https://www.openblas.net/">OpenBLAS</a>
+if you need a BLAS library.</p>
 </div>
 
 

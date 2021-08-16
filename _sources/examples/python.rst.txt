@@ -1,4 +1,4 @@
-.. _python_interface:
+.. _python_example:
 
 Python
 ======

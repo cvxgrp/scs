@@ -105,7 +105,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#other-languages">Other languages</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">C / C++</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#main-solver-api">Main solver API</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#exit-flags">Exit flags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#basic-types">Basic types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#types">Types</a></li>
 </ul>
@@ -232,79 +231,12 @@
 
 </div>
 </div>
-<div class="section" id="exit-flags">
-<span id="id1"></span><h2>Exit flags<a class="headerlink" href="#exit-flags" title="Permalink to this headline">¶</a></h2>
-<p>The integer values that SCS can return are documented below.</p>
-<table class="colwidths-given docutils align-default">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 10%" />
-<col style="width: 40%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Status</p></th>
-<th class="head"><p>Value</p></th>
-<th class="head"><p>SCS constant name</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Solved</p></td>
-<td><p>1</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_SOLVED</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Solved (inaccurate)</p></td>
-<td><p>2</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_SOLVED_INACCURATE</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Unfinished (should never be returned)</p></td>
-<td><p>0</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_UNFINISHED</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Unbounded</p></td>
-<td><p>-1</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_SOLVED</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Infeasible</p></td>
-<td><p>-2</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_INFEASIBLE</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Indeterminate</p></td>
-<td><p>-3</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_INDETERMINATE</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Failed (typically data input error)</p></td>
-<td><p>-4</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Interrupted (SIGINT)</p></td>
-<td><p>-5</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_SIGINT</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Unbounded (inaccurate)</p></td>
-<td><p>-6</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_UNBOUNDED</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Infeasible (inaccurate)</p></td>
-<td><p>-7</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_INFEASIBLE</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Hit maximum iterations</p></td>
-<td><p>-8</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_MAX_ITERS</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Hit time limit</p></td>
-<td><p>-9</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">SCS_TIME_LIMIT</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="basic-types">
 <h2>Basic types<a class="headerlink" href="#basic-types" title="Permalink to this headline">¶</a></h2>
 <p>The most basic types are</p>
 <ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code>: can be <code class="code docutils literal notranslate"><span class="pre">long</span></code> or <code class="code docutils literal notranslate"><span class="pre">int</span></code> if the compiler flag <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> is set or not</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code>: can be a <code class="code docutils literal notranslate"><span class="pre">double</span></code> or a <code class="code docutils literal notranslate"><span class="pre">float</span></code> if the compiler flag <code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code> is set or not.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code>: can be <code class="code docutils literal notranslate"><span class="pre">long</span></code> or <code class="code docutils literal notranslate"><span class="pre">int</span></code> if the <a class="reference internal" href="../solver/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> is set or not</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code>: can be a <code class="code docutils literal notranslate"><span class="pre">double</span></code> or a <code class="code docutils literal notranslate"><span class="pre">float</span></code> if the <a class="reference internal" href="../solver/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code> is set or not.</p></li>
 </ul>
 </div>
 <div class="section" id="types">

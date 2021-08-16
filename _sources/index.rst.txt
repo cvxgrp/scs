@@ -73,8 +73,7 @@ The current version is |version|
 
 The code is freely available on `GitHub <https://github.com/cvxgrp/scs>`_. 
 
-
-
+GPU
 
 Features
 ________

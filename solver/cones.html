@@ -100,20 +100,19 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cones</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#semidefinite-cone">Semidefinite cone</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Cones</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#semidefinite-cone">Semidefinite cone</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
-<li class="toctree-l3"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l3"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
-<li class="toctree-l3"><a class="reference internal" href="info.html">Return information</a></li>
-<li class="toctree-l3"><a class="reference internal" href="scale.html">Scaling</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -211,39 +210,39 @@
 <tbody>
 <tr class="row-even"><td><p>Zero cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{s \mid s = 0 \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">z</span></code>, length of cone</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">z</span></code> length of cone.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Positive orthant</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{s \mid s \geq 0 \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">l</span></code>, length of cone</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">l</span></code> length of cone.</p></td>
 </tr>
 <tr class="row-even"><td><p>Box cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^n \mid t l \leq s \leq t u  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">bu,</span> <span class="pre">bl,</span> <span class="pre">bsize</span></code>, <span class="math notranslate nohighlight">\(u,l\)</span> arrays of len <code class="code docutils literal notranslate"><span class="pre">bsize</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">bu,</span> <span class="pre">bl</span></code> correspond to <span class="math notranslate nohighlight">\(u,l\)</span> and are arrays of len <code class="code docutils literal notranslate"><span class="pre">bsize</span></code> <span class="math notranslate nohighlight">\(=n\)</span>. If <code class="code docutils literal notranslate"><span class="pre">bsize=0</span></code> cone is disabled.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Second-order cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^n\mid \|s\|_2 \leq t  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">q,</span> <span class="pre">qsize</span></code>, array of SOC sizes of len <code class="code docutils literal notranslate"><span class="pre">qsize</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">q</span></code> array of SOC lengths with <code class="code docutils literal notranslate"><span class="pre">qsize</span></code> elements, each <span class="math notranslate nohighlight">\(q[i] = n_i+1\)</span>.</p></td>
 </tr>
 <tr class="row-even"><td><p>Positive semidefinite cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">s,</span> <span class="pre">ssize</span></code> see <a class="reference internal" href="#sdcone"><span class="std std-ref">note</span></a></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">s</span></code> array of PSD cone lengths with <code class="code docutils literal notranslate"><span class="pre">ssize</span></code> elements, each <span class="math notranslate nohighlight">\(s[i] = n_i\)</span>. See <a class="reference internal" href="#sdcone"><span class="std std-ref">note</span></a> about scaling.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y&gt;0  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">ep</span></code>, number of cone triples</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">ep</span></code> number of cone triples.</p></td>
 </tr>
 <tr class="row-even"><td><p>Dual exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{  (u,v,w)\in \mathbf{R}^3 \mid -u e^{v/u} \leq e w, u&lt;0 \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">ed</span></code>, number of cone triples</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">ed</span></code> number of cone triples.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Power cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|\}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">p,</span> <span class="pre">psize</span></code> array of powers</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">p</span></code> array of <span class="math notranslate nohighlight">\(p\in[-1,1]\)</span> powers with <code class="code docutils literal notranslate"><span class="pre">psize</span></code> elements, positive entries correspond to power cone.</p></td>
 </tr>
 <tr class="row-even"><td><p>Dual power cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">p,</span> <span class="pre">psize</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">p</span></code> array <span class="math notranslate nohighlight">\(p\in[-1,1]\)</span> powers with <code class="code docutils literal notranslate"><span class="pre">psize</span></code> elements, negative entries correspond to dual power cone (sign is flipped).</p></td>
 </tr>
 </tbody>
 </table>

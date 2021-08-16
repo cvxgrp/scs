@@ -16,31 +16,31 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
 
    * - Zero cone
      - :math:`\{s \mid s = 0 \}`
-     - :code:`z`, length of cone
+     - :code:`z` length of cone.
    * - Positive orthant
      - :math:`\{s \mid s \geq 0 \}`
-     - :code:`l`, length of cone
+     - :code:`l` length of cone.
    * - Box cone
      - :math:`\{(t, s) \in \mathbf{R} \times \mathbf{R}^n \mid t l \leq s \leq t u  \}`
-     - :code:`bu, bl, bsize`, :math:`u,l` arrays of len :code:`bsize`
+     - :code:`bu, bl` correspond to :math:`u,l` and are arrays of len :code:`bsize` :math:`=n`. If :code:`bsize=0` cone is disabled.
    * - Second-order cone
      - :math:`\{(t, s) \in \mathbf{R} \times \mathbf{R}^n\mid \|s\|_2 \leq t  \}`
-     - :code:`q, qsize`, array of SOC sizes of len :code:`qsize`
+     - :code:`q` array of SOC lengths with :code:`qsize` elements, each :math:`q[i] = n_i+1`.
    * - Positive semidefinite cone
      - :math:`\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}`
-     - :code:`s, ssize` see :ref:`note <sdcone>` 
+     - :code:`s` array of PSD cone lengths with :code:`ssize` elements, each :math:`s[i] = n_i`. See :ref:`note <sdcone>` about scaling.
    * - Exponential cone
      - :math:`\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \}`
-     - :code:`ep`, number of cone triples
+     - :code:`ep` number of cone triples.
    * - Dual exponential cone
      - :math:`\{  (u,v,w)\in \mathbf{R}^3 \mid -u e^{v/u} \leq e w, u<0 \}`
-     - :code:`ed`, number of cone triples
+     - :code:`ed` number of cone triples.
    * - Power cone
      - :math:`\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|\}`
-     - :code:`p, psize` array of powers
+     - :code:`p` array of :math:`p\in[-1,1]` powers with :code:`psize` elements, positive entries correspond to power cone.
    * - Dual power cone
      - :math:`\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}`
-     - :code:`p, psize`
+     - :code:`p` array :math:`p\in[-1,1]` powers with :code:`psize` elements, negative entries correspond to dual power cone (sign is flipped).
 
 
 **Note**:

@@ -38,6 +38,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -99,17 +100,23 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l3"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
-<li class="toctree-l3"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l3"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
-<li class="toctree-l3"><a class="reference internal" href="info.html">Return information</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Scaling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scaling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cone-projection">Cone projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selecting-r">Selecting <span class="math notranslate nohighlight">\(R\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linear-system-solve">Linear system solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vector-v-k">Vector <span class="math notranslate nohighlight">\(v^k\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#root-plus-function">Root-plus function</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -191,75 +198,164 @@
             
   <div class="section" id="scaling">
 <span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline">¶</a></h1>
-<p>In this note we derive the update equations when using a non-identity scaling.
-Solving LCP(M, q), using <a class="reference external" href="https://arxiv.org/pdf/2004.02177.pdf">https://arxiv.org/pdf/2004.02177.pdf</a>.</p>
-<p>DR splitting is:</p>
-<p>tilde u^{k+1} = (I + F)^{-1} w^k
-u^{k+1} = (I + G)^{-1} (2 tilde u^{k+1} - w^k)
-w^{k+1} = w^k + alpha * (u^{k+1} - tilde u^{k+1})</p>
-<p>yielding w^k rightarrow u^star + F(u^star) where 0 in F(u^star) + G(u^star).</p>
-<p>Now consider diagonal matrix R instead of I, the above becomes:</p>
-<p>tilde u^{k+1} = (R + F)^{-1} R w^k
-u^{k+1} = (R + G)^{-1} R (2 tilde u^{k+1} - w^k)
-w^{k+1} = w^k + alpha * (u^{k+1} - tilde u^{k+1})</p>
-<p>w^k rightarrow u^star + R^{-1} F(u^star) where 0 in F(u^star) + G(u^star).</p>
-<p>In SCS, F = mathcal{Q} and G = I_C. R has to be chosen so that the cone
-projection is preserved. To do this we ensure that the entries of R &gt; 0
-corresponding to each cone are constant within that cone. This means that
-R does not affect the cone projection in any way, since:</p>
-<blockquote>
-<div><p>x = (r I + partial I_C)^{-1} (r y)</p>
-</div></blockquote>
-<p>=&gt;   0 in r(x - y) + partial I_C(x)
-=&gt; min_x || x - y ||^2 s.t. x in C.</p>
-<dl class="simple">
-<dt>We take R = [rho_x * I_n           0        0]</dt><dd><p>[ 0           diag(rho_y_vec)   0]
-[ 0                    0        d]</p>
-</dd>
-</dl>
-<p>where I_n is nxn identity, rho_x in reals, rho_y_vec in reals^m and d in
-reals. The rho_y_vec term includes the effect of the parameter <a href="#id2"><span class="problematic" id="id3">`</span></a>scale’, which
-is updated heuristically to improve convergence. Basically</p>
-<blockquote>
-<div><p>rho_y_vec approx 1/scale * I</p>
-</div></blockquote>
-<p>So as scale increases, rho_y_vec decreases and vice-versa.
-Denote by R_x = rho_x * I_n and R_y = diag(rho_y_vec).</p>
-<p><a href="#id4"><span class="problematic" id="id5">*</span></a>Linear equation to be solved:</p>
-<dl class="simple">
-<dt>z = p^k - r tau, where</dt><dd><p>p^k = (R + M)^{-1} R mu^k     ** this is solved at every iteration
-r   = (R + M)^{-1} q           ** R does <em>not</em> appear before q here.</p>
-</dd>
-</dl>
-<p>Now consider z = (R + M)^{-1} R mu</p>
-<dl class="simple">
-<dt>recall M = [ P   A’]</dt><dd><p>[-A   0 ]</p>
-</dd>
-<dt>so want to solve [z_x] = [R_x + P   A’]^{-1} [q_x]</dt><dd><p>[z_y]   [  -A     R_y]      [q_y]</p>
-</dd>
-</dl>
+<p>In this note we derive the update equations when using a non-identity
+scaling when solving <span class="math notranslate nohighlight">\(LCP(M, q)\)</span>. Standard Douglas-Rachford splitting is:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\tilde u^{k+1} &amp;= (I + F)^{-1} w^k \\
+u^{k+1} &amp;= (I + G)^{-1} (2 \tilde u^{k+1} - w^k) \\
+w^{k+1} &amp;= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
+\end{align}\end{split}\]</div>
+<p>yielding <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + F(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0 \in
+F(u^\star) + G(u^\star)\)</span> (assuming such a <span class="math notranslate nohighlight">\(u^\star\)</span> exists).  Now consider
+modifying DR splitting to use a
+diagonal matrix <span class="math notranslate nohighlight">\(R\)</span> instead of <span class="math notranslate nohighlight">\(I\)</span>. This is useful because the
+matrix <span class="math notranslate nohighlight">\(R\)</span> can be selected to provide better convergence in practice.
+The above becomes:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\tilde u^{k+1} &amp;= (R + F)^{-1} R w^k \\
+u^{k+1} &amp;= (R + G)^{-1} R (2 \tilde u^{k+1} - w^k) \\
+w^{k+1} &amp;= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
+\end{align}\end{split}\]</div>
+<p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} F(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0
+\in F(u^\star) + G(u^\star)\)</span>.</p>
+<div class="section" id="cone-projection">
+<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline">¶</a></h2>
+<p>In SCS, <span class="math notranslate nohighlight">\(F = \mathcal{Q}\)</span> and <span class="math notranslate nohighlight">\(G = I_{\mathcal{C}_+}\)</span>. Note that
+<span class="math notranslate nohighlight">\(R\)</span> has to be chosen so that the cone projection is preserved. To do this
+we ensure that the entries of <span class="math notranslate nohighlight">\(R &gt; 0\)</span> corresponding to each cone are
+constant within that cone. This means that R does not affect the cone projection
+in any way, since for sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+ &amp;x = (r I + \partial I_{\mathcal{K}})^{-1} (r y) \\
+ \Rightarrow \quad  &amp;  0 \in r(x - y) + \partial I_{\mathcal{K}}(x) \\
+ \Rightarrow \quad &amp; x = \mbox{argmin}_z || z - y ||^2 \mbox{ s.t. } z \in \mathcal{K}.
+ \end{align}\end{split}\]</div>
+<p>In other words, <span class="math notranslate nohighlight">\(R\)</span> is selected such that</p>
+<div class="math notranslate nohighlight">
+\[(R +  \partial I_{\mathcal{C}_+})^{-1} R = (I +  \partial I_{\mathcal{C}_+})^{-1}\]</div>
+</div>
+<div class="section" id="selecting-r">
+<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this headline">¶</a></h2>
+<p>For SCS we take</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}R =  \begin{bmatrix}
+  \rho_x I_n   &amp;        0    &amp;   0 \\
+  0     &amp;     \mathrm{diag}(\rho_y) &amp;   0 \\
+  0     &amp;               0     &amp;   d
+\end{bmatrix}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(I_n\)</span> is <span class="math notranslate nohighlight">\(n \times n\)</span> identity, <span class="math notranslate nohighlight">\(\rho_x \in \mathbf{R}\)</span>,
+<span class="math notranslate nohighlight">\(\rho_y \in \mathbf{R}^m\)</span> and <span class="math notranslate nohighlight">\(d \in \mathbf{R}\)</span>. The <span class="math notranslate nohighlight">\(\rho_y\)</span>
+term includes the effect of the parameter <code class="code docutils literal notranslate"><span class="pre">scale</span></code>, which is updated
+heuristically to improve convergence. Basically</p>
+<div class="math notranslate nohighlight">
+\[\rho_y \approx (1/\mathrm{scale}) I\]</div>
+<p>with the only difference being that each cone can modify this
+relationship slightly (but currently only the zero cone does, which sets
+<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span>).
+So as scale increases, <span class="math notranslate nohighlight">\(\rho_y\)</span> decreases and vice-versa.</p>
+<p>The quantity <span class="math notranslate nohighlight">\(\rho_x\)</span> is determined by the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">setting</span></a> value
+<code class="code docutils literal notranslate"><span class="pre">rho_x</span></code>. The quantity <span class="math notranslate nohighlight">\(\rho_y\)</span> is determined by the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">setting</span></a> value <code class="code docutils literal notranslate"><span class="pre">scale</span></code> but is updated adaptively using the techniques
+described in <span class="xref std std-ref">Updating the scale</span>. Finally,  <span class="math notranslate nohighlight">\(d\)</span> is determined by
+<code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
+</div>
+<div class="section" id="linear-system-solve">
+<h2>Linear system solve<a class="headerlink" href="#linear-system-solve" title="Permalink to this headline">¶</a></h2>
+<p>At each iteration SCS must solve the following linear equation:</p>
+<div class="math notranslate nohighlight">
+\[z = p^k - r \tau,\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+p^k &amp;= (R + M)^{-1} R \mu^k \\
+r   &amp;= (R + M)^{-1} q
+\end{align}\end{split}\]</div>
+<p>(<span class="math notranslate nohighlight">\(R\)</span> does <em>not</em> appear before <span class="math notranslate nohighlight">\(q\)</span> in the second expression above).
+Now consider <span class="math notranslate nohighlight">\(r = (R + M)^{-1} q\)</span> and recall</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}M = \begin{bmatrix}
+      P  &amp;  A^\top \\
+      -A &amp;  0   \\
+    \end{bmatrix}\end{split}\]</div>
+<p>Denote by <span class="math notranslate nohighlight">\(R_x = \rho_x I_n\)</span> and <span class="math notranslate nohighlight">\(R_y = \mathrm{diag}(\rho_y)\)</span>.
+We want to solve</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+r_x \\
+r_y
+\end{bmatrix}
+=
+\begin{bmatrix}
+R_x + P  &amp;  A^\top \\
+-A &amp;  R_y   \\
+\end{bmatrix}
+\begin{bmatrix}
+q_x \\
+q_y
+\end{bmatrix}\end{split}\]</div>
 <p>which is quasidefinite if we negate the bottom row:</p>
-<blockquote>
-<div><p>[z_x] = [R_x + P   A’]^{-1} [ q_x]
-[z_y]   [  A     -R_y]      [-q_y]</p>
-</div></blockquote>
-<p>A direct method factorizes the above matrix.</p>
-<dl class="simple">
-<dt>An indirect method can solve via:</dt><dd><dl class="simple">
-<dt>(R_x + P + A’ R_y^{-1} A) z_x = q_x - A’ R_y^{-1} q_y</dt><dd><p>z_y = R_y^{-1}(A z_x + q_y).</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p><a href="#id6"><span class="problematic" id="id7">*</span></a>Obtaining the v^k = [r^k;s^k;kappa^k] vector:</p>
-<p>v^{k+1} = R( u^{k+1} + w^k - 2 tilde u^{k+1} ) rightarrow F(u^star)</p>
-<p><a href="#id8"><span class="problematic" id="id9">*</span></a>root_plus function:</p>
-<p>tau^2 (d + r’ R r) + tau (r’ R mu^k - 2 r’ R p^k - d eta^k) + p^k R (p^k - mu^k) = 0</p>
-<p>other than kappa (which does not affect the alg) this is the <em>only</em> place
-where ‘d’ appears, so we have a lot of flexibility in how to choose it.
-<a href="#id10"><span class="problematic" id="id11">`</span></a>d’ is determined by <a href="#id12"><span class="problematic" id="id13">`</span></a>TAU_FACTOR’ in the code.</p>
-<p>(see the <a href="#id14"><span class="problematic" id="id15">`</span></a>dot_with_diag_scaling’ function in src/scs.c).</p>
-<p><a href="#id16"><span class="problematic" id="id17">*</span></a>Projecting onto to the cone unaffacted (see previous discussion).</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+r_x \\
+r_y
+\end{bmatrix}
+=
+\begin{bmatrix}
+R_x + P  &amp;  A^\top \\
+A &amp;  -R_y   \\
+\end{bmatrix}
+\begin{bmatrix}
+q_x \\
+-q_y
+\end{bmatrix}\end{split}\]</div>
+<p>A direct method factorizes the above matrix.
+An indirect method can solve via:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+(R_x + P + A^\top R_y^{-1} A) r_x &amp; = q_x - A^\top R_y^{-1} q_y \\
+                          r_y &amp; = R_y^{-1}(A z_x + q_y).
+\end{align}\end{split}\]</div>
+</div>
+<div class="section" id="vector-v-k">
+<h2>Vector <span class="math notranslate nohighlight">\(v^k\)</span><a class="headerlink" href="#vector-v-k" title="Permalink to this headline">¶</a></h2>
+<p>In order to get the <span class="math notranslate nohighlight">\(v^k\)</span> vector that contains <span class="math notranslate nohighlight">\(s\)</span> and
+<span class="math notranslate nohighlight">\(\kappa\)</span> we use:</p>
+<div class="math notranslate nohighlight">
+\[v^{k+1} = R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \rightarrow \mathcal{Q}(u^\star),\]</div>
+<p>and we have</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+v^{k+1} &amp;= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
+        &amp;= R( \Pi_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
+        &amp;= R( \Pi_{\mathcal{C}^*_+} (-2 \tilde u^{k+1} + w^k)) \\
+        &amp;= R \tilde v^{k+1} \\
+        &amp;\in \mathcal{C}^*_+
+\end{align}\end{split}\]</div>
+<p>by Moreau and the fact that <span class="math notranslate nohighlight">\(R\)</span> is chosen to be constant
+within each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. Finally note that <span class="math notranslate nohighlight">\(v^k \perp u^k\)</span>, since</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+(u^k)^\top v^k &amp;= (u^k)^\top R \tilde v^{k+1}  \\
+ &amp;= \sum_{\mathcal{K} \in \mathcal{C}_+} r_\mathcal{K} (u^k_\mathcal{K})^\top \tilde v^k_\mathcal{K} \\
+ &amp;= 0
+\end{align}\end{split}\]</div>
+<p>since <span class="math notranslate nohighlight">\(\tilde v^k \perp u^k\)</span> and <span class="math notranslate nohighlight">\(R\)</span> is chosen to be constant
+within each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>.</p>
+</div>
+<div class="section" id="root-plus-function">
+<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline">¶</a></h2>
+<p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
+of the following quadratic equation:</p>
+<div class="math notranslate nohighlight">
+\[\tau^2 (d + r^\top R r) + \tau (r^\top R \mu^k - 2 r^\top R p^k - d \eta^k) + p^k R (p^k - \mu^k) = 0.\]</div>
+<p>Other than when computing <span class="math notranslate nohighlight">\(\kappa\)</span> (which does not affect the algorithm)
+this is the <em>only</em> place where <span class="math notranslate nohighlight">\(d\)</span> appears, so we have a lot of
+flexibility in how to choose it and it can even change from iteration to
+iteration. It is an open question on how best to select this parameter.  See the
+<code class="code docutils literal notranslate"><span class="pre">dot_with_diag_scaling</span></code> function in <code class="code docutils literal notranslate"><span class="pre">src/scs.c</span></code>.</p>
+</div>
 </div>
 
 

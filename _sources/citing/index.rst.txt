@@ -8,7 +8,7 @@ If you wish to cite SCS, please use any of the following:
 .. glossary::
 
   Original paper
-      Main algorithm description, derivation, and initial numerical results `paper <https://web.stanford.edu/~boyd/papers/pdf/scs.pdf>`__.
+      Main algorithm description, derivation, and initial numerical results `paper <https://web.stanford.edu/~boyd/papers/scs.html>`__.
 
       .. code:: latex
 
@@ -25,7 +25,7 @@ If you wish to cite SCS, please use any of the following:
         }
 
   Latest extension
-      The paper that derived the extension to quadratics and describes the 'modern' version of the algorithm is available `here <https://stanford.edu/~boyd/papers/pdf/XXX.pdf>`__.
+      The paper that derived the extension to quadratics and describes the 'modern' version of the algorithm is available `here <https://arxiv.org/abs/2004.02177>`__.
 
       .. code:: latex
 
@@ -55,7 +55,7 @@ If you wish to cite SCS, please use any of the following:
         }
 
   Anderson Acceleration
-     The acceleration scheme we use is described in the `paper <https://stanford.edu/~boyd/papers/pdf/XXX.pdf>`__.
+     The acceleration scheme we use is described in the `paper <https://web.stanford.edu/~boyd/papers/nonexp_global_aa1.html>`__.
 
       .. code:: latex
 

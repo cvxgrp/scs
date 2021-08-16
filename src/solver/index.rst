@@ -3,7 +3,19 @@
 Solver
 ===============
 
-SCS is derived as Douglas-Rachford splitting applied to a homogeneous embedding
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   cones.rst
+   termination.rst
+   settings.rst
+   compile_flags.rst
+   info.rst
+   scale.rst
+
+
+SCS applies Douglas-Rachford splitting to a homogeneous embedding
 of the quadratic cone program. The high level algorithm is as follows,
 from an initial :math:`w^0` for :math:`k=0,1,\ldots` do
 
@@ -14,13 +26,13 @@ from an initial :math:`w^0` for :math:`k=0,1,\ldots` do
   w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1}
   \end{align}
 
-and :math:`u^k \rightarrow u^\star` from which we can recover the optimal solution
-or the certificate of infeasibility. The algorithm consists of three steps.
-The first step involves :ref:`solving a linear system` of equations:
+Under the above :math:`u^k \rightarrow u^\star` from which we can recover the :ref:`optimal solution <optimality>`
+or a :ref:`certificate of infeasibility <infeasibility>`. The algorithm consists of three steps.
+The first step involves :ref:`solving a linear system <linear_solver>` of equations:
 
 .. math::
   \begin{bmatrix} I + P & A^T  \\ A & -I \end{bmatrix}\begin{bmatrix} x \\ y
-  \end{bmatrix} = \begin{bmatrix} \mu_x \\ -\mu_y \end{bmatrix},
+  \end{bmatrix} = \begin{bmatrix} \mu_x \\ -\mu_y \end{bmatrix}
 
 The second step is the Euclidean projection onto a convex :ref:`cone <cones>`, ie,
 
@@ -45,15 +57,4 @@ Warm-starting
 -------------
 
 SCS supports warm-starting the solver with a guess of the solution.
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   cones.rst
-   termination.rst
-   settings.rst
-   compile_flags.rst
-   info.rst
-   scale.rst
 
