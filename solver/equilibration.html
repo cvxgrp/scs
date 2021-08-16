@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Data equilibration &mdash; SCS 3.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Install" href="../install/index.html" />
+    <link rel="prev" title="Scaling" href="scale.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/scs_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data equilibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#solution">Solution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#residuals">Residuals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infeasibility-certificates">Infeasibility certificates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SCS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Solver</a> &raquo;</li>
+        
+      <li>Data equilibration</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/solver/equilibration.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="data-equilibration">
+<span id="equilibration"></span><h1>Data equilibration<a class="headerlink" href="#data-equilibration" title="Permalink to this headline">¶</a></h1>
+<p>Data scale has a large impact on the convergence of first-order algorithms like
+SCS in practice. With that in mind SCS implements a heuristic data equilibration
+(or normalization) scheme that attempts to whiten the data which is enabled by
+the <code class="code docutils literal notranslate"><span class="pre">normalize</span></code> <a class="reference internal" href="settings.html#settings"><span class="std std-ref">setting</span></a>.</p>
+<p>At a high level the equilibration scheme (which is performed once, right at
+the start of the solve) produces diagonal matrices <span class="math notranslate nohighlight">\(E \in
+\mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(D \in \mathbf{R}^m\)</span> and scalar <span class="math notranslate nohighlight">\(\sigma &gt; 0\)</span> that rescale
+the data in-place, so that the tuple <span class="math notranslate nohighlight">\((P, A, b, c)\)</span> becomes
+<span class="math notranslate nohighlight">\((\hat P, \hat A, \hat b, \hat c)\)</span> where</p>
+<div class="math notranslate nohighlight">
+\[\hat P = EPE,\quad  \hat A  = DAE,\quad  \hat c  = \sigma Ec,\quad  \hat b = \sigma Db\]</div>
+<p>Essentially:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+\hat P &amp; \hat A^\top &amp; \hat c\\
+\hat A &amp; 0 &amp; \hat b \\
+\hat c^\top &amp; \hat b^\top &amp; 0
+\end{bmatrix}
+=
+\begin{bmatrix}
+E &amp; 0 &amp; 0 \\
+0 &amp; D &amp; 0 \\
+0 &amp; 0 &amp; \sigma
+\end{bmatrix}
+\begin{bmatrix}
+P &amp; A^\top &amp; c\\
+A &amp; 0 &amp; b \\
+c^\top &amp; b^\top &amp; 0
+\end{bmatrix}
+\begin{bmatrix}
+E &amp; 0 &amp; 0 \\
+0 &amp; D &amp; 0 \\
+0 &amp; 0 &amp; \sigma
+\end{bmatrix}
+=
+\begin{bmatrix}
+EPE &amp; EA^\top D &amp; \sigma Ec\\
+DAE &amp; 0 &amp; \sigma Db \\
+\sigma c^\top E &amp; \sigma b^\top D &amp; 0
+\end{bmatrix}\end{split}\]</div>
+<p>In other words <span class="math notranslate nohighlight">\(D\)</span> rescales the rows of <span class="math notranslate nohighlight">\(A, b\)</span> and <span class="math notranslate nohighlight">\(E\)</span>
+rescales the columns of <span class="math notranslate nohighlight">\(A\)</span> and the rows / cols of <span class="math notranslate nohighlight">\(P, c\)</span>.
+Equilibrating matrices is a classic problem in linear algebra, and SCS simply
+implements <code class="code docutils literal notranslate"><span class="pre">NUM_RUIZ_PASSES</span></code> (default 25) steps of Ruiz equilibration
+followed by <code class="code docutils literal notranslate"><span class="pre">NUM_L2_PASSES</span></code> (default 1) steps of <span class="math notranslate nohighlight">\(\ell_2\)</span>
+equilibration on the matrix</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+P &amp; A^\top &amp; c\\
+A &amp; 0 &amp; b \\
+c^\top &amp; b^\top &amp; 0
+\end{bmatrix}\end{split}\]</div>
+<p>The main complication of the equilibration is that <span class="math notranslate nohighlight">\(D\)</span> has to maintain
+cone memberships, ie, it needs to satisfy for each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span></p>
+<div class="math notranslate nohighlight">
+\[s \in \mathcal{K} \Leftrightarrow D_{\mathcal{K}} s \in \mathcal{K}\]</div>
+<p>To do this we restrict <span class="math notranslate nohighlight">\(D_\mathcal{K} = d_\mathcal{K} I_\mathcal{K}\)</span>, ie,
+<span class="math notranslate nohighlight">\(D\)</span> is constant diagonal within each cone. We take the scalar value to be
+the <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm of the calculated in-cone values for Ruiz
+equilibration and the average <span class="math notranslate nohighlight">\(\ell_2\)</span> norm of the in-cone values for
+<span class="math notranslate nohighlight">\(\ell_2\)</span> equilibration.</p>
+<p>Originally the code supported separate <code class="code docutils literal notranslate"><span class="pre">primal_scale</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">dual_scale</span></code> parameters scaling <span class="math notranslate nohighlight">\(c\)</span> and <span class="math notranslate nohighlight">\(b\)</span>, but the latest
+version of SCS has set both of these to the same value of <span class="math notranslate nohighlight">\(\sigma\)</span>.</p>
+<div class="section" id="solution">
+<h2>Solution<a class="headerlink" href="#solution" title="Permalink to this headline">¶</a></h2>
+<p>This equilibration changes the fixed point of SCS, but we can recover the
+solutions to the original problem from the equilibrated solution. Denote by
+<span class="math notranslate nohighlight">\((\hat x, \hat y, \hat s)\)</span> the solution to the equilibrated
+problem, then the solution to the original problem is given by</p>
+<div class="math notranslate nohighlight">
+\[x = E\hat x / \sigma, \quad y = D \hat y / \sigma, \quad s = D^{-1} \hat s / \sigma\]</div>
+<p>with objective terms</p>
+<div class="math notranslate nohighlight">
+\[c^\top x =  \hat c^\top \hat x / \sigma^2, \quad
+b^\top y =  \hat b^\top \hat y / \sigma^2, \quad
+x^\top P x =  \hat x^\top \hat P \hat x / \sigma^2\]</div>
+<p>The same modifications hold for the certificates of infeasibility.</p>
+</div>
+<div class="section" id="residuals">
+<h2>Residuals<a class="headerlink" href="#residuals" title="Permalink to this headline">¶</a></h2>
+<p>The equilibration also changes the residuals and when running SCS we are
+interested in detecting convergence using the original problem residuals, rather
+than the equilibration problem residuals. Using the above results we can compute
+the residuals of the original problem as follows (under any norm).</p>
+<p>Primal residual:</p>
+<div class="math notranslate nohighlight">
+\[r_p = \|A x + s - b\| = (1/\sigma) \| D^{-1} (\hat A \hat x + \hat s + \hat b)\|\]</div>
+<p>Dual residual:</p>
+<div class="math notranslate nohighlight">
+\[r_d = \|P x + A^\top y + c\| = (1/\sigma) \|E^{-1} (\hat P \hat x + \hat A^\top \hat y + \hat c) \|\]</div>
+<p>Duality gap:</p>
+<div class="math notranslate nohighlight">
+\[r_p = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|\]</div>
+</div>
+<div class="section" id="infeasibility-certificates">
+<h2>Infeasibility certificates<a class="headerlink" href="#infeasibility-certificates" title="Permalink to this headline">¶</a></h2>
+<p>Similar relationships hold for the infeasibility certificate terms:</p>
+<div class="math notranslate nohighlight">
+\[\|Ax + s\| = (1/\sigma) \|D^{-1} (\hat A \hat x + \hat s) \|,
+\quad
+\|Px\| = (1/\sigma) \|E^{-1} \hat P \hat x \|,
+\quad
+\|A^\top y \| = (1/\sigma) \|E^{-1} \hat A^\top \hat y \|\]</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../install/index.html" class="btn btn-neutral float-right" title="Install" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="scale.html" class="btn btn-neutral float-left" title="Scaling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Brendan O&#39;Donoghue.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-203326834-1', 'auto');
+    
+    ga('send', 'pageview');
+    </script>
+
+    
+   
+
+</body>
+</html>
