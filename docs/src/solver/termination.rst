@@ -7,7 +7,7 @@ When strong duality holds, the Karush-Kuhn-Tucker (KKT) conditions
 are `necessary and sufficient for optimality <https://web.stanford.edu/~boyd/cvxbook/>`_. They are given by
 
 .. math::
-  Ax + s = b, \quad Px + A^\top y + c= 0,\quad s \in \mathcal{K}, \quad y \in \mathcal{K}^*,\quad  s \perp y.
+  Ax + s = b, \quad Px + A^\top y + c = 0,\quad s \in \mathcal{K}, \quad y \in \mathcal{K}^*,\quad  s \perp y.
 
 These are primal feasibility, dual feasibility, primal and dual cone membership,
 and complementary slackness.  The complementary slackness condition is
@@ -16,6 +16,12 @@ for :math:`(x,y,s)` that satisfy the KKT conditions we have
 
 .. math::
   s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.
+
+
+.. _infeasiblity:
+
+Certificate of infeasibility
+----------------------------
 
 On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
 Any :math:`y \in \mathbf{R}^m` that satisfies
@@ -50,17 +56,17 @@ found :math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m`, and :math:`y \in
 Primal residual:
 
 .. math::
-  \|Ax + s - b\|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty)
+  r_p := \|Ax + s - b\|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty)
 
 Dual residual:
 
 .. math::
-  \|Px + A^\top y - c \|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty)
+  r_d := \|Px + A^\top y - c \|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty)
 
 Duality gap:
 
 .. math::
-  |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),
+  r_g := |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),
 
 where :math:`\epsilon_\mathrm{abs}>0` and :math:`\epsilon_\mathrm{rel}>0` are user defined
 :ref:`settings <settings>`.
@@ -74,11 +80,15 @@ Since the conic constraints are always guaranteed by the iterates (i.e., :math:`
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y`), SCS
 declares a problem primal infeasible when it finds :math:`y \in \mathbf{R}^m` that satisfies
 
+Primal infeasibility residual:
+
 .. math::
   b^\top y = -1, \quad \|A^\top y\|_\infty < \epsilon_\mathrm{infeas}.
 
 Similarly, SCS declares dual infeasibility when it finds :math:`x \in
 \mathbf{R}^n`, :math:`s \in \mathbf{R}^m` that satisfy
+
+Dual infeasibility residual:
 
 .. math::
   c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) < \epsilon_\mathrm{infeas}

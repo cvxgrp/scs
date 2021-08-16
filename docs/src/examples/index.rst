@@ -3,13 +3,16 @@
 Examples
 ===============
 
-:ref:`C/C++ <c_interface>`
+Here we present a few simple examples of using SCS directly in different
+languages.
 
-:ref:`Python <python_interface>`
+:ref:`C/C++ <c_example>`
 
-:ref:`MATLAB <matlab_interface>`
+:ref:`Python <python_example>`
 
-:ref:`Julia <julia_interface>`
+:ref:`MATLAB <matlab_example>`
+
+:ref:`Julia <julia_example>`
 
 .. toctree::
    :maxdepth: 2
