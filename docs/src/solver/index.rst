@@ -13,6 +13,7 @@ Solver
    compile_flags.rst
    info.rst
    scale.rst
+   equilibration.rst
 
 
 SCS applies Douglas-Rachford splitting to a homogeneous embedding

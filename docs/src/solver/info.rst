@@ -39,7 +39,7 @@ the following fields.
      - Dual residual (see :ref:`termination conditions <terminations>`)
    * - :code:`gap`
      - :code:`scs_float` 
-     - Duality gap  (see :ref:`termination conditions <terminations>`)
+     - Absolute duality gap  (see :ref:`termination conditions <terminations>`)
    * - :code:`res_infeas`
      - :code:`scs_float` 
      - Primal infeasibility residual (see :ref:`termination conditions <terminations>`)
