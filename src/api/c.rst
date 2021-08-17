@@ -35,8 +35,8 @@ Basic types
 
 The most basic types are
 
-* :code:`scs_int`: can be :code:`long` or :code:`int` if the :ref:`compiler flag <compile_flags>` :code:`DLONG` is set or not
-* :code:`scs_float`: can be a :code:`double` or a :code:`float` if the :ref:`compiler flag <compile_flags>` :code:`SFLOAT` is set or not.
+* :code:`scs_int`: is :code:`long` if the :ref:`compiler flag <compile_flags>` :code:`DLONG` is set, otherwise it is :code:`int`
+* :code:`scs_float`: is :code:`float` if the :ref:`compiler flag <compile_flags>` :code:`SFLOAT` is set, otherwise it is :code:`double`
 
 
 Types

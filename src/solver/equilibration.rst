@@ -125,7 +125,7 @@ Duality gap:
 
 .. math::
 
-  r_p = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|
+  r_g = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|
 
 
 Infeasibility certificates

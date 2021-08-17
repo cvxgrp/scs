@@ -101,16 +101,18 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Solver</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#acceleration">Acceleration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#warm-starting">Warm-starting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optimality-conditions">Optimality conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#certificate-of-infeasibility">Certificate of infeasibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Optimality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infeasibility">Infeasibility</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -201,8 +203,8 @@ from an initial <span class="math notranslate nohighlight">\(w^0\)</span> for <s
 u^{k+1} &amp;= \Pi_{\mathcal{C}_+}(2\tilde u^{k+1} - w^k)\\
 w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1}
 \end{align}\end{split}\]</div>
-<p>Under the above <span class="math notranslate nohighlight">\(u^k \rightarrow u^\star\)</span> from which we can recover the <a class="reference internal" href="termination.html#optimality"><span class="std std-ref">optimal solution</span></a>
-or a <a class="reference internal" href="termination.html#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>. The algorithm consists of three steps.
+<p>Under the above <span class="math notranslate nohighlight">\(u^k \rightarrow u^\star\)</span> from which we can recover the <a class="reference internal" href="#optimality"><span class="std std-ref">optimal solution</span></a>
+or a <a class="reference internal" href="#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>. The algorithm consists of three steps.
 The first step involves <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">solving a linear system</span></a> of equations:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix} I + P &amp; A^T  \\ A &amp; -I \end{bmatrix}\begin{bmatrix} x \\ y
@@ -214,15 +216,94 @@ The first step involves <a class="reference internal" href="../linear_solver/ind
 \mbox{subject to } &amp; z \in \mathcal{K}
 \end{array}\end{split}\]</div>
 <p>Most cone projection operators have relatively simple projection operators.</p>
-<p><a class="reference internal" href="termination.html#termination"><span class="std std-ref">Termination Criteria</span></a></p>
-<p><a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a></p>
-<p><a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a></p>
-<div class="section" id="acceleration">
-<h2>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="optimality-conditions">
+<span id="optimality"></span><h2>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Permalink to this headline">¶</a></h2>
+<p>SCS solves problems of the form:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{lcr}
+\begin{array}{ll}
+\mbox{minimize} &amp; (1/2)x^\top  P x + c^\top  x\\
+\mbox{subject to} &amp;  Ax + s = b\\
+  &amp; s \in \mathcal{K}
+\end{array}
+&amp;\quad&amp;
+\begin{array}{ll}
+\mbox{maximize} &amp; -(1/2)x^\top  P x - b^\top  y\\
+\mbox{subject to} &amp;  Px + A^\top y + c = 0\\
+  &amp; y \in \mathcal{K}^*
+\end{array}
+\end{array}\end{split}\]</div>
+<p>When strong duality holds, the Karush-Kuhn-Tucker (KKT) conditions
+are <a class="reference external" href="https://web.stanford.edu/~boyd/cvxbook/">necessary and sufficient for optimality</a>. They are given by</p>
+<div class="math notranslate nohighlight">
+\[Ax + s = b, \quad Px + A^\top y + c = 0,\quad s \in \mathcal{K}, \quad y \in \mathcal{K}^*,\quad  s \perp y.\]</div>
+<p>These are primal feasibility, dual feasibility, primal and dual cone membership,
+and complementary slackness.  The complementary slackness condition is
+equivalent to a zero <em>duality gap</em> condition at any optimal point, that is
+for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy the KKT conditions we have</p>
+<div class="math notranslate nohighlight">
+\[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
 </div>
-<div class="section" id="warm-starting">
-<h2>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline">¶</a></h2>
-<p>SCS supports warm-starting the solver with a guess of the solution.</p>
+<div class="section" id="certificate-of-infeasibility">
+<span id="infeasiblity"></span><h2>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline">¶</a></h2>
+<p>On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
+Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
+<div class="math notranslate nohighlight">
+\[A^\top y = 0,\  y \in \mathcal{K}^*,\ b^\top y &lt; 0\]</div>
+<p>acts a certificate that the quadratic cone program is primal infeasible (dual unbounded). On the other hand, if we can find <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> such
+that</p>
+<div class="math notranslate nohighlight">
+\[Px = 0,\ -Ax\in \mathcal{K},\ c^\top x &lt; 0\]</div>
+<p>then this is a certificate that the problem is dual infeasible (primal
+unbounded).</p>
+</div>
+<div class="section" id="termination-criteria">
+<span id="termination"></span><h2>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id2">
+<h3>Optimality<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>The iterates produced by SCS <em>always</em> satisfy the conic constraints <span class="math notranslate nohighlight">\(s \in
+\mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>.  Therefore to say that a problem
+is solved we need to check if the primal residual, dual residual, and duality
+gap are all below a certain tolerance. Specifically, SCS terminates when it has
+found <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span>, and <span class="math notranslate nohighlight">\(y \in
+\mathbf{R}^m\)</span> that satisfy the following residual bounds.</p>
+<ul class="simple">
+<li><p>Primal residual:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[r_p := \|Ax + s - b\|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty)\]</div>
+<ul class="simple">
+<li><p>Dual residual:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[r_d := \|Px + A^\top y - c \|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty)\]</div>
+<ul class="simple">
+<li><p>Duality gap:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[r_g := |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs}&gt;0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel}&gt;0\)</span> are user defined
+<a class="reference internal" href="settings.html#settings"><span class="std std-ref">settings</span></a>.</p>
+</div>
+<div class="section" id="infeasibility">
+<span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility" title="Permalink to this headline">¶</a></h3>
+<p>Since the conic constraints are always guaranteed by the iterates (i.e., <span class="math notranslate nohighlight">\(s \in
+\mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
+declares a problem primal infeasible when it finds <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
+<ul class="simple">
+<li><p>Primal infeasibility residual:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[b^\top y = -1, \quad \|A^\top y\|_\infty &lt; \epsilon_\mathrm{infeas}.\]</div>
+<p>Similarly, SCS declares dual infeasibility when it finds <span class="math notranslate nohighlight">\(x \in
+\mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
+<ul class="simple">
+<li><p>Dual infeasibility residual:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) &lt; \epsilon_\mathrm{infeas}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas}\)</span> is a user-defined <a class="reference internal" href="settings.html#settings"><span class="std std-ref">setting</span></a>.</p>
+</div>
 </div>
 </div>
 

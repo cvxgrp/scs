@@ -176,7 +176,33 @@
             
   <div class="section" id="blas-and-lapack">
 <span id="blas-lapack"></span><h1>BLAS and LAPACK<a class="headerlink" href="#blas-and-lapack" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<p>BLAS and LAPACK are dense numerical linear algebra packages. SCS uses these
+libraries in two places:</p>
+<ul class="simple">
+<li><p>To compute the eigen-decomposition for the semidefinite <a class="reference internal" href="../solver/cones.html#cones"><span class="std std-ref">cone</span></a> projection</p></li>
+<li><p>To solve the linear system in <a class="reference internal" href="../solver/acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a></p></li>
+</ul>
+<p>Therefore compiling with BLAS / LAPACK <strong>is optional</strong>. If you are
+not interested in solving SDPs or using acceleration (which is disabled by
+default) then there is no need to use these libraries. To compile without
+these libraries you can set the <a class="reference internal" href="../solver/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a>
+<code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code>, e.g., if <a class="reference internal" href="../install/index.html#install"><span class="std std-ref">installing</span></a> using
+<code class="code docutils literal notranslate"><span class="pre">make</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nv">USE_LAPACK</span><span class="o">=</span><span class="m">0</span>
+</pre></div>
+</div>
+<p>If you do want to solve SDPs or use Anderson acceleration, then you will need
+to install BLAS and LAPACK libraries (these are pre-installed in most machines).
+If using SCS via another language (Python, MATLAB etc.) then these libraries
+should be pre-installed and SCS will try to link against them. Otherwise
+you may need to install a copy yourself. A good library to start with is
+<a class="reference external" href="https://www.openblas.net/">OpenBLAS</a>, which contains both BLAS and LAPACK.</p>
+<p>There are many different BLAS and LAPACK libraries that conform to the same API.
+Finding one that is optimized for your machine can make a big difference to
+the speed of the operations in practice. If the speed of the SDP projection
+or the acceleration step is a bottleneck you can experiment with faster
+libraries like <a class="reference external" href="https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html">MKL</a>
+or <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>.</p>
 </div>
 
 

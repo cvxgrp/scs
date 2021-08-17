@@ -33,22 +33,22 @@ the following fields.
      - Dual objective 
    * - :code:`res_pri`
      - :code:`scs_float` 
-     - Primal residual (see :ref:`termination conditions <terminations>`)
+     - Primal residual (see :ref:`termination conditions <termination>`)
    * - :code:`res_dual`
      - :code:`scs_float` 
-     - Dual residual (see :ref:`termination conditions <terminations>`)
+     - Dual residual (see :ref:`termination conditions <termination>`)
    * - :code:`gap`
      - :code:`scs_float` 
-     - Absolute duality gap  (see :ref:`termination conditions <terminations>`)
+     - Absolute duality gap  (see :ref:`termination conditions <termination>`)
    * - :code:`res_infeas`
      - :code:`scs_float` 
-     - Primal infeasibility residual (see :ref:`termination conditions <terminations>`)
+     - Primal infeasibility residual (see :ref:`termination conditions <termination>`)
    * - :code:`res_unbbd_a`
      - :code:`scs_float` 
-     - Dual infeasibility residual involving :math:`A` (see :ref:`termination conditions <terminations>`)
+     - Dual infeasibility residual involving :math:`A` (see :ref:`termination conditions <termination>`)
    * - :code:`res_unbdd_p`
      - :code:`scs_float` 
-     - Dual infeasibility residual involving :math:`P` (see :ref:`termination conditions <terminations>`)
+     - Dual infeasibility residual involving :math:`P` (see :ref:`termination conditions <termination>`)
    * - :code:`setup_time`
      - :code:`scs_float` 
      - Time taken for setup (milliseconds) 

@@ -101,9 +101,6 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html">Optimality conditions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="termination.html#termination-criteria">Termination criteria</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
@@ -114,8 +111,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#infeasibility-certificates">Infeasibility certificates</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#acceleration">Acceleration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#warm-starting">Warm-starting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#optimality-conditions">Optimality conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#termination-criteria">Termination criteria</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
@@ -290,7 +288,7 @@ the residuals of the original problem as follows (under any norm).</p>
 \[r_d = \|P x + A^\top y + c\| = (1/\sigma) \|E^{-1} (\hat P \hat x + \hat A^\top \hat y + \hat c) \|\]</div>
 <p>Duality gap:</p>
 <div class="math notranslate nohighlight">
-\[r_p = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|\]</div>
+\[r_g = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|\]</div>
 </div>
 <div class="section" id="infeasibility-certificates">
 <h2>Infeasibility certificates<a class="headerlink" href="#infeasibility-certificates" title="Permalink to this headline">¶</a></h2>
