@@ -10,9 +10,12 @@ Solver
    cones.rst
    settings.rst
    compile_flags.rst
+   exit_flags.rst
    info.rst
    scale.rst
    equilibration.rst
+   warm_start.rst
+   acceleration.rst
 
 SCS applies Douglas-Rachford splitting to a homogeneous embedding
 of the quadratic cone program. The high level algorithm is as follows,

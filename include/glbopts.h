@@ -47,7 +47,7 @@ extern "C" {
 #define WARM_START (0)
 #define ACCELERATION_LOOKBACK (0)
 #define ACCELERATION_INTERVAL (1)
-#define ADAPTIVE_SCALING (1)
+#define ADAPTIVE_SCALE (1)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)

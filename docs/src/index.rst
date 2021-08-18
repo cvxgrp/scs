@@ -67,7 +67,7 @@ with data
 
 At termination SCS will either return points :math:`(x^\star,y^\star,s^\star)` that satisfies
 the :ref:`optimality conditions <solver>` to the desired accuracy, or a certificate
-of :ref:`primal or dual infeasibility` to the designated infeasibility accuracy.
+of :ref:`primal or dual infeasibility <infeasibility>` to the designated infeasibility accuracy.
 
 The current version is |version|
 

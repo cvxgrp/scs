@@ -25,10 +25,10 @@ typedef struct {
   /* these *cannot* change for multiple runs with the same call to SCS(init) */
   /** whether to heuristically rescale the data before solve */
   scs_int normalize;
-  /** initial dual scaling factor (may be updated if adaptive_scaling is on) */
+  /** initial dual scaling factor (may be updated if adaptive_scale is on) */
   scs_float init_scale;
   /** whether to adaptively update `scale` */
-  scs_int adaptive_scaling;
+  scs_int adaptive_scale;
   /** primal constraint scaling factor */
   scs_float rho_x;
   /** maximum iterations to take */

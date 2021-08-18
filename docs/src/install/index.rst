@@ -84,7 +84,7 @@ To compile and run the tests execute
 If make completes successfully, it will produce two static library files,
 :code:`libscsdir.a`, :code:`libscsindir.a`, and two dynamic library files
 :code:`libscsdir.ext`, :code:`libscsindir.ext` (where :code:`.ext` extension is
-platform dependent) in the same folder.  
+platform dependent) in the :code:`out` folder.  
 
 If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo

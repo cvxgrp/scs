@@ -226,7 +226,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
   scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
   sprintf(tmp, "cones: ");
   if (k->z) {
-    sprintf(tmp + strlen(tmp), "\t  f: primal zero / dual free vars: %li\n",
+    sprintf(tmp + strlen(tmp), "\t  z: primal zero / dual free vars: %li\n",
             (long)k->z);
   }
   if (k->l) {

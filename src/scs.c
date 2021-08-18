@@ -89,11 +89,11 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
   scs_printf("%s", cone_str);
   scs_free(cone_str);
   scs_printf("settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e\n"
-             "\t  alpha: %.2f, scale: %.2e, adaptive_scaling: %i\n"
+             "\t  alpha: %.2f, scale: %.2e, adaptive_scale: %i\n"
              "\t  max_iters: %i, normalize: %i, warm_start: %i\n",
              /*, rho_x: %.2e\n", */
              stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas, stgs->alpha,
-             stgs->init_scale, (int)stgs->adaptive_scaling,
+             stgs->init_scale, (int)stgs->adaptive_scale,
              (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start);
   /* , stgs->rho_x); */
   if (stgs->acceleration_lookback != 0) {
@@ -1109,7 +1109,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
 
     /* if residuals are fresh then maybe compute new scale */
-    if (w->stgs->adaptive_scaling && i == w->r_orig->last_iter) {
+    if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
       maybe_update_scale(w, k, i);
     }
 
