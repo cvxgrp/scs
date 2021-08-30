@@ -84,7 +84,7 @@ Features
 * **Detects infeasibility**: Robustly and reliably detects :ref:`infeasible <infeasibility>` problems.
 * **Interfaces**: Bindings for many :ref:`languages <interfaces>`, including C, Python, Julia, R, MATLAB, and Ruby.
 * **Warm starts**: Easily :ref:`warm-started <warm_start>`, and the matrix factorization can be cached.
-* **Matrix-free**: Optionally make use of an :ref:`indirect linear system solver <indirect>`, including a :ref:`GPU version <gpu_indirect>`.
+* **Matrix-free**: Optionally use an :ref:`indirect linear system solver <indirect>`, or a :ref:`GPU version <gpu_indirect>`.
 * **Supported**: A supported solver in parser-solvers `CVX <http://cvxr.com/cvx/>`_, `CVXPY <https://github.com/cvxgrp/cvxpy>`_, `YALMIP <https://github.com/johanlofberg/YALMIP>`_, `Convex.jl <https://github.com/jump-dev/Convex.jl>`_  and `JuMP <https://github.com/jump-dev/JuMP.jl>`_.
 * **Accelerated**: Includes :ref:`acceleration <acceleration>` that can improve convergence to high accuracy.
 * **Battle-tested**: The first solver available based on ADMM, and in wide usage.
