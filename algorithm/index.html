@@ -203,9 +203,12 @@ from an initial <span class="math notranslate nohighlight">\(w^0\)</span> for <s
 u^{k+1} &amp;= \Pi_{\mathcal{C}_+}(2\tilde u^{k+1} - w^k)\\
 w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1}
 \end{align}\end{split}\]</div>
-<p>Under the above <span class="math notranslate nohighlight">\(u^k \rightarrow u^\star\)</span> from which we can recover the <a class="reference internal" href="#optimality"><span class="std std-ref">optimal solution</span></a>
-or a <a class="reference internal" href="#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>. The algorithm consists of three steps.
-The first step involves <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">solving a linear system</span></a> of equations:</p>
+<p>(This is slightly different to the formulation in the original <a class="reference external" href="https://web.stanford.edu/~boyd/papers/scs.html">paper</a>, and corresponds to the modern
+algorithm described <a class="reference external" href="https://arxiv.org/abs/2004.02177">here</a>).  Under the above
+<span class="math notranslate nohighlight">\(u^k \rightarrow u^\star\)</span> from which we can recover the <a class="reference internal" href="#optimality"><span class="std std-ref">optimal
+solution</span></a> or a <a class="reference internal" href="#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>.
+The algorithm consists of three steps.  The first step involves <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">solving a
+linear system</span></a> of equations:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix} I + P &amp; A^T  \\ A &amp; -I \end{bmatrix}\begin{bmatrix} x \\ y
 \end{bmatrix} = \begin{bmatrix} \mu_x \\ -\mu_y \end{bmatrix}\end{split}\]</div>

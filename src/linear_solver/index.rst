@@ -69,6 +69,8 @@ factorization but typically is slower on a per-iteration basis. In most cases
 the factorization is relatively cheap so the direct method is the default,
 however for very large problems it can be faster.
 
+.. _gpu_indirect:
+
 GPU indirect method
 ^^^^^^^^^^^^^^^^^^^
 

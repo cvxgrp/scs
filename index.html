@@ -174,10 +174,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <a class="reference internal image-reference" href="_images/scs_logo.png"><img alt="SCS" class="align-center" src="_images/scs_logo.png" style="width: 400px;" /></a>
+  <a class="reference external image-reference" href="https://github.com/cvxgrp/scs"><img alt="SCS" class="align-center" src="_images/scs_logo.png" style="width: 400px;" /></a>
 <p class="centered">
-<strong><strong>A fast, reliable, and open-source convex optimization solver.</strong></strong></p><p>SCS (Splitting Conic Solver) is a numerical optimization package for solving
-large-scale quadratic cone problems. It solves primal problems of the form</p>
+<strong><strong>A fast, reliable, and open-source convex cone solver.</strong></strong></p><p>SCS (Splitting Conic Solver) is a numerical optimization package for solving
+large-scale quadratic cone problems. The code is freely available on <a class="reference external" href="https://github.com/cvxgrp/scs">GitHub</a>.  It solves primal-dual problems of the form</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{array}{lcr}
 \begin{array}{ll}
@@ -240,34 +240,23 @@ large-scale quadratic cone problems. It solves primal problems of the form</p>
 <p>At termination SCS will either return points <span class="math notranslate nohighlight">\((x^\star,y^\star,s^\star)\)</span> that satisfies
 the <a class="reference internal" href="algorithm/index.html#algorithm"><span class="std std-ref">optimality conditions</span></a> to the desired accuracy, or a certificate
 of <a class="reference internal" href="algorithm/index.html#infeasibility"><span class="std std-ref">primal or dual infeasibility</span></a> to the designated infeasibility accuracy.</p>
-<p>The current version is 3.0.0</p>
-<p>The code is freely available on <a class="reference external" href="https://github.com/cvxgrp/scs">GitHub</a>.</p>
-<p>GPU</p>
 <div class="section" id="features">
 <h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
-<dl class="glossary simple">
-<dt id="term-Fast">Fast<a class="headerlink" href="#term-Fast" title="Permalink to this term">¶</a></dt><dd><p>SCS only requires a single sparse matrix factorization</p>
-</dd>
-<dt id="term-Flexible">Flexible<a class="headerlink" href="#term-Flexible" title="Permalink to this term">¶</a></dt><dd><p>Cones</p>
-</dd>
-<dt id="term-Free-and-open-source">Free and open source<a class="headerlink" href="#term-Free-and-open-source" title="Permalink to this term">¶</a></dt><dd><p>SCS is distributed under the permissive <a class="reference external" href="https://github.com/cvxgrp/scs/blob/master/LICENSE.txt">MIT license</a>.</p>
-</dd>
-<dt id="term-Accelerated">Accelerated<a class="headerlink" href="#term-Accelerated" title="Permalink to this term">¶</a></dt><dd><p>SCS includes Anderson acceleration that can accelerate convergence to high accuracy solutions.</p>
-</dd>
-<dt id="term-Detects-infeasibility">Detects infeasibility<a class="headerlink" href="#term-Detects-infeasibility" title="Permalink to this term">¶</a></dt><dd><p>SCS uses a homogeneous embedding and so can robustly and reliably detect infeasible problems.</p>
-</dd>
-<dt id="term-Language-bindings">Language bindings<a class="headerlink" href="#term-Language-bindings" title="Permalink to this term">¶</a></dt><dd><p>SCS has bindings to many languages, including C, Python, Julia, R, MATLAB, and Ruby.</p>
-</dd>
-<dt id="term-Warm-starts">Warm starts<a class="headerlink" href="#term-Warm-starts" title="Permalink to this term">¶</a></dt><dd><p>It can be easily warm-started and the matrix factorization can be cached.</p>
-</dd>
-<dt id="term-Matrix-free">Matrix-free<a class="headerlink" href="#term-Matrix-free" title="Permalink to this term">¶</a></dt><dd><p>SCS has an indirect linear system solver</p>
-</dd>
-<dt id="term-Supported">Supported<a class="headerlink" href="#term-Supported" title="Permalink to this term">¶</a></dt><dd><p>SCS is a supported solver in parser-solvers CVX, CVXPY, YALMIP,</p>
-</dd>
-<dt id="term-Battle-tested">Battle-tested<a class="headerlink" href="#term-Battle-tested" title="Permalink to this term">¶</a></dt><dd><p>SCS was the first open-source solver available based on ADMM and is in wide-usage in industry and academia.</p>
-</dd>
-</dl>
-<p><strong>Development.</strong></p>
+<ul class="simple">
+<li><p><strong>Efficient</strong>: Designed to scale to large problems.</p></li>
+<li><p><strong>Flexible</strong>: Supports quadratic objectives and a large range of <a class="reference internal" href="api/cones.html#cones"><span class="std std-ref">cones</span></a>.</p></li>
+<li><p><strong>Free and open source</strong>: Distributed under the permissive <a class="reference external" href="https://github.com/cvxgrp/scs/blob/master/LICENSE.txt">MIT license</a>.</p></li>
+<li><p><strong>Detects infeasibility</strong>: Robustly and reliably detects <a class="reference internal" href="algorithm/index.html#infeasibility"><span class="std std-ref">infeasible</span></a> problems.</p></li>
+<li><p><strong>Interfaces</strong>: Bindings for many <a class="reference internal" href="api/index.html#interfaces"><span class="std std-ref">languages</span></a>, including C, Python, Julia, R, MATLAB, and Ruby.</p></li>
+<li><p><strong>Warm starts</strong>: Easily <a class="reference internal" href="algorithm/warm_start.html#warm-start"><span class="std std-ref">warm-started</span></a>, and the matrix factorization can be cached.</p></li>
+<li><p><strong>Matrix-free</strong>: Optionally make use of an <a class="reference internal" href="linear_solver/index.html#indirect"><span class="std std-ref">indirect linear system solver</span></a>, including a <a class="reference internal" href="linear_solver/index.html#gpu-indirect"><span class="std std-ref">GPU version</span></a>.</p></li>
+<li><p><strong>Supported</strong>: A supported solver in parser-solvers <a class="reference external" href="http://cvxr.com/cvx/">CVX</a>, <a class="reference external" href="https://github.com/cvxgrp/cvxpy">CVXPY</a>, <a class="reference external" href="https://github.com/johanlofberg/YALMIP">YALMIP</a>, <a class="reference external" href="https://github.com/jump-dev/Convex.jl">Convex.jl</a>  and <a class="reference external" href="https://github.com/jump-dev/JuMP.jl">JuMP</a>.</p></li>
+<li><p><strong>Accelerated</strong>: Includes <a class="reference internal" href="algorithm/acceleration.html#acceleration"><span class="std std-ref">acceleration</span></a> that can improve convergence to high accuracy.</p></li>
+<li><p><strong>Battle-tested</strong>: The first solver available based on ADMM, and in wide usage.</p></li>
+</ul>
+</div>
+<div class="section" id="development">
+<h1>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h1>
 <p>SCS is a community project, built from the contributions of many
 researchers and engineers. The primary maintainer is
 <a class="reference external" href="https://bodono.github.io/">Brendan O’Donoghue</a>.

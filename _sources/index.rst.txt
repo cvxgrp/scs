@@ -7,14 +7,16 @@
   :width: 400
   :alt: SCS
   :align: center
+  :target: https://github.com/cvxgrp/scs
 
 .. title:: SCS
 
 .. centered::
-  **A fast, reliable, and open-source convex optimization solver.**
+  **A fast, reliable, and open-source convex cone solver.**
 
 SCS (Splitting Conic Solver) is a numerical optimization package for solving
-large-scale quadratic cone problems. It solves primal problems of the form
+large-scale quadratic cone problems. The code is freely available on `GitHub
+<https://github.com/cvxgrp/scs>`_.  It solves primal-dual problems of the form
 
 .. math::
   \begin{array}{lcr}
@@ -69,56 +71,34 @@ At termination SCS will either return points :math:`(x^\star,y^\star,s^\star)` t
 the :ref:`optimality conditions <algorithm>` to the desired accuracy, or a certificate
 of :ref:`primal or dual infeasibility <infeasibility>` to the designated infeasibility accuracy.
 
-The current version is |version|
+.. The current version is |version|
 
-The code is freely available on `GitHub <https://github.com/cvxgrp/scs>`_. 
 
-GPU
 
 Features
-________
+--------
 
-.. glossary::
-
-  Fast 
-    SCS only requires a single sparse matrix factorization    
-
-  Flexible 
-    Cones
-
-  Free and open source
-    SCS is distributed under the permissive `MIT license <https://github.com/cvxgrp/scs/blob/master/LICENSE.txt>`_.
-
-  Accelerated
-    SCS includes Anderson acceleration that can accelerate convergence to high accuracy solutions.
- 
-  Detects infeasibility 
-    SCS uses a homogeneous embedding and so can robustly and reliably detect infeasible problems.
-
-  Language bindings
-    SCS has bindings to many languages, including C, Python, Julia, R, MATLAB, and Ruby.
-   
-  Warm starts
-    It can be easily warm-started and the matrix factorization can be cached.
-
-  Matrix-free
-    SCS has an indirect linear system solver
-
-  Supported 
-    SCS is a supported solver in parser-solvers CVX, CVXPY, YALMIP, 
-
-  Battle-tested
-    SCS was the first open-source solver available based on ADMM and is in wide-usage in industry and academia.
+* **Efficient**: Designed to scale to large problems.
+* **Flexible**: Supports quadratic objectives and a large range of :ref:`cones <cones>`.
+* **Free and open source**: Distributed under the permissive `MIT license <https://github.com/cvxgrp/scs/blob/master/LICENSE.txt>`_.
+* **Detects infeasibility**: Robustly and reliably detects :ref:`infeasible <infeasibility>` problems.
+* **Interfaces**: Bindings for many :ref:`languages <interfaces>`, including C, Python, Julia, R, MATLAB, and Ruby.
+* **Warm starts**: Easily :ref:`warm-started <warm_start>`, and the matrix factorization can be cached.
+* **Matrix-free**: Optionally make use of an :ref:`indirect linear system solver <indirect>`, including a :ref:`GPU version <gpu_indirect>`.
+* **Supported**: A supported solver in parser-solvers `CVX <http://cvxr.com/cvx/>`_, `CVXPY <https://github.com/cvxgrp/cvxpy>`_, `YALMIP <https://github.com/johanlofberg/YALMIP>`_, `Convex.jl <https://github.com/jump-dev/Convex.jl>`_  and `JuMP <https://github.com/jump-dev/JuMP.jl>`_.
+* **Accelerated**: Includes :ref:`acceleration <acceleration>` that can improve convergence to high accuracy.
+* **Battle-tested**: The first solver available based on ADMM, and in wide usage.
 
 
-
-**Development.**
+Development
+-----------
 
 SCS is a community project, built from the contributions of many
 researchers and engineers. The primary maintainer is
 `Brendan O'Donoghue <https://bodono.github.io/>`_.
 We appreciate all contributions. To get involved, see our :doc:`contributing
 guide </contributing/index>`.
+
 
 
 .. toctree::
