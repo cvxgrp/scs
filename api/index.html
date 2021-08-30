@@ -45,8 +45,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="C / C++" href="c.html" />
-    <link rel="prev" title="Getting help" href="../help/index.html" /> 
+    <link rel="next" title="Cones" href="cones.html" />
+    <link rel="prev" title="Acceleration" href="../algorithm/acceleration.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,11 +99,15 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../solver/index.html">Solver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#other-languages">Other languages</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html">Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interfaces">Interfaces</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="c.html">C / C++</a></li>
 <li class="toctree-l3"><a class="reference internal" href="python.html">Python</a></li>
 <li class="toctree-l3"><a class="reference internal" href="matlab.html">MATLAB</a></li>
@@ -112,10 +116,12 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -186,20 +192,17 @@
             
   <div class="section" id="api">
 <span id="id1"></span><h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
 <p>Loosely speaking, SCS takes data <span class="math notranslate nohighlight">\(P, A, b, c, \mathcal{K}\)</span> and produces
-primal-dual optimal points <span class="math notranslate nohighlight">\((x^\star, y^\star, s^\star)\)</span> or a certificate
-of primal or dual <a class="reference internal" href="../solver/index.html#infeasibility"><span class="std std-ref">Infeasibility</span></a>.</p>
-<p>The behavior of SCS is controlled by the <a class="reference internal" href="../solver/settings.html#settings"><span class="std std-ref">settings</span></a>.  As well as
-the solution SCS also returns <a class="reference internal" href="../solver/info.html#info"><span class="std std-ref">information</span></a> about the solve process
-and a status <a class="reference internal" href="../solver/exit_flags.html#exit-flags"><span class="std std-ref">exit flag</span></a>.</p>
-<p><strong>Matrices</strong></p>
-<p>The matrix <span class="math notranslate nohighlight">\(A\)</span> is sparse and the rows correspond to the cones of the
-problem. The order of the rows of <span class="math notranslate nohighlight">\(A\)</span> must be in the order that the cones
-appear in the table <a class="reference internal" href="../solver/cones.html#cones"><span class="std std-ref">here</span></a>.</p>
-<p>The matrix <span class="math notranslate nohighlight">\(P\)</span> must be sparse and symmetric positive semidefinite. Only
-pass the upper triangular part into SCS.</p>
-<div class="section" id="other-languages">
-<h2>Other languages<a class="headerlink" href="#other-languages" title="Permalink to this headline">¶</a></h2>
+primal-dual <a class="reference internal" href="../algorithm/index.html#optimality"><span class="std std-ref">optimal</span></a> points <span class="math notranslate nohighlight">\((x^\star, y^\star,
+s^\star)\)</span> or a certificate of primal or dual <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">Infeasibility</span></a>.  The
+supported cones are documented <a class="reference internal" href="cones.html#cones"><span class="std std-ref">here</span></a>. The input format for the
+data matrices is documented <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">here</span></a>.  The behavior of SCS is
+controlled by the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">settings</span></a>.  As well as the <a class="reference internal" href="c.html#scssolution"><span class="std std-ref">solution</span></a>, SCS also returns <a class="reference internal" href="info.html#info"><span class="std std-ref">information</span></a> about the solve
+process and a status <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flag</span></a>.</p>
+<div class="section" id="interfaces">
+<span id="id2"></span><h2>Interfaces<a class="headerlink" href="#interfaces" title="Permalink to this headline">¶</a></h2>
 <p>SCS is written in raw C code, with interfaces for several other languages.</p>
 <p><a class="reference internal" href="c.html#c-interface"><span class="std std-ref">C/C++</span></a></p>
 <p><a class="reference internal" href="python.html#python-interface"><span class="std std-ref">Python</span></a></p>
@@ -216,8 +219,8 @@ pass the upper triangular part into SCS.</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="c.html" class="btn btn-neutral float-right" title="C / C++" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../help/index.html" class="btn btn-neutral float-left" title="Getting help" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cones.html" class="btn btn-neutral float-right" title="Cones" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../algorithm/acceleration.html" class="btn btn-neutral float-left" title="Acceleration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

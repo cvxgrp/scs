@@ -98,14 +98,14 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../solver/index.html">Solver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -179,13 +179,13 @@
 <p>BLAS and LAPACK are dense numerical linear algebra packages. SCS uses these
 libraries in two places:</p>
 <ul class="simple">
-<li><p>To compute the eigen-decomposition for the semidefinite <a class="reference internal" href="../solver/cones.html#cones"><span class="std std-ref">cone</span></a> projection</p></li>
-<li><p>To solve the linear system in <a class="reference internal" href="../solver/acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a></p></li>
+<li><p>To compute the eigen-decomposition for the semidefinite <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">cone</span></a> projection</p></li>
+<li><p>To solve the linear system in <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a></p></li>
 </ul>
 <p>Therefore compiling with BLAS / LAPACK <strong>is optional</strong>. If you are
 not interested in solving SDPs or using acceleration (which is disabled by
 default) then there is no need to use these libraries. To compile without
-these libraries you can set the <a class="reference internal" href="../solver/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a>
+these libraries you can set the <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a>
 <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code>, e.g., if <a class="reference internal" href="../install/index.html#install"><span class="std std-ref">installing</span></a> using
 <code class="code docutils literal notranslate"><span class="pre">make</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nv">USE_LAPACK</span><span class="o">=</span><span class="m">0</span>

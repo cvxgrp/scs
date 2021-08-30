@@ -1,18 +1,17 @@
-.. _solver:
+.. _algorithm:
 
-Solver
+Algorithm
 ===============
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
-   cones.rst
-   settings.rst
-   compile_flags.rst
-   info.rst
-   scale.rst
    equilibration.rst
+   scale.rst
+   warm_start.rst
+   acceleration.rst
+
 
 SCS applies Douglas-Rachford splitting to a homogeneous embedding
 of the quadratic cone program. The high level algorithm is as follows,
@@ -46,7 +45,7 @@ Most cone projection operators have relatively simple projection operators.
 .. _optimality:
 
 Optimality conditions
----------------------
++++++++++++++++++++++
 SCS solves problems of the form:
 
 .. math::
@@ -105,10 +104,11 @@ unbounded).
 .. _termination:
 
 Termination criteria
---------------------
+++++++++++++++++++++
 
 Optimality
-^^^^^^^^^^
+----------
+
 The iterates produced by SCS *always* satisfy the conic constraints :math:`s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y`.  Therefore to say that a problem
 is solved we need to check if the primal residual, dual residual, and duality
@@ -137,7 +137,7 @@ where :math:`\epsilon_\mathrm{abs}>0` and :math:`\epsilon_\mathrm{rel}>0` are us
 .. _infeasibility:
 
 Infeasibility
-^^^^^^^^^^^^^
+-------------
 
 Since the conic constraints are always guaranteed by the iterates (i.e., :math:`s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y`), SCS

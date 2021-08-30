@@ -45,8 +45,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Install" href="../install/index.html" />
-    <link rel="prev" title="Scaling" href="scale.html" /> 
+    <link rel="next" title="Scaling" href="scale.html" />
+    <link rel="prev" title="Algorithm" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,30 +99,27 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Solver</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Algorithm</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Data equilibration</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#solution">Solution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#residuals">Residuals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#infeasibility-certificates">Infeasibility certificates</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="warm_start.html">Warm-starting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acceleration.html">Acceleration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#optimality-conditions">Optimality conditions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#certificate-of-infeasibility">Certificate of infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#termination-criteria">Termination criteria</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -172,7 +169,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html">Solver</a> &raquo;</li>
+          <li><a href="index.html">Algorithm</a> &raquo;</li>
         
       <li>Data equilibration</li>
     
@@ -180,7 +177,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/solver/equilibration.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/algorithm/equilibration.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -198,7 +195,7 @@
 <p>Data scale has a large impact on the convergence of first-order algorithms like
 SCS in practice. With that in mind SCS implements a heuristic data equilibration
 (or normalization) scheme that attempts to whiten the data which is enabled by
-the <code class="code docutils literal notranslate"><span class="pre">normalize</span></code> <a class="reference internal" href="settings.html#settings"><span class="std std-ref">setting</span></a>.</p>
+the <code class="code docutils literal notranslate"><span class="pre">normalize</span></code> <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.</p>
 <p>At a high level the equilibration scheme (which is performed once, right at
 the start of the solve) produces diagonal matrices <span class="math notranslate nohighlight">\(E \in
 \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(D \in \mathbf{R}^m\)</span> and scalar <span class="math notranslate nohighlight">\(\sigma &gt; 0\)</span> that rescale
@@ -308,8 +305,8 @@ the residuals of the original problem as follows (under any norm).</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../install/index.html" class="btn btn-neutral float-right" title="Install" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="scale.html" class="btn btn-neutral float-left" title="Scaling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scale.html" class="btn btn-neutral float-right" title="Scaling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Algorithm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

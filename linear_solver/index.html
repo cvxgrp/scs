@@ -38,6 +38,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -45,7 +46,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="BLAS and LAPACK" href="../blas_lapack/index.html" />
-    <link rel="prev" title="Julia" href="../api/julia.html" /> 
+    <link rel="prev" title="Install" href="../install/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -98,17 +99,23 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../solver/index.html">Solver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Linear System Solver</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#implementing-your-own-linear-solver">Implementing your own linear solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-linear-solvers">Available linear solvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#direct-method">Direct method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#indirect-method">Indirect method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpu-indirect-method">GPU indirect method</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -179,15 +186,62 @@
             
   <div class="section" id="linear-system-solver">
 <span id="linear-solver"></span><h1>Linear System Solver<a class="headerlink" href="#linear-system-solver" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
-<p>At each iteration SCS solves a system
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">begin</span><span class="p">{</span><span class="n">bmatrix</span><span class="p">}</span> <span class="n">I</span> <span class="o">+</span> <span class="n">P</span> <span class="o">&amp;</span> <span class="n">A</span><span class="o">^</span><span class="n">T</span>  \\ <span class="n">A</span> <span class="o">&amp;</span> <span class="o">-</span><span class="n">I</span> \<span class="n">end</span><span class="p">{</span><span class="n">bmatrix</span><span class="p">}</span>\<span class="n">begin</span><span class="p">{</span><span class="n">bmatrix</span><span class="p">}</span> <span class="n">x</span> \\ <span class="n">y</span>
-\<span class="n">end</span><span class="p">{</span><span class="n">bmatrix</span><span class="p">}</span> <span class="o">=</span> \<span class="n">begin</span><span class="p">{</span><span class="n">bmatrix</span><span class="p">}</span> \<span class="n">mu_x</span> \\ <span class="o">-</span>\<span class="n">mu_y</span> \<span class="n">end</span><span class="p">{</span><span class="n">bmatrix</span><span class="p">}</span>
-</pre></div>
+<p>At each iteration SCS solves a system</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+r_x \\
+r_y
+\end{bmatrix}
+=
+\begin{bmatrix}
+R_x + P  &amp;  A^\top \\
+A &amp;  -R_y   \\
+\end{bmatrix}
+\begin{bmatrix}
+q_x \\
+-q_y
+\end{bmatrix}\end{split}\]</div>
+<p>(the presence of the diagonal <span class="math notranslate nohighlight">\(R\)</span> matrices is explained in
+<a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Scaling</span></a>).</p>
+<div class="section" id="available-linear-solvers">
+<h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="direct-method">
+<span id="direct"></span><h3>Direct method<a class="headerlink" href="#direct-method" title="Permalink to this headline">¶</a></h3>
+<p>The direct method is the default linear system solver in SCS and factorizes the
+above matrix using a sparse permuted LDL factorization. Then it solves the
+linear system at each iteration using the cached factors.  It relies on the
+external <a class="reference external" href="https://github.com/DrTimothyAldenDavis/SuiteSparse">AMD</a> and <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> packages.</p>
 </div>
-<div class="section" id="implementing-your-own-linear-solver">
-<h2>Implementing your own linear solver<a class="headerlink" href="#implementing-your-own-linear-solver" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="indirect-method">
+<span id="indirect"></span><h3>Indirect method<a class="headerlink" href="#indirect-method" title="Permalink to this headline">¶</a></h3>
+<p>TODO(fix setting)</p>
+<p>The indirect method can be enabled via the <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a> and solves the above linear system approximately with a
+‘matrix-free’ method. To do this it first reduces the system to</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+(R_x + P + A^\top R_y^{-1} A) r_x &amp; = q_x - A^\top R_y^{-1} q_y \\
+                          r_y &amp; = R_y^{-1}(A z_x + q_y).
+\end{align}\end{split}\]</div>
+<p>then solves the positive definite system using using <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">conjugate gradients</a>.  Each iteration of
+CG requires one multiply each of <span class="math notranslate nohighlight">\(P, A, A^\top\)</span>.  The system is solved up
+to some tolerance, which is tuned to ensure that the overall algorithm
+converges. The tolerance decays with iteration <span class="math notranslate nohighlight">\(k\)</span> like
+<span class="math notranslate nohighlight">\(O(1/k^\gamma)\)</span> where <span class="math notranslate nohighlight">\(\gamma &gt; 1\)</span> and is determined by the constant
+<code class="code docutils literal notranslate"><span class="pre">CG_RATE</span></code> (defaults to <span class="math notranslate nohighlight">\(1.5\)</span>).</p>
+<p>The indirect method has the advantage of not requiring an expensive
+factorization but typically is slower on a per-iteration basis. In most cases
+the factorization is relatively cheap so the direct method is the default,
+however for very large problems it can be faster.</p>
+</div>
+<div class="section" id="gpu-indirect-method">
+<h3>GPU indirect method<a class="headerlink" href="#gpu-indirect-method" title="Permalink to this headline">¶</a></h3>
+<p>TODO</p>
+<p>The above linear solvers all run on CPU. We also have support for a GPU version
+of the indirect solver, where the multiplies are all performed on the GPU.</p>
+</div>
+</div>
+<div class="section" id="implementing-a-new-linear-solver">
+<span id="new-lin-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
 </div>
 </div>
@@ -199,7 +253,7 @@
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="../blas_lapack/index.html" class="btn btn-neutral float-right" title="BLAS and LAPACK" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../api/julia.html" class="btn btn-neutral float-left" title="Julia" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../install/index.html" class="btn btn-neutral float-left" title="Install" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

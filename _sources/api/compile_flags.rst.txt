@@ -47,7 +47,7 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - :math:`\mathbf{N}`
      - 0
    * - :code:`USE_LAPACK`
-     - Whether to link in :ref:`BLAS/LAPACK <lapack>`
+     - Whether to link in :ref:`BLAS/LAPACK <blas_lapack>`
      - True/False
      - 1
    * - :code:`USE_OPENMP`

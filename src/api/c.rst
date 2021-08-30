@@ -30,19 +30,17 @@ Helper functions
 
   .. doxygenfunction:: scs_finish
 
-Basic types
------------
-
-The most basic types are
+Primitive types
+---------------
 
 * :code:`scs_int`: is :code:`long` if the :ref:`compiler flag <compile_flags>` :code:`DLONG` is set, otherwise it is :code:`int`
 * :code:`scs_float`: is :code:`float` if the :ref:`compiler flag <compile_flags>` :code:`SFLOAT` is set, otherwise it is :code:`double`
 
 
-Types
+Input Types
 -----------
 
-The relevant structures used in the API are
+The relevant input structs required by API are as follows.
 
 .. _ScsData:
 
@@ -54,10 +52,11 @@ Data
 
 .. _ScsMatrix:
 
-Matrices
-^^^^^^^^
+Data Matrices
+^^^^^^^^^^^^^
 
-The matrices are defined in `Compressed Sparse Column (CSC) format <https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html>`_ using zero-based indexing.
+The matrices must be in `Compressed Sparse Column (CSC) format <https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html>`_ using zero-based indexing.
+See :ref:`matrices` for more details.
 
 .. doxygenstruct:: ScsMatrix
    :members:
@@ -67,6 +66,8 @@ The matrices are defined in `Compressed Sparse Column (CSC) format <https://peop
 Cone
 ^^^^
 
+See :ref:`cones` for more details.
+
 .. doxygenstruct:: ScsCone
    :members:
 
@@ -75,13 +76,26 @@ Cone
 Settings
 ^^^^^^^^
 
+See :ref:`settings` for details on each of these.
+
 .. doxygenstruct:: ScsSettings
   :members:
+
+Output Types
+------------
+
+The relevant output structs returned by SCS are as follows.
 
 .. _ScsSolution:
 
 Solution
 ^^^^^^^^
+
+This will contain the solution as found by SCS *or* the certificate of primal or
+dual infeasibility (see :ref:`termination`). If the user wants to warm-start the
+solver, then the Solution struct is also used as an input to specify the
+warm-start points (see :ref:`warm_start`).
+
 
 .. doxygenstruct:: ScsSolution
    :members:
@@ -91,11 +105,13 @@ Solution
 Info
 ^^^^^
 
+See :ref:`info` for details on each of these.
+
 .. doxygenstruct:: ScsInfo
    :members:
 
-Work
-^^^^^
+Workspace
+---------
 
 The user should not need to interact with the :code:`ScsWork` struct,
 which contains the internal workspace allocated and maintained by SCS.

@@ -82,8 +82,8 @@ So as scale increases, :math:`\rho_y` decreases and vice-versa.
 The quantity :math:`\rho_x` is determined by the :ref:`setting <settings>` value
 :code:`rho_x`. The quantity :math:`\rho_y` is determined by the :ref:`setting
 <settings>` value :code:`scale` but is updated adaptively using the techniques
-described in :ref:`Updating the scale`. Finally,  :math:`d` is determined by
-:code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
+described in :ref:`Dynamic scale updating <updating_scale>`. Finally,  :math:`d`
+is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
 
 
 
@@ -208,4 +208,55 @@ this is the *only* place where :math:`d` appears, so we have a lot of
 flexibility in how to choose it and it can even change from iteration to
 iteration. It is an open question on how best to select this parameter.  See the
 :code:`dot_with_diag_scaling` function in :code:`src/scs.c`.
+
+.. _updating_scale:
+
+Dynamic scale updating
+----------------------
+The choice of the :code:`scale` parameter can have a large impact on the
+performance of the algorithm and the optimal choice is highly problem
+dependent. SCS can dynamically adjust the :code:`scale` parameter
+on the fly via a heuristic procedure that can substantially improve convergence
+in practice. This procedure is enabled by the :code:`adaptive_scaling`
+:ref:`setting <settings>`. The procedure attempts to balance the convergence
+rate of the primal residual with the dual residual. Loosely speaking, the
+:code:`scale` parameter will be increased if the primal residual is much larger
+than the dual and decreased if the opposite is true.
+
+Specifically, at iteration :math:`k` consider the case where :math:`l`
+iterations have elapsed since the last update of the :code:`scale` parameter,
+and denote by :math:`(x, y, \tau) = u^k` and :math:`(0, s, \kappa) = v^k`, and
+the *relative* residuals as
+
+.. math::
+   \hat r^k_p = \frac{\|Ax + s - b \tau\|}{\max(\|Ax\|, \|s\|, \|b \tau \|)}
+
+.. math::
+   \hat r^k_d = \frac{\|Px + A^\top y - c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}
+
+And consider
+
+.. math::
+  \beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
+
+In other words, :math:`\beta` corresponds to the geometric mean of the ratio
+of the relative residuals across the last :math:`l` iterations. If this number
+is larger than a constant (eg, 3) or smaller than another constant (eg, 1/3)
+*and* if sufficient iterations have passed since the last update (eg, 100, 
+as determined by :code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale`
+parameter is triggered: 
+
+.. math::
+   \mbox{scale}^+ = \sqrt{\beta}\ \mbox{scale}
+
+The presence of the square root is to prevent over-shooting the 'optimal'
+scale parameter, which could lead to oscillation.
+
+Note that if the :ref:`linear system <linear_solver>` is being solved using a
+direct method, then updating the scale parameter will require a new
+factorization of the perturbed matrix, so is somewhat expensive for larger
+problems and should be done sparingly (the constants mentioned above are
+controlled by the linear system itself).
+
+
 

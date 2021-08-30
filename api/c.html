@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Python" href="python.html" />
-    <link rel="prev" title="API" href="index.html" /> 
+    <link rel="prev" title="Compile flags" href="compile_flags.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -98,15 +98,21 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../solver/index.html">Solver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="index.html#other-languages">Other languages</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html">Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#interfaces">Interfaces</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">C / C++</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#main-solver-api">Main solver API</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#basic-types">Basic types</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#types">Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#primitive-types">Primitive types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-types">Input Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-types">Output Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workspace">Workspace</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="python.html">Python</a></li>
@@ -116,10 +122,12 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -231,17 +239,16 @@
 
 </div>
 </div>
-<div class="section" id="basic-types">
-<h2>Basic types<a class="headerlink" href="#basic-types" title="Permalink to this headline">¶</a></h2>
-<p>The most basic types are</p>
+<div class="section" id="primitive-types">
+<h2>Primitive types<a class="headerlink" href="#primitive-types" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code>: is <code class="code docutils literal notranslate"><span class="pre">long</span></code> if the <a class="reference internal" href="../solver/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> is set, otherwise it is <code class="code docutils literal notranslate"><span class="pre">int</span></code></p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code>: is <code class="code docutils literal notranslate"><span class="pre">float</span></code> if the <a class="reference internal" href="../solver/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code> is set, otherwise it is <code class="code docutils literal notranslate"><span class="pre">double</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code>: is <code class="code docutils literal notranslate"><span class="pre">long</span></code> if the <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> is set, otherwise it is <code class="code docutils literal notranslate"><span class="pre">int</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code>: is <code class="code docutils literal notranslate"><span class="pre">float</span></code> if the <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code> is set, otherwise it is <code class="code docutils literal notranslate"><span class="pre">double</span></code></p></li>
 </ul>
 </div>
-<div class="section" id="types">
-<h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
-<p>The relevant structures used in the API are</p>
+<div class="section" id="input-types">
+<h2>Input Types<a class="headerlink" href="#input-types" title="Permalink to this headline">¶</a></h2>
+<p>The relevant input structs required by API are as follows.</p>
 <div class="section" id="data">
 <span id="scsdata"></span><h3>Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
 <dl class="cpp struct">
@@ -290,9 +297,10 @@
 </dd></dl>
 
 </div>
-<div class="section" id="matrices">
-<span id="scsmatrix"></span><h3>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h3>
-<p>The matrices are defined in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.</p>
+<div class="section" id="data-matrices">
+<span id="scsmatrix"></span><h3>Data Matrices<a class="headerlink" href="#data-matrices" title="Permalink to this headline">¶</a></h3>
+<p>The matrices must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.
+See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Matrices</span></a> for more details.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv49ScsMatrix">
 <span id="_CPPv39ScsMatrix"></span><span id="_CPPv29ScsMatrix"></span><span id="ScsMatrix"></span><span class="target" id="struct_scs_matrix"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsMatrix</span></span></span><a class="headerlink" href="#_CPPv49ScsMatrix" title="Permalink to this definition">¶</a><br /></dt>
@@ -335,6 +343,7 @@
 </div>
 <div class="section" id="cone">
 <span id="scscone"></span><h3>Cone<a class="headerlink" href="#cone" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> for more details.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsCone">
 <span id="_CPPv37ScsCone"></span><span id="_CPPv27ScsCone"></span><span id="ScsCone"></span><span class="target" id="struct_scs_cone"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsCone</span></span></span><a class="headerlink" href="#_CPPv47ScsCone" title="Permalink to this definition">¶</a><br /></dt>
@@ -425,6 +434,7 @@
 </div>
 <div class="section" id="settings">
 <span id="scssettings"></span><h3>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> for details on each of these.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSettings">
 <span id="_CPPv311ScsSettings"></span><span id="_CPPv211ScsSettings"></span><span id="ScsSettings"></span><span class="target" id="struct_scs_settings"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSettings</span></span></span><a class="headerlink" href="#_CPPv411ScsSettings" title="Permalink to this definition">¶</a><br /></dt>
@@ -440,12 +450,12 @@
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings10init_scaleE">
 <span id="_CPPv3N11ScsSettings10init_scaleE"></span><span id="_CPPv2N11ScsSettings10init_scaleE"></span><span id="ScsSettings::init_scale__scs_float"></span><span class="target" id="struct_scs_settings_1a100b7cf5f57192ee6b006da429aa9723"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">init_scale</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings10init_scaleE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>initial dual scaling factor (may be updated if adaptive_scaling is on) </p>
+<dd><p>initial dual scaling factor (may be updated if adaptive_scale is on) </p>
 </dd></dl>
 
 <dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings16adaptive_scalingE">
-<span id="_CPPv3N11ScsSettings16adaptive_scalingE"></span><span id="_CPPv2N11ScsSettings16adaptive_scalingE"></span><span id="ScsSettings::adaptive_scaling__scs_int"></span><span class="target" id="struct_scs_settings_1a943a090c9d7935ddf776a51c650353eb"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adaptive_scaling</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings16adaptive_scalingE" title="Permalink to this definition">¶</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings14adaptive_scaleE">
+<span id="_CPPv3N11ScsSettings14adaptive_scaleE"></span><span id="_CPPv2N11ScsSettings14adaptive_scaleE"></span><span id="ScsSettings::adaptive_scale__scs_int"></span><span class="target" id="struct_scs_settings_1a34b066f818ce7c3e9f34fef42ff31ce3"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adaptive_scale</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings14adaptive_scaleE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>whether to adaptively update <code class="docutils literal notranslate"><span class="pre">scale</span></code> </p>
 </dd></dl>
 
@@ -531,8 +541,16 @@
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="output-types">
+<h2>Output Types<a class="headerlink" href="#output-types" title="Permalink to this headline">¶</a></h2>
+<p>The relevant output structs returned by SCS are as follows.</p>
 <div class="section" id="solution">
 <span id="scssolution"></span><h3>Solution<a class="headerlink" href="#solution" title="Permalink to this headline">¶</a></h3>
+<p>This will contain the solution as found by SCS <em>or</em> the certificate of primal or
+dual infeasibility (see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>). If the user wants to warm-start the
+solver, then the Solution struct is also used as an input to specify the
+warm-start points (see <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Warm-starting</span></a>).</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSolution">
 <span id="_CPPv311ScsSolution"></span><span id="_CPPv211ScsSolution"></span><span id="ScsSolution"></span><span class="target" id="struct_scs_solution"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSolution</span></span></span><a class="headerlink" href="#_CPPv411ScsSolution" title="Permalink to this definition">¶</a><br /></dt>
@@ -563,6 +581,7 @@
 </div>
 <div class="section" id="info">
 <span id="scsinfo"></span><h3>Info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference internal" href="info.html#info"><span class="std std-ref">Return information</span></a> for details on each of these.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsInfo">
 <span id="_CPPv37ScsInfo"></span><span id="_CPPv27ScsInfo"></span><span id="ScsInfo"></span><span class="target" id="struct_scs_info"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsInfo</span></span></span><a class="headerlink" href="#_CPPv47ScsInfo" title="Permalink to this definition">¶</a><br /></dt>
@@ -663,8 +682,9 @@
 </dd></dl>
 
 </div>
-<div class="section" id="work">
-<h3>Work<a class="headerlink" href="#work" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="workspace">
+<h2>Workspace<a class="headerlink" href="#workspace" title="Permalink to this headline">¶</a></h2>
 <p>The user should not need to interact with the <code class="code docutils literal notranslate"><span class="pre">ScsWork</span></code> struct,
 which contains the internal workspace allocated and maintained by SCS.</p>
 <dl class="cpp struct">
@@ -672,7 +692,6 @@ which contains the internal workspace allocated and maintained by SCS.</p>
 <span id="_CPPv37ScsWork"></span><span id="_CPPv27ScsWork"></span><span id="ScsWork"></span><span class="target" id="struct_scs_work"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsWork</span></span></span><a class="headerlink" href="#_CPPv47ScsWork" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
-</div>
 </div>
 </div>
 
@@ -683,7 +702,7 @@ which contains the internal workspace allocated and maintained by SCS.</p>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="python.html" class="btn btn-neutral float-right" title="Python" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="index.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="compile_flags.html" class="btn btn-neutral float-left" title="Compile flags" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

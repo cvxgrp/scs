@@ -44,8 +44,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Getting help" href="../help/index.html" />
-    <link rel="prev" title="Data equilibration" href="../solver/equilibration.html" /> 
+    <link rel="next" title="Linear System Solver" href="../linear_solver/index.html" />
+    <link rel="prev" title="Julia" href="../api/julia.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -98,7 +98,8 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../solver/index.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Install</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#c-c">C/C++</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cmake">CMake</a></li>
@@ -110,12 +111,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#julia">Julia</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -250,7 +250,7 @@ out/run_tests_indirect
 <p>If make completes successfully, it will produce two static library files,
 <code class="code docutils literal notranslate"><span class="pre">libscsdir.a</span></code>, <code class="code docutils literal notranslate"><span class="pre">libscsindir.a</span></code>, and two dynamic library files
 <code class="code docutils literal notranslate"><span class="pre">libscsdir.ext</span></code>, <code class="code docutils literal notranslate"><span class="pre">libscsindir.ext</span></code> (where <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> extension is
-platform dependent) in the same folder.</p>
+platform dependent) in the <code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.</p>
 <p>If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo
 binaries in the out folder corresponding to the GPU version.  Note that the GPU
@@ -272,7 +272,19 @@ option <code class="code docutils literal notranslate"><span class="pre">-L(PATH
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install scs
 </pre></div>
 </div>
-<p>You can also install from source</p>
+<p>SCS depends on python packages numpy and scipy to run and on numpy to install.
+It uses numpy to tell it what <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS and LAPACK</span></a> libraries
+to link against. If you run into an error like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>RuntimeError: Found /usr/lib/libcblas.dylib, but that file is a symbolic link to
+the MacOS Accelerate framework, which is not supported by NumPy
+</pre></div>
+</div>
+<p>you can try:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew install openblas
+<span class="nv">OPENBLAS</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>brew --prefix openblas<span class="k">)</span><span class="s2">&quot;</span> pip install scs
+</pre></div>
+</div>
+<p>You can also install directly from source</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone --recursive https://github.com/bodono/scs-python.git
 <span class="nb">cd</span> scs-python
 python setup.py install
@@ -282,7 +294,7 @@ python setup.py install
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python setup.py install --scs --gpu
 </pre></div>
 </div>
-<p>To test that SCS installed correctly and you have pytest installed, run</p>
+<p>To test that SCS installed correctly, and you have pytest installed, run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
 </pre></div>
 </div>
@@ -303,8 +315,8 @@ python setup.py install
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../help/index.html" class="btn btn-neutral float-right" title="Getting help" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../solver/equilibration.html" class="btn btn-neutral float-left" title="Data equilibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../linear_solver/index.html" class="btn btn-neutral float-right" title="Linear System Solver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../api/julia.html" class="btn btn-neutral float-left" title="Julia" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

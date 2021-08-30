@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Warm-starting &mdash; SCS 3.0.0 documentation</title>
+  <title>Matrices &mdash; SCS 3.0.0 documentation</title>
   
 
   
@@ -38,12 +38,15 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Settings" href="settings.html" />
+    <link rel="prev" title="Cones" href="cones.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -95,15 +98,24 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Solver</a></li>
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#interfaces">Interfaces</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Getting help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -153,13 +165,15 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Warm-starting</li>
+          <li><a href="index.html">API</a> &raquo;</li>
+        
+      <li>Matrices</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/solver/warm_start.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/api/matrices.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -172,10 +186,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="warm-starting">
-<span id="warm-start"></span><h1>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
-<p>SCS supports warm-starting the solver with a guess of the solution.</p>
+  <div class="section" id="matrices">
+<span id="id1"></span><h1>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h1>
+<p>The matrices <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(P\)</span> must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC)
+format</a> using zero-based
+indexing.  The order of the rows of <span class="math notranslate nohighlight">\(A\)</span> must be in the order that the
+cones appear in the table <a class="reference internal" href="cones.html#cones"><span class="std std-ref">here</span></a>.  The matrix <span class="math notranslate nohighlight">\(P\)</span> must be
+<strong>symmetric positive semidefinite</strong> and only the <strong>upper triangular</strong> part of
+<span class="math notranslate nohighlight">\(P\)</span> should be passed in.</p>
 </div>
 
 
@@ -183,6 +201,10 @@
            
           </div>
           <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="settings.html" class="btn btn-neutral float-right" title="Settings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cones.html" class="btn btn-neutral float-left" title="Cones" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
   <hr/>
 
