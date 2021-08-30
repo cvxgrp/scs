@@ -101,7 +101,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
                (int)acceleration_lookback, (int)acceleration_interval);
   }
   if (stgs->time_limit_secs) {
-    scs_printf("\t  time_limit_secs: %.2e,\n", stgs->time_limit_secs);
+    scs_printf("\t  time_limit_secs: %.2e\n", stgs->time_limit_secs);
   }
   if (lin_sys_method) {
     scs_printf("%s", lin_sys_method);

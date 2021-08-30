@@ -72,7 +72,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1
    * - :code:`warm_start`
      - :code:`scs_int`
-     - Set to True if you initialize the solver with a guess of the solution (see below).
+     - Set to True if you initialize the solver with a guess of the solution (see :ref:`warm_start`).
      - True/False
      - 0
    * - :code:`acceleration_lookback`

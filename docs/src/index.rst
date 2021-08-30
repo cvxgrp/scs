@@ -66,7 +66,7 @@ with data
      - dual cone to :math:`\mathcal{K}`
 
 At termination SCS will either return points :math:`(x^\star,y^\star,s^\star)` that satisfies
-the :ref:`optimality conditions <solver>` to the desired accuracy, or a certificate
+the :ref:`optimality conditions <algorithm>` to the desired accuracy, or a certificate
 of :ref:`primal or dual infeasibility <infeasibility>` to the designated infeasibility accuracy.
 
 The current version is |version|
@@ -125,13 +125,13 @@ guide </contributing/index>`.
    :hidden:
    :maxdepth: 2
 
-   solver/index
-   install/index
-   help/index
+   algorithm/index
    api/index
+   install/index
    linear_solver/index
    blas_lapack/index
    examples/index
    contributing/index
+   help/index
    citing/index
 

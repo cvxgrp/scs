@@ -82,8 +82,8 @@ So as scale increases, :math:`\rho_y` decreases and vice-versa.
 The quantity :math:`\rho_x` is determined by the :ref:`setting <settings>` value
 :code:`rho_x`. The quantity :math:`\rho_y` is determined by the :ref:`setting
 <settings>` value :code:`scale` but is updated adaptively using the techniques
-described in :ref:`Updating the scale <updating_scale>`. Finally,  :math:`d` is determined by
-:code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
+described in :ref:`Dynamic scale updating <updating_scale>`. Finally,  :math:`d`
+is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
 
 
 
@@ -223,9 +223,10 @@ rate of the primal residual with the dual residual. Loosely speaking, the
 :code:`scale` parameter will be increased if the primal residual is much larger
 than the dual and decreased if the opposite is true.
 
-Specifically, consider the case where :math:`l` iterations have elapsed since
-the last update of the :code:`scale` parameter, and denote by :math:`(x, y,
-\tau) = u^k` and :math:`(0, s, \kappa) = v^k`, and the *relative* residuals as
+Specifically, at iteration :math:`k` consider the case where :math:`l`
+iterations have elapsed since the last update of the :code:`scale` parameter,
+and denote by :math:`(x, y, \tau) = u^k` and :math:`(0, s, \kappa) = v^k`, and
+the *relative* residuals as
 
 .. math::
    \hat r^k_p = \frac{\|Ax + s - b \tau\|}{\max(\|Ax\|, \|s\|, \|b \tau \|)}
@@ -236,17 +237,17 @@ the last update of the :code:`scale` parameter, and denote by :math:`(x, y,
 And consider
 
 .. math::
-  \beta = \left(\Pi{i=1}^l \frac{\hat r^i_p}{\hat r^i_d}\right)^{1/l}
+  \beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
 
-In other words, :math:`beta` corresponds to the geometric mean of the ratio
+In other words, :math:`\beta` corresponds to the geometric mean of the ratio
 of the relative residuals across the last :math:`l` iterations. If this number
 is larger than a constant (eg, 3) or smaller than another constant (eg, 1/3)
-*and* if sufficient iterations have passed since the last update (eg, 100
-determined by :code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale`
+*and* if sufficient iterations have passed since the last update (eg, 100, 
+as determined by :code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale`
 parameter is triggered: 
 
 .. math::
-   \mbox{scale}^+ = \sqrt{\beta} \mbox{scale}.
+   \mbox{scale}^+ = \sqrt{\beta}\ \mbox{scale}
 
 The presence of the square root is to prevent over-shooting the 'optimal'
 scale parameter, which could lead to oscillation.
