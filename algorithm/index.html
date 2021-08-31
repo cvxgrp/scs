@@ -218,7 +218,8 @@ linear system</span></a> of equations:</p>
 \mbox{minimize} &amp; \| z - z_0\|_2^2 \\
 \mbox{subject to } &amp; z \in \mathcal{K}
 \end{array}\end{split}\]</div>
-<p>Most cone projection operators have relatively simple projection operators.</p>
+<p>over variable <span class="math notranslate nohighlight">\(z\)</span>. Most cone projection operators have relatively simple
+projection operators.</p>
 <div class="section" id="optimality-conditions">
 <span id="optimality"></span><h2>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Permalink to this headline">¶</a></h2>
 <p>SCS solves problems of the form:</p>
@@ -285,27 +286,29 @@ found <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, 
 </ul>
 <div class="math notranslate nohighlight">
 \[r_g := |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs}&gt;0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel}&gt;0\)</span> are user defined
-<a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">settings</span></a>.</p>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs}&gt;0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel}&gt;0\)</span> are
+user defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">settings</span></a>. The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm
+here can be changed to other norms by changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in
+the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
 </div>
 <div class="section" id="infeasibility">
 <span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility" title="Permalink to this headline">¶</a></h3>
-<p>Since the conic constraints are always guaranteed by the iterates (i.e., <span class="math notranslate nohighlight">\(s \in
+<p>Since the conic constraints are always guaranteed by the iterates (<span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
-declares a problem primal infeasible when it finds <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
-<ul class="simple">
-<li><p>Primal infeasibility residual:</p></li>
-</ul>
+declares a problem <strong>primal infeasible (dual unbounded)</strong> when it finds <span class="math notranslate nohighlight">\(y \in
+\mathbf{R}^m\)</span> that satisfies</p>
 <div class="math notranslate nohighlight">
 \[b^\top y = -1, \quad \|A^\top y\|_\infty &lt; \epsilon_\mathrm{infeas}.\]</div>
-<p>Similarly, SCS declares dual infeasibility when it finds <span class="math notranslate nohighlight">\(x \in
-\mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
-<ul class="simple">
-<li><p>Dual infeasibility residual:</p></li>
-</ul>
+<p>Similarly, SCS declares a problem <strong>dual infeasible (primal unbounded)</strong> when it finds
+<span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
 <div class="math notranslate nohighlight">
 \[c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) &lt; \epsilon_\mathrm{infeas}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas}\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.</p>
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas}\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm here can be changed to other norms by
+changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
+<p>In some rare cases a problem is both primal and dual infeasible. In this case
+SCS will return one of the two above certificates, whichever one it finds
+first. However, in that case the interpretation of infeasibility in one space
+being equivalent to unboundedness in the dual space does not hold.</p>
 </div>
 </div>
 </div>

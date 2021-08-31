@@ -44,7 +44,8 @@ The second step is the Euclidean projection onto a convex :ref:`cone <cones>`, i
   \mbox{subject to } & z \in \mathcal{K}
   \end{array}
 
-Most cone projection operators have relatively simple projection operators.
+over variable :math:`z`. Most cone projection operators have relatively simple
+projection operators.
 
 .. _optimality:
 
@@ -135,30 +136,36 @@ found :math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m`, and :math:`y \in
 .. math::
   r_g := |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),
 
-where :math:`\epsilon_\mathrm{abs}>0` and :math:`\epsilon_\mathrm{rel}>0` are user defined
-:ref:`settings <settings>`.
+where :math:`\epsilon_\mathrm{abs}>0` and :math:`\epsilon_\mathrm{rel}>0` are
+user defined :ref:`settings <settings>`. The :math:`\ell_\infty` norm
+here can be changed to other norms by changing the definition of :code:`NORM` in
+the :code:`include/glbopts.h` file.
 
 .. _infeasibility:
 
 Infeasibility
 -------------
 
-Since the conic constraints are always guaranteed by the iterates (i.e., :math:`s \in
+Since the conic constraints are always guaranteed by the iterates (:math:`s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y`), SCS
-declares a problem primal infeasible when it finds :math:`y \in \mathbf{R}^m` that satisfies
-
-* Primal infeasibility residual:
+declares a problem **primal infeasible (dual unbounded)** when it finds :math:`y \in
+\mathbf{R}^m` that satisfies
 
 .. math::
   b^\top y = -1, \quad \|A^\top y\|_\infty < \epsilon_\mathrm{infeas}.
 
-Similarly, SCS declares dual infeasibility when it finds :math:`x \in
-\mathbf{R}^n`, :math:`s \in \mathbf{R}^m` that satisfy
-
-* Dual infeasibility residual:
+Similarly, SCS declares a problem **dual infeasible (primal unbounded)** when it finds
+:math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m` that satisfy
 
 .. math::
   c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) < \epsilon_\mathrm{infeas}
 
-where :math:`\epsilon_\mathrm{infeas}` is a user-defined :ref:`setting <settings>`.
+where :math:`\epsilon_\mathrm{infeas}` is a user-defined :ref:`setting
+<settings>`.  The :math:`\ell_\infty` norm here can be changed to other norms by
+changing the definition of :code:`NORM` in the :code:`include/glbopts.h` file.
+
+In some rare cases a problem is both primal and dual infeasible. In this case
+SCS will return one of the two above certificates, whichever one it finds
+first. However, in that case the interpretation of infeasibility in one space
+being equivalent to unboundedness in the dual space does not hold.
 

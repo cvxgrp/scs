@@ -87,7 +87,7 @@ Features
 * **Matrix-free**: Optionally use an :ref:`indirect linear system solver <indirect>`, or a :ref:`GPU version <gpu_indirect>`.
 * **Supported**: A supported solver in parser-solvers `CVX <http://cvxr.com/cvx/>`_, `CVXPY <https://github.com/cvxgrp/cvxpy>`_, `YALMIP <https://github.com/johanlofberg/YALMIP>`_, `Convex.jl <https://github.com/jump-dev/Convex.jl>`_  and `JuMP <https://github.com/jump-dev/JuMP.jl>`_.
 * **Accelerated**: Includes :ref:`acceleration <acceleration>` that can improve convergence to high accuracy.
-* **Battle-tested**: The first solver available based on ADMM, and in wide usage.
+* **Battle-tested**: The first ADMM-based solver available, and in wide usage.
 
 
 Development

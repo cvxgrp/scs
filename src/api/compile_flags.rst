@@ -42,6 +42,10 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - If on GPU store A transpose in memory
      - True/False
      - 1
+   * - :code:`VALIDATE`
+     - Whether to perform problem validation or not
+     - True/False
+     - 1
    * - :code:`VERBOSITY`
      - Verbosity level (for debugging)
      - :math:`\mathbf{N}`
