@@ -762,6 +762,7 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
   return 0;
 }
 
+#if VALIDATE > 0
 static scs_int validate(const ScsData *d, const ScsCone *k,
                         const ScsSettings *stgs) {
   if (d->m <= 0 || d->n <= 0) {
@@ -811,6 +812,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
   }
   return 0;
 }
+#endif
 
 static ScsResiduals *init_residuals(const ScsData *d) {
   ScsResiduals *r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
@@ -1178,10 +1180,12 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
     scs_printf("ERROR: Missing ScsData or ScsCone input\n");
     return SCS_NULL;
   }
+#if VALIDATE > 0
   if (validate(d, k, stgs) < 0) {
     scs_printf("ERROR: Validation returned failure\n");
     return SCS_NULL;
   }
+#endif
   SCS(tic)(&init_timer);
   if (stgs->write_data_filename) {
     SCS(write_data)(d, k, stgs);

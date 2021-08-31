@@ -111,11 +111,14 @@ GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)
 OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # tranpose A mat in GPU memory
 endif
-
-### VERBOSITY LEVELS: 0,1,2
+VALIDATE = 1
+ifneq ($(VALIDATE), 0)
+OPT_FLAGS += -DVALIDATE=$(VALIDATE) # perform problem validation or skip
+endif
+### VERBOSITY LEVELS: 0,1,2,...
 VERBOSITY = 0
 ifneq ($(VERBOSITY), 0)
-OPT_FLAGS += -DVERBOSITY=$(VERBOSITY) # extra verbosity level
+OPT_FLAGS += -DVERBOSITY=$(VERBOSITY) # verbosity level
 endif
 
 ############ OPENMP: ############
