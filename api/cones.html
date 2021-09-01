@@ -45,7 +45,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Matrices" href="matrices.html" />
+    <link rel="next" title="Data matrices" href="matrices.html" />
     <link rel="prev" title="API" href="index.html" /> 
 </head>
 
@@ -102,10 +102,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Cones</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#semidefinite-cone">Semidefinite cone</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#semidefinite-cones">Semidefinite cones</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="matrices.html">Matrices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
@@ -192,85 +195,143 @@
   <div class="section" id="cones">
 <span id="id1"></span><h1>Cones<a class="headerlink" href="#cones" title="Permalink to this headline">¶</a></h1>
 <p>The cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> can be any Cartesian product of the following primitive cones.</p>
-<table class="colwidths-given docutils align-default">
+<table class="docutils align-default">
 <colgroup>
-<col style="width: 30%" />
-<col style="width: 30%" />
-<col style="width: 40%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
 <th class="head"><p>Description</p></th>
 <th class="head"><p>Entries in <a class="reference internal" href="c.html#scscone"><span class="std std-ref">ScsCone</span></a></p></th>
+<th class="head"><p>Number of rows in <span class="math notranslate nohighlight">\(A, b\)</span></p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Zero cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{s \mid s = 0 \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">z</span></code> length of cone.</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">z</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Positive orthant</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{s \mid s \geq 0 \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">l</span></code> length of cone.</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">l</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Box cone</p></td>
-<td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^n \mid t l \leq s \leq t u  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">bu,</span> <span class="pre">bl</span></code> correspond to <span class="math notranslate nohighlight">\(u,l\)</span> and are arrays of len <code class="code docutils literal notranslate"><span class="pre">bsize</span></code> <span class="math notranslate nohighlight">\(=n\)</span>. If <code class="code docutils literal notranslate"><span class="pre">bsize=0</span></code> cone is disabled.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^k \mid t l \leq s \leq t u  \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">bu,</span> <span class="pre">bl</span></code> correspond to <span class="math notranslate nohighlight">\(u,l\)</span> and are arrays of length <span class="math notranslate nohighlight">\(\max(\text{bsize}-1, 0)\)</span> where <code class="code docutils literal notranslate"><span class="pre">bsize</span></code> is total cone length.</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">bsize</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Second-order cone</p></td>
-<td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^n\mid \|s\|_2 \leq t  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">q</span></code> array of SOC lengths with <code class="code docutils literal notranslate"><span class="pre">qsize</span></code> elements, each <span class="math notranslate nohighlight">\(q[i] = n_i+1\)</span>.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \mathbf{R}^k \mid \|s\|_2 \leq t  \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">q</span></code> array of SOC lengths with <code class="code docutils literal notranslate"><span class="pre">qsize</span></code> elements, each <span class="math notranslate nohighlight">\(q_i\)</span> is total length of that cone.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{qsize}} q_i\)</span></p></td>
 </tr>
 <tr class="row-even"><td><p>Positive semidefinite cone</p></td>
-<td><p><span class="math notranslate nohighlight">\(\{ S \in \mathbf{R}^{n \times n} \mid \min_i \lambda_i(S) \geq 0, S = S^\top  \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">s</span></code> array of PSD cone lengths with <code class="code docutils literal notranslate"><span class="pre">ssize</span></code> elements, each <span class="math notranslate nohighlight">\(s[i] = n_i\)</span>. See <a class="reference internal" href="#sdcone"><span class="std std-ref">note</span></a> about scaling.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{ s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}\)</span> (See <a class="reference internal" href="#sdcone"><span class="std std-ref">note</span></a>)</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">s</span></code> array of PSD cone lengths with <code class="code docutils literal notranslate"><span class="pre">ssize</span></code> elements, each <span class="math notranslate nohighlight">\(s_i = k_i\)</span> in description.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{ssize}} \frac{s_i(s_i+1)}{2}\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p>Exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y&gt;0  \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">ep</span></code> number of cone triples.</p></td>
+<td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">ep</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Dual exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{  (u,v,w)\in \mathbf{R}^3 \mid -u e^{v/u} \leq e w, u&lt;0 \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">ed</span></code> number of cone triples.</p></td>
+<td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">ed</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Power cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|\}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">p</span></code> array of <span class="math notranslate nohighlight">\(p\in[-1,1]\)</span> powers with <code class="code docutils literal notranslate"><span class="pre">psize</span></code> elements, positive entries correspond to power cone.</p></td>
+<td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">psize</span></code> (total for primal and dual power cone)</p></td>
 </tr>
 <tr class="row-even"><td><p>Dual power cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">p</span></code> array <span class="math notranslate nohighlight">\(p\in[-1,1]\)</span> powers with <code class="code docutils literal notranslate"><span class="pre">psize</span></code> elements, negative entries correspond to dual power cone (sign is flipped).</p></td>
+<td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">psize</span></code> (total for primal and dual power cone)</p></td>
 </tr>
 </tbody>
 </table>
 <p><strong>Note</strong>:
-The rows of the data matrix <span class="math notranslate nohighlight">\(A\)</span> correspond to the cones in <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. The rows of
-<span class="math notranslate nohighlight">\(A\)</span> must be in the order of the cones given above, i.e., first come the rows that
-correspond to the zero cones, then those that correspond to the positive
-orthants, then the box cone, etc.</p>
-<div class="section" id="semidefinite-cone">
-<span id="sdcone"></span><h2>Semidefinite cone<a class="headerlink" href="#semidefinite-cone" title="Permalink to this headline">¶</a></h2>
-<p>SCS assumes that the matrix variables and the input data corresponding to
+The rows of the data matrix <span class="math notranslate nohighlight">\(A\)</span> correspond to the cones in
+<span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. The rows of <span class="math notranslate nohighlight">\(A\)</span> <strong>must be in the order of the cones
+given above</strong>, i.e., first come the rows that correspond to the zero cones, then
+those that correspond to the positive orthants, then the box cone, etc.</p>
+<div class="section" id="semidefinite-cones">
+<span id="sdcone"></span><h2>Semidefinite cones<a class="headerlink" href="#semidefinite-cones" title="Permalink to this headline">¶</a></h2>
+<p>The symmetric positive semidefinite cone of matrices is the set</p>
+<div class="math notranslate nohighlight">
+\[\{S \in \mathbf{R}^{k \times k} \mid x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}\]</div>
+<p>and for short we use <span class="math notranslate nohighlight">\(S \succeq 0\)</span> to denote membership. SCS
+vectorizes this cone in a special way which we detail here.</p>
+<p>SCS assumes that the input data corresponding to
 semidefinite cones have been vectorized by scaling the off-diagonal entries by
 <span class="math notranslate nohighlight">\(\sqrt{2}\)</span> and stacking the lower triangular elements column-wise. For a <span class="math notranslate nohighlight">\(k \times k\)</span>
 matrix variable (or data matrix) this operation would create a vector of length
 <span class="math notranslate nohighlight">\(k(k+1)/2\)</span>. Scaling by <span class="math notranslate nohighlight">\(\sqrt{2}\)</span> is required to preserve the inner-product.</p>
-<p>To recover the matrix solution this operation must be inverted on the components
-of the vector returned by SCS corresponding to semidefinite cones. That is, the
-off-diagonal entries must be scaled by <span class="math notranslate nohighlight">\(1/\sqrt{2}\)</span> and the upper triangular
-entries are filled in by copying the values of lower triangular entries.</p>
-<p>More explicitly, we want to express <span class="math notranslate nohighlight">\(Tr(C X)\)</span> as <span class="math notranslate nohighlight">\(\text{vec}(C)^\top \text{vec}(X)\)</span>,
-where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> operation takes the <span class="math notranslate nohighlight">\(k \times k\)</span> matrix</p>
+<p><strong>This must be done for the rows of both</strong> <span class="math notranslate nohighlight">\(A\)</span> <strong>and</strong> <span class="math notranslate nohighlight">\(b\)</span> <strong>that correspond to semidefinite cones and must be done independently for each semidefinite cone.</strong></p>
+<p>More explicitly, we want to express <span class="math notranslate nohighlight">\(\text{Trace}(Y S)\)</span> as <span class="math notranslate nohighlight">\(\text{vec}(Y)^\top \text{vec}(S)\)</span>,
+where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> operation takes the (assumed to be symmetric) <span class="math notranslate nohighlight">\(k \times k\)</span> matrix</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}X =  \begin{bmatrix}
-        X_{11} &amp; X_{12} &amp; \ldots &amp; X_{1k}  \\
-        X_{21} &amp; X_{22} &amp; \ldots &amp; X_{2k}  \\
+\[\begin{split}S =  \begin{bmatrix}
+        S_{11} &amp; S_{12} &amp; \ldots &amp; S_{1k}  \\
+        S_{21} &amp; S_{22} &amp; \ldots &amp; S_{2k}  \\
         \vdots &amp; \vdots &amp; \ddots &amp; \vdots  \\
-        X_{k1} &amp; X_{k2} &amp; \ldots &amp; X_{kk}  \\
+        S_{k1} &amp; S_{k2} &amp; \ldots &amp; S_{kk}  \\
       \end{bmatrix}\end{split}\]</div>
 <p>and produces a vector consisting of the lower triangular elements scaled and arranged as</p>
 <div class="math notranslate nohighlight">
-\[\text{vec}(X) = (X_{11}, \sqrt{2} X_{21}, ..., \sqrt{2} X_{k1}, X_{22}, \sqrt{2}X_{32}, ..., \sqrt{2}X_{k(k-1)}, X_{kk}).\]</div>
+\[\text{vec}(S) = (S_{11}, \sqrt{2} S_{21}, \ldots, \sqrt{2} S_{k1}, S_{22}, \sqrt{2}S_{32}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k,k-1}, S_{kk}) \in \mathbf{R}^{k(k+1)/2}.\]</div>
+<p>To recover the matrix solution this operation must be inverted on the components
+of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
+off-diagonal entries must be scaled by <span class="math notranslate nohighlight">\(1/\sqrt{2}\)</span> and the upper triangular
+entries are filled in by copying the values of lower triangular entries.
+Explicitly, the inverse operation takes vector <span class="math notranslate nohighlight">\(y \in
+\mathbf{R}^{k(k+1)/2}\)</span> and produces the matrix</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\text{mat}(s) =  \begin{bmatrix}
+                  s_{1} &amp; s_{2} / \sqrt{2} &amp; \ldots &amp; s_{k} / \sqrt{2}  \\
+                  s_{2} / \sqrt{2} &amp; s_{k+1} &amp; \ldots &amp; s_{2k-1} / \sqrt{2}  \\
+                  \vdots &amp; \vdots &amp; \ddots &amp; \vdots  \\
+                  s_{k} / \sqrt{2} &amp; s_{2k-1} / \sqrt{2} &amp; \ldots &amp; s_{k(k+1) / 2}  \\
+                  \end{bmatrix}
+\in \mathbf{R}^{k \times k}.\end{split}\]</div>
+<p>So the cone definition that SCS uses is</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{S}_+^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\]</div>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>Consider the symmetric positive semidefinite cone constraint over variables
+<span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> and <span class="math notranslate nohighlight">\(S \in \mathbf{R}^{k \times k}\)</span></p>
+<div class="math notranslate nohighlight">
+\[B - \sum_{i=1}^n \mathcal{A}_i x_i = S \succeq 0\]</div>
+<p>where data <span class="math notranslate nohighlight">\(B, \mathcal{A}_1, \ldots, \mathcal{A}_n \in \mathbf{R}^{k
+\times k}\)</span> are symmetric. We can write this in the canonical form over a new
+variable <span class="math notranslate nohighlight">\(s \in \mathcal{S}_+^k\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+s &amp;= \text{vec}(S)\\
+  &amp;= \text{vec}(B - \sum_{i=1}^n \mathcal{A}_i x_i) \\
+  &amp;= \text{vec}(B) - \sum_{i=1}^n \text{vec}(\mathcal{A}_i) x_i \\
+  &amp;= b - Ax
+\end{align}\end{split}\]</div>
+<p>using the fact that <span class="math notranslate nohighlight">\(\text{vec}\)</span> is linear, where <span class="math notranslate nohighlight">\(b =
+\text{vec}(B)\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[A =
+\begin{bmatrix}
+ \text{vec}(\mathcal{A}_1) &amp; \text{vec}(\mathcal{A}_2) &amp; \cdots &amp; \text{vec}(\mathcal{A}_n)
+\end{bmatrix}\]</div>
+<p>i.e., the vectors <span class="math notranslate nohighlight">\(\text{vec}(\mathcal{A}_i)\)</span> stacked columnwise.
+This is in a form that we can input into SCS.  To recover the matrix solution
+from the optimal solution returned by SCS, we simply use <span class="math notranslate nohighlight">\(S^\star =
+\text{mat}(s^\star)\)</span>.</p>
+</div>
 </div>
 </div>
 
@@ -280,7 +341,7 @@ where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> opera
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="matrices.html" class="btn btn-neutral float-right" title="Matrices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="matrices.html" class="btn btn-neutral float-right" title="Data matrices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="index.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

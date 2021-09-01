@@ -303,7 +303,7 @@ declares a problem <strong>primal infeasible (dual unbounded)</strong> when it f
 <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
 <div class="math notranslate nohighlight">
 \[c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) &lt; \epsilon_\mathrm{infeas}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas}\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm here can be changed to other norms by
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas} &gt; 0\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm here can be changed to other norms by
 changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
 <p>In some rare cases a problem is both primal and dual infeasible. In this case
 SCS will return one of the two above certificates, whichever one it finds

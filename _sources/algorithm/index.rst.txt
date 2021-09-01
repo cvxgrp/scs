@@ -160,7 +160,7 @@ Similarly, SCS declares a problem **dual infeasible (primal unbounded)** when it
 .. math::
   c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) < \epsilon_\mathrm{infeas}
 
-where :math:`\epsilon_\mathrm{infeas}` is a user-defined :ref:`setting
+where :math:`\epsilon_\mathrm{infeas} > 0` is a user-defined :ref:`setting
 <settings>`.  The :math:`\ell_\infty` norm here can be changed to other norms by
 changing the definition of :code:`NORM` in the :code:`include/glbopts.h` file.
 

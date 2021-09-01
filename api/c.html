@@ -101,7 +101,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="matrices.html">Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
@@ -300,7 +300,7 @@
 <div class="section" id="data-matrices">
 <span id="scsmatrix"></span><h3>Data Matrices<a class="headerlink" href="#data-matrices" title="Permalink to this headline">¶</a></h3>
 <p>The matrices must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.
-See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Matrices</span></a> for more details.</p>
+See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Data matrices</span></a> for more details.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv49ScsMatrix">
 <span id="_CPPv39ScsMatrix"></span><span id="_CPPv29ScsMatrix"></span><span id="ScsMatrix"></span><span class="target" id="struct_scs_matrix"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsMatrix</span></span></span><a class="headerlink" href="#_CPPv49ScsMatrix" title="Permalink to this definition">¶</a><br /></dt>
@@ -365,19 +365,19 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone2buE">
 <span id="_CPPv3N7ScsCone2buE"></span><span id="_CPPv2N7ScsCone2buE"></span><span id="ScsCone::bu__scs_floatP"></span><span class="target" id="struct_scs_cone_1a96281da59ac051ef9e49ca401eaaa7b5"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">bu</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone2buE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>upper box values, <code class="docutils literal notranslate"><span class="pre">len(bu)</span> <span class="pre">=</span> <span class="pre">len(bl)</span> <span class="pre">=</span> <span class="pre">bsize</span></code> </p>
+<dd><p>upper box values, <code class="docutils literal notranslate"><span class="pre">len(bu)</span> <span class="pre">=</span> <span class="pre">len(bl)</span> <span class="pre">=</span> <span class="pre">max(bsize-1,</span> <span class="pre">0)</span></code> </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone2blE">
 <span id="_CPPv3N7ScsCone2blE"></span><span id="_CPPv2N7ScsCone2blE"></span><span id="ScsCone::bl__scs_floatP"></span><span class="target" id="struct_scs_cone_1af94a23afc9e1e514d451420ab465143c"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">bl</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone2blE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>lower box values, <code class="docutils literal notranslate"><span class="pre">len(bu)</span> <span class="pre">=</span> <span class="pre">len(bl)</span> <span class="pre">=</span> <span class="pre">bsize</span></code> </p>
+<dd><p>lower box values, <code class="docutils literal notranslate"><span class="pre">len(bu)</span> <span class="pre">=</span> <span class="pre">len(bl)</span> <span class="pre">=</span> <span class="pre">max(bsize-1,</span> <span class="pre">0)</span></code> </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone5bsizeE">
 <span id="_CPPv3N7ScsCone5bsizeE"></span><span id="_CPPv2N7ScsCone5bsizeE"></span><span id="ScsCone::bsize__scs_int"></span><span class="target" id="struct_scs_cone_1aaf6a208d6887d703b3da772e96c9e94d"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bsize</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone5bsizeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>length of box cone arrays (does not include scale <code class="docutils literal notranslate"><span class="pre">t</span></code>) </p>
+<dd><p>total length of box cone (includes scale <code class="docutils literal notranslate"><span class="pre">t</span></code>) </p>
 </dd></dl>
 
 <dl class="cpp var">

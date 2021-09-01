@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Matrices &mdash; SCS 3.0.0 documentation</title>
+  <title>Data matrices &mdash; SCS 3.0.0 documentation</title>
   
 
   
@@ -102,7 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Matrices</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data matrices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
@@ -167,7 +167,7 @@
         
           <li><a href="index.html">API</a> &raquo;</li>
         
-      <li>Matrices</li>
+      <li>Data matrices</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -186,14 +186,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="matrices">
-<span id="id1"></span><h1>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h1>
-<p>The matrices <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(P\)</span> must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC)
-format</a> using zero-based
-indexing.  The order of the rows of <span class="math notranslate nohighlight">\(A\)</span> must be in the order that the
-cones appear in the table <a class="reference internal" href="cones.html#cones"><span class="std std-ref">here</span></a>.  The matrix <span class="math notranslate nohighlight">\(P\)</span> must be
-<strong>symmetric positive semidefinite</strong> and only the <strong>upper triangular</strong> part of
-<span class="math notranslate nohighlight">\(P\)</span> should be passed in.</p>
+  <div class="section" id="data-matrices">
+<span id="matrices"></span><h1>Data matrices<a class="headerlink" href="#data-matrices" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>Both matrices <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(P\)</span> must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.</p></li>
+<li><p>The order of the rows of <span class="math notranslate nohighlight">\(A\)</span> must be in the order that the cones appear in the <a class="reference internal" href="cones.html#cones"><span class="std std-ref">cones table</span></a>.</p></li>
+<li><p>The rows of <span class="math notranslate nohighlight">\(A\)</span> corresponding to semidefinite cones (as well as the rows of <span class="math notranslate nohighlight">\(b\)</span>) must be handled carefully, as described in <a class="reference internal" href="cones.html#sdcone"><span class="std std-ref">Semidefinite cones</span></a>.</p></li>
+<li><p>The matrix <span class="math notranslate nohighlight">\(P\)</span> must be symmetric positive semidefinite and only the <strong>upper triangular</strong> part of <span class="math notranslate nohighlight">\(P\)</span> should be passed in.</p></li>
+</ul>
 </div>
 
 
