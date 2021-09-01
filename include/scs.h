@@ -26,7 +26,7 @@ typedef struct {
   /** whether to heuristically rescale the data before solve */
   scs_int normalize;
   /** initial dual scaling factor (may be updated if adaptive_scale is on) */
-  scs_float init_scale;
+  scs_float scale;
   /** whether to adaptively update `scale` */
   scs_int adaptive_scale;
   /** primal constraint scaling factor */

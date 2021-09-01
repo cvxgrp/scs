@@ -93,7 +93,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
              "\t  max_iters: %i, normalize: %i, warm_start: %i\n",
              /*, rho_x: %.2e\n", */
              stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas, stgs->alpha,
-             stgs->init_scale, (int)stgs->adaptive_scale,
+             stgs->scale, (int)stgs->adaptive_scale,
              (int)stgs->max_iters, (int)stgs->normalize, (int)stgs->warm_start);
   /* , stgs->rho_x); */
   if (stgs->acceleration_lookback != 0) {
@@ -806,7 +806,7 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("rho_x must be positive (1e-3 works well).\n");
     return -1;
   }
-  if (stgs->init_scale <= 0) {
+  if (stgs->scale <= 0) {
     scs_printf("scale must be positive (1 works well).\n");
     return -1;
   }
@@ -841,7 +841,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->d = d;
   w->k = k;
   w->stgs = stgs;
-  w->scale = stgs->init_scale;
+  w->scale = stgs->scale; /* initial scale, may be updated */
   w->m = d->m;
   w->n = d->n;
   w->last_scale_update_iter = 0;

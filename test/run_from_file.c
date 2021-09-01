@@ -7,7 +7,7 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
   if (strcmp(param, "normalize") == 0) {
     s->normalize = atoi(val);
   } else if (strcmp(param, "scale") == 0) {
-    s->init_scale = atof(val);
+    s->scale = atof(val);
   } else if (strcmp(param, "rho_x") == 0) {
     s->rho_x = atof(val);
   } else if (strcmp(param, "max_iters") == 0) {

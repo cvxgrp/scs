@@ -54,7 +54,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   /* Warm start to false for now */
   scs_int warm_start = 0;
   fwrite(&(s->normalize), sizeof(scs_int), 1, fout);
-  fwrite(&(s->init_scale), sizeof(scs_float), 1, fout);
+  fwrite(&(s->scale), sizeof(scs_float), 1, fout);
   fwrite(&(s->rho_x), sizeof(scs_float), 1, fout);
   fwrite(&(s->max_iters), sizeof(scs_int), 1, fout);
   fwrite(&(s->eps_abs), sizeof(scs_float), 1, fout);
@@ -73,7 +73,7 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
 static ScsSettings *read_scs_stgs(FILE *fin) {
   ScsSettings *s = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   fread(&(s->normalize), sizeof(scs_int), 1, fin);
-  fread(&(s->init_scale), sizeof(scs_float), 1, fin);
+  fread(&(s->scale), sizeof(scs_float), 1, fin);
   fread(&(s->rho_x), sizeof(scs_float), 1, fin);
   fread(&(s->max_iters), sizeof(scs_int), 1, fin);
   fread(&(s->eps_abs), sizeof(scs_float), 1, fin);

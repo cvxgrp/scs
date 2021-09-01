@@ -142,7 +142,7 @@ void SCS(set_default_settings)(ScsSettings *stgs) {
   stgs->eps_infeas = EPS_INFEAS;
   stgs->alpha = ALPHA;
   stgs->rho_x = RHO_X;
-  stgs->init_scale = INIT_SCALE;
+  stgs->scale = SCALE;
   stgs->verbose = VERBOSE;
   stgs->normalize = NORMALIZE;
   stgs->warm_start = WARM_START;
