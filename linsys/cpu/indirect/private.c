@@ -3,7 +3,7 @@
 #include "util.h"
 #include <limits.h>
 
-char *SCS(get_lin_sys_method)() {
+const char *SCS(get_lin_sys_method)() {
   return "sparse-indirect";
 }
 

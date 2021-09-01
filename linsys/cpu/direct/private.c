@@ -1,7 +1,7 @@
 #include "private.h"
 #include "linsys.h"
 
-char *SCS(get_lin_sys_method)() {
+const char *SCS(get_lin_sys_method)() {
   return "sparse-direct";
 }
 

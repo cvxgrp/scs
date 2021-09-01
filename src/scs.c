@@ -67,7 +67,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
                               const ScsSettings *stgs) {
   scs_int i;
   char *cone_str = SCS(get_cone_header)(k);
-  char *lin_sys_method = SCS(get_lin_sys_method)();
+  const char *lin_sys_method = SCS(get_lin_sys_method)();
 #ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
   scs_int acceleration_interval = stgs->acceleration_interval;
@@ -105,7 +105,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
     scs_printf("\t  time_limit_secs: %.2e\n", stgs->time_limit_secs);
   }
   if (lin_sys_method) {
-    scs_printf("lin-sys: %s\n\t  nnz(A): %li, nnz(P): %li\n",
+    scs_printf("lin-sys:  %s\n\t  nnz(A): %li, nnz(P): %li\n",
                lin_sys_method,
                (long)d->A->p[d->A->n], d->P ? (long)d->P->p[d->P->n] : 0l);
   }

@@ -21,7 +21,7 @@ static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
   return nrm;
 }
 
-char *SCS(get_lin_sys_method)() {
+const char *SCS(get_lin_sys_method)() {
   return "sparse-indirect GPU";
 }
 
