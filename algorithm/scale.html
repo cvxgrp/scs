@@ -104,8 +104,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Scaling</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cone-projection">Cone projection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selecting-r">Selecting <span class="math notranslate nohighlight">\(R\)</span></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#linear-system-solve">Linear system solve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#vector-v-k">Vector <span class="math notranslate nohighlight">\(v^k\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dual-vector">Dual vector</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#root-plus-function">Root-plus function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-scale-updating">Dynamic scale updating</a></li>
 </ul>
@@ -196,7 +195,7 @@
   <div class="section" id="scaling">
 <span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline">¶</a></h1>
 <p>In this note we derive the update equations when using a non-identity
-scaling when solving <span class="math notranslate nohighlight">\(LCP(M, q)\)</span>. Standard Douglas-Rachford splitting is:</p>
+scaling. Standard Douglas-Rachford splitting is:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
 \tilde u^{k+1} &amp;= (I + F)^{-1} w^k \\
@@ -217,6 +216,9 @@ w^{k+1} &amp;= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
 \end{align}\end{split}\]</div>
 <p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} F(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0
 \in F(u^\star) + G(u^\star)\)</span>.</p>
+<p>This changes the first two steps of the procedure. The linear projection
+explained <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">here</span></a>) and the cone projection (explained
+below).</p>
 <div class="section" id="cone-projection">
 <h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline">¶</a></h2>
 <p>In SCS, <span class="math notranslate nohighlight">\(F = \mathcal{Q}\)</span> and <span class="math notranslate nohighlight">\(G = I_{\mathcal{C}_+}\)</span>. Note that
@@ -258,67 +260,10 @@ So as scale increases, <span class="math notranslate nohighlight">\(\rho_y\)</sp
 described in <a class="reference internal" href="#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>. Finally,  <span class="math notranslate nohighlight">\(d\)</span>
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
 </div>
-<div class="section" id="linear-system-solve">
-<h2>Linear system solve<a class="headerlink" href="#linear-system-solve" title="Permalink to this headline">¶</a></h2>
-<p>At each iteration SCS must solve the following linear equation:</p>
-<div class="math notranslate nohighlight">
-\[z = p^k - r \tau,\]</div>
-<p>where</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
-p^k &amp;= (R + M)^{-1} R \mu^k \\
-r   &amp;= (R + M)^{-1} q
-\end{align}\end{split}\]</div>
-<p>(<span class="math notranslate nohighlight">\(R\)</span> does <em>not</em> appear before <span class="math notranslate nohighlight">\(q\)</span> in the second expression above).
-Now consider <span class="math notranslate nohighlight">\(r = (R + M)^{-1} q\)</span> and recall</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}M = \begin{bmatrix}
-      P  &amp;  A^\top \\
-      -A &amp;  0   \\
-    \end{bmatrix}\end{split}\]</div>
-<p>Denote by <span class="math notranslate nohighlight">\(R_x = \rho_x I_n\)</span> and <span class="math notranslate nohighlight">\(R_y = \mathrm{diag}(\rho_y)\)</span>.
-We want to solve</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix}
-r_x \\
-r_y
-\end{bmatrix}
-=
-\begin{bmatrix}
-R_x + P  &amp;  A^\top \\
--A &amp;  R_y   \\
-\end{bmatrix}
-\begin{bmatrix}
-q_x \\
-q_y
-\end{bmatrix}\end{split}\]</div>
-<p>which is quasidefinite if we negate the bottom row:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix}
-r_x \\
-r_y
-\end{bmatrix}
-=
-\begin{bmatrix}
-R_x + P  &amp;  A^\top \\
-A &amp;  -R_y   \\
-\end{bmatrix}
-\begin{bmatrix}
-q_x \\
--q_y
-\end{bmatrix}\end{split}\]</div>
-<p>A direct method factorizes the above matrix.
-An indirect method can solve via:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
-(R_x + P + A^\top R_y^{-1} A) r_x &amp; = q_x - A^\top R_y^{-1} q_y \\
-                          r_y &amp; = R_y^{-1}(A z_x + q_y).
-\end{align}\end{split}\]</div>
-</div>
-<div class="section" id="vector-v-k">
-<h2>Vector <span class="math notranslate nohighlight">\(v^k\)</span><a class="headerlink" href="#vector-v-k" title="Permalink to this headline">¶</a></h2>
-<p>In order to get the <span class="math notranslate nohighlight">\(v^k\)</span> vector that contains <span class="math notranslate nohighlight">\(s\)</span> and
-<span class="math notranslate nohighlight">\(\kappa\)</span> we use:</p>
+<div class="section" id="dual-vector">
+<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this headline">¶</a></h2>
+<p>In order to get the dual vector <span class="math notranslate nohighlight">\(v^k\)</span> that contains <span class="math notranslate nohighlight">\(s^k\)</span> and
+<span class="math notranslate nohighlight">\(\kappa^k\)</span> we use:</p>
 <div class="math notranslate nohighlight">
 \[v^{k+1} = R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \rightarrow \mathcal{Q}(u^\star),\]</div>
 <p>and we have</p>
@@ -359,7 +304,7 @@ iteration. It is an open question on how best to select this parameter.  See the
 performance of the algorithm and the optimal choice is highly problem
 dependent. SCS can dynamically adjust the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter
 on the fly via a heuristic procedure that can substantially improve convergence
-in practice. This procedure is enabled by the <code class="code docutils literal notranslate"><span class="pre">adaptive_scaling</span></code>
+in practice. This procedure is enabled by the <code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code>
 <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>. The procedure attempts to balance the convergence
 rate of the primal residual with the dual residual. Loosely speaking, the
 <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter will be increased if the primal residual is much larger

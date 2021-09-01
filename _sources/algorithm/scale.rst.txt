@@ -4,7 +4,7 @@ Scaling
 =======
 
 In this note we derive the update equations when using a non-identity
-scaling when solving :math:`LCP(M, q)`. Standard Douglas-Rachford splitting is:
+scaling. Standard Douglas-Rachford splitting is:
 
 .. math::
   \begin{align}
@@ -30,6 +30,10 @@ The above becomes:
 
 which yields :math:`w^k \rightarrow u^\star + R^{-1} F(u^\star)` where :math:`0
 \in F(u^\star) + G(u^\star)`.
+
+This changes the first two steps of the procedure. The linear projection
+explained :ref:`here <linear_solver>`) and the cone projection (explained
+below).
 
 Cone projection
 ---------------
@@ -85,86 +89,11 @@ The quantity :math:`\rho_x` is determined by the :ref:`setting <settings>` value
 described in :ref:`Dynamic scale updating <updating_scale>`. Finally,  :math:`d`
 is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
 
+Dual vector
+-----------
 
-
-Linear system solve
--------------------
-
-At each iteration SCS must solve the following linear equation:
-
-.. math::
-  z = p^k - r \tau, 
-
-where
-
-.. math::
-  \begin{align}
-  p^k &= (R + M)^{-1} R \mu^k \\
-  r   &= (R + M)^{-1} q
-  \end{align}
-
-(:math:`R` does *not* appear before :math:`q` in the second expression above).
-Now consider :math:`r = (R + M)^{-1} q` and recall 
-
-.. math::
-  M = \begin{bmatrix} 
-        P  &  A^\top \\
-        -A &  0   \\
-      \end{bmatrix}
-
-
-Denote by :math:`R_x = \rho_x I_n` and :math:`R_y = \mathrm{diag}(\rho_y)`.
-We want to solve 
-
-.. math::
-
-  \begin{bmatrix}
-  r_x \\
-  r_y
-  \end{bmatrix}
-  =
-  \begin{bmatrix} 
-  R_x + P  &  A^\top \\
-  -A &  R_y   \\
-  \end{bmatrix}
-  \begin{bmatrix}
-  q_x \\
-  q_y
-  \end{bmatrix}
-
-which is quasidefinite if we negate the bottom row:
-
-.. math::
-
-  \begin{bmatrix}
-  r_x \\
-  r_y
-  \end{bmatrix}
-  =
-  \begin{bmatrix} 
-  R_x + P  &  A^\top \\
-  A &  -R_y   \\
-  \end{bmatrix}
-  \begin{bmatrix}
-  q_x \\
-  -q_y
-  \end{bmatrix}
-
-A direct method factorizes the above matrix.
-An indirect method can solve via:
-
-.. math::
-
-  \begin{align}
-  (R_x + P + A^\top R_y^{-1} A) r_x & = q_x - A^\top R_y^{-1} q_y \\
-                            r_y & = R_y^{-1}(A z_x + q_y).
-  \end{align}
-
-Vector :math:`v^k`
-------------------
-
-In order to get the :math:`v^k` vector that contains :math:`s` and
-:math:`\kappa` we use:
+In order to get the dual vector :math:`v^k` that contains :math:`s^k` and
+:math:`\kappa^k` we use:
 
 .. math::
   v^{k+1} = R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \rightarrow \mathcal{Q}(u^\star),
@@ -172,7 +101,6 @@ In order to get the :math:`v^k` vector that contains :math:`s` and
 and we have
 
 .. math::
-
   \begin{align}
   v^{k+1} &= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
           &= R( \Pi_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
@@ -217,7 +145,7 @@ The choice of the :code:`scale` parameter can have a large impact on the
 performance of the algorithm and the optimal choice is highly problem
 dependent. SCS can dynamically adjust the :code:`scale` parameter
 on the fly via a heuristic procedure that can substantially improve convergence
-in practice. This procedure is enabled by the :code:`adaptive_scaling`
+in practice. This procedure is enabled by the :code:`adaptive_scale`
 :ref:`setting <settings>`. The procedure attempts to balance the convergence
 rate of the primal residual with the dual residual. Loosely speaking, the
 :code:`scale` parameter will be increased if the primal residual is much larger

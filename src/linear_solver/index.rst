@@ -3,7 +3,31 @@
 Linear System Solver
 ====================
 
-At each iteration SCS solves a system
+At each iteration SCS must compute the following
+
+.. math::
+  z = p^k - r \tau,
+
+where
+
+.. math::
+  \begin{align}
+  p^k &= (R + M)^{-1} R \mu^k \\
+  r   &= (R + M)^{-1} q
+  \end{align}
+
+the presence of the diagonal :math:`R` matrices is explained in
+:ref:`scaling` (:math:`R` does *not* appear before :math:`q` in the second
+expression above).  Now consider :math:`r = (R + M)^{-1} q` and recall
+
+.. math::
+  M = \begin{bmatrix}
+        P  &  A^\top \\
+        -A &  0   \\
+      \end{bmatrix}
+
+
+Specifically, we want to solve
 
 .. math::
 
@@ -13,19 +37,50 @@ At each iteration SCS solves a system
   \end{bmatrix}
   =
   \begin{bmatrix}
-  R_x + P  &  A^\top \\
-  A &  -R_y   \\
+  \rho_x I + P  &  A^\top \\
+  -A &  \mathrm{diag}(\rho_y)   \\
+  \end{bmatrix}
+  \begin{bmatrix}
+  q_x \\
+  q_y
+  \end{bmatrix}
+
+which is quasidefinite if we negate the bottom row:
+
+.. math::
+
+  \begin{bmatrix}
+  r_x \\
+  r_y
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+  \rho_x I + P  &  A^\top \\
+  A &  -\mathrm{diag}(\rho_y)   \\
   \end{bmatrix}
   \begin{bmatrix}
   q_x \\
   -q_y
   \end{bmatrix}
 
-(the presence of the diagonal :math:`R` matrices is explained in
-:ref:`scaling`).
+A direct method factorizes the above matrix.
+An indirect method can solve via:
+
+.. math::
+
+  \begin{align}
+  (\rho_x I + P + A^\top \mathrm{diag}(\rho_y)^{-1} A) r_x & = q_x - A^\top \mathrm{diag}(\rho_y)^{-1} q_y \\
+                            r_y & = \mathrm{diag}(\rho_y)^{-1}(A z_x + q_y).
+  \end{align}
+
 
 Available linear solvers
 ------------------------
+
+Each of the below linear solvers is included in their own binary. If linking
+against SCS directly, then to switch between them you must compile and link
+against the right binary. If using SCS via one of the interfaces then you can
+choose between the different linear solvers using the appropriate settings.
 
 .. _direct:
 
@@ -43,19 +98,8 @@ external `AMD <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ and `QDLDL
 Indirect method
 ^^^^^^^^^^^^^^^
 
-TODO(fix setting)
-
-The indirect method can be enabled via the :code:`use_indirect` :ref:`setting
-<settings>` and solves the above linear system approximately with a
-'matrix-free' method. To do this it first reduces the system to
-
-.. math::
-
-  \begin{align}
-  (R_x + P + A^\top R_y^{-1} A) r_x & = q_x - A^\top R_y^{-1} q_y \\
-                            r_y & = R_y^{-1}(A z_x + q_y).
-  \end{align}
-
+The indirect method solves the above linear system approximately with a
+'matrix-free' method. To do this it first reduces the system as described above
 then solves the positive definite system using using `conjugate gradients
 <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.  Each iteration of
 CG requires one multiply each of :math:`P, A, A^\top`.  The system is solved up
@@ -67,14 +111,12 @@ converges. The tolerance decays with iteration :math:`k` like
 The indirect method has the advantage of not requiring an expensive
 factorization but typically is slower on a per-iteration basis. In most cases
 the factorization is relatively cheap so the direct method is the default,
-however for very large problems it can be faster.
+however for very large problems the indirect solver can be faster.
 
 .. _gpu_indirect:
 
 GPU indirect method
 ^^^^^^^^^^^^^^^^^^^
-
-TODO
 
 The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the multiplies are all performed on the GPU.
@@ -83,4 +125,10 @@ of the indirect solver, where the multiplies are all performed on the GPU.
 
 Implementing a new linear solver
 --------------------------------
-TODO
+
+In order to implement you own linear system solver, you need to implement the
+struct :code:`ScsLinSysWork` that contains the workspace your solver requires,
+and implement the functions in :code:`include/linsys.h`:
+
+.. doxygenfile:: include/linsys.h
+
