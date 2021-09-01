@@ -24,15 +24,18 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
 
 /**
  * Solves the linear system required by SCS at each iteration:
- *
- *    [(rho_x * I + P)  A' ] x = b
- *    [ A              -R_y]
+ * \f[
+ *    \begin{bmatrix}
+ *    (\rho_x I + P) & A^\top \\
+ *     A   &       -R_y \\
+ *    \end{bmatrix} x = b
+ *  \f]
  *
  *  for x, result stored result in b
  *
  *  @param  A    A data matrix
  *  @param  P    P data matrix
- *  @param  p    Linear system private workspace
+ *  @param  w    Linear system private workspace
  *  @param  b    Right hand side, should contain solution at the end
  *  @param  s    Contains optional warm-start
  *  @param  tol  Tolerance required for the system solve
@@ -40,32 +43,30 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
  *
  */
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           ScsLinSysWork *w, scs_float *b, const scs_float *s,
                            scs_float tol);
 
 /**
  * Frees ScsLinSysWork structure and allocated memory in ScsLinSysWork
  *
- *  @param  p    Linear system private workspace
+ *  @param  w    Linear system private workspace
  */
-void SCS(free_lin_sys_work)(ScsLinSysWork *p);
-
+void SCS(free_lin_sys_work)(ScsLinSysWork *w);
 
 /**
- *  Update the linsys workspace when new rho_y_vec is updated 
+ *  Update the linsys workspace when new rho_y_vec is updated
  *
  *  @param  A          A data matrix
  *  @param  P          P data matrix
- *  @param  p          Linear system private workspace
+ *  @param  w          Linear system private workspace
  *  @param  rho_y_vec  R_y diagonal entries
  *
  */
 void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
-                                  ScsLinSysWork *p, scs_float *rho_y_vec);
+                                  ScsLinSysWork *w, scs_float *rho_y_vec);
 
 /**
- * Name of the linear solver. Can return null. If not null free will be called
- * on the string.
+ * Name of the linear solver. Can return null.
  *
  * @return name of method
  */

@@ -22,9 +22,7 @@ static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
 }
 
 char *SCS(get_lin_sys_method)() {
-  char *str = (char *)scs_malloc(sizeof(char) * 32);
-  sprintf(str, "sparse-indirect GPU");
-  return str;
+  return "sparse-indirect GPU";
 }
 
 /*

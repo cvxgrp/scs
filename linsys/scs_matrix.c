@@ -445,10 +445,6 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
   scs_int *Ap = A->p;
   scs_int *Ai = A->i;
   scs_float *Ax = A->x;
-#if VERBOSITY > 0
-  SCS(timer) mult_by_atrans_timer;
-  SCS(tic)(&mult_by_atrans_timer);
-#endif
 #ifdef _OPENMP
 #pragma omp parallel for private(p, c1, c2, yj)
 #endif
@@ -461,54 +457,42 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
     }
     y[j] = yj;
   }
-#if VERBOSITY > 0
-  scs_printf("trans mat mul time: %1.2es\n",
-             SCS(tocq)(&mult_by_atrans_timer) / 1e3);
-#endif
 }
 
-void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y,
-                     scs_int skip_diag) {
+void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y) {
   /*y += A*x
     A in column compressed format
-   */
+    */
   scs_int p, j, i;
   scs_int n = A->n;
   scs_int *Ap = A->p;
   scs_int *Ai = A->i;
   scs_float *Ax = A->x;
-#if VERBOSITY > 0
-  SCS(timer) mult_by_a_timer;
-  SCS(tic)(&mult_by_a_timer);
-#endif
-  /* have skip_diag out here for compiler optimization */
-  if (skip_diag) {
-    for (j = 0; j < n; j++) { /* col */
-      for (p = Ap[j]; p < Ap[j + 1]; p++) {
-        i = Ai[p]; /* row */
-        if (i != j) {
-          y[i] += Ax[p] * x[j];
-        }
-      }
-    }
-  } else {
-    for (j = 0; j < n; j++) { /* col */
-      for (p = Ap[j]; p < Ap[j + 1]; p++) {
-        i = Ai[p]; /* row */
-        y[i] += Ax[p] * x[j];
-      }
+  for (j = 0; j < n; j++) { /* col */
+    for (p = Ap[j]; p < Ap[j + 1]; p++) {
+      i = Ai[p]; /* row */
+      y[i] += Ax[p] * x[j];
     }
   }
-#if VERBOSITY > 0
-  scs_printf("mat mult time: %1.2es\n", SCS(tocq)(&mult_by_a_timer) / 1e3);
-#endif
 }
 
 /* Since P is upper triangular need to be clever here */
 void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
   /* returns y += P x */
+  scs_int p, j, i;
+  scs_int n = P->n;
+  scs_int *Pp = P->p;
+  scs_int *Pi = P->i;
+  scs_float *Px = P->x;
   /* y += P_upper x but skip diagonal entries*/
-  SCS(accum_by_a)(P, x, y, 1);
+  for (j = 0; j < n; j++) { /* col */
+    for (p = Pp[j]; p < Pp[j + 1]; p++) {
+      i = Pi[p]; /* row */
+      if (i != j) { /* skip the diagonal */
+        y[i] += Px[p] * x[j];
+      }
+    }
+  }
   /* y += P_lower x */
   SCS(accum_by_atrans)(P, x, y);
 }

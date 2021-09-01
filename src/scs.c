@@ -108,7 +108,6 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
     scs_printf("lin-sys: %s\n\t  nnz(A): %li, nnz(P): %li\n",
                lin_sys_method,
                (long)d->A->p[d->A->n], d->P ? (long)d->P->p[d->P->n] : 0l);
-    scs_free(lin_sys_method);
   }
 
 #ifdef MATLAB_MEX_FILE
@@ -261,7 +260,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   /**************** PRIMAL *********************/
   memset(r->ax, 0, m * sizeof(scs_float));
   /* ax = Ax */
-  SCS(accum_by_a)(w->A, x, r->ax, 0);
+  SCS(accum_by_a)(w->A, x, r->ax);
 
   memcpy(r->ax_s, r->ax, m * sizeof(scs_float));
   /* ax_s = Ax + s */

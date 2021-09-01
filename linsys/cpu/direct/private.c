@@ -2,9 +2,7 @@
 #include "linsys.h"
 
 char *SCS(get_lin_sys_method)() {
-  char *tmp = (char *)scs_malloc(sizeof(char) * 32);
-  sprintf(tmp, "sparse-direct");
-  return tmp;
+  return "sparse-direct";
 }
 
 /*

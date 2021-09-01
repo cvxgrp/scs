@@ -4,9 +4,7 @@
 #include <limits.h>
 
 char *SCS(get_lin_sys_method)() {
-  char *str = (char *)scs_malloc(sizeof(char) * 32);
-  sprintf(str, "sparse-indirect");
-  return str;
+  return "sparse-indirect";
 }
 
 /*

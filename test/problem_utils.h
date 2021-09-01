@@ -140,7 +140,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   /**************** PRIMAL *********************/
   memset(ax, 0, m * sizeof(scs_float));
   /* Ax */
-  SCS(accum_by_a)(d->A, x, ax, 0);
+  SCS(accum_by_a)(d->A, x, ax);
 
   memcpy(primal, ax, m * sizeof(scs_float));
   /* Ax + s */

@@ -15,7 +15,22 @@ extern "C" {
 typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
 typedef struct SCS_ACCEL_WORK ScsAccelWork;
 typedef struct SCS_CONE_WORK ScsConeWork;
-typedef struct SCS_MATRIX ScsMatrix;
+
+/** this struct defines the data matrices and is supplied in column compressed
+ * format: https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html
+ */
+typedef struct {
+  /** matrix values, size: number of non-zeros */
+  scs_float *x;
+  /** matrix row indices, size: number of non-zeros */
+  scs_int *i;
+  /** matrix column pointers, size: `n+1` */
+  scs_int *p;
+  /** number of rows */
+  scs_int m;
+  /** number of columns */
+  scs_int n;
+} ScsMatrix;
 
 /** struct containing all settings */
 typedef struct {

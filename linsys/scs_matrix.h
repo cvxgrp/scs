@@ -8,21 +8,6 @@ extern "C" {
 #include "glbopts.h"
 #include "scs.h"
 
-/** this struct defines the data matrices and is supplied in column compressed
- * format: https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html
- */
-struct SCS_MATRIX {
-  /** matrix values, size: number of non-zeros */
-  scs_float *x;
-  /** matrix row indices, size: number of non-zeros */
-  scs_int *i;
-  /** matrix column pointers, size: `n+1` */
-  scs_int *p;
-  /** number of rows */
-  scs_int m;
-  /** number of columns */
-  scs_int n;
-};
 
 /* Normalization routines, used if d->NORMALIZE is true */
 /* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
@@ -45,9 +30,10 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
 scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 
 /**
- * Validate the linear system, returns < 0 if not valid inputs.
+ * Validate the linear system inputs, returns < 0 if not valid inputs.
  *
  *  @param  A    A data matrix
+ *  @param  P    P data matrix
  *  @return status < 0 indicates failure
  */
 scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P);
@@ -56,7 +42,6 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P);
  * Forms y += A^T * x
  *
  *  @param  A    A data matrix
- *  @param  p    Linear system private workspace
  *  @param  x    Input
  *  @param  y    Output
  */
@@ -65,19 +50,16 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x, scs_float *y);
 /**
  * Forms y += A * x
  *
- *  @param  A    A data matrix
- *  @param  p    Linear system private workspace
- *  @param  x    Input
- *  @param  y    Output
+ *  @param  A           Data matrix
+ *  @param  x           Input
+ *  @param  y           Output
  */
-void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y,
-                     scs_int skip_diag);
+void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y);
 
 /**
  * Forms y += P * x
  *
  *  @param  P    P data matrix
- *  @param  p    Linear system private workspace
  *  @param  x    Input
  *  @param  y    Output
  */
