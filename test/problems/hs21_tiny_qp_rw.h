@@ -35,7 +35,7 @@ static const char *hs21_tiny_qp_rw(void) {
 
   scs_float bl[] = {10.0, 2.0, -50.0};
   scs_float bu[] = {1e+20, 50.0, 50.0};
-  scs_int bsize = 3;
+  scs_int bsize = 4;
 
   scs_float opt = 0.04000000000000625;
   /* end data */

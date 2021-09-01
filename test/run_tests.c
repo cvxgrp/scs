@@ -6,6 +6,7 @@
 #include "scs.h"
 
 /* Include Tests */
+#include "problems/degenerate.h"
 #include "problems/hs21_tiny_qp.h"
 #include "problems/hs21_tiny_qp_rw.h"
 #include "problems/infeasible_tiny_qp.h"
@@ -17,6 +18,8 @@
 int tests_run = 0;
 
 static const char *all_tests(void) {
+  scs_printf("degenerate\n");
+  mu_run_test(degenerate);
   scs_printf("small_lp\n");
   mu_run_test(small_lp);
   scs_printf("rob_gauss_cov_est\n");

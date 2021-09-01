@@ -85,7 +85,7 @@ static const char *qafiro_tiny_qp(void) {
                     1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20,
                     1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20, 1e+20,
                     1e+20, 1e+20, 1e+20};
-  scs_int bsize = 51;
+  scs_int bsize = 52;
   scs_int z = 8;
 
   scs_float opt = -1.5907818;
