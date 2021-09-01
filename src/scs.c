@@ -7,6 +7,7 @@
 #include "normalize.h"
 #include "rw.h"
 #include "util.h"
+#include "scs_matrix.h"
 
 SCS(timer) global_timer;
 
@@ -66,7 +67,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
                               const ScsSettings *stgs) {
   scs_int i;
   char *cone_str = SCS(get_cone_header)(k);
-  char *lin_sys_method = SCS(get_lin_sys_method)(d->A, d->P);
+  char *lin_sys_method = SCS(get_lin_sys_method)();
 #ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
   scs_int acceleration_interval = stgs->acceleration_interval;
@@ -104,7 +105,9 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
     scs_printf("\t  time_limit_secs: %.2e\n", stgs->time_limit_secs);
   }
   if (lin_sys_method) {
-    scs_printf("%s", lin_sys_method);
+    scs_printf("lin-sys: %s\n\t  nnz(A): %li, nnz(P): %li\n",
+               lin_sys_method,
+               (long)d->A->p[d->A->n], d->P ? (long)d->P->p[d->P->n] : 0l);
     scs_free(lin_sys_method);
   }
 
@@ -258,7 +261,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   /**************** PRIMAL *********************/
   memset(r->ax, 0, m * sizeof(scs_float));
   /* ax = Ax */
-  SCS(accum_by_a)(w->A, w->p, x, r->ax);
+  SCS(accum_by_a)(w->A, x, r->ax, 0);
 
   memcpy(r->ax_s, r->ax, m * sizeof(scs_float));
   /* ax_s = Ax + s */
@@ -272,7 +275,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   memset(r->px, 0, n * sizeof(scs_float));
   if (w->P) {
     /* px = Px */
-    SCS(accum_by_p)(w->P, w->p, x, r->px);
+    SCS(accum_by_p)(w->P, x, r->px);
     r->xt_p_x_tau = SCS(dot)(r->px, x, n);
   } else {
     r->xt_p_x_tau = 0.;
@@ -280,7 +283,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
 
   memset(r->aty, 0, n * sizeof(scs_float));
   /* aty = A'y */
-  SCS(accum_by_atrans)(w->A, w->p, y, r->aty);
+  SCS(accum_by_atrans)(w->A, y, r->aty);
 
   /* r->px_aty_ctau = Px */
   memcpy(r->px_aty_ctau, r->px, n * sizeof(scs_float));
@@ -667,7 +670,7 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
                          scs_float total_cone_time,
                          scs_float total_accel_time) {
   scs_int i;
-  char *lin_sys_str = SCS(get_lin_sys_summary)(w->p, info);
+  /* char *lin_sys_str = SCS(get_lin_sys_summary)(w->p, info); */
 
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -680,8 +683,10 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
   scs_printf("\t lin-sys: %1.2es, cones: %1.2es, accel: %1.2es\n",
              total_lin_sys_time / 1e3, total_cone_time / 1e3,
              total_accel_time / 1e3);
+  /*
   scs_printf("%s", lin_sys_str);
   scs_free(lin_sys_str);
+  */
 
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -963,6 +968,11 @@ static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
   return 0;
 }
 
+/* will update if the factor is outside of range */
+scs_int should_update_rho_y_vec(scs_float factor, scs_int iter) {
+  return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
+}
+
 static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
@@ -1000,7 +1010,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   if (new_scale == w->scale) {
     return;
   }
-  if (SCS(should_update_rho_y_vec(factor, iters_since_last_update))) {
+  if (should_update_rho_y_vec(factor, iters_since_last_update)) {
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;

@@ -140,7 +140,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   /**************** PRIMAL *********************/
   memset(ax, 0, m * sizeof(scs_float));
   /* Ax */
-  SCS(accum_by_a)(d->A, SCS_NULL, x, ax);
+  SCS(accum_by_a)(d->A, x, ax, 0);
 
   memcpy(primal, ax, m * sizeof(scs_float));
   /* Ax + s */
@@ -158,7 +158,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   memset(px, 0, n * sizeof(scs_float));
   if (d->P) {
     /* px = Px */
-    SCS(accum_by_p)(d->P, SCS_NULL, x, px);
+    SCS(accum_by_p)(d->P, x, px);
     xt_p_x = SCS(dot)(px, x, n);
     res_unbdd_p = NORM(px, n);
   } else {
@@ -168,7 +168,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
 
   memset(aty, 0, n * sizeof(scs_float));
   /* aty = A'y */
-  SCS(accum_by_atrans)(d->A, SCS_NULL, y, aty);
+  SCS(accum_by_atrans)(d->A, y, aty);
   res_infeas = NORM(aty, n);
 
   memcpy(dual, aty, n * sizeof(scs_float));

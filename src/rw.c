@@ -7,6 +7,7 @@
 #include "linalg.h"
 #include "scs.h"
 #include "util.h"
+#include "scs_matrix.h"
 
 /* writes/reads problem data to/from filename */
 /* This is a VERY naive implementation, doesn't care about portability etc */

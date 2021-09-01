@@ -21,63 +21,13 @@ static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
   return nrm;
 }
 
-/* do not use within pcg, reuses memory */
-void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
-                          const scs_float *x, scs_float *y) {
-  if (!p) {
-    SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
-    return;
-  }
-
-  scs_float *v_m = p->tmp_m;
-  scs_float *v_n = p->r;
-  cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
-  cudaMemcpy(v_n, y, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
-
-  cusparseDnVecSetValues(p->dn_vec_m, (void *)v_m);
-  cusparseDnVecSetValues(p->dn_vec_n, (void *)v_n);
-  SCS(accum_by_atrans_gpu)
-  (p->Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
-
-  cudaMemcpy(y, v_n, A->n * sizeof(scs_float), cudaMemcpyDeviceToHost);
-}
-
-/* do not use within pcg, reuses memory */
-void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
-                     scs_float *y) {
-
-  if (!p) {
-    SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y, 0);
-    return;
-  }
-
-  scs_float *v_m = p->tmp_m;
-  scs_float *v_n = p->r;
-  cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
-  cudaMemcpy(v_m, y, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
-
-  cusparseDnVecSetValues(p->dn_vec_m, (void *)v_m);
-  cusparseDnVecSetValues(p->dn_vec_n, (void *)v_n);
-#if GPU_TRANSPOSE_MAT > 0
-  SCS(accum_by_atrans_gpu)
-  (p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
-#else
-  SCS(accum_by_a_gpu)
-  (p->Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
-#endif
-  cudaMemcpy(y, v_m, A->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
-}
-
 char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {
-  char *str = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(str, "lin-sys:  sparse-indirect GPU\n\t  nnz(A): %li, nnz(P): %li\n",
-          (long)A->p[A->n], P ? (long)P->p[P->n] : 0l);
+  char *str = (char *)scs_malloc(sizeof(char) * 32);
+  sprintf(str, "sparse-indirect GPU");
   return str;
 }
 
+/*
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   sprintf(str, "lin-sys: avg cg its: %2.2f\n",
@@ -85,10 +35,7 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   p->tot_cg_its = 0;
   return str;
 }
-
-scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter) {
-  return (factor > SQRTF(10.) || factor < 1.0 / SQRTF(10.));
-}
+*/
 
 /* set M = inv ( diag ( rho_x * I + P + A' R_y^{-1} A ) ) */
 static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,

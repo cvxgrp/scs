@@ -432,8 +432,8 @@ void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
   }
 }
 
-void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                           const scs_float *x, scs_float *y) {
+void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
+                          scs_float *y) {
   /* y += A'*x
      A in column compressed format
      parallelizes over columns (rows of A')
@@ -441,6 +441,10 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
   scs_int p, j;
   scs_int c1, c2;
   scs_float yj;
+  scs_int n = A->n;
+  scs_int *Ap = A->p;
+  scs_int *Ai = A->i;
+  scs_float *Ax = A->x;
 #if VERBOSITY > 0
   SCS(timer) mult_by_atrans_timer;
   SCS(tic)(&mult_by_atrans_timer);
@@ -463,12 +467,16 @@ void SCS(_accum_by_atrans)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 #endif
 }
 
-void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
-                      const scs_float *x, scs_float *y, scs_int skip_diag) {
+void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y,
+                     scs_int skip_diag) {
   /*y += A*x
     A in column compressed format
    */
   scs_int p, j, i;
+  scs_int n = A->n;
+  scs_int *Ap = A->p;
+  scs_int *Ai = A->i;
+  scs_float *Ax = A->x;
 #if VERBOSITY > 0
   SCS(timer) mult_by_a_timer;
   SCS(tic)(&mult_by_a_timer);
@@ -497,11 +505,10 @@ void SCS(_accum_by_a)(scs_int n, scs_float *Ax, scs_int *Ai, scs_int *Ap,
 }
 
 /* Since P is upper triangular need to be clever here */
-void SCS(accum_by_p)(const ScsMatrix *P, ScsLinSysWork *p, const scs_float *x,
-                     scs_float *y) {
+void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
   /* returns y += P x */
   /* y += P_upper x but skip diagonal entries*/
-  SCS(_accum_by_a)(P->n, P->x, P->i, P->p, x, y, 1);
+  SCS(accum_by_a)(P, x, y, 1);
   /* y += P_lower x */
-  SCS(_accum_by_atrans)(P->n, P->x, P->i, P->p, x, y);
+  SCS(accum_by_atrans)(P, x, y);
 }

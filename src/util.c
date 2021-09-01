@@ -2,6 +2,7 @@
 
 #include "glbopts.h"
 #include "linsys.h"
+#include "scs_matrix.h"
 
 /* return milli-seconds */
 #if (defined NOTIMER)

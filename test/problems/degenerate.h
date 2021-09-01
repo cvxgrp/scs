@@ -31,7 +31,6 @@ static const char *degenerate(void) {
   scs_int m = 4;
   scs_int n = 2;
 
-  
   /* used later: */
   scs_int sq[] = {1};
 
@@ -58,7 +57,6 @@ static const char *degenerate(void) {
   d->P->x = Px;
   d->P->i = Pi;
   d->P->p = Pp;
-
 
   SCS(set_default_settings)(stgs);
   stgs->eps_abs = 1e-6;
@@ -89,7 +87,7 @@ static const char *degenerate(void) {
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
   success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
-  mu_assert("degenerate box cone failure", success); 
+  mu_assert("degenerate box cone failure", success);
 
   /* degenerate SOC cone */
   k->bsize = 0;
@@ -104,9 +102,8 @@ static const char *degenerate(void) {
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
   success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
-  mu_assert("degenerate SOC cone failure", success); 
+  mu_assert("degenerate SOC cone failure", success);
 
-  
   /* degenerate PSD cone */
   k->q = 0;
   k->qsize = 0;
@@ -121,8 +118,8 @@ static const char *degenerate(void) {
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
   success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
-  mu_assert("degenerate PSD cone failure", success); 
-  
+  mu_assert("degenerate PSD cone failure", success);
+
   SCS(free_sol)(sol);
   scs_free(d->A);
   scs_free(d->P);

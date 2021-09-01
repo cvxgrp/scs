@@ -1,19 +1,20 @@
 #include "private.h"
 #include "linsys.h"
 
-char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsMatrix *P) {
-  char *tmp = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(tmp, "lin-sys:  sparse-direct\n\t  nnz(A): %li, nnz(P): %li\n",
-          (long)A->p[A->n], P ? (long)P->p[P->n] : 0l);
+char *SCS(get_lin_sys_method)() {
+  char *tmp = (char *)scs_malloc(sizeof(char) * 32);
+  sprintf(tmp, "sparse-direct");
   return tmp;
 }
 
+/*
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
   sprintf(str, "lin-sys: nnz(L): %li\n", (long)(p->L->p[n] + n));
   return str;
 }
+*/
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
@@ -219,16 +220,6 @@ static void _ldl_solve(scs_float *b, csc *L, scs_float *Dinv, scs_int *P,
   _ldl_permt(n, b, bp, P);
 }
 
-void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
-                          const scs_float *x, scs_float *y) {
-  SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
-}
-
-void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
-                     scs_float *y) {
-  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y, 0);
-}
-
 static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   scs_int k, *pinv;
   if (!p) {
@@ -321,11 +312,6 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   scs_free(info);
   scs_free(idx_mapping);
   return kkt_perm;
-}
-
-/* will update if the factor is outside of range */
-scs_int SCS(should_update_rho_y_vec)(scs_float factor, scs_int iter) {
-  return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
 void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,

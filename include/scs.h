@@ -9,16 +9,13 @@ extern "C" {
 
 #include "aa.h"
 #include "glbopts.h"
-#include "scs_matrix.h" /* defines ScsMatrix struct */
 
 /* stores the necessary private workspace, only the linear system solver
  * interacts with this struct */
 typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
-
-// TODO
 typedef struct SCS_ACCEL_WORK ScsAccelWork;
-// TODO
 typedef struct SCS_CONE_WORK ScsConeWork;
+typedef struct SCS_MATRIX ScsMatrix;
 
 /** struct containing all settings */
 typedef struct {

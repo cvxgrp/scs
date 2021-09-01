@@ -44,7 +44,7 @@ csc *SCS(cs_compress)(const csc *T, scs_int *idx_mapping) {
   Ci = C->i;
   Cx = C->x;
   for (k = 0; k < nz; k++) {
-    w[Tj[k]]++;          /* column counts */
+    w[Tj[k]]++; /* column counts */
   }
   SCS(cumsum)(Cp, w, n); /* column pointers */
   for (k = 0; k < nz; k++) {
