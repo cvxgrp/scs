@@ -26,7 +26,6 @@ csc *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
 csc *SCS(cs_done)(csc *C, void *w, void *x, scs_int ok);
 csc *SCS(cs_compress)(const csc *T, scs_int *idx_mapping);
 scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
-void *SCS(cs_free)(void *p);
 csc *SCS(cs_spfree)(csc *A);
 
 #ifdef __cplusplus

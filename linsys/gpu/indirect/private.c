@@ -24,6 +24,11 @@ static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
 /* do not use within pcg, reuses memory */
 void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
                           const scs_float *x, scs_float *y) {
+  if (!p) {
+    SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
+    return;
+  }
+
   scs_float *v_m = p->tmp_m;
   scs_float *v_n = p->r;
   cudaMemcpy(v_m, x, A->m * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -41,6 +46,12 @@ void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
 /* do not use within pcg, reuses memory */
 void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
                      scs_float *y) {
+
+  if (!p) {
+    SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y, 0);
+    return;
+  }
+
   scs_float *v_m = p->tmp_m;
   scs_float *v_n = p->r;
   cudaMemcpy(v_n, x, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
@@ -218,6 +229,7 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
   scs_int i, j, k, kk;
   scs_int Pnzmax = 2 * P->p[P->n]; /* upper bound */
   csc *P_tmp = SCS(cs_spalloc)(P->n, P->n, Pnzmax, 1, 1);
+  csc *P_full;
   kk = 0;
   for (j = 0; j < P->n; j++) { /* cols */
     for (k = P->p[j]; k < P->p[j + 1]; k++) {
@@ -232,14 +244,16 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
       if (i == j) { /* diagonal */
         continue;
       }
-      P_tmp->i[kk + 1] = j;
-      P_tmp->p[kk + 1] = i;
-      P_tmp->x[kk + 1] = P->x[k];
+      P_tmp->i[kk] = j;
+      P_tmp->p[kk] = i;
+      P_tmp->x[kk] = P->x[k];
       kk++;
     }
   }
-  P_tmp->nz = kk;
-  return SCS(cs_compress)(P_tmp, SCS_NULL);
+  P_tmp->nz = kk; /* set number of nonzeros */
+  P_full = SCS(cs_compress)(P_tmp, SCS_NULL);
+  SCS(cs_spfree)(P_tmp);
+  return P_full;
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,

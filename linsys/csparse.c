@@ -19,8 +19,8 @@ csc *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
 }
 
 csc *SCS(cs_done)(csc *C, void *w, void *x, scs_int ok) {
-  SCS(cs_free)(w); /* free workspace */
-  SCS(cs_free)(x);
+  scs_free(w); /* free workspace */
+  scs_free(x);
   return ok ? C : SCS(cs_spfree)(C); /* return result if OK, else free it */
 }
 
@@ -43,8 +43,9 @@ csc *SCS(cs_compress)(const csc *T, scs_int *idx_mapping) {
   Cp = C->p;
   Ci = C->i;
   Cx = C->x;
-  for (k = 0; k < nz; k++)
+  for (k = 0; k < nz; k++) {
     w[Tj[k]]++;          /* column counts */
+  }
   SCS(cumsum)(Cp, w, n); /* column pointers */
   for (k = 0; k < nz; k++) {
     Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
@@ -74,20 +75,13 @@ scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n) {
   return nz2; /* return sum (c [0..n-1]) */
 }
 
-/* wrapper for free */
-void *SCS(cs_free)(void *p) {
-  if (p) {
-    scs_free(p);
-  }                /* free p if it is not already SCS_NULL */
-  return SCS_NULL; /* return SCS_NULL to simplify the use of cs_free */
-}
-
 csc *SCS(cs_spfree)(csc *A) {
   if (!A) {
     return SCS_NULL;
   } /* do nothing if A already SCS_NULL */
-  SCS(cs_free)(A->p);
-  SCS(cs_free)(A->i);
-  SCS(cs_free)(A->x);
-  return (csc *)SCS(cs_free)(A); /* free the csc struct and return SCS_NULL */
+  scs_free(A->p);
+  scs_free(A->i);
+  scs_free(A->x);
+  scs_free(A);
+  return (csc *)SCS_NULL; /* free the csc struct and return SCS_NULL */
 }
