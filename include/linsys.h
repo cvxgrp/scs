@@ -23,6 +23,13 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       scs_float *rho_y_vec, scs_float rho_x);
 
 /**
+ * Frees ScsLinSysWork structure and allocated memory in ScsLinSysWork
+ *
+ *  @param  w    Linear system private workspace
+ */
+void SCS(free_lin_sys_work)(ScsLinSysWork *w);
+
+/**
  * Solves the linear system required by SCS at each iteration:
  * \f[
  *    \begin{bmatrix}
@@ -45,14 +52,6 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
 scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                            ScsLinSysWork *w, scs_float *b, const scs_float *s,
                            scs_float tol);
-
-/**
- * Frees ScsLinSysWork structure and allocated memory in ScsLinSysWork
- *
- *  @param  w    Linear system private workspace
- */
-void SCS(free_lin_sys_work)(ScsLinSysWork *w);
-
 /**
  *  Update the linsys workspace when new rho_y_vec is updated
  *
@@ -70,7 +69,7 @@ void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
  *
  * @return name of method
  */
-char *SCS(get_lin_sys_method)(void);
+const char *SCS(get_lin_sys_method)(void);
 
 #ifdef __cplusplus
 }
