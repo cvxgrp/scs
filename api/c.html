@@ -271,13 +271,13 @@
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsData1AE">
-<span id="_CPPv3N7ScsData1AE"></span><span id="_CPPv2N7ScsData1AE"></span><span id="ScsData::A__ScsMatrixP"></span><span class="target" id="struct_scs_data_1a61f4e659362b25d373e5bd23fc16fe38"></span><span class="n"><span class="pre">ScsMatrix</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">A</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1AE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N7ScsData1AE"></span><span id="_CPPv2N7ScsData1AE"></span><span id="ScsData::A__ScsMatrixP"></span><span class="target" id="struct_scs_data_1a61f4e659362b25d373e5bd23fc16fe38"></span><a class="reference internal" href="#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">A</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1AE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>A is supplied in CSC format (size <code class="docutils literal notranslate"><span class="pre">m</span></code> x <code class="docutils literal notranslate"><span class="pre">n</span></code>) </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsData1PE">
-<span id="_CPPv3N7ScsData1PE"></span><span id="_CPPv2N7ScsData1PE"></span><span id="ScsData::P__ScsMatrixP"></span><span class="target" id="struct_scs_data_1a77fd6df51a73bf2c465a3d718964479a"></span><span class="n"><span class="pre">ScsMatrix</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">P</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1PE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N7ScsData1PE"></span><span id="_CPPv2N7ScsData1PE"></span><span id="ScsData::P__ScsMatrixP"></span><span class="target" id="struct_scs_data_1a77fd6df51a73bf2c465a3d718964479a"></span><a class="reference internal" href="#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">P</span></span></span><a class="headerlink" href="#_CPPv4N7ScsData1PE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>P is supplied in CSC format, must be upper triangular (size <code class="docutils literal notranslate"><span class="pre">n</span></code> x <code class="docutils literal notranslate"><span class="pre">n</span></code>) </p>
 </dd></dl>
 
@@ -301,10 +301,45 @@
 <span id="scsmatrix"></span><h3>Data Matrices<a class="headerlink" href="#data-matrices" title="Permalink to this headline">¶</a></h3>
 <p>The matrices must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.
 See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Data matrices</span></a> for more details.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “ScsMatrix” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv49ScsMatrix">
+<span id="_CPPv39ScsMatrix"></span><span id="_CPPv29ScsMatrix"></span><span id="ScsMatrix"></span><span class="target" id="struct_scs_matrix"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsMatrix</span></span></span><a class="headerlink" href="#_CPPv49ScsMatrix" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>this struct defines the data matrices and is supplied in column compressed format: <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html</a> </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1xE">
+<span id="_CPPv3N9ScsMatrix1xE"></span><span id="_CPPv2N9ScsMatrix1xE"></span><span id="ScsMatrix::x__scs_floatP"></span><span class="target" id="struct_scs_matrix_1a3905b92026499c1f3a1925a7f4dac856"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">x</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1xE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>matrix values, size: number of non-zeros </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1iE">
+<span id="_CPPv3N9ScsMatrix1iE"></span><span id="_CPPv2N9ScsMatrix1iE"></span><span id="ScsMatrix::i__scs_intP"></span><span class="target" id="struct_scs_matrix_1a9a529e08729eab41729e458ce43dcf57"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">i</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1iE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>matrix row indices, size: number of non-zeros </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1pE">
+<span id="_CPPv3N9ScsMatrix1pE"></span><span id="_CPPv2N9ScsMatrix1pE"></span><span id="ScsMatrix::p__scs_intP"></span><span class="target" id="struct_scs_matrix_1a554713f4cd5a35fd93b3039c223314ba"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">p</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1pE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>matrix column pointers, size: <code class="docutils literal notranslate"><span class="pre">n+1</span></code> </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1mE">
+<span id="_CPPv3N9ScsMatrix1mE"></span><span id="_CPPv2N9ScsMatrix1mE"></span><span id="ScsMatrix::m__scs_int"></span><span class="target" id="struct_scs_matrix_1a98fbc612985028a7790d286ebd8b74e2"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">m</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1mE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of rows </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9ScsMatrix1nE">
+<span id="_CPPv3N9ScsMatrix1nE"></span><span id="_CPPv2N9ScsMatrix1nE"></span><span id="ScsMatrix::n__scs_int"></span><span class="target" id="struct_scs_matrix_1ac50dcdaac67999cfff3662f388c9bd0d"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n</span></span></span><a class="headerlink" href="#_CPPv4N9ScsMatrix1nE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>number of columns </p>
+</dd></dl>
+
 </div>
+</dd></dl>
+
 </div>
 <div class="section" id="cone">
 <span id="scscone"></span><h3>Cone<a class="headerlink" href="#cone" title="Permalink to this headline">¶</a></h3>
