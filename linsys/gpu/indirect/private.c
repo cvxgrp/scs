@@ -71,7 +71,7 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
 }
 
 /* no need to update anything in this case */
-void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
+void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
                                   ScsLinSysWork *p, scs_float *rho_y_vec) {
   scs_int i;
   for (i = 0; i < A->m; ++i)

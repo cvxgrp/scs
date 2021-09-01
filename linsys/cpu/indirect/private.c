@@ -148,7 +148,7 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 }
 
 /* no need to update anything in this case */
-void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
+void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
                                   ScsLinSysWork *p, scs_float *rho_y_vec) {
   p->rho_y_vec = rho_y_vec; /* this isn't needed but do it to be safe */
   set_preconditioner(A, P, p);

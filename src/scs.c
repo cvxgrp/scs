@@ -1016,7 +1016,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->last_scale_update_iter = iter;
     w->scale = new_scale;
     SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
-    SCS(update_linsys_rho_y_vec)(w->A, w->P, w->p, w->rho_y_vec);
+    SCS(update_lin_sys_rho_y_vec)(w->A, w->P, w->p, w->rho_y_vec);
 
     /* update pre-solved quantities */
     update_work_cache(w);

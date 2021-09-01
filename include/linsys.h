@@ -61,8 +61,8 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
  *  @param  rho_y_vec  R_y diagonal entries
  *
  */
-void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
-                                  ScsLinSysWork *w, scs_float *rho_y_vec);
+void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
+                                   ScsLinSysWork *w, scs_float *rho_y_vec);
 
 /**
  * Name of the linear solver. Can return null.

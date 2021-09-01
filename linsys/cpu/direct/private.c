@@ -312,7 +312,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void SCS(update_linsys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
+void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
                                   ScsLinSysWork *p, scs_float *rho_y_vec) {
   scs_int i, ldl_status;
   for (i = 0; i < A->m; ++i) {

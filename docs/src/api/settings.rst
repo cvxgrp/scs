@@ -20,19 +20,19 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - Whether to perform heuristic data rescaling.
      - True/False
      - 1
-   * - :code:`init_scale`
+   * - :code:`scale`
      - :code:`scs_float`
-     - Initial dual :code:`scale` factor (the important one).
+     - Initial dual scale factor, updated if :code:`adaptive_scale` is True.
      - :math:`(0, \infty)`
      - 0.1
-   * - :code:`adaptive_scaling`
+   * - :code:`adaptive_scale`
      - :code:`scs_int`
      - Whether to heuristically adapt dual :code:`scale` through the solve.
      - True/False
      - 1
    * - :code:`rho_x`
      - :code:`scs_float`
-     - Primal scale factor (less important one).
+     - Primal scale factor.
      - :math:`(0, \infty)`
      - 1e-6
    * - :code:`max_iters`
