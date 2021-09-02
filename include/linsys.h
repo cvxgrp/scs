@@ -34,7 +34,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *w);
  * \f[
  *    \begin{bmatrix}
  *    (\rho_x I + P) & A^\top \\
- *     A   &       -R_y \\
+ *     A   &  -\mathrm{diag}(\rho_y) \\
  *    \end{bmatrix} x = b
  *  \f]
  *
