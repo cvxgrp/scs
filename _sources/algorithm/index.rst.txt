@@ -11,6 +11,7 @@ Algorithm
    scale.rst
    warm_start.rst
    acceleration.rst
+   relaxation.rst
 
 
 SCS applies Douglas-Rachford splitting to a homogeneous embedding

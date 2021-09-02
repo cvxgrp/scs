@@ -209,25 +209,25 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 <tbody>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">normalize</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Whether to perform heuristic data rescaling.</p></td>
+<td><p>Whether to perform heuristic data rescaling. See <a class="reference internal" href="../algorithm/equilibration.html#equilibration"><span class="std std-ref">Data equilibration</span></a>.</p></td>
 <td><p>True/False</p></td>
 <td><p>1</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Initial dual scale factor, updated if <code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code> is True.</p></td>
+<td><p>Initial dual scale factor, updated if <code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code> is True. See <a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Scaling</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
 <td><p>0.1</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Whether to heuristically adapt dual <code class="code docutils literal notranslate"><span class="pre">scale</span></code> through the solve.</p></td>
+<td><p>Whether to heuristically adapt dual <code class="code docutils literal notranslate"><span class="pre">scale</span></code> through the solve. See <a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Scaling</span></a>.</p></td>
 <td><p>True/False</p></td>
 <td><p>1</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">rho_x</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Primal scale factor.</p></td>
+<td><p>Primal scale factor. See <a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Scaling</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
 <td><p>1e-6</p></td>
 </tr>
@@ -239,25 +239,25 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_abs</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Absolute feasibility tolerance.</p></td>
+<td><p>Absolute feasibility tolerance, see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
 <td><p>1e-4</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_rel</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Relative feasibility tolerance.</p></td>
+<td><p>Relative feasibility tolerance, see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
 <td><p>1e-4</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_infeas</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Infeasibility tolerance (primal and dual).</p></td>
+<td><p>Infeasibility tolerance (primal and dual), see <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">Infeasibility</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
 <td><p>1e-7</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Douglas-Rachford relaxation parameter.</p></td>
+<td><p>Douglas-Rachford relaxation parameter. See <a class="reference internal" href="../algorithm/relaxation.html#relaxation"><span class="std std-ref">Relaxation</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\((0, 2)\)</span></p></td>
 <td><p>1.5</p></td>
 </tr>
@@ -275,19 +275,19 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">warm_start</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Set to True if you initialize the solver with a guess of the solution (see <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Warm-starting</span></a>).</p></td>
+<td><p>Set to True if you initialize the solver with a guess of the solution. See <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Warm-starting</span></a>.</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>How much memory to use for Anderson acceleration. More memory requires more time to compute but can give more reliable steps. <code class="code docutils literal notranslate"><span class="pre">0</span></code> disables it.</p></td>
+<td><p>How much memory to use for Anderson acceleration. More memory requires more time to compute but can give more reliable steps. <code class="code docutils literal notranslate"><span class="pre">0</span></code> disables it. See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\(\mathbf{N}\)</span></p></td>
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Run Anderson acceleration every this number of iterations.</p></td>
+<td><p>Run Anderson acceleration every this number of iterations. See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\(\mathbf{N}\)</span></p></td>
 <td><p>1</p></td>
 </tr>
@@ -299,7 +299,7 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span></code></p></td>
-<td><p>If this is set SCS will write csv logs of various quantities through the solver. Doing this makes the solver much slower.</p></td>
+<td><p>If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower).</p></td>
 <td><p>Any filename</p></td>
 <td><p>NULL</p></td>
 </tr>
