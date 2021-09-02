@@ -31,9 +31,8 @@ The above becomes:
 which yields :math:`w^k \rightarrow u^\star + R^{-1} F(u^\star)` where :math:`0
 \in F(u^\star) + G(u^\star)`.
 
-This changes the first two steps of the procedure. The linear projection
-explained :ref:`here <linear_solver>`) and the cone projection (explained
-below).
+This changes the first two steps of the procedure. The :ref:`linear projection
+<linear_solver>` and the cone projection (explained next).
 
 Cone projection
 ---------------

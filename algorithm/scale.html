@@ -216,9 +216,7 @@ w^{k+1} &amp;= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
 \end{align}\end{split}\]</div>
 <p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} F(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0
 \in F(u^\star) + G(u^\star)\)</span>.</p>
-<p>This changes the first two steps of the procedure. The linear projection
-explained <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">here</span></a>) and the cone projection (explained
-below).</p>
+<p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
 <div class="section" id="cone-projection">
 <h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline">¶</a></h2>
 <p>In SCS, <span class="math notranslate nohighlight">\(F = \mathcal{Q}\)</span> and <span class="math notranslate nohighlight">\(G = I_{\mathcal{C}_+}\)</span>. Note that
