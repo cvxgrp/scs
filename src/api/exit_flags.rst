@@ -11,40 +11,40 @@ The integer values that SCS can return are documented below.
    * - Status
      - Value
      - SCS constant name
-   * - Solved
+   * - Solved to desired tolerance
      - 1
      - :code:`SCS_SOLVED`
-   * - Solved (inaccurate)
+   * - Did not reach desired accuracy, returning best guess of solution
      - 2
      - :code:`SCS_SOLVED_INACCURATE`
-   * - Unfinished (should never be returned)
+   * - Unfinished (never returned, only used internally)
      - 0
      - :code:`SCS_UNFINISHED`
-   * - Unbounded
+   * - Primal unbounded / Dual infeasible (to desired tolerance)
      - -1
-     - :code:`SCS_SOLVED`
-   * - Infeasible
+     - :code:`SCS_UNBOUNDED`
+   * - Primal infeasible / Dual unbounded (to desired tolerance)
      - -2
      - :code:`SCS_INFEASIBLE`
-   * - Indeterminate
+   * - Indeterminate (numerical errors when recovering solution)
      - -3
      - :code:`SCS_INDETERMINATE`
-   * - Failed (typically data input error)
+   * - Failed (usually a data input error)
      - -4
      - :code:`SCS_FAILED`
-   * - Interrupted (SIGINT)
+   * - Interrupted (received SIGINT)
      - -5
      - :code:`SCS_SIGINT`
-   * - Unbounded (inaccurate)
+   * - Did not reach desired accuracy, returning best guess of certificate of primal unboundedness
      - -6
-     - :code:`SCS_UNBOUNDED`
-   * - Infeasible (inaccurate)
+     - :code:`SCS_UNBOUNDED_INACCURATE`
+   * - Did not reach desired accuracy, returning best guess of certificate of primal infeasibility
      - -7
-     - :code:`SCS_INFEASIBLE`
-   * - Hit maximum iterations
+     - :code:`SCS_INFEASIBLE_INACCURATE`
+   * - Hit maximum iterations, return NaN
      - -8
      - :code:`SCS_MAX_ITERS`
-   * - Hit time limit
+   * - Hit time limit, return NaN
      - -9
      - :code:`SCS_TIME_LIMIT`
 

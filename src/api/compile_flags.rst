@@ -38,7 +38,7 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - Make a copy of A in memory
      - True/False
      - 1
-   * - :code:`GPU_TRANSOSE_MAT`
+   * - :code:`GPU_TRANSPOSE_MAT`
      - If on GPU store A transpose in memory
      - True/False
      - 1
