@@ -136,11 +136,32 @@ static const char *qafiro_tiny_qp(void) {
   mu_assert("qafiro_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
   /* test warm-starting */
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
   /* 25 iters should be enough if warm-started */
   mu_assert("qafiro_tiny_qp: warm-start failure", info.iter <= 25);
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+
+  mu_assert("qafiro_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
+            success);
+
+  /* test other settings */
+  stgs->warm_start = 0;
+  stgs->normalize = 0;
+  stgs->adaptive_scale = 0;
+  stgs->acceleration_lookback = 10;
+  stgs->acceleration_interval = 10;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  perr = info.pobj - opt;
+  derr = info.dobj - opt;
+
+  scs_printf("primal obj error %4e\n", perr);
+  scs_printf("dual obj error %4e\n", derr);
+
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
   mu_assert("qafiro_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",

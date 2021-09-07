@@ -16,8 +16,6 @@ extern "C" {
   ("3.0.0") /* string literals automatically null-terminated */
 
 /* SCS returns one of the following integers:                           */
-#define SCS_TIME_LIMIT (-9)
-#define SCS_MAX_ITERS (-8)
 #define SCS_INFEASIBLE_INACCURATE (-7)
 #define SCS_UNBOUNDED_INACCURATE (-6)
 #define SCS_SIGINT (-5)
@@ -198,8 +196,6 @@ typedef float scs_float;
 #define CONVERGED_INTERVAL (25)
 #endif
 
-/* tolerance at which we declare problem indeterminate */
-#define INDETERMINATE_TOL (1e-9)
 /* maintain the iterates at L2 norm =  ITERATE_NORM * sqrt(n+m+1) */
 #define ITERATE_NORM (1.)
 

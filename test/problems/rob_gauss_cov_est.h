@@ -213,6 +213,28 @@ static const char *rob_gauss_cov_est(void) {
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
+  /* test other settings */
+  stgs->warm_start = 0;
+  stgs->normalize = 0;
+  stgs->adaptive_scale = 0;
+  stgs->acceleration_lookback = 10;
+  stgs->acceleration_interval = 10;
+  stgs->write_data_filename = SCS_NULL;
+  stgs->max_iters = 1000;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  perr = info.pobj - opt;
+  derr = info.dobj - opt;
+
+  scs_printf("primal obj error %4e\n", perr);
+  scs_printf("dual obj error %4e\n", derr);
+
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+
+  mu_assert("rob_gauss_cov_est_rw: SCS failed to produce outputflag SCS_SOLVED",
+            success);
+
   SCS(free_sol)(sol);
   SCS(free_data)(d, k, stgs);
   return fail;

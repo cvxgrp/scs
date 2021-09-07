@@ -159,6 +159,8 @@ typedef struct {
   scs_float solve_time;
   /** (final) scale parameter */
   scs_float scale;
+  /** complementary slackness */
+  scs_float comp_slack;
 } ScsInfo;
 
 /* the following structs are not exposed to user */

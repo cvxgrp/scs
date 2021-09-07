@@ -655,7 +655,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                                scs_float t_warm_start) {
   scs_float *x, gt, ht, t_prev, t = t_warm_start;
   scs_int iter, j;
-  
+
   if (bsize == 1) { /* special case */
     tx[0] = MAX(tx[0], 0.0);
     return tx[0];
