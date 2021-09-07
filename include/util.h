@@ -41,10 +41,6 @@ typedef struct SCS(timer) {
 
 #endif
 
-#if VERBOSITY > 1
-extern SCS(timer) global_timer;
-#endif
-
 /* these all return milli-seconds */
 void SCS(tic)(SCS(timer) * t);
 scs_float SCS(toc)(SCS(timer) * t);

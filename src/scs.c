@@ -9,8 +9,6 @@
 #include "util.h"
 #include "scs_matrix.h"
 
-SCS(timer) global_timer;
-
 /* printing header */
 static const char *HEADER[] = {
     " iter ",    " pri res ", " dua res ", "   gap   ",
@@ -1179,9 +1177,6 @@ void SCS(finish)(ScsWork *w) {
 
 ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
                    const ScsSettings *stgs) {
-#if VERBOSITY > 1
-  SCS(tic)(&global_timer);
-#endif
   ScsWork *w;
   SCS(timer) init_timer;
   scs_start_interrupt_listener();
