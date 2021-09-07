@@ -386,13 +386,14 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   return status;
 }
 
-/* compute the [r;s;kappa] iterate
-   rsk^{k+1} = R ( u^{k+1} + v^k - 2 * u_t^{k+1} )
-   uses Moreau decomposition to get projection onto dual cone
-   since it depends on v^k MUST be called before update_dual_vars is done
-   effect of w->stgs->alpha is cancelled out
-   see .note_on_scale.
-*/
+/* Compute the [r;s;kappa] iterate
+ *
+ *  rsk^{k+1} = R ( u^{k+1} + v^k - 2 * u_t^{k+1} )
+ *
+ *  uses Moreau decomposition to get projection onto dual cone
+ *  since it depends on v^k MUST be called before update_dual_vars is done
+ *  (no effect of w->stgs->alpha here).
+ */
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->m + w->n + 1;
   /* r, should = 0 so skip */
