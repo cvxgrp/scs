@@ -26,7 +26,7 @@ The integer values that SCS can return are documented below.
    * - Primal infeasible / Dual unbounded (to desired tolerance)
      - -2
      - :code:`SCS_INFEASIBLE`
-   * - Indeterminate (numerical errors when recovering solution)
+   * - Indeterminate (numerical errors when recovering solution) DEPRECATED
      - -3
      - :code:`SCS_INDETERMINATE`
    * - Failed (usually a data input error)
@@ -41,11 +41,4 @@ The integer values that SCS can return are documented below.
    * - Did not reach desired accuracy, returning best guess of certificate of primal infeasibility
      - -7
      - :code:`SCS_INFEASIBLE_INACCURATE`
-   * - Hit maximum iterations, return NaN
-     - -8
-     - :code:`SCS_MAX_ITERS`
-   * - Hit time limit, return NaN
-     - -9
-     - :code:`SCS_TIME_LIMIT`
-
 

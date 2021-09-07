@@ -4,32 +4,32 @@ Scaling
 =======
 
 In this note we derive the update equations when using a non-identity
-scaling. Standard Douglas-Rachford splitting is:
+scaling. Standard Douglas-Rachford splitting applied to the SCS problem is:
 
 .. math::
   \begin{align}
-  \tilde u^{k+1} &= (I + F)^{-1} w^k \\
-  u^{k+1} &= (I + G)^{-1} (2 \tilde u^{k+1} - w^k) \\
-  w^{k+1} &= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
+  \tilde u^{k+1} &= (I + \mathcal{Q})^{-1} w^k \\
+  u^{k+1} &= (I + N_{\mathcal{C}_+})^{-1} (2 \tilde u^{k+1} - w^k) \\
+  w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1} \\
   \end{align}
 
 
-yielding :math:`w^k \rightarrow u^\star + F(u^\star)` where :math:`0 \in
-F(u^\star) + G(u^\star)` (assuming such a :math:`u^\star` exists).  Now consider
-modifying DR splitting to use a 
+yielding :math:`w^k \rightarrow u^\star + \mathcal{Q}(u^\star)` where :math:`0 \in
+\mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)` (such a :math:`u^\star`
+always exists for SCS).  Now consider modifying DR splitting to use a 
 diagonal matrix :math:`R` instead of :math:`I`. This is useful because the
 matrix :math:`R` can be selected to provide better convergence in practice.
 The above becomes:
 
 .. math::
   \begin{align}
-  \tilde u^{k+1} &= (R + F)^{-1} R w^k \\
-  u^{k+1} &= (R + G)^{-1} R (2 \tilde u^{k+1} - w^k) \\
-  w^{k+1} &= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
+  \tilde u^{k+1} &= (R + \mathcal{Q})^{-1} R w^k \\
+  u^{k+1} &= (R + N_{\mathcal{C}_+})^{-1} R (2 \tilde u^{k+1} - w^k) \\
+  w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1} \\
   \end{align}
 
-which yields :math:`w^k \rightarrow u^\star + R^{-1} F(u^\star)` where :math:`0
-\in F(u^\star) + G(u^\star)`.
+which yields :math:`w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)` where :math:`0
+\in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)`.
 
 This changes the first two steps of the procedure. The :ref:`linear projection
 <linear_solver>` and the cone projection (explained next).
@@ -37,11 +37,11 @@ This changes the first two steps of the procedure. The :ref:`linear projection
 Cone projection
 ---------------
 
-In SCS, :math:`F = \mathcal{Q}` and :math:`G = I_{\mathcal{C}_+}`. Note that
-:math:`R` has to be chosen so that the cone projection is preserved. To do this
-we ensure that the entries of :math:`R > 0` corresponding to each cone are
-constant within that cone. This means that R does not affect the cone projection
-in any way, since for sub-cone :math:`\mathcal{K}`:
+Note that :math:`R` has to be chosen so that the cone projection is preserved.
+To do this we ensure that the entries of :math:`R > 0` corresponding to each
+cone are constant within that cone (with the box cone being a slight exception
+to this). This means that R does not affect the cone projection in any way,
+since for sub-cone :math:`\mathcal{K}`:
 
 .. math::
    \begin{align}
@@ -109,7 +109,8 @@ and we have
   \end{align}
 
 by Moreau and the fact that :math:`R` is chosen to be constant
-within each sub-cone :math:`\mathcal{K}`. Finally note that :math:`v^k \perp u^k`, since
+within each sub-cone :math:`\mathcal{K}`. Finally note that :math:`v^k \perp
+u^k`, since
 
 .. math::
   \begin{align}
@@ -161,12 +162,15 @@ the *relative* residuals as
 .. math::
    \hat r^k_d = \frac{\|Px + A^\top y - c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}
 
-And consider
+where by default we use the :math:`\ell_\infty` norm for these quantities,
+but can be changed using the :code:`SCALE_NORM` constant in
+:code:`include/glbopts.h`.
+Now consider
 
 .. math::
   \beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
 
-In other words, :math:`\beta` corresponds to the geometric mean of the ratio
+ie, :math:`\beta` corresponds to the geometric mean of the ratio
 of the relative residuals across the last :math:`l` iterations. If this number
 is larger than a constant (eg, 3) or smaller than another constant (eg, 1/3)
 *and* if sufficient iterations have passed since the last update (eg, 100, 

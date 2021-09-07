@@ -38,6 +38,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -187,7 +188,23 @@
             
   <div class="section" id="relaxation">
 <span id="id1"></span><h1>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<p>The (unscaled, see <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Scaling</span></a>) SCS update equations are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\tilde u^{k+1} &amp;= (I + \mathcal{Q})^{-1} w^k \\
+u^{k+1} &amp;= (I + N_{\mathcal{C}_+})^{-1} (2 \tilde u^{k+1} - w^k) \\
+w^{k+1} &amp;= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
+\end{align}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha \in (0,2)\)</span> is the <em>relaxation</em> parameter. Vanilla
+Douglas-Rachford corresponds to setting <span class="math notranslate nohighlight">\(\alpha = 1\)</span>. If <span class="math notranslate nohighlight">\(\alpha &lt;
+1\)</span> it is referred to as under-relaxation, if <span class="math notranslate nohighlight">\(\alpha &gt; 1\)</span> it is
+over-relaxation.  Typically values of <span class="math notranslate nohighlight">\(\alpha \approx 1.5\)</span> work well.  It
+is controlled by the <code class="code docutils literal notranslate"><span class="pre">alpha</span></code> <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  If <span class="math notranslate nohighlight">\(\alpha
+= 2\)</span> the method reduces to Peaceman-Rachford splitting, which is not guaranteed
+to converge in general (but will if, for example, the operators in the problem
+are both maximal strongly monotone).</p>
+<p>Thankfully, there is no interaction between <span class="math notranslate nohighlight">\(\alpha\)</span> and the scaling
+described in <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Scaling</span></a>, and they can be combined immediately.</p>
 </div>
 
 
