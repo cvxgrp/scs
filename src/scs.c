@@ -641,7 +641,15 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
     scs_printf("-");
   }
   scs_printf("\n");
-  scs_printf("objective = %.6f\n", info->pobj);
+  scs_printf("objective = %.6f", info->pobj);
+  switch (info->status_val) {
+    case SCS_SOLVED_INACCURATE:
+    case SCS_UNBOUNDED_INACCURATE:
+    case SCS_INFEASIBLE_INACCURATE:
+      scs_printf(" (inaccurate)");
+    default:
+      scs_printf("\n");
+  }
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
