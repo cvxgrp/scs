@@ -43,7 +43,7 @@ the following fields.
    * - :code:`res_infeas`
      - :code:`scs_float`
      - Primal infeasibility residual (see :ref:`termination conditions <termination>`)
-   * - :code:`res_unbbd_a`
+   * - :code:`res_unbdd_a`
      - :code:`scs_float`
      - Dual infeasibility residual involving :math:`A` (see :ref:`termination conditions <termination>`)
    * - :code:`res_unbdd_p`
