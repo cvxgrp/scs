@@ -860,13 +860,17 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
-  /* hack: negative acceleration_lookback interpreted as type-I */
-  if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-                           w->stgs->acceleration_lookback < 0,
-                           AA_REGULARIZATION, AA_RELAXATION, VERBOSITY))) {
-    if (w->stgs->verbose) {
-      scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
+  if (w->stgs->acceleration_lookback) {
+    /* hack: negative acceleration_lookback interpreted as type-I */
+    if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
+            w->stgs->acceleration_lookback < 0,
+            AA_REGULARIZATION, AA_RELAXATION, VERBOSITY))) {
+      if (w->stgs->verbose) {
+        scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
+      }
     }
+  } else {
+    w->accel = SCS_NULL;
   }
   return w;
 }
@@ -951,8 +955,9 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     update_work_cache(w);
 
     /* reset acceleration so that old iterates aren't affecting new values */
-    aa_reset(w->accel);
-
+    if (w->accel) {
+      aa_reset(w->accel);
+    }
     /* update v, using fact that rsk, u, u_t vectors should be the same */
     /* solve: R (v^+ + u - 2u_t) = rsk => v^+ = R^-1 rsk + 2u_t - u  */
     /* only elements with scale on diag */
@@ -997,18 +1002,20 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     /* accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
-    if (i > 0 && i % w->stgs->acceleration_interval == 0) {
+    if (w->accel) {
       SCS(tic)(&accel_timer);
-      w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
-      /*
-      if (r->aa_norm < 0) {
-        return failure(w, w->m, w->n, sol, info, SCS_FAILED,
-            "error in accelerate", "failure");
+      if (i > 0 && i % w->stgs->acceleration_interval == 0) {
+        w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
+        /*
+           if (r->aa_norm < 0) {
+           return failure(w, w->m, w->n, sol, info, SCS_FAILED,
+           "error in accelerate", "failure");
+           }
+           */
       }
-      */
       total_accel_time += SCS(tocq)(&accel_timer);
+      memcpy(w->v_prev, w->v, l * sizeof(scs_float));
     }
-    memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
     SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
