@@ -251,15 +251,19 @@ the following fields.</p>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Dual infeasibility residual involving <span class="math notranslate nohighlight">\(P\)</span> (see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">termination conditions</span></a>)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">setup_time</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">comp_slack</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Complementary slackness (<span class="math notranslate nohighlight">\(s^\top y\)</span>), should be very close to zero</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">setup_time</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Time taken for setup (milliseconds)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">solve_time</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">solve_time</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Time taken for solve (milliseconds)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Final scale parameter (useful for initializing next solve)</p></td>
 </tr>
