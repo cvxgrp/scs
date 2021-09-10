@@ -1,3 +1,4 @@
+*.csv
 *.iml
 docs/*
 !docs/src

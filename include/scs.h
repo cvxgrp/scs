@@ -161,6 +161,8 @@ typedef struct {
   scs_float scale;
   /** complementary slackness */
   scs_float comp_slack;
+  /** number of rejected AA steps */
+  scs_int rejected_accel_steps;
 } ScsInfo;
 
 /* the following structs are not exposed to user */
@@ -198,7 +200,9 @@ typedef struct {
 typedef struct {
   /* x_prev = x from previous iteration */
   scs_int time_limit_reached; /* set if the time-limit is reached */
-  scs_float *u, *v, *u_t, *v_prev, *rsk;
+  scs_float *u, *u_t;
+  scs_float *v, *v_prev, *v_aa, *v_aa_prev;
+  scs_float *rsk;                /* rsk [ r; s; kappa ] */
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
@@ -223,6 +227,7 @@ typedef struct {
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
   /* aa norm stat */
   scs_float aa_norm;
+  scs_int rejected_accel_steps;
   scs_float setup_time; /* time taken for setup phase (milliseconds) */
   scs_float scale;      /* current scale parameter */
   const ScsData *d;

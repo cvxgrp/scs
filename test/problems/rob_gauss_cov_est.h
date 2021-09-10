@@ -221,6 +221,7 @@ static const char *rob_gauss_cov_est(void) {
   stgs->acceleration_interval = 10;
   stgs->write_data_filename = SCS_NULL;
   stgs->max_iters = 1000;
+  stgs->log_csv_filename = "rob_gauss_cov_est.csv";
 
   exitflag = scs(d, k, stgs, sol, &info);
 

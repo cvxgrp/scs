@@ -190,6 +190,7 @@ typedef float scs_float;
 #define PRINT_INTERVAL (1)
 #define CONVERGED_INTERVAL (1)
 #else
+
 /* print summary output every this num iterations */
 #define PRINT_INTERVAL (250)
 /* check for convergence every this num iterations */
@@ -209,7 +210,9 @@ typedef float scs_float;
 
 /* Anderson acceleration parameters: */
 #define AA_RELAXATION (1.0)
-#define AA_REGULARIZATION (1e-9)
+#define AA_REGULARIZATION (1e-10)
+/* norm factor at which we reject AA steps */
+#define AA_NORM_FACTOR (2.)
 
 /* (Dual) Scale updating parameters */
 #define MAX_SCALE_VALUE (1e6)
@@ -223,6 +226,7 @@ typedef float scs_float;
  * linear system to at each iteration. Lower factors require more CG steps
  * but give better accuracy */
 #define CG_TOL_FACTOR (0.2)
+
 
 /* norm to use when deciding CG convergence */
 #ifndef CG_NORM

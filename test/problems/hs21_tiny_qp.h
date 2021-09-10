@@ -99,6 +99,7 @@ static const char *hs21_tiny_qp(void) {
   stgs->adaptive_scale = 0;
   stgs->acceleration_lookback = 10;
   stgs->acceleration_interval = 10;
+  stgs->log_csv_filename = "hs21_tiny_qp.csv";
 
   exitflag = scs(d, k, stgs, sol, &info);
 

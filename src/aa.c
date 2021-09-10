@@ -262,7 +262,7 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
 /* solves the system of equations to perform the aa update
  * at the end f contains the next iterate to be returned
  */
-static aa_int solve(aa_float *f, AaWork *a, aa_int len) {
+static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   TIME_TIC
   blas_int info = -1, bdim = (blas_int)(a->dim), one = 1, blen = (blas_int)len;
   aa_float onef = 1.0, zerof = 0.0, neg_onef = -1.0, aa_norm;
@@ -410,7 +410,7 @@ void aa_finish(AaWork *a) {
 void aa_reset(AaWork *a) {
   /* to reset we simply set a->iter = 0 */
   if (a->verbosity > 1) {
-    printf("AA reset\n.");
+    printf("AA reset.\n");
   }
   a->iter = 0;
   return;

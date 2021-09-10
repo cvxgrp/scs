@@ -62,7 +62,7 @@ void aa_finish(AaWork *a);
  */
 void aa_reset(AaWork *a);
 
-#define MAX_AA_NORM (1e3)
+#define MAX_AA_NORM (1e4)
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 

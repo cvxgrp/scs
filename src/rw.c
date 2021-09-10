@@ -258,6 +258,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k,
                   "diff_u_ut_nrm_inf,"
                   "diff_v_v_prev_nrm_inf,"
                   "aa_norm,"
+                  "rejected_accel_steps,"
                   "time,"
                   "\n");
   }
@@ -296,6 +297,7 @@ void SCS(log_data_to_csv)(const ScsData *d, const ScsCone *k,
   fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->u, w->u_t, l));
   fprintf(fout, "%.16e,", SCS(norm_inf_diff)(w->v, w->v_prev, l));
   fprintf(fout, "%.16e,", w->aa_norm);
+  fprintf(fout, "%li,", (long)w->rejected_accel_steps);
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
   fprintf(fout, "\n");
   fclose(fout);
