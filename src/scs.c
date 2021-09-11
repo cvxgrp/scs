@@ -1013,17 +1013,12 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       if (i > 0 && i % w->stgs->acceleration_interval == 0) {
         /* compute residual error here, use later */
         nrm_v_v_prev = SCS(norm_diff)(w->v, w->v_prev, l);
-
-        /* TODO: only accelerate when close enough to solution:
-         *  if (nrm_v_v_prev < 1e-4 * SQRTF((scs_float)l) * ITERATE_NORM)
-         */
-
         /* store current v, v_prev in case we reject aa step */
         memcpy(w->v_aa_prev, w->v_prev, l * sizeof(scs_float));
         memcpy(w->v_aa, w->v, l * sizeof(scs_float));
         /* v overwritten with AA output here */
         w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
-        accelerated = w->aa_norm > 0 ? 1 : 0;
+        accelerated = w->aa_norm > 0;
       }
       total_accel_time += SCS(tocq)(&accel_timer);
     }
@@ -1059,7 +1054,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
      * as measured by the residual.
      */
     if (accelerated) {
-      /* compute ||v - v_aa|| and compare to previous error */
+      /* compute ||v^+ - v|| and compare to previous error */
       nrm_v_v_aa = SCS(norm_diff)(w->v, w->v_prev, l);
       if (nrm_v_v_aa > AA_NORM_FACTOR * nrm_v_v_prev) {
         /* in this case we reject the AA step and reset */
