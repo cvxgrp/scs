@@ -684,9 +684,8 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     }
     t = MAX(t - gt / MAX(ht, 1e-8), 0.); /* newton step */
 #if VERBOSITY > 3
-    scs_printf("t warm start: %1.3e, t[0]: %1.3e\n", t_warm_start, tx[0]);
-    scs_printf("t_new %1.3e, t_prev %1.3e, gt %1.3e, ht %1.3e\n", t, t_prev, gt,
-               ht);
+    scs_printf("iter %i, t_new %1.3e, t_prev %1.3e, gt %1.3e, ht %1.3e\n", iter,
+               t, t_prev, gt, ht);
     scs_printf("ABS(gt / (ht + 1e-6)) %.4e, ABS(t - t_prev) %.4e\n",
                ABS(gt / (ht + 1e-6)), ABS(t - t_prev));
 #endif
