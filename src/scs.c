@@ -873,7 +873,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     /* hack: negative acceleration_lookback interpreted as type-I */
     if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
             w->stgs->acceleration_lookback < 0,
-            AA_REGULARIZATION, AA_RELAXATION, VERBOSITY))) {
+            AA_REGULARIZATION, AA_RELAXATION, AA_SAFEGUARD_FACTOR,
+            AA_MAX_WEIGHT_NORM, VERBOSITY))) {
       if (w->stgs->verbose) {
         scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
       }
@@ -977,12 +978,11 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 }
 
 scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  scs_int i, accelerated;
+  scs_int i;
   scs_float v_norm;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
             total_lin_sys_time = 0.0;
-  scs_float nrm_v_v_prev, nrm_v_v_aa;
   if (!sol || !w || !info) {
     scs_printf("ERROR: missing ScsWork, ScsSolution or ScsInfo input\n");
     return SCS_FAILED;
@@ -1007,18 +1007,11 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
     /* accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
-    accelerated = 0;
     if (w->accel) {
       SCS(tic)(&accel_timer);
       if (i > 0 && i % w->stgs->acceleration_interval == 0) {
-        /* compute residual error here, use later */
-        nrm_v_v_prev = SCS(norm_diff)(w->v, w->v_prev, l);
-        /* store current v, v_prev in case we reject aa step */
-        memcpy(w->v_aa_prev, w->v_prev, l * sizeof(scs_float));
-        memcpy(w->v_aa, w->v, l * sizeof(scs_float));
         /* v overwritten with AA output here */
         w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
-        accelerated = w->aa_norm > 0;
       }
       total_accel_time += SCS(tocq)(&accel_timer);
     }
@@ -1050,17 +1043,10 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
     update_dual_vars(w);
 
-    /* safeguard check - ensure that the acceleration step is reasonable
-     * as measured by the residual.
-     */
-    if (accelerated) {
-      /* compute ||v^+ - v|| and compare to previous error */
-      nrm_v_v_aa = SCS(norm_diff)(w->v, w->v_prev, l);
-      if (nrm_v_v_aa > AA_SAFEGUARD_FACTOR * nrm_v_v_prev) {
-        /* in this case we reject the AA step and reset */
-        memcpy(w->v, w->v_aa, l * sizeof(scs_float));
-        memcpy(w->v_prev, w->v_aa_prev, l * sizeof(scs_float));
-        aa_reset(w->accel);
+    if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
+      /* AA safeguard check */
+      if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
+        scs_printf("iter: %i, rejected\n", i);
         w->rejected_accel_steps++;
       }
     }

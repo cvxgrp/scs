@@ -3,3 +3,5 @@
 Acceleration
 ------------
 TODO
+
+.. doxygenfile:: include/aa.h
