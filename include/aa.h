@@ -35,28 +35,28 @@ typedef struct ACCEL_WORK AaWork;
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
                 aa_float relaxation, aa_float safeguard_factor,
                 aa_float max_weight_norm, aa_int verbosity);
-
 /**
- * Apply Anderson Acceleration. The usage pattern is as follows:
+ * Apply Anderson Acceleration. The usage pattern should be as follows:
  *
  *  - for i = 0 .. N:
- *    -  if i > 0: aa_apply(x, x_prev, a)
+ *    -  if (i > 0): aa_apply(x, x_prev, a)
  *    -  x_prev = x.copy()
  *    -  x = F(x)
- *    -  aa_safeguard(x, x_prev, a)
+ *    -  aa_safeguard(x, x_prev, a)  // optional but helps stability
  *
- *  We put the AA before the map so that any properties of the map are
- *  maintained at the end. Eg if the map contains a projection onto a set
- *  then the output is guaranteed to be in the set.
+ *  Here F is the map we are trying to find the fixed point for. We put the AA
+ *  before the map so that any properties of the map are maintained at the end.
+ *  Eg if the map contains a projection onto a set then the output is guaranteed
+ *  to be in the set.
  *
  *
  * @param f   output of map at current iteration, overwritten with AA output
  * @param x   input to map at current iteration
  * @param a   workspace from aa_init
  *
- * @return (float) (+ or -) norm of AA weights vector:
- *    if positive then update was accepted and f contains new point
- *    if negative then update was rejected and f is unchanged
+ * @return (+ or -) norm of AA weights vector. If positive then update
+ *         was accepted and f contains new point, if negative then update was
+ *         rejected and f is unchanged
  *
  */
 aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a);
