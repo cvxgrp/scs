@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Linear System Solver &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -89,7 +88,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="linear-system-solver">
+  <div class="section" id="linear-system-solver">
 <span id="linear-solver"></span><h1>Linear System Solver<a class="headerlink" href="#linear-system-solver" title="Permalink to this headline">¶</a></h1>
 <p>At each iteration SCS must compute the following</p>
 <div class="math notranslate nohighlight">
@@ -145,20 +144,20 @@ An indirect method can solve via:</p>
 (\rho_x I + P + A^\top \mathrm{diag}(\rho_y)^{-1} A) r_x &amp; = q_x - A^\top \mathrm{diag}(\rho_y)^{-1} q_y \\
                           r_y &amp; = \mathrm{diag}(\rho_y)^{-1}(A z_x + q_y).
 \end{align}\end{split}\]</div>
-<section id="available-linear-solvers">
+<div class="section" id="available-linear-solvers">
 <h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Permalink to this headline">¶</a></h2>
 <p>Each of the below linear solvers is included in their own binary. If linking
 against SCS directly, then to switch between them you must compile and link
 against the right binary. If using SCS via one of the interfaces then you can
 choose between the different linear solvers using the appropriate settings.</p>
-<section id="direct-method">
+<div class="section" id="direct-method">
 <span id="direct"></span><h3>Direct method<a class="headerlink" href="#direct-method" title="Permalink to this headline">¶</a></h3>
 <p>The direct method is the default linear system solver in SCS and factorizes the
 above matrix using a sparse permuted LDL factorization. Then it solves the
 linear system at each iteration using the cached factors.  It relies on the
 external <a class="reference external" href="https://github.com/DrTimothyAldenDavis/SuiteSparse">AMD</a> and <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> packages.</p>
-</section>
-<section id="indirect-method">
+</div>
+<div class="section" id="indirect-method">
 <span id="indirect"></span><h3>Indirect method<a class="headerlink" href="#indirect-method" title="Permalink to this headline">¶</a></h3>
 <p>The indirect method solves the above linear system approximately with a
 ‘matrix-free’ method. To do this it first reduces the system as described above
@@ -172,14 +171,14 @@ converges. The tolerance decays with iteration <span class="math notranslate noh
 factorization but typically is slower on a per-iteration basis. In most cases
 the factorization is relatively cheap so the direct method is the default,
 however for very large problems the indirect solver can be faster.</p>
-</section>
-<section id="gpu-indirect-method">
+</div>
+<div class="section" id="gpu-indirect-method">
 <span id="gpu-indirect"></span><h3>GPU indirect method<a class="headerlink" href="#gpu-indirect-method" title="Permalink to this headline">¶</a></h3>
 <p>The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the multiplies are all performed on the GPU.</p>
-</section>
-</section>
-<section id="implementing-a-new-linear-solver">
+</div>
+</div>
+<div class="section" id="implementing-a-new-linear-solver">
 <span id="new-lin-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this headline">¶</a></h2>
 <p>In order to implement you own linear system solver, you need to implement the
 struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> that contains the workspace your solver requires,
@@ -268,8 +267,8 @@ and implement the functions in <code class="code docutils literal notranslate"><
 </dd></dl>
 
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

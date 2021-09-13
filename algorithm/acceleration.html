@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Acceleration &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -105,7 +104,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="acceleration">
+  <div class="section" id="acceleration">
 <span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline">¶</a></h1>
 <p>SCS includes Anderson acceleration (AA), which can be used to speed up
 convergence. AA is a quasi-Newton method for the acceleration of fixed point
@@ -114,7 +113,7 @@ higher accuracy solutions are desired. However, it can also cause severe
 instability of the solver and so it is disabled by default. It is an open
 research question how to best implement AA in practice to ensure good
 performance across all problems and we welcome any <a class="reference internal" href="../contributing/index.html#contributing"><span class="std std-ref">contributions</span></a> in that direction!</p>
-<section id="mathematical-details">
+<div class="section" id="mathematical-details">
 <h2>Mathematical details<a class="headerlink" href="#mathematical-details" title="Permalink to this headline">¶</a></h2>
 <p>The discussion here is taken from section 2 of our <a class="reference external" href="https://web.stanford.edu/~boyd/papers/nonexp_global_aa1.html">paper</a>.
 Consider the problem of finding a fixed point of the function <span class="math notranslate nohighlight">\(f:
@@ -138,7 +137,7 @@ last <span class="math notranslate nohighlight">\(m_k + 1\)</span> outputs of th
 choosing the weights <span class="math notranslate nohighlight">\(\alpha \in \mathbf{R}^{m_k-1}\)</span>. There are two ways
 to choose them, corresponding to type-I and type-II AA (named for the type-I and
 type-II Broyden updates). We shall present type-II first.</p>
-<section id="type-ii-aa">
+<div class="section" id="type-ii-aa">
 <h3>Type-II AA<a class="headerlink" href="#type-ii-aa" title="Permalink to this headline">¶</a></h3>
 <p>Define the residual <span class="math notranslate nohighlight">\(g: \mathbf{R}^n \rightarrow \mathbf{R}^n\)</span> of
 <span class="math notranslate nohighlight">\(f\)</span> to be <span class="math notranslate nohighlight">\(g(x) = x - f(x)\)</span>. Note that any fixed point
@@ -180,8 +179,8 @@ as an approximate inverse Jacobian of <span class="math notranslate nohighlight"
 then be considered as a quasi-Newton-type update, with <span class="math notranslate nohighlight">\(H_k\)</span> being
 a generalized second (or type-II) Broyden’s update of <span class="math notranslate nohighlight">\(I\)</span> satisfying
 the inverse multi-secant condition.</p>
-</section>
-<section id="type-i-aa">
+</div>
+<div class="section" id="type-i-aa">
 <h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Permalink to this headline">¶</a></h3>
 <p>In the same spirit, we define type-I AA, in which we find an approximate
 Jacobian of <span class="math notranslate nohighlight">\(g\)</span> minimizing <span class="math notranslate nohighlight">\(\|B_k-I\|_F\)</span> subject to the multi-secant
@@ -200,9 +199,9 @@ matrix identity shows that</p>
 that this explicit formula of <span class="math notranslate nohighlight">\(B_k^{-1}\)</span> is preferred in that the most
 costly step, inversion, is implemented only on a small <span class="math notranslate nohighlight">\(m_k\times m_k\)</span>
 matrix.</p>
-</section>
-</section>
-<section id="in-scs">
+</div>
+</div>
+<div class="section" id="in-scs">
 <h2>In SCS<a class="headerlink" href="#in-scs" title="Permalink to this headline">¶</a></h2>
 <p>In SCS both types of acceleration are available, though by default type-II is
 used since it tends to be more stable.  If you wish to enable AA then set the
@@ -218,7 +217,7 @@ then AA is applied every <span class="math notranslate nohighlight">\(k\)</span>
 iterations). This has the benefit of making AA <span class="math notranslate nohighlight">\(k\)</span> times faster
 to apply and approximating a <span class="math notranslate nohighlight">\(k\)</span> times larger memory. More work is needed
 to determine the optimal setting for this parameter.</p>
-<section id="regularization">
+<div class="section" id="regularization">
 <h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this headline">¶</a></h3>
 <p>By default we also add a small amount of regularization to the matrices
 that are being inverted in the above expressions, ie, in the type-II update</p>
@@ -230,16 +229,16 @@ needs more regularization than type-II. The regularization shrinks the AA update
 towards the update without AA, since if <span class="math notranslate nohighlight">\(\epsilon\rightarrow\infty\)</span>
 then <span class="math notranslate nohighlight">\(\gamma^\star = 0\)</span> and the AA step reduces to <span class="math notranslate nohighlight">\(x^{k+1} =
 f(x^k)\)</span>.</p>
-</section>
-<section id="max-gamma-norm">
+</div>
+<div class="section" id="max-gamma-norm">
 <h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this headline">¶</a></h3>
 <p>As the algorithm converges to the fixed point the matrices to be inverted
 can become ill-conditioned and AA can become unstable. In this case the
 <span class="math notranslate nohighlight">\(\gamma\)</span> vector can become very large. As a simple heuristic we reject
 the AA update and reset the AA state whenever <span class="math notranslate nohighlight">\(\|\gamma\|_2\)</span> is greater
 than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, <span class="math notranslate nohighlight">\(10^4\)</span>).</p>
-</section>
-<section id="safeguarding">
+</div>
+<div class="section" id="safeguarding">
 <h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this headline">¶</a></h3>
 <p>We also apply a safeguarding step to the output of the AA step. Explicitly, let
 <span class="math notranslate nohighlight">\(x^k\)</span> be the current iteration and let <span class="math notranslate nohighlight">\(x_\mathrm{AA} = x^{k+1}\)</span> be
@@ -251,8 +250,8 @@ the output of AA. We reject the AA step if</p>
 if the norm of the residual after the AA step is larger than some amount (eg, if
 it increases the residual from the previous iterate).  After rejecting a step we
 revert the iterate to <span class="math notranslate nohighlight">\(x^k\)</span> and reset the AA state.</p>
-</section>
-<section id="relaxation">
+</div>
+<div class="section" id="relaxation">
 <h3>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this headline">¶</a></h3>
 <p>In some works relaxation has been shown to improve performance. Relaxation
 replaces the final step of AA by mixing the map inputs and outputs as follows:</p>
@@ -262,9 +261,9 @@ replaces the final step of AA by mixing the map inputs and outputs as follows:</
 recovers vanilla AA. This can be computed using the matrices defined above using</p>
 <div class="math notranslate nohighlight">
 \[x^{k+1} = \beta (f(x^k) - (S_k - Y_k) \gamma^k) + (1-\beta) (x^k - S_k \gamma^k)\]</div>
-</section>
-</section>
-<section id="anderson-acceleration-api">
+</div>
+</div>
+<div class="section" id="anderson-acceleration-api">
 <h2>Anderson acceleration API<a class="headerlink" href="#anderson-acceleration-api" title="Permalink to this headline">¶</a></h2>
 <p>For completeness, we document the full Anderson acceleration API below.</p>
 <div class="breathe-sectiondef docutils container">
@@ -383,8 +382,8 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 </dd></dl>
 
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

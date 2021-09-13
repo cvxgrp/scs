@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data equilibration &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -95,7 +94,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="data-equilibration">
+  <div class="section" id="data-equilibration">
 <span id="equilibration"></span><h1>Data equilibration<a class="headerlink" href="#data-equilibration" title="Permalink to this headline">¶</a></h1>
 <p>Data scale has a large impact on the convergence of first-order algorithms like
 SCS in practice. With that in mind SCS implements a heuristic data equilibration
@@ -161,7 +160,7 @@ equilibration and the average <span class="math notranslate nohighlight">\(\ell_
 <p>Originally the code supported separate <code class="code docutils literal notranslate"><span class="pre">primal_scale</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">dual_scale</span></code> parameters scaling <span class="math notranslate nohighlight">\(c\)</span> and <span class="math notranslate nohighlight">\(b\)</span>, but the latest
 version of SCS has set both of these to the same value of <span class="math notranslate nohighlight">\(\sigma\)</span>.</p>
-<section id="solution">
+<div class="section" id="solution">
 <h2>Solution<a class="headerlink" href="#solution" title="Permalink to this headline">¶</a></h2>
 <p>This equilibration changes the fixed point of SCS, but we can recover the
 solutions to the original problem from the equilibrated solution. Denote by
@@ -175,8 +174,8 @@ problem, then the solution to the original problem is given by</p>
 b^\top y =  \hat b^\top \hat y / \sigma^2, \quad
 x^\top P x =  \hat x^\top \hat P \hat x / \sigma^2\]</div>
 <p>The same modifications hold for the certificates of infeasibility.</p>
-</section>
-<section id="residuals">
+</div>
+<div class="section" id="residuals">
 <h2>Residuals<a class="headerlink" href="#residuals" title="Permalink to this headline">¶</a></h2>
 <p>The equilibration also changes the residuals and when running SCS we are
 interested in detecting convergence using the original problem residuals, rather
@@ -191,8 +190,8 @@ the residuals of the original problem as follows (under any norm).</p>
 <p>Duality gap:</p>
 <div class="math notranslate nohighlight">
 \[r_g = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|\]</div>
-</section>
-<section id="infeasibility-certificates">
+</div>
+<div class="section" id="infeasibility-certificates">
 <h2>Infeasibility certificates<a class="headerlink" href="#infeasibility-certificates" title="Permalink to this headline">¶</a></h2>
 <p>Similar relationships hold for the infeasibility certificate terms:</p>
 <div class="math notranslate nohighlight">
@@ -201,8 +200,8 @@ the residuals of the original problem as follows (under any norm).</p>
 \|Px\| = (1/\sigma) \|E^{-1} \hat P \hat x \|,
 \quad
 \|A^\top y \| = (1/\sigma) \|E^{-1} \hat A^\top \hat y \|\]</div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

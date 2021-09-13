@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Install &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -89,15 +88,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="install">
+  <div class="section" id="install">
 <span id="id1"></span><h1>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h1>
-<section id="c-c">
+<div class="section" id="c-c">
 <h2>C/C++<a class="headerlink" href="#c-c" title="Permalink to this headline">¶</a></h2>
 <p>First clone the SCS repo from GitHub</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/cvxgrp/scs.git
 </pre></div>
 </div>
-<section id="cmake">
+<div class="section" id="cmake">
 <h3>CMake<a class="headerlink" href="#cmake" title="Permalink to this headline">¶</a></h3>
 <p>Thanks to <a class="reference external" href="cmake.org">CMake</a> buildsystem, SCS can be easily compiled and linked by other
 CMake projects. To use the cmake buld system please run the following commands:</p>
@@ -138,8 +137,8 @@ target_link_libraries<span class="o">(</span>example scs::scsdir<span class="o">
 target_link_libraries<span class="o">(</span>example scs::scsindir<span class="o">)</span>
 </pre></div>
 </div>
-</section>
-<section id="makefile">
+</div>
+<div class="section" id="makefile">
 <h3>Makefile<a class="headerlink" href="#makefile" title="Permalink to this headline">¶</a></h3>
 <p>Alternatively you can use the Makefile and manage the libraries yourself</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> scs
@@ -169,9 +168,9 @@ out/run_tests_gpu_indirect
 option <code class="code docutils literal notranslate"><span class="pre">-L(PATH_TO_SCS_LIBS)</span></code> and <code class="code docutils literal notranslate"><span class="pre">-lscsdir</span></code> or <code class="code docutils literal notranslate"><span class="pre">-lscsindir</span></code>
 (as needed). The API and required data structures are defined in the file
 <code class="code docutils literal notranslate"><span class="pre">include/scs.h</span></code>. The four main API functions are:</p>
-</section>
-</section>
-<section id="python">
+</div>
+</div>
+<div class="section" id="python">
 <h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
 <p>The easiest way to install the python version is using <a class="reference external" href="https://pypi.org/project/pip/">pip</a></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install scs
@@ -203,16 +202,16 @@ python setup.py install
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
 </pre></div>
 </div>
-</section>
-<section id="matlab">
+</div>
+<div class="section" id="matlab">
 <h2>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
-</section>
-<section id="julia">
+</div>
+<div class="section" id="julia">
 <h2>Julia<a class="headerlink" href="#julia" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
