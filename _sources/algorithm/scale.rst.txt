@@ -16,7 +16,7 @@ scaling. Standard Douglas-Rachford splitting applied to the SCS problem is:
 
 yielding :math:`w^k \rightarrow u^\star + \mathcal{Q}(u^\star)` where :math:`0 \in
 \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)` (such a :math:`u^\star`
-always exists for SCS).  Now consider modifying DR splitting to use a 
+always exists for SCS).  Now consider modifying DR splitting to use a
 diagonal matrix :math:`R` instead of :math:`I`. This is useful because the
 matrix :math:`R` can be selected to provide better convergence in practice.
 The above becomes:
@@ -59,10 +59,10 @@ In other words, :math:`R` is selected such that
 Selecting :math:`R`
 -------------------
 
-For SCS we take 
+For SCS we take
 
 .. math::
-  R =  \begin{bmatrix} 
+  R =  \begin{bmatrix}
     \rho_x I_n   &        0    &   0 \\
     0     &     \mathrm{diag}(\rho_y) &   0 \\
     0     &               0     &   d
@@ -71,7 +71,7 @@ For SCS we take
 where :math:`I_n` is :math:`n \times n` identity, :math:`\rho_x \in \mathbf{R}`,
 :math:`\rho_y \in \mathbf{R}^m` and :math:`d \in \mathbf{R}`. The :math:`\rho_y`
 term includes the effect of the parameter :code:`scale`, which is updated
-heuristically to improve convergence. Basically 
+heuristically to improve convergence. Basically
 
 .. math::
 
@@ -170,12 +170,12 @@ Now consider
 .. math::
   \beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
 
-ie, :math:`\beta` corresponds to the geometric mean of the ratio
-of the relative residuals across the last :math:`l` iterations. If this number
-is larger than a constant (eg, 3) or smaller than another constant (eg, 1/3)
-*and* if sufficient iterations have passed since the last update (eg, 100, 
-as determined by :code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale`
-parameter is triggered: 
+ie, :math:`\beta` corresponds to the geometric mean of the ratio of the relative
+residuals across the last :math:`l` iterations. If this number is larger than a
+constant (eg, 3) or smaller than another constant (eg, 1/3) *and* if sufficient
+iterations have passed since the last update (eg, 100, as determined by
+:code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale` parameter is
+triggered:
 
 .. math::
    \mbox{scale}^+ = \sqrt{\beta}\ \mbox{scale}
@@ -184,10 +184,9 @@ The presence of the square root is to prevent over-shooting the 'optimal'
 scale parameter, which could lead to oscillation.
 
 Note that if the :ref:`linear system <linear_solver>` is being solved using a
-direct method, then updating the scale parameter will require a new
+direct method, then updating the :code:`scale` parameter will require a new
 factorization of the perturbed matrix, so is somewhat expensive for larger
-problems and should be done sparingly (the constants mentioned above are
-controlled by the linear system itself).
-
-
+problems and should be done sparingly. Also, since the changing the
+:code:`scale` changes the operator we are using in DR splitting we also need to
+perform a reset of the :ref:`Anderson acceleration <acceleration>`.
 

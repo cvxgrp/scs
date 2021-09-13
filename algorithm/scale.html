@@ -1,84 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Scaling &mdash; SCS 3.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Warm-starting" href="warm_start.html" />
     <link rel="prev" title="Data equilibration" href="equilibration.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html">
-          
-
-          
-            
             <img src="../_static/scs_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 3.0.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -86,18 +43,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Algorithm</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
@@ -126,74 +72,32 @@
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">SCS</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="index.html">Algorithm</a> &raquo;</li>
-        
       <li>Scaling</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/algorithm/scale.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="scaling">
+             
+  <section id="scaling">
 <span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline">¶</a></h1>
 <p>In this note we derive the update equations when using a non-identity
 scaling. Standard Douglas-Rachford splitting applied to the SCS problem is:</p>
@@ -218,7 +122,7 @@ w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
 <p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0
 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
 <p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
-<div class="section" id="cone-projection">
+<section id="cone-projection">
 <h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline">¶</a></h2>
 <p>Note that <span class="math notranslate nohighlight">\(R\)</span> has to be chosen so that the cone projection is preserved.
 To do this we ensure that the entries of <span class="math notranslate nohighlight">\(R &gt; 0\)</span> corresponding to each
@@ -234,8 +138,8 @@ since for sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</s
 <p>In other words, <span class="math notranslate nohighlight">\(R\)</span> is selected such that</p>
 <div class="math notranslate nohighlight">
 \[(R +  \partial I_{\mathcal{C}_+})^{-1} R = (I +  \partial I_{\mathcal{C}_+})^{-1}\]</div>
-</div>
-<div class="section" id="selecting-r">
+</section>
+<section id="selecting-r">
 <h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this headline">¶</a></h2>
 <p>For SCS we take</p>
 <div class="math notranslate nohighlight">
@@ -258,8 +162,8 @@ So as scale increases, <span class="math notranslate nohighlight">\(\rho_y\)</sp
 <code class="code docutils literal notranslate"><span class="pre">rho_x</span></code>. The quantity <span class="math notranslate nohighlight">\(\rho_y\)</span> is determined by the <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a> value <code class="code docutils literal notranslate"><span class="pre">scale</span></code> but is updated adaptively using the techniques
 described in <a class="reference internal" href="#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>. Finally,  <span class="math notranslate nohighlight">\(d\)</span>
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
-</div>
-<div class="section" id="dual-vector">
+</section>
+<section id="dual-vector">
 <h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this headline">¶</a></h2>
 <p>In order to get the dual vector <span class="math notranslate nohighlight">\(v^k\)</span> that contains <span class="math notranslate nohighlight">\(s^k\)</span> and
 <span class="math notranslate nohighlight">\(\kappa^k\)</span> we use:</p>
@@ -285,8 +189,8 @@ u^k\)</span>, since</p>
 \end{align}\end{split}\]</div>
 <p>since <span class="math notranslate nohighlight">\(\tilde v^k \perp u^k\)</span> and <span class="math notranslate nohighlight">\(R\)</span> is chosen to be constant
 within each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>.</p>
-</div>
-<div class="section" id="root-plus-function">
+</section>
+<section id="root-plus-function">
 <h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline">¶</a></h2>
 <p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
 of the following quadratic equation:</p>
@@ -297,8 +201,8 @@ this is the <em>only</em> place where <span class="math notranslate nohighlight"
 flexibility in how to choose it and it can even change from iteration to
 iteration. It is an open question on how best to select this parameter.  See the
 <code class="code docutils literal notranslate"><span class="pre">dot_with_diag_scaling</span></code> function in <code class="code docutils literal notranslate"><span class="pre">src/scs.c</span></code>.</p>
-</div>
-<div class="section" id="dynamic-scale-updating">
+</section>
+<section id="dynamic-scale-updating">
 <span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this headline">¶</a></h2>
 <p>The choice of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter can have a large impact on the
 performance of the algorithm and the optimal choice is highly problem
@@ -323,83 +227,65 @@ but can be changed using the <code class="code docutils literal notranslate"><sp
 Now consider</p>
 <div class="math notranslate nohighlight">
 \[\beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}\]</div>
-<p>ie, <span class="math notranslate nohighlight">\(\beta\)</span> corresponds to the geometric mean of the ratio
-of the relative residuals across the last <span class="math notranslate nohighlight">\(l\)</span> iterations. If this number
-is larger than a constant (eg, 3) or smaller than another constant (eg, 1/3)
-<em>and</em> if sufficient iterations have passed since the last update (eg, 100,
-as determined by <code class="code docutils literal notranslate"><span class="pre">RESCALING_MIN_ITERS</span></code>) then an update of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code>
-parameter is triggered:</p>
+<p>ie, <span class="math notranslate nohighlight">\(\beta\)</span> corresponds to the geometric mean of the ratio of the relative
+residuals across the last <span class="math notranslate nohighlight">\(l\)</span> iterations. If this number is larger than a
+constant (eg, 3) or smaller than another constant (eg, 1/3) <em>and</em> if sufficient
+iterations have passed since the last update (eg, 100, as determined by
+<code class="code docutils literal notranslate"><span class="pre">RESCALING_MIN_ITERS</span></code>) then an update of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter is
+triggered:</p>
 <div class="math notranslate nohighlight">
 \[\mbox{scale}^+ = \sqrt{\beta}\ \mbox{scale}\]</div>
 <p>The presence of the square root is to prevent over-shooting the ‘optimal’
 scale parameter, which could lead to oscillation.</p>
 <p>Note that if the <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear system</span></a> is being solved using a
-direct method, then updating the scale parameter will require a new
+direct method, then updating the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter will require a new
 factorization of the perturbed matrix, so is somewhat expensive for larger
-problems and should be done sparingly (the constants mentioned above are
-controlled by the linear system itself).</p>
-</div>
-</div>
+problems and should be done sparingly. Also, since the changing the
+<code class="code docutils literal notranslate"><span class="pre">scale</span></code> changes the operator we are using in DR splitting we also need to
+perform a reset of the <a class="reference internal" href="acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a>.</p>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="warm_start.html" class="btn btn-neutral float-right" title="Warm-starting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="equilibration.html" class="btn btn-neutral float-left" title="Data equilibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="warm_start.html" class="btn btn-neutral float-right" title="Warm-starting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Brendan O&#39;Donoghue.
-
-    </p>
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
     <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
     <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-    ga('create', 'UA-203326834-1', 'auto');
-    
-    ga('send', 'pageview');
-    </script>
-
-    
-   
+      gtag('config', 'UA-203326834-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

@@ -1,83 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Acceleration &mdash; SCS 3.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Relaxation" href="relaxation.html" />
     <link rel="prev" title="Warm-starting" href="warm_start.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html">
-          
-
-          
-            
             <img src="../_static/scs_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 3.0.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -85,24 +43,28 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Algorithm</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="warm_start.html">Warm-starting</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mathematical-details">Mathematical details</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#type-ii-aa">Type-II AA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#type-i-aa">Type-I AA</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#in-scs">In SCS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#regularization">Regularization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#max-gamma-norm">Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#safeguarding">Safeguarding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#relaxation">Relaxation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#anderson-acceleration-api">Anderson acceleration API</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="relaxation.html">Relaxation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#optimality-conditions">Optimality conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#termination-criteria">Termination criteria</a></li>
@@ -118,76 +80,193 @@
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">SCS</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="index.html">Algorithm</a> &raquo;</li>
-        
       <li>Acceleration</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/algorithm/acceleration.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="acceleration">
+             
+  <section id="acceleration">
 <span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<p>SCS includes Anderson acceleration (AA), which can be used to speed up
+convergence. AA is a quasi-Newton method for the acceleration of fixed point
+iterations and can dramatically speed up convergence in practice, especially if
+higher accuracy solutions are desired. However, it can also cause severe
+instability of the solver and so it is disabled by default. It is an open
+research question how to best implement AA in practice to ensure good
+performance across all problems and we welcome any <a class="reference internal" href="../contributing/index.html#contributing"><span class="std std-ref">contributions</span></a> in that direction!</p>
+<section id="mathematical-details">
+<h2>Mathematical details<a class="headerlink" href="#mathematical-details" title="Permalink to this headline">¶</a></h2>
+<p>The discussion here is taken from section 2 of our <a class="reference external" href="https://web.stanford.edu/~boyd/papers/nonexp_global_aa1.html">paper</a>.
+Consider the problem of finding a fixed point of the function <span class="math notranslate nohighlight">\(f:
+\mathbf{R}^n \rightarrow \mathbf{R}^n\)</span>, i.e.,</p>
+<div class="math notranslate nohighlight">
+\[\text{Find } x \in \mathbf{R}^n \text{ such that } x = f(x).\]</div>
+<p>In our case <span class="math notranslate nohighlight">\(f\)</span> corresponds to one step of <a class="reference internal" href="index.html#algorithm"><span class="std std-ref">Douglas-Rachford
+splitting</span></a>. At a high level AA from initial point <span class="math notranslate nohighlight">\(x_0\)</span> and
+max memory <span class="math notranslate nohighlight">\(m\)</span> (corresponding to the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code>
+setting) works as follows:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{l}
+\text{For } k=0, 1, \dots \\
+\quad \text{Set } m_k=\min\{m, k\} \\
+\quad \text{Select weights } \alpha_j^k \text{ based on the last } m_k \text{
+  iterations satisfying } \sum_{j=0}^{m_k}\alpha_j^k=1 \\
+\quad \text{Set } x^{k+1}=\sum_{j=0}^{m_k}\alpha_j^kf(x^{k-m_k+j})
+\end{array}\end{split}\]</div>
+<p>In other words, AA produces an iterate that is the linear combination of the
+last <span class="math notranslate nohighlight">\(m_k + 1\)</span> outputs of the map.  Thus, the main challenge is in
+choosing the weights <span class="math notranslate nohighlight">\(\alpha \in \mathbf{R}^{m_k-1}\)</span>. There are two ways
+to choose them, corresponding to type-I and type-II AA (named for the type-I and
+type-II Broyden updates). We shall present type-II first.</p>
+<section id="type-ii-aa">
+<h3>Type-II AA<a class="headerlink" href="#type-ii-aa" title="Permalink to this headline">¶</a></h3>
+<p>Define the residual <span class="math notranslate nohighlight">\(g: \mathbf{R}^n \rightarrow \mathbf{R}^n\)</span> of
+<span class="math notranslate nohighlight">\(f\)</span> to be <span class="math notranslate nohighlight">\(g(x) = x - f(x)\)</span>. Note that any fixed point
+<span class="math notranslate nohighlight">\(x^\star\)</span> satisfies <span class="math notranslate nohighlight">\(g(x^\star) = 0\)</span>.
+In type-II AA the weights are selected by solving a small least squares problem.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+\mbox{minimize} &amp; \|\sum_{j=0}^{m_k}\alpha_j g(x^{k-m_k+j})\|_2^2\\
+\mbox{subject to} &amp; \sum_{j=0}^{m_k}\alpha_j=1,
+\end{array}\end{split}\]</div>
+<p>More explicitly, we can reformulate the above as follows:</p>
+<div class="math notranslate nohighlight">
+\[\begin{array}{ll}
+\mbox{minimize} &amp; \|g_k-Y_k\gamma\|_2,
+\end{array}\]</div>
+<p>with variable <span class="math notranslate nohighlight">\(\gamma=(\gamma_0,\dots,\gamma_{m_k-1})\)</span>. Here
+<span class="math notranslate nohighlight">\(g_i=g(x^i)\)</span>, <span class="math notranslate nohighlight">\(Y_k=[y_{k-m_k}~\dots~y_{k-1}]\)</span> with <span class="math notranslate nohighlight">\(y_i=g_{i+1}-g_i\)</span>
+for each <span class="math notranslate nohighlight">\(i\)</span>, and <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\gamma\)</span> are related by
+<span class="math notranslate nohighlight">\(\alpha_0=\gamma_0\)</span>, <span class="math notranslate nohighlight">\(\alpha_i=\gamma_i-\gamma_{i-1}\)</span> for
+<span class="math notranslate nohighlight">\(1\leq i\leq m_k-1\)</span> and <span class="math notranslate nohighlight">\(\alpha_{m_k}=1-\gamma_{m_k-1}\)</span>.</p>
+<p>Assuming that <span class="math notranslate nohighlight">\(Y_k\)</span> is full column rank, the solution
+<span class="math notranslate nohighlight">\(\gamma^k\)</span> to the above is given by <span class="math notranslate nohighlight">\(\gamma^k=(Y_k^\top
+Y_k)^{-1}Y_k^\top g_k\)</span>, and hence by the relation between <span class="math notranslate nohighlight">\(\alpha^k\)</span> and
+<span class="math notranslate nohighlight">\(\gamma^k\)</span>, the next iterate of type-II AA can be written as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+x^{k+1}&amp;=f(x^k)-\sum_{i=0}^{m_k-1}\gamma_i^k\left(f(x^{k-m_k+i+1})- f(x^{k-m_k+i})\right)\\
+&amp;=x^k-g_k-(S_k-Y_k)\gamma^k\\
+&amp;=x^k-(I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top )g_k\\
+&amp;=x^k-H_kg_k,
+\end{align}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(S_k=[s_{k-m_k}~\dots~s_{k-1}]\)</span>, <span class="math notranslate nohighlight">\(s_i=x^{i+1}-x^i\)</span> for each
+<span class="math notranslate nohighlight">\(i\)</span>, and</p>
+<div class="math notranslate nohighlight">
+\[H_k=I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top\]</div>
+<p>Observe that <span class="math notranslate nohighlight">\(H_k\)</span> minimizes <span class="math notranslate nohighlight">\(\|H_k-I\|_F\)</span> subject to
+the inverse multi-secant condition <span class="math notranslate nohighlight">\(H_kY_k=S_k\)</span>, and hence can be regarded
+as an approximate inverse Jacobian of <span class="math notranslate nohighlight">\(g\)</span>. The update of <span class="math notranslate nohighlight">\(x^k\)</span> can
+then be considered as a quasi-Newton-type update, with <span class="math notranslate nohighlight">\(H_k\)</span> being
+a generalized second (or type-II) Broyden’s update of <span class="math notranslate nohighlight">\(I\)</span> satisfying
+the inverse multi-secant condition.</p>
+</section>
+<section id="type-i-aa">
+<h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Permalink to this headline">¶</a></h3>
+<p>In the same spirit, we define type-I AA, in which we find an approximate
+Jacobian of <span class="math notranslate nohighlight">\(g\)</span> minimizing <span class="math notranslate nohighlight">\(\|B_k-I\|_F\)</span> subject to the multi-secant
+condition <span class="math notranslate nohighlight">\(B_kS_k=Y_k\)</span>. Assuming that <span class="math notranslate nohighlight">\(S_k\)</span> is full column rank, we
+obtain (by symmetry) that</p>
+<div class="math notranslate nohighlight">
+\[B_k=I+(Y_k-S_k)(S_k^\top S_k)^{-1}S_k^\top\]</div>
+<p>and the update scheme is defined as</p>
+<div class="math notranslate nohighlight">
+\[x^{k+1}=x^k-B_k^{-1}g_k\]</div>
+<p>assuming <span class="math notranslate nohighlight">\(B_k\)</span> to be invertible. A direct application of the Woodbury
+matrix identity shows that</p>
+<div class="math notranslate nohighlight">
+\[B_k^{-1}=I+(S_k-Y_k)(S_k^\top Y_k)^{-1}S_k^\top\]</div>
+<p>where again we have assumed that <span class="math notranslate nohighlight">\(S_k^\top Y_k\)</span> is invertible.  Notice
+that this explicit formula of <span class="math notranslate nohighlight">\(B_k^{-1}\)</span> is preferred in that the most
+costly step, inversion, is implemented only on a small <span class="math notranslate nohighlight">\(m_k\times m_k\)</span>
+matrix.</p>
+</section>
+</section>
+<section id="in-scs">
+<h2>In SCS<a class="headerlink" href="#in-scs" title="Permalink to this headline">¶</a></h2>
+<p>In SCS both types of acceleration are available, though by default type-II is
+used since it tends to be more stable.  If you wish to enable AA then set the
+<code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well for
+many problems). This setting corresponds to the number of SCS iterates that AA
+will use to extrapolate to the new point.</p>
+<p>To enable type-I acceleration then set <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> to a
+negative value, the sign is interpreted as switching the AA type (this is mostly
+so that we can test it without fully exposing it the user).</p>
+<p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> controls how frequently AA is applied.
+If <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> <span class="math notranslate nohighlight">\(=k\)</span> for some integer <span class="math notranslate nohighlight">\(k \geq 1\)</span>
+then AA is applied every <span class="math notranslate nohighlight">\(k\)</span> iterations (AA simply ignores the intermediate
+iterations). This has the benefit of making AA <span class="math notranslate nohighlight">\(k\)</span> times faster
+to apply and approximating a <span class="math notranslate nohighlight">\(k\)</span> times larger memory. More work is needed
+to determine the optimal setting for this parameter.</p>
+<section id="regularization">
+<h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this headline">¶</a></h3>
+<p>By default we also add a small amount of regularization to the matrices
+that are being inverted in the above expressions, ie, in the type-II update</p>
+<div class="math notranslate nohighlight">
+\[(Y_k^\top Y_k)^{-1} \text{ becomes } (Y_k^\top Y_k + \epsilon I)^{-1}\]</div>
+<p>for some small <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)</span>, and similarly for the type-I update. This
+ensures the matrices are invertible and helps stability. In practice type-I
+needs more regularization than type-II. The regularization shrinks the AA update
+towards the update without AA, since if <span class="math notranslate nohighlight">\(\epsilon\rightarrow\infty\)</span>
+then <span class="math notranslate nohighlight">\(\gamma^\star = 0\)</span> and the AA step reduces to <span class="math notranslate nohighlight">\(x^{k+1} =
+f(x^k)\)</span>.</p>
+</section>
+<section id="max-gamma-norm">
+<h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this headline">¶</a></h3>
+<p>As the algorithm converges to the fixed point the matrices to be inverted
+can become ill-conditioned and AA can become unstable. In this case the
+<span class="math notranslate nohighlight">\(\gamma\)</span> vector can become very large. As a simple heuristic we reject
+the AA update and reset the AA state whenever <span class="math notranslate nohighlight">\(\|\gamma\|_2\)</span> is greater
+than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, <span class="math notranslate nohighlight">\(10^4\)</span>).</p>
+</section>
+<section id="safeguarding">
+<h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this headline">¶</a></h3>
+<p>We also apply a safeguarding step to the output of the AA step. Explicitly, let
+<span class="math notranslate nohighlight">\(x^k\)</span> be the current iteration and let <span class="math notranslate nohighlight">\(x_\mathrm{AA} = x^{k+1}\)</span> be
+the output of AA. We reject the AA step if</p>
+<div class="math notranslate nohighlight">
+\[\|x_\mathrm{AA} - f(x_\mathrm{AA}) \|_2 &gt; \zeta \|x^k - f(x^k) \|_2\]</div>
+<p>where <span class="math notranslate nohighlight">\(\zeta\)</span> is the safeguarding tolerance factor
+(<code class="code docutils literal notranslate"><span class="pre">safeguard_factor</span></code>) and defaults to 1. In other words we reject the step
+if the norm of the residual after the AA step is larger than some amount (eg, if
+it increases the residual from the previous iterate).  After rejecting a step we
+revert the iterate to <span class="math notranslate nohighlight">\(x^k\)</span> and reset the AA state.</p>
+</section>
+<section id="relaxation">
+<h3>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this headline">¶</a></h3>
+<p>In some works relaxation has been shown to improve performance. Relaxation
+replaces the final step of AA by mixing the map inputs and outputs as follows:</p>
+<div class="math notranslate nohighlight">
+\[x^{k+1} = \beta \sum_{j=0}^{m_k}\alpha_j^k f(x^{k-m_k+j}) + (1-\beta) \sum_{j=0}^{m_k}\alpha_j^k x^{k-m_k+j}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\beta\)</span> is the <code class="code docutils literal notranslate"><span class="pre">relaxation</span></code> parameter, and <span class="math notranslate nohighlight">\(\beta=1\)</span>
+recovers vanilla AA. This can be computed using the matrices defined above using</p>
+<div class="math notranslate nohighlight">
+\[x^{k+1} = \beta (f(x^k) - (S_k - Y_k) \gamma^k) + (1-\beta) (x^k - S_k \gamma^k)\]</div>
+</section>
+</section>
+<section id="anderson-acceleration-api">
+<h2>Anderson acceleration API<a class="headerlink" href="#anderson-acceleration-api" title="Permalink to this headline">¶</a></h2>
+<p>For completeness, we document the full Anderson acceleration API below.</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
 <dl class="cpp type">
@@ -234,18 +313,18 @@
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork">
 <span id="_CPPv38aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="_CPPv28aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="aa_apply__aa_floatP.aa_floatCP.AaWorkP"></span><span class="target" id="aa_8h_1addc105e961590f011f3989170cd975c6"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_apply</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Apply Anderson Acceleration. The usage pattern is as follows:</p>
+<dd><p>Apply Anderson Acceleration. The usage pattern should be as follows:</p>
 <p><ul class="simple">
 <li><p>for i = 0 .. N:<ul>
-<li><p>if i &gt; 0: aa_apply(x, x_prev, a)</p></li>
+<li><p>if (i &gt; 0): aa_apply(x, x_prev, a)</p></li>
 <li><p>x_prev = x.copy()</p></li>
 <li><p>x = F(x)</p></li>
-<li><p>aa_safeguard(x, x_prev, a)</p></li>
+<li><p>aa_safeguard(x, x_prev, a) // optional but helps stability</p></li>
 </ul>
 </p></li>
 </ul>
 </p>
-<p>We put the AA before the map so that any properties of the map are maintained at the end. Eg if the map contains a projection onto a set then the output is guaranteed to be in the set.</p>
+<p>Here F is the map we are trying to find the fixed point for. We put the AA before the map so that any properties of the map are maintained at the end. Eg if the map contains a projection onto a set then the output is guaranteed to be in the set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -255,7 +334,7 @@
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(float) (+ or -) norm of AA weights vector: if positive then update was accepted and f contains new point if negative then update was rejected and f is unchanged </p>
+<dd class="field-even"><p>(+ or -) norm of AA weights vector. If positive then update was accepted and f contains new point, if negative then update was rejected and f is unchanged </p>
 </dd>
 </dl>
 </dd></dl>
@@ -303,67 +382,49 @@
 </dd></dl>
 
 </div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="relaxation.html" class="btn btn-neutral float-right" title="Relaxation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="warm_start.html" class="btn btn-neutral float-left" title="Warm-starting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relaxation.html" class="btn btn-neutral float-right" title="Relaxation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Brendan O&#39;Donoghue.
-
-    </p>
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
     <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
     <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-    ga('create', 'UA-203326834-1', 'auto');
-    
-    ga('send', 'pageview');
-    </script>
-
-    
-   
+      gtag('config', 'UA-203326834-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>
