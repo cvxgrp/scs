@@ -1056,7 +1056,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     if (accelerated) {
       /* compute ||v^+ - v|| and compare to previous error */
       nrm_v_v_aa = SCS(norm_diff)(w->v, w->v_prev, l);
-      if (nrm_v_v_aa > AA_NORM_FACTOR * nrm_v_v_prev) {
+      if (nrm_v_v_aa > AA_SAFEGUARD_FACTOR * nrm_v_v_prev) {
         /* in this case we reject the AA step and reset */
         memcpy(w->v, w->v_aa, l * sizeof(scs_float));
         memcpy(w->v_prev, w->v_aa_prev, l * sizeof(scs_float));

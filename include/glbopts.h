@@ -210,9 +210,9 @@ typedef float scs_float;
 
 /* Anderson acceleration parameters: */
 #define AA_RELAXATION (1.0)
-#define AA_REGULARIZATION (1e-10)
-/* norm factor at which we reject AA steps */
-#define AA_NORM_FACTOR (2.)
+#define AA_REGULARIZATION (1e-12)
+/* Safeguarding norm factor at which we reject AA steps */
+#define AA_SAFEGUARD_FACTOR (1.)
 
 /* (Dual) Scale updating parameters */
 #define MAX_SCALE_VALUE (1e6)
