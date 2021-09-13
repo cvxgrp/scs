@@ -188,6 +188,121 @@
   <div class="section" id="acceleration">
 <span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline">¶</a></h1>
 <p>TODO</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv48aa_float">
+<span id="_CPPv38aa_float"></span><span id="_CPPv28aa_float"></span><span id="aa_float"></span><span class="target" id="aa_8h_1a6ab1ca62f04bdb4c63d1cea9cb89b36f"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_float</span></span></span><a class="headerlink" href="#_CPPv48aa_float" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv46aa_int">
+<span id="_CPPv36aa_int"></span><span id="_CPPv26aa_int"></span><span id="aa_int"></span><span class="target" id="aa_8h_1a518ce90ae9e4fcece7907247cd04d150"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_int</span></span></span><a class="headerlink" href="#_CPPv46aa_int" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv46AaWork">
+<span id="_CPPv36AaWork"></span><span id="_CPPv26AaWork"></span><span id="AaWork"></span><span class="target" id="aa_8h_1abccab62fbdd940ce82c2e250335d8bcb"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">ACCEL_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AaWork</span></span></span><a class="headerlink" href="#_CPPv46AaWork" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int">
+<span id="_CPPv37aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="_CPPv27aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="aa_init__aa_int.aa_int.aa_int.aa_float.aa_float.aa_float.aa_float.aa_int"></span><span class="target" id="aa_8h_1a6288bec767af6f27341a19c238d9b7ef"></span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">aa_init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">type1</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">regularization</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">relaxation</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">safeguard_factor</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">max_weight_norm</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">verbosity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Initialize Anderson Acceleration, allocates memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> – the dimension of the variable for AA </p></li>
+<li><p><strong>mem</strong> – the memory (number of past iterations used) for AA </p></li>
+<li><p><strong>type1</strong> – if True use type 1 AA, otherwise use type 2 </p></li>
+<li><p><strong>regularization</strong> – type-I and type-II different, for type-I: 1e-8 works well, type-II: more stable can use 1e-12 often </p></li>
+<li><p><strong>relaxation</strong> – float \in [0,2], mixing parameter (1.0 is vanilla) </p></li>
+<li><p><strong>safeguard_factor</strong> – factor that controls safeguarding checks larger is more aggressive but less stable </p></li>
+<li><p><strong>max_weight_norm</strong> – float, maximum norm of AA weights </p></li>
+<li><p><strong>verbosity</strong> – if greater than 0 prints out various info</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pointer to AA workspace </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork">
+<span id="_CPPv38aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="_CPPv28aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="aa_apply__aa_floatP.aa_floatCP.AaWorkP"></span><span class="target" id="aa_8h_1addc105e961590f011f3989170cd975c6"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_apply</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Apply Anderson Acceleration. The usage pattern is as follows:</p>
+<p><ul class="simple">
+<li><p>for i = 0 .. N:<ul>
+<li><p>if i &gt; 0: aa_apply(x, x_prev, a)</p></li>
+<li><p>x_prev = x.copy()</p></li>
+<li><p>x = F(x)</p></li>
+<li><p>aa_safeguard(x, x_prev, a)</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p>We put the AA before the map so that any properties of the map are maintained at the end. Eg if the map contains a projection onto a set then the output is guaranteed to be in the set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> – output of map at current iteration, overwritten with AA output </p></li>
+<li><p><strong>x</strong> – input to map at current iteration </p></li>
+<li><p><strong>a</strong> – workspace from aa_init</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(float) (+ or -) norm of AA weights vector: if positive then update was accepted and f contains new point if negative then update was rejected and f is unchanged </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork">
+<span id="_CPPv312aa_safeguardP8aa_floatP8aa_floatP6AaWork"></span><span id="_CPPv212aa_safeguardP8aa_floatP8aa_floatP6AaWork"></span><span id="aa_safeguard__aa_floatP.aa_floatP.AaWorkP"></span><span class="target" id="aa_8h_1a9aa1e1902cb1d80dc5ee809e6a88189a"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_safeguard</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f_new</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x_new</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Apply safeguarding.</p>
+<p>This step is optional but can improve stability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f_new</strong> – output of map after AA step </p></li>
+<li><p><strong>x_new</strong> – AA output that is input to the map </p></li>
+<li><p><strong>a</strong> – workspace from aa_init</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>0 if AA step is accepted otherwise -1, if AA step is rejected then this overwrites f_new and x_new with previous values </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49aa_finishP6AaWork">
+<span id="_CPPv39aa_finishP6AaWork"></span><span id="_CPPv29aa_finishP6AaWork"></span><span id="aa_finish__AaWorkP"></span><span class="target" id="aa_8h_1a38824bbb8c9e9120bb703f5d177034ec"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_finish</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49aa_finishP6AaWork" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Finish Anderson Acceleration, clears memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>a</strong> – AA workspace from aa_init </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv48aa_resetP6AaWork">
+<span id="_CPPv38aa_resetP6AaWork"></span><span id="_CPPv28aa_resetP6AaWork"></span><span id="aa_reset__AaWorkP"></span><span class="target" id="aa_8h_1af838479f20a0a48b7484bfdbbca6c921"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_resetP6AaWork" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Reset Anderson Acceleration.</p>
+<p>Resets AA as if at the first iteration, reuses original memory allocations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>a</strong> – AA workspace from aa_init </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 </div>
 
 
