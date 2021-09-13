@@ -95,7 +95,7 @@
            <div itemprop="articleBody">
              
   <div class="section" id="data-equilibration">
-<span id="equilibration"></span><h1>Data equilibration<a class="headerlink" href="#data-equilibration" title="Permalink to this headline">¶</a></h1>
+<span id="equilibration"></span><h1>Data equilibration<a class="headerlink" href="#data-equilibration" title="Permalink to this headline"></a></h1>
 <p>Data scale has a large impact on the convergence of first-order algorithms like
 SCS in practice. With that in mind SCS implements a heuristic data equilibration
 (or normalization) scheme that attempts to whiten the data which is enabled by
@@ -161,7 +161,7 @@ equilibration and the average <span class="math notranslate nohighlight">\(\ell_
 <code class="code docutils literal notranslate"><span class="pre">dual_scale</span></code> parameters scaling <span class="math notranslate nohighlight">\(c\)</span> and <span class="math notranslate nohighlight">\(b\)</span>, but the latest
 version of SCS has set both of these to the same value of <span class="math notranslate nohighlight">\(\sigma\)</span>.</p>
 <div class="section" id="solution">
-<h2>Solution<a class="headerlink" href="#solution" title="Permalink to this headline">¶</a></h2>
+<h2>Solution<a class="headerlink" href="#solution" title="Permalink to this headline"></a></h2>
 <p>This equilibration changes the fixed point of SCS, but we can recover the
 solutions to the original problem from the equilibrated solution. Denote by
 <span class="math notranslate nohighlight">\((\hat x, \hat y, \hat s)\)</span> the solution to the equilibrated
@@ -176,7 +176,7 @@ x^\top P x =  \hat x^\top \hat P \hat x / \sigma^2\]</div>
 <p>The same modifications hold for the certificates of infeasibility.</p>
 </div>
 <div class="section" id="residuals">
-<h2>Residuals<a class="headerlink" href="#residuals" title="Permalink to this headline">¶</a></h2>
+<h2>Residuals<a class="headerlink" href="#residuals" title="Permalink to this headline"></a></h2>
 <p>The equilibration also changes the residuals and when running SCS we are
 interested in detecting convergence using the original problem residuals, rather
 than the equilibration problem residuals. Using the above results we can compute
@@ -192,7 +192,7 @@ the residuals of the original problem as follows (under any norm).</p>
 \[r_g = |x^\top P x + b^\top y + c^\top x|  = (1/\sigma^2) |\hat x^\top \hat P \hat x + \hat b^\top \hat y + \hat c^\top \hat x|\]</div>
 </div>
 <div class="section" id="infeasibility-certificates">
-<h2>Infeasibility certificates<a class="headerlink" href="#infeasibility-certificates" title="Permalink to this headline">¶</a></h2>
+<h2>Infeasibility certificates<a class="headerlink" href="#infeasibility-certificates" title="Permalink to this headline"></a></h2>
 <p>Similar relationships hold for the infeasibility certificate terms:</p>
 <div class="math notranslate nohighlight">
 \[\|Ax + s\| = (1/\sigma) \|D^{-1} (\hat A \hat x + \hat s) \|,

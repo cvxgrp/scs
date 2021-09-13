@@ -97,7 +97,7 @@
            <div itemprop="articleBody">
              
   <div class="section" id="scaling">
-<span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline"></a></h1>
 <p>In this note we derive the update equations when using a non-identity
 scaling. Standard Douglas-Rachford splitting applied to the SCS problem is:</p>
 <div class="math notranslate nohighlight">
@@ -122,7 +122,7 @@ w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
 <p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
 <div class="section" id="cone-projection">
-<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline">¶</a></h2>
+<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline"></a></h2>
 <p>Note that <span class="math notranslate nohighlight">\(R\)</span> has to be chosen so that the cone projection is preserved.
 To do this we ensure that the entries of <span class="math notranslate nohighlight">\(R &gt; 0\)</span> corresponding to each
 cone are constant within that cone (with the box cone being a slight exception
@@ -139,7 +139,7 @@ since for sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</s
 \[(R +  \partial I_{\mathcal{C}_+})^{-1} R = (I +  \partial I_{\mathcal{C}_+})^{-1}\]</div>
 </div>
 <div class="section" id="selecting-r">
-<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this headline">¶</a></h2>
+<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this headline"></a></h2>
 <p>For SCS we take</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}R =  \begin{bmatrix}
@@ -163,7 +163,7 @@ described in <a class="reference internal" href="#updating-scale"><span class="s
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
 </div>
 <div class="section" id="dual-vector">
-<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this headline">¶</a></h2>
+<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this headline"></a></h2>
 <p>In order to get the dual vector <span class="math notranslate nohighlight">\(v^k\)</span> that contains <span class="math notranslate nohighlight">\(s^k\)</span> and
 <span class="math notranslate nohighlight">\(\kappa^k\)</span> we use:</p>
 <div class="math notranslate nohighlight">
@@ -190,7 +190,7 @@ u^k\)</span>, since</p>
 within each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>.</p>
 </div>
 <div class="section" id="root-plus-function">
-<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline">¶</a></h2>
+<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline"></a></h2>
 <p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
 of the following quadratic equation:</p>
 <div class="math notranslate nohighlight">
@@ -202,7 +202,7 @@ iteration. It is an open question on how best to select this parameter.  See the
 <code class="code docutils literal notranslate"><span class="pre">dot_with_diag_scaling</span></code> function in <code class="code docutils literal notranslate"><span class="pre">src/scs.c</span></code>.</p>
 </div>
 <div class="section" id="dynamic-scale-updating">
-<span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this headline">¶</a></h2>
+<span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this headline"></a></h2>
 <p>The choice of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter can have a large impact on the
 performance of the algorithm and the optimal choice is highly problem
 dependent. SCS can dynamically adjust the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter

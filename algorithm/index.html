@@ -96,7 +96,7 @@
            <div itemprop="articleBody">
              
   <div class="section" id="algorithm">
-<span id="id1"></span><h1>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <p>SCS applies Douglas-Rachford splitting to a homogeneous embedding
@@ -126,7 +126,7 @@ linear system</span></a> of equations:</p>
 <p>over variable <span class="math notranslate nohighlight">\(z\)</span>. Most cone projection operators have relatively simple
 projection operators.</p>
 <div class="section" id="optimality-conditions">
-<span id="optimality"></span><h2>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Permalink to this headline">¶</a></h2>
+<span id="optimality"></span><h2>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Permalink to this headline"></a></h2>
 <p>SCS solves problems of the form:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{array}{lcr}
@@ -153,7 +153,7 @@ for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy t
 <div class="math notranslate nohighlight">
 \[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
 <div class="section" id="certificate-of-infeasibility">
-<span id="infeasiblity"></span><h3>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline">¶</a></h3>
+<span id="infeasiblity"></span><h3>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline"></a></h3>
 <p>On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
 Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
 <div class="math notranslate nohighlight">
@@ -167,9 +167,9 @@ unbounded).</p>
 </div>
 </div>
 <div class="section" id="termination-criteria">
-<span id="termination"></span><h2>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline">¶</a></h2>
+<span id="termination"></span><h2>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline"></a></h2>
 <div class="section" id="id2">
-<h3>Optimality<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3>Optimality<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
 <p>The iterates produced by SCS <em>always</em> satisfy the conic constraints <span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>.  Therefore to say that a problem
 is solved we need to check if the primal residual, dual residual, and duality
@@ -197,7 +197,7 @@ here can be changed to other norms by changing the definition of <code class="co
 the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
 </div>
 <div class="section" id="infeasibility">
-<span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility" title="Permalink to this headline">¶</a></h3>
+<span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility" title="Permalink to this headline"></a></h3>
 <p>Since the conic constraints are always guaranteed by the iterates (<span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
 declares a problem <strong>primal infeasible (dual unbounded)</strong> when it finds <span class="math notranslate nohighlight">\(y \in
