@@ -38,7 +38,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
 /**
  * Apply Anderson Acceleration. The usage pattern should be as follows:
  *
- *  - for i = 0 .. N:
+ * - for i = 0 .. N:
  *    -  if (i > 0): aa_apply(x, x_prev, a)
  *    -  x_prev = x.copy()
  *    -  x = F(x)
