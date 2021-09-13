@@ -1046,7 +1046,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
       /* AA safeguard check */
       if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
-        scs_printf("iter: %i, rejected\n", i);
         w->rejected_accel_steps++;
       }
     }
