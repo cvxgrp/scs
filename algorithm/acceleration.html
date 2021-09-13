@@ -314,17 +314,18 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 <dt class="sig sig-object cpp" id="_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork">
 <span id="_CPPv38aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="_CPPv28aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="aa_apply__aa_floatP.aa_floatCP.AaWorkP"></span><span class="target" id="aa_8h_1addc105e961590f011f3989170cd975c6"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_apply</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Apply Anderson Acceleration. The usage pattern should be as follows:</p>
-<p><ul class="simple">
-<li><p>for i = 0 .. N:<ul>
+<p><ul>
+<li><p>for i = 0 .. N:<ul class="simple">
 <li><p>if (i &gt; 0): aa_apply(x, x_prev, a)</p></li>
 <li><p>x_prev = x.copy()</p></li>
 <li><p>x = F(x)</p></li>
 <li><p>aa_safeguard(x, x_prev, a) // optional but helps stability</p></li>
 </ul>
-</p></li>
-</ul>
 </p>
 <p>Here F is the map we are trying to find the fixed point for. We put the AA before the map so that any properties of the map are maintained at the end. Eg if the map contains a projection onto a set then the output is guaranteed to be in the set.</p>
+</li>
+</ul>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
