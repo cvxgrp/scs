@@ -870,11 +870,14 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   if (w->stgs->acceleration_lookback) {
     w->v_aa = (scs_float *)scs_calloc(l, sizeof(scs_float));
     w->v_aa_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
-    /* hack: negative acceleration_lookback interpreted as type-I */
+    /* TODO(HACK!) negative acceleration_lookback interpreted as type-I */
     if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-            w->stgs->acceleration_lookback < 0,
-            AA_REGULARIZATION, AA_RELAXATION, AA_SAFEGUARD_FACTOR,
-            AA_MAX_WEIGHT_NORM, VERBOSITY))) {
+                             w->stgs->acceleration_lookback < 0,
+                             w->stgs->acceleration_lookback < 0
+                                 ? AA_REGULARIZATION_TYPE_1
+                                 : AA_REGULARIZATION_TYPE_2,
+                             AA_RELAXATION, AA_SAFEGUARD_FACTOR,
+                             AA_MAX_WEIGHT_NORM, VERBOSITY))) {
       if (w->stgs->verbose) {
         scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
       }
@@ -1004,7 +1007,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
-
     /* accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
     if (w->accel) {

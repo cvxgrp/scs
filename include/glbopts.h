@@ -210,7 +210,8 @@ typedef float scs_float;
 
 /* Anderson acceleration parameters: */
 #define AA_RELAXATION (1.0)
-#define AA_REGULARIZATION (1e-12)
+#define AA_REGULARIZATION_TYPE_1 (1e-8)
+#define AA_REGULARIZATION_TYPE_2 (1e-12)
 /* Safeguarding norm factor at which we reject AA steps */
 #define AA_SAFEGUARD_FACTOR (1.)
 /* Max allowable AA weight norm */
@@ -228,7 +229,6 @@ typedef float scs_float;
  * linear system to at each iteration. Lower factors require more CG steps
  * but give better accuracy */
 #define CG_TOL_FACTOR (0.2)
-
 
 /* norm to use when deciding CG convergence */
 #ifndef CG_NORM
