@@ -170,8 +170,6 @@ static void set_m(AaWork *a, aa_int len) {
   ("Trans", "No", &blen, &blen, &bdim, &onef, a->type1 ? a->S : a->Y, &bdim,
    a->Y, &bdim, &zerof, a->M, &blen);
   if (a->regularization > 0) {
-    /* TODO: this regularization doesn't make much sense for type-I */
-    /* but we do it anyway since it seems to help */
     /* typically type-I does better with higher regularization than type-II */
     nrm_y = BLAS(nrm2)(&btotal, a->Y, &one);
     nrm_s = BLAS(nrm2)(&btotal, a->S, &one);

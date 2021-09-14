@@ -25,9 +25,10 @@ Consider the problem of finding a fixed point of the function :math:`f:
   \text{Find } x \in \mathbf{R}^n \text{ such that } x = f(x).
 
 In our case :math:`f` corresponds to one step of :ref:`Douglas-Rachford
-splitting <algorithm>`. At a high level AA from initial point :math:`x_0` and
-max memory :math:`m` (corresponding to the :code:`acceleration_lookback`
-setting) works as follows:
+splitting <algorithm>` and the iterate is the :math:`w^k` vector, which
+converges to a fixed point of the DR operator. At a high level AA, from initial
+point :math:`x_0` and max memory :math:`m` (corresponding to the
+:code:`acceleration_lookback` setting), works as follows:
 
 .. math::
   \begin{array}{l}
@@ -40,7 +41,7 @@ setting) works as follows:
 
 In other words, AA produces an iterate that is the linear combination of the
 last :math:`m_k + 1` outputs of the map.  Thus, the main challenge is in
-choosing the weights :math:`\alpha \in \mathbf{R}^{m_k-1}`. There are two ways
+choosing the weights :math:`\alpha \in \mathbf{R}^{m_k+1}`. There are two ways
 to choose them, corresponding to type-I and type-II AA (named for the type-I and
 type-II Broyden updates). We shall present type-II first.
 
@@ -65,9 +66,10 @@ More explicitly, we can reformulate the above as follows:
   \mbox{minimize} & \|g_k-Y_k\gamma\|_2,
   \end{array}
 
-with variable :math:`\gamma=(\gamma_0,\dots,\gamma_{m_k-1})`. Here
-:math:`g_i=g(x^i)`, :math:`Y_k=[y_{k-m_k}~\dots~y_{k-1}]` with :math:`y_i=g_{i+1}-g_i`
-for each :math:`i`, and :math:`\alpha` and :math:`\gamma` are related by
+with variable :math:`\gamma=(\gamma_0,\dots,\gamma_{m_k-1}) \in
+\mathbf{R}^{m_k}`. Here :math:`g_i=g(x^i)`,
+:math:`Y_k=[y_{k-m_k}~\dots~y_{k-1}]` with :math:`y_i=g_{i+1}-g_i` for each
+:math:`i`, and :math:`\alpha` and :math:`\gamma` are related by
 :math:`\alpha_0=\gamma_0`, :math:`\alpha_i=\gamma_i-\gamma_{i-1}` for
 :math:`1\leq i\leq m_k-1` and :math:`\alpha_{m_k}=1-\gamma_{m_k-1}`.
 
@@ -130,8 +132,8 @@ In SCS
 In SCS both types of acceleration are available, though by default type-II is
 used since it tends to be more stable.  If you wish to enable AA then set the
 :code:`acceleration_lookback` setting to a non-zero value (10 works well for
-many problems). This setting corresponds to the number of SCS iterates that AA
-will use to extrapolate to the new point.
+many problems). This setting corresponds to :math:`m`, the maximum number of SCS
+iterates that AA will use to extrapolate to the new point.
 
 To enable type-I acceleration then set :code:`acceleration_lookback` to a
 negative value, the sign is interpreted as switching the AA type (this is mostly
@@ -144,6 +146,10 @@ iterations). This has the benefit of making AA :math:`k` times faster
 to apply and approximating a :math:`k` times larger memory. More work is needed
 to determine the optimal setting for this parameter.
 
+The details about how the linear systems are solved and updated is abstracted
+away into the AA package. Exactly how best to solve and update the equations
+is still open.
+
 Regularization
 """"""""""""""
 
@@ -153,12 +159,18 @@ that are being inverted in the above expressions, ie, in the type-II update
 .. math::
    (Y_k^\top Y_k)^{-1} \text{ becomes } (Y_k^\top Y_k + \epsilon I)^{-1}
 
-for some small :math:`\epsilon > 0`, and similarly for the type-I update. This
-ensures the matrices are invertible and helps stability. In practice type-I
-needs more regularization than type-II. The regularization shrinks the AA update
-towards the update without AA, since if :math:`\epsilon\rightarrow\infty`
-then :math:`\gamma^\star = 0` and the AA step reduces to :math:`x^{k+1} =
-f(x^k)`.
+for some small :math:`\epsilon > 0`, and similarly for the type-I update
+
+.. math::
+   (S_k^\top Y_k)^{-1} \text{ becomes } (S_k^\top Y_k + \epsilon I)^{-1}
+
+which is equivalent to adding regularization to the :math:`S_k^\top S_k` matrix
+before using the Woodbury matrix identity.  The regularization ensures the
+matrices are invertible and helps stability. In practice type-I tends to require
+more regularization than type-II for good performance. The regularization
+shrinks the AA update towards the update without AA, since if
+:math:`\epsilon\rightarrow\infty` then :math:`\gamma^\star = 0` and the AA step
+reduces to :math:`x^{k+1} = f(x^k)`.
 
 Max :math:`\gamma` norm
 """""""""""""""""""""""

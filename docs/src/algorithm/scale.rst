@@ -3,23 +3,12 @@
 Scaling
 =======
 
-In this note we derive the update equations when using a non-identity
-scaling. Standard Douglas-Rachford splitting applied to the SCS problem is:
-
-.. math::
-  \begin{align}
-  \tilde u^{k+1} &= (I + \mathcal{Q})^{-1} w^k \\
-  u^{k+1} &= (I + N_{\mathcal{C}_+})^{-1} (2 \tilde u^{k+1} - w^k) \\
-  w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1} \\
-  \end{align}
-
-
-yielding :math:`w^k \rightarrow u^\star + \mathcal{Q}(u^\star)` where :math:`0 \in
-\mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)` (such a :math:`u^\star`
-always exists for SCS).  Now consider modifying DR splitting to use a
+In this note we derive the update equations when using a non-identity scaling.
+Standard Douglas-Rachford splitting applied to the SCS problem is described in
+the :ref:`algorithm` page.  Now consider modifying DR splitting to use a
 diagonal matrix :math:`R` instead of :math:`I`. This is useful because the
-matrix :math:`R` can be selected to provide better convergence in practice.
-The above becomes:
+matrix :math:`R` can be selected to provide better convergence in practice.  The
+algorithm then becomes:
 
 .. math::
   \begin{align}
