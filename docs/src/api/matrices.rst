@@ -11,3 +11,6 @@ Data matrices
 
 * The matrix :math:`P` must be symmetric positive semidefinite and only the **upper triangular** part of :math:`P` should be passed in.
 
+See the :ref:`ScsMatrix struct <ScsMatrix>` for the concrete implementation in
+the C api.
+

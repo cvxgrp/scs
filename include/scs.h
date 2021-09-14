@@ -16,8 +16,8 @@ typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
 typedef struct SCS_ACCEL_WORK ScsAccelWork;
 typedef struct SCS_CONE_WORK ScsConeWork;
 
-/** this struct defines the data matrices and is supplied in column compressed
- * format: https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html
+/** This defines the data matrices which should be supplied in column compressed
+ *  format with zero based indexing.
  */
 typedef struct {
   /** matrix values, size: number of non-zeros */
@@ -32,9 +32,8 @@ typedef struct {
   scs_int n;
 } ScsMatrix;
 
-/** struct containing all settings */
+/** Struct containing all settings. */
 typedef struct {
-  /* these *cannot* change for multiple runs with the same call to SCS(init) */
   /** whether to heuristically rescale the data before solve */
   scs_int normalize;
   /** initial dual scaling factor (may be updated if adaptive_scale is on) */
@@ -69,7 +68,7 @@ typedef struct {
   const char *log_csv_filename;
 } ScsSettings;
 
-/** struct containing problem data */
+/** Struct containing problem data. */
 typedef struct {
   /** A has `m` rows */
   scs_int m;
@@ -85,8 +84,7 @@ typedef struct {
   scs_float *c;
 } ScsData;
 
-/** Cone data. NB: rows of data matrix `A` must be specified in this exact order
- */
+/** Cone data. Rows of data matrix `A` must be specified in this exact order. */
 typedef struct {
   /** number of linear equality constraints (primal zero, dual free) */
   scs_int z;
@@ -117,7 +115,9 @@ typedef struct {
   scs_int psize;
 } ScsCone;
 
-/** contains primal-dual solution arrays */
+/** Contains primal-dual solution arrays or a certificate of infeasibility.
+ *  Check the exit flag to determine whether this contains a solution or a
+ *  certificate. */
 typedef struct {
   /** primal variable */
   scs_float *x;
@@ -127,7 +127,7 @@ typedef struct {
   scs_float *s;
 } ScsSolution;
 
-/** contains terminating information */
+/** Contains information about the solve run at termination. */
 typedef struct {
   /** number of iterations taken */
   scs_int iter;
@@ -167,13 +167,13 @@ typedef struct {
 
 /* the following structs are not exposed to user */
 
-/* contains normalization variables */
+/** Contains normalization variables. */
 typedef struct {
   scs_float *D, *E; /* for normalization */
   scs_float primal_scale, dual_scale;
 } ScsScaling;
 
-/* to hold residual information, *all are unnormalized* */
+/** Holds residual information. */
 typedef struct {
   scs_int last_iter;
   scs_float xt_p_x;     /* x' P x  */
@@ -196,7 +196,7 @@ typedef struct {
   scs_float *ax, *ax_s, *px, *aty, *ax_s_btau, *px_aty_ctau;
 } ScsResiduals;
 
-/* workspace for SCS */
+/** Workspace for SCS */
 typedef struct {
   /* x_prev = x from previous iteration */
   scs_int time_limit_reached; /* set if the time-limit is reached */
@@ -251,7 +251,7 @@ typedef struct {
  * - setup linear system solver:
  *      - direct solver: KKT matrix factorization is performed here
  *      - indirect solver: KKT matrix preconditioning is performed here
- * - solve the first linear system
+ * - solve the linear system for the `r` vector in the paper
  *
  *
  * @param  d 		 Problem data
@@ -294,7 +294,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
 
 /**
- * Helper function to set all settings to default values (see \a glbopts.h)
+ * Helper function to set all settings to default values (see \a glbopts.h).
  *
  * @param  stgs  Settings struct that will be populated
  */
