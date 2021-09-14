@@ -79,6 +79,6 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - True/False
      - 0
    * - :code:`USING_R`
-     - If compiling for use in Rlang
+     - If compiling for use in R
      - True/False
      - 0
