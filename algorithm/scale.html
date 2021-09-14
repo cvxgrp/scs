@@ -98,20 +98,12 @@
              
   <div class="section" id="scaling">
 <span id="id1"></span><h1>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline"></a></h1>
-<p>In this note we derive the update equations when using a non-identity
-scaling. Standard Douglas-Rachford splitting applied to the SCS problem is:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
-\tilde u^{k+1} &amp;= (I + \mathcal{Q})^{-1} w^k \\
-u^{k+1} &amp;= (I + N_{\mathcal{C}_+})^{-1} (2 \tilde u^{k+1} - w^k) \\
-w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
-\end{align}\end{split}\]</div>
-<p>yielding <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + \mathcal{Q}(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0 \in
-\mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span> (such a <span class="math notranslate nohighlight">\(u^\star\)</span>
-always exists for SCS).  Now consider modifying DR splitting to use a
+<p>In this note we derive the update equations when using a non-identity scaling.
+Standard Douglas-Rachford splitting applied to the SCS problem is described in
+the <a class="reference internal" href="index.html#algorithm"><span class="std std-ref">Algorithm</span></a> page.  Now consider modifying DR splitting to use a
 diagonal matrix <span class="math notranslate nohighlight">\(R\)</span> instead of <span class="math notranslate nohighlight">\(I\)</span>. This is useful because the
-matrix <span class="math notranslate nohighlight">\(R\)</span> can be selected to provide better convergence in practice.
-The above becomes:</p>
+matrix <span class="math notranslate nohighlight">\(R\)</span> can be selected to provide better convergence in practice.  The
+algorithm then becomes:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
 \tilde u^{k+1} &amp;= (R + \mathcal{Q})^{-1} R w^k \\

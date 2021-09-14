@@ -25,12 +25,15 @@ from an initial :math:`w^0` for :math:`k=0,1,\ldots` do
   w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1}
   \end{align}
 
-(This is slightly different to the formulation in the original `paper
-<https://web.stanford.edu/~boyd/papers/scs.html>`_, and corresponds to the modern
-algorithm described `here <https://arxiv.org/abs/2004.02177>`_).  Under the above
-:math:`u^k \rightarrow u^\star` from which we can recover the :ref:`optimal
-solution <optimality>` or a :ref:`certificate of infeasibility <infeasibility>`.
-The algorithm consists of three steps.  The first step involves :ref:`solving a
+which yields :math:`w^k \rightarrow u^\star + \mathcal{Q}(u^\star)` where
+:math:`0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)`, and :math:`u^k
+\rightarrow u^\star` from which we can recover the :ref:`optimal solution
+<optimality>` or a :ref:`certificate of infeasibility <infeasibility>` (such a
+:math:`u^\star` is guaranteed to exist). Note that this is slightly different to
+the formulation in the original `paper
+<https://web.stanford.edu/~boyd/papers/scs.html>`_, and corresponds to the
+latest algorithm described `here <https://arxiv.org/abs/2004.02177>`_.  The
+algorithm consists of three steps.  The first step involves :ref:`solving a
 linear system <linear_solver>` of equations:
 
 .. math::

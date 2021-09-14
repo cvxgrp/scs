@@ -121,9 +121,10 @@ Consider the problem of finding a fixed point of the function <span class="math 
 <div class="math notranslate nohighlight">
 \[\text{Find } x \in \mathbf{R}^n \text{ such that } x = f(x).\]</div>
 <p>In our case <span class="math notranslate nohighlight">\(f\)</span> corresponds to one step of <a class="reference internal" href="index.html#algorithm"><span class="std std-ref">Douglas-Rachford
-splitting</span></a>. At a high level AA from initial point <span class="math notranslate nohighlight">\(x_0\)</span> and
-max memory <span class="math notranslate nohighlight">\(m\)</span> (corresponding to the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code>
-setting) works as follows:</p>
+splitting</span></a> and the iterate is the <span class="math notranslate nohighlight">\(w^k\)</span> vector, which
+converges to a fixed point of the DR operator. At a high level AA, from initial
+point <span class="math notranslate nohighlight">\(x_0\)</span> and max memory <span class="math notranslate nohighlight">\(m\)</span> (corresponding to the
+<code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting), works as follows:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{array}{l}
 \text{For } k=0, 1, \dots \\
@@ -134,7 +135,7 @@ setting) works as follows:</p>
 \end{array}\end{split}\]</div>
 <p>In other words, AA produces an iterate that is the linear combination of the
 last <span class="math notranslate nohighlight">\(m_k + 1\)</span> outputs of the map.  Thus, the main challenge is in
-choosing the weights <span class="math notranslate nohighlight">\(\alpha \in \mathbf{R}^{m_k-1}\)</span>. There are two ways
+choosing the weights <span class="math notranslate nohighlight">\(\alpha \in \mathbf{R}^{m_k+1}\)</span>. There are two ways
 to choose them, corresponding to type-I and type-II AA (named for the type-I and
 type-II Broyden updates). We shall present type-II first.</p>
 <div class="section" id="type-ii-aa">
@@ -153,9 +154,10 @@ In type-II AA the weights are selected by solving a small least squares problem.
 \[\begin{array}{ll}
 \mbox{minimize} &amp; \|g_k-Y_k\gamma\|_2,
 \end{array}\]</div>
-<p>with variable <span class="math notranslate nohighlight">\(\gamma=(\gamma_0,\dots,\gamma_{m_k-1})\)</span>. Here
-<span class="math notranslate nohighlight">\(g_i=g(x^i)\)</span>, <span class="math notranslate nohighlight">\(Y_k=[y_{k-m_k}~\dots~y_{k-1}]\)</span> with <span class="math notranslate nohighlight">\(y_i=g_{i+1}-g_i\)</span>
-for each <span class="math notranslate nohighlight">\(i\)</span>, and <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\gamma\)</span> are related by
+<p>with variable <span class="math notranslate nohighlight">\(\gamma=(\gamma_0,\dots,\gamma_{m_k-1}) \in
+\mathbf{R}^{m_k}\)</span>. Here <span class="math notranslate nohighlight">\(g_i=g(x^i)\)</span>,
+<span class="math notranslate nohighlight">\(Y_k=[y_{k-m_k}~\dots~y_{k-1}]\)</span> with <span class="math notranslate nohighlight">\(y_i=g_{i+1}-g_i\)</span> for each
+<span class="math notranslate nohighlight">\(i\)</span>, and <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\gamma\)</span> are related by
 <span class="math notranslate nohighlight">\(\alpha_0=\gamma_0\)</span>, <span class="math notranslate nohighlight">\(\alpha_i=\gamma_i-\gamma_{i-1}\)</span> for
 <span class="math notranslate nohighlight">\(1\leq i\leq m_k-1\)</span> and <span class="math notranslate nohighlight">\(\alpha_{m_k}=1-\gamma_{m_k-1}\)</span>.</p>
 <p>Assuming that <span class="math notranslate nohighlight">\(Y_k\)</span> is full column rank, the solution
@@ -206,8 +208,8 @@ matrix.</p>
 <p>In SCS both types of acceleration are available, though by default type-II is
 used since it tends to be more stable.  If you wish to enable AA then set the
 <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well for
-many problems). This setting corresponds to the number of SCS iterates that AA
-will use to extrapolate to the new point.</p>
+many problems). This setting corresponds to <span class="math notranslate nohighlight">\(m\)</span>, the maximum number of SCS
+iterates that AA will use to extrapolate to the new point.</p>
 <p>To enable type-I acceleration then set <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> to a
 negative value, the sign is interpreted as switching the AA type (this is mostly
 so that we can test it without fully exposing it the user).</p>
@@ -217,18 +219,25 @@ then AA is applied every <span class="math notranslate nohighlight">\(k\)</span>
 iterations). This has the benefit of making AA <span class="math notranslate nohighlight">\(k\)</span> times faster
 to apply and approximating a <span class="math notranslate nohighlight">\(k\)</span> times larger memory. More work is needed
 to determine the optimal setting for this parameter.</p>
+<p>The details about how the linear systems are solved and updated is abstracted
+away into the AA package. Exactly how best to solve and update the equations
+is still open.</p>
 <div class="section" id="regularization">
 <h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this headline"></a></h3>
 <p>By default we also add a small amount of regularization to the matrices
 that are being inverted in the above expressions, ie, in the type-II update</p>
 <div class="math notranslate nohighlight">
 \[(Y_k^\top Y_k)^{-1} \text{ becomes } (Y_k^\top Y_k + \epsilon I)^{-1}\]</div>
-<p>for some small <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)</span>, and similarly for the type-I update. This
-ensures the matrices are invertible and helps stability. In practice type-I
-needs more regularization than type-II. The regularization shrinks the AA update
-towards the update without AA, since if <span class="math notranslate nohighlight">\(\epsilon\rightarrow\infty\)</span>
-then <span class="math notranslate nohighlight">\(\gamma^\star = 0\)</span> and the AA step reduces to <span class="math notranslate nohighlight">\(x^{k+1} =
-f(x^k)\)</span>.</p>
+<p>for some small <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)</span>, and similarly for the type-I update</p>
+<div class="math notranslate nohighlight">
+\[(S_k^\top Y_k)^{-1} \text{ becomes } (S_k^\top Y_k + \epsilon I)^{-1}\]</div>
+<p>which is equivalent to adding regularization to the <span class="math notranslate nohighlight">\(S_k^\top S_k\)</span> matrix
+before using the Woodbury matrix identity.  The regularization ensures the
+matrices are invertible and helps stability. In practice type-I tends to require
+more regularization than type-II for good performance. The regularization
+shrinks the AA update towards the update without AA, since if
+<span class="math notranslate nohighlight">\(\epsilon\rightarrow\infty\)</span> then <span class="math notranslate nohighlight">\(\gamma^\star = 0\)</span> and the AA step
+reduces to <span class="math notranslate nohighlight">\(x^{k+1} = f(x^k)\)</span>.</p>
 </div>
 <div class="section" id="max-gamma-norm">
 <h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this headline"></a></h3>
