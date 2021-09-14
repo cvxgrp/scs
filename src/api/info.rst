@@ -24,7 +24,7 @@ the following fields.
      - Status integer :ref:`exit flag <exit_flags>`
    * - :code:`scale_updates`
      - :code:`scs_int`
-     - Number of updates to the scale parameter
+     - Number of updates to the scale parameter  (see :ref:`updating_scale`)
    * - :code:`pobj`
      - :code:`scs_float`
      - Primal objective
@@ -60,5 +60,8 @@ the following fields.
      - Time taken for solve (milliseconds)
    * - :code:`scale`
      - :code:`scs_float`
-     - Final scale parameter (useful for initializing next solve)
+     - Final scale parameter, useful for initializing next solve (see :ref:`updating_scale`)
+   * - :code:`rejected_accel_steps`
+     - :code:`scs_int`
+     - Number of times an AA update was rejected by the safeguarding check (see :ref:`acceleration`)
 

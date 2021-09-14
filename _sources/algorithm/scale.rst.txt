@@ -1,7 +1,7 @@
 .. _scaling:
 
-Scaling
-=======
+Non-identity DR Scaling
+=======================
 
 In this note we derive the update equations when using a non-identity scaling.
 Standard Douglas-Rachford splitting applied to the SCS problem is described in

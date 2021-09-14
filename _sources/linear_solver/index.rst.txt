@@ -121,7 +121,7 @@ GPU indirect method
 The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the multiplies are all performed on the GPU.
 
-.. _new_lin_solver:
+.. _new_linear_solver:
 
 Implementing a new linear solver
 --------------------------------

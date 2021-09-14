@@ -46,7 +46,7 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Algorithm</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scale.html">Scaling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scale.html">Non-identity DR Scaling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="warm_start.html">Warm-starting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="acceleration.html">Acceleration</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Relaxation</a></li>
@@ -91,7 +91,7 @@
              
   <div class="section" id="relaxation">
 <span id="id1"></span><h1>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this headline"></a></h1>
-<p>The (unscaled, see <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Scaling</span></a>) SCS update equations are:</p>
+<p>The (unscaled, see <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a>) SCS update equations are:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
 \tilde u^{k+1} &amp;= (I + \mathcal{Q})^{-1} w^k \\
@@ -107,7 +107,7 @@ is controlled by the <code class="code docutils literal notranslate"><span class
 to converge in general (but will if, for example, the operators in the problem
 are both maximal strongly monotone).</p>
 <p>Thankfully, there is no interaction between <span class="math notranslate nohighlight">\(\alpha\)</span> and the scaling
-described in <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Scaling</span></a>, and they can be combined immediately.</p>
+described in <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a>, and they can be combined immediately.</p>
 </div>
 
 

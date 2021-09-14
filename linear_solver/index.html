@@ -100,7 +100,7 @@ p^k &amp;= (R + M)^{-1} R \mu^k \\
 r   &amp;= (R + M)^{-1} q
 \end{align}\end{split}\]</div>
 <p>the presence of the diagonal <span class="math notranslate nohighlight">\(R\)</span> matrices is explained in
-<a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Scaling</span></a> (<span class="math notranslate nohighlight">\(R\)</span> does <em>not</em> appear before <span class="math notranslate nohighlight">\(q\)</span> in the second
+<a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a> (<span class="math notranslate nohighlight">\(R\)</span> does <em>not</em> appear before <span class="math notranslate nohighlight">\(q\)</span> in the second
 expression above).  Now consider <span class="math notranslate nohighlight">\(r = (R + M)^{-1} q\)</span> and recall</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}M = \begin{bmatrix}
@@ -179,7 +179,7 @@ of the indirect solver, where the multiplies are all performed on the GPU.</p>
 </div>
 </div>
 <div class="section" id="implementing-a-new-linear-solver">
-<span id="new-lin-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this headline"></a></h2>
+<span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this headline"></a></h2>
 <p>In order to implement you own linear system solver, you need to implement the
 struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> that contains the workspace your solver requires,
 and implement the functions in <code class="code docutils literal notranslate"><span class="pre">include/linsys.h</span></code>:</p>
@@ -195,7 +195,7 @@ and implement the functions in <code class="code docutils literal notranslate"><
 <li><p><strong>A</strong> – A data matrix </p></li>
 <li><p><strong>P</strong> – P data matrix </p></li>
 <li><p><strong>rho_y_vec</strong> – R_y diagonal entries </p></li>
-<li><p><strong>rho_x</strong> – SCS rho_x float </p></li>
+<li><p><strong>rho_x</strong> – rho_x float </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -216,8 +216,8 @@ and implement the functions in <code class="code docutils literal notranslate"><
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv417scs_solve_lin_sysPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float">
-<span id="_CPPv317scs_solve_lin_sysPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv217scs_solve_lin_sysPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="scs_solve_lin_sys__ScsMatrixCP.ScsMatrixCP.ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a600a71b0eeff6fead0f6e9ce370d7a47"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="n"><span class="pre">ScsLinSysWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float">
+<span id="_CPPv317scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv217scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a24229ab88459885462fcc7fa6759467f"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsLinSysWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Solves the linear system required by SCS at each iteration: <div class="math notranslate nohighlight">
 \[\begin{split} \begin{bmatrix} (\rho_x I + P) &amp; A^\top \\ A &amp; -\mathrm{diag}(\rho_y) \\ \end{bmatrix} x = b \end{split}\]</div>
 </p>
@@ -225,8 +225,6 @@ and implement the functions in <code class="code docutils literal notranslate"><
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>A</strong> – A data matrix </p></li>
-<li><p><strong>P</strong> – P data matrix </p></li>
 <li><p><strong>w</strong> – Linear system private workspace </p></li>
 <li><p><strong>b</strong> – Right hand side, should contain solution at the end </p></li>
 <li><p><strong>s</strong> – Contains optional warm-start </p></li>
@@ -240,14 +238,12 @@ and implement the functions in <code class="code docutils literal notranslate"><
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv428scs_update_lin_sys_rho_y_vecPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_float">
-<span id="_CPPv328scs_update_lin_sys_rho_y_vecPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv228scs_update_lin_sys_rho_y_vecPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_float"></span><span id="scs_update_lin_sys_rho_y_vec__ScsMatrixCP.ScsMatrixCP.ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1add7181b96d93915978454288781c7390"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_lin_sys_rho_y_vec</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="n"><span class="pre">ScsLinSysWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">rho_y_vec</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428scs_update_lin_sys_rho_y_vecPK9ScsMatrixPK9ScsMatrixP13ScsLinSysWorkP9scs_float" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv428scs_update_lin_sys_rho_y_vecP13ScsLinSysWorkP9scs_float">
+<span id="_CPPv328scs_update_lin_sys_rho_y_vecP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv228scs_update_lin_sys_rho_y_vecP13ScsLinSysWorkP9scs_float"></span><span id="scs_update_lin_sys_rho_y_vec__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1a0483a2c31df6210efbfe16d40003fa40"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_lin_sys_rho_y_vec</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsLinSysWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">rho_y_vec</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428scs_update_lin_sys_rho_y_vecP13ScsLinSysWorkP9scs_float" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Update the linsys workspace when new rho_y_vec is updated</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>A</strong> – A data matrix </p></li>
-<li><p><strong>P</strong> – P data matrix </p></li>
 <li><p><strong>w</strong> – Linear system private workspace </p></li>
 <li><p><strong>rho_y_vec</strong> – R_y diagonal entries </p></li>
 </ul>

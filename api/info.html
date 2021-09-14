@@ -120,7 +120,7 @@ the following fields.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale_updates</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Number of updates to the scale parameter</p></td>
+<td><p>Number of updates to the scale parameter  (see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">pobj</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
@@ -168,7 +168,11 @@ the following fields.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Final scale parameter (useful for initializing next solve)</p></td>
+<td><p>Final scale parameter, useful for initializing next solve (see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">rejected_accel_steps</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of times an AA update was rejected by the safeguarding check (see <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>)</p></td>
 </tr>
 </tbody>
 </table>
