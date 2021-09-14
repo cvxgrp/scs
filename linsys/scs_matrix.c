@@ -487,7 +487,7 @@ void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
   /* y += P_upper x but skip diagonal entries*/
   for (j = 0; j < n; j++) { /* col */
     for (p = Pp[j]; p < Pp[j + 1]; p++) {
-      i = Pi[p]; /* row */
+      i = Pi[p];    /* row */
       if (i != j) { /* skip the diagonal */
         y[i] += Px[p] * x[j];
       }

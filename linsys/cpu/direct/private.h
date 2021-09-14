@@ -13,6 +13,7 @@ extern "C" {
 #include "scs_matrix.h"
 
 struct SCS_LIN_SYS_WORK {
+  scs_int m, n;    /* linear system dimensions */
   csc *kkt, *L;    /* KKT, and factorization matrix L resp. */
   scs_float *Dinv; /* inverse diagonal matrix of factorization */
   scs_int *perm;   /* permutation of KKT matrix for factorization */

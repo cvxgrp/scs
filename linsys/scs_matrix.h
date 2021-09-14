@@ -8,7 +8,6 @@ extern "C" {
 #include "glbopts.h"
 #include "scs.h"
 
-
 /* Normalization routines, used if d->NORMALIZE is true */
 /* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone

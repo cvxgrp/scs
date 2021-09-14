@@ -381,7 +381,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
                                      POWF((scs_float)iter + 1, CG_RATE));
   tol = MAX(CG_BEST_TOL, tol);
 #endif
-  status = SCS(solve_lin_sys)(w->A, w->P, w->p, w->u_t, warm_start, tol);
+  status = SCS(solve_lin_sys)(w->p, w->u_t, warm_start, tol);
   if (iter < FEASIBLE_ITERS) {
     w->u_t[l - 1] = 1.;
   } else {
@@ -889,7 +889,7 @@ static void update_work_cache(ScsWork *w) {
   /* g = (I + M)^{-1} h */
   memcpy(w->g, w->h, (w->n + w->m) * sizeof(scs_float));
   SCS(scale_array)(&(w->g[w->n]), -1., w->m);
-  SCS(solve_lin_sys)(w->A, w->P, w->p, w->g, SCS_NULL, CG_BEST_TOL);
+  SCS(solve_lin_sys)(w->p, w->g, SCS_NULL, CG_BEST_TOL);
   return;
 }
 
@@ -959,7 +959,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->last_scale_update_iter = iter;
     w->scale = new_scale;
     SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
-    SCS(update_lin_sys_rho_y_vec)(w->A, w->P, w->p, w->rho_y_vec);
+    SCS(update_lin_sys_rho_y_vec)(w->p, w->rho_y_vec);
 
     /* update pre-solved quantities */
     update_work_cache(w);

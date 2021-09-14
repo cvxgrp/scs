@@ -12,12 +12,14 @@ extern "C" {
 #include <math.h>
 
 struct SCS_LIN_SYS_WORK {
-  scs_int n, m;
+  scs_int n, m; /* linear system dimensions */
   scs_float *p; /* cg iterate  */
   scs_float *r; /* cg residual */
   scs_float *Gp;
   scs_float *tmp;
-  ScsMatrix *At;
+  const ScsMatrix *A; /* does *not* own this memory */
+  const ScsMatrix *P; /* does *not* own this memory */
+  ScsMatrix *At;      /* does own this memory */
   /* preconditioning */
   scs_float *z;
   scs_float *M;

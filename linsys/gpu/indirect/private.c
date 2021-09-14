@@ -72,7 +72,7 @@ static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
 
 /* no need to update anything in this case */
 void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
-                                  ScsLinSysWork *p, scs_float *rho_y_vec) {
+                                   ScsLinSysWork *p, scs_float *rho_y_vec) {
   scs_int i;
   for (i = 0; i < A->m; ++i)
     p->inv_rho_y_vec[i] = 1. / rho_y_vec[i];

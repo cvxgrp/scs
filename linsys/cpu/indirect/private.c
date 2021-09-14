@@ -18,10 +18,11 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 */
 
 /* set M = inv ( diag ( rho_x * I + P + A' R_y^{-1} A ) ) */
-static void set_preconditioner(const ScsMatrix *A, const ScsMatrix *P,
-                               ScsLinSysWork *p) {
+static void set_preconditioner(ScsLinSysWork *p) {
   scs_int i, k;
   scs_float *M = p->M;
+  const ScsMatrix *A = p->A;
+  const ScsMatrix *P = p->P;
 
 #if VERBOSITY > 0
   scs_printf("getting pre-conditioner\n");
@@ -148,15 +149,16 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 }
 
 /* no need to update anything in this case */
-void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
-                                  ScsLinSysWork *p, scs_float *rho_y_vec) {
+void SCS(update_lin_sys_rho_y_vec)(ScsLinSysWork *p, scs_float *rho_y_vec) {
   p->rho_y_vec = rho_y_vec; /* this isn't needed but do it to be safe */
-  set_preconditioner(A, P, p);
+  set_preconditioner(p);
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       scs_float *rho_y_vec, scs_float rho_x) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  p->A = A;
+  p->P = P;
   p->m = A->m;
   p->n = A->n;
   p->rho_x = rho_x;
@@ -179,7 +181,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->rho_y_vec = rho_y_vec;
   p->z = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->M = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  set_preconditioner(A, P, p);
+  set_preconditioner(p);
 
   p->tot_cg_its = 0;
   if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p ||
@@ -192,15 +194,17 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
 
 /* solves (rho_x * I + P + A' R_y^{-1} A)x = b, s warm start, solution stored in
  * b */
-static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P, ScsLinSysWork *pr,
-                   const scs_float *s, scs_float *b, scs_int max_its,
-                   scs_float tol) {
-  scs_int i, n = A->n;
+static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
+                   scs_int max_its, scs_float tol) {
+  scs_int i, n = pr->n;
   scs_float ztr, ztr_prev, alpha;
   scs_float *p = pr->p;   /* cg direction */
   scs_float *Gp = pr->Gp; /* updated CG direction */
   scs_float *r = pr->r;   /* cg residual */
   scs_float *z = pr->z;   /* for preconditioning */
+
+  const ScsMatrix *A = pr->A;
+  const ScsMatrix *P = pr->P;
 
   if (!s) {
     /* take s = 0 */
@@ -275,8 +279,7 @@ static scs_int pcg(const ScsMatrix *A, const ScsMatrix *P, ScsLinSysWork *pr,
  * y = R_y^{-1} (Ax - ry)
  *
  */
-scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
+scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
                            scs_float tol) {
   scs_int cg_its, max_iters;
 
@@ -286,31 +289,31 @@ scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
                tol);
   }
 
-  if (CG_NORM(b, A->n + A->m) <= 1e-12) {
-    memset(b, 0, (A->n + A->m) * sizeof(scs_float));
+  if (CG_NORM(b, p->n + p->m) <= 1e-12) {
+    memset(b, 0, (p->n + p->m) * sizeof(scs_float));
     return 0;
   }
 
   /* use p->tmp here, and in mat_vec, can do both since they don't overlap */
   /* b = [rx; ry] */
   /* tmp = ry */
-  memcpy(p->tmp, &(b[A->n]), A->m * sizeof(scs_float));
+  memcpy(p->tmp, &(b[p->n]), p->m * sizeof(scs_float));
   /* tmp = R_y^{-1} * ry */
   scale_by_diag_r(p->tmp, p);
   /* b[:n] = rx + A' R_y^{-1} ry */
-  SCS(accum_by_atrans)(A, p->tmp, b);
+  SCS(accum_by_atrans)(p->A, p->tmp, b);
   /* set max_iters to 10 * n (though in theory n is enough for any tol) */
-  max_iters = 10 * A->n;
+  max_iters = 10 * p->n;
   /* solves (rho_x I + P + A' R_y^{-1} A)x = b, s warm start, solution stored in
    * b */
-  cg_its = pcg(A, P, p, s, b, max_iters, tol); /* b[:n] = x */
+  cg_its = pcg(p, s, b, max_iters, tol); /* b[:n] = x */
 
   /* b[n:] = -ry */
-  SCS(scale_array)(&(b[A->n]), -1., A->m);
+  SCS(scale_array)(&(b[p->n]), -1., p->m);
   /* b[n:] = Ax - ry */
-  accum_by_a(p, b, &(b[A->n]));
+  accum_by_a(p, b, &(b[p->n]));
   /* b[n:] = R_y^{-1} (Ax - ry) = y */
-  scale_by_diag_r(&(b[A->n]), p);
+  scale_by_diag_r(&(b[p->n]), p);
   p->tot_cg_its += cg_its;
 #if VERBOSITY > 1
   scs_printf("tol %.3e\n", tol);

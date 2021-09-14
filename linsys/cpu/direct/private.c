@@ -312,13 +312,12 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void SCS(update_lin_sys_rho_y_vec)(const ScsMatrix *A, const ScsMatrix *P,
-                                  ScsLinSysWork *p, scs_float *rho_y_vec) {
+void SCS(update_lin_sys_rho_y_vec)(ScsLinSysWork *p, scs_float *rho_y_vec) {
   scs_int i, ldl_status;
-  for (i = 0; i < A->m; ++i) {
+  for (i = 0; i < p->m; ++i) {
     p->kkt->x[p->rho_y_vec_idxs[i]] = -rho_y_vec[i];
   }
-  ldl_status = ldl_factor(p, A->n);
+  ldl_status = ldl_factor(p, p->n);
   if (ldl_status < 0) {
     scs_printf("Error in LDL factorization when updating.\n");
     /* TODO: this is broken somehow */
@@ -331,6 +330,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       scs_float *rho_y_vec, scs_float rho_x) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
+  p->m = A->m;
+  p->n = A->n;
   p->rho_x = rho_x;
   p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
   p->L = (csc *)scs_malloc(sizeof(csc));
@@ -352,8 +353,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   return p;
 }
 
-scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsMatrix *P,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
+scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
                            scs_float tol) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
