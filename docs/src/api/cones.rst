@@ -100,7 +100,7 @@ To recover the matrix solution this operation must be inverted on the components
 of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
 off-diagonal entries must be scaled by :math:`1/\sqrt{2}` and the upper triangular
 entries are filled in by copying the values of lower triangular entries.
-Explicitly, the inverse operation takes vector :math:`y \in
+Explicitly, the inverse operation takes vector :math:`s \in
 \mathbf{R}^{k(k+1)/2}` and produces the matrix
 
 .. math::
