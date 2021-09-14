@@ -19,8 +19,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Linear System Solver" href="../linear_solver/index.html" />
-    <link rel="prev" title="Julia" href="../api/julia.html" /> 
+    <link rel="next" title="C / C++" href="c.html" />
+    <link rel="prev" title="R" href="../api/r.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,14 +46,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Install</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#c-c">C/C++</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#cmake">CMake</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#makefile">Makefile</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#matlab">MATLAB</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#julia">Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python.html">Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r.html">R</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
@@ -90,126 +87,13 @@
              
   <div class="section" id="install">
 <span id="id1"></span><h1>Install<a class="headerlink" href="#install" title="Permalink to this headline"></a></h1>
-<div class="section" id="c-c">
-<h2>C/C++<a class="headerlink" href="#c-c" title="Permalink to this headline"></a></h2>
-<p>First clone the SCS repo from GitHub</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/cvxgrp/scs.git
-</pre></div>
-</div>
-<div class="section" id="cmake">
-<h3>CMake<a class="headerlink" href="#cmake" title="Permalink to this headline"></a></h3>
-<p>Thanks to <a class="reference external" href="cmake.org">CMake</a> buildsystem, SCS can be easily compiled and linked by other
-CMake projects. To use the cmake buld system please run the following commands:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> scs
-mkdir build
-<span class="nb">cd</span> build
-cmake -DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt; ../
-make
-make install
-</pre></div>
-</div>
-<p>You may also want to compile the tests. In this case when you configure the
-project, please call the following command</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake -DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt; -DBUILD_TESTING<span class="o">=</span>ON ../
-make
-ctest
-</pre></div>
-</div>
-<p>By default the build-system will compile the library as shared. If you want to
-compile it as static, please call the following command when you configure the
-project</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake -DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt; -BUILD_SHARED_LIBS<span class="o">=</span>OFF ../
-make
-</pre></div>
-</div>
-<p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
-<code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> which can be imported using the find_package CMake command and
-used by calling target_link_libraries as in the following example:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION <span class="m">3</span>.0<span class="o">)</span>
-project<span class="o">(</span>myproject<span class="o">)</span>
-find_package<span class="o">(</span>scs REQUIRED<span class="o">)</span>
-add_executable<span class="o">(</span>example example.cpp<span class="o">)</span>
-
-<span class="c1"># To use the direct method</span>
-target_link_libraries<span class="o">(</span>example scs::scsdir<span class="o">)</span>
-
-<span class="c1"># To use the indirect method</span>
-target_link_libraries<span class="o">(</span>example scs::scsindir<span class="o">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="makefile">
-<h3>Makefile<a class="headerlink" href="#makefile" title="Permalink to this headline"></a></h3>
-<p>Alternatively you can use the Makefile and manage the libraries yourself</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> scs
-make
-</pre></div>
-</div>
-<p>To compile and run the tests execute</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nb">test</span>
-out/run_tests_direct
-out/run_tests_indirect
-</pre></div>
-</div>
-<p>If make completes successfully, it will produce two static library files,
-<code class="code docutils literal notranslate"><span class="pre">libscsdir.a</span></code>, <code class="code docutils literal notranslate"><span class="pre">libscsindir.a</span></code>, and two dynamic library files
-<code class="code docutils literal notranslate"><span class="pre">libscsdir.ext</span></code>, <code class="code docutils literal notranslate"><span class="pre">libscsindir.ext</span></code> (where <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> extension is
-platform dependent) in the <code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.</p>
-<p>If you have a GPU and have CUDA installed, you can also execute make gpu to
-compile SCS to run on the GPU which will create additional libraries and demo
-binaries in the out folder corresponding to the GPU version.  Note that the GPU
-(usually) requires 32 bit ints, which can be enforced by compiling with
-<code class="code docutils literal notranslate"><span class="pre">DLONG=0</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make gpu <span class="nv">DLONG</span><span class="o">=</span><span class="m">0</span>
-out/run_tests_gpu_indirect
-</pre></div>
-</div>
-<p>To use the libraries in your own source code, compile your code with the linker
-option <code class="code docutils literal notranslate"><span class="pre">-L(PATH_TO_SCS_LIBS)</span></code> and <code class="code docutils literal notranslate"><span class="pre">-lscsdir</span></code> or <code class="code docutils literal notranslate"><span class="pre">-lscsindir</span></code>
-(as needed). The API and required data structures are defined in the file
-<code class="code docutils literal notranslate"><span class="pre">include/scs.h</span></code>. The four main API functions are:</p>
-</div>
-</div>
-<div class="section" id="python">
-<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline"></a></h2>
-<p>The easiest way to install the python version is using <a class="reference external" href="https://pypi.org/project/pip/">pip</a></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install scs
-</pre></div>
-</div>
-<p>SCS depends on python packages numpy and scipy to run and on numpy to install.
-It uses numpy to tell it what <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS and LAPACK</span></a> libraries
-to link against. If you run into an error like this:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>RuntimeError: Found /usr/lib/libcblas.dylib, but that file is a symbolic link to
-the MacOS Accelerate framework, which is not supported by NumPy
-</pre></div>
-</div>
-<p>you can try:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew install openblas
-<span class="nv">OPENBLAS</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>brew --prefix openblas<span class="k">)</span><span class="s2">&quot;</span> pip install scs
-</pre></div>
-</div>
-<p>You can also install directly from source</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone --recursive https://github.com/bodono/scs-python.git
-<span class="nb">cd</span> scs-python
-python setup.py install
-</pre></div>
-</div>
-<p>You can install the gpu interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python setup.py install --scs --gpu
-</pre></div>
-</div>
-<p>To test that SCS installed correctly, and you have pytest installed, run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
-</pre></div>
-</div>
-</div>
-<div class="section" id="matlab">
-<h2>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline"></a></h2>
-<p>TODO</p>
-</div>
-<div class="section" id="julia">
-<h2>Julia<a class="headerlink" href="#julia" title="Permalink to this headline"></a></h2>
-<p>TODO</p>
+<p>Follow the links below for install instructions for each language.</p>
+<p><a class="reference internal" href="c.html#c-install"><span class="std std-ref">C/C++</span></a></p>
+<p><a class="reference internal" href="python.html#python-install"><span class="std std-ref">Python</span></a></p>
+<p><a class="reference internal" href="matlab.html#matlab-install"><span class="std std-ref">MATLAB</span></a></p>
+<p><a class="reference internal" href="julia.html#julia-install"><span class="std std-ref">Julia</span></a></p>
+<p><a class="reference internal" href="r.html#r-install"><span class="std std-ref">R</span></a></p>
+<div class="toctree-wrapper compound">
 </div>
 </div>
 
@@ -217,8 +101,8 @@ python setup.py install
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../api/julia.html" class="btn btn-neutral float-left" title="Julia" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../linear_solver/index.html" class="btn btn-neutral float-right" title="Linear System Solver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../api/r.html" class="btn btn-neutral float-left" title="R" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="c.html" class="btn btn-neutral float-right" title="C / C++" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
