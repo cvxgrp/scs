@@ -129,10 +129,12 @@
 
 <div class="section" id="helper-functions">
 <h3>Helper functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline"></a></h3>
+<p>This sets the <a class="reference internal" href="#scssettings"><span class="std std-ref">ScsSettings</span></a> struct to the default values as
+specified in the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> page.</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv424scs_set_default_settingsP11ScsSettings">
 <span id="_CPPv324scs_set_default_settingsP11ScsSettings"></span><span id="_CPPv224scs_set_default_settingsP11ScsSettings"></span><span id="scs_set_default_settings__ScsSettingsP"></span><span class="target" id="scs_8h_1aaa770d8e5840e9dcbd92c5b16ce74bc7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_set_default_settings</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424scs_set_default_settingsP11ScsSettings" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Helper function to set all settings to default values (see <em>glbopts.h</em>)</p>
+<dd><p>Helper function to set all settings to default values (see <em>glbopts.h</em>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>stgs</strong> – Settings struct that will be populated </p>
@@ -157,7 +159,7 @@
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsData">
 <span id="_CPPv37ScsData"></span><span id="_CPPv27ScsData"></span><span id="ScsData"></span><span class="target" id="struct_scs_data"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsData</span></span></span><a class="headerlink" href="#_CPPv47ScsData" title="Permalink to this definition"></a><br /></dt>
-<dd><p>struct containing problem data </p>
+<dd><p>Struct containing problem data. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
@@ -203,11 +205,11 @@
 <div class="section" id="data-matrices">
 <span id="scsmatrix"></span><h3>Data Matrices<a class="headerlink" href="#data-matrices" title="Permalink to this headline"></a></h3>
 <p>The matrices must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.
-See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Data matrices</span></a> for more details.</p>
+See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Data matrices</span></a> for more details on what SCS expects.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv49ScsMatrix">
 <span id="_CPPv39ScsMatrix"></span><span id="_CPPv29ScsMatrix"></span><span id="ScsMatrix"></span><span class="target" id="struct_scs_matrix"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsMatrix</span></span></span><a class="headerlink" href="#_CPPv49ScsMatrix" title="Permalink to this definition"></a><br /></dt>
-<dd><p>this struct defines the data matrices and is supplied in column compressed format: <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html</a> </p>
+<dd><p>This defines the data matrices which should be supplied in column compressed format with zero based indexing. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
@@ -250,7 +252,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsCone">
 <span id="_CPPv37ScsCone"></span><span id="_CPPv27ScsCone"></span><span id="ScsCone"></span><span class="target" id="struct_scs_cone"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsCone</span></span></span><a class="headerlink" href="#_CPPv47ScsCone" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Cone data. NB: rows of data matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> must be specified in this exact order </p>
+<dd><p>Cone data. Rows of data matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> must be specified in this exact order. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
@@ -341,7 +343,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSettings">
 <span id="_CPPv311ScsSettings"></span><span id="_CPPv211ScsSettings"></span><span id="ScsSettings"></span><span class="target" id="struct_scs_settings"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSettings</span></span></span><a class="headerlink" href="#_CPPv411ScsSettings" title="Permalink to this definition"></a><br /></dt>
-<dd><p>struct containing all settings </p>
+<dd><p>Struct containing all settings. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
@@ -457,7 +459,7 @@ warm-start points (see <a class="reference internal" href="../algorithm/warm_sta
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSolution">
 <span id="_CPPv311ScsSolution"></span><span id="_CPPv211ScsSolution"></span><span id="ScsSolution"></span><span class="target" id="struct_scs_solution"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSolution</span></span></span><a class="headerlink" href="#_CPPv411ScsSolution" title="Permalink to this definition"></a><br /></dt>
-<dd><p>contains primal-dual solution arrays </p>
+<dd><p>Contains primal-dual solution arrays or a certificate of infeasibility. Check the exit flag to determine whether this contains a solution or a certificate. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
@@ -488,7 +490,7 @@ warm-start points (see <a class="reference internal" href="../algorithm/warm_sta
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsInfo">
 <span id="_CPPv37ScsInfo"></span><span id="_CPPv27ScsInfo"></span><span id="ScsInfo"></span><span class="target" id="struct_scs_info"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsInfo</span></span></span><a class="headerlink" href="#_CPPv47ScsInfo" title="Permalink to this definition"></a><br /></dt>
-<dd><p>contains terminating information </p>
+<dd><p>Contains information about the solve run at termination. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
@@ -605,7 +607,8 @@ which contains the internal workspace allocated and maintained by SCS.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsWork">
 <span id="_CPPv37ScsWork"></span><span id="_CPPv27ScsWork"></span><span id="ScsWork"></span><span class="target" id="struct_scs_work"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsWork</span></span></span><a class="headerlink" href="#_CPPv47ScsWork" title="Permalink to this definition"></a><br /></dt>
-<dd></dd></dl>
+<dd><p>Workspace for SCS </p>
+</dd></dl>
 
 </div>
 </div>

@@ -16,19 +16,28 @@ The main C API is imported from the header :code:`scs.h`.
 Helper functions
 ^^^^^^^^^^^^^^^^
 
+This sets the :ref:`ScsSettings <ScsSettings>` struct to the default values as
+specified in the :ref:`settings` page.
+
 .. doxygenfunction:: scs_set_default_settings
 
 ..
-  lower level:
-  .. doxygenfunction:: scs_init
+  Lower level
+  ^^^^^^^^^^^
 
-  |
+  Under the hood the :code:`scs` function above simply calls the three functions
+  below in series.  It can be useful to call :code:`scs_solve` many times for the
+  same call to :code:`scs_init`. If you want to do this, for example because you
+  want to cache the matrix factorization for many solves, please `contact us
+  <mailto:splitting.conic.solver@gmail.com>`_, because currently that
+  functionality is disabled.
+
+  .. doxygenfunction:: scs_init
 
   .. doxygenfunction:: scs_solve
 
-  |
-
   .. doxygenfunction:: scs_finish
+
 
 Primitive types
 ---------------
@@ -56,7 +65,7 @@ Data Matrices
 ^^^^^^^^^^^^^
 
 The matrices must be in `Compressed Sparse Column (CSC) format <https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html>`_ using zero-based indexing.
-See :ref:`matrices` for more details.
+See :ref:`matrices` for more details on what SCS expects.
 
 .. doxygenstruct:: ScsMatrix
    :members:
