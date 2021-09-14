@@ -176,7 +176,7 @@ static void set_m(AaWork *a, aa_int len) {
     r = a->regularization * (nrm_y * nrm_y + nrm_s * nrm_s);
     if (a->verbosity > 2) {
       printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n",
-             a->iter, len, nrm_y, nrm_s, r);
+             (int)a->iter, (int)len, nrm_y, nrm_s, r);
     }
     for (i = 0; i < len; ++i) {
       a->M[i + len * i] += r;
