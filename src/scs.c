@@ -980,9 +980,16 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
 }
 
+static inline void normalize_v(scs_float *v, scs_int len, scs_int iter) {
+  scs_float v_norm;
+  if (iter >= FEASIBLE_ITERS) {
+    v_norm = SCS(norm)(v, len); /* always l2 norm */
+    SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
+  }
+}
+
 scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   scs_int i;
-  scs_float v_norm;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
             total_lin_sys_time = 0.0;
@@ -1021,10 +1028,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     /* scs is homogeneous so scale the iterate to keep norm reasonable */
     /* this should this be *after* applying any acceleration */
     /* the input to the DR step should be normalized */
-    if (i >= FEASIBLE_ITERS) {
-      v_norm = SCS(norm)(w->v, l); /* always l2 norm */
-      SCS(scale_array)(w->v, SQRTF((scs_float)l) * ITERATE_NORM / v_norm, l);
-    }
+    normalize_v(w->v, l, i);
 
     /* store v_prev = v */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
