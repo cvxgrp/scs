@@ -528,6 +528,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     SCS(un_normalize_sol)(w, sol);
   }
   populate_residual_struct(w, iter);
+  info->setup_time = w->setup_time;
   info->iter = iter;
   info->res_infeas = w->r_orig->res_infeas;
   info->res_unbdd_a = w->r_orig->res_unbdd_a;
@@ -980,6 +981,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
 }
 
+/* scs is homogeneous so scale the iterate to keep norm reasonable */
 static inline void normalize_v(scs_float *v, scs_int len, scs_int iter) {
   scs_float v_norm;
   if (iter >= FEASIBLE_ITERS) {
@@ -1001,7 +1003,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   const ScsData *d = w->d;
   const ScsCone *k = w->k;
   const ScsSettings *stgs = w->stgs;
-  info->setup_time = w->setup_time;
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
@@ -1014,7 +1015,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
-    /* accelerate here so that last step always projection onto cone */
+    /* Accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
     if (w->accel) {
       SCS(tic)(&accel_timer);
@@ -1025,7 +1026,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       total_accel_time += SCS(tocq)(&accel_timer);
     }
 
-    /* scs is homogeneous so scale the iterate to keep norm reasonable */
     /* this should this be *after* applying any acceleration */
     /* the input to the DR step should be normalized */
     normalize_v(w->v, l, i);
@@ -1033,6 +1033,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     /* store v_prev = v */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
+    /* linear system solve */
     SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1040,6 +1041,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
 
+    /* project onto the cones */
     SCS(tic)(&cone_timer);
     if (project_cones(w, k, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1047,10 +1049,11 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     total_cone_time += SCS(tocq)(&cone_timer);
 
+    /* dual variable step */
     update_dual_vars(w);
 
+    /* AA safeguard check */
     if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
-      /* AA safeguard check */
       if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
         w->rejected_accel_steps++;
       }
