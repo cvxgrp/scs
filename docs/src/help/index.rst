@@ -1,7 +1,7 @@
 .. _help:
 
-Support
-=======
+Help
+====
 
 Currently the easiest way to get support is to file a `GitHub issue
 <https://github.com/cvxgrp/scs/issues>`_ or to `email us

@@ -89,7 +89,7 @@ for :math:`(x,y,s)` that satisfy the KKT conditions we have
   s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.
 
 
-.. _infeasiblity:
+.. _infeasibility:
 
 Certificate of infeasibility
 ----------------------------
@@ -145,7 +145,7 @@ user defined :ref:`settings <settings>`. The :math:`\ell_\infty` norm
 here can be changed to other norms by changing the definition of :code:`NORM` in
 the :code:`include/glbopts.h` file.
 
-.. _infeasibility:
+.. _infeasibility_cert:
 
 Infeasibility
 -------------
