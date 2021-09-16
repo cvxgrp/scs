@@ -215,7 +215,7 @@ typedef float scs_float;
 /* Safeguarding norm factor at which we reject AA steps */
 #define AA_SAFEGUARD_FACTOR (1.)
 /* Max allowable AA weight norm */
-#define AA_MAX_WEIGHT_NORM (1e6)
+#define AA_MAX_WEIGHT_NORM (1e10)
 
 /* (Dual) Scale updating parameters */
 #define MAX_SCALE_VALUE (1e6)
