@@ -56,7 +56,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">Optimality</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#infeasibility">Infeasibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infeasibility-cert">Infeasibility</a></li>
 </ul>
 </li>
 </ul>
@@ -67,7 +67,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -155,7 +155,7 @@ for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy t
 <div class="math notranslate nohighlight">
 \[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
 <div class="section" id="certificate-of-infeasibility">
-<span id="infeasiblity"></span><h3>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline"></a></h3>
+<span id="infeasibility"></span><h3>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline"></a></h3>
 <p>On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
 Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
 <div class="math notranslate nohighlight">
@@ -198,8 +198,8 @@ user defined <a class="reference internal" href="../api/settings.html#settings">
 here can be changed to other norms by changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in
 the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
 </div>
-<div class="section" id="infeasibility">
-<span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility" title="Permalink to this headline"></a></h3>
+<div class="section" id="infeasibility-cert">
+<span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility-cert" title="Permalink to this headline"></a></h3>
 <p>Since the conic constraints are always guaranteed by the iterates (<span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
 declares a problem <strong>primal infeasible (dual unbounded)</strong> when it finds <span class="math notranslate nohighlight">\(y \in

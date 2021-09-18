@@ -57,7 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -88,7 +88,22 @@
              
   <div class="section" id="matlab">
 <span id="matlab-install"></span><h1>MATLAB<a class="headerlink" href="#matlab" title="Permalink to this headline"></a></h1>
-<p>TODO</p>
+<p>To install SCS in Matlab from source:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone --recursive https://github.com/bodono/scs-matlab.git
+</pre></div>
+</div>
+<p>Then in a Matlab session</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="o">&lt;</span><span class="nb">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">scs</span><span class="o">-</span><span class="n">matlab</span><span class="o">&gt;</span><span class="w"></span>
+<span class="n">make_scs</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Remember to include the scs-matlab directory in your Matlab path if you wish to
+use the mex file in your Matlab code.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">addpath</span><span class="p">(</span><span class="nb">pwd</span><span class="p">)</span><span class="w"></span>
+<span class="nb">savepath</span><span class="w"></span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../api/matlab.html#matlab-interface"><span class="std std-ref">here</span></a> for the API.</p>
 </div>
 
 
