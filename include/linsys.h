@@ -7,14 +7,14 @@ extern "C" {
 
 #include "scs.h"
 
-/* This is the API that any new linear system solver must implement */
+/** This is the API that any new linear system solver must implement */
 
 /**
- * Initialize ScsLinSysWork structure and perform any necessary preprocessing
+ * Initialize ScsLinSysWork structure and perform any necessary preprocessing.
  *
  *  @param  A          A data matrix
  *  @param  P          P data matrix
- *  @param  rho_y_vec  R_y diagonal entries
+ *  @param  rho_y_vec  rho_y diagonal entries
  *  @param  rho_x      rho_x float
  *  @return            Linear system solver workspace
  *
@@ -38,7 +38,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *w);
  *    \end{bmatrix} x = b
  *  \f]
  *
- *  for x, result stored result in b
+ *  for x, result stored result in b.
  *
  *  @param  w    Linear system private workspace
  *  @param  b    Right hand side, should contain solution at the end
@@ -50,7 +50,9 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *w);
 scs_int SCS(solve_lin_sys)(ScsLinSysWork *w, scs_float *b, const scs_float *s,
                            scs_float tol);
 /**
- *  Update the linsys workspace when new rho_y_vec is updated
+ *  Update the linsys workspace when `rho_y_vec` is changed. For example, a
+ *  direct method for solving the linear system might need to update the
+ *  factorization of the matrix.
  *
  *  @param  w          Linear system private workspace
  *  @param  rho_y_vec  R_y diagonal entries
