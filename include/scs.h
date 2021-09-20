@@ -163,6 +163,8 @@ typedef struct {
   scs_float comp_slack;
   /** number of rejected AA steps */
   scs_int rejected_accel_steps;
+  /** number of accepted AA steps */
+  scs_int accepted_accel_steps;
   /** total time (milliseconds) spent in the linear system solver */
   scs_float lin_sys_time;
   /** total time (milliseconds) spent in the cone projection */
@@ -233,7 +235,7 @@ typedef struct {
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
   /* aa norm stat */
   scs_float aa_norm;
-  scs_int rejected_accel_steps;
+  scs_int rejected_accel_steps, accepted_accel_steps;
   scs_float setup_time; /* time taken for setup phase (milliseconds) */
   scs_float scale;      /* current scale parameter */
   const ScsData *d;

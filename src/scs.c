@@ -536,6 +536,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->scale = w->scale;
   info->scale_updates = w->scale_updates;
   info->rejected_accel_steps = w->rejected_accel_steps;
+  info->accepted_accel_steps = w->accepted_accel_steps;
   info->comp_slack = ABS(SCS(dot)(sol->s, sol->y, w->m));
   if (info->comp_slack >
       1e-5 * MAX(SCS(norm_inf)(sol->s, w->m), SCS(norm_inf)(sol->y, w->m))) {
@@ -859,6 +860,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
+  /* Acceleration */
+  w->rejected_accel_steps = 0;
+  w->accepted_accel_steps = 0;
   if (w->stgs->acceleration_lookback) {
     w->v_aa = (scs_float *)scs_calloc(l, sizeof(scs_float));
     w->v_aa_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -1068,6 +1072,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
       if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
         w->rejected_accel_steps++;
+      } else {
+        w->accepted_accel_steps++;
       }
     }
 
