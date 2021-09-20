@@ -163,6 +163,12 @@ typedef struct {
   scs_float comp_slack;
   /** number of rejected AA steps */
   scs_int rejected_accel_steps;
+  /** total time (milliseconds) spent in the linear system solver */
+  scs_float lin_sys_time;
+  /** total time (milliseconds) spent in the cone projection */
+  scs_float cone_time;
+  /** total time (milliseconds) spent in the acceleration routine */
+  scs_float accel_time;
 } ScsInfo;
 
 /* the following structs are not exposed to user */
