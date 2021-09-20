@@ -43,12 +43,6 @@ static void free_work(ScsWork *w) {
     scs_free(w->c_normalized);
     scs_free(w->rho_y_vec);
     scs_free(w->lin_sys_warm_start);
-    if (w->v_aa) {
-      scs_free(w->v_aa);
-    }
-    if (w->v_aa_prev) {
-      scs_free(w->v_aa_prev);
-    }
     if (w->cone_boundaries) {
       scs_free(w->cone_boundaries);
     }
@@ -864,8 +858,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->rejected_accel_steps = 0;
   w->accepted_accel_steps = 0;
   if (w->stgs->acceleration_lookback) {
-    w->v_aa = (scs_float *)scs_calloc(l, sizeof(scs_float));
-    w->v_aa_prev = (scs_float *)scs_calloc(l, sizeof(scs_float));
     /* TODO(HACK!) negative acceleration_lookback interpreted as type-I */
     if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
                              w->stgs->acceleration_lookback < 0,

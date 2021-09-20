@@ -10,11 +10,12 @@ extern "C" {
 #include "aa.h"
 #include "glbopts.h"
 
-/* stores the necessary private workspace, only the linear system solver
- * interacts with this struct */
-typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
+/** Struct containing acceleration workspace. Implemented by acceleration. */
 typedef struct SCS_ACCEL_WORK ScsAccelWork;
+/** Struct containing cone projection workspace. Implemented by cones. */
 typedef struct SCS_CONE_WORK ScsConeWork;
+/** Struct containing linear system workspace. Implemented by linear solver. */
+typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
 
 /** This defines the data matrices which should be supplied in column compressed
  *  format with zero based indexing.
@@ -209,7 +210,7 @@ typedef struct {
   /* x_prev = x from previous iteration */
   scs_int time_limit_reached; /* set if the time-limit is reached */
   scs_float *u, *u_t;
-  scs_float *v, *v_prev, *v_aa, *v_aa_prev;
+  scs_float *v, *v_prev;
   scs_float *rsk;                /* rsk [ r; s; kappa ] */
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
