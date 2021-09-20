@@ -84,8 +84,8 @@ choose between the different linear solvers using the appropriate settings.
 
 .. _direct:
 
-Direct method
-^^^^^^^^^^^^^
+Sparse direct method
+^^^^^^^^^^^^^^^^^^^^
 
 The direct method is the default linear system solver in SCS and factorizes the
 above matrix using a sparse permuted LDL factorization. Then it solves the
@@ -95,16 +95,16 @@ external `AMD <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ and `QDLDL
 
 .. _indirect:
 
-Indirect method
-^^^^^^^^^^^^^^^
+Sparse indirect method
+^^^^^^^^^^^^^^^^^^^^^^
 
 The indirect method solves the above linear system approximately with a
 'matrix-free' method. To do this it first reduces the system as described above
 then solves the positive definite system using using `conjugate gradients
 <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.  Each iteration of
-CG requires one multiply each of :math:`P, A, A^\top`.  The system is solved up
-to some tolerance, which is tuned to ensure that the overall algorithm
-converges. The tolerance decays with iteration :math:`k` like
+CG requires one multiply each of sparse matrices :math:`P, A, A^\top`.  The
+system is solved up to some tolerance, which is tuned to ensure that the overall
+algorithm converges. The tolerance decays with iteration :math:`k` like
 :math:`O(1/k^\gamma)` where :math:`\gamma > 1` and is determined by the constant
 :code:`CG_RATE` (defaults to :math:`1.5`).
 
@@ -115,8 +115,8 @@ however for very large problems the indirect solver can be faster.
 
 .. _gpu_indirect:
 
-GPU indirect method
-^^^^^^^^^^^^^^^^^^^
+Sparse GPU indirect method
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the multiplies are all performed on the GPU.
