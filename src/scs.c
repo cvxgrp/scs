@@ -1113,8 +1113,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   /* populate timings */
   info->solve_time = SCS(tocq)(&solve_timer);
   info->lin_sys_time = total_lin_sys_time;
-  info->lin_sys_time = total_cone_time;
-  info->lin_sys_time = total_accel_time;
+  info->cone_time = total_cone_time;
+  info->accel_time = total_accel_time;
 
   if (w->stgs->verbose) {
     print_footer(info);
