@@ -15,3 +15,6 @@ package, along with the necessary SCS binary for your system.
 
 For instructions on how to use a custom version of SCS, consult the
 `SCS.jl README <https://github.com/jump-dev/SCS.jl>`_.
+
+Note that SCS.jl is a third-party package maintained by the 
+`JuMP-dev community<https://jump.dev/pages/governance/>`_.
