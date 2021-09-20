@@ -162,14 +162,12 @@ struct ACCEL_WORK {
 static aa_float compute_regularization(AaWork *a, aa_int len) {
   /* typically type-I does better with higher regularization than type-II */
   TIME_TIC
-  aa_float r, nrm_y, nrm_s; /* add r to diags for regularization */
-  blas_int btotal = (blas_int)(a->dim * len), one = 1;
-  nrm_y = BLAS(nrm2)(&btotal, a->Y, &one);
-  nrm_s = BLAS(nrm2)(&btotal, a->S, &one);
-  r = a->regularization * (nrm_y * nrm_y + nrm_s * nrm_s);
+  aa_float r, nrm_m;
+  blas_int btotal = (blas_int)(len * len), one = 1;
+  nrm_m = BLAS(nrm2)(&btotal, a->M, &one);
+  r = a->regularization * nrm_m;
   if (a->verbosity > 2) {
-    printf("iter: %i, len: %i, norm: Y %.2e, norm: S %.2e, r: %.2e\n", a->iter,
-           len, nrm_y, nrm_s, r);
+    printf("iter: %i, norm: M %.2e, r: %.2e\n", (int)a->iter, nrm_m, r);
   }
   TIME_TOC
   return r;
@@ -360,7 +358,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   a->type1 = type1;
   a->iter = 0;
   a->dim = dim;
-  a->mem = mem;
+  a->mem = MIN(mem, dim); /* for rank stability */
   a->regularization = regularization;
   a->relaxation = relaxation;
   a->safeguard_factor = safeguard_factor;
@@ -440,6 +438,10 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
     TIME_TOC
     return 0;
   }
+
+  /* reset success indicator in case safeguarding called multiple times */
+  a->success = 0;
+
   /* work = x_new */
   memcpy(a->work, x_new, a->dim * sizeof(aa_float));
   /* work = x_new - f_new */
