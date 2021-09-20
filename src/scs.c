@@ -190,7 +190,7 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   r->res_unbdd_p = NAN;
   r->res_infeas = NAN;
   if (r->ctx_tau < 0) {
-    r->res_unbdd_a = SAFEDIV_POS(NORM(r->ax_s, n), -r->ctx_tau);
+    r->res_unbdd_a = SAFEDIV_POS(NORM(r->ax_s, m), -r->ctx_tau);
     r->res_unbdd_p = SAFEDIV_POS(NORM(r->px, n), -r->ctx_tau);
   }
   if (r->bty_tau < 0) {
