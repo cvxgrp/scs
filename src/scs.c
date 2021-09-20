@@ -973,12 +973,9 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 }
 
 /* scs is homogeneous so scale the iterate to keep norm reasonable */
-static inline void normalize_v(scs_float *v, scs_int len, scs_int iter) {
-  scs_float v_norm;
-  if (iter >= FEASIBLE_ITERS) {
-    v_norm = SCS(norm)(v, len); /* always l2 norm */
-    SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
-  }
+static inline void normalize_v(scs_float *v, scs_int len) {
+  scs_float v_norm = SCS(norm)(v, len); /* always l2 norm */
+  SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
 
 scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
@@ -1019,7 +1016,10 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
     /* this should this be *after* applying any acceleration */
     /* the input to the DR step should be normalized */
-    normalize_v(w->v, l, i);
+
+    if (i >= FEASIBLE_ITERS) {
+      normalize_v(w->v, l);
+    }
 
     /* store v_prev = v */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
@@ -1043,13 +1043,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     /* dual variable step */
     update_dual_vars(w);
 
-    /* AA safeguard check */
-    if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
-      if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
-        w->rejected_accel_steps++;
-      }
-    }
-
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
         return failure(w, w->m, w->n, sol, info, SCS_SIGINT, "interrupted",
@@ -1067,12 +1060,24 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       }
     }
 
+    /* AA safeguard check.
+     * Perform safeguarding *after* convergence check to prevent safeguard
+     * overwriting converged iterate, since safeguard is on `v` and convergence
+     * is on `u`.
+     */
+    if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
+      if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
+        w->rejected_accel_steps++;
+      }
+    }
+
+    /* Compute residuals. */
     if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
       populate_residual_struct(w, i);
       print_summary(w, i, &solve_timer);
     }
 
-    /* if residuals are fresh then maybe compute new scale */
+    /* If residuals are fresh then maybe compute new scale. */
     if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
       maybe_update_scale(w, k, i);
     }
@@ -1085,8 +1090,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
   }
 
+  /* Final logging after full run */
   if (w->stgs->log_csv_filename) {
-    /* calc residuals every iter if logging to csv */
     populate_residual_struct(w, i);
     SCS(log_data_to_csv)(d, k, stgs, w, i, &solve_timer);
   }
