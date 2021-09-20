@@ -176,7 +176,7 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   for (i = 0; i < m; ++i) {
     v[i + n] = sol->y[i] + sol->s[i] / w->rho_y_vec[i];
   }
-  v[n + m] = 1.0;
+  v[n + m] = 1.0; /* tau = 1 */
   /* un-normalize so sol unchanged */
   if (w->stgs->normalize) {
     SCS(un_normalize_sol)(w, sol);
@@ -621,13 +621,8 @@ static void print_header(ScsWork *w, const ScsCone *k) {
 #endif
 }
 
-static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
-                         ScsWork *w, ScsInfo *info,
-                         scs_float total_lin_sys_time,
-                         scs_float total_cone_time,
-                         scs_float total_accel_time) {
+static void print_footer(ScsInfo *info) {
   scs_int i;
-  /* char *lin_sys_str = SCS(get_lin_sys_summary)(w->p, info); */
 
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -638,12 +633,8 @@ static void print_footer(const ScsData *d, const ScsCone *k, ScsSolution *sol,
              (info->setup_time + info->solve_time) / 1e3,
              info->setup_time / 1e3, info->solve_time / 1e3);
   scs_printf("\t lin-sys: %1.2es, cones: %1.2es, accel: %1.2es\n",
-             total_lin_sys_time / 1e3, total_cone_time / 1e3,
-             total_accel_time / 1e3);
-  /*
-  scs_printf("%s", lin_sys_str);
-  scs_free(lin_sys_str);
-  */
+             info->lin_sys_time / 1e3, info->cone_time / 1e3,
+             info->accel_time / 1e3);
 
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -1107,11 +1098,15 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
   /* populate solution vectors (unnormalized) and info */
   finalize(w, sol, info, i);
+
+  /* populate timings */
   info->solve_time = SCS(tocq)(&solve_timer);
+  info->lin_sys_time = total_lin_sys_time;
+  info->lin_sys_time = total_cone_time;
+  info->lin_sys_time = total_accel_time;
 
   if (w->stgs->verbose) {
-    print_footer(d, k, sol, w, info, total_lin_sys_time, total_cone_time,
-                 total_accel_time);
+    print_footer(info);
   }
 
   scs_end_interrupt_listener();
