@@ -64,4 +64,16 @@ the following fields.
    * - :code:`rejected_accel_steps`
      - :code:`scs_int`
      - Number of times an AA update was rejected by the safeguarding check (see :ref:`acceleration`)
+   * - :code:`accepted_accel_steps`
+     - :code:`scs_int`
+     - Number of times an AA update was accepted by the safeguarding check (see :ref:`acceleration`)
+   * - :code:`lin_sys_time`
+     - :code:`scs_float`
+     - Total time (milliseconds) spent in the :ref:`linear system solver <linear_solver>`
+   * - :code:`cone_time`
+     - :code:`scs_float`
+     - Total time (milliseconds) spent in the :ref:`cone projection <cones>`
+   * - :code:`accel_time`
+     - :code:`scs_float`
+     - Total time (milliseconds) spent in the :ref:`aceleration routine <acceleration>`
 

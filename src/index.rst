@@ -15,8 +15,9 @@
   **A fast, reliable, and open-source convex cone solver.**
 
 SCS (Splitting Conic Solver) is a numerical optimization package for solving
-large-scale quadratic cone problems. The code is freely available on `GitHub
-<https://github.com/cvxgrp/scs>`_.  It solves primal-dual problems of the form
+large-scale convex quadratic cone problems. The code is freely available on
+`GitHub <https://github.com/cvxgrp/scs>`_.  It solves primal-dual problems of
+the form
 
 .. math::
   \begin{array}{lcr}
@@ -85,7 +86,7 @@ Features
 * **Interfaces**: Bindings for many :ref:`languages <interfaces>`, including C, Python, Julia, R, MATLAB, and Ruby.
 * **Warm starts**: Easily :ref:`warm-started <warm_start>`, and the matrix factorization can be cached.
 * **Matrix-free**: Optionally use an :ref:`indirect linear system solver <indirect>`, or a :ref:`GPU version <gpu_indirect>`.
-* **Supported**: A supported solver in parser-solvers `CVX <http://cvxr.com/cvx/>`_, `CVXPY <https://github.com/cvxgrp/cvxpy>`_, `YALMIP <https://github.com/johanlofberg/YALMIP>`_, `Convex.jl <https://github.com/jump-dev/Convex.jl>`_  and `JuMP <https://github.com/jump-dev/JuMP.jl>`_.
+* **Supported**: A supported solver in `CVX <http://cvxr.com/cvx/>`_, `CVXPY <https://github.com/cvxgrp/cvxpy>`_, `YALMIP <https://github.com/johanlofberg/YALMIP>`_, `Convex.jl <https://github.com/jump-dev/Convex.jl>`_  and `JuMP <https://github.com/jump-dev/JuMP.jl>`_.
 * **Accelerated**: Includes :ref:`acceleration <acceleration>` that can improve convergence to high accuracy.
 * **Battle-tested**: The first ADMM-based solver available, and in wide usage.
 

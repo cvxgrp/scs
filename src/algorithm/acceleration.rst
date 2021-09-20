@@ -141,14 +141,16 @@ so that we can test it without fully exposing it the user).
 
 The setting :code:`acceleration_interval` controls how frequently AA is applied.
 If :code:`acceleration_interval` :math:`=k` for some integer :math:`k \geq 1`
-then AA is applied every :math:`k` iterations (AA simply ignores the intermediate
-iterations). This has the benefit of making AA :math:`k` times faster
-to apply and approximating a :math:`k` times larger memory. More work is needed
-to determine the optimal setting for this parameter.
+then AA is applied every :math:`k` iterations (AA simply ignores the
+intermediate iterations). This has the benefit of making AA :math:`k` times
+faster and approximating a :math:`k` times larger memory, as well as improving
+numerical stability by 'decorrelating' the data. On the other hand, older
+iterates might be stale.  More work is needed to determine the optimal setting
+for this parameter.
 
 The details about how the linear systems are solved and updated is abstracted
-away into the AA package. Exactly how best to solve and update the equations
-is still open.
+away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
+how best to solve and update the equations is still open.
 
 Regularization
 """"""""""""""
@@ -170,7 +172,10 @@ matrices are invertible and helps stability. In practice type-I tends to require
 more regularization than type-II for good performance. The regularization
 shrinks the AA update towards the update without AA, since if
 :math:`\epsilon\rightarrow\infty` then :math:`\gamma^\star = 0` and the AA step
-reduces to :math:`x^{k+1} = f(x^k)`.
+reduces to :math:`x^{k+1} = f(x^k)`. Note that the regularization can be folded
+into the matrices by appending :math:`\sqrt{\epsilon} I` to the bottom of
+:math:`S_k` or :math:`Y_k`, which is useful when using a QR or SVD decomposition
+to solve the equations.
 
 Max :math:`\gamma` norm
 """""""""""""""""""""""
@@ -178,7 +183,7 @@ As the algorithm converges to the fixed point the matrices to be inverted
 can become ill-conditioned and AA can become unstable. In this case the
 :math:`\gamma` vector can become very large. As a simple heuristic we reject
 the AA update and reset the AA state whenever :math:`\|\gamma\|_2` is greater
-than :code:`max_weight_norm` (eg, :math:`10^4`).
+than :code:`max_weight_norm` (eg, something very large like :math:`10^10`).
 
 
 Safeguarding

@@ -215,13 +215,15 @@ negative value, the sign is interpreted as switching the AA type (this is mostly
 so that we can test it without fully exposing it the user).</p>
 <p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> controls how frequently AA is applied.
 If <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> <span class="math notranslate nohighlight">\(=k\)</span> for some integer <span class="math notranslate nohighlight">\(k \geq 1\)</span>
-then AA is applied every <span class="math notranslate nohighlight">\(k\)</span> iterations (AA simply ignores the intermediate
-iterations). This has the benefit of making AA <span class="math notranslate nohighlight">\(k\)</span> times faster
-to apply and approximating a <span class="math notranslate nohighlight">\(k\)</span> times larger memory. More work is needed
-to determine the optimal setting for this parameter.</p>
+then AA is applied every <span class="math notranslate nohighlight">\(k\)</span> iterations (AA simply ignores the
+intermediate iterations). This has the benefit of making AA <span class="math notranslate nohighlight">\(k\)</span> times
+faster and approximating a <span class="math notranslate nohighlight">\(k\)</span> times larger memory, as well as improving
+numerical stability by ‘decorrelating’ the data. On the other hand, older
+iterates might be stale.  More work is needed to determine the optimal setting
+for this parameter.</p>
 <p>The details about how the linear systems are solved and updated is abstracted
-away into the AA package. Exactly how best to solve and update the equations
-is still open.</p>
+away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
+how best to solve and update the equations is still open.</p>
 <div class="section" id="regularization">
 <h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this headline"></a></h3>
 <p>By default we also add a small amount of regularization to the matrices
@@ -237,7 +239,10 @@ matrices are invertible and helps stability. In practice type-I tends to require
 more regularization than type-II for good performance. The regularization
 shrinks the AA update towards the update without AA, since if
 <span class="math notranslate nohighlight">\(\epsilon\rightarrow\infty\)</span> then <span class="math notranslate nohighlight">\(\gamma^\star = 0\)</span> and the AA step
-reduces to <span class="math notranslate nohighlight">\(x^{k+1} = f(x^k)\)</span>.</p>
+reduces to <span class="math notranslate nohighlight">\(x^{k+1} = f(x^k)\)</span>. Note that the regularization can be folded
+into the matrices by appending <span class="math notranslate nohighlight">\(\sqrt{\epsilon} I\)</span> to the bottom of
+<span class="math notranslate nohighlight">\(S_k\)</span> or <span class="math notranslate nohighlight">\(Y_k\)</span>, which is useful when using a QR or SVD decomposition
+to solve the equations.</p>
 </div>
 <div class="section" id="max-gamma-norm">
 <h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this headline"></a></h3>
@@ -245,7 +250,7 @@ reduces to <span class="math notranslate nohighlight">\(x^{k+1} = f(x^k)\)</span
 can become ill-conditioned and AA can become unstable. In this case the
 <span class="math notranslate nohighlight">\(\gamma\)</span> vector can become very large. As a simple heuristic we reject
 the AA update and reset the AA state whenever <span class="math notranslate nohighlight">\(\|\gamma\|_2\)</span> is greater
-than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, <span class="math notranslate nohighlight">\(10^4\)</span>).</p>
+than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, something very large like <span class="math notranslate nohighlight">\(10^10\)</span>).</p>
 </div>
 <div class="section" id="safeguarding">
 <h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this headline"></a></h3>

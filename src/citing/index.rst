@@ -25,7 +25,7 @@ If you wish to cite SCS, please use any of the following:
         }
 
   Latest extension
-      The paper that derived the extension to quadratics and describes the 'modern' version of the algorithm is available `here <https://arxiv.org/abs/2004.02177>`__.
+      The paper that derived the extension to quadratics and describes the latest version of the algorithm is available `here <https://arxiv.org/abs/2004.02177>`__.
 
       .. code:: latex
 
