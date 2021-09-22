@@ -11,6 +11,8 @@ Data matrices
 
 * The matrix :math:`P` must be symmetric positive semidefinite and only the **upper triangular** part of :math:`P` should be passed in.
 
+* If :math:`P = 0` for your problem then you can set the :code:`P` entry to NULL in the :ref:`ScsData` struct. :math:`A` must always be non-NULL.
+
 See the :ref:`ScsMatrix struct <ScsMatrix>` for the concrete implementation in
 the C api.
 

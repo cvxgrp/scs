@@ -96,6 +96,7 @@
 <li><p>The order of the rows of <span class="math notranslate nohighlight">\(A\)</span> must be in the order that the cones appear in the <a class="reference internal" href="cones.html#cones"><span class="std std-ref">cones table</span></a>.</p></li>
 <li><p>The rows of <span class="math notranslate nohighlight">\(A\)</span> corresponding to semidefinite cones (as well as the rows of <span class="math notranslate nohighlight">\(b\)</span>) must be handled carefully, as described in <a class="reference internal" href="cones.html#sdcone"><span class="std std-ref">Semidefinite cones</span></a>.</p></li>
 <li><p>The matrix <span class="math notranslate nohighlight">\(P\)</span> must be symmetric positive semidefinite and only the <strong>upper triangular</strong> part of <span class="math notranslate nohighlight">\(P\)</span> should be passed in.</p></li>
+<li><p>If <span class="math notranslate nohighlight">\(P = 0\)</span> for your problem then you can set the <code class="code docutils literal notranslate"><span class="pre">P</span></code> entry to NULL in the <a class="reference internal" href="c.html#scsdata"><span class="std std-ref">Data</span></a> struct. <span class="math notranslate nohighlight">\(A\)</span> must always be non-NULL.</p></li>
 </ul>
 <p>See the <a class="reference internal" href="c.html#scsmatrix"><span class="std std-ref">ScsMatrix struct</span></a> for the concrete implementation in
 the C api.</p>
