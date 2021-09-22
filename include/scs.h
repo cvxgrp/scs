@@ -21,98 +21,100 @@ typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
  *  format with zero based indexing.
  */
 typedef struct {
-  /** matrix values, size: number of non-zeros */
+  /** Matrix values, size: number of non-zeros. */
   scs_float *x;
-  /** matrix row indices, size: number of non-zeros */
+  /** Matrix row indices, size: number of non-zeros. */
   scs_int *i;
-  /** matrix column pointers, size: `n+1` */
+  /** Matrix column pointers, size: `n+1`. */
   scs_int *p;
-  /** number of rows */
+  /** Number of rows. */
   scs_int m;
-  /** number of columns */
+  /** Number of columns. */
   scs_int n;
 } ScsMatrix;
 
 /** Struct containing all settings. */
 typedef struct {
-  /** whether to heuristically rescale the data before solve */
+  /** Whether to heuristically rescale the data before solve. */
   scs_int normalize;
-  /** initial dual scaling factor (may be updated if adaptive_scale is on) */
+  /** Initial dual scaling factor (may be updated if adaptive_scale is on). */
   scs_float scale;
-  /** whether to adaptively update `scale` */
+  /** Whether to adaptively update `scale`. */
   scs_int adaptive_scale;
-  /** primal constraint scaling factor */
+  /** Primal constraint scaling factor. */
   scs_float rho_x;
-  /** maximum iterations to take */
+  /** Maximum iterations to take. */
   scs_int max_iters;
-  /** absolute convergence tolerance */
+  /** Absolute convergence tolerance. */
   scs_float eps_abs;
-  /** relative convergence tolerance */
+  /** Relative convergence tolerance. */
   scs_float eps_rel;
-  /** infeasible convergence tolerance */
+  /** Infeasible convergence tolerance. */
   scs_float eps_infeas;
-  /** Douglas-Rachford relaxation parameter */
+  /** Douglas-Rachford relaxation parameter. */
   scs_float alpha;
-  /** time limit in secs (can be fractional) */
+  /** Time limit in secs (can be fractional). */
   scs_float time_limit_secs;
-  /** whether to log progress to stdout */
+  /** Whether to log progress to stdout. */
   scs_int verbose;
-  /** whether to use warm start (put initial guess in ScsSolution struct) */
+  /** Whether to use warm start (put initial guess in ScsSolution struct). */
   scs_int warm_start;
-  /** memory for acceleration */
+  /** Memory for acceleration. */
   scs_int acceleration_lookback;
-  /** interval to apply acceleration */
+  /** Interval to apply acceleration. */
   scs_int acceleration_interval;
-  /** string, if set will dump raw prob data to this file */
+  /** String, if set will dump raw prob data to this file. */
   const char *write_data_filename;
-  /** string, if set will log solve data to this csv file (slows solve a lot) */
+  /** String, if set will log data to this csv file (makes SCS very slow). */
   const char *log_csv_filename;
 } ScsSettings;
 
 /** Struct containing problem data. */
 typedef struct {
-  /** A has `m` rows */
+  /** A has `m` rows. */
   scs_int m;
-  /** A has `n` cols, P has `n` cols and `n` rows */
+  /** A has `n` cols, P has `n` cols and `n` rows. */
   scs_int n;
-  /** A is supplied in CSC format (size `m` x `n`) */
+  /** A is supplied in CSC format (size `m` x `n`). */
   ScsMatrix *A;
-  /** P is supplied in CSC format, must be upper triangular  (size `n` x `n`) */
+  /** P is supplied in CSC format (size `n` x `n`), must be symmetric positive
+   * semidefinite. Only pass in the upper triangular entries. If `P = 0` then
+   * set `P = SCS_NULL`. */
   ScsMatrix *P;
-  /** dense array for b (size `m`) */
+  /** Dense array for b (size `m`). */
   scs_float *b;
-  /** dense array for c (size `n`) */
+  /** Dense array for c (size `n`). */
   scs_float *c;
 } ScsData;
 
 /** Cone data. Rows of data matrix `A` must be specified in this exact order. */
 typedef struct {
-  /** number of linear equality constraints (primal zero, dual free) */
+  /** Number of linear equality constraints (primal zero, dual free). */
   scs_int z;
-  /** number of positive orthant cones */
+  /** Number of positive orthant cones. */
   scs_int l;
-  /** upper box values, `len(bu) = len(bl) = max(bsize-1, 0)` */
+  /** Upper box values, `len(bu) = len(bl) = max(bsize-1, 0)`. */
   scs_float *bu;
-  /** lower box values, `len(bu) = len(bl) = max(bsize-1, 0)` */
+  /** Lower box values, `len(bu) = len(bl) = max(bsize-1, 0)`. */
   scs_float *bl;
-  /** total length of box cone (includes scale `t`) */
+  /** Total length of box cone (includes scale `t`). */
   scs_int bsize;
-  /** array of second-order cone constraints */
+  /** Array of second-order cone constraints. */
   scs_int *q;
-  /** length of SOC array */
+  /** Length of second-order cone array `q`. */
   scs_int qsize;
-  /** array of semidefinite cone constraints */
+  /** Array of semidefinite cone constraints. */
   scs_int *s;
-  /** length of semidefinite constraints array */
+  /** Length of semidefinite constraints array `s`. */
   scs_int ssize;
-  /** number of primal exponential cone triples */
+  /** Number of primal exponential cone triples. */
   scs_int ep;
-  /** number of dual exponential cone triples */
+  /** Number of dual exponential cone triples. */
   scs_int ed;
-  /** array of power cone params, must be in `[-1, 1]`, negative values are
-   * interpreted as specifying the dual cone */
+  /** Array of power cone params, must be in `[-1, 1]`, negative values are
+   * interpreted as specifying the dual cone. */
   scs_float *p;
-  /** number of (primal and dual) power cone triples */
+  /** Number of (primal and dual) power cone triples. */
   scs_int psize;
 } ScsCone;
 
@@ -120,57 +122,57 @@ typedef struct {
  *  Check the exit flag to determine whether this contains a solution or a
  *  certificate. */
 typedef struct {
-  /** primal variable */
+  /** Primal variable. */
   scs_float *x;
-  /** dual variable */
+  /** Dual variable. */
   scs_float *y;
-  /** slack variable */
+  /** Slack variable. */
   scs_float *s;
 } ScsSolution;
 
 /** Contains information about the solve run at termination. */
 typedef struct {
-  /** number of iterations taken */
+  /** Number of iterations taken. */
   scs_int iter;
-  /** status string, e.g. 'solved' */
+  /** Status string, e.g. 'solved'. */
   char status[128];
-  /** status as scs_int, defined in glbopts.h */
+  /** Status as scs_int, defined in glbopts.h. */
   scs_int status_val;
-  /** number of updates to scale */
+  /** Number of updates to scale. */
   scs_int scale_updates;
-  /** primal objective */
+  /** Primal objective. */
   scs_float pobj;
-  /** dual objective */
+  /** Dual objective. */
   scs_float dobj;
-  /** primal equality residual */
+  /** Primal equality residual. */
   scs_float res_pri;
-  /** dual equality residual */
+  /** Dual equality residual. */
   scs_float res_dual;
-  /** duality gap */
+  /** Duality gap. */
   scs_float gap;
-  /** infeasibility cert residual */
+  /** Infeasibility cert residual. */
   scs_float res_infeas;
-  /** unbounded cert residual */
+  /** Unbounded cert residual. */
   scs_float res_unbdd_a;
-  /** unbounded cert residual */
+  /** Unbounded cert residual. */
   scs_float res_unbdd_p;
-  /** time taken for setup phase (milliseconds) */
+  /** Time taken for setup phase (milliseconds). */
   scs_float setup_time;
-  /** time taken for solve phase (milliseconds) */
+  /** Time taken for solve phase (milliseconds). */
   scs_float solve_time;
-  /** (final) scale parameter */
+  /** Final scale parameter. */
   scs_float scale;
-  /** complementary slackness */
+  /** Complementary slackness. */
   scs_float comp_slack;
-  /** number of rejected AA steps */
+  /** Number of rejected AA steps. */
   scs_int rejected_accel_steps;
-  /** number of accepted AA steps */
+  /** Number of accepted AA steps. */
   scs_int accepted_accel_steps;
-  /** total time (milliseconds) spent in the linear system solver */
+  /** Total time (milliseconds) spent in the linear system solver. */
   scs_float lin_sys_time;
-  /** total time (milliseconds) spent in the cone projection */
+  /** Total time (milliseconds) spent in the cone projection. */
   scs_float cone_time;
-  /** total time (milliseconds) spent in the acceleration routine */
+  /** Total time (milliseconds) spent in the acceleration routine. */
   scs_float accel_time;
 } ScsInfo;
 
@@ -260,23 +262,23 @@ typedef struct {
  * - setup linear system solver:
  *      - direct solver: KKT matrix factorization is performed here
  *      - indirect solver: KKT matrix preconditioning is performed here
- * - solve the linear system for the `r` vector in the paper
+ * - solve the linear system for the `r` vector in the paper.
  *
  *
- * @param  d 		 Problem data
- * @param  k 		 Cone data
- * @param  stgs  SCS solver settings
- * @return       Solver work struct
+ * @param  d 		 Problem data.
+ * @param  k 		 Cone data.
+ * @param  stgs  SCS solver settings.
+ * @return       Solver work struct.
  */
 ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
  * Solve quadratic cone program initialized by SCS(init).
  *
- * @param  w     Workspace allocated by init
- * @param  sol 	 Solver solution struct, will contain solution at termination
- * @param  info  Solver info reporting
- * @return       Flag containing problem status (see \a glbopts.h)
+ * @param  w     Workspace allocated by init.
+ * @param  sol 	 Solver solution struct, will contain solution at termination.
+ * @param  info  Solver info reporting.
+ * @return       Flag containing problem status (see \a glbopts.h).
  */
 scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info);
 
@@ -292,12 +294,12 @@ void SCS(finish)(ScsWork *w);
  *
  * All the inputs must already be allocated in memory before calling.
  *
- * @param  d 		 Problem data
- * @param  k 		 Cone data
- * @param  stgs  SCS solver settings
- * @param  sol   Solution will be stored here
- * @param  info  Information about the solve will be stored here
- * @return       Flag that determines solve type (see \a glbopts.h)
+ * @param  d 		 Problem data.
+ * @param  k 		 Cone data.
+ * @param  stgs  SCS solver settings.
+ * @param  sol   Solution will be stored here.
+ * @param  info  Information about the solve will be stored here.
+ * @return       Flag that determines solve type (see \a glbopts.h).
  */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
@@ -305,7 +307,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
 /**
  * Helper function to set all settings to default values (see \a glbopts.h).
  *
- * @param  stgs  Settings struct that will be populated
+ * @param  stgs  Settings struct that will be populated.
  */
 void SCS(set_default_settings)(ScsSettings *stgs);
 
