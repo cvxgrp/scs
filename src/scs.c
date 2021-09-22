@@ -436,7 +436,7 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   return status;
 }
 
-static void sety(ScsWork *w, ScsSolution *sol) {
+static void sety(const ScsWork *w, ScsSolution *sol) {
   if (!sol->y) {
     sol->y = (scs_float *)scs_calloc(w->m, sizeof(scs_float));
   }
@@ -444,39 +444,34 @@ static void sety(ScsWork *w, ScsSolution *sol) {
 }
 
 /* s is contained in rsk */
-static void sets(ScsWork *w, ScsSolution *sol) {
+static void sets(const ScsWork *w, ScsSolution *sol) {
   if (!sol->s) {
     sol->s = (scs_float *)scs_calloc(w->m, sizeof(scs_float));
   }
   memcpy(sol->s, &(w->rsk[w->n]), w->m * sizeof(scs_float));
 }
 
-static void setx(ScsWork *w, ScsSolution *sol) {
+static void setx(const ScsWork *w, ScsSolution *sol) {
   if (!sol->x) {
     sol->x = (scs_float *)scs_calloc(w->n, sizeof(scs_float));
   }
   memcpy(sol->x, w->u, w->n * sizeof(scs_float));
 }
 
-static void set_solved(ScsWork *w, ScsSolution *sol, ScsInfo *info,
-                       scs_int iter) {
+static void set_solved(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   SCS(scale_array)(sol->x, SAFEDIV_POS(1.0, w->r_orig->tau), w->n);
   SCS(scale_array)(sol->y, SAFEDIV_POS(1.0, w->r_orig->tau), w->m);
   SCS(scale_array)(sol->s, SAFEDIV_POS(1.0, w->r_orig->tau), w->m);
+  info->gap = w->r_orig->gap;
   info->res_pri = w->r_orig->res_pri;
   info->res_dual = w->r_orig->res_dual;
   info->pobj = w->r_orig->xt_p_x / 2. + w->r_orig->ctx;
   info->dobj = -w->r_orig->xt_p_x / 2. - w->r_orig->bty;
-  if (info->status_val == SCS_UNFINISHED) {
-    strcpy(info->status, "solved (inaccurate)");
-    info->status_val = SCS_SOLVED_INACCURATE;
-  } else {
-    strcpy(info->status, "solved");
-    info->gap = w->r_orig->gap;
-  }
+  strcpy(info->status, "solved");
+  info->status_val = SCS_SOLVED;
 }
 
-static void set_infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+static void set_infeasible(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   SCS(scale_array)(sol->y, -1 / w->r_orig->bty_tau, w->m);
   SCS(scale_array)(sol->x, NAN, w->n);
   SCS(scale_array)(sol->s, NAN, w->m);
@@ -485,16 +480,11 @@ static void set_infeasible(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   info->res_dual = NAN;
   info->pobj = INFINITY;
   info->dobj = INFINITY;
-  if (info->status_val == SCS_UNFINISHED) {
-    strcpy(info->status, "infeasible (inaccurate)");
-    info->status_val = SCS_INFEASIBLE_INACCURATE;
-  } else {
-    strcpy(info->status, "infeasible");
-    info->status_val = SCS_INFEASIBLE;
-  }
+  strcpy(info->status, "infeasible");
+  info->status_val = SCS_INFEASIBLE;
 }
 
-static void set_unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+static void set_unbounded(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   SCS(scale_array)(sol->x, -1 / w->r_orig->ctx_tau, w->n);
   SCS(scale_array)(sol->s, -1 / w->r_orig->ctx_tau, w->m);
   SCS(scale_array)(sol->y, NAN, w->m);
@@ -503,12 +493,29 @@ static void set_unbounded(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   info->res_dual = NAN;
   info->pobj = -INFINITY;
   info->dobj = -INFINITY;
-  if (info->status_val == SCS_UNFINISHED) {
-    strcpy(info->status, "unbounded (inaccurate)");
-    info->status_val = SCS_UNBOUNDED_INACCURATE;
+  strcpy(info->status, "unbounded");
+  info->status_val = SCS_UNBOUNDED;
+}
+
+/* not yet converged, take best guess */
+static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+  if (w->r_orig->tau > w->r_orig->kap) {
+    set_solved(w, sol, info);
+    info->status_val = SCS_SOLVED_INACCURATE;
+  } else if (w->r_orig->bty_tau < w->r_orig->ctx_tau) {
+    set_infeasible(w, sol, info);
+    info->status_val = SCS_INFEASIBLE_INACCURATE;
   } else {
-    strcpy(info->status, "unbounded");
-    info->status_val = SCS_UNBOUNDED;
+    set_unbounded(w, sol, info);
+    info->status_val = SCS_UNBOUNDED_INACCURATE;
+  }
+  /* Append inaccurate to the status string */
+  if (w->time_limit_reached) {
+    strcat(info->status, " (inaccurate - reached time_limit_secs)");
+  } else if (info->iter >= w->stgs->max_iters) {
+    strcat(info->status, " (inaccurate - reached max_iters)");
+  } else {
+    scs_printf("ERROR: should not be in this state (1).\n");
   }
 }
 
@@ -539,7 +546,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   }
   switch (info->status_val) {
   case SCS_SOLVED:
-    set_solved(w, sol, info, iter);
+    set_solved(w, sol, info);
     break;
   case SCS_INFEASIBLE:
     set_infeasible(w, sol, info);
@@ -547,18 +554,11 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   case SCS_UNBOUNDED:
     set_unbounded(w, sol, info);
     break;
-  case SCS_UNFINISHED:
-    /* not yet converged, take best guess */
-    if (w->r_orig->tau > w->r_orig->kap) {
-      set_solved(w, sol, info, iter);
-    } else if (w->r_orig->bty_tau < w->r_orig->ctx_tau) {
-      set_infeasible(w, sol, info);
-    } else {
-      set_unbounded(w, sol, info);
-    }
+  case SCS_UNFINISHED: /* When SCS reaches max_iters or time_limit_secs */
+    set_unfinished(w, sol, info);
     break;
   default:
-    scs_printf("ERROR: should not be in this state (1).\n");
+    scs_printf("ERROR: should not be in this state (2).\n");
   }
 }
 
@@ -1049,7 +1049,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       }
       if (w->stgs->time_limit_secs) {
         if (SCS(tocq)(&solve_timer) > 1000. * w->stgs->time_limit_secs) {
-          scs_printf("Reached time limit. Returning approximate solution.\n");
           w->time_limit_reached = 1;
           break;
         }

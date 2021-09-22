@@ -133,7 +133,7 @@ typedef struct {
   /** number of iterations taken */
   scs_int iter;
   /** status string, e.g. 'solved' */
-  char status[64];
+  char status[128];
   /** status as scs_int, defined in glbopts.h */
   scs_int status_val;
   /** number of updates to scale */
