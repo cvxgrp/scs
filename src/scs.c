@@ -1010,14 +1010,13 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       total_accel_time += SCS(tocq)(&accel_timer);
     }
 
-    /* this should this be *after* applying any acceleration */
-    /* the input to the DR step should be normalized */
-
     if (i >= FEASIBLE_ITERS) {
+      /* normalize v *after* applying any acceleration */
+      /* the input to the DR step should be normalized */
       normalize_v(w->v, l);
     }
 
-    /* store v_prev = v */
+    /* store v_prev = v, *after* normalizing */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
     /* linear system solve */
@@ -1050,6 +1049,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       }
       if (w->stgs->time_limit_secs) {
         if (SCS(tocq)(&solve_timer) > 1000. * w->stgs->time_limit_secs) {
+          scs_printf("Reached time limit. Returning approximate solution.\n");
           w->time_limit_reached = 1;
           break;
         }
@@ -1063,6 +1063,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
      */
     if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
       if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
+        /* TODO should we copy u from u_prev here too? Then move above, possibly
+         * better residual calculation and scale updating. */
         w->rejected_accel_steps++;
       } else {
         w->accepted_accel_steps++;
