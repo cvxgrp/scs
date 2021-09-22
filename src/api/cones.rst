@@ -65,7 +65,7 @@ Semidefinite cones
 The symmetric positive semidefinite cone of matrices is the set
 
 .. math::
-   \{S \in \mathbf{R}^{k \times k} \mid x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}
+   \{S \in \mathbf{R}^{k \times k} \mid  S = S^\top,  x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}
 
 and for short we use :math:`S \succeq 0` to denote membership. SCS
 vectorizes this cone in a special way which we detail here.

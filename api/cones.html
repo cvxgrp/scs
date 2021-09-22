@@ -169,7 +169,7 @@ those that correspond to the positive orthants, then the box cone, etc.</p>
 <span id="sdcone"></span><h2>Semidefinite cones<a class="headerlink" href="#semidefinite-cones" title="Permalink to this headline"></a></h2>
 <p>The symmetric positive semidefinite cone of matrices is the set</p>
 <div class="math notranslate nohighlight">
-\[\{S \in \mathbf{R}^{k \times k} \mid x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}\]</div>
+\[\{S \in \mathbf{R}^{k \times k} \mid  S = S^\top,  x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}\]</div>
 <p>and for short we use <span class="math notranslate nohighlight">\(S \succeq 0\)</span> to denote membership. SCS
 vectorizes this cone in a special way which we detail here.</p>
 <p>SCS assumes that the input data corresponding to
