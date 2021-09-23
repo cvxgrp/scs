@@ -668,7 +668,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   SCS(print_array)(bl, bsize - 1, "l");
   SCS(print_array)(tx, bsize, "tx");
 #endif
-  /* should only require about 5 or so iterations */
+  /* should only require about 5 or so iterations, 1 or 2 if warm-started */
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
     gt = t - tx[0]; /* gradient */
