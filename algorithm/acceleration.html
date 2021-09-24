@@ -110,7 +110,7 @@
 convergence. AA is a quasi-Newton method for the acceleration of fixed point
 iterations and can dramatically speed up convergence in practice, especially if
 higher accuracy solutions are desired. However, it can also cause severe
-instability of the solver and so it is disabled by default. It is an open
+instability of the solver and so should be used with caution. It is an open
 research question how to best implement AA in practice to ensure good
 performance across all problems and we welcome any <a class="reference internal" href="../contributing/index.html#contributing"><span class="std std-ref">contributions</span></a> in that direction!</p>
 <div class="section" id="mathematical-details">
@@ -169,48 +169,48 @@ Y_k)^{-1}Y_k^\top g_k\)</span>, and hence by the relation between <span class="m
 x^{k+1}&amp;=f(x^k)-\sum_{i=0}^{m_k-1}\gamma_i^k\left(f(x^{k-m_k+i+1})- f(x^{k-m_k+i})\right)\\
 &amp;=x^k-g_k-(S_k-Y_k)\gamma^k\\
 &amp;=x^k-(I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top )g_k\\
-&amp;=x^k-H_kg_k,
+&amp;=x^k-B_kg_k,
 \end{align}\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(S_k=[s_{k-m_k}~\dots~s_{k-1}]\)</span>, <span class="math notranslate nohighlight">\(s_i=x^{i+1}-x^i\)</span> for each
 <span class="math notranslate nohighlight">\(i\)</span>, and</p>
 <div class="math notranslate nohighlight">
-\[H_k=I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top\]</div>
-<p>Observe that <span class="math notranslate nohighlight">\(H_k\)</span> minimizes <span class="math notranslate nohighlight">\(\|H_k-I\|_F\)</span> subject to
-the inverse multi-secant condition <span class="math notranslate nohighlight">\(H_kY_k=S_k\)</span>, and hence can be regarded
+\[B_k=I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top\]</div>
+<p>Observe that <span class="math notranslate nohighlight">\(B_k\)</span> minimizes <span class="math notranslate nohighlight">\(\|B_k-I\|_F\)</span> subject to
+the inverse multi-secant condition <span class="math notranslate nohighlight">\(B_kY_k=S_k\)</span>, and hence can be regarded
 as an approximate inverse Jacobian of <span class="math notranslate nohighlight">\(g\)</span>. The update of <span class="math notranslate nohighlight">\(x^k\)</span> can
-then be considered as a quasi-Newton-type update, with <span class="math notranslate nohighlight">\(H_k\)</span> being
+then be considered as a quasi-Newton-type update, with <span class="math notranslate nohighlight">\(B_k\)</span> being
 a generalized second (or type-II) Broyden’s update of <span class="math notranslate nohighlight">\(I\)</span> satisfying
 the inverse multi-secant condition.</p>
 </div>
 <div class="section" id="type-i-aa">
 <h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Permalink to this headline"></a></h3>
 <p>In the same spirit, we define type-I AA, in which we find an approximate
-Jacobian of <span class="math notranslate nohighlight">\(g\)</span> minimizing <span class="math notranslate nohighlight">\(\|B_k-I\|_F\)</span> subject to the multi-secant
-condition <span class="math notranslate nohighlight">\(B_kS_k=Y_k\)</span>. Assuming that <span class="math notranslate nohighlight">\(S_k\)</span> is full column rank, we
+Jacobian of <span class="math notranslate nohighlight">\(g\)</span> minimizing <span class="math notranslate nohighlight">\(\|H_k-I\|_F\)</span> subject to the multi-secant
+condition <span class="math notranslate nohighlight">\(H_kS_k=Y_k\)</span>. Assuming that <span class="math notranslate nohighlight">\(S_k\)</span> is full column rank, we
 obtain (by symmetry) that</p>
 <div class="math notranslate nohighlight">
-\[B_k=I+(Y_k-S_k)(S_k^\top S_k)^{-1}S_k^\top\]</div>
+\[H_k=I+(Y_k-S_k)(S_k^\top S_k)^{-1}S_k^\top\]</div>
 <p>and the update scheme is defined as</p>
 <div class="math notranslate nohighlight">
-\[x^{k+1}=x^k-B_k^{-1}g_k\]</div>
-<p>assuming <span class="math notranslate nohighlight">\(B_k\)</span> to be invertible. A direct application of the Woodbury
+\[x^{k+1}=x^k-H_k^{-1}g_k\]</div>
+<p>assuming <span class="math notranslate nohighlight">\(H_k\)</span> to be invertible. A direct application of the Woodbury
 matrix identity shows that</p>
 <div class="math notranslate nohighlight">
-\[B_k^{-1}=I+(S_k-Y_k)(S_k^\top Y_k)^{-1}S_k^\top\]</div>
+\[H_k^{-1}=I+(S_k-Y_k)(S_k^\top Y_k)^{-1}S_k^\top\]</div>
 <p>where again we have assumed that <span class="math notranslate nohighlight">\(S_k^\top Y_k\)</span> is invertible.  Notice
-that this explicit formula of <span class="math notranslate nohighlight">\(B_k^{-1}\)</span> is preferred in that the most
+that this explicit formula of <span class="math notranslate nohighlight">\(H_k^{-1}\)</span> is preferred in that the most
 costly step, inversion, is implemented only on a small <span class="math notranslate nohighlight">\(m_k\times m_k\)</span>
 matrix.</p>
 </div>
 </div>
 <div class="section" id="in-scs">
 <h2>In SCS<a class="headerlink" href="#in-scs" title="Permalink to this headline"></a></h2>
-<p>In SCS both types of acceleration are available, though by default type-II is
-used since it tends to be more stable.  If you wish to enable AA then set the
-<code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well for
-many problems). This setting corresponds to <span class="math notranslate nohighlight">\(m\)</span>, the maximum number of SCS
-iterates that AA will use to extrapolate to the new point.</p>
-<p>To enable type-I acceleration then set <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> to a
+<p>In SCS both types of acceleration are available, though by default type-I is
+used since it tends to have better performance.  If you wish to enable AA then
+set the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well
+for many problems). This setting corresponds to <span class="math notranslate nohighlight">\(m\)</span>, the maximum number of
+SCS iterates that AA will use to extrapolate to the new point.</p>
+<p>To enable type-II acceleration then set <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> to a
 negative value, the sign is interpreted as switching the AA type (this is mostly
 so that we can test it without fully exposing it the user).</p>
 <p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> controls how frequently AA is applied.
@@ -220,7 +220,7 @@ intermediate iterations). This has the benefit of making AA <span class="math no
 faster and approximating a <span class="math notranslate nohighlight">\(k\)</span> times larger memory, as well as improving
 numerical stability by ‘decorrelating’ the data. On the other hand, older
 iterates might be stale.  More work is needed to determine the optimal setting
-for this parameter.</p>
+for this parameter, but 10 appears to work well in practice.</p>
 <p>The details about how the linear systems are solved and updated is abstracted
 away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
 how best to solve and update the equations is still open.</p>
@@ -250,7 +250,7 @@ to solve the equations.</p>
 can become ill-conditioned and AA can become unstable. In this case the
 <span class="math notranslate nohighlight">\(\gamma\)</span> vector can become very large. As a simple heuristic we reject
 the AA update and reset the AA state whenever <span class="math notranslate nohighlight">\(\|\gamma\|_2\)</span> is greater
-than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, something very large like <span class="math notranslate nohighlight">\(10^10\)</span>).</p>
+than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, something very large like <span class="math notranslate nohighlight">\(10^{10}\)</span>).</p>
 </div>
 <div class="section" id="safeguarding">
 <h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this headline"></a></h3>

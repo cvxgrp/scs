@@ -7,7 +7,7 @@ SCS includes Anderson acceleration (AA), which can be used to speed up
 convergence. AA is a quasi-Newton method for the acceleration of fixed point
 iterations and can dramatically speed up convergence in practice, especially if
 higher accuracy solutions are desired. However, it can also cause severe
-instability of the solver and so it is disabled by default. It is an open
+instability of the solver and so should be used with caution. It is an open
 research question how to best implement AA in practice to ensure good
 performance across all problems and we welcome any :ref:`contributions
 <contributing>` in that direction!
@@ -83,19 +83,19 @@ Y_k)^{-1}Y_k^\top g_k`, and hence by the relation between :math:`\alpha^k` and
   x^{k+1}&=f(x^k)-\sum_{i=0}^{m_k-1}\gamma_i^k\left(f(x^{k-m_k+i+1})- f(x^{k-m_k+i})\right)\\
   &=x^k-g_k-(S_k-Y_k)\gamma^k\\
   &=x^k-(I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top )g_k\\
-  &=x^k-H_kg_k,
+  &=x^k-B_kg_k,
   \end{align}
 
 where :math:`S_k=[s_{k-m_k}~\dots~s_{k-1}]`, :math:`s_i=x^{i+1}-x^i` for each
 :math:`i`, and
 
 .. math::
-   H_k=I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top
+   B_k=I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top
 
-Observe that :math:`H_k` minimizes :math:`\|H_k-I\|_F` subject to
-the inverse multi-secant condition :math:`H_kY_k=S_k`, and hence can be regarded
+Observe that :math:`B_k` minimizes :math:`\|B_k-I\|_F` subject to
+the inverse multi-secant condition :math:`B_kY_k=S_k`, and hence can be regarded
 as an approximate inverse Jacobian of :math:`g`. The update of :math:`x^k` can
-then be considered as a quasi-Newton-type update, with :math:`H_k` being
+then be considered as a quasi-Newton-type update, with :math:`B_k` being
 a generalized second (or type-II) Broyden's update of :math:`I` satisfying
 the inverse multi-secant condition.
 
@@ -103,39 +103,39 @@ Type-I AA
 """""""""
 
 In the same spirit, we define type-I AA, in which we find an approximate
-Jacobian of :math:`g` minimizing :math:`\|B_k-I\|_F` subject to the multi-secant
-condition :math:`B_kS_k=Y_k`. Assuming that :math:`S_k` is full column rank, we
+Jacobian of :math:`g` minimizing :math:`\|H_k-I\|_F` subject to the multi-secant
+condition :math:`H_kS_k=Y_k`. Assuming that :math:`S_k` is full column rank, we
 obtain (by symmetry) that
 
 .. math::
-  B_k=I+(Y_k-S_k)(S_k^\top S_k)^{-1}S_k^\top
+  H_k=I+(Y_k-S_k)(S_k^\top S_k)^{-1}S_k^\top
 
 and the update scheme is defined as
 
 .. math::
-  x^{k+1}=x^k-B_k^{-1}g_k
+  x^{k+1}=x^k-H_k^{-1}g_k
 
-assuming :math:`B_k` to be invertible. A direct application of the Woodbury
+assuming :math:`H_k` to be invertible. A direct application of the Woodbury
 matrix identity shows that
 
 .. math::
-  B_k^{-1}=I+(S_k-Y_k)(S_k^\top Y_k)^{-1}S_k^\top
+  H_k^{-1}=I+(S_k-Y_k)(S_k^\top Y_k)^{-1}S_k^\top
 
 where again we have assumed that :math:`S_k^\top Y_k` is invertible.  Notice
-that this explicit formula of :math:`B_k^{-1}` is preferred in that the most
+that this explicit formula of :math:`H_k^{-1}` is preferred in that the most
 costly step, inversion, is implemented only on a small :math:`m_k\times m_k`
 matrix.
 
 In SCS
 ------
 
-In SCS both types of acceleration are available, though by default type-II is
-used since it tends to be more stable.  If you wish to enable AA then set the
-:code:`acceleration_lookback` setting to a non-zero value (10 works well for
-many problems). This setting corresponds to :math:`m`, the maximum number of SCS
-iterates that AA will use to extrapolate to the new point.
+In SCS both types of acceleration are available, though by default type-I is
+used since it tends to have better performance.  If you wish to enable AA then
+set the :code:`acceleration_lookback` setting to a non-zero value (10 works well
+for many problems). This setting corresponds to :math:`m`, the maximum number of
+SCS iterates that AA will use to extrapolate to the new point.
 
-To enable type-I acceleration then set :code:`acceleration_lookback` to a
+To enable type-II acceleration then set :code:`acceleration_lookback` to a
 negative value, the sign is interpreted as switching the AA type (this is mostly
 so that we can test it without fully exposing it the user).
 
@@ -146,7 +146,7 @@ intermediate iterations). This has the benefit of making AA :math:`k` times
 faster and approximating a :math:`k` times larger memory, as well as improving
 numerical stability by 'decorrelating' the data. On the other hand, older
 iterates might be stale.  More work is needed to determine the optimal setting
-for this parameter.
+for this parameter, but 10 appears to work well in practice.
 
 The details about how the linear systems are solved and updated is abstracted
 away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
@@ -183,7 +183,7 @@ As the algorithm converges to the fixed point the matrices to be inverted
 can become ill-conditioned and AA can become unstable. In this case the
 :math:`\gamma` vector can become very large. As a simple heuristic we reject
 the AA update and reset the AA state whenever :math:`\|\gamma\|_2` is greater
-than :code:`max_weight_norm` (eg, something very large like :math:`10^10`).
+than :code:`max_weight_norm` (eg, something very large like :math:`10^{10}`).
 
 
 Safeguarding
