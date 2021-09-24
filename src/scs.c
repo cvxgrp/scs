@@ -1060,7 +1060,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
      * overwriting converged iterate, since safeguard is on `v` and convergence
      * is on `u`.
      */
-    if (w->accel && i > 0 && i % w->stgs->acceleration_interval == 0) {
+    if (w->accel && i % w->stgs->acceleration_interval == 0 && w->aa_norm > 0) {
       if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
         /* TODO should we copy u from u_prev here too? Then move above, possibly
          * better residual calculation and scale updating. */
