@@ -183,7 +183,7 @@ As the algorithm converges to the fixed point the matrices to be inverted
 can become ill-conditioned and AA can become unstable. In this case the
 :math:`\gamma` vector can become very large. As a simple heuristic we reject
 the AA update and reset the AA state whenever :math:`\|\gamma\|_2` is greater
-than :code:`max_weight_norm` (eg, something very large like :math:`10^10`).
+than :code:`max_weight_norm` (eg, something very large like :math:`10^{10}`).
 
 
 Safeguarding
