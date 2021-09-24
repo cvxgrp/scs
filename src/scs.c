@@ -1158,7 +1158,7 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
     SCS(write_data)(d, k, stgs);
   }
   w = init_work(d, k, stgs);
-  w->setup_time = SCS(tocq)(&init_timer);
+  if (w) w->setup_time = SCS(tocq)(&init_timer);
   scs_end_interrupt_listener();
   return w;
 }
