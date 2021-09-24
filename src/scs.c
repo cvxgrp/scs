@@ -858,10 +858,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->rejected_accel_steps = 0;
   w->accepted_accel_steps = 0;
   if (w->stgs->acceleration_lookback) {
-    /* TODO(HACK!) negative acceleration_lookback interpreted as type-I */
+    /* TODO(HACK!) negative acceleration_lookback interpreted as type-II */
     if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
-                             w->stgs->acceleration_lookback < 0,
-                             w->stgs->acceleration_lookback < 0
+                             w->stgs->acceleration_lookback > 0,
+                             w->stgs->acceleration_lookback > 0
                                  ? AA_REGULARIZATION_TYPE_1
                                  : AA_REGULARIZATION_TYPE_2,
                              AA_RELAXATION, AA_SAFEGUARD_FACTOR,

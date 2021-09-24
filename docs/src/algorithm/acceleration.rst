@@ -7,7 +7,7 @@ SCS includes Anderson acceleration (AA), which can be used to speed up
 convergence. AA is a quasi-Newton method for the acceleration of fixed point
 iterations and can dramatically speed up convergence in practice, especially if
 higher accuracy solutions are desired. However, it can also cause severe
-instability of the solver and so it is disabled by default. It is an open
+instability of the solver and so should be used with caution. It is an open
 research question how to best implement AA in practice to ensure good
 performance across all problems and we welcome any :ref:`contributions
 <contributing>` in that direction!
@@ -129,13 +129,13 @@ matrix.
 In SCS
 ------
 
-In SCS both types of acceleration are available, though by default type-II is
-used since it tends to be more stable.  If you wish to enable AA then set the
-:code:`acceleration_lookback` setting to a non-zero value (10 works well for
-many problems). This setting corresponds to :math:`m`, the maximum number of SCS
-iterates that AA will use to extrapolate to the new point.
+In SCS both types of acceleration are available, though by default type-I is
+used since it tends to have better performance.  If you wish to enable AA then
+set the :code:`acceleration_lookback` setting to a non-zero value (10 works well
+for many problems). This setting corresponds to :math:`m`, the maximum number of
+SCS iterates that AA will use to extrapolate to the new point.
 
-To enable type-I acceleration then set :code:`acceleration_lookback` to a
+To enable type-II acceleration then set :code:`acceleration_lookback` to a
 negative value, the sign is interpreted as switching the AA type (this is mostly
 so that we can test it without fully exposing it the user).
 
@@ -146,7 +146,7 @@ intermediate iterations). This has the benefit of making AA :math:`k` times
 faster and approximating a :math:`k` times larger memory, as well as improving
 numerical stability by 'decorrelating' the data. On the other hand, older
 iterates might be stale.  More work is needed to determine the optimal setting
-for this parameter.
+for this parameter, but 10 appears to work well in practice.
 
 The details about how the linear systems are solved and updated is abstracted
 away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
