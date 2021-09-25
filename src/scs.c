@@ -568,7 +568,8 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("%*.2e ", (int)HSPACE, r->res_pri);
   scs_printf("%*.2e ", (int)HSPACE, r->res_dual);
   scs_printf("%*.2e ", (int)HSPACE, r->gap);
-  scs_printf("%*.2e ", (int)HSPACE, r->pobj);
+  /* report mid point of primal and dual objective values */
+  scs_printf("%*.2e ", (int)HSPACE, 0.5 * (r->pobj + r->dobj));
   scs_printf("%*.2e ", (int)HSPACE, w->scale);
   scs_printf("%*.2e ", (int)HSPACE, SCS(tocq)(solve_timer) / 1e3);
   scs_printf("\n");
@@ -635,7 +636,8 @@ static void print_footer(ScsInfo *info) {
     scs_printf("-");
   }
   scs_printf("\n");
-  scs_printf("objective = %.6f", info->pobj);
+  /* report mid point of primal and dual objective values */
+  scs_printf("objective = %.6f", 0.5 * (info->pobj + info->dobj));
   switch (info->status_val) {
   case SCS_SOLVED_INACCURATE:
   case SCS_UNBOUNDED_INACCURATE:
