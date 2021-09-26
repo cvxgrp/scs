@@ -10,6 +10,14 @@
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_MAX_ITERS (20)
 
+/* In the box cone projection we penalize the `t` term additionally by this
+ * factor. This encourages the `t` term to stay close to the incoming `t` term,
+ * which should provide better convergence since typically the `t` term does
+ * not appear in the linear system other than `t = 1`. Setting to 1 is
+ * the vanilla projection.
+ */
+#define BOX_T_SCALE (1.)
+
 /* Box cone limits (+ or -) taken to be INF */
 #define MAX_BOX_VAL (1e15)
 
@@ -34,8 +42,8 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
   scs_int i, count = 0;
   /* f cone */
   for (i = 0; i < k->z; ++i) {
-    /* set rho_y small for z, similar to rho_x term, since z is primal zero
-     * cone, this effectively decreases penalty on those entries
+    /* set rho_y small for z, similar to rho_x term, since z corresponds to
+     * dual free cone, this effectively decreases penalty on those entries
      * and lets them be determined almost entirely by the linear system solve
      */
     rho_y_vec[i] = 1.0 / (1000. * scale);
@@ -45,10 +53,16 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
   for (i = count; i < m; ++i) {
     rho_y_vec[i] = 1.0 / scale;
   }
+
   /* Note, if updating this to use different scales for other cones (e.g. box)
    * then you must be careful to also include the effect of the rho_y_vec
-   * in the actual projection operator.
+   * in the cone projection operator.
    */
+
+  /* Increase rho_y_vec for the t term in the box cone */
+  if (k->bsize) {
+    rho_y_vec[k->z + k->l] *= BOX_T_SCALE;
+  }
 }
 
 static inline scs_int get_sd_cone_size(scs_int s) {
@@ -672,8 +686,9 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   /* should only require about 5 or so iterations, 1 or 2 if warm-started */
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
-    gt = t - tx[0]; /* gradient */
-    ht = 1.;        /* hessian */
+    /* incorporate the additional BOX_T_SCALE factor into the projection */
+    gt = BOX_T_SCALE * (t - tx[0]);       /* gradient */
+    ht = BOX_T_SCALE;                     /* hessian */
     for (j = 0; j < bsize - 1; j++) {
       if (x[j] > t * bu[j]) {
         gt += (t * bu[j] - x[j]) * bu[j]; /* gradient */
