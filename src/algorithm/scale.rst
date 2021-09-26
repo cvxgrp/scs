@@ -123,8 +123,7 @@ of the following quadratic equation:
 Other than when computing :math:`\kappa` (which does not affect the algorithm)
 this is the *only* place where :math:`d` appears, so we have a lot of
 flexibility in how to choose it and it can even change from iteration to
-iteration. It is an open question on how best to select this parameter.  See the
-:code:`dot_with_diag_scaling` function in :code:`src/scs.c`.
+iteration. It is an open question on how best to select this parameter.
 
 .. _updating_scale:
 

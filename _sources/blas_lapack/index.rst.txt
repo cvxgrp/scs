@@ -9,11 +9,10 @@ libraries in two places:
 * To solve the linear system in :ref:`Anderson acceleration <acceleration>`
 
 Therefore compiling with BLAS / LAPACK **is optional**. If you are
-not interested in solving SDPs or using acceleration (which is disabled by
-default) then there is no need to use these libraries. To compile without
-these libraries you can set the :ref:`compiler flag <compile_flags>`
-:code:`USE_LAPACK` to :code:`0`, e.g., if :ref:`installing <install>` using
-:code:`make`:
+not interested in solving SDPs or using acceleration then there is no need to
+use these libraries. To compile without these libraries you can set the
+:ref:`compiler flag <compile_flags>` :code:`USE_LAPACK` to :code:`0`, e.g., if
+:ref:`installing <install>` using :code:`make`:
 
 .. code:: bash
 

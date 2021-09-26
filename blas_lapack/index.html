@@ -87,11 +87,10 @@ libraries in two places:</p>
 <li><p>To solve the linear system in <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a></p></li>
 </ul>
 <p>Therefore compiling with BLAS / LAPACK <strong>is optional</strong>. If you are
-not interested in solving SDPs or using acceleration (which is disabled by
-default) then there is no need to use these libraries. To compile without
-these libraries you can set the <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a>
-<code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code>, e.g., if <a class="reference internal" href="../install/index.html#install"><span class="std std-ref">installing</span></a> using
-<code class="code docutils literal notranslate"><span class="pre">make</span></code>:</p>
+not interested in solving SDPs or using acceleration then there is no need to
+use these libraries. To compile without these libraries you can set the
+<a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code>, e.g., if
+<a class="reference internal" href="../install/index.html#install"><span class="std std-ref">installing</span></a> using <code class="code docutils literal notranslate"><span class="pre">make</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nv">USE_LAPACK</span><span class="o">=</span><span class="m">0</span>
 </pre></div>
 </div>
