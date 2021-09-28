@@ -88,7 +88,27 @@
              
   <div class="section" id="julia">
 <span id="julia-example"></span><h1>Julia<a class="headerlink" href="#julia" title="Permalink to this headline"></a></h1>
-<p>TODO</p>
+<p>The easiest way to use SCS in Julia is via JuMP:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">JuMP</span><span class="p">,</span> <span class="n">SCS</span>
+<span class="n">items</span>  <span class="o">=</span> <span class="p">[</span><span class="ss">:Gold</span><span class="p">,</span> <span class="ss">:Silver</span><span class="p">,</span> <span class="ss">:Bronze</span><span class="p">]</span>
+<span class="n">values</span> <span class="o">=</span> <span class="kt">Dict</span><span class="p">(</span><span class="ss">:Gold</span> <span class="o">=&gt;</span> <span class="mf">5.0</span><span class="p">,</span>  <span class="ss">:Silver</span> <span class="o">=&gt;</span> <span class="mf">3.0</span><span class="p">,</span>  <span class="ss">:Bronze</span> <span class="o">=&gt;</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="n">weight</span> <span class="o">=</span> <span class="kt">Dict</span><span class="p">(</span><span class="ss">:Gold</span> <span class="o">=&gt;</span> <span class="mf">2.0</span><span class="p">,</span>  <span class="ss">:Silver</span> <span class="o">=&gt;</span> <span class="mf">1.5</span><span class="p">,</span>  <span class="ss">:Bronze</span> <span class="o">=&gt;</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">SCS</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">)</span>
+<span class="nd">@variable</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">take</span><span class="p">[</span><span class="n">items</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>  <span class="c"># Define a variable for each item</span>
+<span class="nd">@objective</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Max</span><span class="p">,</span> <span class="n">sum</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">*</span> <span class="n">take</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="k">in</span> <span class="n">items</span><span class="p">))</span>
+<span class="nd">@constraint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sum</span><span class="p">(</span><span class="n">weight</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">*</span> <span class="n">take</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="k">in</span> <span class="n">items</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">optimize!</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">println</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="p">(</span><span class="n">take</span><span class="p">))</span>
+<span class="c"># 1-dimensional DenseAxisArray{Float64,1,...} with index sets:</span>
+<span class="c">#     Dimension 1, Symbol[:Gold, :Silver, :Bronze]</span>
+<span class="c"># And data, a 3-element Vector{Float64}:</span>
+<span class="c">#  1.0000002002226671</span>
+<span class="c">#  0.4666659513182934</span>
+<span class="c">#  1.0000007732744878</span>
+</pre></div>
+</div>
+<p>Read the <a class="reference external" href="https://jump.dev/JuMP.jl/stable/">JuMP documentation</a> and the
+<a class="reference external" href="https://github.com/jump-dev/SCS.jl">SCS.jl README</a> for more details.</p>
 </div>
 
 
