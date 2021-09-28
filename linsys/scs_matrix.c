@@ -4,8 +4,8 @@
 #include "linsys.h"
 #include "util.h"
 
-#define MIN_SCALE (1e-4)
-#define MAX_SCALE (1e4)
+#define MIN_NORMALIZATION_FACTOR (1e-4)
+#define MAX_NORMALIZATION_FACTOR (1e4)
 #define NUM_RUIZ_PASSES (25) /* additional passes don't help much */
 #define NUM_L2_PASSES (1)    /* do one or zero, not more since not stable */
 
@@ -101,8 +101,8 @@ void SCS(free_scs_matrix)(ScsMatrix *A) {
 
 static inline scs_float apply_limit(scs_float x) {
   /* need to bound to 1 for cols/rows of all zeros, otherwise blows up */
-  x = x < MIN_SCALE ? 1.0 : x;
-  x = x > MAX_SCALE ? MAX_SCALE : x;
+  x = x < MIN_NORMALIZATION_FACTOR ? 1.0 : x;
+  x = x > MAX_NORMALIZATION_FACTOR ? MAX_NORMALIZATION_FACTOR : x;
   return x;
 }
 
