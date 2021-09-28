@@ -1,0 +1,103 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,600i,700,700i);
+
+h1, h2, h3, h4, h5, h6 {
+    font-family:  "Open Sans", sans-serif;
+    font-weight: 600;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* no box shadow on buttons */
+.btn {
+    font-weight: normal;
+    font-family:  "Open Sans", sans-serif;
+    box-shadow: none;
+}
+
+.wy-side-nav-search {
+    background-color: rgb(245, 245, 245);
+}
+
+.wy-nav-side {
+    background: rgb(245, 245, 245);
+}
+
+.wy-side-nav-search>div.version{
+    color: rgb(0, 0, 0);
+}
+
+.wy-nav-top {
+    color: rgb(245, 245, 245);
+    background-color: rgb(245, 245, 245);
+}
+
+.wy-nav-top i{
+    color: rgb(46, 118, 176);
+}
+
+/* Navigation bar text */
+.wy-menu-vertical header, .wy-menu-vertical p.caption {
+    color: rgb(255, 255, 255); /* White text*/
+    font-weight: 600;
+}
+
+.wy-menu-vertical a{
+    color: rgb(178, 188, 200); /* Grey */
+}
+
+.wy-menu-vertical a:hover{
+    background: rgb(46, 118, 176);
+    color: rgb(255, 255, 255); /* White text*/
+}
+
+/* override table width restrictions */
+.wy-table-responsive table td, .wy-table-responsive table th {
+    white-space: normal;
+}
+
+.wy-table-responsive {
+    margin-bottom: 24px;
+    max-width: 100%;
+    overflow: visible;
+}
+
+.wy-nav-content-wrap, .wy-menu li.current > a  {
+    background-color: rgb(245, 245, 245);
+    /* font-weight: 600; */
+}
+
+/* change page width */
+/*.wy-nav-content {
+ *   max-width: none;
+ *}
+ */
+
+/* Link Styling */
+a,a:visited, a:focus {
+  color: rgb(46, 118, 176);  /* Light blue*/
+  text-decoration: none;
+}
+a:hover, a:active {
+  color: rgb(0, 32, 72);  /*  blue*/
+  text-decoration: none;
+}
+
+.wy-side-nav-search>a{
+    color: rgb(0, 0, 0);
+}
+.wy-nav-top a{
+    color: rgb(0, 0, 0);
+}
+
+/* Navigation bar text */
+.wy-menu-vertical header, .wy-menu-vertical p.caption {
+    color: rgb(0, 0, 0);
+    font-weight: 600;
+}
+
+.wy-menu-vertical a{
+    color: rgb(0, 0, 0);
+}
+

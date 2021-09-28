@@ -1,0 +1,28 @@
+.. _examples:
+
+Examples
+===============
+
+Here we present a few simple examples of using SCS directly in different
+languages.
+
+:ref:`C/C++ <c_example>`
+
+:ref:`Python <python_example>`
+
+:ref:`MATLAB <matlab_example>`
+
+:ref:`Julia <julia_example>`
+
+:ref:`R <r_example>`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   c.rst
+   python.rst
+   matlab.rst
+   julia.rst
+   r.rst
+

@@ -5,19 +5,25 @@
 extern "C" {
 #endif
 
-#include "amatrix.h"
+#include "csparse.h"
 #include "external/amd/amd.h"
 #include "external/qdldl/qdldl.h"
 #include "glbopts.h"
 #include "scs.h"
+#include "scs_matrix.h"
 
-typedef struct SPARSE_MATRIX _cs;
 struct SCS_LIN_SYS_WORK {
-  _cs *L;            /* KKT, and factorization matrix L resp. */
-  scs_float *Dinv;  /* inverse diagonal matrix of factorization */
-  scs_int *P;       /* permutation of KKT matrix for factorization */
-  scs_float *bp;    /* workspace memory for solves */
-  scs_float total_solve_time; /* reporting */
+  scs_int m, n;    /* linear system dimensions */
+  csc *kkt, *L;    /* KKT, and factorization matrix L resp. */
+  scs_float *Dinv; /* inverse diagonal matrix of factorization */
+  scs_int *perm;   /* permutation of KKT matrix for factorization */
+  scs_float *bp;   /* workspace memory for solves */
+  scs_int *rho_y_vec_idxs;
+  scs_int factorizations;
+  /* ldl factorization workspace */
+  scs_float *D, *fwork;
+  scs_int *etree, *iwork, *Lnz, *bwork;
+  scs_float rho_x;
 };
 
 #ifdef __cplusplus

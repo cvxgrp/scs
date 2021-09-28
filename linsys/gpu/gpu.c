@@ -1,8 +1,10 @@
 #include "gpu.h"
 
-void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
-                               cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
-                               size_t *buffer_size, void **buffer) {
+void SCS(accum_by_atrans_gpu)(const ScsGpuMatrix *Ag,
+                              const cusparseDnVecDescr_t x,
+                              cusparseDnVecDescr_t y,
+                              cusparseHandle_t cusparse_handle,
+                              size_t *buffer_size, void **buffer) {
   /* y += A'*x
      x and y MUST be on GPU already
   */
@@ -10,10 +12,8 @@ void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_
   size_t new_buffer_size = 0;
 
   CUSPARSE_GEN(SpMV_bufferSize)
-  (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-    &onef, Ag->descr, x, &onef, y,
-    SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
-    &new_buffer_size);
+  (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &onef, Ag->descr, x,
+   &onef, y, SCS_CUDA_FLOAT, SCS_CSRMV_ALG, &new_buffer_size);
 
   if (new_buffer_size > *buffer_size) {
     if (*buffer != SCS_NULL) {
@@ -24,15 +24,15 @@ void SCS(_accum_by_atrans_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_
   }
 
   CUSPARSE_GEN(SpMV)
-  (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
-    &onef, Ag->descr, x, &onef, y,
-    SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
-    buffer);
+  (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &onef, Ag->descr, x,
+   &onef, y, SCS_CUDA_FLOAT, SCS_CSRMV_ALG, buffer);
 }
 
-void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
-                          cusparseDnVecDescr_t y, cusparseHandle_t cusparse_handle,
-                          size_t *buffer_size, void **buffer) {
+/* this is slow, use trans routine if possible */
+void SCS(accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
+                         cusparseDnVecDescr_t y,
+                         cusparseHandle_t cusparse_handle, size_t *buffer_size,
+                         void **buffer) {
   /* y += A*x
      x and y MUST be on GPU already
    */
@@ -40,12 +40,9 @@ void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
   size_t new_buffer_size = 0;
 
   /* The A matrix idx pointers must be ORDERED */
-
   CUSPARSE_GEN(SpMV_bufferSize)
-  (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE,
-    &onef, Ag->descr, x, &onef, y,
-    SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
-    &new_buffer_size);
+  (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE, &onef, Ag->descr, x, &onef, y,
+   SCS_CUDA_FLOAT, SCS_CSRMV_ALG, &new_buffer_size);
 
   if (new_buffer_size > *buffer_size) {
     if (*buffer != SCS_NULL) {
@@ -56,10 +53,21 @@ void SCS(_accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
   }
 
   CUSPARSE_GEN(SpMV)
-  (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE,
-    &onef, Ag->descr, x, &onef, y,
-    SCS_CUDA_FLOAT, SCS_CSRMV_ALG,
-    buffer);
+  (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE, &onef, Ag->descr, x, &onef, y,
+   SCS_CUDA_FLOAT, SCS_CSRMV_ALG, buffer);
+}
+
+/* This assumes that P has been made full (ie not triangular) and uses the
+ * fact that the GPU is faster for general sparse matrices than for symmetric
+ */
+/* y += P*x
+   x and y MUST be on GPU already
+ */
+void SCS(accum_by_p_gpu)(const ScsGpuMatrix *Pg, const cusparseDnVecDescr_t x,
+                         cusparseDnVecDescr_t y,
+                         cusparseHandle_t cusparse_handle, size_t *buffer_size,
+                         void **buffer) {
+  SCS(accum_by_atrans_gpu)(Pg, x, y, cusparse_handle, buffer_size, buffer);
 }
 
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A) {
@@ -67,14 +75,4 @@ void SCS(free_gpu_matrix)(ScsGpuMatrix *A) {
   cudaFree(A->i);
   cudaFree(A->p);
   cusparseDestroySpMat(A->descr);
-}
-
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                      ScsScaling *scal) {
-  SCS(_normalize_a)(A, stgs, k, scal);
-}
-
-void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                         const ScsScaling *scal) {
-  SCS(_un_normalize_a)(A, stgs, scal);
 }

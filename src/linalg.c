@@ -1,17 +1,40 @@
 #include "linalg.h"
+#include "scs_blas.h"
 #include <math.h>
 
-/* x = b*a */
-void SCS(set_as_scaled_array)(scs_float *x, const scs_float *a,
-                              const scs_float b, scs_int len) {
+/* these routines do not have BLAS implementations (that I can find at least) */
+
+scs_float SCS(norm_diff)(const scs_float *a, const scs_float *b, scs_int len) {
+  scs_float nm_diff = 0.0, tmp;
   scs_int i;
-  for (i = 0; i < len; ++i) x[i] = b * a[i];
+  for (i = 0; i < len; ++i) {
+    tmp = (a[i] - b[i]);
+    nm_diff += tmp * tmp;
+  }
+  return SQRTF(nm_diff);
 }
+
+scs_float SCS(norm_inf_diff)(const scs_float *a, const scs_float *b,
+                             scs_int len) {
+  scs_float tmp, max = 0.0;
+  scs_int i;
+  for (i = 0; i < len; ++i) {
+    tmp = ABS(a[i] - b[i]);
+    if (tmp > max) {
+      max = tmp;
+    }
+  }
+  return max;
+}
+
+#ifndef USE_LAPACK
+/* Self-rolled basic linear algebra routines */
 
 /* a *= b */
 void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len) {
   scs_int i;
-  for (i = 0; i < len; ++i) a[i] *= b;
+  for (i = 0; i < len; ++i)
+    a[i] *= b;
 }
 
 /* x'*y */
@@ -35,14 +58,14 @@ scs_float SCS(norm_sq)(const scs_float *v, scs_int len) {
 }
 
 /* ||v||_2 */
-scs_float SCS(norm)(const scs_float *v, scs_int len) {
+scs_float SCS(norm_2)(const scs_float *v, scs_int len) {
   return SQRTF(SCS(norm_sq)(v, len));
 }
 
-scs_float SCS(norm_inf)(const scs_float *a, scs_int l) {
+scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
   scs_float tmp, max = 0.0;
   scs_int i;
-  for (i = 0; i < l; ++i) {
+  for (i = 0; i < len; ++i) {
     tmp = ABS(a[i]);
     if (tmp > max) {
       max = tmp;
@@ -51,7 +74,7 @@ scs_float SCS(norm_inf)(const scs_float *a, scs_int l) {
   return max;
 }
 
-/* saxpy a += sc*b */
+/* axpy a += sc*b */
 void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
                            const scs_float sc) {
   scs_int i;
@@ -60,25 +83,58 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
   }
 }
 
-scs_float SCS(norm_diff)(const scs_float *a, const scs_float *b, scs_int l) {
-  scs_float nm_diff = 0.0, tmp;
-  scs_int i;
-  for (i = 0; i < l; ++i) {
-    tmp = (a[i] - b[i]);
-    nm_diff += tmp * tmp;
-  }
-  return SQRTF(nm_diff);
+#else
+/* If we have BLAS / LAPACK we may as well use them */
+
+scs_float BLAS(nrm2)(blas_int *n, const scs_float *x, blas_int *incx);
+scs_float BLAS(dot)(const blas_int *n, const scs_float *x, const blas_int *incx,
+                    const scs_float *y, const blas_int *incy);
+scs_float BLAS(lange)(const char *norm, const blas_int *m, const blas_int *n,
+                      const scs_float *a, blas_int *lda, scs_float *work);
+void BLAS(axpy)(blas_int *n, const scs_float *a, const scs_float *x,
+                blas_int *incx, scs_float *y, blas_int *incy);
+void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
+                const blas_int *incx);
+
+/* a *= b */
+void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len) {
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  BLAS(scal)(&blen, &b, a, &bone);
 }
 
-scs_float SCS(norm_inf_diff)(const scs_float *a, const scs_float *b,
-                             scs_int l) {
-  scs_float tmp, max = 0.0;
-  scs_int i;
-  for (i = 0; i < l; ++i) {
-    tmp = ABS(a[i] - b[i]);
-    if (tmp > max) {
-      max = tmp;
-    }
-  }
-  return max;
+/* x'*y */
+scs_float SCS(dot)(const scs_float *x, const scs_float *y, scs_int len) {
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  return BLAS(dot)(&blen, x, &bone, y, &bone);
 }
+
+/* ||v||_2^2 */
+scs_float SCS(norm_sq)(const scs_float *v, scs_int len) {
+  scs_float nrm = SCS(norm_2)(v, len);
+  return nrm * nrm;
+}
+
+/* ||v||_2 */
+scs_float SCS(norm_2)(const scs_float *v, scs_int len) {
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  return BLAS(nrm2)(&blen, v, &bone);
+}
+
+scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  return BLAS(lange)("Max", &blen, &bone, a, &bone, SCS_NULL);
+}
+
+/* axpy a += sc*b */
+void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int len,
+                           const scs_float sc) {
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  BLAS(axpy)(&blen, &sc, b, &bone, a, &bone);
+}
+
+#endif

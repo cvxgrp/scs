@@ -1,34 +1,8 @@
 #include "qdldl.h"
-#include "ctrlc.h"
 
 #define QDLDL_UNKNOWN (-1)
 #define QDLDL_USED (1)
 #define QDLDL_UNUSED (0)
-
-// //DEBUG
-// #include <stdio.h>
-// void qdprint_arrayi(const QDLDL_int* data, QDLDL_int n,char* varName){
-
-//   QDLDL_int i;
-//   printf("%s = [",varName);
-//   for(i=0; i< n; i++){
-//     printf("%lli,",data[i]);
-//   }
-//   printf("]\n");
-
-// }
-
-// void qdprint_arrayf(const QDLDL_float* data, QDLDL_int n, char* varName){
-
-//   QDLDL_int i;
-//   printf("%s = [",varName);
-//   for(i=0; i< n; i++){
-//     printf("%.3g,",data[i]);
-//   }
-//   printf("]\n");
-
-// }
-// // END DEBUG
 
 /* Compute the elimination tree for a quasidefinite matrix
    in compressed sparse column form.
@@ -41,7 +15,7 @@ QDLDL_int QDLDL_etree(const QDLDL_int  n,
                       QDLDL_int* Lnz,
                       QDLDL_int* etree){
 
-  QDLDL_int sumLnz = 0;
+  QDLDL_int sumLnz;
   QDLDL_int i,j,p;
 
 
@@ -76,8 +50,19 @@ QDLDL_int QDLDL_etree(const QDLDL_int  n,
   }
 
   //compute the total nonzeros in L.  This much
-  //space is required to store Li and Lx
-  for(i = 0; i < n; i++){sumLnz += Lnz[i];}
+  //space is required to store Li and Lx.  Return
+  //error code -2 if the nonzero count will overflow
+  //its unteger type.
+  sumLnz  = 0;
+  for(i = 0; i < n; i++){
+    if(sumLnz > QDLDL_INT_MAX - Lnz[i]){
+      sumLnz = -2;
+      break;
+    }
+    else{
+      sumLnz += Lnz[i];
+    }
+  }
 
   return sumLnz;
 }
@@ -139,10 +124,6 @@ QDLDL_int QDLDL_factor(const QDLDL_int    n,
   //Start from 1 here. The upper LH corner is trivially 0
   //in L b/c we are only computing the subdiagonal elements
   for(k = 1; k < n; k++){
-    if(scs_is_interrupted()) {
-      scs_printf("interrupt detected in factorization\n");
-      return -1;
-    }
 
     //NB : For each k, we compute a solution to
     //y = L(0:(k-1),0:k-1))\b, where b is the kth
@@ -258,11 +239,12 @@ void QDLDL_Lsolve(const QDLDL_int    n,
                   const QDLDL_float* Lx,
                   QDLDL_float* x){
 
-QDLDL_int i,j;
+  QDLDL_int i,j;
   for(i = 0; i < n; i++){
-      for(j = Lp[i]; j < Lp[i+1]; j++){
-          x[Li[j]] -= Lx[j]*x[i];
-      }
+    QDLDL_float val = x[i];
+    for(j = Lp[i]; j < Lp[i+1]; j++){
+      x[Li[j]] -= Lx[j]*val;
+    }
   }
 }
 
@@ -273,11 +255,13 @@ void QDLDL_Ltsolve(const QDLDL_int    n,
                    const QDLDL_float* Lx,
                    QDLDL_float* x){
 
-QDLDL_int i,j;
+  QDLDL_int i,j;
   for(i = n-1; i>=0; i--){
-      for(j = Lp[i]; j < Lp[i+1]; j++){
-          x[i] -= Lx[j]*x[Li[j]];
-      }
+    QDLDL_float val = x[i];
+    for(j = Lp[i]; j < Lp[i+1]; j++){
+      val -= Lx[j]*x[Li[j]];
+    }
+    x[i] = val;
   }
 }
 
@@ -289,10 +273,9 @@ void QDLDL_solve(const QDLDL_int       n,
                     const QDLDL_float* Dinv,
                     QDLDL_float* x){
 
-QDLDL_int i;
+  QDLDL_int i;
 
-QDLDL_Lsolve(n,Lp,Li,Lx,x);
-for(i = 0; i < n; i++) x[i] *= Dinv[i];
-QDLDL_Ltsolve(n,Lp,Li,Lx,x);
-
+  QDLDL_Lsolve(n,Lp,Li,Lx,x);
+  for(i = 0; i < n; i++) x[i] *= Dinv[i];
+  QDLDL_Ltsolve(n,Lp,Li,Lx,x);
 }

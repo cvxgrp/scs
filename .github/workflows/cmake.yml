@@ -1,0 +1,35 @@
+---
+name: Cmake
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt-get install libopenblas-dev liblapack-dev
+      - run: mkdir build
+      - run: |
+          cd build
+          mkdir out
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$PWD/out ..
+          make
+          make install
+          ctest --output-on-failure
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: brew install openblas lapack
+      - run: mkdir cmake_out
+      - run: mkdir build
+      - run: |
+          cd build
+          mkdir out
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$PWD/out ..
+          make
+          make install
+          ctest --output-on-failure
+

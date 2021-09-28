@@ -7,55 +7,69 @@ extern "C" {
 
 #include "scs.h"
 
-/* YOUR LINEAR SYSTEM SOLVER MUST IMPLEMENT THESE METHODS AND SCS_LIN_SYS_WORK
- * STRUCT */
+/* This is the API that any new linear system solver must implement */
 
-/* initialize ScsLinSysWork structure and perform any necessary preprocessing */
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
-                                      const ScsSettings *stgs);
-/* solves [d->RHO_X * I  A' ; A  -I] x = b for x, stores result in b, s contains
- * warm-start, iter is current scs iteration count */
-scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_int iter);
-/* frees ScsLinSysWork structure and allocated memory in ScsLinSysWork */
-void SCS(free_lin_sys_work)(ScsLinSysWork *p);
+/* Struct containing linear system workspace. Implemented by linear solver. */
+/* This typedef is in scs.h */
+/* typedef struct SCS_LIN_SYS_WORK ScsLinSysWork; */
 
-/* forms y += A'*x */
-void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
-                          const scs_float *x, scs_float *y);
-/* forms y += A*x */
-void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
-                     scs_float *y);
+/**
+ * Initialize `ScsLinSysWork` structure and perform any necessary preprocessing.
+ *
+ *  @param  A          A data matrix.
+ *  @param  P          P data matrix.
+ *  @param  rho_y_vec  `rho_y > 0` diagonal entries.
+ *  @param  rho_x      `rho_x > 0` float.
+ *  @return            Linear system solver workspace.
+ *
+ */
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
+                                      scs_float *rho_y_vec, scs_float rho_x);
 
-/* returns negative num if input data is invalid */
-scs_int SCS(validate_lin_sys)(const ScsMatrix *A);
+/**
+ * Frees `ScsLinSysWork` structure and associated allocated memory.
+ *
+ *  @param  w    Linear system private workspace.
+ */
+void SCS(free_lin_sys_work)(ScsLinSysWork *w);
 
-/* returns string describing method, can return null, if not null free will be
- * called on output */
-char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsSettings *stgs);
-/* returns string containing summary information about linear system solves, can
- * return null, if not null free will be called on output */
-char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info);
+/**
+ * Solves the linear system required by SCS at each iteration:
+ * \f[
+ *    \begin{bmatrix}
+ *    (\rho_x I + P) & A^\top \\
+ *     A   &  -\mathrm{diag}(\rho_y) \\
+ *    \end{bmatrix} x = b
+ *  \f]
+ *
+ *  for `x`. Overwrites `b` with result.
+ *
+ *  @param  w    Linear system private workspace.
+ *  @param  b    Right hand side, contains solution at the end.
+ *  @param  s    Contains warm-start (may be NULL).
+ *  @param  tol  Tolerance required for the system solve.
+ *  @return status < 0 indicates failure.
+ *
+ */
+scs_int SCS(solve_lin_sys)(ScsLinSysWork *w, scs_float *b, const scs_float *s,
+                           scs_float tol);
+/**
+ *  Update the linsys workspace when `rho_y_vec` is changed. For example, a
+ *  direct method for solving the linear system might need to update the
+ *  factorization of the matrix.
+ *
+ *  @param  w          Linear system private workspace.
+ *  @param  rho_y_vec  `rho_y` diagonal entries.
+ *
+ */
+void SCS(update_lin_sys_rho_y_vec)(ScsLinSysWork *w, scs_float *rho_y_vec);
 
-/* Normalization routines, used if d->NORMALIZE is true */
-/* normalizes A matrix, sets w->E and w->D diagonal scaling matrices, Anew =
- * d->SCALE * (D^-1)*A*(E^-1) (different to paper which is D*A*E)
- * D and E must be all positive entries, D must satisfy cone boundaries
- * must set (w->mean_norm_row_a = mean of norms of rows of normalized A) THEN
- * scale
- * resulting A by d->SCALE */
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                      ScsScaling *scal);
-/* unnormalizes A matrix, unnormalizes by w->D and w->E and d->SCALE */
-void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                         const ScsScaling *scal);
-/* to free the memory allocated in ScsMatrix */
-void SCS(free_a_matrix)(ScsMatrix *A);
-
-/* copies A (instead of in-place normalization), returns 0 for failure,
- * allocates memory for dstp	*/
-scs_int SCS(copy_a_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
+/**
+ * Name of the linear solver.
+ *
+ * @return name of method.
+ */
+const char *SCS(get_lin_sys_method)(void);
 
 #ifdef __cplusplus
 }

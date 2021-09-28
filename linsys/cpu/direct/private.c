@@ -1,237 +1,221 @@
 #include "private.h"
+#include "linsys.h"
 
-struct SPARSE_MATRIX /* matrix in compressed-column or triplet form */
-{
-  scs_int nzmax; /* maximum number of entries */
-  scs_int m;     /* number of rows */
-  scs_int n;     /* number of columns */
-  scs_int *p;    /* column pointers (size n+1) or col indices (size nzmax) */
-  scs_int *i;    /* row indices, size nzmax */
-  scs_float *x;  /* numerical values, size nzmax */
-  scs_int nz;    /* # of entries in triplet matrix, -1 for compressed-col */
-};
-
-char *SCS(get_lin_sys_method)(const ScsMatrix *A, const ScsSettings *stgs) {
-  char *tmp = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(tmp, "sparse-direct, nnz in A = %li", (long)A->p[A->n]);
-  return tmp;
+const char *SCS(get_lin_sys_method)() {
+  return "sparse-direct";
 }
 
+/*
 char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
   char *str = (char *)scs_malloc(sizeof(char) * 128);
   scs_int n = p->L->n;
-  sprintf(str, "\tLin-sys: nnz in L factor: %li, avg solve time: %1.2es\n",
-          (long)(p->L->p[n] + n), p->total_solve_time / (info->iter + 1) / 1e3);
-  p->total_solve_time = 0;
+  sprintf(str, "lin-sys: nnz(L): %li\n", (long)(p->L->p[n] + n));
   return str;
 }
-
-/* wrapper for free */
-static void *cs_free(void *p) {
-  if (p) {
-    scs_free(p);
-  }                /* free p if it is not already SCS_NULL */
-  return SCS_NULL; /* return SCS_NULL to simplify the use of cs_free */
-}
-
-static _cs *cs_spfree(_cs *A) {
-  if (!A) {
-    return SCS_NULL;
-  } /* do nothing if A already SCS_NULL */
-  cs_free(A->p);
-  cs_free(A->i);
-  cs_free(A->x);
-  return (_cs *)cs_free(A); /* free the _cs struct and return SCS_NULL */
-}
+*/
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
-    cs_spfree(p->L);
-    scs_free(p->P);
+    SCS(cs_spfree)(p->L);
+    SCS(cs_spfree)(p->kkt);
+    scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
+    scs_free(p->rho_y_vec_idxs);
+    scs_free(p->Lnz);
+    scs_free(p->iwork);
+    scs_free(p->etree);
+    scs_free(p->D);
+    scs_free(p->bwork);
+    scs_free(p->fwork);
     scs_free(p);
   }
 }
 
-static _cs *cs_spalloc(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-                       scs_int triplet) {
-  _cs *A = (_cs *)scs_calloc(1, sizeof(_cs)); /* allocate the _cs struct */
-  if (!A) {
-    return SCS_NULL;
-  }         /* out of memory */
-  A->m = m; /* define dimensions and nzmax */
-  A->n = n;
-  A->nzmax = nzmax = MAX(nzmax, 1);
-  A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
-  A->p = (scs_int *)scs_malloc((triplet ? nzmax : n + 1) * sizeof(scs_int));
-  A->i = (scs_int *)scs_malloc(nzmax * sizeof(scs_int));
-  A->x = values ? (scs_float *)scs_malloc(nzmax * sizeof(scs_float)) : SCS_NULL;
-  return (!A->p || !A->i || (values && !A->x)) ? cs_spfree(A) : A;
-}
-
-static _cs *cs_done(_cs *C, void *w, void *x, scs_int ok) {
-  cs_free(w); /* free workspace */
-  cs_free(x);
-  return ok ? C : cs_spfree(C); /* return result if OK, else free it */
-}
-
-/* C = compressed-column form of a triplet matrix T */
-static _cs *cs_compress(const _cs *T) {
-  scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
-  scs_float *Cx, *Tx;
-  _cs *C;
-  m = T->m;
-  n = T->n;
-  Ti = T->i;
-  Tj = T->p;
-  Tx = T->x;
-  nz = T->nz;
-  C = cs_spalloc(m, n, nz, Tx != SCS_NULL, 0);   /* allocate result */
-  w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
-  if (!C || !w) {
-    return cs_done(C, w, SCS_NULL, 0);
-  } /* out of memory */
-  Cp = C->p;
-  Ci = C->i;
-  Cx = C->x;
-  for (k = 0; k < nz; k++) w[Tj[k]]++; /* column counts */
-  SCS(cumsum)(Cp, w, n);               /* column pointers */
-  for (k = 0; k < nz; k++) {
-    Ci[p = w[Tj[k]]++] = Ti[k]; /* A(i,j) is the pth entry in C */
-    if (Cx) {
-      Cx[p] = Tx[k];
-    }
-  }
-  return cs_done(C, w, SCS_NULL, 1); /* success; free w and return C */
-}
-
-static _cs *form_kkt(const ScsMatrix *A, const ScsSettings *s) {
+static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
+                     scs_float *rho_y_vec, scs_int *rho_y_vec_idxs,
+                     scs_float rho_x) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
-   * forms column compressed KKT matrix
+   * forms column compressed kkt matrix
    * assumes column compressed form A matrix
    *
-   * forms upper triangular part of [I A'; A -I]
+   * forms upper triangular part of [(I + P)  A'; A -I]
+   * P : n x n, A: m x n.
    */
-  scs_int j, k, kk;
-  _cs *K_cs;
-  /* I at top left */
-  const scs_int Anz = A->p[A->n];
-  const scs_int Knzmax = A->n + A->m + Anz;
-  _cs *K = cs_spalloc(A->m + A->n, A->m + A->n, Knzmax, 1, 1);
+  scs_int i, j, k, kk;
+  csc *Kcsc, *K;
+  scs_int n = A->n;
+  scs_int m = A->m;
+  scs_int Anz = A->p[n];
+  scs_int Knzmax;
+  scs_int *idx_mapping;
+  if (P) {
+    /* Upper bound P + I upper triangular component as Pnz + n */
+    Knzmax = n + m + Anz + P->p[n];
+  } else {
+    Knzmax = n + m + Anz;
+  }
+  K = SCS(cs_spalloc)(m + n, m + n, Knzmax, 1, 1);
 
-#if EXTRA_VERBOSE > 0
-  scs_printf("forming KKT\n");
+#if VERBOSITY > 0
+  scs_printf("forming kkt\n");
 #endif
-
+  /* Here we generate a triplet matrix and then compress to CSC */
   if (!K) {
     return SCS_NULL;
   }
-  kk = 0;
-  for (k = 0; k < A->n; k++) {
-    K->i[kk] = k;
-    K->p[kk] = k;
-    K->x[kk] = s->rho_x;
-    kk++;
+
+  kk = 0; /* element counter */
+  if (P) {
+    /* I + P in top left */
+    for (j = 0; j < P->n; j++) { /* cols */
+      /* empty column, add diagonal  */
+      if (P->p[j] == P->p[j + 1]) {
+        K->i[kk] = j;
+        K->p[kk] = j;
+        K->x[kk] = rho_x;
+        kk++;
+      }
+      for (k = P->p[j]; k < P->p[j + 1]; k++) {
+        i = P->i[k]; /* row */
+        if (i > j) { /* only upper triangular needed */
+          break;
+        }
+        K->i[kk] = i;
+        K->p[kk] = j;
+        K->x[kk] = P->x[k];
+        if (i == j) {
+          /* P has diagonal element */
+          K->x[kk] += rho_x;
+        }
+        kk++;
+        /* reached the end without adding diagonal, do it now */
+        if ((i < j) && (k + 1 == P->p[j + 1] || P->i[k + 1] > j)) {
+          K->i[kk] = j;
+          K->p[kk] = j;
+          K->x[kk] = rho_x;
+          kk++;
+        }
+      }
+    }
+  } else {
+    /* rho_x * I in top left */
+    for (k = 0; k < A->n; k++) {
+      K->i[kk] = k;
+      K->p[kk] = k;
+      K->x[kk] = rho_x;
+      kk++;
+    }
   }
-  /* A^T at top right : CCS: */
-  for (j = 0; j < A->n; j++) {
+
+  /* A^T at top right */
+  for (j = 0; j < n; j++) {
     for (k = A->p[j]; k < A->p[j + 1]; k++) {
-      K->p[kk] = A->i[k] + A->n;
+      K->p[kk] = A->i[k] + n;
       K->i[kk] = j;
       K->x[kk] = A->x[k];
       kk++;
     }
   }
-  /* -I at bottom right */
-  for (k = 0; k < A->m; k++) {
-    K->i[kk] = k + A->n;
-    K->p[kk] = k + A->n;
-    K->x[kk] = -1;
+
+  /* -rho_y_vec * I at bottom right */
+  for (k = 0; k < m; k++) {
+    K->i[kk] = k + n;
+    K->p[kk] = k + n;
+    K->x[kk] = -rho_y_vec[k];
+    rho_y_vec_idxs[k] = kk; /* store the indices where rho_y_vec occurs */
     kk++;
   }
-  /* assert kk == Knzmax */
-  K->nz = Knzmax;
-  K_cs = cs_compress(K);
-  cs_spfree(K);
-  return K_cs;
+  K->nz = kk;
+  idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
+  Kcsc = SCS(cs_compress)(K, idx_mapping);
+  for (i = 0; i < A->m; i++) {
+    rho_y_vec_idxs[i] = idx_mapping[rho_y_vec_idxs[i]];
+  }
+  SCS(cs_spfree)(K);
+  scs_free(idx_mapping);
+  return Kcsc;
 }
 
-static scs_int _ldl_init(_cs *A, scs_int *P, scs_float **info) {
+static scs_int _ldl_init(csc *A, scs_int *P, scs_float **info) {
   *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
   return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
-static scs_int _ldl_factor(_cs *A, _cs **L, scs_float **Dinv) {
-  scs_int factor_status, n = A->n;
-  scs_int *etree = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_int *Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  scs_int *iwork = (scs_int *)scs_malloc(3 * n * sizeof(scs_int));
-  scs_float *D, *fwork;
-  scs_int *bwork;
-  (*L)->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
-  (*L)->nzmax = QDLDL_etree(n, A->p, A->i, iwork, Lnz, etree);
-  if ((*L)->nzmax < 0) {
+/* call only once */
+static scs_int ldl_prepare(ScsLinSysWork *p) {
+  csc *kkt = p->kkt, *L = p->L;
+  scs_int n = kkt->n;
+  p->etree = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  p->Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  p->iwork = (scs_int *)scs_malloc(3 * n * sizeof(scs_int));
+  L->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
+  L->nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
+  if (L->nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
-    scs_free(Lnz);
-    scs_free(iwork);
-    scs_free(etree);
-    scs_free((*L)->p);
-    return (*L)->nzmax;
+    if (L->nzmax == -1) {
+      scs_printf("Matrix is not perfectly upper triangular.\n");
+    } else if (L->nzmax == -2) {
+      scs_printf("Integer overflow in L nonzero count.\n");
+    }
+    return L->nzmax;
   }
 
-  (*L)->x = (scs_float *)scs_malloc((*L)->nzmax * sizeof(scs_float));
-  (*L)->i = (scs_int *)scs_malloc((*L)->nzmax * sizeof(scs_int));
-  *Dinv = (scs_float *)scs_malloc(n * sizeof(scs_float));
-  D = (scs_float *)scs_malloc(n * sizeof(scs_float));
-  bwork = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  fwork = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  L->x = (scs_float *)scs_malloc(L->nzmax * sizeof(scs_float));
+  L->i = (scs_int *)scs_malloc(L->nzmax * sizeof(scs_int));
+  p->Dinv = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  p->D = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  p->bwork = (scs_int *)scs_malloc(n * sizeof(scs_int));
+  p->fwork = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  return L->nzmax;
+}
 
-#if EXTRA_VERBOSE > 0
+/* can call many times */
+static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
+  scs_int factor_status;
+  csc *kkt = p->kkt, *L = p->L;
+#if VERBOSITY > 0
   scs_printf("numeric factorization\n");
 #endif
-  factor_status = QDLDL_factor(n, A->p, A->i, A->x, (*L)->p, (*L)->i, (*L)->x,
-                               D, *Dinv, Lnz, etree, bwork, iwork, fwork);
-#if EXTRA_VERBOSE > 0
-  scs_printf("finished numeric factorization\n");
+  factor_status =
+      QDLDL_factor(kkt->n, kkt->p, kkt->i, kkt->x, L->p, L->i, L->x, p->D,
+                   p->Dinv, p->Lnz, p->etree, p->bwork, p->iwork, p->fwork);
+#if VERBOSITY > 0
+  scs_printf("finished numeric factorization.\n");
 #endif
-
-  scs_free(Lnz);
-  scs_free(iwork);
-  scs_free(etree);
-  scs_free(D);
-  scs_free(bwork);
-  scs_free(fwork);
+  if (factor_status < 0) {
+    scs_printf("Error in LDL factorization when computing the nonzero "
+               "elements. There are zeros in the diagonal matrix.\n");
+  } else if (factor_status < num_vars) {
+    scs_printf("Error in LDL factorization when computing the nonzero "
+               "elements. The problem seems to be non-convex.\n");
+    scs_printf("factor_status: %li, num_vars: %li\n", (long)factor_status,
+               (long)num_vars);
+    return -1;
+  }
+  p->factorizations++;
   return factor_status;
 }
 
 static void _ldl_perm(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
   scs_int j;
-  for (j = 0; j < n; j++) x[j] = b[P[j]];
+  for (j = 0; j < n; j++)
+    x[j] = b[P[j]];
 }
 
 static void _ldl_permt(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
   scs_int j;
-  for (j = 0; j < n; j++) x[P[j]] = b[j];
+  for (j = 0; j < n; j++)
+    x[P[j]] = b[j];
 }
 
-static void _ldl_solve(scs_float *b, _cs *L, scs_float *Dinv, scs_int *P,
+static void _ldl_solve(scs_float *b, csc *L, scs_float *Dinv, scs_int *P,
                        scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
   _ldl_perm(n, bp, b, P);
   QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
   _ldl_permt(n, b, bp, P);
-}
-
-void SCS(accum_by_atrans)(const ScsMatrix *A, ScsLinSysWork *p,
-                          const scs_float *x, scs_float *y) {
-  SCS(_accum_by_atrans)(A->n, A->x, A->i, A->p, x, y);
-}
-
-void SCS(accum_by_a)(const ScsMatrix *A, ScsLinSysWork *p, const scs_float *x,
-                     scs_float *y) {
-  SCS(_accum_by_a)(A->n, A->x, A->i, A->p, x, y);
 }
 
 static scs_int *cs_pinv(scs_int const *p, scs_int n) {
@@ -242,23 +226,26 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
   if (!pinv) {
     return SCS_NULL;
-  }                                       /* out of memory */
-  for (k = 0; k < n; k++) pinv[p[k]] = k; /* invert the permutation */
-  return pinv;                            /* return result */
+  } /* out of memory */
+  for (k = 0; k < n; k++)
+    pinv[p[k]] = k; /* invert the permutation */
+  return pinv;      /* return result */
 }
 
-static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
+static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
+                       scs_int values) {
   scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
   scs_float *Cx, *Ax;
-  _cs *C;
+  csc *C;
   n = A->n;
   Ap = A->p;
   Ai = A->i;
   Ax = A->x;
-  C = cs_spalloc(n, n, Ap[n], values && (Ax != SCS_NULL), 0); /* alloc result*/
+  C = SCS(cs_spalloc)(n, n, Ap[n], values && (Ax != SCS_NULL),
+                      0);                        /* alloc result*/
   w = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* get workspace */
   if (!C || !w) {
-    return cs_done(C, w, SCS_NULL, 0);
+    return SCS(cs_done)(C, w, SCS_NULL, 0);
   } /* out of memory */
   Cp = C->p;
   Ci = C->i;
@@ -288,79 +275,88 @@ static _cs *cs_symperm(const _cs *A, const scs_int *pinv, scs_int values) {
       if (Cx) {
         Cx[q] = Ax[p];
       }
+      idx_mapping[p] = q; /* old to new indices */
     }
   }
-  return cs_done(C, w, SCS_NULL, 1); /* success; free workspace, return C */
+  return SCS(cs_done)(C, w, SCS_NULL,
+                      1); /* success; free workspace, return C */
 }
 
-static scs_int factorize(const ScsMatrix *A, const ScsSettings *stgs,
-                         ScsLinSysWork *p) {
+static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
+                        ScsLinSysWork *p, scs_float *rho_y_vec) {
   scs_float *info;
-  scs_int *Pinv, amd_status, ldl_status;
-  _cs *C, *K = form_kkt(A, stgs);
-  if (!K) {
-    return -1;
+  scs_int *Pinv, amd_status, *idx_mapping, i;
+  csc *kkt_perm, *kkt = form_kkt(A, P, rho_y_vec, p->rho_y_vec_idxs, p->rho_x);
+  if (!kkt) {
+    return SCS_NULL;
   }
-  amd_status = _ldl_init(K, p->P, &info);
+  amd_status = _ldl_init(kkt, p->perm, &info);
   if (amd_status < 0) {
-    return amd_status;
+    scs_printf("AMD permutatation error.\n");
+    return SCS_NULL;
   }
-#if EXTRA_VERBOSE > 0
-  if (stgs->verbose) {
-    scs_printf("Matrix factorization info:\n");
-    amd_info(info);
-  }
+#if VERBOSITY > 0
+  scs_printf("Matrix factorization info:\n");
+  amd_info(info);
 #endif
-  Pinv = cs_pinv(p->P, A->n + A->m);
-  C = cs_symperm(K, Pinv, 1);
-  ldl_status = _ldl_factor(C, &p->L, &p->Dinv);
-  cs_spfree(C);
-  cs_spfree(K);
+  Pinv = cs_pinv(p->perm, A->n + A->m);
+  idx_mapping = (scs_int *)scs_malloc(kkt->nzmax * sizeof(scs_int));
+  kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
+  for (i = 0; i < A->m; i++) {
+    p->rho_y_vec_idxs[i] = idx_mapping[p->rho_y_vec_idxs[i]];
+  }
+  SCS(cs_spfree)(kkt);
   scs_free(Pinv);
   scs_free(info);
-  return ldl_status;
+  scs_free(idx_mapping);
+  return kkt_perm;
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A,
-                                      const ScsSettings *stgs) {
+void SCS(update_lin_sys_rho_y_vec)(ScsLinSysWork *p, scs_float *rho_y_vec) {
+  scs_int i, ldl_status;
+  for (i = 0; i < p->m; ++i) {
+    p->kkt->x[p->rho_y_vec_idxs[i]] = -rho_y_vec[i];
+  }
+  ldl_status = ldl_factor(p, p->n);
+  if (ldl_status < 0) {
+    scs_printf("Error in LDL factorization when updating.\n");
+    /* TODO: this is broken somehow */
+    /* SCS(free_lin_sys_work)(p); */
+    return;
+  }
+}
+
+ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
+                                      scs_float *rho_y_vec, scs_float rho_x) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
-  scs_int n_plus_m = A->n + A->m;
-  p->P = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
-  p->L = (_cs *)scs_malloc(sizeof(_cs));
+  scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
+  p->m = A->m;
+  p->n = A->n;
+  p->rho_x = rho_x;
+  p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
+  p->L = (csc *)scs_malloc(sizeof(csc));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
+  p->rho_y_vec_idxs = (scs_int *)scs_malloc(A->m * sizeof(scs_int));
+  p->factorizations = 0;
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;
-
-  if (factorize(A, stgs, p) < 0) {
-    SCS(free_lin_sys_work)(p);
+  p->kkt = permute_kkt(A, P, p, rho_y_vec);
+  ldl_prepare_status = ldl_prepare(p);
+  ldl_status = ldl_factor(p, A->n);
+  if (ldl_prepare_status < 0 || ldl_status < 0) {
+    scs_printf("Error in LDL initial factorization.\n");
+    /* TODO: this is broken somehow */
+    /* SCS(free_lin_sys_work)(p); */
     return SCS_NULL;
   }
-  p->total_solve_time = 0.0;
   return p;
 }
 
-scs_int SCS(solve_lin_sys)(const ScsMatrix *A, const ScsSettings *stgs,
-                           ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_int iter) {
+scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
-  SCS(timer) linsys_timer;
-  SCS(tic)(&linsys_timer);
-  _ldl_solve(b, p->L, p->Dinv, p->P, p->bp);
-  p->total_solve_time += SCS(tocq)(&linsys_timer);
-#if EXTRA_VERBOSE > 0
-  scs_printf("linsys solve time: %1.2es\n", SCS(tocq)(&linsys_timer) / 1e3);
-#endif
+  _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
-}
-
-void SCS(normalize_a)(ScsMatrix *A, const ScsSettings *stgs, const ScsCone *k,
-                      ScsScaling *scal) {
-  SCS(_normalize_a)(A, stgs, k, scal);
-}
-
-void SCS(un_normalize_a)(ScsMatrix *A, const ScsSettings *stgs,
-                         const ScsScaling *scal) {
-  SCS(_un_normalize_a)(A, stgs, scal);
 }

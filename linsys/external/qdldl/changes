@@ -1,3 +1,5 @@
+Last qdldl commit: a00d500906621fbf014b39e42a3304d1143eb65f
+
 flatten into one dir
 create qdldl_types.h from template file
 add 'include "glbopts.h"' to qdldl_types.h

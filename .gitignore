@@ -1,4 +1,7 @@
+*.csv
 *.iml
+docs/*
+!docs/src
 examples/DIMACS/
 local.mk
 sftp-config.json
@@ -44,3 +47,5 @@ out
 *.class
 *.dylib
 *.jar
+hs21_tiny_qp
+rob_gauss_cov_est
