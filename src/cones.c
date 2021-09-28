@@ -745,7 +745,7 @@ static void proj_soc(scs_float *x, scs_int q) {
     return;
   }
   scs_float v1 = x[0];
-  scs_float s = SCS(norm)(&(x[1]), q - 1);
+  scs_float s = SCS(norm_2)(&(x[1]), q - 1);
   scs_float alpha = (s + v1) / 2.0;
 
   if (s <= v1) {

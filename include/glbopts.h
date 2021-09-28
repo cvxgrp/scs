@@ -200,8 +200,8 @@ typedef float scs_float;
 /* maintain the iterates at L2 norm =  ITERATE_NORM * sqrt(n+m+1) */
 #define ITERATE_NORM (1.)
 
-/* Which norm to use throughout SCS */
-/* #define NORM SCS(norm) */
+/* Which norm to use for termination checking etc */
+/* #define NORM SCS(norm_2) */
 #define NORM SCS(norm_inf)
 
 /* Factor which is scales tau in the linear system update */
@@ -218,8 +218,8 @@ typedef float scs_float;
 #define AA_MAX_WEIGHT_NORM (1e10)
 
 /* (Dual) Scale updating parameters */
-#define MAX_SCALE_VALUE (1e6)
-#define MIN_SCALE_VALUE (1e-6)
+#define MAX_SCALE_VALUE (1e3)
+#define MIN_SCALE_VALUE (1e-3)
 #define SCALE_NORM NORM /* what norm to use when computing the scale factor */
 
 /* CG == Conjugate gradient */
