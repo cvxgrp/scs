@@ -9,7 +9,6 @@ extern "C" {
 
 /* This is the API that any new linear system solver must implement */
 
-
 /* Struct containing linear system workspace. Implemented by linear solver. */
 /* This typedef is in scs.h */
 /* typedef struct SCS_LIN_SYS_WORK ScsLinSysWork; */

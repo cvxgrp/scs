@@ -575,13 +575,13 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("\n");
 
 #if VERBOSITY > 0
-  scs_printf("Norm u = %4f, ", SCS(norm)(w->u, w->n + w->m + 1));
-  scs_printf("Norm u_t = %4f, ", SCS(norm)(w->u_t, w->n + w->m + 1));
-  scs_printf("Norm v = %4f, ", SCS(norm)(w->v, w->n + w->m + 1));
-  scs_printf("Norm x = %4f, ", SCS(norm)(w->xys_orig->x, w->n));
-  scs_printf("Norm y = %4f, ", SCS(norm)(w->xys_orig->y, w->m));
-  scs_printf("Norm s = %4f, ", SCS(norm)(w->xys_orig->s, w->m));
-  scs_printf("Norm |Ax + s| = %1.2e, ", SCS(norm)(r->ax_s, w->m));
+  scs_printf("Norm u = %4f, ", SCS(norm_2)(w->u, w->n + w->m + 1));
+  scs_printf("Norm u_t = %4f, ", SCS(norm_2)(w->u_t, w->n + w->m + 1));
+  scs_printf("Norm v = %4f, ", SCS(norm_2)(w->v, w->n + w->m + 1));
+  scs_printf("Norm x = %4f, ", SCS(norm_2)(w->xys_orig->x, w->n));
+  scs_printf("Norm y = %4f, ", SCS(norm_2)(w->xys_orig->y, w->m));
+  scs_printf("Norm s = %4f, ", SCS(norm_2)(w->xys_orig->s, w->m));
+  scs_printf("Norm |Ax + s| = %1.2e, ", SCS(norm_2)(r->ax_s, w->m));
   scs_printf("tau = %4f, ", w->u[w->n + w->m]);
   scs_printf("kappa = %4f, ", w->rsk[w->n + w->m]);
   scs_printf("|u - u_t| = %1.2e, ",
@@ -836,9 +836,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
      w->cone_boundaries_len);
 #if VERBOSITY > 0
     SCS(print_array)(w->scal->D, d->m, "D");
-    scs_printf("norm(D) = %4f\n", SCS(norm)(w->scal->D, d->m));
+    scs_printf("norm(D) = %4f\n", SCS(norm_2)(w->scal->D, d->m));
     SCS(print_array)(w->scal->E, d->n, "E");
-    scs_printf("norm(E) = %4f\n", SCS(norm)(w->scal->E, d->n));
+    scs_printf("norm(E) = %4f\n", SCS(norm_2)(w->scal->E, d->n));
 #endif
   } else {
     w->xys_normalized = w->xys_orig;
@@ -972,7 +972,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 
 /* scs is homogeneous so scale the iterate to keep norm reasonable */
 static inline void normalize_v(scs_float *v, scs_int len) {
-  scs_float v_norm = SCS(norm)(v, len); /* always l2 norm */
+  scs_float v_norm = SCS(norm_2)(v, len); /* always l2 norm */
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
 
@@ -1160,7 +1160,9 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
     SCS(write_data)(d, k, stgs);
   }
   w = init_work(d, k, stgs);
-  if (w) w->setup_time = SCS(tocq)(&init_timer);
+  if (w) {
+    w->setup_time = SCS(tocq)(&init_timer);
+  }
   scs_end_interrupt_listener();
   return w;
 }

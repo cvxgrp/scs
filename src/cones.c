@@ -687,8 +687,8 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
     /* incorporate the additional BOX_T_SCALE factor into the projection */
-    gt = BOX_T_SCALE * (t - tx[0]);       /* gradient */
-    ht = BOX_T_SCALE;                     /* hessian */
+    gt = BOX_T_SCALE * (t - tx[0]); /* gradient */
+    ht = BOX_T_SCALE;               /* hessian */
     for (j = 0; j < bsize - 1; j++) {
       if (x[j] > t * bu[j]) {
         gt += (t * bu[j] - x[j]) * bu[j]; /* gradient */

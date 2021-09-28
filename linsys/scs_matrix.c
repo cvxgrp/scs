@@ -257,8 +257,8 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *b,
   }
 
   /* calculate s value */
-  norm_c = SCS(norm)(c, A->n);
-  norm_b = SCS(norm)(b, A->m);
+  norm_c = SCS(norm_2)(c, A->n);
+  norm_b = SCS(norm_2)(b, A->m);
   *s = SQRTF(norm_c * norm_c + norm_b * norm_b);
   *s = SAFEDIV_POS(1.0, SQRTF(apply_limit(*s)));
 }
