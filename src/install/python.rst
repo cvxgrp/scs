@@ -3,7 +3,7 @@
 Python
 ======
 
-The easiest way to install the python version is using `pip <https://pypi.org/project/pip/>`_
+The easiest way to install the python version is using `pip <https://pypi.org/project/pip/>`_:
 
 .. code:: bash
 
@@ -45,3 +45,4 @@ To test that SCS installed correctly, and you have pytest installed, run
   
   pytest
 
+See :ref:`here <python_interface>` for the API.
