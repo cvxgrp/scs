@@ -120,6 +120,11 @@ VERBOSITY = 0
 ifneq ($(VERBOSITY), 0)
 OPT_FLAGS += -DVERBOSITY=$(VERBOSITY) # verbosity level
 endif
+COVERAGE = 0
+ifneq ($(COVERAGE), 0)
+override CFLAGS += --coverage # generate test coverage data
+endif
+
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):

@@ -1,0 +1,35 @@
+name: Coveralls
+
+on: ["push", "pull_request"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Set up
+        run: sudo apt-get install -y libopenblas-dev liblapack-dev lcov
+
+      - name: Make
+        run: make test COVERAGE=1
+
+      - name: Run tests
+        run: out/run_tests_direct && out/run_tests_indirect
+
+      - name: Process coverage
+        uses: imciner2/run-lcov@v1
+        with:
+          input_directory: '${{ runner.workspace }}'
+          exclude: '"$GITHUB_WORKSPACE/test/*" "$GITHUB_WORKSPACE/linsys/external/*"'
+          output_file: '${{ runner.workspace }}/coverage.info'
+
+      - name: Upload coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: '${{ runner.workspace }}/coverage.info'
+
