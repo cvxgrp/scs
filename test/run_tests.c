@@ -14,11 +14,14 @@
 #include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h"
 #include "problems/small_lp.h"
+#include "problems/test_fails.h"
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
 
 static const char *all_tests(void) {
+  scs_printf("test_fails\n");
+  mu_run_test(test_fails);
   scs_printf("degenerate\n");
   mu_run_test(degenerate);
   scs_printf("small_lp\n");
