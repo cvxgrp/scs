@@ -834,12 +834,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     SCS(normalize)
     (w->P, w->A, w->b_normalized, w->c_normalized, w->scal, w->cone_boundaries,
      w->cone_boundaries_len);
-#if VERBOSITY > 0
-    SCS(print_array)(w->scal->D, d->m, "D");
-    scs_printf("norm(D) = %4f\n", SCS(norm_2)(w->scal->D, d->m));
-    SCS(print_array)(w->scal->E, d->n, "E");
-    scs_printf("norm(E) = %4f\n", SCS(norm_2)(w->scal->E, d->n));
-#endif
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;

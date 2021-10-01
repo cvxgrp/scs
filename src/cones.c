@@ -556,28 +556,14 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* mult by factor to make sure is upper bound */
   vupper = 1.1 * sqrt2 * BLAS(nrm2)(&cone_sz, X, &one);
   vupper = MAX(vupper, 0.01);
-#if VERBOSITY > 0
-  SCS(print_array)(Xs, n * n, "Xs");
-  SCS(print_array)(X, get_sd_cone_size(n), "X");
-#endif
   /* Solve eigenproblem, reuse workspaces */
   BLAS(syevr)
   ("Vectors", "VInterval", "Lower", &nb, Xs, &nb, &zero, &vupper, SCS_NULL,
    SCS_NULL, &eig_tol, &m, e, Z, &nb, SCS_NULL, work, &lwork, iwork, &liwork,
    &info);
-#if VERBOSITY > 0
   if (info != 0) {
     scs_printf("WARN: LAPACK syevr error, info = %i\n", info);
   }
-  scs_printf("syevr input parameter dump:\n");
-  scs_printf("nb = %li\n", (long)nb);
-  scs_printf("lwork = %li\n", (long)lwork);
-  scs_printf("liwork = %li\n", (long)liwork);
-  scs_printf("vupper = %f\n", vupper);
-  scs_printf("eig_tol = %e\n", eig_tol);
-  SCS(print_array)(e, m, "e");
-  SCS(print_array)(Z, m * n, "Z");
-#endif
   if (info < 0) {
     return -1;
   }
@@ -594,11 +580,6 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Xs[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
   }
-
-#if VERBOSITY > 0
-  SCS(print_array)(Xs, n * n, "Xs");
-  SCS(print_array)(X, get_sd_cone_size(n), "X");
-#endif
 
 #else
   scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
@@ -678,11 +659,6 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
 
   x = &(tx[1]);
 
-#if VERBOSITY > 10
-  SCS(print_array)(bu, bsize - 1, "u");
-  SCS(print_array)(bl, bsize - 1, "l");
-  SCS(print_array)(tx, bsize, "tx");
-#endif
   /* should only require about 5 or so iterations, 1 or 2 if warm-started */
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
@@ -728,9 +704,6 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   tx[0] = t;
 #if VERBOSITY > 3
   scs_printf("box cone iters %i\n", (int)iter + 1);
-#endif
-#if VERBOSITY > 10
-  SCS(print_array)(tx, bsize, "tx_+");
 #endif
   return t;
 }
