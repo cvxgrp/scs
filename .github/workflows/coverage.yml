@@ -17,7 +17,7 @@ jobs:
       - name: Make
         run: make test COVERAGE=1
 
-		  - name: Run tests
+      - name: Run tests
         run: out/run_tests_direct    # test direct solver
         run: out/run_tests_indirect  # test indirect solver
 
@@ -27,7 +27,7 @@ jobs:
           input_directory: '${{ runner.workspace }}'
           output_file: '${{ runner.workspace }}/coverage.info'
 
-		  - name: Upload coverage
+      - name: Upload coverage
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
