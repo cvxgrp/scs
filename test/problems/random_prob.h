@@ -30,7 +30,7 @@ static const char *random_prob(void) {
   sol = scs_calloc(1, sizeof(ScsSolution));
   exitflag = scs(d, k, stgs, sol, &info);
 
-  perr = SCS(dot)(d->c, sol->x, d->n) - OPT; 
+  perr = SCS(dot)(d->c, sol->x, d->n) - OPT;
   derr = -SCS(dot)(d->b, sol->y, d->m) - OPT;
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
