@@ -14,6 +14,7 @@
 #include "problems/rob_gauss_cov_est.h"
 #include "problems/small_lp.h"
 #include "problems/unbounded_tiny_qp.h"
+#include "problems/random_prob.h"
 
 int tests_run = 0;
 
@@ -34,6 +35,8 @@ static const char *all_tests(void) {
   mu_run_test(infeasible_tiny_qp);
   scs_printf("unbounded_tiny_qp\n");
   mu_run_test(unbounded_tiny_qp);
+  scs_printf("random_prob\n");
+  mu_run_test(random_prob);
   return 0;
 }
 
