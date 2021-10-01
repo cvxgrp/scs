@@ -18,8 +18,8 @@ jobs:
         run: make test COVERAGE=1
 
       - name: Run tests
-        run: out/run_tests_direct    # test direct solver
-        run: out/run_tests_indirect  # test indirect solver
+      - run: out/run_tests_direct    # test direct solver
+      - run: out/run_tests_indirect  # test indirect solver
 
       - name: Process coverage
         uses: imciner2/run-lcov@v1
