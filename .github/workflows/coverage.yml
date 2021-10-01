@@ -24,6 +24,7 @@ jobs:
         uses: imciner2/run-lcov@v1
         with:
           input_directory: '${{ runner.workspace }}'
+          exclude: '"$GITHUB_WORKSPACE/test/*" "$GITHUB_WORKSPACE/linsys/external.*"'
           output_file: '${{ runner.workspace }}/coverage.info'
 
       - name: Upload coverage
