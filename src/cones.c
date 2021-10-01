@@ -293,10 +293,11 @@ static scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
 
 static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
                                   scs_float z_hat, scs_float w) {
-  scs_float t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
-  scs_float f, fp;
+  scs_float t_prev, t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
+  scs_float f = 1., fp = 1.;
   scs_int i;
   for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
+    t_prev = t;
     f = t * (t + z_hat) / rho / rho - y_hat / rho + log(t / rho) + 1;
     fp = (2 * t + z_hat) / rho / rho + 1 / t;
 
@@ -308,17 +309,18 @@ static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
     } else if (t <= 0) {
       t = 0;
       break;
+    } else if (ABS(t - t_prev) < CONE_TOL) {
+      break;
     } else if (SQRTF(f * f / fp) < CONE_TOL) {
       break;
     }
   }
-  /* #if VERBOSITY > 1 */
   if (i == EXP_CONE_MAX_ITERS) {
     scs_printf("warning: exp cone newton step hit maximum %i iters\n", (int)i);
-    scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e\n", rho, y_hat,
-               z_hat, w);
+    scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e; f=%1.5e, "
+               "fp=%1.5e, t=%1.5e, t_prev= %1.5e\n",
+               rho, y_hat, z_hat, w, f, fp, t, t_prev);
   }
-  /* #endif */
   return t + z_hat;
 }
 
@@ -353,7 +355,6 @@ static scs_int proj_exp_cone(scs_float *v) {
   scs_int i;
   scs_float ub, lb, rho, g, x[3];
   scs_float r = v[0], s = v[1], t = v[2];
-  scs_float tol = CONE_TOL;
 
   /* v in cl(Kexp) */
   if ((s * exp(r / s) - t <= CONE_THRESH && s > 0) ||
@@ -385,7 +386,7 @@ static scs_int proj_exp_cone(scs_float *v) {
     } else {
       ub = rho;
     }
-    if (ub - lb < tol) {
+    if (ub - lb < CONE_TOL) {
       break;
     }
   }
