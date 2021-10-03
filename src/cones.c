@@ -275,16 +275,6 @@ char *SCS(get_cone_header)(const ScsCone *k) {
   return tmp;
 }
 
-static scs_int is_simple_semi_definite_cone(scs_int *s, scs_int ssize) {
-  scs_int i;
-  for (i = 0; i < ssize; i++) {
-    if (s[i] > 2) {
-      return 0; /* false */
-    }
-  }
-  return 1; /* true */
-}
-
 static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
                                   scs_float z_hat, scs_float w) {
   scs_float t_prev, t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
@@ -398,8 +388,8 @@ static scs_int proj_exp_cone(scs_float *v) {
 }
 
 static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
-#ifdef USE_LAPACK
   scs_int i;
+#ifdef USE_LAPACK
   blas_int n_max = 0;
   blas_int neg_one = -1;
   blas_int info = 0;
@@ -436,10 +426,17 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   }
   return 0;
 #else
-  scs_printf("FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
-  scs_printf("Install blas+lapack and re-compile SCS with blas+lapack library "
-             "locations\n");
-  return -1;
+  for (i = 0; i < k->ssize; i++) {
+    if (k->s[i] > 1) {
+      scs_printf(
+          "FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
+      scs_printf(
+          "Install blas+lapack and re-compile SCS with blas+lapack library "
+          "locations\n");
+      return -1;
+    }
+  }
+  return 0;
 #endif
 }
 
@@ -868,8 +865,7 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal,
     }
   }
   if (k->ssize && k->s) {
-    if (!is_simple_semi_definite_cone(k->s, k->ssize) &&
-        set_up_sd_cone_work_space(c, k) < 0) {
+    if (set_up_sd_cone_work_space(c, k) < 0) {
       SCS(finish_cone)(c);
       return SCS_NULL;
     }
