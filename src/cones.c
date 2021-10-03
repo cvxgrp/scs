@@ -436,51 +436,11 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   }
   return 0;
 #else
-  scs_printf("FATAL: Cannot solve SDPs with > 2x2 matrices without linked "
-             "blas+lapack libraries\n");
+  scs_printf("FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
   scs_printf("Install blas+lapack and re-compile SCS with blas+lapack library "
              "locations\n");
   return -1;
 #endif
-}
-
-static scs_int project_2x2_sdc(scs_float *X) {
-  scs_float a, b, d, l1, l2, x1, x2, rad;
-  scs_float sqrt2 = SQRTF(2.0);
-  a = X[0];
-  b = X[1] / sqrt2;
-  d = X[2];
-
-  if (ABS(b) < 1e-6) { /* diagonal matrix */
-    X[0] = MAX(a, 0);
-    X[1] = 0;
-    X[2] = MAX(d, 0);
-    return 0;
-  }
-
-  rad = SQRTF((a - d) * (a - d) + 4 * b * b);
-  /* l1 >= l2 always, since rad >= 0 */
-  l1 = 0.5 * (a + d + rad);
-  l2 = 0.5 * (a + d - rad);
-
-  if (l2 >= 0) { /* both eigs positive already */
-    return 0;
-  }
-  if (l1 <= 0) { /* both eigs negative, set to 0 */
-    X[0] = 0;
-    X[1] = 0;
-    X[2] = 0;
-    return 0;
-  }
-
-  /* l1 pos, l2 neg */
-  x1 = 1 / SQRTF(1 + (l1 - a) * (l1 - a) / b / b);
-  x2 = x1 * (l1 - a) / b;
-
-  X[0] = l1 * x1 * x1;
-  X[1] = (l1 * x1 * x2) * sqrt2;
-  X[2] = l1 * x2 * x2;
-  return 0;
 }
 
 /* size of X is get_sd_cone_size(n) */
@@ -512,10 +472,6 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   if (n == 1) {
     X[0] = MAX(X[0], 0.);
     return 0;
-  }
-  if (n == 2) {
-    /* 2 x 2 special case, no need for lapack */
-    return project_2x2_sdc(X);
   }
 
 #ifdef USE_LAPACK
@@ -580,8 +536,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   return 0;
 
 #else
-  scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
-             "libraries were linked!\n");
+  scs_printf("FAILURE: solving SDP but no blas/lapack libraries were found!\n");
   scs_printf("SCS will return nonsense!\n");
   SCS(scale_array)(X, NAN, n);
   return -1;
