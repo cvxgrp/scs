@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "O'Donoghue"
+  given-names: "Brendan"
+- family-names: "Chu"
+  given-names: "Eric"
+- family-names: "Parikh"
+  given-names: "Neal"
+- family-names: "Boyd"
+  given-names: "Stephen"
+title: "SCS: Spltting Conic Solver"
+version: 3.0.0
+date-released: 2021
+url: "https://github.com/cvxgrp/scs"
+
+# Original SCS paper:
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "O'Donoghue"
+    given-names: "Brendan"
+  - family-names: "Chu"
+    given-names: "Eric"
+  - family-names: "Parikh"
+    given-names: "Neal"
+  - family-names: "Boyd"
+    given-names: "Stephen"
+  journal: "Journal of Optimization Theory and Applications"
+  month: 6
+  start: 1042  # Start pages
+  end: 1068  # End pages
+  title: "Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding"
+  issue: 3
+  volume: 169
+  year: 2016
+  doi: 10.1007/s10957-016-0892-3
+  url: https://dx.doi.org/10.1007/s10957-016-0892-3
+
