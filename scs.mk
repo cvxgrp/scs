@@ -111,9 +111,9 @@ GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)
 OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # tranpose A mat in GPU memory
 endif
-VALIDATE = 1
-ifneq ($(VALIDATE), 0)
-OPT_FLAGS += -DVALIDATE=$(VALIDATE) # perform problem validation or skip
+NOVALIDATE = 0
+ifneq ($(NOVALIDATE), 0)
+OPT_FLAGS += -DNOVALIDATE=$(NOVALIDATE) # perform problem validation or skip
 endif
 ### VERBOSITY LEVELS: 0,1,2,...
 VERBOSITY = 0

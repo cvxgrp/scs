@@ -162,7 +162,7 @@ target_include_directories(${${PROJECT_NAME}_DIRECT} PUBLIC
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
-target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE -DUSE_LAPACK -DVALIDATE -DCOPYAMATRIX -DCTRLC)
+target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE -DUSE_LAPACK -DCOPYAMATRIX -DCTRLC)
 
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
@@ -209,7 +209,7 @@ target_include_directories(${${PROJECT_NAME}_INDIRECT} PUBLIC
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
-target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE -DUSE_LAPACK -DVALIDATE -DCOPYAMATRIX -DCTRLC -DINDIRECT)
+target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE -DUSE_LAPACK -DCOPYAMATRIX -DCTRLC -DINDIRECT)
 
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_INDIRECT} PUBLIC
