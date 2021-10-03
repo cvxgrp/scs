@@ -505,6 +505,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_float sq_eig_pos;
 
 #endif
+
   if (n == 0) {
     return 0;
   }
@@ -516,6 +517,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     /* 2 x 2 special case, no need for lapack */
     return project_2x2_sdc(X);
   }
+
 #ifdef USE_LAPACK
 
   /* copy lower triangular matrix into full matrix */
@@ -550,7 +552,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
   if (first_idx == -1) {
     /* there are no positive eigenvalues, set X to 0 and return */
-    memset(X, 0, sizeof(scs_float) * n * (n + 1) / 2);
+    memset(X, 0, sizeof(scs_float) * get_sd_cone_size(n));
     return 0;
   }
 
@@ -569,11 +571,13 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* undo rescaling: scale diags by 1/sqrt(2) */
   BLAS(scal)(&nb, &sqrt2_inv, Xs, &nb_plus_one); /* not n_squared */
+
   /* extract just lower triangular matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Xs[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
   }
+  return 0;
 
 #else
   scs_printf("FAILURE: solving SDP with > 2x2 matrices, but no blas/lapack "
@@ -582,7 +586,6 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   SCS(scale_array)(X, NAN, n);
   return -1;
 #endif
-  return 0;
 }
 
 static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
