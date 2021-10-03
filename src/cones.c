@@ -461,18 +461,6 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   blas_int info = 0;
   scs_float sq_eig_pos;
 
-#endif
-
-  if (n == 0) {
-    return 0;
-  }
-  if (n == 1) {
-    X[0] = MAX(X[0], 0.);
-    return 0;
-  }
-
-#ifdef USE_LAPACK
-
   /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
@@ -533,10 +521,21 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   return 0;
 
 #else
+
+  if (n == 0) {
+    return 0;
+  }
+
+  if (n == 1) {
+    X[0] = MAX(X[0], 0.);
+    return 0;
+  }
+
   scs_printf("FAILURE: solving SDP but no blas/lapack libraries were found!\n");
   scs_printf("SCS will return nonsense!\n");
   SCS(scale_array)(X, NAN, n);
   return -1;
+
 #endif
 }
 
