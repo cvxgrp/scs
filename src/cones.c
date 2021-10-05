@@ -489,9 +489,9 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
   if (info != 0) {
     scs_printf("WARN: LAPACK syev error, info = %i\n", info);
-  }
-  if (info < 0) {
-    return -1;
+    if (info < 0) {
+      return info;
+    }
   }
 
   first_idx = -1;
@@ -724,7 +724,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 /* project onto the primal K cone in the paper */
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize) {
-  scs_int i;
+  scs_int i, status;
   scs_int count = 0;
 
   if (k->z) {
@@ -764,8 +764,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->ssize && k->s) {
     /* project onto PSD cones */
     for (i = 0; i < k->ssize; ++i) {
-      if (proj_semi_definite_cone(&(x[count]), k->s[i], c) < 0) {
-        return -1;
+      status = proj_semi_definite_cone(&(x[count]), k->s[i], c);
+      if (status < 0) {
+        return status;
       }
       count += get_sd_cone_size(k->s[i]);
     }
