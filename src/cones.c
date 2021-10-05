@@ -232,7 +232,7 @@ void SCS(finish_cone)(ScsConeWork *c) {
 
 char *SCS(get_cone_header)(const ScsCone *k) {
   char *tmp = (char *)scs_malloc(sizeof(char) * 512);
-  scs_int i, soc_vars, soc_blks, sd_vars, sd_blks;
+  scs_int i, soc_vars, sd_vars;
   sprintf(tmp, "cones: ");
   if (k->z) {
     sprintf(tmp + strlen(tmp), "\t  z: primal zero / dual free vars: %li\n",
@@ -245,24 +245,20 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)(k->bsize));
   }
   soc_vars = 0;
-  soc_blks = 0;
   if (k->qsize && k->q) {
-    soc_blks = k->qsize;
     for (i = 0; i < k->qsize; i++) {
       soc_vars += k->q[i];
     }
-    sprintf(tmp + strlen(tmp), "\t  q: soc vars: %li, soc blks: %li\n",
-            (long)soc_vars, (long)soc_blks);
+    sprintf(tmp + strlen(tmp), "\t  q: soc vars: %li, qsize: %li\n",
+            (long)soc_vars, (long)k->qsize);
   }
   sd_vars = 0;
-  sd_blks = 0;
   if (k->ssize && k->s) {
-    sd_blks = k->ssize;
     for (i = 0; i < k->ssize; i++) {
       sd_vars += get_sd_cone_size(k->s[i]);
     }
-    sprintf(tmp + strlen(tmp), "\t  s: sd vars: %li, sd blks: %li\n",
-            (long)sd_vars, (long)sd_blks);
+    sprintf(tmp + strlen(tmp), "\t  s: psd vars: %li, ssize: %li\n",
+            (long)sd_vars, (long)k->ssize);
   }
   if (k->ep || k->ed) {
     sprintf(tmp + strlen(tmp), "\t  e: exp vars: %li, dual exp vars: %li\n",
