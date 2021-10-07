@@ -52,7 +52,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
     y[i] = z[i] = rand_scs_float();
   }
   tmp_cone_work = SCS(init_cone)(k, SCS_NULL, m);
-  SCS(proj_dual_cone)(y, k, tmp_cone_work, 0);
+  SCS(proj_dual_cone)(y, k, tmp_cone_work, 0, SCS_NULL);
   SCS(finish_cone(tmp_cone_work));
 
   for (i = 0; i < m; i++) {
@@ -93,7 +93,7 @@ static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, y, m * sizeof(scs_float));
-  SCS(proj_dual_cone)(t, k, c, 0);
+  SCS(proj_dual_cone)(t, k, c, 0, SCS_NULL);
   dist = SCS(norm_inf_diff)(t, y, m);
   scs_free(t);
   return dist;
@@ -106,7 +106,7 @@ static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, s, m * sizeof(scs_float));
   SCS(scale_array)(t, -1.0, m);
-  SCS(proj_dual_cone)(t, k, c, 0);
+  SCS(proj_dual_cone)(t, k, c, 0, SCS_NULL);
   dist = SCS(norm_inf)(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
   scs_free(t);
   return dist;
@@ -218,11 +218,13 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    1e-12);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
                    1e-12);
-    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-12);
-    mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj), 1e-12);
-    mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj), 1e-12);
+    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-8 * (1 + ABS(gap)));
+    mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
+                   1e-9 * (1 + ABS(pobj)));
+    mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj),
+                   1e-9 * (1 + ABS(dobj)));
     /* slightly looser tol */
-    mu_assert_less("Complementary slackness ERROR", ABS(sty), 1e-6);
+    mu_assert_less("Complementary slackness ERROR", ABS(sty), 1e-5);
     mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-5);
     mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-5);
 
