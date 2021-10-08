@@ -209,6 +209,11 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   ScsGpuMatrix *Ag = (ScsGpuMatrix *)scs_calloc(1, sizeof(ScsGpuMatrix));
   ScsGpuMatrix *Pg = SCS_NULL;
 
+  p->A = A;
+  p->P = P;
+  p->m = A->m;
+  p->n = A->n;
+
 #if GPU_TRANSPOSE_MAT > 0
   size_t new_buffer_size = 0;
 #endif
@@ -451,7 +456,6 @@ scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   scs_float *bg = p->bg;
   scs_float *tmp_m = p->tmp_m;
   ScsGpuMatrix *Ag = p->Ag;
-  ScsGpuMatrix *Pg = p->Pg;
 
   if (CG_NORM(b, p->n + p->m) <= 1e-12) {
     memset(b, 0, (p->n + p->m) * sizeof(scs_float));

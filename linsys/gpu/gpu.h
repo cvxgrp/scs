@@ -5,8 +5,13 @@
 extern "C" {
 #endif
 
-#include <cublas_v2.h>
+/* TODO: Do we need this?
+
 #include <cuda.h>
+
+*/
+
+#include <cublas_v2.h>
 #include <cuda_runtime_api.h>
 #include <cusparse.h>
 
