@@ -42,7 +42,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
    * forms upper triangular part of [(I + P)  A'; A -I]
    * P : n x n, A: m x n.
    */
-  scs_int i, j, k, kk;
+  scs_int h, i, j, count;
   csc *Kcsc, *K;
   scs_int n = A->n;
   scs_int m = A->m;
@@ -65,71 +65,72 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
-  kk = 0; /* element counter */
+  count = 0; /* element counter */
   if (P) {
     /* I + P in top left */
-    for (j = 0; j < P->n; j++) { /* cols */
+    for (j = 0; j < n; j++) { /* cols */
       /* empty column, add diagonal  */
       if (P->p[j] == P->p[j + 1]) {
-        K->i[kk] = j;
-        K->p[kk] = j;
-        K->x[kk] = rho_x;
-        kk++;
+        K->i[count] = j;
+        K->p[count] = j;
+        K->x[count] = rho_x;
+        count++;
       }
-      for (k = P->p[j]; k < P->p[j + 1]; k++) {
-        i = P->i[k]; /* row */
+      for (h = P->p[j]; h < P->p[j + 1]; h++) {
+        i = P->i[h]; /* row */
         if (i > j) { /* only upper triangular needed */
           break;
         }
-        K->i[kk] = i;
-        K->p[kk] = j;
-        K->x[kk] = P->x[k];
+        K->i[count] = i;
+        K->p[count] = j;
+        K->x[count] = P->x[h];
         if (i == j) {
           /* P has diagonal element */
-          K->x[kk] += rho_x;
+          K->x[count] += rho_x;
         }
-        kk++;
+        count++;
         /* reached the end without adding diagonal, do it now */
-        if ((i < j) && (k + 1 == P->p[j + 1] || P->i[k + 1] > j)) {
-          K->i[kk] = j;
-          K->p[kk] = j;
-          K->x[kk] = rho_x;
-          kk++;
+        if ((i < j) && (h + 1 == P->p[j + 1] || P->i[h + 1] > j)) {
+          K->i[count] = j;
+          K->p[count] = j;
+          K->x[count] = rho_x;
+          count++;
         }
       }
     }
   } else {
     /* rho_x * I in top left */
-    for (k = 0; k < A->n; k++) {
-      K->i[kk] = k;
-      K->p[kk] = k;
-      K->x[kk] = rho_x;
-      kk++;
+    for (j = 0; j < n; j++) {
+      K->i[count] = j;
+      K->p[count] = j;
+      K->x[count] = rho_x;
+      count++;
     }
   }
 
   /* A^T at top right */
   for (j = 0; j < n; j++) {
-    for (k = A->p[j]; k < A->p[j + 1]; k++) {
-      K->p[kk] = A->i[k] + n;
-      K->i[kk] = j;
-      K->x[kk] = A->x[k];
-      kk++;
+    for (h = A->p[j]; h < A->p[j + 1]; h++) {
+      K->p[count] = A->i[h] + n;
+      K->i[count] = j;
+      K->x[count] = A->x[h];
+      count++;
     }
   }
 
   /* -rho_y_vec * I at bottom right */
-  for (k = 0; k < m; k++) {
-    K->i[kk] = k + n;
-    K->p[kk] = k + n;
-    K->x[kk] = -rho_y_vec[k];
-    rho_y_vec_idxs[k] = kk; /* store the indices where rho_y_vec occurs */
-    kk++;
+  for (j = 0; j < m; j++) {
+    K->i[count] = j + n;
+    K->p[count] = j + n;
+    K->x[count] = -rho_y_vec[j];
+    rho_y_vec_idxs[j] = count; /* store the indices where rho_y_vec occurs */
+    count++;
   }
-  K->nz = kk;
+
+  K->nz = count;
   idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
   Kcsc = SCS(cs_compress)(K, idx_mapping);
-  for (i = 0; i < A->m; i++) {
+  for (i = 0; i < m; i++) {
     rho_y_vec_idxs[i] = idx_mapping[rho_y_vec_idxs[i]];
   }
   SCS(cs_spfree)(K);
