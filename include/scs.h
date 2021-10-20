@@ -218,6 +218,7 @@ typedef struct {
   scs_float *g;                  /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *rho_y_vec; /* vector of rho y parameters (affects cone project) */
+  scs_float *diag_r; /* vector of rho y parameters (affects cone project) */
   AaWork *accel;        /* struct for acceleration workspace */
   scs_float *b_orig, *c_orig;             /* original b and c vectors */
   scs_float *b_normalized, *c_normalized; /* normalized b and c vectors */

@@ -21,7 +21,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
-    scs_free(p->rho_y_vec_idxs);
+    scs_free(p->diag_r_idxs);
     scs_free(p->Lnz);
     scs_free(p->iwork);
     scs_free(p->etree);
@@ -33,8 +33,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
 }
 
 static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                     scs_float *rho_y_vec, scs_int *rho_y_vec_idxs,
-                     scs_float rho_x) {
+                     scs_float *diag_r, scs_int *diag_r_idxs) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed kkt matrix
    * assumes column compressed form A matrix
@@ -67,14 +66,16 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
 
   count = 0; /* element counter */
   if (P) {
-    /* I + P in top left */
+    /* R_x + P in top left */
     for (j = 0; j < n; j++) { /* cols */
       /* empty column, add diagonal  */
       if (P->p[j] == P->p[j + 1]) {
         K->i[count] = j;
         K->p[count] = j;
-        K->x[count] = rho_x;
+        K->x[count] = diag_r[j];
+        diag_r_idxs[j] = count; /* store the indices where diag_r occurs */
         count++;
+        break;
       }
       for (h = P->p[j]; h < P->p[j + 1]; h++) {
         i = P->i[h]; /* row */
@@ -86,24 +87,27 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
         K->x[count] = P->x[h];
         if (i == j) {
           /* P has diagonal element */
-          K->x[count] += rho_x;
+          K->x[count] += diag_r[j];
+          diag_r_idxs[j] = count; /* store the indices where diag_r occurs */
         }
         count++;
         /* reached the end without adding diagonal, do it now */
         if ((i < j) && (h + 1 == P->p[j + 1] || P->i[h + 1] > j)) {
           K->i[count] = j;
           K->p[count] = j;
-          K->x[count] = rho_x;
+          K->x[count] = diag_r[j];
+          diag_r_idxs[j] = count; /* store the indices where diag_r occurs */
           count++;
         }
       }
     }
   } else {
-    /* rho_x * I in top left */
+    /* R_x in top left */
     for (j = 0; j < n; j++) {
       K->i[count] = j;
       K->p[count] = j;
-      K->x[count] = rho_x;
+      K->x[count] = diag_r[j];
+      diag_r_idxs[j] = count; /* store the indices where diag_r occurs */
       count++;
     }
   }
@@ -118,20 +122,20 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
-  /* -rho_y_vec * I at bottom right */
+  /* -R_y at bottom right */
   for (j = 0; j < m; j++) {
     K->i[count] = j + n;
     K->p[count] = j + n;
-    K->x[count] = -rho_y_vec[j];
-    rho_y_vec_idxs[j] = count; /* store the indices where rho_y_vec occurs */
+    K->x[count] = -diag_r[j + n];
+    diag_r_idxs[j + n] = count; /* store the indices where diag_r occurs */
     count++;
   }
 
   K->nz = count;
   idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
   Kcsc = SCS(cs_compress)(K, idx_mapping);
-  for (i = 0; i < m; i++) {
-    rho_y_vec_idxs[i] = idx_mapping[rho_y_vec_idxs[i]];
+  for (i = 0; i < m + n; i++) {
+    diag_r_idxs[i] = idx_mapping[diag_r_idxs[i]];
   }
   SCS(cs_spfree)(K);
   scs_free(idx_mapping);
@@ -284,10 +288,10 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
 }
 
 static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                        ScsLinSysWork *p, scs_float *rho_y_vec) {
+                        ScsLinSysWork *p, scs_float *diag_r) {
   scs_float *info;
   scs_int *Pinv, amd_status, *idx_mapping, i;
-  csc *kkt_perm, *kkt = form_kkt(A, P, rho_y_vec, p->rho_y_vec_idxs, p->rho_x);
+  csc *kkt_perm, *kkt = form_kkt(A, P, diag_r, p->diag_r_idxs);
   if (!kkt) {
     return SCS_NULL;
   }
@@ -303,8 +307,8 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   Pinv = cs_pinv(p->perm, A->n + A->m);
   idx_mapping = (scs_int *)scs_malloc(kkt->nzmax * sizeof(scs_int));
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
-  for (i = 0; i < A->m; i++) {
-    p->rho_y_vec_idxs[i] = idx_mapping[p->rho_y_vec_idxs[i]];
+  for (i = 0; i < A->n + A->m; i++) {
+    p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
   }
   SCS(cs_spfree)(kkt);
   scs_free(Pinv);
@@ -313,10 +317,11 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void SCS(update_lin_sys_rho_y_vec)(ScsLinSysWork *p, scs_float *rho_y_vec) {
+void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
   scs_int i, ldl_status;
-  for (i = 0; i < p->m; ++i) {
-    p->kkt->x[p->rho_y_vec_idxs[i]] = -rho_y_vec[i];
+  for (i = 0; i < p->n + p->m; ++i) {
+    /* top left is R_x, bottom right is -R_y */
+    p->kkt->x[p->diag_r_idxs[i]] = (i < p->n ? 1 : -1) * diag_r[i];
   }
   ldl_status = ldl_factor(p, p->n);
   if (ldl_status < 0) {
@@ -328,21 +333,20 @@ void SCS(update_lin_sys_rho_y_vec)(ScsLinSysWork *p, scs_float *rho_y_vec) {
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      scs_float *rho_y_vec, scs_float rho_x) {
+                                      scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
   p->m = A->m;
   p->n = A->n;
-  p->rho_x = rho_x;
   p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
   p->L = (csc *)scs_malloc(sizeof(csc));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
-  p->rho_y_vec_idxs = (scs_int *)scs_malloc(A->m * sizeof(scs_int));
+  p->diag_r_idxs = (scs_int *)scs_malloc(n_plus_m * sizeof(scs_int));
   p->factorizations = 0;
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->L->nz = -1;
-  p->kkt = permute_kkt(A, P, p, rho_y_vec);
+  p->kkt = permute_kkt(A, P, p, diag_r);
   ldl_prepare_status = ldl_prepare(p);
   ldl_status = ldl_factor(p, A->n);
   if (ldl_prepare_status < 0 || ldl_status < 0) {

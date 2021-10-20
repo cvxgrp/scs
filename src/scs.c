@@ -755,6 +755,17 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
+// TODO delete this
+static void set_diag_r(ScsWork *w) {
+  scs_int i;
+  for (i = 0; i < w->n; ++i) {
+    w->diag_r[i] = w->stgs->rho_x;
+  }
+  for (i = 0; i < w->m; ++i) {
+    w->diag_r[i + w->n] = w->rho_y_vec[i];
+  }
+}
+
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs) {
   ScsWork *w = (ScsWork *)scs_calloc(1, sizeof(ScsWork));
@@ -788,6 +799,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->lin_sys_warm_start = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->rho_y_vec = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
+  w->diag_r = (scs_float *)scs_calloc(d->m + d->n, sizeof(scs_float));
   /* x,y,s struct */
   w->xys_orig = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   w->xys_orig->x = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
@@ -845,8 +857,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
-  if (!(w->p =
-            SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
+  set_diag_r(w);
+  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
@@ -946,7 +958,8 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->last_scale_update_iter = iter;
     w->scale = new_scale;
     SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
-    SCS(update_lin_sys_rho_y_vec)(w->p, w->rho_y_vec);
+    set_diag_r(w);
+    SCS(update_lin_sys_diag_r)(w->p, w->diag_r);
 
     /* update pre-solved quantities */
     update_work_cache(w);
