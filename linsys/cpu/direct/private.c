@@ -75,7 +75,6 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
         K->x[count] = diag_r[j];
         diag_r_idxs[j] = count; /* store the indices where diag_r occurs */
         count++;
-        break;
       }
       for (h = P->p[j]; h < P->p[j + 1]; h++) {
         i = P->i[h]; /* row */
