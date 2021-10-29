@@ -18,6 +18,7 @@ struct SCS_CONE_WORK {
    */
   scs_int *cone_boundaries;
   scs_int cone_boundaries_len;
+  scs_int scaled_cones;
   scs_float *s;     /* used for Moreau decomposition in projection */
   scs_int cone_len; /* total length of cone (= m) */
   /* box cone quantities */
@@ -29,12 +30,11 @@ struct SCS_CONE_WORK {
 #endif
 };
 
-ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal,
-                            scs_int cone_len);
+ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int cone_len);
 char *SCS(get_cone_header)(const ScsCone *k);
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                            scs_int normalize, scs_float *rho_y_vec);
+                            ScsScaling *scal, scs_float *rho_y_vec);
 void SCS(finish_cone)(ScsConeWork *c);
 void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
                         scs_float *rho_y_vec);

@@ -18,6 +18,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
     SCS(cs_spfree)(p->L);
     SCS(cs_spfree)(p->kkt);
+    scs_free(p->diag_p);
     scs_free(p->perm);
     scs_free(p->Dinv);
     scs_free(p->bp);
@@ -32,7 +33,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   }
 }
 
-static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
+static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
                      scs_float *diag_r, scs_int *diag_r_idxs) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed kkt matrix
@@ -68,6 +69,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
   if (P) {
     /* R_x + P in top left */
     for (j = 0; j < n; j++) { /* cols */
+      diag_p[j] = 0.;
       /* empty column, add diagonal  */
       if (P->p[j] == P->p[j + 1]) {
         K->i[count] = j;
@@ -86,6 +88,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
         K->x[count] = P->x[h];
         if (i == j) {
           /* P has diagonal element */
+          diag_p[j] = P->x[h];
           K->x[count] += diag_r[j];
           diag_r_idxs[j] = count; /* store the indices where diag_r occurs */
         }
@@ -103,6 +106,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P,
   } else {
     /* R_x in top left */
     for (j = 0; j < n; j++) {
+      diag_p[j] = 0.;
       K->i[count] = j;
       K->p[count] = j;
       K->x[count] = diag_r[j];
@@ -290,7 +294,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
                         ScsLinSysWork *p, scs_float *diag_r) {
   scs_float *info;
   scs_int *Pinv, amd_status, *idx_mapping, i;
-  csc *kkt_perm, *kkt = form_kkt(A, P, diag_r, p->diag_r_idxs);
+  csc *kkt_perm, *kkt = form_kkt(A, P, p->diag_p, diag_r, p->diag_r_idxs);
   if (!kkt) {
     return SCS_NULL;
   }
@@ -318,9 +322,13 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 
 void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
   scs_int i, ldl_status;
-  for (i = 0; i < p->n + p->m; ++i) {
-    /* top left is R_x, bottom right is -R_y */
-    p->kkt->x[p->diag_r_idxs[i]] = (i < p->n ? 1 : -1) * diag_r[i];
+  for (i = 0; i < p->n; ++i) {
+    /* top left is R_x + {, bottom right is -R_y */
+    p->kkt->x[p->diag_r_idxs[i]] = p->diag_p[i] + diag_r[i];
+  }
+  for (i = p->n; i < p->n + p->m; ++i) {
+    /* top left is R_x + P, bottom right is -R_y */
+    p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
   }
   ldl_status = ldl_factor(p, p->n);
   if (ldl_status < 0) {
@@ -337,6 +345,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
   p->m = A->m;
   p->n = A->n;
+  p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
   p->L = (csc *)scs_malloc(sizeof(csc));
   p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));

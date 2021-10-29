@@ -296,9 +296,8 @@ static const char *small_qp(void) {
 
   d->m = m + 1; /* t var in box cone */
   d->n = n;
-  d->b =
-      (scs_float *)scs_calloc(m + 1, sizeof(scs_float)); /* t var in box cone */
-  d->b[0] = 1;                                           /* t var in box cone */
+  d->b = (scs_float *)scs_calloc(m + 1, sizeof(scs_float));
+  d->b[0] = 1;  /* t var in box cone */
   d->c = q;
 
   d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
@@ -329,8 +328,8 @@ static const char *small_qp(void) {
   k->bsize = m + 1; /* t var in box cone */
 
   SCS(set_default_settings)(stgs);
-  stgs->eps_abs = 1e-10;
-  stgs->eps_rel = 1e-10;
+  stgs->eps_abs = 1e-6;
+  stgs->eps_rel = 1e-6;
   stgs->eps_infeas = 1e-10;
 
   exitflag = scs(d, k, stgs, sol, &info);

@@ -24,6 +24,7 @@ struct SCS_LIN_SYS_WORK {
   scs_float *D, *fwork;
   scs_int *etree, *iwork, *Lnz, *bwork;
   scs_float rho_x;
+  scs_float *diag_p;
 };
 
 #ifdef __cplusplus

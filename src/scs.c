@@ -43,6 +43,7 @@ static void free_work(ScsWork *w) {
     scs_free(w->c_normalized);
     scs_free(w->rho_y_vec);
     scs_free(w->lin_sys_warm_start);
+    scs_free(w->diag_r);
     if (w->scal) {
       scs_free(w->scal->D);
       scs_free(w->scal->E);
@@ -424,7 +425,7 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
   /* u = [x;y;tau] */
-  status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, w->stgs->normalize,
+  status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, w->scal,
                                w->rho_y_vec);
   if (iter < FEASIBLE_ITERS) {
     w->u[l - 1] = 1.0;
@@ -815,11 +816,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
   memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
 
-  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
+  if (!(w->cone_work = SCS(init_cone)(k, w->m))) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
   SCS(set_rho_y_vec)(k, w->cone_work, w->scale, w->rho_y_vec);
+  set_diag_r(w);
 
   if (!w->c_normalized) {
     scs_printf("ERROR: work memory allocation failure\n");
@@ -854,7 +856,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->scal = SCS_NULL;
   }
 
-  set_diag_r(w);
   if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
