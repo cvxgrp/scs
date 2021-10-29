@@ -43,9 +43,6 @@ static void free_work(ScsWork *w) {
     scs_free(w->c_normalized);
     scs_free(w->rho_y_vec);
     scs_free(w->lin_sys_warm_start);
-    if (w->cone_boundaries) {
-      scs_free(w->cone_boundaries);
-    }
     if (w->scal) {
       scs_free(w->scal->D);
       scs_free(w->scal->E);
@@ -817,7 +814,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->c_normalized = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
   memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
-  SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
+
+  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
+    scs_printf("ERROR: init_cone failure\n");
+    return SCS_NULL;
+  }
+  SCS(set_rho_y_vec)(k, w->cone_work, w->scale, w->rho_y_vec);
 
   if (!w->c_normalized) {
     scs_printf("ERROR: work memory allocation failure\n");
@@ -842,22 +844,16 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     }
 #endif
     /* this allocates memory that must be freed */
-    w->cone_boundaries_len = SCS(set_cone_boundaries)(k, &w->cone_boundaries);
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
     SCS(normalize)
-    (w->P, w->A, w->b_normalized, w->c_normalized, w->scal, w->cone_boundaries,
-     w->cone_boundaries_len);
+    (w->P, w->A, w->b_normalized, w->c_normalized, w->scal,
+     w->cone_work->cone_boundaries, w->cone_work->cone_boundaries_len);
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
-    w->cone_boundaries_len = 0;
-    w->cone_boundaries = SCS_NULL;
     w->scal = SCS_NULL;
   }
-  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
-    scs_printf("ERROR: init_cone failure\n");
-    return SCS_NULL;
-  }
+
   set_diag_r(w);
   if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
@@ -958,7 +954,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
     w->scale = new_scale;
-    SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
+    SCS(set_rho_y_vec)(k, w->cone_work, w->scale, w->rho_y_vec);
     set_diag_r(w);
     SCS(update_lin_sys_diag_r)(w->p, w->diag_r);
 

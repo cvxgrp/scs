@@ -28,10 +28,9 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 #endif
 
 /* set the vector of rho y terms, based on scale and cones */
-void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
-                        scs_int m) {
+void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
+                        scs_float *rho_y_vec) {
   scs_int i;
-  scs_float *rho_box;
 
   /* f cone */
   for (i = 0; i < k->z; ++i) {
@@ -42,27 +41,8 @@ void SCS(set_rho_y_vec)(const ScsCone *k, scs_float scale, scs_float *rho_y_vec,
     rho_y_vec[i] = 1.0 / (1000. * scale);
   }
   /* others */
-  for (i = k->z; i < m; ++i) {
+  for (i = k->z; i < c->cone_len; ++i) {
     rho_y_vec[i] = 1.0 / scale;
-  }
-
-  /* Note, if updating this to use different scales for other cones (e.g. box)
-   * then you must be careful to also include the effect of the rho_y_vec
-   * in the cone projection operator.
-   */
-
-  /* Increase rho_y_vec for the t term in the box cone */
-  if (k->bsize) {
-    rho_box = &(rho_y_vec[k->z + k->l + 1]);
-    for (i = 0; i < k->bsize - 1; ++i) { /* -1 for t */
-      if ((k->bu[i] > MAX_BOX_VAL) && (k->bl[i] < -MAX_BOX_VAL)) {
-        /* unconstrained */
-        rho_box[i] /= 10;
-      } else if (k->bu[i] - k->bl[i] < BOX_EQUALITY_TOL) {
-        /* equality constrained */
-        rho_box[i] *= 10;
-      }
-    }
   }
 }
 
@@ -75,7 +55,7 @@ static inline scs_int get_sd_cone_size(scs_int s) {
  * cone boundaries, boundaries[0] is starting index for cones of size strictly
  * larger than 1, boundaries malloc-ed here so should be freed.
  */
-scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
+void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   scs_int i, s_cone_sz, count = 0;
   scs_int cone_boundaries_len =
       1 + k->qsize + k->ssize + k->ed + k->ep + k->psize;
@@ -103,8 +83,8 @@ scs_int SCS(set_cone_boundaries)(const ScsCone *k, scs_int **cone_boundaries) {
   }
   count += k->psize;
   /* other cones */
-  *cone_boundaries = b;
-  return cone_boundaries_len;
+  c->cone_boundaries = b;
+  c->cone_boundaries_len = cone_boundaries_len;
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
@@ -220,6 +200,9 @@ void SCS(finish_cone)(ScsConeWork *c) {
     scs_free(c->work);
   }
 #endif
+  if (c->cone_boundaries) {
+    scs_free(c->cone_boundaries);
+  }
   if (c->s) {
     scs_free(c->s);
   }
@@ -593,11 +576,13 @@ static void normalize_box_cone(ScsConeWork *c, scs_float *D, scs_int bsize) {
 
 /* project onto { (t, s) | t * l <= s <= t * u, t >= 0 }, Newton's method on t
    tx = [t; s], total length = bsize
-   uses Moreau since \Pi_K*(tx) = \Pi_K(-tx) + tx
+
+  under Euclidean metric r_box
+
 */
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
-                               scs_float t_warm_start, scs_float *rho_y_vec) {
+                               scs_float t_warm_start, scs_float *r_box) {
   scs_float *x, gt, ht, t_prev, t = t_warm_start;
   scs_float rho_t = 1, *rho = SCS_NULL, r;
   scs_int iter, j;
@@ -606,25 +591,16 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     tx[0] = MAX(tx[0], 0.0);
     return tx[0];
   }
-  
-  if (rho_y_vec) {
-    for (j = 0; j < bsize; j++) {
-      tx[j] *= rho_y_vec[j];
-      //scs_printf("r[%i] = %4f\n", j, rho_y_vec[j]);
-    }
-  }
-
   x = &(tx[1]);
 
-  if (rho_y_vec) {
-    rho_t = 1.0 / rho_y_vec[0];
-    rho = &(rho_y_vec[1]);
+  if (r_box) {
+    rho_t = 1.0 / r_box[0];
+    rho = &(r_box[1]);
   }
 
   /* should only require about 5 or so iterations, 1 or 2 if warm-started */
   for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
     t_prev = t;
-    /* incorporate the additional BOX_T_SCALE factor into the projection */
     gt = rho_t * (t - tx[0]); /* gradient */
     ht = rho_t;               /* hessian */
     for (j = 0; j < bsize - 1; j++) {
@@ -665,14 +641,6 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     /* x[j] unchanged otherwise */
   }
   tx[0] = t;
-
-  if (rho_y_vec) {
-    for (j = 0; j < bsize; j++) {
-      tx[j] /= rho_y_vec[j];
-      //scs_printf("r[%i] = %4f\n", j, rho_y_vec[j]);
-    }
-  }
-
 
 #if VERBOSITY > 3
   scs_printf("box cone iters %i\n", (int)iter + 1);
@@ -746,18 +714,18 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* project onto the primal K cone in the paper */
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                         scs_int normalize, scs_float *rho_y_vec) {
+                         scs_int normalize, scs_float *diag_r_y) {
   scs_int i, status;
   scs_int count = 0;
-  scs_float *rho_box = SCS_NULL;
+  scs_float *r_box = SCS_NULL;
 
-  if (k->z) {
+  if (k->z) { /* doesn't use diag_r_y */
     /* project onto primal zero / dual free cone */
     memset(x, 0, k->z * sizeof(scs_float));
     count += k->z;
   }
 
-  if (k->l) {
+  if (k->l) { /* doesn't use diag_r_y */
     /* project onto positive orthant */
     for (i = count; i < count + k->l; ++i) {
       x[i] = MAX(x[i], 0.0);
@@ -765,22 +733,22 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += k->l;
   }
 
-  if (k->bsize) {
-    if (rho_y_vec) {
-      rho_box = &(rho_y_vec[k->z + k->l]);
+  if (k->bsize) { /* DOES use diag_r_y */
+    if (diag_r_y) {
+      r_box = &(diag_r_y[count]);
     }
     /* project onto box cone */
     if (normalize) {
       c->box_t_warm_start = proj_box_cone(&(x[count]), c->bl, c->bu, k->bsize,
-                                          c->box_t_warm_start, rho_box);
+                                          c->box_t_warm_start, r_box);
     } else {
       c->box_t_warm_start = proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize,
-                                          c->box_t_warm_start, rho_box);
+                                          c->box_t_warm_start, r_box);
     }
     count += k->bsize; /* since b = (t,s), len(s) = bsize - 1 */
   }
 
-  if (k->qsize && k->q) {
+  if (k->qsize && k->q) { /* doesn't use diag_r_y */
     /* project onto second-order cones */
     for (i = 0; i < k->qsize; ++i) {
       proj_soc(&(x[count]), k->q[i]);
@@ -788,7 +756,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  if (k->ssize && k->s) {
+  if (k->ssize && k->s) { /* doesn't use diag_r_y */
     /* project onto PSD cones */
     for (i = 0; i < k->ssize; ++i) {
       status = proj_semi_definite_cone(&(x[count]), k->s[i], c);
@@ -799,13 +767,13 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  if (k->ep) {
-    /*
-     * exponential cone is not self dual, if s \in K
-     * then y \in K^* and so if K is the primal cone
-     * here we project onto K^*, via Moreau
-     * \Pi_C^*(y) = y + \Pi_C(-y)
-     */
+  if (k->ep) { /* doesn't use diag_r_y */
+               /*
+                * exponential cone is not self dual, if s \in K
+                * then y \in K^* and so if K is the primal cone
+                * here we project onto K^*, via Moreau
+                * \Pi_C^*(y) = y + \Pi_C(-y)
+                */
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -815,7 +783,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->ep;
   }
 
-  if (k->ed) { /* dual exponential cone */
+  /* dual exponential cone */
+  if (k->ed) { /* doesn't use diag_r_y */
     /*
      * exponential cone is not self dual, if s \in K
      * then y \in K^* and so if K is the primal cone
@@ -843,7 +812,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->ed;
   }
 
-  if (k->psize && k->p) {
+  if (k->psize && k->p) { /* doesn't use diag_r_y */
     scs_float v[3];
     scs_int idx;
     /* don't use openmp for power cone
@@ -851,7 +820,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     pragma omp parallel for private(v, idx)
     endif
     */
-    for (i = 0; i < k->psize; ++i) {
+    for (i = 0; i < k->psize; ++i) { /* doesn't use diag_r_y */
       idx = count + 3 * i;
       if (k->p[i] >= 0) {
         /* primal power cone */
@@ -879,6 +848,7 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal,
                             scs_int cone_len) {
   ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
   c->cone_len = cone_len;
+  set_cone_boundaries(k, c);
   c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
   if (k->bsize && k->bu && k->bl) {
     c->box_t_warm_start = 1.;
@@ -904,17 +874,31 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, const ScsScaling *scal,
 /* outward facing cone projection routine
    performs projection in-place
    if normalize > 0 then will use normalized (equilibrated) cones if applicable.
+
+   x + R^{-1} \Pi_{C^*}^{R^{-1}} ( - R x ) = \Pi_C^R ( x )
+
+   where \Pi^R_C is the projection onto C under the R-Euclidean norm.
+
 */
 scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                            scs_int normalize, scs_float *rho_y_vec) {
-  scs_int status;
-  /* copy x, s = x */
+                            scs_int normalize, scs_float *diag_r_y) {
+  scs_int status, i;
+
+  /* copy s = x */
   memcpy(c->s, x, c->cone_len * sizeof(scs_float));
-  /* negate x -> -x */
-  SCS(scale_array)(x, -1., c->cone_len);
-  /* project -x onto cone, x -> Pi_K(-x) */
-  status = proj_cone(x, k, c, normalize, rho_y_vec);
-  /* return Pi_K*(x) = x + Pi_K(-x) */
-  SCS(add_scaled_array)(x, c->s, c->cone_len, 1.);
+
+  /* x -> - Rx */
+  for (i = 0; i < c->cone_len; ++i) {
+    x[i] *= -diag_r_y[i];
+  }
+
+  /* project -x onto cone, x -> \Pi_{C^*}^{R^{-1}}(-x) */
+  status = proj_cone(x, k, c, normalize, diag_r_y);
+
+  /* return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x )  */
+  for (i = 0; i < c->cone_len; ++i) {
+    x[i] = x[i] / diag_r_y[i] + c->s[i];
+  }
+
   return status;
 }
