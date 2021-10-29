@@ -14,6 +14,7 @@
 #include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h"
 #include "problems/small_lp.h"
+#include "problems/small_qp.h"
 #include "problems/test_fails.h"
 #include "problems/unbounded_tiny_qp.h"
 
@@ -26,6 +27,8 @@ static const char *all_tests(void) {
   mu_run_test(degenerate);
   scs_printf("small_lp\n");
   mu_run_test(small_lp);
+  scs_printf("small_qp\n");
+  mu_run_test(small_qp);
   scs_printf("rob_gauss_cov_est\n");
   mu_run_test(rob_gauss_cov_est);
   scs_printf("hs21_tiny_qp\n");
