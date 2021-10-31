@@ -791,7 +791,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->lin_sys_warm_start = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
-  w->diag_r = (scs_float *)scs_calloc(d->m + d->n, sizeof(scs_float));
+  w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
   w->xys_orig = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   w->xys_orig->x = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
@@ -964,7 +964,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     }
     for (i=0; i < l; ++i) {
       r_hat[i] /= mean;
-      r_hat[i] = SQRTF(r_hat[i]); // TODO better than this
+      r_hat[i] = POWF(r_hat[i], 0.25); // TODO better than this
     }
     mean = 0.;
 
@@ -987,12 +987,18 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
     }
 
+     for (i=0; i < w->n; ++i) {
+      w->diag_r[i] *= SQRTF(new_scale);
+    }
+    for (i=w->n; i < w->n+w->m; ++i) {
+      w->diag_r[i] /= SQRTF(new_scale);
+    }
+
+
     mean = 0.;
     for (i=0; i < l; ++i) {
       mean += w->diag_r[i] /l;
     }
-
-
     scs_printf("mean R = %.3e\n", mean);
     scs_printf("max R = %.3e\n", SCS(norm_inf)(w->diag_r, l));
     scs_free(r_hat);

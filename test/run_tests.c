@@ -29,8 +29,8 @@ static const char *all_tests(void) {
   mu_run_test(small_lp);
   scs_printf("small_qp\n");
   mu_run_test(small_qp);
-  //scs_printf("rob_gauss_cov_est\n");
-  //mu_run_test(rob_gauss_cov_est);
+  scs_printf("rob_gauss_cov_est\n");
+  mu_run_test(rob_gauss_cov_est);
   scs_printf("hs21_tiny_qp\n");
   mu_run_test(hs21_tiny_qp);
   scs_printf("hs21_tiny_qp_rw\n");
