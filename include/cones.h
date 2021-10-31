@@ -38,6 +38,8 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
 void SCS(finish_cone)(ScsConeWork *c);
 void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
                         scs_float *rho_y_vec);
+void SCS(enforce_cone_boundaries)(const ScsCone *k, const ScsConeWork *c,
+                                  scs_float *vec);
 
 #ifdef __cplusplus
 }

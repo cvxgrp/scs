@@ -46,6 +46,26 @@ void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
   }
 }
 
+/* XXX */
+/* Should also handle l2 ? */
+/* use this function in normalization? */
+void SCS(enforce_cone_boundaries)(const ScsCone *k, const ScsConeWork *c,
+                                  scs_float *vec) {
+  scs_int i, j, delta;
+  scs_int count = c->cone_boundaries[0];
+  scs_printf("count %i\n", count);
+  scs_float wrk;
+  for (i = 1; i < c->cone_boundaries_len; ++i) {
+    delta = c->cone_boundaries[i];
+    wrk = SCS(norm_inf)(&(vec[count]), delta);
+    for (j = count; j < count + delta; ++j) {
+      vec[j] = wrk;
+    }
+    count += delta;
+    scs_printf("count %i\n", count);
+  }
+}
+
 static inline scs_int get_sd_cone_size(scs_int s) {
   return (s * (s + 1)) / 2;
 }

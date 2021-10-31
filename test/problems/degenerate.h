@@ -86,7 +86,7 @@ static const char *degenerate(void) {
   }
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
-  success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
   mu_assert("degenerate box cone failure", success);
 
   /* degenerate SOC cone */
@@ -101,7 +101,7 @@ static const char *degenerate(void) {
   }
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
-  success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
   mu_assert("degenerate SOC cone failure", success);
 
   /* degenerate PSD cone */
@@ -117,7 +117,7 @@ static const char *degenerate(void) {
   }
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
-  success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
   mu_assert("degenerate PSD cone failure", success);
 
   SCS(free_sol)(sol);
