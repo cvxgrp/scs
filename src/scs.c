@@ -964,7 +964,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     }
     for (i=0; i < l; ++i) {
       r_hat[i] /= mean;
-      r_hat[i] = POWF(r_hat[i], 0.25); // TODO better than this
+      r_hat[i] = POWF(r_hat[i], 0.5); // TODO better than this
     }
     mean = 0.;
 
