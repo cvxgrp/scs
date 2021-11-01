@@ -318,7 +318,7 @@ static void cold_start_vars(ScsWork *w) {
 /* See .note_on_scale in repo for explanation */
 static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
                                        const scs_float *y) {
-  scs_int i, n = w->n, len = w->n + w->m;
+  scs_int i, len = w->n + w->m;
   scs_float ip = 0.0;
   for (i = 0; i < len; ++i) {
     ip += x[i] * y[i] * w->diag_r[i];
@@ -755,7 +755,7 @@ static void set_diag_r(ScsWork *w) {
     w->diag_r[i] = w->stgs->rho_x;
   }
   for (i = 0; i < w->m; ++i) {
-    w->diag_r[i + w->n] = w->scale;
+    w->diag_r[i + w->n] = 1. / w->scale;
   }
 }
 
@@ -949,12 +949,12 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->scale = new_scale;
 
     // XXX
-    scs_int i,l = w->m + w->n + 1;
+    scs_int l = w->m + w->n + 1;
     scs_float mean = 0.;
     scs_float *r_hat = scs_malloc(l * sizeof(scs_float));
     for (i=0; i < l; ++i) {
       r_hat[i] = ABS(w->u[i] - w->u_t[i]);
-      scs_printf("err[%i] = %.3e\n", i, r_hat[i]);
+      //scs_printf("err[%i] = %.3e\n", i, r_hat[i]);
       r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
     }
     SCS(enforce_cone_boundaries)(w->k, w->cone_work, &(r_hat[w->n]));
@@ -984,10 +984,10 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     }
     for (i=0; i < l; ++i) {
       w->diag_r[i] /= mean;
-      scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
+      //scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
     }
 
-     for (i=0; i < w->n; ++i) {
+    for (i=0; i < w->n; ++i) {
       w->diag_r[i] *= SQRTF(new_scale);
     }
     for (i=w->n; i < w->n+w->m; ++i) {
@@ -999,8 +999,8 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     for (i=0; i < l; ++i) {
       mean += w->diag_r[i] /l;
     }
-    scs_printf("mean R = %.3e\n", mean);
-    scs_printf("max R = %.3e\n", SCS(norm_inf)(w->diag_r, l));
+    //scs_printf("mean R = %.3e\n", mean);
+    //scs_printf("max R = %.3e\n", SCS(norm_inf)(w->diag_r, l));
     scs_free(r_hat);
 
     SCS(update_lin_sys_diag_r)(w->p, w->diag_r);

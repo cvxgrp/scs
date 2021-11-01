@@ -53,7 +53,6 @@ void SCS(enforce_cone_boundaries)(const ScsCone *k, const ScsConeWork *c,
                                   scs_float *vec) {
   scs_int i, j, delta;
   scs_int count = c->cone_boundaries[0];
-  scs_printf("count %i\n", count);
   scs_float wrk;
   for (i = 1; i < c->cone_boundaries_len; ++i) {
     delta = c->cone_boundaries[i];
@@ -62,7 +61,6 @@ void SCS(enforce_cone_boundaries)(const ScsCone *k, const ScsConeWork *c,
       vec[j] = wrk;
     }
     count += delta;
-    scs_printf("count %i\n", count);
   }
 }
 
