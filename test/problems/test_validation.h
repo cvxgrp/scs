@@ -4,7 +4,7 @@
 #include "scs.h"
 #include "util.h"
 
-static const char *test_fails(void) {
+static const char *test_validation(void) {
   scs_printf("Testing that SCS handles bad inputs correctly:");
 
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));

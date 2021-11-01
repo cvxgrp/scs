@@ -15,33 +15,22 @@
 #include "problems/rob_gauss_cov_est.h"
 #include "problems/small_lp.h"
 #include "problems/small_qp.h"
-#include "problems/test_fails.h"
+#include "problems/test_validation.h"
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
 
 static const char *all_tests(void) {
-  scs_printf("test_fails\n");
-  mu_run_test(test_fails);
-  scs_printf("degenerate\n");
+  mu_run_test(test_validation);
   mu_run_test(degenerate);
-  scs_printf("small_lp\n");
   mu_run_test(small_lp);
-  scs_printf("small_qp\n");
   mu_run_test(small_qp);
-  scs_printf("rob_gauss_cov_est\n");
   mu_run_test(rob_gauss_cov_est);
-  scs_printf("hs21_tiny_qp\n");
   mu_run_test(hs21_tiny_qp);
-  scs_printf("hs21_tiny_qp_rw\n");
   mu_run_test(hs21_tiny_qp_rw);
-  scs_printf("qafiro_tiny_qp\n");
   mu_run_test(qafiro_tiny_qp);
-  scs_printf("infeasible_tiny_qp\n");
   mu_run_test(infeasible_tiny_qp);
-  scs_printf("unbounded_tiny_qp\n");
   mu_run_test(unbounded_tiny_qp);
-  scs_printf("random_prob\n");
   mu_run_test(random_prob);
   return 0;
 }
