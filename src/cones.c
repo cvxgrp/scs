@@ -123,7 +123,7 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
   if (k->ep) {
     c += 3 * k->ep;
   }
-  if (k->p) {
+  if (k->psize) {
     c += 3 * k->psize;
   }
   return c;
@@ -489,7 +489,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* Solve eigenproblem, reuse workspaces */
   BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
   if (info != 0) {
-    scs_printf("WARN: LAPACK syev error, info = %i\n", info);
+    scs_printf("WARN: LAPACK syev error, info = %i\n", (int)info);
     if (info < 0) {
       return info;
     }
