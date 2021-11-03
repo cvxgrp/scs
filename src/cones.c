@@ -121,7 +121,7 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
   if (k->ep) {
     c += 3 * k->ep;
   }
-  if (k->p) {
+  if (k->psize) {
     c += 3 * k->psize;
   }
   return c;
