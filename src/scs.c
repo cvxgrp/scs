@@ -841,15 +841,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->cone_boundaries = SCS_NULL;
     w->scal = SCS_NULL;
   }
-  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
-    scs_printf("ERROR: init_cone failure\n");
-    return SCS_NULL;
-  }
-  if (!(w->p =
-            SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
-    scs_printf("ERROR: init_lin_sys_work failure\n");
-    return SCS_NULL;
-  }
   /* Acceleration */
   w->rejected_accel_steps = 0;
   w->accepted_accel_steps = 0;
@@ -868,6 +859,17 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     }
   } else {
     w->accel = SCS_NULL;
+  }
+  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
+    scs_printf("ERROR: init_cone failure\n");
+    SCS(finish)(w);
+    return SCS_NULL;
+  }
+  if (!(w->p =
+            SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
+    scs_printf("ERROR: init_lin_sys_work failure\n");
+    SCS(finish)(w);
+    return SCS_NULL;
   }
   return w;
 }

@@ -205,9 +205,20 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   cudaError_t err;
   scs_int i;
   csc *P_full;
-  ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
-  ScsGpuMatrix *Ag = (ScsGpuMatrix *)scs_calloc(1, sizeof(ScsGpuMatrix));
+  ScsLinSysWork *p = SCS_NULL;
+  ScsGpuMatrix *Ag = SCS_NULL;
   ScsGpuMatrix *Pg = SCS_NULL;
+  int device_count;
+
+  err = cudaGetDeviceCount(&device_count);
+  if (err > 0) {
+    scs_printf("cudaError: %i (100 indicates no device)\n", (int)err);
+    return SCS_NULL;
+  }
+
+  p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  Ag = (ScsGpuMatrix *)scs_calloc(1, sizeof(ScsGpuMatrix));
+
 
   p->A = A;
   p->P = P;
