@@ -484,7 +484,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* Solve eigenproblem, reuse workspaces */
   BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
   if (info != 0) {
-    scs_printf("WARN: LAPACK syev error, info = %i\n", (int) info);
+    scs_printf("WARN: LAPACK syev error, info = %i\n", (int)info);
     if (info < 0) {
       return info;
     }
