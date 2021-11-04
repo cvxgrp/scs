@@ -10,18 +10,6 @@
 #include "scs_matrix.h"
 #include "util.h"
 
-#define PI (3.141592654)
-#ifdef DLONG
-#ifdef _WIN64
-/* this is a Microsoft extension, but also works with min_g_w-w64 */
-#define INTRW "%I64d"
-#else
-#define INTRW "%ld"
-#endif
-#else
-#define INTRW "%i"
-#endif
-
 /* uniform random number in [-1,1] */
 static scs_float rand_scs_float(void) {
   return 2 * (((scs_float)ran_arr_next()) / RAND_MAX) - 1;
