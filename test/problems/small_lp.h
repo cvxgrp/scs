@@ -33,8 +33,10 @@ static const char *small_lp(void) {
   stgs->eps_rel = 1e-5;
 
   exitflag = scs(d, k, stgs, sol, &info);
+
   perr = SCS(dot)(d->c, sol->x, d->n) - SCS(dot)(d->c, opt_sol->x, d->n);
   derr = -SCS(dot)(d->b, sol->y, d->m) + SCS(dot)(d->b, opt_sol->y, d->m);
+  scs_printf("true obj %4e\n", SCS(dot)(d->c, opt_sol->x, d->n));
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
