@@ -205,9 +205,9 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   /**************** ASSERTS *****************/
   if (status == SCS_SOLVED) {
     mu_assert_less("Primal residual ERROR", ABS(res_pri - info->res_pri),
-                   1e-12);
+                   1e-11);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
-                   1e-12);
+                   1e-11);
     mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-8 * (1 + ABS(gap)));
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
                    1e-9 * (1 + ABS(pobj)));
