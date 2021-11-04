@@ -10,21 +10,11 @@
 #include "scs_matrix.h"
 #include "util.h"
 
-#define PI (3.141592654)
-#ifdef DLONG
-#ifdef _WIN64
-/* this is a Microsoft extension, but also works with min_g_w-w64 */
-#define INTRW "%I64d"
-#else
-#define INTRW "%ld"
-#endif
-#else
-#define INTRW "%i"
-#endif
+#define _MAX_RAND_VAL (1073741823) /* 2^30 - 1 */
 
 /* uniform random number in [-1,1] */
 static scs_float rand_scs_float(void) {
-  return 2 * (((scs_float)ran_arr_next()) / RAND_MAX) - 1;
+  return 2 * (((scs_float)ran_arr_next()) / _MAX_RAND_VAL) - 1; /* in [-1, 1] */
 }
 
 void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
@@ -215,9 +205,9 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   /**************** ASSERTS *****************/
   if (status == SCS_SOLVED) {
     mu_assert_less("Primal residual ERROR", ABS(res_pri - info->res_pri),
-                   1e-12);
+                   1e-11);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
-                   1e-12);
+                   1e-11);
     mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-8 * (1 + ABS(gap)));
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
                    1e-9 * (1 + ABS(pobj)));
@@ -232,7 +222,8 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    stgs->eps_abs + stgs->eps_rel * prl);
     mu_assert_less("Dual feas ERROR", res_dual,
                    stgs->eps_abs + stgs->eps_rel * drl);
-    mu_assert_less("Gap ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
+    mu_assert_less("Gap feas ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
+
 
   } else if (status == SCS_INFEASIBLE) {
     mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-8);
