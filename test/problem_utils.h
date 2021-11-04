@@ -208,9 +208,12 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    1e-12);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
                    1e-12);
-    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-12);
-    mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj), 1e-12);
-    mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj), 1e-12);
+    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-8 * (1 + ABS(gap)));
+    mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
+                   1e-9 * (1 + ABS(pobj)));
+    mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj),
+                   1e-9 * (1 + ABS(dobj)));
+
     /* slightly looser tol */
     mu_assert_less("Complementary slackness ERROR", ABS(sty), 1e-6);
     mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-5);
@@ -220,7 +223,8 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    stgs->eps_abs + stgs->eps_rel * prl);
     mu_assert_less("Dual feas ERROR", res_dual,
                    stgs->eps_abs + stgs->eps_rel * drl);
-    mu_assert_less("Gap ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
+    mu_assert_less("Gap feas ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
+
 
   } else if (status == SCS_INFEASIBLE) {
     mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-8);
