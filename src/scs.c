@@ -847,7 +847,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->r_normalized = w->r_orig;
     w->scal = SCS_NULL;
   }
-
   if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
