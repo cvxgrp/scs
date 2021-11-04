@@ -10,9 +10,11 @@
 #include "scs_matrix.h"
 #include "util.h"
 
+#define _MAX_RAND_VAL (1073741823) /* 2^30 - 1 */
+
 /* uniform random number in [-1,1] */
 static scs_float rand_scs_float(void) {
-  return 2 * (((scs_float)ran_arr_next()) / RAND_MAX) - 1;
+  return 2 * (((scs_float)ran_arr_next()) / _MAX_RAND_VAL) - 1; /* in [-1, 1] */
 }
 
 void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
