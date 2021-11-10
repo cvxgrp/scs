@@ -963,7 +963,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     }
     for (i=0; i < l; ++i) {
       r_hat[i] /= mean;
-      r_hat[i] = POWF(r_hat[i], 0.5); // TODO better than this
+      r_hat[i] = POWF(r_hat[i], 0.25); // TODO better than this
     }
     mean = 0.;
 
@@ -976,7 +976,6 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       w->diag_r[i] /= mean;
     }
 
-
     mean = 0.;
     for (i=0; i < l; ++i) {
       mean += w->diag_r[i] /l;
@@ -986,12 +985,14 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       //scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
     }
 
+    /*
     for (i=0; i < w->n; ++i) {
       w->diag_r[i] *= SQRTF(new_scale);
     }
     for (i=w->n; i < w->n+w->m; ++i) {
       w->diag_r[i] /= SQRTF(new_scale);
     }
+    */
 
 
     mean = 0.;
