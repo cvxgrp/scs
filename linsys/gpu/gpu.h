@@ -36,11 +36,9 @@ extern "C" {
 #ifndef SFLOAT
 #define CUBLAS(x) cublasD##x
 #define CUBLASI(x) cublasId##x
-#define CUSPARSE(x) cusparseD##x
 #else
 #define CUBLAS(x) cublasS##x
 #define CUBLASI(x) cublasIs##x
-#define CUSPARSE(x) cusparseS##x
 #endif
 #define CUSPARSE_GEN(x) cusparse##x
 #else
@@ -51,9 +49,6 @@ extern "C" {
 #define CUBLASI(x)                                                             \
   CUDA_CHECK_ERR;                                                              \
   cublasId##x
-#define CUSPARSE(x)                                                            \
-  CUDA_CHECK_ERR;                                                              \
-  cusparseD##x
 #else
 #define CUBLAS(x)                                                              \
   CUDA_CHECK_ERR;                                                              \
@@ -61,9 +56,6 @@ extern "C" {
 #define CUBLASI(x)                                                             \
   CUDA_CHECK_ERR;                                                              \
   cublasIs##x
-#define CUSPARSE(x)                                                            \
-  CUDA_CHECK_ERR;                                                              \
-  cusparseS##x
 #endif
 #define CUSPARSE_GEN(x)                                                        \
   CUDA_CHECK_ERR;                                                              \
