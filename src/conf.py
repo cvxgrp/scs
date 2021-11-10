@@ -24,7 +24,7 @@ copyright = "2021, Brendan O'Donoghue"
 author = "Brendan O'Donoghue"
 
 # The full version, including alpha/beta/rc tags
-__version__ = "3.1.0"
+__version__ = "3.0.0"
 
 release = __version__
 version = __version__
