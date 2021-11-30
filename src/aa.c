@@ -352,7 +352,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   AaWork *a = (AaWork *)calloc(1, sizeof(AaWork));
   if (!a) {
     printf("Failed to allocate memory for AA.\n");
-    return (void *)0;
+    return (AaWork *)0;
   }
   a->type1 = type1;
   a->iter = 0;
