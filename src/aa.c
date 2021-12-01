@@ -96,6 +96,10 @@ aa_float toc(const char *str, timer *t) {
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* BLAS functions used */
 aa_float BLAS(nrm2)(blas_int *n, aa_float *x, blas_int *incx);
 void BLAS(axpy)(blas_int *n, aa_float *a, const aa_float *x, blas_int *incx,
@@ -112,6 +116,10 @@ void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
                 aa_float *c, blas_int *ldc);
 void BLAS(scal)(const blas_int *n, const aa_float *a, aa_float *x,
                 const blas_int *incx);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* This file uses Anderson acceleration to improve the convergence of
  * a fixed point mapping.

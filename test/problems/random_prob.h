@@ -27,7 +27,7 @@ static const char *random_prob(void) {
   stgs->eps_abs = 1e-6;
   stgs->eps_rel = 1e-6;
 
-  sol = scs_calloc(1, sizeof(ScsSolution));
+  sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   exitflag = scs(d, k, stgs, sol, &info);
 
   perr = SCS(dot)(d->c, sol->x, d->n) - OPT;
