@@ -96,6 +96,10 @@ aa_float toc(const char *str, timer *t) {
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* BLAS functions used */
 aa_float BLAS(nrm2)(blas_int *n, aa_float *x, blas_int *incx);
 void BLAS(axpy)(blas_int *n, aa_float *a, const aa_float *x, blas_int *incx,
@@ -112,6 +116,10 @@ void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
                 aa_float *c, blas_int *ldc);
 void BLAS(scal)(const blas_int *n, const aa_float *a, aa_float *x,
                 const blas_int *incx);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* This file uses Anderson acceleration to improve the convergence of
  * a fixed point mapping.
@@ -352,7 +360,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   AaWork *a = (AaWork *)calloc(1, sizeof(AaWork));
   if (!a) {
     printf("Failed to allocate memory for AA.\n");
-    return (void *)0;
+    return (AaWork *)0;
   }
   a->type1 = type1;
   a->iter = 0;

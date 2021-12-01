@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
       return -1;
     }
   }
-  sol = scs_calloc(1, sizeof(ScsSolution));
+  sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   scs(d, k, stgs, sol, &info);
   SCS(free_data)(d, k, stgs);
   SCS(free_sol)(sol);

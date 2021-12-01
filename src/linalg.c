@@ -86,6 +86,10 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
 #else
 /* If we have BLAS / LAPACK we may as well use them */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 scs_float BLAS(nrm2)(blas_int *n, const scs_float *x, blas_int *incx);
 scs_float BLAS(dot)(const blas_int *n, const scs_float *x, const blas_int *incx,
                     const scs_float *y, const blas_int *incy);
@@ -95,6 +99,10 @@ void BLAS(axpy)(blas_int *n, const scs_float *a, const scs_float *x,
                 blas_int *incx, scs_float *y, blas_int *incy);
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* a *= b */
 void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len) {
