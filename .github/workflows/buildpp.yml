@@ -1,5 +1,5 @@
 ---
-name: Build C++
+name: Build C++  # test that we can compile SCS with C++ compiler
 
 on: [push, pull_request]
 
@@ -29,9 +29,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: brew install openblas lapack
-      - run: export CC=clang++
-      - run: make
-      - run: make test
-      - run: out/run_tests_direct    # test direct solver
-      - run: out/run_tests_indirect  # test indirect solver
+      - run: |
+          brew install openblas lapack
+          export CC=clang++
+          echo $CC
+          make
+          make test
+          out/run_tests_direct    # test direct solver
+          out/run_tests_indirect  # test indirect solver
