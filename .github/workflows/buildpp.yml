@@ -8,8 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install libopenblas-dev liblapack-dev
+      - name: Build with g++ and test
       - run: |
+          sudo apt-get install libopenblas-dev liblapack-dev
           export CC=g++
           echo $CC
           make
@@ -29,6 +30,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Build with clang++ and test
       - run: |
           brew install openblas lapack
           export CC=clang++
