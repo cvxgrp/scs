@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>R &mdash; SCS 3.0.0 documentation</title>
+  <title>R &mdash; SCS 3.1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
@@ -16,7 +16,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,7 +32,7 @@
             <img src="../_static/scs_logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                3.1.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -54,11 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="python.html">Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">R</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#second-order-cone-programming">Second-order cone programming</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#primal-exponential-cone">Primal exponential cone</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">R</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
@@ -93,104 +88,7 @@
              
   <div class="section" id="r">
 <span id="r-example"></span><h1>R<a class="headerlink" href="#r" title="Permalink to this headline"></a></h1>
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">library</span><span class="p">(</span><span class="s">&quot;scs&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="section" id="second-order-cone-programming">
-<h2>Second-order cone programming<a class="headerlink" href="#second-order-cone-programming" title="Permalink to this headline"></a></h2>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{rr}
-\underset{x}{\text{maximize}}
-  &amp; x + y  \\
-\text{subject to}
-  &amp; \sqrt{x^2 + y^2} \leq \sqrt{2} \\
-  &amp; x, y \geq 0
-\end{array}\end{split}\]</div>
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">obj</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span> <span class="m">-1</span><span class="p">)</span>
-<span class="n">A</span> <span class="o">&lt;-</span> <span class="nf">rbind</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span>  <span class="m">0</span><span class="p">),</span>  <span class="c1"># x &gt;= 0</span>
-           <span class="nf">c</span><span class="p">(</span> <span class="m">0</span><span class="p">,</span> <span class="m">-1</span><span class="p">),</span>  <span class="c1"># y &gt;= 0</span>
-           <span class="nf">c</span><span class="p">(</span> <span class="m">0</span><span class="p">,</span>  <span class="m">0</span><span class="p">),</span>
-           <span class="nf">c</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span>  <span class="m">0</span><span class="p">),</span>
-           <span class="nf">c</span><span class="p">(</span> <span class="m">0</span><span class="p">,</span> <span class="m">-1</span><span class="p">))</span>
-<span class="n">b</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nf">sqrt</span><span class="p">(</span><span class="m">2</span><span class="p">),</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
-<span class="n">cone</span> <span class="o">&lt;-</span> <span class="nf">list</span><span class="p">(</span><span class="n">z</span> <span class="o">=</span> <span class="m">0</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="m">2</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="m">3</span><span class="p">)</span>
-
-<span class="n">solution</span> <span class="o">&lt;-</span> <span class="nf">scs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">cone</span> <span class="o">=</span> <span class="n">cone</span><span class="p">)</span>
-<span class="nf">str</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
-<span class="c1">#R&gt; List of 4</span>
-<span class="c1">#R&gt;  $ x   : num [1:2] 1 1</span>
-<span class="c1">#R&gt;  $ y   : num [1:5] 0 0 1.41 -1 -1</span>
-<span class="c1">#R&gt;  $ s   : num [1:5] 1 1 1.41 1 1</span>
-<span class="c1">#R&gt;  $ info:List of 21</span>
-<span class="c1">#R&gt;   ..$ iter                : int 50</span>
-<span class="c1">#R&gt;   ..$ status              : chr &quot;solved&quot;</span>
-<span class="c1">#R&gt;   ..$ status_val          : int 1</span>
-<span class="c1">#R&gt;   ..$ scale_updates       : int 0</span>
-<span class="c1">#R&gt;   ..$ pobj                : num -2</span>
-<span class="c1">#R&gt;   ..$ dobj                : num -2</span>
-<span class="c1">#R&gt;   ..$ res_pri             : num 4.86e-05</span>
-<span class="c1">#R&gt;   ..$ res_dual            : num 1.98e-06</span>
-<span class="c1">#R&gt;   ..$ gap                 : num 0.000141</span>
-<span class="c1">#R&gt;   ..$ res_infeas          : num NaN</span>
-<span class="c1">#R&gt;   ..$ res_unbdd_a         : num 0.707</span>
-<span class="c1">#R&gt;   ..$ res_unbdd_p         : num 0</span>
-<span class="c1">#R&gt;   ..$ setup_time          : num 0.0236</span>
-<span class="c1">#R&gt;   ..$ solve_time          : num 0.0237</span>
-<span class="c1">#R&gt;   ..$ scale               : num 0.1</span>
-<span class="c1">#R&gt;   ..$ comp_slack          : num 1.34e-14</span>
-<span class="c1">#R&gt;   ..$ rejected_accel_steps: int 0</span>
-<span class="c1">#R&gt;   ..$ accepted_accel_steps: int 0</span>
-<span class="c1">#R&gt;   ..$ lin_sys_time        : num 0.00668</span>
-<span class="c1">#R&gt;   ..$ cone_time           : num 0.00439</span>
-<span class="c1">#R&gt;   ..$ accel_time          : num 0</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="primal-exponential-cone">
-<h2>Primal exponential cone<a class="headerlink" href="#primal-exponential-cone" title="Permalink to this headline"></a></h2>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{rr}
-\underset{x}{\text{maximize}}  &amp; x + y + z \\
-\text{subject to} &amp; y   e^{\frac{x}{y}} \leq z \\
-&amp; x \geq 0, y &gt; 0, z \in [0, e]
-\end{array}\end{split}\]</div>
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">obj</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span> <span class="m">-1</span><span class="p">,</span> <span class="m">-1</span><span class="p">)</span>
-<span class="n">A</span> <span class="o">&lt;-</span> <span class="nf">rbind</span><span class="p">(</span><span class="o">-</span><span class="nf">diag</span><span class="p">(</span><span class="m">3</span><span class="p">),</span>   <span class="c1"># x, z &gt;= 0, y &gt;= 1e-12</span>
-           <span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">1</span><span class="p">),</span> <span class="c1"># z &lt;= e</span>
-           <span class="o">-</span><span class="nf">diag</span><span class="p">(</span><span class="m">3</span><span class="p">))</span>   <span class="c1"># K_exp</span>
-<span class="n">b</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">-1e-12</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nf">exp</span><span class="p">(</span><span class="m">1</span><span class="p">),</span> <span class="nf">double</span><span class="p">(</span><span class="m">3</span><span class="p">))</span>
-<span class="n">cone</span> <span class="o">&lt;-</span> <span class="nf">list</span><span class="p">(</span><span class="n">z</span> <span class="o">=</span> <span class="m">0L</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="m">4L</span><span class="p">,</span> <span class="n">ep</span> <span class="o">=</span> <span class="m">1L</span><span class="p">)</span>
-<span class="n">solution</span> <span class="o">&lt;-</span> <span class="nf">scs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">cone</span> <span class="o">=</span> <span class="n">cone</span><span class="p">)</span>
-<span class="nf">str</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
-<span class="c1">#R&gt; List of 4</span>
-<span class="c1">#R&gt;  $ x   : num [1:3] 8.46e-05 2.72 2.72</span>
-<span class="c1">#R&gt;  $ y   : num [1:7] 1.17e-05 0.00 0.00 2.00 -1.00 ...</span>
-<span class="c1">#R&gt;  $ s   : num [1:7] 0.00 2.72 2.72 0.00 5.68e-05 ...</span>
-<span class="c1">#R&gt;  $ info:List of 21</span>
-<span class="c1">#R&gt;   ..$ iter                : int 75</span>
-<span class="c1">#R&gt;   ..$ status              : chr &quot;solved&quot;</span>
-<span class="c1">#R&gt;   ..$ status_val          : int 1</span>
-<span class="c1">#R&gt;   ..$ scale_updates       : int 0</span>
-<span class="c1">#R&gt;   ..$ pobj                : num -5.44</span>
-<span class="c1">#R&gt;   ..$ dobj                : num -5.44</span>
-<span class="c1">#R&gt;   ..$ res_pri             : num 0.000273</span>
-<span class="c1">#R&gt;   ..$ res_dual            : num 2.02e-05</span>
-<span class="c1">#R&gt;   ..$ gap                 : num 0.000583</span>
-<span class="c1">#R&gt;   ..$ res_infeas          : num NaN</span>
-<span class="c1">#R&gt;   ..$ res_unbdd_a         : num 0.5</span>
-<span class="c1">#R&gt;   ..$ res_unbdd_p         : num 0</span>
-<span class="c1">#R&gt;   ..$ setup_time          : num 0.0273</span>
-<span class="c1">#R&gt;   ..$ solve_time          : num 0.273</span>
-<span class="c1">#R&gt;   ..$ scale               : num 0.1</span>
-<span class="c1">#R&gt;   ..$ comp_slack          : num 8.54e-09</span>
-<span class="c1">#R&gt;   ..$ rejected_accel_steps: int 0</span>
-<span class="c1">#R&gt;   ..$ accepted_accel_steps: int 0</span>
-<span class="c1">#R&gt;   ..$ lin_sys_time        : num 0.0118</span>
-<span class="c1">#R&gt;   ..$ cone_time           : num 0.242</span>
-<span class="c1">#R&gt;   ..$ accel_time          : num 0</span>
-</pre></div>
-</div>
-</div>
+<p>TODO</p>
 </div>
 
 

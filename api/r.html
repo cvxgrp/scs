@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>R &mdash; SCS 3.0.0 documentation</title>
+  <title>R &mdash; SCS 3.1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
@@ -32,7 +32,7 @@
             <img src="../_static/scs_logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                3.1.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -56,10 +56,7 @@
 <li class="toctree-l3"><a class="reference internal" href="python.html">Python</a></li>
 <li class="toctree-l3"><a class="reference internal" href="matlab.html">MATLAB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="julia.html">Julia</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">R</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">R</a></li>
 </ul>
 </li>
 </ul>
@@ -100,46 +97,7 @@
              
   <div class="section" id="r">
 <span id="r-interface"></span><h1>R<a class="headerlink" href="#r" title="Permalink to this headline"></a></h1>
-<p>After <a class="reference internal" href="../install/r.html#r-install"><span class="std std-ref">installing</span></a> you can load SCS using</p>
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">library</span><span class="p">(</span><span class="s">&quot;scs&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
-<p>Use function <cite>scs</cite> to solve a given optimization problem. Additional information
-about the arguments can be found in the <cite>R-Manual &lt;https://cran.r-project.org/package=scs/scs.pdf&gt;</cite>
-or the <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">matrices</span></a> of the homepage.</p>
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">scs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span>
-    <span class="n">b</span><span class="p">,</span>
-    <span class="n">obj</span><span class="p">,</span>
-    <span class="n">P</span> <span class="o">=</span> <span class="kc">NULL</span><span class="p">,</span>
-    <span class="n">cone</span><span class="p">,</span>
-    <span class="n">initial</span> <span class="o">=</span> <span class="kc">NULL</span><span class="p">,</span>
-    <span class="n">control</span> <span class="o">=</span> <span class="nf">scs_control</span><span class="p">())</span>
-</pre></div>
-</div>
-<p>The <cite>scs_control</cite>  is used to define additional settings, additional information
-can be found in the R-Manual or the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">settings</span></a> section of the
-homepage.</p>
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">scs_control</span><span class="p">(</span><span class="n">max_iters</span> <span class="o">=</span> <span class="m">100000L</span><span class="p">,</span>
-            <span class="n">eps_rel</span> <span class="o">=</span> <span class="m">1e-04</span><span class="p">,</span>
-            <span class="n">eps_abs</span> <span class="o">=</span> <span class="m">1e-04</span><span class="p">,</span>
-            <span class="n">eps_infeas</span> <span class="o">=</span> <span class="m">1e-07</span><span class="p">,</span>
-            <span class="n">alpha</span> <span class="o">=</span> <span class="m">1.5</span><span class="p">,</span>
-            <span class="n">rho_x</span> <span class="o">=</span> <span class="m">1e-06</span><span class="p">,</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="m">0.1</span><span class="p">,</span>
-            <span class="n">verbose</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">,</span>
-            <span class="n">normalize</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
-            <span class="n">warm_start</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">,</span>
-            <span class="n">acceleration_lookback</span> <span class="o">=</span> <span class="m">0L</span><span class="p">,</span>
-            <span class="n">acceleration_interval</span> <span class="o">=</span> <span class="m">1L</span><span class="p">,</span>
-            <span class="n">adaptive_scale</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
-            <span class="n">write_data_filename</span> <span class="o">=</span> <span class="kc">NULL</span><span class="p">,</span>
-            <span class="n">log_csv_filename</span> <span class="o">=</span> <span class="kc">NULL</span><span class="p">,</span>
-            <span class="n">time_limit_secs</span> <span class="o">=</span> <span class="m">0</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
+<p>TODO</p>
 </div>
 
 
