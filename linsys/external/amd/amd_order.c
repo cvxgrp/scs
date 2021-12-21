@@ -89,8 +89,8 @@ GLOBAL Int AMD_order
     }
 
     /* allocate two size-n integer workspaces */
-    Len  = SuiteSparse_malloc (n, sizeof (Int)) ;
-    Pinv = SuiteSparse_malloc (n, sizeof (Int)) ;
+    Len  = (Int *)SuiteSparse_malloc (n, sizeof (Int)) ;
+    Pinv = (Int *)SuiteSparse_malloc (n, sizeof (Int)) ;
     mem += n ;
     mem += n ;
     if (!Len || !Pinv)
@@ -106,8 +106,8 @@ GLOBAL Int AMD_order
     {
 	/* sort the input matrix and remove duplicate entries */
 	AMD_DEBUG1 (("Matrix is jumbled\n")) ;
-	Rp = SuiteSparse_malloc (n+1, sizeof (Int)) ;
-	Ri = SuiteSparse_malloc (nz,  sizeof (Int)) ;
+	Rp = (Int *)SuiteSparse_malloc (n+1, sizeof (Int)) ;
+	Ri = (Int *)SuiteSparse_malloc (nz,  sizeof (Int)) ;
 	mem += (n+1) ;
 	mem += MAX (nz,1) ;
 	if (!Rp || !Ri)
@@ -160,7 +160,7 @@ GLOBAL Int AMD_order
     ok = ok && (slen < Int_MAX) ;	/* S[i] for Int i must be OK */
     if (ok)
     {
-	S = SuiteSparse_malloc (slen, sizeof (Int)) ;
+	S = (Int *)SuiteSparse_malloc (slen, sizeof (Int)) ;
     }
     AMD_DEBUG1 (("slen %g\n", (scs_float) slen)) ;
     if (!S)

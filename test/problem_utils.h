@@ -113,11 +113,11 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   scs_float *c = d->c;
   scs_float *b = d->b;
 
-  scs_float *primal = scs_calloc(m, sizeof(scs_float));
-  scs_float *ax = scs_calloc(m, sizeof(scs_float));
-  scs_float *dual = scs_calloc(n, sizeof(scs_float));
-  scs_float *px = scs_calloc(n, sizeof(scs_float));
-  scs_float *aty = scs_calloc(n, sizeof(scs_float));
+  scs_float *primal = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *ax = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *dual = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scs_float *px = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scs_float *aty = (scs_float *)scs_calloc(n, sizeof(scs_float));
 
   scs_float res_pri, res_dual, res_infeas, res_unbdd_a, res_unbdd_p;
   scs_float ctx, bty, xt_p_x, gap, pobj, dobj, sty;

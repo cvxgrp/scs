@@ -1,0 +1,39 @@
+---
+name: Build C++  # test that we can compile SCS with C++ compiler
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          sudo apt-get install libopenblas-dev liblapack-dev
+          export CC=g++
+          echo $CC
+          make
+          make test
+          out/run_tests_direct    # test direct solver
+          out/run_tests_indirect  # test indirect solver
+
+  #  runs-on: windows-latest
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - run: choco install clapack
+  #    - run: make
+  #    - run: make test
+  #    - run: test/run_tests
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          brew install openblas lapack
+          export CC=clang++
+          echo $CC
+          make
+          make test
+          out/run_tests_direct    # test direct solver
+          out/run_tests_indirect  # test indirect solver

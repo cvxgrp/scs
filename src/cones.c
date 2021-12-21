@@ -16,6 +16,11 @@
 #define BOX_EQUALITY_TOL (1e-4)
 
 #ifdef USE_LAPACK
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
@@ -25,6 +30,11 @@ blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
                     const scs_float *beta, scs_float *c, const blas_int *ldc);
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 /* set the vector of rho y terms, based on scale and cones */

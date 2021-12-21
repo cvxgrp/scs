@@ -145,7 +145,7 @@ endif
 USE_LAPACK = 1
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
-  BLASLDFLAGS = -lblas -llapack #-lgfortran
+  BLASLDFLAGS = -llapack -lblas # -lgfortran
   LDFLAGS += $(BLASLDFLAGS)
   OPT_FLAGS += -DUSE_LAPACK
 
