@@ -950,31 +950,47 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     // XXX
     scs_int l = w->m + w->n + 1;
     scs_float mean = 0.;
-    scs_float *r_hat = scs_malloc(l * sizeof(scs_float));
-    /*
+    scs_float *r_hat = scs_calloc(l, sizeof(scs_float));
+    //*
     for (i = 0; i < l; ++i) {
       r_hat[i] = ABS(w->u[i] - w->u_t[i]);
-      //scs_printf("err[%i] = %.3e\n", i, r_hat[i]);
+      // scs_printf("err[%i] = %.3e\n", i, r_hat[i]);
       r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
+      //scs_printf("r_hat[%i] = %.3e\n", i, r_hat[i]);
     }
-    */
+    if (w->stgs->normalize) {
+      for (i = 0; i < w->n; ++i) {
+        r_hat[i] *= w->scal->E[i];
+      }
+      for (i = w->n; i < w->n + w->m; ++i) {
+        r_hat[i] *= w->scal->D[i - w->n];
+      }
+    }
+    //*/
+    /*
     for (i = 0; i < w->n; ++i) {
       // dual
-      r_hat[i] = 1 / (r->px_aty_ctau[i] / MAX(MAX(r->px[i], r->aty[i]), c[i]));
+      //r_hat[i] = SAFEDIV_POS(ABS(r->px_aty_ctau[i]), MAX(MAX(ABS(r->px[i]), ABS(r->aty[i])), ABS(c[i]) * r->tau));
+      r_hat[i] = ABS(r->px_aty_ctau[i]);
+      r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
     }
     for (i = w->n; i < w->n + w->m; ++i) {
       // primal
-      r_hat[i] = 1 / (r->ax_s_btau[i] / MAX(MAX(r->ax[i], xys->s[i]), b[i]));
+      //r_hat[i] = SAFEDIV_POS(ABS(r->ax_s_btau[i]), MAX(MAX(ABS(r->ax[i]), ABS(xys->s[i])), ABS(b[i]) * r->tau));
+      r_hat[i] = ABS(r->ax_s_btau[i]);
+      r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
     }
     r_hat[l-1] = 1.;
+    */
     SCS(enforce_cone_boundaries)(w->k, w->cone_work, &(r_hat[w->n]));
     for (i=0; i < l; ++i) {
-      //r_hat[i] = 1 / r_hat[i];
+      r_hat[i] = 1. / r_hat[i];
       mean += r_hat[i] / l;
     }
     for (i=0; i < l; ++i) {
       r_hat[i] /= mean;
       r_hat[i] = POWF(r_hat[i], 0.5); // TODO better than this
+      //scs_printf("r_hat[%i] = %.3e\n", i, r_hat[i]);
     }
 
     //mean = 0.;
@@ -988,15 +1004,16 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       w->diag_r[i] /= mean;
     }
     */
+    /*
     mean = 0.;
     for (i=0; i < l; ++i) {
       mean += w->diag_r[i] /l;
     }
     for (i=0; i < l; ++i) {
       w->diag_r[i] /= mean;
-      //scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
+      scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
     }
-
+    */
     /*
     for (i=0; i < w->n; ++i) {
       w->diag_r[i] *= SQRTF(new_scale);
