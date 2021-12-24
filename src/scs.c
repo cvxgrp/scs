@@ -739,6 +739,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("scale must be positive (1 works well).\n");
     return -1;
   }
+  if (stgs->acceleration_interval <= 0) {
+    scs_printf("acceleration_interval must be positive (10 works well).\n");
+    return -1;
+  }
   return 0;
 }
 #endif
