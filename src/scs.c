@@ -945,7 +945,6 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
-    w->scale = new_scale;
 
     // XXX
     scs_int l = w->m + w->n + 1;
@@ -958,14 +957,16 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
       //scs_printf("r_hat[%i] = %.3e\n", i, r_hat[i]);
     }
-    if (w->stgs->normalize) {
+
+    if (0 && w->stgs->normalize) {
       for (i = 0; i < w->n; ++i) {
-        r_hat[i] *= w->scal->E[i];
+        r_hat[i] *= (w->scal->E[i] / w->scal->dual_scale);
       }
       for (i = w->n; i < w->n + w->m; ++i) {
-        r_hat[i] *= w->scal->D[i - w->n];
+        r_hat[i] *= (w->scal->D[i - w->n] / w->scal->primal_scale);
       }
     }
+
     //*/
     /*
     for (i = 0; i < w->n; ++i) {
@@ -1016,12 +1017,13 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     */
     /*
     for (i=0; i < w->n; ++i) {
-      w->diag_r[i] *= SQRTF(new_scale);
-    }
-    for (i=w->n; i < w->n+w->m; ++i) {
-      w->diag_r[i] /= SQRTF(new_scale);
+      w->diag_r[i] *= SQRTF(new_scale / w->scale);
     }
     */
+    for (i=w->n; i < w->n+w->m; ++i) {
+      w->diag_r[i] /= new_scale / w->scale;
+    }
+    w->scale = new_scale;
     /*
     mean = 0.;
     for (i=0; i < l; ++i) {
@@ -1031,6 +1033,13 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     //scs_printf("mean R = %.3e\n", mean);
     //scs_printf("max R = %.3e\n", SCS(norm_inf)(w->diag_r, l));
     scs_free(r_hat);
+
+    /*
+    for (i = 0; i < l; ++i) {
+      scs_printf("R[%i] = %.2e, ", i, w->diag_r[i]);
+    }
+    scs_printf("\n");
+    */
 
     SCS(update_lin_sys_diag_r)(w->p, w->diag_r);
 
