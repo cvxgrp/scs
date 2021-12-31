@@ -22,17 +22,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.1.0
-      - uses: uraimo/run-on-arch-action@v2.0.7
+      - uses: uraimo/run-on-arch-action@v2.1.1
         name: Build artifact
         id: build
         with:
           arch: ${{ matrix.arch }}
           distro: ${{ matrix.distro }}
 
-          # Not required, but speeds up builds
-          githubToken: ${{ github.token }}
-
           run: |
+            sudo apt-get install libopenblas-dev liblapack-dev
             make
             make test
             out/run_tests_direct
