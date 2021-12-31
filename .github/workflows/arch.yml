@@ -13,12 +13,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - arch: aarch64
-            distro: ubuntu18.04
-          # - arch: ppc64le
-          #  distro: alpine_latest
-          # - arch: s390x
-          #  distro: fedora_latest
+          - arch: [armv6, armv7, aarch64, s390x, ppc64le]
+            distro: [ubuntu18.04, ubuntu20.04, alpine_latest, fedora_latest]
 
     steps:
       - uses: actions/checkout@v2.1.0
@@ -28,6 +24,9 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           distro: ${{ matrix.distro }}
+
+          # Not required, but speeds up builds
+          githubToken: ${{ github.token }}
 
           # Install some dependencies in the container. This speeds up builds if
           # you are also using githubToken. Any dependencies installed here will
@@ -43,11 +42,11 @@ jobs:
                 ;;
               fedora*)
                 dnf -y update
-                dnf -y install git which
+                dnf -y install gcc make git libopenblas-dev liblapack-dev
                 ;;
               alpine*)
                 apk update
-                apk add git
+                apk add gcc make git libopenblas-dev liblapack-dev
                 ;;
             esac
 
