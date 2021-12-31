@@ -15,10 +15,10 @@ jobs:
         include:
           - arch: aarch64
             distro: ubuntu18.04
-          - arch: ppc64le
-            distro: alpine_latest
-          - arch: s390x
-            distro: fedora_latest
+          # - arch: ppc64le
+          #  distro: alpine_latest
+          # - arch: s390x
+          #  distro: fedora_latest
 
     steps:
       - uses: actions/checkout@v2.1.0
