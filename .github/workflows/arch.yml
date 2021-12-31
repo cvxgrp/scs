@@ -12,9 +12,8 @@ jobs:
     # Run steps on a matrix of 3 arch/distro combinations
     strategy:
       matrix:
-        include:
-          - arch: [armv6, armv7, aarch64, s390x, ppc64le]
-            distro: [ubuntu18.04, ubuntu20.04, alpine_latest, fedora_latest]
+        arch: [armv6, armv7, aarch64, s390x, ppc64le]
+        distro: [ubuntu18.04, ubuntu20.04, alpine_latest, fedora_latest]
 
     steps:
       - uses: actions/checkout@v2.1.0
