@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-18.04
     name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
 
-    # Run steps on a matrix of 3 arch/distro combinations
     strategy:
+      fail-fast: false
       matrix:
-        arch: [armv6, armv7, aarch64, s390x, ppc64le]
+        arch: [armv7, aarch64, s390x, ppc64le]
         distro: [ubuntu18.04, ubuntu20.04, alpine_latest, fedora_latest]
 
     steps:
