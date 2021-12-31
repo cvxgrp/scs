@@ -29,10 +29,9 @@ jobs:
           # Not required, but speeds up builds
           githubToken: ${{ github.token }}
 
-          # Produce a binary artifact and place it in the mounted volume
           run: |
             make
-						make test
-						out/run_tests_direct
-						out/run_tests_indirect
+            make test
+            out/run_tests_direct
+            out/run_tests_indirect
 
