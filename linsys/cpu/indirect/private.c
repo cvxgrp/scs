@@ -18,7 +18,7 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 */
 
 
-/* TODO is it better to do this on the fly rather than cache it? */
+/* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
 static void set_preconditioner(ScsLinSysWork *p) {
   scs_int i, k;
@@ -30,9 +30,11 @@ static void set_preconditioner(ScsLinSysWork *p) {
   scs_printf("getting pre-conditioner\n");
 #endif
 
+  /* M_ii = (R_x)_i + P_ii + a_i' (R_y)^-1 a_i */
   for (i = 0; i < A->n; ++i) { /* cols */
+    /* M_ii = (R_x)_i */
     M[i] = p->diag_r[i];
-    /* diag(A' R_y^{-1} A) */
+    /* M_ii += a_i' (R_y)^-1 a_i */
     for (k = A->p[i]; k < A->p[i + 1]; ++k) {
       /* A->i[k] is row of entry k with value A->x[k] */
       M[i] += A->x[k] * A->x[k] / p->diag_r[A->n + A->i[k]];
@@ -41,11 +43,13 @@ static void set_preconditioner(ScsLinSysWork *p) {
       for (k = P->p[i]; k < P->p[i + 1]; k++) {
         /* diagonal element only */
         if (P->i[k] == i) { /* row == col */
+          /* M_ii += P_ii */
           M[i] += P->x[k];
           break;
         }
       }
     }
+    /* finally invert for pre-conditioner */
     M[i] = 1. / M[i];
   }
 #if VERBOSITY > 0
