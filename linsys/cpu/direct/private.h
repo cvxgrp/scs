@@ -23,7 +23,6 @@ struct SCS_LIN_SYS_WORK {
   /* ldl factorization workspace */
   scs_float *D, *fwork;
   scs_int *etree, *iwork, *Lnz, *bwork;
-  scs_float rho_x;
   scs_float *diag_p;
 };
 
