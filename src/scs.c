@@ -326,14 +326,9 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
   return ip;
 }
 
-static inline scs_float get_tau_scale(ScsWork *w) {
-  return w->diag_r[w->n + w->m]; /* TAU_FACTOR * w->scale; */
-}
-
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float b, c, tau, a, tau_scale;
-  tau_scale = get_tau_scale(w);
+  scs_float b, c, tau, a, tau_scale = w->diag_r[w->n + w->m];
   a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
   b = (dot_with_diag_scaling(w, mu, w->g) -
        2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
@@ -387,19 +382,9 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
  */
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->m + w->n + 1;
-  /* r, should = 0 so skip */
-  /*
-  for (i = 0; i < w->n; ++i) {
-    w->rsk[i] = w->stgs->rho_x * (w->v[i] + w->u[i] - 2 * w->u_t[i]);
-  }
-  */
-  /* s */
   for (i = 0; i < l; ++i) {
     w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) * w->diag_r[i];
   }
-  /* kappa, incorporates tau scaling parameter */
-  //w->rsk[l - 1] =
-  //    get_tau_scale(w) * (w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1]);
 }
 
 static void update_dual_vars(ScsWork *w) {
