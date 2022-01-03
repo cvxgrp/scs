@@ -215,7 +215,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    1e-9 * (1 + ABS(dobj)));
     /* slightly looser tol */
     mu_assert_less("Complementary slackness ERROR", ABS(sty),
-                   1e-7 * MAX(NORM(s, m), NORM(y, m)));
+                   1e-8 * MAX(NORM(s, m), NORM(y, m)));
     mu_assert_less("s cone dist ERROR", ABS(sdist), 1e-5);
     mu_assert_less("y cone dist ERROR", ABS(ydist), 1e-5);
 
