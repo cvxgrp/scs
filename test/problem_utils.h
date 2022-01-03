@@ -78,8 +78,8 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   scs_free(z);
 }
 
-static scs_float get_dual_cone_dist(const scs_float *y,
-                                    ScsConeWork *c, scs_int m) {
+static scs_float get_dual_cone_dist(const scs_float *y, ScsConeWork *c,
+                                    scs_int m) {
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, y, m * sizeof(scs_float));
@@ -90,8 +90,8 @@ static scs_float get_dual_cone_dist(const scs_float *y,
 }
 
 /* via moreau */
-static scs_float get_pri_cone_dist(const scs_float *s,
-                                   ScsConeWork *c, scs_int m) {
+static scs_float get_pri_cone_dist(const scs_float *s, ScsConeWork *c,
+                                   scs_int m) {
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, s, m * sizeof(scs_float));
@@ -224,7 +224,6 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
     mu_assert_less("Dual feas ERROR", res_dual,
                    stgs->eps_abs + stgs->eps_rel * drl);
     mu_assert_less("Gap feas ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
-
 
   } else if (status == SCS_INFEASIBLE) {
     mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-8);

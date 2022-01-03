@@ -13,15 +13,17 @@
     if (!(test))                                                               \
       return message;                                                          \
   } while (0)
-#define mu_run_test(test)  _mu_run_test(#test, test)                           \
+#define mu_run_test(test) _mu_run_test(#test, test)
 
 #define _mu_run_test(name, test)                                               \
   do {                                                                         \
-    scs_printf("**********************************************************\n");\
+    scs_printf(                                                                \
+        "**********************************************************\n");       \
     scs_printf("Running test: %s\n", name);                                    \
     const char *message = test();                                              \
     tests_run++;                                                               \
-    scs_printf("**********************************************************\n");\
+    scs_printf(                                                                \
+        "**********************************************************\n");       \
     if (message)                                                               \
       return message;                                                          \
   } while (0)

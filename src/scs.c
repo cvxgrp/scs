@@ -404,8 +404,8 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
   /* u = [x;y;tau] */
-  status = SCS(proj_dual_cone)(&(w->u[n]), w->cone_work, w->scal,
-                               &(w->diag_r[n]));
+  status =
+      SCS(proj_dual_cone)(&(w->u[n]), w->cone_work, w->scal, &(w->diag_r[n]));
   if (iter < FEASIBLE_ITERS) {
     w->u[l - 1] = 1.0;
   } else {

@@ -17,7 +17,6 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 }
 */
 
-
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
 static void set_preconditioner(ScsLinSysWork *p) {
@@ -147,7 +146,7 @@ static void mat_vec(const ScsMatrix *A, const ScsMatrix *P, ScsLinSysWork *p,
     SCS(accum_by_p)(P, x, y); /* y = Px */
   }
   accum_by_a(p, x, z);           /* z = Ax */
-  scale_by_r_y_inv(z, p);         /* z = R_y^{-1} A x */
+  scale_by_r_y_inv(z, p);        /* z = R_y^{-1} A x */
   SCS(accum_by_atrans)(A, z, y); /* y += A'z, y = Px + A' R_y^{-1} Ax */
   /* y = R_x * x + Px + A' R_y^{-1} A * x */
   accum_by_r_x(y, x, p);

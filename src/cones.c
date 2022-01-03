@@ -36,8 +36,7 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 #endif
 
 /* set the vector of rho y terms, based on scale and cones */
-void SCS(set_r_y)(const ScsConeWork *c, scs_float scale,
-                        scs_float *rho_y_vec) {
+void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *rho_y_vec) {
   scs_int i;
 
   /* f cone */
@@ -55,8 +54,7 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale,
 }
 
 /* the function f aggregates the entries across the cone boundaries */
-void SCS(enforce_cone_boundaries)(const ScsConeWork *c,
-                                  scs_float *vec, 
+void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
                                   scs_float (*f)(const scs_float *, scs_int)) {
   scs_int i, j, delta;
   scs_int count = c->cone_boundaries[0];
@@ -764,8 +762,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       r_box = &(diag_r_y[count]);
     }
     /* project onto box cone */
-    bu = normalize? c->bu : k->bu;
-    bl = normalize? c->bl : k->bl;
+    bu = normalize ? c->bu : k->bu;
+    bl = normalize ? c->bl : k->bl;
     c->box_t_warm_start = proj_box_cone(&(x[count]), bl, bu, k->bsize,
                                         c->box_t_warm_start, r_box);
     count += k->bsize; /* since b = (t,s), len(s) = bsize - 1 */
@@ -883,7 +881,6 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int m) {
   return c;
 }
 
-
 void scale_box_cone(const ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
   if (k->bsize && k->bu && k->bl) {
     c->box_t_warm_start = 1.;
@@ -907,8 +904,8 @@ void scale_box_cone(const ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
    where \Pi^R_C is the projection onto C under the R-Euclidean norm.
 
 */
-scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c,
-                            ScsScaling *scal, scs_float *diag_r_y) {
+scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,
+                            scs_float *diag_r_y) {
   scs_int status, i;
   const ScsCone *k = c->k;
 
