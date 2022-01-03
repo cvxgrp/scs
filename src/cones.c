@@ -11,9 +11,7 @@
 #define POW_CONE_MAX_ITERS (20)
 
 /* Box cone limits (+ or -) taken to be INF */
-#define MAX_BOX_VAL (1e20)
-/* Box cone limit difference taken to mean an equality constraint */
-#define BOX_EQUALITY_TOL (1e-4)
+#define MAX_BOX_VAL (1e15)
 
 #ifdef USE_LAPACK
 
@@ -56,17 +54,16 @@ void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
   }
 }
 
-/* XXX */
-/* Should also handle l2 ? */
-/* use this function in normalization? */
+/* the function f aggregates the entries across the cone boundaries */
 void SCS(enforce_cone_boundaries)(const ScsCone *k, const ScsConeWork *c,
-                                  scs_float *vec) {
+                                  scs_float *vec, 
+                                  scs_float (*f)(const scs_float *, scs_int)) {
   scs_int i, j, delta;
   scs_int count = c->cone_boundaries[0];
   scs_float wrk;
   for (i = 1; i < c->cone_boundaries_len; ++i) {
     delta = c->cone_boundaries[i];
-    wrk = SCS(norm_inf)(&(vec[count]), delta);
+    wrk = f(&(vec[count]), delta);
     for (j = count; j < count + delta; ++j) {
       vec[j] = wrk;
     }

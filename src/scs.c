@@ -987,7 +987,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     }
     r_hat[l-1] = 1.;
     */
-    SCS(enforce_cone_boundaries)(w->k, w->cone_work, &(r_hat[w->n]));
+    SCS(enforce_cone_boundaries)(w->k, w->cone_work, &(r_hat[w->n]), &SCS(norm_inf));
     for (i=0; i < l; ++i) {
       r_hat[i] = 1. / r_hat[i];
       mean += r_hat[i] / l;
