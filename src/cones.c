@@ -55,7 +55,7 @@ void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
 }
 
 /* the function f aggregates the entries across the cone boundaries */
-void SCS(enforce_cone_boundaries)(const ScsCone *k, const ScsConeWork *c,
+void SCS(enforce_cone_boundaries)(const ScsConeWork *c,
                                   scs_float *vec, 
                                   scs_float (*f)(const scs_float *, scs_int)) {
   scs_int i, j, delta;

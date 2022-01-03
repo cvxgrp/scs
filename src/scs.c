@@ -846,8 +846,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     /* this allocates memory that must be freed */
     w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
     SCS(normalize)
-    (w->P, w->A, w->b_normalized, w->c_normalized, w->scal,
-     w->cone_work->cone_boundaries, w->cone_work->cone_boundaries_len);
+    (w->P, w->A, w->b_normalized, w->c_normalized, w->scal, w->cone_work);
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;

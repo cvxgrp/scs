@@ -17,6 +17,7 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
                            const scs_float sc);
 scs_float SCS(norm_diff)(const scs_float *a, const scs_float *b, scs_int l);
 scs_float SCS(norm_inf_diff)(const scs_float *a, const scs_float *b, scs_int l);
+scs_float SCS(mean)(const scs_float *x, scs_int l);
 
 #ifdef __cplusplus
 }
