@@ -222,12 +222,12 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float">
 <span id="_CPPv325scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv225scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1ae08b763dd0770e44404fccc28ab01260"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">rho_y_vec</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.</p>
+<dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">R</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>w</strong> – Linear system private workspace. </p></li>
-<li><p><strong>rho_y_vec</strong> – <code class="docutils literal notranslate"><span class="pre">rho_y</span></code> diagonal entries. </p></li>
+<li><p><strong>diag_r</strong> – <code class="docutils literal notranslate"><span class="pre">diag_r</span></code> diagonal entries of R (assumed to be diagonal). </p></li>
 </ul>
 </dd>
 </dl>
