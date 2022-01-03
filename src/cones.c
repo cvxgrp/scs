@@ -36,12 +36,12 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 #endif
 
 /* set the vector of rho y terms, based on scale and cones */
-void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
+void SCS(set_r_y)(const ScsConeWork *c, scs_float scale,
                         scs_float *rho_y_vec) {
   scs_int i;
 
   /* f cone */
-  for (i = 0; i < k->z; ++i) {
+  for (i = 0; i < c->k->z; ++i) {
     /* set rho_y small for z, similar to rho_x term, since z corresponds to
      * dual free cone, this effectively decreases penalty on those entries
      * and lets them be determined almost entirely by the linear system solve
@@ -49,7 +49,7 @@ void SCS(set_rho_y_vec)(const ScsCone *k, const ScsConeWork *c, scs_float scale,
     rho_y_vec[i] = 1.0 / (1000. * scale);
   }
   /* others */
-  for (i = k->z; i < c->cone_len; ++i) {
+  for (i = c->k->z; i < c->m; ++i) {
     rho_y_vec[i] = 1.0 / scale;
   }
 }
@@ -867,12 +867,13 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   return 0;
 }
 
-ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int cone_len) {
+ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int m) {
   ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
-  c->cone_len = cone_len;
+  c->k = k;
+  c->m = m;
   c->scaled_cones = 0;
   set_cone_boundaries(k, c);
-  c->s = (scs_float *)scs_calloc(cone_len, sizeof(scs_float));
+  c->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
   if (k->ssize && k->s) {
     if (set_up_sd_cone_work_space(c, k) < 0) {
       SCS(finish_cone)(c);
@@ -906,9 +907,10 @@ void scale_box_cone(const ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
    where \Pi^R_C is the projection onto C under the R-Euclidean norm.
 
 */
-scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
+scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c,
                             ScsScaling *scal, scs_float *diag_r_y) {
   scs_int status, i;
+  const ScsCone *k = c->k;
 
   if (!c->scaled_cones) {
     scale_box_cone(k, c, scal);
@@ -916,10 +918,10 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
   }
 
   /* copy s = x */
-  memcpy(c->s, x, c->cone_len * sizeof(scs_float));
+  memcpy(c->s, x, c->m * sizeof(scs_float));
 
   /* x -> - Rx */
-  for (i = 0; i < c->cone_len; ++i) {
+  for (i = 0; i < c->m; ++i) {
     x[i] *= diag_r_y ? -diag_r_y[i] : -1;
   }
 
@@ -927,7 +929,7 @@ scs_int SCS(proj_dual_cone)(scs_float *x, const ScsCone *k, ScsConeWork *c,
   status = proj_cone(x, k, c, scal ? 1 : 0, diag_r_y);
 
   /* return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x )  */
-  for (i = 0; i < c->cone_len; ++i) {
+  for (i = 0; i < c->m; ++i) {
     if (diag_r_y) {
       x[i] = x[i] / diag_r_y[i] + c->s[i];
     } else {

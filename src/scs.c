@@ -404,7 +404,7 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
   /* u = [x;y;tau] */
-  status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, w->scal,
+  status = SCS(proj_dual_cone)(&(w->u[n]), w->cone_work, w->scal,
                                &(w->diag_r[n]));
   if (iter < FEASIBLE_ITERS) {
     w->u[l - 1] = 1.0;
@@ -737,16 +737,14 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-/* XXX */
 /* Sets the diag_r vector, given the scale parameters in work */
 static void set_diag_r(ScsWork *w) {
   scs_int i;
   for (i = 0; i < w->n; ++i) {
     w->diag_r[i] = w->stgs->rho_x;
   }
-  for (i = 0; i < w->m; ++i) {
-    w->diag_r[i + w->n] = 1. / w->scale;
-  }
+  /* use cone information to set R_y */
+  SCS(set_r_y)(w->cone_work, w->scale, &(w->diag_r[w->n]));
   w->diag_r[w->n + w->m] = 1.; /* TODO: is this the best choice? */
 }
 
@@ -937,7 +935,6 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->last_scale_update_iter = iter;
     w->scale = new_scale;
 
-    /* XXX what about cone specific scales? */
     /* update diag r vector */
     set_diag_r(w);
 

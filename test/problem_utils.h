@@ -42,7 +42,7 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
     y[i] = z[i] = rand_scs_float();
   }
   tmp_cone_work = SCS(init_cone)(k, m);
-  SCS(proj_dual_cone)(y, k, tmp_cone_work, SCS_NULL, SCS_NULL);
+  SCS(proj_dual_cone)(y, tmp_cone_work, SCS_NULL, SCS_NULL);
   SCS(finish_cone(tmp_cone_work));
 
   for (i = 0; i < m; i++) {
@@ -78,25 +78,25 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   scs_free(z);
 }
 
-static scs_float get_dual_cone_dist(const scs_float *y, const ScsCone *k,
+static scs_float get_dual_cone_dist(const scs_float *y,
                                     ScsConeWork *c, scs_int m) {
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, y, m * sizeof(scs_float));
-  SCS(proj_dual_cone)(t, k, c, SCS_NULL, SCS_NULL);
+  SCS(proj_dual_cone)(t, c, SCS_NULL, SCS_NULL);
   dist = SCS(norm_inf_diff)(t, y, m);
   scs_free(t);
   return dist;
 }
 
 /* via moreau */
-static scs_float get_pri_cone_dist(const scs_float *s, const ScsCone *k,
+static scs_float get_pri_cone_dist(const scs_float *s,
                                    ScsConeWork *c, scs_int m) {
   scs_float dist;
   scs_float *t = (scs_float *)scs_calloc(m, sizeof(scs_float));
   memcpy(t, s, m * sizeof(scs_float));
   SCS(scale_array)(t, -1.0, m);
-  SCS(proj_dual_cone)(t, k, c, SCS_NULL, SCS_NULL);
+  SCS(proj_dual_cone)(t, c, SCS_NULL, SCS_NULL);
   dist = SCS(norm_inf)(t, m); /* ||s - Pi_c(s)|| = ||Pi_c*(-s)|| */
   scs_free(t);
   return dist;
@@ -172,10 +172,10 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   /**************** CONES *****************/
 
   if (status == SCS_SOLVED || status == SCS_UNBOUNDED) {
-    sdist = get_pri_cone_dist(sol->s, k, cone_work, m);
+    sdist = get_pri_cone_dist(sol->s, cone_work, m);
   }
   if (status == SCS_SOLVED || status == SCS_INFEASIBLE) {
-    ydist = get_dual_cone_dist(sol->y, k, cone_work, m);
+    ydist = get_dual_cone_dist(sol->y, cone_work, m);
   }
 
   /**************** OTHERS *****************/
