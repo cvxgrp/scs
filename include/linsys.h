@@ -54,12 +54,12 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *w);
 scs_int SCS(solve_lin_sys)(ScsLinSysWork *w, scs_float *b, const scs_float *s,
                            scs_float tol);
 /**
- *  Update the linsys workspace when `rho_y_vec` is changed. For example, a
+ *  Update the linsys workspace when `R` is changed. For example, a
  *  direct method for solving the linear system might need to update the
  *  factorization of the matrix.
  *
  *  @param  w          Linear system private workspace.
- *  @param  rho_y_vec  `rho_y` diagonal entries.
+ *  @param  diag_r     `diag_r` diagonal entries of R (assumed to be diagonal).
  *
  */
 void SCS(update_lin_sys_diag_r)(ScsLinSysWork *w, scs_float *diag_r);
