@@ -752,7 +752,8 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-// TODO delete this
+/* XXX */
+/* Sets the diag_r vector, given the scale parameters in work */
 static void set_diag_r(ScsWork *w) {
   scs_int i;
   for (i = 0; i < w->n; ++i) {
@@ -761,6 +762,7 @@ static void set_diag_r(ScsWork *w) {
   for (i = 0; i < w->m; ++i) {
     w->diag_r[i + w->n] = 1. / w->scale;
   }
+  w->diag_r[w->n + w->m] = 1.; /* TODO: is this the best choice? */
 }
 
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
@@ -949,102 +951,13 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
-
-    // XXX
-    scs_int l = w->m + w->n + 1;
-    scs_float mean = 0.;
-    scs_float *r_hat = scs_calloc(l, sizeof(scs_float));
-    //*
-    for (i = 0; i < l; ++i) {
-      r_hat[i] = ABS(w->u[i] - w->u_t[i]);
-      // scs_printf("err[%i] = %.3e\n", i, r_hat[i]);
-      r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
-      //scs_printf("r_hat[%i] = %.3e\n", i, r_hat[i]);
-    }
-
-    if (0 && w->stgs->normalize) {
-      for (i = 0; i < w->n; ++i) {
-        r_hat[i] *= (w->scal->E[i] / w->scal->dual_scale);
-      }
-      for (i = w->n; i < w->n + w->m; ++i) {
-        r_hat[i] *= (w->scal->D[i - w->n] / w->scal->primal_scale);
-      }
-    }
-
-    //*/
-    /*
-    for (i = 0; i < w->n; ++i) {
-      // dual
-      //r_hat[i] = SAFEDIV_POS(ABS(r->px_aty_ctau[i]), MAX(MAX(ABS(r->px[i]), ABS(r->aty[i])), ABS(c[i]) * r->tau));
-      r_hat[i] = ABS(r->px_aty_ctau[i]);
-      r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
-    }
-    for (i = w->n; i < w->n + w->m; ++i) {
-      // primal
-      //r_hat[i] = SAFEDIV_POS(ABS(r->ax_s_btau[i]), MAX(MAX(ABS(r->ax[i]), ABS(xys->s[i])), ABS(b[i]) * r->tau));
-      r_hat[i] = ABS(r->ax_s_btau[i]);
-      r_hat[i] = MAX(MIN(r_hat[i], 1e3), 1e-9);
-    }
-    r_hat[l-1] = 1.;
-    */
-    SCS(enforce_cone_boundaries)(w->k, w->cone_work, &(r_hat[w->n]), &SCS(norm_inf));
-    for (i=0; i < l; ++i) {
-      r_hat[i] = 1. / r_hat[i];
-      mean += r_hat[i] / l;
-    }
-    for (i=0; i < l; ++i) {
-      r_hat[i] /= mean;
-      r_hat[i] = POWF(r_hat[i], 0.5); // TODO better than this
-      //scs_printf("r_hat[%i] = %.3e\n", i, r_hat[i]);
-    }
-
-    //mean = 0.;
-    for (i=0; i < l; ++i) {
-      w->diag_r[i] *= r_hat[i];
-      w->diag_r[i] = MAX(MIN(w->diag_r[i], 1e6), 1e-6);
-      //mean += w->diag_r[i] / l;
-    }
-    /*
-    for (i=0; i < l; ++i) {
-      w->diag_r[i] /= mean;
-    }
-    */
-    /*
-    mean = 0.;
-    for (i=0; i < l; ++i) {
-      mean += w->diag_r[i] /l;
-    }
-    for (i=0; i < l; ++i) {
-      w->diag_r[i] /= mean;
-      scs_printf("R[%i] = %.3e\n", i, w->diag_r[i]);
-    }
-    */
-    /*
-    for (i=0; i < w->n; ++i) {
-      w->diag_r[i] *= SQRTF(new_scale / w->scale);
-    }
-    */
-    for (i=w->n; i < w->n+w->m; ++i) {
-      w->diag_r[i] /= new_scale / w->scale;
-    }
     w->scale = new_scale;
-    /*
-    mean = 0.;
-    for (i=0; i < l; ++i) {
-      mean += w->diag_r[i] /l;
-    }
-    */
-    //scs_printf("mean R = %.3e\n", mean);
-    //scs_printf("max R = %.3e\n", SCS(norm_inf)(w->diag_r, l));
-    scs_free(r_hat);
 
-    /*
-    for (i = 0; i < l; ++i) {
-      scs_printf("R[%i] = %.2e, ", i, w->diag_r[i]);
-    }
-    scs_printf("\n");
-    */
+    /* XXX what about cone specific scales? */
+    /* update diag r vector */
+    set_diag_r(w);
 
+    /* update linear systems */
     SCS(update_lin_sys_diag_r)(w->p, w->diag_r);
 
     /* update pre-solved quantities */
@@ -1057,7 +970,7 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     /* update v, using fact that rsk, u, u_t vectors should be the same */
     /* solve: R (v^+ + u - 2u_t) = rsk => v^+ = R^-1 rsk + 2u_t - u  */
     /* only elements with scale on diag */
-    for (i = 0; i < l; i++) {
+    for (i = 0; i < w->n + w->m + 1; i++) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
   }
