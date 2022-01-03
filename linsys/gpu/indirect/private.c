@@ -37,11 +37,11 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
-static void set_preconditioner(ScsLinSysWork *p) {
+static void set_preconditioner(ScsLinSysWork *p, scs_float *diag_r) {
   scs_int i, k;
-  scs_float *M = p->M;
   const ScsMatrix *A = p->A;
   const ScsMatrix *P = p->P;
+  scs_float *M = p->M;
 
 #if VERBOSITY > 0
   scs_printf("getting pre-conditioner\n");
@@ -50,11 +50,11 @@ static void set_preconditioner(ScsLinSysWork *p) {
   /* M_ii = (R_x)_i + P_ii + a_i' (R_y)^-1 a_i */
   for (i = 0; i < A->n; ++i) { /* cols */
     /* M_ii = (R_x)_i */
-    M[i] = p->diag_r[i];
+    M[i] = diag_r[i];
     /* M_ii += a_i' (R_y)^-1 a_i */
     for (k = A->p[i]; k < A->p[i + 1]; ++k) {
       /* A->i[k] is row of entry k with value A->x[k] */
-      M[i] += A->x[k] * A->x[k] / p->diag_r[A->n + A->i[k]];
+      M[i] += A->x[k] * A->x[k] / diag_r[A->n + A->i[k]];
     }
     if (P) {
       for (k = P->p[i]; k < P->p[i + 1]; k++) {
@@ -69,8 +69,7 @@ static void set_preconditioner(ScsLinSysWork *p) {
     /* finally invert for pre-conditioner */
     M[i] = 1. / M[i];
   }
-  cudaMemcpy(p->M, M, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
-  scs_free(M);
+  cudaMemcpy(p->M_gpu, M, A->n * sizeof(scs_float), cudaMemcpyHostToDevice);
 #if VERBOSITY > 0
   scs_printf("finished getting pre-conditioner\n");
 #endif
@@ -96,6 +95,7 @@ void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
 
 void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
   if (p) {
+    scs_free(p->M);
     scs_free(p->inv_r_y);
     cudaFree(p->p);
     cudaFree(p->r);
@@ -103,7 +103,8 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
     cudaFree(p->bg);
     cudaFree(p->tmp_m);
     cudaFree(p->z);
-    cudaFree(p->M);
+    cudaFree(p->M_gpu);
+    cudaFree(p->r_x_gpu);
     cudaFree(p->inv_r_y_gpu);
     if (p->Pg) {
       SCS(free_gpu_matrix)(p->Pg);
@@ -217,7 +218,6 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
                                       scs_float *diag_r) {
   cudaError_t err;
-  scs_int i;
   csc *P_full;
   ScsLinSysWork *p = SCS_NULL;
   ScsGpuMatrix *Ag = SCS_NULL;
@@ -232,6 +232,9 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
 
   p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   Ag = (ScsGpuMatrix *)scs_calloc(1, sizeof(ScsGpuMatrix));
+
+  p->inv_r_y = (scs_float *)scs_calloc(A->m * sizeof(scs_float));
+  p->M = (scs_float *)scs_calloc(A->n * sizeof(scs_float));
 
   p->A = A;
   p->P = P;
@@ -270,7 +273,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   cudaMalloc((void **)&p->bg, (A->n + A->m) * sizeof(scs_float));
   cudaMalloc((void **)&p->tmp_m, A->m * sizeof(scs_float));
   cudaMalloc((void **)&p->z, A->n * sizeof(scs_float));
-  cudaMalloc((void **)&p->M, A->n * sizeof(scs_float));
+  cudaMalloc((void **)&p->M_gpu, A->n * sizeof(scs_float));
+  cudaMalloc((void **)&p->r_x_gpu, A->n * sizeof(scs_float));
   cudaMalloc((void **)&p->inv_r_y_gpu, A->m * sizeof(scs_float));
 
   cudaMemcpy(Ag->i, A->i, (A->p[A->n]) * sizeof(scs_int),
@@ -319,8 +323,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   cusparseCreateDnVec(&p->dn_vec_n_p, Ag->n, p->tmp_m, SCS_CUDA_FLOAT);
   cusparseCreateDnVec(&p->dn_vec_m, Ag->m, p->tmp_m, SCS_CUDA_FLOAT);
 
-  /* Form preconditioner and copy 1/R_y to gpu */
-  SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r)
+  /* Form preconditioner and copy R_x, 1/R_y to gpu */
+  SCS(update_lin_sys_diag_r)(p, diag_r);
 
 #if GPU_TRANSPOSE_MAT > 0
   p->Agt = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
@@ -409,7 +413,7 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
 
   /* z = M r */
   cudaMemcpy(z, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
-  scale_by_diag(cublas_handle, pr->M, z, n);
+  scale_by_diag(cublas_handle, pr->M_gpu, z, n);
   /* ztr = z'r */
   CUBLAS(dot)(cublas_handle, n, r, 1, z, 1, &ztr);
   /* p = z */
@@ -438,7 +442,7 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
     }
     /* z = M r */
     cudaMemcpy(z, r, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
-    scale_by_diag(cublas_handle, pr->M, z, n);
+    scale_by_diag(cublas_handle, pr->M_gpu, z, n);
     ztr_prev = ztr;
     /* ztr = z'r */
     CUBLAS(dot)(cublas_handle, n, r, 1, z, 1, &ztr);

@@ -39,9 +39,9 @@ struct SCS_LIN_SYS_WORK {
   cusparseDnVecDescr_t dn_vec_n_p; /* Dense vector of length n */
 
   /* rho terms */
-  scs_float rho_x;
-  scs_float *inv_rho_y_vec;     /* inverse rho_y_vec */
-  scs_float *inv_rho_y_vec_gpu; /* inverse rho_y_vec on GPU */
+  scs_float *r_x_gpu;
+  scs_float *inv_r_y;     /* inverse R_y */
+  scs_float *inv_r_y_gpu; /* inverse R_y on GPU */
 };
 
 #ifdef __cplusplus
