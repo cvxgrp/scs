@@ -53,7 +53,7 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *rho_y_vec) {
   }
 }
 
-/* the function f aggregates the entries across the cone boundaries */
+/* the function f aggregates the entries within each cone */
 void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
                                   scs_float (*f)(const scs_float *, scs_int)) {
   scs_int i, j, delta;
