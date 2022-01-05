@@ -326,7 +326,7 @@ static inline scs_float dot_r(ScsWork *w, const scs_float *x,
 
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float b, c, tau, a, tau_scale = w->diag_r[w->n + w->m];
+  scs_float a, b, c, tau_scale = w->diag_r[w->n + w->m];
   a = tau_scale + dot_r(w, w->g, w->g);
   b = dot_r(w, mu, w->g) - 2 * dot_r(w, p, w->g) - eta * tau_scale;
   c = dot_r(w, p, p) - dot_r(w, p, mu);

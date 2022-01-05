@@ -35,9 +35,9 @@ ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int m);
 char *SCS(get_cone_header)(const ScsCone *k);
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
 scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,
-                            scs_float *rho_y_vec);
+                            scs_float *r_y);
 void SCS(finish_cone)(ScsConeWork *c);
-void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *rho_y_vec);
+void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y);
 void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
                                   scs_float (*f)(const scs_float *, scs_int));
 

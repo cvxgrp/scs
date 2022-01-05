@@ -736,19 +736,19 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* project onto the primal K cone in the paper */
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
-                         scs_int normalize, scs_float *diag_r_y) {
+                         scs_int normalize, scs_float *r_y) {
   scs_int i, status;
   scs_int count = 0;
   scs_float *r_box = SCS_NULL;
   scs_float *bu, *bl;
 
-  if (k->z) { /* doesn't use diag_r_y */
+  if (k->z) { /* doesn't use r_y */
     /* project onto primal zero / dual free cone */
     memset(x, 0, k->z * sizeof(scs_float));
     count += k->z;
   }
 
-  if (k->l) { /* doesn't use diag_r_y */
+  if (k->l) { /* doesn't use r_y */
     /* project onto positive orthant */
     for (i = count; i < count + k->l; ++i) {
       x[i] = MAX(x[i], 0.0);
@@ -756,9 +756,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += k->l;
   }
 
-  if (k->bsize) { /* DOES use diag_r_y */
-    if (diag_r_y) {
-      r_box = &(diag_r_y[count]);
+  if (k->bsize) { /* DOES use r_y */
+    if (r_y) {
+      r_box = &(r_y[count]);
     }
     /* project onto box cone */
     bu = normalize ? c->bu : k->bu;
@@ -768,7 +768,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += k->bsize; /* since b = (t,s), len(s) = bsize - 1 */
   }
 
-  if (k->qsize && k->q) { /* doesn't use diag_r_y */
+  if (k->qsize && k->q) { /* doesn't use r_y */
     /* project onto second-order cones */
     for (i = 0; i < k->qsize; ++i) {
       proj_soc(&(x[count]), k->q[i]);
@@ -776,7 +776,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  if (k->ssize && k->s) { /* doesn't use diag_r_y */
+  if (k->ssize && k->s) { /* doesn't use r_y */
     /* project onto PSD cones */
     for (i = 0; i < k->ssize; ++i) {
       status = proj_semi_definite_cone(&(x[count]), k->s[i], c);
@@ -787,7 +787,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  if (k->ep) { /* doesn't use diag_r_y */
+  if (k->ep) { /* doesn't use r_y */
                /*
                 * exponential cone is not self dual, if s \in K
                 * then y \in K^* and so if K is the primal cone
@@ -804,7 +804,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   }
 
   /* dual exponential cone */
-  if (k->ed) { /* doesn't use diag_r_y */
+  if (k->ed) { /* doesn't use r_y */
     /*
      * exponential cone is not self dual, if s \in K
      * then y \in K^* and so if K is the primal cone
@@ -832,7 +832,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->ed;
   }
 
-  if (k->psize && k->p) { /* doesn't use diag_r_y */
+  if (k->psize && k->p) { /* doesn't use r_y */
     scs_float v[3];
     scs_int idx;
     /* don't use openmp for power cone
@@ -840,7 +840,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     pragma omp parallel for private(v, idx)
     endif
     */
-    for (i = 0; i < k->psize; ++i) { /* doesn't use diag_r_y */
+    for (i = 0; i < k->psize; ++i) { /* doesn't use r_y */
       idx = count + 3 * i;
       if (k->p[i] >= 0) {
         /* primal power cone */
@@ -904,7 +904,7 @@ void scale_box_cone(const ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
 
 */
 scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,
-                            scs_float *diag_r_y) {
+                            scs_float *r_y) {
   scs_int status, i;
   const ScsCone *k = c->k;
 
@@ -918,16 +918,16 @@ scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,
 
   /* x -> - Rx */
   for (i = 0; i < c->m; ++i) {
-    x[i] *= diag_r_y ? -diag_r_y[i] : -1;
+    x[i] *= r_y ? -r_y[i] : -1;
   }
 
   /* project -x onto cone, x -> \Pi_{C^*}^{R^{-1}}(-x) */
-  status = proj_cone(x, k, c, scal ? 1 : 0, diag_r_y);
+  status = proj_cone(x, k, c, scal ? 1 : 0, r_y);
 
   /* return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x )  */
   for (i = 0; i < c->m; ++i) {
-    if (diag_r_y) {
-      x[i] = x[i] / diag_r_y[i] + c->s[i];
+    if (r_y) {
+      x[i] = x[i] / r_y[i] + c->s[i];
     } else {
       x[i] += c->s[i];
     }
