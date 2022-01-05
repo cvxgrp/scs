@@ -313,14 +313,12 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = 1.;
 }
 
-/* utility function that scales first n entries in inner prod by rho_x   */
-/* and last m entries by 1 / rho_y_vec, assumes length of array is n + m */
-/* See .note_on_scale in repo for explanation */
-static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
-                                       const scs_float *y) {
-  scs_int i, len = w->n + w->m;
+/* utility function that computes x'Ry */
+static inline scs_float dot_r(ScsWork *w, const scs_float *x,
+                              const scs_float *y) {
+  scs_int i;
   scs_float ip = 0.0;
-  for (i = 0; i < len; ++i) {
+  for (i = 0; i < w->n + w->m; ++i) {
     ip += x[i] * y[i] * w->diag_r[i];
   }
   return ip;
@@ -329,12 +327,10 @@ static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   scs_float b, c, tau, a, tau_scale = w->diag_r[w->n + w->m];
-  a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
-  b = (dot_with_diag_scaling(w, mu, w->g) -
-       2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
-  c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
-  tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
-  return tau;
+  a = tau_scale + dot_r(w, w->g, w->g);
+  b = dot_r(w, mu, w->g) - 2 * dot_r(w, p, w->g) - eta * tau_scale;
+  c = dot_r(w, p, p) - dot_r(w, p, mu);
+  return (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
 }
 
 /* status < 0 indicates failure */
