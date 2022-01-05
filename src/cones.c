@@ -36,20 +36,19 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 #endif
 
 /* set the vector of rho y terms, based on scale and cones */
-void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *rho_y_vec) {
+void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
   scs_int i;
-
-  /* f cone */
+  /* z cone */
   for (i = 0; i < c->k->z; ++i) {
     /* set rho_y small for z, similar to rho_x term, since z corresponds to
      * dual free cone, this effectively decreases penalty on those entries
      * and lets them be determined almost entirely by the linear system solve
      */
-    rho_y_vec[i] = 1.0 / (1000. * scale);
+    r_y[i] = 1.0 / (1000. * scale);
   }
   /* others */
   for (i = c->k->z; i < c->m; ++i) {
-    rho_y_vec[i] = 1.0 / scale;
+    r_y[i] = 1.0 / scale;
   }
 }
 
