@@ -323,7 +323,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
   scs_int i, ldl_status;
   for (i = 0; i < p->n; ++i) {
-    /* top left is R_x + {, bottom right is -R_y */
+    /* top left is R_x + P, bottom right is -R_y */
     p->kkt->x[p->diag_r_idxs[i]] = p->diag_p[i] + diag_r[i];
   }
   for (i = p->n; i < p->n + p->m; ++i) {
