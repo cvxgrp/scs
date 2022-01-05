@@ -746,7 +746,7 @@ static void set_diag_r(ScsWork *w) {
   /* use cone information to set R_y */
   SCS(set_r_y)(w->cone_work, w->scale, &(w->diag_r[w->n]));
   /* if modified need to SCS(enforce_cone_boundaries)(...) */
-  w->diag_r[w->n + w->m] = 1.; /* TODO: is this the best choice? */
+  w->diag_r[w->n + w->m] = TAU_FACTOR; /* TODO: is this the best choice? */
 }
 
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
