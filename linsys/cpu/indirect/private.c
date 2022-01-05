@@ -204,8 +204,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   return p;
 }
 
-/* solves (R_x * I + P + A' R_y^{-1} A)x = b, s warm start, solution stored in
- * b */
+/* solves (R_x * I + P + A' R_y^{-1} A)x = b, s warm start, solution in b */
 static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
                    scs_int max_its, scs_float tol) {
   scs_int i, n = pr->n;
