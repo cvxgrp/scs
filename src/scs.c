@@ -385,11 +385,8 @@ static void compute_rsk(ScsWork *w) {
 
 static void update_dual_vars(ScsWork *w) {
   scs_int i, l = w->n + w->m + 1;
-  scs_float a = w->stgs->alpha;
-  /* compute and store [r;s;kappa] */
-  compute_rsk(w);
   for (i = 0; i < l; ++i) {
-    w->v[i] += a * (w->u[i] - w->u_t[i]);
+    w->v[i] += w->stgs->alpha * (w->u[i] - w->u_t[i]);
   }
 }
 
@@ -552,6 +549,7 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("Norm u = %4f, ", SCS(norm_2)(w->u, w->n + w->m + 1));
   scs_printf("Norm u_t = %4f, ", SCS(norm_2)(w->u_t, w->n + w->m + 1));
   scs_printf("Norm v = %4f, ", SCS(norm_2)(w->v, w->n + w->m + 1));
+  scs_printf("Norm rsk = %4f, ", SCS(norm_2)(w->rsk, w->n + w->m + 1));
   scs_printf("Norm x = %4f, ", SCS(norm_2)(w->xys_orig->x, w->n));
   scs_printf("Norm y = %4f, ", SCS(norm_2)(w->xys_orig->y, w->m));
   scs_printf("Norm s = %4f, ", SCS(norm_2)(w->xys_orig->s, w->m));
@@ -888,7 +886,7 @@ scs_int should_update_r(scs_float factor, scs_int iter) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
-static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
+static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
 
@@ -946,8 +944,9 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       aa_reset(w->accel);
     }
     /* update v, using fact that rsk, u, u_t vectors should be the same */
-    /* solve: R (v^+ + u - 2u_t) = rsk => v^+ = R^-1 rsk + 2u_t - u  */
-    /* only elements with scale on diag */
+    /* solve: R^+ (v^+ + u - 2u_t) = rsk = R(v + u - 2u_t)
+     *  => v^+ = R+^-1 rsk + 2u_t - u
+     */
     for (i = 0; i < w->n + w->m + 1; i++) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
@@ -1005,7 +1004,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     /* store v_prev = v, *after* normalizing */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
-    /* linear system solve */
+    /******************* linear system solve ********************/
     SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1013,7 +1012,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
 
-    /* project onto the cones */
+    /****************** project onto the cones ******************/
     SCS(tic)(&cone_timer);
     if (project_cones(w, k, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1021,8 +1020,9 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     total_cone_time += SCS(tocq)(&cone_timer);
 
-    /* dual variable step */
-    update_dual_vars(w);
+    /* compute [r;s;kappa], must be before dual var update */
+    /* since Moreau decomp logic relies on v at start */
+    compute_rsk(w);
 
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
@@ -1041,6 +1041,21 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       }
     }
 
+    /* Compute residuals. */
+    if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
+      populate_residual_struct(w, i);
+      print_summary(w, i, &solve_timer);
+    }
+
+    /* If residuals are fresh then maybe compute new scale. */
+    if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
+      update_scale(w, k, i);
+    }
+
+    /****************** dual variable step **********************/
+    /* do this after update_scale due to remapping that happens there */
+    update_dual_vars(w);
+
     /* AA safeguard check.
      * Perform safeguarding *after* convergence check to prevent safeguard
      * overwriting converged iterate, since safeguard is on `v` and convergence
@@ -1054,17 +1069,6 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       } else {
         w->accepted_accel_steps++;
       }
-    }
-
-    /* Compute residuals. */
-    if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-      populate_residual_struct(w, i);
-      print_summary(w, i, &solve_timer);
-    }
-
-    /* If residuals are fresh then maybe compute new scale. */
-    if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
-      maybe_update_scale(w, k, i);
     }
 
     /* Log *after* updating scale so residual recalc does not affect alg */
