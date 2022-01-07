@@ -11,7 +11,7 @@ static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
   scs_float nrm;
   CUBLAS(nrm2)(cublas_handle, n, r, 1, &nrm);
 #else
-  blas_int idx;
+  scs_int idx;
   scs_float nrm;
   CUBLASI(amax)(cublas_handle, n, r, 1, &idx);
   /* NOTE: we take idx -1 here since the routine above returns Fortran idxs */
