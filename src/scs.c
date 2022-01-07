@@ -947,7 +947,13 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     /* solve: R^+ (v^+ + u - 2u_t) = rsk = R(v + u - 2u_t)
      *  => v^+ = R+^-1 rsk + 2u_t - u
      */
+    // XXX XXX
+    /*
     for (i = 0; i < w->n + w->m + 1; i++) {
+      w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
+    }
+    */
+    for (i = w->n; i < w->m + w->n; i++) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
   }
@@ -1023,6 +1029,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     /* compute [r;s;kappa], must be before dual var update */
     /* since Moreau decomp logic relies on v at start */
     compute_rsk(w);
+    // XXX XXX
+    update_dual_vars(w);
 
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
@@ -1054,7 +1062,8 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
     /****************** dual variable step **********************/
     /* do this after update_scale due to remapping that happens there */
-    update_dual_vars(w);
+    // XXX XXX
+    //update_dual_vars(w);
 
     /* AA safeguard check.
      * Perform safeguarding *after* convergence check to prevent safeguard
