@@ -921,7 +921,7 @@ scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,
     x[i] *= r_y ? -r_y[i] : -1;
   }
 
-  /* project -x onto cone, x -> \Pi_{C^*}^{R^{-1}}(-x) */
+  /* project -x onto cone, x -> \Pi_{C^*}^{R^{-1}}(-x) under r_y metric */
   status = proj_cone(x, k, c, scal ? 1 : 0, r_y);
 
   /* return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x )  */
