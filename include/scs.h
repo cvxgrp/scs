@@ -17,8 +17,8 @@ typedef struct SCS_CONE_WORK ScsConeWork;
 /** Struct containing linear system workspace. Implemented by linear solver. */
 typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
 
-/** This defines the data matrices which should be supplied in column compressed
- *  format with zero based indexing.
+/** This defines the data matrices which should be supplied in compressed
+ *  sparse column format with zero based indexing.
  */
 typedef struct {
   /** Matrix values, size: number of non-zeros. */
@@ -297,7 +297,8 @@ void SCS(finish)(ScsWork *w);
  * @param  d 		 Problem data.
  * @param  k 		 Cone data.
  * @param  stgs  SCS solver settings.
- * @param  sol   Solution will be stored here.
+ * @param  sol   Solution will be stored here. If members `x`, `y`, `s` are
+ *               NULL then SCS will allocate memory for them.
  * @param  info  Information about the solve will be stored here.
  * @return       Flag that determines solve type (see \a glbopts.h).
  */

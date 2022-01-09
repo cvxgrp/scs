@@ -76,11 +76,11 @@ body {
 
 /* Link Styling */
 a,a:visited, a:focus {
-  color: rgb(46, 118, 176);  /* Light blue*/
+  color: rgb(46, 118, 176);  /* Light blue */
   text-decoration: none;
 }
 a:hover, a:active {
-  color: rgb(0, 32, 72);  /*  blue*/
+  color: rgb(0, 32, 72);  /*  blue */
   text-decoration: none;
 }
 
