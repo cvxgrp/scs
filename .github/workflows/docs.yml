@@ -13,8 +13,7 @@ jobs:
         uses: actions/setup-python@v2
       - name: Install Python dependencies
         run: |
-          # pin docutils here due to bullets not appearing
-          pip install sphinx sphinx-rtd-theme breathe docutils==0.16
+          pip install sphinx sphinx-rtd-theme breathe docutils
       - name: Build docs
         run: |
           cd docs/src && make docs && touch ../.nojekyll
