@@ -16,4 +16,5 @@ run the code yielding output
 .. matlab -r "run ~/git/scs/docs/src/examples/qp.m;exit"
 
 .. literalinclude:: qp.m.out
+   :language: none
 

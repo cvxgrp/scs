@@ -1,10 +1,10 @@
+import scipy
 import scs
 import numpy as np
-from scipy import sparse
 
 # Set up the problem data
-P = sparse.csc_matrix([[3., -1.], [-1., 2.]])
-A = sparse.csc_matrix([[-1., 1.], [1., 0.], [0., 1.]])
+P = scipy.sparse.csc_matrix([[3., -1.], [-1., 2.]])
+A = scipy.sparse.csc_matrix([[-1., 1.], [1., 0.], [0., 1.]])
 b = np.array([-1, 0.3, -0.5])
 c = np.array([-1., -1.])
 
