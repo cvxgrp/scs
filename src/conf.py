@@ -56,25 +56,23 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-# html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'alabaster'
+# html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 def setup(app):
     app.add_css_file('css/scs_theme.css')
 
-html_logo = '_static/scs_logo.png'
+#html_logo = '_static/scs_logo_transparent.png'
 html_favicon = '_static/favicon.ico'
 html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-    #'github_banner': True,
-    #'github_user': 'cvxgrp',
-    #'github_repo': 'scs',
-    #'github_button': False,
-    #'html_show_sourcelink' = False,
+    'github_banner': True,
+    'github_user': 'cvxgrp',
+    'github_repo': 'scs',
+    'logo': 'scs_logo_transparent.png',
+    'logo_name': False,
+    'github_button': False,
     #'github_type': 'star',
-    #'travis_button': False,
     'analytics_id': 'UA-203326834-1',
 }
 
