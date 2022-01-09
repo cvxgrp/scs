@@ -19,7 +19,7 @@ compile the code using:
 
 .. ./qp.out > qp.c.out
 
-Then run the code yielding output
+Then running the code yields output
 
 .. literalinclude:: qp.c.out
    :language: none
