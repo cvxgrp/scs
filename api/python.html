@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Python &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -98,7 +99,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="python">
+  <section id="python">
 <span id="python-interface"></span><h1>Python<a class="headerlink" href="#python" title="Permalink to this headline"></a></h1>
 <p>After <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installing</span></a> you can import SCS using</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
@@ -136,7 +137,7 @@ in <a class="reference internal" href="settings.html#settings"><span class="std 
 <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s</span></code> contains the primal-dual <a class="reference internal" href="../algorithm/index.html#optimality"><span class="std std-ref">solution</span></a> or the
 <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>, and <code class="code docutils literal notranslate"><span class="pre">info</span></code> is a dict
 containing the solve <a class="reference internal" href="info.html#info"><span class="std std-ref">Return information</span></a>.</p>
-<div class="section" id="warm-starting">
+<section id="warm-starting">
 <h2>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline"></a></h2>
 <p>Warm-starting SCS with a guess of the primal-dual solution can reduce the total
 solve time. This is useful, for example, when solving several similar problems
@@ -145,8 +146,8 @@ sequentially. To do this add to the <code class="code docutils literal notransla
 any subset thereof) where <code class="code docutils literal notranslate"><span class="pre">x</span></code> and <code class="code docutils literal notranslate"><span class="pre">s</span></code> correspond to numpy arrays
 containing the primal solution guesses and <code class="code docutils literal notranslate"><span class="pre">y</span></code> corresponds to a numpy
 array containing the dual solution guess.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

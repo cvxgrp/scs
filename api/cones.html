@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cones &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -95,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="cones">
+  <section id="cones">
 <span id="id1"></span><h1>Cones<a class="headerlink" href="#cones" title="Permalink to this headline"></a></h1>
 <p>The cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> can be any Cartesian product of the following primitive cones.</p>
 <table class="docutils align-default">
@@ -165,7 +166,7 @@ The rows of the data matrix <span class="math notranslate nohighlight">\(A\)</sp
 <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. The rows of <span class="math notranslate nohighlight">\(A\)</span> <strong>must be in the order of the cones
 given above</strong>, i.e., first come the rows that correspond to the zero cones, then
 those that correspond to the positive orthants, then the box cone, etc.</p>
-<div class="section" id="semidefinite-cones">
+<section id="semidefinite-cones">
 <span id="sdcone"></span><h2>Semidefinite cones<a class="headerlink" href="#semidefinite-cones" title="Permalink to this headline"></a></h2>
 <p>The symmetric positive semidefinite cone of matrices is the set</p>
 <div class="math notranslate nohighlight">
@@ -207,7 +208,7 @@ Explicitly, the inverse operation takes vector <span class="math notranslate noh
 <p>So the cone definition that SCS uses is</p>
 <div class="math notranslate nohighlight">
 \[\mathcal{S}_+^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\]</div>
-<div class="section" id="example">
+<section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline"></a></h3>
 <p>Consider the symmetric positive semidefinite cone constraint over variables
 <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> and <span class="math notranslate nohighlight">\(S \in \mathbf{R}^{k \times k}\)</span></p>
@@ -234,9 +235,9 @@ s &amp;= \text{vec}(S)\\
 This is in a form that we can input into SCS.  To recover the matrix solution
 from the optimal solution returned by SCS, we simply use <span class="math notranslate nohighlight">\(S^\star =
 \text{mat}(s^\star)\)</span>.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

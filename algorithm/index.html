@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Algorithm &mdash; SCS 3.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -95,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="algorithm">
+  <section id="algorithm">
 <span id="id1"></span><h1>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
@@ -127,7 +128,7 @@ linear system</span></a> of equations:</p>
 \end{array}\end{split}\]</div>
 <p>over variable <span class="math notranslate nohighlight">\(z\)</span>. Most cone projection operators have relatively simple
 projection operators.</p>
-<div class="section" id="optimality-conditions">
+<section id="optimality-conditions">
 <span id="optimality"></span><h2>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Permalink to this headline"></a></h2>
 <p>SCS solves problems of the form:</p>
 <div class="math notranslate nohighlight">
@@ -154,7 +155,7 @@ equivalent to a zero <em>duality gap</em> condition at any optimal point, that i
 for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy the KKT conditions we have</p>
 <div class="math notranslate nohighlight">
 \[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
-<div class="section" id="certificate-of-infeasibility">
+<section id="certificate-of-infeasibility">
 <span id="infeasibility"></span><h3>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline"></a></h3>
 <p>On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
 Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
@@ -166,11 +167,11 @@ that</p>
 \[Px = 0,\ -Ax\in \mathcal{K},\ c^\top x &lt; 0\]</div>
 <p>then this is a certificate that the problem is dual infeasible (primal
 unbounded).</p>
-</div>
-</div>
-<div class="section" id="termination-criteria">
+</section>
+</section>
+<section id="termination-criteria">
 <span id="termination"></span><h2>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline"></a></h2>
-<div class="section" id="id2">
+<section id="id2">
 <h3>Optimality<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
 <p>The iterates produced by SCS <em>always</em> satisfy the conic constraints <span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>.  Therefore to say that a problem
@@ -197,8 +198,8 @@ found <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, 
 user defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">settings</span></a>. The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm
 here can be changed to other norms by changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in
 the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
-</div>
-<div class="section" id="infeasibility-cert">
+</section>
+<section id="infeasibility-cert">
 <span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility-cert" title="Permalink to this headline"></a></h3>
 <p>Since the conic constraints are always guaranteed by the iterates (<span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
@@ -216,9 +217,9 @@ changing the definition of <code class="code docutils literal notranslate"><span
 SCS will return one of the two above certificates, whichever one it finds
 first. However, in that case the interpretation of infeasibility in one space
 being equivalent to unboundedness in the dual space does not hold.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
