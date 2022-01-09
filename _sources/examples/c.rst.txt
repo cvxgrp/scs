@@ -22,3 +22,5 @@ compile the code using:
 Then run the code yielding output
 
 .. literalinclude:: qp.c.out
+   :language: none
+

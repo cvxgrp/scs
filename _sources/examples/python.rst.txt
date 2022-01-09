@@ -16,3 +16,5 @@ run the code yielding output
 .. python qp.py > qp.py.out
 
 .. literalinclude:: qp.py.out
+   :language: none
+

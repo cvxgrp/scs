@@ -43,7 +43,9 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-pygments_style = 'sphinx'
+
+#pygments_style = 'sphinx'
+pygments_style = 'default'
 
 #html_sidebars = {
 #   '**': [
@@ -56,22 +58,23 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = 'alabaster'
-# html_theme = 'sphinx_rtd_theme'
+# html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 def setup(app):
     app.add_css_file('css/scs_theme.css')
 
-#html_logo = '_static/scs_logo_transparent.png'
+html_logo = '_static/scs_logo_transparent.png'
 html_favicon = '_static/favicon.ico'
 html_theme_options = {
-    'github_banner': True,
-    'github_user': 'cvxgrp',
-    'github_repo': 'scs',
-    'logo': 'scs_logo_transparent.png',
-    'logo_name': False,
-    'github_button': False,
+    'logo_only': True,
+    #'github_banner': True,
+    #'github_user': 'cvxgrp',
+    #'github_repo': 'scs',
+    #'logo': 'scs_logo_transparent.png',
+    #'logo_name': False,
+    #'github_button': False,
     #'github_type': 'star',
     'analytics_id': 'UA-203326834-1',
 }

@@ -1,79 +1,48 @@
-
 <!DOCTYPE html>
-
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Julia &#8212; SCS 3.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Julia &mdash; SCS 3.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="R" href="r.html" />
-    <link rel="prev" title="MATLAB" href="matlab.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+    <link rel="prev" title="MATLAB" href="matlab.html" /> 
+</head>
 
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
-
-          <div class="body" role="main">
-            
-  <div class="section" id="julia">
-<span id="julia-install"></span><h1>Julia<a class="headerlink" href="#julia" title="Permalink to this headline"></a></h1>
-<p>Install SCS via the Julia package manager:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">Pkg</span>
-<span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;SCS&quot;</span><span class="p">)</span>
-</pre></div>
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
-<p>This will install the <a class="reference external" href="https://github.com/jump-dev/SCS.jl">SCS.jl</a>
-package, along with the necessary SCS binary for your system.</p>
-<p>For instructions on how to use a custom version of SCS, consult the
-<a class="reference external" href="https://github.com/jump-dev/SCS.jl">SCS.jl README</a>.</p>
-<p>Note that SCS.jl is a third-party package maintained by the
-<a class="reference external" href="https://jump.dev/pages/governance/">JuMP-dev community</a>.</p>
-</div>
-
-
-          </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<p class="logo">
-  <a href="../index.html">
-    <img class="logo" src="../_static/scs_logo_transparent.png" alt="Logo"/>
-    
-  </a>
-</p>
-
-
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
@@ -92,73 +61,86 @@ package, along with the necessary SCS binary for your system.</p>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="index.html">Install</a><ul>
-      <li>Previous: <a href="matlab.html" title="previous chapter">MATLAB</a></li>
-      <li>Next: <a href="r.html" title="next chapter">R</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
-      <div class="clearer"></div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Install</a> &raquo;</li>
+      <li>Julia</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install/julia.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="julia">
+<span id="julia-install"></span><h1>Julia<a class="headerlink" href="#julia" title="Permalink to this headline"></a></h1>
+<p>Install SCS via the Julia package manager:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">Pkg</span>
+<span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;SCS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will install the <a class="reference external" href="https://github.com/jump-dev/SCS.jl">SCS.jl</a>
+package, along with the necessary SCS binary for your system.</p>
+<p>For instructions on how to use a custom version of SCS, consult the
+<a class="reference external" href="https://github.com/jump-dev/SCS.jl">SCS.jl README</a>.</p>
+<p>Note that SCS.jl is a third-party package maintained by the
+<a class="reference external" href="https://jump.dev/pages/governance/">JuMP-dev community</a>.</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="matlab.html" class="btn btn-neutral float-left" title="MATLAB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="r.html" class="btn btn-neutral float-right" title="R" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-    <div class="footer">
-      &copy;2021, Brendan O'Donoghue.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="../_sources/install/julia.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
-    <a href="https://github.com/cvxgrp/scs" class="github">
-        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
-    </a>
-    
+  <hr/>
 
-    
-    <script type="text/javascript">
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
+  </div>
 
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-203326834-1']);
-      _gaq.push(['_setDomainName', 'none']);
-      _gaq.push(['_setAllowLinker', true]);
-      _gaq.push(['_trackPageview']);
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-    </script>
-    
-  </body>
+      gtag('config', 'UA-203326834-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
 </html>

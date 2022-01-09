@@ -2,7 +2,6 @@
 
 /* Set up and solve basic qp */
 int main(int argc, char **argv) {
-
   /* Set up the problem data */
   /* A and P must be in compressed sparse column format */
   double P_x[3] = {3., -1., 2.}; /* Upper triangular of P only */
@@ -11,7 +10,7 @@ int main(int argc, char **argv) {
   double A_x[4] = {-1., 1., 1., 1.};
   int A_i[4] = {0, 1, 0, 2};
   int A_p[3] = {0, 2, 4};
-  double b[3] = {-1., 0.3, -0.5,};
+  double b[3] = {-1., 0.3, -0.5};
   double c[2] = {-1., -1.};
   /* data shape */
   int n = 2;
@@ -29,8 +28,8 @@ int main(int argc, char **argv) {
   d->n = n;
   d->b = b;
   d->c = c;
-  d->A = &(ScsMatrix) {A_x, A_i, A_p, m, n};
-  d->P = &(ScsMatrix) {P_x, P_i, P_p, n, n};
+  d->A = &(ScsMatrix){A_x, A_i, A_p, m, n};
+  d->P = &(ScsMatrix){P_x, P_i, P_p, n, n};
 
   /* Cone */
   k->l = m;
@@ -39,8 +38,8 @@ int main(int argc, char **argv) {
   scs_set_default_settings(stgs);
 
   /* Modify tolerances */
-  stgs->eps_abs=1e-9;
-  stgs->eps_rel=1e-9;
+  stgs->eps_abs = 1e-9;
+  stgs->eps_rel = 1e-9;
 
   /* Solve! */
   int exitflag = scs(d, k, stgs, sol, info);
@@ -56,7 +55,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < n; ++i) {
     printf("x[%i] = %4f\n", i, sol->x[i]);
   }
-  
+
   /* Print dual solution y */
   printf("Optimal dual vector y*:\n");
   for (int i = 0; i < m; ++i) {
