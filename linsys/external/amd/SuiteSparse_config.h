@@ -44,7 +44,7 @@ extern "C" {
 
 #include <limits.h>
 #include <stdlib.h>
-#include "scs.h"
+#include "glbopts.h"
 #include "ctrlc.h"
 
 /* ========================================================================== */
@@ -70,6 +70,11 @@ extern "C" {
 #endif
 #define SuiteSparse_long_id "%" SuiteSparse_long_idd
 #endif
+
+#ifndef _scs_printf
+#define _scs_printf scs_printf
+#endif
+
 
 /* ========================================================================== */
 /* === SuiteSparse_config parameters and functions ========================== */

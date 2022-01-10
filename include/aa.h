@@ -23,7 +23,7 @@ typedef struct ACCEL_WORK AaWork;
  * @param type1             if True use type 1 AA, otherwise use type 2
  * @param regularization    type-I and type-II different, for type-I: 1e-8 works
  *                          well, type-II: more stable can use 1e-12 often
- * @param relaxation        float \in [0,2], mixing parameter (1.0 is vanilla)
+ * @param relaxation        float in [0,2], mixing parameter (1.0 is vanilla)
  * @param safeguard_factor  factor that controls safeguarding checks
  *                          larger is more aggressive but less stable
  * @param max_weight_norm   float, maximum norm of AA weights

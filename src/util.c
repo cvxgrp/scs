@@ -106,7 +106,7 @@ void SCS(free_sol)(ScsSolution *sol) {
 }
 
 /* assumes stgs already allocated memory */
-void SCS(set_default_settings)(ScsSettings *stgs) {
+void scs_set_default_settings(ScsSettings *stgs) {
   /* These constants are defined in include/glbopts.h */
   stgs->max_iters = MAX_ITERS;
   stgs->eps_abs = EPS_ABS;

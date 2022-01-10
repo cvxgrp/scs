@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "scs.h"
+#include "glbopts.h"
 #include <math.h>
 
 void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len);

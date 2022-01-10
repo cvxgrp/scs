@@ -155,7 +155,7 @@ static const char *rob_gauss_cov_est(void) {
   k->p = p;
   k->psize = psize;
 
-  SCS(set_default_settings)(stgs);
+  scs_set_default_settings(stgs);
   stgs->eps_abs = 1e-6;
   stgs->eps_rel = 1e-6;
   stgs->eps_infeas = 1e-9;

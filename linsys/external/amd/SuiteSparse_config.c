@@ -18,7 +18,6 @@
 
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
-#include "scs_matrix.h"
 #endif
 
 #ifndef NULL
@@ -51,7 +50,7 @@
 
 struct SuiteSparse_config_struct SuiteSparse_config =
 {
-    _scs_malloc, _scs_calloc, _scs_realloc, _scs_free, _scs_printf,
+    scs_malloc, scs_calloc, scs_realloc, scs_free, _scs_printf,
     SuiteSparse_hypot,
     SuiteSparse_divcomplex
 
@@ -73,12 +72,13 @@ struct SuiteSparse_config_struct SuiteSparse_config =
    SuiteSparse_start be called prior to calling any SuiteSparse function.
  */
 
+
 void SuiteSparse_start ( void )
 {
-    SuiteSparse_config.malloc_func  = _scs_malloc ;
-    SuiteSparse_config.calloc_func  = _scs_calloc ;
-    SuiteSparse_config.realloc_func = _scs_realloc ;
-    SuiteSparse_config.free_func    = _scs_free ;
+    SuiteSparse_config.malloc_func  = scs_malloc ;
+    SuiteSparse_config.calloc_func  = scs_calloc ;
+    SuiteSparse_config.realloc_func = scs_realloc ;
+    SuiteSparse_config.free_func    = scs_free ;
     SuiteSparse_config.printf_func  = _scs_printf ;
     /* math functions */
     SuiteSparse_config.hypot_func = SuiteSparse_hypot ;

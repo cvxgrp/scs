@@ -1,3 +1,6 @@
+/* This file contains the outward facing SCS API. */
+/* It includes all the input/output data structs and the API functions. */
+
 #ifndef SCS_H_GUARD
 #define SCS_H_GUARD
 
@@ -5,17 +8,31 @@
 extern "C" {
 #endif
 
-#include <string.h>
+/* Contains definitions of primitive types `scs_int` and `scs_float`. */
+#include "scs_types.h"
 
-#include "aa.h"
-#include "glbopts.h"
+/* The following abstract structs are implemented later. */
 
 /** Struct containing acceleration workspace. Implemented by acceleration. */
-typedef struct SCS_ACCEL_WORK ScsAccelWork;
+typedef struct ACCEL_WORK AaWork;
 /** Struct containing cone projection workspace. Implemented by cones. */
 typedef struct SCS_CONE_WORK ScsConeWork;
 /** Struct containing linear system workspace. Implemented by linear solver. */
 typedef struct SCS_LIN_SYS_WORK ScsLinSysWork;
+/** Struct containing SCS workspace. Implemented in `scs_work.h`. */
+typedef struct SCS_WORK ScsWork;
+
+/* SCS returns one of the following integer exit flags:            */
+#define SCS_INFEASIBLE_INACCURATE (-7)
+#define SCS_UNBOUNDED_INACCURATE (-6)
+#define SCS_SIGINT (-5)
+#define SCS_FAILED (-4)
+#define SCS_INDETERMINATE (-3)
+#define SCS_INFEASIBLE (-2) /* primal infeasible, dual unbounded   */
+#define SCS_UNBOUNDED (-1)  /* primal unbounded, dual infeasible   */
+#define SCS_UNFINISHED (0)  /* never returned, used as placeholder */
+#define SCS_SOLVED (1)
+#define SCS_SOLVED_INACCURATE (2)
 
 /** This defines the data matrices which should be supplied in compressed
  *  sparse column format with zero based indexing.
@@ -176,78 +193,8 @@ typedef struct {
   scs_float accel_time;
 } ScsInfo;
 
-/* the following structs are not exposed to user */
-
-/** Contains normalization variables. */
-typedef struct {
-  scs_float *D, *E; /* for normalization */
-  scs_float primal_scale, dual_scale;
-} ScsScaling;
-
-/** Holds residual information. */
-typedef struct {
-  scs_int last_iter;
-  scs_float xt_p_x;     /* x' P x  */
-  scs_float xt_p_x_tau; /* x'Px * tau^2 *not* divided out */
-  scs_float ctx;
-  scs_float ctx_tau; /* tau *not* divided out */
-  scs_float bty;
-  scs_float bty_tau; /* tau *not* divided out */
-  scs_float pobj;    /* primal objective */
-  scs_float dobj;    /* dual objective */
-  scs_float gap;     /* pobj - dobj */
-  scs_float tau;
-  scs_float kap;
-  scs_float res_pri;
-  scs_float res_dual;
-  scs_float res_infeas;
-  scs_float res_unbdd_p;
-  scs_float res_unbdd_a;
-  /* tau NOT divided out */
-  scs_float *ax, *ax_s, *px, *aty, *ax_s_btau, *px_aty_ctau;
-} ScsResiduals;
-
-/** Workspace for SCS */
-typedef struct {
-  /* x_prev = x from previous iteration */
-  scs_int time_limit_reached; /* set if the time-limit is reached */
-  scs_float *u, *u_t;
-  scs_float *v, *v_prev;
-  scs_float *rsk;                /* rsk [ r; s; kappa ] */
-  scs_float *h;                  /* h = [c; b] */
-  scs_float *g;                  /* g = (I + M)^{-1} h */
-  scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
-  scs_float *rho_y_vec; /* vector of rho y parameters (affects cone project) */
-  AaWork *accel;        /* struct for acceleration workspace */
-  scs_float *b_orig, *c_orig;             /* original b and c vectors */
-  scs_float *b_normalized, *c_normalized; /* normalized b and c vectors */
-  scs_int m, n;                           /* A has m rows, n cols */
-  ScsMatrix *A;                           /* (possibly normalized) A matrix */
-  ScsMatrix *P;                           /* (possibly normalized) P matrix */
-  ScsLinSysWork *p;            /* struct populated by linear system solver */
-  ScsScaling *scal;            /* contains the re-scaling data */
-  ScsConeWork *cone_work;      /* workspace for the cone projection step */
-  scs_int *cone_boundaries;    /* array with boundaries of cones */
-  scs_int cone_boundaries_len; /* total length of cones */
-  /* normalized and unnormalized residuals */
-  ScsResiduals *r_orig, *r_normalized;
-  /* track x,y,s as alg progresses, tau *not* divided out */
-  ScsSolution *xys_orig, *xys_normalized;
-  /* updating scale params workspace */
-  scs_float sum_log_scale_factor;
-  scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
-  /* aa norm stat */
-  scs_float aa_norm;
-  scs_int rejected_accel_steps, accepted_accel_steps;
-  scs_float setup_time; /* time taken for setup phase (milliseconds) */
-  scs_float scale;      /* current scale parameter */
-  const ScsData *d;
-  const ScsCone *k;
-  const ScsSettings *stgs; /* contains solver settings specified by user */
-} ScsWork;
-
 /*
- * main library API
+ * Main library API.
  */
 
 /**
@@ -270,24 +217,24 @@ typedef struct {
  * @param  stgs  SCS solver settings.
  * @return       Solver work struct.
  */
-ScsWork *SCS(init)(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
+ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
- * Solve quadratic cone program initialized by SCS(init).
+ * Solve quadratic cone program initialized by scs_init.
  *
  * @param  w     Workspace allocated by init.
  * @param  sol 	 Solver solution struct, will contain solution at termination.
  * @param  info  Solver info reporting.
  * @return       Flag containing problem status (see \a glbopts.h).
  */
-scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info);
+scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info);
 
 /**
  * Clean up allocated SCS workspace.
  *
  * @param  w  Workspace allocated by init, will be deallocated.
  */
-void SCS(finish)(ScsWork *w);
+void scs_finish(ScsWork *w);
 
 /**
  * Solve quadratic cone program defined by data in d and cone k.
@@ -310,11 +257,14 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
  *
  * @param  stgs  Settings struct that will be populated.
  */
-void SCS(set_default_settings)(ScsSettings *stgs);
+void scs_set_default_settings(ScsSettings *stgs);
 
-const char *SCS(version)(void);
-size_t SCS(sizeof_int)(void);
-size_t SCS(sizeof_float)(void);
+/**
+ * Helper function simply returns the current version of SCS as a string.
+ *
+ * @return       SCS version as a string.
+ */
+const char *scs_version(void);
 
 #ifdef __cplusplus
 }

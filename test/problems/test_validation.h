@@ -27,7 +27,7 @@ static const char *test_validation(void) {
   d->m = m;
   d->n = n;
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
-  SCS(set_default_settings)(stgs);
+  scs_set_default_settings(stgs);
 
   /* TODO test more failure modes */
   stgs->eps_abs = -1;
