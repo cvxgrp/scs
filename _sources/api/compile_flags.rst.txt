@@ -23,7 +23,7 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - True/False
      - 0
    * - :code:`SFLOAT`
-     - If True use 32 bit floats, else 64 bit
+     - If True use 32 bit floats, else 64 bit (WARNING: currently broken)
      - True/False
      - 0
    * - :code:`CTRLC`

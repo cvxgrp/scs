@@ -1,4 +1,6 @@
-#include "scs.h" /* SCS API */
+#include "scs.h"    /* SCS API */
+#include <stdio.h>  /* printf */
+#include <stdlib.h> /* memory allocation */
 
 /* Set up and solve basic qp */
 int main(int argc, char **argv) {

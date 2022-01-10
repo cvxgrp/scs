@@ -108,7 +108,9 @@ c = \begin{bmatrix}-1 \\ -1\end{bmatrix}
 <p>The cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> is simply the positive orthant <code class="code docutils literal notranslate"><span class="pre">l</span></code> of
 dimension 3.</p>
 <p>C code to solve this is below.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;scs.h&quot;</span><span class="c1"> /* SCS API */</span><span class="cp"></span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;scs.h&quot;</span><span class="c1">    /* SCS API */</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="c1">  /* printf */</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="c1"> /* memory allocation */</span><span class="cp"></span>
 
 <span class="cm">/* Set up and solve basic qp */</span><span class="w"></span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -208,12 +210,12 @@ lin-sys:  sparse-direct
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.78e+00  1.00e+00  1.42e+00 -1.04e+00  1.00e-01  2.28e-05 
-   175| 3.34e-11  4.17e-10  4.07e-10  1.24e+00  2.08e+01  4.26e-04 
+     0| 1.78e+00  1.00e+00  1.42e+00 -1.04e+00  1.00e-01  2.14e-05 
+   175| 3.34e-11  4.17e-10  4.07e-10  1.24e+00  2.08e+01  1.25e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.17e-03s = setup: 7.40e-04s + solve: 4.28e-04s
-	 lin-sys: 3.06e-05s, cones: 1.57e-05s, accel: 2.42e-05s
+timings: total: 2.01e-04s = setup: 7.52e-05s + solve: 1.26e-04s
+	 lin-sys: 2.56e-05s, cones: 1.43e-05s, accel: 2.20e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------

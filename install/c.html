@@ -117,6 +117,13 @@ make
 ctest
 </pre></div>
 </div>
+<p>Some <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">compile flags</span></a> can be overridden using the
+command line, for example we can compile the library (and headers) to use 64 bit
+integers using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake -DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt; -DDLONG<span class="o">=</span>ON ../
+make
+</pre></div>
+</div>
 <p>By default the build-system will compile the library as shared. If you want to
 compile it as static, please call the following command when you configure the
 project</p>
@@ -125,8 +132,9 @@ make
 </pre></div>
 </div>
 <p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
-<code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> which can be imported using the find_package CMake command and
-used by calling target_link_libraries as in the following example:</p>
+<code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <cite>scs.h</cite> that defines the API. The
+libraries can be imported using the find_package CMake command and used by
+calling target_link_libraries as in the following example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION <span class="m">3</span>.0<span class="o">)</span>
 project<span class="o">(</span>myproject<span class="o">)</span>
 find_package<span class="o">(</span>scs REQUIRED<span class="o">)</span>
