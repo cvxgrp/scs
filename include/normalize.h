@@ -8,10 +8,10 @@ extern "C" {
 #include "glbopts.h"
 #include "scs_work.h"
 
-void SCS(normalize_sol)(ScsWork *w, ScsSolution *sol);
-void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol);
-void SCS(un_normalize_primal)(ScsWork *w, scs_float *r);
-void SCS(un_normalize_dual)(ScsWork *w, scs_float *r);
+void SCS(normalize_sol)(ScsScaling *scal, ScsSolution *sol);
+void SCS(un_normalize_sol)(ScsScaling *scal, ScsSolution *sol);
+void SCS(un_normalize_primal)(ScsScaling *scal, scs_float *r);
+void SCS(un_normalize_dual)(ScsScaling *scal, scs_float *r);
 
 #ifdef __cplusplus
 }

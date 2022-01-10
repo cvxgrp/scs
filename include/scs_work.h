@@ -1,5 +1,5 @@
 /*
- * Define ScsWork and related internal only struct (not part of external API).
+ * Define ScsWork and related internal-only structs (not part of external API).
  */
 
 #ifndef SCS_WORK_H_GUARD
@@ -12,6 +12,8 @@ extern "C" {
 /** Contains normalization variables. */
 typedef struct {
   scs_float *D, *E; /* for normalization */
+  scs_int m;        /* Length of D */
+  scs_int n;        /* Length of E */
   scs_float primal_scale, dual_scale;
 } ScsScaling;
 

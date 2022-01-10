@@ -165,7 +165,7 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   scs_float *v = w->v;
   /* normalize the warm-start */
   if (w->stgs->normalize) {
-    SCS(normalize_sol)(w, sol);
+    SCS(normalize_sol)(w->scal, sol);
   }
   memcpy(v, sol->x, n * sizeof(scs_float));
   for (i = 0; i < m; ++i) {
@@ -174,7 +174,7 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   v[n + m] = 1.0; /* tau = 1 */
   /* un-normalize so sol unchanged */
   if (w->stgs->normalize) {
-    SCS(un_normalize_sol)(w, sol);
+    SCS(un_normalize_sol)(w->scal, sol);
   }
 }
 
@@ -222,12 +222,12 @@ static void unnormalize_residuals(ScsWork *w) {
   r->dobj = r_n->dobj / pd;
   r->gap = r_n->gap / pd;
 
-  SCS(un_normalize_primal)(w, r->ax);
-  SCS(un_normalize_primal)(w, r->ax_s);
-  SCS(un_normalize_primal)(w, r->ax_s_btau);
-  SCS(un_normalize_dual)(w, r->aty);
-  SCS(un_normalize_dual)(w, r->px);
-  SCS(un_normalize_dual)(w, r->px_aty_ctau);
+  SCS(un_normalize_primal)(w->scal, r->ax);
+  SCS(un_normalize_primal)(w->scal, r->ax_s);
+  SCS(un_normalize_primal)(w->scal, r->ax_s_btau);
+  SCS(un_normalize_dual)(w->scal, r->aty);
+  SCS(un_normalize_dual)(w->scal, r->px);
+  SCS(un_normalize_dual)(w->scal, r->px_aty_ctau);
 
   compute_residuals(r, w->m, w->n);
 }
@@ -307,7 +307,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
     memcpy(w->xys_orig->x, w->xys_normalized->x, n * sizeof(scs_float));
     memcpy(w->xys_orig->y, w->xys_normalized->y, m * sizeof(scs_float));
     memcpy(w->xys_orig->s, w->xys_normalized->s, m * sizeof(scs_float));
-    SCS(un_normalize_sol)(w, w->xys_orig);
+    SCS(un_normalize_sol)(w->scal, w->xys_orig);
     unnormalize_residuals(w);
   }
 }
@@ -527,7 +527,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   sety(w, sol);
   sets(w, sol);
   if (w->stgs->normalize) {
-    SCS(un_normalize_sol)(w, sol);
+    SCS(un_normalize_sol)(w->scal, sol);
   }
   populate_residual_struct(w, iter);
   info->setup_time = w->setup_time;
@@ -835,10 +835,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 #endif
     /* this allocates memory that must be freed */
     w->cone_boundaries_len = SCS(set_cone_boundaries)(k, &w->cone_boundaries);
-    w->scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-    SCS(normalize)
-    (w->P, w->A, w->b_normalized, w->c_normalized, w->scal, w->cone_boundaries,
-     w->cone_boundaries_len);
+    w->scal = SCS(normalize_a_p)(w->P, w->A, w->b_normalized, w->c_normalized,
+                                 w->cone_boundaries, w->cone_boundaries_len);
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
@@ -1125,7 +1123,7 @@ void scs_finish(ScsWork *w) {
     SCS(finish_cone)(w->cone_work);
     if (w->stgs && w->stgs->normalize) {
 #ifndef COPYAMATRIX
-      SCS(un_normalize)(w->A, w->P, w->scal);
+      SCS(un_normalize_a_p)(w->A, w->P, w->scal);
 #else
       SCS(free_scs_matrix)(w->A);
       SCS(free_scs_matrix)(w->P);
