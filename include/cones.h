@@ -21,7 +21,7 @@ struct SCS_CONE_WORK {
   const ScsCone *k; /* original cone information */
   scs_int *cone_boundaries;
   scs_int cone_boundaries_len;
-  scs_int scaled_cones;
+  scs_int scaled_cones; /* boolean, whether the cones have been scaled */
   scs_float *s; /* used for Moreau decomposition in projection */
   scs_int m;    /* total length of cone */
   /* box cone quantities */
