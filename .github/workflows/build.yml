@@ -3,8 +3,6 @@ name: Build
 
 on: [push, pull_request]
 
-matrix:
-
 jobs:
   linux:
     strategy:
