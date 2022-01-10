@@ -129,6 +129,8 @@ endif()
 
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
 
+# TODO this is a hack that overwrites the scs_types.h file, we should
+# find a way to do this that doesn't pollute the master directory.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/scs_types.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/include/scs_types.h
                NEWLINE_STYLE LF)
