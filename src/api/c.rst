@@ -42,6 +42,8 @@ specified in the :ref:`settings` page.
 Primitive types
 ---------------
 
+These are defined in header file :code:`scs_types.h`.
+
 * :code:`scs_int`: is :code:`long` if the :ref:`compiler flag <compile_flags>` :code:`DLONG` is set, otherwise it is :code:`int`
 * :code:`scs_float`: is :code:`float` if the :ref:`compiler flag <compile_flags>` :code:`SFLOAT` is set, otherwise it is :code:`double`
 
@@ -124,7 +126,4 @@ Workspace
 
 The user should not need to interact with the :code:`ScsWork` struct,
 which contains the internal workspace allocated and maintained by SCS.
-
-.. doxygenstruct:: ScsWork
-   :members:
 
