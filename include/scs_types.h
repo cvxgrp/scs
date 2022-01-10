@@ -28,7 +28,6 @@ typedef double scs_float;
 typedef float scs_float;
 #endif
 
-
 #ifdef __cplusplus
 }
 #endif

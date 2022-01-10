@@ -1,5 +1,4 @@
 #include "scs.h"
-#include "scs_work.h"
 #include "aa.h"
 #include "ctrlc.h"
 #include "glbopts.h"
@@ -8,6 +7,7 @@
 #include "normalize.h"
 #include "rw.h"
 #include "scs_matrix.h"
+#include "scs_work.h"
 #include "util.h"
 
 /* printing header */
@@ -1141,8 +1141,7 @@ void scs_finish(ScsWork *w) {
   }
 }
 
-ScsWork *scs_init(const ScsData *d, const ScsCone *k,
-                   const ScsSettings *stgs) {
+ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   ScsWork *w;
   SCS(timer) init_timer;
   scs_start_interrupt_listener();

@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include <math.h>
 #include "scs.h"
+#include <math.h>
 
 #ifndef SCS
 #define SCS(x) _scs_##x
