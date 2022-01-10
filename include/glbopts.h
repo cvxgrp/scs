@@ -67,13 +67,13 @@ extern "C" {
     PySys_WriteStdout(__VA_ARGS__);                                            \
     PyGILState_Release(gilstate);                                              \
   }
-/* only for SuiteSparse */
-#define _scs_printf PySys_WriteStdout
 #if PY_MAJOR_VERSION >= 3
 #define scs_free PyMem_RawFree
 #define scs_malloc PyMem_RawMalloc
 #define scs_realloc PyMem_RawRealloc
 #define scs_calloc PyMem_RawCalloc
+/* only for SuiteSparse + python */
+#define _scs_printf PySys_WriteStdout
 #else
 #define scs_free PyMem_Free
 #define scs_malloc PyMem_Malloc
