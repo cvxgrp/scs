@@ -7,7 +7,9 @@ extern "C" {
 
 #include "glbopts.h"
 #include "scs.h"
+#include "scs_work.h"
 #include "scs_blas.h"
+#include <string.h>
 
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {

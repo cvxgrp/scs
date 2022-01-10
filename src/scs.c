@@ -1,4 +1,5 @@
 #include "scs.h"
+#include "scs_work.h"
 #include "aa.h"
 #include "ctrlc.h"
 #include "glbopts.h"
@@ -78,7 +79,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
   }
   scs_printf("\n\t       SCS v%s - Splitting Conic Solver\n\t(c) Brendan "
              "O'Donoghue, Stanford University, 2012\n",
-             SCS(version)());
+             scs_version());
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
   }
@@ -866,13 +867,13 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
     scs_printf("ERROR: init_cone failure\n");
-    SCS(finish)(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   if (!(w->p =
             SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
-    SCS(finish)(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   return w;
@@ -1119,7 +1120,7 @@ scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   return info->status_val;
 }
 
-void SCS(finish)(ScsWork *w) {
+void scs_finish(ScsWork *w) {
   if (w) {
     SCS(finish_cone)(w->cone_work);
     if (w->stgs && w->stgs->normalize) {
@@ -1167,7 +1168,7 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
   return w;
 }
 
-/* this just calls SCS(init), SCS(solve), and SCS(finish) */
+/* this just calls SCS(init), SCS(solve), and scs_finish */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info) {
   scs_int status;
@@ -1183,6 +1184,6 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
     status = failure(SCS_NULL, d ? d->m : -1, d ? d->n : -1, sol, info,
                      SCS_FAILED, "could not initialize work", "failure");
   }
-  SCS(finish)(w);
+  scs_finish(w);
   return status;
 }

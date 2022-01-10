@@ -122,6 +122,8 @@ set(${PROJECT_NAME}_HDR
   include/rw.h
   include/scs.h
   include/scs_blas.h
+  include/scs_types.h
+  include/scs_work.h
   include/util.h
   ${LINSYS}/csparse.h
   ${LINSYS}/scs_matrix.h)

@@ -44,7 +44,7 @@ extern "C" {
 
 #include <limits.h>
 #include <stdlib.h>
-#include "scs.h"
+#include "glbopts.h"
 #include "ctrlc.h"
 
 /* ========================================================================== */

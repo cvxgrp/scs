@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-#include "scs.h"
+#include "glbopts.h"
+#include "scs_work.h"
 
 void SCS(normalize_sol)(ScsWork *w, ScsSolution *sol);
 void SCS(un_normalize_sol)(ScsWork *w, ScsSolution *sol);

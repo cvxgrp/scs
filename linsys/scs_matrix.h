@@ -7,6 +7,7 @@ extern "C" {
 
 #include "glbopts.h"
 #include "scs.h"
+#include "scs_work.h"
 
 /* Normalization routines, used if d->NORMALIZE is true */
 /* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
