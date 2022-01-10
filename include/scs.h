@@ -208,7 +208,7 @@ typedef struct {
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
- * Solve quadratic cone program initialized by SCS(init).
+ * Solve quadratic cone program initialized by scs_init.
  *
  * @param  w     Workspace allocated by init.
  * @param  sol 	 Solver solution struct, will contain solution at termination.

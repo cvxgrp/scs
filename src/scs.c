@@ -977,7 +977,7 @@ static inline void normalize_v(scs_float *v, scs_int len) {
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
 
-scs_int SCS(solve)(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   scs_int i;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
@@ -1141,7 +1141,7 @@ void scs_finish(ScsWork *w) {
   }
 }
 
-ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
+ScsWork *scs_init(const ScsData *d, const ScsCone *k,
                    const ScsSettings *stgs) {
   ScsWork *w;
   SCS(timer) init_timer;
@@ -1168,17 +1168,17 @@ ScsWork *SCS(init)(const ScsData *d, const ScsCone *k,
   return w;
 }
 
-/* this just calls SCS(init), SCS(solve), and scs_finish */
+/* this just calls scs_init, scs_solve, and scs_finish */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info) {
   scs_int status;
-  ScsWork *w = SCS(init)(d, k, stgs);
+  ScsWork *w = scs_init(d, k, stgs);
 #if VERBOSITY > 0
   scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
              sizeof(scs_int), sizeof(scs_float));
 #endif
   if (w) {
-    SCS(solve)(w, sol, info);
+    scs_solve(w, sol, info);
     status = info->status_val;
   } else {
     status = failure(SCS_NULL, d ? d->m : -1, d ? d->n : -1, sol, info,
