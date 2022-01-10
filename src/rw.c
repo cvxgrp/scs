@@ -146,8 +146,8 @@ static ScsData *read_scs_data(FILE *fin) {
 void SCS(write_data)(const ScsData *d, const ScsCone *k,
                      const ScsSettings *stgs) {
   FILE *fout = fopen(stgs->write_data_filename, "wb");
-  uint32_t scs_int_sz = (uint32_t)SCS(sizeof_int)();
-  uint32_t scs_float_sz = (uint32_t)SCS(sizeof_float)();
+  uint32_t scs_int_sz = (uint32_t)sizeof(scs_int);
+  uint32_t scs_float_sz = (uint32_t)sizeof(scs_float);
   const char *scs_version = SCS_VERSION;
   uint32_t scs_version_sz = (uint32_t)strlen(scs_version);
   scs_printf("writing data to %s\n", stgs->write_data_filename);

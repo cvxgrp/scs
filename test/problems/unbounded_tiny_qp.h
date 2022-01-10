@@ -60,7 +60,7 @@ static const char *unbounded_tiny_qp(void) {
 
   k->l = l;
 
-  SCS(set_default_settings)(stgs);
+  scs_set_default_settings(stgs);
   stgs->eps_abs = 1e-6;
   stgs->eps_rel = 1e-6;
   stgs->eps_infeas = 1e-7;

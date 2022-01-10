@@ -13,13 +13,12 @@ jobs:
         uses: actions/setup-python@v2
       - name: Install Python dependencies
         run: |
-          # pin docutils here due to bullets not appearing
-          pip install sphinx sphinx-rtd-theme breathe docutils==0.16
+          pip install sphinx sphinx-rtd-theme breathe docutils
       - name: Build docs
         run: |
           cd docs/src && make docs && touch ../.nojekyll
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@4.1.4
+        uses: JamesIves/github-pages-deploy-action@4.2.1
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: docs # The folder the action should deploy.

@@ -39,13 +39,13 @@ $(SCS_INDIR_O): src/scs.c $(INC_FILES)
 %.o : src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-src/util.o	: src/util.c include/util.h include/glbopts.h
-src/cones.o	: src/cones.c include/cones.h include/scs_blas.h
-src/aa.o	: src/aa.c include/aa.h include/scs_blas.h
-src/rw.o	: src/rw.c include/rw.h
-src/linalg.o: src/linalg.c include/linalg.h
-src/ctrl.o  : src/ctrl.c include/ctrl.h
-src/scs_version.o: src/scs_version.c include/glbopts.h
+src/util.o	: src/util.c $(INC_FILES)
+src/cones.o	: src/cones.c $(INC_FILES)
+src/aa.o	: src/aa.c $(INC_FILES)
+src/rw.o	: src/rw.c $(INC_FILES)
+src/linalg.o: src/linalg.c $(INC_FILES)
+src/ctrl.o  : src/ctrl.c $(INC_FILES)
+src/scs_version.o: src/scs_version.c $(INC_FILES)
 
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h

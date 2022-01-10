@@ -1,0 +1,44 @@
+                                  < M A T L A B (R) >
+                        Copyright 1984-2021 The MathWorks, Inc.
+                    R2021a Update 3 (9.10.0.1684407) 64-bit (maci64)
+                                      May 27, 2021
+
+ 
+For online documentation, see https://www.mathworks.com/support
+For product information, visit www.mathworks.com.
+ 
+
+------------------------------------------------------------------
+	       SCS v3.0.0 - Splitting Conic Solver
+	(c) Brendan O'Donoghue, Stanford University, 2012
+------------------------------------------------------------------
+problem:  variables n: 2, constraints m: 3
+cones: 	  l: linear vars: 3
+settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
+	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
+	  max_iters: 100000, normalize: 1, warm_start: 0
+	  acceleration_lookback: 10, acceleration_interval: 10
+lin-sys:  sparse-direct
+	  nnz(A): 4, nnz(P): 3
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.78e+00  1.00e+00  1.42e+00 -1.04e+00  1.00e-01  2.37e-04 
+   175| 3.34e-11  4.17e-10  4.07e-10  1.24e+00  2.08e+01  6.45e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 2.51e-02s = setup: 1.86e-02s + solve: 6.52e-03s
+	 lin-sys: 2.94e-05s, cones: 1.52e-05s, accel: 6.04e-03s
+------------------------------------------------------------------
+objective = 1.235000
+------------------------------------------------------------------
+SCS took 175 iters
+Optimal solution vector x*:
+    0.3000
+   -0.7000
+
+Optimal dual vector y*:
+    2.7000
+    2.1000
+         0
+

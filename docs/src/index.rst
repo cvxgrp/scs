@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: _static/scs_logo.png
+.. image:: _static/scs_logo_transparent.png
   :width: 400
   :alt: SCS
   :align: center

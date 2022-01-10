@@ -331,10 +331,11 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
  * The main complication is that D has to respect cone boundaries.
  *
  */
-void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
-                    ScsScaling *scal, ScsConeWork *cone) {
+ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, scs_float *b,
+                               scs_float *c, ScsConeWork *cone) {
   scs_int i;
   scs_float s;
+  ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
   scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
   scal->D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
@@ -347,9 +348,11 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
 #endif
 
   /* init D, E */
+  scal->m = A->m;
   for (i = 0; i < A->m; ++i) {
     scal->D[i] = 1.;
   }
+  scal->n = A->n;
   for (i = 0; i < A->n; ++i) {
     scal->E[i] = 1.;
   }
@@ -380,9 +383,10 @@ void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
   scs_printf("norm D %g\n", SCS(norm_inf)(scal->D, A->m));
   scs_printf("norm E %g\n", SCS(norm_inf)(scal->E, A->n));
 #endif
+  return scal;
 }
 
-void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
+void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
   scs_float *E = scal->E;

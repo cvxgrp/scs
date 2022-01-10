@@ -7,16 +7,17 @@ extern "C" {
 
 #include "glbopts.h"
 #include "scs.h"
+#include "scs_work.h"
 
 /* Normalization routines, used if d->NORMALIZE is true */
 /* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
-void SCS(normalize)(ScsMatrix *P, ScsMatrix *A, scs_float *b, scs_float *c,
-                    ScsScaling *scal, ScsConeWork *cone);
+ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, scs_float *b,
+                               scs_float *c, ScsConeWork *cone);
 
 /* unnormalizes A matrix, unnormalizes by w->D and w->E */
-void SCS(un_normalize)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);
+void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);
 
 /* to free the memory allocated in a ScsMatrix (called on A and P at finish) */
 void SCS(free_scs_matrix)(ScsMatrix *A);

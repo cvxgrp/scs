@@ -2,7 +2,8 @@
 
 Exit flags
 -----------
-The integer values that SCS can return are documented below.
+The integer values that SCS can return are documented below and are defined
+in the :code:`'include/scs.h` file.
 
 .. list-table::
    :widths: 50 10 40
