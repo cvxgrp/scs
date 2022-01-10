@@ -50,16 +50,16 @@ struct SCS_WORK {
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
-  scs_float *diag_r;    /* vector of R matrix diagonals (affects cone proj) */
-  AaWork *accel;        /* struct for acceleration workspace */
+  scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
+  AaWork *accel;     /* struct for acceleration workspace */
   scs_float *b_orig, *c_orig;             /* original b and c vectors */
   scs_float *b_normalized, *c_normalized; /* normalized b and c vectors */
   scs_int m, n;                           /* A has m rows, n cols */
   ScsMatrix *A;                           /* (possibly normalized) A matrix */
   ScsMatrix *P;                           /* (possibly normalized) P matrix */
-  ScsLinSysWork *p;            /* struct populated by linear system solver */
-  ScsScaling *scal;            /* contains the re-scaling data */
-  ScsConeWork *cone_work;      /* workspace for the cone projection step */
+  ScsLinSysWork *p;       /* struct populated by linear system solver */
+  ScsScaling *scal;       /* contains the re-scaling data */
+  ScsConeWork *cone_work; /* workspace for the cone projection step */
   /* normalized and unnormalized residuals */
   ScsResiduals *r_orig, *r_normalized;
   /* track x,y,s as alg progresses, tau *not* divided out */
