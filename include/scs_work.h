@@ -1,5 +1,5 @@
 /*
- * Interface for SCS signal handling.
+ * Define ScsWork and related internal only struct (not part of external API).
  */
 
 #ifndef SCS_WORK_H_GUARD

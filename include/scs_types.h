@@ -1,5 +1,5 @@
 /*
- * Interface for SCS signal handling.
+ * Definitions of primitive types used in SCS.
  */
 
 #ifndef SCS_TYPES_H_GUARD
