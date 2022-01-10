@@ -4,10 +4,14 @@ name: Build
 on: [push, pull_request]
 
 matrix:
-  long: [0, 1]
 
 jobs:
   linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -26,6 +30,11 @@ jobs:
   #    - run: test/run_tests
 
   mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
