@@ -16,18 +16,6 @@ extern "C" {
 #define SCS_VERSION                                                            \
   ("3.0.0") /* string literals automatically null-terminated */
 
-/* SCS returns one of the following integers:                           */
-#define SCS_INFEASIBLE_INACCURATE (-7)
-#define SCS_UNBOUNDED_INACCURATE (-6)
-#define SCS_SIGINT (-5)
-#define SCS_FAILED (-4)
-#define SCS_INDETERMINATE (-3)
-#define SCS_INFEASIBLE (-2) /* primal infeasible, dual unbounded   */
-#define SCS_UNBOUNDED (-1)  /* primal unbounded, dual infeasible   */
-#define SCS_UNFINISHED (0)  /* never returned, used as placeholder */
-#define SCS_SOLVED (1)
-#define SCS_SOLVED_INACCURATE (2)
-
 /* verbosity level */
 #ifndef VERBOSITY
 #define VERBOSITY (0)

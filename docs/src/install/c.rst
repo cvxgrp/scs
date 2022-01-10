@@ -35,6 +35,15 @@ project, please call the following command
   make
   ctest
 
+Some :ref:`compile flags <compile_flags>` can be overridden using the
+command line, for example we can compile the library (and headers) to use 64 bit
+integers using:
+
+.. code:: bash
+
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DDLONG=ON ../
+  make
+
 By default the build-system will compile the library as shared. If you want to
 compile it as static, please call the following command when you configure the
 project
@@ -45,8 +54,9 @@ project
   make
 
 The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
-:code:`scs::scsindir` which can be imported using the find_package CMake command and
-used by calling target_link_libraries as in the following example:
+:code:`scs::scsindir` as well as a header file `scs.h` that defines the API. The
+libraries can be imported using the find_package CMake command and used by
+calling target_link_libraries as in the following example:
 
 .. code:: bash
 

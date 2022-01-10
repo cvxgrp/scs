@@ -88,6 +88,10 @@ if(BUILD_TESTING)
   enable_testing()
 endif()
 
+# Add uninstall target
+# After 'make install' can run 'make uninstall' to remove.
+include(AddUninstallTarget)
+
 ### Some variables useful for sampling the building process
 # Note that the GPU profile is not compiled.
 set(LINSYS linsys)
@@ -95,6 +99,44 @@ set(DIRSRC ${LINSYS}/cpu/direct)
 set(INDIRSRC ${LINSYS}/cpu/indirect)
 set(EXTERNAL ${LINSYS}/external)
 
+# Options
+# ----------------------------------------------
+# Use floats instead of doubles
+option(SFLOAT "Use single precision floats rather than doubles" OFF)
+message(STATUS "Single precision floats (32bit) are ${SFLOAT}")
+
+# Use long integers for indexing
+option(DLONG "Use long integers (64bit) for indexing" OFF)
+message(STATUS "Long integers (64bit) are ${DLONG}")
+
+
+set(COMPILER_OPTS "-DUSE_LAPACK -DCOPYAMATRIX -DCTRLC")
+
+# Primitive types
+if(SFLOAT)
+  set(SCS_FLOAT_TYPE "float")
+  set(COMPILER_OPTS "-DSFLOAT ${COMPILER_OPTS}")
+else()
+  set(SCS_FLOAT_TYPE "double")
+endif()
+
+if(DLONG)
+  set(SCS_INT_TYPE "long long")
+  set(COMPILER_OPTS "-DDLONG ${COMPILER_OPTS}")
+else()
+  set(SCS_INT_TYPE "int")
+endif()
+
+message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/scs_types.h.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/include/scs_types.h
+               NEWLINE_STYLE LF)
+
+# Public headers 
+set(${PROJECT_NAME}_PUBLIC_HDR
+  include/scs_types.h
+  include/scs.h)
 
 # Common source files
 set(${PROJECT_NAME}_SRC
@@ -164,7 +206,7 @@ target_include_directories(${${PROJECT_NAME}_DIRECT} PUBLIC
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
-target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE -DUSE_LAPACK -DCOPYAMATRIX -DCTRLC)
+target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
@@ -175,7 +217,7 @@ target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
 # Set some properties
 set_target_properties(${${PROJECT_NAME}_DIRECT} PROPERTIES
   VERSION ${scs_VERSION}
-  PUBLIC_HEADER "${${PROJECT_NAME}_HDR}")
+  PUBLIC_HEADER "${${PROJECT_NAME}_PUBLIC_HDR}")
 
 add_library(scs::${${PROJECT_NAME}_DIRECT} ALIAS ${${PROJECT_NAME}_DIRECT})
 
@@ -211,7 +253,7 @@ target_include_directories(${${PROJECT_NAME}_INDIRECT} PUBLIC
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
-target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE -DUSE_LAPACK -DCOPYAMATRIX -DCTRLC -DINDIRECT)
+target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS} -DINDIRECT)
 
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_INDIRECT} PUBLIC
@@ -222,7 +264,7 @@ target_link_libraries(${${PROJECT_NAME}_INDIRECT} PUBLIC
 # Set some properties
 set_target_properties(${${PROJECT_NAME}_INDIRECT} PROPERTIES
   VERSION ${scs_VERSION}
-  PUBLIC_HEADER "${${${PROJECT_NAME}_INDIRECT}_HDR}")
+  PUBLIC_HEADER "${${PROJECT_NAME}_PUBLIC_HDR}")
 
 add_library(scs::${${PROJECT_NAME}_INDIRECT} ALIAS ${${PROJECT_NAME}_INDIRECT})
 
@@ -252,20 +294,22 @@ install_basic_package_files(${PROJECT_NAME}
 ### Add the tests
 if(BUILD_TESTING)
   add_executable(run_tests_direct  test/run_tests.c)
+  target_compile_definitions(run_tests_direct PRIVATE ${COMPILER_OPTS})
   target_link_libraries(run_tests_direct PRIVATE
     scs::scsdir)
   target_include_directories(run_tests_direct PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>")
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"  )
 
   add_test(NAME run_tests_direct
     COMMAND run_tests_direct
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_executable(run_tests_indirect  test/run_tests.c)
+  target_compile_definitions(run_tests_indirect PRIVATE ${COMPILER_OPTS})
   target_link_libraries(run_tests_indirect PRIVATE
     scs::scsindir)
   target_include_directories(run_tests_indirect PRIVATE
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>")
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"  )
 
   add_test(NAME run_tests_indirect
     COMMAND run_tests_indirect
