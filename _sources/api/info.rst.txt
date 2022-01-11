@@ -19,6 +19,9 @@ the following fields.
    * - :code:`status`
      - :code:`char *`
      - Status string (e.g., 'solved')
+   * - :code:`lin_sys_solver`
+     - :code:`char *`
+     - Linear system solver used
    * - :code:`status_val`
      - :code:`scs_int`
      - Status integer :ref:`exit flag <exit_flags>`

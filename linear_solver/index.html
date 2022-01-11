@@ -175,10 +175,9 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>A</strong> – A data matrix. </p></li>
-<li><p><strong>P</strong> – P data matrix. </p></li>
-<li><p><strong>rho_y_vec</strong> – <code class="docutils literal notranslate"><span class="pre">rho_y</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> diagonal entries. </p></li>
-<li><p><strong>rho_x</strong> – <code class="docutils literal notranslate"><span class="pre">rho_x</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> float. </p></li>
+<li><p><strong>A</strong> – <code class="docutils literal notranslate"><span class="pre">A</span></code> data matrix, <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">x</span> <span class="pre">n</span></code>. </p></li>
+<li><p><strong>P</strong> – <code class="docutils literal notranslate"><span class="pre">P</span></code> data matrix, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>. </p></li>
+<li><p><strong>diag_r</strong> – <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> diagonal entries of length <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">+</span> <span class="pre">n</span></code>. </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -201,10 +200,10 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv418_scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float">
 <span id="_CPPv318_scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv218_scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a28acc0e673558678f598b1ffa15cae59"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418_scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Solves the linear system required by SCS at each iteration: <div class="math notranslate nohighlight">
-\[\begin{split} \begin{bmatrix} (\rho_x I + P) &amp; A^\top \\ A &amp; -\mathrm{diag}(\rho_y) \\ \end{bmatrix} x = b \end{split}\]</div>
+<dd><p>Solves the linear system as required by SCS at each iteration: <div class="math notranslate nohighlight">
+\[\begin{split} \begin{bmatrix} (R_x + P) &amp; A^\top \\ A &amp; -R_y \\ \end{bmatrix} x = b \end{split}\]</div>
 </p>
-<p>for <code class="docutils literal notranslate"><span class="pre">x</span></code>. Overwrites <code class="docutils literal notranslate"><span class="pre">b</span></code> with result.</p>
+<p>for <code class="docutils literal notranslate"><span class="pre">x</span></code>, where <code class="docutils literal notranslate"><span class="pre">diag(R_x,</span> <span class="pre">R_y)</span> <span class="pre">=</span> <span class="pre">R</span></code>. Overwrites <code class="docutils literal notranslate"><span class="pre">b</span></code> with result.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -222,13 +221,13 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float">
-<span id="_CPPv326_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv226_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1aed6a42e948e456578735aa1923c58140"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv326_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv226_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1a709eb88749a58f35c1d3b09d00926619"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">new_diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">R</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>w</strong> – Linear system private workspace. </p></li>
-<li><p><strong>diag_r</strong> – <code class="docutils literal notranslate"><span class="pre">diag_r</span></code> diagonal entries of R (assumed to be diagonal). </p></li>
+<li><p><strong>new_diag_r</strong> – Updated <code class="docutils literal notranslate"><span class="pre">diag_r</span></code>, diagonal entries of R. </p></li>
 </ul>
 </dd>
 </dl>

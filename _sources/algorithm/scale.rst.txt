@@ -17,8 +17,8 @@ algorithm then becomes:
   w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1} \\
   \end{align}
 
-which yields :math:`w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)` where :math:`0
-\in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)`.
+which yields :math:`w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)` where
+:math:`0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)`.
 
 This changes the first two steps of the procedure. The :ref:`linear projection
 <linear_solver>` and the cone projection (explained next).
@@ -77,6 +77,40 @@ The quantity :math:`\rho_x` is determined by the :ref:`setting <settings>` value
 described in :ref:`Dynamic scale updating <updating_scale>`. Finally,  :math:`d`
 is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
 
+Root-plus function
+------------------
+
+Finally, the :code:`root_plus` function is modified to be the solution
+of the following quadratic equation:
+
+.. math::
+  \tau^2 (d + r^\top R_{-1} r) + \tau (r^\top R_{-1} \mu^k - 2 r^\top R_{-1} p^k - d \eta^k) + p^k R_{-1} (p^k - \mu^k) = 0,
+
+where :math:`R_{-1}` corresponds to the first :math:`n+m` entries of :math:`R`.
+Other than when computing :math:`\kappa` (which does not affect the algorithm)
+this is the *only* place where :math:`d` appears, so we have a lot of
+flexibility in how to choose it and it can even change from iteration to
+iteration. It is an open question on how best to select this parameter.
+
+Moreau decomposition
+--------------------
+The projection onto a cone under a diagonal scaling also satisfies a
+Moreau-style decomposition identity, as follows:
+
+.. math::
+   x + R^{-1} \Pi_\mathcal{C^*}^{R^{-1}} ( - R x ) = \Pi_\mathcal{C}^R ( x )
+
+where :math:`\Pi_\mathcal{C}^R` denotes the projection onto convex cone
+:math:`\mathcal{C}` under the :math:`R`-norm, which is defined as
+
+.. math::
+  \|x\|_R = \sqrt{x^\top R x}.
+
+This identity is useful when deriving cone projection routines, though most
+cones are either invariant to this or we enforce that :math:`R` is constant
+across them. Note that the two components of the decomposition are
+:math:`R`-orthogonal.
+
 Dual vector
 -----------
 
@@ -91,39 +125,14 @@ and we have
 .. math::
   \begin{align}
   v^{k+1} &= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
-          &= R( \Pi_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
-          &= R( \Pi_{\mathcal{C}^*_+} (-2 \tilde u^{k+1} + w^k)) \\
-          &= R \tilde v^{k+1} \\
+          &= R( \Pi^R_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
+          &= R( R^{-1} \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1}))) \\
+          &= \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1})) \\
           &\in \mathcal{C}^*_+
   \end{align}
 
-by Moreau and the fact that :math:`R` is chosen to be constant
-within each sub-cone :math:`\mathcal{K}`. Finally note that :math:`v^k \perp
-u^k`, since
-
-.. math::
-  \begin{align}
-  (u^k)^\top v^k &= (u^k)^\top R \tilde v^{k+1}  \\
-   &= \sum_{\mathcal{K} \in \mathcal{C}_+} r_\mathcal{K} (u^k_\mathcal{K})^\top \tilde v^k_\mathcal{K} \\
-   &= 0
-  \end{align}
-
-since :math:`\tilde v^k \perp u^k` and :math:`R` is chosen to be constant
-within each sub-cone :math:`\mathcal{K}`.
-
-Root-plus function
-------------------
-
-Finally, the :code:`root_plus` function is modified to be the solution
-of the following quadratic equation:
-
-.. math::
-  \tau^2 (d + r^\top R r) + \tau (r^\top R \mu^k - 2 r^\top R p^k - d \eta^k) + p^k R (p^k - \mu^k) = 0.
-
-Other than when computing :math:`\kappa` (which does not affect the algorithm)
-this is the *only* place where :math:`d` appears, so we have a lot of
-flexibility in how to choose it and it can even change from iteration to
-iteration. It is an open question on how best to select this parameter.
+by Moreau, and finally note that :math:`v^k \perp
+u^k` from the fact that the Moreau decomposition is :math:`R`-orthogonal.
 
 .. _updating_scale:
 

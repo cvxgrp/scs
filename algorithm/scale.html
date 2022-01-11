@@ -50,8 +50,9 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Non-identity DR Scaling</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cone-projection">Cone projection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selecting-r">Selecting <span class="math notranslate nohighlight">\(R\)</span></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dual-vector">Dual vector</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#root-plus-function">Root-plus function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#moreau-decomposition">Moreau decomposition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dual-vector">Dual vector</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-scale-updating">Dynamic scale updating</a></li>
 </ul>
 </li>
@@ -111,8 +112,8 @@ algorithm then becomes:</p>
 u^{k+1} &amp;= (R + N_{\mathcal{C}_+})^{-1} R (2 \tilde u^{k+1} - w^k) \\
 w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
 \end{align}\end{split}\]</div>
-<p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)\)</span> where <span class="math notranslate nohighlight">\(0
-\in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
+<p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)\)</span> where
+<span class="math notranslate nohighlight">\(0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
 <p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
 <section id="cone-projection">
 <h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline"></a></h2>
@@ -155,6 +156,33 @@ So as scale increases, <span class="math notranslate nohighlight">\(\rho_y\)</sp
 described in <a class="reference internal" href="#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>. Finally,  <span class="math notranslate nohighlight">\(d\)</span>
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
 </section>
+<section id="root-plus-function">
+<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline"></a></h2>
+<p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
+of the following quadratic equation:</p>
+<div class="math notranslate nohighlight">
+\[\tau^2 (d + r^\top R_{-1} r) + \tau (r^\top R_{-1} \mu^k - 2 r^\top R_{-1} p^k - d \eta^k) + p^k R_{-1} (p^k - \mu^k) = 0,\]</div>
+<p>where <span class="math notranslate nohighlight">\(R_{-1}\)</span> corresponds to the first <span class="math notranslate nohighlight">\(n+m\)</span> entries of <span class="math notranslate nohighlight">\(R\)</span>.
+Other than when computing <span class="math notranslate nohighlight">\(\kappa\)</span> (which does not affect the algorithm)
+this is the <em>only</em> place where <span class="math notranslate nohighlight">\(d\)</span> appears, so we have a lot of
+flexibility in how to choose it and it can even change from iteration to
+iteration. It is an open question on how best to select this parameter.</p>
+</section>
+<section id="moreau-decomposition">
+<h2>Moreau decomposition<a class="headerlink" href="#moreau-decomposition" title="Permalink to this headline"></a></h2>
+<p>The projection onto a cone under a diagonal scaling also satisfies a
+Moreau-style decomposition identity, as follows:</p>
+<div class="math notranslate nohighlight">
+\[x + R^{-1} \Pi_\mathcal{C^*}^{R^{-1}} ( - R x ) = \Pi_\mathcal{C}^R ( x )\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Pi_\mathcal{C}^R\)</span> denotes the projection onto convex cone
+<span class="math notranslate nohighlight">\(\mathcal{C}\)</span> under the <span class="math notranslate nohighlight">\(R\)</span>-norm, which is defined as</p>
+<div class="math notranslate nohighlight">
+\[\|x\|_R = \sqrt{x^\top R x}.\]</div>
+<p>This identity is useful when deriving cone projection routines, though most
+cones are either invariant to this or we enforce that <span class="math notranslate nohighlight">\(R\)</span> is constant
+across them. Note that the two components of the decomposition are
+<span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
+</section>
 <section id="dual-vector">
 <h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this headline"></a></h2>
 <p>In order to get the dual vector <span class="math notranslate nohighlight">\(v^k\)</span> that contains <span class="math notranslate nohighlight">\(s^k\)</span> and
@@ -165,33 +193,13 @@ is determined by <code class="code docutils literal notranslate"><span class="pr
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
 v^{k+1} &amp;= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
-        &amp;= R( \Pi_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
-        &amp;= R( \Pi_{\mathcal{C}^*_+} (-2 \tilde u^{k+1} + w^k)) \\
-        &amp;= R \tilde v^{k+1} \\
+        &amp;= R( \Pi^R_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
+        &amp;= R( R^{-1} \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1}))) \\
+        &amp;= \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1})) \\
         &amp;\in \mathcal{C}^*_+
 \end{align}\end{split}\]</div>
-<p>by Moreau and the fact that <span class="math notranslate nohighlight">\(R\)</span> is chosen to be constant
-within each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. Finally note that <span class="math notranslate nohighlight">\(v^k \perp
-u^k\)</span>, since</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
-(u^k)^\top v^k &amp;= (u^k)^\top R \tilde v^{k+1}  \\
- &amp;= \sum_{\mathcal{K} \in \mathcal{C}_+} r_\mathcal{K} (u^k_\mathcal{K})^\top \tilde v^k_\mathcal{K} \\
- &amp;= 0
-\end{align}\end{split}\]</div>
-<p>since <span class="math notranslate nohighlight">\(\tilde v^k \perp u^k\)</span> and <span class="math notranslate nohighlight">\(R\)</span> is chosen to be constant
-within each sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>.</p>
-</section>
-<section id="root-plus-function">
-<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline"></a></h2>
-<p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
-of the following quadratic equation:</p>
-<div class="math notranslate nohighlight">
-\[\tau^2 (d + r^\top R r) + \tau (r^\top R \mu^k - 2 r^\top R p^k - d \eta^k) + p^k R (p^k - \mu^k) = 0.\]</div>
-<p>Other than when computing <span class="math notranslate nohighlight">\(\kappa\)</span> (which does not affect the algorithm)
-this is the <em>only</em> place where <span class="math notranslate nohighlight">\(d\)</span> appears, so we have a lot of
-flexibility in how to choose it and it can even change from iteration to
-iteration. It is an open question on how best to select this parameter.</p>
+<p>by Moreau, and finally note that <span class="math notranslate nohighlight">\(v^k \perp
+u^k\)</span> from the fact that the Moreau decomposition is <span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
 </section>
 <section id="dynamic-scale-updating">
 <span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this headline"></a></h2>

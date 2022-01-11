@@ -14,9 +14,9 @@ int main(int argc, char **argv) {
   int A_p[3] = {0, 2, 4};
   double b[3] = {-1., 0.3, -0.5};
   double c[2] = {-1., -1.};
-  /* data shape */
-  int n = 2;
-  int m = 3;
+  /* data shapes */
+  int n = 2; /* number of variables */
+  int m = 3; /* number of constraints */
 
   /* Allocate SCS structs */
   ScsCone *k = (ScsCone *)calloc(1, sizeof(ScsCone));
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   ScsSolution *sol = (ScsSolution *)calloc(1, sizeof(ScsSolution));
   ScsInfo *info = (ScsInfo *)calloc(1, sizeof(ScsInfo));
 
-  /* Fill in structs */
+  /* Fill in data struct */
   d->m = m;
   d->n = n;
   d->b = b;
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   /* Cone */
   k->l = m;
 
-  /* Utility to set some default settings */
+  /* Utility to set default settings */
   scs_set_default_settings(stgs);
 
   /* Modify tolerances */
@@ -49,8 +49,9 @@ int main(int argc, char **argv) {
   /* Verify that SCS solved the problem */
   printf("SCS solved successfully: %i\n", exitflag == SCS_SOLVED);
 
-  /* Print iterations taken */
-  printf("SCS took %i iters\n", info->iter);
+  /* Print some info about the solve */
+  printf("SCS took %i iters, using the %s linear solver.\n", info->iter,
+         info->lin_sys_solver);
 
   /* Print solution x */
   printf("Optimal solution vector x*:\n");

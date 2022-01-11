@@ -54,9 +54,9 @@ project
   make
 
 The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
-:code:`scs::scsindir` as well as a header file `scs.h` that defines the API. The
-libraries can be imported using the find_package CMake command and used by
-calling target_link_libraries as in the following example:
+:code:`scs::scsindir` as well as a header file :code:`scs.h` that defines the
+API. The libraries can be imported using the find_package CMake command and used
+by calling target_link_libraries as in the following example:
 
 .. code:: bash
 
@@ -73,7 +73,7 @@ calling target_link_libraries as in the following example:
 
 Makefile
 ^^^^^^^^
-Alternatively you can use the Makefile and manage the libraries yourself 
+Alternatively you can use the Makefile and manage the libraries yourself
 
 .. code:: bash
 
@@ -92,7 +92,7 @@ To compile and run the tests execute
 If make completes successfully, it will produce two static library files,
 :code:`libscsdir.a`, :code:`libscsindir.a`, and two dynamic library files
 :code:`libscsdir.ext`, :code:`libscsindir.ext` (where :code:`.ext` extension is
-platform dependent) in the :code:`out` folder.  
+platform dependent) in the :code:`out` folder.
 
 If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo
@@ -108,5 +108,5 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
 To use the libraries in your own source code, compile your code with the linker
 option :code:`-L(PATH_TO_SCS_LIBS)` and :code:`-lscsdir` or :code:`-lscsindir`
 (as needed). The API and required data structures are defined in the file
-:code:`include/scs.h`. The four main API functions are:
+:code:`include/scs.h`.
 

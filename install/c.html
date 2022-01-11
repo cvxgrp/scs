@@ -132,9 +132,9 @@ make
 </pre></div>
 </div>
 <p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
-<code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <cite>scs.h</cite> that defines the API. The
-libraries can be imported using the find_package CMake command and used by
-calling target_link_libraries as in the following example:</p>
+<code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> that defines the
+API. The libraries can be imported using the find_package CMake command and used
+by calling target_link_libraries as in the following example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION <span class="m">3</span>.0<span class="o">)</span>
 project<span class="o">(</span>myproject<span class="o">)</span>
 find_package<span class="o">(</span>scs REQUIRED<span class="o">)</span>
@@ -177,7 +177,7 @@ out/run_tests_gpu_indirect
 <p>To use the libraries in your own source code, compile your code with the linker
 option <code class="code docutils literal notranslate"><span class="pre">-L(PATH_TO_SCS_LIBS)</span></code> and <code class="code docutils literal notranslate"><span class="pre">-lscsdir</span></code> or <code class="code docutils literal notranslate"><span class="pre">-lscsindir</span></code>
 (as needed). The API and required data structures are defined in the file
-<code class="code docutils literal notranslate"><span class="pre">include/scs.h</span></code>. The four main API functions are:</p>
+<code class="code docutils literal notranslate"><span class="pre">include/scs.h</span></code>.</p>
 </section>
 </section>
 
