@@ -596,11 +596,8 @@ static void normalize_box_cone(ScsConeWork *c, scs_float *D, scs_int bsize) {
   }
 }
 
-/* project onto { (t, s) | t * l <= s <= t * u, t >= 0 }, Newton's method on t
-   tx = [t; s], total length = bsize
-
-  under Euclidean metric r_box
-
+/* Project onto { (t, s) | t * l <= s <= t * u, t >= 0 }, Newton's method on t
+   tx = [t; s], total length = bsize, under Euclidean metric 1/r_box.
 */
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
@@ -735,6 +732,9 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 }
 
 /* project onto the primal K cone in the paper */
+/* the r_y vector determines the INVERSE metric, ie, project under the
+ * diag(r_y)^-1 norm.
+ */
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize, scs_float *r_y) {
   scs_int i, status;
@@ -894,13 +894,16 @@ void scale_box_cone(const ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
   }
 }
 
-/* outward facing cone projection routine
-   performs projection in-place
-   if normalize > 0 then will use normalized (equilibrated) cones if applicable.
+/* Outward facing cone projection routine, performs projection in-place.
+   If normalize > 0 then will use normalized (equilibrated) cones if applicable.
 
-   x + R^{-1} \Pi_{C^*}^{R^{-1}} ( - R x ) = \Pi_C^R ( x )
+   Moreau decomposition for R-norm projections:
 
-   where \Pi^R_C is the projection onto C under the R-Euclidean norm.
+    `x + R^{-1} \Pi_{C^*}^{R^{-1}} ( - R x ) = \Pi_C^R ( x )`
+
+   where \Pi^R_C is the projection onto C under the R-norm:
+
+    `||x||_R = \sqrt{x ' R x}`.
 
 */
 scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,

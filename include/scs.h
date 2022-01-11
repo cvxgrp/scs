@@ -153,6 +153,8 @@ typedef struct {
   scs_int iter;
   /** Status string, e.g. 'solved'. */
   char status[128];
+  /** Linear system solver used. */
+  char lin_sys_solver[128];
   /** Status as scs_int, defined in glbopts.h. */
   scs_int status_val;
   /** Number of updates to scale. */

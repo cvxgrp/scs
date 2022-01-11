@@ -975,6 +975,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
+  strcpy(info->lin_sys_solver, SCS(get_lin_sys_method)());
   info->status_val = SCS_UNFINISHED; /* not yet converged */
   update_work(d, w, sol);
 

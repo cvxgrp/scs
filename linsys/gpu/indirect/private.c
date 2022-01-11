@@ -374,8 +374,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
 }
 
 /* solves (R_x + P + A' R_y^{-1} A)x = b, s warm start, solution stored in
- * b */
-/* on GPU */
+ * b, on GPU */
 static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
                    scs_int max_its, scs_float tol) {
   scs_int i, n = pr->n;
