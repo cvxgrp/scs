@@ -284,17 +284,18 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
 /* f = (1-relaxation) * \sum_i a_i x_i + relaxation * \sum_i a_i f_i */
 static void relax(aa_float *f, AaWork *a, aa_int len) {
   TIME_TIC
-  /* x_work = x - S * work */
+  /* x_work = x initially */
   blas_int bdim = (blas_int)(a->dim), one = 1, blen = (blas_int)len;
   aa_float onef = 1.0, neg_onef = -1.0;
   aa_float one_m_relaxation = 1. - a->relaxation;
+  /* x_work = x - S * work */
   BLAS(gemv)
   ("NoTrans", &bdim, &blen, &neg_onef, a->S, &bdim, a->work, &one, &onef,
    a->x_work, &one);
   /* f = relaxation * f */
-  BLAS(scal)(&blen, &a->relaxation, f, &one);
+  BLAS(scal)(&bdim, &a->relaxation, f, &one);
   /* f += (1 - relaxation) * x_work */
-  BLAS(axpy)(&blen, &one_m_relaxation, a->x_work, &one, f, &one);
+  BLAS(axpy)(&bdim, &one_m_relaxation, a->x_work, &one, f, &one);
   TIME_TOC
 }
 
