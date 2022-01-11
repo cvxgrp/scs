@@ -15,6 +15,7 @@ struct SCS_LIN_SYS_WORK {
   scs_int n, m; /* linear system dimensions */
   /* reporting */
   scs_int tot_cg_its;
+  scs_float *M; /* preconditioner on cpu */
   /* ALL BELOW HOSTED ON THE GPU */
   scs_float *p;       /* cg iterate, n  */
   scs_float *r;       /* cg residual, n */
@@ -22,7 +23,7 @@ struct SCS_LIN_SYS_WORK {
   scs_float *bg;      /* b, n */
   scs_float *tmp_m;   /* m, used in mat_vec */
   scs_float *z;       /* preconditioned */
-  scs_float *M;       /* preconditioner */
+  scs_float *M_gpu;   /* preconditioner */
   const ScsMatrix *A; /* does *not* own this memory */
   const ScsMatrix *P; /* does *not* own this memory */
   ScsGpuMatrix *Ag;   /* A matrix on GPU */

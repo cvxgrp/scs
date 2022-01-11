@@ -1,0 +1,16 @@
+---
+name: GPU
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Jimver/cuda-toolkit@v0.2.5
+      - run: sudo apt-get install libopenblas-dev liblapack-dev
+      - run: make gpu
+      - run: make test_gpu
+      # - run: out/run_tests_gpu_indirect    # gpus not available yet
+
