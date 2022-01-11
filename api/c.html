@@ -462,7 +462,7 @@ warm-start points (see <a class="reference internal" href="../algorithm/warm_sta
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSolution">
 <span id="_CPPv311ScsSolution"></span><span id="_CPPv211ScsSolution"></span><span id="ScsSolution"></span><span class="target" id="struct_scs_solution"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSolution</span></span></span><a class="headerlink" href="#_CPPv411ScsSolution" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Contains primal-dual solution arrays or a certificate of infeasibility. Check the exit flag to determine whether this contains a solution or a certificate. </p>
+<dd><p>Contains primal-dual solution arrays or a certificate of infeasibility. Check the exit flag to determine whether this contains a solution or a certificate. If when passed into SCS the members <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code> are NULL then SCS will allocate memory for them which should be managed by the user to prevent memory leaks. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
 <dl class="cpp var">
