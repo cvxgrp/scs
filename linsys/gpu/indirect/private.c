@@ -37,7 +37,7 @@ char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
 
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
-static void set_preconditioner(ScsLinSysWork *p, scs_float *diag_r) {
+static void set_preconditioner(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i, k;
   const ScsMatrix *A = p->A;
   const ScsMatrix *P = p->P;
@@ -76,7 +76,7 @@ static void set_preconditioner(ScsLinSysWork *p, scs_float *diag_r) {
 }
 
 /* no need to update anything in this case */
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
+void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   /* R_x to gpu */
@@ -216,7 +216,7 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      scs_float *diag_r) {
+                                      const scs_float *diag_r) {
   cudaError_t err;
   csc *P_full;
   ScsLinSysWork *p = SCS_NULL;

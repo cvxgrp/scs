@@ -24,7 +24,7 @@ extern "C" {
  *
  */
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      scs_float *diag_r);
+                                      const scs_float *diag_r);
 
 /**
  * Frees `ScsLinSysWork` structure and associated allocated memory.
@@ -62,7 +62,7 @@ scs_int SCS(solve_lin_sys)(ScsLinSysWork *w, scs_float *b, const scs_float *s,
  *  @param  new_diag_r    Updated `diag_r`, diagonal entries of R.
  *
  */
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *w, scs_float *new_diag_r);
+void SCS(update_lin_sys_diag_r)(ScsLinSysWork *w, const scs_float *new_diag_r);
 
 /**
  * Name of the linear solver.

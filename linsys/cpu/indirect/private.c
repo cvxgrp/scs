@@ -162,13 +162,13 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 }
 
 /* no need to update anything in this case */
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
+void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
   p->diag_r = diag_r; /* this isn't needed but do it to be safe */
   set_preconditioner(p);
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      scs_float *diag_r) {
+                                      const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   p->A = A;
   p->P = P;
@@ -280,7 +280,7 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
 /* s contains warm-start (if available) */
 /*
  * [x] = [R_x + P     A' ]^{-1} [rx]
- * [y]   [     A        -R_y ]      [ry]
+ * [y]   [   A      -R_y ]      [ry]
  *
  * becomes:
  *

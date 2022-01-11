@@ -34,7 +34,7 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
 }
 
 static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
-                     scs_float *diag_r, scs_int *diag_r_idxs) {
+                     const scs_float *diag_r, scs_int *diag_r_idxs) {
   /* ONLY UPPER TRIANGULAR PART IS STUFFED
    * forms column compressed kkt matrix
    * assumes column compressed form A matrix
@@ -291,7 +291,7 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
 }
 
 static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                        ScsLinSysWork *p, scs_float *diag_r) {
+                        ScsLinSysWork *p, const scs_float *diag_r) {
   scs_float *info;
   scs_int *Pinv, amd_status, *idx_mapping, i;
   csc *kkt_perm, *kkt = form_kkt(A, P, p->diag_p, diag_r, p->diag_r_idxs);
@@ -320,7 +320,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
+void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i, ldl_status;
   for (i = 0; i < p->n; ++i) {
     /* top left is R_x + P, bottom right is -R_y */
@@ -340,7 +340,7 @@ void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, scs_float *diag_r) {
 }
 
 ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      scs_float *diag_r) {
+                                      const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
   p->m = A->m;
