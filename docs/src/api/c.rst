@@ -9,7 +9,8 @@ C / C++
 Main solver API
 ---------------
 
-The main C API is imported from the header :code:`scs.h`.
+The C API is imported from the header :code:`scs.h`, available `here
+<https://github.com/cvxgrp/scs/blob/master/include/scs.h>`_.
 
 .. doxygenfunction:: scs
 

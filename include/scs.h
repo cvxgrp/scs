@@ -137,7 +137,10 @@ typedef struct {
 
 /** Contains primal-dual solution arrays or a certificate of infeasibility.
  *  Check the exit flag to determine whether this contains a solution or a
- *  certificate. */
+ *  certificate. If when passed into SCS the members `x`, `y`, `s` are
+ *  NULL then SCS will allocate memory for them which should be managed
+ *  by the user to prevent memory leaks.
+ */
 typedef struct {
   /** Primal variable. */
   scs_float *x;
@@ -153,6 +156,8 @@ typedef struct {
   scs_int iter;
   /** Status string, e.g. 'solved'. */
   char status[128];
+  /** Linear system solver used. */
+  char lin_sys_solver[128];
   /** Status as scs_int, defined in glbopts.h. */
   scs_int status_val;
   /** Number of updates to scale. */

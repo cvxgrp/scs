@@ -14,8 +14,7 @@ extern "C" {
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
 ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, scs_float *b,
-                               scs_float *c, scs_int *cone_boundaries,
-                               scs_int cone_boundaries_len);
+                               scs_float *c, ScsConeWork *cone);
 
 /* unnormalizes A matrix, unnormalizes by w->D and w->E */
 void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal);

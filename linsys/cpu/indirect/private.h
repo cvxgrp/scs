@@ -25,8 +25,7 @@ struct SCS_LIN_SYS_WORK {
   scs_float *M;
   /* reporting */
   scs_int tot_cg_its;
-  scs_float *rho_y_vec;
-  scs_float rho_x;
+  const scs_float *diag_r;
 };
 
 #ifdef __cplusplus

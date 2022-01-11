@@ -11,7 +11,7 @@ Python code to solve this is below.
    :language: python
 
 After following the python :ref:`install instructions <python_install>`, we can
-run the code yielding output
+run the code yielding output:
 
 .. python qp.py > qp.py.out
 

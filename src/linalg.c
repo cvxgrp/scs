@@ -83,6 +83,15 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
   }
 }
 
+scs_float SCS(mean)(const scs_float *x, scs_int n) {
+  scs_int i;
+  mean = 0.;
+  for (i = 0; i < n; ++i) {
+    mean += x[i];
+  }
+  return mean / n;
+}
+
 #else
 /* If we have BLAS / LAPACK we may as well use them */
 
@@ -143,6 +152,14 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int len,
   blas_int bone = 1;
   blas_int blen = (blas_int)len;
   BLAS(axpy)(&blen, &sc, b, &bone, a, &bone);
+}
+
+scs_float SCS(mean)(const scs_float *x, scs_int n) {
+  blas_int bone = 1;
+  blas_int bzero = 0;
+  blas_int blen = (blas_int)n;
+  scs_float y = 1.0;
+  return BLAS(dot)(&blen, x, &bone, &y, &bzero) / n;
 }
 
 #endif

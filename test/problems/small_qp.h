@@ -297,7 +297,7 @@ static const char *small_qp(void) {
   d->m = m + 1; /* t var in box cone */
   d->n = n;
   d->b = (scs_float *)scs_calloc(m + 1, sizeof(scs_float));
-  d->b[0] = 1;  /* t var in box cone */
+  d->b[0] = 1; /* t var in box cone */
   d->c = q;
 
   d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));

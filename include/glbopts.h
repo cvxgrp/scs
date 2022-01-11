@@ -13,8 +13,8 @@ extern "C" {
 #endif
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
-#define SCS_VERSION                                                            \
-  ("3.0.0") /* string literals automatically null-terminated */
+/* string literals automatically null-terminated */
+#define SCS_VERSION ("3.0.0")
 
 /* verbosity level */
 #ifndef VERBOSITY

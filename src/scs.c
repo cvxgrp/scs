@@ -42,11 +42,8 @@ static void free_work(ScsWork *w) {
     scs_free(w->g);
     scs_free(w->b_normalized);
     scs_free(w->c_normalized);
-    scs_free(w->rho_y_vec);
     scs_free(w->lin_sys_warm_start);
-    if (w->cone_boundaries) {
-      scs_free(w->cone_boundaries);
-    }
+    scs_free(w->diag_r);
     if (w->scal) {
       scs_free(w->scal->D);
       scs_free(w->scal->E);
@@ -158,7 +155,6 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
 }
 
 /* given x,y,s warm start, set v = [x; s / R + y; 1]
- * where R = diag(w->rho_y_vec).
  */
 static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   scs_int n = w->n, m = w->m, i;
@@ -169,7 +165,7 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   }
   memcpy(v, sol->x, n * sizeof(scs_float));
   for (i = 0; i < m; ++i) {
-    v[i + n] = sol->y[i] + sol->s[i] / w->rho_y_vec[i];
+    v[i + n] = sol->y[i] + sol->s[i] / w->diag_r[i + n];
   }
   v[n + m] = 1.0; /* tau = 1 */
   /* un-normalize so sol unchanged */
@@ -318,47 +314,34 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = 1.;
 }
 
-/* utility function that scales first n entries in inner prod by rho_x   */
-/* and last m entries by 1 / rho_y_vec, assumes length of array is n + m */
-/* See .note_on_scale in repo for explanation */
-static scs_float dot_with_diag_scaling(ScsWork *w, const scs_float *x,
-                                       const scs_float *y) {
-  scs_int i, n = w->n, len = w->n + w->m;
+/* utility function that computes x'Ry */
+static inline scs_float dot_r(ScsWork *w, const scs_float *x,
+                              const scs_float *y) {
+  scs_int i;
   scs_float ip = 0.0;
-  for (i = 0; i < n; ++i) {
-    ip += w->stgs->rho_x * x[i] * y[i];
-  }
-  for (i = n; i < len; ++i) {
-    ip += x[i] * y[i] * w->rho_y_vec[i - n];
+  for (i = 0; i < w->n + w->m; ++i) {
+    ip += x[i] * y[i] * w->diag_r[i];
   }
   return ip;
 }
 
-static inline scs_float get_tau_scale(ScsWork *w) {
-  return TAU_FACTOR; /* TAU_FACTOR * w->scale; */
-}
-
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float b, c, tau, a, tau_scale;
-  tau_scale = get_tau_scale(w);
-  a = tau_scale + dot_with_diag_scaling(w, w->g, w->g);
-  b = (dot_with_diag_scaling(w, mu, w->g) -
-       2 * dot_with_diag_scaling(w, p, w->g) - eta * tau_scale);
-  c = dot_with_diag_scaling(w, p, p) - dot_with_diag_scaling(w, p, mu);
-  tau = (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
-  return tau;
+  scs_float a, b, c, tau_scale = w->diag_r[w->n + w->m];
+  a = tau_scale + dot_r(w, w->g, w->g);
+  b = dot_r(w, mu, w->g) - 2 * dot_r(w, p, w->g) - eta * tau_scale;
+  c = dot_r(w, p, p) - dot_r(w, p, mu);
+  return (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
 }
 
 /* status < 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->n, m = w->m, l = n + m + 1, status, i;
   scs_float *warm_start = SCS_NULL;
-  scs_float tol = -1.0; /* only used for indirect methods, overriden later */
+  scs_float tol = -1.0; /* only used for indirect methods, overridden later */
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
-  SCS(scale_array)(w->u_t, w->stgs->rho_x, n);
-  for (i = n; i < l - 1; ++i) {
-    w->u_t[i] *= -w->rho_y_vec[i - n];
+  for (i = 0; i < l - 1; ++i) {
+    w->u_t[i] *= (i < n ? 1 : -1) * w->diag_r[i];
   }
 #if INDIRECT > 0
   /* compute warm start using the cone projection output */
@@ -396,28 +379,15 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
  */
 static void compute_rsk(ScsWork *w) {
   scs_int i, l = w->m + w->n + 1;
-  /* r, should = 0 so skip */
-  /*
-  for (i = 0; i < w->n; ++i) {
-    w->rsk[i] = w->stgs->rho_x * (w->v[i] + w->u[i] - 2 * w->u_t[i]);
+  for (i = 0; i < l; ++i) {
+    w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) * w->diag_r[i];
   }
-  */
-  /* s */
-  for (i = w->n; i < l - 1; ++i) {
-    w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) * w->rho_y_vec[i - w->n];
-  }
-  /* kappa, incorporates tau scaling parameter */
-  w->rsk[l - 1] =
-      get_tau_scale(w) * (w->v[l - 1] + w->u[l - 1] - 2 * w->u_t[l - 1]);
 }
 
 static void update_dual_vars(ScsWork *w) {
   scs_int i, l = w->n + w->m + 1;
-  scs_float a = w->stgs->alpha;
-  /* compute and store [r;s;kappa] */
-  compute_rsk(w);
   for (i = 0; i < l; ++i) {
-    w->v[i] += a * (w->u[i] - w->u_t[i]);
+    w->v[i] += w->stgs->alpha * (w->u[i] - w->u_t[i]);
   }
 }
 
@@ -428,7 +398,8 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
   /* u = [x;y;tau] */
-  status = SCS(proj_dual_cone)(&(w->u[n]), k, w->cone_work, w->stgs->normalize);
+  status =
+      SCS(proj_dual_cone)(&(w->u[n]), w->cone_work, w->scal, &(w->diag_r[n]));
   if (iter < FEASIBLE_ITERS) {
     w->u[l - 1] = 1.0;
   } else {
@@ -579,6 +550,7 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("Norm u = %4f, ", SCS(norm_2)(w->u, w->n + w->m + 1));
   scs_printf("Norm u_t = %4f, ", SCS(norm_2)(w->u_t, w->n + w->m + 1));
   scs_printf("Norm v = %4f, ", SCS(norm_2)(w->v, w->n + w->m + 1));
+  scs_printf("Norm rsk = %4f, ", SCS(norm_2)(w->rsk, w->n + w->m + 1));
   scs_printf("Norm x = %4f, ", SCS(norm_2)(w->xys_orig->x, w->n));
   scs_printf("Norm y = %4f, ", SCS(norm_2)(w->xys_orig->y, w->m));
   scs_printf("Norm s = %4f, ", SCS(norm_2)(w->xys_orig->s, w->m));
@@ -760,6 +732,18 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
+/* Sets the diag_r vector, given the scale parameters in work */
+static void set_diag_r(ScsWork *w) {
+  scs_int i;
+  for (i = 0; i < w->n; ++i) {
+    w->diag_r[i] = w->stgs->rho_x;
+  }
+  /* use cone information to set R_y */
+  SCS(set_r_y)(w->cone_work, w->scale, &(w->diag_r[w->n]));
+  /* if modified need to SCS(enforce_cone_boundaries)(...) */
+  w->diag_r[w->n + w->m] = TAU_FACTOR; /* TODO: is this the best choice? */
+}
+
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs) {
   ScsWork *w = (ScsWork *)scs_calloc(1, sizeof(ScsWork));
@@ -792,7 +776,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->lin_sys_warm_start = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
-  w->rho_y_vec = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
+  w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
   w->xys_orig = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   w->xys_orig->x = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
@@ -809,7 +793,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->c_normalized = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
   memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
-  SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
+
+  if (!(w->cone_work = SCS(init_cone)(k, w->m))) {
+    scs_printf("ERROR: init_cone failure\n");
+    return SCS_NULL;
+  }
+  set_diag_r(w);
 
   if (!w->c_normalized) {
     scs_printf("ERROR: work memory allocation failure\n");
@@ -834,15 +823,16 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     }
 #endif
     /* this allocates memory that must be freed */
-    w->cone_boundaries_len = SCS(set_cone_boundaries)(k, &w->cone_boundaries);
     w->scal = SCS(normalize_a_p)(w->P, w->A, w->b_normalized, w->c_normalized,
-                                 w->cone_boundaries, w->cone_boundaries_len);
+                                 w->cone_work);
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
-    w->cone_boundaries_len = 0;
-    w->cone_boundaries = SCS_NULL;
     w->scal = SCS_NULL;
+  }
+  if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->diag_r))) {
+    scs_printf("ERROR: init_lin_sys_work failure\n");
+    return SCS_NULL;
   }
   /* Acceleration */
   w->rejected_accel_steps = 0;
@@ -862,17 +852,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     }
   } else {
     w->accel = SCS_NULL;
-  }
-  if (!(w->cone_work = SCS(init_cone)(k, w->scal, w->m))) {
-    scs_printf("ERROR: init_cone failure\n");
-    scs_finish(w);
-    return SCS_NULL;
-  }
-  if (!(w->p =
-            SCS(init_lin_sys_work)(w->A, w->P, w->rho_y_vec, w->stgs->rho_x))) {
-    scs_printf("ERROR: init_lin_sys_work failure\n");
-    scs_finish(w);
-    return SCS_NULL;
   }
   return w;
 }
@@ -903,11 +882,11 @@ static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
 }
 
 /* will update if the factor is outside of range */
-scs_int should_update_rho_y_vec(scs_float factor, scs_int iter) {
+scs_int should_update_r(scs_float factor, scs_int iter) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
-static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
+static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale;
 
@@ -944,14 +923,18 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   if (new_scale == w->scale) {
     return;
   }
-  if (should_update_rho_y_vec(factor, iters_since_last_update)) {
+  if (should_update_r(factor, iters_since_last_update)) {
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
     w->scale = new_scale;
-    SCS(set_rho_y_vec)(k, w->scale, w->rho_y_vec, w->m);
-    SCS(update_lin_sys_rho_y_vec)(w->p, w->rho_y_vec);
+
+    /* update diag r vector */
+    set_diag_r(w);
+
+    /* update linear systems */
+    SCS(update_lin_sys_diag_r)(w->p, w->diag_r);
 
     /* update pre-solved quantities */
     update_work_cache(w);
@@ -961,10 +944,11 @@ static void maybe_update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       aa_reset(w->accel);
     }
     /* update v, using fact that rsk, u, u_t vectors should be the same */
-    /* solve: R (v^+ + u - 2u_t) = rsk => v^+ = R^-1 rsk + 2u_t - u  */
-    /* only elements with scale on diag */
-    for (i = w->n; i < w->n + w->m; i++) {
-      w->v[i] = w->rsk[i] / w->rho_y_vec[i - w->n] + 2 * w->u_t[i] - w->u[i];
+    /* solve: R^+ (v^+ + u - 2u_t) = rsk = R(v + u - 2u_t)
+     *  => v^+ = R+^-1 rsk + 2u_t - u
+     */
+    for (i = 0; i < w->n + w->m + 1; i++) {
+      w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
   }
 }
@@ -991,6 +975,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
+  strcpy(info->lin_sys_solver, SCS(get_lin_sys_method)());
   info->status_val = SCS_UNFINISHED; /* not yet converged */
   update_work(d, w, sol);
 
@@ -1020,7 +1005,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     /* store v_prev = v, *after* normalizing */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
 
-    /* linear system solve */
+    /******************* linear system solve ********************/
     SCS(tic)(&lin_sys_timer);
     if (project_lin_sys(w, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1028,7 +1013,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
 
-    /* project onto the cones */
+    /****************** project onto the cones ******************/
     SCS(tic)(&cone_timer);
     if (project_cones(w, k, i) < 0) {
       return failure(w, w->m, w->n, sol, info, SCS_FAILED,
@@ -1036,8 +1021,9 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     }
     total_cone_time += SCS(tocq)(&cone_timer);
 
-    /* dual variable step */
-    update_dual_vars(w);
+    /* compute [r;s;kappa], must be before dual var update */
+    /* since Moreau decomp logic relies on v at start */
+    compute_rsk(w);
 
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
@@ -1056,6 +1042,21 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       }
     }
 
+    /* Compute residuals. */
+    if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
+      populate_residual_struct(w, i);
+      print_summary(w, i, &solve_timer);
+    }
+
+    /* If residuals are fresh then maybe compute new scale. */
+    if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
+      update_scale(w, k, i);
+    }
+
+    /****************** dual variable step **********************/
+    /* do this after update_scale due to remapping that happens there */
+    update_dual_vars(w);
+
     /* AA safeguard check.
      * Perform safeguarding *after* convergence check to prevent safeguard
      * overwriting converged iterate, since safeguard is on `v` and convergence
@@ -1069,17 +1070,6 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
       } else {
         w->accepted_accel_steps++;
       }
-    }
-
-    /* Compute residuals. */
-    if (w->stgs->verbose && i % PRINT_INTERVAL == 0) {
-      populate_residual_struct(w, i);
-      print_summary(w, i, &solve_timer);
-    }
-
-    /* If residuals are fresh then maybe compute new scale. */
-    if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
-      maybe_update_scale(w, k, i);
     }
 
     /* Log *after* updating scale so residual recalc does not affect alg */
