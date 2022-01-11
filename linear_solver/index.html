@@ -94,8 +94,8 @@
 <p>At each iteration <span class="math notranslate nohighlight">\(k\)</span> SCS solves the following set of linear equations:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
-\rho_x I + P  &amp;  A^\top \\
-A &amp;  -\mathrm{diag}(\rho_y)   \\
+R_x + P  &amp;  A^\top \\
+A &amp;  -R_y   \\
 \end{bmatrix}
 \begin{bmatrix}
 x \\
@@ -106,13 +106,14 @@ y
 z^k_x \\
 z^k_y
 \end{bmatrix}\end{split}\]</div>
-<p>for a particular right-hand side <span class="math notranslate nohighlight">\(z^k \in \mathbf{R}^{n+m}\)</span>
-(the presence of the diagonal scaling <span class="math notranslate nohighlight">\(\rho\)</span> terms is explained in
-<a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a>). Note that the matrix does not change from iteration to
-iteration, which is a major advantage of this approach. Moreover, this system
-can be solved approximately so long as the errors satisfy a summability
-condition, which permits the use of approximate solvers that can scale to
-very large problems.</p>
+<p>for a particular right-hand side <span class="math notranslate nohighlight">\(z^k \in \mathbf{R}^{n+m}\)</span>. The presence
+of the diagonal scaling <span class="math notranslate nohighlight">\(R \in \mathbf{R}^{(n+m) \times (n+m)}\)</span> matrix is
+explained in <a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a>. The <span class="math notranslate nohighlight">\(R_y\)</span> term is negated to make the matrix
+quasi-definite; we can recover the solution to the original problem from this
+modified one. Note that the matrix does not change from iteration to iteration,
+which is a major advantage of this approach. Moreover, this system can be solved
+approximately so long as the errors satisfy a summability condition, which
+permits the use of approximate solvers that can scale to very large problems.</p>
 <section id="available-linear-solvers">
 <h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Permalink to this headline"></a></h2>
 <p>Each of the below linear solvers is included in their own binary. If linking
@@ -133,8 +134,8 @@ factorization.  It relies on the external <a class="reference external" href="ht
 ‘matrix-free’ method. To do this it first reduces the system to solving</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
-(\rho_x I + P + A^\top \mathrm{diag}(\rho_y)^{-1} A) r_x &amp; = q_x - A^\top \mathrm{diag}(\rho_y)^{-1} q_y \\
-                          r_y &amp; = \mathrm{diag}(\rho_y)^{-1}(A z_x + q_y).
+(R_x + P + A^\top R_y^{-1} A) x &amp; = z^k_x + A^\top R_y^{-1} z^k_y \\
+                          y &amp; = R_y^{-1}(A x - z^k_y).
 \end{align}\end{split}\]</div>
 <p>then solves the positive definite system using using <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">conjugate gradients</a>.  Each iteration of
 CG requires one multiply each of sparse matrices <span class="math notranslate nohighlight">\(P, A, A^\top\)</span>.  The
@@ -169,8 +170,8 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv422_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixP9scs_float">
-<span id="_CPPv322_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixP9scs_float"></span><span id="_CPPv222_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixP9scs_float"></span><span id="_scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatP"></span><span class="target" id="linsys_8h_1a829ea32da67ec12d03bea4b3ca7de86d"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">_scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixP9scs_float" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv422_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float">
+<span id="_CPPv322_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_CPPv222_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatCP"></span><span class="target" id="linsys_8h_1ac3b9488c8e26d341d4e614d0be1992e2"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">_scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422_scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Initialize <code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> structure and perform any necessary preprocessing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -220,8 +221,8 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float">
-<span id="_CPPv326_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv226_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float"></span><span id="_scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1a709eb88749a58f35c1d3b09d00926619"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">new_diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkP9scs_float" title="Permalink to this definition"></a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float">
+<span id="_CPPv326_scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="_CPPv226_scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="_scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatCP"></span><span class="target" id="linsys_8h_1ad5085b1e94a5a6306ddebfc7487cef5a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">new_diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426_scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">R</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
