@@ -12,7 +12,8 @@ First clone the SCS repo from GitHub
 CMake
 ^^^^^
 
-Thanks to the `CMake <cmake.org>`_ buildsystem (contributed by `Giulio Romualdi
+Thanks to the `CMake <https://cmake.org/cmake/help/latest/>`__
+buildsystem (contributed by `Giulio Romualdi
 <https://github.com/GiulioRomualdi>`__), SCS can be easily compiled and linked
 to other CMake projects. To use the cmake buld system please run the following
 commands:
@@ -108,5 +109,5 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
 To use the libraries in your own source code, compile your code with the linker
 option :code:`-L(PATH_TO_SCS_LIBS)` and :code:`-lscsdir` or :code:`-lscsindir`
 (as needed). The API and required data structures are defined in the file
-:code:`include/scs.h`.
+:code:`include/scs.h` and documented :ref:`here <c_interface>`.
 
