@@ -11,8 +11,8 @@ C code to solve this is below.
    :language: c
 
 After following the CMake :ref:`install instructions <c_install>`, we can
-compile the code using (assuming the library was installed in
-:code:`/usr/local/`):
+compile the code (assuming the library was installed in
+:code:`/usr/local/`) using:
 
 .. code::
 
@@ -20,7 +20,7 @@ compile the code using (assuming the library was installed in
 
 .. ./qp.out > qp.c.out
 
-Then running the binary yields output
+Then running the binary yields output:
 
 .. literalinclude:: qp.c.out
    :language: none
