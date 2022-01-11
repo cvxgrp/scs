@@ -93,7 +93,7 @@
 <p>In this example we shall solve the following small quadratic program:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{array}{ll}
-\mbox{minimize} &amp; \frac{1}{2} x^T \begin{bmatrix}3 &amp; -1\\ -1 &amp; 2 \end{bmatrix}
+\mbox{minimize} &amp; (1/2) x^T \begin{bmatrix}3 &amp; -1\\ -1 &amp; 2 \end{bmatrix}
 x + \begin{bmatrix}-1 \\ -1\end{bmatrix}^T x \\
 \mbox{subject to} &amp; \begin{bmatrix} -1 &amp; 1\\ 1 &amp; 0\\ 0 &amp; 1\end{bmatrix} x \leq \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}
 \end{array}\end{split}\]</div>
@@ -103,9 +103,9 @@ x + \begin{bmatrix}-1 \\ -1\end{bmatrix}^T x \\
 P = \begin{bmatrix}3 &amp; -1\\ -1 &amp; 2 \end{bmatrix}, &amp;
 A = \begin{bmatrix}-1 &amp; 1\\ 1 &amp; 0\\ 0 &amp; 1\end{bmatrix}, &amp;
 b = \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}, &amp;
-c = \begin{bmatrix}-1 \\ -1\end{bmatrix}
+c = \begin{bmatrix}-1 \\ -1\end{bmatrix}.
 \end{array}\end{split}\]</div>
-<p>The cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> is simply the positive orthant <code class="code docutils literal notranslate"><span class="pre">l</span></code> of
+<p>And the cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> is the positive orthant <code class="code docutils literal notranslate"><span class="pre">l</span></code> of
 dimension 3.</p>
 <p>C code to solve this is below.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;scs.h&quot;</span><span class="c1">    /* SCS API */</span><span class="cp"></span>
@@ -191,12 +191,12 @@ dimension 3.</p>
 </pre></div>
 </div>
 <p>After following the CMake <a class="reference internal" href="../install/c.html#c-install"><span class="std std-ref">install instructions</span></a>, we can
-compile the code using (assuming the library was installed in
-<code class="code docutils literal notranslate"><span class="pre">/usr/local/</span></code>):</p>
+compile the code (assuming the library was installed in
+<code class="code docutils literal notranslate"><span class="pre">/usr/local/</span></code>) using:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gcc</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">scs</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span> <span class="o">-</span><span class="n">lscsdir</span> <span class="n">qp</span><span class="o">.</span><span class="n">c</span> <span class="o">-</span><span class="n">o</span> <span class="n">qp</span><span class="o">.</span><span class="n">out</span>
 </pre></div>
 </div>
-<p>Then running the binary yields output</p>
+<p>Then running the binary yields output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
 	       SCS v3.0.0 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012

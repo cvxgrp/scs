@@ -3,7 +3,7 @@ In this example we shall solve the following small quadratic program:
 
 .. math::
     \begin{array}{ll}
-    \mbox{minimize} & \frac{1}{2} x^T \begin{bmatrix}3 & -1\\ -1 & 2 \end{bmatrix}
+    \mbox{minimize} & (1/2) x^T \begin{bmatrix}3 & -1\\ -1 & 2 \end{bmatrix}
     x + \begin{bmatrix}-1 \\ -1\end{bmatrix}^T x \\
     \mbox{subject to} & \begin{bmatrix} -1 & 1\\ 1 & 0\\ 0 & 1\end{bmatrix} x \leq \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}
     \end{array}
@@ -12,11 +12,11 @@ over variable :math:`x \in \mathbf{R}^2`. This problem corresponds to data:
 
 .. math::
     \begin{array}{cccc}
-    P = \begin{bmatrix}3 & -1\\ -1 & 2 \end{bmatrix}, & 
-    A = \begin{bmatrix}-1 & 1\\ 1 & 0\\ 0 & 1\end{bmatrix}, &  
+    P = \begin{bmatrix}3 & -1\\ -1 & 2 \end{bmatrix}, &
+    A = \begin{bmatrix}-1 & 1\\ 1 & 0\\ 0 & 1\end{bmatrix}, &
     b = \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}, &
-    c = \begin{bmatrix}-1 \\ -1\end{bmatrix} 
+    c = \begin{bmatrix}-1 \\ -1\end{bmatrix}.
     \end{array}
 
-The cone :math:`\mathcal{K}` is simply the positive orthant :code:`l` of
+And the cone :math:`\mathcal{K}` is the positive orthant :code:`l` of
 dimension 3.

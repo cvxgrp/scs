@@ -41,13 +41,13 @@ over variables
    :header-rows: 0
 
    * - :math:`x \in \mathbf{R}^n`
-     - primal variable 
-
-   * - :math:`s \in \mathbf{R}^m`
-     - slack variable 
+     - primal variable
 
    * - :math:`y \in \mathbf{R}^m`
-     - dual variable 
+     - dual variable
+
+   * - :math:`s \in \mathbf{R}^m`
+     - slack variable
 
 with data
 
@@ -56,13 +56,13 @@ with data
    :header-rows: 0
 
    * - :math:`A \in \mathbf{R}^{m \times n}`
-     - sparse data matrix
+     - sparse data matrix, see :ref:`matrices`
    * - :math:`P \in \mathbf{S}_+^{n}`
-     - sparse **symmetric positive semidefinite** matrix
+     - sparse, symmetric positive semidefinite matrix
    * - :math:`c \in \mathbf{R}^n`
-     - dense primal cost vector 
+     - dense primal cost vector
    * - :math:`b \in \mathbf{R}^m`
-     - dense dual cost vector 
+     - dense dual cost vector
    * - :math:`\mathcal{K} \subseteq \mathbf{R}^m`
      - nonempty, closed, convex cone, see :ref:`cones`
    * - :math:`\mathcal{K}^* \subseteq \mathbf{R}^m`

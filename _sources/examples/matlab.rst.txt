@@ -11,7 +11,7 @@ Python code to solve this is below.
    :language: matlab
 
 After following the matlab :ref:`install instructions <matlab_install>`, we can
-run the code yielding output
+run the code yielding output:
 
 .. matlab -r "run ~/git/scs/docs/src/examples/qp.m;exit"
 
