@@ -233,8 +233,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   Ag = (ScsGpuMatrix *)scs_calloc(1, sizeof(ScsGpuMatrix));
 
-  p->inv_r_y = (scs_float *)scs_calloc(A->m * sizeof(scs_float));
-  p->M = (scs_float *)scs_calloc(A->n * sizeof(scs_float));
+  p->inv_r_y = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+  p->M = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
 
   p->A = A;
   p->P = P;

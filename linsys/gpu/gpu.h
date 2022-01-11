@@ -1,5 +1,5 @@
-#ifndef SCSGPU_H_GUARD
-#define SCSGPU_H_GUARD
+#ifndef SCS_GPU_H_GUARD
+#define SCS_GPU_H_GUARD
 
 #ifdef __cplusplus
 extern "C" {
