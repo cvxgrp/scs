@@ -1,5 +1,5 @@
 ---
-name: Build
+name: GPU
 
 on: [push, pull_request]
 
