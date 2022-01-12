@@ -175,18 +175,18 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->m = A->m;
   p->n = A->n;
 
-  p->p = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
-  p->r = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
-  p->Gp = (scs_float *)scs_malloc((A->n) * sizeof(scs_float));
-  p->tmp = (scs_float *)scs_malloc((A->m) * sizeof(scs_float));
+  p->p = (scs_float *)scs_calloc((A->n), sizeof(scs_float));
+  p->r = (scs_float *)scs_calloc((A->n), sizeof(scs_float));
+  p->Gp = (scs_float *)scs_calloc((A->n), sizeof(scs_float));
+  p->tmp = (scs_float *)scs_calloc((A->m), sizeof(scs_float));
 
   /* memory for A transpose */
-  p->At = (ScsMatrix *)scs_malloc(sizeof(ScsMatrix));
+  p->At = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   p->At->m = A->n;
   p->At->n = A->m;
-  p->At->i = (scs_int *)scs_malloc((A->p[A->n]) * sizeof(scs_int));
-  p->At->p = (scs_int *)scs_malloc((A->m + 1) * sizeof(scs_int));
-  p->At->x = (scs_float *)scs_malloc((A->p[A->n]) * sizeof(scs_float));
+  p->At->i = (scs_int *)scs_calloc((A->p[A->n]), sizeof(scs_int));
+  p->At->p = (scs_int *)scs_calloc((A->m + 1), sizeof(scs_int));
+  p->At->x = (scs_float *)scs_calloc((A->p[A->n]), sizeof(scs_float));
   transpose(A, p);
 
   /* preconditioner memory */

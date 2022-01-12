@@ -135,7 +135,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
   }
 
   K->nz = count;
-  idx_mapping = (scs_int *)scs_malloc(K->nz * sizeof(scs_int));
+  idx_mapping = (scs_int *)scs_calloc(K->nz, sizeof(scs_int));
   Kcsc = SCS(cs_compress)(K, idx_mapping);
   for (i = 0; i < m + n; i++) {
     diag_r_idxs[i] = idx_mapping[diag_r_idxs[i]];
@@ -146,7 +146,7 @@ static csc *form_kkt(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
 }
 
 static scs_int _ldl_init(csc *A, scs_int *P, scs_float **info) {
-  *info = (scs_float *)scs_malloc(AMD_INFO * sizeof(scs_float));
+  *info = (scs_float *)scs_calloc(AMD_INFO, sizeof(scs_float));
   return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
@@ -154,10 +154,10 @@ static scs_int _ldl_init(csc *A, scs_int *P, scs_float **info) {
 static scs_int ldl_prepare(ScsLinSysWork *p) {
   csc *kkt = p->kkt, *L = p->L;
   scs_int n = kkt->n;
-  p->etree = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  p->Lnz = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  p->iwork = (scs_int *)scs_malloc(3 * n * sizeof(scs_int));
-  L->p = (scs_int *)scs_malloc((1 + n) * sizeof(scs_int));
+  p->etree = (scs_int *)scs_calloc(n, sizeof(scs_int));
+  p->Lnz = (scs_int *)scs_calloc(n, sizeof(scs_int));
+  p->iwork = (scs_int *)scs_calloc(3 * n, sizeof(scs_int));
+  L->p = (scs_int *)scs_calloc((1 + n), sizeof(scs_int));
   L->nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
   if (L->nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
@@ -169,12 +169,12 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
     return L->nzmax;
   }
 
-  L->x = (scs_float *)scs_malloc(L->nzmax * sizeof(scs_float));
-  L->i = (scs_int *)scs_malloc(L->nzmax * sizeof(scs_int));
-  p->Dinv = (scs_float *)scs_malloc(n * sizeof(scs_float));
-  p->D = (scs_float *)scs_malloc(n * sizeof(scs_float));
-  p->bwork = (scs_int *)scs_malloc(n * sizeof(scs_int));
-  p->fwork = (scs_float *)scs_malloc(n * sizeof(scs_float));
+  L->x = (scs_float *)scs_calloc(L->nzmax, sizeof(scs_float));
+  L->i = (scs_int *)scs_calloc(L->nzmax, sizeof(scs_int));
+  p->Dinv = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  p->D = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  p->bwork = (scs_int *)scs_calloc(n, sizeof(scs_int));
+  p->fwork = (scs_float *)scs_calloc(n, sizeof(scs_float));
   return L->nzmax;
 }
 
@@ -231,7 +231,7 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   if (!p) {
     return SCS_NULL;
   } /* p = SCS_NULL denotes identity */
-  pinv = (scs_int *)scs_malloc(n * sizeof(scs_int)); /* allocate result */
+  pinv = (scs_int *)scs_calloc(n, sizeof(scs_int)); /* allocate result */
   if (!pinv) {
     return SCS_NULL;
   } /* out of memory */
@@ -308,7 +308,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   amd_info(info);
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
-  idx_mapping = (scs_int *)scs_malloc(kkt->nzmax * sizeof(scs_int));
+  idx_mapping = (scs_int *)scs_calloc(kkt->nzmax, sizeof(scs_int));
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
@@ -346,10 +346,10 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->m = A->m;
   p->n = A->n;
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  p->perm = (scs_int *)scs_malloc(sizeof(scs_int) * n_plus_m);
-  p->L = (csc *)scs_malloc(sizeof(csc));
-  p->bp = (scs_float *)scs_malloc(n_plus_m * sizeof(scs_float));
-  p->diag_r_idxs = (scs_int *)scs_malloc(n_plus_m * sizeof(scs_int));
+  p->perm = (scs_int *)scs_calloc(sizeof(scs_int), n_plus_m);
+  p->L = (csc *)scs_calloc(1, sizeof(csc));
+  p->bp = (scs_float *)scs_calloc(n_plus_m, sizeof(scs_float));
+  p->diag_r_idxs = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
   p->factorizations = 0;
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
