@@ -11,12 +11,17 @@ jobs:
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: mkdir build
       - run: |
+          export INSTALL_DIR=$PWD/out
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           cd build
           mkdir out
-          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$PWD/out ..
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
           make
           make install
           ctest --output-on-failure
+          cd ../docs/src/examples/
+          gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsdir
+          ./qp.out
 
   mac:
     runs-on: macos-latest
@@ -26,10 +31,15 @@ jobs:
       - run: mkdir cmake_out
       - run: mkdir build
       - run: |
+          export INSTALL_DIR=$PWD/out
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           cd build
           mkdir out
-          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$PWD/out ..
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
           make
           make install
           ctest --output-on-failure
+          cd ../docs/src/examples/
+          gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsdir
+          ./qp.out
 
