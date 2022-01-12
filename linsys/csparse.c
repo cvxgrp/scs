@@ -12,9 +12,9 @@ csc *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
   A->n = n;
   A->nzmax = nzmax = MAX(nzmax, 1);
   A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
-  A->p = (scs_int *)scs_malloc((triplet ? nzmax : n + 1) * sizeof(scs_int));
-  A->i = (scs_int *)scs_malloc(nzmax * sizeof(scs_int));
-  A->x = values ? (scs_float *)scs_malloc(nzmax * sizeof(scs_float)) : SCS_NULL;
+  A->p = (scs_int *)scs_calloc((triplet ? nzmax : n + 1), sizeof(scs_int));
+  A->i = (scs_int *)scs_calloc(nzmax, sizeof(scs_int));
+  A->x = values ? (scs_float *)scs_calloc(nzmax, sizeof(scs_float)) : SCS_NULL;
   return (!A->p || !A->i || (values && !A->x)) ? SCS(cs_spfree)(A) : A;
 }
 

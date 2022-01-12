@@ -18,11 +18,11 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   A->n = src->n;
   A->m = src->m;
   /* A values, size: NNZ A */
-  A->x = (scs_float *)scs_malloc(sizeof(scs_float) * Anz);
+  A->x = (scs_float *)scs_calloc(Anz, sizeof(scs_float));
   /* A row index, size: NNZ A */
-  A->i = (scs_int *)scs_malloc(sizeof(scs_int) * Anz);
+  A->i = (scs_int *)scs_calloc(Anz, sizeof(scs_int));
   /* A column pointer, size: n+1 */
-  A->p = (scs_int *)scs_malloc(sizeof(scs_int) * (src->n + 1));
+  A->p = (scs_int *)scs_calloc(src->n + 1, sizeof(scs_int));
   if (!A->x || !A->i || !A->p) {
     return 0;
   }
@@ -336,10 +336,10 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, scs_float *b,
   scs_int i;
   scs_float s;
   ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-  scs_float *Dt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
-  scs_float *Et = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
-  scal->D = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
-  scal->E = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
+  scs_float *Dt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+  scs_float *Et = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  scal->D = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+  scal->E = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
 
 #if VERBOSITY > 5
   SCS(timer) normalize_timer;

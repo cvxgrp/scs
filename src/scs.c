@@ -51,7 +51,7 @@ static void free_work(ScsWork *w) {
     }
     SCS(free_sol)(w->xys_orig);
     free_residuals(w->r_orig);
-    if (w->stgs->normalize) {
+    if (w->stgs && w->stgs->normalize) {
       SCS(free_sol)(w->xys_normalized);
       free_residuals(w->r_normalized);
     }
