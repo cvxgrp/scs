@@ -12,6 +12,7 @@ jobs:
       - run: mkdir build
       - run: |
           export INSTALL_DIR=$PWD/out
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           cd build
           mkdir out
           cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
@@ -31,6 +32,7 @@ jobs:
       - run: mkdir build
       - run: |
           export INSTALL_DIR=$PWD/out
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           cd build
           mkdir out
           cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
