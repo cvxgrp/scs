@@ -131,8 +131,9 @@
 a dict that contains that <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> information.
 The <code class="code docutils literal notranslate"><span class="pre">b</span></code>, and <code class="code docutils literal notranslate"><span class="pre">c</span></code> must be 1d numpy arrays and <code class="code docutils literal notranslate"><span class="pre">P</span></code> and <code class="code docutils literal notranslate"><span class="pre">A</span></code>
 must be scipy sparse matrices in CSC format; if they are not of the proper
-format, SCS will attempt to convert them. The remaining fields are explained
-in <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
+format, SCS will attempt to convert them. The <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting
+switches between the sparse direct <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the
+sparse indirect solver.  The remaining fields are explained in <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
 <p>At termination <code class="code docutils literal notranslate"><span class="pre">sol</span></code> is a dict with fields <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s,</span> <span class="pre">info</span></code> where
 <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s</span></code> contains the primal-dual <a class="reference internal" href="../algorithm/index.html#optimality"><span class="std std-ref">solution</span></a> or the
 <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>, and <code class="code docutils literal notranslate"><span class="pre">info</span></code> is a dict

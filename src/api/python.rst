@@ -37,8 +37,9 @@ where :code:`data` is a dict containing :code:`P, A, b, c`, and :code:`cone` is
 a dict that contains that :ref:`cones` information. 
 The :code:`b`, and :code:`c` must be 1d numpy arrays and :code:`P` and :code:`A`
 must be scipy sparse matrices in CSC format; if they are not of the proper
-format, SCS will attempt to convert them. The remaining fields are explained
-in :ref:`settings`.
+format, SCS will attempt to convert them. The :code:`use_indirect` setting
+switches between the sparse direct :ref:`linear_solver` (the default) or the
+sparse indirect solver.  The remaining fields are explained in :ref:`settings`.
 
 At termination :code:`sol` is a dict with fields :code:`x, y, s, info` where
 :code:`x, y, s` contains the primal-dual :ref:`solution <optimality>` or the
