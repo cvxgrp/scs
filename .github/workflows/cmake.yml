@@ -13,7 +13,7 @@ jobs:
       - run: |
           cd build
           mkdir out
-          cmake -DBUILD_TESTING=ON ..
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$PWD/out ..
           make
           make install
           ctest --output-on-failure
@@ -31,7 +31,7 @@ jobs:
       - run: |
           cd build
           mkdir out
-          cmake -DBUILD_TESTING=ON ..
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$PWD/out ..
           make
           make install
           ctest --output-on-failure
