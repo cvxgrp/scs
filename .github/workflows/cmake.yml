@@ -17,6 +17,9 @@ jobs:
           make
           make install
           ctest --output-on-failure
+          cd ../docs/src/examples/
+          gcc -I/usr/local/include/scs -L/usr/local/lib/ qp.c -o qp.out -lscsdir
+          ./qp.out
 
   mac:
     runs-on: macos-latest
@@ -32,4 +35,7 @@ jobs:
           make
           make install
           ctest --output-on-failure
+          cd ../docs/src/examples/
+          gcc -I/usr/local/include/scs -L/usr/local/lib/ qp.c -o qp.out -lscsdir
+          ./qp.out
 

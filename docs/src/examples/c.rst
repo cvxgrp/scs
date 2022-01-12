@@ -16,7 +16,7 @@ compile the code (assuming the library was installed in
 
 .. code::
 
-	  gcc -I/usr/local/include/scs -L/usr/local/lib/ -lscsdir qp.c -o qp.out
+    gcc -I/usr/local/include/scs -L/usr/local/lib/ qp.c -o qp.out -lscsdir	  
 
 .. ./qp.out > qp.c.out
 
