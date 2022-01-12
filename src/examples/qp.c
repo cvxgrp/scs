@@ -76,5 +76,5 @@ int main(int argc, char **argv) {
   free(sol->s);
   free(sol);
 
-  return exitflag;
+  return 0;  /* returning exitflag will set bash exit code to 1 */
 }
