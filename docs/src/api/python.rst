@@ -26,9 +26,9 @@ This module provides a single function solve with the following call signature:
                   eps_rel=1e-4,
                   eps_infeas=1e-7,
                   alpha=1.5,
-                  rho_x=1e-3,
-                  acceleration_lookback=0,
-                  acceleration_interval=1,
+                  rho_x=1e-6,
+                  acceleration_lookback=10,
+                  acceleration_interval=10,
                   time_limit_secs=0,
                   write_data_filename=None,
                   log_csv_filename=None)
