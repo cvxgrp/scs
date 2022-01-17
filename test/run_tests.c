@@ -11,19 +11,28 @@
 #include "problems/hs21_tiny_qp_rw.h"
 #include "problems/infeasible_tiny_qp.h"
 #include "problems/qafiro_tiny_qp.h"
-#include "problems/rob_gauss_cov_est.h"
 #include "problems/small_lp.h"
 #include "problems/small_qp.h"
 #include "problems/test_validation.h"
 #include "problems/unbounded_tiny_qp.h"
 
-#ifndef DLONG /* TODO: this reads a file written with 32bit ints */
+#define _skip(problem)                                                         \
+  char *problem(void) {                                                        \
+    scs_printf("skipped\n");                                                   \
+    return 0;                                                                  \
+  }
+
+#ifdef USE_LAPACK /* solve SDPs, requires blas / lapack */
+#include "problems/rob_gauss_cov_est.h"
+#else
+_skip(rob_gauss_cov_est)
+#endif
+
+/* TODO: this reads a file written with 32bit ints */
+#if defined(USE_LAPACK) && !defined(DLONG)
 #include "problems/random_prob.h"
 #else
-char * random_prob(void) {
-  scs_printf("skipped\n"); 
-  return 0;
-}
+    _skip(random_prob)
 #endif
 
 int tests_run = 0;

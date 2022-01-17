@@ -9,13 +9,14 @@ jobs:
       fail-fast: false
       matrix:
         long: [0, 1]
+        lapack: [0, 1]
 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: sudo apt-get install libopenblas-dev liblapack-dev
-      - run: make DLONG=${{ matrix.long }}
-      - run: make test DLONG=${{ matrix.long }}
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: out/run_tests_direct    # test direct solver
       - run: out/run_tests_indirect  # test indirect solver
 
@@ -32,12 +33,13 @@ jobs:
       fail-fast: false
       matrix:
         long: [0, 1]
+        lapack: [0, 1]
 
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
       - run: brew install openblas lapack
-      - run: make DLONG=${{ matrix.long }}
-      - run: make test DLONG=${{ matrix.long }}
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: out/run_tests_direct    # test direct solver
       - run: out/run_tests_indirect  # test indirect solver
