@@ -16,7 +16,7 @@
 #include "problems/test_validation.h"
 #include "problems/unbounded_tiny_qp.h"
 
-#define _skip(problem)                                                         \
+#define _SKIP(problem)                                                         \
   char *problem(void) {                                                        \
     scs_printf("skipped\n");                                                   \
     return 0;                                                                  \
@@ -25,14 +25,14 @@
 #ifdef USE_LAPACK /* solve SDPs, requires blas / lapack */
 #include "problems/rob_gauss_cov_est.h"
 #else
-_skip(rob_gauss_cov_est)
+_SKIP(rob_gauss_cov_est)
 #endif
 
 /* TODO: this reads a file written with 32bit ints */
 #if defined(USE_LAPACK) && !defined(DLONG)
 #include "problems/random_prob.h"
 #else
-    _skip(random_prob)
+_SKIP(random_prob)
 #endif
 
 int tests_run = 0;
