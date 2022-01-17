@@ -85,7 +85,7 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
 
 scs_float SCS(mean)(const scs_float *x, scs_int n) {
   scs_int i;
-  mean = 0.;
+  scs_float mean = 0.;
   for (i = 0; i < n; ++i) {
     mean += x[i];
   }
