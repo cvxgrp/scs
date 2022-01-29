@@ -11,8 +11,8 @@ C code to solve this is below.
    :language: c
 
 After following the CMake :ref:`install instructions <c_install>`, we can
-compile the code (assuming the library was installed in
-:code:`/usr/local/`) using:
+compile the code (assuming the library was installed in :code:`/usr/local/` and
+the :code:`gcc` compiler is available) using:
 
 .. code::
 
