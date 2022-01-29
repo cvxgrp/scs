@@ -5,7 +5,7 @@ MATLAB
 
 .. include:: qp.prob
 
-Python code to solve this is below.
+Matlab code to solve this is below.
 
 .. literalinclude:: qp.m
    :language: matlab
