@@ -51,10 +51,8 @@
 <li class="toctree-l2"><a class="reference internal" href="warm_start.html">Warm-starting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="acceleration.html">Acceleration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="relaxation.html">Relaxation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#optimality-conditions">Optimality conditions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#certificate-of-infeasibility">Certificate of infeasibility</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#optimality-conditions">Optimality conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#certificate-of-infeasibility">Certificate of infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">Optimality</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#infeasibility-cert">Infeasibility</a></li>
@@ -155,8 +153,9 @@ equivalent to a zero <em>duality gap</em> condition at any optimal point, that i
 for <span class="math notranslate nohighlight">\((x,y,s)\)</span> that satisfy the KKT conditions we have</p>
 <div class="math notranslate nohighlight">
 \[s\perp y \ \Leftrightarrow \ c^\top x + b^\top y + x^\top P x = 0.\]</div>
+</section>
 <section id="certificate-of-infeasibility">
-<span id="infeasibility"></span><h3>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline"></a></h3>
+<span id="infeasibility"></span><h2>Certificate of infeasibility<a class="headerlink" href="#certificate-of-infeasibility" title="Permalink to this headline"></a></h2>
 <p>On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
 Any <span class="math notranslate nohighlight">\(y \in \mathbf{R}^m\)</span> that satisfies</p>
 <div class="math notranslate nohighlight">
@@ -167,7 +166,6 @@ that</p>
 \[Px = 0,\ -Ax\in \mathcal{K},\ c^\top x &lt; 0\]</div>
 <p>then this is a certificate that the problem is dual infeasible (primal
 unbounded).</p>
-</section>
 </section>
 <section id="termination-criteria">
 <span id="termination"></span><h2>Termination criteria<a class="headerlink" href="#termination-criteria" title="Permalink to this headline"></a></h2>

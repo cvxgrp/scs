@@ -92,7 +92,7 @@ for :math:`(x,y,s)` that satisfy the KKT conditions we have
 .. _infeasibility:
 
 Certificate of infeasibility
-----------------------------
+++++++++++++++++++++++++++++
 
 On the other hand, if no optimal solution exists then SCS is able to robustly detect primal or dual infeasibility.
 Any :math:`y \in \mathbf{R}^m` that satisfies

@@ -95,7 +95,8 @@
 \[\begin{split}\begin{array}{ll}
 \mbox{minimize} &amp; (1/2) x^T \begin{bmatrix}3 &amp; -1\\ -1 &amp; 2 \end{bmatrix}
 x + \begin{bmatrix}-1 \\ -1\end{bmatrix}^T x \\
-\mbox{subject to} &amp; \begin{bmatrix} -1 &amp; 1\\ 1 &amp; 0\\ 0 &amp; 1\end{bmatrix} x \leq \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}
+\mbox{subject to} &amp; \begin{bmatrix} -1 \\ 1 \end{bmatrix}^T x = -1  \\
+&amp; \begin{bmatrix} 1 &amp; 0\\ 0 &amp; 1\end{bmatrix} x \leq \begin{bmatrix}0.3 \\ -0.5\end{bmatrix}
 \end{array}\end{split}\]</div>
 <p>over variable <span class="math notranslate nohighlight">\(x \in \mathbf{R}^2\)</span>. This problem corresponds to data:</p>
 <div class="math notranslate nohighlight">
@@ -105,8 +106,11 @@ A = \begin{bmatrix}-1 &amp; 1\\ 1 &amp; 0\\ 0 &amp; 1\end{bmatrix}, &amp;
 b = \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}, &amp;
 c = \begin{bmatrix}-1 \\ -1\end{bmatrix}.
 \end{array}\end{split}\]</div>
-<p>And the cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> is the positive orthant <code class="code docutils literal notranslate"><span class="pre">l</span></code> of
-dimension 3.</p>
+<p>And the cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> consists of a zero cone (<code class="code docutils literal notranslate"><span class="pre">z</span></code>) of length 1
+and a positive cone (<code class="code docutils literal notranslate"><span class="pre">l</span></code>) of dimension 2. Note that the order of the
+rows in <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(b\)</span> corresponds to the order in <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">Cones</span></a>, so
+the row corresponding to the zero cone comes first, followed by the rows for the
+positive cone.</p>
 <p>Python code to solve this is below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span>
 <span class="kn">import</span> <span class="nn">scs</span>
@@ -120,7 +124,7 @@ dimension 3.</p>
 
 <span class="c1"># Populate dicts with data to pass into SCS</span>
 <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
-<span class="n">cone</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">));</span>
+<span class="n">cone</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">2</span><span class="p">);</span>
 
 <span class="c1"># Solve!</span>
 <span class="n">sol</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">eps_rel</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span>
@@ -140,7 +144,8 @@ run the code yielding output:</p>
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
-cones: 	  l: linear vars: 3
+cones: 	  z: primal zero / dual free vars: 1
+	  l: linear vars: 2
 settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, warm_start: 0
@@ -150,16 +155,16 @@ lin-sys:  sparse-direct
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.78e+00  1.00e+00  1.42e+00 -1.04e+00  1.00e-01  6.11e-05 
-   175| 3.34e-11  4.17e-10  4.07e-10  1.24e+00  2.08e+01  1.59e-04 
+     0| 1.53e+00  1.00e+00  4.87e+00  1.10e+00  1.00e-01  4.76e-05 
+   100| 6.18e-11  1.56e-12  1.30e-10  1.23e+00  1.00e-01  1.07e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.09e-03s = setup: 9.31e-04s + solve: 1.60e-04s
-	 lin-sys: 2.49e-05s, cones: 1.16e-05s, accel: 2.14e-05s
+timings: total: 2.05e-04s = setup: 9.69e-05s + solve: 1.08e-04s
+	 lin-sys: 1.23e-05s, cones: 7.86e-06s, accel: 1.55e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------
-SCS took 175 iters
+SCS took 100 iters
 Optimal solution vector x*:
 [ 0.3 -0.7]
 Optimal dual vector y*:

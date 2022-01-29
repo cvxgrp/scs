@@ -95,7 +95,8 @@
 \[\begin{split}\begin{array}{ll}
 \mbox{minimize} &amp; (1/2) x^T \begin{bmatrix}3 &amp; -1\\ -1 &amp; 2 \end{bmatrix}
 x + \begin{bmatrix}-1 \\ -1\end{bmatrix}^T x \\
-\mbox{subject to} &amp; \begin{bmatrix} -1 &amp; 1\\ 1 &amp; 0\\ 0 &amp; 1\end{bmatrix} x \leq \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}
+\mbox{subject to} &amp; \begin{bmatrix} -1 \\ 1 \end{bmatrix}^T x = -1  \\
+&amp; \begin{bmatrix} 1 &amp; 0\\ 0 &amp; 1\end{bmatrix} x \leq \begin{bmatrix}0.3 \\ -0.5\end{bmatrix}
 \end{array}\end{split}\]</div>
 <p>over variable <span class="math notranslate nohighlight">\(x \in \mathbf{R}^2\)</span>. This problem corresponds to data:</p>
 <div class="math notranslate nohighlight">
@@ -105,8 +106,11 @@ A = \begin{bmatrix}-1 &amp; 1\\ 1 &amp; 0\\ 0 &amp; 1\end{bmatrix}, &amp;
 b = \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}, &amp;
 c = \begin{bmatrix}-1 \\ -1\end{bmatrix}.
 \end{array}\end{split}\]</div>
-<p>And the cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> is the positive orthant <code class="code docutils literal notranslate"><span class="pre">l</span></code> of
-dimension 3.</p>
+<p>And the cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span> consists of a zero cone (<code class="code docutils literal notranslate"><span class="pre">z</span></code>) of length 1
+and a positive cone (<code class="code docutils literal notranslate"><span class="pre">l</span></code>) of dimension 2. Note that the order of the
+rows in <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(b\)</span> corresponds to the order in <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">Cones</span></a>, so
+the row corresponding to the zero cone comes first, followed by the rows for the
+positive cone.</p>
 <p>Python code to solve this is below.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% First, make sure SCS is in the path so MATLAB can call it</span><span class="w"></span>
 <span class="nb">addpath</span><span class="p">(</span><span class="s">&quot;/Users/bodonoghue/git/scs-matlab&quot;</span><span class="p">)</span><span class="w"></span>
@@ -116,7 +120,8 @@ dimension 3.</p>
 <span class="n">data</span><span class="p">.</span><span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">([</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">;</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">]);</span><span class="w"></span>
 <span class="n">data</span><span class="p">.</span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="mf">0.3</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">0.5</span><span class="p">];</span><span class="w"></span>
 <span class="n">data</span><span class="p">.</span><span class="n">c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">];</span><span class="w"></span>
-<span class="n">cone</span><span class="p">.</span><span class="n">l</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+<span class="n">cone</span><span class="p">.</span><span class="n">z</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="n">cone</span><span class="p">.</span><span class="n">l</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
 
 <span class="c">% Optional solver settings</span><span class="w"></span>
 <span class="nb">settings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">&#39;eps_abs&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;eps_rel&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">);</span><span class="w"></span>
@@ -133,22 +138,22 @@ dimension 3.</p>
 </div>
 <p>After following the matlab <a class="reference internal" href="../install/matlab.html#matlab-install"><span class="std std-ref">install instructions</span></a>, we can
 run the code yielding output:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>                                  &lt; M A T L A B (R) &gt;
-                        Copyright 1984-2021 The MathWorks, Inc.
-                    R2021a Update 3 (9.10.0.1684407) 64-bit (maci64)
-                                      May 27, 2021
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>                                                                        &lt; M A T L A B (R) &gt;
+                                                              Copyright 1984-2021 The MathWorks, Inc.
+                                                         R2021a Update 3 (9.10.0.1684407) 64-bit (maci64)
+                                                                           May 27, 2021
 
  
 For online documentation, see https://www.mathworks.com/support
 For product information, visit www.mathworks.com.
  
-
 ------------------------------------------------------------------
 	       SCS v3.0.0 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
-cones: 	  l: linear vars: 3
+cones: 	  z: primal zero / dual free vars: 1
+	  l: linear vars: 2
 settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, warm_start: 0
@@ -158,16 +163,16 @@ lin-sys:  sparse-direct
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.78e+00  1.00e+00  1.42e+00 -1.04e+00  1.00e-01  2.37e-04 
-   175| 3.34e-11  4.17e-10  4.07e-10  1.24e+00  2.08e+01  6.45e-03 
+     0| 1.53e+00  1.00e+00  4.87e+00  1.10e+00  1.00e-01  1.53e-04 
+   100| 6.18e-11  1.56e-12  1.30e-10  1.23e+00  1.00e-01  3.37e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.51e-02s = setup: 1.86e-02s + solve: 6.52e-03s
-	 lin-sys: 2.94e-05s, cones: 1.52e-05s, accel: 6.04e-03s
+timings: total: 5.26e-03s = setup: 4.89e-03s + solve: 3.74e-04s
+	 lin-sys: 1.96e-05s, cones: 7.60e-06s, accel: 9.94e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------
-SCS took 175 iters
+SCS took 100 iters
 Optimal solution vector x*:
     0.3000
    -0.7000

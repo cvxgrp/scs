@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
   d->P = &(ScsMatrix){P_x, P_i, P_p, n, n};
 
   /* Cone */
-  k->l = m;
+  k->z = 1;
+  k->l = 2;
 
   /* Utility to set default settings */
   scs_set_default_settings(stgs);

@@ -69,7 +69,7 @@ with data
      - dual cone to :math:`\mathcal{K}`
 
 At termination SCS will either return points :math:`(x^\star,y^\star,s^\star)` that satisfies
-the :ref:`optimality conditions <algorithm>` to the desired accuracy, or a certificate
+the :ref:`optimality conditions <optimality>` to the desired accuracy, or a certificate
 of :ref:`primal or dual infeasibility <infeasibility>` to the designated infeasibility accuracy.
 
 .. The current version is |version|
