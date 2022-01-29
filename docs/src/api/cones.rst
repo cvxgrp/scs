@@ -17,7 +17,7 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
      - :math:`\{s \mid s = 0 \}`
      - :code:`z` length of cone.
      - :code:`z`
-   * - Positive orthant
+   * - Positive (or linear) cone
      - :math:`\{s \mid s \geq 0 \}`
      - :code:`l` length of cone.
      - :code:`l`

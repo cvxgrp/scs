@@ -1,19 +1,19 @@
-                                  < M A T L A B (R) >
-                        Copyright 1984-2021 The MathWorks, Inc.
-                    R2021a Update 3 (9.10.0.1684407) 64-bit (maci64)
-                                      May 27, 2021
+                                                                        < M A T L A B (R) >
+                                                              Copyright 1984-2021 The MathWorks, Inc.
+                                                         R2021a Update 3 (9.10.0.1684407) 64-bit (maci64)
+                                                                           May 27, 2021
 
  
 For online documentation, see https://www.mathworks.com/support
 For product information, visit www.mathworks.com.
  
-
 ------------------------------------------------------------------
 	       SCS v3.0.0 - Splitting Conic Solver
 	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
-cones: 	  l: linear vars: 3
+cones: 	  z: primal zero / dual free vars: 1
+	  l: linear vars: 2
 settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, warm_start: 0
@@ -23,16 +23,16 @@ lin-sys:  sparse-direct
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.78e+00  1.00e+00  1.42e+00 -1.04e+00  1.00e-01  2.37e-04 
-   175| 3.34e-11  4.17e-10  4.07e-10  1.24e+00  2.08e+01  6.45e-03 
+     0| 1.53e+00  1.00e+00  4.87e+00  1.10e+00  1.00e-01  1.53e-04 
+   100| 6.18e-11  1.56e-12  1.30e-10  1.23e+00  1.00e-01  3.37e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.51e-02s = setup: 1.86e-02s + solve: 6.52e-03s
-	 lin-sys: 2.94e-05s, cones: 1.52e-05s, accel: 6.04e-03s
+timings: total: 5.26e-03s = setup: 4.89e-03s + solve: 3.74e-04s
+	 lin-sys: 1.96e-05s, cones: 7.60e-06s, accel: 9.94e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------
-SCS took 175 iters
+SCS took 100 iters
 Optimal solution vector x*:
     0.3000
    -0.7000

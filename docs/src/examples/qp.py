@@ -10,7 +10,7 @@ c = np.array([-1., -1.])
 
 # Populate dicts with data to pass into SCS
 data = dict(P=P, A=A, b=b, c=c)
-cone = dict(l=len(b));
+cone = dict(z=1, l=2);
 
 # Solve!
 sol = scs.solve(data, cone, eps_abs=1e-9, eps_rel=1e-9)

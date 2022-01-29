@@ -5,7 +5,8 @@ In this example we shall solve the following small quadratic program:
     \begin{array}{ll}
     \mbox{minimize} & (1/2) x^T \begin{bmatrix}3 & -1\\ -1 & 2 \end{bmatrix}
     x + \begin{bmatrix}-1 \\ -1\end{bmatrix}^T x \\
-    \mbox{subject to} & \begin{bmatrix} -1 & 1\\ 1 & 0\\ 0 & 1\end{bmatrix} x \leq \begin{bmatrix}-1 \\ 0.3 \\ -0.5\end{bmatrix}
+    \mbox{subject to} & \begin{bmatrix} -1 \\ 1 \end{bmatrix}^T x = -1  \\
+    & \begin{bmatrix} 1 & 0\\ 0 & 1\end{bmatrix} x \leq \begin{bmatrix}0.3 \\ -0.5\end{bmatrix}
     \end{array}
 
 over variable :math:`x \in \mathbf{R}^2`. This problem corresponds to data:
@@ -18,5 +19,8 @@ over variable :math:`x \in \mathbf{R}^2`. This problem corresponds to data:
     c = \begin{bmatrix}-1 \\ -1\end{bmatrix}.
     \end{array}
 
-And the cone :math:`\mathcal{K}` is the positive orthant :code:`l` of
-dimension 3.
+And the cone :math:`\mathcal{K}` consists of a zero cone (:code:`z`) of length 1
+and a positive cone (:code:`l`) of dimension 2. Note that the order of the
+rows in :math:`A` and :math:`b` corresponds to the order in :ref:`cones`, so
+the row corresponding to the zero cone comes first, followed by the rows for the 
+positive cone.
