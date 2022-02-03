@@ -732,6 +732,32 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
+scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
+                       scs_int warm_start) {
+  if (b_new) {
+    w->b_orig = b_new;
+    memcpy(w->b_normalized, b_new, w->m * sizeof(scs_float));
+  } else {
+    memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
+  }
+  if (c_new) {
+    w->c_orig = c_new;
+    memcpy(w->c_normalized, c_new, w->n * sizeof(scs_float));
+  } else {
+    memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
+  }
+
+  /* normalize */
+  if (w->scal) {
+    SCS(normalize_b_c)(w->scal, w->b_normalized, w->c_normalized);
+  }
+
+  /* set warm start */
+  w->warm_start = warm_start;
+
+  return 0;
+}
+
 /* Sets the diag_r vector, given the scale parameters in work */
 static void set_diag_r(ScsWork *w) {
   scs_int i;
@@ -762,6 +788,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->scale = stgs->scale; /* initial scale, may be updated */
   w->m = d->m;
   w->n = d->n;
+  w->warm_start = stgs->warm_start;
   w->last_scale_update_iter = 0;
   w->sum_log_scale_factor = 0.;
   w->n_log_scale_factor = 0;
@@ -787,23 +814,19 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->A = d->A;
   w->P = d->P;
 
-  w->b_orig = d->b;
-  w->c_orig = d->c;
   w->b_normalized = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   w->c_normalized = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
-  memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
-  memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
+
+  if (!w->c_normalized) {
+    scs_printf("ERROR: work memory allocation failure\n");
+    return SCS_NULL;
+  }
 
   if (!(w->cone_work = SCS(init_cone)(k, w->m))) {
     scs_printf("ERROR: init_cone failure\n");
     return SCS_NULL;
   }
   set_diag_r(w);
-
-  if (!w->c_normalized) {
-    scs_printf("ERROR: work memory allocation failure\n");
-    return SCS_NULL;
-  }
 
   if (w->stgs->normalize) {
     w->xys_normalized = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
@@ -823,13 +846,15 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     }
 #endif
     /* this allocates memory that must be freed */
-    w->scal = SCS(normalize_a_p)(w->P, w->A, w->b_normalized, w->c_normalized,
-                                 w->cone_work);
+    w->scal = SCS(normalize_a_p)(w->P, w->A, w->cone_work);
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
     w->scal = SCS_NULL;
   }
+  /* set w->*_normalized and normalizes if appropriate */
+  scs_update_b_c(w, d->b, d->c, w->warm_start);
+
   if (!(w->p = SCS(init_lin_sys_work)(w->A, w->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
@@ -866,17 +891,15 @@ static void update_work_cache(ScsWork *w) {
 
 static scs_int update_work(const ScsData *d, ScsWork *w, ScsSolution *sol) {
   /* before normalization */
-  scs_int n = d->n;
-  scs_int m = d->m;
-  if (w->stgs->warm_start) {
+  if (w->warm_start) {
     warm_start_vars(w, sol);
   } else {
     cold_start_vars(w);
   }
 
   /* h = [c;b] */
-  memcpy(w->h, w->c_normalized, n * sizeof(scs_float));
-  memcpy(&(w->h[n]), w->b_normalized, m * sizeof(scs_float));
+  memcpy(w->h, w->c_normalized, d->n * sizeof(scs_float));
+  memcpy(&(w->h[d->n]), w->b_normalized, d->m * sizeof(scs_float));
   update_work_cache(w);
   return 0;
 }

@@ -225,6 +225,25 @@ typedef struct {
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
+ * Update the `b` vector, `c` vector, or both, before another solve call.
+ *
+ * After a solve we can reuse the SCS workspace if the problem data has only
+ * changed the `b` and `c` vectors, then solve again. Additionally we can
+ * warm-start the solution using the solution from the last solve. We can
+ * manually override the warm-start values by modifying the `sol` struct.
+ *
+ * @param  w 		        SCS workspace, modified in-place.
+ * @param  b_new	      New `b` vector (can be `SCS_NULL` if unchanged).
+ * @param  c_new	      New `c` vector (can be `SCS_NULL` if unchanged).
+ * @param  warm_start   Whether to use the solution from the most recent solve.
+ *                      to warm-start the next solve.
+ *
+ * @return              0 if update successful.
+ */
+scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
+                       scs_int warm_start);
+
+/**
  * Solve quadratic cone program initialized by scs_init.
  *
  * @param  w     Workspace allocated by init.

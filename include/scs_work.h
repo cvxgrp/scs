@@ -55,6 +55,7 @@ struct SCS_WORK {
   scs_float *b_orig, *c_orig;             /* original b and c vectors */
   scs_float *b_normalized, *c_normalized; /* normalized b and c vectors */
   scs_int m, n;                           /* A has m rows, n cols */
+  scs_int warm_start;                     /* Bool, warm-start using sol */
   ScsMatrix *A;                           /* (possibly normalized) A matrix */
   ScsMatrix *P;                           /* (possibly normalized) P matrix */
   ScsLinSysWork *p;       /* struct populated by linear system solver */
