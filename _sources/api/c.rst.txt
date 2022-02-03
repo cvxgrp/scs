@@ -26,9 +26,8 @@ specified in the :ref:`settings` page.
 .. doxygenfunction:: scs_set_default_settings
 
 If you only need to solve a single problem and not a series of related problems,
-then you can simply call the :code:`scs` function documented here, which simply
-calls the :code:`scs_init`, :code:`scs_solve`, :code:`scs_finish` sequence
-above.
+then you can call the :code:`scs` function documented here, which simply calls
+the :code:`scs_init`, :code:`scs_solve`, :code:`scs_finish` sequence above.
 
 .. doxygenfunction:: scs
 
