@@ -11,6 +11,8 @@ extern "C" {
 /* Contains definitions of primitive types `scs_int` and `scs_float`. */
 #include "scs_types.h"
 
+#define SCS_NULL 0 /* NULL type */
+
 /* The following abstract structs are implemented later. */
 
 /** Struct containing acceleration workspace. Implemented by acceleration. */

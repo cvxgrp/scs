@@ -107,8 +107,6 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #endif
 #endif
 
-#define SCS_NULL 0
-
 #ifndef MAX
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
