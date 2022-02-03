@@ -226,9 +226,9 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 /**
  * Update the `b` vector, `c` vector, or both, before another solve call.
  *
- * After a solve we can reuse the SCS workspace if the problem data has only
- * changed the `b` and `c` vectors, then solve again. Additionally we can
- * warm-start the solution using the solution from the last solve. We can
+ * After a solve we can reuse the SCS workspace in another solve if the only
+ * problem data that has changed are the `b` and `c` vectors. Additionally we
+ * can warm-start the solution using the solution from the last solve. We can
  * manually override the warm-start values by modifying the `sol` struct.
  *
  * @param  w 		        SCS workspace from scs_init (modified in-place).
