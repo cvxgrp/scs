@@ -213,8 +213,7 @@ typedef struct {
  * - automatic parameters tuning (if enabled)
  * - setup linear system solver:
  *      - direct solver: KKT matrix factorization is performed here
- *      - indirect solver: KKT matrix preconditioning is performed here
- * - solve the linear system for the `r` vector in the paper.
+ *      - indirect solver: KKT matrix preconditioning is performed here.
  *
  *
  * @param  d 		 Problem data.
@@ -232,7 +231,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  * warm-start the solution using the solution from the last solve. We can
  * manually override the warm-start values by modifying the `sol` struct.
  *
- * @param  w 		        SCS workspace, modified in-place.
+ * @param  w 		        SCS workspace from scs_init (modified in-place).
  * @param  b_new	      New `b` vector (can be `SCS_NULL` if unchanged).
  * @param  c_new	      New `c` vector (can be `SCS_NULL` if unchanged).
  * @param  warm_start   Whether to use the solution from the most recent solve.
@@ -246,7 +245,7 @@ scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
 /**
  * Solve quadratic cone program initialized by scs_init.
  *
- * @param  w     Workspace allocated by init.
+ * @param  w     Workspace allocated by scs_init.
  * @param  sol 	 Solver solution struct, will contain solution at termination.
  * @param  info  Solver info reporting.
  * @return       Flag containing problem status (see \a glbopts.h).
@@ -271,7 +270,7 @@ void scs_finish(ScsWork *w);
  * @param  sol   Solution will be stored here. If members `x`, `y`, `s` are
  *               NULL then SCS will allocate memory for them.
  * @param  info  Information about the solve will be stored here.
- * @return       Flag that determines solve type (see \a glbopts.h).
+ * @return       Flag containing problem status (see \a glbopts.h).
  */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
