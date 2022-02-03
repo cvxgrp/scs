@@ -220,8 +220,8 @@ typedef struct {
  *
  * @param  d 		 Problem data.
  * @param  k 		 Cone data.
- * @param  stgs  SCS solver settings.
- * @return       Solver work struct.
+ * @param  stgs  SCS solve settings.
+ * @return       Solver workspace.
  */
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
@@ -248,8 +248,9 @@ scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
  * Solve quadratic cone program initialized by scs_init.
  *
  * @param  w     Workspace allocated by scs_init.
- * @param  sol 	 Solver solution struct, will contain solution at termination.
- * @param  info  Solver info reporting.
+ * @param  sol   Solution will be stored here. If members `x`, `y`, `s` are
+ *               NULL then SCS will allocate memory for them.
+ * @param  info  Information about the solve will be stored here.
  * @return       Flag containing problem status (see \a glbopts.h).
  */
 scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info);
