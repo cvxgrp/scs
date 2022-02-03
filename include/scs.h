@@ -236,7 +236,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  * @param  w 		        SCS workspace from scs_init (modified in-place).
  * @param  b_new	      New `b` vector (can be `SCS_NULL` if unchanged).
  * @param  c_new	      New `c` vector (can be `SCS_NULL` if unchanged).
- * @param  warm_start   Whether to use the solution from the most recent solve.
+ * @param  warm_start   Whether to use the solution from the most recent solve
  *                      to warm-start the next solve.
  *
  * @return              0 if update successful.
