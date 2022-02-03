@@ -367,6 +367,8 @@ static const char *small_qp(void) {
   mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
+  scs_finish(w);
+
   scs_free(d->A);
   scs_free(d->P);
   scs_free(d->b);
