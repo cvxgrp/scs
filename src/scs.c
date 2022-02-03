@@ -734,6 +734,9 @@ static ScsResiduals *init_residuals(const ScsData *d) {
 
 scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
                        scs_int warm_start) {
+  SCS(timer) update_timer;
+  SCS(tic)(&update_timer);
+
   if (b_new) {
     w->b_orig = b_new;
     memcpy(w->b_normalized, b_new, w->m * sizeof(scs_float));
@@ -755,6 +758,8 @@ scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
   /* set warm start */
   w->warm_start = warm_start;
 
+  /* override setup time with update time, since the update is the 'setup' */
+  w->setup_time = SCS(tocq)(&update_timer);
   return 0;
 }
 
