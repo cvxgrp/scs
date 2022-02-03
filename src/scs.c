@@ -40,6 +40,8 @@ static void free_work(ScsWork *w) {
     scs_free(w->rsk);
     scs_free(w->h);
     scs_free(w->g);
+    scs_free(w->b_orig);
+    scs_free(w->c_orig);
     scs_free(w->b_normalized);
     scs_free(w->c_normalized);
     scs_free(w->lin_sys_warm_start);
@@ -738,13 +740,13 @@ scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
   SCS(tic)(&update_timer);
 
   if (b_new) {
-    w->b_orig = b_new;
+    memcpy(w->b_orig, b_new, w->m * sizeof(scs_float));
     memcpy(w->b_normalized, b_new, w->m * sizeof(scs_float));
   } else {
     memcpy(w->b_normalized, w->b_orig, w->m * sizeof(scs_float));
   }
   if (c_new) {
-    w->c_orig = c_new;
+    memcpy(w->c_orig, c_new, w->n * sizeof(scs_float));
     memcpy(w->c_normalized, c_new, w->n * sizeof(scs_float));
   } else {
     memcpy(w->c_normalized, w->c_orig, w->n * sizeof(scs_float));
@@ -819,6 +821,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->A = d->A;
   w->P = d->P;
 
+  w->b_orig = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
+  w->c_orig = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   w->b_normalized = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   w->c_normalized = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
 
