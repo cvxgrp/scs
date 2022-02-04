@@ -37,11 +37,16 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 
 void SCS(free_cone)(ScsCone *k) {
   if (k) {
-    scs_free(k->bu);
-    scs_free(k->bl);
-    scs_free(k->q);
-    scs_free(k->s);
-    scs_free(k->p);
+    if (k->bu)
+      scs_free(k->bu);
+    if (k->bl)
+      scs_free(k->bl);
+    if (k->q)
+      scs_free(k->q);
+    if (k->s)
+      scs_free(k->s);
+    if (k->p)
+      scs_free(k->p);
     scs_free(k);
   }
 }

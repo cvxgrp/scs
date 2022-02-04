@@ -33,21 +33,29 @@ static ScsCone *read_scs_cone(FILE *fin) {
   fread(&(k->z), sizeof(scs_int), 1, fin);
   fread(&(k->l), sizeof(scs_int), 1, fin);
   fread(&(k->bsize), sizeof(scs_int), 1, fin);
-  k->bl = (scs_float *)scs_calloc(MAX(k->bsize - 1, 0), sizeof(scs_float));
-  k->bu = (scs_float *)scs_calloc(MAX(k->bsize - 1, 0), sizeof(scs_float));
-  fread(k->bl, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
-  fread(k->bu, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
+  if (k->bsize > 1) {
+    k->bl = (scs_float *)scs_calloc(MAX(k->bsize - 1, 0), sizeof(scs_float));
+    k->bu = (scs_float *)scs_calloc(MAX(k->bsize - 1, 0), sizeof(scs_float));
+    fread(k->bl, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
+    fread(k->bu, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
+  }
   fread(&(k->qsize), sizeof(scs_int), 1, fin);
-  k->q = (scs_int *)scs_calloc(k->qsize, sizeof(scs_int));
-  fread(k->q, sizeof(scs_int), k->qsize, fin);
+  if (k->qsize) {
+    k->q = (scs_int *)scs_calloc(k->qsize, sizeof(scs_int));
+    fread(k->q, sizeof(scs_int), k->qsize, fin);
+  }
   fread(&(k->ssize), sizeof(scs_int), 1, fin);
-  k->s = (scs_int *)scs_calloc(k->ssize, sizeof(scs_int));
-  fread(k->s, sizeof(scs_int), k->ssize, fin);
+  if (k->ssize) {
+    k->s = (scs_int *)scs_calloc(k->ssize, sizeof(scs_int));
+    fread(k->s, sizeof(scs_int), k->ssize, fin);
+  }
   fread(&(k->ep), sizeof(scs_int), 1, fin);
   fread(&(k->ed), sizeof(scs_int), 1, fin);
   fread(&(k->psize), sizeof(scs_int), 1, fin);
-  k->p = (scs_float *)scs_calloc(k->psize, sizeof(scs_float));
-  fread(k->p, sizeof(scs_float), k->psize, fin);
+  if (k->psize) {
+    k->p = (scs_float *)scs_calloc(k->psize, sizeof(scs_float));
+    fread(k->p, sizeof(scs_float), k->psize, fin);
+  }
   return k;
 }
 
