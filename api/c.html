@@ -112,7 +112,7 @@
 <dt class="sig sig-object cpp" id="_CPPv48scs_initPK7ScsDataPK7ScsConePK11ScsSettings">
 <span id="_CPPv38scs_initPK7ScsDataPK7ScsConePK11ScsSettings"></span><span id="_CPPv28scs_initPK7ScsDataPK7ScsConePK11ScsSettings"></span><span id="scs_init__ScsDataCP.ScsConeCP.ScsSettingsCP"></span><span class="target" id="scs_8h_1a46e5897d083fbb36509a5bf86a41118a"></span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsData" title="ScsData"><span class="n"><span class="pre">ScsData</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">d</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsCone" title="ScsCone"><span class="n"><span class="pre">ScsCone</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">k</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48scs_initPK7ScsDataPK7ScsConePK11ScsSettings" title="Permalink to this definition"></a><br /></dt>
 <dd><p>Initialize SCS and allocate memory.</p>
-<p>All the inputs must be already allocated in memory before calling.</p>
+<p>All the inputs must be already allocated in memory before calling. After this function returns then the memory associated with <code class="docutils literal notranslate"><span class="pre">d</span></code>, <code class="docutils literal notranslate"><span class="pre">k</span></code>, and <code class="docutils literal notranslate"><span class="pre">stgs</span></code> can be freed as SCS maintains deep copies of these internally.</p>
 <p>It performs:<ul class="simple">
 <li><p>data and settings validation</p></li>
 <li><p>problem data scaling</p></li>
@@ -373,7 +373,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1qE">
 <span id="_CPPv3N7ScsCone1qE"></span><span id="_CPPv2N7ScsCone1qE"></span><span id="ScsCone::q__scs_intP"></span><span class="target" id="struct_scs_cone_1a4ec650e0813fab72ad255d8ecaa73f8e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">q</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1qE" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Array of second-order cone constraints. </p>
+<dd><p>Array of second-order cone constraints, <code class="docutils literal notranslate"><span class="pre">len(q)</span> <span class="pre">=</span> <span class="pre">qsize</span></code>. </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -385,7 +385,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1sE">
 <span id="_CPPv3N7ScsCone1sE"></span><span id="_CPPv2N7ScsCone1sE"></span><span id="ScsCone::s__scs_intP"></span><span class="target" id="struct_scs_cone_1a8439d6bb734309682da2cee78283475e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">s</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1sE" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Array of semidefinite cone constraints. </p>
+<dd><p>Array of semidefinite cone constraints, <code class="docutils literal notranslate"><span class="pre">len(s)</span> <span class="pre">=</span> <span class="pre">ssize</span></code>. </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -409,7 +409,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1pE">
 <span id="_CPPv3N7ScsCone1pE"></span><span id="_CPPv2N7ScsCone1pE"></span><span id="ScsCone::p__scs_floatP"></span><span class="target" id="struct_scs_cone_1af10de865b1a76694b2369fcba61e842f"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">p</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1pE" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Array of power cone params, must be in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>, negative values are interpreted as specifying the dual cone. </p>
+<dd><p>Array of power cone params, must be in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>, negative values are interpreted as specifying the dual cone, <code class="docutils literal notranslate"><span class="pre">len(p)</span> <span class="pre">=</span> <span class="pre">psize</span></code> </p>
 </dd></dl>
 
 <dl class="cpp var">
