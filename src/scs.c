@@ -167,7 +167,12 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   return status;
 }
 
+static inline scs_int _is_nan(scs_float x) {
+  return x != x;
+}
+
 /* given x,y,s warm start, set v = [x; s / R + y; 1]
+ * check for nans and set to zero if present
  */
 static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   scs_int n = w->d->n, m = w->d->m, i;
@@ -176,9 +181,12 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   if (w->stgs->normalize) {
     SCS(normalize_sol)(w->scal, sol);
   }
-  memcpy(v, sol->x, n * sizeof(scs_float));
+  for (i = 0; i < n; ++i) {
+    v[i] = _is_nan(sol->x[i]) ? 0. : sol->x[i];
+  }
   for (i = 0; i < m; ++i) {
     v[i + n] = sol->y[i] + sol->s[i] / w->diag_r[i + n];
+    v[i + n] = _is_nan(v[i + n]) ? 0. : v[i + n];
   }
   v[n + m] = 1.0; /* tau = 1 */
   /* un-normalize so sol unchanged */
