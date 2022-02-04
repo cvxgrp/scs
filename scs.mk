@@ -103,10 +103,6 @@ NOTIMER = 0
 ifneq ($(NOTIMER), 0)
 OPT_FLAGS += -DNOTIMER=$(NOTIMER) # no timing, times reported as nan
 endif
-COPYAMATRIX = 1
-ifneq ($(COPYAMATRIX), 0)
-OPT_FLAGS += -DCOPYAMATRIX=$(COPYAMATRIX) # if normalize, copy A
-endif
 GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)
 OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # tranpose A mat in GPU memory

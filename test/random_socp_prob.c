@@ -164,9 +164,11 @@ int main(int argc, char **argv) {
     scs_printf("scs dua obj = %4f\n", -SCS(dot)(d->b, sol->y, d->m));
   }
 
-  SCS(free_data)(d, k, stgs);
+  SCS(free_data)(d);
+  SCS(free_cone)(k);
   SCS(free_sol)(sol);
   SCS(free_sol)(opt_sol);
+  scs_free(stgs);
 
   return 0;
 }

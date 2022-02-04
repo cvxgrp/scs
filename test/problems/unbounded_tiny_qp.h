@@ -73,9 +73,6 @@ static const char *unbounded_tiny_qp(void) {
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
   SCS(free_sol)(sol);
-  scs_free(d->A);
-  scs_free(d->P);
-  scs_free(k);
   scs_free(stgs);
   scs_free(d);
   return fail;

@@ -61,18 +61,30 @@ int main(int argc, char **argv) {
   for (i = 2; i < argc; i += 2) {
     if (argc < i + 2) {
       scs_printf("Incorrect number of arguments supplied\n.");
-      SCS(free_data)(d, k, stgs);
+
+      SCS(free_data)(d);
+      SCS(free_cone)(k);
+      scs_free(stgs);
+
       return -1;
     }
     if (override_setting(stgs, argv[i], argv[i + 1]) < 0) {
       scs_printf("Unrecognized setting %s\n", argv[i]);
-      SCS(free_data)(d, k, stgs);
+
+      SCS(free_data)(d);
+      SCS(free_cone)(k);
+      scs_free(stgs);
+
       return -1;
     }
   }
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   scs(d, k, stgs, sol, &info);
-  SCS(free_data)(d, k, stgs);
+
+  SCS(free_data)(d);
+  SCS(free_cone)(k);
   SCS(free_sol)(sol);
+  scs_free(stgs);
+
   return 0;
 }

@@ -39,7 +39,10 @@ static const char *random_prob(void) {
 
   mu_assert("random_prob: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
-  SCS(free_data)(d, k, stgs);
+  SCS(free_data)(d);
+  SCS(free_cone)(k);
   SCS(free_sol)(sol);
+  scs_free(stgs);
+
   return fail;
 }

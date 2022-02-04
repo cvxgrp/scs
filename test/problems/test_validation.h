@@ -36,8 +36,11 @@ static const char *test_validation(void) {
 
   mu_assert("test_fails: SCS failed to produce outputflag SCS_FAILED",
             exitflag == SCS_FAILED);
-  SCS(free_data)(d, k, stgs);
+  SCS(free_data)(d);
+  SCS(free_cone)(k);
   SCS(free_sol)(sol);
   SCS(free_sol)(opt_sol);
+  scs_free(stgs);
+
   return 0;
 }

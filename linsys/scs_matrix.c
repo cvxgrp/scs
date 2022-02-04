@@ -10,6 +10,10 @@
 #define NUM_L2_PASSES (1)    /* do one or zero, not more since not stable */
 
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
+  if (!src) {
+    *dstp = SCS_NULL;
+    return 1;
+  }
   scs_int Anz = src->p[src->n];
   ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
@@ -350,6 +354,7 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   return scal;
 }
 
+/*
 void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
   scs_int i, j;
   scs_float *D = scal->D;
@@ -375,6 +380,7 @@ void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
     }
   }
 }
+*/
 
 void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
                           scs_float *y) {

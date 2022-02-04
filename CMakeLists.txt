@@ -110,7 +110,7 @@ option(DLONG "Use long integers (64bit) for indexing" OFF)
 message(STATUS "Long integers (64bit) are ${DLONG}")
 
 
-set(COMPILER_OPTS "-DUSE_LAPACK -DCOPYAMATRIX -DCTRLC")
+set(COMPILER_OPTS "-DUSE_LAPACK -DCTRLC")
 
 # Primitive types
 if(SFLOAT)

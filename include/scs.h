@@ -118,11 +118,11 @@ typedef struct {
   scs_float *bl;
   /** Total length of box cone (includes scale `t`). */
   scs_int bsize;
-  /** Array of second-order cone constraints. */
+  /** Array of second-order cone constraints, `len(q) = qsize`. */
   scs_int *q;
   /** Length of second-order cone array `q`. */
   scs_int qsize;
-  /** Array of semidefinite cone constraints. */
+  /** Array of semidefinite cone constraints, `len(s) = ssize`. */
   scs_int *s;
   /** Length of semidefinite constraints array `s`. */
   scs_int ssize;
@@ -131,7 +131,7 @@ typedef struct {
   /** Number of dual exponential cone triples. */
   scs_int ed;
   /** Array of power cone params, must be in `[-1, 1]`, negative values are
-   * interpreted as specifying the dual cone. */
+   * interpreted as specifying the dual cone, `len(p) = psize ` */
   scs_float *p;
   /** Number of (primal and dual) power cone triples. */
   scs_int psize;
@@ -207,7 +207,9 @@ typedef struct {
 /**
  * Initialize SCS and allocate memory.
  *
- * All the inputs must be already allocated in memory before calling.
+ * All the inputs must be already allocated in memory before calling. After
+ * this function returns then the memory associated with `d`, `k`, and `stgs`
+ * can be freed as SCS maintains deep copies of these internally.
  *
  * It performs:
  * - data and settings validation

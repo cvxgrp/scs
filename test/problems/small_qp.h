@@ -375,9 +375,7 @@ static const char *small_qp(void) {
   scs_free(k);
   scs_free(d);
   scs_free(stgs);
-  scs_free(sol->x);
-  scs_free(sol->y);
-  scs_free(sol->s);
-  scs_free(sol);
+  SCS(free_sol)(sol);
+
   return fail;
 }

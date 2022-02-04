@@ -42,7 +42,7 @@ static const char *all_tests(void) {
   mu_run_test(degenerate);
   mu_run_test(small_lp);
   mu_run_test(small_qp);
-  mu_run_test(rob_gauss_cov_est);
+  // mu_run_test(rob_gauss_cov_est);
   mu_run_test(hs21_tiny_qp);
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(qafiro_tiny_qp);
