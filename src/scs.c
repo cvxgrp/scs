@@ -754,8 +754,7 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
-                       scs_int warm_start) {
+scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new) {
   SCS(timer) update_timer;
   SCS(tic)(&update_timer);
 
@@ -776,9 +775,6 @@ scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
   if (w->scal) {
     SCS(normalize_b_c)(w->scal, w->d->b, w->d->c);
   }
-
-  /* set warm start */
-  w->stgs->warm_start = warm_start;
 
   /* override setup time with update time, since the update is the 'setup' */
   w->setup_time = SCS(tocq)(&update_timer);
@@ -873,7 +869,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->scal = SCS_NULL;
   }
   /* set w->*_orig and performs normalization if appropriate */
-  scs_update_b_c(w, w->d->b, w->d->c, w->stgs->warm_start);
+  scs_update_b_c(w, w->d->b, w->d->c);
 
   if (!(w->p = SCS(init_lin_sys_work)(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
@@ -1003,7 +999,8 @@ static inline void normalize_v(scs_float *v, scs_int len) {
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
 
-scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
+                  scs_int warm_start) {
   scs_int i;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
@@ -1014,7 +1011,10 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   }
   scs_int l = w->d->m + w->d->n + 1;
   const ScsCone *k = w->k;
-  const ScsSettings *stgs = w->stgs;
+  ScsSettings *stgs = w->stgs;
+  /* set warm start */
+  stgs->warm_start = warm_start;
+
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
@@ -1200,7 +1200,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
   scs_int status;
   ScsWork *w = scs_init(d, k, stgs);
   if (w) {
-    scs_solve(w, sol, info);
+    scs_solve(w, sol, info, stgs->warm_start);
     status = info->status_val;
   } else {
     status = failure(SCS_NULL, d ? d->m : -1, d ? d->n : -1, sol, info,

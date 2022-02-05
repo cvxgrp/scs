@@ -238,24 +238,26 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  * @param  w 		        SCS workspace from scs_init (modified in-place).
  * @param  b_new	      New `b` vector (can be `SCS_NULL` if unchanged).
  * @param  c_new	      New `c` vector (can be `SCS_NULL` if unchanged).
- * @param  warm_start   Whether to use the solution from the most recent solve
- *                      to warm-start the next solve.
  *
  * @return              0 if update successful.
  */
-scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new,
-                       scs_int warm_start);
+scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new);
 
 /**
  * Solve quadratic cone program initialized by scs_init.
  *
- * @param  w     Workspace allocated by scs_init.
- * @param  sol   Solution will be stored here. If members `x`, `y`, `s` are
- *               NULL then SCS will allocate memory for them.
- * @param  info  Information about the solve will be stored here.
+ * @param  w            Workspace allocated by scs_init.
+ * @param  sol          Solution will be stored here. If members `x`, `y`, `s`
+ *                      are NULL then SCS will allocate memory for them which
+ *                      must be freed by the caller.
+ * @param  info         Information about the solve will be stored here.
+ * @param  warm_start   Whether to use the entries of `sol` to warm-start the
+ *                      solve.
+ *
  * @return       Flag containing problem status (see \a glbopts.h).
  */
-scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info);
+scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
+                  scs_int warm_start);
 
 /**
  * Clean up allocated SCS workspace.
