@@ -754,7 +754,7 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new) {
+scs_int scs_update(ScsWork *w, scs_float *b_new, scs_float *c_new) {
   SCS(timer) update_timer;
   SCS(tic)(&update_timer);
 
@@ -820,11 +820,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   SCS(deep_copy_stgs)(w->stgs, stgs);
   stgs = SCS_NULL; /* for safety */
 
-  w->last_scale_update_iter = 0;
-  w->sum_log_scale_factor = 0.;
-  w->n_log_scale_factor = 0;
-  w->scale_updates = 0;
-  w->time_limit_reached = 0;
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->u_t = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -869,15 +864,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->scal = SCS_NULL;
   }
   /* set w->*_orig and performs normalization if appropriate */
-  scs_update_b_c(w, w->d->b, w->d->c);
+  scs_update(w, w->d->b, w->d->c);
 
   if (!(w->p = SCS(init_lin_sys_work)(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
-  /* Acceleration */
-  w->rejected_accel_steps = 0;
-  w->accepted_accel_steps = 0;
   if (w->stgs->acceleration_lookback) {
     /* TODO(HACK!) negative acceleration_lookback interpreted as type-II */
     if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
@@ -905,8 +897,22 @@ static void update_work_cache(ScsWork *w) {
   return;
 }
 
+/* Reset quantities specific to current solve */
+static void reset_tracking(ScsWork *w) {
+  w->last_scale_update_iter = 0;
+  w->sum_log_scale_factor = 0.;
+  w->n_log_scale_factor = 0;
+  w->scale_updates = 0;
+  w->time_limit_reached = 0;
+  /* Acceleration */
+  w->rejected_accel_steps = 0;
+  w->accepted_accel_steps = 0;
+  w->aa_norm = 0.;
+}
+
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
-  /* before normalization */
+  reset_tracking(w);
+
   if (w->stgs->warm_start) {
     warm_start_vars(w, sol);
   } else {

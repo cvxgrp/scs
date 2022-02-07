@@ -341,7 +341,7 @@ static const char *small_qp(void) {
 
   /* test updating c */
   d->c[0] = 1.0; /* set to new value */
-  scs_update_b_c(w, SCS_NULL, d->c);
+  scs_update(w, SCS_NULL, d->c);
   exitflag = scs_solve(w, sol, &info, 1);
   success = exitflag == SCS_SOLVED;
 
@@ -350,7 +350,7 @@ static const char *small_qp(void) {
 
   /* test updating b */
   d->b[0] = 4.0; /* set to new value */
-  scs_update_b_c(w, d->b, SCS_NULL);
+  scs_update(w, d->b, SCS_NULL);
   exitflag = scs_solve(w, sol, &info, 1);
   success = exitflag == SCS_SOLVED;
 
@@ -360,7 +360,7 @@ static const char *small_qp(void) {
   /* revert back to original data */
   d->c[0] = 0.0; /* revert to original value */
   d->b[0] = 1.0; /* revert to original value */
-  scs_update_b_c(w, d->b, d->c);
+  scs_update(w, d->b, d->c);
   exitflag = scs_solve(w, sol, &info, 1);
   success = exitflag == SCS_SOLVED;
 

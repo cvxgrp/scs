@@ -241,7 +241,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  *
  * @return              0 if update successful.
  */
-scs_int scs_update_b_c(ScsWork *w, scs_float *b_new, scs_float *c_new);
+scs_int scs_update(ScsWork *w, scs_float *b_new, scs_float *c_new);
 
 /**
  * Solve quadratic cone program initialized by scs_init.
