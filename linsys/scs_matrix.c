@@ -45,6 +45,8 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
   }
   /* detects some errors in A col ptrs: */
   Anz = A->p[A->n];
+  /* Disable this check which is slowish and typically just produces noise. */
+  /*
   if (Anz > 0) {
     for (i = 0; i < A->n; ++i) {
       if (A->p[i] == A->p[i + 1]) {
@@ -57,6 +59,7 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
       }
     }
   }
+  */
   if (((scs_float)Anz / A->m > A->n) || (Anz < 0)) {
     scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n",
                (long)Anz);
