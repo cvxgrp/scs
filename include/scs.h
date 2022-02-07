@@ -231,9 +231,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  * Update the `b` vector, `c` vector, or both, before another solve call.
  *
  * After a solve we can reuse the SCS workspace in another solve if the only
- * problem data that has changed are the `b` and `c` vectors. Additionally we
- * can warm-start the solution using the solution from the last solve. We can
- * manually override the warm-start values by modifying the `sol` struct.
+ * problem data that has changed are the `b` and `c` vectors.
  *
  * @param  w 		        SCS workspace from scs_init (modified in-place).
  * @param  b_new	      New `b` vector (can be `SCS_NULL` if unchanged).
@@ -251,8 +249,8 @@ scs_int scs_update(ScsWork *w, scs_float *b_new, scs_float *c_new);
  *                      are NULL then SCS will allocate memory for them which
  *                      must be freed by the caller.
  * @param  info         Information about the solve will be stored here.
- * @param  warm_start   Whether to use the entries of `sol` to warm-start the
- *                      solve.
+ * @param  warm_start   Whether to use the entries of `sol` as warm-start for
+ *                      the solve.
  *
  * @return       Flag containing problem status (see \a glbopts.h).
  */
