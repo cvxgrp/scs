@@ -59,21 +59,30 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
     memcpy(dest->bu, src->bu, (src->bsize - 1) * sizeof(scs_float));
     dest->bl = (scs_float *)scs_calloc(src->bsize - 1, sizeof(scs_float));
     memcpy(dest->bl, src->bl, (src->bsize - 1) * sizeof(scs_float));
+  } else {
+    dest->bu = SCS_NULL;
+    dest->bl = SCS_NULL;
   }
   /* copy SOC */
   if (src->qsize > 0) {
     dest->q = (scs_int *)scs_calloc(src->qsize, sizeof(scs_int));
     memcpy(dest->q, src->q, src->qsize * sizeof(scs_int));
+  } else {
+    dest->q = SCS_NULL;
   }
   /* copy PSD cone */
   if (src->ssize > 0) {
     dest->s = (scs_int *)scs_calloc(src->ssize, sizeof(scs_int));
     memcpy(dest->s, src->s, src->ssize * sizeof(scs_int));
+  } else {
+    dest->s = SCS_NULL;
   }
   /* copy power cone */
   if (src->psize > 0) {
     dest->p = (scs_float *)scs_calloc(src->psize, sizeof(scs_float));
     memcpy(dest->p, src->p, src->psize * sizeof(scs_float));
+  } else {
+    dest->p = SCS_NULL;
   }
 }
 
