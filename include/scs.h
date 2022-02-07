@@ -234,12 +234,12 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  * problem data that has changed are the `b` and `c` vectors.
  *
  * @param  w 		        SCS workspace from scs_init (modified in-place).
- * @param  b_new	      New `b` vector (can be `SCS_NULL` if unchanged).
- * @param  c_new	      New `c` vector (can be `SCS_NULL` if unchanged).
+ * @param  b	          New `b` vector (can be `SCS_NULL` if unchanged).
+ * @param  c	          New `c` vector (can be `SCS_NULL` if unchanged).
  *
  * @return              0 if update successful.
  */
-scs_int scs_update(ScsWork *w, scs_float *b_new, scs_float *c_new);
+scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c);
 
 /**
  * Solve quadratic cone program initialized by scs_init.

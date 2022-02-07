@@ -753,19 +753,19 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-scs_int scs_update(ScsWork *w, scs_float *b_new, scs_float *c_new) {
+scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
   SCS(timer) update_timer;
   SCS(tic)(&update_timer);
 
-  if (b_new) {
-    memcpy(w->b_orig, b_new, w->d->m * sizeof(scs_float));
-    memcpy(w->d->b, b_new, w->d->m * sizeof(scs_float));
+  if (b) {
+    memcpy(w->b_orig, b, w->d->m * sizeof(scs_float));
+    memcpy(w->d->b, b, w->d->m * sizeof(scs_float));
   } else {
     memcpy(w->d->b, w->b_orig, w->d->m * sizeof(scs_float));
   }
-  if (c_new) {
-    memcpy(w->c_orig, c_new, w->d->n * sizeof(scs_float));
-    memcpy(w->d->c, c_new, w->d->n * sizeof(scs_float));
+  if (c) {
+    memcpy(w->c_orig, c, w->d->n * sizeof(scs_float));
+    memcpy(w->d->c, c, w->d->n * sizeof(scs_float));
   } else {
     memcpy(w->d->c, w->c_orig, w->d->n * sizeof(scs_float));
   }
