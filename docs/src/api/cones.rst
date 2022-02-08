@@ -121,8 +121,9 @@ So the cone definition that SCS uses is
 Example
 ^^^^^^^
 
-Consider the symmetric positive semidefinite cone constraint over variables
-:math:`x \in \mathbf{R}^n` and :math:`S \in \mathbf{R}^{k \times k}`
+For a concrete example in python see :ref:`py_mat_completion`.
+Here we consider the symmetric positive semidefinite cone constraint over
+variables :math:`x \in \mathbf{R}^n` and :math:`S \in \mathbf{R}^{k \times k}`
 
 .. math::
     B - \sum_{i=1}^n \mathcal{A}_i x_i = S \succeq 0
