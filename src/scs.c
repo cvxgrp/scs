@@ -743,7 +743,6 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
 
 static ScsResiduals *init_residuals(const ScsData *d) {
   ScsResiduals *r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
-  r->last_iter = -1;
   r->ax = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s_btau = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
@@ -907,6 +906,9 @@ static void reset_tracking(ScsWork *w) {
   w->rejected_accel_steps = 0;
   w->accepted_accel_steps = 0;
   w->aa_norm = 0.;
+  /* Need this to force residual calc if previous solve solved at iter 0 */
+  w->r_normalized->last_iter = -1;
+  w->r_orig->last_iter = -1;
 }
 
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
