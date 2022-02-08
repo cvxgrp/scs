@@ -9,11 +9,11 @@ After :ref:`installing <python_install>` you can import SCS using
 
   import scs
 
-This module provides the :code:`SCS` class which is initialized using:
+This module provides a single function solve with the following call signature:
 
 .. code:: python
 
-  solver = scs.SCS(data,
+  sol = scs.solve(data,
                   cone,
                   use_indirect=False,
                   gpu=False,
@@ -34,37 +34,27 @@ This module provides the :code:`SCS` class which is initialized using:
                   log_csv_filename=None)
 
 where :code:`data` is a dict containing :code:`P, A, b, c`, and :code:`cone` is
-a dict that contains that :ref:`cones` information.  The :code:`b`, and
-:code:`c` must be 1d numpy arrays and :code:`P` and :code:`A` must be scipy
-sparse matrices in CSC format; if they are not of the proper format, SCS will
-attempt to convert them. The :code:`use_indirect` setting switches between the
-sparse direct :ref:`linear_solver` (the default) or the sparse indirect solver.
-The remaining fields are explained in :ref:`settings`.
-
-Then to solve the problem call:
-
-.. code:: python
-
-   sol = solver.solve(warm_start=True, x=None, y=None, s=None)
-
-where :code:`warm_start` indicates whether the solve will reuse the previous
-solution as a warm-start (if this is the first solve it initializes at zero).
-A good warm-start can reduce the overall number of iterations required to solve
-a problem. This is useful, for example, when solving several similar problems
-sequentially. Numpy arrays :code:`x,y,s` are (optional) warm-start overrides if
-you wish to set these manually rather than use the last solve.
+a dict that contains that :ref:`cones` information. 
+The :code:`b`, and :code:`c` must be 1d numpy arrays and :code:`P` and :code:`A`
+must be scipy sparse matrices in CSC format; if they are not of the proper
+format, SCS will attempt to convert them. The :code:`use_indirect` setting
+switches between the sparse direct :ref:`linear_solver` (the default) or the
+sparse indirect solver.  The remaining fields are explained in :ref:`settings`.
 
 At termination :code:`sol` is a dict with fields :code:`x, y, s, info` where
 :code:`x, y, s` contains the primal-dual :ref:`solution <optimality>` or the
 :ref:`certificate of infeasibility <infeasibility>`, and :code:`info` is a dict
 containing the solve :ref:`info`.
 
-To re-use the workspace and solve a similar problem with new `b`
-and / or `c` data, we can update the solver using:
 
-.. code:: python
+Warm-starting
+-------------
 
-   solver.update(b=new_b, c=new_c)  # update b and c vectors (can be None)
-   solver.solve()  # solve new problem with updated b and c
-
+Warm-starting SCS with a guess of the primal-dual solution can reduce the total
+solve time. This is useful, for example, when solving several similar problems
+sequentially. To do this add to the :code:`data` dict passed to
+:code:`scs.solve` the additional fields :code:`x`, :code:`y`, and :code:`s` (or
+any subset thereof) where :code:`x` and :code:`s` correspond to numpy arrays
+containing the primal solution guesses and :code:`y` corresponds to a numpy
+array containing the dual solution guess.
 

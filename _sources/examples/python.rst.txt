@@ -3,17 +3,18 @@
 Python
 ======
 
-:ref:`Basic QP <py_basic_qp>`
+.. include:: qp.prob
 
-:ref:`Lasso <py_lasso>`
+Python code to solve this is below.
 
-:ref:`Low-rank matrix completion <py_mat_completion>`
+.. literalinclude:: qp.py
+   :language: python
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
+After following the python :ref:`install instructions <python_install>`, we can
+run the code yielding output:
 
-   python/basic_qp.rst
-   python/lasso.rst
-   python/mat_completion.rst
+.. python qp.py > qp.py.out
+
+.. literalinclude:: qp.py.out
+   :language: none
 

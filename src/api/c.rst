@@ -12,10 +12,7 @@ Main solver API
 The C API is imported from the header :code:`scs.h`, available `here
 <https://github.com/cvxgrp/scs/blob/master/include/scs.h>`_.
 
-.. doxygenfunction:: scs_init
-.. doxygenfunction:: scs_solve
-.. doxygenfunction:: scs_update
-.. doxygenfunction:: scs_finish
+.. doxygenfunction:: scs
 
 Helper functions
 ^^^^^^^^^^^^^^^^
@@ -24,13 +21,6 @@ This sets the :ref:`ScsSettings <ScsSettings>` struct to the default values as
 specified in the :ref:`settings` page.
 
 .. doxygenfunction:: scs_set_default_settings
-
-If you only need to solve a single problem and not a series of related problems,
-then you can call the :code:`scs` function documented here, which simply calls
-the :code:`scs_init`, :code:`scs_solve`, :code:`scs_finish` sequence above.
-
-.. doxygenfunction:: scs
-
 
 ..
   Lower level

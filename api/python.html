@@ -54,7 +54,10 @@
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#interfaces">Interfaces</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="c.html">C / C++</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Python</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Python</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#warm-starting">Warm-starting</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="matlab.html">MATLAB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="julia.html">Julia</a></li>
 <li class="toctree-l3"><a class="reference internal" href="r.html">R</a></li>
@@ -102,8 +105,8 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
 </pre></div>
 </div>
-<p>This module provides the <code class="code docutils literal notranslate"><span class="pre">SCS</span></code> class which is initialized using:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+<p>This module provides a single function solve with the following call signature:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sol</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
                 <span class="n">cone</span><span class="p">,</span>
                 <span class="n">use_indirect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">gpu</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -125,32 +128,26 @@
 </pre></div>
 </div>
 <p>where <code class="code docutils literal notranslate"><span class="pre">data</span></code> is a dict containing <code class="code docutils literal notranslate"><span class="pre">P,</span> <span class="pre">A,</span> <span class="pre">b,</span> <span class="pre">c</span></code>, and <code class="code docutils literal notranslate"><span class="pre">cone</span></code> is
-a dict that contains that <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> information.  The <code class="code docutils literal notranslate"><span class="pre">b</span></code>, and
-<code class="code docutils literal notranslate"><span class="pre">c</span></code> must be 1d numpy arrays and <code class="code docutils literal notranslate"><span class="pre">P</span></code> and <code class="code docutils literal notranslate"><span class="pre">A</span></code> must be scipy
-sparse matrices in CSC format; if they are not of the proper format, SCS will
-attempt to convert them. The <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting switches between the
-sparse direct <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the sparse indirect solver.
-The remaining fields are explained in <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
-<p>Then to solve the problem call:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">warm_start</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>where <code class="code docutils literal notranslate"><span class="pre">warm_start</span></code> indicates whether the solve will reuse the previous
-solution as a warm-start (if this is the first solve it initializes at zero).
-A good warm-start can reduce the overall number of iterations required to solve
-a problem. This is useful, for example, when solving several similar problems
-sequentially. Numpy arrays <code class="code docutils literal notranslate"><span class="pre">x,y,s</span></code> are (optional) warm-start overrides if
-you wish to set these manually rather than use the last solve.</p>
+a dict that contains that <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> information.
+The <code class="code docutils literal notranslate"><span class="pre">b</span></code>, and <code class="code docutils literal notranslate"><span class="pre">c</span></code> must be 1d numpy arrays and <code class="code docutils literal notranslate"><span class="pre">P</span></code> and <code class="code docutils literal notranslate"><span class="pre">A</span></code>
+must be scipy sparse matrices in CSC format; if they are not of the proper
+format, SCS will attempt to convert them. The <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting
+switches between the sparse direct <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the
+sparse indirect solver.  The remaining fields are explained in <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
 <p>At termination <code class="code docutils literal notranslate"><span class="pre">sol</span></code> is a dict with fields <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s,</span> <span class="pre">info</span></code> where
 <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s</span></code> contains the primal-dual <a class="reference internal" href="../algorithm/index.html#optimality"><span class="std std-ref">solution</span></a> or the
 <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>, and <code class="code docutils literal notranslate"><span class="pre">info</span></code> is a dict
 containing the solve <a class="reference internal" href="info.html#info"><span class="std std-ref">Return information</span></a>.</p>
-<p>To re-use the workspace and solve a similar problem with new <cite>b</cite>
-and / or <cite>c</cite> data, we can update the solver using:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">new_b</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">new_c</span><span class="p">)</span>  <span class="c1"># update b and c vectors (can be None)</span>
-<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># solve new problem with updated b and c</span>
-</pre></div>
-</div>
+<section id="warm-starting">
+<h2>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline"></a></h2>
+<p>Warm-starting SCS with a guess of the primal-dual solution can reduce the total
+solve time. This is useful, for example, when solving several similar problems
+sequentially. To do this add to the <code class="code docutils literal notranslate"><span class="pre">data</span></code> dict passed to
+<code class="code docutils literal notranslate"><span class="pre">scs.solve</span></code> the additional fields <code class="code docutils literal notranslate"><span class="pre">x</span></code>, <code class="code docutils literal notranslate"><span class="pre">y</span></code>, and <code class="code docutils literal notranslate"><span class="pre">s</span></code> (or
+any subset thereof) where <code class="code docutils literal notranslate"><span class="pre">x</span></code> and <code class="code docutils literal notranslate"><span class="pre">s</span></code> correspond to numpy arrays
+containing the primal solution guesses and <code class="code docutils literal notranslate"><span class="pre">y</span></code> corresponds to a numpy
+array containing the dual solution guess.</p>
+</section>
 </section>
 
 
