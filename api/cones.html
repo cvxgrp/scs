@@ -210,8 +210,9 @@ Explicitly, the inverse operation takes vector <span class="math notranslate noh
 \[\mathcal{S}_+^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\]</div>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline"></a></h3>
-<p>Consider the symmetric positive semidefinite cone constraint over variables
-<span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> and <span class="math notranslate nohighlight">\(S \in \mathbf{R}^{k \times k}\)</span></p>
+<p>For a concrete example in python see <a class="reference internal" href="../examples/python/mat_completion.html#py-mat-completion"><span class="std std-ref">Low-Rank Matrix Completion</span></a>.
+Here we consider the symmetric positive semidefinite cone constraint over
+variables <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> and <span class="math notranslate nohighlight">\(S \in \mathbf{R}^{k \times k}\)</span></p>
 <div class="math notranslate nohighlight">
 \[B - \sum_{i=1}^n \mathcal{A}_i x_i = S \succeq 0\]</div>
 <p>where data <span class="math notranslate nohighlight">\(B, \mathcal{A}_1, \ldots, \mathcal{A}_n \in \mathbf{R}^{k

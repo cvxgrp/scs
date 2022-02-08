@@ -157,10 +157,25 @@
 </dl>
 </dd></dl>
 
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “scs_update_b_c” in doxygen xml output for project “scs” from directory: doxygen_out/xml/</p>
-</div>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv410scs_updateP7ScsWorkP9scs_floatP9scs_float">
+<span id="_CPPv310scs_updateP7ScsWorkP9scs_floatP9scs_float"></span><span id="_CPPv210scs_updateP7ScsWorkP9scs_floatP9scs_float"></span><span id="scs_update__ScsWorkP.scs_floatP.scs_floatP"></span><span class="target" id="scs_8h_1ae19c84d79a22890aa957067824c0b088"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410scs_updateP7ScsWorkP9scs_floatP9scs_float" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Update the <code class="docutils literal notranslate"><span class="pre">b</span></code> vector, <code class="docutils literal notranslate"><span class="pre">c</span></code> vector, or both, before another solve call.</p>
+<p>After a solve we can reuse the SCS workspace in another solve if the only problem data that has changed are the <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – SCS workspace from scs_init (modified in-place). </p></li>
+<li><p><strong>b</strong> – New <code class="docutils literal notranslate"><span class="pre">b</span></code> vector (can be <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> if unchanged). </p></li>
+<li><p><strong>c</strong> – New <code class="docutils literal notranslate"><span class="pre">c</span></code> vector (can be <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> if unchanged).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>0 if update successful. </p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv410scs_finishP7ScsWork">
 <span id="_CPPv310scs_finishP7ScsWork"></span><span id="_CPPv210scs_finishP7ScsWork"></span><span id="scs_finish__ScsWorkP"></span><span class="target" id="scs_8h_1ad09d2ed5fe68896d2b7056cb5a9a3e0d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_finish</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410scs_finishP7ScsWork" title="Permalink to this definition"></a><br /></dt>
