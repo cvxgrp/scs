@@ -1,5 +1,10 @@
 name: Docs
-on: [push]
+
+on:
+  push:
+    branches:
+      - master
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
