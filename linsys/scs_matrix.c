@@ -349,8 +349,6 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   }
   scs_printf("primal_scale %g\n", scal->primal_scale);
   scs_printf("dual_scale %g\n", scal->dual_scale);
-  scs_printf("norm_b %g\n", SCS(norm_inf)(b, A->m));
-  scs_printf("norm_c %g\n", SCS(norm_inf)(c, A->n));
   scs_printf("norm D %g\n", SCS(norm_inf)(scal->D, A->m));
   scs_printf("norm E %g\n", SCS(norm_inf)(scal->E, A->n));
 #endif
