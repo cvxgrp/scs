@@ -14,7 +14,7 @@ The C API is imported from the header :code:`scs.h`, available `here
 
 .. doxygenfunction:: scs_init
 .. doxygenfunction:: scs_solve
-.. doxygenfunction:: scs_update_b_c
+.. doxygenfunction:: scs_update
 .. doxygenfunction:: scs_finish
 
 Helper functions
