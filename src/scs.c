@@ -838,8 +838,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
-  memcpy(w->b_orig, d->b, w->d->m * sizeof(scs_float));
-  memcpy(w->c_orig, d->c, w->d->n * sizeof(scs_float));
+  memcpy(w->b_orig, w->d->b, w->d->m * sizeof(scs_float));
+  memcpy(w->c_orig, w->d->c, w->d->n * sizeof(scs_float));
 
   if (!w->c_orig) {
     scs_printf("ERROR: work memory allocation failure\n");
