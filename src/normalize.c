@@ -47,7 +47,7 @@ void SCS(normalize_b_c)(ScsScaling *scal, scs_float *b, scs_float *c) {
   SCS(scale_array)(c, sigma, scal->n);
   SCS(scale_array)(b, sigma, scal->m);
 
-  /* We assume that primal_scale = dual_scale, otherwise need refactorize */
+  /* We assume that primal_scale = dual_scale, otherwise need to refactorize */
   scal->primal_scale = sigma;
   scal->dual_scale = sigma;
 }
