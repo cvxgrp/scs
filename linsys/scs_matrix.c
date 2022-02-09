@@ -113,17 +113,21 @@ static inline scs_float apply_limit(scs_float x) {
   return x;
 }
 
-static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
-                              scs_float *Et, ScsConeWork *cone) {
+static void compute_ruiz_mats(ScsData *d, scs_float *Dt, scs_float *Et,
+                              scs_float *s, ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
+  ScsMatrix *A = d->A;
+  ScsMatrix *P = d->P;
+  scs_float *b = d->b;
+  scs_float *c = d->c;
 
   /****************************  D  ****************************/
 
   /* initialize D */
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = 0.;
-    /* Dt[i] = ABS(b[i]); */
+    /* Dt[i] = 0.; */
+    Dt[i] = ABS(b[i]);
   }
 
   /* calculate row norms */
@@ -145,8 +149,8 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 
   /* initialize E */
   for (i = 0; i < A->n; ++i) {
-    Et[i] = 0.;
-    /* Et[i] = ABS(c[i]); */
+    /* Et[i] = 0.; */
+    Et[i] = ABS(c[i]);
   }
 
   /* TODO: test not using P to determine scaling  */
@@ -172,19 +176,27 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
     Et[i] = MAX(Et[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
     Et[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(Et[i])));
   }
+
+  /* calculate s value */
+  *s = MAX(SCS(norm_inf)(c, A->n), SCS(norm_inf)(b, A->m));
+  *s = SAFEDIV_POS(1.0, SQRTF(apply_limit(*s)));
 }
 
-static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
-                            scs_float *Et, ScsConeWork *cone) {
+static void compute_l2_mats(ScsData *d, scs_float *Dt, scs_float *Et,
+                            scs_float *s, ScsConeWork *cone) {
   scs_int i, j, kk;
-  scs_float wrk;
+  scs_float wrk, norm_c, norm_b;
+  ScsMatrix *A = d->A;
+  ScsMatrix *P = d->P;
+  scs_float *b = d->b;
+  scs_float *c = d->c;
 
   /****************************  D  ****************************/
 
   /* initialize D */
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = 0.;
-    /* Dt[i] = b[i] * b[i]; */
+    /* Dt[i] = 0.; */
+    Dt[i] = b[i] * b[i];
   }
 
   /* calculate row norms */
@@ -208,8 +220,8 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 
   /* initialize E */
   for (i = 0; i < A->n; ++i) {
-    Et[i] = 0.;
-    /* Et[i] = c[i] * c[i]; */
+    /* Et[i] = 0.; */
+    Et[i] = c[i] * c[i];
   }
 
   /* TODO: test not using P to determine scaling  */
@@ -235,11 +247,22 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
     Et[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
     Et[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(SQRTF(Et[i]))));
   }
+
+  /* calculate s value */
+  norm_c = SCS(norm_2)(c, A->n);
+  norm_b = SCS(norm_2)(b, A->m);
+  *s = SQRTF(norm_c * norm_c + norm_b * norm_b);
+  *s = SAFEDIV_POS(1.0, SQRTF(apply_limit(*s)));
 }
 
-static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
+static void rescale(ScsData *d, scs_float *Dt, scs_float *Et, scs_float s,
                     ScsScaling *scal, ScsConeWork *cone) {
   scs_int i, j;
+  ScsMatrix *A = d->A;
+  ScsMatrix *P = d->P;
+  scs_float *b = d->b;
+  scs_float *c = d->c;
+
   /* scale the rows of A with D */
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
@@ -265,6 +288,15 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
     }
   }
 
+  /* scale c */
+  for (i = 0; i < A->n; ++i) {
+    c[i] *= Et[i];
+  }
+  /* scale b */
+  for (i = 0; i < A->m; ++i) {
+    b[i] *= Dt[i];
+  }
+
   /* Accumulate scaling */
   for (i = 0; i < A->m; ++i) {
     scal->D[i] *= Dt[i];
@@ -273,44 +305,57 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
     scal->E[i] *= Et[i];
   }
 
-  /* no need to scale P since later primal_scale = dual_scale */
+  /* Apply scaling */
+  SCS(scale_array)(c, s, A->n);
+  SCS(scale_array)(b, s, A->m);
+  /* no need to scale P since primal_scale = dual_scale */
   /*
   if (P) {
     SCS(scale_array)(P->x, primal_scale, P->p[P->n]);
     SCS(scale_array)(P->x, 1.0 / dual_scale, P->p[P->n]);
   }
   */
+
+  /* Accumulate scaling */
+  scal->primal_scale *= s;
+  scal->dual_scale *= s;
 }
 
-/* Will rescale as P -> EPE, A -> DAE in-place.
+/* Will rescale as P -> EPE, A -> DAE, c -> sEc, b -> sDb, in-place.
  * Essentially trying to rescale this matrix:
  *
- * [P  A']   with   [E  0 ] on both sides (D, E diagonal)
- * [A  0 ]          [0  D ]
+ * [P  A' c]   with   [E  0  0] on both sides (D, E diagonal)
+ * [A  0  b]          [0  D  0]
+ * [c' b' 0]          [0  0  s]
  *
  * which results in:
  *
- * [ EPE   EA'D ]
- * [ DAE    0   ]
+ * [ EPE   EA'D  sEc ]
+ * [ DAE    0    sDb ]
+ * [ sc'E  sb'D   0  ]
  *
- * In other words D rescales the rows of A
- *                E rescales the cols of A and rows/cols of P
+ * In other words D rescales the rows of A, b
+ *                E rescales the cols of A and rows/cols of P, c'
  *
- * will repeatedly set: D^-1 ~ norm of rows of [ A ]
+ * will repeatedly set: D^-1 ~ norm of rows of [ A  b ]
  *
  *                      E^-1 ~ norm of cols of [ P ]
  *                                             [ A ]
+ *                                             [ c']
+ *
+ * `s` is incorporated into dual_scale and primal_scale
  *
  * The main complication is that D has to respect cone boundaries.
  *
  */
-ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
-  scs_int i;
+ScsScaling *SCS(normalize_data)(ScsData *d, ScsConeWork *cone) {
+  scs_int i, m = d->m, n = d->n;
+  scs_float s;
   ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
-  scs_float *Dt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
-  scs_float *Et = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  scal->D = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
-  scal->E = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  scs_float *Dt = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *Et = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scal->D = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scal->E = (scs_float *)scs_calloc(n, sizeof(scs_float));
 
 #if VERBOSITY > 5
   SCS(timer) normalize_timer;
@@ -319,69 +364,33 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
 #endif
 
   /* init D, E */
-  scal->m = A->m;
-  for (i = 0; i < A->m; ++i) {
+  scal->m = m;
+  for (i = 0; i < m; ++i) {
     scal->D[i] = 1.;
   }
-  scal->n = A->n;
-  for (i = 0; i < A->n; ++i) {
+  scal->n = n;
+  for (i = 0; i < n; ++i) {
     scal->E[i] = 1.;
   }
   scal->primal_scale = 1.;
   scal->dual_scale = 1.;
   for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
-    compute_ruiz_mats(P, A, Dt, Et, cone);
-    rescale(P, A, Dt, Et, scal, cone);
+    compute_ruiz_mats(d, Dt, Et, &s, cone);
+    rescale(d, Dt, Et, s, scal, cone);
   }
   for (i = 0; i < NUM_L2_PASSES; ++i) {
-    compute_l2_mats(P, A, Dt, Et, cone);
-    rescale(P, A, Dt, Et, scal, cone);
+    compute_l2_mats(d, Dt, Et, &s, cone);
+    rescale(d, Dt, Et, s, scal, cone);
   }
   scs_free(Dt);
   scs_free(Et);
 
 #if VERBOSITY > 5
-  scs_printf("finished normalizing A and P, time: %1.2es\n",
+  scs_printf("finished normalizing data, time: %1.2es\n",
              SCS(tocq)(&normalize_timer) / 1e3);
-  scs_printf("inf norm A %1.2e\n", SCS(norm_inf)(A->x, A->p[A->n]));
-  if (P) {
-    scs_printf("inf norm P %1.2e\n", SCS(norm_inf)(P->x, P->p[P->n]));
-  }
-  scs_printf("primal_scale %g\n", scal->primal_scale);
-  scs_printf("dual_scale %g\n", scal->dual_scale);
-  scs_printf("norm D %g\n", SCS(norm_inf)(scal->D, A->m));
-  scs_printf("norm E %g\n", SCS(norm_inf)(scal->E, A->n));
 #endif
   return scal;
 }
-
-/*
-void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
-  scs_int i, j;
-  scs_float *D = scal->D;
-  scs_float *E = scal->E;
-  for (i = 0; i < A->n; ++i) {
-    SCS(scale_array)
-    (&(A->x[A->p[i]]), 1. / E[i], A->p[i + 1] - A->p[i]);
-  }
-  for (i = 0; i < A->n; ++i) {
-    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-      A->x[j] /= D[A->i[j]];
-    }
-  }
-  if (P) {
-    for (i = 0; i < P->n; ++i) {
-      SCS(scale_array)
-      (&(P->x[P->p[i]]), 1. / E[i], P->p[i + 1] - P->p[i]);
-    }
-    for (i = 0; i < P->n; ++i) {
-      for (j = P->p[i]; j < P->p[i + 1]; ++j) {
-        P->x[j] /= E[P->i[j]];
-      }
-    }
-  }
-}
-*/
 
 void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
                           scs_float *y) {
