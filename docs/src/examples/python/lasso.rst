@@ -7,7 +7,8 @@ Lasso is a well known technique for sparse linear regression.
 It is obtained by adding an :math:`\ell_1` regularization term in the objective,
 
 .. math::
-     \begin{array}{ll}
+
+  \begin{array}{ll}
     \mbox{minimize} & \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| x \|_1
   \end{array}
 
@@ -17,7 +18,8 @@ where :math:`x \in \mathbf{R}^{n}` is the vector of parameters, :math:`A \in
 weighting parameter.  The problem has the following equivalent form,
 
 .. math::
-     \begin{array}{ll}
+
+    \begin{array}{ll}
     \mbox{minimize}   & \frac{1}{2} y^T y + \lambda \boldsymbol{1}^T t \\
     \mbox{subject to} & y = Ax - b \\
                       & -t \le x \le t

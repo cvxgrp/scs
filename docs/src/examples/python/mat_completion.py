@@ -25,10 +25,16 @@ def mat(s):
 
 
 dim = 15  # dim x dim matrix
-vlen = int(dim * (dim + 1) / 2)
-rank = 2
+vlen = int(dim * (dim + 1) / 2)  # length of vector x = vec(X)
+
+# Generate true matrix
+rank = dim // 5  # low rank
 X = np.random.randn(dim, rank)
 X = X @ X.T
+
+#############################################################################
+
+# Let's first do some basic sanity checks to ensure that mat, vec are working:
 
 # mat(vec( . )) should be identity
 print(f"Should be ~ 0: {np.linalg.norm(X - mat(vec(X)))}")
@@ -36,16 +42,22 @@ print(f"Should be ~ 0: {np.linalg.norm(X - mat(vec(X)))}")
 # Trace( . ) should be vec(I)' vec( . )
 print(f"Should be ~ 0: {np.trace(X) - vec(np.eye(dim)) @ vec(X)}")
 
-num_measurements = vlen // 3
+#############################################################################
+
+num_measurements = vlen // 2  # how many measurements are revealed
+
+# Generate random measurement indices
 measurement_idxs = np.random.choice(
     np.arange(vlen), size=num_measurements, replace=False
 )
 
+# Create A matrix
 Ad = np.zeros((num_measurements, vlen))
 for i in range(num_measurements):
     Ad[i, measurement_idxs[i]] = 1.0
 
-measurements = Ad @ vec(X) + 0.1 * np.random.randn(num_measurements)  # + noise
+# Noisy measurements of X
+measurements = Ad @ vec(X) + 0.01 * np.random.randn(num_measurements)  # + noise
 
 # Auxiliary data
 In = sparse.eye(vlen)
@@ -64,21 +76,25 @@ A = sparse.vstack(
 )
 b = np.hstack([measurements, np.zeros(vlen)])
 c = np.hstack([np.zeros(vlen + num_measurements)])
+
 data = dict(P=P, A=A, b=b, c=c)
 cone = dict(z=num_measurements, s=dim)
-
 # Setup workspace
 solver = scs.SCS(data, cone, eps_abs=1e-6, eps_rel=1e-6)
+print(f"Solving for lambda = 0")
 sol = solver.solve()  # lambda = 0
 X_hat = mat(sol["x"][:vlen])
 print(f"Error: {np.linalg.norm(X_hat - X) / np.linalg.norm(X)}")
 
-# Solve problem for different values of lambda parameter
+# Solve for different values of lambda
 lambdas = np.logspace(-6, 1, 11)
 for lam in lambdas:
     print(f"Solving for lambda = {lam}")
+    # Re-use workspace, just update the `c` vector
     c_new = np.hstack([lam * vec(np.eye(dim)), np.zeros(num_measurements)])
     solver.update(c=c_new)
+    # Solve updated problem
     sol = solver.solve()
     X_hat = mat(sol["x"][:vlen])
+    # What is the norm error?
     print(f"Error : {np.linalg.norm(X_hat - X) / np.linalg.norm(X)}")
