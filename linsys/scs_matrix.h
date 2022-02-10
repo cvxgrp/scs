@@ -13,7 +13,12 @@ extern "C" {
 /* normalizes A matrix, sets scal->E and scal->D diagonal scaling matrices,
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
-ScsScaling *SCS(normalize_data)(ScsData *d, ScsConeWork *cone);
+ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone);
+
+/* unnormalizes A matrix, unnormalizes by w->D and w->E */
+/* void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling
+ * *scal);
+ */
 
 /* to free the memory allocated in a ScsMatrix (called on A and P at finish) */
 void SCS(free_scs_matrix)(ScsMatrix *A);

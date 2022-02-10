@@ -752,7 +752,6 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
-/* Don't call this other than by the user */
 scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
   SCS(timer) update_timer;
   SCS(tic)(&update_timer);
@@ -835,11 +834,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->xys_orig->s = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->xys_orig->y = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->r_orig = init_residuals(w->d);
-
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
-  memcpy(w->b_orig, d->b, w->d->m * sizeof(scs_float));
-  memcpy(w->c_orig, d->c, w->d->n * sizeof(scs_float));
 
   if (!w->c_orig) {
     scs_printf("ERROR: work memory allocation failure\n");
@@ -859,16 +855,14 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->xys_normalized->y = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
     w->r_normalized = init_residuals(w->d);
     /* this allocates memory that must be freed */
-    w->scal = SCS(normalize_data)(w->d, w->cone_work);
+    w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
     w->scal = SCS_NULL;
   }
   /* set w->*_orig and performs normalization if appropriate */
-  // XXX
-  //scs_update(w, w->d->b, w->d->c);
-  
+  scs_update(w, w->d->b, w->d->c);
 
   if (!(w->p = SCS(init_lin_sys_work)(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
