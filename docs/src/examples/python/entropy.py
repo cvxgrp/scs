@@ -61,4 +61,4 @@ prob.solve(solver=cp.ECOS)
 x_cvxpy = x.value
 
 print(f"CVXPY optimal value is:", prob.value)
-print(f"Difference: {np.linalg.norm(x_scs - x_cvxpy, np.inf)}")
+print(f"Solution norm difference: {np.linalg.norm(x_scs - x_cvxpy, np.inf)}")

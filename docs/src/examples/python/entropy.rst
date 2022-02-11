@@ -10,7 +10,7 @@ It is obtained by adding an :math:`\ell_1` regularization term in the objective,
 
   \begin{array}{ll}
     \mbox{maximize} & -\sum_i^n x_i \log x_i \\
-    \mbox{subhect to} & \sum_i x_i = 1 \\
+    \mbox{subhect to} & {\bf 1}^T x_i = 1 \\
                       & Fx - g \geq 0
   \end{array}
 
@@ -23,7 +23,7 @@ weighting parameter.  The problem has the following equivalent form,
 
   \begin{array}{ll}
     \mbox{minimize} & -{\bf 1}^T t \\
-    \mbox{subject to} & \sum_i x_i = 1 \\
+    \mbox{subject to} & {\bf 1}^T x_i = 1 \\
                       & Fx - g \geq 0 \\
                       & \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in K_\mathrm{exp}.
   \end{array}
