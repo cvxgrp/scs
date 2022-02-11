@@ -8,10 +8,11 @@ np.random.seed(1)
 
 class MPC(object):
     """Model Predictive Contoller using SCS."""
+
     def __init__(self, Ad, Bd, Q, R, QT, xr, xmin, xmax, umin, umax, T):
         # State and action dimension
         self.nx, self.nu = Bd.shape
-        # Quadratic objective 
+        # Quadratic objective
         P = sparse.block_diag(
             [sparse.kron(sparse.eye(T), Q), QT, sparse.kron(sparse.eye(T), R)],
             format="csc",
@@ -32,7 +33,7 @@ class MPC(object):
             sparse.vstack([sparse.csc_matrix((1, T)), sparse.eye(T)]), Bd
         )
         Aeq = sparse.hstack([Ax, Bu])
-        beq = np.zeros((T + 1) * self.nx) # Just a placeholder for now
+        beq = np.zeros((T + 1) * self.nx)  # Just a placeholder for now
         # State and action constraints
         Aineq = sparse.eye((T + 1) * self.nx + T * self.nu)
         box_lower = np.hstack(

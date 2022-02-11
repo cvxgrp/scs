@@ -1,48 +1,64 @@
 import scs
 import numpy as np
-import scipy as sp
 from scipy import sparse
 
 # Generate problem data
-sp.random.seed(1)
+np.random.seed(1)
 
-# Matrix size parameters.
-n = 20
-m = 10
-p = 5
+# Matrix size parameters
+n = 50  # Number of variables
+p = 20  # Number of measurements
 
-# Generate random problem data.
+# Generate random problem data
 tmp = np.random.rand(n)
-A = np.random.randn(m, n)
-b = A.dot(tmp)
+tmp /= np.sum(tmp)
 F = np.random.randn(p, n)
-g = F.dot(tmp) + np.random.rand(p)
+g = 0.5 * F.dot(tmp) + 0.01 * np.random.rand(p)
 
+# Build the A, b rows corresponding to the exponential cone
+A_exp = sparse.lil_matrix((3 * n, 2 * n))
+b_exp = np.zeros(3 * n)
+for i in range(n):
+    A_exp[i * 3, i] = -1  # t
+    A_exp[i * 3 + 1, i + n] = -1  # x
+    b_exp[i * 3 + 2] = 1
 
-data = dict(P=P, A=A, b=b, c=c)
-cone = dict(z=m, l=2 * n)
+A = sparse.vstack(
+    [
+        sparse.hstack([sparse.csc_matrix((1, n)), np.ones((1, n))]),
+        sparse.hstack([sparse.csc_matrix((p, n)), -F]),
+        A_exp,
+    ],
+    format="csc",
+)
+b = np.hstack([1, -g, b_exp])
+c = np.hstack([-np.ones(n), np.zeros(n)])
 
-print(f"Solving for lambda = 0")
+# SCS data
+data = dict(A=A, b=b, c=c)
+cone = dict(z=1, l=p, ep=n)
+
 # Setup workspace
 solver = scs.SCS(
     data,
     cone,
-    eps_abs=1e-6,
-    eps_rel=1e-6,
 )
-sol = solver.solve()  # lambda = 0
-x = sol["x"][:n]
-print(f"Error : {np.linalg.norm(x_true - x) / np.linalg.norm(x_true)}")
+sol = solver.solve()
+x_scs = sol["x"][-n:]
 
-# Solve for different values of lambda
-lambdas = np.logspace(-2, np.log10(lambda_max), 11)
-for lam in lambdas:
-    print(f"Solving for lambda = {lam}")
-    # Re-use workspace, just update the `c` vector
-    c_new = np.hstack([np.zeros(n + m), lam * np.ones(n)])
-    solver.update(c=c_new)
-    # Solve updated problem
-    sol = solver.solve()
-    x = sol["x"][:n]
-    # What is the norm error?
-    print(f"Error : {np.linalg.norm(x_true - x) / np.linalg.norm(x_true)}")
+# Verify solution with CVXPY
+try:
+    import cvxpy as cp
+except ImportError():
+    print("This example requires CVXPY installed to run.")
+    raise
+
+x = cp.Variable(shape=n)
+obj = cp.Maximize(cp.sum(cp.entr(x)))
+constraints = [cp.sum(x) == 1, F @ x >= g]
+prob = cp.Problem(obj, constraints)
+prob.solve(solver=cp.ECOS)
+x_cvxpy = x.value
+
+print(f"CVXPY optimal value is:", prob.value)
+print(f"Difference: {np.linalg.norm(x_scs - x_cvxpy, np.inf)}")
