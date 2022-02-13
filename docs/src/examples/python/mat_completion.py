@@ -96,7 +96,7 @@ for lam in lambdas:
     c_new = np.hstack([lam * vec(np.eye(dim)), np.zeros(num_measurements)])
     solver.update(c=c_new)
     # Solve updated problem
-    sol = solver.solve()
+    sol = solver.solve()  # will warm-start automatically
     X_hat = mat(sol["x"][:vlen])
     # What is the norm error?
     print(f"Error : {np.linalg.norm(X_hat - X) / np.linalg.norm(X)}")
