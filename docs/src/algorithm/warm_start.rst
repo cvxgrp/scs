@@ -1,9 +1,11 @@
 .. _warm_start:
 
-Warm-starting
--------------
+Repeated Solves
+---------------
+XXX
 
-SCS supports warm-starting (aka hot-starting) the solver with a guess of the
+SCS supports reusing the a 
+warm-starting the solver with a guess of the
 solution which can sometimes substantially improve the algorithm performance.
 This is useful, for example, when solving a sequence of related problems.
 

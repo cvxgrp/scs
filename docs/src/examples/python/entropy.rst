@@ -3,37 +3,35 @@
 Maximum Entropy
 ===============
 
-entropy is a well known technique for sparse linear regression.
-It is obtained by adding an :math:`\ell_1` regularization term in the objective,
+This example demonstrates an instance of using the exponential cone.
+In this problem we want find the maximum entropy point inside a convex polytope,
+ie, to solve
 
 .. math::
 
   \begin{array}{ll}
     \mbox{maximize} & -\sum_i^n x_i \log x_i \\
     \mbox{subhect to} & {\bf 1}^T x_i = 1 \\
-                      & Fx - g \geq 0
+                      & Ax - b \geq 0
   \end{array}
 
 
-where :math:`x \in \mathbf{R}^{n}` is the vector of parameters, :math:`A \in
-\mathbf{R}^{m \times n}` is the data matrix, and :math:`\lambda > 0` is the
-weighting parameter.  The problem has the following equivalent form,
+over variable :math:`x \in \mathbf{R}^{n}`, where :math:`A \in
+\mathbf{R}^{m \times n}` and :math:`b \in \mathbf{R}^m` are data.  The problem
+has the following equivalent form,
 
 .. math::
 
   \begin{array}{ll}
     \mbox{minimize} & -{\bf 1}^T t \\
     \mbox{subject to} & {\bf 1}^T x_i = 1 \\
-                      & Fx - g \geq 0 \\
-                      & \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in K_\mathrm{exp}.
+                      & Ax - b \geq 0 \\
+                      & \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in \mathcal{K}_\mathrm{exp}, \quad i=1,\ldots,n.
   \end{array}
 
-
-In order to get a good trade-off between sparsity of the solution and quality of
-the linear fit, we solve the problem for varying weighting parameter
-:math:`\lambda`.  Since :math:`\lambda` enters only in the linear part of the
-objective function, we can reuse the matrix factorization and enable warm
-starting to reduce the computation time.
+over variables :math:`x \in \mathbf{R}^{n}`, :math:`t \in \mathbf{R}^{n}` and
+where :math:`\mathcal{K}_\mathrm{exp} \subset \mathbf{R}^3` denotes the
+exponential cone. 
 
 Python code to solve this is below.
 

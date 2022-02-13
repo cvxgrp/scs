@@ -69,7 +69,9 @@ Onm = sparse.csc_matrix((vlen, num_measurements))
 P = sparse.block_diag([On, sparse.eye(num_measurements)], format="csc")
 A = sparse.vstack(
     [
+        # zero cone
         sparse.hstack([Ad, -Im]),
+        # positive semidefinite cone
         sparse.hstack([-In, Onm]),
     ],
     format="csc",

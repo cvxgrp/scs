@@ -30,7 +30,9 @@ P = sparse.block_diag([On, sparse.eye(m), On], format="csc")
 q = np.zeros(2 * n + m)
 A = sparse.vstack(
     [
+        # zero cone
         sparse.hstack([Ad, -Im, Onm.T]),
+        # positive cones
         sparse.hstack([In, Onm, -In]),
         sparse.hstack([-In, Onm, -In]),
     ],
@@ -62,7 +64,7 @@ for lam in lambdas:
     c_new = np.hstack([np.zeros(n + m), lam * np.ones(n)])
     solver.update(c=c_new)
     # Solve updated problem
-    sol = solver.solve()
+    sol = solver.solve()  # will warm-start automatically
     x = sol["x"][:n]
     # What is the norm error?
     print(f"Error : {np.linalg.norm(x_true - x) / np.linalg.norm(x_true)}")

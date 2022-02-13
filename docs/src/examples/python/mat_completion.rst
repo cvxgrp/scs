@@ -3,6 +3,8 @@
 Low-Rank Matrix Completion
 ==========================
 
+This example shows how to use the positive semidefinite cone, as well as
+reusing a cached workspace (matrix factorization) and using warm-starting.
 
 Matrix completion is the problem of filling in missing data into a partially
 observed matrix where the measurements we are given have
@@ -15,10 +17,9 @@ this problem is the `Netflix prize
 
 Concretely, we denote by :math:`\hat X \in \mathcal{S}^n_+` the true matrix
 corrupted by noise, and denote by :math:`\mathcal{I}` the set of indices (row
-and column pairs) from which we receive noisy observations. Let :math:`X \in
-\mathcal{S}^n_+` be the
-variable we are solving for. The nuclear norm, denoted :math:`\| \cdot \|_*`
-XXX
+and column pairs) from which we receive noisy observations. The nuclear norm,
+denoted :math:`\| \cdot \|_*` acts as a convex surrogate for rank, and the
+low-rank matrix completion problem is given by
 
 .. math::
 
@@ -27,13 +28,16 @@ XXX
     \mbox{subject to} & X \succeq 0
   \end{array}
 
-where :math:`I_n` is the :math:`n \times n` identity matrix.
+over variable :math:`X \in \mathcal{S}^n_+`  and where :math:`I_n` is the
+:math:`n \times n` identity matrix.
 
-We can convert this into a XX
-First, let :math:`x = \mathrm{vec}(X)` be the semidefinite vectorization
-of :math:`X` described in :ref:`cones` (and concretely implemented
-in the code that follows). Further, let :math:`A` be the linear operator that
-extracts the elements XXX and :math:`b = A \mathrm{vec}(\hat X)`.
+We can convert this into a more standard form.  First, let :math:`x =
+\mathrm{vec}(X)` be the semidefinite vectorization of :math:`X` described in
+:ref:`cones` (and concretely implemented in the code that follows). Further, let
+:math:`A` be the linear operator that extracts the elements of :math:`x` for
+which we have (noisy) observations, and let :math:`b = A \mathrm{vec}(\hat X)`.
+Since the nuclear norm of a positive semidefinite matrix is given by its trace
+we obtain
 
 .. math::
 
@@ -43,12 +47,13 @@ extracts the elements XXX and :math:`b = A \mathrm{vec}(\hat X)`.
                       & \mathrm{mat}(x) \succeq 0
     \end{array}
 
-over variable :math:`x \in \mathbf{R}^{n(n+1) /2}`.  From this formulation it is
-straightforward to convert it into the standard form accepted by SCS.  In order
+over variable :math:`x \in \mathbf{R}^{n(n+1) /2}` and :math:`y \in
+\mathbf{R}^{|\mathcal{I}|}`.  From this formulation it is straightforward to
+convert it into the standard form accepted by SCS.  In order
 to get a good trade-off between rank of the solution and quality of the fit, we
-solve the problem for varying weighting parameter :math:`\lambda`.  Since
-:math:`\lambda` enters only in the linear part of the objective function, we can
-reuse the matrix factorization and enable warm starting to reduce the
+solve the problem for varying weighting parameter :math:`\lambda \geq 0`.  Since
+:math:`\lambda` enters only in the linear part of the objective function we can
+reuse the matrix factorization and use warm starting to reduce the
 computation time.
 
 Python code to solve this is below.
