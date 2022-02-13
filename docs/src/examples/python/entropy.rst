@@ -3,9 +3,9 @@
 Maximum Entropy
 ===============
 
-This example demonstrates an instance of using the exponential cone.
-In this problem we want find the maximum entropy point inside a convex polytope,
-ie, to solve
+This example demonstrates an instance of using the exponential :ref:`cone
+<cones>`.  In this problem we want find the maximum entropy point inside a
+convex polytope, ie, to solve
 
 .. math::
 

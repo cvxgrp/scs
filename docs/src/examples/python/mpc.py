@@ -9,20 +9,20 @@ np.random.seed(1)
 class MPC(object):
     """Model Predictive Contoller using SCS."""
 
-    def __init__(self, Ad, Bd, d, Q, R, QT, xmin, xmax, umin, umax, T):
+    def __init__(self, Ad, Bd, Q, R, q, QT, qT, xmin, xmax, umin, umax, T):
         # State and action dimension
         self.nx, self.nu = Bd.shape
-    
+
         # Stack variables as follows:
-        # [x_0, x_1, ..., x_T, u_0, u_1, ..., u_{T-1}]
-        
+        # [x_0, x_1, ..., x_{T-1}, x_T, u_0, u_1, ..., u_{T-1}]
+
         # Quadratic objective
         P = sparse.block_diag(
             [sparse.kron(sparse.eye(T), Q), QT, sparse.kron(sparse.eye(T), R)],
             format="csc",
         )
         # Linear objective
-        c = np.zeros((T + 1) * self.nx + T * self.nu)
+        c = np.hstack([np.kron(np.ones(T), q), qT, np.zeros(T * self.nu)])
         # Linear dynamics
         Ax = sparse.kron(sparse.eye(T + 1), -sparse.eye(self.nx)) + sparse.kron(
             sparse.eye(T + 1, k=-1), Ad
@@ -33,9 +33,9 @@ class MPC(object):
         Aeq = sparse.hstack([Ax, Bu])
 
         # Will update this later with initial state
-        beq = np.hstack([np.zeros(nx), np.kron(np.ones(T), -d)])
+        beq = np.zeros((T + 1) * self.nx)
 
-        # State and action constraints
+        # Box constraints on state and action
         Aineq = sparse.eye((T + 1) * self.nx + T * self.nu)
 
         box_lower = np.hstack(
@@ -50,7 +50,7 @@ class MPC(object):
                 # zero cone
                 Aeq,
                 # Box cone {(t, s) | -t l <= s <= t u }
-                sparse.csc_matrix((1, (T + 1) * self.nx + T * self.nu))
+                sparse.csc_matrix((1, (T + 1) * self.nx + T * self.nu)),
                 -Aineq,
             ],
             format="csc",
@@ -78,9 +78,9 @@ class MPC(object):
 
 
 # States dimension
-nx = 10
+nx = 20
 # Control dimension
-nu = 4
+nu = 5
 
 # State dynamics matrices
 Ad = 0.1 * np.random.randn(nx, nx)  # State -> State
@@ -88,17 +88,18 @@ Bd = np.random.randn(nx, nu)  # Control -> State
 
 # Cost matrices
 Q = sparse.eye(nx)  # State
-QN = 10 * Q  # Terminal State
+QT = 10 * Q  # Terminal State
 R = 0.1 * sparse.eye(nu)  # Control
+
+# Linear cost vector
+q = 0.1 * np.random.randn(nx)
+qT = q
 
 # Initial state
 x0 = 10 * np.random.randn(nx)
 
-# Drift
-d = 0.1 * np.random.randn(nx)
-
 # Prediction horizon
-T = 25
+T = 30
 
 # Bounds on state
 xmax = np.inf * np.ones(nx)
@@ -109,7 +110,7 @@ umax = np.ones(nu)
 umin = -np.ones(nu)
 
 # Initialize Model Predictive Controller
-mpc = MPC(Ad, Bd, d, Q, R, QN, xmin, xmax, umin, umax, T)
+mpc = MPC(Ad, Bd, Q, R, q, QT, qT, xmin, xmax, umin, umax, T)
 
 # Simulate in closed loop
 nsteps = 10  # Number of steps
@@ -119,5 +120,5 @@ for i in range(nsteps):
     print(f"Control action: {u}")
 
     # Apply first control input and update to next state
-    x0 = Ad @ x0 + Bd @ u + d + 0.01 * np.random.normal(nx, 1)  # + noise
+    x0 = Ad @ x0 + Bd @ u + 0.01 * np.random.normal(nx, 1)  # + noise
     x0 = np.maximum(np.minimum(x0, xmax), xmin)  # Bound to xmin, xmax

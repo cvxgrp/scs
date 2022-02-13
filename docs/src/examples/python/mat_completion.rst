@@ -3,16 +3,15 @@
 Low-Rank Matrix Completion
 ==========================
 
-This example shows how to use the positive semidefinite cone, as well as
-reusing a cached workspace (matrix factorization) and using warm-starting.
+This example shows how to use the :ref:`positive semidefinite cone <sdcone>`, as
+well as reusing a :ref:`cached workspace and using warm-starting <warm_start>`.
 
 Matrix completion is the problem of filling in missing data into a partially
-observed matrix where the measurements we are given have
-been corrupted by Gaussian noise.  In low-rank matrix completion we have
-the additional prior knowledge that the matrix we are completing is low-rank.
-For simplicity we shall also assume that the matrix we are reconstructing is
-symmetric positive definite.  A famous instance of
-this problem is the `Netflix prize
+observed matrix where the measurements we are given have been corrupted by
+Gaussian noise.  In low-rank matrix completion we have the additional prior
+knowledge that the matrix we are completing is low-rank.  For simplicity we
+shall also assume that the matrix we are reconstructing is symmetric positive
+definite.  A famous instance of this problem is the `Netflix prize
 <https://en.wikipedia.org/wiki/Netflix_Prize>`__.
 
 Concretely, we denote by :math:`\hat X \in \mathcal{S}^n_+` the true matrix
@@ -49,12 +48,12 @@ we obtain
 
 over variable :math:`x \in \mathbf{R}^{n(n+1) /2}` and :math:`y \in
 \mathbf{R}^{|\mathcal{I}|}`.  From this formulation it is straightforward to
-convert it into the standard form accepted by SCS.  In order
-to get a good trade-off between rank of the solution and quality of the fit, we
-solve the problem for varying weighting parameter :math:`\lambda \geq 0`.  Since
-:math:`\lambda` enters only in the linear part of the objective function we can
-reuse the matrix factorization and use warm starting to reduce the
-computation time.
+convert it into the standard form accepted by SCS.  The regularization parameter
+:math:`\lambda \geq 0` trades off the rank of the solution and the quality of
+the fit, and so we solve the problem for many choices of :math:`\lambda`.  Since
+:math:`\lambda` enters only in the linear part of the objective function, we can
+reuse the matrix factorization and use warm starting to reduce the computation
+time.
 
 Python code to solve this is below.
 

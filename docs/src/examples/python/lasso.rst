@@ -2,13 +2,13 @@
 
 Lasso
 =====
-This example demonstrates quadratic objectives, as well as
-reusing a cached workspace (matrix factorization) and using warm-starting.
+This example demonstrates quadratic objectives, as well as reusing a
+:ref:`cached workspace and using warm-starting <warm_start>`.
 
 In the lasso the goal is to find a sparse vector that fits some measurements.
 The :math:`\ell_1` norm is used as a convex surrogate for sparsity, and
 a regularization parameter :math:`\lambda \geq 0` trades off sparsity and
-quality of fit. Concretely the lasso is as follows
+quality of fit. Concretely the lasso solves 
 
 .. math::
 
@@ -31,12 +31,12 @@ following equivalent form,
 
 over variables :math:`x \in \mathbf{R}^{n}`, :math:`t \in \mathbf{R}^{n}`,
 :math:`y \in \mathbf{R}^{m}`.  From this formulation it is straightforward to
-convert it into the standard form accepted by SCS.  In order to get a good
-trade-off between sparsity of the solution and quality of the linear fit, we
-solve the problem for varying weighting parameter :math:`\lambda \geq 0`.  Since
-:math:`\lambda` enters only in the linear part of the objective function, we can
-reuse the matrix factorization and use warm starting to reduce the computation
-time.
+convert it into the standard form accepted by SCS. The regularization parameter
+:math:`\lambda \geq 0` trades off the sparsity of the solution and the quality
+of the fit, and so we solve the problem for many choices of :math:`\lambda`.
+Since :math:`\lambda` enters only in the linear part of the objective function,
+we can reuse the matrix factorization and use warm starting to reduce the
+computation time.
 
 Python code to solve this is below.
 
