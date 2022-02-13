@@ -220,10 +220,10 @@ typedef struct {
  *      - indirect solver: KKT matrix preconditioning is performed here.
  *
  *
- * @param  d 		 Problem data.
- * @param  k 		 Cone data.
- * @param  stgs  SCS solve settings.
- * @return       Solver workspace.
+ * @param  d      Problem data.
+ * @param  k      Cone data.
+ * @param  stgs   SCS solve settings.
+ * @return        Solver workspace.
  */
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
@@ -233,9 +233,9 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
  * After a solve we can reuse the SCS workspace in another solve if the only
  * problem data that has changed are the `b` and `c` vectors.
  *
- * @param  w 		        SCS workspace from scs_init (modified in-place).
- * @param  b	          New `b` vector (can be `SCS_NULL` if unchanged).
- * @param  c	          New `c` vector (can be `SCS_NULL` if unchanged).
+ * @param  w            SCS workspace from scs_init (modified in-place).
+ * @param  b            New `b` vector (can be `SCS_NULL` if unchanged).
+ * @param  c            New `c` vector (can be `SCS_NULL` if unchanged).
  *
  * @return              0 if update successful.
  */
@@ -269,13 +269,13 @@ void scs_finish(ScsWork *w);
  *
  * All the inputs must already be allocated in memory before calling.
  *
- * @param  d 		 Problem data.
- * @param  k 		 Cone data.
- * @param  stgs  SCS solver settings.
- * @param  sol   Solution will be stored here. If members `x`, `y`, `s` are
- *               NULL then SCS will allocate memory for them.
- * @param  info  Information about the solve will be stored here.
- * @return       Flag containing problem status (see \a glbopts.h).
+ * @param  d      Problem data.
+ * @param  k      Cone data.
+ * @param  stgs   SCS solver settings.
+ * @param  sol    Solution will be stored here. If members `x`, `y`, `s` are
+ *                NULL then SCS will allocate memory for them.
+ * @param  info   Information about the solve will be stored here.
+ * @return        Flag containing problem status (see \a glbopts.h).
  */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
@@ -283,7 +283,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
 /**
  * Helper function to set all settings to default values (see \a glbopts.h).
  *
- * @param  stgs  Settings struct that will be populated.
+ * @param  stgs   Settings struct that will be populated.
  */
 void scs_set_default_settings(ScsSettings *stgs);
 
