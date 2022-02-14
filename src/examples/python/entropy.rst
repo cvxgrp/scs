@@ -26,7 +26,7 @@ has the following equivalent form,
     \mbox{minimize} & -{\bf 1}^T t \\
     \mbox{subject to} & {\bf 1}^T x_i = 1 \\
                       & Ax - b \geq 0 \\
-                      & \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in \mathcal{K}_\mathrm{exp}, \quad i=1,\ldots,n.
+                      & \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in \mathcal{K}_\mathrm{exp}, \quad i=1,\ldots,n,
   \end{array}
 
 over variables :math:`x \in \mathbf{R}^{n}`, :math:`t \in \mathbf{R}^{n}` and
