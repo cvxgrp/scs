@@ -236,7 +236,10 @@ static const char *rob_gauss_cov_est(void) {
   mu_assert("rob_gauss_cov_est_rw: SCS failed to produce outputflag SCS_SOLVED",
             success);
 
+  SCS(free_data)(d);
+  SCS(free_cone)(k);
   SCS(free_sol)(sol);
-  SCS(free_data)(d, k, stgs);
+  scs_free(stgs);
+
   return fail;
 }

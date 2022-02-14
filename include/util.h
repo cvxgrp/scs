@@ -45,7 +45,9 @@ typedef struct SCS(timer) {
 void SCS(tic)(SCS(timer) * t);
 scs_float SCS(tocq)(SCS(timer) * t);
 void SCS(free_sol)(ScsSolution *sol);
-void SCS(free_data)(ScsData *d, ScsCone *k, ScsSettings *stgs);
+void SCS(deep_copy_data)(ScsData *dest, const ScsData *src);
+void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src);
+void SCS(free_data)(ScsData *d);
 
 #ifdef __cplusplus
 }

@@ -11,6 +11,8 @@ extern "C" {
 /* Contains definitions of primitive types `scs_int` and `scs_float`. */
 #include "scs_types.h"
 
+#define SCS_NULL 0 /* NULL type */
+
 /* The following abstract structs are implemented later. */
 
 /** Struct containing acceleration workspace. Implemented by acceleration. */
@@ -116,11 +118,11 @@ typedef struct {
   scs_float *bl;
   /** Total length of box cone (includes scale `t`). */
   scs_int bsize;
-  /** Array of second-order cone constraints. */
+  /** Array of second-order cone constraints, `len(q) = qsize`. */
   scs_int *q;
   /** Length of second-order cone array `q`. */
   scs_int qsize;
-  /** Array of semidefinite cone constraints. */
+  /** Array of semidefinite cone constraints, `len(s) = ssize`. */
   scs_int *s;
   /** Length of semidefinite constraints array `s`. */
   scs_int ssize;
@@ -129,7 +131,7 @@ typedef struct {
   /** Number of dual exponential cone triples. */
   scs_int ed;
   /** Array of power cone params, must be in `[-1, 1]`, negative values are
-   * interpreted as specifying the dual cone. */
+   * interpreted as specifying the dual cone, `len(p) = psize ` */
   scs_float *p;
   /** Number of (primal and dual) power cone triples. */
   scs_int psize;
@@ -205,7 +207,9 @@ typedef struct {
 /**
  * Initialize SCS and allocate memory.
  *
- * All the inputs must be already allocated in memory before calling.
+ * All the inputs must be already allocated in memory before calling. After
+ * this function returns then the memory associated with `d`, `k`, and `stgs`
+ * can be freed as SCS maintains deep copies of these internally.
  *
  * It performs:
  * - data and settings validation
@@ -213,26 +217,45 @@ typedef struct {
  * - automatic parameters tuning (if enabled)
  * - setup linear system solver:
  *      - direct solver: KKT matrix factorization is performed here
- *      - indirect solver: KKT matrix preconditioning is performed here
- * - solve the linear system for the `r` vector in the paper.
+ *      - indirect solver: KKT matrix preconditioning is performed here.
  *
  *
- * @param  d 		 Problem data.
- * @param  k 		 Cone data.
- * @param  stgs  SCS solver settings.
- * @return       Solver work struct.
+ * @param  d      Problem data.
+ * @param  k      Cone data.
+ * @param  stgs   SCS solve settings.
+ * @return        Solver workspace.
  */
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 
 /**
+ * Update the `b` vector, `c` vector, or both, before another solve call.
+ *
+ * After a solve we can reuse the SCS workspace in another solve if the only
+ * problem data that has changed are the `b` and `c` vectors.
+ *
+ * @param  w            SCS workspace from scs_init (modified in-place).
+ * @param  b            New `b` vector (can be `SCS_NULL` if unchanged).
+ * @param  c            New `c` vector (can be `SCS_NULL` if unchanged).
+ *
+ * @return              0 if update successful.
+ */
+scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c);
+
+/**
  * Solve quadratic cone program initialized by scs_init.
  *
- * @param  w     Workspace allocated by init.
- * @param  sol 	 Solver solution struct, will contain solution at termination.
- * @param  info  Solver info reporting.
+ * @param  w            Workspace allocated by scs_init.
+ * @param  sol          Solution will be stored here. If members `x`, `y`, `s`
+ *                      are NULL then SCS will allocate memory for them which
+ *                      must be freed by the caller.
+ * @param  info         Information about the solve will be stored here.
+ * @param  warm_start   Whether to use the entries of `sol` as warm-start for
+ *                      the solve.
+ *
  * @return       Flag containing problem status (see \a glbopts.h).
  */
-scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info);
+scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
+                  scs_int warm_start);
 
 /**
  * Clean up allocated SCS workspace.
@@ -246,13 +269,13 @@ void scs_finish(ScsWork *w);
  *
  * All the inputs must already be allocated in memory before calling.
  *
- * @param  d 		 Problem data.
- * @param  k 		 Cone data.
- * @param  stgs  SCS solver settings.
- * @param  sol   Solution will be stored here. If members `x`, `y`, `s` are
- *               NULL then SCS will allocate memory for them.
- * @param  info  Information about the solve will be stored here.
- * @return       Flag that determines solve type (see \a glbopts.h).
+ * @param  d      Problem data.
+ * @param  k      Cone data.
+ * @param  stgs   SCS solver settings.
+ * @param  sol    Solution will be stored here. If members `x`, `y`, `s` are
+ *                NULL then SCS will allocate memory for them.
+ * @param  info   Information about the solve will be stored here.
+ * @return        Flag containing problem status (see \a glbopts.h).
  */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
@@ -260,7 +283,7 @@ scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
 /**
  * Helper function to set all settings to default values (see \a glbopts.h).
  *
- * @param  stgs  Settings struct that will be populated.
+ * @param  stgs   Settings struct that will be populated.
  */
 void scs_set_default_settings(ScsSettings *stgs);
 

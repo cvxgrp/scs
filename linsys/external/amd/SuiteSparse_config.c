@@ -50,7 +50,9 @@
 
 struct SuiteSparse_config_struct SuiteSparse_config =
 {
-    scs_malloc, scs_calloc, scs_realloc, scs_free, _scs_printf,
+    scs_malloc, scs_calloc, scs_realloc, scs_free,
+    /* Disable printing */
+    SCS_NULL,
     SuiteSparse_hypot,
     SuiteSparse_divcomplex
 
@@ -79,7 +81,7 @@ void SuiteSparse_start ( void )
     SuiteSparse_config.calloc_func  = scs_calloc ;
     SuiteSparse_config.realloc_func = scs_realloc ;
     SuiteSparse_config.free_func    = scs_free ;
-    SuiteSparse_config.printf_func  = _scs_printf ;
+    SuiteSparse_config.printf_func  = SCS_NULL;
     /* math functions */
     SuiteSparse_config.hypot_func = SuiteSparse_hypot ;
     SuiteSparse_config.divcomplex_func = SuiteSparse_divcomplex ;

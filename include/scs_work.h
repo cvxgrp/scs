@@ -40,10 +40,11 @@ typedef struct {
   scs_float *ax, *ax_s, *px, *aty, *ax_s_btau, *px_aty_ctau;
 } ScsResiduals;
 
-/** Workspace for SCS */
+/** Workspace for SCS. */
 struct SCS_WORK {
   /* x_prev = x from previous iteration */
-  scs_int time_limit_reached; /* set if the time-limit is reached */
+  scs_float setup_time;       /* time taken for setup phase (milliseconds) */
+  scs_int time_limit_reached; /* boolean, if the time-limit is reached */
   scs_float *u, *u_t;
   scs_float *v, *v_prev;
   scs_float *rsk;                /* rsk [ r; s; kappa ] */
@@ -51,30 +52,24 @@ struct SCS_WORK {
   scs_float *g;                  /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
-  AaWork *accel;     /* struct for acceleration workspace */
-  scs_float *b_orig, *c_orig;             /* original b and c vectors */
-  scs_float *b_normalized, *c_normalized; /* normalized b and c vectors */
-  scs_int m, n;                           /* A has m rows, n cols */
-  ScsMatrix *A;                           /* (possibly normalized) A matrix */
-  ScsMatrix *P;                           /* (possibly normalized) P matrix */
-  ScsLinSysWork *p;       /* struct populated by linear system solver */
-  ScsScaling *scal;       /* contains the re-scaling data */
-  ScsConeWork *cone_work; /* workspace for the cone projection step */
+  scs_float *b_orig, *c_orig; /* original unnormalized b and c vectors */
+  AaWork *accel;              /* struct for acceleration workspace */
+  ScsData *d;                 /* Problem data deep copy NORMALIZED */
+  ScsCone *k;                 /* Problem cone deep copy */
+  ScsSettings *stgs;          /* contains solver settings specified by user */
+  ScsLinSysWork *p;           /* struct populated by linear system solver */
+  ScsScaling *scal;           /* contains the re-scaling data */
+  ScsConeWork *cone_work;     /* workspace for the cone projection step */
   /* normalized and unnormalized residuals */
   ScsResiduals *r_orig, *r_normalized;
   /* track x,y,s as alg progresses, tau *not* divided out */
   ScsSolution *xys_orig, *xys_normalized;
-  /* updating scale params workspace */
+  /* Scale updating workspace */
   scs_float sum_log_scale_factor;
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
-  /* aa norm stat */
+  /* AA stats */
   scs_float aa_norm;
   scs_int rejected_accel_steps, accepted_accel_steps;
-  scs_float setup_time; /* time taken for setup phase (milliseconds) */
-  scs_float scale;      /* current scale parameter */
-  const ScsData *d;
-  const ScsCone *k;
-  const ScsSettings *stgs; /* contains solver settings specified by user */
 };
 
 #ifdef __cplusplus

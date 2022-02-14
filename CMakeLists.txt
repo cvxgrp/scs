@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(scs
   LANGUAGES C
-  VERSION 3.1.1)
+  VERSION 3.2.0)
 
 # Defines the CMAKE_INSTALL_LIBDIR, CMAKE_INSTALL_BINDIR and many other useful macros.
 # See https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html
@@ -110,7 +110,7 @@ option(DLONG "Use long integers (64bit) for indexing" OFF)
 message(STATUS "Long integers (64bit) are ${DLONG}")
 
 
-set(COMPILER_OPTS "-DUSE_LAPACK -DCOPYAMATRIX -DCTRLC")
+set(COMPILER_OPTS "-DUSE_LAPACK -DCTRLC")
 
 # Primitive types
 if(SFLOAT)

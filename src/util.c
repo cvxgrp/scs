@@ -71,7 +71,32 @@ scs_float SCS(tocq)(SCS(timer) * t) {
 
 #endif
 
-void SCS(free_data)(ScsData *d, ScsCone *k, ScsSettings *stgs) {
+void SCS(deep_copy_data)(ScsData *dest, const ScsData *src) {
+  dest->n = src->n;
+  dest->m = src->m;
+  SCS(copy_matrix)(&(dest->A), src->A);
+  SCS(copy_matrix)(&(dest->P), src->P);
+  dest->b = (scs_float *)scs_calloc(dest->m, sizeof(scs_float));
+  memcpy(dest->b, src->b, dest->m * sizeof(scs_float));
+  dest->c = (scs_float *)scs_calloc(dest->n, sizeof(scs_float));
+  memcpy(dest->c, src->c, dest->n * sizeof(scs_float));
+}
+
+void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
+  memcpy(dest, src, sizeof(ScsSettings));
+  if (src->write_data_filename) {
+    dest->write_data_filename = strdup(src->write_data_filename);
+  } else {
+    dest->write_data_filename = SCS_NULL;
+  }
+  if (src->log_csv_filename) {
+    dest->log_csv_filename = strdup(src->log_csv_filename);
+  } else {
+    dest->log_csv_filename = SCS_NULL;
+  }
+}
+
+void SCS(free_data)(ScsData *d) {
   if (d) {
     scs_free(d->b);
     scs_free(d->c);
@@ -82,17 +107,6 @@ void SCS(free_data)(ScsData *d, ScsCone *k, ScsSettings *stgs) {
       SCS(free_scs_matrix)(d->P);
     }
     scs_free(d);
-  }
-  if (k) {
-    scs_free(k->bu);
-    scs_free(k->bl);
-    scs_free(k->q);
-    scs_free(k->s);
-    scs_free(k->p);
-    scs_free(k);
-  }
-  if (stgs) {
-    scs_free(stgs);
   }
 }
 

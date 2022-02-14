@@ -14,7 +14,7 @@ extern "C" {
 
 /* SCS VERSION NUMBER ----------------------------------------------    */
 /* string literals automatically null-terminated */
-#define SCS_VERSION ("3.1.1")
+#define SCS_VERSION ("3.2.0")
 
 /* verbosity level */
 #ifndef VERBOSITY
@@ -49,6 +49,9 @@ extern "C" {
 #define scs_realloc mxRealloc
 #elif defined PYTHON
 #include <Python.h>
+/* see:
+ * https://cython-users.narkive.com/jRjjs3sK/reacquire-gil-for-printing-in-wrapped-c-library
+ */
 #define scs_printf(...)                                                        \
   {                                                                            \
     PyGILState_STATE gilstate = PyGILState_Ensure();                           \
@@ -60,8 +63,6 @@ extern "C" {
 #define scs_malloc PyMem_RawMalloc
 #define scs_realloc PyMem_RawRealloc
 #define scs_calloc PyMem_RawCalloc
-/* only for SuiteSparse + python */
-#define _scs_printf PySys_WriteStdout
 #else
 #define scs_free PyMem_Free
 #define scs_malloc PyMem_Malloc
@@ -106,8 +107,6 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define INFINITY NAN
 #endif
 #endif
-
-#define SCS_NULL 0
 
 #ifndef MAX
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))

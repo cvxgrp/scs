@@ -18,14 +18,14 @@ struct SCS_CONE_WORK {
    * cone boundaries, boundaries[0] is starting index for cones of size larger
    * than 1
    */
-  const ScsCone *k; /* original cone information */
+  ScsCone *k; /* original cone information */
   scs_int *cone_boundaries;
   scs_int cone_boundaries_len;
   scs_int scaled_cones; /* boolean, whether the cones have been scaled */
   scs_float *s;         /* used for Moreau decomposition in projection */
   scs_int m;            /* total length of cone */
   /* box cone quantities */
-  scs_float *bl, *bu, box_t_warm_start;
+  scs_float box_t_warm_start;
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
@@ -33,7 +33,9 @@ struct SCS_CONE_WORK {
 #endif
 };
 
-ScsConeWork *SCS(init_cone)(const ScsCone *k, scs_int m);
+void SCS(free_cone)(ScsCone *k);
+void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src);
+ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m);
 char *SCS(get_cone_header)(const ScsCone *k);
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
 scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,

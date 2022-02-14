@@ -251,7 +251,7 @@ scs_float u[] = {
     96.00000, 96.00000,  96.00000,   96.00000,  96.00000,  96.00000,
     96.00000, 96.00000,  96.00000,   96.00000,  96.00000,  96.00000,
     96.00000, 96.00000,  96.00000,   96.00000};
-scs_float q[] = {0.00000,     0.00000,    -35.02643,   0.00000,     0.00000,
+scs_float c[] = {0.00000,     0.00000,    -35.02643,   0.00000,     0.00000,
                  -3.56718,    0.00000,    -17.41907,   0.00000,     0.00000,
                  -17.64691,   0.00000,    0.00000,     0.00000,     0.00000,
                  0.00000,     0.00000,    0.00000,     0.00000,     0.00000,
@@ -298,7 +298,7 @@ static const char *small_qp(void) {
   d->n = n;
   d->b = (scs_float *)scs_calloc(m + 1, sizeof(scs_float));
   d->b[0] = 1; /* t var in box cone */
-  d->c = q;
+  d->c = c;
 
   d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   d->A->m = m + 1; /* t var in box cone */
@@ -332,11 +332,42 @@ static const char *small_qp(void) {
   stgs->eps_rel = 1e-6;
   stgs->eps_infeas = 1e-10;
 
-  exitflag = scs(d, k, stgs, sol, &info);
+  ScsWork *w = scs_init(d, k, stgs);
+  exitflag = scs_solve(w, sol, &info, 0);
   success = exitflag == SCS_SOLVED;
 
   mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  /* test updating c */
+  d->c[0] = 1.0; /* set to new value */
+  scs_update(w, SCS_NULL, d->c);
+  exitflag = scs_solve(w, sol, &info, 1);
+  success = exitflag == SCS_SOLVED;
+
+  mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  /* test updating b */
+  d->b[0] = 4.0; /* set to new value */
+  scs_update(w, d->b, SCS_NULL);
+  exitflag = scs_solve(w, sol, &info, 1);
+  success = exitflag == SCS_SOLVED;
+
+  mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  /* revert back to original data */
+  d->c[0] = 0.0; /* revert to original value */
+  d->b[0] = 1.0; /* revert to original value */
+  scs_update(w, d->b, d->c);
+  exitflag = scs_solve(w, sol, &info, 1);
+  success = exitflag == SCS_SOLVED;
+
+  mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  scs_finish(w);
 
   scs_free(d->A);
   scs_free(d->P);
@@ -344,9 +375,7 @@ static const char *small_qp(void) {
   scs_free(k);
   scs_free(d);
   scs_free(stgs);
-  scs_free(sol->x);
-  scs_free(sol->y);
-  scs_free(sol->s);
-  scs_free(sol);
+  SCS(free_sol)(sol);
+
   return fail;
 }

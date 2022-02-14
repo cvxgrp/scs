@@ -1,0 +1,28 @@
+------------------------------------------------------------------
+	       SCS v3.1.1 - Splitting Conic Solver
+	(c) Brendan O'Donoghue, Stanford University, 2012
+------------------------------------------------------------------
+problem:  variables n: 100, constraints m: 171
+cones: 	  z: primal zero / dual free vars: 1
+	  l: linear vars: 20
+	  e: exp vars: 150, dual exp vars: 0
+settings: eps_abs: 1.0e-04, eps_rel: 1.0e-04, eps_infeas: 1.0e-07
+	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
+	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
+	  acceleration_lookback: 10, acceleration_interval: 10
+lin-sys:  sparse-direct
+	  nnz(A): 1150, nnz(P): 0
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.11e+01  6.95e-01  5.59e+02 -3.06e+02  1.00e-01  9.02e-04 
+   225| 8.91e-06  1.30e-05  3.24e-05 -3.89e+00  5.45e+00  1.43e-01 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.44e-01s = setup: 5.53e-04s + solve: 1.43e-01s
+	 lin-sys: 1.06e-03s, cones: 1.42e-01s, accel: 4.26e-05s
+------------------------------------------------------------------
+objective = -3.888803
+------------------------------------------------------------------
+CVXPY optimal value is: 3.888784623785257
+Solution norm difference: 2.241074541050464e-06
