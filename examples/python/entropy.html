@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maximum Entropy &mdash; SCS 3.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/scs_theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model Predictive Control" href="mpc.html" />
+    <link rel="prev" title="Low-Rank Matrix Completion" href="mat_completion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../c.html">C/C++</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../python.html">Python</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic_qp.html">Basic QP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lasso.html">Lasso</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mat_completion.html">Low-Rank Matrix Completion</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Maximum Entropy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpc.html">Model Predictive Control</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../matlab.html">MATLAB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia.html">Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../r.html">R</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../help/index.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing/index.html">Citing SCS</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Examples</a> &raquo;</li>
+          <li><a href="../python.html">Python</a> &raquo;</li>
+      <li>Maximum Entropy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/examples/python/entropy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="maximum-entropy">
+<span id="py-entropy"></span><h1>Maximum Entropy<a class="headerlink" href="#maximum-entropy" title="Permalink to this headline"></a></h1>
+<p>This example demonstrates an instance of using the exponential <a class="reference internal" href="../../api/cones.html#cones"><span class="std std-ref">cone</span></a>.  In this problem we want find the maximum entropy point inside a
+convex polytope, ie, to solve</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  \mbox{maximize} &amp; -\sum_i^n x_i \log x_i \\
+  \mbox{subhect to} &amp; {\bf 1}^T x_i = 1 \\
+                    &amp; Ax - b \geq 0
+\end{array}\end{split}\]</div>
+<p>over variable <span class="math notranslate nohighlight">\(x \in \mathbf{R}^{n}\)</span>, where <span class="math notranslate nohighlight">\(A \in
+\mathbf{R}^{m \times n}\)</span> and <span class="math notranslate nohighlight">\(b \in \mathbf{R}^m\)</span> are data.  The problem
+has the following equivalent form,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  \mbox{minimize} &amp; -{\bf 1}^T t \\
+  \mbox{subject to} &amp; {\bf 1}^T x_i = 1 \\
+                    &amp; Ax - b \geq 0 \\
+                    &amp; \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in \mathcal{K}_\mathrm{exp}, \quad i=1,\ldots,n.
+\end{array}\end{split}\]</div>
+<p>over variables <span class="math notranslate nohighlight">\(x \in \mathbf{R}^{n}\)</span>, <span class="math notranslate nohighlight">\(t \in \mathbf{R}^{n}\)</span> and
+where <span class="math notranslate nohighlight">\(\mathcal{K}_\mathrm{exp} \subset \mathbf{R}^3\)</span> denotes the
+exponential cone.</p>
+<p>Python code to solve this is below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="c1"># Generate problem data</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Matrix size parameters</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># Number of variables</span>
+<span class="n">p</span> <span class="o">=</span> <span class="mi">20</span>  <span class="c1"># Number of constraints</span>
+
+<span class="c1"># Generate random problem data</span>
+<span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="n">tmp</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+<span class="n">Ad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="n">bd</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">Ad</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+<span class="c1"># Build the A, b rows corresponding to the exponential cone</span>
+<span class="n">A_exp</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">lil_matrix</span><span class="p">((</span><span class="mi">3</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">))</span>
+<span class="n">b_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">A_exp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># t</span>
+    <span class="n">A_exp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># x</span>
+    <span class="n">b_exp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="c1"># zero cone</span>
+        <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))]),</span>
+        <span class="c1"># positive cone</span>
+        <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)),</span> <span class="o">-</span><span class="n">Ad</span><span class="p">]),</span>
+        <span class="c1"># exponential cones</span>
+        <span class="n">A_exp</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">bd</span><span class="p">,</span> <span class="n">b_exp</span><span class="p">])</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+
+<span class="c1"># SCS data</span>
+<span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+<span class="c1"># ep is exponential cone (primal), with n triples</span>
+<span class="n">cone</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">ep</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+<span class="c1"># Setup workspace</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">cone</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="n">x_scs</span> <span class="o">=</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span>
+
+<span class="c1"># Verify solution with CVXPY</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This example requires CVXPY installed to run.&quot;</span><span class="p">)</span>
+    <span class="k">raise</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Maximize</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">entr</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+<span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Ad</span> <span class="o">@</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">bd</span><span class="p">]</span>
+<span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
+<span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">ECOS</span><span class="p">)</span>
+<span class="n">x_cvxpy</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CVXPY optimal value is:&quot;</span><span class="p">,</span> <span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solution norm difference: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x_scs</span> <span class="o">-</span> <span class="n">x_cvxpy</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
+run the code yielding output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
+	       SCS v3.1.1 - Splitting Conic Solver
+	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+------------------------------------------------------------------
+problem:  variables n: 100, constraints m: 171
+cones: 	  z: primal zero / dual free vars: 1
+	  l: linear vars: 20
+	  e: exp vars: 150, dual exp vars: 0
+settings: eps_abs: 1.0e-04, eps_rel: 1.0e-04, eps_infeas: 1.0e-07
+	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
+	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
+	  acceleration_lookback: 10, acceleration_interval: 10
+lin-sys:  sparse-direct
+	  nnz(A): 1150, nnz(P): 0
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.11e+01  6.95e-01  5.59e+02 -3.06e+02  1.00e-01  9.02e-04 
+   225| 8.91e-06  1.30e-05  3.24e-05 -3.89e+00  5.45e+00  1.43e-01 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.44e-01s = setup: 5.53e-04s + solve: 1.43e-01s
+	 lin-sys: 1.06e-03s, cones: 1.42e-01s, accel: 4.26e-05s
+------------------------------------------------------------------
+objective = -3.888803
+------------------------------------------------------------------
+CVXPY optimal value is: 3.888784623785257
+Solution norm difference: 2.241074541050464e-06
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mat_completion.html" class="btn btn-neutral float-left" title="Low-Rank Matrix Completion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mpc.html" class="btn btn-neutral float-right" title="Model Predictive Control" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-203326834-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

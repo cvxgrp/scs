@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Warm-starting &mdash; SCS 3.1.1 documentation</title>
+  <title>Caching the workspace and warm-starts &mdash; SCS 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
@@ -17,6 +17,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,7 +34,7 @@
             <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.1.1
+                3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,7 +48,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Algorithm</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="scale.html">Non-identity DR Scaling</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Warm-starting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Caching the workspace and warm-starts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="acceleration.html">Acceleration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="relaxation.html">Relaxation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#optimality-conditions">Optimality conditions</a></li>
@@ -80,7 +81,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="index.html">Algorithm</a> &raquo;</li>
-      <li>Warm-starting</li>
+      <li>Caching the workspace and warm-starts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/algorithm/warm_start.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,19 +91,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="warm-starting">
-<span id="warm-start"></span><h1>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline"></a></h1>
-<p>SCS supports warm-starting (aka hot-starting) the solver with a guess of the
-solution which can sometimes substantially improve the algorithm performance.
-This is useful, for example, when solving a sequence of related problems.</p>
-<p>In the <a class="reference internal" href="../api/c.html#c-interface"><span class="std std-ref">raw API</span></a> this can be done by toggling the warm-start
-<a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a> to <code class="code docutils literal notranslate"><span class="pre">True</span></code>, and then including the guess of the
-solution in the <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s</span></code> members of the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a> struct, where
-those members correspond to the guess of the solution in the <a class="reference internal" href="index.html#optimality"><span class="std std-ref">standard form</span></a>.  SCS will initialize the solver at those points and then
-overwrite the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a> struct members with the real solution at
-termination.</p>
-<p>In other languages the warm-starting is documented in their respective
-<a class="reference internal" href="../api/index.html#interfaces"><span class="std std-ref">Interfaces</span></a>.</p>
+  <section id="caching-the-workspace-and-warm-starts">
+<span id="warm-start"></span><h1>Caching the workspace and warm-starts<a class="headerlink" href="#caching-the-workspace-and-warm-starts" title="Permalink to this headline"></a></h1>
+<p>SCS supports reusing the workspace between solves so long as the data matrices
+<span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(P\)</span> do not change. After an initial solve the workspace can
+be updated with new <span class="math notranslate nohighlight">\(b\)</span> and <span class="math notranslate nohighlight">\(c\)</span> vectors if desired. This can
+substantially speed up subsequent solve times since we can cache important
+quantities such as the matrix factorization and the data equilibration.
+Moreover, SCS supports warm-starting the solver with a guess of the solution,
+which can significantly reduce the total number of iterations required for
+convergence.</p>
+<p>Re-using the workspace and warm-starting can be useful, for example, when
+solving a sequence of related problems such as in <a class="reference internal" href="../examples/python/mpc.html#py-mpc"><span class="std std-ref">Model predictive control</span></a> or solving for the entire regularization path in the <a class="reference internal" href="../examples/python/lasso.html#py-lasso"><span class="std std-ref">the Lasso</span></a>.</p>
+<p>In the <a class="reference internal" href="../api/c.html#c-interface"><span class="std std-ref">C API</span></a> call <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code> once to initialize the
+workspace, then use the <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code> in conjunction with
+<code class="code docutils literal notranslate"><span class="pre">scs_update</span></code> to solve a sequence of problems.  Warm-starting can be done
+by setting the warm-start <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a> to <code class="code docutils literal notranslate"><span class="pre">True</span></code> when calling
+<code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code>, and then including the guess of the solution in the <code class="code docutils literal notranslate"><span class="pre">x,</span>
+<span class="pre">y,</span> <span class="pre">s</span></code> members of the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a> struct, where those members correspond
+to the guess of the solution in the <a class="reference internal" href="index.html#optimality"><span class="std std-ref">standard form</span></a>.  SCS will
+initialize the solver at those points and then overwrite the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a>
+struct members with the real solution at termination.</p>
+<p>In other languages caching the workspace and warm-starting is documented in
+their respective <a class="reference internal" href="../api/index.html#interfaces"><span class="std std-ref">Interfaces</span></a>.</p>
 </section>
 
 

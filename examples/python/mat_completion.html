@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Low-Rank Matrix Completion &mdash; SCS 3.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/scs_theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Maximum Entropy" href="entropy.html" />
+    <link rel="prev" title="Lasso" href="lasso.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../c.html">C/C++</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../python.html">Python</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic_qp.html">Basic QP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lasso.html">Lasso</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Low-Rank Matrix Completion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="entropy.html">Maximum Entropy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpc.html">Model Predictive Control</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../matlab.html">MATLAB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia.html">Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../r.html">R</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../help/index.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing/index.html">Citing SCS</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Examples</a> &raquo;</li>
+          <li><a href="../python.html">Python</a> &raquo;</li>
+      <li>Low-Rank Matrix Completion</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/examples/python/mat_completion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="low-rank-matrix-completion">
+<span id="py-mat-completion"></span><h1>Low-Rank Matrix Completion<a class="headerlink" href="#low-rank-matrix-completion" title="Permalink to this headline"></a></h1>
+<p>This example shows how to use the <a class="reference internal" href="../../api/cones.html#sdcone"><span class="std std-ref">positive semidefinite cone</span></a>, as
+well as reusing a <a class="reference internal" href="../../algorithm/warm_start.html#warm-start"><span class="std std-ref">cached workspace and using warm-starting</span></a>.</p>
+<p>Matrix completion is the problem of filling in missing data into a partially
+observed matrix where the measurements we are given have been corrupted by
+Gaussian noise.  In low-rank matrix completion we have the additional prior
+knowledge that the matrix we are completing is low-rank.  For simplicity we
+shall also assume that the matrix we are reconstructing is symmetric positive
+definite.  A famous instance of this problem is the <a class="reference external" href="https://en.wikipedia.org/wiki/Netflix_Prize">Netflix prize</a>.</p>
+<p>Concretely, we denote by <span class="math notranslate nohighlight">\(\hat X \in \mathcal{S}^n_+\)</span> the true matrix
+corrupted by noise, and denote by <span class="math notranslate nohighlight">\(\mathcal{I}\)</span> the set of indices (row
+and column pairs) from which we receive noisy observations. The nuclear norm,
+denoted <span class="math notranslate nohighlight">\(\| \cdot \|_*\)</span> acts as a convex surrogate for rank, and the
+low-rank matrix completion problem is given by</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  \mbox{minimize} &amp; \frac{1}{2} \sum_{i,j \in \mathcal{I_n}} (X_{ij} - \hat X_{ij})^2 + \lambda \|X \|_* \\
+  \mbox{subject to} &amp; X \succeq 0
+\end{array}\end{split}\]</div>
+<p>over variable <span class="math notranslate nohighlight">\(X \in \mathcal{S}^n_+\)</span>  and where <span class="math notranslate nohighlight">\(I_n\)</span> is the
+<span class="math notranslate nohighlight">\(n \times n\)</span> identity matrix.</p>
+<p>We can convert this into a more standard form.  First, let <span class="math notranslate nohighlight">\(x =
+\mathrm{vec}(X)\)</span> be the semidefinite vectorization of <span class="math notranslate nohighlight">\(X\)</span> described in
+<a class="reference internal" href="../../api/cones.html#cones"><span class="std std-ref">Cones</span></a> (and concretely implemented in the code that follows). Further, let
+<span class="math notranslate nohighlight">\(A\)</span> be the linear operator that extracts the elements of <span class="math notranslate nohighlight">\(x\)</span> for
+which we have (noisy) observations, and let <span class="math notranslate nohighlight">\(b = A \mathrm{vec}(\hat X)\)</span>.
+Since the nuclear norm of a positive semidefinite matrix is given by its trace
+we obtain</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+\mbox{minimize}   &amp; \frac{1}{2} y^T y + \lambda \mathrm{vec}(I)^\top x \\
+\mbox{subject to} &amp; y = Ax - b \\
+                  &amp; \mathrm{mat}(x) \succeq 0
+\end{array}\end{split}\]</div>
+<p>over variable <span class="math notranslate nohighlight">\(x \in \mathbf{R}^{n(n+1) /2}\)</span> and <span class="math notranslate nohighlight">\(y \in
+\mathbf{R}^{|\mathcal{I}|}\)</span>.  From this formulation it is straightforward to
+convert it into the standard form accepted by SCS.  The regularization parameter
+<span class="math notranslate nohighlight">\(\lambda \geq 0\)</span> trades off the rank of the solution and the quality of
+the fit, and so we solve the problem for many choices of <span class="math notranslate nohighlight">\(\lambda\)</span>.  Since
+<span class="math notranslate nohighlight">\(\lambda\)</span> enters only in the linear part of the objective function, we can
+reuse the matrix factorization and use warm starting to reduce the computation
+time.</p>
+<p>Python code to solve this is below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># The vec function as documented in api/cones</span>
+<span class="k">def</span> <span class="nf">vec</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">S</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">S</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+
+
+<span class="c1"># The mat function as documented in api/cones</span>
+<span class="k">def</span> <span class="nf">mat</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">S</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">s</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">S</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">S</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">S</span>
+
+
+<span class="n">dim</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># dim x dim matrix</span>
+<span class="n">vlen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># length of vector x = vec(X)</span>
+
+<span class="c1"># Generate true matrix</span>
+<span class="n">rank</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">//</span> <span class="mi">5</span>  <span class="c1"># low rank</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">@</span> <span class="n">X</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1">#############################################################################</span>
+
+<span class="c1"># Let&#39;s first do some basic sanity checks to ensure that mat, vec are working:</span>
+
+<span class="c1"># mat(vec( . )) should be identity</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Should be ~ 0: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span> <span class="o">-</span> <span class="n">mat</span><span class="p">(</span><span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Trace( . ) should be vec(I)&#39; vec( . )</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Should be ~ 0: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">-</span> <span class="n">vec</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span> <span class="o">@</span> <span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1">#############################################################################</span>
+
+<span class="n">num_measurements</span> <span class="o">=</span> <span class="n">vlen</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># how many measurements are revealed</span>
+
+<span class="c1"># Generate random measurement indices</span>
+<span class="n">measurement_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">vlen</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">num_measurements</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="c1"># Create A matrix</span>
+<span class="n">Ad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_measurements</span><span class="p">,</span> <span class="n">vlen</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">):</span>
+    <span class="n">Ad</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">measurement_idxs</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="c1"># Noisy measurements of X</span>
+<span class="n">measurements</span> <span class="o">=</span> <span class="n">Ad</span> <span class="o">@</span> <span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)</span>  <span class="c1"># + noise</span>
+
+<span class="c1"># Auxiliary data</span>
+<span class="n">In</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">vlen</span><span class="p">)</span>
+<span class="n">Im</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)</span>
+<span class="n">On</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="n">vlen</span><span class="p">,</span> <span class="n">vlen</span><span class="p">))</span>
+<span class="n">Onm</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="n">vlen</span><span class="p">,</span> <span class="n">num_measurements</span><span class="p">))</span>
+
+<span class="c1"># SCS data</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">([</span><span class="n">On</span><span class="p">,</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="c1"># zero cone</span>
+        <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">Ad</span><span class="p">,</span> <span class="o">-</span><span class="n">Im</span><span class="p">]),</span>
+        <span class="c1"># positive semidefinite cone</span>
+        <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="o">-</span><span class="n">In</span><span class="p">,</span> <span class="n">Onm</span><span class="p">]),</span>
+    <span class="p">],</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">measurements</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vlen</span><span class="p">)])</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vlen</span> <span class="o">+</span> <span class="n">num_measurements</span><span class="p">)])</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+<span class="n">cone</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">num_measurements</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+<span class="c1"># Setup workspace</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">eps_rel</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solving for lambda = 0&quot;</span><span class="p">)</span>
+<span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># lambda = 0</span>
+<span class="n">X_hat</span> <span class="o">=</span> <span class="n">mat</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][:</span><span class="n">vlen</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X_hat</span> <span class="o">-</span> <span class="n">X</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Solve for different values of lambda</span>
+<span class="n">lambdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">lam</span> <span class="ow">in</span> <span class="n">lambdas</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solving for lambda = </span><span class="si">{</span><span class="n">lam</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Re-use workspace, just update the `c` vector</span>
+    <span class="n">c_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">lam</span> <span class="o">*</span> <span class="n">vec</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)])</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">c_new</span><span class="p">)</span>
+    <span class="c1"># Solve updated problem</span>
+    <span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># will warm-start automatically</span>
+    <span class="n">X_hat</span> <span class="o">=</span> <span class="n">mat</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][:</span><span class="n">vlen</span><span class="p">])</span>
+    <span class="c1"># What is the norm error?</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error : </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X_hat</span> <span class="o">-</span> <span class="n">X</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
+run the code yielding output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Should be ~ 0: 3.0513465426178085e-15
+Should be ~ 0: 0.0
+------------------------------------------------------------------
+	       SCS v3.1.1 - Splitting Conic Solver
+	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+------------------------------------------------------------------
+problem:  variables n: 180, constraints m: 180
+cones: 	  z: primal zero / dual free vars: 60
+	  s: psd vars: 120, ssize: 1
+settings: eps_abs: 1.0e-06, eps_rel: 1.0e-06, eps_infeas: 1.0e-07
+	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
+	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
+	  acceleration_lookback: 10, acceleration_interval: 10
+lin-sys:  sparse-direct
+	  nnz(A): 240, nnz(P): 60
+Solving for lambda = 0
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 5.12e+00  8.58e-01  3.93e+01  2.40e+01  1.00e-01  7.29e-03 
+   250| 7.51e-03  3.59e-05  2.58e-04  2.03e-04  3.19e-03  1.49e-02 
+   500| 7.41e-03  1.60e-06  6.49e-05 -1.89e-05  9.33e-04  2.48e-02 
+   750| 3.89e-03  1.04e-08  1.56e-06 -7.37e-07  9.33e-04  3.47e-02 
+   800| 1.67e-08  3.76e-10  3.11e-12 -1.56e-12  9.33e-04  3.67e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.85e-02s = setup: 1.81e-03s + solve: 3.67e-02s
+	 lin-sys: 3.24e-03s, cones: 3.16e-02s, accel: 3.59e-04s
+------------------------------------------------------------------
+objective = -0.000000
+------------------------------------------------------------------
+Error: 2.4700619951554748
+Solving for lambda = 1e-06
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 3.04e-06  1.00e-06  1.76e-04  1.21e-04  9.33e-04  1.01e-04 
+   250| 2.31e-02  9.45e-09  7.98e-07  4.11e-05  1.00e-06  1.03e-02 
+   500| 7.27e-03  7.34e-10  4.85e-07  4.16e-05  1.00e-06  2.12e-02 
+   750| 4.47e-03  3.69e-10  4.00e-07  4.18e-05  1.00e-06  3.06e-02 
+  1000| 3.61e-03  1.61e-10  3.42e-07  4.19e-05  1.00e-06  3.78e-02 
+  1250| 3.49e-03  1.59e-10  3.38e-07  4.19e-05  1.00e-06  4.49e-02 
+  1500| 3.10e-03  9.65e-11  3.18e-07  4.20e-05  1.00e-06  5.18e-02 
+  1750| 3.22e-03  3.06e-08  2.75e-07  4.20e-05  1.36e-05  5.90e-02 
+  2000| 1.94e-03  2.37e-09  3.94e-07  4.22e-05  1.36e-05  6.64e-02 
+  2250| 1.81e-03  5.11e-10  4.73e-07  4.23e-05  1.36e-05  7.35e-02 
+  2500| 1.72e-03  5.65e-10  5.08e-07  4.23e-05  1.36e-05  8.07e-02 
+  2750| 1.63e-03  6.25e-10  5.40e-07  4.23e-05  1.36e-05  8.83e-02 
+  3000| 1.53e-03  7.00e-10  5.67e-07  4.24e-05  1.36e-05  9.56e-02 
+  3250| 1.43e-03  4.32e-09  6.40e-07  4.24e-05  4.32e-05  1.03e-01 
+  3500| 1.21e-03  6.07e-09  6.68e-07  4.25e-05  4.32e-05  1.09e-01 
+  3750| 1.03e-03  9.64e-09  7.59e-07  4.27e-05  4.32e-05  1.16e-01 
+  4000| 4.61e-04  2.64e-08  2.03e-07  4.31e-05  4.32e-05  1.23e-01 
+  4250| 2.54e-04  2.09e-09  1.05e-07  4.30e-05  4.32e-05  1.29e-01 
+  4500| 7.91e-05  1.08e-09  3.60e-08  4.31e-05  4.32e-05  1.36e-01 
+  4750| 3.03e-05  1.24e-09  5.48e-09  4.31e-05  4.32e-05  1.42e-01 
+  4775| 9.42e-06  5.65e-10  5.58e-09  4.31e-05  4.32e-05  1.43e-01 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.43e-01s = setup: 2.17e-06s + solve: 1.43e-01s
+	 lin-sys: 1.76e-02s, cones: 1.17e-01s, accel: 1.83e-03s
+------------------------------------------------------------------
+objective = 0.000043
+------------------------------------------------------------------
+Error : 0.039165998317111615
+Solving for lambda = 5.011872336272725e-06
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.50e-01  4.95e-06  3.31e-05  1.92e-04  4.32e-05  8.42e-05 
+   250| 3.43e-03  1.34e-07  1.58e-06  2.11e-04  4.32e-05  7.29e-03 
+   500| 1.73e-03  2.11e-09  1.81e-06  2.11e-04  4.32e-05  1.47e-02 
+   750| 1.59e-03  1.01e-09  1.90e-06  2.12e-04  4.32e-05  2.22e-02 
+  1000| 1.52e-03  9.87e-10  1.95e-06  2.12e-04  4.32e-05  2.98e-02 
+  1250| 1.34e-03  9.31e-09  2.10e-06  2.12e-04  1.38e-04  3.71e-02 
+  1500| 1.01e-03  1.04e-08  2.13e-06  2.13e-04  1.38e-04  4.48e-02 
+  1750| 6.80e-04  8.59e-09  1.73e-06  2.14e-04  1.38e-04  5.23e-02 
+  2000| 1.45e+00  2.00e-04  1.53e-06  2.15e-04  1.38e-04  5.95e-02 
+  2250| 4.87e-04  1.13e-08  1.40e-06  2.14e-04  1.38e-04  6.65e-02 
+  2500| 7.75e-04  8.76e-08  1.49e-06  2.16e-04  1.38e-04  7.36e-02 
+  2750| 6.69e-04  2.14e-08  2.14e-06  2.15e-04  1.38e-04  8.19e-02 
+  3000| 2.18e-04  7.41e-09  7.61e-07  2.15e-04  1.38e-04  8.90e-02 
+  3250| 2.17e-04  3.06e-08  1.10e-07  2.15e-04  1.38e-04  9.61e-02 
+  3500| 2.40e-05  4.38e-10  7.45e-08  2.15e-04  1.38e-04  1.03e-01 
+  3600| 4.83e-06  5.28e-10  4.07e-09  2.15e-04  1.38e-04  1.06e-01 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.06e-01s = setup: 1.96e-06s + solve: 1.06e-01s
+	 lin-sys: 1.29e-02s, cones: 8.62e-02s, accel: 1.09e-03s
+------------------------------------------------------------------
+objective = 0.000215
+------------------------------------------------------------------
+Error : 0.025334768895438196
+Solving for lambda = 2.5118864315095822e-05
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 2.44e-01  2.49e-05  1.34e-04  9.44e-04  1.38e-04  9.16e-05 
+   250| 1.61e-03  1.94e-07  5.77e-06  1.06e-03  1.38e-04  7.88e-03 
+   500| 1.25e-03  5.66e-09  5.22e-06  1.06e-03  1.38e-04  1.55e-02 
+   750| 1.08e-03  4.03e-09  4.49e-06  1.06e-03  1.38e-04  2.26e-02 
+  1000| 8.60e-04  1.78e-09  3.69e-06  1.06e-03  1.38e-04  3.04e-02 
+  1250| 7.46e-04  1.21e-08  3.55e-06  1.06e-03  4.46e-04  3.85e-02 
+  1500| 5.59e-04  7.69e-09  2.78e-06  1.06e-03  4.46e-04  4.60e-02 
+  1750| 4.57e-04  1.01e-08  2.73e-06  1.06e-03  4.46e-04  5.33e-02 
+  2000| 2.15e-04  3.68e-09  1.35e-06  1.06e-03  4.46e-04  6.05e-02 
+  2250| 9.98e-05  1.54e-09  6.55e-07  1.06e-03  4.46e-04  6.74e-02 
+  2500| 7.51e-06  5.47e-10  4.88e-08  1.06e-03  4.46e-04  7.47e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 7.47e-02s = setup: 1.88e-06s + solve: 7.47e-02s
+	 lin-sys: 9.02e-03s, cones: 6.11e-02s, accel: 8.98e-04s
+------------------------------------------------------------------
+objective = 0.001062
+------------------------------------------------------------------
+Error : 0.021416258779558488
+Solving for lambda = 0.0001258925411794166
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 3.71e-01  1.17e-04  4.59e-04  4.61e-03  4.46e-04  8.17e-05 
+   250| 1.44e-03  4.05e-07  1.33e-05  5.27e-03  4.46e-04  7.40e-03 
+   500| 9.07e-04  4.06e-07  5.92e-06  5.28e-03  4.46e-04  1.52e-02 
+   750| 1.14e-04  2.21e-09  1.42e-06  5.28e-03  4.46e-04  2.22e-02 
+  1000| 1.70e-05  3.22e-10  1.49e-07  5.28e-03  4.46e-04  2.97e-02 
+  1025| 9.37e-06  1.07e-10  1.06e-07  5.28e-03  4.46e-04  3.05e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.05e-02s = setup: 1.79e-06s + solve: 3.05e-02s
+	 lin-sys: 3.54e-03s, cones: 2.50e-02s, accel: 5.09e-04s
+------------------------------------------------------------------
+objective = 0.005279
+------------------------------------------------------------------
+Error : 0.03355024082447967
+Solving for lambda = 0.000630957344480193
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 2.03e+00  5.72e-04  7.00e-03  1.84e-02  4.46e-04  8.29e-05 
+   250| 6.36e-03  1.41e-06  1.78e-04  2.61e-02  4.46e-04  7.31e-03 
+   500| 2.35e-02  1.04e-05  5.01e-05  2.62e-02  4.46e-04  1.45e-02 
+   750| 7.01e-04  1.89e-07  2.18e-05  2.62e-02  4.46e-04  2.16e-02 
+  1000| 2.42e-05  1.05e-09  3.62e-07  2.62e-02  4.46e-04  2.87e-02 
+  1100| 7.41e-06  1.86e-10  7.34e-08  2.62e-02  4.46e-04  3.16e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.16e-02s = setup: 1.74e-06s + solve: 3.16e-02s
+	 lin-sys: 3.65e-03s, cones: 2.57e-02s, accel: 6.26e-04s
+------------------------------------------------------------------
+objective = 0.026224
+------------------------------------------------------------------
+Error : 0.06744664704036951
+Solving for lambda = 0.0031622776601683794
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.04e+01  2.74e-03  2.66e-01 -2.34e-02  4.46e-04  9.11e-05 
+   250| 8.77e-03  1.73e-05  2.41e-05  1.30e-01  2.01e-03  7.52e-03 
+   500| 7.31e-05  3.12e-08  9.26e-07  1.30e-01  6.56e-03  1.47e-02 
+   575| 1.47e-06  9.60e-10  4.27e-08  1.30e-01  6.56e-03  1.68e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.68e-02s = setup: 1.78e-06s + solve: 1.68e-02s
+	 lin-sys: 1.92e-03s, cones: 1.39e-02s, accel: 1.96e-04s
+------------------------------------------------------------------
+objective = 0.129971
+------------------------------------------------------------------
+Error : 0.11835628778123863
+Solving for lambda = 0.01584893192461111
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 3.47e+00  1.39e-02  3.91e-01  3.49e-01  6.56e-03  8.42e-05 
+   250| 1.03e-04  1.62e-07  1.25e-05  6.43e-01  6.56e-03  7.30e-03 
+   375| 1.71e-06  1.57e-09  1.05e-07  6.43e-01  6.56e-03  1.15e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.15e-02s = setup: 1.73e-06s + solve: 1.15e-02s
+	 lin-sys: 1.25e-03s, cones: 9.60e-03s, accel: 1.12e-04s
+------------------------------------------------------------------
+objective = 0.642509
+------------------------------------------------------------------
+Error : 0.17415959268201173
+Solving for lambda = 0.07943282347242805
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.82e+01  6.55e-02  1.19e+01 -3.25e+00  6.56e-03  8.98e-05 
+   225| 4.87e-07  4.73e-09  1.27e-07  3.15e+00  3.61e-02  7.46e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 7.47e-03s = setup: 1.72e-06s + solve: 7.47e-03s
+	 lin-sys: 7.51e-04s, cones: 6.26e-03s, accel: 5.70e-05s
+------------------------------------------------------------------
+objective = 3.149158
+------------------------------------------------------------------
+Error : 0.22262545190934194
+Solving for lambda = 0.3981071705534969
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.65e+01  3.21e-01  5.33e+01 -1.46e+01  3.61e-02  8.96e-05 
+   125| 7.27e-07  1.89e-08  8.50e-07  1.49e+01  1.83e-01  4.27e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 4.27e-03s = setup: 1.76e-06s + solve: 4.27e-03s
+	 lin-sys: 4.41e-04s, cones: 3.58e-03s, accel: 2.71e-05s
+------------------------------------------------------------------
+objective = 14.885089
+------------------------------------------------------------------
+Error : 0.3057864439961101
+Solving for lambda = 1.9952623149688788
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.67e+01  1.55e+00  2.52e+02 -9.34e+01  1.83e-01  8.80e-05 
+    50| 2.65e-07  5.94e-09  4.41e-07  6.15e+01  1.83e-01  1.86e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.86e-03s = setup: 1.67e-06s + solve: 1.86e-03s
+	 lin-sys: 1.67e-04s, cones: 1.56e-03s, accel: 7.00e-06s
+------------------------------------------------------------------
+objective = 61.454584
+------------------------------------------------------------------
+Error : 0.5124766513093888
+Solving for lambda = 10.0
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 8.75e+01  7.97e+00  6.59e+03 -3.72e+03  1.83e-01  9.20e-05 
+    50| 1.31e-06  2.45e-10  6.05e-08  1.32e+02  1.83e-01  1.81e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 1.81e-03s = setup: 1.71e-06s + solve: 1.81e-03s
+	 lin-sys: 1.73e-04s, cones: 1.49e-03s, accel: 1.87e-05s
+------------------------------------------------------------------
+objective = 132.180037
+------------------------------------------------------------------
+Error : 0.9959215771443783
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lasso.html" class="btn btn-neutral float-left" title="Lasso" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="entropy.html" class="btn btn-neutral float-right" title="Maximum Entropy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-203326834-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

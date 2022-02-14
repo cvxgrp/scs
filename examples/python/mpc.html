@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Predictive Control &mdash; SCS 3.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/scs_theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="MATLAB" href="../matlab.html" />
+    <link rel="prev" title="Maximum Entropy" href="entropy.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../c.html">C/C++</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../python.html">Python</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic_qp.html">Basic QP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lasso.html">Lasso</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mat_completion.html">Low-Rank Matrix Completion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="entropy.html">Maximum Entropy</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Model Predictive Control</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../matlab.html">MATLAB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia.html">Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../r.html">R</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../help/index.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing/index.html">Citing SCS</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Examples</a> &raquo;</li>
+          <li><a href="../python.html">Python</a> &raquo;</li>
+      <li>Model Predictive Control</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/examples/python/mpc.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="model-predictive-control">
+<span id="py-mpc"></span><h1>Model Predictive Control<a class="headerlink" href="#model-predictive-control" title="Permalink to this headline"></a></h1>
+<p>In this example we shall demonstrate an instance of using the box <a class="reference internal" href="../../api/cones.html#cones"><span class="std std-ref">cone</span></a>, as well as reusing a <a class="reference internal" href="../../algorithm/warm_start.html#warm-start"><span class="std std-ref">cached workspace and using warm-starting</span></a>.</p>
+<p>In model predictive control (MPC) the control action at each time-step is
+obtained by solving an optimization problem that simulates the dynamical system
+over some time horizon.  Here, we consider the problem of controlling a linear,
+time-invariant dynamical systems with quadratic stage costs and box constraints
+on the state and action:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{ll}
+  \mbox{minimize}   &amp; x_T^T Q_T x_T + q_T^\top x_T + \sum_{t=0}^{T-1}\left( x_t^T Q x_t + u_t^T R u_t + q^\top x_t \right) \\
+  \mbox{subject to} &amp; x_{t+1} = A x_t + B u_t, \quad t = 0, \ldots T-1\\
+                    &amp; x_{\rm min} \le x_t  \le x_{\rm max}, \quad t = 0, \ldots T\\
+                    &amp; u_{\rm min} \le u_t  \le u_{\rm max}, \quad t = 0, \ldots T-1\\
+                    &amp; x_0 = \bar{x}
+\end{array}\end{split}\]</div>
+<p>over variables corresponding to the states <span class="math notranslate nohighlight">\(x_t \in \mathbf{R}^{n}\)</span>,
+<span class="math notranslate nohighlight">\(t=0,\ldots,T\)</span>, and the inputs <span class="math notranslate nohighlight">\(u_t \in \mathbf{R}^{m}\)</span>,
+<span class="math notranslate nohighlight">\(t=0,\ldots,T-1\)</span>, where <span class="math notranslate nohighlight">\(A \in \mathbf{R}^{n \times n}\)</span>, <span class="math notranslate nohighlight">\(B
+\in  \mathbf{R}^{n \times m}\)</span> correspond to the linear dynamics and <span class="math notranslate nohighlight">\(Q \in
+\mathbf{R}^{n \times n}\)</span>, <span class="math notranslate nohighlight">\(R \in \mathbf{R}^{m \times m}\)</span>, <span class="math notranslate nohighlight">\(q \in
+\mathbf{R}^{n}\)</span> correspond to the positive semidefinite quadratic cost functions
+with terminal cost defined by <span class="math notranslate nohighlight">\(Q_T \in  \mathbf{R}^{n \times n}\)</span> and
+<span class="math notranslate nohighlight">\(q_T \in \mathbf{R}^{n}\)</span>.</p>
+<p>The problem is solved repeatedly for varying initial state <span class="math notranslate nohighlight">\(\bar{x} \in
+\mathbf{R}^{n}\)</span>. The upper and lower bound constraints can be expressed in
+SCS using the box <a class="reference internal" href="../../api/cones.html#cones"><span class="std std-ref">cone</span></a>.</p>
+<p>Python code to solve this is below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MPC</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Model Predictive Contoller using SCS.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ad</span><span class="p">,</span> <span class="n">Bd</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">QT</span><span class="p">,</span> <span class="n">qT</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">umin</span><span class="p">,</span> <span class="n">umax</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="c1"># State and action dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="n">Bd</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># Stack variables as follows:</span>
+        <span class="c1"># [x_0, x_1, ..., x_{T-1}, x_T, u_0, u_1, ..., u_{T-1}]</span>
+
+        <span class="c1"># Quadratic objective</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">Q</span><span class="p">),</span> <span class="n">QT</span><span class="p">,</span> <span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">R</span><span class="p">)],</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Linear objective</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">q</span><span class="p">),</span> <span class="n">qT</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)])</span>
+        <span class="c1"># Linear dynamics</span>
+        <span class="n">Ax</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">))</span> <span class="o">+</span> <span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span>
+            <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="n">Ad</span>
+        <span class="p">)</span>
+        <span class="n">Bu</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span>
+            <span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span><span class="p">)]),</span> <span class="n">Bd</span>
+        <span class="p">)</span>
+        <span class="n">Aeq</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">Ax</span><span class="p">,</span> <span class="n">Bu</span><span class="p">])</span>
+
+        <span class="c1"># Will update this later with initial state</span>
+        <span class="n">beq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">)</span>
+
+        <span class="c1"># Box constraints on state and action</span>
+        <span class="n">Aineq</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">((</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">+</span> <span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
+
+        <span class="n">box_lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">xmin</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">umin</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">box_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">xmax</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">umax</span><span class="p">)]</span>
+        <span class="p">)</span>
+
+        <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="c1"># zero cone</span>
+                <span class="n">Aeq</span><span class="p">,</span>
+                <span class="c1"># Box cone {(t, s) | -t l &lt;= s &lt;= t u }</span>
+                <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">+</span> <span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)),</span>
+                <span class="o">-</span><span class="n">Aineq</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Box cone add constraint t=1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">beq</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">+</span> <span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)])</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+        <span class="n">cone</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="n">bu</span><span class="o">=</span><span class="n">box_upper</span><span class="p">,</span> <span class="n">bl</span><span class="o">=</span><span class="n">box_lower</span><span class="p">)</span>
+        <span class="c1"># Create an SCS object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">eps_rel</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">):</span>
+        <span class="c1"># Overwrite b with new initial state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">x0</span>
+        <span class="c1"># Update b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># will warm-start automatically</span>
+        <span class="k">if</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;solved&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SCS failed to solve the problem.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Return first action</span>
+        <span class="k">return</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="p">:</span> <span class="o">-</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">]</span>
+
+
+<span class="c1"># States dimension</span>
+<span class="n">nx</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="c1"># Control dimension</span>
+<span class="n">nu</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="c1"># State dynamics matrices</span>
+<span class="n">Ad</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">nx</span><span class="p">)</span>  <span class="c1"># State -&gt; State</span>
+<span class="n">Bd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>  <span class="c1"># Control -&gt; State</span>
+
+<span class="c1"># Cost matrices</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>  <span class="c1"># State</span>
+<span class="n">QT</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">Q</span>  <span class="c1"># Terminal State</span>
+<span class="n">R</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>  <span class="c1"># Control</span>
+
+<span class="c1"># Linear cost vector</span>
+<span class="n">q</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+<span class="n">qT</span> <span class="o">=</span> <span class="n">q</span>
+
+<span class="c1"># Initial state</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+
+<span class="c1"># Prediction horizon</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1"># Bounds on state</span>
+<span class="n">xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+<span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+
+<span class="c1"># Bounds on control</span>
+<span class="n">umax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
+<span class="n">umin</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
+
+<span class="c1"># Initialize Model Predictive Controller</span>
+<span class="n">mpc</span> <span class="o">=</span> <span class="n">MPC</span><span class="p">(</span><span class="n">Ad</span><span class="p">,</span> <span class="n">Bd</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">QT</span><span class="p">,</span> <span class="n">qT</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">umin</span><span class="p">,</span> <span class="n">umax</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+<span class="c1"># Simulate in closed loop</span>
+<span class="n">nsteps</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Number of steps</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsteps</span><span class="p">):</span>
+    <span class="c1"># Get control action</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">mpc</span><span class="o">.</span><span class="n">control</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Control action: </span><span class="si">{</span><span class="n">u</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Apply first control input and update to next state</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">Ad</span> <span class="o">@</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">Bd</span> <span class="o">@</span> <span class="n">u</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># + noise</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">xmax</span><span class="p">),</span> <span class="n">xmin</span><span class="p">)</span>  <span class="c1"># Bound to xmin, xmax</span>
+</pre></div>
+</div>
+<p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
+run the code yielding output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
+	       SCS v3.1.1 - Splitting Conic Solver
+	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+------------------------------------------------------------------
+problem:  variables n: 770, constraints m: 1391
+cones: 	  z: primal zero / dual free vars: 620
+	  b: box cone vars: 771
+settings: eps_abs: 1.0e-05, eps_rel: 1.0e-05, eps_infeas: 1.0e-07
+	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
+	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
+	  acceleration_lookback: 10, acceleration_interval: 10
+lin-sys:  sparse-direct
+	  nnz(A): 16390, nnz(P): 770
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.74e+01  3.51e+00  3.73e+03  2.35e+03  1.00e-01  3.09e-04 
+   225| 6.23e-11  1.21e-11  1.04e-09  1.09e+03  1.30e+00  2.33e-02 
+------------------------------------------------------------------
+status:  solved
+timings: total: 2.34e-02s = setup: 9.72e-06s + solve: 2.34e-02s
+	 lin-sys: 1.84e-02s, cones: 1.09e-03s, accel: 6.86e-04s
+------------------------------------------------------------------
+objective = 1088.948282
+------------------------------------------------------------------
+Control action: [ 0.41348794 -1.         -0.38009805 -1.         -0.42945415]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 2.46e+01  6.40e+01  2.05e+03  9.35e+02  1.30e+00  4.82e-04 
+    25| 5.67e-07  2.89e-05  4.55e-04  1.43e+02  1.30e+00  3.84e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.87e-03s = setup: 1.59e-05s + solve: 3.85e-03s
+	 lin-sys: 2.81e-03s, cones: 2.09e-04s, accel: 1.12e-04s
+------------------------------------------------------------------
+objective = 142.600803
+------------------------------------------------------------------
+Control action: [-0.44966462 -0.03355008  0.52249607  0.19250174  0.14671164]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 9.09e+00  2.36e+01  2.87e+02  9.13e+01  1.30e+00  3.74e-04 
+    25| 1.28e-07  5.65e-06  2.59e-05  1.01e+01  1.30e+00  3.69e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.72e-03s = setup: 1.28e-05s + solve: 3.71e-03s
+	 lin-sys: 2.79e-03s, cones: 2.11e-04s, accel: 2.78e-05s
+------------------------------------------------------------------
+objective = 10.124977
+------------------------------------------------------------------
+Control action: [ 0.18436581  0.01049508 -0.01660706 -0.10110899 -0.00797351]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 2.97e+00  7.72e+00  2.21e+01  8.98e+00  1.30e+00  4.36e-04 
+    25| 4.95e-08  2.08e-06  2.67e-06  6.17e-01  1.30e+00  3.85e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.88e-03s = setup: 1.18e-05s + solve: 3.87e-03s
+	 lin-sys: 2.95e-03s, cones: 2.29e-04s, accel: 2.76e-05s
+------------------------------------------------------------------
+objective = 0.616727
+------------------------------------------------------------------
+Control action: [-0.05327529  0.02863548  0.02321702  0.05851298  0.05562412]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 9.21e-01  2.39e+00  1.32e+00  2.03e+00  1.30e+00  3.92e-04 
+    25| 1.79e-08  6.46e-07  6.26e-07  2.25e-01  1.30e+00  3.58e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.61e-03s = setup: 1.17e-05s + solve: 3.60e-03s
+	 lin-sys: 2.76e-03s, cones: 1.88e-04s, accel: 2.94e-05s
+------------------------------------------------------------------
+objective = 0.224881
+------------------------------------------------------------------
+Control action: [ 0.00742414  0.01912228 -0.03393191  0.03964983  0.00193193]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 3.06e-01  7.95e-01  4.69e-01  7.86e-02  1.30e+00  4.53e-04 
+    25| 6.91e-09  2.38e-07  5.74e-08  4.16e-02  1.30e+00  3.61e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.65e-03s = setup: 2.32e-05s + solve: 3.63e-03s
+	 lin-sys: 2.67e-03s, cones: 1.68e-04s, accel: 2.56e-05s
+------------------------------------------------------------------
+objective = 0.041573
+------------------------------------------------------------------
+Control action: [-0.01297334  0.02363413 -0.03044127  0.05802441 -0.00469033]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 1.11e-01  2.89e-01  5.02e-02 -3.43e-02  1.30e+00  3.57e-04 
+    25| 4.30e-09  1.81e-07  1.22e-08 -1.47e-02  1.30e+00  3.48e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.51e-03s = setup: 1.26e-05s + solve: 3.50e-03s
+	 lin-sys: 2.55e-03s, cones: 1.59e-04s, accel: 1.49e-04s
+------------------------------------------------------------------
+objective = -0.014719
+------------------------------------------------------------------
+Control action: [-0.01673083  0.02410207 -0.03265513  0.05713659  0.00074876]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 4.88e-02  1.27e-01  1.10e-01  1.95e-01  1.30e+00  4.38e-04 
+    25| 1.05e-09  3.82e-08  5.28e-08  5.71e-02  1.30e+00  4.01e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 4.04e-03s = setup: 1.17e-05s + solve: 4.03e-03s
+	 lin-sys: 3.09e-03s, cones: 2.11e-04s, accel: 1.81e-05s
+------------------------------------------------------------------
+objective = 0.057139
+------------------------------------------------------------------
+Control action: [-0.01873535  0.02513378 -0.03083648  0.0586056   0.00248981]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 2.81e-02  7.30e-02  1.51e-01  3.06e-01  1.30e+00  4.49e-04 
+    25| 5.55e-10  2.30e-08  6.88e-08  1.41e-01  1.30e+00  3.98e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 4.01e-03s = setup: 1.25e-05s + solve: 4.00e-03s
+	 lin-sys: 3.05e-03s, cones: 2.10e-04s, accel: 3.11e-05s
+------------------------------------------------------------------
+objective = 0.140619
+------------------------------------------------------------------
+Control action: [-0.01807515  0.02511239 -0.03288644  0.0597179   0.00232987]
+------------------------------------------------------------------
+ iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
+------------------------------------------------------------------
+     0| 8.98e-03  2.33e-02  2.83e-02  1.86e-01  1.30e+00  3.14e-04 
+    25| 1.54e-10  6.84e-09  1.30e-08  1.56e-01  1.30e+00  3.47e-03 
+------------------------------------------------------------------
+status:  solved
+timings: total: 3.50e-03s = setup: 1.07e-05s + solve: 3.49e-03s
+	 lin-sys: 2.68e-03s, cones: 1.64e-04s, accel: 2.98e-05s
+------------------------------------------------------------------
+objective = 0.156128
+------------------------------------------------------------------
+Control action: [-0.01797391  0.02512434 -0.03330189  0.06002231  0.00188589]
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="entropy.html" class="btn btn-neutral float-left" title="Maximum Entropy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../matlab.html" class="btn btn-neutral float-right" title="MATLAB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-203326834-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

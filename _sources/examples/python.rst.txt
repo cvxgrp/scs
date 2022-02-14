@@ -3,18 +3,23 @@
 Python
 ======
 
-.. include:: qp.prob
+:ref:`Basic QP <py_basic_qp>`
 
-Python code to solve this is below.
+:ref:`Lasso <py_lasso>`
 
-.. literalinclude:: qp.py
-   :language: python
+:ref:`Low-rank matrix completion <py_mat_completion>`
 
-After following the python :ref:`install instructions <python_install>`, we can
-run the code yielding output:
+:ref:`Maximum entropy <py_entropy>`
 
-.. python qp.py > qp.py.out
+:ref:`Model predictive control <py_mpc>`
 
-.. literalinclude:: qp.py.out
-   :language: none
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   python/basic_qp.rst
+   python/lasso.rst
+   python/mat_completion.rst
+   python/entropy.rst
+   python/mpc.rst

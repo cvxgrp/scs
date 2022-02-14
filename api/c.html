@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C / C++ &mdash; SCS 3.1.1 documentation</title>
+  <title>C / C++ &mdash; SCS 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
@@ -33,7 +33,7 @@
             <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.1.1
+                3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -109,22 +109,80 @@
 <span id="c-main-api"></span><h2>Main solver API<a class="headerlink" href="#main-solver-api" title="Permalink to this headline"></a></h2>
 <p>The C API is imported from the header <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code>, available <a class="reference external" href="https://github.com/cvxgrp/scs/blob/master/include/scs.h">here</a>.</p>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv43scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo">
-<span id="_CPPv33scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo"></span><span id="_CPPv23scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo"></span><span id="scs__ScsDataCP.ScsConeCP.ScsSettingsCP.ScsSolutionP.ScsInfoP"></span><span class="target" id="scs_8h_1acd26da2b245ff5341bce5e3b6a803356"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsData" title="ScsData"><span class="n"><span class="pre">ScsData</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">d</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsCone" title="ScsCone"><span class="n"><span class="pre">ScsCone</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">k</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span>, <a class="reference internal" href="#_CPPv411ScsSolution" title="ScsSolution"><span class="n"><span class="pre">ScsSolution</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">sol</span></span>, <a class="reference internal" href="#_CPPv47ScsInfo" title="ScsInfo"><span class="n"><span class="pre">ScsInfo</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">info</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv43scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Solve quadratic cone program defined by data in d and cone k.</p>
-<p>All the inputs must already be allocated in memory before calling.</p>
+<dt class="sig sig-object cpp" id="_CPPv48scs_initPK7ScsDataPK7ScsConePK11ScsSettings">
+<span id="_CPPv38scs_initPK7ScsDataPK7ScsConePK11ScsSettings"></span><span id="_CPPv28scs_initPK7ScsDataPK7ScsConePK11ScsSettings"></span><span id="scs_init__ScsDataCP.ScsConeCP.ScsSettingsCP"></span><span class="target" id="scs_8h_1a46e5897d083fbb36509a5bf86a41118a"></span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsData" title="ScsData"><span class="n"><span class="pre">ScsData</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">d</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsCone" title="ScsCone"><span class="n"><span class="pre">ScsCone</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">k</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48scs_initPK7ScsDataPK7ScsConePK11ScsSettings" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize SCS and allocate memory.</p>
+<p>All the inputs must be already allocated in memory before calling. After this function returns then the memory associated with <code class="docutils literal notranslate"><span class="pre">d</span></code>, <code class="docutils literal notranslate"><span class="pre">k</span></code>, and <code class="docutils literal notranslate"><span class="pre">stgs</span></code> can be freed as SCS maintains deep copies of these internally.</p>
+<p>It performs:<ul class="simple">
+<li><p>data and settings validation</p></li>
+<li><p>problem data scaling</p></li>
+<li><p>automatic parameters tuning (if enabled)</p></li>
+<li><p>setup linear system solver:<ul>
+<li><p>direct solver: KKT matrix factorization is performed here</p></li>
+<li><p>indirect solver: KKT matrix preconditioning is performed here.</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>d</strong> – Problem data. </p></li>
 <li><p><strong>k</strong> – Cone data. </p></li>
-<li><p><strong>stgs</strong> – SCS solver settings. </p></li>
-<li><p><strong>sol</strong> – Solution will be stored here. If members <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code> are NULL then SCS will allocate memory for them. </p></li>
-<li><p><strong>info</strong> – Information about the solve will be stored here. </p></li>
+<li><p><strong>stgs</strong> – SCS solve settings. </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Flag that determines solve type (see <em>glbopts.h</em>). </p>
+<dd class="field-even"><p>Solver workspace. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49scs_solveP7ScsWorkP11ScsSolutionP7ScsInfo7scs_int">
+<span id="_CPPv39scs_solveP7ScsWorkP11ScsSolutionP7ScsInfo7scs_int"></span><span id="_CPPv29scs_solveP7ScsWorkP11ScsSolutionP7ScsInfo7scs_int"></span><span id="scs_solve__ScsWorkP.ScsSolutionP.ScsInfoP.scs_int"></span><span class="target" id="scs_8h_1a58fd31598ebab93ce1121f87df460566"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <a class="reference internal" href="#_CPPv411ScsSolution" title="ScsSolution"><span class="n"><span class="pre">ScsSolution</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">sol</span></span>, <a class="reference internal" href="#_CPPv47ScsInfo" title="ScsInfo"><span class="n"><span class="pre">ScsInfo</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">info</span></span>, <span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">warm_start</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49scs_solveP7ScsWorkP11ScsSolutionP7ScsInfo7scs_int" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Solve quadratic cone program initialized by scs_init.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – Workspace allocated by scs_init. </p></li>
+<li><p><strong>sol</strong> – Solution will be stored here. If members <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code> are NULL then SCS will allocate memory for them which must be freed by the caller. </p></li>
+<li><p><strong>info</strong> – Information about the solve will be stored here. </p></li>
+<li><p><strong>warm_start</strong> – Whether to use the entries of <code class="docutils literal notranslate"><span class="pre">sol</span></code> as warm-start for the solve.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Flag containing problem status (see <em>glbopts.h</em>). </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv410scs_updateP7ScsWorkP9scs_floatP9scs_float">
+<span id="_CPPv310scs_updateP7ScsWorkP9scs_floatP9scs_float"></span><span id="_CPPv210scs_updateP7ScsWorkP9scs_floatP9scs_float"></span><span id="scs_update__ScsWorkP.scs_floatP.scs_floatP"></span><span class="target" id="scs_8h_1ae19c84d79a22890aa957067824c0b088"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410scs_updateP7ScsWorkP9scs_floatP9scs_float" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Update the <code class="docutils literal notranslate"><span class="pre">b</span></code> vector, <code class="docutils literal notranslate"><span class="pre">c</span></code> vector, or both, before another solve call.</p>
+<p>After a solve we can reuse the SCS workspace in another solve if the only problem data that has changed are the <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – SCS workspace from scs_init (modified in-place). </p></li>
+<li><p><strong>b</strong> – New <code class="docutils literal notranslate"><span class="pre">b</span></code> vector (can be <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> if unchanged). </p></li>
+<li><p><strong>c</strong> – New <code class="docutils literal notranslate"><span class="pre">c</span></code> vector (can be <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> if unchanged).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>0 if update successful. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv410scs_finishP7ScsWork">
+<span id="_CPPv310scs_finishP7ScsWork"></span><span id="_CPPv210scs_finishP7ScsWork"></span><span id="scs_finish__ScsWorkP"></span><span class="target" id="scs_8h_1ad09d2ed5fe68896d2b7056cb5a9a3e0d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_finish</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410scs_finishP7ScsWork" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clean up allocated SCS workspace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> – Workspace allocated by init, will be deallocated. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -140,6 +198,30 @@ specified in the <a class="reference internal" href="settings.html#settings"><sp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>stgs</strong> – Settings struct that will be populated. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>If you only need to solve a single problem and not a series of related problems,
+then you can call the <code class="code docutils literal notranslate"><span class="pre">scs</span></code> function documented here, which simply calls
+the <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>, <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code>, <code class="code docutils literal notranslate"><span class="pre">scs_finish</span></code> sequence above.</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv43scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo">
+<span id="_CPPv33scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo"></span><span id="_CPPv23scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo"></span><span id="scs__ScsDataCP.ScsConeCP.ScsSettingsCP.ScsSolutionP.ScsInfoP"></span><span class="target" id="scs_8h_1acd26da2b245ff5341bce5e3b6a803356"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsData" title="ScsData"><span class="n"><span class="pre">ScsData</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">d</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv47ScsCone" title="ScsCone"><span class="n"><span class="pre">ScsCone</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">k</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span>, <a class="reference internal" href="#_CPPv411ScsSolution" title="ScsSolution"><span class="n"><span class="pre">ScsSolution</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">sol</span></span>, <a class="reference internal" href="#_CPPv47ScsInfo" title="ScsInfo"><span class="n"><span class="pre">ScsInfo</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">info</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv43scsPK7ScsDataPK7ScsConePK11ScsSettingsP11ScsSolutionP7ScsInfo" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Solve quadratic cone program defined by data in d and cone k.</p>
+<p>All the inputs must already be allocated in memory before calling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> – Problem data. </p></li>
+<li><p><strong>k</strong> – Cone data. </p></li>
+<li><p><strong>stgs</strong> – SCS solver settings. </p></li>
+<li><p><strong>sol</strong> – Solution will be stored here. If members <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code> are NULL then SCS will allocate memory for them. </p></li>
+<li><p><strong>info</strong> – Information about the solve will be stored here. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Flag containing problem status (see <em>glbopts.h</em>). </p>
 </dd>
 </dl>
 </dd></dl>
@@ -291,7 +373,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1qE">
 <span id="_CPPv3N7ScsCone1qE"></span><span id="_CPPv2N7ScsCone1qE"></span><span id="ScsCone::q__scs_intP"></span><span class="target" id="struct_scs_cone_1a4ec650e0813fab72ad255d8ecaa73f8e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">q</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1qE" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Array of second-order cone constraints. </p>
+<dd><p>Array of second-order cone constraints, <code class="docutils literal notranslate"><span class="pre">len(q)</span> <span class="pre">=</span> <span class="pre">qsize</span></code>. </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -303,7 +385,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1sE">
 <span id="_CPPv3N7ScsCone1sE"></span><span id="_CPPv2N7ScsCone1sE"></span><span id="ScsCone::s__scs_intP"></span><span class="target" id="struct_scs_cone_1a8439d6bb734309682da2cee78283475e"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">s</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1sE" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Array of semidefinite cone constraints. </p>
+<dd><p>Array of semidefinite cone constraints, <code class="docutils literal notranslate"><span class="pre">len(s)</span> <span class="pre">=</span> <span class="pre">ssize</span></code>. </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -327,7 +409,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N7ScsCone1pE">
 <span id="_CPPv3N7ScsCone1pE"></span><span id="_CPPv2N7ScsCone1pE"></span><span id="ScsCone::p__scs_floatP"></span><span class="target" id="struct_scs_cone_1af10de865b1a76694b2369fcba61e842f"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">p</span></span></span><a class="headerlink" href="#_CPPv4N7ScsCone1pE" title="Permalink to this definition"></a><br /></dt>
-<dd><p>Array of power cone params, must be in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>, negative values are interpreted as specifying the dual cone. </p>
+<dd><p>Array of power cone params, must be in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>, negative values are interpreted as specifying the dual cone, <code class="docutils literal notranslate"><span class="pre">len(p)</span> <span class="pre">=</span> <span class="pre">psize</span></code> </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -458,7 +540,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <p>This will contain the solution as found by SCS <em>or</em> the certificate of primal or
 dual infeasibility (see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>). If the user wants to warm-start the
 solver, then the Solution struct is also used as an input to specify the
-warm-start points (see <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Warm-starting</span></a>).</p>
+warm-start points (see <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Caching the workspace and warm-starts</span></a>).</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSolution">
 <span id="_CPPv311ScsSolution"></span><span id="_CPPv211ScsSolution"></span><span id="ScsSolution"></span><span class="target" id="struct_scs_solution"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsSolution</span></span></span><a class="headerlink" href="#_CPPv411ScsSolution" title="Permalink to this definition"></a><br /></dt>
