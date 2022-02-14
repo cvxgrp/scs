@@ -105,13 +105,15 @@
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">cones</span><span class="p">,</span><span class="w"> </span><span class="nb">settings</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
-<p>where <code class="code docutils literal notranslate"><span class="pre">data</span></code> is a struct containing <code class="code docutils literal notranslate"><span class="pre">P,</span> <span class="pre">A,</span> <span class="pre">b,</span> <span class="pre">c</span></code>, <code class="code docutils literal notranslate"><span class="pre">P,</span> <span class="pre">A</span></code>
-must be sparse matrices, <code class="code docutils literal notranslate"><span class="pre">settings</span></code> is a struct containing solver
+<p>where <code class="code docutils literal notranslate"><span class="pre">data</span></code> is a struct containing <code class="code docutils literal notranslate"><span class="pre">P,</span> <span class="pre">A,</span> <span class="pre">b,</span> <span class="pre">c</span></code>, <code class="code docutils literal notranslate"><span class="pre">P,</span> <span class="pre">A</span></code> must
+be sparse matrices, <code class="code docutils literal notranslate"><span class="pre">settings</span></code> is a struct containing solver
 <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> (missing settings are set to the defaults), and <code class="code docutils literal notranslate"><span class="pre">cones</span></code> is
-a struct that contains the <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> information. At termination <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span>
-<span class="pre">s</span></code> contains the primal-dual <a class="reference internal" href="../algorithm/index.html#optimality"><span class="std std-ref">solution</span></a> or the
-<a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>, and info is a struct
-containing the solve <a class="reference internal" href="info.html#info"><span class="std std-ref">Return information</span></a>.</p>
+a struct that contains the <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> information.  The <code class="code docutils literal notranslate"><span class="pre">cone</span></code> struct
+contains members corresponding to the cone type and values corresponding to either
+the cone length or the array that defines the cone (see the third column in
+<a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> for the keys and what the corresponding values represent).  At
+termination <code class="code docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">s</span></code> contains the primal-dual <a class="reference internal" href="../algorithm/index.html#optimality"><span class="std std-ref">solution</span></a> or the <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">certificate of infeasibility</span></a>, and
+info is a struct containing the solve <a class="reference internal" href="info.html#info"><span class="std std-ref">Return information</span></a>.</p>
 <section id="warm-starting">
 <h2>Warm-starting<a class="headerlink" href="#warm-starting" title="Permalink to this headline"></a></h2>
 <p>Warm-starting SCS with a guess of the primal-dual solution can reduce the total
