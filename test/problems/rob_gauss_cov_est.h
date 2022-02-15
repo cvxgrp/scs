@@ -175,6 +175,8 @@ static const char *rob_gauss_cov_est(void) {
   mu_assert("rob_gauss_cov_est: SCS failed to produce outputflag SCS_SOLVED",
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  if (fail)
+    return fail;
 
   /* test warm-starting */
   stgs->warm_start = 1;

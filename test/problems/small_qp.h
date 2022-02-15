@@ -338,6 +338,8 @@ static const char *small_qp(void) {
 
   mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  if (fail)
+    return fail;
 
   /* test updating c */
   d->c[0] = 1.0; /* set to new value */
@@ -347,6 +349,8 @@ static const char *small_qp(void) {
 
   mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  if (fail)
+    return fail;
 
   /* test updating b */
   d->b[0] = 4.0; /* set to new value */
@@ -356,6 +360,8 @@ static const char *small_qp(void) {
 
   mu_assert("small_qp: SCS failed to produce outputflag SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  if (fail)
+    return fail;
 
   /* revert back to original data */
   d->c[0] = 0.0; /* revert to original value */
