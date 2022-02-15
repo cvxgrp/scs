@@ -1,6 +1,7 @@
 #include "glbopts.h"
 #include "minunit.h"
 #include "problem_utils.h"
+#include "rw.h"
 #include "scs.h"
 #include "util.h"
 

@@ -2,6 +2,7 @@
 #include "linalg.h"
 #include "minunit.h"
 #include "problem_utils.h"
+#include "rw.h"
 #include "scs.h"
 #include "scs_matrix.h"
 #include "util.h"
