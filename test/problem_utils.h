@@ -208,7 +208,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    1e-11);
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
                    1e-11);
-    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 2e-8 * (1 + ABS(gap)));
+    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-7 * (1 + ABS(gap)));
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
                    1e-9 * (1 + ABS(pobj)));
     mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj),
