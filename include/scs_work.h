@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+#include "scs.h"
+
 /** Contains normalization variables. */
 typedef struct {
   scs_float *D, *E; /* for normalization */
