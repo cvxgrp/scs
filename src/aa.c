@@ -199,7 +199,6 @@ static void set_m(AaWork *a, aa_int len) {
     }
   }
   TIME_TOC
-  return;
 }
 
 /* initialize accel params, in particular x_prev, f_prev, g_prev */
@@ -278,7 +277,6 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
   a->norm_g = BLAS(nrm2)(&bdim, a->g, &one);
 
   TIME_TOC
-  return;
 }
 
 /* f = (1-relaxation) * \sum_i a_i x_i + relaxation * \sum_i a_i f_i */
@@ -493,7 +491,6 @@ void aa_finish(AaWork *a) {
     }
     free(a);
   }
-  return;
 }
 
 void aa_reset(AaWork *a) {
@@ -502,7 +499,6 @@ void aa_reset(AaWork *a) {
     printf("AA reset.\n");
   }
   a->iter = 0;
-  return;
 }
 
 #endif
