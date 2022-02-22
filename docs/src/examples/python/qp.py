@@ -12,8 +12,10 @@ c = np.array([-1.0, -1.0])
 data = dict(P=P, A=A, b=b, c=c)
 cone = dict(z=1, l=2)
 
+# Initialize solver
+solver = scs.SCS(data, cone, eps_abs=1e-9, eps_rel=1e-9)
 # Solve!
-sol = scs.solve(data, cone, eps_abs=1e-9, eps_rel=1e-9)
+sol = solver.solve()
 
 print(f"SCS took {sol['info']['iter']} iters")
 print("Optimal solution vector x*:")
