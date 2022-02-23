@@ -109,6 +109,13 @@ message(STATUS "Single precision floats (32bit) are ${SFLOAT}")
 option(DLONG "Use long integers (64bit) for indexing" OFF)
 message(STATUS "Long integers (64bit) are ${DLONG}")
 
+# Disable all printing
+option(NO_PRINTING "Disables all printing" OFF)
+message(STATUS "Printing is NOT ${NO_PRINTING}")
+
+# Disable all read/write functionality
+option(NO_READ_WRITE "Disables all read/write functionality" OFF)
+message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 
 set(COMPILER_OPTS "-DUSE_LAPACK -DCTRLC")
 
@@ -127,6 +134,14 @@ else()
   set(SCS_INT_TYPE "int")
 endif()
 
+if(NO_PRINTING)
+  set(COMPILER_OPTS "-DNO_PRINTING=1 ${COMPILER_OPTS}")
+endif()
+
+if(NO_READ_WRITE)
+  set(COMPILER_OPTS "-DNO_READ_WRITE=1 ${COMPILER_OPTS}")
+endif()
+
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
 
 # TODO this is a hack that overwrites the scs_types.h file, we should
@@ -135,7 +150,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/scs_types.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/include/scs_types.h
                NEWLINE_STYLE LF)
 
-# Public headers 
+# Public headers
 set(${PROJECT_NAME}_PUBLIC_HDR
   include/scs_types.h
   include/scs.h)

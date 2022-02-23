@@ -11,7 +11,7 @@ extern "C" {
 #include <stdlib.h>
 
 /* timing code courtesy of A. Domahidi */
-#if (defined NOTIMER)
+#if (defined NO_TIMER)
 typedef void *SCS(timer);
 #elif (defined _WIN32 || defined _WIN64 || defined _WINDLL)
 /* Use Windows QueryPerformanceCounter for timing */
