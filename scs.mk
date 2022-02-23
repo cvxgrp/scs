@@ -83,50 +83,50 @@ ifeq ($(PREFIX),)
   PREFIX = /usr/local
 endif
 
-########### OPTIONAL FLAGS ##########
+########### CUSTOM FLAGS ##########
 # these can all be override from the command line
-OPT_FLAGS =
+CUSTOM_FLAGS =
 # e.g. make DLONG=1 will override the setting below
 DLONG = 0
 ifneq ($(DLONG), 0)
-OPT_FLAGS += -DDLONG=$(DLONG) # use longs rather than ints
+CUSTOM_FLAGS += -DDLONG=$(DLONG) # use longs rather than ints
 endif
 CTRLC = 1
 ifneq ($(CTRLC), 0)
-OPT_FLAGS += -DCTRLC=$(CTRLC) # graceful interrupts with ctrl-c
+CUSTOM_FLAGS += -DCTRLC=$(CTRLC) # graceful interrupts with ctrl-c
 endif
 SFLOAT = 0
 ifneq ($(SFLOAT), 0)
-OPT_FLAGS += -DSFLOAT=$(SFLOAT) # use floats rather than doubles
+CUSTOM_FLAGS += -DSFLOAT=$(SFLOAT) # use floats rather than doubles
 endif
 GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)
-OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # transpose A mat in GPU memory
+CUSTOM_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # transpose A mat in GPU memory
 endif
 NO_TIMER = 0
 ifneq ($(NO_TIMER), 0)
-OPT_FLAGS += -DNO_TIMER=$(NO_TIMER) # no timing, times reported as nan
+CUSTOM_FLAGS += -DNO_TIMER=$(NO_TIMER) # no timing, times reported as nan
 endif
 NO_VALIDATE = 0
 ifneq ($(NO_VALIDATE), 0)
-OPT_FLAGS += -DNO_VALIDATE=$(NO_VALIDATE) # perform problem validation or skip
+CUSTOM_FLAGS += -DNO_VALIDATE=$(NO_VALIDATE) # perform problem validation or skip
 endif
 NO_PRINTING = 0
 ifneq ($(NO_PRINTING), 0)
-OPT_FLAGS += -DNO_PRINTING=$(NO_PRINTING) # disable printing
+CUSTOM_FLAGS += -DNO_PRINTING=$(NO_PRINTING) # disable printing
 endif
 NO_READ_WRITE = 0
 ifneq ($(NO_READ_WRITE ), 0)
-OPT_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable printing
+CUSTOM_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable printing
 endif
 ### VERBOSITY LEVELS: 0,1,2,...
 VERBOSITY = 0
 ifneq ($(VERBOSITY), 0)
-OPT_FLAGS += -DVERBOSITY=$(VERBOSITY) # verbosity level
+CUSTOM_FLAGS += -DVERBOSITY=$(VERBOSITY) # verbosity level
 endif
 COVERAGE = 0
 ifneq ($(COVERAGE), 0)
-OPT_FLAGS += --coverage # generate test coverage data
+CUSTOM_FLAGS += --coverage # generate test coverage data
 endif
 
 ############ OPENMP: ############
@@ -150,39 +150,39 @@ ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   BLASLDFLAGS = -llapack -lblas # -lgfortran
   LDFLAGS += $(BLASLDFLAGS)
-  OPT_FLAGS += -DUSE_LAPACK
+  CUSTOM_FLAGS += -DUSE_LAPACK
 
   BLAS64 = 0
   ifneq ($(BLAS64), 0)
-  OPT_FLAGS += -DBLAS64=$(BLAS64) # if blas/lapack lib uses 64 bit ints
+  CUSTOM_FLAGS += -DBLAS64=$(BLAS64) # if blas/lapack lib uses 64 bit ints
   endif
 
   NOBLASSUFFIX = 0
   ifneq ($(NOBLASSUFFIX), 0)
-  OPT_FLAGS += -DNOBLASSUFFIX=$(NOBLASSUFFIX) # hack to strip blas suffix
+  CUSTOM_FLAGS += -DNOBLASSUFFIX=$(NOBLASSUFFIX) # hack to strip blas suffix
   endif
 
   BLASSUFFIX = "_"
   ifneq ($(BLASSUFFIX), "_")
-  OPT_FLAGS += -DBLASSUFFIX=$(BLASSUFFIX) # blas suffix (underscore usually)
+  CUSTOM_FLAGS += -DBLASSUFFIX=$(BLASSUFFIX) # blas suffix (underscore usually)
   endif
 endif
 
 MATLAB_MEX_FILE = 0
 ifneq ($(MATLAB_MEX_FILE), 0)
-OPT_FLAGS += -DMATLAB_MEX_FILE=$(MATLAB_MEX_FILE) # matlab mex
+CUSTOM_FLAGS += -DMATLAB_MEX_FILE=$(MATLAB_MEX_FILE) # matlab mex
 endif
 PYTHON = 0
 ifneq ($(PYTHON), 0)
-OPT_FLAGS += -DPYTHON=$(PYTHON) # python extension
+CUSTOM_FLAGS += -DPYTHON=$(PYTHON) # python extension
 endif
 USING_R = 0
 ifneq ($(USING_R), 0)
-OPT_FLAGS += -DUSING_R=$(USING_R) # R extension
+CUSTOM_FLAGS += -DUSING_R=$(USING_R) # R extension
 endif
 
 # debug to see var values, e.g. 'make print-OBJECTS' shows OBJECTS value
 print-%: ; @echo $*=$($*)
 
-override CFLAGS += $(OPT_FLAGS)
-CUDAFLAGS += $(OPT_FLAGS)
+override CFLAGS += $(CUSTOM_FLAGS)
+CUDAFLAGS += $(CUSTOM_FLAGS)
