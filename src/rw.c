@@ -9,6 +9,25 @@
 #include "scs_matrix.h"
 #include "util.h"
 
+#if NO_READ_WRITE > 0 /* Disables all read / write functionality */
+
+void SCS(write_data)(const ScsData *d, const ScsCone *k,
+                     const ScsSettings *stgs) {
+  /* Do nothing */
+}
+scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
+                       ScsSettings **stgs) {
+  /* Failure */
+  return -1;
+}
+void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
+                          const ScsWork *w, scs_int iter,
+                          SCS(timer) * solve_timer) {
+  /* Do nothing */
+}
+
+#else
+
 /* writes/reads problem data to/from filename */
 /* This is a VERY naive implementation, doesn't care about portability etc */
 
@@ -348,3 +367,5 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   fprintf(fout, "\n");
   fclose(fout);
 }
+
+#endif

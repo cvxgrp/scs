@@ -5,7 +5,7 @@
 #include "scs_matrix.h"
 
 /* return milli-seconds */
-#if (defined NOTIMER)
+#if (defined NO_TIMER)
 
 void SCS(tic)(SCS(timer) * t) {
 }

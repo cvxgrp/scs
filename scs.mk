@@ -83,9 +83,9 @@ ifeq ($(PREFIX),)
   PREFIX = /usr/local
 endif
 
-OPT_FLAGS =
 ########### OPTIONAL FLAGS ##########
 # these can all be override from the command line
+OPT_FLAGS =
 # e.g. make DLONG=1 will override the setting below
 DLONG = 0
 ifneq ($(DLONG), 0)
@@ -99,17 +99,25 @@ SFLOAT = 0
 ifneq ($(SFLOAT), 0)
 OPT_FLAGS += -DSFLOAT=$(SFLOAT) # use floats rather than doubles
 endif
-NOTIMER = 0
-ifneq ($(NOTIMER), 0)
-OPT_FLAGS += -DNOTIMER=$(NOTIMER) # no timing, times reported as nan
-endif
 GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)
-OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # tranpose A mat in GPU memory
+OPT_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # transpose A mat in GPU memory
 endif
-NOVALIDATE = 0
-ifneq ($(NOVALIDATE), 0)
-OPT_FLAGS += -DNOVALIDATE=$(NOVALIDATE) # perform problem validation or skip
+NO_TIMER = 0
+ifneq ($(NO_TIMER), 0)
+OPT_FLAGS += -DNO_TIMER=$(NO_TIMER) # no timing, times reported as nan
+endif
+NO_VALIDATE = 0
+ifneq ($(NO_VALIDATE), 0)
+OPT_FLAGS += -DNO_VALIDATE=$(NO_VALIDATE) # perform problem validation or skip
+endif
+NO_PRINTING = 0
+ifneq ($(NO_PRINTING), 0)
+OPT_FLAGS += -DNO_PRINTING=$(NO_PRINTING) # disable printing
+endif
+NO_READ_WRITE = 0
+ifneq ($(NO_READ_WRITE ), 0)
+OPT_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable printing
 endif
 ### VERBOSITY LEVELS: 0,1,2,...
 VERBOSITY = 0
@@ -118,9 +126,8 @@ OPT_FLAGS += -DVERBOSITY=$(VERBOSITY) # verbosity level
 endif
 COVERAGE = 0
 ifneq ($(COVERAGE), 0)
-override CFLAGS += --coverage # generate test coverage data
+OPT_FLAGS += --coverage # generate test coverage data
 endif
-
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):

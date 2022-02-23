@@ -39,14 +39,13 @@ extern "C" {
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)
 
+#if NO_PRINTING > 0     /* Disable all printing */
+#define scs_printf(...) /* No-op */
+#else
 /* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
 #define scs_printf mexPrintf
-#define scs_free mxFree
-#define scs_malloc mxMalloc
-#define scs_calloc mxCalloc
-#define scs_realloc mxRealloc
 #elif defined PYTHON
 #include <Python.h>
 /* see:
@@ -58,6 +57,30 @@ extern "C" {
     PySys_WriteStdout(__VA_ARGS__);                                            \
     PyGILState_Release(gilstate);                                              \
   }
+#elif defined R_LANG
+#include <R_ext/Print.h> /* Rprintf etc */
+#include <stdio.h>
+#include <stdlib.h>
+#define scs_printf Rprintf
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#define scs_printf printf
+#endif
+#endif
+
+/* redefine memory allocators as needed */
+#ifdef MATLAB_MEX_FILE
+#include "mex.h"
+#define scs_free mxFree
+#define scs_malloc mxMalloc
+#define scs_calloc mxCalloc
+#define scs_realloc mxRealloc
+#elif defined PYTHON
+#include <Python.h>
+/* see:
+ * https://cython-users.narkive.com/jRjjs3sK/reacquire-gil-for-printing-in-wrapped-c-library
+ */
 #if PY_MAJOR_VERSION >= 3
 #define scs_free PyMem_RawFree
 #define scs_malloc PyMem_RawMalloc
@@ -74,10 +97,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
 }
 #endif
 #elif defined R_LANG
-#include <R_ext/Print.h> /* Rprintf etc */
 #include <stdio.h>
 #include <stdlib.h>
-#define scs_printf Rprintf
 #define scs_free free
 #define scs_malloc malloc
 #define scs_calloc calloc
@@ -85,7 +106,6 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #else
 #include <stdio.h>
 #include <stdlib.h>
-#define scs_printf printf
 #define scs_free free
 #define scs_malloc malloc
 #define scs_calloc calloc

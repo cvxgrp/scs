@@ -685,7 +685,7 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
   return 0;
 }
 
-#if NOVALIDATE == 0
+#if NO_VALIDATE == 0
 static scs_int validate(const ScsData *d, const ScsCone *k,
                         const ScsSettings *stgs) {
   if (d->m <= 0 || d->n <= 0) {
@@ -1179,7 +1179,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
     scs_printf("ERROR: Missing ScsData or ScsCone input\n");
     return SCS_NULL;
   }
-#if NOVALIDATE == 0
+#if NO_VALIDATE == 0
   if (validate(d, k, stgs) < 0) {
     scs_printf("ERROR: Validation returned failure\n");
     return SCS_NULL;

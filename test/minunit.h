@@ -21,7 +21,6 @@
     scs_printf("Running test: %s\n", name);                                    \
     const char *message = test();                                              \
     tests_run++;                                                               \
-    scs_printf("*********************************************************\n"); \
     if (message)                                                               \
       return message;                                                          \
   } while (0)
