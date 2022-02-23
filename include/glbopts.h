@@ -39,10 +39,10 @@ extern "C" {
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)
 
+/* redefine printfs as needed */
 #if NO_PRINTING > 0     /* Disable all printing */
 #define scs_printf(...) /* No-op */
 #else
-/* redefine printfs and memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
 #define scs_printf mexPrintf
@@ -78,9 +78,6 @@ extern "C" {
 #define scs_realloc mxRealloc
 #elif defined PYTHON
 #include <Python.h>
-/* see:
- * https://cython-users.narkive.com/jRjjs3sK/reacquire-gil-for-printing-in-wrapped-c-library
- */
 #if PY_MAJOR_VERSION >= 3
 #define scs_free PyMem_RawFree
 #define scs_malloc PyMem_RawMalloc
