@@ -76,7 +76,7 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
                               const ScsSettings *stgs) {
   scs_int i;
   char *cone_str = SCS(get_cone_header)(k);
-  const char *lin_sys_method = SCS(get_lin_sys_method)();
+  const char *lin_sys_method = scs_get_lin_sys_method();
 #ifdef USE_LAPACK
   scs_int acceleration_lookback = stgs->acceleration_lookback;
   scs_int acceleration_interval = stgs->acceleration_interval;
@@ -379,7 +379,7 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
                                      POWF((scs_float)iter + 1, CG_RATE));
   tol = MAX(CG_BEST_TOL, tol);
 #endif
-  status = SCS(solve_lin_sys)(w->p, w->u_t, warm_start, tol);
+  status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol);
   if (iter < FEASIBLE_ITERS) {
     w->u_t[l - 1] = 1.;
   } else {
@@ -864,7 +864,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   /* set w->*_orig and performs normalization if appropriate */
   scs_update(w, w->d->b, w->d->c);
 
-  if (!(w->p = SCS(init_lin_sys_work)(w->d->A, w->d->P, w->diag_r))) {
+  if (!(w->p = scs_init_lin_sys_work(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     return SCS_NULL;
   }
@@ -891,7 +891,7 @@ static void update_work_cache(ScsWork *w) {
   /* g = (I + M)^{-1} h */
   memcpy(w->g, w->h, (w->d->n + w->d->m) * sizeof(scs_float));
   SCS(scale_array)(&(w->g[w->d->n]), -1., w->d->m);
-  SCS(solve_lin_sys)(w->p, w->g, SCS_NULL, CG_BEST_TOL);
+  scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL);
   return;
 }
 
@@ -981,7 +981,7 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     set_diag_r(w);
 
     /* update linear systems */
-    SCS(update_lin_sys_diag_r)(w->p, w->diag_r);
+    scs_update_lin_sys_diag_r(w->p, w->diag_r);
 
     /* update pre-solved quantities */
     update_work_cache(w);
@@ -1025,7 +1025,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();
   SCS(tic)(&solve_timer);
-  strcpy(info->lin_sys_solver, SCS(get_lin_sys_method)());
+  strcpy(info->lin_sys_solver, scs_get_lin_sys_method());
   info->status_val = SCS_UNFINISHED; /* not yet converged */
   update_work(w, sol);
 
@@ -1162,7 +1162,7 @@ void scs_finish(ScsWork *w) {
   if (w) {
     SCS(finish_cone)(w->cone_work);
     if (w->p) {
-      SCS(free_lin_sys_work)(w->p);
+      scs_free_lin_sys_work(w->p);
     }
     if (w->accel) {
       aa_finish(w->accel);

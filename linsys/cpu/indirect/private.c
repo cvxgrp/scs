@@ -3,19 +3,9 @@
 #include "util.h"
 #include <limits.h>
 
-const char *SCS(get_lin_sys_method)() {
+const char *scs_get_lin_sys_method() {
   return "sparse-indirect";
 }
-
-/*
-char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
-  char *str = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(str, "lin-sys: avg cg its: %2.2f\n",
-          (scs_float)p->tot_cg_its / (info->iter + 1));
-  p->tot_cg_its = 0;
-  return str;
-}
-*/
 
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
@@ -97,7 +87,7 @@ static void transpose(const ScsMatrix *A, ScsLinSysWork *p) {
 #endif
 }
 
-void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
+void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
     scs_free(p->p);
     scs_free(p->r);
@@ -162,13 +152,13 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 }
 
 /* no need to update anything in this case */
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
+void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   p->diag_r = diag_r; /* this isn't needed but do it to be safe */
   set_preconditioner(p);
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const scs_float *diag_r) {
+ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
+                                     const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   p->A = A;
   p->P = P;
@@ -198,7 +188,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   p->tot_cg_its = 0;
   if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p ||
       !p->At->x) {
-    SCS(free_lin_sys_work)(p);
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
   return p;
@@ -288,8 +278,8 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
  * y = R_y^{-1} (Ax - ry)
  *
  */
-scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_float tol) {
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol) {
   scs_int cg_its, max_iters;
 
   if (tol <= 0.) {
