@@ -1,20 +1,11 @@
 #include "private.h"
 #include "linsys.h"
 
-const char *SCS(get_lin_sys_method)() {
+const char *scs_get_lin_sys_method() {
   return "sparse-direct";
 }
 
-/*
-char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
-  char *str = (char *)scs_malloc(sizeof(char) * 128);
-  scs_int n = p->L->n;
-  sprintf(str, "lin-sys: nnz(L): %li\n", (long)(p->L->p[n] + n));
-  return str;
-}
-*/
-
-void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
+void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
     SCS(cs_spfree)(p->L);
     SCS(cs_spfree)(p->kkt);
@@ -320,7 +311,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
+void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i, ldl_status;
   for (i = 0; i < p->n; ++i) {
     /* top left is R_x + P, bottom right is -R_y */
@@ -339,8 +330,8 @@ void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
   }
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const scs_float *diag_r) {
+ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
+                                     const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
   p->m = A->m;
@@ -366,8 +357,8 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   return p;
 }
 
-scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_float tol) {
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);

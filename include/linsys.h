@@ -23,15 +23,15 @@ extern "C" {
  *  @return            Linear system solver workspace.
  *
  */
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const scs_float *diag_r);
+ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
+                                     const scs_float *diag_r);
 
 /**
  * Frees `ScsLinSysWork` structure and associated allocated memory.
  *
  *  @param  w    Linear system private workspace.
  */
-void SCS(free_lin_sys_work)(ScsLinSysWork *w);
+void scs_free_lin_sys_work(ScsLinSysWork *w);
 
 /**
  * Solves the linear system as required by SCS at each iteration:
@@ -51,8 +51,8 @@ void SCS(free_lin_sys_work)(ScsLinSysWork *w);
  *  @return status < 0 indicates failure.
  *
  */
-scs_int SCS(solve_lin_sys)(ScsLinSysWork *w, scs_float *b, const scs_float *s,
-                           scs_float tol);
+scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,
+                          scs_float tol);
 /**
  *  Update the linsys workspace when `R` is changed. For example, a
  *  direct method for solving the linear system might need to update the
@@ -62,14 +62,14 @@ scs_int SCS(solve_lin_sys)(ScsLinSysWork *w, scs_float *b, const scs_float *s,
  *  @param  new_diag_r    Updated `diag_r`, diagonal entries of R.
  *
  */
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *w, const scs_float *new_diag_r);
+void scs_update_lin_sys_diag_r(ScsLinSysWork *w, const scs_float *new_diag_r);
 
 /**
  * Name of the linear solver.
  *
  * @return name of method.
  */
-const char *SCS(get_lin_sys_method)(void);
+const char *scs_get_lin_sys_method(void);
 
 #ifdef __cplusplus
 }
