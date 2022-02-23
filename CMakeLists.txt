@@ -117,7 +117,6 @@ message(STATUS "Printing is NOT ${NO_PRINTING}")
 option(NO_READ_WRITE "Disables all read/write functionality" OFF)
 message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 
-
 set(COMPILER_OPTS "-DUSE_LAPACK -DCTRLC")
 
 # Primitive types
@@ -142,8 +141,6 @@ endif()
 if(NO_READ_WRITE)
   set(COMPILER_OPTS "-DNO_READ_WRITE=1 ${COMPILER_OPTS}")
 endif()
-
-
 
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
 
