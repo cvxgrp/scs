@@ -21,19 +21,9 @@ static scs_float cg_gpu_norm(cublasHandle_t cublas_handle, scs_float *r,
   return nrm;
 }
 
-const char *SCS(get_lin_sys_method)() {
+const char *scs_get_lin_sys_method() {
   return "sparse-indirect GPU";
 }
-
-/*
-char *SCS(get_lin_sys_summary)(ScsLinSysWork *p, const ScsInfo *info) {
-  char *str = (char *)scs_malloc(sizeof(char) * 128);
-  sprintf(str, "lin-sys: avg cg its: %2.2f\n",
-          (scs_float)p->tot_cg_its / (info->iter + 1));
-  p->tot_cg_its = 0;
-  return str;
-}
-*/
 
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
@@ -76,7 +66,7 @@ static void set_preconditioner(ScsLinSysWork *p, const scs_float *diag_r) {
 }
 
 /* no need to update anything in this case */
-void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
+void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   /* R_x to gpu */
@@ -93,7 +83,7 @@ void SCS(update_lin_sys_diag_r)(ScsLinSysWork *p, const scs_float *diag_r) {
   set_preconditioner(p, diag_r);
 }
 
-void SCS(free_lin_sys_work)(ScsLinSysWork *p) {
+void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
     scs_free(p->M);
     scs_free(p->inv_r_y);
@@ -215,8 +205,8 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
   return P_full;
 }
 
-ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
-                                      const scs_float *diag_r) {
+ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
+                                     const scs_float *diag_r) {
   cudaError_t err;
   csc *P_full;
   ScsLinSysWork *p = SCS_NULL;
@@ -324,7 +314,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   cusparseCreateDnVec(&p->dn_vec_m, Ag->m, p->tmp_m, SCS_CUDA_FLOAT);
 
   /* Form preconditioner and copy R_x, 1/R_y to gpu */
-  SCS(update_lin_sys_diag_r)(p, diag_r);
+  scs_update_lin_sys_diag_r(p, diag_r);
 
 #if GPU_TRANSPOSE_MAT > 0
   p->Agt = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
@@ -367,7 +357,7 @@ ScsLinSysWork *SCS(init_lin_sys_work)(const ScsMatrix *A, const ScsMatrix *P,
   if (err != cudaSuccess) {
     printf("%s:%d:%s\nERROR_CUDA (*): %s\n", __FILE__, __LINE__, __func__,
            cudaGetErrorString(err));
-    SCS(free_lin_sys_work)(p);
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
   return p;
@@ -466,8 +456,8 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
  * y = R_y^{-1} (Ax - ry)
  *
  */
-scs_int SCS(solve_lin_sys)(ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                           scs_float tol) {
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol) {
   scs_int cg_its, max_iters;
   scs_float neg_onef = -1.0;
 
