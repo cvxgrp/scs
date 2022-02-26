@@ -26,6 +26,8 @@ jobs:
 
     - name: Setup Intel oneAPI environment
       run: |
+        ls /opt/intel
+        ls /opt/intel/mkl
         source /opt/intel/mkl/bin/mklvars.sh
         echo $MKLROOT
 
