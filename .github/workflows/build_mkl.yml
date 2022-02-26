@@ -30,7 +30,7 @@ jobs:
         echo $MKLROOT
 
     - name: Build SCS MKL and test
-      - uses: actions/checkout@v2
-      - run: |
+      uses: actions/checkout@v2
+      run: |
         make DLONG=${{ matrix.long }} mkl
         out/run_tests_mkl
