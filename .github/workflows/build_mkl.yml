@@ -29,10 +29,8 @@ jobs:
         source /opt/intel/oneapi/mklvars.sh
         echo $MKLROOT
 
-    - name: checkout project code
-      uses: actions/checkout@v2
-
     - name: Build SCS MKL and test
+      - uses: actions/checkout@v2
       - run: |
         make DLONG=${{ matrix.long }} mkl
         out/run_tests_mkl
