@@ -26,8 +26,8 @@ jobs:
 
     - name: Setup Intel oneAPI environment
       run: |
-        ls /opt/intel
-        ls /opt/intel/mkl
+        sudo updatedb
+        locate libmkl_rt
         source /opt/intel/mkl/bin/mklvars.sh
         echo $MKLROOT
 
