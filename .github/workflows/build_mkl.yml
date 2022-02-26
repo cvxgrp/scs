@@ -26,10 +26,10 @@ jobs:
 
     - name: Setup Intel oneAPI environment
       run: |
-        sudo updatedb
-        locate libmkl_rt
-        source /opt/intel/mkl/bin/mklvars.sh
-        echo $MKLROOT
+        ls -al /usr/lib/x86_64-linux-gnu/libmkl_rt.so
+        export MKLROOT=/usr/lib/x86_64-linux-gnu/
+        # source /opt/intel/mkl/bin/mklvars.sh
+        # echo $MKLROOT
 
     - name: checkout project code
       uses: actions/checkout@v2
