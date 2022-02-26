@@ -26,7 +26,7 @@ jobs:
 
     - name: Setup Intel oneAPI environment
       run: |
-        ls -al /usr/lib/x86_64-linux-gnu/libmkl_rt.so
+        locate libmkl_rt
         echo "MKLROOT=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
         # source /opt/intel/mkl/bin/mklvars.sh
         # echo $MKLROOT
