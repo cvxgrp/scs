@@ -8,11 +8,13 @@
       return message;                                                          \
     }                                                                          \
   } while (0)
+
 #define mu_assert(message, test)                                               \
   do {                                                                         \
     if (!(test))                                                               \
       return message;                                                          \
   } while (0)
+
 #define mu_run_test(test) _mu_run_test(#test, test)
 
 #define _mu_run_test(name, test)                                               \

@@ -27,7 +27,9 @@ csc *SCS(cs_done)(csc *C, void *w, void *x, scs_int ok);
 csc *SCS(cs_compress)(const csc *T, scs_int *idx_mapping);
 scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 csc *SCS(cs_spfree)(csc *A);
-
+csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
+                   const scs_float *diag_r, scs_int *diag_r_idxs,
+                   scs_int upper);
 #ifdef __cplusplus
 }
 #endif

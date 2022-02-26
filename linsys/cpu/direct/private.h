@@ -9,7 +9,7 @@ extern "C" {
 #include "external/amd/amd.h"
 #include "external/qdldl/qdldl.h"
 #include "glbopts.h"
-#include "scs.h"
+#include "linsys.h"
 #include "scs_matrix.h"
 
 struct SCS_LIN_SYS_WORK {

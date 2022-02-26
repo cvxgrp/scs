@@ -69,6 +69,7 @@ DIRSRC = $(LINSYS)/cpu/direct
 INDIRSRC = $(LINSYS)/cpu/indirect
 GPUDIR = $(LINSYS)/gpu/direct
 GPUINDIR = $(LINSYS)/gpu/indirect
+MKLSRC = $(LINSYS)/mkl/direct
 
 EXTSRC = $(LINSYS)/external
 
@@ -116,7 +117,7 @@ ifneq ($(NO_PRINTING), 0)
 CUSTOM_FLAGS += -DNO_PRINTING=$(NO_PRINTING) # disable printing
 endif
 NO_READ_WRITE = 0
-ifneq ($(NO_READ_WRITE ), 0)
+ifneq ($(NO_READ_WRITE), 0)
 CUSTOM_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable printing
 endif
 ### VERBOSITY LEVELS: 0,1,2,...
@@ -145,11 +146,11 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
+BLASLDFLAGS =
 USE_LAPACK = 1
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
-  BLASLDFLAGS = -llapack -lblas # -lgfortran
-  LDFLAGS += $(BLASLDFLAGS)
+  BLASLDFLAGS += -llapack -lblas # -lgfortran
   CUSTOM_FLAGS += -DUSE_LAPACK
 
   BLAS64 = 0

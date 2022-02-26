@@ -1,7 +1,4 @@
 #include "private.h"
-#include "linsys.h"
-#include "util.h"
-#include <limits.h>
 
 const char *scs_get_lin_sys_method() {
   return "sparse-indirect";
