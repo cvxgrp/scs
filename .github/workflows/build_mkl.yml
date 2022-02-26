@@ -26,7 +26,7 @@ jobs:
 
     - name: Setup Intel oneAPI environment
       run: |
-        source /opt/intel/oneapi/mklvars.sh
+        source /opt/intel/oneapi/setvars.sh
         echo $MKLROOT
 
     - name: checkout project code
