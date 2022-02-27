@@ -30,8 +30,20 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - Listen to CTRL-C interruptions
      - True/False
      - 1
-   * - :code:`NOTIMER`
+   * - :code:`NO_TIMER`
      - Disables code timing
+     - True/False
+     - 0
+   * - :code:`NO_VALIDATE`
+     - Disables data validation
+     - True/False
+     - 0
+   * - :code:`NO_PRINTING`
+     - Disables all printing in compiled binary
+     - True/False
+     - 0
+   * - :code:`NO_READ_WRITE`
+     - Disables the read/write code
      - True/False
      - 0
    * - :code:`COPYAMATRIX`
