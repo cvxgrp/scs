@@ -100,7 +100,7 @@ set(EXTERNAL ${LINSYS}/external)
 
 # If MKLROOT is defined, then we install the MKL version.
 # TODO - allow user to specify which version to install.
-if(DEFINED MKLROOT)
+if(DEFINED ENV{MKLROOT})
 set(DIRSRC ${LINSYS}/mkl/direct)
 else()
 set(DIRSRC ${LINSYS}/cpu/direct)
@@ -232,7 +232,9 @@ target_include_directories(${${PROJECT_NAME}_DIRECT} PUBLIC
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
-if(DEFINED MKLROOT)
+if(DEFINED ENV{MKLROOT})
+target_link_directories(${${PROJECT_NAME}_DIRECT} PRIVATE
+  $ENV{MKLROOT}/lib)
 target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
   m
   mkl_rt)
