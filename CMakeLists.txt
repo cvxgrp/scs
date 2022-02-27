@@ -95,9 +95,16 @@ include(AddUninstallTarget)
 ### Some variables useful for sampling the building process
 # Note that the GPU profile is not compiled.
 set(LINSYS linsys)
-set(DIRSRC ${LINSYS}/cpu/direct)
 set(INDIRSRC ${LINSYS}/cpu/indirect)
 set(EXTERNAL ${LINSYS}/external)
+
+# If MKLROOT is defined, then we install the MKL version.
+# TODO - allow user to specify which version to install.
+if(DEFINED MKLROOT)
+set(DIRSRC ${LINSYS}/mkl/direct)
+else()
+set(DIRSRC ${LINSYS}/cpu/direct)
+endif()
 
 # Options
 # ----------------------------------------------
@@ -225,11 +232,17 @@ target_include_directories(${${PROJECT_NAME}_DIRECT} PUBLIC
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
+if(DEFINED MKLROOT)
+target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
+  m
+  mkl_rt)
+else()
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
   m
   blas
   lapack)
+endif()
 
 # Set some properties
 set_target_properties(${${PROJECT_NAME}_DIRECT} PROPERTIES
