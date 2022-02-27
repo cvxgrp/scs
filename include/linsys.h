@@ -48,7 +48,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *w);
  *  @param  b    Right hand side, contains solution at the end.
  *  @param  s    Contains warm-start (may be NULL).
  *  @param  tol  Tolerance required for the system solve.
- *  @return status < 0 indicates failure.
+ *  @return status != 0 indicates failure.
  *
  */
 scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,

@@ -86,16 +86,21 @@ csc *SCS(cs_spfree)(csc *A) {
   return (csc *)SCS_NULL; /* free the csc struct and return SCS_NULL */
 }
 
-/* diag_p will contain values of P diagonal upon completion */
+/* Build the KKT matrix */
 csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
                    const scs_float *diag_r, scs_int *diag_r_idxs,
                    scs_int upper) {
-  /* ONLY UPPER or LOWER TRIANGULAR PART IS STUFFED
-   * forms column compressed kkt matrix
-   * assumes column compressed form A matrix
+  /*
+   * Forms column compressed KKT matrix assumes column compressed A,P matrices.
+   * Only upper OR lower triangular part is stuffed, depending on `upper` flag.
    *
-   * forms upper/lower triangular part of [(I + P)  A'; A -I]
-   * P : n x n, A: m x n.
+   * Forms upper/lower triangular part of [(R_x + P)  A'; A -R_y]
+   * Shapes: P : n x n, A: m x n.
+   *
+   * Output: `diag_p` will contain values of P diagonal upon completion,
+   * and `diag_r_idxs` will contain the indices corresponding to the entries
+   * in the returned matrix corresponding to the entries of R.
+   *
    */
   scs_int h, i, j, count;
   csc *Kcsc, *K;
@@ -105,7 +110,7 @@ csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
   scs_int Knzmax;
   scs_int *idx_mapping;
   if (P) {
-    /* Upper bound P + I upper triangular component as Pnz + n */
+    /* Upper bound P + I triangular component NNZs as Pnz + n */
     Knzmax = n + m + Anz + P->p[n];
   } else {
     Knzmax = n + m + Anz;
@@ -141,7 +146,7 @@ csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
         if (upper) {
           K->i[count] = i;
           K->p[count] = j;
-        } else {
+        } else { /* lower triangular */
           /* P is passed in upper triangular, need to flip that here */
           K->i[count] = j; /* col -> row */
           K->p[count] = i; /* row -> col */
@@ -182,7 +187,7 @@ csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
       if (upper) {
         K->p[count] = A->i[h] + n; /* column */
         K->i[count] = j;           /*row */
-      } else {
+      } else {                     /* lower triangular */
         K->p[count] = j;           /* column */
         K->i[count] = A->i[h] + n; /* row */
       }

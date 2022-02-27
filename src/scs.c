@@ -354,7 +354,7 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   return (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
 }
 
-/* status < 0 indicates failure */
+/* status != 0 indicates failure */
 static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->d->n, m = w->d->m, l = n + m + 1, status, i;
   scs_float *warm_start = SCS_NULL;
@@ -1057,7 +1057,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
     /******************* linear system solve ********************/
     SCS(tic)(&lin_sys_timer);
-    if (project_lin_sys(w, i) < 0) {
+    if (project_lin_sys(w, i) != 0) {
       return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
                      "error in project_lin_sys", "failure");
     }

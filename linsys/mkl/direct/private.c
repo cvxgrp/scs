@@ -1,5 +1,4 @@
 #include "private.h"
-#include "linsys.h"
 
 #define MKL_INTERFACE_LP64 0
 #define MKL_INTERFACE_ILP64 1
@@ -16,55 +15,44 @@
 #endif
 
 /* Prototypes for Pardiso functions */
-void _PARDISO(void **,           /* pt */
-              const scs_int *,   /* maxfct */
-              const scs_int *,   /* mnum */
-              const scs_int *,   /* mtype */
-              const scs_int *,   /* phase */
-              const scs_int *,   /* n */
-              const scs_float *, /* a */
-              const scs_int *,   /* ia */
-              const scs_int *,   /* ja */
-              scs_int *,         /* perm */
-              const scs_int *,   /* nrhs */
-              scs_int *,         /* iparam */
-              const scs_int *,   /* msglvl */
-              scs_float *,       /* b */
-              scs_float *,       /* x */
-              scs_int *          /* error */
-);
+void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
+              const scs_int *mtype, const scs_int *phase, const scs_int *n,
+              const scs_float *a, const scs_int *ia, const scs_int *ja,
+              scs_int *perm, const scs_int *nrhs, scs_int *iparm,
+              const scs_int *msglvl, scs_float *b, scs_float *x,
+              scs_int *error);
 scs_int MKL_Set_Interface_Layer(scs_int);
 
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
 }
 
-void scs_free_lin_sys_work(ScsLinSysWork *s) {
-  if (s) {
-    s->phase = PARDISO_CLEANUP;
-    _PARDISO(s->pt, &(s->maxfct), &(s->mnum), &(s->mtype), &(s->phase),
-             &(s->n_plus_m), &(s->fdum), s->kkt->p, s->kkt->i, &(s->idum),
-             &(s->nrhs), s->iparm, &(s->msglvl), &(s->fdum), &(s->fdum),
-             &(s->error));
-    if (s->error != 0) {
-      scs_printf("Error during MKL Pardiso cleanup: %d", (int)s->error);
+void scs_free_lin_sys_work(ScsLinSysWork *p) {
+  if (p) {
+    p->phase = PARDISO_CLEANUP;
+    _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
+             &(p->n_plus_m), &(p->fdum), p->kkt->p, p->kkt->i, &(p->idum),
+             &(p->nrhs), p->iparm, &(p->msglvl), &(p->fdum), &(p->fdum),
+             &(p->error));
+    if (p->error != 0) {
+      scs_printf("Error during MKL Pardiso cleanup: %d", (int)p->error);
     }
-    if (s->kkt)
-      SCS(cs_spfree)(s->kkt);
-    if (s->sol)
-      scs_free(s->sol);
-    if (s->diag_r_idxs)
-      scs_free(s->diag_r_idxs);
-    if (s->diag_p)
-      scs_free(s->diag_p);
-    scs_free(s);
+    if (p->kkt)
+      SCS(cs_spfree)(p->kkt);
+    if (p->sol)
+      scs_free(p->sol);
+    if (p->diag_r_idxs)
+      scs_free(p->diag_r_idxs);
+    if (p->diag_p)
+      scs_free(p->diag_p);
+    scs_free(p);
   }
 }
 
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   scs_int i;
-  ScsLinSysWork *s = scs_calloc(1, sizeof(ScsLinSysWork));
+  ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
 
   /* TODO: is this necessary with pardiso_64? */
   /* Set MKL interface layer */
@@ -74,95 +62,95 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   MKL_Set_Interface_Layer(MKL_INTERFACE_LP64);
 #endif
 
-  s->n = A->n;
-  s->m = A->m;
-  s->n_plus_m = s->n + s->m;
+  p->n = A->n;
+  p->m = A->m;
+  p->n_plus_m = p->n + p->m;
 
   /* Even though we overwrite rhs with sol pardiso requires the memory */
-  s->sol = (scs_float *)scs_malloc(sizeof(scs_float) * s->n_plus_m);
-  s->diag_r_idxs = (scs_int *)scs_calloc(s->n_plus_m, sizeof(scs_int));
-  s->diag_p = (scs_float *)scs_calloc(s->n, sizeof(scs_float));
+  p->sol = (scs_float *)scs_malloc(sizeof(scs_float) * p->n_plus_m);
+  p->diag_r_idxs = (scs_int *)scs_calloc(p->n_plus_m, sizeof(scs_int));
+  p->diag_p = (scs_float *)scs_calloc(p->n, sizeof(scs_float));
 
   /* MKL pardiso requires upper triangular CSR matrices. The KKT matrix stuffed
    * as CSC lower triangular is equivalent. Pass upper=0. */
-  s->kkt = SCS(form_kkt)(A, P, s->diag_p, diag_r, s->diag_r_idxs, 0);
-  if (!(s->kkt)) {
+  p->kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 0);
+  if (!(p->kkt)) {
     scs_printf("Error in forming KKT matrix");
-    scs_free_lin_sys_work(s);
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
 
   for (i = 0; i < 64; i++) {
-    s->iparm[i] = 0; /* Setup Pardiso control parameters */
-    s->pt[i] = 0;    /* Initialize the internal solver memory pointer */
+    p->iparm[i] = 0; /* Setup Pardiso control parameters */
+    p->pt[i] = 0;    /* Initialize the internal solver memory pointer */
   }
 
   /* Set Pardiso variables */
-  s->mtype = -2;         /* Real symmetric indefinite matrix */
-  s->nrhs = 1;           /* Number of right hand sides */
-  s->maxfct = 1;         /* Maximum number of numerical factorizations */
-  s->mnum = 1;           /* Which factorization to use */
-  s->error = 0;          /* Initialize error flag */
-  s->msglvl = VERBOSITY; /* Printing information */
+  p->mtype = -2;         /* Real symmetric indefinite matrix */
+  p->nrhs = 1;           /* Number of right hand sides */
+  p->maxfct = 1;         /* Maximum number of numerical factorizations */
+  p->mnum = 1;           /* Which factorization to use */
+  p->error = 0;          /* Initialize error flag */
+  p->msglvl = VERBOSITY; /* Printing information */
 
   /* For all iparm vars see MKL documentation */
-  s->iparm[0] = 1;          /* Parsido must inspect iparm */
-  s->iparm[1] = 3;          /* Fill-in reordering from OpenMP */
-  s->iparm[5] = 1;          /* Write solution into b */
-  s->iparm[7] = 0;          /* Automatic iterative refinement calculation */
-  s->iparm[9] = 8;          /* Perturb the pivot elements with 1E-8 */
-  s->iparm[34] = 1;         /* Use C-style indexing for indices */
-  /* s->iparm[36] = -80; */ /* Form block sparse matrices */
+  p->iparm[0] = 1;          /* Parsido must inspect iparm */
+  p->iparm[1] = 3;          /* Fill-in reordering from OpenMP */
+  p->iparm[5] = 1;          /* Write solution into b */
+  p->iparm[7] = 0;          /* Automatic iterative refinement calculation */
+  p->iparm[9] = 8;          /* Perturb the pivot elements with 1E-8 */
+  p->iparm[34] = 1;         /* Use C-style indexing for indices */
+  /* p->iparm[36] = -80; */ /* Form block sparse matrices */
 
 #ifdef SFLOAT
-  s->iparm[27] = 1; /* 1 is single precision, 0 is double */
+  p->iparm[27] = 1; /* 1 is single precision, 0 is double */
 #endif
 
   /* Permutation and symbolic factorization */
   scs_int phase = PARDISO_SYMBOLIC;
-  _PARDISO(s->pt, &(s->maxfct), &(s->mnum), &(s->mtype), &phase, &(s->n_plus_m),
-           s->kkt->x, s->kkt->p, s->kkt->i, &(s->idum), &(s->nrhs), s->iparm,
-           &(s->msglvl), &(s->fdum), &(s->fdum), &(s->error));
-  if (s->error != 0) {
-    scs_printf("Error during symbolic factorization: %d", (int)s->error);
-    scs_free_lin_sys_work(s);
+  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &phase, &(p->n_plus_m),
+           p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum), &(p->nrhs), p->iparm,
+           &(p->msglvl), &(p->fdum), &(p->fdum), &(p->error));
+
+  if (p->error != 0) {
+    scs_printf("Error during symbolic factorization: %d", (int)p->error);
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
 
   /* Numerical factorization */
-  s->phase = PARDISO_NUMERIC;
-  _PARDISO(s->pt, &(s->maxfct), &(s->mnum), &(s->mtype), &(s->phase),
-           &(s->n_plus_m), s->kkt->x, s->kkt->p, s->kkt->i, &(s->idum),
-           &(s->nrhs), s->iparm, &(s->msglvl), &(s->fdum), &(s->fdum),
-           &(s->error));
+  p->phase = PARDISO_NUMERIC;
+  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
+           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum),
+           &(p->nrhs), p->iparm, &(p->msglvl), &(p->fdum), &(p->fdum),
+           &(p->error));
 
-  if (s->error) {
-    scs_printf("Error during numerical factorization: %d", (int)s->error);
-    scs_free_lin_sys_work(s);
+  if (p->error) {
+    scs_printf("Error during numerical factorization: %d", (int)p->error);
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
 
-  if (s->iparm[21] < s->n) {
+  if (p->iparm[21] < p->n) {
     scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.");
     return SCS_NULL;
   }
 
-  return s;
+  return p;
 }
 
 /* Returns solution to linear system Ax = b with solution stored in b */
-scs_int scs_solve_lin_sys(ScsLinSysWork *s, scs_float *b,
-                          const scs_float *warm_start, scs_float tol) {
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
+                          scs_float tol) {
   /* Back substitution and iterative refinement */
-  s->phase = PARDISO_SOLVE;
-  _PARDISO(s->pt, &(s->maxfct), &(s->mnum), &(s->mtype), &(s->phase),
-           &(s->n_plus_m), s->kkt->x, s->kkt->p, s->kkt->i, &(s->idum),
-           &(s->nrhs), s->iparm, &(s->msglvl), b, s->sol, &(s->error));
-  if (s->error != 0) {
-    scs_printf("Error during linear system solution: %d", (int)s->error);
-    return 1;
+  p->phase = PARDISO_SOLVE;
+  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
+           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum),
+           &(p->nrhs), p->iparm, &(p->msglvl), b, p->sol, &(p->error));
+  if (p->error != 0) {
+    scs_printf("Error during linear system solution: %d", (int)p->error);
   }
-  return 0;
+  return p->error;
 }
 
 /* Update factorization when R changes */
@@ -186,8 +174,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
            &(p->error));
 
   if (p->error != 0) {
-    scs_printf("Error in PARDISO factorization when updating.\n");
+    scs_printf("Error in PARDISO factorization when updating: %d.\n", p->error);
     scs_free_lin_sys_work(p);
-    return;
   }
 }
