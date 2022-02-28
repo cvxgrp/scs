@@ -8,8 +8,10 @@
 #define PARDISO_SOLVE (33)
 #define PARDISO_CLEANUP (-1)
 
+
+/* TODO: is it necessary to use pardiso_64? */
 #ifdef DLONG
-#define _PARDISO pardiso_64
+#define _PARDISO pardiso /* pardiso_64 */
 #else
 #define _PARDISO pardiso
 #endif
