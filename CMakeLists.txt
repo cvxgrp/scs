@@ -95,16 +95,9 @@ include(AddUninstallTarget)
 ### Some variables useful for sampling the building process
 # Note that the GPU profile is not compiled.
 set(LINSYS linsys)
+set(DIRSRC ${LINSYS}/cpu/direct)
 set(INDIRSRC ${LINSYS}/cpu/indirect)
 set(EXTERNAL ${LINSYS}/external)
-
-# If MKLROOT is defined, then we install the MKL version.
-# TODO - allow user to specify which version to install.
-if(DEFINED ENV{MKLROOT})
-set(DIRSRC ${LINSYS}/mkl/direct)
-else()
-set(DIRSRC ${LINSYS}/cpu/direct)
-endif()
 
 # Options
 # ----------------------------------------------
@@ -232,19 +225,11 @@ target_include_directories(${${PROJECT_NAME}_DIRECT} PUBLIC
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
-if(DEFINED ENV{MKLROOT})
-target_link_directories(${${PROJECT_NAME}_DIRECT} PRIVATE
-  $ENV{MKLROOT}/lib)
-target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
-  m
-  mkl_rt)
-else()
 # The library depends on math (m) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE
   m
   blas
   lapack)
-endif()
 
 # Set some properties
 set_target_properties(${${PROJECT_NAME}_DIRECT} PROPERTIES
@@ -263,7 +248,7 @@ install(TARGETS ${${PROJECT_NAME}_DIRECT}
   PUBLIC_HEADER    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
 
 # Add the direct method to the set of the compiled targets
-set_property(GLOBAL APPEND PROPERTY scs_TARGETS ${${PROJECT_NAME}_DIRECT})
+set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_DIRECT})
 
 ### Indirect method
 # Here we compile the indirect method library
@@ -278,7 +263,7 @@ add_library(${${PROJECT_NAME}_INDIRECT}
 
 
 target_include_directories(${${PROJECT_NAME}_INDIRECT} PRIVATE
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${EXTERNAL}/amd;${CMAKE_CURRENT_SOURCE_DIR}/${EXTERNAL}/qdldl;${CMAKE_CURRENT_SOURCE_DIR}/${INDIRSRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${INDIRSRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>")
 
 target_include_directories(${${PROJECT_NAME}_INDIRECT} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -310,7 +295,65 @@ install(TARGETS ${${PROJECT_NAME}_INDIRECT}
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
 
 # Add the indirect method to the set of the compiled targets
-set_property(GLOBAL APPEND PROPERTY scs_TARGETS ${${PROJECT_NAME}_INDIRECT})
+set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_INDIRECT})
+
+####################################################### MKL Pardiso
+
+# If MKLROOT is defined, then we install the MKL version.
+if(DEFINED ENV{MKLROOT})
+
+message(STATUS "MKLROOT set to $ENV{MKLROOT}")
+message(STATUS "Will install SCS-MKL (libscsmkl).")
+
+set(MKLSRC ${LINSYS}/mkl/direct)
+
+# Here we compile the direct MKL pardiso library
+set(${PROJECT_NAME}_MKL ${PROJECT_NAME}mkl)
+add_library(${${PROJECT_NAME}_MKL}
+  ${${PROJECT_NAME}_HDR}
+  ${${PROJECT_NAME}_SRC}
+  ${MKLSRC}/private.c
+  ${MKLSRC}/private.h
+  ${${${PROJECT_NAME}_MKL}_HDR}
+  )
+
+target_include_directories(${${PROJECT_NAME}_MKL} PRIVATE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${MKLSRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>")
+
+target_include_directories(${${PROJECT_NAME}_MKL} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+
+target_compile_definitions(${${PROJECT_NAME}_MKL} PRIVATE ${COMPILER_OPTS})
+
+target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE $ENV{MKLROOT}/lib)
+target_link_libraries(${${PROJECT_NAME}_MKL} PRIVATE
+  m
+  mkl_rt)
+
+# Set some properties
+set_target_properties(${${PROJECT_NAME}_MKL} PROPERTIES
+  VERSION ${scs_VERSION}
+  PUBLIC_HEADER "${${PROJECT_NAME}_PUBLIC_HDR}")
+
+add_library(scs::${${PROJECT_NAME}_MKL} ALIAS ${${PROJECT_NAME}_MKL})
+
+# Install the library
+install(TARGETS ${${PROJECT_NAME}_MKL}
+  EXPORT  ${PROJECT_NAME}
+  COMPONENT runtime
+  LIBRARY       DESTINATION "${CMAKE_INSTALL_LIBDIR}"                            COMPONENT shlib
+  ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"                            COMPONENT lib
+  RUNTIME       DESTINATION "${CMAKE_INSTALL_BINDIR}"                            COMPONENT bin
+  PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
+
+# Add the mkl method to the set of the compiled targets
+set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_MKL})
+else()
+message(STATUS "MKLROOT environment variable is undefined, skipping SCS-MKL install")
+endif()
+
+#######################################################
 
 ### Install the .cmake file.
 # Thanks to thanks file it will be possible to link scs to consumer libraries
@@ -318,7 +361,7 @@ include(InstallBasicPackageFiles)
 install_basic_package_files(${PROJECT_NAME}
   NAMESPACE scs::
   VERSION ${${PROJECT_NAME}_VERSION}
-  TARGETS_PROPERTY scs_TARGETS
+  TARGETS_PROPERTY SCS_TARGETS
   COMPATIBILITY SameMajorVersion
   VARS_PREFIX ${PROJECT_NAME}
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
@@ -346,5 +389,18 @@ if(BUILD_TESTING)
   add_test(NAME run_tests_indirect
     COMMAND run_tests_indirect
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+if(DEFINED ENV{MKLROOT})
+  add_executable(run_tests_mkl  test/run_tests.c)
+  target_compile_definitions(run_tests_mkl PRIVATE ${COMPILER_OPTS})
+  target_link_libraries(run_tests_mkl PRIVATE
+    scs::scsmkl)
+  target_include_directories(run_tests_mkl PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"  )
+
+  add_test(NAME run_tests_mkl
+    COMMAND run_tests_mkl
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 endif()
