@@ -12,7 +12,7 @@ extern "C" {
 #define SCS(x) _scs_##x
 #endif
 
-/* SCS VERSION NUMBER ----------------------------------------------    */
+/* SCS VERSION NUMBER ----------------------------------------------     */
 /* string literals automatically null-terminated */
 #define SCS_VERSION ("3.2.0")
 
@@ -21,7 +21,8 @@ extern "C" {
 #define VERBOSITY (0)
 #endif
 
-/* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------    */
+/* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------     */
+/* If you update any of these you must update the documentation manually */
 #define MAX_ITERS (100000)
 #define EPS_REL (1E-4)
 #define EPS_ABS (1E-4)
