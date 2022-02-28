@@ -8,10 +8,9 @@
 #define PARDISO_SOLVE (33)
 #define PARDISO_CLEANUP (-1)
 
-
-/* TODO: is it necessary to use pardiso_64? */
+/* TODO: is it necessary to use pardiso_64 and MKL_Set_Interface_Layer ? */
 #ifdef DLONG
-#define _PARDISO pardiso /* pardiso_64 */
+#define _PARDISO pardiso_64
 #else
 #define _PARDISO pardiso
 #endif
@@ -176,7 +175,8 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
            &(p->error));
 
   if (p->error != 0) {
-    scs_printf("Error in PARDISO factorization when updating: %d.\n", p->error);
+    scs_printf("Error in PARDISO factorization when updating: %d.\n",
+               (int)p->error);
     scs_free_lin_sys_work(p);
   }
 }
