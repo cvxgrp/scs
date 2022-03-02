@@ -9,7 +9,7 @@ extern "C" {
 #include "linsys.h"
 
 struct SCS_LIN_SYS_WORK {
-  csc *kkt;       /* Upper triangular KKT matrix (in CSR format!) */
+  csc *kkt;       /* Upper triangular KKT matrix (in CSR format) */
   scs_float *sol; /* solution to the KKT system */
   scs_int n;      /* number of QP variables */
   scs_int m;      /* number of QP constraints */
@@ -25,8 +25,6 @@ struct SCS_LIN_SYS_WORK {
   scs_int phase;     /* control the execution phases of the solver */
   scs_int error;     /* the error indicator (0 for no error) */
   scs_int msglvl;    /* Message level information (0 for no output) */
-  scs_int idum;      /* dummy integer */
-  scs_float fdum;    /* dummy float */
 
   /* These are required for matrix updates */
   scs_int *diag_r_idxs; /* indices where R appears */

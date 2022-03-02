@@ -130,6 +130,9 @@ ifneq ($(COVERAGE), 0)
 CUSTOM_FLAGS += --coverage # generate test coverage data
 endif
 
+# See: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
+MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl
+
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):
 # set the number of threads to, for example, 4 by entering the command:

@@ -78,7 +78,7 @@ $(OUT)/libscsindir.$(SHARED): $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.
 
 $(OUT)/libscsmkl.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) -L$(MKLROOT)/lib -lmkl_rt
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
 
 $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -87,7 +87,7 @@ $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
 $(OUT)/demo_socp_mkl: test/random_socp_prob.c $(OUT)/libscsmkl.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -L$(MKLROOT)/lib -lmkl_rt
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
 
 $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -106,7 +106,7 @@ $(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
 $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -L$(MKLROOT)/lib -lmkl_rt -Itest
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(MKLFLAGS) -Itest
 
 
 .PHONY: test_gpu

@@ -1,7 +1,5 @@
 #include "private.h"
 
-#define MKL_INTERFACE_LP64 0
-#define MKL_INTERFACE_ILP64 1
 
 #define PARDISO_SYMBOLIC (11)
 #define PARDISO_NUMERIC (22)
@@ -9,6 +7,10 @@
 #define PARDISO_CLEANUP (-1)
 
 /* TODO: is it necessary to use pardiso_64 and MKL_Set_Interface_Layer ? */
+/*
+#define MKL_INTERFACE_LP64 0
+#define MKL_INTERFACE_ILP64 1
+*/
 #ifdef DLONG
 #define _PARDISO pardiso_64
 #else
@@ -22,7 +24,7 @@ void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
               scs_int *perm, const scs_int *nrhs, scs_int *iparm,
               const scs_int *msglvl, scs_float *b, scs_float *x,
               scs_int *error);
-scs_int MKL_Set_Interface_Layer(scs_int);
+  /* scs_int MKL_Set_Interface_Layer(scs_int); */
 
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
@@ -32,8 +34,8 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
     p->phase = PARDISO_CLEANUP;
     _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-             &(p->n_plus_m), &(p->fdum), p->kkt->p, p->kkt->i, &(p->idum),
-             &(p->nrhs), p->iparm, &(p->msglvl), &(p->fdum), &(p->fdum),
+             &(p->n_plus_m), SCS_NULL, p->kkt->p, p->kkt->i, SCS_NULL,
+             &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
              &(p->error));
     if (p->error != 0) {
       scs_printf("Error during MKL Pardiso cleanup: %d", (int)p->error);
@@ -57,12 +59,13 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   /* TODO: is this necessary with pardiso_64? */
   /* Set MKL interface layer */
+  /*
 #ifdef DLONG
   MKL_Set_Interface_Layer(MKL_INTERFACE_ILP64);
 #else
   MKL_Set_Interface_Layer(MKL_INTERFACE_LP64);
 #endif
-
+  */
   p->n = A->n;
   p->m = A->m;
   p->n_plus_m = p->n + p->m;
@@ -110,8 +113,8 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   /* Permutation and symbolic factorization */
   scs_int phase = PARDISO_SYMBOLIC;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &phase, &(p->n_plus_m),
-           p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum), &(p->nrhs), p->iparm,
-           &(p->msglvl), &(p->fdum), &(p->fdum), &(p->error));
+           p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL, &(p->nrhs), p->iparm,
+           &(p->msglvl), SCS_NULL, SCS_NULL, &(p->error));
 
   if (p->error != 0) {
     scs_printf("Error during symbolic factorization: %d", (int)p->error);
@@ -122,8 +125,8 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   /* Numerical factorization */
   p->phase = PARDISO_NUMERIC;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum),
-           &(p->nrhs), p->iparm, &(p->msglvl), &(p->fdum), &(p->fdum),
+           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
+           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
            &(p->error));
 
   if (p->error) {
@@ -146,7 +149,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
   /* Back substitution and iterative refinement */
   p->phase = PARDISO_SOLVE;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum),
+           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
            &(p->nrhs), p->iparm, &(p->msglvl), b, p->sol, &(p->error));
   if (p->error != 0) {
     scs_printf("Error during linear system solution: %d", (int)p->error);
@@ -170,8 +173,8 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   /* Perform numerical factorization */
   p->phase = PARDISO_NUMERIC;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, &(p->idum),
-           &(p->nrhs), p->iparm, &(p->msglvl), &(p->fdum), &(p->fdum),
+           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
+           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
            &(p->error));
 
   if (p->error != 0) {
