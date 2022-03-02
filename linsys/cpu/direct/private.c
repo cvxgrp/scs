@@ -1,7 +1,7 @@
 #include "private.h"
 
 const char *scs_get_lin_sys_method() {
-  return "sparse-direct";
+  return "sparse-direct-amd-qdldl";
 }
 
 void scs_free_lin_sys_work(ScsLinSysWork *p) {
