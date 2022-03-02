@@ -62,8 +62,10 @@ included Intel oneAPI MKL library. This offers an alternative to the single
 threaded AMD / QDLDL libraries which come bundled with SCS. Pardiso tends to be
 faster than AMD / QDLDL, especially for larger problems. If MKL is installed on
 your system then it is generally worth using MKL for both the blas / lapack
-usage as well as the linear system solve. Most non-commercial users can download
-and install MKL for free.
+usage as well as the linear system solve.
+Intel MKL is now available for
+`free and without restrictions for everyone <https://www.intel.com/content/www/us/en/developer/articles/news/free-ipsxe-tools-and-libraries.html>`_,
+though it only offers limited support for non-Intel CPUs.
 
 .. _indirect:
 
