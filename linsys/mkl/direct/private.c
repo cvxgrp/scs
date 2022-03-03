@@ -1,6 +1,5 @@
 #include "private.h"
 
-
 #define PARDISO_SYMBOLIC (11)
 #define PARDISO_NUMERIC (22)
 #define PARDISO_SOLVE (33)
@@ -24,7 +23,7 @@ void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
               scs_int *perm, const scs_int *nrhs, scs_int *iparm,
               const scs_int *msglvl, scs_float *b, scs_float *x,
               scs_int *error);
-  /* scs_int MKL_Set_Interface_Layer(scs_int); */
+/* scs_int MKL_Set_Interface_Layer(scs_int); */
 
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
@@ -126,8 +125,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->phase = PARDISO_NUMERIC;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
            &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
-           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
-           &(p->error));
+           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL, &(p->error));
 
   if (p->error) {
     scs_printf("Error during numerical factorization: %d", (int)p->error);
@@ -174,8 +172,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   p->phase = PARDISO_NUMERIC;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
            &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
-           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
-           &(p->error));
+           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL, &(p->error));
 
   if (p->error != 0) {
     scs_printf("Error in PARDISO factorization when updating: %d.\n",

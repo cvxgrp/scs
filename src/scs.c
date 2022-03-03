@@ -563,7 +563,8 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   /* report mid point of primal and dual objective values */
   scs_printf("%*.2e ", (int)HSPACE, 0.5 * (r->pobj + r->dobj));
   scs_printf("%*.2e ", (int)HSPACE, w->stgs->scale);
-  scs_printf("%*.2e ", (int)HSPACE, (SCS(tocq)(solve_timer) + w->setup_time) / 1e3);
+  scs_printf("%*.2e ", (int)HSPACE,
+             (SCS(tocq)(solve_timer) + w->setup_time) / 1e3);
   scs_printf("\n");
 
 #if VERBOSITY > 0
