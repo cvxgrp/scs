@@ -326,10 +326,19 @@ if(DEFINED ENV{MKLROOT})
            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
   target_compile_definitions(${${PROJECT_NAME}_MKL} PRIVATE ${COMPILER_OPTS})
-  # See: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
+  # See:
+  # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
   target_link_options(${${PROJECT_NAME}_MKL} PRIVATE "LINKER:--no-as-needed")
   target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE $ENV{MKLROOT}/lib)
-  target_link_libraries(${${PROJECT_NAME}_MKL} PRIVATE m mkl_rt mkl_gnu_thread mkl_core gomp pthread dl)
+  target_link_libraries(
+    ${${PROJECT_NAME}_MKL}
+    PRIVATE m
+            mkl_rt
+            mkl_gnu_thread
+            mkl_core
+            gomp
+            pthread
+            dl)
 
   # Set some properties
   set_target_properties(
