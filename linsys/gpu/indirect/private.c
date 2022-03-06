@@ -172,13 +172,13 @@ static void mat_vec(ScsLinSysWork *p, const scs_float *x, scs_float *y) {
 }
 
 /* P comes in upper triangular, expand to full
- * First compute triplet version of full matrix, then compress to csc
+ * First compute triplet version of full matrix, then compress to CSC
  * */
-static csc *fill_p_matrix(const ScsMatrix *P) {
+static ScsMatrix *fill_p_matrix(const ScsMatrix *P) {
   scs_int i, j, k, kk;
   scs_int Pnzmax = 2 * P->p[P->n]; /* upper bound */
-  csc *P_tmp = SCS(cs_spalloc)(P->n, P->n, Pnzmax, 1, 1);
-  csc *P_full;
+  ScsMatrix *P_tmp = SCS(cs_spalloc)(P->n, P->n, Pnzmax, 1, 1);
+  ScsMatrix *P_full;
   kk = 0;
   for (j = 0; j < P->n; j++) { /* cols */
     for (k = P->p[j]; k < P->p[j + 1]; k++) {
@@ -199,8 +199,7 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
       kk++;
     }
   }
-  P_tmp->nz = kk; /* set number of nonzeros */
-  P_full = SCS(cs_compress)(P_tmp, SCS_NULL);
+  P_full = SCS(cs_compress)(P_tmp, kk, SCS_NULL);
   SCS(cs_spfree)(P_tmp);
   return P_full;
 }
@@ -208,7 +207,7 @@ static csc *fill_p_matrix(const ScsMatrix *P) {
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   cudaError_t err;
-  csc *P_full;
+  ScsMatrix *P_full;
   ScsLinSysWork *p = SCS_NULL;
   ScsGpuMatrix *Ag = SCS_NULL;
   ScsGpuMatrix *Pg = SCS_NULL;

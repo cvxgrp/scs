@@ -23,43 +23,43 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
   }
 }
 
-static scs_int _ldl_init(csc *A, scs_int *P, scs_float **info) {
+static scs_int _ldl_init(ScsMatrix *A, scs_int *P, scs_float **info) {
   *info = (scs_float *)scs_calloc(AMD_INFO, sizeof(scs_float));
   return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
 /* call only once */
 static scs_int ldl_prepare(ScsLinSysWork *p) {
-  csc *kkt = p->kkt, *L = p->L;
-  scs_int n = kkt->n;
+  ScsMatrix *kkt = p->kkt, *L = p->L;
+  scs_int nzmax, n = kkt->n;
   p->etree = (scs_int *)scs_calloc(n, sizeof(scs_int));
   p->Lnz = (scs_int *)scs_calloc(n, sizeof(scs_int));
   p->iwork = (scs_int *)scs_calloc(3 * n, sizeof(scs_int));
   L->p = (scs_int *)scs_calloc((1 + n), sizeof(scs_int));
-  L->nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
-  if (L->nzmax < 0) {
+  nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
+  if (nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
-    if (L->nzmax == -1) {
+    if (nzmax == -1) {
       scs_printf("Matrix is not perfectly upper triangular.\n");
-    } else if (L->nzmax == -2) {
+    } else if (nzmax == -2) {
       scs_printf("Integer overflow in L nonzero count.\n");
     }
-    return L->nzmax;
+    return nzmax;
   }
 
-  L->x = (scs_float *)scs_calloc(L->nzmax, sizeof(scs_float));
-  L->i = (scs_int *)scs_calloc(L->nzmax, sizeof(scs_int));
+  L->x = (scs_float *)scs_calloc(nzmax, sizeof(scs_float));
+  L->i = (scs_int *)scs_calloc(nzmax, sizeof(scs_int));
   p->Dinv = (scs_float *)scs_calloc(n, sizeof(scs_float));
   p->D = (scs_float *)scs_calloc(n, sizeof(scs_float));
   p->bwork = (scs_int *)scs_calloc(n, sizeof(scs_int));
   p->fwork = (scs_float *)scs_calloc(n, sizeof(scs_float));
-  return L->nzmax;
+  return nzmax;
 }
 
 /* can call many times */
 static scs_int ldl_factor(ScsLinSysWork *p, scs_int num_vars) {
   scs_int factor_status;
-  csc *kkt = p->kkt, *L = p->L;
+  ScsMatrix *kkt = p->kkt, *L = p->L;
 #if VERBOSITY > 0
   scs_printf("numeric factorization\n");
 #endif
@@ -95,7 +95,7 @@ static void _ldl_permt(scs_int n, scs_float *x, scs_float *b, scs_int *P) {
     x[P[j]] = b[j];
 }
 
-static void _ldl_solve(scs_float *b, csc *L, scs_float *Dinv, scs_int *P,
+static void _ldl_solve(scs_float *b, ScsMatrix *L, scs_float *Dinv, scs_int *P,
                        scs_float *bp) {
   /* solves PLDL'P' x = b for x */
   scs_int n = L->n;
@@ -118,11 +118,11 @@ static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   return pinv;      /* return result */
 }
 
-static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
-                       scs_int values) {
+static ScsMatrix *cs_symperm(const ScsMatrix *A, const scs_int *pinv,
+                             scs_int *idx_mapping, scs_int values) {
   scs_int i, j, p, q, i2, j2, n, *Ap, *Ai, *Cp, *Ci, *w;
   scs_float *Cx, *Ax;
-  csc *C;
+  ScsMatrix *C;
   n = A->n;
   Ap = A->p;
   Ai = A->i;
@@ -168,12 +168,13 @@ static csc *cs_symperm(const csc *A, const scs_int *pinv, scs_int *idx_mapping,
                       1); /* success; free workspace, return C */
 }
 
-static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
-                        ScsLinSysWork *p, const scs_float *diag_r) {
+static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
+                              ScsLinSysWork *p, const scs_float *diag_r) {
   scs_float *info;
-  scs_int *Pinv, amd_status, *idx_mapping, i;
-  csc *kkt_perm;
-  csc *kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 1);
+  scs_int *Pinv, amd_status, *idx_mapping, i, kkt_nnz;
+  ScsMatrix *kkt_perm;
+  ScsMatrix *kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 1);
+  kkt_nnz = kkt->p[kkt->n];
   if (!kkt) {
     return SCS_NULL;
   }
@@ -187,7 +188,7 @@ static csc *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   amd_info(info);
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
-  idx_mapping = (scs_int *)scs_calloc(kkt->nzmax, sizeof(scs_int));
+  idx_mapping = (scs_int *)scs_calloc(kkt_nnz, sizeof(scs_int));
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
@@ -226,13 +227,12 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->n = A->n;
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->perm = (scs_int *)scs_calloc(sizeof(scs_int), n_plus_m);
-  p->L = (csc *)scs_calloc(1, sizeof(csc));
+  p->L = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   p->bp = (scs_float *)scs_calloc(n_plus_m, sizeof(scs_float));
   p->diag_r_idxs = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
   p->factorizations = 0;
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
-  p->L->nz = -1;
   p->kkt = permute_kkt(A, P, p, diag_r);
   ldl_prepare_status = ldl_prepare(p);
   ldl_status = ldl_factor(p, A->n);

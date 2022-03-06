@@ -9,7 +9,7 @@ extern "C" {
 #include "linsys.h"
 
 struct SCS_LIN_SYS_WORK {
-  csc *kkt;       /* Upper triangular KKT matrix (in CSR format) */
+  ScsMatrix *kkt; /* Upper triangular KKT matrix (in CSR format) */
   scs_float *sol; /* solution to the KKT system */
   scs_int n;      /* number of QP variables */
   scs_int m;      /* number of QP constraints */
