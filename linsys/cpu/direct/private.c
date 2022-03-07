@@ -174,10 +174,10 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   scs_int *Pinv, amd_status, *idx_mapping, i, kkt_nnz;
   ScsMatrix *kkt_perm;
   ScsMatrix *kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 1);
-  kkt_nnz = kkt->p[kkt->n];
   if (!kkt) {
     return SCS_NULL;
   }
+  kkt_nnz = kkt->p[kkt->n];
   amd_status = _ldl_init(kkt, p->perm, &info);
   if (amd_status < 0) {
     scs_printf("AMD permutatation error.\n");

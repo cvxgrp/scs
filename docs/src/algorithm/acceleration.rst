@@ -130,10 +130,10 @@ In SCS
 ------
 
 In SCS both types of acceleration are available, though by default type-I is
-used since it tends to have better performance.  If you wish to enable AA then
-set the :code:`acceleration_lookback` setting to a non-zero value (10 works well
-for many problems). This setting corresponds to :math:`m`, the maximum number of
-SCS iterates that AA will use to extrapolate to the new point.
+used since it tends to have better performance.  If you wish to use AA then set
+the :code:`acceleration_lookback` setting to a non-zero value (10 works well for
+many problems and is the default). This setting corresponds to :math:`m`, the
+maximum number of SCS iterates that AA will use to extrapolate to the new point.
 
 To enable type-II acceleration then set :code:`acceleration_lookback` to a
 negative value, the sign is interpreted as switching the AA type (this is mostly
@@ -146,7 +146,7 @@ intermediate iterations). This has the benefit of making AA :math:`k` times
 faster and approximating a :math:`k` times larger memory, as well as improving
 numerical stability by 'decorrelating' the data. On the other hand, older
 iterates might be stale.  More work is needed to determine the optimal setting
-for this parameter, but 10 appears to work well in practice.
+for this parameter, but 10 appears to work well in practice and is the default.
 
 The details about how the linear systems are solved and updated is abstracted
 away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
