@@ -131,8 +131,8 @@ CUSTOM_FLAGS += --coverage # generate test coverage data
 endif
 
 # See: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
-# This is probably not correct for other systems, not sure how best to write this
-# to work for all combinations of platform / compiler / threading options
+# This is probably not correct for other systems. TODO: update this
+# to work for all combinations of platform / compiler / threading options.
 MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl
 
 ############ OPENMP: ############

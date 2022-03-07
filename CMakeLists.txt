@@ -96,7 +96,7 @@ endif()
 # Add uninstall target After 'make install' can run 'make uninstall' to remove.
 include(AddUninstallTarget)
 
-# Some variables useful for sampling the building process Note that the GPU
+# Some variables useful for sampling the building process. Note that the GPU
 # profile is not compiled.
 set(LINSYS linsys)
 set(DIRSRC ${LINSYS}/cpu/direct)
@@ -328,8 +328,8 @@ if(DEFINED ENV{MKLROOT})
   target_compile_definitions(${${PROJECT_NAME}_MKL} PRIVATE ${COMPILER_OPTS})
   # See:
   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
-  # This is probably not correct for other systems, not sure how best to write
-  # this to work for all combinations of platform / compiler / threading options
+  # This is probably not correct for other systems. TODO: make SCS-MKL
+  # work for all combinations of platform / compiler / threading options.
   target_link_options(${${PROJECT_NAME}_MKL} PRIVATE "LINKER:--no-as-needed")
   target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE $ENV{MKLROOT}/lib)
   target_link_libraries(

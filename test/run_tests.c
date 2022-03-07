@@ -16,13 +16,13 @@
 
 int tests_run = 0;
 
+/* decrement tests_run since mu_unit will increment it, so this cancels */
 #define _SKIP(problem)                                                         \
   char *problem(void) {                                                        \
     scs_printf("skipped\n");                                                   \
     tests_run--;                                                               \
     return 0;                                                                  \
-  }                                                                            
-
+  }
 
 #if NO_VALIDATE == 0
 #include "problems/test_validation.h"
