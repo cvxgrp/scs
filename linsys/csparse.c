@@ -4,8 +4,7 @@
 
 ScsMatrix *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
                            scs_int triplet) {
-  ScsMatrix *A = (ScsMatrix *)scs_calloc(
-      1, sizeof(ScsMatrix)); /* allocate the ScsMatrix struct */
+  ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
     return SCS_NULL;
   }         /* out of memory */
