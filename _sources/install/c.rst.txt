@@ -12,11 +12,9 @@ First clone the SCS repo from GitHub
 CMake
 ^^^^^
 
-Thanks to the `CMake <https://cmake.org/cmake/help/latest/>`__
-buildsystem (contributed by `Giulio Romualdi
-<https://github.com/GiulioRomualdi>`__), SCS can be easily compiled and linked
-to other CMake projects. To use the cmake buld system please run the following
-commands:
+Thanks to the `CMake <https://cmake.org/cmake/help/latest/>`__ buildsystem SCS
+can be easily compiled and linked to other CMake projects. To use the cmake
+buld system please run the following commands:
 
 .. code:: bash
 
@@ -56,7 +54,19 @@ project
 
 The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
 :code:`scs::scsindir` as well as a header file :code:`scs.h` that defines the
-API. The libraries can be imported using the find_package CMake command and used
+API.
+
+If `MKL
+<https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html>`_
+is installed in your system and the :code:`MKLROOT` environment variable is
+set, then additionally CMake will build and install the :ref:`MKL Pardiso
+<mkl>` linear solver with target :code:`scs::scsmkl`.  (Note that the choice of
+MKL compiler flags might not be right for your system and may need to be
+`modified
+<https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
+
+
+The libraries can be imported using the find_package CMake command and used
 by calling target_link_libraries as in the following example:
 
 .. code:: bash
@@ -71,6 +81,9 @@ by calling target_link_libraries as in the following example:
 
   # To use the indirect method
   target_link_libraries(example scs::scsindir)
+
+  # To use the MKL Pardiso direct method
+  target_link_libraries(example scs::scsmkl)
 
 Makefile
 ^^^^^^^^
@@ -94,6 +107,22 @@ If make completes successfully, it will produce two static library files,
 :code:`libscsdir.a`, :code:`libscsindir.a`, and two dynamic library files
 :code:`libscsdir.ext`, :code:`libscsindir.ext` (where :code:`.ext` extension is
 platform dependent) in the :code:`out` folder.
+
+If `MKL
+<https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html>`_
+is installed in your system and the :code:`MKLROOT` environment variable is set,
+then you can compile and test the :ref:`MKL Pardiso <mkl>` version of SCS using:
+
+.. code:: bash
+
+  make mkl
+  out/run_tests_mkl
+
+This will produce static library :code:`libscsmkl.a` and dynamic library
+:code:`libscsmkl.ext` (again :code:`.ext` is platform dependent) in the
+:code:`out` folder.  (Note that the choice of MKL compiler flags might not be right
+for your system and may need to be `modified
+<https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
 
 If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo

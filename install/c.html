@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C / C++ &mdash; SCS 3.2.0 documentation</title>
+  <title>C / C++ &mdash; SCS 3.2.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
@@ -33,7 +33,7 @@
             <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.2.0
+                3.2.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -99,10 +99,9 @@
 </div>
 <section id="cmake">
 <h2>CMake<a class="headerlink" href="#cmake" title="Permalink to this headline"></a></h2>
-<p>Thanks to the <a class="reference external" href="https://cmake.org/cmake/help/latest/">CMake</a>
-buildsystem (contributed by <a class="reference external" href="https://github.com/GiulioRomualdi">Giulio Romualdi</a>), SCS can be easily compiled and linked
-to other CMake projects. To use the cmake buld system please run the following
-commands:</p>
+<p>Thanks to the <a class="reference external" href="https://cmake.org/cmake/help/latest/">CMake</a> buildsystem SCS
+can be easily compiled and linked to other CMake projects. To use the cmake
+buld system please run the following commands:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> scs
 mkdir build
 <span class="nb">cd</span> build
@@ -134,7 +133,13 @@ make
 </div>
 <p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> that defines the
-API. The libraries can be imported using the find_package CMake command and used
+API.</p>
+<p>If <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html">MKL</a>
+is installed in your system and the <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment variable is
+set, then additionally CMake will build and install the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a> linear solver with target <code class="code docutils literal notranslate"><span class="pre">scs::scsmkl</span></code>.  (Note that the choice of
+MKL compiler flags might not be right for your system and may need to be
+<a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+<p>The libraries can be imported using the find_package CMake command and used
 by calling target_link_libraries as in the following example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION <span class="m">3</span>.0<span class="o">)</span>
 project<span class="o">(</span>myproject<span class="o">)</span>
@@ -146,6 +151,9 @@ target_link_libraries<span class="o">(</span>example scs::scsdir<span class="o">
 
 <span class="c1"># To use the indirect method</span>
 target_link_libraries<span class="o">(</span>example scs::scsindir<span class="o">)</span>
+
+<span class="c1"># To use the MKL Pardiso direct method</span>
+target_link_libraries<span class="o">(</span>example scs::scsmkl<span class="o">)</span>
 </pre></div>
 </div>
 </section>
@@ -166,6 +174,17 @@ out/run_tests_indirect
 <code class="code docutils literal notranslate"><span class="pre">libscsdir.a</span></code>, <code class="code docutils literal notranslate"><span class="pre">libscsindir.a</span></code>, and two dynamic library files
 <code class="code docutils literal notranslate"><span class="pre">libscsdir.ext</span></code>, <code class="code docutils literal notranslate"><span class="pre">libscsindir.ext</span></code> (where <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> extension is
 platform dependent) in the <code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.</p>
+<p>If <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html">MKL</a>
+is installed in your system and the <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment variable is set,
+then you can compile and test the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a> version of SCS using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make mkl
+out/run_tests_mkl
+</pre></div>
+</div>
+<p>This will produce static library <code class="code docutils literal notranslate"><span class="pre">libscsmkl.a</span></code> and dynamic library
+<code class="code docutils literal notranslate"><span class="pre">libscsmkl.ext</span></code> (again <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> is platform dependent) in the
+<code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.  (Note that the choice of MKL compiler flags might not be right
+for your system and may need to be <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
 <p>If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo
 binaries in the out folder corresponding to the GPU version.  Note that the GPU

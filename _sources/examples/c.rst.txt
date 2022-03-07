@@ -16,7 +16,7 @@ the :code:`gcc` compiler is available) using:
 
 .. code::
 
-    gcc -I/usr/local/include/scs -L/usr/local/lib/ qp.c -o qp.out -lscsdir	  
+    gcc -I/usr/local/include/scs -L/usr/local/lib/ qp.c -o qp.out -lscsdir
 
 .. ./qp.out > qp.c.out
 

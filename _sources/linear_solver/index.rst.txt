@@ -40,21 +40,37 @@ choose between the different linear solvers using the appropriate settings.
 
 .. _direct:
 
-Sparse direct method
-^^^^^^^^^^^^^^^^^^^^
+Sparse direct
+^^^^^^^^^^^^^
 
 The direct method is the default linear system solver in SCS and factorizes the
 above matrix using a sparse permuted LDL factorization. Then it solves the
 linear system at each iteration using the cached factors.  Since the linear
 system is quasidefinite we have strong existence guarantees about the
-factorization.  It relies on the external `AMD
+factorization.  It relies on the external (but included) `AMD
 <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ and `QDLDL
 <https://github.com/oxfordcontrol/qdldl>`_ packages.
 
+.. _mkl:
+
+MKL Pardiso
+^^^^^^^^^^^
+The `Intel MKL Pardiso solver
+<https://www.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-c/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-iface.html>`_
+is a shared-memory multiprocessing parallel direct sparse solver which is
+included Intel oneAPI MKL library. This offers an alternative to the single
+threaded AMD / QDLDL libraries which come bundled with SCS. Pardiso tends to be
+faster than AMD / QDLDL, especially for larger problems. If MKL is installed on
+your system then it is generally worth using MKL for both the blas / lapack
+usage as well as the linear system solve.
+Intel MKL is now available for
+`free and without restrictions for everyone <https://www.intel.com/content/www/us/en/developer/articles/news/free-ipsxe-tools-and-libraries.html>`_,
+though it only offers limited support for non-Intel CPUs.
+
 .. _indirect:
 
-Sparse indirect method
-^^^^^^^^^^^^^^^^^^^^^^
+Sparse indirect
+^^^^^^^^^^^^^^^
 
 The indirect method solves the above linear system approximately with a
 'matrix-free' method. To do this it first reduces the system to solving
