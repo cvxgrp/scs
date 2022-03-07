@@ -81,8 +81,8 @@ ScsMatrix *SCS(cs_spfree)(ScsMatrix *A) {
   scs_free(A->i);
   scs_free(A->x);
   scs_free(A);
-  return (
-      ScsMatrix *)SCS_NULL; /* free the ScsMatrix struct and return SCS_NULL */
+  /* free the ScsMatrix struct and return SCS_NULL */
+  return (ScsMatrix *)SCS_NULL;
 }
 
 /* Build the KKT matrix */
