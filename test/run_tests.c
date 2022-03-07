@@ -14,9 +14,13 @@
 #include "problems/small_qp.h"
 #include "problems/unbounded_tiny_qp.h"
 
+int tests_run = 0;
+
+/* decrement tests_run since mu_unit will increment it, so this cancels */
 #define _SKIP(problem)                                                         \
   char *problem(void) {                                                        \
     scs_printf("skipped\n");                                                   \
+    tests_run--;                                                               \
     return 0;                                                                  \
   }
 
@@ -45,8 +49,6 @@ _SKIP(hs21_tiny_qp_rw)
 #else
 _SKIP(random_prob)
 #endif
-
-int tests_run = 0;
 
 static const char *all_tests(void) {
   mu_run_test(test_validation);

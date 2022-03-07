@@ -69,6 +69,7 @@ DIRSRC = $(LINSYS)/cpu/direct
 INDIRSRC = $(LINSYS)/cpu/indirect
 GPUDIR = $(LINSYS)/gpu/direct
 GPUINDIR = $(LINSYS)/gpu/indirect
+MKLSRC = $(LINSYS)/mkl/direct
 
 EXTSRC = $(LINSYS)/external
 
@@ -116,7 +117,7 @@ ifneq ($(NO_PRINTING), 0)
 CUSTOM_FLAGS += -DNO_PRINTING=$(NO_PRINTING) # disable printing
 endif
 NO_READ_WRITE = 0
-ifneq ($(NO_READ_WRITE ), 0)
+ifneq ($(NO_READ_WRITE), 0)
 CUSTOM_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable printing
 endif
 ### VERBOSITY LEVELS: 0,1,2,...
@@ -128,6 +129,11 @@ COVERAGE = 0
 ifneq ($(COVERAGE), 0)
 CUSTOM_FLAGS += --coverage # generate test coverage data
 endif
+
+# See: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
+# This is probably not correct for other systems. TODO: update this
+# to work for all combinations of platform / compiler / threading options.
+MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):
@@ -145,11 +151,11 @@ endif
 # NB: point the libraries to the locations where
 # you have blas and lapack installed
 
+BLASLDFLAGS =
 USE_LAPACK = 1
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
-  BLASLDFLAGS = -llapack -lblas # -lgfortran
-  LDFLAGS += $(BLASLDFLAGS)
+  BLASLDFLAGS += -llapack -lblas # -lgfortran
   CUSTOM_FLAGS += -DUSE_LAPACK
 
   BLAS64 = 0

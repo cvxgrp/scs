@@ -1,10 +1,7 @@
 #include "private.h"
-#include "linsys.h"
-#include "util.h"
-#include <limits.h>
 
 const char *scs_get_lin_sys_method() {
-  return "sparse-indirect";
+  return "sparse-indirect-scs";
 }
 
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */

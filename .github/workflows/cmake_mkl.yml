@@ -1,0 +1,44 @@
+---
+name: CMake MKL
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Intel Apt repository
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+
+    - name: Install Intel oneAPI
+      run: sudo apt-get install intel-mkl
+
+    - name: Setup Intel oneAPI environment
+      run: |
+        # TODO: hack to set MKLROOT for now
+        echo "MKLROOT=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+        # source /opt/intel/mkl/bin/mklvars.sh
+
+    - name: checkout project code
+      uses: actions/checkout@v2
+
+    - name: Build SCS MKL and test
+      run: |
+        mkdir build
+        export INSTALL_DIR=$PWD/out
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
+        cd build
+        mkdir out
+        cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+        make
+        make install
+        ctest --output-on-failure
+        cd ../docs/src/examples/
+        gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsmkl
+        ./qp.out
+

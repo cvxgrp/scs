@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install libopenblas-dev liblapack-dev
-      - run: mkdir build
       - run: |
+          sudo apt-get install libopenblas-dev liblapack-dev
+          mkdir build
           export INSTALL_DIR=$PWD/out
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           cd build
@@ -27,10 +27,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: brew install openblas lapack
-      - run: mkdir cmake_out
-      - run: mkdir build
       - run: |
+          brew install openblas lapack
+          mkdir build
           export INSTALL_DIR=$PWD/out
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           cd build

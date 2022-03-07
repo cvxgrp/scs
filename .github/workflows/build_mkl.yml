@@ -1,0 +1,39 @@
+---
+name: Build and Test MKL
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Intel Apt repository
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+
+    - name: Install Intel oneAPI
+      run: sudo apt-get install intel-mkl
+
+    - name: Setup Intel oneAPI environment
+      run: |
+        # TODO: hack to set MKLROOT for now
+        echo "MKLROOT=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+        # source /opt/intel/mkl/bin/mklvars.sh
+
+    - name: checkout project code
+      uses: actions/checkout@v2
+
+    - name: Build SCS MKL and test
+      run: |
+        make DLONG=${{ matrix.long }} mkl
+        out/run_tests_mkl
