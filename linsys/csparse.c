@@ -2,39 +2,37 @@
 
 #include "csparse.h"
 
-csc *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
-                     scs_int triplet) {
-  csc *A = (csc *)scs_calloc(1, sizeof(csc)); /* allocate the csc struct */
+ScsMatrix *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
+                           scs_int triplet) {
+  ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
     return SCS_NULL;
   }         /* out of memory */
   A->m = m; /* define dimensions and nzmax */
   A->n = n;
-  A->nzmax = nzmax = MAX(nzmax, 1);
-  A->nz = triplet ? 0 : -1; /* allocate triplet or comp.col */
   A->p = (scs_int *)scs_calloc((triplet ? nzmax : n + 1), sizeof(scs_int));
   A->i = (scs_int *)scs_calloc(nzmax, sizeof(scs_int));
   A->x = values ? (scs_float *)scs_calloc(nzmax, sizeof(scs_float)) : SCS_NULL;
   return (!A->p || !A->i || (values && !A->x)) ? SCS(cs_spfree)(A) : A;
 }
 
-csc *SCS(cs_done)(csc *C, void *w, void *x, scs_int ok) {
+ScsMatrix *SCS(cs_done)(ScsMatrix *C, void *w, void *x, scs_int ok) {
   scs_free(w); /* free workspace */
   scs_free(x);
   return ok ? C : SCS(cs_spfree)(C); /* return result if OK, else free it */
 }
 
 /* C = compressed-column form of a triplet matrix T */
-csc *SCS(cs_compress)(const csc *T, scs_int *idx_mapping) {
-  scs_int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj;
+ScsMatrix *SCS(cs_compress)(const ScsMatrix *T, scs_int nz,
+                            scs_int *idx_mapping) {
+  scs_int m, n, p, k, *Cp, *Ci, *w, *Ti, *Tj;
   scs_float *Cx, *Tx;
-  csc *C;
+  ScsMatrix *C;
   m = T->m;
   n = T->n;
   Ti = T->i;
   Tj = T->p;
   Tx = T->x;
-  nz = T->nz;
   C = SCS(cs_spalloc)(m, n, nz, Tx != SCS_NULL, 0); /* allocate result */
   w = (scs_int *)scs_calloc(n, sizeof(scs_int));    /* get workspace */
   if (!C || !w) {
@@ -75,7 +73,7 @@ scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n) {
   return nz2; /* return sum (c [0..n-1]) */
 }
 
-csc *SCS(cs_spfree)(csc *A) {
+ScsMatrix *SCS(cs_spfree)(ScsMatrix *A) {
   if (!A) {
     return SCS_NULL;
   } /* do nothing if A already SCS_NULL */
@@ -83,13 +81,14 @@ csc *SCS(cs_spfree)(csc *A) {
   scs_free(A->i);
   scs_free(A->x);
   scs_free(A);
-  return (csc *)SCS_NULL; /* free the csc struct and return SCS_NULL */
+  /* free the ScsMatrix struct and return SCS_NULL */
+  return (ScsMatrix *)SCS_NULL;
 }
 
 /* Build the KKT matrix */
-csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
-                   const scs_float *diag_r, scs_int *diag_r_idxs,
-                   scs_int upper) {
+ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
+                         scs_float *diag_p, const scs_float *diag_r,
+                         scs_int *diag_r_idxs, scs_int upper) {
   /*
    * Forms column compressed KKT matrix assumes column compressed A,P matrices.
    * Only upper OR lower triangular part is stuffed, depending on `upper` flag.
@@ -103,7 +102,7 @@ csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
    *
    */
   scs_int h, i, j, count;
-  csc *Kcsc, *K;
+  ScsMatrix *Kcsc, *K;
   scs_int n = A->n;
   scs_int m = A->m;
   scs_int Anz = A->p[n];
@@ -205,9 +204,8 @@ csc *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p,
     count++;
   }
 
-  K->nz = count;
-  idx_mapping = (scs_int *)scs_calloc(K->nz, sizeof(scs_int));
-  Kcsc = SCS(cs_compress)(K, idx_mapping);
+  idx_mapping = (scs_int *)scs_calloc(count, sizeof(scs_int));
+  Kcsc = SCS(cs_compress)(K, count, idx_mapping);
   for (i = 0; i < m + n; i++) {
     diag_r_idxs[i] = idx_mapping[diag_r_idxs[i]];
   }
