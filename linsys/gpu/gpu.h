@@ -62,19 +62,24 @@ extern "C" {
   cusparse##x
 #endif
 
-#ifndef SFLOAT
+#if SFLOAT==0
+#define SCS_CUDA_FLOAT CUDA_R_32F /* 32 bit real floats */
+#else
+#define SCS_CUDA_FLOAT CUDA_R_64F /* 64 bit real floats */
+#endif
+
 #define SCS_CUDA_FLOAT CUDA_R_64F
+
+
+#if DLONG==0
+#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_32I /* 32 bit signed integer */
 #else
-#define SCS_CUDA_FLOAT CUDA_R_32F
+#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_64I /* 64 bit signed integer */
 #endif
 
-#ifndef DLONG
 #define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_32I
-#else
-#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_64I
-#endif
 
-#define SCS_CSRMV_ALG CUSPARSE_SPMV_CSR_ALG1
+#define SCS_MV_ALG CUSPARSE_MV_ALG_DEFAULT
 #define SCS_CSR2CSC_ALG CUSPARSE_CSR2CSC_ALG1
 
 /*
@@ -96,17 +101,6 @@ typedef struct SCS_GPU_DATA_MATRIX {
   cusparseSpMatDescr_t descr;
 } ScsGpuMatrix;
 
-void SCS(accum_by_atrans_gpu)(const ScsGpuMatrix *A,
-                              const cusparseDnVecDescr_t x,
-                              cusparseDnVecDescr_t y,
-                              cusparseHandle_t cusparse_handle,
-                              size_t *buffer_size, void **buffer);
-
-void SCS(accum_by_a_gpu)(const ScsGpuMatrix *A, const cusparseDnVecDescr_t x,
-                         cusparseDnVecDescr_t y,
-                         cusparseHandle_t cusparse_handle, size_t *buffer_size,
-                         void **buffer);
-
 void SCS(accum_by_p_gpu)(const ScsGpuMatrix *P, const cusparseDnVecDescr_t x,
                          cusparseDnVecDescr_t y,
                          cusparseHandle_t cusparse_handle, size_t *buffer_size,
@@ -114,6 +108,12 @@ void SCS(accum_by_p_gpu)(const ScsGpuMatrix *P, const cusparseDnVecDescr_t x,
 
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A);
 
+void SCS(accum_by_a_gpu)(const ScsGpuMatrix *Ag,
+                              cusparseOperation_t trans,
+                              const cusparseDnVecDescr_t x,
+                              cusparseDnVecDescr_t y,
+                              cusparseHandle_t cusparse_handle,
+                              size_t *buffer_size, void **buffer);
 #ifdef __cplusplus
 }
 #endif

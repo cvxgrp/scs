@@ -54,7 +54,7 @@ endif
 ifeq ($(CUDA_PATH), )
 CUDA_PATH=/usr/local/cuda
 endif
-CULDFLAGS = -L$(CUDA_PATH)/lib -L$(CUDA_PATH)/lib64 -lcudart -lcublas -lcusparse
+CULDFLAGS = -L$(CUDA_PATH)/lib -L$(CUDA_PATH)/lib64 -lcuda -lcudart -lcublas -lcusparse
 CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 # Add on default CFLAGS

@@ -21,7 +21,7 @@ int tests_run = 0;
     scs_printf("skipped\n");                                                   \
     tests_run--;                                                               \
     return 0;                                                                  \
-  }                                                                            
+  }
 
 
 #if NO_VALIDATE == 0

@@ -220,7 +220,9 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
     /* b = s */
     memcpy(b, s, n * sizeof(scs_float));
   }
-
+#if VERBOSITY > -3
+  scs_printf("INIT: tol: %.4e, resid: %.4e\n", tol, CG_NORM(r, n));
+#endif
   /* check to see if we need to run CG at all */
   if (CG_NORM(r, n) < MAX(tol, 1e-12)) {
     return 0;
@@ -243,7 +245,7 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
     /* r -= alpha * G p */
     SCS(add_scaled_array)(r, Gp, n, -alpha);
 
-#if VERBOSITY > 3
+#if VERBOSITY > -3
     scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, CG_NORM(r, n),
                (long)i + 1);
 #endif
@@ -294,10 +296,17 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   /* b = [rx; ry] */
   /* tmp = ry */
   memcpy(p->tmp, &(b[p->n]), p->m * sizeof(scs_float));
+  scs_printf("b norm %.3e\n", CG_NORM(b, p->n + p->m));
   /* tmp = R_y^{-1} * ry */
   scale_by_r_y_inv(p->tmp, p);
+  scs_printf("XXYYXX norm %.3e\n", CG_NORM(p->tmp, p->m));
   /* b[:n] = rx + A' R_y^{-1} ry */
   SCS(accum_by_atrans)(p->A, p->tmp, b);
+  scs_printf("XXYYXX norm %.3e\n", CG_NORM(b, p->n));
+  scs_int i;
+  for (i = 0; i< p->n+p->m; ++i) {
+      scs_printf("b[%i] = %.2e\n",i, b[i]);
+  }
   /* set max_iters to 10 * n (though in theory n is enough for any tol) */
   max_iters = 10 * p->n;
   /* solves (R_x + P + A' R_y^{-1} A)x = b, s warm start, solution stored in

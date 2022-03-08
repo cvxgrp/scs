@@ -23,7 +23,7 @@ extern "C" {
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS --------------------------     */
 /* If you update any of these you must update the documentation manually */
-#define MAX_ITERS (100000)
+#define MAX_ITERS (10)
 #define EPS_REL (1E-4)
 #define EPS_ABS (1E-4)
 #define EPS_INFEAS (1E-7)

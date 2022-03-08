@@ -136,14 +136,18 @@ static void mat_vec(ScsLinSysWork *p, const scs_float *x, scs_float *y) {
   scs_float *z = p->tmp_m; /* temp memory */
   cudaMemset(z, 0, p->m * sizeof(scs_float));
 
+  CUDA_CHECK_ERR;
   cusparseDnVecSetValues(p->dn_vec_m, (void *)z);
   cusparseDnVecSetValues(p->dn_vec_n, (void *)x);
   cusparseDnVecSetValues(p->dn_vec_n_p, (void *)y);
 
+  CUDA_CHECK_ERR;
   /* y = x */
   cudaMemcpy(y, x, p->n * sizeof(scs_float), cudaMemcpyHostToDevice);
   /* y = R_x * x */
+  CUDA_CHECK_ERR;
   scale_by_diag(p->cublas_handle, p->r_x_gpu, y, p->n);
+  CUDA_CHECK_ERR;
 
   if (p->Pg) {
     /* y = R_x * x + P x */
@@ -152,22 +156,23 @@ static void mat_vec(ScsLinSysWork *p, const scs_float *x, scs_float *y) {
      &p->buffer);
   }
 
+  CUDA_CHECK_ERR;
   /* z = Ax */
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(accum_by_atrans_gpu)
-  (p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
+  SCS(accum_by_a_gpu)
+  (p->Agt, CUSPARSE_OPERATION_TRANSPOSE, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
    &p->buffer);
 #else
   SCS(accum_by_a_gpu)
-  (p->Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
+  (p->Ag, CUSPARSE_OPERATION_NON_TRANSPOSE, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
    &p->buffer);
 #endif
   /* z = R_y^{-1} A x */
   scale_by_diag(p->cublas_handle, p->inv_r_y_gpu, z, p->m);
 
   /* y += A'z => y = R_x * x + P x + A' R_y^{-1} Ax */
-  SCS(accum_by_atrans_gpu)
-  (p->Ag, p->dn_vec_m, p->dn_vec_n_p, p->cusparse_handle, &p->buffer_size,
+  SCS(accum_by_a_gpu)
+  (p->Ag, CUSPARSE_OPERATION_TRANSPOSE, p->dn_vec_m, p->dn_vec_n_p, p->cusparse_handle, &p->buffer_size,
    &p->buffer);
 }
 
@@ -236,9 +241,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   p->cublas_handle = 0;
   p->cusparse_handle = 0;
-
   p->tot_cg_its = 0;
-
   p->buffer_size = 0;
   p->buffer = SCS_NULL;
 
@@ -252,9 +255,9 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   Ag->m = A->m;
   Ag->nnz = A->p[A->n];
   Ag->descr = 0;
-  cudaMalloc((void **)&Ag->i, (A->p[A->n]) * sizeof(scs_int));
+  cudaMalloc((void **)&Ag->i, Ag->nnz * sizeof(scs_int));
   cudaMalloc((void **)&Ag->p, (A->n + 1) * sizeof(scs_int));
-  cudaMalloc((void **)&Ag->x, (A->p[A->n]) * sizeof(scs_float));
+  cudaMalloc((void **)&Ag->x, Ag->nnz * sizeof(scs_float));
 
   cudaMalloc((void **)&p->p, A->n * sizeof(scs_float));
   cudaMalloc((void **)&p->r, A->n * sizeof(scs_float));
@@ -266,13 +269,13 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   cudaMalloc((void **)&p->r_x_gpu, A->n * sizeof(scs_float));
   cudaMalloc((void **)&p->inv_r_y_gpu, A->m * sizeof(scs_float));
 
-  cudaMemcpy(Ag->i, A->i, (A->p[A->n]) * sizeof(scs_int),
+  cudaMemcpy(Ag->i, A->i, Ag->nnz * sizeof(scs_int),
              cudaMemcpyHostToDevice);
   cudaMemcpy(Ag->p, A->p, (A->n + 1) * sizeof(scs_int), cudaMemcpyHostToDevice);
-  cudaMemcpy(Ag->x, A->x, (A->p[A->n]) * sizeof(scs_float),
+  cudaMemcpy(Ag->x, A->x, Ag->nnz * sizeof(scs_float),
              cudaMemcpyHostToDevice);
 
-  cusparseCreateCsr(&Ag->descr, Ag->n, Ag->m, Ag->nnz, Ag->p, Ag->i, Ag->x,
+  cusparseCreateCsc(&Ag->descr, (int64_t)Ag->m, (int64_t)Ag->n, (int64_t)Ag->nnz, Ag->p, Ag->i, Ag->x,
                     SCS_CUSPARSE_INDEX, SCS_CUSPARSE_INDEX,
                     CUSPARSE_INDEX_BASE_ZERO, SCS_CUDA_FLOAT);
 
@@ -283,18 +286,18 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     Pg->m = P_full->m;
     Pg->nnz = P_full->p[P_full->n];
     Pg->descr = 0;
-    cudaMalloc((void **)&Pg->i, (P_full->p[P_full->n]) * sizeof(scs_int));
-    cudaMalloc((void **)&Pg->p, (P_full->n + 1) * sizeof(scs_int));
-    cudaMalloc((void **)&Pg->x, (P_full->p[P_full->n]) * sizeof(scs_float));
+    cudaMalloc((void **)&Pg->i, Pg->nnz * sizeof(scs_int));
+    cudaMalloc((void **)&Pg->p, (Pg->n + 1) * sizeof(scs_int));
+    cudaMalloc((void **)&Pg->x, Pg->nnz * sizeof(scs_float));
 
-    cudaMemcpy(Pg->i, P_full->i, (P_full->p[P_full->n]) * sizeof(scs_int),
+    cudaMemcpy(Pg->i, P_full->i, Pg->nnz * sizeof(scs_int),
                cudaMemcpyHostToDevice);
-    cudaMemcpy(Pg->p, P_full->p, (P_full->n + 1) * sizeof(scs_int),
+    cudaMemcpy(Pg->p, P_full->p, (Pg->n + 1) * sizeof(scs_int),
                cudaMemcpyHostToDevice);
-    cudaMemcpy(Pg->x, P_full->x, (P_full->p[P_full->n]) * sizeof(scs_float),
+    cudaMemcpy(Pg->x, P_full->x, Pg->nnz * sizeof(scs_float),
                cudaMemcpyHostToDevice);
 
-    cusparseCreateCsr(&Pg->descr, Pg->n, Pg->m, Pg->nnz, Pg->p, Pg->i, Pg->x,
+    cusparseCreateCsc(&Pg->descr, Pg->m, Pg->n, Pg->nnz, Pg->p, Pg->i, Pg->x,
                       SCS_CUSPARSE_INDEX, SCS_CUSPARSE_INDEX,
                       CUSPARSE_INDEX_BASE_ZERO, SCS_CUDA_FLOAT);
 
@@ -308,7 +311,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->Agt = SCS_NULL;
 
   /* we initialize with tmp_m but always overwrite it so it doesn't matter */
-  cusparseCreateDnVec(&p->dn_vec_n, Ag->n, p->tmp_m, SCS_CUDA_FLOAT);
+  cusparseCreateDnVec(&p->dn_vec_n, Ag->n, p->bg, SCS_CUDA_FLOAT);
   cusparseCreateDnVec(&p->dn_vec_n_p, Ag->n, p->tmp_m, SCS_CUDA_FLOAT);
   cusparseCreateDnVec(&p->dn_vec_m, Ag->m, p->tmp_m, SCS_CUDA_FLOAT);
 
@@ -319,7 +322,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->Agt = (ScsGpuMatrix *)scs_malloc(sizeof(ScsGpuMatrix));
   p->Agt->n = A->m;
   p->Agt->m = A->n;
-  p->Agt->nnz = A->p[A->n];
+  p->Agt->nnz = p->Ag->nnz;
   p->Agt->descr = 0;
   /* Matrix description */
 
@@ -329,7 +332,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   /* transpose Ag into Agt for faster multiplies */
   /* TODO: memory intensive, could perform transpose in CPU and copy to GPU */
   cusparseCsr2cscEx2_bufferSize(
-      p->cusparse_handle, A->n, A->m, A->p[A->n], Ag->x, Ag->p, Ag->i,
+      p->cusparse_handle, Ag->m, Ag->n, Ag->nnz, Ag->x, Ag->p, Ag->i,
       p->Agt->x, p->Agt->p, p->Agt->i, SCS_CUDA_FLOAT, CUSPARSE_ACTION_NUMERIC,
       CUSPARSE_INDEX_BASE_ZERO, SCS_CSR2CSC_ALG, &new_buffer_size);
 
@@ -341,12 +344,13 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     p->buffer_size = new_buffer_size;
   }
 
-  cusparseCsr2cscEx2(p->cusparse_handle, A->n, A->m, A->p[A->n], Ag->x, Ag->p,
+  cusparseCsr2cscEx2(p->cusparse_handle, (int64_t)Ag->m, (int64_t)Ag->n, (int64_t)Ag->nnz, Ag->x, Ag->p,
                      Ag->i, p->Agt->x, p->Agt->p, p->Agt->i, SCS_CUDA_FLOAT,
                      CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO,
                      SCS_CSR2CSC_ALG, p->buffer);
 
-  cusparseCreateCsr(&p->Agt->descr, p->Agt->n, p->Agt->m, p->Agt->nnz,
+  /* Transpose in CSC format */
+  cusparseCreateCsc(&p->Agt->descr, p->Agt->n, p->Agt->m, p->Agt->nnz,
                     p->Agt->p, p->Agt->i, p->Agt->x, SCS_CUSPARSE_INDEX,
                     SCS_CUSPARSE_INDEX, CUSPARSE_INDEX_BASE_ZERO,
                     SCS_CUDA_FLOAT);
@@ -374,7 +378,9 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
   scs_float *r = pr->r;   /* cg residual */
   scs_float *z = pr->z;   /* preconditioned */
   cublasHandle_t cublas_handle = pr->cublas_handle;
+  scs_printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx\n");
 
+  CUDA_CHECK_ERR;
   if (!s) {
     /* take s = 0 */
     /* r = b */
@@ -383,17 +389,29 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
     cudaMemset(bg, 0, n * sizeof(scs_float));
   } else {
     /* p contains bg temporarily */
+    CUDA_CHECK_ERR;
     cudaMemcpy(p, bg, n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
     /* bg = s */
     cudaMemcpy(bg, s, n * sizeof(scs_float), cudaMemcpyHostToDevice);
+    CUDA_CHECK_ERR;
     /* r = Mat * s */
     mat_vec(pr, bg, r);
     /* r = Mat * s - b */
+
+    CUDA_CHECK_ERR;
     CUBLAS(axpy)(cublas_handle, n, &neg_onef, p, 1, r, 1);
     /* r = b - Mat * s  */
     CUBLAS(scal)(cublas_handle, n, &neg_onef, r, 1);
   }
-
+#if VERBOSITY > -3
+  scs_printf("INIT: tol: %.4e, resid: %.4e\n", tol,
+               cg_gpu_norm(cublas_handle, r, n));
+  scs_float * rc = scs_malloc(n * sizeof(scs_float));
+  cudaMemcpy(rc, r, n * sizeof(scs_float), cudaMemcpyDeviceToHost);
+  scs_printf("INIT: tol: %.4e, resid: %.4e\n", tol,
+               CG_NORM(rc, n));
+  scs_free(rc);
+#endif
   /* check to see if we need to run CG at all */
   if (cg_gpu_norm(cublas_handle, r, n) < tol) {
     return 0;
@@ -420,9 +438,14 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
     /* r -= alpha * G p */
     CUBLAS(axpy)(cublas_handle, n, &neg_alpha, Gp, 1, r, 1);
 
-#if VERBOSITY > 3
+#if VERBOSITY > -3
     scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol,
                cg_gpu_norm(cublas_handle, r, n), (long)i + 1);
+  scs_float * rc = scs_malloc(n * sizeof(scs_float));
+  cudaMemcpy(rc, r, n * sizeof(scs_float), cudaMemcpyDeviceToHost);
+  scs_printf("tol: %.4e, resid: %.4e\n", tol,
+               CG_NORM(rc, n));
+  scs_free(rc);
 #endif
 
     if (cg_gpu_norm(cublas_handle, r, n) < tol) {
@@ -470,6 +493,10 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
     return 0;
   }
 
+#if VERBOSITY > -3
+    scs_printf("norm %.3e\n", CG_NORM(b, p->n + p->m));
+#endif
+
   if (tol <= 0.) {
     scs_printf("Warning: tol = %4f <= 0, likely compiled without setting "
                "INDIRECT flag.\n",
@@ -484,13 +511,41 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
              cudaMemcpyDeviceToDevice);
   /* tmp = R_y^{-1} * tmp = R_y^{-1} * ry */
   scale_by_diag(p->cublas_handle, p->inv_r_y_gpu, tmp_m, p->Ag->m);
+  scs_float * rc1 = scs_malloc(p->m * sizeof(scs_float));
+  cudaMemcpy(rc1, tmp_m, p->m * sizeof(scs_float), cudaMemcpyDeviceToHost);
+  scs_printf("XXYYXX norm %.3e\n", CG_NORM(rc1, p->m));
+  scs_printf("XXYYXX norm %.3e\n", cg_gpu_norm(p->cublas_handle, tmp_m, p->m));
+  scs_free(rc1);
 
-  cusparseDnVecSetValues(p->dn_vec_m, (void *)tmp_m); /* R * ry */
-  cusparseDnVecSetValues(p->dn_vec_n, (void *)bg);    /* rx */
-  /* bg[:n] = rx + A' R ry */
-  SCS(accum_by_atrans_gpu)
-  (Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle, &p->buffer_size,
+  CUDA_CHECK_ERR;
+  //cusparseDnVecSetValues(p->dn_vec_m, (void *)tmp_m); /* R * ry */
+  //cusparseDnVecSetValues(p->dn_vec_n, (void *)bg);    /* rx */
+
+  scs_printf("b norm %.3e\n", cg_gpu_norm(p->cublas_handle, bg, p->n + p->m));
+  cusparseDnVecDescr_t dn_vec_m;
+  cusparseDnVecDescr_t dn_vec_n;
+  cusparseCreateDnVec(&dn_vec_m, (int64_t)Ag->m, tmp_m, SCS_CUDA_FLOAT);
+  cusparseCreateDnVec(&dn_vec_n, (int64_t)Ag->n, bg, SCS_CUDA_FLOAT);
+
+  /* bg[:n] = rx + A' R_y^{-1} ry */
+  CUDA_CHECK_ERR;
+  SCS(accum_by_a_gpu)
+  (Ag, CUSPARSE_OPERATION_TRANSPOSE, dn_vec_m, dn_vec_n, p->cusparse_handle, &p->buffer_size,
    &p->buffer);
+
+  CUDA_CHECK_ERR;
+  cudaDeviceSynchronize();
+  //cusparseDnVecGetValues(dn_vec_n, (void **)&bg);    /* rx */
+  scs_float * rc = scs_malloc((p->n + p->m) * sizeof(scs_float));
+  cudaMemcpy(rc, bg, (p->n + p->m) * sizeof(scs_float), cudaMemcpyDeviceToHost);
+  scs_printf("XXYYXX norm %.3e\n", CG_NORM(rc, p->n + p->m));
+  scs_printf("XXYYXX norm %.3e\n", cg_gpu_norm(p->cublas_handle, bg, p->n+p->m));
+  scs_int i;
+  for (i = 0; i< p->n + p->m; ++i) {
+    scs_printf("b[%i] = %.2e\n",i, rc[i]);
+  }
+  scs_free(rc);
+  CUDA_CHECK_ERR;
 
   /* set max_iters to 10 * n (though in theory n is enough for any tol) */
   max_iters = 10 * Ag->n;
@@ -506,12 +561,12 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
 
   /* b[n:] = Ax - ry */
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(accum_by_atrans_gpu)
-  (p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
+  SCS(accum_by_a_gpu)
+  (p->Agt, CUSPARSE_OPERATION_TRANSPOSE, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
    &p->buffer);
 #else
   SCS(accum_by_a_gpu)
-  (Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
+  (Ag, CUSPARSE_OPERATION_NON_TRANSPOSE, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
    &p->buffer);
 #endif
 

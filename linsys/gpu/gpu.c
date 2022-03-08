@@ -1,19 +1,22 @@
 #include "gpu.h"
 
-void SCS(accum_by_atrans_gpu)(const ScsGpuMatrix *Ag,
+/* trans = CUSPARSE_OPERATION_TRANSPOSE is fastest for CSC */
+void SCS(accum_by_a_gpu)(const ScsGpuMatrix *Ag,
+                              cusparseOperation_t trans,
                               const cusparseDnVecDescr_t x,
                               cusparseDnVecDescr_t y,
                               cusparseHandle_t cusparse_handle,
                               size_t *buffer_size, void **buffer) {
-  /* y += A'*x
+  /* y += A*x or y += A'*x
      x and y MUST be on GPU already
   */
   const scs_float onef = 1.0;
   size_t new_buffer_size = 0;
+  CUDA_CHECK_ERR;
 
   CUSPARSE_GEN(SpMV_bufferSize)
-  (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &onef, Ag->descr, x,
-   &onef, y, SCS_CUDA_FLOAT, SCS_CSRMV_ALG, &new_buffer_size);
+  (cusparse_handle, trans, &onef, Ag->descr, x,
+   &onef, y, SCS_CUDA_FLOAT, SCS_MV_ALG, &new_buffer_size);
 
   if (new_buffer_size > *buffer_size) {
     if (*buffer != SCS_NULL) {
@@ -22,39 +25,12 @@ void SCS(accum_by_atrans_gpu)(const ScsGpuMatrix *Ag,
     cudaMalloc(buffer, *buffer_size);
     *buffer_size = new_buffer_size;
   }
-
-  CUSPARSE_GEN(SpMV)
-  (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &onef, Ag->descr, x,
-   &onef, y, SCS_CUDA_FLOAT, SCS_CSRMV_ALG, buffer);
-}
-
-/* this is slow, use trans routine if possible */
-void SCS(accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
-                         cusparseDnVecDescr_t y,
-                         cusparseHandle_t cusparse_handle, size_t *buffer_size,
-                         void **buffer) {
-  /* y += A*x
-     x and y MUST be on GPU already
-   */
-  const scs_float onef = 1.0;
-  size_t new_buffer_size = 0;
-
-  /* The A matrix idx pointers must be ORDERED */
-  CUSPARSE_GEN(SpMV_bufferSize)
-  (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE, &onef, Ag->descr, x, &onef, y,
-   SCS_CUDA_FLOAT, SCS_CSRMV_ALG, &new_buffer_size);
-
-  if (new_buffer_size > *buffer_size) {
-    if (*buffer != SCS_NULL) {
-      cudaFree(*buffer);
-    }
-    cudaMalloc(buffer, *buffer_size);
-    *buffer_size = new_buffer_size;
-  }
-
-  CUSPARSE_GEN(SpMV)
-  (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE, &onef, Ag->descr, x, &onef, y,
-   SCS_CUDA_FLOAT, SCS_CSRMV_ALG, buffer);
+  CUDA_CHECK_ERR;
+  cusparseStatus_t status = CUSPARSE_GEN(SpMV)
+  (cusparse_handle, trans, &onef, Ag->descr, x,
+   &onef, y, SCS_CUDA_FLOAT, SCS_MV_ALG, buffer);
+  CUDA_CHECK_ERR;
+  scs_printf("status: %i\n", status);
 }
 
 /* This assumes that P has been made full (ie not triangular) and uses the
@@ -67,7 +43,8 @@ void SCS(accum_by_p_gpu)(const ScsGpuMatrix *Pg, const cusparseDnVecDescr_t x,
                          cusparseDnVecDescr_t y,
                          cusparseHandle_t cusparse_handle, size_t *buffer_size,
                          void **buffer) {
-  SCS(accum_by_atrans_gpu)(Pg, x, y, cusparse_handle, buffer_size, buffer);
+  /* P is symmetric and FULL, so can use transpose here for speed */
+  SCS(accum_by_a_gpu)(Pg, CUSPARSE_OPERATION_TRANSPOSE, x, y, cusparse_handle, buffer_size, buffer);
 }
 
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A) {
