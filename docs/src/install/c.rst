@@ -87,7 +87,9 @@ by calling target_link_libraries as in the following example:
 
 Makefile
 ^^^^^^^^
-Alternatively you can use the Makefile and manage the libraries yourself
+Alternatively you can use the Makefile and manage the libraries and header
+files yourself.  The public header files are :code:`scs.h` and
+:code:`scs_types.h`.
 
 .. code:: bash
 
