@@ -88,8 +88,8 @@ by calling target_link_libraries as in the following example:
 Makefile
 ^^^^^^^^
 Alternatively you can use the Makefile and manage the libraries and header
-files yourself.  You will need public header files :code:`scs.h` and
-:code:`scs_types.h` to be available when using SCS in another program.
+files yourself.  The public header files are :code:`scs.h` and
+:code:`scs_types.h`.
 
 .. code:: bash
 

@@ -3,8 +3,7 @@
 Examples
 ===============
 
-Here we present a few simple examples of using SCS directly in different
-languages.
+Here we present a few simple examples of calling SCS from different languages.
 
 :ref:`C/C++ <c_example>`
 

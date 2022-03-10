@@ -20,7 +20,7 @@ use these libraries. To compile without these libraries you can set the
 
 If you do want to solve SDPs or use Anderson acceleration, then you will need
 to install BLAS and LAPACK libraries (these are pre-installed in most machines).
-If using SCS via another language (Python, MATLAB etc.) then these libraries
+If calling SCS from another language (Python, MATLAB etc.) then these libraries
 should be pre-installed and SCS will try to link against them. Otherwise
 you may need to install a copy yourself. A good library to start with is
 `OpenBLAS <https://www.openblas.net/>`_, which contains both BLAS and LAPACK.
