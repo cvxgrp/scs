@@ -158,8 +158,23 @@ positive cone.</p>
 <span class="w">  </span><span class="n">stgs</span><span class="o">-&gt;</span><span class="n">eps_abs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">;</span><span class="w"></span>
 <span class="w">  </span><span class="n">stgs</span><span class="o">-&gt;</span><span class="n">eps_rel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">;</span><span class="w"></span>
 
+<span class="w">  </span><span class="cm">/* Initialize SCS workspace */</span><span class="w"></span>
+<span class="w">  </span><span class="n">ScsWork</span><span class="w"> </span><span class="o">*</span><span class="n">scs_work</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scs_init</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">stgs</span><span class="p">);</span><span class="w"></span>
+
 <span class="w">  </span><span class="cm">/* Solve! */</span><span class="w"></span>
-<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">exitflag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scs</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">stgs</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">exitflag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">scs_work</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="cm">/*</span>
+<span class="cm">   * If we wanted to solve many related problems with different</span>
+<span class="cm">   * b / c vectors we could update the SCS workspace as follows:</span>
+<span class="cm">   *</span>
+<span class="cm">   * int success = scs_update(scs_work, new_b, new_c)</span>
+<span class="cm">   * int new_exitflag = scs_solve(scs_work, sol, info, 1);</span>
+<span class="cm">   *</span>
+<span class="cm">   */</span><span class="w"></span>
+
+<span class="w">  </span><span class="cm">/* Free SCS workspace */</span><span class="w"></span>
+<span class="w">  </span><span class="n">scs_finish</span><span class="p">(</span><span class="n">scs_work</span><span class="p">);</span><span class="w"></span>
 
 <span class="w">  </span><span class="cm">/* Verify that SCS solved the problem */</span><span class="w"></span>
 <span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;SCS solved successfully: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">exitflag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SCS_SOLVED</span><span class="p">);</span><span class="w"></span>
@@ -190,7 +205,6 @@ positive cone.</p>
 <span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">sol</span><span class="o">-&gt;</span><span class="n">y</span><span class="p">);</span><span class="w"></span>
 <span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">sol</span><span class="o">-&gt;</span><span class="n">s</span><span class="p">);</span><span class="w"></span>
 <span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">sol</span><span class="p">);</span><span class="w"></span>
-
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* returning exitflag will set bash exit code to 1 */</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
@@ -203,7 +217,7 @@ the <code class="code docutils literal notranslate"><span class="pre">gcc</span>
 </div>
 <p>Then running the binary yields output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
-	       SCS v3.2.0 - Splitting Conic Solver
+	       SCS v3.2.1 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
@@ -213,22 +227,22 @@ settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
 	  acceleration_lookback: 10, acceleration_interval: 10
-lin-sys:  sparse-direct
+lin-sys:  sparse-direct-amd-qdldl
 	  nnz(A): 4, nnz(P): 3
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.51e+00  1.00e+00  4.91e+00  1.14e+00  1.00e-01  8.42e-06 
-    75| 4.09e-10  7.93e-10  1.07e-09  1.24e+00  1.00e-01  4.96e-05 
+     0| 1.51e+00  1.00e+00  4.91e+00  1.14e+00  1.00e-01  1.19e-04 
+    75| 4.09e-10  7.93e-10  1.07e-09  1.24e+00  1.00e-01  2.10e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 9.86e-05s = setup: 4.83e-05s + solve: 5.03e-05s
-	 lin-sys: 7.39e-06s, cones: 1.65e-06s, accel: 2.29e-05s
+timings: total: 2.11e-04s = setup: 9.88e-05s + solve: 1.13e-04s
+	 lin-sys: 1.48e-05s, cones: 3.92e-06s, accel: 5.06e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------
 SCS solved successfully: 1
-SCS took 75 iters, using the sparse-direct linear solver.
+SCS took 75 iters, using the sparse-direct-amd-qdldl linear solver.
 Optimal solution vector x*:
 x[0] = 0.300000
 x[1] = -0.700000

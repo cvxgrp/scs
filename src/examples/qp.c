@@ -44,8 +44,23 @@ int main(int argc, char **argv) {
   stgs->eps_abs = 1e-9;
   stgs->eps_rel = 1e-9;
 
+  /* Initialize SCS workspace */
+  ScsWork *scs_work = scs_init(d, k, stgs);
+
   /* Solve! */
-  int exitflag = scs(d, k, stgs, sol, info);
+  int exitflag = scs_solve(scs_work, sol, info, 0);
+
+  /*
+   * If we wanted to solve many related problems with different
+   * b / c vectors we could update the SCS workspace as follows:
+   *
+   * int success = scs_update(scs_work, new_b, new_c)
+   * int new_exitflag = scs_solve(scs_work, sol, info, 1);
+   *
+   */
+
+  /* Free SCS workspace */
+  scs_finish(scs_work);
 
   /* Verify that SCS solved the problem */
   printf("SCS solved successfully: %i\n", exitflag == SCS_SOLVED);
@@ -76,6 +91,5 @@ int main(int argc, char **argv) {
   free(sol->y);
   free(sol->s);
   free(sol);
-
   return 0; /* returning exitflag will set bash exit code to 1 */
 }

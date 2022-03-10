@@ -35,7 +35,7 @@ Available linear solvers
 
 Each of the below linear solvers is included in their own binary. If linking
 against SCS directly, then to switch between them you must compile and link
-against the right binary. If using SCS via one of the interfaces then you can
+against the right binary. If calling SCS via one of the interfaces then you can
 choose between the different linear solvers using the appropriate settings.
 
 .. _direct:
