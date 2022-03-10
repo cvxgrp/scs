@@ -1,5 +1,10 @@
-/* This file contains the outward facing SCS API. */
-/* It includes all the input/output data structs and the API functions. */
+/*
+ * Public header containing the outward facing SCS API. It includes all the
+ * input/output data structs and the API functions.  Make sure this file and
+ * `scs_types.h` are somewhere appropriate and then use `#include "scs.h"` to
+ * access the SCS public API.
+ *
+ */
 
 #ifndef SCS_H_GUARD
 #define SCS_H_GUARD
