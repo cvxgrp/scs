@@ -33,7 +33,13 @@ You can also install directly from source
   cd scs-python
   python setup.py install
 
-You can install the gpu interface using
+You can install the MKL Pardiso interface using
+
+.. code:: bash
+
+  python setup.py install --scs --mkl
+
+You can install the GPU interface using
 
 .. code:: bash
 
@@ -42,7 +48,7 @@ You can install the gpu interface using
 To test that SCS installed correctly, and you have pytest installed, run
 
 .. code:: bash
-  
+
   pytest
 
 See :ref:`here <python_interface>` for the API.

@@ -106,6 +106,7 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
                 <span class="n">cone</span><span class="p">,</span>
                 <span class="n">use_indirect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">mkl</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">gpu</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -129,11 +130,16 @@ a dict that contains the <a class="reference internal" href="cones.html#cones"><
 contains keys corresponding to the cone type and values corresponding to either
 the cone length or the array that defines the cone (see the third column in
 <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> for the keys and what the corresponding values represent).  The
-<code class="code docutils literal notranslate"><span class="pre">b</span></code>, and <code class="code docutils literal notranslate"><span class="pre">c</span></code> must be 1d numpy arrays and <code class="code docutils literal notranslate"><span class="pre">P</span></code> and <code class="code docutils literal notranslate"><span class="pre">A</span></code>
-must be scipy sparse matrices in CSC format; if they are not of the proper
-format, SCS will attempt to convert them. The <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting
-switches between the sparse direct <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the
-sparse indirect solver.  The remaining fields are explained in <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
+<code class="code docutils literal notranslate"><span class="pre">b</span></code>, and <code class="code docutils literal notranslate"><span class="pre">c</span></code> entries must be 1d numpy arrays and the <code class="code docutils literal notranslate"><span class="pre">P</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">A</span></code> entries must be scipy sparse matrices in CSC format; if they are not
+of the proper format, SCS will attempt to convert them. The
+<code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting switches between the sparse direct
+<a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the sparse indirect solver. If the MKL
+Pardiso direct solver for SCS is <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> then it can
+be used by setting <code class="code docutils literal notranslate"><span class="pre">mkl=True</span></code>. If the GPU indirect solver for SCS is
+<a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> and a GPU is available then it can be used by
+setting <code class="code docutils literal notranslate"><span class="pre">gpu=True</span></code>.  The remaining fields are explained in
+<a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
 <p>Then to solve the problem call:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">warm_start</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
