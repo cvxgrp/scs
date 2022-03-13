@@ -16,6 +16,7 @@ This module provides the :code:`SCS` class which is initialized using:
   solver = scs.SCS(data,
                   cone,
                   use_indirect=False,
+                  mkl=False,
                   gpu=False,
                   verbose=True,
                   normalize=True,
@@ -38,11 +39,16 @@ a dict that contains the :ref:`cones` information. The :code:`cone` dict
 contains keys corresponding to the cone type and values corresponding to either
 the cone length or the array that defines the cone (see the third column in
 :ref:`cones` for the keys and what the corresponding values represent).  The
-:code:`b`, and :code:`c` must be 1d numpy arrays and :code:`P` and :code:`A`
-must be scipy sparse matrices in CSC format; if they are not of the proper
-format, SCS will attempt to convert them. The :code:`use_indirect` setting
-switches between the sparse direct :ref:`linear_solver` (the default) or the
-sparse indirect solver.  The remaining fields are explained in :ref:`settings`.
+:code:`b`, and :code:`c` entries must be 1d numpy arrays and the :code:`P` and
+:code:`A` entries must be scipy sparse matrices in CSC format; if they are not
+of the proper format, SCS will attempt to convert them. The
+:code:`use_indirect` setting switches between the sparse direct
+:ref:`linear_solver` (the default) or the sparse indirect solver. If the MKL
+Pardiso direct solver for SCS is :ref:`installed <python_install>` then it can
+be used by setting :code:`mkl=True`. If the GPU indirect solver for SCS is
+:ref:`installed <python_install>` and a GPU is available then it can be used by
+setting :code:`gpu=True`.  The remaining fields are explained in
+:ref:`settings`.
 
 Then to solve the problem call:
 
