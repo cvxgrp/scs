@@ -143,8 +143,6 @@ aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
 
   a->iter++;
 
-  printf("iter %i.\n", a->iter);
-
   if (a->iter % a->interval == 0) {
     /* reset to average */
     if (a->verbosity > 0) {
