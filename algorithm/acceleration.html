@@ -16,6 +16,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -107,7 +108,7 @@
            <div itemprop="articleBody">
              
   <section id="acceleration">
-<span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline"></a></h1>
+<span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this heading"></a></h1>
 <p>SCS includes Anderson acceleration (AA), which can be used to speed up
 convergence. AA is a quasi-Newton method for the acceleration of fixed point
 iterations and can dramatically speed up convergence in practice, especially if
@@ -116,7 +117,7 @@ instability of the solver and so should be used with caution. It is an open
 research question how to best implement AA in practice to ensure good
 performance across all problems and we welcome any <a class="reference internal" href="../contributing/index.html#contributing"><span class="std std-ref">contributions</span></a> in that direction!</p>
 <section id="mathematical-details">
-<h2>Mathematical details<a class="headerlink" href="#mathematical-details" title="Permalink to this headline"></a></h2>
+<h2>Mathematical details<a class="headerlink" href="#mathematical-details" title="Permalink to this heading"></a></h2>
 <p>The discussion here is taken from section 2 of our <a class="reference external" href="https://web.stanford.edu/~boyd/papers/nonexp_global_aa1.html">paper</a>.
 Consider the problem of finding a fixed point of the function <span class="math notranslate nohighlight">\(f:
 \mathbf{R}^n \rightarrow \mathbf{R}^n\)</span>, i.e.,</p>
@@ -141,7 +142,7 @@ choosing the weights <span class="math notranslate nohighlight">\(\alpha \in \ma
 to choose them, corresponding to type-I and type-II AA (named for the type-I and
 type-II Broyden updates). We shall present type-II first.</p>
 <section id="type-ii-aa">
-<h3>Type-II AA<a class="headerlink" href="#type-ii-aa" title="Permalink to this headline"></a></h3>
+<h3>Type-II AA<a class="headerlink" href="#type-ii-aa" title="Permalink to this heading"></a></h3>
 <p>Define the residual <span class="math notranslate nohighlight">\(g: \mathbf{R}^n \rightarrow \mathbf{R}^n\)</span> of
 <span class="math notranslate nohighlight">\(f\)</span> to be <span class="math notranslate nohighlight">\(g(x) = x - f(x)\)</span>. Note that any fixed point
 <span class="math notranslate nohighlight">\(x^\star\)</span> satisfies <span class="math notranslate nohighlight">\(g(x^\star) = 0\)</span>.
@@ -185,7 +186,7 @@ a generalized second (or type-II) Broyden’s update of <span class="math notran
 the inverse multi-secant condition.</p>
 </section>
 <section id="type-i-aa">
-<h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Permalink to this headline"></a></h3>
+<h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Permalink to this heading"></a></h3>
 <p>In the same spirit, we define type-I AA, in which we find an approximate
 Jacobian of <span class="math notranslate nohighlight">\(g\)</span> minimizing <span class="math notranslate nohighlight">\(\|H_k-I\|_F\)</span> subject to the multi-secant
 condition <span class="math notranslate nohighlight">\(H_kS_k=Y_k\)</span>. Assuming that <span class="math notranslate nohighlight">\(S_k\)</span> is full column rank, we
@@ -206,7 +207,7 @@ matrix.</p>
 </section>
 </section>
 <section id="in-scs">
-<h2>In SCS<a class="headerlink" href="#in-scs" title="Permalink to this headline"></a></h2>
+<h2>In SCS<a class="headerlink" href="#in-scs" title="Permalink to this heading"></a></h2>
 <p>In SCS both types of acceleration are available, though by default type-I is
 used since it tends to have better performance.  If you wish to use AA then set
 the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well for
@@ -227,7 +228,7 @@ for this parameter, but 10 appears to work well in practice and is the default.<
 away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
 how best to solve and update the equations is still open.</p>
 <section id="regularization">
-<h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this headline"></a></h3>
+<h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this heading"></a></h3>
 <p>By default we also add a small amount of regularization to the matrices
 that are being inverted in the above expressions, ie, in the type-II update</p>
 <div class="math notranslate nohighlight">
@@ -247,7 +248,7 @@ into the matrices by appending <span class="math notranslate nohighlight">\(\sqr
 to solve the equations.</p>
 </section>
 <section id="max-gamma-norm">
-<h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this headline"></a></h3>
+<h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this heading"></a></h3>
 <p>As the algorithm converges to the fixed point the matrices to be inverted
 can become ill-conditioned and AA can become unstable. In this case the
 <span class="math notranslate nohighlight">\(\gamma\)</span> vector can become very large. As a simple heuristic we reject
@@ -255,7 +256,7 @@ the AA update and reset the AA state whenever <span class="math notranslate nohi
 than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, something very large like <span class="math notranslate nohighlight">\(10^{10}\)</span>).</p>
 </section>
 <section id="safeguarding">
-<h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this headline"></a></h3>
+<h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this heading"></a></h3>
 <p>We also apply a safeguarding step to the output of the AA step. Explicitly, let
 <span class="math notranslate nohighlight">\(x^k\)</span> be the current iteration and let <span class="math notranslate nohighlight">\(x_\mathrm{AA} = x^{k+1}\)</span> be
 the output of AA. We reject the AA step if</p>
@@ -268,7 +269,7 @@ it increases the residual from the previous iterate).  After rejecting a step we
 revert the iterate to <span class="math notranslate nohighlight">\(x^k\)</span> and reset the AA state.</p>
 </section>
 <section id="relaxation">
-<h3>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this headline"></a></h3>
+<h3>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this heading"></a></h3>
 <p>In some works relaxation has been shown to improve performance. Relaxation
 replaces the final step of AA by mixing the map inputs and outputs as follows:</p>
 <div class="math notranslate nohighlight">
@@ -280,7 +281,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 </section>
 </section>
 <section id="anderson-acceleration-api">
-<h2>Anderson acceleration API<a class="headerlink" href="#anderson-acceleration-api" title="Permalink to this headline"></a></h2>
+<h2>Anderson acceleration API<a class="headerlink" href="#anderson-acceleration-api" title="Permalink to this heading"></a></h2>
 <p>For completeness, we document the full Anderson acceleration API below.</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>

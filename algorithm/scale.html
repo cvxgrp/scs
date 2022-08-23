@@ -16,6 +16,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -100,7 +101,7 @@
            <div itemprop="articleBody">
              
   <section id="non-identity-dr-scaling">
-<span id="scaling"></span><h1>Non-identity DR Scaling<a class="headerlink" href="#non-identity-dr-scaling" title="Permalink to this headline"></a></h1>
+<span id="scaling"></span><h1>Non-identity DR Scaling<a class="headerlink" href="#non-identity-dr-scaling" title="Permalink to this heading"></a></h1>
 <p>In this note we derive the update equations when using a non-identity scaling.
 Standard Douglas-Rachford splitting applied to the SCS problem is described in
 the <a class="reference internal" href="index.html#algorithm"><span class="std std-ref">Algorithm</span></a> page.  Now consider modifying DR splitting to use a
@@ -117,7 +118,7 @@ w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
 <span class="math notranslate nohighlight">\(0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
 <p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
 <section id="cone-projection">
-<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this headline"></a></h2>
+<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this heading"></a></h2>
 <p>Note that <span class="math notranslate nohighlight">\(R\)</span> has to be chosen so that the cone projection is preserved.
 To do this we ensure that the entries of <span class="math notranslate nohighlight">\(R &gt; 0\)</span> corresponding to each
 cone are constant within that cone (with the box cone being a slight exception
@@ -134,7 +135,7 @@ since for sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</s
 \[(R +  \partial I_{\mathcal{C}_+})^{-1} R = (I +  \partial I_{\mathcal{C}_+})^{-1}\]</div>
 </section>
 <section id="selecting-r">
-<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this headline"></a></h2>
+<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this heading"></a></h2>
 <p>For SCS we take</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}R =  \begin{bmatrix}
@@ -158,7 +159,7 @@ described in <a class="reference internal" href="#updating-scale"><span class="s
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
 </section>
 <section id="root-plus-function">
-<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this headline"></a></h2>
+<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this heading"></a></h2>
 <p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
 of the following quadratic equation:</p>
 <div class="math notranslate nohighlight">
@@ -170,7 +171,7 @@ flexibility in how to choose it and it can even change from iteration to
 iteration. It is an open question on how best to select this parameter.</p>
 </section>
 <section id="moreau-decomposition">
-<h2>Moreau decomposition<a class="headerlink" href="#moreau-decomposition" title="Permalink to this headline"></a></h2>
+<h2>Moreau decomposition<a class="headerlink" href="#moreau-decomposition" title="Permalink to this heading"></a></h2>
 <p>The projection onto a cone under a diagonal scaling also satisfies a
 Moreau-style decomposition identity, as follows:</p>
 <div class="math notranslate nohighlight">
@@ -185,7 +186,7 @@ across them. Note that the two components of the decomposition are
 <span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
 </section>
 <section id="dual-vector">
-<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this headline"></a></h2>
+<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this heading"></a></h2>
 <p>In order to get the dual vector <span class="math notranslate nohighlight">\(v^k\)</span> that contains <span class="math notranslate nohighlight">\(s^k\)</span> and
 <span class="math notranslate nohighlight">\(\kappa^k\)</span> we use:</p>
 <div class="math notranslate nohighlight">
@@ -203,7 +204,7 @@ v^{k+1} &amp;= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
 u^k\)</span> from the fact that the Moreau decomposition is <span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
 </section>
 <section id="dynamic-scale-updating">
-<span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this headline"></a></h2>
+<span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this heading"></a></h2>
 <p>The choice of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter can have a large impact on the
 performance of the algorithm and the optimal choice is highly problem
 dependent. SCS can dynamically adjust the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter

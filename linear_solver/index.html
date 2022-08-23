@@ -16,6 +16,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -91,7 +92,7 @@
            <div itemprop="articleBody">
              
   <section id="linear-system-solver">
-<span id="linear-solver"></span><h1>Linear System Solver<a class="headerlink" href="#linear-system-solver" title="Permalink to this headline"></a></h1>
+<span id="linear-solver"></span><h1>Linear System Solver<a class="headerlink" href="#linear-system-solver" title="Permalink to this heading"></a></h1>
 <p>At each iteration <span class="math notranslate nohighlight">\(k\)</span> SCS solves the following set of linear equations:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
@@ -116,13 +117,13 @@ which is a major advantage of this approach. Moreover, this system can be solved
 approximately so long as the errors satisfy a summability condition, which
 permits the use of approximate solvers that can scale to very large problems.</p>
 <section id="available-linear-solvers">
-<h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Permalink to this headline"></a></h2>
+<h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Permalink to this heading"></a></h2>
 <p>Each of the below linear solvers is included in their own binary. If linking
 against SCS directly, then to switch between them you must compile and link
 against the right binary. If calling SCS via one of the interfaces then you can
 choose between the different linear solvers using the appropriate settings.</p>
 <section id="sparse-direct">
-<span id="direct"></span><h3>Sparse direct<a class="headerlink" href="#sparse-direct" title="Permalink to this headline"></a></h3>
+<span id="direct"></span><h3>Sparse direct<a class="headerlink" href="#sparse-direct" title="Permalink to this heading"></a></h3>
 <p>The direct method is the default linear system solver in SCS and factorizes the
 above matrix using a sparse permuted LDL factorization. Then it solves the
 linear system at each iteration using the cached factors.  Since the linear
@@ -130,7 +131,7 @@ system is quasidefinite we have strong existence guarantees about the
 factorization.  It relies on the external (but included) <a class="reference external" href="https://github.com/DrTimothyAldenDavis/SuiteSparse">AMD</a> and <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> packages.</p>
 </section>
 <section id="mkl-pardiso">
-<span id="mkl"></span><h3>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Permalink to this headline"></a></h3>
+<span id="mkl"></span><h3>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Permalink to this heading"></a></h3>
 <p>The <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-c/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-iface.html">Intel MKL Pardiso solver</a>
 is a shared-memory multiprocessing parallel direct sparse solver which is
 included Intel oneAPI MKL library. This offers an alternative to the single
@@ -143,7 +144,7 @@ Intel MKL is now available for
 though it only offers limited support for non-Intel CPUs.</p>
 </section>
 <section id="sparse-indirect">
-<span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Permalink to this headline"></a></h3>
+<span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Permalink to this heading"></a></h3>
 <p>The indirect method solves the above linear system approximately with a
 ‘matrix-free’ method. To do this it first reduces the system to solving</p>
 <div class="math notranslate nohighlight">
@@ -163,14 +164,14 @@ the factorization is relatively cheap so the direct method is the default,
 however for very large problems the indirect solver can be faster.</p>
 </section>
 <section id="sparse-gpu-indirect-method">
-<span id="gpu-indirect"></span><h3>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Permalink to this headline"></a></h3>
+<span id="gpu-indirect"></span><h3>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Permalink to this heading"></a></h3>
 <p>The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU.</p>
 </section>
 </section>
 <section id="implementing-a-new-linear-solver">
-<span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this headline"></a></h2>
+<span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this heading"></a></h2>
 <p>In order to implement you own linear system solver, you need to implement the
 struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> that contains the workspace your solver requires,
 and implement the functions in <code class="code docutils literal notranslate"><span class="pre">include/linsys.h</span></code> as detailed below.

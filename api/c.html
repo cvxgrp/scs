@@ -16,6 +16,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -104,9 +105,9 @@
            <div itemprop="articleBody">
              
   <section id="c-c">
-<span id="c-interface"></span><h1>C / C++<a class="headerlink" href="#c-c" title="Permalink to this headline"></a></h1>
+<span id="c-interface"></span><h1>C / C++<a class="headerlink" href="#c-c" title="Permalink to this heading"></a></h1>
 <section id="main-solver-api">
-<span id="c-main-api"></span><h2>Main solver API<a class="headerlink" href="#main-solver-api" title="Permalink to this headline"></a></h2>
+<span id="c-main-api"></span><h2>Main solver API<a class="headerlink" href="#main-solver-api" title="Permalink to this heading"></a></h2>
 <p>The C API is imported from the header <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code>, available <a class="reference external" href="https://github.com/cvxgrp/scs/blob/master/include/scs.h">here</a>. This file
 and <code class="code docutils literal notranslate"><span class="pre">scs_types.h</span></code> are the only public header files required
 for downstream applications.</p>
@@ -190,7 +191,7 @@ for downstream applications.</p>
 </dd></dl>
 
 <section id="helper-functions">
-<h3>Helper functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline"></a></h3>
+<h3>Helper functions<a class="headerlink" href="#helper-functions" title="Permalink to this heading"></a></h3>
 <p>This sets the <a class="reference internal" href="#scssettings"><span class="std std-ref">ScsSettings</span></a> struct to the default values as
 specified in the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> page.</p>
 <dl class="cpp function">
@@ -231,7 +232,7 @@ the <code class="code docutils literal notranslate"><span class="pre">scs_init</
 </section>
 </section>
 <section id="primitive-types">
-<h2>Primitive types<a class="headerlink" href="#primitive-types" title="Permalink to this headline"></a></h2>
+<h2>Primitive types<a class="headerlink" href="#primitive-types" title="Permalink to this heading"></a></h2>
 <p>These are defined in header file <code class="code docutils literal notranslate"><span class="pre">scs_types.h</span></code>.</p>
 <ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code>: is <code class="code docutils literal notranslate"><span class="pre">long</span></code> if the <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> is set, otherwise it is <code class="code docutils literal notranslate"><span class="pre">int</span></code></p></li>
@@ -239,10 +240,10 @@ the <code class="code docutils literal notranslate"><span class="pre">scs_init</
 </ul>
 </section>
 <section id="input-types">
-<h2>Input Types<a class="headerlink" href="#input-types" title="Permalink to this headline"></a></h2>
+<h2>Input Types<a class="headerlink" href="#input-types" title="Permalink to this heading"></a></h2>
 <p>The relevant input structs required by API are as follows.</p>
 <section id="data">
-<span id="scsdata"></span><h3>Data<a class="headerlink" href="#data" title="Permalink to this headline"></a></h3>
+<span id="scsdata"></span><h3>Data<a class="headerlink" href="#data" title="Permalink to this heading"></a></h3>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsData">
 <span id="_CPPv37ScsData"></span><span id="_CPPv27ScsData"></span><span id="ScsData"></span><span class="target" id="struct_scs_data"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsData</span></span></span><a class="headerlink" href="#_CPPv47ScsData" title="Permalink to this definition"></a><br /></dt>
@@ -290,7 +291,7 @@ the <code class="code docutils literal notranslate"><span class="pre">scs_init</
 
 </section>
 <section id="data-matrices">
-<span id="scsmatrix"></span><h3>Data Matrices<a class="headerlink" href="#data-matrices" title="Permalink to this headline"></a></h3>
+<span id="scsmatrix"></span><h3>Data Matrices<a class="headerlink" href="#data-matrices" title="Permalink to this heading"></a></h3>
 <p>The matrices must be in <a class="reference external" href="https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html">Compressed Sparse Column (CSC) format</a> using zero-based indexing.
 See <a class="reference internal" href="matrices.html#matrices"><span class="std std-ref">Data matrices</span></a> for more details on what SCS expects.</p>
 <dl class="cpp struct">
@@ -334,7 +335,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 
 </section>
 <section id="cone">
-<span id="scscone"></span><h3>Cone<a class="headerlink" href="#cone" title="Permalink to this headline"></a></h3>
+<span id="scscone"></span><h3>Cone<a class="headerlink" href="#cone" title="Permalink to this heading"></a></h3>
 <p>See <a class="reference internal" href="cones.html#cones"><span class="std std-ref">Cones</span></a> for more details.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsCone">
@@ -425,7 +426,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 
 </section>
 <section id="settings">
-<span id="scssettings"></span><h3>Settings<a class="headerlink" href="#settings" title="Permalink to this headline"></a></h3>
+<span id="scssettings"></span><h3>Settings<a class="headerlink" href="#settings" title="Permalink to this heading"></a></h3>
 <p>See <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> for details on each of these.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv411ScsSettings">
@@ -535,10 +536,10 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 </section>
 </section>
 <section id="output-types">
-<h2>Output Types<a class="headerlink" href="#output-types" title="Permalink to this headline"></a></h2>
+<h2>Output Types<a class="headerlink" href="#output-types" title="Permalink to this heading"></a></h2>
 <p>The relevant output structs returned by SCS are as follows.</p>
 <section id="solution">
-<span id="scssolution"></span><h3>Solution<a class="headerlink" href="#solution" title="Permalink to this headline"></a></h3>
+<span id="scssolution"></span><h3>Solution<a class="headerlink" href="#solution" title="Permalink to this heading"></a></h3>
 <p>This will contain the solution as found by SCS <em>or</em> the certificate of primal or
 dual infeasibility (see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>). If the user wants to warm-start the
 solver, then the Solution struct is also used as an input to specify the
@@ -572,7 +573,7 @@ warm-start points (see <a class="reference internal" href="../algorithm/warm_sta
 
 </section>
 <section id="info">
-<span id="scsinfo"></span><h3>Info<a class="headerlink" href="#info" title="Permalink to this headline"></a></h3>
+<span id="scsinfo"></span><h3>Info<a class="headerlink" href="#info" title="Permalink to this heading"></a></h3>
 <p>See <a class="reference internal" href="info.html#info"><span class="std std-ref">Return information</span></a> for details on each of these.</p>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv47ScsInfo">
@@ -718,7 +719,7 @@ warm-start points (see <a class="reference internal" href="../algorithm/warm_sta
 </section>
 </section>
 <section id="workspace">
-<h2>Workspace<a class="headerlink" href="#workspace" title="Permalink to this headline"></a></h2>
+<h2>Workspace<a class="headerlink" href="#workspace" title="Permalink to this heading"></a></h2>
 <p>The user should not need to interact with the <code class="code docutils literal notranslate"><span class="pre">ScsWork</span></code> struct,
 which contains the internal workspace allocated and maintained by SCS.</p>
 </section>

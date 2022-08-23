@@ -57,6 +57,14 @@ The rows of the data matrix :math:`A` correspond to the cones in
 given above**, i.e., first come the rows that correspond to the zero cones, then
 those that correspond to the positive orthants, then the box cone, etc.
 
+Within a cone the rows should be ordered to agree with the mathematical
+description of the cone as given above. For instance, the box cone is defined
+as :math:`\{(t, s) \in \mathbf{R} \times \mathbf{R}^k \mid t l \leq s \leq t u
+\}` and consequently the variable vector is stacked as :code:`[t;s]`, ie,
+:code:`t` comes first then :code:`s`. Similarly, the exponential cone is
+defined as :math:`\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \}`
+and therefore the variable vector is stacked as :code:`[x, y, z]`, etc.
+
 .. _sdcone:
 
 Semidefinite cones
