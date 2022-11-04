@@ -117,7 +117,7 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
                               scs_float *Et, ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
-  scs_float nm_a_col
+  scs_float nm_a_col;
 
   /****************************  D  ****************************/
 

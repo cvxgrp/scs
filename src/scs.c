@@ -378,9 +378,9 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
-  nm_warm_start = CG_NORM(warm_start, w->d->n) tol =
-      CG_TOL_FACTOR *
-      MIN(tol, nm_warm_start / POWF((scs_float)iter + 1, CG_RATE));
+  nm_warm_start = CG_NORM(warm_start, w->d->n);
+  tol = CG_TOL_FACTOR *
+        MIN(tol, nm_warm_start / POWF((scs_float)iter + 1, CG_RATE));
   tol = MAX(CG_BEST_TOL, tol);
 #endif
   status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol);
