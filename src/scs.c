@@ -365,22 +365,21 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
     w->u_t[i] *= (i < n ? 1 : -1) * w->diag_r[i];
   }
 #if INDIRECT > 0
-  scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_warm_start;
+  scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
   /* compute warm start using the cone projection output */
-  nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, w->d->m);
-  nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, w->d->n);
+  nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, m);
+  nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, n);
   warm_start = w->lin_sys_warm_start;
-  memcpy(warm_start, w->u, (l - 1) * sizeof(scs_float));
   /* warm_start = u[:n] + tau * g[:n] */
-  SCS(add_scaled_array)(warm_start, w->g, l - 1, w->u[l - 1]);
+  memcpy(warm_start, w->u, n * sizeof(scs_float));
+  SCS(add_scaled_array)(warm_start, w->g, n, w->u[l - 1]);
   /* use normalized residuals to compute tolerance */
   tol = MIN(nm_ax_s_btau, nm_px_aty_ctau);
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
-  nm_warm_start_p =
-      CG_NORM(warm_start, w->d->n) / POWF((scs_float)iter + 1, CG_RATE);
-  tol = CG_TOL_FACTOR * MIN(tol, nm_warm_start_p);
+  nm_ws = CG_NORM(warm_start, n) / POWF((scs_float)iter + 1, CG_RATE);
+  tol = CG_TOL_FACTOR * MIN(tol, nm_ws);
   tol = MAX(CG_BEST_TOL, tol);
 #endif
   status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol);
@@ -843,7 +842,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->rsk = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
-  w->lin_sys_warm_start = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->lin_sys_warm_start = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
   w->xys_orig = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
