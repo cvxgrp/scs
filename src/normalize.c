@@ -26,7 +26,7 @@
  */
 void SCS(normalize_b_c)(ScsScaling *scal, scs_float *b, scs_float *c) {
   scs_int i;
-  scs_float sigma;
+  scs_float sigma, nm_c, nm_b;
 
   /* scale c */
   for (i = 0; i < scal->n; ++i) {
@@ -38,7 +38,9 @@ void SCS(normalize_b_c)(ScsScaling *scal, scs_float *b, scs_float *c) {
   }
 
   /* calculate primal and dual scales */
-  sigma = MAX(SCS(norm_inf)(c, scal->n), SCS(norm_inf)(b, scal->m));
+  nm_c = SCS(norm_inf)(c, scal->n);
+  nm_b = SCS(norm_inf)(b, scal->m);
+  sigma = MAX(nm_c, nm_b);
   sigma = sigma < MIN_NORMALIZATION_FACTOR ? 1.0 : sigma;
   sigma = sigma > MAX_NORMALIZATION_FACTOR ? MAX_NORMALIZATION_FACTOR : sigma;
   sigma = SAFEDIV_POS(1.0, sigma);

@@ -54,14 +54,15 @@ struct SCS_WORK {
   scs_float *g;                  /* g = (I + M)^{-1} h */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
-  scs_float *b_orig, *c_orig; /* original unnormalized b and c vectors */
-  AaWork *accel;              /* struct for acceleration workspace */
-  ScsData *d;                 /* Problem data deep copy NORMALIZED */
-  ScsCone *k;                 /* Problem cone deep copy */
-  ScsSettings *stgs;          /* contains solver settings specified by user */
-  ScsLinSysWork *p;           /* struct populated by linear system solver */
-  ScsScaling *scal;           /* contains the re-scaling data */
-  ScsConeWork *cone_work;     /* workspace for the cone projection step */
+  scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */
+  scs_float nm_b_orig, nm_c_orig; /* unnormalized NORM(b), NORM(c) */
+  AaWork *accel;                  /* struct for acceleration workspace */
+  ScsData *d;                     /* Problem data deep copy NORMALIZED */
+  ScsCone *k;                     /* Problem cone deep copy */
+  ScsSettings *stgs;      /* contains solver settings specified by user */
+  ScsLinSysWork *p;       /* struct populated by linear system solver */
+  ScsScaling *scal;       /* contains the re-scaling data */
+  ScsConeWork *cone_work; /* workspace for the cone projection step */
   /* normalized and unnormalized residuals */
   ScsResiduals *r_orig, *r_normalized;
   /* track x,y,s as alg progresses, tau *not* divided out */

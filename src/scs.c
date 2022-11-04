@@ -347,11 +347,12 @@ static inline scs_float dot_r(ScsWork *w, const scs_float *x,
 
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float a, b, c, tau_scale = w->diag_r[w->d->n + w->d->m];
+  scs_float a, b, c, rad, tau_scale = w->diag_r[w->d->n + w->d->m];
   a = tau_scale + dot_r(w, w->g, w->g);
   b = dot_r(w, mu, w->g) - 2 * dot_r(w, p, w->g) - eta * tau_scale;
   c = dot_r(w, p, p) - dot_r(w, p, mu);
-  return (-b + SQRTF(MAX(b * b - 4 * a * c, 0.))) / (2 * a);
+  rad = b * b - 4 * a * c;
+  return (-b + SQRTF(MAX(rad, 0.))) / (2 * a);
 }
 
 /* status != 0 indicates failure */
@@ -364,19 +365,21 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
     w->u_t[i] *= (i < n ? 1 : -1) * w->diag_r[i];
   }
 #if INDIRECT > 0
+  scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
   /* compute warm start using the cone projection output */
+  nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, m);
+  nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, n);
   warm_start = w->lin_sys_warm_start;
-  memcpy(warm_start, w->u, (l - 1) * sizeof(scs_float));
   /* warm_start = u[:n] + tau * g[:n] */
-  SCS(add_scaled_array)(warm_start, w->g, l - 1, w->u[l - 1]);
+  memcpy(warm_start, w->u, n * sizeof(scs_float));
+  SCS(add_scaled_array)(warm_start, w->g, n, w->u[l - 1]);
   /* use normalized residuals to compute tolerance */
-  tol = MIN(CG_NORM(w->r_normalized->ax_s_btau, w->d->m),
-            CG_NORM(w->r_normalized->px_aty_ctau, w->d->n));
+  tol = MIN(nm_ax_s_btau, nm_px_aty_ctau);
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
-  tol = CG_TOL_FACTOR * MIN(tol, CG_NORM(warm_start, w->d->n) /
-                                     POWF((scs_float)iter + 1, CG_RATE));
+  nm_ws = CG_NORM(warm_start, n) / POWF((scs_float)iter + 1, CG_RATE);
+  tol = CG_TOL_FACTOR * MIN(tol, nm_ws);
   tol = MAX(CG_BEST_TOL, tol);
 #endif
   status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol);
@@ -514,6 +517,7 @@ static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 /* sets solutions, re-scales by inner prods if infeasible or unbounded */
 static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                      scs_int iter) {
+  scs_float nm_s, nm_y, sty;
   setx(w, sol);
   sety(w, sol);
   sets(w, sol);
@@ -521,6 +525,11 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     SCS(un_normalize_sol)(w->scal, sol);
   }
   populate_residual_struct(w, iter);
+
+  nm_s = SCS(norm_inf)(sol->s, w->d->m);
+  nm_y = SCS(norm_inf)(sol->y, w->d->m);
+  sty = SCS(dot)(sol->s, sol->y, w->d->m);
+
   info->setup_time = w->setup_time;
   info->iter = iter;
   info->res_infeas = w->r_orig->res_infeas;
@@ -530,9 +539,8 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->scale_updates = w->scale_updates;
   info->rejected_accel_steps = w->rejected_accel_steps;
   info->accepted_accel_steps = w->accepted_accel_steps;
-  info->comp_slack = ABS(SCS(dot)(sol->s, sol->y, w->d->m));
-  if (info->comp_slack > 1e-5 * MAX(SCS(norm_inf)(sol->s, w->d->m),
-                                    SCS(norm_inf)(sol->y, w->d->m))) {
+  info->comp_slack = ABS(sty);
+  if (info->comp_slack > 1e-5 * MAX(nm_s, nm_y)) {
     scs_printf("WARNING - large complementary slackness residual: %f\n",
                info->comp_slack);
   }
@@ -651,26 +659,29 @@ static void print_footer(ScsInfo *info) {
 }
 
 static scs_int has_converged(ScsWork *w, scs_int iter) {
+  scs_float abs_xt_p_x, abs_ctx, abs_bty;
+  scs_float nm_s, nm_px, nm_aty, nm_ax;
+  scs_float grl, prl, drl;
   scs_float eps_abs = w->stgs->eps_abs;
   scs_float eps_rel = w->stgs->eps_rel;
   scs_float eps_infeas = w->stgs->eps_infeas;
-  scs_float grl, prl, drl;
 
   ScsResiduals *r = w->r_orig;
-  scs_float *b = w->b_orig;
-  scs_float *c = w->c_orig;
-  scs_float *s = w->xys_orig->s;
 
   if (r->tau > 0.) {
+    abs_xt_p_x = ABS(r->xt_p_x);
+    abs_ctx = ABS(r->ctx);
+    abs_bty = ABS(r->bty);
+
+    nm_s = NORM(w->xys_orig->s, w->d->m);
+    nm_px = NORM(r->px, w->d->n);
+    nm_aty = NORM(r->aty, w->d->n);
+    nm_ax = NORM(r->ax, w->d->m);
     /* xt_p_x, ctx, bty already have tau divided out */
-    grl = MAX(MAX(ABS(r->xt_p_x), ABS(r->ctx)), ABS(r->bty));
+    grl = MAX(MAX(abs_xt_p_x, abs_ctx), abs_bty);
     /* s, ax, px, aty do *not* have tau divided out, so need to divide */
-    prl = MAX(MAX(NORM(b, w->d->m) * r->tau, NORM(s, w->d->m)),
-              NORM(r->ax, w->d->m)) /
-          r->tau;
-    drl = MAX(MAX(NORM(c, w->d->n) * r->tau, NORM(r->px, w->d->n)),
-              NORM(r->aty, w->d->n)) /
-          r->tau;
+    prl = MAX(MAX(w->nm_b_orig * r->tau, nm_s), nm_ax) / r->tau;
+    drl = MAX(MAX(w->nm_c_orig * r->tau, nm_px), nm_aty) / r->tau;
     if (isless(r->res_pri, eps_abs + eps_rel * prl) &&
         isless(r->res_dual, eps_abs + eps_rel * drl) &&
         isless(r->gap, eps_abs + eps_rel * grl)) {
@@ -764,12 +775,15 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
   } else {
     memcpy(w->d->b, w->b_orig, w->d->m * sizeof(scs_float));
   }
+  w->nm_b_orig = NORM(w->b_orig, w->d->m);
+
   if (c) {
     memcpy(w->c_orig, c, w->d->n * sizeof(scs_float));
     memcpy(w->d->c, c, w->d->n * sizeof(scs_float));
   } else {
     memcpy(w->d->c, w->c_orig, w->d->n * sizeof(scs_float));
   }
+  w->nm_c_orig = NORM(w->c_orig, w->d->n);
 
   /* normalize */
   if (w->scal) {
@@ -828,7 +842,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->rsk = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
-  w->lin_sys_warm_start = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->lin_sys_warm_start = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
   w->xys_orig = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
@@ -939,21 +953,21 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_float factor, new_scale;
 
   ScsResiduals *r = w->r_orig;
-  ScsSolution *xys = w->xys_orig;
-  scs_float *b = w->b_orig;
-  scs_float *c = w->c_orig;
+
+  scs_float nm_ax = SCALE_NORM(r->ax, w->d->m);
+  scs_float nm_s = SCALE_NORM(w->xys_orig->s, w->d->m);
+  scs_float nm_px_aty_ctau = SCALE_NORM(r->px_aty_ctau, w->d->n);
+  scs_float nm_px = SCALE_NORM(r->px, w->d->n);
+  scs_float nm_aty = SCALE_NORM(r->aty, w->d->n);
+  scs_float nm_ax_s_btau = SCALE_NORM(r->ax_s_btau, w->d->m);
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   /* ||Ax + s - b * tau|| */
-  scs_float relative_res_pri = SAFEDIV_POS(
-      SCALE_NORM(r->ax_s_btau, w->d->m),
-      MAX(MAX(SCALE_NORM(r->ax, w->d->m), SCALE_NORM(xys->s, w->d->m)),
-          SCALE_NORM(b, w->d->m) * r->tau));
+  scs_float relative_res_pri =
+      SAFEDIV_POS(nm_ax_s_btau, MAX(MAX(nm_ax, nm_s), w->nm_b_orig * r->tau));
   /* ||Px + A'y + c * tau|| */
   scs_float relative_res_dual = SAFEDIV_POS(
-      SCALE_NORM(r->px_aty_ctau, w->d->n),
-      MAX(MAX(SCALE_NORM(r->px, w->d->n), SCALE_NORM(r->aty, w->d->n)),
-          SCALE_NORM(c, w->d->n) * r->tau));
+      nm_px_aty_ctau, MAX(MAX(nm_px, nm_aty), w->nm_c_orig * r->tau));
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
