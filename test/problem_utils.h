@@ -190,6 +190,7 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
 
   /************** OPTIMALITY ****************/
 
+  /* TODO: the MAX expansion computes these norms many times */
   grl = MAX(MAX(ABS(xt_p_x), ABS(ctx)), ABS(bty));
   prl = MAX(MAX(NORM(b, m), NORM(s, m)), NORM(ax, m));
   drl = MAX(MAX(NORM(c, n), NORM(px, n)), NORM(aty, n));

@@ -117,6 +117,7 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
                               scs_float *Et, ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
+  scs_float nm_a_col
 
   /****************************  D  ****************************/
 
@@ -169,7 +170,8 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 
   /* calculate col norms, E */
   for (i = 0; i < A->n; ++i) {
-    Et[i] = MAX(Et[i], SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]));
+    nm_a_col = SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    Et[i] = MAX(Et[i], nm_a_col);
     Et[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(Et[i])));
   }
 }
