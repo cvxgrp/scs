@@ -157,7 +157,7 @@ the *relative* residuals as
    \hat r^k_p = \frac{\|Ax + s - b \tau\|}{\max(\|Ax\|, \|s\|, \|b \tau \|)}
 
 .. math::
-   \hat r^k_d = \frac{\|Px + A^\top y - c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}
+   \hat r^k_d = \frac{\|Px + A^\top y + c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}
 
 where by default we use the :math:`\ell_\infty` norm for these quantities,
 but can be changed using the :code:`SCALE_NORM` constant in

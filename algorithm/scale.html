@@ -222,7 +222,7 @@ the <em>relative</em> residuals as</p>
 <div class="math notranslate nohighlight">
 \[\hat r^k_p = \frac{\|Ax + s - b \tau\|}{\max(\|Ax\|, \|s\|, \|b \tau \|)}\]</div>
 <div class="math notranslate nohighlight">
-\[\hat r^k_d = \frac{\|Px + A^\top y - c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}\]</div>
+\[\hat r^k_d = \frac{\|Px + A^\top y + c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}\]</div>
 <p>where by default we use the <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm for these quantities,
 but can be changed using the <code class="code docutils literal notranslate"><span class="pre">SCALE_NORM</span></code> constant in
 <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>.

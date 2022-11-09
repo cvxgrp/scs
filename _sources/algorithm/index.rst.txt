@@ -133,7 +133,7 @@ found :math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m`, and :math:`y \in
 * Dual residual:
 
 .. math::
-  r_d := \|Px + A^\top y - c \|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty)
+  r_d := \|Px + A^\top y + c \|_\infty \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(\|Px\|_\infty, \|A^\top y\|_\infty, \|c\|_\infty)
 
 * Duality gap:
 
