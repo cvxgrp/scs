@@ -1,5 +1,6 @@
 #include "rw.h"
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -194,9 +195,11 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   uint32_t file_float_sz;
   uint32_t file_version_sz;
   char file_version[16];
+  errno = 0;
   FILE *fin = fopen(filename, "rb");
   if (!fin) {
     scs_printf("Error reading file %s\n", filename);
+    scs_printf("errno:%i:%s\n", errno, strerror(errno));
     return -1;
   }
   scs_printf("Reading data from %s\n", filename);
@@ -231,6 +234,7 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   *k = read_scs_cone(fin);
   *d = read_scs_data(fin);
   *stgs = read_scs_stgs(fin);
+  scs_printf("Finished reading data.\n");
   fclose(fin);
   return 0;
 }
