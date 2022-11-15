@@ -11,7 +11,7 @@ convex polytope, ie, to solve
 
   \begin{array}{ll}
     \mbox{maximize} & -\sum_i^n x_i \log x_i \\
-    \mbox{subhect to} & {\bf 1}^T x_i = 1 \\
+    \mbox{subhect to} & {\bf 1}^T x = 1 \\
                       & Ax - b \geq 0
   \end{array}
 
@@ -24,7 +24,7 @@ has the following equivalent form,
 
   \begin{array}{ll}
     \mbox{minimize} & -{\bf 1}^T t \\
-    \mbox{subject to} & {\bf 1}^T x_i = 1 \\
+    \mbox{subject to} & {\bf 1}^T x = 1 \\
                       & Ax - b \geq 0 \\
                       & \begin{bmatrix} t_i \\ x_i \\ 1 \end{bmatrix} \in \mathcal{K}_\mathrm{exp}, \quad i=1,\ldots,n,
   \end{array}
