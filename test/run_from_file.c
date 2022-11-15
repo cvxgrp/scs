@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
   }
   for (i = 2; i < argc; i += 2) {
     if (argc < i + 2) {
-      scs_printf("Incorrect number of arguments supplied\n.");
+      scs_printf("Incorrect number of arguments supplied.\n");
 
       SCS(free_data)(d);
       SCS(free_cone)(k);
@@ -78,6 +78,12 @@ int main(int argc, char **argv) {
       return -1;
     }
   }
+  if (!stgs->verbose) {
+    scs_printf(
+        "File data set `verbose` to 0, SCS will not output information. Add "
+        "`verbose 1` to call to override.\n");
+  }
+  scs_printf("Solving problem.\n");
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   scs(d, k, stgs, sol, &info);
 
