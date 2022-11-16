@@ -139,7 +139,8 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 
   /* invert temporary vec to form D */
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(Dt[i])));
+    Dt[i] = SQRTF(apply_limit(Dt[i]));
+    Dt[i] = SAFEDIV_POS(1.0, Dt[i]);
   }
 
   /****************************  E  ****************************/
@@ -172,7 +173,8 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
   for (i = 0; i < A->n; ++i) {
     nm_a_col = SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
     Et[i] = MAX(Et[i], nm_a_col);
-    Et[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(Et[i])));
+    Et[i] = SQRTF(apply_limit(Et[i]));
+    Et[i] = SAFEDIV_POS(1.0, Et[i]);
   }
 }
 
@@ -203,7 +205,8 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
   SCS(enforce_cone_boundaries)(cone, Dt, &SCS(mean));
 
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(Dt[i])));
+    Dt[i] = SQRTF(apply_limit(Dt[i]));
+    Dt[i] = SAFEDIV_POS(1.0, Dt[i]);
   }
 
   /****************************  E  ****************************/
@@ -235,7 +238,8 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
   /* calculate col norms, E */
   for (i = 0; i < A->n; ++i) {
     Et[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
-    Et[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(SQRTF(Et[i]))));
+    Et[i] = SQRTF(apply_limit(SQRTF(Et[i])));
+    Et[i] = SAFEDIV_POS(1.0, Et[i]);
   }
 }
 

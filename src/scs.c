@@ -195,17 +195,24 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
 }
 
 static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
-  r->res_pri = SAFEDIV_POS(NORM(r->ax_s_btau, m), r->tau);
-  r->res_dual = SAFEDIV_POS(NORM(r->px_aty_ctau, n), r->tau);
+  scs_float nm_ax_s, nm_px, nm_aty;
+  scs_float nm_ax_s_btau = NORM(r->ax_s_btau, m);
+  scs_float nm_px_aty_ctau = NORM(r->px_aty_ctau, n);
+
+  r->res_pri = SAFEDIV_POS(nm_ax_s_btau, r->tau);
+  r->res_dual = SAFEDIV_POS(nm_px_aty_ctau, r->tau);
   r->res_unbdd_a = NAN;
   r->res_unbdd_p = NAN;
   r->res_infeas = NAN;
   if (r->ctx_tau < 0) {
-    r->res_unbdd_a = SAFEDIV_POS(NORM(r->ax_s, m), -r->ctx_tau);
-    r->res_unbdd_p = SAFEDIV_POS(NORM(r->px, n), -r->ctx_tau);
+    nm_ax_s = NORM(r->ax_s, m);
+    nm_px = NORM(r->px, n);
+    r->res_unbdd_a = SAFEDIV_POS(nm_ax_s, -r->ctx_tau);
+    r->res_unbdd_p = SAFEDIV_POS(nm_px, -r->ctx_tau);
   }
   if (r->bty_tau < 0) {
-    r->res_infeas = SAFEDIV_POS(NORM(r->aty, n), -r->bty_tau);
+    nm_aty = NORM(r->aty, n);
+    r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
   }
 }
 
@@ -950,7 +957,8 @@ scs_int should_update_r(scs_float factor, scs_int iter) {
 
 static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
-  scs_float factor, new_scale;
+  scs_float factor, new_scale, relative_res_pri, relative_res_dual;
+  scs_float denom_pri, denom_dual;
 
   ScsResiduals *r = w->r_orig;
 
@@ -963,11 +971,13 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
   /* ||Ax + s - b * tau|| */
-  scs_float relative_res_pri =
-      SAFEDIV_POS(nm_ax_s_btau, MAX(MAX(nm_ax, nm_s), w->nm_b_orig * r->tau));
+  denom_pri = MAX(nm_ax, nm_s);
+  denom_pri = MAX(denom_pri, w->nm_b_orig * r->tau);
+  relative_res_pri = SAFEDIV_POS(nm_ax_s_btau, denom_pri);
   /* ||Px + A'y + c * tau|| */
-  scs_float relative_res_dual = SAFEDIV_POS(
-      nm_px_aty_ctau, MAX(MAX(nm_px, nm_aty), w->nm_c_orig * r->tau));
+  denom_dual = MAX(nm_px, nm_aty);
+  denom_dual = MAX(denom_dual, w->nm_c_orig * r->tau);
+  relative_res_dual = SAFEDIV_POS(nm_px_aty_ctau, denom_dual);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
