@@ -162,8 +162,9 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* how many iterations between heuristic residual rescaling */
 #define RESCALING_MIN_ITERS (100)
 
-#define EPS_TOL (1E-18)
-#define SAFEDIV_POS(X, Y) ((Y) < EPS_TOL ? ((X) / EPS_TOL) : (X) / (Y))
+#define _DIV_EPS_TOL (1E-18)
+#define SAFEDIV_POS(X, Y)                                                      \
+  ((Y) < _DIV_EPS_TOL ? ((X) / _DIV_EPS_TOL) : (X) / (Y))
 
 #if VERBOSITY > 0
 #define PRINT_INTERVAL (1)
