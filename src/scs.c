@@ -195,11 +195,9 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
 }
 
 static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
+  scs_float nm_ax_s, nm_px, nm_aty;
   scs_float nm_ax_s_btau = NORM(r->ax_s_btau, m);
   scs_float nm_px_aty_ctau = NORM(r->px_aty_ctau, n);
-  scs_float nm_ax_s = NORM(r->ax_s, m);
-  scs_float nm_px = NORM(r->px, n);
-  scs_float nm_aty = NORM(r->aty, n);
 
   r->res_pri = SAFEDIV_POS(nm_ax_s_btau, r->tau);
   r->res_dual = SAFEDIV_POS(nm_px_aty_ctau, r->tau);
@@ -207,10 +205,13 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   r->res_unbdd_p = NAN;
   r->res_infeas = NAN;
   if (r->ctx_tau < 0) {
+    nm_ax_s = NORM(r->ax_s, m);
+    nm_px = NORM(r->px, n);
     r->res_unbdd_a = SAFEDIV_POS(nm_ax_s, -r->ctx_tau);
     r->res_unbdd_p = SAFEDIV_POS(nm_px, -r->ctx_tau);
   }
   if (r->bty_tau < 0) {
+    nm_aty = NORM(r->aty, n);
     r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
   }
 }
