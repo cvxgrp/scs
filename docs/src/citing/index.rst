@@ -51,7 +51,7 @@ If you wish to cite SCS, please use any of the following:
             title        = {{SCS}: Splitting Conic Solver, version 3.2.2},
             howpublished = {\url{https://github.com/cvxgrp/scs}},
             month        = nov,
-            year         = 2021
+            year         = 2022
         }
 
   Anderson Acceleration
