@@ -48,7 +48,7 @@ The second step is the Euclidean projection onto a convex :ref:`cone <cones>`, i
   \mbox{subject to } & z \in \mathcal{K}
   \end{array}
 
-over variable :math:`z`. Most cone projection operators have relatively simple
+over variable :math:`z`. Many cones of interest have relatively simple
 projection operators.
 
 .. _optimality:
