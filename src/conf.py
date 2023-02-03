@@ -80,7 +80,7 @@ html_theme_options = {
     #'logo_name': False,
     #'github_button': False,
     #'github_type': 'star',
-    "analytics_id": "UA-203326834-1",
+    "analytics_id": "G-9CY7R8S5N2",
 }
 
 rst_epilog = ".. |version| replace:: %s" % __version__

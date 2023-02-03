@@ -1,18 +1,40 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
   <title>Non-identity DR Scaling &mdash; SCS 3.2.2 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
+
+  
+  
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
@@ -20,24 +42,46 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="../_static/js/theme.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Caching the workspace and warm-starts" href="warm_start.html" />
     <link rel="prev" title="Data equilibration" href="equilibration.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+
+   
   <div class="wy-grid-for-nav">
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
+
+          
             <a href="../index.html">
+          
+
+          
+            
             <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          
           </a>
+
+          
+            
+            
               <div class="version">
                 3.2.2
               </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -45,7 +89,18 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Algorithm</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
@@ -76,33 +131,75 @@
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
+            
+          
         </div>
+        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">SCS</a>
+        
       </nav>
 
+
       <div class="wy-nav-content">
+        
         <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
-          <li class="breadcrumb-item"><a href="index.html">Algorithm</a></li>
-      <li class="breadcrumb-item active">Non-identity DR Scaling</li>
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Algorithm</a> &raquo;</li>
+        
+      <li>Non-identity DR Scaling</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
+        
+          
             <a href="../_sources/algorithm/scale.rst.txt" rel="nofollow"> View page source</a>
+          
+        
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+            
   <section id="non-identity-dr-scaling">
-<span id="scaling"></span><h1>Non-identity DR Scaling<a class="headerlink" href="#non-identity-dr-scaling" title="Permalink to this heading"></a></h1>
+<span id="scaling"></span><h1>Non-identity DR Scaling<a class="headerlink" href="#non-identity-dr-scaling" title="Permalink to this heading">¶</a></h1>
 <p>In this note we derive the update equations when using a non-identity scaling.
 Standard Douglas-Rachford splitting applied to the SCS problem is described in
 the <a class="reference internal" href="index.html#algorithm"><span class="std std-ref">Algorithm</span></a> page.  Now consider modifying DR splitting to use a
@@ -119,7 +216,7 @@ w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
 <span class="math notranslate nohighlight">\(0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
 <p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
 <section id="cone-projection">
-<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this heading"></a></h2>
+<h2>Cone projection<a class="headerlink" href="#cone-projection" title="Permalink to this heading">¶</a></h2>
 <p>Note that <span class="math notranslate nohighlight">\(R\)</span> has to be chosen so that the cone projection is preserved.
 To do this we ensure that the entries of <span class="math notranslate nohighlight">\(R &gt; 0\)</span> corresponding to each
 cone are constant within that cone (with the box cone being a slight exception
@@ -136,7 +233,7 @@ since for sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</s
 \[(R +  \partial I_{\mathcal{C}_+})^{-1} R = (I +  \partial I_{\mathcal{C}_+})^{-1}\]</div>
 </section>
 <section id="selecting-r">
-<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this heading"></a></h2>
+<h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Permalink to this heading">¶</a></h2>
 <p>For SCS we take</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}R =  \begin{bmatrix}
@@ -160,7 +257,7 @@ described in <a class="reference internal" href="#updating-scale"><span class="s
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
 </section>
 <section id="root-plus-function">
-<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this heading"></a></h2>
+<h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Permalink to this heading">¶</a></h2>
 <p>Finally, the <code class="code docutils literal notranslate"><span class="pre">root_plus</span></code> function is modified to be the solution
 of the following quadratic equation:</p>
 <div class="math notranslate nohighlight">
@@ -172,7 +269,7 @@ flexibility in how to choose it and it can even change from iteration to
 iteration. It is an open question on how best to select this parameter.</p>
 </section>
 <section id="moreau-decomposition">
-<h2>Moreau decomposition<a class="headerlink" href="#moreau-decomposition" title="Permalink to this heading"></a></h2>
+<h2>Moreau decomposition<a class="headerlink" href="#moreau-decomposition" title="Permalink to this heading">¶</a></h2>
 <p>The projection onto a cone under a diagonal scaling also satisfies a
 Moreau-style decomposition identity, as follows:</p>
 <div class="math notranslate nohighlight">
@@ -187,7 +284,7 @@ across them. Note that the two components of the decomposition are
 <span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
 </section>
 <section id="dual-vector">
-<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this heading"></a></h2>
+<h2>Dual vector<a class="headerlink" href="#dual-vector" title="Permalink to this heading">¶</a></h2>
 <p>In order to get the dual vector <span class="math notranslate nohighlight">\(v^k\)</span> that contains <span class="math notranslate nohighlight">\(s^k\)</span> and
 <span class="math notranslate nohighlight">\(\kappa^k\)</span> we use:</p>
 <div class="math notranslate nohighlight">
@@ -205,7 +302,7 @@ v^{k+1} &amp;= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
 u^k\)</span> from the fact that the Moreau decomposition is <span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
 </section>
 <section id="dynamic-scale-updating">
-<span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this heading"></a></h2>
+<span id="updating-scale"></span><h2>Dynamic scale updating<a class="headerlink" href="#dynamic-scale-updating" title="Permalink to this heading">¶</a></h2>
 <p>The choice of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter can have a large impact on the
 performance of the algorithm and the optimal choice is highly problem
 dependent. SCS can dynamically adjust the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter
@@ -250,44 +347,63 @@ perform a reset of the <a class="reference internal" href="acceleration.html#acc
 
 
            </div>
+           
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="equilibration.html" class="btn btn-neutral float-left" title="Data equilibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="warm_start.html" class="btn btn-neutral float-right" title="Caching the workspace and warm-starts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="equilibration.html" class="btn btn-neutral float-left" title="Data equilibration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
-  </div>
+    <p>
+        &#169; Copyright 2021, Brendan O&#39;Donoghue.
 
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
         </div>
       </div>
+
     </section>
+
   </div>
-  <script>
+  
+
+  <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-    <!-- Theme Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-203326834-1"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
 
-      gtag('config', 'UA-203326834-1', {
-          'anonymize_ip': false,
-      });
-    </script> 
+  
+  
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'G-9CY7R8S5N2', 'auto');
+    
+    ga('send', 'pageview');
+    </script>
+
+    
+   
 
 </body>
 </html>
