@@ -29,11 +29,11 @@ jobs:
 
     - name: Build SCS MKL and test
       run: |
-        mkdir build
+        mkdir out
         export INSTALL_DIR=$PWD/out
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
+        mkdir build
         cd build
-        mkdir out
         cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
         make
         make install
