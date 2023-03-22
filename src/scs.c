@@ -1217,10 +1217,12 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
 #endif
   SCS(tic)(&init_timer);
   if (stgs->write_data_filename) {
+    scs_printf("Writing raw problem data to %s\n", stgs->write_data_filename);
     SCS(write_data)(d, k, stgs);
   }
   if (stgs->log_csv_filename) {
     scs_printf("Logging run data to %s\n", stgs->log_csv_filename);
+    /* logging done every iteration */
   }
   w = init_work(d, k, stgs);
   if (w) {
