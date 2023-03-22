@@ -178,7 +178,6 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k,
   uint32_t scs_float_sz = (uint32_t)sizeof(scs_float);
   const char *scs_version = SCS_VERSION;
   uint32_t scs_version_sz = (uint32_t)strlen(scs_version);
-  scs_printf("Writing raw problem data to %s\n", stgs->write_data_filename);
   fwrite(&(scs_int_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_float_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_version_sz), sizeof(uint32_t), 1, fout);
@@ -247,7 +246,6 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   ScsSolution *sol = w->xys_orig;
   ScsSolution *sol_n = w->xys_normalized;
   /* if iter 0 open to write, else open to append */
-  scs_printf("Logging run data to %s\n", stgs->log_csv_filename);
   FILE *fout = fopen(stgs->log_csv_filename, iter == 0 ? "w" : "a");
   if (!fout) {
     scs_printf("Error: Could not open %s for writing\n",
