@@ -247,7 +247,6 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   ScsSolution *sol = w->xys_orig;
   ScsSolution *sol_n = w->xys_normalized;
   /* if iter 0 open to write, else open to append */
-  scs_printf("Logging run data to %s\n", stgs->log_csv_filename);
   FILE *fout = fopen(stgs->log_csv_filename, iter == 0 ? "w" : "a");
   if (!fout) {
     scs_printf("Error: Could not open %s for writing\n",

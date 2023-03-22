@@ -1219,6 +1219,9 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   if (stgs->write_data_filename) {
     SCS(write_data)(d, k, stgs);
   }
+  if (stgs->log_csv_filename) {
+    scs_printf("Logging run data to %s\n", stgs->log_csv_filename);
+  }
   w = init_work(d, k, stgs);
   if (w) {
     w->setup_time = SCS(tocq)(&init_timer);
