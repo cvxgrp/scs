@@ -84,13 +84,20 @@ void SCS(deep_copy_data)(ScsData *dest, const ScsData *src) {
 
 void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
   memcpy(dest, src, sizeof(ScsSettings));
+  /* MATLAB does something weird with strdup, so use strcpy instead */
+  char *tmp;
   if (src->write_data_filename) {
-    dest->write_data_filename = strdup(src->write_data_filename);
+    tmp = scs_malloc(strlen(src->write_data_filename) + 1);
+    strcpy(tmp, src->write_data_filename);
+    dest->write_data_filename = tmp;
   } else {
     dest->write_data_filename = SCS_NULL;
   }
+  /* MATLAB does something weird with strdup, so use strcpy instead */
   if (src->log_csv_filename) {
-    dest->log_csv_filename = strdup(src->log_csv_filename);
+    tmp = scs_malloc(strlen(src->log_csv_filename) + 1);
+    strcpy(tmp, src->log_csv_filename);
+    dest->log_csv_filename = tmp;
   } else {
     dest->log_csv_filename = SCS_NULL;
   }
