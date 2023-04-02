@@ -10,6 +10,8 @@
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_MAX_ITERS (20)
 
+#define EXP_CONE_INF (1E15)
+
 /* Box cone limits (+ or -) taken to be INF */
 #define MAX_BOX_VAL (1e15)
 
@@ -33,6 +35,7 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 }
 #endif
 
+#define EXP_CONE_INF (1E15)
 #endif
 
 void SCS(free_cone)(ScsCone *k) {
@@ -323,118 +326,6 @@ char *SCS(get_cone_header)(const ScsCone *k) {
             (long)(3 * k->psize));
   }
   return tmp;
-}
-
-static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
-                                  scs_float z_hat, scs_float w) {
-  scs_float t_prev, t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
-  scs_float f = 1., fp = 1.;
-  scs_int i;
-  for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
-    t_prev = t;
-    f = t * (t + z_hat) / rho / rho - y_hat / rho + log(t / rho) + 1;
-    fp = (2 * t + z_hat) / rho / rho + 1 / t;
-
-    t = t - f / fp;
-
-    if (t <= -z_hat) {
-      t = -z_hat;
-      break;
-    } else if (t <= 0) {
-      t = 0;
-      break;
-    } else if (ABS(t - t_prev) < CONE_TOL) {
-      break;
-    } else if (SQRTF(f * f / fp) < CONE_TOL) {
-      break;
-    }
-  }
-  if (i == EXP_CONE_MAX_ITERS) {
-    scs_printf("warning: exp cone newton step hit maximum %i iters\n", (int)i);
-    scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e; f=%1.5e, "
-               "fp=%1.5e, t=%1.5e, t_prev= %1.5e\n",
-               rho, y_hat, z_hat, w, f, fp, t, t_prev);
-  }
-  return t + z_hat;
-}
-
-static void exp_solve_for_x_with_rho(const scs_float *v, scs_float *x,
-                                     scs_float rho, scs_float w) {
-  x[2] = exp_newton_one_d(rho, v[1], v[2], w);
-  x[1] = (x[2] - v[2]) * x[2] / rho;
-  x[0] = v[0] - rho;
-}
-
-static scs_float exp_calc_grad(const scs_float *v, scs_float *x, scs_float rho,
-                               scs_float w) {
-  exp_solve_for_x_with_rho(v, x, rho, w);
-  if (x[1] <= 1e-12) {
-    return x[0];
-  }
-  return x[0] + x[1] * log(x[1] / x[2]);
-}
-
-static void exp_get_rho_ub(const scs_float *v, scs_float *x, scs_float *ub,
-                           scs_float *lb) {
-  *lb = 0;
-  *ub = 0.125;
-  while (exp_calc_grad(v, x, *ub, v[1]) > 0) {
-    *lb = *ub;
-    (*ub) *= 2;
-  }
-}
-
-/* project onto the exponential cone, v has dimension *exactly* 3 */
-static scs_int proj_exp_cone(scs_float *v) {
-  scs_int i;
-  scs_float ub, lb, rho, g, x[3];
-  scs_float r = v[0], s = v[1], t = v[2];
-
-  /* v in cl(Kexp) */
-  if ((s * exp(r / s) - t <= CONE_THRESH && s > 0) ||
-      (r <= 0 && s == 0 && t >= 0)) {
-    return 0;
-  }
-
-  /* -v in Kexp^* */
-  if ((r > 0 && r * exp(s / r) + exp(1) * t <= CONE_THRESH) ||
-      (r == 0 && s <= 0 && t <= 0)) {
-    memset(v, 0, 3 * sizeof(scs_float));
-    return 0;
-  }
-
-  /* special case with analytical solution */
-  if (r < 0 && s < 0) {
-    v[1] = 0.0;
-    v[2] = MAX(v[2], 0);
-    return 0;
-  }
-
-  /* iterative procedure to find projection, bisects on dual variable: */
-  exp_get_rho_ub(v, x, &ub, &lb); /* get starting upper and lower bounds */
-  for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
-    rho = (ub + lb) / 2; /* halfway between upper and lower bounds */
-    g = exp_calc_grad(v, x, rho, x[1]); /* calculates gradient wrt dual var */
-    if (g > 0) {
-      lb = rho;
-    } else {
-      ub = rho;
-    }
-    if (ub - lb < CONE_TOL) {
-      break;
-    }
-  }
-#if VERBOSITY > 10
-  scs_printf("exponential cone proj iters %i\n", (int)i);
-#endif
-  if (i == EXP_CONE_MAX_ITERS) {
-    scs_printf("warning: exp cone outer step hit maximum %i iters\n", (int)i);
-    scs_printf("r=%1.5e; s=%1.5e; t=%1.5e\n", r, s, t);
-  }
-  v[0] = x[0];
-  v[1] = x[1];
-  v[2] = x[2];
-  return 0;
 }
 
 static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
@@ -776,6 +667,351 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   v[2] = (v[2] < 0) ? -(r) : (r);
 }
 
+static inline scs_int _isfinite(float x) {
+  return x < EXP_CONE_INF;
+}
+
+static inline float clip(float x, float l, float u) {
+  return MIN(MAX(x, l), u);
+}
+
+void hfun(const scs_float *v0, scs_float rho, scs_float *f, scs_float *df) {
+  scs_float t0 = v0[2], s0 = v0[1], r0 = v0[0];
+  scs_float exprho = exp(rho);
+  scs_float expnegrho = exp(-rho);
+  *f = ((rho - 1) * r0 + s0) * exprho - (r0 - rho * s0) * expnegrho -
+       (rho * (rho - 1) + 1) * t0;
+  *df = (rho * r0 + s0) * exprho + (r0 - (rho - 1) * s0) * expnegrho -
+        (2 * rho - 1) * t0;
+}
+
+scs_float root_binary_search(const scs_float *farg, scs_float xl, scs_float xh,
+                             scs_float x0) {
+  const scs_float EPS = 1e-15;
+  scs_int MAXITER = 20, i;
+  scs_float xx, f, df;
+  for (i = 0; i < MAXITER; i++) {
+    hfun(farg, x0, &f, &df);
+    if (f < 0.0) {
+      xl = x0;
+    } else {
+      xh = x0;
+    }
+
+    xx = 0.5 * (xl + xh);
+    if (ABS(xx - x0) <= EPS * MAX(1., ABS(xx)) || (xx == xl) || (xx == xh)) {
+      break;
+    }
+  }
+  return xx;
+}
+
+scs_float root_search_newton(const scs_float *farg, scs_float xl, scs_float xh,
+                             scs_float x0) {
+  const scs_float EPS = 1e-15;
+  const scs_float DFTOL = pow(EPS, 6.0 / 7.0);
+  const scs_int MAXITER = 20;
+  const scs_float LODAMP = 0.05;
+  const scs_float HIDAMP = 0.95;
+
+  scs_float xx = x0;
+  scs_float f, df;
+
+  scs_int i;
+
+  for (i = 0; i < MAXITER; i++) {
+    hfun(farg, x0, &f, &df);
+    if (f < 0.0) {
+      xl = x0;
+    } else {
+      xh = x0;
+    }
+
+    if (xh <= xl) {
+      break;
+    }
+
+    if (_isfinite(f) && df >= DFTOL) {
+      xx = x0 - f / df;
+    } else {
+      break;
+    }
+
+    if (ABS(xx - x0) <= EPS * MAX(1., ABS(xx))) {
+      break;
+    }
+
+    if (xx >= xh) {
+      x0 = MIN(LODAMP * x0 + HIDAMP * xh, xh);
+    } else if (xx <= xl) {
+      x0 = MAX(LODAMP * x0 + HIDAMP * xl, xl);
+    } else {
+      x0 = xx;
+    }
+  }
+
+  if (i < MAXITER) { /* newton method converged */
+    return MAX(xl, MIN(xh, xx));
+  }
+  return root_binary_search(farg, xl, xh, x0);
+}
+
+scs_float proj_primal_exp_cone_heuristic(const scs_float *v0, scs_float *vp) {
+  scs_float t0 = v0[2], s0 = v0[1], r0 = v0[0];
+  scs_float dist;
+  /* perspective boundary */
+  vp[2] = MAX(t0, 0);
+  vp[1] = 0.0;
+  vp[0] = MIN(r0, 0);
+  dist = SCS(norm_diff)(v0, vp, 3);
+
+  /* perspective scs_interior */
+  if (s0 > 0.0) {
+    scs_float tp = MAX(t0, s0 * exp(r0 / s0));
+    scs_float newdist = tp - t0;
+    if (newdist < dist) {
+      vp[2] = tp;
+      vp[1] = s0;
+      vp[0] = r0;
+      dist = newdist;
+    }
+  }
+  return dist;
+}
+
+scs_float proj_polar_exp_cone_heuristic(const scs_float *v0, scs_float *vd) {
+  scs_float t0 = v0[2], s0 = v0[1], r0 = v0[0];
+  scs_float dist;
+  /* perspective boundary */
+  vd[2] = MIN(t0, 0);
+  vd[1] = MIN(s0, 0);
+  vd[0] = 0.0;
+  dist = SCS(norm_diff)(v0, vd, 3);
+
+  /* perspective scs_interior */
+  if (r0 > 0.0) {
+    scs_float td = MIN(t0, -r0 * exp(s0 / r0 - 1));
+    scs_float newdist = t0 - td;
+    if (newdist < dist) {
+      vd[2] = td;
+      vd[1] = s0;
+      vd[0] = r0;
+      dist = newdist;
+    }
+  }
+  return dist;
+}
+
+scs_float ppsi(const scs_float *v0) {
+  scs_float s0 = v0[1], r0 = v0[0];
+  scs_float psi;
+
+  if (r0 > s0) {
+    psi = (r0 - s0 + sqrt(r0 * r0 + s0 * s0 - r0 * s0)) / r0;
+  } else {
+    psi = -s0 / (r0 - s0 - sqrt(r0 * r0 + s0 * s0 - r0 * s0));
+  }
+
+  return ((psi - 1) * r0 + s0) / (psi * (psi - 1) + 1);
+}
+
+scs_float pomega(scs_float rho) {
+  scs_float val = exp(rho) / (rho * (rho - 1) + 1);
+
+  if (rho < 2.0) {
+    val = MIN(val, exp(2.0) / 3);
+  }
+
+  return val;
+}
+
+scs_float dpsi(const scs_float *v0) {
+  scs_float s0 = v0[1], r0 = v0[0];
+  scs_float psi;
+
+  if (s0 > r0) {
+    psi = (r0 - sqrt(r0 * r0 + s0 * s0 - r0 * s0)) / s0;
+  } else {
+    psi = (r0 - s0) / (r0 + sqrt(r0 * r0 + s0 * s0 - r0 * s0));
+  }
+
+  return (r0 - psi * s0) / (psi * (psi - 1) + 1);
+}
+
+scs_float domega(scs_float rho) {
+  scs_float val = -exp(-rho) / (rho * (rho - 1) + 1);
+
+  if (rho > -1.0) {
+    val = MAX(val, -exp(1.0) / 3);
+  }
+
+  return val;
+}
+
+void exp_search_bracket(const scs_float *v0, scs_float pdist, scs_float ddist,
+                        scs_float *low_out, scs_float *upr_out) {
+  scs_float t0 = v0[2], s0 = v0[1], r0 = v0[0];
+  scs_float baselow = -EXP_CONE_INF, baseupr = EXP_CONE_INF;
+  scs_float low = -EXP_CONE_INF, upr = EXP_CONE_INF;
+
+  scs_float Dp = sqrt(pdist * pdist - MIN(s0, 0) * MIN(s0, 0));
+  scs_float Dd = sqrt(ddist * ddist - MIN(r0, 0) * MIN(r0, 0));
+
+  if (t0 > 0) {
+    scs_float tpl = t0;
+    scs_float curbnd = log(tpl / ppsi(v0));
+    low = MAX(low, curbnd);
+  }
+
+  if (t0 < 0) {
+    scs_float tdu = t0;
+    scs_float curbnd = -log(-tdu / dpsi(v0));
+    upr = MIN(upr, curbnd);
+  }
+
+  if (r0 > 0) {
+    baselow = 1 - s0 / r0;
+    low = MAX(low, baselow);
+
+    scs_float tpu = MAX(1e-12, MIN(Dd, Dp + t0));
+    scs_float palpha = low;
+    scs_float curbnd = MAX(palpha, baselow + tpu / r0 / pomega(palpha));
+    upr = MIN(upr, curbnd);
+  }
+
+  if (s0 > 0) {
+    baseupr = r0 / s0;
+    upr = MIN(upr, baseupr);
+
+    scs_float tdl = -MAX(1e-12, MIN(Dp, Dd - t0));
+    scs_float dalpha = upr;
+    scs_float curbnd = MIN(dalpha, baseupr - tdl / s0 / domega(dalpha));
+    low = MAX(low, curbnd);
+  }
+
+  /* Guarantee valid bracket */
+  /* TODO do we need these 4 lines? */
+  low = MIN(low, upr);
+  upr = MAX(low, upr);
+  low = clip(low, baselow, baseupr);
+  upr = clip(upr, baselow, baseupr);
+
+  if (low != upr) {
+    scs_float fl, fu;
+    scs_float df;
+    hfun(v0, low, &fl, &df);
+    hfun(v0, upr, &fu, &df);
+
+    if (!(fl * fu < 0)) {
+      if (ABS(fl) < ABS(fu)) {
+        upr = low;
+      } else {
+        low = upr;
+      }
+    }
+  }
+
+  *low_out = low;
+  *upr_out = upr;
+}
+
+scs_float proj_sol_primal_exp_cone(const scs_float *v0, scs_float rho, scs_float *vp) {
+  scs_float linrho = (rho - 1) * v0[0] + v0[1];
+  scs_float exprho = exp(rho);
+  scs_float quadrho, dist;
+  if (linrho > 0 && _isfinite(exprho)) {
+    quadrho = rho * (rho - 1) + 1;
+    vp[2] = exprho * linrho / quadrho;
+    vp[1] = linrho / quadrho;
+    vp[0] = rho * linrho / quadrho;
+    dist = SCS(norm_diff)(vp, v0, 3);
+  } else {
+    vp[2] = EXP_CONE_INF;
+    vp[1] = 0.0;
+    vp[0] = 0.0;
+    dist = EXP_CONE_INF;
+  }
+  return dist;
+}
+
+scs_float proj_sol_polar_exp_cone(const scs_float *v0, scs_float rho, scs_float *vd) {
+  scs_float linrho = v0[0] - rho * v0[1];
+  scs_float exprho = exp(-rho);
+  scs_float quadrho, dist;
+  if (linrho > 0 && _isfinite(exprho)) {
+    quadrho = rho * (rho - 1) + 1;
+    vd[2] = -exprho * linrho / quadrho;
+    vd[1] = (1 - rho) * linrho / quadrho;
+    vd[0] = linrho / quadrho;
+    dist = SCS(norm_diff)(v0, vd, 3);
+  } else {
+    vd[2] = -EXP_CONE_INF;
+    vd[1] = 0.0;
+    vd[0] = 0.0;
+    dist = EXP_CONE_INF;
+  }
+  return dist;
+}
+
+/* project onto primal or dual exponential conem performed in-place */
+scs_float proj_pd_exp_cone(scs_float *v0, scs_int primal) {
+  scs_float TOL = pow(1e-10, 2.0 / 3.0);
+  scs_float xl, xh;
+  scs_float vp[3], vd[3];
+  if (!primal) {
+    SCS(scale_array)(v0, -1.0, 3);
+  }
+  scs_float pdist = proj_primal_exp_cone_heuristic(v0, vp);
+  scs_float ddist = proj_polar_exp_cone_heuristic(v0, vd);
+
+  scs_float err = ABS(vp[0] + vd[0] - v0[0]);
+  err = MAX(err, ABS(vp[1] + vd[1] - v0[1]));
+  err = MAX(err, ABS(vp[2] + vd[2] - v0[2]));
+
+  /* Skip root search if presolve rules apply
+   * or optimality conditions are satisfied
+   */
+  scs_int opt = (v0[1] <= 0 && v0[0] <= 0);
+  opt |= (MIN(pdist, ddist) <= TOL);
+  opt |= (err <= TOL && SCS(dot)(vp, vd, 3) <= TOL);
+  if (opt) {
+    if (primal) {
+      memcpy(v0, vp, 3 * sizeof(scs_float));
+      return pdist;
+    }
+    /* polar cone -> dual cone */
+    vd[0] *= -1.; vd[1] *= -1.; vd[2] *= -1.;
+    memcpy(v0, vd, 3 * sizeof(scs_float));
+    return ddist;
+  }
+
+  exp_search_bracket(v0, pdist, ddist, &xl, &xh);
+  scs_float rho = root_search_newton(v0, xl, xh, 0.5 * (xl + xh));
+
+  if (primal) { /* primal cone projection */
+    scs_float vp1[3], pdist1;
+    pdist1 = proj_sol_primal_exp_cone(v0, rho, vp1);
+    if (pdist1 <= pdist) {
+      memcpy(vp, vp1, 3 * sizeof(scs_float));
+      pdist = pdist1;
+    }
+    memcpy(v0, vp, 3 * sizeof(scs_float));
+    return pdist;
+  } /* polar cone projection */
+  scs_float vd1[3], ddist1;
+  ddist1 = proj_sol_polar_exp_cone(v0, rho, vd1);
+  if (ddist1 <= ddist) {
+    memcpy(vd, vd1, 3 * sizeof(scs_float));
+    ddist = ddist1;
+  }
+  /* polar cone -> dual cone */
+  vd[0] *= -1.; vd[1] *= -1.; vd[2] *= -1.;
+  memcpy(v0, vd, 3 * sizeof(scs_float));
+  return ddist;
+}
+
+
+
 /* project onto the primal K cone in the paper */
 /* the r_y vector determines the INVERSE metric, ie, project under the
  * diag(r_y)^-1 norm.
@@ -829,51 +1065,15 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  if (k->ep) { /* doesn't use r_y */
-               /*
-                * exponential cone is not self dual, if s \in K
-                * then y \in K^* and so if K is the primal cone
-                * here we project onto K^*, via Moreau
-                * \Pi_C^*(y) = y + \Pi_C(-y)
-                */
+  if (k->ep || k->ed) { /* doesn't use r_y */
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (i = 0; i < k->ep; ++i) {
-      proj_exp_cone(&(x[count + 3 * i]));
+    for (i = 0; i < k->ep + k->ed; ++i) {
+      scs_float d = proj_pd_exp_cone(&(x[count + 3 * i]), i < k->ep);
     }
-    count += 3 * k->ep;
+    count += 3 * (k->ep + k->ed);
   }
-
-  /* dual exponential cone */
-  if (k->ed) { /* doesn't use r_y */
-    /*
-     * exponential cone is not self dual, if s \in K
-     * then y \in K^* and so if K is the primal cone
-     * here we project onto K^*, via Moreau
-     * \Pi_C^*(y) = y + \Pi_C(-y)
-     */
-    scs_int idx;
-    scs_float r, s, t;
-    SCS(scale_array)(&(x[count]), -1, 3 * k->ed); /* x = -x; */
-#ifdef _OPENMP
-#pragma omp parallel for private(r, s, t, idx)
-#endif
-    for (i = 0; i < k->ed; ++i) {
-      idx = count + 3 * i;
-      r = x[idx];
-      s = x[idx + 1];
-      t = x[idx + 2];
-
-      proj_exp_cone(&(x[idx]));
-
-      x[idx] -= r;
-      x[idx + 1] -= s;
-      x[idx + 2] -= t;
-    }
-    count += 3 * k->ed;
-  }
-
   if (k->psize && k->p) { /* doesn't use r_y */
     scs_float v[3];
     scs_int idx;
