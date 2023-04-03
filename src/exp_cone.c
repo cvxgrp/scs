@@ -6,15 +6,23 @@
 
 #define EXP_CONE_INF (1E15)
 
+/*
+ * Exponential cone projection routines, from:
+ *
+ * Projection onto the exponential cone: a univariate root-finding problem,
+ *    by Henrik A. Friberg, 2021.
+ *
+ */
+
 static inline scs_int _isfinite(float x) {
-  return x < EXP_CONE_INF;
+  return ABS(x) < EXP_CONE_INF;
 }
 
 static inline float _clip(float x, float l, float u) {
   return MIN(MAX(x, l), u);
 }
 
-void hfun(const scs_float *v0, scs_float rho, scs_float *f, scs_float *df) {
+static void hfun(const scs_float *v0, scs_float rho, scs_float *f, scs_float *df) {
   scs_float t0 = v0[2], s0 = v0[1], r0 = v0[0];
   scs_float exprho = exp(rho);
   scs_float expnegrho = exp(-rho);
@@ -361,35 +369,3 @@ scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal) {
   return ddist;
 }
 
-/*
-void test_exp_proj(scs_float * v0) {
-  scs_float vp[3], vd[3];
-
-  memcpy(vp, v0, 3 * sizeof(scs_float));
-  memcpy(vd, v0, 3 * sizeof(scs_float));
-
-  proj_pd_exp_cone(vp, 1);
-  proj_pd_exp_cone(vd, 0);
-
-  scs_printf("*******************************\n");
-  scs_printf("v0: (%f, %f, %f)\n", v0[0], v0[1], v0[2]);
-  scs_printf("vp: (%f, %f, %f)\n", vp[0], vp[1], vp[2]);
-  scs_printf("vd: (%f, %f, %f)\n", vd[0], vd[1], vd[2]);
-}
-
-scs_int main() {
-  scs_float v0[5][3] = {
-    {0.14814832, 1.04294573, 0.67905585},
-    {-0.78301134, 1.82790084, -1.05417044},
-    {1.3282585,  -0.43277314,  1.7468072},
-    {0.67905585, 0.14814832, 1.04294573},
-    {0.50210027,  0.12314491, -1.77568921},
-  };
-  test_exp_proj(v0[0]);
-  test_exp_proj(v0[1]);
-  test_exp_proj(v0[2]);
-  test_exp_proj(v0[3]);
-  test_exp_proj(v0[4]);
-  return 0;
-}
-*/

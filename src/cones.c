@@ -4,13 +4,9 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
-#define CONE_TOL (1e-9)
-#define CONE_THRESH (1e-8)
-#define EXP_CONE_MAX_ITERS (100)
 #define BOX_CONE_MAX_ITERS (25)
+#define POW_CONE_TOL (1e-9)
 #define POW_CONE_MAX_ITERS (20)
-
-#define EXP_CONE_INF (1E15)
 
 /* Box cone limits (+ or -) taken to be INF */
 #define MAX_BOX_VAL (1e15)
@@ -636,13 +632,13 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   scs_int i;
   /* v in K_a */
   if (xh >= 0 && yh >= 0 &&
-      CONE_THRESH + POWF(xh, a) * POWF(yh, (1 - a)) >= rh) {
+      POW_CONE_TOL + POWF(xh, a) * POWF(yh, (1 - a)) >= rh) {
     return;
   }
 
   /* -v in K_a^* */
   if (xh <= 0 && yh <= 0 &&
-      CONE_THRESH + POWF(-xh, a) * POWF(-yh, 1 - a) >=
+      POW_CONE_TOL + POWF(-xh, a) * POWF(-yh, 1 - a) >=
           rh * POWF(a, a) * POWF(1 - a, 1 - a)) {
     v[0] = v[1] = v[2] = 0;
     return;
@@ -655,7 +651,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     y = pow_calc_x(r, yh, rh, 1 - a);
 
     f = pow_calc_f(x, y, r, a);
-    if (ABS(f) < CONE_TOL) {
+    if (ABS(f) < POW_CONE_TOL) {
       break;
     }
 
