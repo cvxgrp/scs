@@ -33,21 +33,18 @@ _SKIP(test_validation)
 /* solve SDPs, requires blas / lapack */
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
 #include "problems/rob_gauss_cov_est.h"
+#include "problems/random_prob.h"
 #else
 _SKIP(rob_gauss_cov_est)
+_SKIP(random_prob)
 #endif
 
 #if NO_READ_WRITE == 0 /* reads / writes */
 #include "problems/hs21_tiny_qp_rw.h"
+#include "problems/max_ent.h"
 #else
 _SKIP(hs21_tiny_qp_rw)
-#endif
-
-/* TODO: this reads a file written with 32bit ints */
-#if defined(USE_LAPACK) && DLONG == 0 && NO_READ_WRITE == 0
-#include "problems/random_prob.h"
-#else
-_SKIP(random_prob)
+_SKIP(max_ent)
 #endif
 
 static const char *all_tests(void) {
@@ -62,12 +59,14 @@ static const char *all_tests(void) {
   mu_run_test(infeasible_tiny_qp);
   mu_run_test(unbounded_tiny_qp);
   mu_run_test(random_prob);
+  mu_run_test(max_ent);
   return 0;
 }
 int main(void) {
   const char *result = all_tests();
   if (result != 0) {
     scs_printf("%s\n", result);
+    scs_printf("TEST FAILED!\n");
   } else {
     scs_printf("ALL TESTS PASSED\n");
   }
