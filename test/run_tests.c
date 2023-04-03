@@ -32,8 +32,8 @@ _SKIP(test_validation)
 
 /* solve SDPs, requires blas / lapack */
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
-#include "problems/rob_gauss_cov_est.h"
 #include "problems/random_prob.h"
+#include "problems/rob_gauss_cov_est.h"
 #else
 _SKIP(rob_gauss_cov_est)
 _SKIP(random_prob)
