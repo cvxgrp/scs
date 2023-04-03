@@ -13,12 +13,12 @@
  *
  */
 
-static inline scs_int _isfinite(float x) {
+static inline scs_int _isfinite(scs_float x) {
   return ABS(x) < EXP_CONE_INFINITY_VALUE;
 }
 
-static inline float _clip(float x, float l, float u) {
-  return MIN(MAX(x, l), u);
+static inline scs_float _clip(scs_float x, scs_float l, scs_float u) {
+  return MAX(l, MIN(u, x));
 }
 
 /* As defined in Friberg, 2021 (multiplied by positive polynomial) */
@@ -38,6 +38,9 @@ static void hfun(const scs_float *v0, scs_float rho, scs_float *f,
 /* Binary search for the root of the hfun function */
 static scs_float root_search_binary(const scs_float *v0, scs_float xl,
                                     scs_float xh, scs_float x0) {
+#if VERBOSITY > 0
+  scs_printf("Exp cone: Newton method failed, resorting to binary search.\n");
+#endif
   const scs_float EPS = 1e-10; /* expensive so loosen tol */
   const scs_int MAXITER = 30;
   scs_int i;
@@ -80,6 +83,8 @@ static scs_float root_search_newton(const scs_float *v0, scs_float xl,
     }
 
     if (xu <= xl) {
+      xu = 0.5 * (xu + xl);
+      xl = xu;
       break;
     }
 
@@ -103,6 +108,9 @@ static scs_float root_search_newton(const scs_float *v0, scs_float xl,
     }
   }
   if (i < MAXITER) { /* Newton's method converged */
+#if VERBOSITY > 0
+    scs_printf("Exp cone: Newton iters:%i, f:%.4e, df:%.4e\n", (int)i, f, df);
+#endif
     return _clip(x, xl, xu);
   }
   /* Fall back to binary search if Newton failed */
