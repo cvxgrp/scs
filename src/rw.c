@@ -234,7 +234,7 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   if (file_int_sz != (uint32_t)sizeof(scs_int)) {
     scs_printf(
         "Warning, sizeof(file int) is %lu, but scs expects sizeof(int) %lu. "
-        "SCS will attempt to cast the data which may be slow. "
+        "SCS will attempt to cast the data, which may be slow. "
         "This message can be avoided by recompiling with the correct flags.\n",
         (unsigned long)file_int_sz, (unsigned long)sizeof(scs_int));
   }
