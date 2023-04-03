@@ -1,7 +1,7 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/util.o src/cones.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+SCS_OBJECTS = src/util.o src/cones.o src/exp_cone.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
 SCS_O = src/scs.o
 SCS_INDIR_O = src/scs_indir.o
 
@@ -41,6 +41,7 @@ $(SCS_INDIR_O): src/scs.c $(INC_FILES)
 
 src/util.o	: src/util.c $(INC_FILES)
 src/cones.o	: src/cones.c $(INC_FILES)
+src/exp_cone.o	: src/exp_cone.c $(INC_FILES)
 src/aa.o	: src/aa.c $(INC_FILES)
 src/rw.o	: src/rw.c $(INC_FILES)
 src/linalg.o: src/linalg.c $(INC_FILES)
