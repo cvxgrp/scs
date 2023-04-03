@@ -48,20 +48,29 @@ static void write_scs_cone(const ScsCone *k, FILE *fout) {
   fwrite(k->p, sizeof(scs_float), k->psize, fout);
 }
 
-static size_t read_int(scs_int * addr, size_t file_int_sz, size_t nitems, FILE * fin) {
+static size_t read_int(scs_int *dest, size_t file_int_sz, size_t nitems,
+                       FILE *fin) {
   if (file_int_sz == sizeof(scs_int)) {
-    return fread(addr, sizeof(scs_int), nitems, fin);
+    return fread(dest, sizeof(scs_int), nitems, fin);
   }
-  void * ptr = scs_calloc(nitems, file_int_sz);
+  void *ptr = scs_calloc(nitems, file_int_sz);
   size_t val = fread(ptr, file_int_sz, nitems, fin);
   scs_int i;
   switch (file_int_sz) {
-    case 4:
-      for (i=0; i<nitems; ++i) addr[i] = (scs_int)(((int *)ptr)[i]);
-    case 8:
-      for (i=0; i<nitems; ++i) addr[i] = (scs_int)(((long long *)ptr)[i]);
+  case 4:
+    for (i = 0; i < nitems; ++i) {
+      dest[i] = (scs_int)(((int *)ptr)[i]);
+    }
+    break;
+  case 8:
+    for (i = 0; i < nitems; ++i) {
+      dest[i] = (scs_int)(((long long *)ptr)[i]);
+    }
+    break;
   }
-  scs_free(ptr);
+  if (ptr) {
+    scs_free(ptr);
+  }
   return val;
 }
 
