@@ -161,6 +161,7 @@ set(${PROJECT_NAME}_SRC
     src/aa.c
     src/cones.c
     src/ctrlc.c
+    src/exp_cone.c
     src/linalg.c
     src/normalize.c
     src/rw.c
