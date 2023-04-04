@@ -68,7 +68,7 @@ static const char *hs21_tiny_qp(void) {
   scs_set_default_settings(stgs);
   stgs->eps_abs = 1e-6;
   stgs->eps_rel = 1e-6;
-  stgs->eps_infeas = 0;
+  stgs->eps_infeas = 0.; /* disable due to gpu test finding cert */
 
   exitflag = scs(d, k, stgs, sol, &info);
 
