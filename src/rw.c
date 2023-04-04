@@ -48,6 +48,10 @@ static void write_scs_cone(const ScsCone *k, FILE *fout) {
   fwrite(k->p, sizeof(scs_float), k->psize, fout);
 }
 
+/* Read integer data from file. If the integer width on file is 
+ * different to scs_int then it will cast the ints after reading
+ * to be compatible with the SCS data types.
+ */
 static size_t read_int(scs_int *dest, size_t file_int_sz, size_t nitems,
                        FILE *fin) {
   if (file_int_sz == sizeof(scs_int)) {
