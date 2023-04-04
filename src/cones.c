@@ -4,10 +4,8 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
-#define CONE_TOL (1e-9)
-#define CONE_THRESH (1e-8)
-#define EXP_CONE_MAX_ITERS (100)
 #define BOX_CONE_MAX_ITERS (25)
+#define POW_CONE_TOL (1e-9)
 #define POW_CONE_MAX_ITERS (20)
 
 /* Box cone limits (+ or -) taken to be INF */
@@ -34,6 +32,11 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 #endif
 
 #endif
+
+/* Forward declare exponential cone projection routine.
+ * Implemented in exp_cone.c.
+ */
+scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 
 void SCS(free_cone)(ScsCone *k) {
   if (k) {
@@ -323,118 +326,6 @@ char *SCS(get_cone_header)(const ScsCone *k) {
             (long)(3 * k->psize));
   }
   return tmp;
-}
-
-static scs_float exp_newton_one_d(scs_float rho, scs_float y_hat,
-                                  scs_float z_hat, scs_float w) {
-  scs_float t_prev, t = MAX(w - z_hat, MAX(-z_hat, 1e-9));
-  scs_float f = 1., fp = 1.;
-  scs_int i;
-  for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
-    t_prev = t;
-    f = t * (t + z_hat) / rho / rho - y_hat / rho + log(t / rho) + 1;
-    fp = (2 * t + z_hat) / rho / rho + 1 / t;
-
-    t = t - f / fp;
-
-    if (t <= -z_hat) {
-      t = -z_hat;
-      break;
-    } else if (t <= 0) {
-      t = 0;
-      break;
-    } else if (ABS(t - t_prev) < CONE_TOL) {
-      break;
-    } else if (SQRTF(f * f / fp) < CONE_TOL) {
-      break;
-    }
-  }
-  if (i == EXP_CONE_MAX_ITERS) {
-    scs_printf("warning: exp cone newton step hit maximum %i iters\n", (int)i);
-    scs_printf("rho=%1.5e; y_hat=%1.5e; z_hat=%1.5e; w=%1.5e; f=%1.5e, "
-               "fp=%1.5e, t=%1.5e, t_prev= %1.5e\n",
-               rho, y_hat, z_hat, w, f, fp, t, t_prev);
-  }
-  return t + z_hat;
-}
-
-static void exp_solve_for_x_with_rho(const scs_float *v, scs_float *x,
-                                     scs_float rho, scs_float w) {
-  x[2] = exp_newton_one_d(rho, v[1], v[2], w);
-  x[1] = (x[2] - v[2]) * x[2] / rho;
-  x[0] = v[0] - rho;
-}
-
-static scs_float exp_calc_grad(const scs_float *v, scs_float *x, scs_float rho,
-                               scs_float w) {
-  exp_solve_for_x_with_rho(v, x, rho, w);
-  if (x[1] <= 1e-12) {
-    return x[0];
-  }
-  return x[0] + x[1] * log(x[1] / x[2]);
-}
-
-static void exp_get_rho_ub(const scs_float *v, scs_float *x, scs_float *ub,
-                           scs_float *lb) {
-  *lb = 0;
-  *ub = 0.125;
-  while (exp_calc_grad(v, x, *ub, v[1]) > 0) {
-    *lb = *ub;
-    (*ub) *= 2;
-  }
-}
-
-/* project onto the exponential cone, v has dimension *exactly* 3 */
-static scs_int proj_exp_cone(scs_float *v) {
-  scs_int i;
-  scs_float ub, lb, rho, g, x[3];
-  scs_float r = v[0], s = v[1], t = v[2];
-
-  /* v in cl(Kexp) */
-  if ((s * exp(r / s) - t <= CONE_THRESH && s > 0) ||
-      (r <= 0 && s == 0 && t >= 0)) {
-    return 0;
-  }
-
-  /* -v in Kexp^* */
-  if ((r > 0 && r * exp(s / r) + exp(1) * t <= CONE_THRESH) ||
-      (r == 0 && s <= 0 && t <= 0)) {
-    memset(v, 0, 3 * sizeof(scs_float));
-    return 0;
-  }
-
-  /* special case with analytical solution */
-  if (r < 0 && s < 0) {
-    v[1] = 0.0;
-    v[2] = MAX(v[2], 0);
-    return 0;
-  }
-
-  /* iterative procedure to find projection, bisects on dual variable: */
-  exp_get_rho_ub(v, x, &ub, &lb); /* get starting upper and lower bounds */
-  for (i = 0; i < EXP_CONE_MAX_ITERS; ++i) {
-    rho = (ub + lb) / 2; /* halfway between upper and lower bounds */
-    g = exp_calc_grad(v, x, rho, x[1]); /* calculates gradient wrt dual var */
-    if (g > 0) {
-      lb = rho;
-    } else {
-      ub = rho;
-    }
-    if (ub - lb < CONE_TOL) {
-      break;
-    }
-  }
-#if VERBOSITY > 10
-  scs_printf("exponential cone proj iters %i\n", (int)i);
-#endif
-  if (i == EXP_CONE_MAX_ITERS) {
-    scs_printf("warning: exp cone outer step hit maximum %i iters\n", (int)i);
-    scs_printf("r=%1.5e; s=%1.5e; t=%1.5e\n", r, s, t);
-  }
-  v[0] = x[0];
-  v[1] = x[1];
-  v[2] = x[2];
-  return 0;
 }
 
 static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
@@ -741,13 +632,13 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   scs_int i;
   /* v in K_a */
   if (xh >= 0 && yh >= 0 &&
-      CONE_THRESH + POWF(xh, a) * POWF(yh, (1 - a)) >= rh) {
+      POW_CONE_TOL + POWF(xh, a) * POWF(yh, (1 - a)) >= rh) {
     return;
   }
 
   /* -v in K_a^* */
   if (xh <= 0 && yh <= 0 &&
-      CONE_THRESH + POWF(-xh, a) * POWF(-yh, 1 - a) >=
+      POW_CONE_TOL + POWF(-xh, a) * POWF(-yh, 1 - a) >=
           rh * POWF(a, a) * POWF(1 - a, 1 - a)) {
     v[0] = v[1] = v[2] = 0;
     return;
@@ -760,7 +651,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     y = pow_calc_x(r, yh, rh, 1 - a);
 
     f = pow_calc_f(x, y, r, a);
-    if (ABS(f) < CONE_TOL) {
+    if (ABS(f) < POW_CONE_TOL) {
       break;
     }
 
@@ -829,51 +720,16 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  if (k->ep) { /* doesn't use r_y */
-               /*
-                * exponential cone is not self dual, if s \in K
-                * then y \in K^* and so if K is the primal cone
-                * here we project onto K^*, via Moreau
-                * \Pi_C^*(y) = y + \Pi_C(-y)
-                */
+  if (k->ep || k->ed) { /* doesn't use r_y */
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (i = 0; i < k->ep; ++i) {
-      proj_exp_cone(&(x[count + 3 * i]));
+    for (i = 0; i < k->ep + k->ed; ++i) {
+      /* provided in exp_cone.c */
+      SCS(proj_pd_exp_cone)(&(x[count + 3 * i]), i < k->ep);
     }
-    count += 3 * k->ep;
+    count += 3 * (k->ep + k->ed);
   }
-
-  /* dual exponential cone */
-  if (k->ed) { /* doesn't use r_y */
-    /*
-     * exponential cone is not self dual, if s \in K
-     * then y \in K^* and so if K is the primal cone
-     * here we project onto K^*, via Moreau
-     * \Pi_C^*(y) = y + \Pi_C(-y)
-     */
-    scs_int idx;
-    scs_float r, s, t;
-    SCS(scale_array)(&(x[count]), -1, 3 * k->ed); /* x = -x; */
-#ifdef _OPENMP
-#pragma omp parallel for private(r, s, t, idx)
-#endif
-    for (i = 0; i < k->ed; ++i) {
-      idx = count + 3 * i;
-      r = x[idx];
-      s = x[idx + 1];
-      t = x[idx + 2];
-
-      proj_exp_cone(&(x[idx]));
-
-      x[idx] -= r;
-      x[idx + 1] -= s;
-      x[idx + 2] -= t;
-    }
-    count += 3 * k->ed;
-  }
-
   if (k->psize && k->p) { /* doesn't use r_y */
     scs_float v[3];
     scs_int idx;

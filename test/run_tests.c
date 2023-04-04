@@ -12,6 +12,7 @@
 #include "problems/qafiro_tiny_qp.h"
 #include "problems/small_lp.h"
 #include "problems/small_qp.h"
+#include "problems/test_exp_cone.h"
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
@@ -60,6 +61,7 @@ static const char *all_tests(void) {
   mu_run_test(unbounded_tiny_qp);
   mu_run_test(random_prob);
   mu_run_test(max_ent);
+  mu_run_test(test_exp_cone);
   return 0;
 }
 int main(void) {
