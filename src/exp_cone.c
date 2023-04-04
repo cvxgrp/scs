@@ -135,7 +135,7 @@ static scs_float proj_primal_exp_cone_heuristic(const scs_float *v0,
   vp[0] = MIN(r0, 0);
   dist = SCS(norm_diff)(v0, vp, 3);
 
-  /* perspective scs_interior */
+  /* perspective interior */
   if (s0 > 0.0) {
     tp = MAX(t0, s0 * exp(r0 / s0));
     newdist = tp - t0;
@@ -160,7 +160,7 @@ static scs_float proj_polar_exp_cone_heuristic(const scs_float *v0,
   vd[0] = 0.0;
   dist = SCS(norm_diff)(v0, vd, 3);
 
-  /* perspective scs_interior */
+  /* perspective interior */
   if (r0 > 0.0) {
     td = MIN(t0, -r0 * exp(s0 / r0 - 1));
     newdist = t0 - td;
