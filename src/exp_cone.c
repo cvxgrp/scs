@@ -37,28 +37,30 @@ static void hfun(const scs_float *v0, scs_float rho, scs_float *f,
 
 /* Binary search for the root of the hfun function */
 static scs_float root_search_binary(const scs_float *v0, scs_float xl,
-                                    scs_float xh, scs_float x0) {
+                                    scs_float xu, scs_float x) {
 #if VERBOSITY > 0
   scs_printf("Exp cone: Newton method failed, resorting to binary search.\n");
 #endif
-  const scs_float EPS = 1e-10; /* expensive so loosen tol */
-  const scs_int MAXITER = 30;
+  const scs_float EPS = 1e-12; /* expensive so loosen tol */
+  const scs_int MAXITER = 40;
   scs_int i;
-  scs_float xx, f, df;
+  scs_float x_plus = x, f, df;
   for (i = 0; i < MAXITER; i++) {
-    hfun(v0, x0, &f, &df);
+    hfun(v0, x, &f, &df);
     if (f < 0.0) {
-      xl = x0;
+      xl = x;
     } else {
-      xh = x0;
+      xu = x;
     }
-
-    xx = 0.5 * (xl + xh);
-    if (ABS(xx - x0) <= EPS * MAX(1., ABS(xx)) || (xx == xl) || (xx == xh)) {
+    /* binary search step */
+    x_plus = 0.5 * (xl + xu);
+    if (ABS(x_plus - x) <= EPS * MAX(1., ABS(x_plus)) || (x_plus == xl) ||
+        (x_plus == xu)) {
       break;
     }
+    x = x_plus;
   }
-  return xx;
+  return x_plus;
 }
 
 /* Use damped Newton's to find the root of the hfun function */
