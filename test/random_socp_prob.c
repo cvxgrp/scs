@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
   gen_random_prob_data(nnz, col_nnz, d, k, opt_sol, seed);
   scs_set_default_settings(stgs);
 
-  stgs->write_data_filename = "random_socp_prob";
+  /* stgs->write_data_filename = "random_socp_prob"; */
 
   scs_printf("true pri opt = %4f\n", SCS(dot)(d->c, opt_sol->x, d->n));
   scs_printf("true dua opt = %4f\n", -SCS(dot)(d->b, opt_sol->y, d->m));
