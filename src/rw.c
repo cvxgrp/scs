@@ -178,7 +178,6 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k,
   uint32_t scs_float_sz = (uint32_t)sizeof(scs_float);
   const char *scs_version = SCS_VERSION;
   uint32_t scs_version_sz = (uint32_t)strlen(scs_version);
-  scs_printf("writing data to %s\n", stgs->write_data_filename);
   fwrite(&(scs_int_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_float_sz), sizeof(uint32_t), 1, fout);
   fwrite(&(scs_version_sz), sizeof(uint32_t), 1, fout);

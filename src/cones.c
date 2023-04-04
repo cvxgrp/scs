@@ -285,7 +285,7 @@ void SCS(finish_cone)(ScsConeWork *c) {
 }
 
 char *SCS(get_cone_header)(const ScsCone *k) {
-  char *tmp = (char *)scs_malloc(sizeof(char) * 512);
+  char *tmp = (char *)scs_malloc(512); /* sizeof(char) = 1 */
   scs_int i, soc_vars, sd_vars;
   sprintf(tmp, "cones: ");
   if (k->z) {
