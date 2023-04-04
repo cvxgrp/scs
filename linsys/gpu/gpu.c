@@ -19,13 +19,13 @@ void SCS(accum_by_atrans_gpu)(const ScsGpuMatrix *Ag,
     if (*buffer != SCS_NULL) {
       cudaFree(*buffer);
     }
-    cudaMalloc(buffer, *buffer_size);
+    cudaMalloc(buffer, new_buffer_size);
     *buffer_size = new_buffer_size;
   }
 
   CUSPARSE_GEN(SpMV)
   (cusparse_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &onef, Ag->descr, x,
-   &onef, y, SCS_CUDA_FLOAT, SCS_CSRMV_ALG, buffer);
+   &onef, y, SCS_CUDA_FLOAT, SCS_CSRMV_ALG, *buffer);
 }
 
 /* this is slow, use trans routine if possible */
@@ -48,13 +48,13 @@ void SCS(accum_by_a_gpu)(const ScsGpuMatrix *Ag, const cusparseDnVecDescr_t x,
     if (*buffer != SCS_NULL) {
       cudaFree(*buffer);
     }
-    cudaMalloc(buffer, *buffer_size);
+    cudaMalloc(buffer, new_buffer_size);
     *buffer_size = new_buffer_size;
   }
 
   CUSPARSE_GEN(SpMV)
   (cusparse_handle, CUSPARSE_OPERATION_TRANSPOSE, &onef, Ag->descr, x, &onef, y,
-   SCS_CUDA_FLOAT, SCS_CSRMV_ALG, buffer);
+   SCS_CUDA_FLOAT, SCS_CSRMV_ALG, *buffer);
 }
 
 /* This assumes that P has been made full (ie not triangular) and uses the
