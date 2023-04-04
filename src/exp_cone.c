@@ -78,6 +78,11 @@ static scs_float root_search_newton(const scs_float *v0, scs_float xl,
 
   for (i = 0; i < MAXITER; i++) {
     hfun(v0, x, &f, &df);
+
+    if (ABS(f) <= EPS) { /* root found */
+      break;
+    }
+
     if (f < 0.0) {
       xl = x;
     } else {
