@@ -1,4 +1,4 @@
-#ifndef _SCS_FILE_TEST_CHASSIS 
+#ifndef _SCS_FILE_TEST_CHASSIS
 #define _SCS_FILE_TEST_CHASSIS
 
 #include "glbopts.h"
@@ -8,7 +8,7 @@
 #include "scs.h"
 #include "util.h"
 
-static const char *_test_prob_from_data(const char * file, scs_float OPT) {
+static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   scs_int read_status;
   ScsData *d;
   ScsCone *k;
