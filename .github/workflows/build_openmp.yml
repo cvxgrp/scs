@@ -14,9 +14,8 @@ jobs:
     - name: checkout project code
       uses: actions/checkout@v3
 
-    steps:
     - name: install deps
-    - run: sudo apt-get install libopenblas-dev liblapack-dev
+      run: sudo apt-get install libopenblas-dev liblapack-dev
 
     - name: Build SCS with OpenMP and test
       run: |
