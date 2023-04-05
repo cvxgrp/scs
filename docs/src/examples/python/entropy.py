@@ -53,7 +53,7 @@ x_scs = sol["x"][-n:]
 # Verify solution with CVXPY
 try:
     import cvxpy as cp
-except ImportError():
+except ModuleNotFoundError:
     print("This example requires CVXPY installed to run.")
     raise
 
