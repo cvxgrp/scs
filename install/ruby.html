@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python &mdash; SCS 3.2.3 documentation</title>
+  <title>Ruby &mdash; SCS 3.2.3 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/scs_theme.css" type="text/css" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="MATLAB" href="matlab.html" />
-    <link rel="prev" title="C / C++" href="c.html" /> 
+    <link rel="next" title="Linear System Solver" href="../linear_solver/index.html" />
+    <link rel="prev" title="R" href="r.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,11 +53,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python.html">Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
 <li class="toctree-l2"><a class="reference internal" href="r.html">R</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ruby.html">Ruby</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Ruby</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
@@ -83,9 +83,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Install</a></li>
-      <li class="breadcrumb-item active">Python</li>
+      <li class="breadcrumb-item active">Ruby</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/install/python.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/install/ruby.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -93,51 +93,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="python">
-<span id="python-install"></span><h1>Python<a class="headerlink" href="#python" title="Permalink to this heading"></a></h1>
-<p>The easiest way to install the python version is using <a class="reference external" href="https://pypi.org/project/pip/">pip</a>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>scs
-</pre></div>
-</div>
-<p>SCS depends on python packages numpy and scipy to run and on numpy to install.
-It uses numpy to tell it what <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS and LAPACK</span></a> libraries
-to link against. If you run into an error like this:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>RuntimeError:<span class="w"> </span>Found<span class="w"> </span>/usr/lib/libcblas.dylib,<span class="w"> </span>but<span class="w"> </span>that<span class="w"> </span>file<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span>symbolic<span class="w"> </span>link<span class="w"> </span>to
-the<span class="w"> </span>MacOS<span class="w"> </span>Accelerate<span class="w"> </span>framework,<span class="w"> </span>which<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>supported<span class="w"> </span>by<span class="w"> </span>NumPy
-</pre></div>
-</div>
-<p>you can try:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>openblas
-<span class="nv">OPENBLAS</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>brew<span class="w"> </span>--prefix<span class="w"> </span>openblas<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>scs
-</pre></div>
-</div>
-<p>You can also install directly from source</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/bodono/scs-python.git
-<span class="nb">cd</span><span class="w"> </span>scs-python
-python<span class="w"> </span>setup.py<span class="w"> </span>install
-</pre></div>
-</div>
-<p>You can install the MKL Pardiso interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--mkl
-</pre></div>
-</div>
-<p>You can install the GPU interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--gpu
-</pre></div>
-</div>
-<p>To test that SCS installed correctly, and you have pytest installed, run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
-</pre></div>
-</div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for the API.</p>
+  <section id="ruby">
+<span id="ruby-install"></span><h1>Ruby<a class="headerlink" href="#ruby" title="Permalink to this heading"></a></h1>
+<p>See instructions <a class="reference external" href="https://github.com/ankane/scs-ruby">here</a>.</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="c.html" class="btn btn-neutral float-left" title="C / C++" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="matlab.html" class="btn btn-neutral float-right" title="MATLAB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="r.html" class="btn btn-neutral float-left" title="R" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../linear_solver/index.html" class="btn btn-neutral float-right" title="Linear System Solver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -3,6 +3,7 @@
 R
 =
 
+R interface source code available `here <https://github.com/FlorianSchwendinger/scs>`_.
 After :ref:`installing <r_install>` you can load SCS using
 
 .. code:: r
@@ -14,7 +15,7 @@ Usage
 -----
 
 Use function `scs` to solve a given optimization problem. Additional information
-about the arguments can be found in the `R-Manual <https://cran.r-project.org/package=scs/scs.pdf>`
+about the arguments can be found in the `R-Manual <https://cran.r-project.org/package=scs/scs.pdf>`_
 or the :ref:`matrices <matrices>` of the homepage.
 
 .. code-block:: r
