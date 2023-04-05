@@ -60,7 +60,7 @@ static size_t read_int(scs_int *dest, size_t file_int_sz, size_t nitems,
   }
   void *ptr = scs_calloc(nitems, file_int_sz);
   size_t val = fread(ptr, file_int_sz, nitems, fin);
-  scs_int i;
+  size_t i;
   switch (file_int_sz) {
   case 4:
     for (i = 0; i < nitems; ++i) {
