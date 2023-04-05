@@ -181,7 +181,7 @@ exponential cone.</p>
 <span class="c1"># Verify solution with CVXPY</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">():</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This example requires CVXPY installed to run.&quot;</span><span class="p">)</span>
     <span class="k">raise</span>
 
