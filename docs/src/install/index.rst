@@ -15,6 +15,8 @@ Follow the links below for install instructions for each language.
 
 :ref:`R <r_install>`
 
+:ref:`Ruby <ruby_install>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -24,3 +26,4 @@ Follow the links below for install instructions for each language.
    matlab.rst
    julia.rst
    r.rst
+   ruby.rst

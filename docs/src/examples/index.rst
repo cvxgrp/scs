@@ -15,6 +15,8 @@ Here we present a few simple examples of calling SCS from different languages.
 
 :ref:`R <r_example>`
 
+:ref:`Ruby <ruby_example>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -24,4 +26,5 @@ Here we present a few simple examples of calling SCS from different languages.
    matlab.rst
    julia.rst
    r.rst
+   ruby.rst
 

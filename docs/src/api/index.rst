@@ -40,6 +40,8 @@ SCS is written in raw C code, with interfaces for several other languages.
 
 :ref:`R <r_interface>`
 
+:ref:`Ruby <ruby_interface>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -49,3 +51,4 @@ SCS is written in raw C code, with interfaces for several other languages.
    matlab.rst
    julia.rst
    r.rst
+   ruby.rst
