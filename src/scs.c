@@ -112,6 +112,9 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
   if (stgs->time_limit_secs) {
     scs_printf("\t  time_limit_secs: %.2e\n", stgs->time_limit_secs);
   }
+#ifdef _OPENMP
+  scs_printf("\t  compiled with openmp parallelization enabled\n");
+#endif
   if (lin_sys_method) {
     scs_printf("lin-sys:  %s\n\t  nnz(A): %li, nnz(P): %li\n", lin_sys_method,
                (long)d->A->p[d->A->n], d->P ? (long)d->P->p[d->P->n] : 0l);

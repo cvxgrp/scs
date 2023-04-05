@@ -143,7 +143,7 @@ MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_t
 USE_OPENMP = 0
 ifneq ($(USE_OPENMP), 0)
   override CFLAGS += -fopenmp
-  LDFLAGS += -lgomp
+  LDFLAGS += -fopenmp
 endif
 
 ############ SDPS: BLAS + LAPACK ############

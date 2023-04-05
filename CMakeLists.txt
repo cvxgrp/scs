@@ -121,6 +121,10 @@ message(STATUS "Printing is NOT ${NO_PRINTING}")
 option(NO_READ_WRITE "Disables all read/write functionality" OFF)
 message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 
+# Enable OpenMP support
+option(USE_OPENMP "Compile with OpenMP support" OFF)
+message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
+
 set(COMPILER_OPTS "-DUSE_LAPACK -DCTRLC")
 
 # Primitive types
@@ -146,7 +150,12 @@ if(NO_READ_WRITE)
   set(COMPILER_OPTS "-DNO_READ_WRITE=1 ${COMPILER_OPTS}")
 endif()
 
+if(USE_OPENMP)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+endif()
+
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
+message(STATUS "CMAKE_C_FLAGS = ${CMAKE_C_FLAGS}")
 
 # TODO this is a hack that overwrites the scs_types.h file, we should find a way
 # to do this that doesn't pollute the master directory.

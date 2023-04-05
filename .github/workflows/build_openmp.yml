@@ -1,0 +1,24 @@
+---
+name: Build and Test OpenMP
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout project code
+      uses: actions/checkout@v3
+
+    - name: install deps
+      run: sudo apt-get install libopenblas-dev liblapack-dev
+
+    - name: Build SCS with OpenMP and test
+      run: |
+        make USE_OPENMP=1 test
+        out/run_tests_direct
+        out/run_tests_indirect
