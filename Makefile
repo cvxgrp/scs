@@ -151,7 +151,7 @@ $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
 # 	$(ARCHIVE) $@ $^
 # 	- $(RANLIB) $@
 
-$(OUT)/libscsgpuindir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
+$(OUT)/libscsgpuindir.$(SHARED): $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS)
 
