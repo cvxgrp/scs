@@ -1038,7 +1038,7 @@ static inline void normalize_v(scs_float *v, scs_int len) {
 scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                   scs_int warm_start) {
   scs_int i;
-  SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
+  SCS(timer) solve_timer, inner_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
             total_lin_sys_time = 0.0;
   if (!sol || !w || !info) {
@@ -1067,43 +1067,52 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     /* Accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
     if (w->accel) {
-      SCS(tic)(&accel_timer);
+      SCS(tic)(&inner_timer);
       if (i > 0 && i % w->stgs->acceleration_interval == 0) {
         /* v overwritten with AA output here */
         w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
       }
-      total_accel_time += SCS(tocq)(&accel_timer);
+      total_accel_time += SCS(tocq)(&inner_timer);
     }
-
+  
+    SCS(tic)(&inner_timer);
     if (i >= FEASIBLE_ITERS) {
       /* normalize v *after* applying any acceleration */
       /* the input to the DR step should be normalized */
       normalize_v(w->v, l);
     }
+    scs_printf("normalize t: %1.2es\n", SCS(tocq)(&inner_timer));
 
+    
+    SCS(tic)(&inner_timer);
     /* store v_prev = v, *after* normalizing */
     memcpy(w->v_prev, w->v, l * sizeof(scs_float));
+    scs_printf("memcpy t: %1.2es\n", SCS(tocq)(&inner_timer));
 
     /******************* linear system solve ********************/
-    SCS(tic)(&lin_sys_timer);
+    SCS(tic)(&inner_timer);
     if (project_lin_sys(w, i) != 0) {
       return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
                      "error in project_lin_sys", "failure");
     }
-    total_lin_sys_time += SCS(tocq)(&lin_sys_timer);
+    total_lin_sys_time += SCS(tocq)(&inner_timer);
 
     /****************** project onto the cones ******************/
-    SCS(tic)(&cone_timer);
+    SCS(tic)(&inner_timer);
     if (project_cones(w, k, i) < 0) {
       return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
                      "error in project_cones", "failure");
     }
-    total_cone_time += SCS(tocq)(&cone_timer);
+    total_cone_time += SCS(tocq)(&inner_timer);
 
     /* compute [r;s;kappa], must be before dual var update */
     /* since Moreau decomp logic relies on v at start */
-    compute_rsk(w);
 
+    SCS(tic)(&inner_timer);
+    compute_rsk(w);
+    scs_printf("rsk t: %1.2es\n", SCS(tocq)(&inner_timer));
+
+    SCS(tic)(&inner_timer);
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
         return failure(w, w->d->m, w->d->n, sol, info, SCS_SIGINT,
@@ -1126,21 +1135,27 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       populate_residual_struct(w, i);
       print_summary(w, i, &solve_timer);
     }
+    scs_printf("resids t: %1.2es\n", SCS(tocq)(&inner_timer));
 
+    SCS(tic)(&inner_timer);
     /* If residuals are fresh then maybe compute new scale. */
     if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
       update_scale(w, k, i);
     }
+    scs_printf("scale t: %1.2es\n", SCS(tocq)(&inner_timer));
 
     /****************** dual variable step **********************/
     /* do this after update_scale due to remapping that happens there */
+    SCS(tic)(&inner_timer);
     update_dual_vars(w);
+    scs_printf("dual vars t: %1.2es\n", SCS(tocq)(&inner_timer));
 
     /* AA safeguard check.
      * Perform safeguarding *after* convergence check to prevent safeguard
      * overwriting converged iterate, since safeguard is on `v` and convergence
      * is on `u`.
      */
+    SCS(tic)(&inner_timer);
     if (w->accel && i % w->stgs->acceleration_interval == 0 && w->aa_norm > 0) {
       if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
         /* TODO should we copy u from u_prev here too? Then move above, possibly
@@ -1150,6 +1165,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
         w->accepted_accel_steps++;
       }
     }
+    scs_printf("safeguard vars t: %1.2es\n", SCS(tocq)(&inner_timer));
 
     /* Log *after* updating scale so residual recalc does not affect alg */
     if (w->stgs->log_csv_filename) {
