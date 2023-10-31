@@ -121,11 +121,14 @@ message(STATUS "Printing is NOT ${NO_PRINTING}")
 option(NO_READ_WRITE "Disables all read/write functionality" OFF)
 message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 
+option(USE_LAPACK "Whether to use BLAS/LAPACK" ON)
+message(STATUS "BLAS/LAPACK usage is ${USE_LAPACK}")
+
 # Enable OpenMP support
 option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
-set(COMPILER_OPTS "-DUSE_LAPACK -DCTRLC")
+set(COMPILER_OPTS "-DCTRLC")
 
 # Primitive types
 if(SFLOAT)
@@ -148,6 +151,10 @@ endif()
 
 if(NO_READ_WRITE)
   set(COMPILER_OPTS "-DNO_READ_WRITE=1 ${COMPILER_OPTS}")
+endif()
+
+if (USE_LAPACK)
+  set(COMPILER_OPTS "-DUSE_LAPACK ${COMPILER_OPTS}")
 endif()
 
 if(USE_OPENMP)
