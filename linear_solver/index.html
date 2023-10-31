@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=7895512d"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -61,7 +61,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv413ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_init_lin_sys_work()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv421scs_free_lin_sys_workP13ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">scs_free_lin_sys_work()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_solve_lin_sys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv422scs_get_lin_sys_methodv"><code class="docutils literal notranslate"><span class="pre">scs_get_lin_sys_method()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
@@ -96,7 +104,7 @@
            <div itemprop="articleBody">
              
   <section id="linear-system-solver">
-<span id="linear-solver"></span><h1>Linear System Solver<a class="headerlink" href="#linear-system-solver" title="Permalink to this heading"></a></h1>
+<span id="linear-solver"></span><h1>Linear System Solver<a class="headerlink" href="#linear-system-solver" title="Link to this heading"></a></h1>
 <p>At each iteration <span class="math notranslate nohighlight">\(k\)</span> SCS solves the following set of linear equations:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
@@ -121,13 +129,13 @@ which is a major advantage of this approach. Moreover, this system can be solved
 approximately so long as the errors satisfy a summability condition, which
 permits the use of approximate solvers that can scale to very large problems.</p>
 <section id="available-linear-solvers">
-<h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Permalink to this heading"></a></h2>
+<h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Link to this heading"></a></h2>
 <p>Each of the below linear solvers is included in their own binary. If linking
 against SCS directly, then to switch between them you must compile and link
 against the right binary. If calling SCS via one of the interfaces then you can
 choose between the different linear solvers using the appropriate settings.</p>
 <section id="sparse-direct">
-<span id="direct"></span><h3>Sparse direct<a class="headerlink" href="#sparse-direct" title="Permalink to this heading"></a></h3>
+<span id="direct"></span><h3>Sparse direct<a class="headerlink" href="#sparse-direct" title="Link to this heading"></a></h3>
 <p>The direct method is the default linear system solver in SCS and factorizes the
 above matrix using a sparse permuted LDL factorization. Then it solves the
 linear system at each iteration using the cached factors.  Since the linear
@@ -135,7 +143,7 @@ system is quasidefinite we have strong existence guarantees about the
 factorization.  It relies on the external (but included) <a class="reference external" href="https://github.com/DrTimothyAldenDavis/SuiteSparse">AMD</a> and <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> packages.</p>
 </section>
 <section id="mkl-pardiso">
-<span id="mkl"></span><h3>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Permalink to this heading"></a></h3>
+<span id="mkl"></span><h3>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Link to this heading"></a></h3>
 <p>The <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-c/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-iface.html">Intel MKL Pardiso solver</a>
 is a shared-memory multiprocessing parallel direct sparse solver which is
 included Intel oneAPI MKL library. This offers an alternative to the single
@@ -148,7 +156,7 @@ Intel MKL is now available for
 though it only offers limited support for non-Intel CPUs.</p>
 </section>
 <section id="sparse-indirect">
-<span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Permalink to this heading"></a></h3>
+<span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Link to this heading"></a></h3>
 <p>The indirect method solves the above linear system approximately with a
 ‘matrix-free’ method. To do this it first reduces the system to solving</p>
 <div class="math notranslate nohighlight">
@@ -168,21 +176,21 @@ the factorization is relatively cheap so the direct method is the default,
 however for very large problems the indirect solver can be faster.</p>
 </section>
 <section id="sparse-gpu-indirect-method">
-<span id="gpu-indirect"></span><h3>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Permalink to this heading"></a></h3>
+<span id="gpu-indirect"></span><h3>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Link to this heading"></a></h3>
 <p>The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU.</p>
 </section>
 </section>
 <section id="implementing-a-new-linear-solver">
-<span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Permalink to this heading"></a></h2>
+<span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Link to this heading"></a></h2>
 <p>In order to implement you own linear system solver, you need to implement the
 struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> that contains the workspace your solver requires,
 and implement the functions in <code class="code docutils literal notranslate"><span class="pre">include/linsys.h</span></code> as detailed below.
 See <code class="code docutils literal notranslate"><span class="pre">linsys</span></code> directory for examples.</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv413ScsLinSysWork">
-<span id="_CPPv313ScsLinSysWork"></span><span id="_CPPv213ScsLinSysWork"></span><span id="ScsLinSysWork"></span><span class="target" id="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">SCS_LIN_SYS_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsLinSysWork</span></span></span><a class="headerlink" href="#_CPPv413ScsLinSysWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv313ScsLinSysWork"></span><span id="_CPPv213ScsLinSysWork"></span><span id="ScsLinSysWork"></span><span class="target" id="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">SCS_LIN_SYS_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsLinSysWork</span></span></span><a class="headerlink" href="#_CPPv413ScsLinSysWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Struct containing linear system workspace. Implemented by linear solver. </p>
 </dd></dl>
 
@@ -190,7 +198,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float">
-<span id="_CPPv321scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_CPPv221scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a8ac979c387dc9951c40d017d1143a9f4"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv321scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_CPPv221scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a8ac979c387dc9951c40d017d1143a9f4"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float" title="Link to this definition"></a><br /></dt>
 <dd><p>Initialize <code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> structure and perform any necessary preprocessing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -208,7 +216,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv421scs_free_lin_sys_workP13ScsLinSysWork">
-<span id="_CPPv321scs_free_lin_sys_workP13ScsLinSysWork"></span><span id="_CPPv221scs_free_lin_sys_workP13ScsLinSysWork"></span><span id="scs_free_lin_sys_work__ScsLinSysWorkP"></span><span class="target" id="linsys_8h_1a5ae24bcf8738840e3ddedf42fc451a26"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_free_lin_sys_work</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_free_lin_sys_workP13ScsLinSysWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv321scs_free_lin_sys_workP13ScsLinSysWork"></span><span id="_CPPv221scs_free_lin_sys_workP13ScsLinSysWork"></span><span id="scs_free_lin_sys_work__ScsLinSysWorkP"></span><span class="target" id="linsys_8h_1a5ae24bcf8738840e3ddedf42fc451a26"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_free_lin_sys_work</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_free_lin_sys_workP13ScsLinSysWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Frees <code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> structure and associated allocated memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -219,7 +227,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float">
-<span id="_CPPv317scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv217scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a24229ab88459885462fcc7fa6759467f"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv317scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv217scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a24229ab88459885462fcc7fa6759467f"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Link to this definition"></a><br /></dt>
 <dd><p>Solves the linear system as required by SCS at each iteration: <div class="math notranslate nohighlight">
 \[\begin{split} \begin{bmatrix} (R_x + P) &amp; A^\top \\ A &amp; -R_y \\ \end{bmatrix} x = b \end{split}\]</div>
 </p>
@@ -241,7 +249,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float">
-<span id="_CPPv325scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="_CPPv225scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatCP"></span><span class="target" id="linsys_8h_1a60c71cb29b263ccb96b227b5c5635442"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">new_diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv325scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="_CPPv225scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatCP"></span><span class="target" id="linsys_8h_1a60c71cb29b263ccb96b227b5c5635442"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">new_diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float" title="Link to this definition"></a><br /></dt>
 <dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">R</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -255,7 +263,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv422scs_get_lin_sys_methodv">
-<span id="_CPPv322scs_get_lin_sys_methodv"></span><span id="_CPPv222scs_get_lin_sys_methodv"></span><span id="scs_get_lin_sys_method__void"></span><span class="target" id="linsys_8h_1a916ae46bf2bd801b82f79272d411b851"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_get_lin_sys_method</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422scs_get_lin_sys_methodv" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv322scs_get_lin_sys_methodv"></span><span id="_CPPv222scs_get_lin_sys_methodv"></span><span id="scs_get_lin_sys_method__void"></span><span class="target" id="linsys_8h_1a916ae46bf2bd801b82f79272d411b851"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_get_lin_sys_method</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422scs_get_lin_sys_methodv" title="Link to this definition"></a><br /></dt>
 <dd><p>Name of the linear solver.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>

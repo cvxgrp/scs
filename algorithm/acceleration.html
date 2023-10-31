@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=7895512d"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -67,7 +67,17 @@
 <li class="toctree-l4"><a class="reference internal" href="#relaxation">Relaxation</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#anderson-acceleration-api">Anderson acceleration API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#anderson-acceleration-api">Anderson acceleration API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_float"><code class="docutils literal notranslate"><span class="pre">aa_float</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv46aa_int"><code class="docutils literal notranslate"><span class="pre">aa_int</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv46AaWork"><code class="docutils literal notranslate"><span class="pre">AaWork</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"><code class="docutils literal notranslate"><span class="pre">aa_init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_safeguard()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv49aa_finishP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_finish()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_resetP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_reset()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="relaxation.html">Relaxation</a></li>
@@ -112,7 +122,7 @@
            <div itemprop="articleBody">
              
   <section id="acceleration">
-<span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>Acceleration<a class="headerlink" href="#acceleration" title="Link to this heading"></a></h1>
 <p>SCS includes Anderson acceleration (AA), which can be used to speed up
 convergence. AA is a quasi-Newton method for the acceleration of fixed point
 iterations and can dramatically speed up convergence in practice, especially if
@@ -121,7 +131,7 @@ instability of the solver and so should be used with caution. It is an open
 research question how to best implement AA in practice to ensure good
 performance across all problems and we welcome any <a class="reference internal" href="../contributing/index.html#contributing"><span class="std std-ref">contributions</span></a> in that direction!</p>
 <section id="mathematical-details">
-<h2>Mathematical details<a class="headerlink" href="#mathematical-details" title="Permalink to this heading"></a></h2>
+<h2>Mathematical details<a class="headerlink" href="#mathematical-details" title="Link to this heading"></a></h2>
 <p>The discussion here is taken from section 2 of our <a class="reference external" href="https://web.stanford.edu/~boyd/papers/nonexp_global_aa1.html">paper</a>.
 Consider the problem of finding a fixed point of the function <span class="math notranslate nohighlight">\(f:
 \mathbf{R}^n \rightarrow \mathbf{R}^n\)</span>, i.e.,</p>
@@ -146,7 +156,7 @@ choosing the weights <span class="math notranslate nohighlight">\(\alpha \in \ma
 to choose them, corresponding to type-I and type-II AA (named for the type-I and
 type-II Broyden updates). We shall present type-II first.</p>
 <section id="type-ii-aa">
-<h3>Type-II AA<a class="headerlink" href="#type-ii-aa" title="Permalink to this heading"></a></h3>
+<h3>Type-II AA<a class="headerlink" href="#type-ii-aa" title="Link to this heading"></a></h3>
 <p>Define the residual <span class="math notranslate nohighlight">\(g: \mathbf{R}^n \rightarrow \mathbf{R}^n\)</span> of
 <span class="math notranslate nohighlight">\(f\)</span> to be <span class="math notranslate nohighlight">\(g(x) = x - f(x)\)</span>. Note that any fixed point
 <span class="math notranslate nohighlight">\(x^\star\)</span> satisfies <span class="math notranslate nohighlight">\(g(x^\star) = 0\)</span>.
@@ -190,7 +200,7 @@ a generalized second (or type-II) Broyden’s update of <span class="math notran
 the inverse multi-secant condition.</p>
 </section>
 <section id="type-i-aa">
-<h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Permalink to this heading"></a></h3>
+<h3>Type-I AA<a class="headerlink" href="#type-i-aa" title="Link to this heading"></a></h3>
 <p>In the same spirit, we define type-I AA, in which we find an approximate
 Jacobian of <span class="math notranslate nohighlight">\(g\)</span> minimizing <span class="math notranslate nohighlight">\(\|H_k-I\|_F\)</span> subject to the multi-secant
 condition <span class="math notranslate nohighlight">\(H_kS_k=Y_k\)</span>. Assuming that <span class="math notranslate nohighlight">\(S_k\)</span> is full column rank, we
@@ -211,7 +221,7 @@ matrix.</p>
 </section>
 </section>
 <section id="in-scs">
-<h2>In SCS<a class="headerlink" href="#in-scs" title="Permalink to this heading"></a></h2>
+<h2>In SCS<a class="headerlink" href="#in-scs" title="Link to this heading"></a></h2>
 <p>In SCS both types of acceleration are available, though by default type-I is
 used since it tends to have better performance.  If you wish to use AA then set
 the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well for
@@ -232,7 +242,7 @@ for this parameter, but 10 appears to work well in practice and is the default.<
 away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
 how best to solve and update the equations is still open.</p>
 <section id="regularization">
-<h3>Regularization<a class="headerlink" href="#regularization" title="Permalink to this heading"></a></h3>
+<h3>Regularization<a class="headerlink" href="#regularization" title="Link to this heading"></a></h3>
 <p>By default we also add a small amount of regularization to the matrices
 that are being inverted in the above expressions, ie, in the type-II update</p>
 <div class="math notranslate nohighlight">
@@ -252,7 +262,7 @@ into the matrices by appending <span class="math notranslate nohighlight">\(\sqr
 to solve the equations.</p>
 </section>
 <section id="max-gamma-norm">
-<h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Permalink to this heading"></a></h3>
+<h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Link to this heading"></a></h3>
 <p>As the algorithm converges to the fixed point the matrices to be inverted
 can become ill-conditioned and AA can become unstable. In this case the
 <span class="math notranslate nohighlight">\(\gamma\)</span> vector can become very large. As a simple heuristic we reject
@@ -260,7 +270,7 @@ the AA update and reset the AA state whenever <span class="math notranslate nohi
 than <code class="code docutils literal notranslate"><span class="pre">max_weight_norm</span></code> (eg, something very large like <span class="math notranslate nohighlight">\(10^{10}\)</span>).</p>
 </section>
 <section id="safeguarding">
-<h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Permalink to this heading"></a></h3>
+<h3>Safeguarding<a class="headerlink" href="#safeguarding" title="Link to this heading"></a></h3>
 <p>We also apply a safeguarding step to the output of the AA step. Explicitly, let
 <span class="math notranslate nohighlight">\(x^k\)</span> be the current iteration and let <span class="math notranslate nohighlight">\(x_\mathrm{AA} = x^{k+1}\)</span> be
 the output of AA. We reject the AA step if</p>
@@ -273,7 +283,7 @@ it increases the residual from the previous iterate).  After rejecting a step we
 revert the iterate to <span class="math notranslate nohighlight">\(x^k\)</span> and reset the AA state.</p>
 </section>
 <section id="relaxation">
-<h3>Relaxation<a class="headerlink" href="#relaxation" title="Permalink to this heading"></a></h3>
+<h3>Relaxation<a class="headerlink" href="#relaxation" title="Link to this heading"></a></h3>
 <p>In some works relaxation has been shown to improve performance. Relaxation
 replaces the final step of AA by mixing the map inputs and outputs as follows:</p>
 <div class="math notranslate nohighlight">
@@ -285,23 +295,23 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 </section>
 </section>
 <section id="anderson-acceleration-api">
-<h2>Anderson acceleration API<a class="headerlink" href="#anderson-acceleration-api" title="Permalink to this heading"></a></h2>
+<h2>Anderson acceleration API<a class="headerlink" href="#anderson-acceleration-api" title="Link to this heading"></a></h2>
 <p>For completeness, we document the full Anderson acceleration API below.</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv48aa_float">
-<span id="_CPPv38aa_float"></span><span id="_CPPv28aa_float"></span><span id="aa_float"></span><span class="target" id="aa_8h_1a6ab1ca62f04bdb4c63d1cea9cb89b36f"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_float</span></span></span><a class="headerlink" href="#_CPPv48aa_float" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv38aa_float"></span><span id="_CPPv28aa_float"></span><span id="aa_float"></span><span class="target" id="aa_8h_1a6ab1ca62f04bdb4c63d1cea9cb89b36f"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_float</span></span></span><a class="headerlink" href="#_CPPv48aa_float" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv46aa_int">
-<span id="_CPPv36aa_int"></span><span id="_CPPv26aa_int"></span><span id="aa_int"></span><span class="target" id="aa_8h_1a518ce90ae9e4fcece7907247cd04d150"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_int</span></span></span><a class="headerlink" href="#_CPPv46aa_int" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv36aa_int"></span><span id="_CPPv26aa_int"></span><span id="aa_int"></span><span class="target" id="aa_8h_1a518ce90ae9e4fcece7907247cd04d150"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_int</span></span></span><a class="headerlink" href="#_CPPv46aa_int" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv46AaWork">
-<span id="_CPPv36AaWork"></span><span id="_CPPv26AaWork"></span><span id="AaWork"></span><span class="target" id="aa_8h_1abccab62fbdd940ce82c2e250335d8bcb"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">ACCEL_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AaWork</span></span></span><a class="headerlink" href="#_CPPv46AaWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv36AaWork"></span><span id="_CPPv26AaWork"></span><span id="AaWork"></span><span class="target" id="aa_8h_1abccab62fbdd940ce82c2e250335d8bcb"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">ACCEL_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AaWork</span></span></span><a class="headerlink" href="#_CPPv46AaWork" title="Link to this definition"></a><br /></dt>
 <dd></dd></dl>
 
 </div>
@@ -309,7 +319,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int">
-<span id="_CPPv37aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="_CPPv27aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="aa_init__aa_int.aa_int.aa_int.aa_float.aa_float.aa_float.aa_float.aa_int"></span><span class="target" id="aa_8h_1a6288bec767af6f27341a19c238d9b7ef"></span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">aa_init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">type1</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">regularization</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">relaxation</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">safeguard_factor</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">max_weight_norm</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">verbosity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv37aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="_CPPv27aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="aa_init__aa_int.aa_int.aa_int.aa_float.aa_float.aa_float.aa_float.aa_int"></span><span class="target" id="aa_8h_1a6288bec767af6f27341a19c238d9b7ef"></span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">aa_init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">type1</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">regularization</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">relaxation</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">safeguard_factor</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">max_weight_norm</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">verbosity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int" title="Link to this definition"></a><br /></dt>
 <dd><p>Initialize Anderson Acceleration, allocates memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -332,7 +342,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork">
-<span id="_CPPv38aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="_CPPv28aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="aa_apply__aa_floatP.aa_floatCP.AaWorkP"></span><span class="target" id="aa_8h_1addc105e961590f011f3989170cd975c6"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_apply</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv38aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="_CPPv28aa_applyP8aa_floatPK8aa_floatP6AaWork"></span><span id="aa_apply__aa_floatP.aa_floatCP.AaWorkP"></span><span class="target" id="aa_8h_1addc105e961590f011f3989170cd975c6"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_apply</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Apply Anderson Acceleration. The usage pattern should be as follows:</p>
 <p><ul>
 <li><p>for i = 0 .. N:<ul class="simple">
@@ -362,7 +372,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork">
-<span id="_CPPv312aa_safeguardP8aa_floatP8aa_floatP6AaWork"></span><span id="_CPPv212aa_safeguardP8aa_floatP8aa_floatP6AaWork"></span><span id="aa_safeguard__aa_floatP.aa_floatP.AaWorkP"></span><span class="target" id="aa_8h_1a9aa1e1902cb1d80dc5ee809e6a88189a"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_safeguard</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f_new</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x_new</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv312aa_safeguardP8aa_floatP8aa_floatP6AaWork"></span><span id="_CPPv212aa_safeguardP8aa_floatP8aa_floatP6AaWork"></span><span id="aa_safeguard__aa_floatP.aa_floatP.AaWorkP"></span><span class="target" id="aa_8h_1a9aa1e1902cb1d80dc5ee809e6a88189a"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_safeguard</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">f_new</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x_new</span></span>, <a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Apply safeguarding.</p>
 <p>This step is optional but can improve stability.</p>
 <dl class="field-list simple">
@@ -381,7 +391,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv49aa_finishP6AaWork">
-<span id="_CPPv39aa_finishP6AaWork"></span><span id="_CPPv29aa_finishP6AaWork"></span><span id="aa_finish__AaWorkP"></span><span class="target" id="aa_8h_1a38824bbb8c9e9120bb703f5d177034ec"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_finish</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49aa_finishP6AaWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv39aa_finishP6AaWork"></span><span id="_CPPv29aa_finishP6AaWork"></span><span id="aa_finish__AaWorkP"></span><span class="target" id="aa_8h_1a38824bbb8c9e9120bb703f5d177034ec"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_finish</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49aa_finishP6AaWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Finish Anderson Acceleration, clears memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -392,7 +402,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv48aa_resetP6AaWork">
-<span id="_CPPv38aa_resetP6AaWork"></span><span id="_CPPv28aa_resetP6AaWork"></span><span id="aa_reset__AaWorkP"></span><span class="target" id="aa_8h_1af838479f20a0a48b7484bfdbbca6c921"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_resetP6AaWork" title="Permalink to this definition"></a><br /></dt>
+<span id="_CPPv38aa_resetP6AaWork"></span><span id="_CPPv28aa_resetP6AaWork"></span><span id="aa_reset__AaWorkP"></span><span class="target" id="aa_8h_1af838479f20a0a48b7484bfdbbca6c921"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_resetP6AaWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Reset Anderson Acceleration.</p>
 <p>Resets AA as if at the first iteration, reuses original memory allocations.</p>
 <dl class="field-list simple">
