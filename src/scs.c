@@ -896,12 +896,13 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   if (w->stgs->acceleration_lookback) {
     /* TODO(HACK!) negative acceleration_lookback interpreted as type-II */
-    if (!(w->accel = aa_init(
-              l, ABS(w->stgs->acceleration_lookback),
-              w->stgs->acceleration_lookback > 0,
-              w->stgs->acceleration_lookback > 0 ? AA_REGULARIZATION_TYPE_1
-                                                 : AA_REGULARIZATION_TYPE_2,
-              AA_RELAXATION, AA_SAFEGUARD_FACTOR, AA_MAX_WEIGHT_NORM, 1))) {
+    if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
+            w->stgs->acceleration_lookback > 0,
+            w->stgs->acceleration_lookback > 0
+            ? AA_REGULARIZATION_TYPE_1
+            : AA_REGULARIZATION_TYPE_2,
+            AA_RELAXATION, AA_SAFEGUARD_FACTOR,
+            AA_MAX_WEIGHT_NORM, VERBOSITY))) {
       if (w->stgs->verbose) {
         scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
       }
