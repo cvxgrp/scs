@@ -138,7 +138,9 @@ aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
 
   for (i = 0; i < a->dim; ++i) {
     /* accumulate the average */
-    a->x[i] = (a->x[i] * a->iter + f[i]) / (a->iter + 1);
+    a->x[i] *=  a->iter / (a->iter + 1);
+    a->x[i] += f[i] / (a->iter + 1);
+    /* a->x[i] = (a->x[i] * a->iter + f[i]) / (a->iter + 1); */
   }
 
   a->iter++;
