@@ -331,7 +331,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
 static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   scs_int i;
 #ifdef USE_LAPACK
-  blas_int n_max = 0;
+  blas_int n_max = 1;
   blas_int neg_one = -1;
   blas_int info = 0;
   scs_float wkopt = 0.0;
@@ -356,7 +356,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
    &info);
 
   if (info != 0) {
-    scs_printf("FATAL: syev failure, info = %li\n", (long)info);
+    scs_printf("FATAL: syev workspace query failure, info = %li\n", (long)info);
     return -1;
   }
   c->lwork = (blas_int)(wkopt + 1); /* +1 for int casting safety */
