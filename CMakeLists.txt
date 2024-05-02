@@ -129,6 +129,7 @@ option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
 set(COMPILER_OPTS "-DCTRLC")
+set(LAPACK_LINK_LIBRARIES "")
 
 # Primitive types
 if(SFLOAT)
@@ -155,6 +156,7 @@ endif()
 
 if (USE_LAPACK)
   set(COMPILER_OPTS "-DUSE_LAPACK ${COMPILER_OPTS}")
+  list(APPEND LAPACK_LINK_LIBRARIES "blas" "lapack")
 endif()
 
 if(USE_OPENMP)
@@ -242,8 +244,8 @@ target_include_directories(
 # Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
-# The library depends on math (m) blas and lapack
-target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE m blas lapack)
+# The library depends on math (m) and (optionally) blas and lapack
+target_link_libraries(${${PROJECT_NAME}_DIRECT} PRIVATE m ${LAPACK_LINK_LIBRARIES})
 
 # Set some properties
 set_target_properties(
@@ -290,8 +292,8 @@ target_include_directories(
 target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS}
                                                                -DINDIRECT)
 
-# The library depends on math (m) blas and lapack
-target_link_libraries(${${PROJECT_NAME}_INDIRECT} PUBLIC m blas lapack)
+# The library depends on math (m) and (optionally) blas and lapack
+target_link_libraries(${${PROJECT_NAME}_INDIRECT} PUBLIC m ${LAPACK_LINK_LIBRARIES})
 
 # Set some properties
 set_target_properties(
