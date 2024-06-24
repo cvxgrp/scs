@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Jimver/cuda-toolkit@v0.2.5
+      - uses: Jimver/cuda-toolkit@v0.2.16
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: make gpu
       - run: make test_gpu
