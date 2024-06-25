@@ -12,7 +12,7 @@ jobs:
         id: cuda-toolkit
         with:
           method: network
-          sub-packages: '["cusparse", "cublas", "cudart"]'
+          non-cuda-sub-packages: '["libcublas", "libcusparse"]'
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: make gpu
       - run: make test_gpu
