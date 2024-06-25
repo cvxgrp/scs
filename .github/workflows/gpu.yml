@@ -10,7 +10,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Jimver/cuda-toolkit@v0.2.16
         id: cuda-toolkit
-      - run: nvcc -V
+        with:
+          method: network
+          sub-packages: '["cusparse", "cublas", "cudart"]'
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: make gpu
       - run: make test_gpu
