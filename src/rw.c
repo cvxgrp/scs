@@ -328,8 +328,15 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
                   "tau_normalized,"
                   "kap_normalized,"
                   "ax_nrm_inf,"
+                  "ax_s_nrm_inf"
                   "px_nrm_inf,"
                   "aty_nrm_inf,"
+                  "xt_p_x,"
+                  "xt_p_x_tau,"
+                  "ctx,"
+                  "ctx_tau,"
+                  "bty,"
+                  "bty_tau,"
                   "b_nrm_inf,"
                   "c_nrm_inf,"
                   "scale,"
@@ -385,8 +392,15 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   fprintf(fout, "%.16e,", r_n->tau);
   fprintf(fout, "%.16e,", r_n->kap);
   fprintf(fout, "%.16e,", SCS(norm_inf)(r->ax, w->d->m));
+  fprintf(fout, "%.16e,", SCS(norm_inf)(r->ax_s, w->d->m));
   fprintf(fout, "%.16e,", SCS(norm_inf)(r->px, w->d->n));
   fprintf(fout, "%.16e,", SCS(norm_inf)(r->aty, w->d->n));
+  fprintf(fout, "%.16e,", r->xt_p_x);
+  fprintf(fout, "%.16e,", r->xt_p_x_tau);
+  fprintf(fout, "%.16e,", r->ctx);
+  fprintf(fout, "%.16e,", r->ctx_tau);
+  fprintf(fout, "%.16e,", r->bty);
+  fprintf(fout, "%.16e,", r->bty_tau);
   fprintf(fout, "%.16e,", SCS(norm_inf)(w->b_orig, w->d->m));
   fprintf(fout, "%.16e,", SCS(norm_inf)(w->c_orig, w->d->n));
   fprintf(fout, "%.16e,", w->stgs->scale);

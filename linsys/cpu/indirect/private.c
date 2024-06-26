@@ -1,6 +1,6 @@
 #include "private.h"
 
-const char *scs_get_lin_sys_method() {
+const char *scs_get_lin_sys_method(void) {
   return "sparse-indirect-scs";
 }
 
