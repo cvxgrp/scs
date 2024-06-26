@@ -143,7 +143,7 @@ scs_float SCS(norm_2)(const scs_float *v, scs_int len) {
 scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
   blas_int bone = 1;
   blas_int blen = (blas_int)len;
-  return BLAS(lange)("Max", &blen, &bone, a, &bone, SCS_NULL);
+  return BLAS(lange)("Max", &blen, &bone, a, &blen, SCS_NULL);
 }
 
 /* axpy a += sc*b */
