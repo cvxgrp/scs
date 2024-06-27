@@ -17,8 +17,10 @@ extern "C" {
 /* single or double precision */
 #ifndef SFLOAT
 #define BLAS(x) d##x
+#define BLASI(x) id##x
 #else
 #define BLAS(x) s##x
+#define BLASI(x) is##x
 #endif
 #else
 /* this extra indirection is needed for BLASSUFFIX to work correctly as a
@@ -28,8 +30,10 @@ extern "C" {
 /* single or double precision */
 #ifndef SFLOAT
 #define BLAS(x) stitch__(d, x, BLASSUFFIX)
+#define BLASI(x) stitch__(id, x, BLASSUFFIX)
 #else
 #define BLAS(x) stitch__(s, x, BLASSUFFIX)
+#define BLASI(x) stitch__(is, x, BLASSUFFIX)
 #endif
 #endif
 
