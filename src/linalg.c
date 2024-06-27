@@ -102,12 +102,16 @@ extern "C" {
 scs_float BLAS(nrm2)(blas_int *n, const scs_float *x, blas_int *incx);
 scs_float BLAS(dot)(const blas_int *n, const scs_float *x, const blas_int *incx,
                     const scs_float *y, const blas_int *incy);
-scs_float BLAS(lange)(const char *norm, const blas_int *m, const blas_int *n,
-                      const scs_float *a, blas_int *lda, scs_float *work);
 void BLAS(axpy)(blas_int *n, const scs_float *a, const scs_float *x,
                 blas_int *incx, scs_float *y, blas_int *incy);
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
+blas_int BLASI(amax)(blas_int *n, const scs_float *x, blas_int *incx);
+
+/* Possibly not working correctly on all platforms.
+scs_float BLAS(lange)(const char *norm, const blas_int *m, const blas_int *n,
+                      const scs_float *a, blas_int *lda, scs_float *work);
+*/
 
 #ifdef __cplusplus
 }
@@ -140,10 +144,20 @@ scs_float SCS(norm_2)(const scs_float *v, scs_int len) {
   return BLAS(nrm2)(&blen, v, &bone);
 }
 
+/* Possibly not working correctly on all platforms.
 scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
   blas_int bone = 1;
   blas_int blen = (blas_int)len;
   return BLAS(lange)("Max", &blen, &bone, a, &blen, SCS_NULL);
+}
+*/
+
+scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  scs_int idx = (scs_int)BLASI(amax)(&blen, a, &bone);
+  /* Returned idx is 1-based. */
+  return ABS(a[idx - 1]);
 }
 
 /* axpy a += sc*b */
