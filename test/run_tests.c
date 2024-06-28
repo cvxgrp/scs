@@ -43,9 +43,11 @@ _SKIP(random_prob)
 #if NO_READ_WRITE == 0 /* reads / writes */
 #include "problems/hs21_tiny_qp_rw.h"
 #include "problems/max_ent.h"
+#include "problems/mpc_bug.h"
 #else
 _SKIP(hs21_tiny_qp_rw)
 _SKIP(max_ent)
+_SKIP(mpc_bug)
 #endif
 
 static const char *all_tests(void) {
@@ -61,6 +63,7 @@ static const char *all_tests(void) {
   mu_run_test(unbounded_tiny_qp);
   mu_run_test(random_prob);
   mu_run_test(max_ent);
+  mu_run_test(mpc_bug);
   mu_run_test(test_exp_cone);
   return 0;
 }

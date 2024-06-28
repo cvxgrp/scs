@@ -19,8 +19,11 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   scs_float perr, derr;
   scs_int success;
   const char *fail;
+  scs_float xt_p_x;
+  scs_float *px;
 
   read_status = SCS(read_data)(file, &d, &k, &stgs);
+  px = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
 
   if (read_status < 0) {
     return "Data read failure, exit.\n";
@@ -28,12 +31,22 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
 
   stgs->eps_abs = 1e-6;
   stgs->eps_rel = 1e-6;
+  /* Force verbosity for the test */
+  stgs->verbose = 1;
 
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   exitflag = scs(d, k, stgs, sol, &info);
 
-  perr = SCS(dot)(d->c, sol->x, d->n) - OPT;
-  derr = -SCS(dot)(d->b, sol->y, d->m) - OPT;
+  if (d->P) {
+    /* px = Px */
+    SCS(accum_by_p)(d->P, sol->x, px);
+    xt_p_x = SCS(dot)(px, sol->x, n);
+  } else {
+    xt_p_x = 0.;
+  }
+
+  perr = 0.5 * xt_p_x + SCS(dot)(d->c, sol->x, d->n) - OPT;
+  derr = -0.5 * xt_p_x - SCS(dot)(d->b, sol->y, d->m) - OPT;
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
@@ -47,6 +60,7 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   SCS(free_cone)(k);
   SCS(free_sol)(sol);
   scs_free(stgs);
+  scs_free(px);
 
   if (fail) {
     scs_printf("%s: FAILED\n", file);
