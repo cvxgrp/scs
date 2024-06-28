@@ -37,6 +37,7 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   exitflag = scs(d, k, stgs, sol, &info);
 
+  memset(px, 0, n * sizeof(scs_float));
   if (d->P) {
     /* px = Px */
     SCS(accum_by_p)(d->P, sol->x, px);
