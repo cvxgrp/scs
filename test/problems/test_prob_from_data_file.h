@@ -20,10 +20,9 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   scs_int success;
   const char *fail;
   scs_float xt_p_x;
-  scs_float *px;
+  scs_float *px = SCS_NULL;
 
   read_status = SCS(read_data)(file, &d, &k, &stgs);
-  px = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
 
   if (read_status < 0) {
     return "Data read failure, exit.\n";
@@ -37,9 +36,10 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   exitflag = scs(d, k, stgs, sol, &info);
 
-  memset(px, 0, n * sizeof(scs_float));
   if (d->P) {
     /* px = Px */
+    px = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
+    memset(px, 0, n * sizeof(scs_float));
     SCS(accum_by_p)(d->P, sol->x, px);
     xt_p_x = SCS(dot)(px, sol->x, n);
   } else {
@@ -61,8 +61,9 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   SCS(free_cone)(k);
   SCS(free_sol)(sol);
   scs_free(stgs);
-  scs_free(px);
-
+  if (px) {
+    scs_free(px);
+  }
   if (fail) {
     scs_printf("%s: FAILED\n", file);
   }
