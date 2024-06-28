@@ -213,6 +213,9 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
     r->res_unbdd_a = SAFEDIV_POS(nm_ax_s, -r->ctx_tau);
     r->res_unbdd_p = SAFEDIV_POS(nm_px, -r->ctx_tau);
   }
+  scs_printf("iter %i\n", r->last_iter);
+  scs_printf("bty_tau %.6f\n", r->bty_tau);
+  scs_printf("nm_aty %.6f\n", NORM(r->aty, n));
   if (r->bty_tau < 0) {
     nm_aty = NORM(r->aty, n);
     r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
