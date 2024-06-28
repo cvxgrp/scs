@@ -39,9 +39,9 @@ static const char *_test_prob_from_data(const char *file, scs_float OPT) {
   if (d->P) {
     /* px = Px */
     px = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
-    memset(px, 0, n * sizeof(scs_float));
+    memset(px, 0, d->n * sizeof(scs_float));
     SCS(accum_by_p)(d->P, sol->x, px);
-    xt_p_x = SCS(dot)(px, sol->x, n);
+    xt_p_x = SCS(dot)(px, sol->x, d->n);
   } else {
     xt_p_x = 0.;
   }
