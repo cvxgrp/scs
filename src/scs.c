@@ -218,7 +218,7 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   scs_printf("nm_aty %.6e\n", NORM(r->aty, n));
   if (r->bty_tau < 0) {
     nm_aty = NORM(r->aty, n);
-    r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
+    r->res_infeas = 1.0; /* SAFEDIV_POS(nm_aty, -r->bty_tau); */
   }
 }
 
