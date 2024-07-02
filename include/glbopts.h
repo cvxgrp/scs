@@ -40,7 +40,7 @@ extern "C" {
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)
 /* Tolerance to check negativity condition for infeasibility */
-#define EPS_INFEAS_TOL (1e-9)
+#define INFEAS_NEGATIVITY_TOL (1e-9)
 /* redefine printfs as needed */
 #if NO_PRINTING > 0     /* Disable all printing */
 #define scs_printf(...) /* No-op */

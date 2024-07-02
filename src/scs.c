@@ -207,13 +207,13 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   r->res_unbdd_a = NAN;
   r->res_unbdd_p = NAN;
   r->res_infeas = NAN;
-  if (r->ctx_tau < -EPS_INFEAS_TOL) {
+  if (r->ctx_tau < -INFEAS_NEGATIVITY_TOL) {
     nm_ax_s = NORM(r->ax_s, m);
     nm_px = NORM(r->px, n);
     r->res_unbdd_a = SAFEDIV_POS(nm_ax_s, -r->ctx_tau);
     r->res_unbdd_p = SAFEDIV_POS(nm_px, -r->ctx_tau);
   }
-  if (r->bty_tau < -EPS_INFEAS_TOL) {
+  if (r->bty_tau < -INFEAS_NEGATIVITY_TOL) {
     nm_aty = NORM(r->aty, n);
     r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
   }
