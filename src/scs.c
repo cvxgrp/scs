@@ -207,18 +207,15 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
   r->res_unbdd_a = NAN;
   r->res_unbdd_p = NAN;
   r->res_infeas = NAN;
-  if (r->ctx_tau < 0) {
+  if (r->ctx_tau < -EPS_INFEAS_TOL) {
     nm_ax_s = NORM(r->ax_s, m);
     nm_px = NORM(r->px, n);
     r->res_unbdd_a = SAFEDIV_POS(nm_ax_s, -r->ctx_tau);
     r->res_unbdd_p = SAFEDIV_POS(nm_px, -r->ctx_tau);
   }
-  scs_printf("iter %i\n", r->last_iter);
-  scs_printf("bty_tau %.6e\n", r->bty_tau);
-  scs_printf("nm_aty %.6e\n", NORM(r->aty, n));
-  if (r->bty_tau < 0) {
+  if (r->bty_tau < -EPS_INFEAS_TOL) {
     nm_aty = NORM(r->aty, n);
-    r->res_infeas = 1.0; /* SAFEDIV_POS(nm_aty, -r->bty_tau); */
+    r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
   }
 }
 
@@ -590,22 +587,22 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer) {
   scs_printf("\n");
 
 #if VERBOSITY > 0
-  scs_printf("Norm u = %4f, ", SCS(norm_2)(w->u, w->d->n + w->d->m + 1));
-  scs_printf("Norm u_t = %4f, ", SCS(norm_2)(w->u_t, w->d->n + w->d->m + 1));
-  scs_printf("Norm v = %4f, ", SCS(norm_2)(w->v, w->d->n + w->d->m + 1));
-  scs_printf("Norm rsk = %4f, ", SCS(norm_2)(w->rsk, w->d->n + w->d->m + 1));
-  scs_printf("Norm x = %4f, ", SCS(norm_2)(w->xys_orig->x, w->d->n));
-  scs_printf("Norm y = %4f, ", SCS(norm_2)(w->xys_orig->y, w->d->m));
-  scs_printf("Norm s = %4f, ", SCS(norm_2)(w->xys_orig->s, w->d->m));
-  scs_printf("Norm |Ax + s| = %1.2e, ", SCS(norm_2)(r->ax_s, w->d->m));
-  scs_printf("tau = %4f, ", w->u[w->d->n + w->d->m]);
-  scs_printf("kappa = %4f, ", w->rsk[w->d->n + w->d->m]);
-  scs_printf("|u - u_t| = %1.2e, ",
+  scs_printf("Norm u = %1.6e, ", SCS(norm_2)(w->u, w->d->n + w->d->m + 1));
+  scs_printf("Norm u_t = %1.6e, ", SCS(norm_2)(w->u_t, w->d->n + w->d->m + 1));
+  scs_printf("Norm v = %1.6e, ", SCS(norm_2)(w->v, w->d->n + w->d->m + 1));
+  scs_printf("Norm rsk = %1.6e, ", SCS(norm_2)(w->rsk, w->d->n + w->d->m + 1));
+  scs_printf("Norm x = %1.6e, ", SCS(norm_2)(w->xys_orig->x, w->d->n));
+  scs_printf("Norm y = %1.6e, ", SCS(norm_2)(w->xys_orig->y, w->d->m));
+  scs_printf("Norm s = %1.6e, ", SCS(norm_2)(w->xys_orig->s, w->d->m));
+  scs_printf("Norm |Ax + s| = %1.6e, ", SCS(norm_2)(r->ax_s, w->d->m));
+  scs_printf("tau = %1.6e, ", w->u[w->d->n + w->d->m]);
+  scs_printf("kappa = %1.6e, ", w->rsk[w->d->n + w->d->m]);
+  scs_printf("|u - u_t| = %1.6e, ",
              SCS(norm_diff)(w->u, w->u_t, w->d->n + w->d->m + 1));
-  scs_printf("res_infeas = %1.2e, ", r->res_infeas);
-  scs_printf("res_unbdd_a = %1.2e, ", r->res_unbdd_a);
-  scs_printf("res_unbdd_p = %1.2e, ", r->res_unbdd_p);
-  scs_printf("ctx_tau = %1.2e, ", r->ctx_tau);
+  scs_printf("res_infeas = %1.6e, ", r->res_infeas);
+  scs_printf("res_unbdd_a = %1.6e, ", r->res_unbdd_a);
+  scs_printf("res_unbdd_p = %1.6e, ", r->res_unbdd_p);
+  scs_printf("ctx_tau = %1.6e, ", r->ctx_tau);
   scs_printf("bty_tau = %1.2e\n", r->bty_tau);
 #endif
 
