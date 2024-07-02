@@ -51,7 +51,20 @@ _SKIP(mpc_bug)
 #endif
 
 static const char *all_tests(void) {
+  mu_run_test(test_validation);
+  mu_run_test(degenerate);
+  mu_run_test(small_lp);
+  mu_run_test(small_qp);
+  mu_run_test(rob_gauss_cov_est);
+  mu_run_test(hs21_tiny_qp);
+  mu_run_test(hs21_tiny_qp_rw);
+  mu_run_test(qafiro_tiny_qp);
+  mu_run_test(infeasible_tiny_qp);
+  mu_run_test(unbounded_tiny_qp);
+  mu_run_test(random_prob);
+  mu_run_test(max_ent);
   mu_run_test(mpc_bug);
+  mu_run_test(test_exp_cone);
   return 0;
 }
 int main(void) {
