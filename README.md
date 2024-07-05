@@ -8,7 +8,7 @@
 
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
-large-scale convex cone problems. The current version is `3.2.5`.
+large-scale convex cone problems. The current version is `3.2.6`.
 
 The full documentation is available [here](https://www.cvxgrp.org/scs/).
 
