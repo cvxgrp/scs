@@ -153,9 +153,14 @@ scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
 */
 
 scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
+  /* Follow the semantics of BLASI(lange) for zero-size array. */
+  scs_int idx;
   blas_int bone = 1;
   blas_int blen = (blas_int)len;
-  scs_int idx = (scs_int)BLASI(amax)(&blen, a, &bone);
+  if (len <= 0) {
+    return 0.0;
+  }
+  idx = (scs_int)BLASI(amax)(&blen, a, &bone);
   /* Returned idx is 1-based. */
   return ABS(a[idx - 1]);
 }
