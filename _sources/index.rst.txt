@@ -90,6 +90,22 @@ Features
 * **Accelerated**: Includes :ref:`acceleration <acceleration>` that can improve convergence to high accuracy.
 * **Battle-tested**: The first ADMM-based solver available, and in wide usage.
 
+Performance
+-----------
+
+SCS is a fast and reliable optimization library. For instance, it is one of the
+most performant solvers as determined by the third-party `QP solvers benchmark
+<https://github.com/qpsolvers/qpbenchmark>`_ on the challenging Maros-Meszaros
+QP test suite. This is despite SCS being a general quadratic conic solver and
+not specifically tailored for QPs.
+
+.. figure:: files/qp_solvers_benchmark.png
+   :scale: 80 %
+   :align: center
+   :alt: map to buried treasure
+
+   SCS is faster and more reliable than most other solvers.
+
 
 Development
 -----------
