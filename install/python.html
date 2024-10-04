@@ -55,7 +55,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
 <li class="toctree-l2"><a class="reference internal" href="r.html">R</a></li>
@@ -101,37 +104,34 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>scs
 </pre></div>
 </div>
-<p>SCS depends on python packages numpy and scipy to run and on numpy to install.
-It uses numpy to tell it what <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS and LAPACK</span></a> libraries
-to link against. If you run into an error like this:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>RuntimeError:<span class="w"> </span>Found<span class="w"> </span>/usr/lib/libcblas.dylib,<span class="w"> </span>but<span class="w"> </span>that<span class="w"> </span>file<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span>symbolic<span class="w"> </span>link<span class="w"> </span>to
-the<span class="w"> </span>MacOS<span class="w"> </span>Accelerate<span class="w"> </span>framework,<span class="w"> </span>which<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>supported<span class="w"> </span>by<span class="w"> </span>NumPy
-</pre></div>
-</div>
-<p>you can try:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>openblas
-<span class="nv">OPENBLAS</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>brew<span class="w"> </span>--prefix<span class="w"> </span>openblas<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>scs
-</pre></div>
-</div>
 <p>You can also install directly from source</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/bodono/scs-python.git
 <span class="nb">cd</span><span class="w"> </span>scs-python
-python<span class="w"> </span>setup.py<span class="w"> </span>install
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--verbose<span class="w"> </span>.
 </pre></div>
 </div>
-<p>You can install the MKL Pardiso interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--mkl
+<p>If you have MKL, you can install the MKL Pardiso interface using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--verbose<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>You can install the GPU interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--gpu
-</pre></div>
-</div>
+<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable MKL when solving. MKL is typically
+faster than the built-in linear system solver.</p>
 <p>To test that SCS installed correctly, and you have pytest installed, run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>.
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for the API.</p>
+<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for the full SCS python API.</p>
+<section id="legacy-options">
+<h2>Legacy options<a class="headerlink" href="#legacy-options" title="Link to this heading"></a></h2>
+<p>You can install with OpenMP parallelization support using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--openmp
+</pre></div>
+</div>
+<p>You can install the GPU interface using (the GPU solver is no longer recommended)</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--gpu
+</pre></div>
+</div>
+</section>
 </section>
 
 
