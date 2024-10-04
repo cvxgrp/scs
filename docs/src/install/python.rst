@@ -9,46 +9,43 @@ The easiest way to install the python version is using `pip <https://pypi.org/pr
 
   pip install scs
 
-SCS depends on python packages numpy and scipy to run and on numpy to install.
-It uses numpy to tell it what :ref:`BLAS and LAPACK <blas_lapack>` libraries
-to link against. If you run into an error like this:
-
-.. code:: bash
-
-  RuntimeError: Found /usr/lib/libcblas.dylib, but that file is a symbolic link to
-  the MacOS Accelerate framework, which is not supported by NumPy
-
-you can try:
-
-.. code:: bash
-
-  brew install openblas
-  OPENBLAS="$(brew --prefix openblas)" pip install scs
-
 You can also install directly from source
 
 .. code:: bash
 
   git clone --recursive https://github.com/bodono/scs-python.git
   cd scs-python
-  python setup.py install
+  python -m pip install --verbose .
 
-You can install the MKL Pardiso interface using
-
-.. code:: bash
-
-  python setup.py install --scs --mkl
-
-You can install the GPU interface using
+If you have MKL, you can install the MKL Pardiso interface using
 
 .. code:: bash
 
-  python setup.py install --scs --gpu
+  python -m pip install --verbose -Csetup-args=-Dlink_mkl=true .
+
+See :ref:`here <python_interface>` for how to enable MKL when solving. MKL is typically
+faster than the built-in linear system solver.
 
 To test that SCS installed correctly, and you have pytest installed, run
 
 .. code:: bash
 
-  pytest
+  python -m pytest .
 
-See :ref:`here <python_interface>` for the API.
+See :ref:`here <python_interface>` for the full SCS python API.
+
+Legacy options
+--------------
+
+You can install with OpenMP parallelization support using
+
+.. code:: bash
+
+  python legacy_setup.py install --scs --openmp
+
+You can install the GPU interface using (the GPU solver is no longer recommended)
+
+.. code:: bash
+
+  python legacy_setup.py install --scs --gpu
+
