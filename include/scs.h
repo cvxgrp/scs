@@ -139,6 +139,22 @@ typedef struct {
   scs_float *p;
   /** Number of (primal and dual) power cone triples. */
   scs_int psize;
+  /** Array of logdet cone constraints 'len(d) = dsize'. The dimension of a
+   * log-det cone is "n" and not "n+2" if the matrix has dimension n */
+  scs_int *d;
+  /** Length of logdet cone constraints array `d`. */
+  scs_int dsize;
+  /** Array of nuc norm cone constraints 'len(nuc_m) = len(nuc_n) = nucsize.*/
+  scs_int *nuc_m;
+  scs_int *nuc_n;
+  scs_int nucsize;
+  /** Array of ell1-norm cone constraints 'len(ell1) = ell1_size */
+  scs_int *ell1;
+  scs_int ell1_size;
+  /** Array of sum-of-largest-evals cone  */
+  scs_int *sl_n;
+  scs_int *sl_k;
+  scs_int sl_size;
 } ScsCone;
 
 /** Contains primal-dual solution arrays or a certificate of infeasibility.

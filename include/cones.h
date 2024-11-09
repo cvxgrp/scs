@@ -10,6 +10,9 @@ extern "C" {
 #include "scs_blas.h"
 #include "scs_work.h"
 #include <string.h>
+#include "util_spectral_cones.h" // for newton_stats
+
+
 
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
@@ -26,10 +29,36 @@ struct SCS_CONE_WORK {
   scs_int m;            /* total length of cone */
   /* box cone quantities */
   scs_float box_t_warm_start;
+
+  /* if the projection onto the logarithmic cone should be warmstarted*/
+  bool log_cone_warmstart;
+
+  /* Needed for ell1 norm cone projection */
+  Value_index *work_ell1;
+  scs_float *work_ell1_proj; 
+
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
   scs_float *Xs, *Z, *e, *work;
   blas_int lwork;
+
+  /* workspace for singular value decompositions: */
+  scs_float *s_nuc, *u_nuc, *vt_nuc, *work_nuc; 
+  blas_int lwork_nuc;
+  
+  /* workspace that is used internally in the logdet projection (for example,
+     the gradient and Hessian of the objective function in the projection
+     problem are stored using this memory) */
+  scs_float *work_logdet;
+
+  /* workspace to store the projection onto the logarithm cone */
+  scs_float *work_log_proj;
+
+  /* Stats for spectral projections, assuming there is only one spectral cone */
+  newton_stats newton_stats;
+
+  /* workspace for projection onto sum-largest-evals cone */
+  scs_float *work_sum_of_largest;
 #endif
 };
 

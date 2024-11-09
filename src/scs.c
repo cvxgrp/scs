@@ -1050,6 +1050,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   ScsSettings *stgs = w->stgs;
   /* set warm start */
   stgs->warm_start = warm_start;
+  w->cone_work->log_cone_warmstart = false;
 
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();

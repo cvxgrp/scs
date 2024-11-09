@@ -186,6 +186,15 @@ set(${PROJECT_NAME}_SRC
     src/scs.c
     src/scs_version.c
     src/util.c
+    src/spectral_cones/logdeterminant/log_cone_Newton.c
+    src/spectral_cones/logdeterminant/log_cone_IPM.c
+    src/spectral_cones/logdeterminant/log_cone_wrapper.c
+    src/spectral_cones/logdeterminant/logdet_cone.c
+    src/spectral_cones/nuclear/ell1_cone.c
+    src/spectral_cones/nuclear/nuclear_cone.c
+    src/spectral_cones/sum-largest/sum_largest_cone.c
+    src/spectral_cones/sum-largest/sum_largest_eval_cone.c
+    src/spectral_cones/util_spectral_cones.c
     ${LINSYS}/csparse.c
     ${LINSYS}/scs_matrix.c)
 
@@ -204,6 +213,7 @@ set(${PROJECT_NAME}_HDR
     include/scs_types.h
     include/scs_work.h
     include/util.h
+    include/util_spectral_cones.h
     ${LINSYS}/csparse.h
     ${LINSYS}/scs_matrix.h)
 
