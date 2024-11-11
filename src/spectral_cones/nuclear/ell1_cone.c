@@ -147,7 +147,7 @@ scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0, scs_float *proj
 
 #ifdef DEBUG
     //-------------------------------------------------------------------------
-    //               Check residuals - not needed in production?
+    //               Check residuals - not needed in production
     //-------------------------------------------------------------------------
     scs_float residuals[3];
     compute_cone_residuals_ell1(proj, t0, x0, n, residuals);
