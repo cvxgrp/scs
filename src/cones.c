@@ -384,7 +384,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       return -1;
     }
     for (i = 0; i < k->nucsize; ++i) {
-      if (k->nuc_m[i] < 1 || k->nuc_n[i] < 1 || k->nuc_n[i] < k->nuc_m[i]) {
+      if (k->nuc_m[i] < 1 || k->nuc_n[i] < 1 || k->nuc_n[i] > k->nuc_m[i]) {
         scs_printf("nuclear norm cone dimension error\n");
         return -1;
       }
