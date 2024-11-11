@@ -18,15 +18,15 @@
  * Last modified: 25 August 2024.
  */
 
-void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
-                blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
-                blas_int *info);
-blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
-                    const blas_int *k, const scs_float *alpha,
-                    const scs_float *a, const blas_int *lda,
-                    const scs_float *beta, scs_float *c, const blas_int *ldc);
-void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
-                const blas_int *incx);
+// void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
+//                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
+//                 blas_int *info);
+// blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
+//                     const blas_int *k, const scs_float *alpha,
+//                     const scs_float *a, const blas_int *lda,
+//                     const scs_float *beta, scs_float *c, const blas_int *ldc);
+// void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
+//                 const blas_int *incx);
 
 // forward declare from log_cone_wrapper.c
 scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, const scs_float *x0,
@@ -34,7 +34,7 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, const scs_float *x0,
                               newton_stats *stats, bool warm_start);
 
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
-                              newton_stats *stats)
+                              newton_stats *stats, scs_int offset)
 {
     // tvX = [t, v, X], where X represents the lower triangular part of a matrix
     // stored in a compact form and off-diagonal elements have been scaled by
@@ -97,12 +97,12 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
     //  Project onto spectral *vector* cone. Note that e is sqrt(2) times
     //  the eigenvalue vector we want to project. We therefore multiply
     //  tvX[0] and tvX[1] by sqrt(2). The projection of sqrt(2) * (t0, v0,
-    //  evals) is stored in c->work_log_proj.
-    //  OBS! It is assumed that c->work_log_proj is not overwritten after this,
-    //  so an implicit assumption is that there is only one logdet cone for now.
+    //  evals) is stored in current_log_proj 
+    // (or equivalently, in c->saved_log_projs + offset)
     // ----------------------------------------------------------------------
+    scs_float *current_log_proj = c->saved_log_projs + offset;
     scs_int status = log_cone_proj_wrapper(sqrt2 * tvX[0], sqrt2 * tvX[1], e,
-                                           c->work_log_proj, n, c->work_logdet,
+                                           current_log_proj,  n, c->work_logdet, 
                                            stats, c->log_cone_warmstart);
     
     if (status < 0)
@@ -119,7 +119,7 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
     // ----------------------------------------------------------------------
     //             recover projection onto spectral *matrix* cone
     // ----------------------------------------------------------------------
-    scs_float *evals_proj = c->work_log_proj + 2;
+    scs_float *evals_proj = current_log_proj + 2;
     for (i = 0; i < n; ++i)
     {
         assert(evals_proj[i] > 0);
@@ -138,8 +138,8 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
         memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Z[i * (n + 1)]),
                (n - i) * sizeof(scs_float));
     }
-    tvX[0] = sqrt2_inv * c->work_log_proj[0];
-    tvX[1] = sqrt2_inv * c->work_log_proj[1];
+    tvX[0] = sqrt2_inv * current_log_proj[0];
+    tvX[1] = sqrt2_inv * current_log_proj[1];
 
     // after the first iteration we can warm start the spectral projection
     c->log_cone_warmstart = true;

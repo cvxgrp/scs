@@ -8,8 +8,8 @@
 #define DUAL_FEAS_TOL 1e-2
 #define PRI_FEAS_TOL 1e-2
 #define COMP_TOL 1e-2
-#define DUAL_T_THRESHOLD 1e-12
-#define DUAL_X_THRESHOLD 1e-12
+#define DUAL_T_THRESHOLD 1e-8
+#define DUAL_X_THRESHOLD 1e-8
 
 #define NEWTON_SUCCESS 1
 #define IPM_VARIANT_0_SUCCESS 2
@@ -206,15 +206,11 @@ static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
     }
 
     // --------------------------------------------------------
-    //    Normalize the residuals
+    //    Normalize the residuals and assign the result
     // --------------------------------------------------------
     scs_float dual_norm = sqrt(dualt * dualt + dualv * dualv +
                                SCS(norm_sq)(dualx, n));
     scs_float pri_norm = SCS(norm_2)(tvx, n + 2);
-
-    // -------------------------------------------------------
-    //    Assign result and free allocated memory
-    // -------------------------------------------------------
     residuals[0] = dual_res / MAX(dual_norm, 1.0);
     residuals[1] = pri_res / MAX(pri_norm, 1.0);
     double scale = MAX(pri_norm, 1.0);

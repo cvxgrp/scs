@@ -52,7 +52,7 @@ struct SCS_CONE_WORK {
   scs_float *work_logdet;
 
   /* workspace to store the projection onto the logarithm cone */
-  scs_float *work_log_proj;
+  scs_float *saved_log_projs;
 
   /* Stats for spectral projections, assuming there is only one spectral cone */
   newton_stats newton_stats;

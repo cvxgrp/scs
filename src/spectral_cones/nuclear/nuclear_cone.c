@@ -17,13 +17,13 @@
  * Last modified: 25 August 2024.
  */
 
-void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
-                blas_int *n, blas_int *k, scs_float *alpha, scs_float *a,
-                blas_int *lda, scs_float *b, blas_int *ldb, scs_float *beta,
-                scs_float *c, blas_int *ldc);
+// void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
+//                 blas_int *n, blas_int *k, scs_float *alpha, scs_float *a,
+//                 blas_int *lda, scs_float *b, blas_int *ldb, scs_float *beta,
+//                 scs_float *c, blas_int *ldc);
 
-void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
-                const blas_int *incx);
+// void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
+//                 const blas_int *incx);
 
 void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
                  const blas_int *n, scs_float *a, const blas_int *lda,

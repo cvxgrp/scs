@@ -48,7 +48,7 @@ scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 
 // Forward declare spectral matrix cone projections
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, const scs_int n, ScsConeWork *c,
-                              newton_stats *stats);
+                              newton_stats *stats, scs_int offset);
 scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c);
 void SCS(proj_ell_one)(scs_float *tx, size_t n, ScsConeWork *c);
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
@@ -371,10 +371,6 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       scs_printf("logdet cone dimension error\n");
       return -1;
     }
-    if (k->dsize > 1) {
-      scs_printf("at most one logdet cone allowed for now\n");
-      return -1;
-    }
     for (i = 0; i < k->dsize; ++i) {
       if (k->d[i] < 1) {
         scs_printf("logdet cone dimension error\n");
@@ -385,10 +381,6 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
   if (k->nucsize && k->nuc_m && k->nuc_n) {
     if (k->nucsize < 0) {
       scs_printf("nuclear cone dimension error\n");
-      return -1;
-    }
-    if (k->nucsize > 1) {
-      scs_printf("at most one nuclear norm cone allowed for now\n");
       return -1;
     }
     for (i = 0; i < k->nucsize; ++i) {
@@ -411,10 +403,6 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
     }
   }
   if (k->sl_size && k->sl_n && k->sl_k) {
-    if (k->sl_size > 1) {
-      scs_printf("at most one sum-of-largest-eigenvalues cone allowed for now\n");
-      return -1;
-    }
     for (i = 0; i < k->sl_size; ++i) {
       if ((k->sl_k[i] >= k->sl_n[i]) || k->sl_k[i] <= 0) {
         scs_printf("sum-of-largest-eigenvalues cone dimension error\n");
@@ -439,8 +427,8 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->work_logdet) {
     scs_free(c->work_logdet);
   }
-  if (c->work_log_proj) {
-    scs_free(c->work_log_proj);
+  if (c->saved_log_projs) {
+    scs_free(c->saved_log_projs);
   }
   if (c->s_nuc){
     scs_free(c->s_nuc);
@@ -558,6 +546,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #ifdef USE_LAPACK
   blas_int n_max = 1;
   blas_int n_max_logdet = 1;
+  blas_int n_logdet_total = 0;
   blas_int n_max_sl = 1;
   blas_int neg_one = -1;
   blas_int info = 0;
@@ -585,6 +574,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   }
 
   for (i = 0; i < k->dsize; ++i) {
+      n_logdet_total += (blas_int)k->d[i];
       if (k->d[i] > n_max_logdet) {
         n_max_logdet = (blas_int)k->d[i];
       }
@@ -595,9 +585,12 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   // --------------------------------------------------------------------------
   if (k->dsize > 0) {
     c->work_logdet = (scs_float *)scs_calloc(22*n_max_logdet + 122, sizeof(scs_float));
-    c->work_log_proj = (scs_float *)scs_calloc(2 + n_max_logdet, sizeof(scs_float));
+    //c->saved_log_projs = (scs_float *)scs_calloc(2 + n_max_logdet,
+    //sizeof(scs_float));
+    c->saved_log_projs = (scs_float *)scs_calloc(2 * k->dsize + n_logdet_total,
+                                                 sizeof(scs_float));
 
-    if (!c->work_logdet || !c->work_log_proj) {
+    if (!c->work_logdet || !c->saved_log_projs) {
       return -1;
     }
   }
@@ -1012,6 +1005,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize, scs_float *r_y) {
   scs_int i, status;
   scs_int count = 0;
+  scs_int offset_logdet_cone = 0;  /* used for warmstarting log-cone projections */  
   scs_float *r_box = SCS_NULL;
 
   if (k->z) { /* doesn't use r_y */
@@ -1097,11 +1091,12 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->psize;
   }
 
-  SCS(timer) spectral_matrix_proj_timer;
   /* project onto logdet cones */
   if (k->dsize && k->d) {
     for (i = 0; i < k->dsize; ++i) {
-      status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, &(c->newton_stats));
+      status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, &(c->newton_stats),
+                                     offset_logdet_cone);
+      offset_logdet_cone += k->d[i] + 2;
       if (status < 0) {
         return status;
       }
