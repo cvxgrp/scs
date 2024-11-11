@@ -24,16 +24,17 @@
 #define BETA_IPM 0.5
 #define STEP_IPM 0.99
 #define ALPHA_IPM 0.01
-#define MAX_RELAXED_ITERS 8 // TODO: does this value matter?
+#define MAX_RELAXED_ITERS 8 
 
 blas_int bi_one = 1;
 scs_float d_one = 1.0;
 scs_float d_minus_one = -1.0;
 blas_int bi_three = 3;
 
-extern void dgemv_(char *trans, int *m, int *n, scs_float *alpha, scs_float *A,
-                   int *lda, scs_float *x, int *incx, scs_float *beta,
-                   scs_float *y, int *incy);
+void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
+                const scs_float *alpha, const scs_float *a, const blas_int *lda,
+                const scs_float *x, const blas_int *incx, const scs_float *beta,
+                scs_float *y, const blas_int *incy);
 
 /* Evaluates the oracle f(u) = (f0(u), f1(u), f2(u)) where u = [t, v, x, r]
  *  and
@@ -284,7 +285,9 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
         // --------------------------------------------------------------------
 
         char trans = 'N';
-        dgemv_(&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim, RinvCTGinvRes,
+        //dgemv_(&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim, RinvCTGinvRes,
+        //       &bi_one, &d_one, GinvRes, &bi_one);
+        BLAS(gemv)(&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim, RinvCTGinvRes,
                &bi_one, &d_one, GinvRes, &bi_one);
         SCS(add_scaled_array)
         (du1, GinvRes, u1_dim, 1.0);

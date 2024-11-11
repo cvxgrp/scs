@@ -154,9 +154,8 @@ scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
     for (iter = 1; iter <= MAX_ITER_NEWTON; ++iter)
     {
         // -------------------------------------------------------------------
-        // To avoid pathological (?) cases where some components of
+        // To avoid pathological cases where some components of
         // x approach 0 we use a minimum threshold.
-        // TODO: is this necessary?
         // -------------------------------------------------------------------
         for (size_t i = 0; i < n; i++)
         {
