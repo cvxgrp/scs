@@ -46,8 +46,7 @@ scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c
     int lwork = c->lwork_nuc;
     int info = 0;
 
-    dgesvd_("S", "A", &bm, &bn, X, &bm, s, u, &bm, vt, &bn, work,
-            &lwork, &info);
+    BLAS(gesvd)("S", "A", &bm, &bn, X, &bm, s, u, &bm, vt, &bn, work, &lwork, &info);
     if (info != 0)
     {
         printf("WARN: LAPACK gesvd error, info = %i\n", (int)info);

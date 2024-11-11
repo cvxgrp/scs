@@ -18,16 +18,6 @@
  * Last modified: 25 August 2024.
  */
 
-// void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
-//                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
-//                 blas_int *info);
-// blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
-//                     const blas_int *k, const scs_float *alpha,
-//                     const scs_float *a, const blas_int *lda,
-//                     const scs_float *beta, scs_float *c, const blas_int *ldc);
-// void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
-//                 const blas_int *incx);
-
 // forward declare from log_cone_wrapper.c
 scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, const scs_float *x0,
                               scs_float *proj, scs_int n, scs_float *workspace,

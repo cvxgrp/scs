@@ -285,8 +285,6 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
         // --------------------------------------------------------------------
 
         char trans = 'N';
-        //dgemv_(&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim, RinvCTGinvRes,
-        //       &bi_one, &d_one, GinvRes, &bi_one);
         BLAS(gemv)(&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim, RinvCTGinvRes,
                &bi_one, &d_one, GinvRes, &bi_one);
         SCS(add_scaled_array)
