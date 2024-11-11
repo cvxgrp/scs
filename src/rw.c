@@ -328,7 +328,7 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
                   "tau_normalized,"
                   "kap_normalized,"
                   "ax_nrm_inf,"
-                  "ax_s_nrm_inf"
+                  "ax_s_nrm_inf,"
                   "px_nrm_inf,"
                   "aty_nrm_inf,"
                   "xt_p_x,"
@@ -348,6 +348,11 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
                   "accepted_accel_steps,"
                   "rejected_accel_steps,"
                   "time,"
+                  "spectral_Newton_iter,"
+                  "plain_Newton_success,"
+                  "res_dual_spectral,"
+                  "res_pri_spectral,"
+                  "comp_spectral,"
                   "\n");
   }
   fprintf(fout, "%li,", (long)iter);
@@ -412,6 +417,11 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   fprintf(fout, "%li,", (long)w->accepted_accel_steps);
   fprintf(fout, "%li,", (long)w->rejected_accel_steps);
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
+  fprintf(fout, "%li,", (long)w->cone_work->newton_stats.iter);         
+  fprintf(fout, "%li,", (long)w->cone_work->newton_stats.newton_success);
+  fprintf(fout, "%.16e,", w->cone_work->newton_stats.residuals[0]);
+  fprintf(fout, "%.16e,", w->cone_work->newton_stats.residuals[1]);
+  fprintf(fout, "%.16e,", w->cone_work->newton_stats.residuals[2]);
   fprintf(fout, "\n");
   fclose(fout);
 }

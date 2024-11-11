@@ -48,7 +48,7 @@ scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 
 // Forward declare spectral matrix cone projections
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, const scs_int n, ScsConeWork *c,
-                              newton_stats *stats, scs_int offset);
+                              Newton_stats *stats, scs_int offset);
 scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c);
 void SCS(proj_ell_one)(scs_float *tx, size_t n, ScsConeWork *c);
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
@@ -1040,7 +1040,6 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  SCS(timer) PSD_cone_proj_timer;
   if (k->ssize && k->s) { /* doesn't use r_y */
     /* project onto PSD cones */
     for (i = 0; i < k->ssize; ++i) {

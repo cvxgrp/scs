@@ -1,21 +1,8 @@
 #include "util_spectral_cones.h"
 
-// checks if all entries of a vector are nonnegative
-bool is_non_neg(const scs_float *x, size_t n)
+bool is_pos(const scs_float *x, scs_int n)
 {
-    for (size_t i = 0; i < n; ++i)
-    {
-        if (x[i] < 0.0)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool is_pos(const scs_float *x, size_t n)
-{
-    for (size_t i = 0; i < n; ++i)
+    for (scs_int i = 0; i < n; ++i)
     {
         if (x[i] <= 0.0)
         {
@@ -25,9 +12,9 @@ bool is_pos(const scs_float *x, size_t n)
     return true;
 }
 
-bool is_negative(const scs_float *x, size_t n)
+bool is_negative(const scs_float *x, scs_int n)
 {
-    for (size_t i = 0; i < n; ++i)
+    for (scs_int i = 0; i < n; ++i)
     {
         if (x[i] >= 0.0)
         {
@@ -37,9 +24,9 @@ bool is_negative(const scs_float *x, size_t n)
     return true;
 }
 
-void non_neg_proj(const scs_float *src, scs_float *dst, size_t n)
+void non_neg_proj(const scs_float *src, scs_float *dst, scs_int n)
 {
-    for (size_t i = 0; i < n; ++i)
+    for (scs_int i = 0; i < n; ++i)
     {
         dst[i] = (src[i] > 0.0) ? src[i] : 0.0;
     }
@@ -70,10 +57,10 @@ scs_float min_vec(const scs_float *vec, size_t n)
 }
 
 
-scs_float sum_log(const scs_float *x, size_t n)
+scs_float sum_log(const scs_float *x, scs_int n)
 {
     scs_float sum = 0.0;
-    for (size_t i = 0; i < n; ++i)
+    for (scs_int i = 0; i < n; ++i)
     {
         sum += log(x[i]);
     }

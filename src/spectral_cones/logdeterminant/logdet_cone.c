@@ -31,10 +31,10 @@
 // forward declare from log_cone_wrapper.c
 scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, const scs_float *x0,
                               scs_float *proj, scs_int n, scs_float *workspace,
-                              newton_stats *stats, bool warm_start);
+                              Newton_stats *stats, bool warm_start);
 
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
-                              newton_stats *stats, scs_int offset)
+                              Newton_stats *stats, scs_int offset)
 {
     // tvX = [t, v, X], where X represents the lower triangular part of a matrix
     // stored in a compact form and off-diagonal elements have been scaled by

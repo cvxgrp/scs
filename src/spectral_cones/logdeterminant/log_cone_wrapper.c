@@ -31,11 +31,11 @@
 // forward declare from log_cone_Newton.c
 scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
                         scs_float *proj, scs_int n, scs_float *workspace,
-                        newton_stats *stats, bool warm_start);
+                        Newton_stats *stats, bool warm_start);
 
 // forward declare form log_cone_IPM.c
 scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
-                     scs_int n, scs_float *workspace, newton_stats *stats,
+                     scs_int n, scs_float *workspace, Newton_stats *stats,
                      scs_int variant);
 
 // forward declare from this file
@@ -45,7 +45,7 @@ static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
 
 scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
                               scs_float *proj, scs_int n, scs_float *workspace,
-                              newton_stats *stats, bool warm_start)
+                              Newton_stats *stats, bool warm_start)
 {
     scs_int status;
     // -----------------------------------------------------------------------
@@ -74,7 +74,7 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
     if (status == 0 && stats->residuals[0] < DUAL_FEAS_TOL &&
         stats->residuals[1] < PRI_FEAS_TOL && fabs(stats->residuals[2]) < COMP_TOL)
     {
-        stats->NewtonSuccess = NEWTON_SUCCESS;
+        stats->newton_success = NEWTON_SUCCESS;
         return 0;
     }
 
@@ -88,7 +88,7 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
     if (status == 0 && stats->residuals[0] < DUAL_FEAS_TOL &&
         stats->residuals[1] < PRI_FEAS_TOL && fabs(stats->residuals[2]) < COMP_TOL)
     {
-        stats->NewtonSuccess = IPM_VARIANT_0_SUCCESS;
+        stats->newton_success = IPM_VARIANT_0_SUCCESS;
         return 0;
     }
 
@@ -102,7 +102,7 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
     if (status == 0 && stats->residuals[0] < DUAL_FEAS_TOL &&
         stats->residuals[1] < PRI_FEAS_TOL && fabs(stats->residuals[2]) < COMP_TOL)
     {
-        stats->NewtonSuccess = IPM_VARIANT_1_SUCCESS;
+        stats->newton_success = IPM_VARIANT_1_SUCCESS;
         return 0;
     }
 

@@ -55,7 +55,7 @@ struct SCS_CONE_WORK {
   scs_float *saved_log_projs;
 
   /* Stats for spectral projections, assuming there is only one spectral cone */
-  newton_stats newton_stats;
+  Newton_stats newton_stats;
 
   /* workspace for projection onto sum-largest-evals cone */
   scs_float *work_sum_of_largest;

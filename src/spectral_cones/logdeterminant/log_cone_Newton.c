@@ -51,7 +51,7 @@ static scs_float objVal(const scs_float *u, scs_float t0, scs_float v0,
 
 scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
                         scs_float *u, scs_int n, scs_float *workspace,
-                        newton_stats *stats, bool warm_start)
+                        Newton_stats *stats, bool warm_start)
 {
     scs_float *t = u;
     scs_float *v = u + 1;

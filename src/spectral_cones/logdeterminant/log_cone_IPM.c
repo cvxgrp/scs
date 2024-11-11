@@ -346,7 +346,7 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
  * variable r
  */
 scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1, 
-                     scs_int n, scs_float *workspace, newton_stats *stats,
+                     scs_int n, scs_float *workspace, Newton_stats *stats,
                      scs_int variant)
 {
 
