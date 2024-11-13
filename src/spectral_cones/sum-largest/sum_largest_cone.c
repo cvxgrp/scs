@@ -22,9 +22,11 @@
  * Last modified: 25 August 2024.
  */
 
+#ifdef SPECTRAL_DEBUG
 static void compute_cone_residuals(scs_float t, const scs_float *x, scs_float t0,
                                    const scs_float *x0, scs_float residuals[3],
                                    scs_int n, scs_int k);
+#endif
 
 scs_int assert_sorted(scs_float *x, scs_int n)
 {
@@ -43,7 +45,7 @@ scs_int proj_sum_largest_cone_sorted(scs_float *t, scs_float *x, scs_int n,
                                      scs_int k)
 {
 
-#ifdef DEBUG
+#ifdef SPECTRAL_DEBUG
     scs_float t00 = *t;
     scs_float *x0 = scs_malloc(n * sizeof(*x0));
     memcpy(x0, x, n * sizeof(*x0));
@@ -134,7 +136,7 @@ scs_int proj_sum_largest_cone_sorted(scs_float *t, scs_float *x, scs_int n,
         x[i] = a_t;
     }
 
-#ifdef DEBUG
+#ifdef SPECTRAL_DEBUG
     scs_float residuals[3];
     compute_cone_residuals(*t, x, t00, x0, residuals, n, k);
     scs_free(x0);
@@ -158,6 +160,8 @@ scs_int cmp_desc(const void *a, const void *b)
     return 0;
 }
 
+
+#ifdef SPECTRAL_DEBUG
 // this function is not used in production so fine to allocate memory
 static scs_float sum_largest_val(const scs_float *x, scs_int n, scs_int k)
 {
@@ -181,7 +185,6 @@ static void compute_cone_residuals(scs_float t, const scs_float *x, scs_float t0
     scs_float lmbda_t = t - t0;
     scs_float *lmbda_x = scs_malloc(n * sizeof(*x));
     scs_float sum_lmbda_x = 0.0;
-    scs_int int_one = 1;
     for (scs_int i = 0; i < n; ++i)
     {
         lmbda_x[i] = x[i] - x0[i];
@@ -213,3 +216,4 @@ static void compute_cone_residuals(scs_float t, const scs_float *x, scs_float t0
 
     scs_free(lmbda_x);
 }
+#endif

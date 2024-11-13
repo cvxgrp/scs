@@ -41,7 +41,7 @@ void print_vector(const scs_float *x, size_t n)
     printf("\n");
 }
 
-scs_float min_vec(const scs_float *vec, size_t n)
+scs_float min_vec(const scs_float *vec, scs_int n)
 {
     scs_float minVal = vec[0];
 

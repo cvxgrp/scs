@@ -19,6 +19,13 @@
  * Last modified: 25 August 2024.
  */
 
+void BLAS(axpy)(blas_int *n, const scs_float *a, const scs_float *x,
+                blas_int *incx, scs_float *y, blas_int *incy);
+
+scs_float BLAS(dot)(const blas_int *n, const scs_float *x, const blas_int *incx,
+                    const scs_float *y, const blas_int *incy);
+
+#ifdef SPECTRAL_DEBUG
 static void compute_cone_residuals_ell1(const scs_float *tx, scs_float t0,
                                         const scs_float *x0, scs_int n,
                                         scs_float residuals[3])
@@ -77,14 +84,13 @@ static void compute_cone_residuals_ell1(const scs_float *tx, scs_float t0,
     residuals[2] = complementarity;
     free(dualx);
 }
+#endif
 
 // Asssumes that all components of x0 are positive and
 // x0[0] >= x0[1] >= ... x0[n-1].
 scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0, scs_float *proj,
                               scs_int n)
 {
-    assert(isSortedAndNonNeg(x0, n));
-
     if (-t0 >= x0[0])
     {
         memset(proj, 0, (n + 1) * sizeof(*x0));
@@ -145,7 +151,7 @@ scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0, scs_float *proj
     }
     memset(proj + 1 + k, 0, (n - k) * sizeof(*x0));
 
-#ifdef DEBUG
+#ifdef SPECTRAL_DEBUG
     //-------------------------------------------------------------------------
     //               Check residuals - not needed in production
     //-------------------------------------------------------------------------

@@ -17,7 +17,7 @@ static const char *several_sum_largest(void)
     ScsInfo info = {0};
     scs_int exitflag;
     scs_float perr, derr;
-    scs_int success, read_status;
+    scs_int success;
     const char *fail;
 
     /* data */

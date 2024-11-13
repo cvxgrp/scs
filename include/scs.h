@@ -218,6 +218,12 @@ typedef struct {
   scs_float cone_time;
   /** Total time (milliseconds) spent in the acceleration routine. */
   scs_float accel_time;
+#ifdef SPECTRAL_TIMING_FLAG 
+  /** Average time (milliseconds) per iteration matrix cone projection */
+  scs_float ave_time_matrix_cone_proj;
+  /** Average time (milliseconds) per iteration for spectral vector cone projection */
+  scs_float ave_time_vector_cone_proj;
+#endif
 } ScsInfo;
 
 /*

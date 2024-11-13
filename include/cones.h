@@ -5,12 +5,20 @@
 extern "C" {
 #endif
 
+// macro for time measurements of SpectralSCS
+#ifdef SPECTRAL_TIMING_FLAG
+    #define SPECTRAL_TIMING(action) action
+#else
+    #define SPECTRAL_TIMING(action)
+#endif
+
 #include "glbopts.h"
 #include "scs.h"
 #include "scs_blas.h"
 #include "scs_work.h"
 #include <string.h>
 #include "util_spectral_cones.h" // for newton_stats
+
 
 
 
@@ -31,11 +39,15 @@ struct SCS_CONE_WORK {
   scs_float box_t_warm_start;
 
   /* if the projection onto the logarithmic cone should be warmstarted*/
-  bool log_cone_warmstart;
+  bool *log_cone_warmstarts;
 
   /* Needed for ell1 norm cone projection */
   Value_index *work_ell1;
   scs_float *work_ell1_proj; 
+
+  // used for timing spectral vector cone and spectral matrix cone projections
+  SPECTRAL_TIMING(scs_float tot_time_mat_cone_proj;)
+  SPECTRAL_TIMING(scs_float tot_time_vec_cone_proj;)
 
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */

@@ -7,7 +7,6 @@
 #include "scs_matrix.h"
 #include "util.h"
 
-double sqrt2 = sqrt(2);
 
 // for SpectralSCS
 static const char *exp_design(void)
@@ -19,7 +18,7 @@ static const char *exp_design(void)
     ScsInfo info = {0};
     scs_int exitflag;
     scs_float perr, derr;
-    scs_int success, read_status;
+    scs_int success;
     const char *fail;
 
     /* data */
@@ -109,6 +108,7 @@ static const char *exp_design(void)
     stgs->eps_rel = 1e-7;
     stgs->eps_infeas = 1e-9;
 
+    stgs->log_csv_filename="test_exp_design.csv";
     exitflag = scs(d, k, stgs, sol, &info);
 
     perr = SCS(dot)(d->c, sol->x, d->n) - opt;

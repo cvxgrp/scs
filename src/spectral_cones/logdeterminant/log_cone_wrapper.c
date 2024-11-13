@@ -31,7 +31,7 @@
 // forward declare from log_cone_Newton.c
 scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
                         scs_float *proj, scs_int n, scs_float *workspace,
-                        Newton_stats *stats, bool warm_start);
+                        Newton_stats *stats, bool *warm_start);
 
 // forward declare form log_cone_IPM.c
 scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
@@ -45,7 +45,7 @@ static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
 
 scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
                               scs_float *proj, scs_int n, scs_float *workspace,
-                              Newton_stats *stats, bool warm_start)
+                              Newton_stats *stats, bool *warm_start)
 {
     scs_int status;
     // -----------------------------------------------------------------------
@@ -85,6 +85,8 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
     status = log_cone_IPM(t0, v0, x0, proj, n, workspace, stats, 0);
     check_opt_cond_log_cone(proj, t0, v0, x0, n, stats->residuals, workspace);
 
+    *warm_start = true; // next iteration Newton should be warmstarted
+
     if (status == 0 && stats->residuals[0] < DUAL_FEAS_TOL &&
         stats->residuals[1] < PRI_FEAS_TOL && fabs(stats->residuals[2]) < COMP_TOL)
     {
@@ -94,7 +96,12 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
 
     // ------------------------------------------------------------------------
     // Solve problem with primal-dual IPM without Mehrotra's correction
-    // etc.
+    // etc. (In all experiments in the paper by Cederberg and Boyd, 
+    // the IPM above solves the problem correctly so the code below never 
+    // runs. However, during development I ran into a (possibly pathological
+    // case) where the first IPM fails. If this happens we run below another
+    // version. This version of the IPM solves the problem that the first version
+    // failed on.)
     // ------------------------------------------------------------------------
     status = log_cone_IPM(t0, v0, x0, proj, n, workspace, stats, 1);
     check_opt_cond_log_cone(proj, t0, v0, x0, n, stats->residuals, workspace);
@@ -106,8 +113,8 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
         return 0;
     }
 
-#ifdef DEBUG
-    scs_printf("FAILURE: logarithmic cone projection")
+#ifdef SPECTRAL_DEBUG
+    scs_printf("FAILURE: logarithmic cone projection");
         scs_printf("dual_res / pri_res / comp / iter: %.3e, %.3e, %.3e, %d\n",
                    stats->residuals[0], stats->residuals[1], stats->residuals[2],
                    stats->iter);

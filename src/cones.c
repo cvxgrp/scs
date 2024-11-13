@@ -48,7 +48,8 @@ scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 
 // Forward declare spectral matrix cone projections
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, const scs_int n, ScsConeWork *c,
-                              Newton_stats *stats, scs_int offset);
+                              Newton_stats *stats, scs_int offset,
+                              bool *warmstart);
 scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c);
 void SCS(proj_ell_one)(scs_float *tx, size_t n, ScsConeWork *c);
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
@@ -448,6 +449,9 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->work_sum_of_largest) {
     scs_free(c->work_sum_of_largest);
   }
+  if (c->log_cone_warmstarts) {
+    scs_free(c->log_cone_warmstarts);
+  }
 #endif
   if (c->work_ell1) {
     scs_free(c->work_ell1);
@@ -556,6 +560,9 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #define _STR(tok) _STR_EXPAND(tok)
   scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
 #endif
+
+  c->log_cone_warmstarts = (bool *)scs_calloc(k->dsize, sizeof(bool));
+
   // ----------------------------------------------------------------------
   //   compute max dimension needed for eigenvalue decomposition workspace
   //   (all cones appearing in the next section of code require eigenvalue
@@ -775,10 +782,6 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     memset(X, 0, sizeof(scs_float) * get_sd_cone_size(n));
     return 0;
   }
-
-#ifdef DEBUG
-  scs_printf("number of positive eigenvalues: %d \n", n - first_idx);
-#endif
 
   /* Z is matrix of eigenvectors with positive eigenvalues */
   memcpy(Z, &Xs[first_idx * n], sizeof(scs_float) * n * (n - first_idx));
@@ -1005,8 +1008,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize, scs_float *r_y) {
   scs_int i, status;
   scs_int count = 0;
-  scs_int offset_logdet_cone = 0;  /* used for warmstarting log-cone projections */  
+  scs_int offset_log_cone = 0;  /* used for warmstarting log-cone projections */  
   scs_float *r_box = SCS_NULL;
+  SPECTRAL_TIMING(SCS(timer) spec_mat_proj_timer;)
 
   if (k->z) { /* doesn't use r_y */
     /* project onto primal zero / dual free cone */
@@ -1043,7 +1047,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->ssize && k->s) { /* doesn't use r_y */
     /* project onto PSD cones */
     for (i = 0; i < k->ssize; ++i) {
+      SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
       status = proj_semi_definite_cone(&(x[count]), k->s[i], c);
+      SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
       if (status < 0) {
         return status;
       }
@@ -1093,9 +1099,12 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   /* project onto logdet cones */
   if (k->dsize && k->d) {
     for (i = 0; i < k->dsize; ++i) {
+      SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
       status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, &(c->newton_stats),
-                                     offset_logdet_cone);
-      offset_logdet_cone += k->d[i] + 2;
+                                     offset_log_cone, 
+                                     c->log_cone_warmstarts + i);
+      SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
+      offset_log_cone += k->d[i] + 2;
       if (status < 0) {
         return status;
       }
@@ -1105,7 +1114,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   /* project onto nuclear norm cones */
   if (k->nucsize && k->nuc_m && k->nuc_n) {
     for (i = 0; i < k->nucsize; ++i) {
+      SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
       status = SCS(proj_nuclear_cone)(&(x[count]), k->nuc_m[i], k->nuc_n[i], c);
+      SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
       if (status < 0) {
         return status;
       }
@@ -1122,7 +1133,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   /* project onto sum-of-largest eigenvalues cone */
   if (k->sl_size && k->sl_n && k->sl_k) {
     for (i = 0; i < k->sl_size; ++i) {
+      SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
       status = SCS(proj_sum_largest_evals)(&(x[count]), k->sl_n[i], k->sl_k[i], c);
+      SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
       if (status < 0) {
         return status;
       }

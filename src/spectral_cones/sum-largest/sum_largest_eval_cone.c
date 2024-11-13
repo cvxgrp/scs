@@ -17,6 +17,18 @@
  * Last modified: 25 August 2024.
  */
 
+void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
+                blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
+                blas_int *info);
+
+void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
+                const blas_int *incx);
+
+void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
+                blas_int *n, blas_int *k, scs_float *alpha, scs_float *a,
+                blas_int *lda, scs_float *b, blas_int *ldb, scs_float *beta,
+                scs_float *c, blas_int *ldc);
+
 // forward declaration 
 scs_int proj_sum_largest_cone_sorted(scs_float *t, scs_float *x, scs_int n, scs_int k);
 
@@ -32,9 +44,6 @@ void flip(scs_float *x, int n) {
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
                                     ScsConeWork *c)
 {
-    SCS(timer)
-    _timer;
-
     // tvX = [t, X], where X represents the lower triangular part of a matrix
     // stored in a compact form and off-diagonal elements have been scaled by
     // sqrt(2)
@@ -85,9 +94,11 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
     //  tvX[0] by sqrt(2).
     // ----------------------------------------------------------------------
     tX[0] *= sqrt2;
+    SPECTRAL_TIMING(SCS(timer) _timer; SCS(tic)(&_timer);)
     flip(e, n);
     scs_int status = proj_sum_largest_cone_sorted(&tX[0], e, n, k);
     flip(e, n);
+    SPECTRAL_TIMING(c->tot_time_vec_cone_proj += SCS(tocq)(&_timer);)
 
     if (status < 0)
     {

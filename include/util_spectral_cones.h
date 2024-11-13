@@ -16,7 +16,7 @@ bool is_pos(const scs_float *x, scs_int n);
 bool is_negative(const scs_float *x, scs_int n);
 void non_neg_proj(const scs_float *src, scs_float *dst, scs_int n);
 scs_float sum_log(const scs_float *x, scs_int n);
-
+scs_float min_vec(const scs_float *vec, scs_int n);
 
 // used for sorting in ell1-norm cone and sum of largest cone.
 typedef struct

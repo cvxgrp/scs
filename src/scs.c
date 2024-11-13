@@ -550,6 +550,10 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->rejected_accel_steps = w->rejected_accel_steps;
   info->accepted_accel_steps = w->accepted_accel_steps;
   info->comp_slack = ABS(sty);
+#ifdef SPECTRAL_TIMING_FLAG
+  info->ave_time_matrix_cone_proj = w->cone_work->tot_time_mat_cone_proj / iter;
+  info->ave_time_vector_cone_proj = w->cone_work->tot_time_vec_cone_proj / iter;
+#endif
   if (info->comp_slack > 1e-5 * MAX(nm_s, nm_y)) {
     scs_printf("WARNING - large complementary slackness residual: %f\n",
                info->comp_slack);
@@ -1050,7 +1054,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   ScsSettings *stgs = w->stgs;
   /* set warm start */
   stgs->warm_start = warm_start;
-  w->cone_work->log_cone_warmstart = false;
+  
 
   /* initialize ctrl-c support */
   scs_start_interrupt_listener();

@@ -17,7 +17,7 @@ static const char *several_logdet_cones(void)
     ScsInfo info = {0};
     scs_int exitflag;
     scs_float perr, derr;
-    scs_int success, read_status;
+    scs_int success;
     const char *fail;
 
     /* data */
@@ -184,6 +184,8 @@ static const char *several_logdet_cones(void)
     stgs->eps_rel = 1e-6;
     stgs->eps_infeas = 1e-9;
 
+
+    stgs->log_csv_filename="several_logdet_cone.csv";
     exitflag = scs(d, k, stgs, sol, &info);
 
     perr = SCS(dot)(d->c, sol->x, d->n) - opt;
