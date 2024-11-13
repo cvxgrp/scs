@@ -25,6 +25,8 @@
 #define STEP_IPM 0.99
 #define ALPHA_IPM 0.01
 #define MAX_RELAXED_ITERS 8 
+//#define MAX_CONSECUTIVE_SMALL_STEPS 5
+//#define SMALLEST_STEP_SIZE 1e-6
 
 blas_int bi_one = 1;
 scs_float d_one = 1.0;
@@ -443,6 +445,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     scs_float theta1, theta2, theta3;
     scs_float pres0, dres0;
     scs_float phi0 = 0.0, dphi0 = 0.0, step_size0 = 0.0;
+    scs_int small_consecutive_steps_counter = 0;
 
 #ifdef SPECTRAL_DEBUG
     printf("%-3s%-15s%-15s%-15s%-10s%-10s\n", "", "gap", "pres", "dres", "sig",
@@ -706,6 +709,24 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
             }
         }
 
+        // // --------------------------------------------------------------------
+        // // TODO (Daniel C): should look at progress in KKT residuals instead
+        // // --------------------------------------------------------------------
+        // if (step_size < SMALLEST_STEP_SIZE)
+        // {
+        //     small_consecutive_steps_counter += 1;
+        // }
+        // else 
+        // {
+        //     small_consecutive_steps_counter = 0;
+        // }
+
+        // if (small_consecutive_steps_counter == MAX_CONSECUTIVE_SMALL_STEPS)
+        // {
+        //     break;
+        // }
+       
+        // update iterates
         memcpy(u1, u1_new, u1_dim * sizeof(*u1));
         r = rnew;
         memcpy(z, z_new, 3 * sizeof(*z));
@@ -722,7 +743,6 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     (x0, scale1, n);
     SCS(scale_array)
     (u1, scale1, u1_dim);
-
     stats->iter = iter;
     return 0;
 }
