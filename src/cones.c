@@ -711,11 +711,9 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 /* size of X is get_sd_cone_size(n) */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                        ScsConeWork *c) {
-    SCS(timer) _timer;
-
-
 /* project onto the positive semi-definite cone */
 #ifdef USE_LAPACK
+  SCS(timer) _timer;
   scs_int i, first_idx;
   blas_int nb = (blas_int)n;
   blas_int ncols_z;

@@ -104,8 +104,8 @@ static const char *exp_design(void)
     k->sl_size = sl_size;
 
     scs_set_default_settings(stgs);
-    stgs->eps_abs = 1e-7;
-    stgs->eps_rel = 1e-7;
+    stgs->eps_abs = 1e-8;
+    stgs->eps_rel = 1e-8;
     stgs->eps_infeas = 1e-9;
 
     stgs->log_csv_filename="test_exp_design.csv";

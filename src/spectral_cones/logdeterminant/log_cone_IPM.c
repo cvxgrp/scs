@@ -247,8 +247,8 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
     memcpy(residual, bnew, u_dim * sizeof(*bnew));
     memset(du1, 0, u1_dim * sizeof(*du1));
     *dr = 0;
-    const int num_ref = 3;
-    for (size_t i = 0; i < num_ref; ++i)
+    const scs_int num_ref = 3;
+    for (scs_int i = 0; i < num_ref; ++i)
     {
         // --------------------------------
         // solve (G + C @ C.T) d = residual
@@ -256,7 +256,7 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
         GinvRes[0] = residual[0] / z[0];
         GinvRes[1] = (residual[1] + z[1] * SCS(dot)(residual + 2, temp2, n)) /
                      coeff;
-        for (size_t i = 2; i < n + 2; ++i)
+        for (scs_int i = 2; i < n + 2; ++i)
         {
             GinvRes[i] = (residual[i] + (z[1] * GinvRes[1]) * x_inv[i - 2]) /
                          temp1[i - 2];
@@ -302,7 +302,7 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
             Gdu[0] = z[0] * du1[0];
             Gdu[1] = ((z[0] + 1 / (w[2] * w[2])) * du1[1] +
                       z[1] * (n / v * du1[1] - SCS(dot)(x_inv, du1 + 2, n)));
-            for (size_t ii = 2; ii < n + 2; ++ii)
+            for (scs_int ii = 2; ii < n + 2; ++ii)
             {
                 Gdu[ii] = (z[0] * du1[ii] +
                            z[1] * (-du1[1] * x_inv[ii - 2] +
@@ -336,7 +336,7 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
     dz[0] -= w[0] * (SCS(dot)(g0g1, du1, u1_dim) + g0g1[n + 2] * (*dr));
     dz[1] -= w[1] * (SCS(dot)(g0g1 + u_dim, du1, u1_dim) + g0g1[2 * n + 5] * (*dr));
     dz[2] += du1[1];
-    for (size_t ii = 0; ii < 3; ++ii)
+    for (scs_int ii = 0; ii < 3; ++ii)
     {
         dz[ii] = -dz[ii] / (w[ii] * w[ii]);
         ds[ii] = w[ii] * (rhs2[ii] / lmbda[ii] - w[ii] * dz[ii]);
@@ -425,7 +425,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     // initialize primal variable u1 = [t, v, x], epigraph variable r and
     // primal slack variable s and Lagrange multipliers z
     // ---------------------------------------------------------------------
-    for (size_t i = 0; i < n + 2; ++i)
+    for (scs_int i = 0; i < n + 2; ++i)
     {
         u1[i] = 1.0;
     }
@@ -434,7 +434,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     scs_float dr = 0.0;
     scs_float rnew = 0.0;
 
-    for (size_t i = 0; i < m; ++i)
+    for (scs_int i = 0; i < m; ++i)
     {
         z[i] = 1.0;
         s[i] = 1.0;
@@ -460,7 +460,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
         // --------------------------------------------------------
         //                   evaluate oracle
         // --------------------------------------------------------
-        for (size_t i = 0; i < n; i++)
+        for (scs_int i = 0; i < n; i++)
         {
             x_inv[i] = 1 / u1[i + 2];
         }
@@ -511,7 +511,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
         // ----------------------------------------------------
         //      compute scaling matrix and scaling point
         // ----------------------------------------------------
-        for (size_t i = 0; i < m; i++)
+        for (scs_int i = 0; i < m; i++)
         {
             w[i] = sqrt(s[i] / z[i]);
             lmbda[i] = sqrt(s[i] * z[i]);
@@ -532,7 +532,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
                                 -lmbda[2] * lmbda[2]};
 
         // upper bound on loop is chosen so it also iterates over rznl
-        for (size_t i = 0; i < u_dim + 3; ++i)
+        for (scs_int i = 0; i < u_dim + 3; ++i)
         {
             rx[i] = -rx[i];
         }
@@ -545,7 +545,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
         phi = theta1 * gap + theta2 * norm_rx + theta3 * norm_rznl;
         dphi = -theta1 * (1 - sigma) * gap - theta2 * norm_rx - theta3 * norm_rznl;
 
-        for (size_t i = 0; i < 2; ++i)
+        for (scs_int i = 0; i < 2; ++i)
         {
             // ------------------------------------------------------------
             //  For i = 0 we compute the affine-scaling direction.
@@ -586,7 +586,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
                 (s_new, ds, m, step_size);
 
                 // evaluate oracle in u_new
-                for (size_t i = 0; i < n; i++)
+                for (scs_int i = 0; i < n; i++)
                 {
                     x_inv_new[i] = 1 / u1_new[i + 2];
                 }
