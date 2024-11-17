@@ -35,7 +35,7 @@ scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0, scs_float *proj
                               scs_int n);
 
 // X is of size m x n, stored column major. It is assumed that m >= n.
-scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c)
+scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n, ScsConeWork *c)
 {
     assert(m >= n);
     scs_float *X = tX + 1;

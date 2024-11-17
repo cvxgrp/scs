@@ -275,8 +275,8 @@ static const char *several_nuc_cone(void)
     k->sl_size = sl_size;
 
     scs_set_default_settings(stgs);
-    stgs->eps_abs = 1e-6;
-    stgs->eps_rel = 1e-6;
+    stgs->eps_abs = 1e-7;
+    stgs->eps_rel = 1e-7;
     stgs->eps_infeas = 1e-9;
 
     exitflag = scs(d, k, stgs, sol, &info);
