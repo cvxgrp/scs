@@ -38,10 +38,6 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
                      scs_int n, scs_float *workspace, Newton_stats *stats,
                      scs_int variant);
 
-// forward declare from util_spectral_cones.c
-scs_float sum_log(const scs_float *x, scs_int n);
-bool is_pos(const scs_float *x, scs_int n);
-
 // forward declare from this file
 static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
                                     scs_float v0, const scs_float *x0, scs_int n,
@@ -196,7 +192,7 @@ static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
     // ----------------------------------------------------------------------
     if (dualt > 0 && is_pos(dualx, n))
     {
-        dual_res = dualt * (n * log(dualt) - (int)(n)-sum_log(dualx, n)) - dualv;
+        dual_res = dualt * (n * log(dualt) - n - sum_log(dualx, n)) - dualv;
     }
     else
     {
