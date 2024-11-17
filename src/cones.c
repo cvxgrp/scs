@@ -1005,7 +1005,6 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize, scs_float *r_y) {
   scs_int i, status;
   scs_int count = 0;
-  scs_int offset_log_cone = 0;  /* used for warmstarting log-cone projections */  
   scs_float *r_box = SCS_NULL;
   SPECTRAL_TIMING(SCS(timer) spec_mat_proj_timer;)
 
@@ -1093,6 +1092,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->psize;
   }
 
+#ifdef USE_LAPACK
+  scs_int offset_log_cone = 0;  /* used for warmstarting log-cone projections */
   /* project onto logdet cones */
   if (k->dsize && k->d) {
     for (i = 0; i < k->dsize; ++i) {
@@ -1138,6 +1139,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       count += (get_sd_cone_size(k->sl_n[i]) + 1);
     }
   }
+
+#endif
   /* project onto OTHER cones */
   
   return 0;
