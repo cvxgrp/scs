@@ -445,7 +445,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     scs_float theta1, theta2, theta3;
     scs_float pres0, dres0;
     scs_float phi0 = 0.0, dphi0 = 0.0, step_size0 = 0.0;
-    scs_int small_consecutive_steps_counter = 0;
+    //scs_int small_consecutive_steps_counter = 0;
 
 #ifdef SPECTRAL_DEBUG
     printf("%-3s%-15s%-15s%-15s%-10s%-10s\n", "", "gap", "pres", "dres", "sig",
