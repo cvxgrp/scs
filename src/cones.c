@@ -48,8 +48,7 @@ scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 
 // Forward declare spectral matrix cone projections
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, const scs_int n, ScsConeWork *c,
-                              Newton_stats *stats, scs_int offset,
-                              bool *warmstart);
+                              scs_int offset, bool *warmstart);
 scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c);
 void SCS(proj_ell_one)(scs_float *tx, size_t n, ScsConeWork *c);
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
@@ -1098,8 +1097,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->dsize && k->d) {
     for (i = 0; i < k->dsize; ++i) {
       SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
-      status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, &(c->newton_stats),
-                                     offset_log_cone, 
+      status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, offset_log_cone, 
                                      c->log_cone_warmstarts + i);
       SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
       offset_log_cone += k->d[i] + 2;
