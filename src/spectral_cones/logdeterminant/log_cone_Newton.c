@@ -140,7 +140,7 @@ scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
     {
         *v = (v0 > MIN_INIT_LOG_CONE) ? v0 : MIN_INIT_LOG_CONE;
 
-        for (size_t i = 0; i < n; ++i)
+        for (scs_int i = 0; i < n; ++i)
         {
             x[i] = (x0[i] > MIN_INIT_LOG_CONE) ? x0[i] : MIN_INIT_LOG_CONE;
         }
@@ -175,7 +175,7 @@ scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
         // To avoid pathological cases where some components of
         // x approach 0 we use a minimum threshold.
         // -------------------------------------------------------------------
-        for (size_t i = 0; i < n; i++)
+        for (scs_int i = 0; i < n; i++)
         {
             x[i] = MAX(x[i], MIN_X);
         }

@@ -203,7 +203,7 @@ static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
             dual_res += dualv * dualv;
         }
 
-        for (size_t i = 0; i < n; i++)
+        for (scs_int i = 0; i < n; i++)
         {
             if (dualx[i] < 0)
             {

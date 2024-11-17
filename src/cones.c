@@ -49,7 +49,7 @@ scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 // Forward declare spectral matrix cone projections
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, const scs_int n, ScsConeWork *c,
                               scs_int offset, bool *warmstart);
-scs_int SCS(proj_nuclear_cone)(scs_float *tX, size_t m, size_t n, ScsConeWork *c);
+scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n, ScsConeWork *c);
 void SCS(proj_ell_one)(scs_float *tx, size_t n, ScsConeWork *c);
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
                                     ScsConeWork *c);
