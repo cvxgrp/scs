@@ -16,7 +16,12 @@ SCS_O = src/scs.o
 SCS_INDIR_O = src/scs_indir.o
 
 SRC_FILES = $(wildcard src/*.c)
-INC_FILES = $(wildcard include/*.h)
+
+ifneq ($(USE_LAPACK), 0)
+	INC_FILES = $(wildcard include/*.h)
+else
+	INC_FILES = $(filter-out include/util_spectral_cones.h, $(wildcard include/*.h))
+endif
 
 AMD_SOURCE = $(wildcard $(EXTSRC)/amd/*.c)
 LDL_SOURCE = $(EXTSRC)/qdldl/qdldl.c
