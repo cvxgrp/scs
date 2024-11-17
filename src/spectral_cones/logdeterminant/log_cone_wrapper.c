@@ -39,7 +39,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
                      scs_int variant);
 
 // forward declare from this file
-void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
+static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
                                     scs_float v0, const scs_float *x0, scs_int n,
                                     scs_float residuals[3], scs_float *dualx);
 
@@ -131,7 +131,7 @@ scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
 }
 
 // tvx = [t, v, x].
-void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
+static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
                                     scs_float v0, const scs_float *x0, scs_int n,
                                     scs_float residuals[3], scs_float *dualx)
 {

@@ -1,5 +1,10 @@
 #ifndef UTILSPECTRALCONES_H
 #define UTILSPECTRALCONES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -36,4 +41,7 @@ typedef struct
     scs_float residuals[3];
 } Newton_stats;
 
+#ifdef __cplusplus
+}
+#endif
 #endif
