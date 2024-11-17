@@ -17,6 +17,11 @@
  * Last modified: 25 August 2024.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
@@ -28,6 +33,10 @@ void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
                 blas_int *n, blas_int *k, scs_float *alpha, scs_float *a,
                 blas_int *lda, scs_float *b, blas_int *ldb, scs_float *beta,
                 scs_float *c, blas_int *ldc);
+
+#ifdef __cplusplus
+}
+#endif
 
 // forward declaration 
 scs_int proj_sum_largest_cone_sorted(scs_float *t, scs_float *x, scs_int n, scs_int k);

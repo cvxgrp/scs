@@ -19,11 +19,19 @@
  * Last modified: 25 August 2024.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void BLAS(axpy)(blas_int *n, const scs_float *a, const scs_float *x,
                 blas_int *incx, scs_float *y, blas_int *incy);
 
 scs_float BLAS(dot)(const blas_int *n, const scs_float *x, const blas_int *incx,
                     const scs_float *y, const blas_int *incy);
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef SPECTRAL_DEBUG
 static void compute_cone_residuals_ell1(const scs_float *tx, scs_float t0,
