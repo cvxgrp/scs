@@ -38,7 +38,7 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 
 
 // forward declare from log_cone_wrapper.c
-scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, const scs_float *x0,
+scs_int log_cone_proj_wrapper(scs_float t0, scs_float v0, scs_float *x0,
                               scs_float *proj, scs_int n, scs_float *workspace,
                               Newton_stats *stats, bool *warm_start);
 
