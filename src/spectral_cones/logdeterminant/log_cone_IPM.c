@@ -33,10 +33,18 @@ scs_float d_one = 1.0;
 scs_float d_minus_one = -1.0;
 blas_int bi_three = 3;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
                 const scs_float *alpha, const scs_float *a, const blas_int *lda,
                 const scs_float *x, const blas_int *incx, const scs_float *beta,
                 scs_float *y, const blas_int *incy);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* Evaluates the oracle f(u) = (f0(u), f1(u), f2(u)) where u = [t, v, x, r]
  *  and

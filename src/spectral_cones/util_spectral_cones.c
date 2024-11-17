@@ -32,9 +32,9 @@ void non_neg_proj(const scs_float *src, scs_float *dst, scs_int n)
     }
 }
 
-void print_vector(const scs_float *x, size_t n)
+void print_vector(const scs_float *x, scs_int n)
 {
-    for (size_t i = 0; i < n; ++i)
+    for (scs_int i = 0; i < n; ++i)
     {
         printf("%f ", x[i]);
     }
@@ -45,7 +45,7 @@ scs_float min_vec(const scs_float *vec, scs_int n)
 {
     scs_float minVal = vec[0];
 
-    for (size_t i = 1; i < n; ++i)
+    for (scs_int i = 1; i < n; ++i)
     {
         if (vec[i] < minVal)
         {

@@ -16,6 +16,11 @@
  * 
  * Last modified: 25 August 2024.
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
                 blas_int *n, blas_int *k, scs_float *alpha, scs_float *a,
                 blas_int *lda, scs_float *b, blas_int *ldb, scs_float *beta,
@@ -29,6 +34,10 @@ void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
                  scs_float *s, scs_float *u, const blas_int *ldu, scs_float *vt,
                  const blas_int *ldvt, scs_float *work, const blas_int *lwork,
                  blas_int *info);
+
+#ifdef __cplusplus
+}
+#endif
 
 // forward declaration from ell1_cone.c
 scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0, scs_float *proj,
