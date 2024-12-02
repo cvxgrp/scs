@@ -9,6 +9,7 @@ endif
 #CC = i686-w64-mingw32-gcc -m32
 #CC = x86_64-w64-mingw32-gcc-4.8
 CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
+HIPCC = $(HIP_PATH)/bin/hipcc
 
 # For GPU must add cuda libs to path, e.g.
 # export DYLD_LIBRARY_PATH=/usr/local/cuda/lib:$DYLD_LIBRARY_PATH
@@ -70,6 +71,7 @@ INDIRSRC = $(LINSYS)/cpu/indirect
 GPUDIR = $(LINSYS)/gpu/direct
 GPUINDIR = $(LINSYS)/gpu/indirect
 MKLSRC = $(LINSYS)/mkl/direct
+HIPSRC = $(LINSYS)/hip/direct
 
 EXTSRC = $(LINSYS)/external
 
@@ -134,6 +136,11 @@ endif
 # This is probably not correct for other systems. TODO: update this
 # to work for all combinations of platform / compiler / threading options.
 MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl
+
+HIP_PLATFORM =HIP_PLATFORM_AMD
+HIP_PATH = /opt/rocm
+HIPLDFLAGS = -L$(HIP_PATH)/lib -lamdhip64 -lhipsparse
+HIPCFLAGS = -D__$(HIP_PLATFORM)__ -I$(HIP_PATH)/include -Wno-extra-semi -Wno-strict-prototypes
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):
