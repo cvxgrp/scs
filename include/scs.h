@@ -130,6 +130,10 @@ typedef struct {
   scs_int *s;
   /** Length of semidefinite constraints array `s`. */
   scs_int ssize;
+  /** Array of complex semidefinite cone constraints, `len(cs) = cssize`. */
+  scs_int *cs;
+  /** Length of complex semidefinite constraints array `cs`. */
+  scs_int cssize;
   /** Number of primal exponential cone triples. */
   scs_int ep;
   /** Number of dual exponential cone triples. */

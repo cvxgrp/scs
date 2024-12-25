@@ -49,6 +49,10 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
      - :math:`\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}`
      - :code:`p` array :math:`p\in[-1,1]` powers with :code:`psize` elements, negative entries correspond to dual power cone (sign is flipped).
      - :math:`3 \times`:code:`psize` (total for primal and dual power cone)
+   * - Complex positive semidefinite cone
+     - :math:`\{ s \in \mathbf{R}^{k^2} \mid \text{mat}(s) \succeq 0 \}` (See :ref:`note <sdcone>`)
+     - :code:`cs` array of PSD cone lengths with :code:`cssize` elements, each :math:`cs_i = k_i` in description.
+     - :math:`\displaystyle \sum_{i=1}^{\text{cssize}} cs_i^2`
 
 
 **Note**:
@@ -70,27 +74,30 @@ and therefore the variable vector is stacked as :code:`[x, y, z]`, etc.
 Semidefinite cones
 ------------------
 
-The symmetric positive semidefinite cone of matrices is the set
+The real positive semidefinite cone of matrices is the set
 
 .. math::
-   \{S \in \mathbf{R}^{k \times k} \mid  S = S^\top,  x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}
+   \{S \in \mathbf{R}^{k \times k} \mid  S = S^\top,\  x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \},
+
+and the complex positive semidefinite cone is the set
+
+.. math::
+   \{S \in \mathbf{C}^{k \times k} \mid  S = S^\dagger,\  x^\dagger S x \geq 0 \ \forall x \in \mathbf{C}^k \},
 
 and for short we use :math:`S \succeq 0` to denote membership. SCS
-vectorizes this cone in a special way which we detail here.
+vectorizes these cones in a special way which we detail here.
 
-SCS assumes that the input data corresponding to
-semidefinite cones have been vectorized by scaling the off-diagonal entries by
-:math:`\sqrt{2}` and stacking the lower triangular elements column-wise. For a :math:`k \times k`
-matrix variable (or data matrix) this operation would create a vector of length
-:math:`k(k+1)/2`. Scaling by :math:`\sqrt{2}` is required to preserve the inner-product.
+SCS assumes that the input data corresponding to positive semidefinite cones have been vectorized by scaling the off-diagonal entries by
+:math:`\sqrt{2}` and stacking the real parameters of the upper triangular row-wise. For a :math:`k \times k`
+real matrix variable (or data matrix) this operation would create a vector of length
+:math:`k(k+1)/2`, whereas for a :math:`k \times k` complex matrix its creates a vector of length :math:`k^2`. Scaling by :math:`\sqrt{2}` is required to preserve the inner-product.
 
 **This must be done for the rows of both** :math:`A` **and** :math:`b` **that correspond to semidefinite cones and must be done independently for each semidefinite cone.**
 
-More explicitly, we want to express :math:`\text{Trace}(Y S)` as :math:`\text{vec}(Y)^\top \text{vec}(S)`,
-where the :math:`\text{vec}` operation takes the (assumed to be symmetric) :math:`k \times k` matrix
+More explicitly, we want to express :math:`\text{Trace}(Y^\dagger S)` as :math:`\text{vec}(Y)^\dagger \text{vec}(S)`,
+where the :math:`\text{vec}` operation takes the :math:`k \times k` matrix
 
 .. math::
-
   S =  \begin{bmatrix}
           S_{11} & S_{12} & \ldots & S_{1k}  \\
           S_{21} & S_{22} & \ldots & S_{2k}  \\
@@ -98,17 +105,21 @@ where the :math:`\text{vec}` operation takes the (assumed to be symmetric) :math
           S_{k1} & S_{k2} & \ldots & S_{kk}  \\
         \end{bmatrix}
 
-and produces a vector consisting of the lower triangular elements scaled and arranged as
+and produces a vector consisting of the upper triangular real parameters elements scaled and re-arranged. In the real case, the result is
 
 .. math::
+  \text{vec}(S) = (S_{11}, \sqrt{2} S_{12}, \ldots, \sqrt{2} S_{1k}, S_{22}, \sqrt{2}S_{23}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k-1,k}, S_{kk}) \in \mathbf{R}^{k(k+1)/2},
 
-  \text{vec}(S) = (S_{11}, \sqrt{2} S_{21}, \ldots, \sqrt{2} S_{k1}, S_{22}, \sqrt{2}S_{32}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k,k-1}, S_{kk}) \in \mathbf{R}^{k(k+1)/2}.
+whereas in the complex case the result is
+
+.. math::
+  \text{vec}(S) = (S_{11}, \sqrt{2} \Re(S_{12}), \sqrt{2} \Im(S_{12}), \ldots, \sqrt{2} \Re(S_{1k}), \sqrt{2} \Im(S_{1k}), S_{22}, \\\sqrt{2}\Re(S_{23}), \sqrt{2}\Im(S_{23}), \dots, S_{k-1,k-1}, \sqrt{2}\Re(S_{k-1,k}), \sqrt{2}\Im(S_{k-1,k}), S_{kk}) \in \mathbf{R}^{k^2}.
 
 To recover the matrix solution this operation must be inverted on the components
 of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
-off-diagonal entries must be scaled by :math:`1/\sqrt{2}` and the upper triangular
-entries are filled in by copying the values of lower triangular entries.
-Explicitly, the inverse operation takes vector :math:`s \in
+off-diagonal entries must be scaled by :math:`1/\sqrt{2}` and the lower triangular
+entries are filled in by copying the values of upper triangular entries.
+Explicitly, in the real case the inverse operation takes vector :math:`s \in
 \mathbf{R}^{k(k+1)/2}` and produces the matrix
 
 .. math::
@@ -118,19 +129,31 @@ Explicitly, the inverse operation takes vector :math:`s \in
                     \vdots & \vdots & \ddots & \vdots  \\
                     s_{k} / \sqrt{2} & s_{2k-1} / \sqrt{2} & \ldots & s_{k(k+1) / 2}  \\
                     \end{bmatrix}
-  \in \mathbf{R}^{k \times k}.
+  \in \mathbf{R}^{k \times k},
 
-
-So the cone definition that SCS uses is
+whereas in the complex case the inverse operation takes vector :math:`s \in
+\mathbf{R}^{k^2}` and produces the matrix
 
 .. math::
-   \mathcal{S}_+^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.
+  \text{mat}(s) =  \begin{bmatrix}
+                    s_{1} & (s_{2} + i s_3) / \sqrt{2} & \ldots & (s_{2k-2}+is_{2k-1}) / \sqrt{2}  \\
+                    (s_{2} - i s_3) / \sqrt{2} / \sqrt{2} & s_{2k} & \ldots & (s_{4k-5}+is_{4k-4}) / \sqrt{2} \\
+                    \vdots & \vdots & \ddots & \vdots  \\
+                    (s_{2k-2}-is_{2k-1}) / \sqrt{2} & (s_{4k-5}-is_{4k-4}) / \sqrt{2} & \ldots & s_{k^2}  \\
+                    \end{bmatrix}
+  \in \mathbf{C}^{k \times k},
+
+So the cone definitions that SCS uses are
+
+.. math::
+   \mathcal{S}_\mathbf{R}^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\\
+   \mathcal{S}_\mathbf{C}^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k^2  } \mid \text{mat}(s) \succeq 0 \}.
 
 Example
 ^^^^^^^
 
-For a concrete example in python see :ref:`py_mat_completion`.
-Here we consider the symmetric positive semidefinite cone constraint over
+For a concrete example in Python see :ref:`py_mat_completion`.
+Here we consider the real positive semidefinite cone constraint over
 variables :math:`x \in \mathbf{R}^n` and :math:`S \in \mathbf{R}^{k \times k}`
 
 .. math::
