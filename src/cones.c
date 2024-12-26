@@ -173,6 +173,11 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
     b[count + i] = s_cone_sz;
   }
   count += k->ssize; /* size here not ssize * (ssize + 1) / 2 */
+  for (i = 0; i < k->cssize; ++i) {
+    cs_cone_sz = get_csd_cone_size(k->cs[i]);
+    b[count + i] = cs_cone_sz;
+  }
+  count += k->cssize;
   /* exp cones */
   for (i = 0; i < k->ep + k->ed; ++i) {
     b[count + i] = 3;
@@ -183,11 +188,6 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
     b[count + i] = 3;
   }
   count += k->psize;
-  for (i = 0; i < k->cssize; ++i) { /*adding the complex psd cone here for backwards compatibility */
-    cs_cone_sz = get_csd_cone_size(k->cs[i]);
-    b[count + i] = cs_cone_sz;
-  }
-  count += k->cssize;
   /* other cones */
   c->cone_boundaries = b;
   c->cone_boundaries_len = cone_boundaries_len;

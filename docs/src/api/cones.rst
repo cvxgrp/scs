@@ -33,6 +33,10 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
      - :math:`\{ s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}` (See :ref:`note <sdcone>`)
      - :code:`s` array of PSD cone lengths with :code:`ssize` elements, each :math:`s_i = k_i` in description.
      - :math:`\displaystyle \sum_{i=1}^{\text{ssize}} \frac{s_i(s_i+1)}{2}`
+   * - Complex positive semidefinite cone
+     - :math:`\{ s \in \mathbf{R}^{k^2} \mid \text{mat}(s) \succeq 0 \}` (See :ref:`note <sdcone>`)
+     - :code:`cs` array of PSD cone lengths with :code:`cssize` elements, each :math:`cs_i = k_i` in description.
+     - :math:`\displaystyle \sum_{i=1}^{\text{cssize}} cs_i^2`
    * - Exponential cone
      - :math:`\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \}`
      - :code:`ep` number of cone triples.
@@ -49,10 +53,6 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
      - :math:`\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}`
      - :code:`p` array :math:`p\in[-1,1]` powers with :code:`psize` elements, negative entries correspond to dual power cone (sign is flipped).
      - :math:`3 \times`:code:`psize` (total for primal and dual power cone)
-   * - Complex positive semidefinite cone
-     - :math:`\{ s \in \mathbf{R}^{k^2} \mid \text{mat}(s) \succeq 0 \}` (See :ref:`note <sdcone>`)
-     - :code:`cs` array of PSD cone lengths with :code:`cssize` elements, each :math:`cs_i = k_i` in description.
-     - :math:`\displaystyle \sum_{i=1}^{\text{cssize}} cs_i^2`
 
 
 **Note**:
