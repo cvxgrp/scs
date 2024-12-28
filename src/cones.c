@@ -487,7 +487,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
 #ifdef USE_LAPACK
 
-  /* copy upper triangular matrix into full matrix */
+  /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
            (n - i) * sizeof(scs_float));
@@ -539,7 +539,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* undo rescaling: scale diags by 1/sqrt(2) */
   BLAS(scal)(&nb, &sqrt2_inv, Xs, &nb_plus_one); /* not n_squared */
 
-  /* extract just upper triangular matrix */
+  /* extract just lower triangular matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Xs[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
@@ -648,7 +648,7 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
 #ifdef USE_LAPACK
 
-  /* copy upper triangular matrix into full matrix */
+  /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n - 1; ++i) {
     cXs[i * (n + 1)] = X[i * (2 * n - i)];
     memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
@@ -687,21 +687,21 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
     return 0;
   }
 
-  /*LAPACK is col-major, so the columns of cZ' are the eigenvectors */
+  /* cZ is matrix of all eigenvectors */
   /* scale cZ by sqrt(eig) */
   for (i = first_idx; i < n; ++i) {
     csq_eig_pos = SQRTF(e[i]);
     BLASC(scal)(&nb, &csq_eig_pos, &cZ[i * n], &one_int);
   }
 
-  /* Xs = Z Z' = V E V' */
+  /* Xs = cZ cZ' = V E V' */
   ncols_z = (blas_int)(n - first_idx);
   BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one, &cZ[first_idx * n], &nb, &zero, cXs, &nb);
 
   /* undo rescaling: scale diags by 1/sqrt(2) */
   BLASC(scal)(&nb, &csqrt2_inv, cXs, &nb_plus_one); /* not n_squared */
 
-  /* extract just upper triangular matrix */
+  /* extract just lower triangular matrix */
   for (i = 0; i < n - 1; ++i) {
     X[i * (2 * n - i)] = cXs[i * (n + 1)];
     memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
