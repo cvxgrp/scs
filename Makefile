@@ -9,7 +9,7 @@ SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
 
 AMD_SOURCE = $(wildcard $(EXTSRC)/amd/*.c)
-LDL_SOURCE = $(EXTSRC)/qdldl/qdldl.c
+LDL_SOURCE = $(wildcard $(EXTSRC)/qdldl/qdldl.c)
 AMD_OBJS = $(AMD_SOURCE:.c=.o)
 LDL_OBJS = $(LDL_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct $(OUT)/run_from_file_indirect $(OUT)/run_from_file_direct
@@ -35,6 +35,15 @@ $(SCS_O): src/scs.c $(INC_FILES)
 
 $(SCS_INDIR_O): src/scs.c $(INC_FILES)
 	$(CC) $(CFLAGS) -DINDIRECT=1 -c $< -o $@
+
+# Compile AMD sources with emcc
+$(EXTSRC)/amd/%.o: $(EXTSRC)/amd/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile QDLDL sources with emcc
+$(EXTSRC)/qdldl/%.o: $(EXTSRC)/qdldl/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 %.o : src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -165,6 +174,27 @@ $(OUT)/libscsgpuindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(L
 
 $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS)
+
+# Add wasm targets
+WASM_TARGETS = $(OUT)/scs.wasm $(OUT)/scs.js
+
+WASM_SRC = src/scs.c src/util.c src/cones.c src/exp_cone.c src/aa.c src/rw.c \
+           src/linalg.c src/ctrlc.c src/scs_version.c src/normalize.c \
+           $(DIRSRC)/private.c $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/scs_matrix.c $(LINSYS)/csparse.c
+
+.PHONY: wasm
+wasm: $(WASM_TARGETS)
+
+$(OUT)/scs.wasm $(OUT)/scs.js: $(WASM_SRC)
+	mkdir -p $(OUT)
+	emcc $(CFLAGS) -o $(OUT)/scs.js $^ \
+		-s WASM=1 \
+		-s EXPORTED_FUNCTIONS='["_scs_init", "_scs_solve", "_scs_finish", "_scs_set_default_settings", "_malloc", "_free"]' \
+		-s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "setValue", "getValue", "UTF8ToString"]' \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s NO_EXIT_RUNTIME=1 \
+		-s ASSERTIONS=1 \
+		$(LDFLAGS)
 
 .PHONY: clean purge
 clean:
