@@ -1,5 +1,5 @@
 // Import the WASM module
-const Module = require('../../../out/scs.js');
+const Module = require('../out/scs.js');
 
 // Wait for the module to be initialized
 Module.onRuntimeInitialized = async function() {

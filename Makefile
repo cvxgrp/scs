@@ -122,6 +122,10 @@ $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
 .PHONY: test_gpu
 test_gpu: $(OUT)/run_tests_gpu_indirect # $(OUT)/run_tests_gpu_direct
 
+.PHONY: test_wasm
+test_wasm: 
+	node test/test_wasm.js
+
 .PHONY: mkl
 mkl: mklroot $(OUT)/libscsmkl.a $(OUT)/libscsmkl.$(SHARED) $(OUT)/run_tests_mkl $(OUT)/demo_socp_mkl
 mklroot:
