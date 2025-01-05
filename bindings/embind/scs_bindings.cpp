@@ -18,6 +18,21 @@ std::vector<T> convertJSArrayToVector(const val& jsArray) {
     return result;
 }
 
+template<typename T>
+T getValueOrDefault(const val& obj, const std::string& key, T defaultValue) {
+    if (obj.hasOwnProperty(key.c_str()) && !obj[key.c_str()].isUndefined() && !obj[key.c_str()].isNull()) {
+        return obj[key.c_str()].as<T>();
+    }
+    return defaultValue;
+}
+
+val getArrayOrNull(const val& obj, const std::string& key) {
+    if (obj.hasOwnProperty(key.c_str()) && !obj[key.c_str()].isUndefined() && !obj[key.c_str()].isNull()) {
+        return obj[key.c_str()];
+    }
+    return val::null();
+}
+
 // Helper class to wrap ScsMatrix for easier JS interaction
 class ScsMatrixWrapper {
 public:
@@ -47,8 +62,7 @@ private:
 class ScsDataWrapper {
 public:
     ScsDataWrapper(int m, int n, val A_x, val A_i, val A_p, 
-                  val P_x, val P_i, val P_p, 
-                  val b, val c) {
+                  const val& dataObj) {
         data = std::make_unique<ScsData>();
         data->m = m;
         data->n = n;
@@ -58,7 +72,11 @@ public:
         data->A = A->get();
 
         // Set up P matrix if provided
-        if (!P_x.isNull()) {
+        val P_x = getArrayOrNull(dataObj, "P_x");
+        val P_i = getArrayOrNull(dataObj, "P_i");
+        val P_p = getArrayOrNull(dataObj, "P_p");
+        
+        if (!P_x.isNull() && !P_i.isNull() && !P_p.isNull()) {
             P = std::make_unique<ScsMatrixWrapper>(P_x, P_i, P_p, n, n);
             data->P = P->get();
         } else {
@@ -66,8 +84,8 @@ public:
         }
 
         // Convert b and c vectors
-        b_data = convertJSArrayToVector<scs_float>(b);
-        c_data = convertJSArrayToVector<scs_float>(c);
+        b_data = convertJSArrayToVector<scs_float>(dataObj["b"]);
+        c_data = convertJSArrayToVector<scs_float>(dataObj["c"]);
         data->b = b_data.data();
         data->c = c_data.data();
     }
@@ -85,40 +103,54 @@ private:
 // Helper class to wrap ScsCone
 class ScsConeWrapper {
 public:
-    ScsConeWrapper(int z, int l, val bu, val bl, int bsize,
-                  val q, int qsize, val s, int ssize,
-                  int ep, int ed, val p, int psize) {
+    ScsConeWrapper(const val& coneObj) {
         cone = std::make_unique<ScsCone>();
         
-        cone->z = z;
-        cone->l = l;
-        cone->bsize = bsize;
-        cone->qsize = qsize;
-        cone->ssize = ssize;
-        cone->ep = ep;
-        cone->ed = ed;
-        cone->psize = psize;
+        // Set default values
+        cone->z = getValueOrDefault(coneObj, "z", 0);
+        cone->l = getValueOrDefault(coneObj, "l", 0);
+        cone->bsize = getValueOrDefault(coneObj, "bsize", 0);
+        cone->qsize = getValueOrDefault(coneObj, "qsize", 0);
+        cone->ssize = getValueOrDefault(coneObj, "ssize", 0);
+        cone->ep = getValueOrDefault(coneObj, "ep", 0);
+        cone->ed = getValueOrDefault(coneObj, "ed", 0);
+        cone->psize = getValueOrDefault(coneObj, "psize", 0);
 
-        if (!bu.isNull()) {
+        // Handle arrays
+        val bu = getArrayOrNull(coneObj, "bu");
+        val bl = getArrayOrNull(coneObj, "bl");
+        if (!bu.isNull() && !bl.isNull()) {
             bu_data = convertJSArrayToVector<scs_float>(bu);
             bl_data = convertJSArrayToVector<scs_float>(bl);
             cone->bu = bu_data.data();
             cone->bl = bl_data.data();
+        } else {
+            cone->bu = nullptr;
+            cone->bl = nullptr;
         }
 
+        val q = getArrayOrNull(coneObj, "q");
         if (!q.isNull()) {
             q_data = convertJSArrayToVector<scs_int>(q);
             cone->q = q_data.data();
+        } else {
+            cone->q = nullptr;
         }
 
+        val s = getArrayOrNull(coneObj, "s");
         if (!s.isNull()) {
             s_data = convertJSArrayToVector<scs_int>(s);
             cone->s = s_data.data();
+        } else {
+            cone->s = nullptr;
         }
 
+        val p = getArrayOrNull(coneObj, "p");
         if (!p.isNull()) {
             p_data = convertJSArrayToVector<scs_float>(p);
             cone->p = p_data.data();
+        } else {
+            cone->p = nullptr;
         }
     }
 
@@ -192,15 +224,10 @@ val solve_scs(val dataObj, val coneObj, const ScsSettings& settings) {
     // Convert JS data object to ScsDataWrapper
     ScsDataWrapper data(dataObj["m"].as<int>(), dataObj["n"].as<int>(),
                        dataObj["A_x"], dataObj["A_i"], dataObj["A_p"],
-                       dataObj["P_x"], dataObj["P_i"], dataObj["P_p"],
-                       dataObj["b"], dataObj["c"]);
+                       dataObj);
 
-    // Convert JS cone object to ScsConeWrapper
-    ScsConeWrapper cone(coneObj["z"].as<int>(), coneObj["l"].as<int>(),
-                        coneObj["bu"], coneObj["bl"], coneObj["bsize"].as<int>(),
-                        coneObj["q"], coneObj["qsize"].as<int>(), coneObj["s"],
-                        coneObj["ssize"].as<int>(), coneObj["ep"].as<int>(), coneObj["ed"].as<int>(),
-                        coneObj["p"], coneObj["psize"].as<int>());
+    // Use the cone constructor
+    ScsConeWrapper cone(coneObj);
 
     return solve_scs(data, cone, settings);
 }
@@ -232,11 +259,11 @@ EMSCRIPTEN_BINDINGS(scs_module) {
         ;
     
     class_<ScsDataWrapper>("ScsData")
-        .constructor<int, int, val, val, val, val, val, val, val, val>()
+        .constructor<int, int, val, val, val, val>()
         ;
     
     class_<ScsConeWrapper>("ScsCone")
-        .constructor<int, int, val, val, int, val, int, val, int, int, int, val, int>()
+        .constructor<val>()
         ;
     
     function("solve", select_overload<val(val, val, const ScsSettings&)>(&solve_scs));
