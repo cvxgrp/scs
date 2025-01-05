@@ -6,13 +6,14 @@ JavaScript / WebAssembly
 After :ref:`building the WebAssembly version <javascript_install>`, you can use SCS in JavaScript environments including browsers and Node.js.
 
 Basic Usage
-----------
+-----------
 
 In Node.js, you can use SCS as a Node.js module:
 
 .. code-block:: javascript
 
     const Module = require('scs.js');
+    // or: import Module from 'scs.js';
 
     // Wait for WASM module initialization
     Module.onRuntimeInitialized = function() {
@@ -33,15 +34,15 @@ In browsers, you can load SCS using a script tag:
     </script>
 
 Data Format
-----------
+-----------
 
 Problem data must be provided as sparse matrices in CSC format using the following structure:
 
 .. code-block:: javascript
 
     const data = {
-        m: number,     // Number of constraints
-        n: number,     // Number of variables
+        m: number,     // Number of rows of A
+        n: number,     // Number of cols of A and of P
         A_x: number[], // Non-zero elements of matrix A
         A_i: number[], // Row indices of A elements
         A_p: number[], // Column pointers for A
@@ -53,23 +54,26 @@ Problem data must be provided as sparse matrices in CSC format using the followi
     };
 
 One way to handle the CSC format in javascript is via the 
-[Math.js library](https://mathjs.org/docs/reference/classes/sparsematrix.html),
+`Math.js library <https://mathjs.org/docs/reference/classes/sparsematrix.html>`_,
 for example
 
 .. code-block:: javascript
 
-    const math = require('mathjs');
+    // npm install mathjs
+    const { matrix } = require('mathjs');
+    // or import { matrix } from 'mathjs';
+    // or <script src="https://unpkg.com/mathjs@14.0.1/lib/browser/math.js"></script>
 
-    const A = math.sparse([
+    const A = matrix([
         [1, 0],
         [0, 1],
         [1, 1]
-    ]);
+    ], 'sparse');
 
-    const P = math.sparse([
+    const P = matrix([
         [3, 0],
         [0, 2]
-    ]);
+    ], 'sparse');
 
     const data = {
         m: 3,
@@ -85,7 +89,7 @@ for example
     };
 
 Cone Specification
-----------------
+------------------
 
 Cones are specified using the following structure:
 
@@ -133,7 +137,7 @@ Available settings:
 - ``warmStart`` (boolean): Use warm starting
 
 Solving Problems
---------------
+----------------
 
 Use the ``solve`` function to solve optimization problems:
 
@@ -147,15 +151,16 @@ The solution object contains:
 - ``y``: Dual variables
 - ``s``: Slack variables
 - ``info``: Solver information
-  - ``iter``: Number of iterations
-  - ``pobj``: Primal objective
-  - ``dobj``: Dual objective
-  - ``resPri``: Primal residual
-  - ``resDual``: Dual residual
-  - ``resInfeas``: Infeasibility residual
-  - ``resUnbdd``: Unboundedness measure
-  - ``solveTime``: Solve time
-  - ``setupTime``: Setup time
+
+    - ``iter``: Number of iterations
+    - ``pobj``: Primal objective
+    - ``dobj``: Dual objective
+    - ``resPri``: Primal residual
+    - ``resDual``: Dual residual
+    - ``resInfeas``: Infeasibility residual
+    - ``resUnbdd``: Unboundedness measure
+    - ``solveTime``: Solve time
+    - ``setupTime``: Setup time
 - ``status``: Solution status code
 
 Example
@@ -182,12 +187,6 @@ Here's a complete example solving a quadratic program:
         const cone = {
             z: 1,
             l: 2,
-            bsize: 0,
-            qsize: 0,
-            ssize: 0,
-            ep: 0,
-            ed: 0,
-            psize: 0
         };
 
         const settings = new Module.ScsSettings();
@@ -198,3 +197,25 @@ Here's a complete example solving a quadratic program:
         const solution = Module.solve(data, cone, settings);
         console.log(solution);
     };
+
+This prints the solution object to the console:
+
+.. code-block:: javascript
+
+    {
+      x: [ 0.3000000000043908, -0.6999999999956144 ],
+      y: [ 2.699999999995767, 2.0999999999869825, 0 ],
+      s: [ 0, 0, 0.1999999999956145 ],
+      info: {
+        iter: 100,
+        pobj: 1.2349999999907928,
+        dobj: 1.2350000000001042,
+        resPri: 4.390808429506794e-12,
+        resDual: 1.4869081633461182e-13,
+        resInfeas: 1.3043478260851176,
+        resUnbdd: NaN,
+        solveTime: 0.598459,
+        setupTime: 11.603125
+      },
+      status: 1
+    }
