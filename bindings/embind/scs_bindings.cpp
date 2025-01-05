@@ -164,14 +164,25 @@ private:
 };
 
 // Wrapper function for scs_solve that returns solution as a JavaScript object
-val solve_scs(ScsDataWrapper& data, ScsConeWrapper& cone, const ScsSettings& settings) {
+val solve_scs(ScsDataWrapper& data, ScsConeWrapper& cone, const ScsSettings& settings, val solutionObj = val::null()) {
     auto sol = std::make_unique<ScsSolution>();
     auto info = std::make_unique<ScsInfo>();
     
-    // Initialize solution vectors to nullptr
-    sol->x = nullptr;
-    sol->y = nullptr;
-    sol->s = nullptr;
+    std::vector<scs_float> x_data, y_data, s_data;
+    if (!solutionObj.isNull()) {
+        // Initialize sol with provided solution object for warm starting
+        x_data = convertJSArrayToVector<scs_float>(solutionObj["x"]);
+        y_data = convertJSArrayToVector<scs_float>(solutionObj["y"]);
+        s_data = convertJSArrayToVector<scs_float>(solutionObj["s"]);
+        sol->x = x_data.data();
+        sol->y = y_data.data();
+        sol->s = s_data.data();
+    } else {
+        // Initialize solution vectors to nullptr
+        sol->x = nullptr;
+        sol->y = nullptr;
+        sol->s = nullptr;
+    }
 
     // Call SCS solver
     scs_int result = scs(data.get(), cone.get(), &settings, sol.get(), info.get());
@@ -211,16 +222,11 @@ val solve_scs(ScsDataWrapper& data, ScsConeWrapper& cone, const ScsSettings& set
     solution.set("info", info_obj);
     solution.set("status", result);
     
-    // Clean up
-    free(sol->x);
-    free(sol->y);
-    free(sol->s);
-    
     return solution;
 }
 
 // Wrapper function for scs_solve that accepts JS objects for data and cone
-val solve_scs(val dataObj, val coneObj, const ScsSettings& settings) {
+val solve_scs(val dataObj, val coneObj, const ScsSettings& settings, val solutionObj = val::null()) {
     // Convert JS data object to ScsDataWrapper
     ScsDataWrapper data(dataObj["m"].as<int>(), dataObj["n"].as<int>(),
                        dataObj["A_x"], dataObj["A_i"], dataObj["A_p"],
@@ -229,7 +235,12 @@ val solve_scs(val dataObj, val coneObj, const ScsSettings& settings) {
     // Use the cone constructor
     ScsConeWrapper cone(coneObj);
 
-    return solve_scs(data, cone, settings);
+    return solve_scs(data, cone, settings, solutionObj);
+}
+
+// Overload for scs_solve that does not require a solution object
+val solve_scs(val dataObj, val coneObj, const ScsSettings& settings) {
+    return solve_scs(dataObj, coneObj, settings, val::null());
 }
 
 // Wrapper function for scs_set_default_settings
@@ -266,6 +277,7 @@ EMSCRIPTEN_BINDINGS(scs_module) {
         .constructor<val>()
         ;
     
+    function("solve", select_overload<val(val, val, const ScsSettings&, val)>(&solve_scs));
     function("solve", select_overload<val(val, val, const ScsSettings&)>(&solve_scs));
     function("setDefaultSettings", &set_default_settings);
     
