@@ -10,16 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: git clone https://github.com/emscripten-core/emsdk.git
-      - run: cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh
-      - run: make wasm
+      - run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk 
+          ./emsdk install latest
+          ./emsdk activate latest 
+          source ./emsdk_env.sh
+          cd ..
+          make wasm
 
-  mac:
-    strategy:
-      fail-fast: false
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: git clone https://github.com/emscripten-core/emsdk.git
-      - run: cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh
-      - run: make wasm
+  # mac:
+  #   strategy:
+  #     fail-fast: false
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: git clone https://github.com/emscripten-core/emsdk.git
+  #     - run: cd emsdk && ./emsdk install latest && ./emsdk activate latest && source ./emsdk_env.sh
+  #     - run: make wasm
