@@ -182,18 +182,21 @@ WASM_SRC = src/scs.c src/util.c src/cones.c src/exp_cone.c src/aa.c src/rw.c \
            src/linalg.c src/ctrlc.c src/scs_version.c src/normalize.c \
            $(DIRSRC)/private.c $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/scs_matrix.c $(LINSYS)/csparse.c
 
+WASM_SRC += bindings/embind/scs_bindings.cpp
+
 .PHONY: wasm
+wasm: CC = emcc
 wasm: $(WASM_TARGETS)
 
 $(OUT)/scs.wasm $(OUT)/scs.js: $(WASM_SRC)
 	mkdir -p $(OUT)
 	emcc $(CFLAGS) -o $(OUT)/scs.js $^ \
 		-s WASM=1 \
-		-s EXPORTED_FUNCTIONS='["_scs_init", "_scs_solve", "_scs_finish", "_scs_set_default_settings", "_malloc", "_free"]' \
-		-s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "setValue", "getValue", "UTF8ToString"]' \
+		--bind \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s NO_EXIT_RUNTIME=1 \
 		-s ASSERTIONS=1 \
+		-O2
 		$(LDFLAGS)
 
 .PHONY: clean purge

@@ -4,8 +4,6 @@ else
 UNAME = $(shell uname -s)
 endif
 
-CC = emcc
-
 #CC = gcc
 # For cross-compiling with mingw use these.
 #CC = i686-w64-mingw32-gcc -m32
@@ -33,13 +31,6 @@ endif
 endif
 endif
 
-# Add Emscripten detection
-ifdef EMSCRIPTEN
-ISEMSCRIPTEN := 1
-else
-ISEMSCRIPTEN := 0
-endif
-
 ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
 LDFLAGS += -lm
@@ -52,18 +43,10 @@ LDFLAGS += -lm
 SHARED = dll
 SONAME = -soname
 else
-ifeq ($(ISEMSCRIPTEN), 1)
-CC = emcc
-# we're compiling to wasm, no need for rt library
-LDFLAGS += -lm
-SHARED = wasm
-SONAME = -soname
-else
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS += -lm -lrt
 SHARED = so
 SONAME = -soname
-endif
 endif
 endif
 
@@ -169,7 +152,11 @@ endif
 # you have blas and lapack installed
 
 BLASLDFLAGS =
-USE_LAPACK = 0
+USE_LAPACK = 1
+# Disable LAPACK if the 'wasm' target is specified
+ifeq ($(filter wasm,$(MAKECMDGOALS)),wasm)
+  USE_LAPACK := 0
+endif
 ifneq ($(USE_LAPACK), 0)
   # edit these for your setup:
   BLASLDFLAGS += -llapack -lblas # -lgfortran
