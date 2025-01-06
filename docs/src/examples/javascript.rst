@@ -7,8 +7,8 @@ These examples assume that you have loaded `scs.js`, either in Node.js via
 
 .. code-block:: javascript
 
-    const Module = require('scs.js'); // if using CommonJS
-    import Module from 'scs.js'; // if using ES6 modules
+    const createSCS = require('scs.js'); // if using CommonJS
+    import createSCS from 'scs.js'; // if using ES6 modules
 
 of in the browser via
 
@@ -23,7 +23,7 @@ Here's the :ref:`basic example from C <c_example>` translated to JavaScript:
 
 .. code-block:: javascript
 
-    Module.onRuntimeInitialized = function() {
+    createSCS().then(SCS => {
         const data = {
             m: 3,
             n: 2,
@@ -42,18 +42,18 @@ Here's the :ref:`basic example from C <c_example>` translated to JavaScript:
             l: 2,
         };
 
-        const settings = new Module.ScsSettings();
-        Module.setDefaultSettings(settings);
+        const settings = new SCS.ScsSettings();
+        SCS.setDefaultSettings(settings);
         settings.epsAbs = 1e-9;
         settings.epsRel = 1e-9;
 
-        const solution = Module.solve(data, cone, settings);
+        const solution = SCS.solve(data, cone, settings);
         console.log(solution);
 
         // re-solve using warm start (will be faster)
         settings.warmStart = true;
-        const solution2 = Module.solve(data, cone, settings, solution);
-    };
+        const solution2 = SCS.solve(data, cone, settings, solution);
+    });
 
 This prints the solution object to the console:
 
@@ -76,3 +76,129 @@ This prints the solution object to the console:
       },
       status: 1
     }
+
+Entropy Example
+---------------
+
+Next, we will consider a problem involving maximum entropy. Given a vector 
+:math:`y \in \mathbf{R}^n`, we want to optimize a function involving entropy
+over the unit simplex.
+
+.. math::
+  \begin{align*}
+	  \text{minimize} \quad & \sum_{i = 1}^n x_i \log x_i - \langle y, x \rangle \\
+    \text{subject to} \quad & \sum_{i = 1}^n x_i = 1 \\
+    & x \geq 0
+  \end{align*}
+
+It is known that for the optimal solution, we have :math:`x_i \propto e^{y_i}`.
+
+This problem can be formulated using the :ref:`(primal) exponential cone <cones>`,
+defined as 
+
+.. math::
+  \begin{align*}
+    \mathcal{K}_{\text{exp}} &= \{ (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \} \\
+    &= \{ (x,y,z) \in \mathbf{R}^3 \mid y \log(z/y) \geq x, y>0, z>0 \}
+  \end{align*}
+
+Our formulation is then:
+
+.. math::
+  \begin{align*}
+    \text{minimize} \quad & \sum_{i = 1}^n t_i - \langle y, x \rangle \\
+    \text{subject to} \quad & \sum_{i = 1}^n x_i = 1 \\
+    & x_i \geq 0 \: && \forall i \\
+    & (-t_i, x_i, 1) \in \mathcal{K}_{\text{exp}} \: && \forall i
+  \end{align*}
+
+To implement this problem in JavaScript, we will use the sparse matrix
+implementation from the `Math.js library <https://mathjs.org/docs/reference/classes/sparsematrix.html>`_.
+
+.. code-block:: javascript
+
+    const createSCS = require('./out/scs.js');
+    const math = require('./math.js');
+
+    createSCS().then(SCS => {
+        const n = 5;
+        const y = Array.from({ length: n }, () => Math.random());
+
+        const A = math.matrix('sparse');
+        const b = [];
+
+        let constraintIndex = 0;
+
+        const x_vars = Array.from({ length: n }, (_, i) => i);
+        const t_vars = Array.from({ length: n }, (_, i) => i + n);
+
+        // equality constraint (zero cone)
+        let numEqCones = 0;
+        for (let i = 0; i < n; i++) {
+            A.set([constraintIndex, x_vars[i]], 1);
+        }
+        b.push(1);
+        constraintIndex++;
+        numEqCones++;
+
+        // inequality constraints (positive cone)
+        let numPosCones = 0;
+        for (let i = 0; i < n; i++) {
+            A.set([constraintIndex, x_vars[i]], -1);
+            b.push(0);
+            constraintIndex++;
+            numPosCones++;
+        }
+
+        // exponential cone constraints
+        let numExpCones = 0;
+        for (let i = 0; i < n; i++) {
+            // (-t_i, x_i, 1) in exponential cone
+            A.set([constraintIndex, t_vars[i]], 1);
+            b.push(0);
+            constraintIndex++;
+            A.set([constraintIndex, x_vars[i]], -1);
+            b.push(0);
+            constraintIndex++;
+            // last element is constant, so A has a 0-row; set arbitrary index to 0
+            A.set([constraintIndex, x_vars[i]], 0);
+            b.push(1);
+            constraintIndex++;
+            numExpCones++;
+        }
+
+        // objective function
+        const c = Array.from({ length: 2 * n }, (_, i) => 0);
+        for (let i = 0; i < n; i++) {
+            c[x_vars[i]] = -y[i];
+            c[t_vars[i]] = 1;
+        }
+
+        const data = {
+            m: A._size[0],
+            n: A._size[1],
+            A_x: A._values,
+            A_i: A._index,
+            A_p: A._ptr,
+            b: b,
+            c: c,
+        };
+
+        const cone = {
+            z: numEqCones,
+            l: numPosCones,
+            ep: numExpCones,
+        };
+
+        const settings = new SCS.ScsSettings();
+        SCS.setDefaultSettings(settings);
+        settings.epsAbs = 1e-9;
+        settings.epsRel = 1e-9;
+
+        const solution = SCS.solve(data, cone, settings);
+        console.log("SCS solution:", solution.x.slice(0, n));
+
+        const denominator = y.map(y_i => Math.exp(y_i)).reduce((a, b) => a + b, 0);
+        const predicted_solution = y.map(y_i => Math.exp(y_i) / denominator);
+        console.log("Predicted solution:", predicted_solution);
+    });
