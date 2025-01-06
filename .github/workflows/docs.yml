@@ -19,6 +19,17 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install sphinx sphinx-rtd-theme breathe docutils
+      - name: Build wasm
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk 
+          ./emsdk install latest
+          ./emsdk activate latest 
+          source ./emsdk_env.sh
+          cd ..
+          make wasm
+          cp out/scs.js docs/src/_static/
+          cp out/scs.wasm docs/src/_static/
       - name: Build docs
         run: |
           cd docs/src && make docs && touch ../.nojekyll

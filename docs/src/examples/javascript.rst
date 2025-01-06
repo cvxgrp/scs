@@ -10,11 +10,76 @@ These examples assume that you have loaded `scs.js`, either in Node.js via
     const createSCS = require('scs.js'); // if using CommonJS
     import createSCS from 'scs.js'; // if using ES6 modules
 
-of in the browser via
+or in the browser via
 
 .. code-block:: html
 
     <script src="scs.js"></script>
+
+Live Demo
+---------
+
+.. raw:: html
+  
+    <pre id="output" style="font-size: 90%">Loading...</pre>
+    <script src="../_static/scs.js"></script>
+    <script>
+        createSCS().then(SCS => {
+            // Define problem data similar to qp.c
+            const P_x = [3.0, -1.0, 2.0];
+            const P_i = [0, 0, 1];
+            const P_p = [0, 1, 3];
+            const A_x = [-1.0, 1.0, 1.0, 1.0];
+            const A_i = [0, 1, 0, 2];
+            const A_p = [0, 2, 4];
+            const b = [-1.0, 0.3, -0.5];
+            const c = [-1.0, -1.0];
+
+            // Create ScsData object in JS
+            const data = {
+                m: 3,
+                n: 2,
+                A_x: A_x,
+                A_i: A_i,
+                A_p: A_p,
+                P_x: P_x,
+                P_i: P_i,
+                P_p: P_p,
+                b: b,
+                c: c
+            };
+
+            // Create ScsCone object in JS
+            const cone = {
+                z: 1,
+                l: 2,
+                bu: null,
+                bl: null,
+                bsize: 0,
+                q: null,
+                qsize: 0,
+                s: null,
+                ssize: 0,
+                ep: 0,
+                ed: 0,
+                p: null,
+                psize: 0
+            };
+
+            // Initialize ScsSettings with default settings
+            const settings = new SCS.ScsSettings();
+            SCS.setDefaultSettings(settings);
+            settings.epsAbs = 1e-9;
+            settings.epsRel = 1e-9;
+            settings.verbose = 0;
+
+            // Solve the problem using the data and cone objects
+            const solution = SCS.solve(data, cone, settings);
+
+            // Display the results
+            document.getElementById('output').textContent = JSON.stringify(solution, null, 2);
+        });
+    </script>
 
 Basic Usage
 -----------
