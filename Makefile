@@ -197,11 +197,15 @@ $(OUT)/scs.wasm $(OUT)/scs.js: $(WASM_SRC)
 	emcc $(CFLAGS) -o $(OUT)/scs.js $^ \
 		-s WASM=1 \
 		--bind \
+		-g0 \
+		-Os \
 		-s ALLOW_MEMORY_GROWTH=1 \
-		-s NO_EXIT_RUNTIME=1 \
-		-s ASSERTIONS=1 \
-		-O2
+		-s MODULARIZE \
+		-s 'EXPORT_NAME="createSCS"'
 		$(LDFLAGS)
+
+# -s NO_EXIT_RUNTIME=1 \
+# -s ASSERTIONS=1 \
 
 .PHONY: clean purge
 clean:

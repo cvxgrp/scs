@@ -6,6 +6,9 @@ JavaScript / WebAssembly
 After :ref:`building the WebAssembly version <javascript_install>`, you can use SCS in 
 JavaScript environments including browsers and Node.js.
 
+Note that the JavaScript version does not support compiling with BLAS and LAPACK,
+so it does not support solving SDPs.
+
 Basic Usage
 -----------
 
@@ -13,14 +16,26 @@ In Node.js, you can use SCS as follows:
 
 .. code-block:: javascript
 
-    const Module = require('scs.js');
-    // or: import Module from 'scs.js';
+    const createSCS = require('scs.js');
 
-    // Wait for WASM module initialization
-    Module.onRuntimeInitialized = function() {
+    createSCS().then(SCS => {
         // define problem here
-        Module.solve(data, cone, settings);
-    };
+        SCS.solve(data, cone, settings);
+    });
+
+Alternatively, you can use ES6 modules, as well as async/await:
+
+.. code-block:: javascript
+
+    import createSCS from 'scs.js';
+
+    async function main() {
+        const SCS = await createSCS();
+        // define problem here
+        SCS.solve(data, cone, settings);
+    }
+
+    main();
 
 In browsers, you can load SCS using a script tag:
 
@@ -28,10 +43,10 @@ In browsers, you can load SCS using a script tag:
 
     <script src="scs.js"></script>
     <script>
-        Module.onRuntimeInitialized = function() {
+        createSCS().then(SCS => {
             // define problem here
-            Module.solve(data, cone, settings);
-        };
+            SCS.solve(data, cone, settings);
+        });
     </script>
 
 Data Format
@@ -104,8 +119,6 @@ Cones are specified using the following structure:
         bsize: number, // Total length of box cone
         q: number[],   // Array of second-order cone constraints (optional)
         qsize: number, // Length of second-order cone array
-        s: number[],   // Array of semidefinite cone constraints (optional)
-        ssize: number, // Length of semidefinite constraints array
         ep: number,    // Number of primal exponential cone triples
         ed: number,    // Number of dual exponential cone triples
         p: number[],   // Array of power cone parameters (optional)
@@ -165,4 +178,5 @@ The returned ``solution`` object contains:
     - ``resUnbdd``: Unboundedness measure
     - ``solveTime``: Solve time
     - ``setupTime``: Setup time
+    
 - ``status``: Solution status code

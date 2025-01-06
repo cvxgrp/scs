@@ -1,62 +1,54 @@
-// Import the WASM module
-const Module = require('../out/scs.js');
+import createSCS from '../out/scs.js';
 
-// Wait for the module to be initialized
-Module.onRuntimeInitialized = async function() {
-    // Define problem data (same as demo.html)
-    const P_x = [3.0, -1.0, 2.0];
-    const P_i = [0, 0, 1];
-    const P_p = [0, 1, 3];
-    const A_x = [-1.0, 1.0, 1.0, 1.0];
-    const A_i = [0, 1, 0, 2];
-    const A_p = [0, 2, 4];
-    const b = [-1.0, 0.3, -0.5];
-    const c = [-1.0, -1.0];
+const SCS = await createSCS();
 
-    // Create ScsData object
+const settings = new SCS.ScsSettings();
+SCS.setDefaultSettings(settings);
+
+createSCS().then(SCS => {
     const data = {
         m: 3,
         n: 2,
-        A_x, A_i, A_p,
-        P_x, P_i, P_p,
-        b, c
+        A_x: [-1.0, 1.0, 1.0, 1.0],
+        A_i: [0, 1, 0, 2],
+        A_p: [0, 2, 4],
+        P_x: [3.0, -1.0, 2.0],
+        P_i: [0, 0, 1],
+        P_p: [0, 1, 3],
+        b: [-1.0, 0.3, -0.5],
+        c: [-1.0, -1.0]
     };
 
-    // Create ScsCone object
     const cone = {
         z: 1,
         l: 2,
-        bu: null,
-        bl: null,
-        bsize: 0,
-        q: null,
-        qsize: 0,
-        s: null,
-        ssize: 0,
-        ep: 0,
-        ed: 0,
-        p: null,
-        psize: 0
+        // bu: null,
+        // bl: null,
+        // bsize: 0,
+        // q: null,
+        // qsize: 0,
+        // s: null,
+        // ssize: 0,
+        // ep: 0,
+        // ed: 0,
+        // p: null,
+        // psize: 0
     };
 
-    // Initialize settings
-    const settings = new Module.ScsSettings();
-    Module.setDefaultSettings(settings);
+    const settings = new SCS.ScsSettings();
+    SCS.setDefaultSettings(settings);
     settings.epsAbs = 1e-9;
     settings.epsRel = 1e-9;
-    settings.verbose = 1;  // Set to 1 to see solver output
 
-    // Solve the problem
-    const solution = Module.solve(data, cone, settings);
+    // First solve without warm start
+    const solution = SCS.solve(data, cone, settings);
+    console.log('First solution:', solution);
 
-    // Print results
-    console.log('Solution status:', solution.status);
-    console.log('\nPrimal variables (x):');
-    console.log(Array.from(solution.x));
-    console.log('\nDual variables (y):');
-    console.log(Array.from(solution.y));
-    console.log('\nSlack variables (s):');
-    console.log(Array.from(solution.s));
-    console.log('\nSolver info:');
-    console.log(solution.info);
-};
+    // Enable warm start
+    settings.warmStart = true;
+    settings.verbose = 1;
+
+    // Second solve with warm start
+    const solution2 = SCS.solve(data, cone, settings, solution);
+    console.log('Second solution with warm start:', solution2);
+});
