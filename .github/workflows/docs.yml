@@ -33,13 +33,10 @@ jobs:
       - name: Build docs
         run: |
           cd docs/src && make docs && touch ../.nojekyll
-      - name: Upload files to FTP server
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
-          server: w008ef9a.kasserver.com
-          username: f0146955
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./docs/
-          server-dir: ./scs/
-
-
+          branch: gh-pages # The branch the action should deploy to.
+          folder: docs # The folder the action should deploy.
+  
+  
