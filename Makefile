@@ -36,11 +36,9 @@ $(SCS_O): src/scs.c $(INC_FILES)
 $(SCS_INDIR_O): src/scs.c $(INC_FILES)
 	$(CC) $(CFLAGS) -DINDIRECT=1 -c $< -o $@
 
-# Compile AMD sources with emcc
 $(EXTSRC)/amd/%.o: $(EXTSRC)/amd/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile QDLDL sources with emcc
 $(EXTSRC)/qdldl/%.o: $(EXTSRC)/qdldl/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -121,10 +119,6 @@ $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
 
 .PHONY: test_gpu
 test_gpu: $(OUT)/run_tests_gpu_indirect # $(OUT)/run_tests_gpu_direct
-
-.PHONY: test_wasm
-test_wasm: 
-	node test/test_wasm.js
 
 .PHONY: mkl
 mkl: mklroot $(OUT)/libscsmkl.a $(OUT)/libscsmkl.$(SHARED) $(OUT)/run_tests_mkl $(OUT)/demo_socp_mkl
