@@ -198,9 +198,6 @@ $(OUT)/scs.wasm $(OUT)/scs.js: $(WASM_SRC)
 		-s 'EXPORT_NAME="createSCS"'
 		$(LDFLAGS)
 
-# -s NO_EXIT_RUNTIME=1 \
-# -s ASSERTIONS=1 \
-
 .PHONY: clean purge
 clean:
 	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(MKLSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
