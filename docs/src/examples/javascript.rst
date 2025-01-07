@@ -19,67 +19,28 @@ or in the browser via
 Live Demo
 ---------
 
+Here is a live demo, which computes the point :math:`x` that is closest to the 
+origin, subject to lying in the half-plane :math:`x_1 + x_2 \ge b` and within 
+a disc of radius :math:`r` centered at :math:`c = (-2, 2.5)`. Here, the values 
+of :math:`b` and :math:`r` are set by sliders. The solution is computed using 
+two second-order cones, one for the disc constraint, and one to encode
+:math:`\|x\|_2 \leq d`, where :math:`d` is the distance from the origin, which
+is the quantity to be minimized.
+
 .. raw:: html
-  
-    <pre id="output" style="font-size: 90%">Loading...</pre>
-    <script src="../_static/scs.js"></script>
-    <script>
-        createSCS().then(SCS => {
-            // Define problem data similar to qp.c
-            const P_x = [3.0, -1.0, 2.0];
-            const P_i = [0, 0, 1];
-            const P_p = [0, 1, 3];
-            const A_x = [-1.0, 1.0, 1.0, 1.0];
-            const A_i = [0, 1, 0, 2];
-            const A_p = [0, 2, 4];
-            const b = [-1.0, 0.3, -0.5];
-            const c = [-1.0, -1.0];
+   :file: javascript_disc.html
 
-            // Create ScsData object in JS
-            const data = {
-                m: 3,
-                n: 2,
-                A_x: A_x,
-                A_i: A_i,
-                A_p: A_p,
-                P_x: P_x,
-                P_i: P_i,
-                P_p: P_p,
-                b: b,
-                c: c
-            };
+.. raw:: html
 
-            // Create ScsCone object in JS
-            const cone = {
-                z: 1,
-                l: 2,
-                bu: null,
-                bl: null,
-                bsize: 0,
-                q: null,
-                qsize: 0,
-                s: null,
-                ssize: 0,
-                ep: 0,
-                ed: 0,
-                p: null,
-                psize: 0
-            };
+  <details style="margin: 1em 0;">
+    <summary style="cursor: pointer; margin-bottom: 1em;">Show code</summary>
 
-            // Initialize ScsSettings with default settings
-            const settings = new SCS.ScsSettings();
-            SCS.setDefaultSettings(settings);
-            settings.epsAbs = 1e-9;
-            settings.epsRel = 1e-9;
-            settings.verbose = 0;
+.. literalinclude:: javascript_disc.html
+  :language: html
 
-            // Solve the problem using the data and cone objects
-            const solution = SCS.solve(data, cone, settings);
+.. raw:: html
 
-            // Display the results
-            document.getElementById('output').textContent = JSON.stringify(solution, null, 2);
-        });
-    </script>
+  </details>
 
 Basic Usage
 -----------
