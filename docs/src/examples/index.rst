@@ -17,6 +17,8 @@ Here we present a few simple examples of calling SCS from different languages.
 
 :ref:`Ruby <ruby_example>`
 
+:ref:`JavaScript / WebAssembly <javascript_example>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -27,4 +29,5 @@ Here we present a few simple examples of calling SCS from different languages.
    julia.rst
    r.rst
    ruby.rst
+   javascript.rst
 

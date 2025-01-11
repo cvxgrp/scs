@@ -1,0 +1,316 @@
+<script src="https://unpkg.com/scs-solver/dist/scs.js"></script>
+<style>
+    #solution {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    #canvas {
+        border: 1px solid #ccc;
+        max-width: 100%;
+    }
+
+    #canvas text {
+        font-style: italic;
+    }
+
+    pre#output {
+        font-size: 75%;
+        margin: 0;
+        max-width: 180px;
+        overflow-x: auto;
+    }
+</style>
+<div>
+    <label for="radiusSlider">Radius (<i>r</i>):</label>
+    <input type="range" id="radiusSlider" min="0.5" max="6" step="0.1" value="5">
+    <span id="radiusVal">5</span>
+</div>
+<div>
+    <label for="lineSlider">Line Offset (<i>b</i>):</label>
+    <input type="range" id="lineSlider" min="-3" max="8" step="0.1" value="3">
+    <span id="lineVal">3</span>
+</div>
+<div id="solution">
+    <svg id="canvas" width="500" height="500"></svg>
+    <pre id="output">Loading...</pre>
+</div>
+<script>
+    (async function () {
+        const SCS = await createSCS();
+
+        const svg = document.getElementById('canvas');
+        const output = document.getElementById('output');
+
+        let r = parseFloat(document.getElementById('radiusSlider').value);
+        let b_val = parseFloat(document.getElementById('lineSlider').value);
+        const c = [-2, 2.5];      // Center of circle
+        const a = [1, 1];         // Coefficients for linear constraint
+        let solutionPoint = [0, 0];
+
+        document.getElementById('radiusSlider').addEventListener('input', e => {
+            r = parseFloat(e.target.value);
+            document.getElementById('radiusVal').textContent = r;
+            solveAndDraw();
+        });
+
+        document.getElementById('lineSlider').addEventListener('input', e => {
+            b_val = parseFloat(e.target.value);
+            document.getElementById('lineVal').textContent = b_val;
+            solveAndDraw();
+        });
+
+        async function solveAndDraw() {
+            // Dimensions
+            const m = 7; // total constraint rows: 1 for line and 3+3 for SOC
+            const n = 3; // variables: x1, x2, d
+
+            // Way to construct the problem using math.js:
+
+            // // Create a sparse matrix A of size m x n using math.js
+            // let A = math.sparse(math.zeros(m, n));
+            // let b = Array(m).fill(0);
+
+            // // Indices for rows in constraints:
+            // // Linear constraint: 0, SOC1: 1, 2, 3, SOC2: 4, 5, 6
+
+            // // Linear constraint: a^T x >= b_val -> -x1 + -x2 + slack == -b_val
+            // A.set([0, 0], -a[0]);
+            // A.set([0, 1], -a[1]);
+            // b[0] = -b_val;
+
+            // // Constraint SOC1: ||[x1,x2]||_2 <= d -> (d, x1, x2) ∈ SOC
+            // A.set([1, 2], -1);   // coefficient for d in row0
+            // A.set([2, 0], 1);    // coefficient for x1 in row1
+            // A.set([3, 1], 1);    // coefficient for x2 in row2
+            // // No additional b entries needed (remains 0)
+
+            // // Constraint SOC2: ||[x1 - c1, x2 - c2]||_2 <= r -> (r, x1-c1, x2-c2) ∈ SOC
+            // b[4] = r;              // row3: constant term = r
+            // A.set([5, 0], 1);      // row4: coefficient for x1
+            // b[5] = c[0];           // adjust for x1 - c1
+            // A.set([6, 1], 1);      // row5: coefficient for x2
+            // b[6] = c[1];           // adjust for x2 - c2
+
+            // // Extract CSC arrays from math.js sparse matrix
+            // const A_data = A._values;
+            // const A_index = A._index;
+            // const A_ptr = A._ptr;
+
+            // Directly construct the problem using arrays:
+
+            // Objective: minimize t
+            const c_vec = [0, 0, 1];
+
+            const A_index = [5, 2, 0, 6, 3, 0, 1];
+            const A_ptr = [0, 3, 6, 7];
+            const A_data = [1, 1, -1, 1, 1, -1, -1];
+
+            const b = [-b_val, 0, 0, 0, r, c[0], c[1]];
+            
+            const data = {
+                m: m,
+                n: n,
+                A_x: A_data,
+                A_i: A_index,
+                A_p: A_ptr,
+                b: b,
+                c: c_vec
+            };
+
+            console.log(data);
+
+            // Cone specification: one linear inequality, two SOC cones of size 3 each
+            const cone = {
+                l: 1,
+                q: [3, 3],
+                qsize: 2,
+            };
+
+            const settings = new SCS.ScsSettings();
+            SCS.setDefaultSettings(settings);
+            settings.epsAbs = 1e-6;
+            settings.epsRel = 1e-6;
+            settings.verbose = 0;
+
+            const solution = SCS.solve(data, cone, settings);
+
+            for (const key in solution.info) {
+                if (typeof solution.info[key] === 'number') {
+                    solution.info[key] = Math.round(solution.info[key] * 10000) / 10000;
+                }
+            }
+
+            if (solution.status == "SOLVED") {
+                const x_sol = solution.x.map(x => Math.round(x * 1000) / 1000);
+                solutionPoint = [x_sol[0], x_sol[1]];
+
+                let text = JSON.stringify({
+                    status: solution.status,
+                    x: x_sol,
+                    info: solution.info
+                }, null, 2).split('\n');
+                text[3] = text[3].padEnd(12) + "// x1";
+                text[4] = text[4].padEnd(12) + "// x2";
+                text[5] = text[5].padEnd(12) + "// d";
+                output.textContent = text.join('\n');
+                console.log(text.join('\n'));
+            } else if (solution.status == "INFEASIBLE") {
+                solutionPoint = null;
+                output.textContent = JSON.stringify({
+                    status: solution.status,
+                    info: solution.info
+                }, null, 2);
+            } else {
+                output.textContent = JSON.stringify({
+                    status: solution.status,
+                    info: solution.info
+                }, null, 2);
+            }
+
+            drawScene();
+        }
+
+        function drawScene() {
+            // Clear existing SVG content
+            while (svg.firstChild) {
+                svg.removeChild(svg.firstChild);
+            }
+
+            // Coordinate transformation
+            function toSVGCoords(x, y) {
+                const scale = 500 / 20;
+                const cx = 250 + x * scale;
+                const cy = 250 - y * scale;
+                return [cx, cy];
+            }
+
+            // Draw circle
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const [c_svgX, c_svgY] = toSVGCoords(c[0], c[1]);
+            circle.setAttribute("cx", c_svgX);
+            circle.setAttribute("cy", c_svgY);
+            circle.setAttribute("r", r * (500 / 20));
+            circle.setAttribute("stroke", "blue");
+            circle.setAttribute("fill", "rgba(0, 0, 255, 0.05)");
+            svg.appendChild(circle);
+
+            // Draw point c
+            const cCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            cCircle.setAttribute("cx", c_svgX);
+            cCircle.setAttribute("cy", c_svgY);
+            cCircle.setAttribute("r", 2);
+            cCircle.setAttribute("fill", "blue");
+            svg.appendChild(cCircle);
+
+            if (r >= 1.5) {
+                // label
+                const cText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                cText.setAttribute("x", c_svgX + 3);
+                cText.setAttribute("y", c_svgY - 3);
+                cText.textContent = "c";
+                svg.appendChild(cText);
+
+                // Radius line
+                const radiusLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                const rEnd = toSVGCoords(c[0] - r / Math.sqrt(2), c[1] - r / Math.sqrt(2));
+                radiusLine.setAttribute("x1", c_svgX);
+                radiusLine.setAttribute("y1", c_svgY);
+                radiusLine.setAttribute("x2", rEnd[0]);
+                radiusLine.setAttribute("y2", rEnd[1]);
+                radiusLine.setAttribute("stroke", "blue");
+                svg.appendChild(radiusLine);
+                // label
+                const rText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                const radiusLabelPos = toSVGCoords(c[0] - r / Math.sqrt(2) * 0.5 - 0.2, c[1] - r / Math.sqrt(2) * 0.5 + 0.2);
+                rText.setAttribute("x", radiusLabelPos[0]);
+                rText.setAttribute("y", radiusLabelPos[1]);
+                rText.textContent = "r";
+                radiusLine.setAttribute("stroke-dasharray", "5,2");
+                svg.appendChild(rText);
+            }
+
+            // Draw line
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const pt1 = toSVGCoords(-10, b_val + 10);
+            const pt2 = toSVGCoords(10, b_val - 10);
+            line.setAttribute("x1", pt1[0]);
+            line.setAttribute("y1", pt1[1]);
+            line.setAttribute("x2", pt2[0]);
+            line.setAttribute("y2", pt2[1]);
+            line.setAttribute("stroke", "green");
+            svg.appendChild(line);
+
+            // Shade area above the line
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", `${pt1[0]},${pt1[1]} ${pt2[0]},${pt2[1]} ${pt2[0]},-500 ${pt1[0]},-500`);
+            polygon.setAttribute("fill", "rgba(0, 255, 0, 0.05)");
+            svg.appendChild(polygon);
+
+            // label offset b
+            const bText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            const bTextPos = toSVGCoords(0, b_val);
+            bText.setAttribute("x", bTextPos[0] - 17);
+            bText.setAttribute("y", bTextPos[1] + 5);
+            bText.textContent = "b";
+            svg.appendChild(bText);
+            // tick
+            const bTick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            bTick.setAttribute("x1", bTextPos[0] - 3);
+            bTick.setAttribute("y1", bTextPos[1]);
+            bTick.setAttribute("x2", bTextPos[0] + 3);
+            bTick.setAttribute("y2", bTextPos[1]);
+            bTick.setAttribute("stroke", "black");
+            svg.appendChild(bTick);
+
+            // Draw axes
+            const axisX = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            axisX.setAttribute("x1", 0);
+            axisX.setAttribute("y1", 250);
+            axisX.setAttribute("x2", 500);
+            axisX.setAttribute("y2", 250);
+            axisX.setAttribute("stroke", "black");
+            svg.appendChild(axisX);
+
+            const axisY = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            axisY.setAttribute("x1", 250);
+            axisY.setAttribute("y1", 0);
+            axisY.setAttribute("x2", 250);
+            axisY.setAttribute("y2", 500);
+            axisY.setAttribute("stroke", "black");
+            svg.appendChild(axisY);
+
+            // Draw optimal point or infeasibility message
+            if (solutionPoint) {
+                const [optX, optY] = toSVGCoords(solutionPoint[0], solutionPoint[1]);
+                const optCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                optCircle.setAttribute("cx", optX);
+                optCircle.setAttribute("cy", optY);
+                optCircle.setAttribute("r", 4);
+                optCircle.setAttribute("fill", "red");
+                svg.appendChild(optCircle);
+
+                // label
+                const optText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                optText.setAttribute("x", optX + 5);
+                optText.setAttribute("y", optY - 5);
+                optText.textContent = "x";
+                svg.appendChild(optText);
+
+            } else {
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", 400);
+                text.setAttribute("y", 100);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("dominant-baseline", "middle");
+                text.textContent = "Infeasible";
+                svg.appendChild(text);
+            }
+        }
+
+        // Initial solve and draw
+        solveAndDraw();
+    })();
+</script>
