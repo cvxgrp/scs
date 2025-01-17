@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="BLAS and LAPACK" href="../blas_lapack/index.html" />
-    <link rel="prev" title="Ruby" href="../install/ruby.html" /> 
+    <link rel="prev" title="JavaScript / WebAssembly" href="../install/javascript.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -195,7 +195,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float">
-<span id="_CPPv321scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_CPPv221scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a8ac979c387dc9951c40d017d1143a9f4"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float" title="Link to this definition"></a><br /></dt>
+<span id="_CPPv321scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_CPPv221scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float" title="Link to this definition"></a><br /></dt>
 <dd><p>Initialize <code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> structure and perform any necessary preprocessing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -225,8 +225,13 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float">
 <span id="_CPPv317scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv217scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a24229ab88459885462fcc7fa6759467f"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Solves the linear system as required by SCS at each iteration: <div class="math notranslate nohighlight">
-\[\begin{split} \begin{bmatrix} (R_x + P) &amp; A^\top \\ A &amp; -R_y \\ \end{bmatrix} x = b \end{split}\]</div>
+<dd><p>Solves the linear system as required by SCS at each iteration:  <div class="math notranslate nohighlight">
+\[\begin{split}
+   \begin{bmatrix}
+   (R_x + P) &amp; A^\top \\
+    A   &amp;  -R_y \\
+   \end{bmatrix} x = b
+ \end{split}\]</div>
 </p>
 <p>for <code class="docutils literal notranslate"><span class="pre">x</span></code>, where <code class="docutils literal notranslate"><span class="pre">diag(R_x,</span> <span class="pre">R_y)</span> <span class="pre">=</span> <span class="pre">R</span></code>. Overwrites <code class="docutils literal notranslate"><span class="pre">b</span></code> with result.</p>
 <dl class="field-list simple">
@@ -260,7 +265,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv422scs_get_lin_sys_methodv">
-<span id="_CPPv322scs_get_lin_sys_methodv"></span><span id="_CPPv222scs_get_lin_sys_methodv"></span><span id="scs_get_lin_sys_method__void"></span><span class="target" id="linsys_8h_1a916ae46bf2bd801b82f79272d411b851"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_get_lin_sys_method</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422scs_get_lin_sys_methodv" title="Link to this definition"></a><br /></dt>
+<span id="_CPPv322scs_get_lin_sys_methodv"></span><span id="_CPPv222scs_get_lin_sys_methodv"></span><span id="scs_get_lin_sys_method__void"></span><span class="target" id="linsys_8h_1a5d3ebe89707d22dc70f63a3d151e000f"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_get_lin_sys_method</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422scs_get_lin_sys_methodv" title="Link to this definition"></a><br /></dt>
 <dd><p>Name of the linear solver.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -277,7 +282,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../install/ruby.html" class="btn btn-neutral float-left" title="Ruby" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../install/javascript.html" class="btn btn-neutral float-left" title="JavaScript / WebAssembly" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../blas_lapack/index.html" class="btn btn-neutral float-right" title="BLAS and LAPACK" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

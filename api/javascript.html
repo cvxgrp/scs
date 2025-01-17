@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaScript / WebAssembly &mdash; SCS 3.2.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=84e44b8a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Install" href="../install/index.html" />
+    <link rel="prev" title="Ruby" href="ruby.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#interfaces">Interfaces</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="c.html">C / C++</a></li>
+<li class="toctree-l3"><a class="reference internal" href="python.html">Python</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matlab.html">MATLAB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="julia.html">Julia</a></li>
+<li class="toctree-l3"><a class="reference internal" href="r.html">R</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ruby.html">Ruby</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">JavaScript / WebAssembly</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#instantiating-the-solver">Instantiating the Solver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data-format">Data Format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cone-specification">Cone Specification</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#settings">Settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#solving-problems">Solving Problems</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API</a></li>
+      <li class="breadcrumb-item active">JavaScript / WebAssembly</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/javascript.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="javascript-webassembly">
+<span id="javascript-interface"></span><h1>JavaScript / WebAssembly<a class="headerlink" href="#javascript-webassembly" title="Link to this heading"></a></h1>
+<p>After <a class="reference internal" href="../install/javascript.html#javascript-install"><span class="std std-ref">installing the scs-solver package</span></a>, or after
+loading <code class="docutils literal notranslate"><span class="pre">scs.js</span></code> <a class="reference internal" href="../install/javascript.html#javascript-install"><span class="std std-ref">in the browser</span></a>, you can use SCS
+using the following interface.</p>
+<section id="instantiating-the-solver">
+<h2>Instantiating the Solver<a class="headerlink" href="#instantiating-the-solver" title="Link to this heading"></a></h2>
+<p>In Node.js, you can use SCS as follows using CommonJS:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;scs-solver&#39;</span><span class="p">);</span>
+
+<span class="nx">createSCS</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="nx">SCS</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// define problem here</span>
+<span class="w">    </span><span class="nx">SCS</span><span class="p">.</span><span class="nx">solve</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">cone</span><span class="p">,</span><span class="w"> </span><span class="nx">settings</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Alternatively, you can use ES6 modules, as well as async/await:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;scs-solver&#39;</span><span class="p">;</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">SCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">createSCS</span><span class="p">();</span>
+<span class="w">    </span><span class="c1">// define problem here</span>
+<span class="w">    </span><span class="nx">SCS</span><span class="p">.</span><span class="nx">solve</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">cone</span><span class="p">,</span><span class="w"> </span><span class="nx">settings</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">main</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>In browsers, you can load SCS using a script tag:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/scs-solver/dist/scs.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="nx">createSCS</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="nx">SCS</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// define problem here</span>
+<span class="w">        </span><span class="nx">SCS</span><span class="p">.</span><span class="nx">solve</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">cone</span><span class="p">,</span><span class="w"> </span><span class="nx">settings</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="data-format">
+<h2>Data Format<a class="headerlink" href="#data-format" title="Link to this heading"></a></h2>
+<p>Problem data must be provided as sparse matrices in CSC format using the following structure:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">m</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w">     </span><span class="c1">// Number of rows of A</span>
+<span class="w">    </span><span class="nx">n</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w">     </span><span class="c1">// Number of cols of A and of P</span>
+<span class="w">    </span><span class="nx">A_x</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w"> </span><span class="c1">// Non-zero elements of matrix A</span>
+<span class="w">    </span><span class="nx">A_i</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w"> </span><span class="c1">// Row indices of A elements</span>
+<span class="w">    </span><span class="nx">A_p</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w"> </span><span class="c1">// Column pointers for A</span>
+<span class="w">    </span><span class="nx">P_x</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w"> </span><span class="c1">// Non-zero elements of matrix P (optional)</span>
+<span class="w">    </span><span class="nx">P_i</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w"> </span><span class="c1">// Row indices of P elements (optional)</span>
+<span class="w">    </span><span class="nx">P_p</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w"> </span><span class="c1">// Column pointers for P (optional)</span>
+<span class="w">    </span><span class="nx">b</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w">   </span><span class="c1">// Length m array</span>
+<span class="w">    </span><span class="nx">c</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[]</span><span class="w">    </span><span class="c1">// Length n array</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>One way to handle the CSC format in javascript is via the
+<a class="reference external" href="https://mathjs.org/docs/reference/classes/sparsematrix.html">Math.js library</a>,
+for example</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// npm install mathjs</span>
+<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">matrix</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mathjs&#39;</span><span class="p">);</span>
+<span class="c1">// or import { matrix } from &#39;mathjs&#39;;</span>
+<span class="c1">// or &lt;script src=&quot;https://unpkg.com/mathjs@14.0.1/lib/browser/math.js&quot;&gt;&lt;/script&gt;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">matrix</span><span class="p">([</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">]</span>
+<span class="p">],</span><span class="w"> </span><span class="s1">&#39;sparse&#39;</span><span class="p">);</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">P</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">matrix</span><span class="p">([</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">]</span>
+<span class="p">],</span><span class="w"> </span><span class="s1">&#39;sparse&#39;</span><span class="p">);</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">m</span><span class="o">:</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">n</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">A_x</span><span class="o">:</span><span class="w"> </span><span class="nx">A</span><span class="p">.</span><span class="nx">_values</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">A_i</span><span class="o">:</span><span class="w"> </span><span class="nx">A</span><span class="p">.</span><span class="nx">_index</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">A_p</span><span class="o">:</span><span class="w"> </span><span class="nx">A</span><span class="p">.</span><span class="nx">_ptr</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">P_x</span><span class="o">:</span><span class="w"> </span><span class="nx">P</span><span class="p">.</span><span class="nx">_values</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">P_i</span><span class="o">:</span><span class="w"> </span><span class="nx">P</span><span class="p">.</span><span class="nx">_index</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">P_p</span><span class="o">:</span><span class="w"> </span><span class="nx">P</span><span class="p">.</span><span class="nx">_ptr</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">b</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">0.5</span><span class="p">],</span>
+<span class="w">    </span><span class="nx">c</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0</span><span class="p">]</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="cone-specification">
+<h2>Cone Specification<a class="headerlink" href="#cone-specification" title="Link to this heading"></a></h2>
+<p>Cones are specified using the following structure:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">cone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">z</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w">     </span><span class="c1">// Number of zero cones</span>
+<span class="w">    </span><span class="nx">l</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w">     </span><span class="c1">// Number of positive (or linear) cones</span>
+<span class="w">    </span><span class="nx">bu</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w">  </span><span class="c1">// Box cone upper values</span>
+<span class="w">    </span><span class="nx">bl</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w">  </span><span class="c1">// Box cone lower values</span>
+<span class="w">    </span><span class="nx">bsize</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w"> </span><span class="c1">// Total length of box cone</span>
+<span class="w">    </span><span class="nx">q</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w">   </span><span class="c1">// Array of second-order cone lengths</span>
+<span class="w">    </span><span class="nx">qsize</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w"> </span><span class="c1">// Number of second-order cones</span>
+<span class="w">    </span><span class="nx">ep</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w">    </span><span class="c1">// Number of primal exponential cone triples</span>
+<span class="w">    </span><span class="nx">ed</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">,</span><span class="w">    </span><span class="c1">// Number of dual exponential cone triples</span>
+<span class="w">    </span><span class="nx">p</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="p">[],</span><span class="w">   </span><span class="c1">// Array of power cone parameters</span>
+<span class="w">    </span><span class="nx">psize</span><span class="o">:</span><span class="w"> </span><span class="nx">number</span><span class="w">  </span><span class="c1">// Number of power cone triples</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Note that positive semidefinite cones are not supported in the JavaScript interface.</p>
+<p>Usually, not all cone types are used in a problem, in which case the unused
+cones can be omitted. For example, if only zero and positive cones are used:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">cone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">z</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">l</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="settings">
+<h2>Settings<a class="headerlink" href="#settings" title="Link to this heading"></a></h2>
+<p>Control solver behavior using settings:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">settings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Module</span><span class="p">.</span><span class="nx">ScsSettings</span><span class="p">();</span>
+<span class="nx">Module</span><span class="p">.</span><span class="nx">setDefaultSettings</span><span class="p">(</span><span class="nx">settings</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Available settings:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code> (boolean): Heuristically rescale problem data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> (number): Initial dual scaling factor</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">adaptiveScale</span></code> (boolean): Whether to adaptively update scale</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rhoX</span></code> (number): Primal constraint scaling factor</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxIters</span></code> (number): Maximum iterations to take</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">epsAbs</span></code> (number): Absolute convergence tolerance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">epsRel</span></code> (number): Relative convergence tolerance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">epsInfeas</span></code> (number): Infeasible convergence tolerance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (number): Douglas-Rachford relaxation parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeLimitSecs</span></code> (number): Time limit in seconds</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code> (number): Output level (0-3)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warmStart</span></code> (boolean): Use warm starting</p></li>
+</ul>
+</section>
+<section id="solving-problems">
+<h2>Solving Problems<a class="headerlink" href="#solving-problems" title="Link to this heading"></a></h2>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">solve</span></code> function to solve optimization problems:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">solution</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Module</span><span class="p">.</span><span class="nx">solve</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">cone</span><span class="p">,</span><span class="w"> </span><span class="nx">settings</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nx">warmStartSolution</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>The function takes an optional <code class="docutils literal notranslate"><span class="pre">warmStartSolution</span></code> object to warm-start the solver,
+provided <code class="docutils literal notranslate"><span class="pre">settings.warmStart</span></code> is set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">solution</span></code> object contains:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code>: Primal variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code>: Dual variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: Slack variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">info</span></code>: Solver information</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iter</span></code>: Number of iterations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pobj</span></code>: Primal objective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dobj</span></code>: Dual objective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">solveTime</span></code>: Solve time</p></li>
+<li><p>and <a class="reference internal" href="info.html#info"><span class="std std-ref">other solver information</span></a></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code>: Solution status (e.g. <code class="docutils literal notranslate"><span class="pre">SOLVED</span></code>, <code class="docutils literal notranslate"><span class="pre">INFEASIBLE</span></code>, <code class="docutils literal notranslate"><span class="pre">UNBOUNDED</span></code>, see <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flags</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">statusVal</span></code>: Solution status value (see <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flags</span></a>)</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ruby.html" class="btn btn-neutral float-left" title="Ruby" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../install/index.html" class="btn btn-neutral float-right" title="Install" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9CY7R8S5N2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-9CY7R8S5N2', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python &mdash; SCS 3.2.7 documentation</title>
+  <title>JavaScript / WebAssembly &mdash; SCS 3.2.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="MATLAB" href="matlab.html" />
-    <link rel="prev" title="C / C++" href="c.html" /> 
+    <link rel="next" title="Linear System Solver" href="../linear_solver/index.html" />
+    <link rel="prev" title="Ruby" href="ruby.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,15 +50,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="python.html">Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
 <li class="toctree-l2"><a class="reference internal" href="r.html">R</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ruby.html">Ruby</a></li>
-<li class="toctree-l2"><a class="reference internal" href="javascript.html">JavaScript / WebAssembly</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">JavaScript / WebAssembly</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-with-npm">Install with npm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-from-a-cdn-in-the-browser">Loading from a CDN in the browser</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
@@ -84,9 +85,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Install</a></li>
-      <li class="breadcrumb-item active">Python</li>
+      <li class="breadcrumb-item active">JavaScript / WebAssembly</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/install/python.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/install/javascript.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -94,39 +95,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="python">
-<span id="python-install"></span><h1>Python<a class="headerlink" href="#python" title="Link to this heading"></a></h1>
-<p>The easiest way to install the python version is using <a class="reference external" href="https://pypi.org/project/pip/">pip</a>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>scs
+  <section id="javascript-webassembly">
+<span id="javascript-install"></span><h1>JavaScript / WebAssembly<a class="headerlink" href="#javascript-webassembly" title="Link to this heading"></a></h1>
+<p>SCS is available in <a class="reference external" href="https://github.com/DominikPeters/scs.wasm">a WebAssembly version</a> that can be used with JavaScript.
+Note that the JavaScript version does not support compiling with BLAS
+and LAPACK, so it does not support solving SDPs.</p>
+<p>For building the WebAssembly version from source, see the <a class="reference external" href="https://github.com/DominikPeters/scs.wasm">scs.wasm</a> repository.</p>
+<p>The page on the <a class="reference internal" href="../api/javascript.html#javascript-interface"><span class="std std-ref">JS interface</span></a> provides more
+information on how to use SCS in JavaScript environments once loaded or installed.</p>
+<section id="install-with-npm">
+<h2>Install with npm<a class="headerlink" href="#install-with-npm" title="Link to this heading"></a></h2>
+<p>The package can be installed using <a class="reference external" href="https://www.npmjs.com/package/scs-solver">npm</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>npm<span class="w"> </span>install<span class="w"> </span>scs-solver
 </pre></div>
 </div>
-<p>You can also install directly from source</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/bodono/scs-python.git
-<span class="nb">cd</span><span class="w"> </span>scs-python
-python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--verbose<span class="w"> </span>.
+<p>It can be used in Node.js and in the browser.</p>
+</section>
+<section id="loading-from-a-cdn-in-the-browser">
+<h2>Loading from a CDN in the browser<a class="headerlink" href="#loading-from-a-cdn-in-the-browser" title="Link to this heading"></a></h2>
+<p>The package can also directly be included in a webpage using a CDN, by
+using one of the following script tags:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/scs-solver/dist/scs.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://cdn.jsdelivr.net/npm/scs-solver/dist/scs.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<p>If you have MKL, you can install the MKL Pardiso interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--verbose<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+<p>It can also be imported in JavaScript code using ES6 modules:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;module&quot;</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="k">import</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;https://unpkg.com/scs-solver/dist/scs.mjs&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable MKL when solving. MKL is typically
-faster than the built-in linear system solver.</p>
-<p>To test that SCS installed correctly, and you have pytest installed, run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>.
-</pre></div>
-</div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for the full SCS python API.</p>
-<section id="legacy-options">
-<h2>Legacy options<a class="headerlink" href="#legacy-options" title="Link to this heading"></a></h2>
-<p>You can install with OpenMP parallelization support using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--openmp
-</pre></div>
-</div>
-<p>You can install the GPU interface using (the GPU solver is no longer recommended)</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--gpu
-</pre></div>
-</div>
+<p>You can also host the files yourself, by <a class="reference external" href="https://unpkg.com/browse/scs-solver/dist/">downloading the files</a>, and putting <code class="docutils literal notranslate"><span class="pre">scs.js</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">scs.mjs</span></code>) and <code class="docutils literal notranslate"><span class="pre">scs.wasm</span></code> in the same directory.</p>
 </section>
 </section>
 
@@ -134,8 +135,8 @@ faster than the built-in linear system solver.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="c.html" class="btn btn-neutral float-left" title="C / C++" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="matlab.html" class="btn btn-neutral float-right" title="MATLAB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ruby.html" class="btn btn-neutral float-left" title="Ruby" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../linear_solver/index.html" class="btn btn-neutral float-right" title="Linear System Solver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
