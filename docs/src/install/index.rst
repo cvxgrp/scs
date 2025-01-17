@@ -17,6 +17,8 @@ Follow the links below for install instructions for each language.
 
 :ref:`Ruby <ruby_install>`
 
+:ref:`JavaScript / WebAssembly <javascript_install>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -27,3 +29,4 @@ Follow the links below for install instructions for each language.
    julia.rst
    r.rst
    ruby.rst
+   javascript.rst
