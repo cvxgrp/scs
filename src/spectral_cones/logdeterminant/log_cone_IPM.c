@@ -8,8 +8,7 @@
  * Spectral matrix cone projections, from "Projection onto Spectral Matrix
  * Cones" by Daniel Cederberg and Stephen Boyd, 2024.
  *
- * If you have any questions on the code, please reach out to the code author
- * Daniel Cederberg.
+ * If you have any questions on the code, please reach out to the code author Daniel Cederberg.
  * 
  * This file implements a primal-dual IPM for projecting onto the logarithmic 
  * cone.
