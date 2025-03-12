@@ -53,13 +53,13 @@ endif
 ifeq ($(CUDA_PATH), )
 CUDA_PATH=/usr/local/cuda
 CUCC = $(CUDA_PATH)/bin/nvcc
-CUDSS_DIR=/opt/cudss
 endif
+
 CULDFLAGS = -L$(CUDA_PATH)/lib -L$(CUDA_PATH)/lib64 -lcudart -lcublas -lcusparse
 CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
-CUDSS_FLAGS = -I$(CUDSS_DIR)/include -I$(CUDA_PATH)/include
-CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_DIR)/lib -lcudss
+CUDSS_FLAGS = -I$(CUDSS_PATH)/include -I$(CUDA_PATH)/include
+CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss
 
 # Add on default CFLAGS
 OPT = -O3
