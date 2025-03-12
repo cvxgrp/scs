@@ -8,7 +8,6 @@ endif
 # For cross-compiling with mingw use these.
 #CC = i686-w64-mingw32-gcc -m32
 #CC = x86_64-w64-mingw32-gcc-4.8
-CUCC = $(CC) #Don't need to use nvcc, since using cuda blas APIs
 
 # For GPU must add cuda libs to path, e.g.
 # export DYLD_LIBRARY_PATH=/usr/local/cuda/lib:$DYLD_LIBRARY_PATH
@@ -53,13 +52,19 @@ endif
 #TODO: check if this works for all platforms:
 ifeq ($(CUDA_PATH), )
 CUDA_PATH=/usr/local/cuda
+CUCC = $(CUDA_PATH)/bin/nvcc
+CUDSS_DIR=/opt/cudss
 endif
 CULDFLAGS = -L$(CUDA_PATH)/lib -L$(CUDA_PATH)/lib64 -lcudart -lcublas -lcusparse
 CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
+CUDSS_FLAGS = -I$(CUDSS_DIR)/include -I$(CUDA_PATH)/include
+CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_DIR)/lib -lcudss
+
 # Add on default CFLAGS
 OPT = -O3
-override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes -I. -Iinclude -Ilinsys $(OPT)
+INCLUDE = -I. -Iinclude -Ilinsys
+override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT)
 ifneq ($(ISWINDOWS), 1)
 override CFLAGS += -fPIC
 endif
@@ -70,6 +75,7 @@ INDIRSRC = $(LINSYS)/cpu/indirect
 GPUDIR = $(LINSYS)/gpu/direct
 GPUINDIR = $(LINSYS)/gpu/indirect
 MKLSRC = $(LINSYS)/mkl/direct
+CUDSSSRC = $(LINSYS)/cudss/direct
 
 EXTSRC = $(LINSYS)/external
 
