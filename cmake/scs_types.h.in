@@ -15,8 +15,11 @@
 extern "C" {
 #endif
 
+#include <complex.h>
+
 typedef @SCS_INT_TYPE@    scs_int;
 typedef @SCS_FLOAT_TYPE@  scs_float;
+typedef @SCS_FLOAT_TYPE@ _Complex scs_complex_float;
 
 #ifdef __cplusplus
 }
