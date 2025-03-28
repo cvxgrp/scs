@@ -589,7 +589,7 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     scs_printf("FATAL: heev workspace query failure, info = %li\n", (long)info);
     return -1;
   }
-  c->lcwork = (blas_int)(lcwork);
+  c->lcwork = (blas_int)(creal(lcwork));
   c->lrwork = (blas_int)(lrwork);
   c->liwork = liwork;
   c->cwork = (scs_complex_float *)scs_calloc(c->lcwork, sizeof(scs_complex_float));
@@ -703,11 +703,11 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* extract just lower triangular matrix */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = cXs[i * (n + 1)];
+    X[i * (2 * n - i)] = creal(cXs[i * (n + 1)]);
     memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = cXs[n * n - 1];
+  X[n * n - 1] = creal(cXs[n * n - 1]);
   return 0;
 
 #else
