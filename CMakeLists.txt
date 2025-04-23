@@ -163,6 +163,14 @@ if(USE_OPENMP)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 endif()
 
+if(USE_SPECTRAL_TIMING_FLAG)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSPECTRAL_TIMING_FLAG")
+endif()
+
+if(USE_SPECTRAL_DEBUG)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSPECTRAL_DEBUG")
+endif()
+
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
 message(STATUS "CMAKE_C_FLAGS = ${CMAKE_C_FLAGS}")
 
@@ -176,18 +184,36 @@ set(${PROJECT_NAME}_PUBLIC_HDR include/scs_types.h include/scs.h)
 
 # Common source files
 set(${PROJECT_NAME}_SRC
-    src/aa.c
-    src/cones.c
-    src/ctrlc.c
-    src/exp_cone.c
-    src/linalg.c
-    src/normalize.c
-    src/rw.c
-    src/scs.c
-    src/scs_version.c
-    src/util.c
-    ${LINSYS}/csparse.c
-    ${LINSYS}/scs_matrix.c)
+  src/aa.c
+  src/cones.c
+  src/ctrlc.c
+  src/exp_cone.c
+  src/linalg.c
+  src/normalize.c
+  src/rw.c
+  src/scs.c
+  src/scs_version.c
+  src/util.c
+  ${LINSYS}/csparse.c
+  ${LINSYS}/scs_matrix.c)
+
+# Spectral source files
+set(SPECTRAL_SRC
+    src/spectral_cones/logdeterminant/log_cone_Newton.c
+    src/spectral_cones/logdeterminant/log_cone_IPM.c
+    src/spectral_cones/logdeterminant/log_cone_wrapper.c
+    src/spectral_cones/logdeterminant/logdet_cone.c
+    src/spectral_cones/nuclear/ell1_cone.c
+    src/spectral_cones/nuclear/nuclear_cone.c
+    src/spectral_cones/sum-largest/sum_largest_cone.c
+    src/spectral_cones/sum-largest/sum_largest_eval_cone.c
+    src/spectral_cones/util_spectral_cones.c)
+
+# Conditionally add spectral files
+if(USE_LAPACK)
+  list(APPEND ${PROJECT_NAME}_SRC ${SPECTRAL_SRC})
+endif()
+
 
 # Common header files
 set(${PROJECT_NAME}_HDR
@@ -206,6 +232,15 @@ set(${PROJECT_NAME}_HDR
     include/util.h
     ${LINSYS}/csparse.h
     ${LINSYS}/scs_matrix.h)
+
+# Spectral header files
+set(SPECTRAL_HDR
+  include/util_spectral_cones.h)
+
+if(USE_LAPACK)
+  list(APPEND ${PROJECT_NAME}_HDR ${SPECTRAL_HDR})
+endif()
+
 
 # get all the c file in amd/external
 file(GLOB ${PROJECT_NAME}_AMD_EXTERNAL_SRC ${EXTERNAL}/amd/*.c)

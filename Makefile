@@ -1,12 +1,27 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/util.o src/cones.o src/exp_cone.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+ifneq ($(USE_LAPACK), 0)
+    SCS_OBJECTS = src/util.o src/cones.o src/exp_cone.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o \
+             	  src/spectral_cones/logdeterminant/log_cone_Newton.o src/spectral_cones/logdeterminant/log_cone_IPM.o \
+              	  src/spectral_cones/logdeterminant/log_cone_wrapper.o src/spectral_cones/logdeterminant/logdet_cone.o \
+              	  src/spectral_cones/nuclear/ell1_cone.o src/spectral_cones/nuclear/nuclear_cone.o \
+              	  src/spectral_cones/sum-largest/sum_largest_cone.o src/spectral_cones/sum-largest/sum_largest_eval_cone.o \
+                  src/spectral_cones/util_spectral_cones.o
+else
+	SCS_OBJECTS = src/util.o src/cones.o src/exp_cone.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+endif
+
 SCS_O = src/scs.o
 SCS_INDIR_O = src/scs_indir.o
 
 SRC_FILES = $(wildcard src/*.c)
-INC_FILES = $(wildcard include/*.h)
+
+ifneq ($(USE_LAPACK), 0)
+	INC_FILES = $(wildcard include/*.h)
+else
+	INC_FILES = $(filter-out include/util_spectral_cones.h, $(wildcard include/*.h))
+endif
 
 AMD_SOURCE = $(wildcard $(EXTSRC)/amd/*.c)
 LDL_SOURCE = $(EXTSRC)/qdldl/qdldl.c
