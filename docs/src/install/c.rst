@@ -137,6 +137,20 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
   make gpu DLONG=0
   out/run_tests_gpu_indirect
 
+Finally, to compile and test the :ref:`cuDSS solver <cudss>` you need to have
+CUDA toolkit, the :code:`nvcc` compiler, and
+`cuDSS <https://developer.nvidia.com/cudss>`_ library installed.
+Then set :code:`CUDA_PATH` and :code:`CUDSS_PATH` and execute
+
+.. code::bash
+
+  make cudss DLONG=0
+  out/run_tests_cudss
+
+Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
+:code:`DLONG=0` is mandatory (see `the docs of cuDSS CSR matrix
+<https://docs.nvidia.com/cuda/cudss/functions.html#cudssmatrixcreatecsr>`_).
+
 To use the libraries in your own source code, compile your code with the linker
 option :code:`-L(PATH_TO_SCS_LIBS)` and :code:`-lscsdir` or :code:`-lscsindir`
 (as needed). The API and required data structures are defined in the file
