@@ -17,3 +17,12 @@ jobs:
       - run: make gpu
       - run: make test_gpu
       # - run: out/run_tests_gpu_indirect    # gpus not available yet
+      - name: Install cudss
+        run: sudo apt-get -y install cudss
+      - name: Make cudss target
+        run: |
+          export CUDSS_PATH=/usr/lib/cudss
+          export CUCC=${CUDA_PATH}/bin/nvcc
+          ${CUCC} --version
+          make cudss
+      # - run: out/run_tests_cudss           # gpus not available yet
