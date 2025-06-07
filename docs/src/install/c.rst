@@ -66,6 +66,20 @@ MKL compiler flags might not be right for your system and may need to be
 <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
 
 
+If you have a GPU and CUDA toolkit installed, along with the
+`cuDSS <https://developer.nvidia.com/cudss>`_ library, you can compile SCS
+with cuDSS support using CMake. First, ensure that the :code:`CUDA_PATH` and
+:code:`CUDSS_PATH` environment variables are set, then configure with cuDSS enabled:
+
+.. code:: bash
+
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DUSE_CUDSS=ON -DDLONG=OFF ../
+  make
+
+Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
+:code:`DDLONG=OFF` is mandatory.
+This will build and install the cuDSS linear solver with target :code:`scs::scscudss`.
+
 The libraries can be imported using the find_package CMake command and used
 by calling target_link_libraries as in the following example:
 
@@ -84,6 +98,9 @@ by calling target_link_libraries as in the following example:
 
   # To use the MKL Pardiso direct method
   target_link_libraries(example scs::scsmkl)
+
+  # To use the cuDSS direct method
+  target_link_libraries(example scs::scscudss)
 
 Makefile
 ^^^^^^^^

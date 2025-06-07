@@ -128,6 +128,10 @@ message(STATUS "BLAS/LAPACK usage is ${USE_LAPACK}")
 option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
+# Enable cuDSS support
+option(USE_CUDSS "Compile with cuDSS support" OFF)
+message(STATUS "cuDSS support is ${USE_CUDSS}")
+
 set(COMPILER_OPTS "-DCTRLC")
 set(LAPACK_LINK_LIBRARIES "")
 
@@ -389,6 +393,76 @@ endif()
 
 # ##############################################################################
 
+# If cuDSS is enabled and environment variables are set, install the cuDSS version
+if(USE_CUDSS)
+  find_package(CUDAToolkit REQUIRED)
+  find_package(cudss REQUIRED)
+
+  # Force 32-bit integers for cuDSS compatibility
+  if(DLONG)
+    message(FATAL_ERROR "cuDSS requires 32-bit integers. Set DLONG=OFF or do not use -DDLONG=ON")
+  endif()
+
+  message(STATUS "Will install SCS-cuDSS (libscscudss).")
+
+
+  set(CUDSSSRC ${LINSYS}/cudss/direct)
+
+  # Here we compile the direct cuDSS library
+  set(${PROJECT_NAME}_CUDSS ${PROJECT_NAME}cudss)
+  add_library(
+    ${${PROJECT_NAME}_CUDSS}
+    ${${PROJECT_NAME}_HDR} ${${PROJECT_NAME}_SRC} ${CUDSSSRC}/private.c
+    ${CUDSSSRC}/private.h)
+
+  target_include_directories(
+    ${${PROJECT_NAME}_CUDSS}
+    PRIVATE
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${CUDSSSRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
+  )
+
+  target_include_directories(
+    ${${PROJECT_NAME}_CUDSS}
+    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+
+  target_compile_definitions(${${PROJECT_NAME}_CUDSS} PRIVATE ${COMPILER_OPTS})
+
+
+  target_link_libraries(
+    ${${PROJECT_NAME}_CUDSS}
+    PRIVATE CUDA::cudart
+            cudss
+            $<$<NOT:$<PLATFORM_ID:Windows>>:m>
+            ${LAPACK_LINK_LIBRARIES})
+
+  # Set some properties
+  set_target_properties(
+    ${${PROJECT_NAME}_CUDSS}
+    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+                                      "${${PROJECT_NAME}_PUBLIC_HDR}")
+
+  add_library(scs::${${PROJECT_NAME}_CUDSS} ALIAS ${${PROJECT_NAME}_CUDSS})
+
+  # Install the library
+  install(
+    TARGETS ${${PROJECT_NAME}_CUDSS}
+    EXPORT ${PROJECT_NAME}
+    COMPONENT runtime
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
+
+  # Add the cuDSS method to the set of the compiled targets
+  set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_CUDSS})
+elseif(USE_CUDSS)
+  message(
+    STATUS "USE_CUDSS is ON but CUDA_PATH and/or CUDSS_PATH environment variables are undefined, skipping SCS-cuDSS install"
+  )
+endif()
+
+# ##############################################################################
 # Install the .cmake file. It is possible to link scs o consumer libraries.
 include(InstallBasicPackageFiles)
 install_basic_package_files(
@@ -448,6 +522,22 @@ if(BUILD_TESTING)
     add_test(
       NAME run_tests_mkl
       COMMAND run_tests_mkl
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  endif()
+
+  if(USE_CUDSS)
+    add_executable(run_tests_cudss test/run_tests.c)
+    target_compile_definitions(run_tests_cudss PRIVATE ${COMPILER_OPTS})
+    target_link_libraries(run_tests_cudss PRIVATE scs::scscudss)
+    target_include_directories(
+      run_tests_cudss
+      PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
+    )
+
+    add_test(
+      NAME run_tests_cudss
+      COMMAND run_tests_cudss
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   endif()
 
