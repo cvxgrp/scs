@@ -456,10 +456,6 @@ if(USE_CUDSS)
 
   # Add the cuDSS method to the set of the compiled targets
   set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_CUDSS})
-elseif(USE_CUDSS)
-  message(
-    STATUS "USE_CUDSS is ON but CUDA_PATH and/or CUDSS_PATH environment variables are undefined, skipping SCS-cuDSS install"
-  )
 endif()
 
 # ##############################################################################
