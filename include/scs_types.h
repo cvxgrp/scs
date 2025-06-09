@@ -1,5 +1,5 @@
 /*
- * Pulic header including definitions of primitive types used in SCS.
+ * Public header including definitions of primitive types used in SCS.
  * Make sure this file and `scs.h` are somewhere appropriate and then use
  * `#include "scs.h"` to access the SCS public API.
  */
