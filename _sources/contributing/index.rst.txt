@@ -13,7 +13,6 @@ Here are some ideas (of varying difficulty):
 * Improve the :ref:`data equilibration <equilibration>`
 * Improve the :ref:`heuristic re-scaling <updating_scale>`
 * Determine how to select the :code:`TAU_FACTOR` :ref:`term <scaling>`
-* Implement a :ref:`GPU direct linear system solver <gpu_indirect>`
 * Add other new :ref:`linear system solvers <new_linear_solver>`
 * Refactor the :ref:`linear solvers <linear_solver>` to only compile a single binary with all solvers
 * Add :ref:`interfaces for other languages <interfaces>` (or improve the current interfaces)

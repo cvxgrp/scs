@@ -56,6 +56,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#mkl-pardiso">MKL Pardiso</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-indirect">Sparse indirect</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-direct-method">Sparse GPU direct method</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a><ul>
@@ -177,6 +178,18 @@ however for very large problems the indirect solver can be faster.</p>
 <p>The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU.</p>
+</section>
+<section id="sparse-gpu-direct-method">
+<span id="cudss"></span><h3>Sparse GPU direct method<a class="headerlink" href="#sparse-gpu-direct-method" title="Link to this heading"></a></h3>
+<p>This is a linear solver that uses the <a href="#id1"><span class="problematic" id="id2">`cuDSS&lt;https://developer.nvidia.com/cudss&gt;`_</span></a>
+library to solve the linear system on the GPU. It is similar to the direct
+solver, but uses the calls to cuDSS library to perform the analysis, numerical
+(re-)factorization and subsequent solves. According to its documentation</p>
+<p>&gt; reordering (a major part of the analysis phase) is executed on the host,
+&gt; while symbolic factorization (another part of the analysis phase),
+&gt; numerical factorization and solve are executed on the GPU.</p>
+<p>As the newest addition to SCS this solver is still under development and not
+as well battle-tested as the other solvers.</p>
 </section>
 </section>
 <section id="implementing-a-new-linear-solver">
