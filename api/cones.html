@@ -135,22 +135,27 @@
 <td><p><code class="code docutils literal notranslate"><span class="pre">s</span></code> array of PSD cone lengths with <code class="code docutils literal notranslate"><span class="pre">ssize</span></code> elements, each <span class="math notranslate nohighlight">\(s_i = k_i\)</span> in description.</p></td>
 <td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{ssize}} \frac{s_i(s_i+1)}{2}\)</span></p></td>
 </tr>
-<tr class="row-odd"><td><p>Exponential cone</p></td>
+<tr class="row-odd"><td><p>Complex positive semidefinite cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{ s \in \mathbf{R}^{k^2} \mid \text{mat}(s) \succeq 0 \}\)</span> (See <a class="reference internal" href="#sdcone"><span class="std std-ref">note</span></a>)</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">cs</span></code> array of PSD cone lengths with <code class="code docutils literal notranslate"><span class="pre">cssize</span></code> elements, each <span class="math notranslate nohighlight">\(cs_i = k_i\)</span> in description.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{cssize}} cs_i^2\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y&gt;0  \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">ep</span></code> number of cone triples.</p></td>
 <td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">ep</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Dual exponential cone</p></td>
+<tr class="row-odd"><td><p>Dual exponential cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{  (u,v,w)\in \mathbf{R}^3 \mid -u e^{v/u} \leq e w, u&lt;0 \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">ed</span></code> number of cone triples.</p></td>
 <td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">ed</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Power cone</p></td>
+<tr class="row-even"><td><p>Power cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{  (x,y,z) \in \mathbf{R}^3 \mid x^p y^{1-p} \geq |z|\}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">p</span></code> array of <span class="math notranslate nohighlight">\(p\in[-1,1]\)</span> powers with <code class="code docutils literal notranslate"><span class="pre">psize</span></code> elements, positive entries correspond to power cone.</p></td>
 <td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">psize</span></code> (total for primal and dual power cone)</p></td>
 </tr>
-<tr class="row-even"><td><p>Dual power cone</p></td>
+<tr class="row-odd"><td><p>Dual power cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{ (u,v,w)\in \mathbf{R}^3 \mid \left(\frac{u}{p}\right)^p \left(\frac{v}{1-p}\right)^{1-p} \geq |w|\}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">p</span></code> array <span class="math notranslate nohighlight">\(p\in[-1,1]\)</span> powers with <code class="code docutils literal notranslate"><span class="pre">psize</span></code> elements, negative entries correspond to dual power cone (sign is flipped).</p></td>
 <td><p><span class="math notranslate nohighlight">\(3 \times\)</span><code class="code docutils literal notranslate"><span class="pre">psize</span></code> (total for primal and dual power cone)</p></td>
@@ -171,19 +176,21 @@ defined as <span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf
 and therefore the variable vector is stacked as <code class="code docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">z]</span></code>, etc.</p>
 <section id="semidefinite-cones">
 <span id="sdcone"></span><h2>Semidefinite cones<a class="headerlink" href="#semidefinite-cones" title="Link to this heading"></a></h2>
-<p>The symmetric positive semidefinite cone of matrices is the set</p>
+<p>The real positive semidefinite cone of matrices is the set</p>
 <div class="math notranslate nohighlight">
-\[\{S \in \mathbf{R}^{k \times k} \mid  S = S^\top,  x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \}\]</div>
+\[\{S \in \mathbf{R}^{k \times k} \mid  S = S^\top,\  x^\top S x \geq 0 \ \forall x \in \mathbf{R}^k \},\]</div>
+<p>and the complex positive semidefinite cone is the set</p>
+<div class="math notranslate nohighlight">
+\[\{S \in \mathbf{C}^{k \times k} \mid  S = S^\dagger,\  x^\dagger S x \geq 0 \ \forall x \in \mathbf{C}^k \},\]</div>
 <p>and for short we use <span class="math notranslate nohighlight">\(S \succeq 0\)</span> to denote membership. SCS
-vectorizes this cone in a special way which we detail here.</p>
-<p>SCS assumes that the input data corresponding to
-semidefinite cones have been vectorized by scaling the off-diagonal entries by
-<span class="math notranslate nohighlight">\(\sqrt{2}\)</span> and stacking the lower triangular elements column-wise. For a <span class="math notranslate nohighlight">\(k \times k\)</span>
-matrix variable (or data matrix) this operation would create a vector of length
-<span class="math notranslate nohighlight">\(k(k+1)/2\)</span>. Scaling by <span class="math notranslate nohighlight">\(\sqrt{2}\)</span> is required to preserve the inner-product.</p>
+vectorizes these cones in a special way which we detail here.</p>
+<p>SCS assumes that the input data corresponding to positive semidefinite cones have been vectorized by scaling the off-diagonal entries by
+<span class="math notranslate nohighlight">\(\sqrt{2}\)</span> and stacking the real parameters of the lower triangle column-wise. For a <span class="math notranslate nohighlight">\(k \times k\)</span>
+real matrix variable (or data matrix) this operation creates a vector of length
+<span class="math notranslate nohighlight">\(k(k+1)/2\)</span>, whereas for a <span class="math notranslate nohighlight">\(k \times k\)</span> complex matrix it creates a vector of length <span class="math notranslate nohighlight">\(k^2\)</span>. Scaling by <span class="math notranslate nohighlight">\(\sqrt{2}\)</span> is required to preserve the inner-product.</p>
 <p><strong>This must be done for the rows of both</strong> <span class="math notranslate nohighlight">\(A\)</span> <strong>and</strong> <span class="math notranslate nohighlight">\(b\)</span> <strong>that correspond to semidefinite cones and must be done independently for each semidefinite cone.</strong></p>
-<p>More explicitly, we want to express <span class="math notranslate nohighlight">\(\text{Trace}(Y S)\)</span> as <span class="math notranslate nohighlight">\(\text{vec}(Y)^\top \text{vec}(S)\)</span>,
-where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> operation takes the (assumed to be symmetric) <span class="math notranslate nohighlight">\(k \times k\)</span> matrix</p>
+<p>More explicitly, we want to express <span class="math notranslate nohighlight">\(\text{Trace}(Y^\dagger S)\)</span> as <span class="math notranslate nohighlight">\(\text{vec}(Y)^\dagger \text{vec}(S)\)</span>,
+where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> operation takes the <span class="math notranslate nohighlight">\(k \times k\)</span> matrix</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}S =  \begin{bmatrix}
         S_{11} &amp; S_{12} &amp; \ldots &amp; S_{1k}  \\
@@ -191,14 +198,17 @@ where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> opera
         \vdots &amp; \vdots &amp; \ddots &amp; \vdots  \\
         S_{k1} &amp; S_{k2} &amp; \ldots &amp; S_{kk}  \\
       \end{bmatrix}\end{split}\]</div>
-<p>and produces a vector consisting of the lower triangular elements scaled and arranged as</p>
+<p>and produces a vector consisting of the lower triangular real parameters scaled and re-arranged. In the real case, the result is</p>
 <div class="math notranslate nohighlight">
-\[\text{vec}(S) = (S_{11}, \sqrt{2} S_{21}, \ldots, \sqrt{2} S_{k1}, S_{22}, \sqrt{2}S_{32}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k,k-1}, S_{kk}) \in \mathbf{R}^{k(k+1)/2}.\]</div>
+\[\text{vec}(S) = (S_{11}, \sqrt{2} S_{21}, \ldots, \sqrt{2} S_{k1}, S_{22}, \sqrt{2}S_{32}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k,k-1}, S_{kk}) \in \mathbf{R}^{k(k+1)/2},\]</div>
+<p>whereas in the complex case the result is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\text{vec}(S) = (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\\sqrt{2}\Re(S_{32}), \sqrt{2}\Im(S_{32}), \dots, S_{k-1,k-1}, \sqrt{2}\Re(S_{k,k-1}), \sqrt{2}\Im(S_{k,k-1}), S_{kk}) \in \mathbf{R}^{k^2}.\end{split}\]</div>
 <p>To recover the matrix solution this operation must be inverted on the components
 of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
 off-diagonal entries must be scaled by <span class="math notranslate nohighlight">\(1/\sqrt{2}\)</span> and the upper triangular
 entries are filled in by copying the values of lower triangular entries.
-Explicitly, the inverse operation takes vector <span class="math notranslate nohighlight">\(s \in
+Explicitly, in the real case the inverse operation takes vector <span class="math notranslate nohighlight">\(s \in
 \mathbf{R}^{k(k+1)/2}\)</span> and produces the matrix</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\text{mat}(s) =  \begin{bmatrix}
@@ -207,14 +217,25 @@ Explicitly, the inverse operation takes vector <span class="math notranslate noh
                   \vdots &amp; \vdots &amp; \ddots &amp; \vdots  \\
                   s_{k} / \sqrt{2} &amp; s_{2k-1} / \sqrt{2} &amp; \ldots &amp; s_{k(k+1) / 2}  \\
                   \end{bmatrix}
-\in \mathbf{R}^{k \times k}.\end{split}\]</div>
-<p>So the cone definition that SCS uses is</p>
+\in \mathbf{R}^{k \times k},\end{split}\]</div>
+<p>whereas in the complex case the inverse operation takes vector <span class="math notranslate nohighlight">\(s \in
+\mathbf{R}^{k^2}\)</span> and produces the matrix</p>
 <div class="math notranslate nohighlight">
-\[\mathcal{S}_+^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\]</div>
+\[\begin{split}\text{mat}(s) =  \begin{bmatrix}
+                  s_{1} &amp; (s_{2} - i s_3) / \sqrt{2} &amp; \ldots &amp; (s_{2k-2} - is_{2k-1}) / \sqrt{2}  \\
+                  (s_{2} + i s_3) / \sqrt{2} &amp; s_{2k} &amp; \ldots &amp; (s_{4k-5} - is_{4k-4}) / \sqrt{2} \\
+                  \vdots &amp; \vdots &amp; \ddots &amp; \vdots  \\
+                  (s_{2k-2} + is_{2k-1}) / \sqrt{2} &amp; (s_{4k-5} + is_{4k-4}) / \sqrt{2} &amp; \ldots &amp; s_{k^2}  \\
+                  \end{bmatrix}
+\in \mathbf{C}^{k \times k},\end{split}\]</div>
+<p>So the cone definitions that SCS uses are</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathcal{S}_\mathbf{R}^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\\
+\mathcal{S}_\mathbf{C}^k = \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k^2  } \mid \text{mat}(s) \succeq 0 \}.\end{split}\]</div>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h3>
-<p>For a concrete example in python see <a class="reference internal" href="../examples/python/mat_completion.html#py-mat-completion"><span class="std std-ref">Low-Rank Matrix Completion</span></a>.
-Here we consider the symmetric positive semidefinite cone constraint over
+<p>For a concrete example in Python see <a class="reference internal" href="../examples/python/mat_completion.html#py-mat-completion"><span class="std std-ref">Low-Rank Matrix Completion</span></a>.
+Here we consider the real positive semidefinite cone constraint over
 variables <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span> and <span class="math notranslate nohighlight">\(S \in \mathbf{R}^{k \times k}\)</span></p>
 <div class="math notranslate nohighlight">
 \[B - \sum_{i=1}^n \mathcal{A}_i x_i = S \succeq 0\]</div>
