@@ -14,7 +14,7 @@ CMake
 
 Thanks to the `CMake <https://cmake.org/cmake/help/latest/>`__ buildsystem SCS
 can be easily compiled and linked to other CMake projects. To use the cmake
-buld system please run the following commands:
+build system please run the following commands:
 
 .. code:: bash
 
