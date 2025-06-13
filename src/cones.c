@@ -746,7 +746,7 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
  *  want (t, s) \in K <==> (t', s') \in K'
  *
  *  (t', s') = (d0 * t, D s) (overloading D to mean D[1:])
- *    (up to scalar scaling factor which we can ignore due to conic prooperty)
+ *    (up to scalar scaling factor which we can ignore due to conic property)
  *
  *   K = { (t, s) | t * l <= s <= t * u, t >= 0 } =>
  *       { (t, s) | d0 * t * D l / d0 <= D s <= d0 * t D u / d0, t >= 0 } =>

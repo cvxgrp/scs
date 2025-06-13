@@ -7,7 +7,7 @@ np.random.seed(1)
 
 
 class MPC(object):
-    """Model Predictive Contoller using SCS."""
+    """Model Predictive Controller using SCS."""
 
     def __init__(self, Ad, Bd, Q, R, q, QT, qT, xmin, xmax, umin, umax, T):
         # State and action dimension
