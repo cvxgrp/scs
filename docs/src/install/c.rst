@@ -159,7 +159,7 @@ CUDA toolkit, the :code:`nvcc` compiler, and
 `cuDSS <https://developer.nvidia.com/cudss>`_ library installed.
 Then set :code:`CUDA_PATH` and :code:`CUDSS_PATH` and execute
 
-.. code::bash
+.. code:: bash
 
   make cudss DLONG=0
   out/run_tests_cudss
