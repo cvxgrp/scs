@@ -218,6 +218,10 @@ out/run_tests_gpu_indirect
 CUDA toolkit, the <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> compiler, and
 <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library installed.
 Then set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> and execute</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>cudss<span class="w"> </span><span class="nv">DLONG</span><span class="o">=</span><span class="m">0</span>
+out/run_tests_cudss
+</pre></div>
+</div>
 <p>Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
 <code class="code docutils literal notranslate"><span class="pre">DLONG=0</span></code> is mandatory (see <a class="reference external" href="https://docs.nvidia.com/cuda/cudss/functions.html#cudssmatrixcreatecsr">the docs of cuDSS CSR matrix</a>).</p>
 <p>To use the libraries in your own source code, compile your code with the linker
