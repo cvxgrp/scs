@@ -104,6 +104,23 @@ The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU.
 
+.. _cudss:
+
+Sparse GPU direct method
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a linear solver that uses the `cuDSS<https://developer.nvidia.com/cudss>`_
+library to solve the linear system on the GPU. It is similar to the direct
+solver, but uses the calls to cuDSS library to perform the analysis, numerical
+(re-)factorization and subsequent solves. According to its documentation
+
+> reordering (a major part of the analysis phase) is executed on the host,
+> while symbolic factorization (another part of the analysis phase),
+> numerical factorization and solve are executed on the GPU.
+
+As the newest addition to SCS this solver is still under development and not
+as well battle-tested as the other solvers.
+
 .. _new_linear_solver:
 
 Implementing a new linear solver

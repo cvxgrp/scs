@@ -9,7 +9,7 @@ authors:
   given-names: "Neal"
 - family-names: "Boyd"
   given-names: "Stephen"
-title: "SCS: Spltting Conic Solver"
+title: "SCS: Splitting Conic Solver"
 version: 3.2.7
 date-released: 2023
 url: "https://github.com/cvxgrp/scs"

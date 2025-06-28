@@ -20,19 +20,30 @@ extern "C" {
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
+void BLASC(heevr)(const char *jobz, const char *range, const char *uplo, blas_int *n, scs_complex_float *a,
+                 blas_int *lda, scs_float *vl, scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
+                 blas_int *m, scs_float *w, scs_complex_float *z, blas_int *ldz, blas_int *isuppz, scs_complex_float *cwork,
+                 blas_int *lcwork, scs_float *rwork, blas_int *lrwork, blas_int *iwork, blas_int *liwork, blas_int *info);
+
 blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
                     const blas_int *k, const scs_float *alpha,
                     const scs_float *a, const blas_int *lda,
                     const scs_float *beta, scs_float *c, const blas_int *ldc);
 
-void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m, 
+void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
                  const blas_int *n, scs_float *a, const blas_int *lda,
                  scs_float *s, scs_float *u, const blas_int *ldu, scs_float *vt,
                  const blas_int *ldvt, scs_float *work, const blas_int *lwork,
                  blas_int *info);
+blas_int BLASC(herk)(const char *uplo, const char *trans, const blas_int *n,
+                     const blas_int *k, const scs_float *alpha,
+                     const scs_complex_float *a, const blas_int *lda,
+                     const scs_float *beta, scs_complex_float *c, const blas_int *ldc);
 
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
+void BLASC(scal)(const blas_int *n, const scs_complex_float *sa, scs_complex_float *sx,
+                 const blas_int *incx);
 
 
 #ifdef __cplusplus
@@ -64,6 +75,8 @@ void SCS(free_cone)(ScsCone *k) {
       scs_free(k->q);
     if (k->s)
       scs_free(k->s);
+    if (k->cs)
+      scs_free(k->cs);
     if (k->p)
       scs_free(k->p);
     if (k->d)
@@ -108,6 +121,13 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   } else {
     dest->s = SCS_NULL;
   }
+  /* copy complex PSD cone */
+  if (src->cssize > 0) {
+    dest->cs = (scs_int *)scs_calloc(src->cssize, sizeof(scs_int));
+    memcpy(dest->cs, src->cs, src->cssize * sizeof(scs_int));
+  } else {
+    dest->cs = SCS_NULL;
+  }
   /* copy power cone */
   if (src->psize > 0) {
     dest->p = (scs_float *)scs_calloc(src->psize, sizeof(scs_float));
@@ -149,7 +169,7 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
     dest->sl_n = SCS_NULL;
     dest->sl_k = SCS_NULL;
   }
-  
+
 }
 
 /* set the vector of rho y terms, based on scale and cones */
@@ -163,7 +183,7 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
      */
     r_y[i] = 1.0 / (1000. * scale);
   }
-  
+
   /* others */
   for (i = c->k->z; i < c->m ; ++i) {
     r_y[i] = 1.0 / scale;
@@ -191,15 +211,19 @@ static inline scs_int get_sd_cone_size(scs_int s) {
   return (s * (s + 1)) / 2;
 }
 
+static inline scs_int get_csd_cone_size(scs_int cs) {
+  return cs * cs;
+}
+
 /*
  * boundaries will contain array of indices of rows of A corresponding to
  * cone boundaries, boundaries[0] is starting index for cones of size strictly
  * larger than 1, boundaries malloc-ed here so should be freed.
  */
 void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
-  scs_int i, s_cone_sz, d_cone_sz, count = 0;
+  scs_int i, s_cone_sz, cs_cone_sz, d_cone_sz, count = 0;
   scs_int cone_boundaries_len =
-      1 + k->qsize + k->ssize + k->ed + k->ep + k->psize + k->dsize + 
+      1 + k->qsize + k->ssize + + k->cssize  + k->ed + k->ep + k->psize + k->dsize +
       k->nucsize + k->ell1_size + k->sl_size;
   scs_int *b = (scs_int *)scs_calloc(cone_boundaries_len, sizeof(scs_int));
   /* cones that can be scaled independently */
@@ -214,7 +238,12 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
     s_cone_sz = get_sd_cone_size(k->s[i]);
     b[count + i] = s_cone_sz;
   }
-  count += k->ssize; /* add ssize here not ssize * (ssize + 1) / 2 */
+  count += k->ssize; /* size here not ssize * (ssize + 1) / 2 */
+  for (i = 0; i < k->cssize; ++i) {
+    cs_cone_sz = get_csd_cone_size(k->cs[i]);
+    b[count + i] = cs_cone_sz;
+  }
+  count += k->cssize;
   /* exp cones */
   for (i = 0; i < k->ep + k->ed; ++i) {
     b[count + i] = 3;
@@ -261,6 +290,11 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
   if (k->ssize) {
     for (i = 0; i < k->ssize; ++i) {
       c += get_sd_cone_size(k->s[i]);
+    }
+  }
+  if (k->cssize) {
+    for (i = 0; i < k->cssize; ++i) {
+      c += get_csd_cone_size(k->cs[i]);
     }
   }
   if (k->ed) {
@@ -346,6 +380,18 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
+  if (k->cssize && k->cs) {
+    if (k->cssize < 0) {
+      scs_printf("complex psd cone dimension error\n");
+      return -1;
+    }
+    for (i = 0; i < k->cssize; ++i) {
+      if (k->cs[i] < 0) {
+        scs_printf("complex psd cone dimension error\n");
+        return -1;
+      }
+    }
+  }
   if (k->ed && k->ed < 0) {
     scs_printf("ep cone dimension error\n");
     return -1;
@@ -418,8 +464,14 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->Xs) {
     scs_free(c->Xs);
   }
+  if (c->cXs) {
+    scs_free(c->cXs);
+  }
   if (c->Z) {
     scs_free(c->Z);
+  }
+  if (c->cZ) {
+    scs_free(c->cZ);
   }
   if (c->e) {
     scs_free(c->e);
@@ -442,6 +494,9 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->work_nuc){
     scs_free(c->work_nuc);
   }
+  if (c->isuppz) {
+    scs_free(c->isuppz);
+  }
   if (c->work) {
     scs_free(c->work);
   }
@@ -450,6 +505,15 @@ void SCS(finish_cone)(ScsConeWork *c) {
   }
   if (c->log_cone_warmstarts) {
     scs_free(c->log_cone_warmstarts);
+  }
+  if (c->iwork) {
+    scs_free(c->iwork);
+  }
+  if (c->cwork) {
+    scs_free(c->cwork);
+  }
+  if (c->rwork) {
+    scs_free(c->rwork);
   }
 #endif
   if (c->work_ell1) {
@@ -471,7 +535,7 @@ void SCS(finish_cone)(ScsConeWork *c) {
 
 char *SCS(get_cone_header)(const ScsCone *k) {
   char *tmp = (char *)scs_malloc(512); /* sizeof(char) = 1 */
-  scs_int i, soc_vars, sd_vars, log_vars, nuc_vars, ell1_vars, sl_vars;
+  scs_int i, soc_vars, sd_vars, csd_vars, log_vars, nuc_vars, ell1_vars, sl_vars;
   sprintf(tmp, "cones: ");
   if (k->z) {
     sprintf(tmp + strlen(tmp), "\t  z: primal zero / dual free vars: %li\n",
@@ -499,6 +563,14 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     sprintf(tmp + strlen(tmp), "\t  s: psd vars: %li, ssize: %li\n",
             (long)sd_vars, (long)k->ssize);
   }
+  csd_vars = 0;
+  if (k->cssize && k->cs) {
+    for (i = 0; i < k->cssize; i++) {
+      csd_vars += get_csd_cone_size(k->cs[i]);
+    }
+    sprintf(tmp + strlen(tmp), "\t  cs: complex psd vars: %li, ssize: %li\n",
+            (long)csd_vars, (long)k->cssize);
+  }
   if (k->ep || k->ed) {
     sprintf(tmp + strlen(tmp), "\t  e: exp vars: %li, dual exp vars: %li\n",
             (long)(3 * k->ep), (long)(3 * k->ed));
@@ -518,7 +590,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
   nuc_vars = 0;
   if (k->nucsize && k->nuc_m && k->nuc_n) {
     for (i = 0; i < k->nucsize; i++) {
-      nuc_vars += k->nuc_m[i] * k->nuc_n[i] + 1; 
+      nuc_vars += k->nuc_m[i] * k->nuc_n[i] + 1;
     }
     sprintf(tmp + strlen(tmp), "\t  nuc: nuclear vars: %li, nucsize: %li\n",
             (long)nuc_vars, (long)k->nucsize);
@@ -585,7 +657,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
         n_max_logdet = (blas_int)k->d[i];
       }
   }
- 
+
   // --------------------------------------------------------------------------
   //         allocate workspace for logdeterminant cones
   // --------------------------------------------------------------------------
@@ -664,13 +736,13 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     }
 
     // workspace query
-    BLAS(gesvd)("S", "A", &m_max_nuc, &n_max_nuc, c->u_nuc, &m_max_nuc, 
+    BLAS(gesvd)("S", "A", &m_max_nuc, &n_max_nuc, c->u_nuc, &m_max_nuc,
                 c->s_nuc, c->u_nuc, &m_max_nuc, c->vt_nuc, &n_max_nuc, &wkopt,
                 &neg_one, &info);
-    
+
     c->lwork_nuc = (blas_int)(wkopt + 1); /* +1 for int casting safety */
     c->work_nuc = (scs_float *)scs_calloc(c->lwork_nuc, sizeof(scs_float));
-    
+
     if (!c->lwork_nuc || !c->work_nuc) {
       return -1;
     }
@@ -806,7 +878,171 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 #else
   scs_printf("FAILURE: solving SDP but no blas/lapack libraries were found!\n");
   scs_printf("SCS will return nonsense!\n");
-  SCS(scale_array)(X, NAN, n);
+  SCS(scale_array)(X, NAN, get_sd_cone_size(n));
+  return -1;
+#endif
+}
+
+static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
+  scs_int i;
+#ifdef USE_LAPACK
+  blas_int n_max = 1;
+  blas_int neg_one = -1;
+  blas_int info = 0;
+  scs_float abstol = -1.0;
+  blas_int m = 0;
+  scs_complex_float lcwork = 0.0;
+  scs_float lrwork = 0.0;
+  blas_int liwork = 0;
+#if VERBOSITY > 0
+#define _STR_EXPAND(tok) #tok
+#define _STR(tok) _STR_EXPAND(tok)
+  scs_printf("BLAS(func) = '%s'\n", _STR(BLASC(func)));
+#endif
+  /* eigenvector decomp workspace */
+  for (i = 0; i < k->cssize; ++i) {
+    if (k->cs[i] > n_max) {
+      n_max = (blas_int)k->cs[i];
+    }
+  }
+  c->cXs = (scs_complex_float *)scs_calloc(n_max * n_max, sizeof(scs_complex_float));
+  c->cZ = (scs_complex_float *)scs_calloc(n_max * n_max, sizeof(scs_complex_float));
+  c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
+  c->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n_max), sizeof(blas_int));
+
+  /* workspace query */
+  BLASC(heevr)("V", "A", "L", &n_max, c->cXs, &n_max, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, c->e,
+                 c->cZ, &n_max, c->isuppz, &lcwork, &neg_one, &lrwork, &neg_one, &liwork, &neg_one, &info);
+
+  if (info != 0) {
+    scs_printf("FATAL: heev workspace query failure, info = %li\n", (long)info);
+    return -1;
+  }
+  c->lcwork = (blas_int)(creal(lcwork));
+  c->lrwork = (blas_int)(lrwork);
+  c->liwork = liwork;
+  c->cwork = (scs_complex_float *)scs_calloc(c->lcwork, sizeof(scs_complex_float));
+  c->rwork = (scs_float *)scs_calloc(c->lrwork, sizeof(scs_float));
+  c->iwork = (blas_int *)scs_calloc(c->liwork, sizeof(blas_int));
+
+  if (!c->cXs || !c->cZ || !c->e || !c->isuppz || !c->cwork || !c->rwork || !c->iwork) {
+    return -1;
+  }
+  return 0;
+#else
+  for (i = 0; i < k->cssize; i++) {
+    if (k->cs[i] > 1) {
+      scs_printf(
+          "FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
+      scs_printf(
+          "Install blas+lapack and re-compile SCS with blas+lapack library "
+          "locations\n");
+      return -1;
+    }
+  }
+  return 0;
+#endif
+}
+
+/* size of X is get_csd_cone_size(n) */
+static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
+                                       ScsConeWork *c) {
+/* project onto the positive semi-definite cone */
+#ifdef USE_LAPACK
+  scs_int i, first_idx;
+  blas_int nb = (blas_int)n;
+  blas_int ncols_z;
+  blas_int nb_plus_one = (blas_int)(n + 1);
+  blas_int one_int = 1;
+  scs_float zero = 0., one = 1.;
+  scs_complex_float csqrt2 = SQRTF(2.0);
+  scs_complex_float csqrt2_inv = 1.0 / csqrt2;
+  scs_complex_float *cXs = c->cXs;
+  scs_complex_float *cZ = c->cZ;
+  scs_float *e = c->e;
+  scs_float abstol = -1.0;
+  blas_int m = 0;
+  blas_int info = 0;
+  scs_complex_float csq_eig_pos;
+
+#endif
+
+  if (n == 0) {
+    return 0;
+  }
+  if (n == 1) {
+    X[0] = MAX(X[0], 0.);
+    return 0;
+  }
+
+#ifdef USE_LAPACK
+
+  /* copy lower triangular matrix into full matrix */
+  for (i = 0; i < n - 1; ++i) {
+    cXs[i * (n + 1)] = X[i * (2 * n - i)];
+    memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
+           2 * (n - i - 1) * sizeof(scs_float));
+  }
+  cXs[n * n - 1] = X[n * n - 1];
+  /*
+     rescale so projection works, and matrix norm preserved
+     see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
+   */
+  /* scale diags by sqrt(2) */
+  BLASC(scal)(&nb, &csqrt2, cXs, &nb_plus_one); /* not n_squared */
+
+  /* Solve eigenproblem, reuse workspaces */
+  BLASC(heevr)("V", "A", "L", &nb, cXs, &nb, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, e,
+                 cZ, &nb, c->isuppz, c->cwork, &c->lcwork, c->rwork, &c->lrwork, c->iwork, &c->liwork, &info);
+  if (info != 0) {
+    scs_printf("WARN: LAPACK heev error, info = %i\n", (int)info);
+    if (info < 0) {
+      return info;
+    }
+  }
+
+  first_idx = -1;
+  /* e is eigvals in ascending order, find first entry > 0 */
+  for (i = 0; i < n; ++i) {
+    if (e[i] > 0) {
+      first_idx = i;
+      break;
+    }
+  }
+
+  if (first_idx == -1) {
+    /* there are no positive eigenvalues, set X to 0 and return */
+    memset(X, 0, sizeof(scs_float) * get_csd_cone_size(n));
+    return 0;
+  }
+
+  /* cZ is matrix of all eigenvectors */
+  /* scale cZ by sqrt(eig) */
+  for (i = first_idx; i < n; ++i) {
+    csq_eig_pos = SQRTF(e[i]);
+    BLASC(scal)(&nb, &csq_eig_pos, &cZ[i * n], &one_int);
+  }
+
+  /* Xs = cZ cZ' = V E V' */
+  ncols_z = (blas_int)(n - first_idx);
+  BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one, &cZ[first_idx * n], &nb, &zero, cXs, &nb);
+
+  /* undo rescaling: scale diags by 1/sqrt(2) */
+  BLASC(scal)(&nb, &csqrt2_inv, cXs, &nb_plus_one); /* not n_squared */
+
+  /* extract just lower triangular matrix */
+  for (i = 0; i < n - 1; ++i) {
+    X[i * (2 * n - i)] = creal(cXs[i * (n + 1)]);
+    memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
+           2 * (n - i - 1) * sizeof(scs_float));
+  }
+  X[n * n - 1] = creal(cXs[n * n - 1]);
+  return 0;
+
+#else
+  scs_printf("FAILURE: solving SDP but no blas/lapack libraries were found!\n");
+  scs_printf("SCS will return nonsense!\n");
+  SCS(scale_array)(X, NAN, get_csd_cone_size(n));
   return -1;
 #endif
 }
@@ -839,7 +1075,7 @@ static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
  *  want (t, s) \in K <==> (t', s') \in K'
  *
  *  (t', s') = (d0 * t, D s) (overloading D to mean D[1:])
- *    (up to scalar scaling factor which we can ignore due to conic prooperty)
+ *    (up to scalar scaling factor which we can ignore due to conic property)
  *
  *   K = { (t, s) | t * l <= s <= t * u, t >= 0 } =>
  *       { (t, s) | d0 * t * D l / d0 <= D s <= d0 * t D u / d0, t >= 0 } =>
@@ -1053,6 +1289,17 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
+  if (k->cssize && k->cs) { /* doesn't use r_y */
+    /* project onto complex PSD cones */
+    for (i = 0; i < k->cssize; ++i) {
+      status = proj_complex_semi_definite_cone(&(x[count]), k->cs[i], c);
+      if (status < 0) {
+        return status;
+      }
+      count += get_csd_cone_size(k->cs[i]);
+    }
+  }
+
   if (k->ep || k->ed) { /* doesn't use r_y */
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -1098,7 +1345,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->dsize && k->d) {
     for (i = 0; i < k->dsize; ++i) {
       SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
-      status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, offset_log_cone, 
+      status = SCS(proj_logdet_cone)(&(x[count]), k->d[i], c, offset_log_cone,
                                      c->log_cone_warmstarts + i);
       SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
       offset_log_cone += k->d[i] + 2;
@@ -1142,7 +1389,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
 
 #endif
   /* project onto OTHER cones */
-  
+
   return 0;
 }
 
@@ -1175,7 +1422,7 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   set_cone_boundaries(k, c);
   c->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
   if ((k->ssize && k->s) || (k->dsize && k->d) ||
-     (k->nucsize && k->nuc_m && k->nuc_n) || 
+     (k->nucsize && k->nuc_m && k->nuc_n) ||
      (k->sl_size && k->sl_k && k->sl_n)) {
     if (set_up_sd_cone_work_space(c, k) < 0) {
       SCS(finish_cone)(c);
@@ -1185,6 +1432,13 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
 
   if (k->ell1_size > 0 && k->ell1) {
     if (set_up_ell1_cone_work_space(c, k) < 0) {
+      SCS(finish_cone)(c);
+      return SCS_NULL;
+    }
+  }
+
+  if (k->cssize && k->cs) {
+    if (set_up_csd_cone_work_space(c, k) < 0) {
       SCS(finish_cone)(c);
       return SCS_NULL;
     }

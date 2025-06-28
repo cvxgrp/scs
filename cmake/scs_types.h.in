@@ -3,7 +3,7 @@
  */
 
 /*
- * Pulic header including definitions of primitive types used in SCS.
+ * Public header including definitions of primitive types used in SCS.
  * Make sure this file and `scs.h` are somewhere appropriate and then use
  * `#include "scs.h"` to access the SCS public API.
  */
@@ -15,8 +15,11 @@
 extern "C" {
 #endif
 
+#include <complex.h>
+
 typedef @SCS_INT_TYPE@    scs_int;
 typedef @SCS_FLOAT_TYPE@  scs_float;
+typedef @SCS_FLOAT_TYPE@ _Complex scs_complex_float;
 
 #ifdef __cplusplus
 }

@@ -66,6 +66,8 @@ src/scs_version.o: src/scs_version.c $(INC_FILES)
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
+$(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
+	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
 $(LINSYS)/scs_matrix.o: $(LINSYS)/scs_matrix.c $(LINSYS)/scs_matrix.h
 $(LINSYS)/csparse.o: $(LINSYS)/csparse.c $(LINSYS)/csparse.h
 
@@ -84,6 +86,11 @@ $(OUT)/libscsmkl.a: $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_ma
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
+$(OUT)/libscscudss.a: $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+	mkdir -p $(OUT)
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
+
 $(OUT)/libscsdir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -96,6 +103,10 @@ $(OUT)/libscsmkl.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
 
+$(OUT)/libscscudss.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
+
 $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
@@ -104,6 +115,9 @@ $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
 
 $(OUT)/demo_socp_mkl: test/random_socp_prob.c $(OUT)/libscsmkl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
+
+$(OUT)/demo_socp_cudss: test/random_socp_prob.c $(OUT)/libscscudss.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS)
 
 $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -124,6 +138,8 @@ $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(MKLFLAGS) -Itest
 
+$(OUT)/run_tests_cudss: test/run_tests.c $(OUT)/libscscudss.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS) -Itest
 
 .PHONY: test_gpu
 test_gpu: $(OUT)/run_tests_gpu_indirect # $(OUT)/run_tests_gpu_direct
@@ -135,6 +151,8 @@ ifndef MKLROOT
 	$(error MKLROOT is undefined, set MKLROOT to the MKL install location)
 endif
 
+.PHONY:
+cudss: $(OUT)/libscscudss.a $(OUT)/libscscudss.$(SHARED) $(OUT)/run_tests_cudss $(OUT)/demo_socp_cudss
 
 $(OUT)/run_tests_gpu_indirect: test/run_tests.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS) -Itest
@@ -149,13 +167,13 @@ gpu: gpu_indirect # gpu_direct
 gpu_indirect: $(OUT)/demo_socp_gpu_indirect $(OUT)/libscsgpuindir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/run_from_file_gpu_indirect
 
 $(LINSYS)/gpu/gpu.o: $(LINSYS)/gpu/gpu.c
-	$(CUCC) -c -o $@ $^ $(CUDAFLAGS)
+	$(CC) -c -o $@ $^ $(CUDAFLAGS)
 
 # $(GPUDIR)/private.o: $(GPUDIR)/private.c
 # 	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
 
 $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
-	$(CUCC) -c -o $@ $^ $(CUDAFLAGS)
+	$(CC) -c -o $@ $^ $(CUDAFLAGS)
 
 # $(OUT)/libscsgpudir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/scs_matrix.o $(LINSYS)/gpu/gpu.o
 #	 mkdir -p $(OUT)

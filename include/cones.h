@@ -43,7 +43,7 @@ struct SCS_CONE_WORK {
 
   /* Needed for ell1 norm cone projection */
   Value_index *work_ell1;
-  scs_float *work_ell1_proj; 
+  scs_float *work_ell1_proj;
 
   // used for timing spectral vector cone and spectral matrix cone projections
   SPECTRAL_TIMING(scs_float tot_time_mat_cone_proj;)
@@ -51,13 +51,15 @@ struct SCS_CONE_WORK {
 
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
-  scs_float *Xs, *Z, *e, *work;
-  blas_int lwork;
+  scs_float *Xs, *Z, *e, *work, *rwork;
+  scs_complex_float *cXs, *cZ, *cwork;
+  blas_int *isuppz, *iwork;
+  blas_int lwork, lcwork, lrwork, liwork;
 
   /* workspace for singular value decompositions: */
-  scs_float *s_nuc, *u_nuc, *vt_nuc, *work_nuc; 
+  scs_float *s_nuc, *u_nuc, *vt_nuc, *work_nuc;
   blas_int lwork_nuc;
-  
+
   /* workspace that is used internally in the logdet projection (for example,
      the gradient and Hessian of the objective function in the projection
      problem are stored using this memory) */
