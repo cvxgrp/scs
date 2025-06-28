@@ -19,9 +19,6 @@ extern "C" {
 #include <string.h>
 #include "util_spectral_cones.h" // for newton_stats
 
-
-
-
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
   /*
