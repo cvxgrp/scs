@@ -8,12 +8,12 @@
 #ifndef SCS_H_GUARD
 #define SCS_H_GUARD
 
-/* Contains definitions of primitive types `scs_int` and `scs_float`. */
-#include "scs_types.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Contains definitions of primitive types `scs_int` and `scs_float`. */
+#include "scs_types.h"
 
 #define SCS_NULL 0 /* NULL type */
 

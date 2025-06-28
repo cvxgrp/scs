@@ -1,12 +1,11 @@
 #ifndef GLB_H_GUARD
 #define GLB_H_GUARD
 
-#include "scs.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "scs.h"
 #include <math.h>
 
 #ifndef SCS
