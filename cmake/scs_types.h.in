@@ -11,11 +11,11 @@
 #ifndef SCS_TYPES_H_GUARD
 #define SCS_TYPES_H_GUARD
 
-#include <complex.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <complex.h>
 
 typedef @SCS_INT_TYPE@    scs_int;
 typedef @SCS_FLOAT_TYPE@  scs_float;
