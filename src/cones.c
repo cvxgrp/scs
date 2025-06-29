@@ -30,11 +30,6 @@ blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
                     const scs_float *a, const blas_int *lda,
                     const scs_float *beta, scs_float *c, const blas_int *ldc);
 
-void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
-                 const blas_int *n, scs_float *a, const blas_int *lda,
-                 scs_float *s, scs_float *u, const blas_int *ldu, scs_float *vt,
-                 const blas_int *ldvt, scs_float *work, const blas_int *lwork,
-                 blas_int *info);
 blas_int BLASC(herk)(const char *uplo, const char *trans, const blas_int *n,
                      const blas_int *k, const scs_float *alpha,
                      const scs_complex_float *a, const blas_int *lda,
@@ -46,9 +41,12 @@ void BLASC(scal)(const blas_int *n, const scs_complex_float *sa, scs_complex_flo
                  const blas_int *incx);
 
 
-#ifdef __cplusplus
-}
-#endif
+#ifdef USE_SPECTRAL_CONES
+void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
+                 const blas_int *n, scs_float *a, const blas_int *lda,
+                 scs_float *s, scs_float *u, const blas_int *ldu, scs_float *vt,
+                 const blas_int *ldvt, scs_float *work, const blas_int *lwork,
+                 blas_int *info);
 
 // Forward declare spectral matrix cone projections
 scs_int SCS(proj_logdet_cone)(scs_float *tvX, const scs_int n, ScsConeWork *c,
@@ -57,7 +55,11 @@ scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n, ScsConeWork 
 void SCS(proj_ell_one)(scs_float *tx, scs_int n, ScsConeWork *c);
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
                                     ScsConeWork *c);
+#endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 /* Forward declare exponential cone projection routine.
@@ -79,6 +81,7 @@ void SCS(free_cone)(ScsCone *k) {
       scs_free(k->cs);
     if (k->p)
       scs_free(k->p);
+#ifdef USE_SPECTRAL_CONES
     if (k->d)
       scs_free(k->d);
     if (k->nuc_m)
@@ -91,6 +94,7 @@ void SCS(free_cone)(ScsCone *k) {
       scs_free(k->sl_n);
     if (k->sl_k)
       scs_free(k->sl_k);
+#endif
     scs_free(k);
   }
 }
@@ -135,6 +139,7 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   } else {
     dest->p = SCS_NULL;
   }
+#ifdef USE_SPECTRAL_CONES
   /* copy logdet cone */
   if (src->dsize > 0) {
     dest->d = (scs_int *)scs_calloc(src->dsize, sizeof(scs_int));
@@ -169,6 +174,7 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
     dest->sl_n = SCS_NULL;
     dest->sl_k = SCS_NULL;
   }
+#endif
 
 }
 
@@ -221,10 +227,15 @@ static inline scs_int get_csd_cone_size(scs_int cs) {
  * larger than 1, boundaries malloc-ed here so should be freed.
  */
 void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
-  scs_int i, s_cone_sz, cs_cone_sz, d_cone_sz, count = 0;
+  scs_int i, s_cone_sz, cs_cone_sz, count = 0;
+#ifdef USE_SPECTRAL_CONES
   scs_int cone_boundaries_len =
       1 + k->qsize + k->ssize + + k->cssize  + k->ed + k->ep + k->psize + k->dsize +
       k->nucsize + k->ell1_size + k->sl_size;
+#else
+  scs_int cone_boundaries_len =
+      1 + k->qsize + k->ssize + k->cssize + k->ed + k->ep + k->psize;
+#endif
   scs_int *b = (scs_int *)scs_calloc(cone_boundaries_len, sizeof(scs_int));
   /* cones that can be scaled independently */
   b[count] = k->z + k->l + k->bsize;
@@ -254,10 +265,10 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
     b[count + i] = 3;
   }
   count += k->psize;
+#ifdef USE_SPECTRAL_CONES
   /* logdet cones */
   for (i = 0; i < k->dsize; ++i) {
-    d_cone_sz = get_sd_cone_size(k->d[i]) + 2;
-    b[count + i] = d_cone_sz;
+    b[count + i] = get_sd_cone_size(k->d[i]) + 2;
   }
   count += k->dsize;
   /* nuclear norm cones */
@@ -275,6 +286,7 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
     b[count + i] = get_sd_cone_size(k->sl_n[i]) + 1;
   }
   count += k->sl_size;
+#endif
   /* other cones */
   c->cone_boundaries = b;
   c->cone_boundaries_len = cone_boundaries_len;
@@ -306,6 +318,7 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
   if (k->psize) {
     c += 3 * k->psize;
   }
+#ifdef USE_SPECTRAL_CONES
   if (k->dsize) {
     for (i = 0; i < k->dsize; ++i) {
       c += get_sd_cone_size(k->d[i]) + 2;
@@ -326,6 +339,7 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
       c += get_sd_cone_size(k->sl_n[i]) + 1;
     }
   }
+#endif
   return c;
 }
 
@@ -412,6 +426,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
+#ifdef USE_SPECTRAL_CONES
   if (k->dsize && k->d) {
     if (k->dsize < 0) {
       scs_printf("logdet cone dimension error\n");
@@ -456,6 +471,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
+#endif
   return 0;
 }
 
@@ -476,6 +492,29 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->e) {
     scs_free(c->e);
   }
+  if (c->isuppz) {
+    scs_free(c->isuppz);
+  }
+  if (c->work) {
+    scs_free(c->work);
+  }
+  if (c->iwork) {
+    scs_free(c->iwork);
+  }
+  if (c->cwork) {
+    scs_free(c->cwork);
+  }
+  if (c->rwork) {
+    scs_free(c->rwork);
+  }
+#endif
+  if (c->cone_boundaries) {
+    scs_free(c->cone_boundaries);
+  }
+  if (c->s) {
+    scs_free(c->s);
+  }
+#ifdef USE_SPECTRAL_CONES
   if (c->work_logdet) {
     scs_free(c->work_logdet);
   }
@@ -494,40 +533,19 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (c->work_nuc){
     scs_free(c->work_nuc);
   }
-  if (c->isuppz) {
-    scs_free(c->isuppz);
-  }
-  if (c->work) {
-    scs_free(c->work);
-  }
   if (c->work_sum_of_largest) {
     scs_free(c->work_sum_of_largest);
   }
   if (c->log_cone_warmstarts) {
     scs_free(c->log_cone_warmstarts);
   }
-  if (c->iwork) {
-    scs_free(c->iwork);
-  }
-  if (c->cwork) {
-    scs_free(c->cwork);
-  }
-  if (c->rwork) {
-    scs_free(c->rwork);
-  }
-#endif
   if (c->work_ell1) {
     scs_free(c->work_ell1);
   }
   if (c->work_ell1_proj) {
     scs_free(c->work_ell1_proj);
   }
-  if (c->cone_boundaries) {
-    scs_free(c->cone_boundaries);
-  }
-  if (c->s) {
-    scs_free(c->s);
-  }
+#endif
   if (c) {
     scs_free(c);
   }
@@ -535,7 +553,7 @@ void SCS(finish_cone)(ScsConeWork *c) {
 
 char *SCS(get_cone_header)(const ScsCone *k) {
   char *tmp = (char *)scs_malloc(512); /* sizeof(char) = 1 */
-  scs_int i, soc_vars, sd_vars, csd_vars, log_vars, nuc_vars, ell1_vars, sl_vars;
+  scs_int i, soc_vars, sd_vars, csd_vars;
   sprintf(tmp, "cones: ");
   if (k->z) {
     sprintf(tmp + strlen(tmp), "\t  z: primal zero / dual free vars: %li\n",
@@ -579,6 +597,8 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     sprintf(tmp + strlen(tmp), "\t  p: primal + dual power vars: %li\n",
             (long)(3 * k->psize));
   }
+#ifdef USE_SPECTRAL_CONES
+  scs_int ell1_vars, log_vars, nuc_vars, sl_vars;
   log_vars = 0;
   if (k->dsize && k->d) {
     for (i = 0; i < k->dsize; i++) {
@@ -612,6 +632,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     sprintf(tmp + strlen(tmp), "\t  sl: sl vars: %li, sl_size: %li\n",
             (long)sl_vars, (long)k->sl_size);
   }
+#endif
 
   return tmp;
 }
@@ -620,9 +641,6 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   scs_int i;
 #ifdef USE_LAPACK
   blas_int n_max = 1;
-  blas_int n_max_logdet = 1;
-  blas_int n_logdet_total = 0;
-  blas_int n_max_sl = 1;
   blas_int neg_one = -1;
   blas_int info = 0;
   scs_float wkopt = 0.0;
@@ -631,8 +649,6 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 #define _STR(tok) _STR_EXPAND(tok)
   scs_printf("BLAS(func) = '%s'\n", _STR(BLAS(func)));
 #endif
-
-  c->log_cone_warmstarts = (bool *)scs_calloc(k->dsize, sizeof(bool));
 
   // ----------------------------------------------------------------------
   //   compute max dimension needed for eigenvalue decomposition workspace
@@ -644,6 +660,12 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       n_max = (blas_int)k->s[i];
     }
   }
+
+#ifdef USE_SPECTRAL_CONES
+  blas_int n_max_logdet = 1;
+  blas_int n_logdet_total = 0;
+  blas_int n_max_sl = 1;
+  c->log_cone_warmstarts = (bool *)scs_calloc(k->dsize, sizeof(bool));
 
   for (i = 0; i < k->sl_size; ++i) {
       if (k->sl_n[i] > n_max_sl) {
@@ -658,6 +680,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       }
   }
 
+
   // --------------------------------------------------------------------------
   //         allocate workspace for logdeterminant cones
   // --------------------------------------------------------------------------
@@ -665,6 +688,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     c->work_logdet = (scs_float *)scs_calloc(22*n_max_logdet + 122, sizeof(scs_float));
     //c->saved_log_projs = (scs_float *)scs_calloc(2 + n_max_logdet,
     //sizeof(scs_float));
+    // DCED TODO
     c->saved_log_projs = (scs_float *)scs_calloc(2 * k->dsize + n_logdet_total,
                                                  sizeof(scs_float));
 
@@ -683,11 +707,12 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       return -1;
     }
   }
+  n_max = MAX(n_max, n_max_logdet);
+  n_max = MAX(n_max, n_max_sl);
+#endif
   // -----------------------------------------------------------------
   //         allocate eigenvector decomposition workspace
   // -----------------------------------------------------------------
-  n_max = MAX(n_max, n_max_logdet);
-  n_max = MAX(n_max, n_max_sl);
   c->Xs = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
   c->Z = (scs_float *)scs_calloc(n_max * n_max, sizeof(scs_float));
   c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
@@ -709,6 +734,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     return -1;
   }
 
+#ifdef USE_SPECTRAL_CONES
   // ------------------------------------------------------------------
   //              allocate memory for nuclear norm cone
   // ------------------------------------------------------------------
@@ -752,6 +778,7 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       return -1;
     }
   }
+#endif
 
   return 0;
 #else
@@ -765,16 +792,39 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
       return -1;
     }
   }
+#ifdef USE_SPECTRAL_CONES
+  bool has_spectral_cones = false;
   for (i = 0; i < k->dsize; i++) {
     if (k->d[i] > 1) {
-      scs_printf(
-          "FATAL: Cannot solve SDPs without linked blas+lapack libraries\n");
-      scs_printf(
-          "Install blas+lapack and re-compile SCS with blas+lapack library "
-          "locations\n");
-      return -1;
+      has_spectral_cones = true;
+      break;
     }
   }
+
+  for (i = 0; i < k->nucsize; i++) {
+    if (k->nuc_m[i] > 1 || k->nuc_n[i] > 1) {
+      has_spectral_cones = true;
+      break;
+    }
+  }
+
+  for (i = 0; i < k->sl_size; i++) {
+    if (k->sl_n[i] > 1) {
+      has_spectral_cones = true;
+      break;
+    }
+  }
+
+  if (has_spectral_cones) {
+    scs_printf(
+        "FATAL: Cannot use spectral cones without linked blas+lapack "
+        "libraries\n");
+    scs_printf(
+        "Install blas+lapack and re-compile SCS with blas+lapack library "
+        "locations\n");
+    return -1;
+  }
+#endif
   return 0;
 #endif
 }
@@ -1242,7 +1292,9 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   scs_int i, status;
   scs_int count = 0;
   scs_float *r_box = SCS_NULL;
+#ifdef USE_SPECTRAL_CONES
   SPECTRAL_TIMING(SCS(timer) spec_mat_proj_timer;)
+#endif
 
   if (k->z) { /* doesn't use r_y */
     /* project onto primal zero / dual free cone */
@@ -1279,9 +1331,13 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   if (k->ssize && k->s) { /* doesn't use r_y */
     /* project onto PSD cones */
     for (i = 0; i < k->ssize; ++i) {
+#ifdef USE_SPECTRAL_CONES
       SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
+#endif
       status = proj_semi_definite_cone(&(x[count]), k->s[i], c);
+#ifdef USE_SPECTRAL_CONES
       SPECTRAL_TIMING(c->tot_time_mat_cone_proj += SCS(tocq)(&spec_mat_proj_timer);)
+#endif
       if (status < 0) {
         return status;
       }
@@ -1339,7 +1395,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     count += 3 * k->psize;
   }
 
-#ifdef USE_LAPACK
+#ifdef USE_SPECTRAL_CONES
   scs_int offset_log_cone = 0;  /* used for warmstarting log-cone projections */
   /* project onto logdet cones */
   if (k->dsize && k->d) {
@@ -1393,7 +1449,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   return 0;
 }
 
-
+#ifdef USE_SPECTRAL_CONES
 static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   scs_int i;
   scs_int n_max = 0;
@@ -1412,6 +1468,7 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 
   return 0;
 }
+#endif
 
 ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));
@@ -1421,21 +1478,27 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   c->scaled_cones = 0;
   set_cone_boundaries(k, c);
   c->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
-  if ((k->ssize && k->s) || (k->dsize && k->d) ||
+  if ((k->ssize && k->s)
+#ifdef USE_SPECTRAL_CONES
+      || (k->dsize && k->d) ||
      (k->nucsize && k->nuc_m && k->nuc_n) ||
-     (k->sl_size && k->sl_k && k->sl_n)) {
-    if (set_up_sd_cone_work_space(c, k) < 0) {
-      SCS(finish_cone)(c);
-      return SCS_NULL;
-    }
-  }
+     (k->sl_size && k->sl_k && k->sl_n)
+#endif
+     ) {
+          if (set_up_sd_cone_work_space(c, k) < 0) {
+          SCS(finish_cone)(c);
+          return SCS_NULL;
+          }
+       }
 
+#ifdef USE_SPECTRAL_CONES
   if (k->ell1_size > 0 && k->ell1) {
     if (set_up_ell1_cone_work_space(c, k) < 0) {
       SCS(finish_cone)(c);
       return SCS_NULL;
     }
   }
+#endif
 
   if (k->cssize && k->cs) {
     if (set_up_csd_cone_work_space(c, k) < 0) {

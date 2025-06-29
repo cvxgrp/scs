@@ -419,8 +419,8 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   fprintf(fout, "%li,", (long)w->accepted_accel_steps);
   fprintf(fout, "%li,", (long)w->rejected_accel_steps);
   fprintf(fout, "%.16e,", SCS(tocq)(solve_timer) / 1e3);
-#ifdef USE_LAPACK
-  fprintf(fout, "%li,", (long)w->cone_work->newton_stats.iter);         
+#ifdef USE_SPECTRAL_CONES
+  fprintf(fout, "%li,", (long)w->cone_work->newton_stats.iter);
   fprintf(fout, "%li,", (long)w->cone_work->newton_stats.newton_success);
   fprintf(fout, "%.16e,", w->cone_work->newton_stats.residuals[0]);
   fprintf(fout, "%.16e,", w->cone_work->newton_stats.residuals[1]);

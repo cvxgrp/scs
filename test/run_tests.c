@@ -36,6 +36,12 @@ _SKIP(test_validation)
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
 #include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h"
+#else
+_SKIP(rob_gauss_cov_est)
+_SKIP(random_prob)
+#endif
+
+#if defined(USE_SPECTRAL_CONES) && NO_READ_WRITE == 0
 #include "spectral_cones_problems/exp_design.h"
 #include "spectral_cones_problems/robust_pca.h"
 #include "spectral_cones_problems/graph_partitioning.h"
@@ -43,8 +49,6 @@ _SKIP(test_validation)
 #include "spectral_cones_problems/several_nuc_cone.h"
 #include "spectral_cones_problems/several_logdet_cones.h"
 #else
-_SKIP(rob_gauss_cov_est)
-_SKIP(random_prob)
 _SKIP(exp_design)
 _SKIP(robust_pca)
 _SKIP(graph_partitioning)
@@ -52,6 +56,7 @@ _SKIP(several_sum_largest)
 _SKIP(several_nuc_cone)
 _SKIP(several_logdet_cones)
 #endif
+
 
 #if NO_READ_WRITE == 0 /* reads / writes */
 #include "problems/hs21_tiny_qp_rw.h"

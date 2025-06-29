@@ -1,0 +1,36 @@
+name: Build and Test with Spectral Cones
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        spectral: [0, 1]
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: out/run_tests_direct    # test direct solver
+      - run: out/run_tests_indirect  # test indirect solver
+
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        spectral: [0, 1]
+
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew update && brew install openblas lapack
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: out/run_tests_direct    # test direct solver
+      - run: out/run_tests_indirect  # test indirect solver

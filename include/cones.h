@@ -5,19 +5,25 @@
 extern "C" {
 #endif
 
+#include "glbopts.h"
+#include "scs.h"
+#include "scs_blas.h"
+#include "scs_work.h"
+#include <string.h>
+
+#ifdef USE_SPECTRAL_CONES
+#include "util_spectral_cones.h" // for newton_stats
+
 // macro for time measurements of SpectralSCS
 #ifdef SPECTRAL_TIMING_FLAG
     #define SPECTRAL_TIMING(action) action
 #else
     #define SPECTRAL_TIMING(action)
 #endif
+#endif
 
-#include "glbopts.h"
-#include "scs.h"
-#include "scs_blas.h"
-#include "scs_work.h"
-#include <string.h>
-#include "util_spectral_cones.h" // for newton_stats
+
+
 
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
@@ -35,7 +41,16 @@ struct SCS_CONE_WORK {
   /* box cone quantities */
   scs_float box_t_warm_start;
 
-  /* if the projection onto the logarithmic cone should be warmstarted*/
+#ifdef USE_LAPACK
+  /* workspace for eigenvector decompositions: */
+  scs_float *Xs, *Z, *e, *work, *rwork;
+  scs_complex_float *cXs, *cZ, *cwork;
+  blas_int *isuppz, *iwork;
+  blas_int lwork, lcwork, lrwork, liwork;
+#endif
+
+#ifdef USE_SPECTRAL_CONES
+/* if the projection onto the logarithmic cone should be warmstarted*/
   bool *log_cone_warmstarts;
 
   /* Needed for ell1 norm cone projection */
@@ -45,13 +60,6 @@ struct SCS_CONE_WORK {
   // used for timing spectral vector cone and spectral matrix cone projections
   SPECTRAL_TIMING(scs_float tot_time_mat_cone_proj;)
   SPECTRAL_TIMING(scs_float tot_time_vec_cone_proj;)
-
-#ifdef USE_LAPACK
-  /* workspace for eigenvector decompositions: */
-  scs_float *Xs, *Z, *e, *work, *rwork;
-  scs_complex_float *cXs, *cZ, *cwork;
-  blas_int *isuppz, *iwork;
-  blas_int lwork, lcwork, lrwork, liwork;
 
   /* workspace for singular value decompositions: */
   scs_float *s_nuc, *u_nuc, *vt_nuc, *work_nuc;
@@ -71,6 +79,7 @@ struct SCS_CONE_WORK {
   /* workspace for projection onto sum-largest-evals cone */
   scs_float *work_sum_of_largest;
 #endif
+
 };
 
 void SCS(free_cone)(ScsCone *k);

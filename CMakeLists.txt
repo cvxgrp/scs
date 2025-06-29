@@ -124,6 +124,12 @@ message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 option(USE_LAPACK "Whether to use BLAS/LAPACK" ON)
 message(STATUS "BLAS/LAPACK usage is ${USE_LAPACK}")
 
+# spectral cones
+option(USE_SPECTRAL_CONES "Whether to use spectral cones (requires LAPACK)" OFF)
+if(USE_SPECTRAL_CONES AND NOT USE_LAPACK)
+  message(FATAL_ERROR "USE_SPECTRAL_CONES requires USE_LAPACK to be ON")
+endif()
+
 # Enable OpenMP support
 option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
@@ -165,6 +171,11 @@ endif()
 
 if(USE_OPENMP)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+endif()
+
+# Flags for spectral cones.
+if (USE_SPECTRAL_CONES)
+  set(COMPILER_OPTS "-DUSE_SPECTRAL_CONES ${COMPILER_OPTS}")
 endif()
 
 if(USE_SPECTRAL_TIMING_FLAG)
@@ -214,7 +225,7 @@ set(SPECTRAL_SRC
     src/spectral_cones/util_spectral_cones.c)
 
 # Conditionally add spectral files
-if(USE_LAPACK)
+if(USE_SPECTRAL_CONES)
   list(APPEND ${PROJECT_NAME}_SRC ${SPECTRAL_SRC})
 endif()
 
@@ -241,7 +252,7 @@ set(${PROJECT_NAME}_HDR
 set(SPECTRAL_HDR
   include/util_spectral_cones.h)
 
-if(USE_LAPACK)
+if(USE_SPECTRAL_CONES)
   list(APPEND ${PROJECT_NAME}_HDR ${SPECTRAL_HDR})
 endif()
 

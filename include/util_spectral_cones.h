@@ -30,13 +30,13 @@ typedef struct
     int index;
 } Value_index;
 
-typedef struct 
+typedef struct
 {
     int iter;
-    
+
     // if plain Newton computed the projection or if an IPM was used
-    int newton_success; 
-    
+    int newton_success;
+
     // dual_res, pri_res, complementarity for the projection problem
     scs_float residuals[3];
 } Newton_stats;
