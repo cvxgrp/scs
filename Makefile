@@ -166,13 +166,13 @@ gpu: gpu_indirect # gpu_direct
 gpu_indirect: $(OUT)/demo_socp_gpu_indirect $(OUT)/libscsgpuindir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/run_from_file_gpu_indirect
 
 $(LINSYS)/gpu/gpu.o: $(LINSYS)/gpu/gpu.c
-	$(CUCC) -c -o $@ $^ $(CUDAFLAGS)
+	$(CC) -c -o $@ $^ $(CUDAFLAGS)
 
 # $(GPUDIR)/private.o: $(GPUDIR)/private.c
 # 	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
 
 $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
-	$(CUCC) -c -o $@ $^ $(CUDAFLAGS)
+	$(CC) -c -o $@ $^ $(CUDAFLAGS)
 
 # $(OUT)/libscsgpudir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/scs_matrix.o $(LINSYS)/gpu/gpu.o
 #	 mkdir -p $(OUT)
