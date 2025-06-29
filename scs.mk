@@ -180,6 +180,15 @@ ifneq ($(USE_LAPACK), 0)
   endif
 endif
 
+############ SPECTRAL CONES ############
+USE_SPECTRAL_CONES = 0
+ifneq ($(USE_SPECTRAL_CONES), 0)
+  ifeq ($(USE_LAPACK), 0)
+    $(error USE_SPECTRAL_CONES requires USE_LAPACK to be enabled)
+  endif
+  CUSTOM_FLAGS += -DUSE_SPECTRAL_CONES
+endif
+
 MATLAB_MEX_FILE = 0
 ifneq ($(MATLAB_MEX_FILE), 0)
 CUSTOM_FLAGS += -DMATLAB_MEX_FILE=$(MATLAB_MEX_FILE) # matlab mex

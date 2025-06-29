@@ -1,7 +1,33 @@
 # MAKEFILE for scs
 include scs.mk
 
-SCS_OBJECTS = src/util.o src/cones.o src/exp_cone.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+# Base object files always included
+BASE_SCS_OBJECTS = \
+    src/util.o src/cones.o src/exp_cone.o src/aa.o src/rw.o src/linalg.o src/ctrlc.o src/scs_version.o src/normalize.o
+
+# Spectral cones files, only included if USE_SPECTRAL_CONES=1
+SPECTRAL_CONES_OBJECTS = \
+    src/spectral_cones/logdeterminant/log_cone_Newton.o \
+    src/spectral_cones/logdeterminant/log_cone_IPM.o \
+    src/spectral_cones/logdeterminant/log_cone_wrapper.o \
+    src/spectral_cones/logdeterminant/logdet_cone.o \
+    src/spectral_cones/nuclear/ell1_cone.o \
+    src/spectral_cones/nuclear/nuclear_cone.o \
+    src/spectral_cones/sum-largest/sum_largest_cone.o \
+    src/spectral_cones/sum-largest/sum_largest_eval_cone.o \
+    src/spectral_cones/util_spectral_cones.o
+
+# Now decide which objects to include:
+ifneq ($(USE_LAPACK),0)
+  ifneq ($(USE_SPECTRAL_CONES),0)
+    SCS_OBJECTS = $(BASE_SCS_OBJECTS) $(SPECTRAL_CONES_OBJECTS)
+  else
+    SCS_OBJECTS = $(BASE_SCS_OBJECTS)
+  endif
+else
+  SCS_OBJECTS = $(BASE_SCS_OBJECTS)
+endif
+
 SCS_O = src/scs.o
 SCS_INDIR_O = src/scs_indir.o
 
@@ -27,6 +53,12 @@ else
 	@echo "NOT compiled with blas/lapack, cannot solve SDPs (can solve LPs, SOCPs, ECPs, and PCPs)."
 	@echo "To solve SDPs, install blas and lapack, then edit scs.mk to set USE_LAPACK=1"
 	@echo "and point to the library install locations, and recompile with 'make purge', 'make'."
+endif
+ifneq ($(USE_SPECTRAL_CONES), 0)
+	@echo "Compiled with spectral cones extension enabled (Daniel Cederberg 2025)"
+else
+	@echo "Spectral cones extension is NOT enabled. To enable spectral cones, edit"
+	@echo "scs.mk to set USE_SPECTRAL_CONES=1 and recompile."
 endif
 	@echo "****************************************************************************************"
 

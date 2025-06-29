@@ -143,6 +143,24 @@ typedef struct {
   scs_float *p;
   /** Number of (primal and dual) power cone triples. */
   scs_int psize;
+#ifdef USE_SPECTRAL_CONES
+  /** Array of logdet cone constraints 'len(d) = dsize'. The dimension of a
+   * log-det cone is "n" and not "n+2" if the matrix has dimension n */
+  scs_int *d;
+  /** Length of logdet cone constraints array `d`. */
+  scs_int dsize;
+  /** Array of nuc norm cone constraints 'len(nuc_m) = len(nuc_n) = nucsize.*/
+  scs_int *nuc_m;
+  scs_int *nuc_n;
+  scs_int nucsize;
+  /** Array of ell1-norm cone constraints 'len(ell1) = ell1_size */
+  scs_int *ell1;
+  scs_int ell1_size;
+  /** Array of sum-of-largest-evals cone  */
+  scs_int *sl_n;
+  scs_int *sl_k;
+  scs_int sl_size;
+#endif
 } ScsCone;
 
 /** Contains primal-dual solution arrays or a certificate of infeasibility.
@@ -206,6 +224,13 @@ typedef struct {
   scs_float cone_time;
   /** Total time (milliseconds) spent in the acceleration routine. */
   scs_float accel_time;
+#ifdef SPECTRAL_TIMING_FLAG
+  /** Average time (milliseconds) per iteration matrix cone projection */
+  scs_float ave_time_matrix_cone_proj;
+  /** Average time (milliseconds) per iteration for spectral vector cone
+   * projection */
+  scs_float ave_time_vector_cone_proj;
+#endif
 } ScsInfo;
 
 /*
