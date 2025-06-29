@@ -25,8 +25,6 @@
 #define STEP_IPM 0.99
 #define ALPHA_IPM 0.01
 #define MAX_RELAXED_ITERS 8
-// #define MAX_CONSECUTIVE_SMALL_STEPS 5
-// #define SMALLEST_STEP_SIZE 1e-6
 
 blas_int bi_one = 1;
 scs_float d_one = 1.0;
@@ -662,23 +660,6 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
         }
       }
     }
-
-    // // --------------------------------------------------------------------
-    // // TODO (Daniel C): should look at progress in KKT residuals instead
-    // // --------------------------------------------------------------------
-    // if (step_size < SMALLEST_STEP_SIZE)
-    // {
-    //     small_consecutive_steps_counter += 1;
-    // }
-    // else
-    // {
-    //     small_consecutive_steps_counter = 0;
-    // }
-
-    // if (small_consecutive_steps_counter == MAX_CONSECUTIVE_SMALL_STEPS)
-    // {
-    //     break;
-    // }
 
     // update iterates
     memcpy(u1, u1_new, u1_dim * sizeof(*u1));

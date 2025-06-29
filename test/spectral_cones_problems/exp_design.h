@@ -120,11 +120,15 @@ static const char *exp_design(void) {
   mu_assert("exp_design: SCS failed to produce outputflag SCS_SOLVED", success);
 
   fail = 0;
-  // TODO: Talk to Brendan. This test fails because of the complementary
-  // slackness check.
+  // TODO: This test fails because of the complementary slackness check.
+  //       The complementary slackness tolerance is a bit too tight.
   // fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
   // if (fail)
-  //    return fail;
+  //   return fail;
+
+  mu_assert("exp_design: primal feas error: ", ABS(info.res_pri) < 1e-6);
+  mu_assert("exp_design: dual feas error: ", ABS(info.res_dual) < 1e-6);
+  mu_assert("exp_design: duality gap error: ", ABS(info.gap) < 1e-6);
 
   /* kill data */
   scs_free(d->A);

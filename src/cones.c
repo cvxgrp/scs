@@ -686,9 +686,6 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   // --------------------------------------------------------------------------
   if (k->dsize > 0) {
     c->work_logdet = (scs_float *)scs_calloc(22*n_max_logdet + 122, sizeof(scs_float));
-    //c->saved_log_projs = (scs_float *)scs_calloc(2 + n_max_logdet,
-    //sizeof(scs_float));
-    // DCED TODO
     c->saved_log_projs = (scs_float *)scs_calloc(2 * k->dsize + n_logdet_total,
                                                  sizeof(scs_float));
 

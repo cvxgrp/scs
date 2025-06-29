@@ -198,11 +198,15 @@ static const char *several_logdet_cones(void) {
             success);
 
   fail = 0;
-  // TODO: Talk to Brendan. This test fails because of the complementary
-  // slackness check.
-  // fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
-  // if (fail)
+  // TODO: This test fails because of the complementary slackness check.
+  // The complementary slackness tolerance is a bit too tight.
+  //fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  //if (fail)
   //    return fail;
+
+  mu_assert("several logdet cones: primal feas error ", ABS(info.res_pri) < 5 * 1e-6);
+  mu_assert("several logdet cones: dual feas error ", ABS(info.res_dual) < 1e-6);
+  mu_assert("several logdet cones: duality gap error ", ABS(info.gap) < 5 * 1e-6);
 
   /* kill data */
   scs_free(d->A);
