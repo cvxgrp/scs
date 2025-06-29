@@ -16,14 +16,11 @@ extern "C" {
 
 // macro for time measurements of SpectralSCS
 #ifdef SPECTRAL_TIMING_FLAG
-    #define SPECTRAL_TIMING(action) action
+#define SPECTRAL_TIMING(action) action
 #else
-    #define SPECTRAL_TIMING(action)
+#define SPECTRAL_TIMING(action)
 #endif
 #endif
-
-
-
 
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
@@ -50,7 +47,7 @@ struct SCS_CONE_WORK {
 #endif
 
 #ifdef USE_SPECTRAL_CONES
-/* if the projection onto the logarithmic cone should be warmstarted*/
+  /* if the projection onto the logarithmic cone should be warmstarted*/
   bool *log_cone_warmstarts;
 
   /* Needed for ell1 norm cone projection */
@@ -79,7 +76,6 @@ struct SCS_CONE_WORK {
   /* workspace for projection onto sum-largest-evals cone */
   scs_float *work_sum_of_largest;
 #endif
-
 };
 
 void SCS(free_cone)(ScsCone *k);

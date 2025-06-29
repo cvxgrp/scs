@@ -15,7 +15,6 @@
 #include "problems/test_exp_cone.h"
 #include "problems/unbounded_tiny_qp.h"
 
-
 int tests_run = 0;
 
 /* decrement tests_run since mu_unit will increment it, so this cancels */
@@ -43,11 +42,11 @@ _SKIP(random_prob)
 
 #if defined(USE_SPECTRAL_CONES) && NO_READ_WRITE == 0
 #include "spectral_cones_problems/exp_design.h"
-#include "spectral_cones_problems/robust_pca.h"
 #include "spectral_cones_problems/graph_partitioning.h"
-#include "spectral_cones_problems/several_sum_largest.h"
-#include "spectral_cones_problems/several_nuc_cone.h"
+#include "spectral_cones_problems/robust_pca.h"
 #include "spectral_cones_problems/several_logdet_cones.h"
+#include "spectral_cones_problems/several_nuc_cone.h"
+#include "spectral_cones_problems/several_sum_largest.h"
 #else
 _SKIP(exp_design)
 _SKIP(robust_pca)
@@ -56,7 +55,6 @@ _SKIP(several_sum_largest)
 _SKIP(several_nuc_cone)
 _SKIP(several_logdet_cones)
 #endif
-
 
 #if NO_READ_WRITE == 0 /* reads / writes */
 #include "problems/hs21_tiny_qp_rw.h"

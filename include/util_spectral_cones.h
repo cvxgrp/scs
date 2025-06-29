@@ -5,13 +5,13 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <math.h>
-#include <assert.h>
-#include "scs_types.h"
 #include "scs_blas.h"
+#include "scs_types.h"
+#include <assert.h>
+#include <math.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 
 #define IN_CONE -1
 #define IN_NEGATIVE_DUAL_CONE -2
@@ -24,21 +24,19 @@ scs_float sum_log(const scs_float *x, scs_int n);
 scs_float min_vec(const scs_float *vec, scs_int n);
 
 // used for sorting in ell1-norm cone and sum of largest cone.
-typedef struct
-{
-    scs_float value;
-    int index;
+typedef struct {
+  scs_float value;
+  int index;
 } Value_index;
 
-typedef struct
-{
-    int iter;
+typedef struct {
+  int iter;
 
-    // if plain Newton computed the projection or if an IPM was used
-    int newton_success;
+  // if plain Newton computed the projection or if an IPM was used
+  int newton_success;
 
-    // dual_res, pri_res, complementarity for the projection problem
-    scs_float residuals[3];
+  // dual_res, pri_res, complementarity for the projection problem
+  scs_float residuals[3];
 } Newton_stats;
 
 #ifdef __cplusplus
