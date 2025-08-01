@@ -3,6 +3,16 @@
 #include "scs.h"
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
+#include <complex.h>
+
+#ifndef SFLOAT
+#define SCS_BLAS_COMPLEX_CAST(x) ((double complex*)(x))
+#define SCS_BLAS_COMPLEX_TYPE double complex
+#else
+#define SCS_BLAS_COMPLEX_CAST(x) ((float complex*)(x))
+#define SCS_BLAS_COMPLEX_TYPE float complex
+#endif
+
 
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_TOL (1e-9)
@@ -20,10 +30,11 @@ extern "C" {
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
-void BLASC(heevr)(const char *jobz, const char *range, const char *uplo, blas_int *n, scs_complex_float *a,
-                 blas_int *lda, scs_float *vl, scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
-                 blas_int *m, scs_float *w, scs_complex_float *z, blas_int *ldz, blas_int *isuppz, scs_complex_float *cwork,
-                 blas_int *lcwork, scs_float *rwork, blas_int *lrwork, blas_int *iwork, blas_int *liwork, blas_int *info);
+void BLASC(heevr)(const char *jobz, const char *range, const char *uplo, blas_int *n,
+                  SCS_BLAS_COMPLEX_TYPE *a,
+                  blas_int *lda, scs_float *vl, scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
+                  blas_int *m, scs_float *w, SCS_BLAS_COMPLEX_TYPE *z, blas_int *ldz, blas_int *isuppz, SCS_BLAS_COMPLEX_TYPE *cwork,
+                  blas_int *lcwork, scs_float *rwork, blas_int *lrwork, blas_int *iwork, blas_int *liwork, blas_int *info);
 
 blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
                     const blas_int *k, const scs_float *alpha,
@@ -32,12 +43,12 @@ blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
 
 blas_int BLASC(herk)(const char *uplo, const char *trans, const blas_int *n,
                      const blas_int *k, const scs_float *alpha,
-                     const scs_complex_float *a, const blas_int *lda,
-                     const scs_float *beta, scs_complex_float *c, const blas_int *ldc);
+                     const SCS_BLAS_COMPLEX_TYPE *a, const blas_int *lda,
+                     const scs_float *beta, SCS_BLAS_COMPLEX_TYPE *c, const blas_int *ldc);
 
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
-void BLASC(scal)(const blas_int *n, const scs_complex_float *sa, scs_complex_float *sx,
+void BLASC(scal)(const blas_int *n, const SCS_BLAS_COMPLEX_TYPE *sa, SCS_BLAS_COMPLEX_TYPE *sx,
                  const blas_int *incx);
 
 
@@ -938,7 +949,7 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   blas_int info = 0;
   scs_float abstol = -1.0;
   blas_int m = 0;
-  scs_complex_float lcwork = 0.0;
+  scs_complex_float lcwork = {0.0, 0.0};
   scs_float lrwork = 0.0;
   blas_int liwork = 0;
 #if VERBOSITY > 0
@@ -958,14 +969,17 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   c->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n_max), sizeof(blas_int));
 
   /* workspace query */
-  BLASC(heevr)("V", "A", "L", &n_max, c->cXs, &n_max, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, c->e,
-                 c->cZ, &n_max, c->isuppz, &lcwork, &neg_one, &lrwork, &neg_one, &liwork, &neg_one, &info);
+  BLASC(heevr)("V", "A", "L", &n_max, SCS_BLAS_COMPLEX_CAST(c->cXs),
+                &n_max, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, c->e,
+                SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max, c->isuppz,
+                SCS_BLAS_COMPLEX_CAST(&lcwork), &neg_one,
+                &lrwork, &neg_one, &liwork, &neg_one, &info);
 
   if (info != 0) {
     scs_printf("FATAL: heev workspace query failure, info = %li\n", (long)info);
     return -1;
   }
-  c->lcwork = (blas_int)(creal(lcwork));
+  c->lcwork = (blas_int)(lcwork[0]);
   c->lrwork = (blas_int)(lrwork);
   c->liwork = liwork;
   c->cwork = (scs_complex_float *)scs_calloc(c->lcwork, sizeof(scs_complex_float));
@@ -1002,15 +1016,15 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   blas_int nb_plus_one = (blas_int)(n + 1);
   blas_int one_int = 1;
   scs_float zero = 0., one = 1.;
-  scs_complex_float csqrt2 = SQRTF(2.0);
-  scs_complex_float csqrt2_inv = 1.0 / csqrt2;
+  scs_complex_float csqrt2 = {SQRTF(2.0), 0.0};
+  scs_complex_float csqrt2_inv = {1.0 / csqrt2[0], 0.0};
   scs_complex_float *cXs = c->cXs;
   scs_complex_float *cZ = c->cZ;
   scs_float *e = c->e;
   scs_float abstol = -1.0;
   blas_int m = 0;
   blas_int info = 0;
-  scs_complex_float csq_eig_pos;
+  scs_complex_float csq_eig_pos = {0.0, 0.0};
 
 #endif
 
@@ -1026,21 +1040,28 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n - 1; ++i) {
-    cXs[i * (n + 1)] = X[i * (2 * n - i)];
+    cXs[i * (n + 1)][0] = X[i * (2 * n - i)];
+    cXs[i * (n + 1)][1] = 0.0;
     memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  cXs[n * n - 1] = X[n * n - 1];
+  cXs[n * n - 1][0] = X[n * n - 1];
+  cXs[n * n - 1][1] = 0.0;
   /*
      rescale so projection works, and matrix norm preserved
      see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
    */
   /* scale diags by sqrt(2) */
-  BLASC(scal)(&nb, &csqrt2, cXs, &nb_plus_one); /* not n_squared */
+  BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2), SCS_BLAS_COMPLEX_CAST(cXs),
+              &nb_plus_one); /* not n_squared */
 
   /* Solve eigenproblem, reuse workspaces */
-  BLASC(heevr)("V", "A", "L", &nb, cXs, &nb, SCS_NULL, SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, e,
-                 cZ, &nb, c->isuppz, c->cwork, &c->lcwork, c->rwork, &c->lrwork, c->iwork, &c->liwork, &info);
+  BLASC(heevr)("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(cXs), &nb, SCS_NULL,
+                SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, e,
+                SCS_BLAS_COMPLEX_CAST(cZ), &nb, c->isuppz,
+                SCS_BLAS_COMPLEX_CAST(c->cwork), &c->lcwork,
+                c->rwork, &c->lrwork, c->iwork, &c->liwork, &info);
+
   if (info != 0) {
     scs_printf("WARN: LAPACK heev error, info = %i\n", (int)info);
     if (info < 0) {
@@ -1066,24 +1087,28 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   /* cZ is matrix of all eigenvectors */
   /* scale cZ by sqrt(eig) */
   for (i = first_idx; i < n; ++i) {
-    csq_eig_pos = SQRTF(e[i]);
-    BLASC(scal)(&nb, &csq_eig_pos, &cZ[i * n], &one_int);
+    csq_eig_pos[0] = SQRTF(e[i]);
+    BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csq_eig_pos),
+                SCS_BLAS_COMPLEX_CAST(&cZ[i * n]), &one_int);
   }
 
   /* Xs = cZ cZ' = V E V' */
   ncols_z = (blas_int)(n - first_idx);
-  BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one, &cZ[first_idx * n], &nb, &zero, cXs, &nb);
+  BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one,
+              SCS_BLAS_COMPLEX_CAST(&cZ[first_idx * n]), &nb, &zero,
+              SCS_BLAS_COMPLEX_CAST(cXs), &nb);
 
   /* undo rescaling: scale diags by 1/sqrt(2) */
-  BLASC(scal)(&nb, &csqrt2_inv, cXs, &nb_plus_one); /* not n_squared */
+  BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2_inv),
+              SCS_BLAS_COMPLEX_CAST(cXs), &nb_plus_one); /* not n_squared */
 
   /* extract just lower triangular matrix */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = creal(cXs[i * (n + 1)]);
+    X[i * (2 * n - i)] = cXs[i * (n + 1)][0];
     memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = creal(cXs[n * n - 1]);
+  X[n * n - 1] = cXs[n * n - 1][0];
   return 0;
 
 #else
