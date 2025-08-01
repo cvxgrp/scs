@@ -6,11 +6,11 @@
 #include <complex.h>
 
 #ifndef SFLOAT
-#define SCS_BLAS_COMPLEX_CAST(x) ((double complex*)(x))
-#define SCS_BLAS_COMPLEX_TYPE double complex
+#define SCS_BLAS_COMPLEX_CAST(x) ((double _Complex*)(x))
+#define SCS_BLAS_COMPLEX_TYPE double _Complex
 #else
-#define SCS_BLAS_COMPLEX_CAST(x) ((float complex*)(x))
-#define SCS_BLAS_COMPLEX_TYPE float complex
+#define SCS_BLAS_COMPLEX_CAST(x) ((float _Complex*)(x))
+#define SCS_BLAS_COMPLEX_TYPE float _Complex
 #endif
 
 
