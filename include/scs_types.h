@@ -7,11 +7,11 @@
 #ifndef SCS_TYPES_H_GUARD
 #define SCS_TYPES_H_GUARD
 
+#include <complex.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <complex.h>
 
 #ifdef DLONG
 /*#ifdef _WIN64
