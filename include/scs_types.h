@@ -7,8 +7,6 @@
 #ifndef SCS_TYPES_H_GUARD
 #define SCS_TYPES_H_GUARD
 
-//#include <complex.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,17 +26,11 @@ typedef int scs_int;
 
 #ifndef SFLOAT
 typedef double scs_float;
-//typedef double _Complex scs_complex_float;
 typedef double scs_complex_float[2]; // [real, imaginary]
 #else
 typedef float scs_float;
-//typedef float _Complex scs_complex_float;
 typedef float scs_complex_float[2]; // [real, imaginary]
 #endif
-
-
-
-
 
 #ifdef __cplusplus
 }
