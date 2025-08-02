@@ -1045,7 +1045,8 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n - 1; ++i) {
-    SCS_COMPLEX_REAL(cXs, i * (n + 1)) = X[i * (2 * n - i)];
+    //SCS_COMPLEX_REAL(cXs, i * (n + 1)) = X[i * (2 * n - i)];
+    CXs[i * (n + 1)][0] = 0.0;
     SCS_COMPLEX_IMAG(cXs, i * (n + 1)) = 0.0;
     memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
