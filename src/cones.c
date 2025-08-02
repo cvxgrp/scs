@@ -1046,13 +1046,17 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n - 1; ++i) {
     //SCS_COMPLEX_REAL(cXs, i * (n + 1)) = X[i * (2 * n - i)];
-    cXs[i * (n + 1)][0] = 0.0;
-    SCS_COMPLEX_IMAG(cXs, i * (n + 1)) = 0.0;
+    cXs[i * (n + 1)][0] = X[i * (2 * n - i)];
+    cXs[i * (n + 1)][1] = 0.0;
+    //SCS_COMPLEX_IMAG(cXs, i * (n + 1)) = 0.0;
     memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  SCS_COMPLEX_REAL(cXs, n * n - 1) = X[n * n - 1];
-  SCS_COMPLEX_IMAG(cXs, n * n - 1) = 0.0;
+  cXs[n * n - 1][0] = X[n * n - 1];
+  cXs[n * n - 1][1] = 0.0;
+
+  //SCS_COMPLEX_REAL(cXs, n * n - 1) = X[n * n - 1];
+  //SCS_COMPLEX_IMAG(cXs, n * n - 1) = 0.0;
   /*
      rescale so projection works, and matrix norm preserved
      see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
@@ -1110,11 +1114,13 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* extract just lower triangular matrix */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = SCS_COMPLEX_REAL(cXs, i * (n + 1));
+    //X[i * (2 * n - i)] = SCS_COMPLEX_REAL(cXs, i * (n + 1));
+    X[i * (2 * n - i)] = cXs[i * (n + 1)][0];
     memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = SCS_COMPLEX_REAL(cXs, n * n - 1);
+  X[n * n - 1] = cXs[n * n - 1][0];
+  //X[n * n - 1] = SCS_COMPLEX_REAL(cXs, n * n - 1);
   return 0;
 
 #else
