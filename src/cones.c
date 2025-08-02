@@ -13,6 +13,9 @@
 #define SCS_BLAS_COMPLEX_TYPE float _Complex
 #endif
 
+#define SCS_COMPLEX_REAL(arr, idx) (((scs_float*)(arr))[2 * (idx)])
+#define SCS_COMPLEX_IMAG(arr, idx) (((scs_float*)(arr))[2 * (idx) + 1])
+
 
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_TOL (1e-9)
@@ -949,7 +952,7 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   blas_int info = 0;
   scs_float abstol = -1.0;
   blas_int m = 0;
-  scs_complex_float lcwork = {0.0, 0.0};
+  scs_complex_float lcwork = {0.0};
   scs_float lrwork = 0.0;
   blas_int liwork = 0;
 #if VERBOSITY > 0
@@ -1016,15 +1019,17 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   blas_int nb_plus_one = (blas_int)(n + 1);
   blas_int one_int = 1;
   scs_float zero = 0., one = 1.;
-  scs_complex_float csqrt2 = {SQRTF(2.0), 0.0};
-  scs_complex_float csqrt2_inv = {1.0 / csqrt2[0], 0.0};
+  scs_complex_float csqrt2 = {0.0};
+  csqrt2[0] = SQRTF(2.0);
+  scs_complex_float csqrt2_inv = {0.0};
+  csqrt2_inv[0] = 1.0 / csqrt2[0];;
   scs_complex_float *cXs = c->cXs;
   scs_complex_float *cZ = c->cZ;
   scs_float *e = c->e;
   scs_float abstol = -1.0;
   blas_int m = 0;
   blas_int info = 0;
-  scs_complex_float csq_eig_pos = {0.0, 0.0};
+  scs_complex_float csq_eig_pos = {0.0};
 
 #endif
 
@@ -1040,13 +1045,13 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n - 1; ++i) {
-    cXs[i * (n + 1)][0] = X[i * (2 * n - i)];
-    cXs[i * (n + 1)][1] = 0.0;
+    SCS_COMPLEX_REAL(cXs, i * (n + 1)) = X[i * (2 * n - i)];
+    SCS_COMPLEX_IMAG(cXs, i * (n + 1)) = 0.0;
     memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  cXs[n * n - 1][0] = X[n * n - 1];
-  cXs[n * n - 1][1] = 0.0;
+  SCS_COMPLEX_REAL(cXs, n * n - 1) = X[n * n - 1];
+  SCS_COMPLEX_IMAG(cXs, n * n - 1) = 0.0;
   /*
      rescale so projection works, and matrix norm preserved
      see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
@@ -1104,11 +1109,11 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* extract just lower triangular matrix */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = cXs[i * (n + 1)][0];
+    X[i * (2 * n - i)] = SCS_COMPLEX_REAL(cXs, i * (n + 1));
     memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = cXs[n * n - 1][0];
+  X[n * n - 1] = SCS_COMPLEX_REAL(cXs, n * n - 1);
   return 0;
 
 #else
