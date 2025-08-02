@@ -5,6 +5,10 @@
 #include "util.h"
 #include <complex.h>
 
+// We need these definitions here to avoid including complex.h in scs_types.h.
+// Including complex.h in scs_types.h causes issues when building with C++ compilers.
+// Reach out to Daniel Cederberg if you have any questions about the following
+// 7 lines of code.
 #ifndef SFLOAT
 #define SCS_BLAS_COMPLEX_CAST(x) ((double _Complex*)(x))
 #define SCS_BLAS_COMPLEX_TYPE double _Complex
@@ -12,10 +16,6 @@
 #define SCS_BLAS_COMPLEX_CAST(x) ((float _Complex*)(x))
 #define SCS_BLAS_COMPLEX_TYPE float _Complex
 #endif
-
-#define SCS_COMPLEX_REAL(arr, idx) (((scs_float*)(arr))[2 * (idx)])
-#define SCS_COMPLEX_IMAG(arr, idx) (((scs_float*)(arr))[2 * (idx) + 1])
-
 
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_TOL (1e-9)
@@ -1045,18 +1045,13 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n - 1; ++i) {
-    //SCS_COMPLEX_REAL(cXs, i * (n + 1)) = X[i * (2 * n - i)];
     cXs[i * (n + 1)][0] = X[i * (2 * n - i)];
     cXs[i * (n + 1)][1] = 0.0;
-    //SCS_COMPLEX_IMAG(cXs, i * (n + 1)) = 0.0;
     memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
   cXs[n * n - 1][0] = X[n * n - 1];
   cXs[n * n - 1][1] = 0.0;
-
-  //SCS_COMPLEX_REAL(cXs, n * n - 1) = X[n * n - 1];
-  //SCS_COMPLEX_IMAG(cXs, n * n - 1) = 0.0;
   /*
      rescale so projection works, and matrix norm preserved
      see http://www.seas.ucla.edu/~vandenbe/publications/mlbook.pdf pg 3
@@ -1114,13 +1109,11 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* extract just lower triangular matrix */
   for (i = 0; i < n - 1; ++i) {
-    //X[i * (2 * n - i)] = SCS_COMPLEX_REAL(cXs, i * (n + 1));
     X[i * (2 * n - i)] = cXs[i * (n + 1)][0];
     memcpy(&(X[i * (2 * n - i) + 1]), &(cXs[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
   X[n * n - 1] = cXs[n * n - 1][0];
-  //X[n * n - 1] = SCS_COMPLEX_REAL(cXs, n * n - 1);
   return 0;
 
 #else

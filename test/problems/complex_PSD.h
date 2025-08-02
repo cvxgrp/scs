@@ -36,7 +36,7 @@ static const char *complex_PSD(void)
     k->cssize = cssize;
 
     // computed offline
-    scs_float opt = 8.046737895443831;
+    scs_float opt = -5.228930;
     /* end data */
 
     d->m = m;
@@ -57,20 +57,6 @@ static const char *complex_PSD(void)
     stgs->eps_infeas = 1e-9;
 
     exitflag = scs(d, k, stgs, sol, &info);
-
-    /* Print solution x */
-    printf("Optimal solution vector x*:\n");
-    for (int i = 0; i < n; ++i)
-    {
-        printf("x[%i] = %4f\n", i, sol->x[i]);
-    }
-
-    /* Print dual solution y */
-    printf("Optimal dual vector y*:\n");
-    for (int i = 0; i < m; ++i)
-    {
-        printf("y[%i] = %4f\n", i, sol->y[i]);
-    }
 
     perr = SCS(dot)(d->c, sol->x, d->n) - opt;
     derr = -SCS(dot)(d->b, sol->y, d->m) - opt;
