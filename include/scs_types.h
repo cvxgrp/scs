@@ -11,8 +11,6 @@
 extern "C" {
 #endif
 
-#include <complex.h>
-
 #ifdef DLONG
 /*#ifdef _WIN64
 #include <stdint.h>
@@ -28,10 +26,10 @@ typedef int scs_int;
 
 #ifndef SFLOAT
 typedef double scs_float;
-typedef double _Complex scs_complex_float;
+typedef double scs_complex_float[2]; // [real, imaginary]
 #else
 typedef float scs_float;
-typedef float _Complex scs_complex_float;
+typedef float scs_complex_float[2]; // [real, imaginary]
 #endif
 
 #ifdef __cplusplus

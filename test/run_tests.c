@@ -35,9 +35,11 @@ _SKIP(test_validation)
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
 #include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h"
+#include "problems/complex_PSD.h"
 #else
 _SKIP(rob_gauss_cov_est)
 _SKIP(random_prob)
+_SKIP(complex_PSD)
 #endif
 
 #if defined(USE_SPECTRAL_CONES) && NO_READ_WRITE == 0
@@ -72,6 +74,7 @@ static const char *all_tests(void) {
   mu_run_test(small_lp);
   mu_run_test(small_qp);
   mu_run_test(rob_gauss_cov_est);
+  mu_run_test(complex_PSD);
   mu_run_test(hs21_tiny_qp);
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(qafiro_tiny_qp);
