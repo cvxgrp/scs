@@ -51,7 +51,7 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
   L->i = (scs_int *)scs_calloc(nzmax, sizeof(scs_int));
   p->Dinv = (scs_float *)scs_calloc(n, sizeof(scs_float));
   p->D = (scs_float *)scs_calloc(n, sizeof(scs_float));
-  p->bwork = (scs_int *)scs_calloc(n, sizeof(scs_int));
+  p->bwork = (QDLDL_bool *)scs_calloc(n, sizeof(QDLDL_bool));
   p->fwork = (scs_float *)scs_calloc(n, sizeof(scs_float));
   return nzmax;
 }
