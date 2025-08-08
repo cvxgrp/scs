@@ -12,7 +12,7 @@ extern "C" {
 
 #define QDLDL_int scs_int
 #define QDLDL_float scs_float
-#define QDLDL_bool scs_int
+#define QDLDL_bool unsigned char
 
 /* Maximum value of the signed type QDLDL_int */
 #ifdef DLONG

@@ -64,7 +64,7 @@ CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss
 # Add on default CFLAGS
 OPT = -O3
 INCLUDE = -I. -Iinclude -Ilinsys
-override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT)
+override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT) -Werror=incompatible-pointer-types
 ifneq ($(ISWINDOWS), 1)
 override CFLAGS += -fPIC
 endif
