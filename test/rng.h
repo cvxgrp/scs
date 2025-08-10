@@ -52,14 +52,14 @@ long ran_arr_buf[QUALITY];
 long ran_arr_dummy = -1, ran_arr_started = -1;
 long *ran_arr_ptr = &ran_arr_dummy; /* the next random number, or -1 */
 
-#define TT 70             /* guaranteed separation between streams */
-#define is_odd(x) ((x)&1) /* units bit of x */
+#define TT 70               /* guaranteed separation between streams */
+#define is_odd(x) ((x) & 1) /* units bit of x */
 
 #ifdef __STDC__
 void ran_start(long seed)
 #else
-void ran_start(seed)  /* do this before using ran_array */
-    long seed;        /* selector for different streams */
+void ran_start(seed) /* do this before using ran_array */
+    long seed;       /* selector for different streams */
 #endif
 {
   register int t, j;

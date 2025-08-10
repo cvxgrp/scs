@@ -193,3 +193,4 @@ static void compute_cone_residuals(scs_float t, const scs_float *x,
   scs_free(lmbda_x);
 }
 #endif
+

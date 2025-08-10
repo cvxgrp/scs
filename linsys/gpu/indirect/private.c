@@ -147,28 +147,24 @@ static void mat_vec(ScsLinSysWork *p, const scs_float *x, scs_float *y) {
 
   if (p->Pg) {
     /* y = R_x * x + P x */
-    SCS(accum_by_p_gpu)
-    (p->Pg, p->dn_vec_n, p->dn_vec_n_p, p->cusparse_handle, &p->buffer_size,
-     &p->buffer);
+    SCS(accum_by_p_gpu)(p->Pg, p->dn_vec_n, p->dn_vec_n_p, p->cusparse_handle,
+                        &p->buffer_size, &p->buffer);
   }
 
   /* z = Ax */
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(accum_by_atrans_gpu)
-  (p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
+  SCS(accum_by_atrans_gpu)(p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+                           &p->buffer_size, &p->buffer);
 #else
-  SCS(accum_by_a_gpu)
-  (p->Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
+  SCS(accum_by_a_gpu)(p->Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+                      &p->buffer_size, &p->buffer);
 #endif
   /* z = R_y^{-1} A x */
   scale_by_diag(p->cublas_handle, p->inv_r_y_gpu, z, p->m);
 
   /* y += A'z => y = R_x * x + P x + A' R_y^{-1} Ax */
-  SCS(accum_by_atrans_gpu)
-  (p->Ag, p->dn_vec_m, p->dn_vec_n_p, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
+  SCS(accum_by_atrans_gpu)(p->Ag, p->dn_vec_m, p->dn_vec_n_p,
+                           p->cusparse_handle, &p->buffer_size, &p->buffer);
 }
 
 /* P comes in upper triangular, expand to full
@@ -488,9 +484,8 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   cusparseDnVecSetValues(p->dn_vec_m, (void *)tmp_m); /* R * ry */
   cusparseDnVecSetValues(p->dn_vec_n, (void *)bg);    /* rx */
   /* bg[:n] = rx + A' R ry */
-  SCS(accum_by_atrans_gpu)
-  (Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
+  SCS(accum_by_atrans_gpu)(Ag, p->dn_vec_m, p->dn_vec_n, p->cusparse_handle,
+                           &p->buffer_size, &p->buffer);
 
   /* set max_iters to 10 * n (though in theory n is enough for any tol) */
   max_iters = 10 * Ag->n;
@@ -506,13 +501,11 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
 
   /* b[n:] = Ax - ry */
 #if GPU_TRANSPOSE_MAT > 0
-  SCS(accum_by_atrans_gpu)
-  (p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
+  SCS(accum_by_atrans_gpu)(p->Agt, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+                           &p->buffer_size, &p->buffer);
 #else
-  SCS(accum_by_a_gpu)
-  (Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle, &p->buffer_size,
-   &p->buffer);
+  SCS(accum_by_a_gpu)(Ag, p->dn_vec_n, p->dn_vec_m, p->cusparse_handle,
+                      &p->buffer_size, &p->buffer);
 #endif
 
   /* bg[n:] = R_y^{-1} bg[n:] = R_y^{-1} (Ax - ry) = y */

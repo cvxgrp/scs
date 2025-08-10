@@ -123,9 +123,8 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
   scs_float zero = 0.0;
 
   // it is not safe to have overlapping matrices for dgemm_.
-  BLAS(gemm)
-  (&transN, &transY, &nb, &nb, &nb, &one, Xs, &nb, c->work_sum_of_largest, &nb,
-   &zero, Z, &nb);
+  BLAS(gemm)(&transN, &transY, &nb, &nb, &nb, &one, Xs, &nb,
+             c->work_sum_of_largest, &nb, &zero, Z, &nb);
 
   BLAS(scal)(&nb, &sqrt2_inv, Z, &nb_plus_one);
 
@@ -138,3 +137,4 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
 
   return 0;
 }
+

@@ -269,8 +269,7 @@ static const char *graph_partitioning(void) {
   scs_free(k);
   scs_free(stgs);
   scs_free(d);
-  SCS(free_sol)
-  (sol);
+  SCS(free_sol)(sol);
 
   return fail;
 }

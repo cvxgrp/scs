@@ -62,8 +62,8 @@ scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n,
   int lwork = c->lwork_nuc;
   int info = 0;
 
-  BLAS(gesvd)
-  ("S", "A", &bm, &bn, X, &bm, s, u, &bm, vt, &bn, work, &lwork, &info);
+  BLAS(gesvd)("S", "A", &bm, &bn, X, &bm, s, u, &bm, vt, &bn, work, &lwork,
+              &info);
   if (info != 0) {
     printf("WARN: LAPACK gesvd error, info = %i\n", (int)info);
     if (info < 0) {
@@ -86,15 +86,14 @@ scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n,
   // -------------------------------------------------------------------------
   int one = 1;
   for (scs_int i = 0; i < n; ++i) {
-    BLAS(scal)
-    (&bm, &tX[i + 1], &u[i * m], &one);
+    BLAS(scal)(&bm, &tX[i + 1], &u[i * m], &one);
   }
 
   char trans = 'N';
   scs_float alpha = 1.0;
   scs_float beta = 0.0;
-  BLAS(gemm)
-  (&trans, &trans, &bm, &bn, &bn, &alpha, u, &bm, vt, &bn, &beta, tX + 1, &bm);
+  BLAS(gemm)(&trans, &trans, &bm, &bn, &bn, &alpha, u, &bm, vt, &bn, &beta,
+             tX + 1, &bm);
 
   return 0;
 }

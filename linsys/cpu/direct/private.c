@@ -51,7 +51,7 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
   L->i = (scs_int *)scs_calloc(nzmax, sizeof(scs_int));
   p->Dinv = (scs_float *)scs_calloc(n, sizeof(scs_float));
   p->D = (scs_float *)scs_calloc(n, sizeof(scs_float));
-  p->bwork = (scs_int *)scs_calloc(n, sizeof(scs_int));
+  p->bwork = (QDLDL_bool *)scs_calloc(n, sizeof(QDLDL_bool));
   p->fwork = (scs_float *)scs_calloc(n, sizeof(scs_float));
   return nzmax;
 }
@@ -143,7 +143,7 @@ static ScsMatrix *cs_symperm(const ScsMatrix *A, const scs_int *pinv,
       i = Ai[p];
       if (i > j) {
         continue;
-      }                        /* skip lower triangular part of A */
+      } /* skip lower triangular part of A */
       i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
       w[MAX(i2, j2)]++;        /* column count of C */
     }
@@ -155,7 +155,7 @@ static ScsMatrix *cs_symperm(const ScsMatrix *A, const scs_int *pinv,
       i = Ai[p];
       if (i > j) {
         continue;
-      }                        /* skip lower triangular part of A*/
+      } /* skip lower triangular part of A*/
       i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
       Ci[q = w[MAX(i2, j2)]++] = MIN(i2, j2);
       if (Cx) {

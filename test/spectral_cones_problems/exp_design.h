@@ -135,8 +135,7 @@ static const char *exp_design(void) {
   scs_free(k);
   scs_free(stgs);
   scs_free(d);
-  SCS(free_sol)
-  (sol);
+  SCS(free_sol)(sol);
 
   return fail;
 }
