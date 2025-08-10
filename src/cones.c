@@ -731,9 +731,8 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
 
   /* workspace query */
-  BLAS(syev)
-  ("Vectors", "Lower", &n_max, c->Xs, &n_max, SCS_NULL, &wkopt, &neg_one,
-   &info);
+  BLAS(syev)("Vectors", "Lower", &n_max, c->Xs, &n_max, SCS_NULL, &wkopt,
+             &neg_one, &info);
 
   if (info != 0) {
     scs_printf("FATAL: syev workspace query failure, info = %li\n", (long)info);
@@ -774,9 +773,9 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
     }
 
     // workspace query
-    BLAS(gesvd)
-    ("S", "A", &m_max_nuc, &n_max_nuc, c->u_nuc, &m_max_nuc, c->s_nuc, c->u_nuc,
-     &m_max_nuc, c->vt_nuc, &n_max_nuc, &wkopt, &neg_one, &info);
+    BLAS(gesvd)("S", "A", &m_max_nuc, &n_max_nuc, c->u_nuc, &m_max_nuc,
+                c->s_nuc, c->u_nuc, &m_max_nuc, c->vt_nuc, &n_max_nuc, &wkopt,
+                &neg_one, &info);
 
     c->lwork_nuc = (blas_int)(wkopt + 1); /* +1 for int casting safety */
     c->work_nuc = (scs_float *)scs_calloc(c->lwork_nuc, sizeof(scs_float));
@@ -896,8 +895,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     }
   }
 
-  SCS(tic)
-  (&_timer);
+  SCS(tic)(&_timer);
 
   first_idx = -1;
   /* e is eigvals in ascending order, find first entry > 0 */

@@ -53,8 +53,7 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
 #ifndef USE_LAPACK
   scs_printf("FAILURE: solving SDP but no blas/lapack libraries were found!\n");
   scs_printf("SCS will return nonsense!\n");
-  SCS(scale_array)
-  (X, NAN, n);
+  SCS(scale_array)(X, NAN, n);
   return -1;
 #endif
 
@@ -83,14 +82,12 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
   }
 
   // rescale diags by sqrt(2)
-  BLAS(scal)
-  (&nb, &sqrt2, Xs, &nb_plus_one);
+  BLAS(scal)(&nb, &sqrt2, Xs, &nb_plus_one);
 
   // Eigendecomposition. On exit, the lower triangular part of Xs stores
   // the eigenvectors. The vector e stores the eigenvalues in ascending
   // order (smallest eigenvalue first) */
-  BLAS(syev)
-  ("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
+  BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
   if (info != 0) {
     scs_printf("WARN: LAPACK syev error, info = %i\n", (int)info);
     if (info < 0) {
@@ -129,14 +126,11 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
   for (i = 0; i < n; ++i) {
     assert(evals_proj[i] >= 0);
     sq_eig_pos = SQRTF(evals_proj[i]);
-    BLAS(scal)
-    (&nb, &sq_eig_pos, &Xs[i * n], &one_int);
+    BLAS(scal)(&nb, &sq_eig_pos, &Xs[i * n], &one_int);
   }
 
-  BLAS(syrk)
-  ("Lower", "NoTrans", &nb, &nb, &one, Xs, &nb, &zero, Z, &nb);
-  BLAS(scal)
-  (&nb, &sqrt2_inv, Z, &nb_plus_one);
+  BLAS(syrk)("Lower", "NoTrans", &nb, &nb, &one, Xs, &nb, &zero, Z, &nb);
+  BLAS(scal)(&nb, &sqrt2_inv, Z, &nb_plus_one);
 
   for (i = 0; i < n; ++i) {
     memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(Z[i * (n + 1)]),

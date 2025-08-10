@@ -189,9 +189,8 @@ static void set_m(AaWork *a, aa_int len) {
   blas_int blen = (blas_int)len;
   aa_float onef = 1.0, zerof = 0.0, r;
   /* if len < mem this only uses len cols */
-  BLAS(gemm)
-  ("Trans", "No", &blen, &blen, &bdim, &onef, a->type1 ? a->S : a->Y, &bdim,
-   a->Y, &bdim, &zerof, a->M, &blen);
+  BLAS(gemm)("Trans", "No", &blen, &blen, &bdim, &onef, a->type1 ? a->S : a->Y,
+             &bdim, a->Y, &bdim, &zerof, a->M, &blen);
   if (a->regularization > 0) {
     r = compute_regularization(a, len);
     for (i = 0; i < len; ++i) {
@@ -287,9 +286,8 @@ static void relax(aa_float *f, AaWork *a, aa_int len) {
   aa_float onef = 1.0, neg_onef = -1.0;
   aa_float one_m_relaxation = 1. - a->relaxation;
   /* x_work = x - S * work */
-  BLAS(gemv)
-  ("NoTrans", &bdim, &blen, &neg_onef, a->S, &bdim, a->work, &one, &onef,
-   a->x_work, &one);
+  BLAS(gemv)("NoTrans", &bdim, &blen, &neg_onef, a->S, &bdim, a->work, &one,
+             &onef, a->x_work, &one);
   /* f = relaxation * f */
   BLAS(scal)(&bdim, &a->relaxation, f, &one);
   /* f += (1 - relaxation) * x_work */
@@ -306,9 +304,8 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   aa_float onef = 1.0, zerof = 0.0, neg_onef = -1.0, aa_norm;
 
   /* work = S'g or Y'g */
-  BLAS(gemv)
-  ("Trans", &bdim, &blen, &onef, a->type1 ? a->S : a->Y, &bdim, a->g, &one,
-   &zerof, a->work, &one);
+  BLAS(gemv)("Trans", &bdim, &blen, &onef, a->type1 ? a->S : a->Y, &bdim, a->g,
+             &one, &zerof, a->work, &one);
 
   /* work = M \ work, where update_accel_params has set M = S'Y or M = Y'Y */
   BLAS(gesv)(&blen, &one, a->M, &blen, a->ipiv, a->work, &blen, &info);
@@ -335,9 +332,8 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   /* if solve was successful compute new point */
 
   /* first set f -= D * work */
-  BLAS(gemv)
-  ("NoTrans", &bdim, &blen, &neg_onef, a->D, &bdim, a->work, &one, &onef, f,
-   &one);
+  BLAS(gemv)("NoTrans", &bdim, &blen, &neg_onef, a->D, &bdim, a->work, &one,
+             &onef, f, &one);
 
   /* if relaxation is not 1 then need to incorporate */
   if (a->relaxation != 1.0) {

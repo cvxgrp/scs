@@ -143,7 +143,7 @@ static ScsMatrix *cs_symperm(const ScsMatrix *A, const scs_int *pinv,
       i = Ai[p];
       if (i > j) {
         continue;
-      }                        /* skip lower triangular part of A */
+      } /* skip lower triangular part of A */
       i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
       w[MAX(i2, j2)]++;        /* column count of C */
     }
@@ -155,7 +155,7 @@ static ScsMatrix *cs_symperm(const ScsMatrix *A, const scs_int *pinv,
       i = Ai[p];
       if (i > j) {
         continue;
-      }                        /* skip lower triangular part of A*/
+      } /* skip lower triangular part of A*/
       i2 = pinv ? pinv[i] : i; /* row i of A is row i2 of C */
       Ci[q = w[MAX(i2, j2)]++] = MIN(i2, j2);
       if (Cx) {

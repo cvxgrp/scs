@@ -7,7 +7,7 @@ ScsMatrix *SCS(cs_spalloc)(scs_int m, scs_int n, scs_int nzmax, scs_int values,
   ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
     return SCS_NULL;
-  }         /* out of memory */
+  } /* out of memory */
   A->m = m; /* define dimensions and nzmax */
   A->n = n;
   A->p = (scs_int *)scs_calloc((triplet ? nzmax : n + 1), sizeof(scs_int));

@@ -50,8 +50,7 @@ static void compute_cone_residuals_ell1(const scs_float *tx, scs_float t0,
   blas_int int_n = n;
   scs_float negOne = -1.0;
   blas_int one = 1;
-  BLAS(axpy)
-  (&int_n, &negOne, x0, &one, dualx, &one);
+  BLAS(axpy)(&int_n, &negOne, x0, &one, dualx, &one);
 
   // ---------------------------------------
   //     Compute complementarity measure

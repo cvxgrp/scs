@@ -60,8 +60,7 @@ static void f_oracle(const scs_float *u1, scs_float r, scs_float t0,
   grad_f0[0] = u1[0] - t0;
   grad_f0[1] = u1[1] - v0;
   memcpy(grad_f0 + 2, u1 + 2, n * sizeof(*grad_f0));
-  SCS(add_scaled_array)
-  (grad_f0 + 2, x0, n, -1.0);
+  SCS(add_scaled_array)(grad_f0 + 2, x0, n, -1.0);
   grad_f0[n + 2] = -1.0;
 
   // compute f_u
@@ -78,8 +77,7 @@ static void f_oracle(const scs_float *u1, scs_float r, scs_float t0,
   grad_f1[0] = -1.0;
   grad_f1[1] = n - sum_log_xv;
   memcpy(grad_f1 + 2, x_inv, n * sizeof(*x_inv));
-  SCS(scale_array)
-  (grad_f1 + 2, -u1[1], n);
+  SCS(scale_array)(grad_f1 + 2, -u1[1], n);
   grad_f1[n + 2] = 0.0;
 }
 
@@ -227,11 +225,9 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
   rhs_reduced[u_dim + 2] -= w[2] * (rhs2[2] / lmbda[2]);
   memcpy(bnew, rhs_reduced, u_dim * sizeof(*rhs_reduced));
   scs_float scale = rhs_reduced[n + 3] / w[0];
-  SCS(add_scaled_array)
-  (bnew, g0g1, u_dim, scale);
+  SCS(add_scaled_array)(bnew, g0g1, u_dim, scale);
   scale = rhs_reduced[n + 4] / w[1];
-  SCS(add_scaled_array)
-  (bnew, g0g1 + u_dim, u_dim, scale);
+  SCS(add_scaled_array)(bnew, g0g1 + u_dim, u_dim, scale);
   bnew[1] -= (rhs_reduced[n + 5] / (w[2] * w[2]));
 
   // -------------------------------------------------------------------------
@@ -278,11 +274,9 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
     // --------------------------------------------------------------------
 
     char trans = 'N';
-    BLAS(gemv)
-    (&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim, RinvCTGinvRes,
-     &bi_one, &d_one, GinvRes, &bi_one);
-    SCS(add_scaled_array)
-    (du1, GinvRes, u1_dim, 1.0);
+    BLAS(gemv)(&trans, &u_dim, &bi_three, &d_minus_one, GinvC, &u_dim,
+               RinvCTGinvRes, &bi_one, &d_one, GinvRes, &bi_one);
+    SCS(add_scaled_array)(du1, GinvRes, u1_dim, 1.0);
     *dr += GinvRes[n + 2];
 
     // -----------------------------------
@@ -303,19 +297,15 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
       scs_float coeff1 =
           SCS(dot)(g0g1 + u_dim, du1, u1_dim) + g0g1[2 * n + 5] * (*dr);
       memcpy(CCTdu, g0g1, u_dim * sizeof(*g0g1));
-      SCS(scale_array)
-      (CCTdu, coeff0, u_dim);
-      SCS(add_scaled_array)
-      (CCTdu, g0g1 + u_dim, u_dim, coeff1);
+      SCS(scale_array)(CCTdu, coeff0, u_dim);
+      SCS(add_scaled_array)(CCTdu, g0g1 + u_dim, u_dim, coeff1);
       CCTdu[n + 2] += (*dr);
       memcpy(residual, bnew, u_dim * sizeof(*bnew));
 
       // important to compute the residual as residual = bnew - (Gdu +
       // CCTdu) and not as residual = (bnew - Gdu) - CCTdu
-      SCS(add_scaled_array)
-      (Gdu, CCTdu, u_dim, 1.0);
-      SCS(add_scaled_array)
-      (residual, Gdu, u_dim, -1.0);
+      SCS(add_scaled_array)(Gdu, CCTdu, u_dim, 1.0);
+      SCS(add_scaled_array)(residual, Gdu, u_dim, -1.0);
     }
   }
 
@@ -354,8 +344,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
   scale1 = 1 / scale1;
   t0 = t0 * scale1;
   v0 = v0 * scale1;
-  SCS(scale_array)
-  (x0, scale1, n);
+  SCS(scale_array)(x0, scale1, n);
 
   // ----------------------------------------------------------------------
   //                       Parse workspace
@@ -454,10 +443,8 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     //    compute residuals and check termination criteria
     // --------------------------------------------------------
     memcpy(rx, grad_f0, u_dim * sizeof(*grad_f0));
-    SCS(scale_array)
-    (rx, z[0], u_dim);
-    SCS(add_scaled_array)
-    (rx, grad_f1, u_dim, z[1]);
+    SCS(scale_array)(rx, z[0], u_dim);
+    SCS(add_scaled_array)(rx, grad_f1, u_dim, z[1]);
     rx[1] -= z[2];
     rx[n + 2] += 1;
     rznl[0] = f_u[0] + s[0];
@@ -503,11 +490,9 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
     //      precomputations for KKT system
     // -----------------------------------------------------------------
     scs_float scale2 = 1 / w[0];
-    SCS(scale_array)
-    (grad_f0, scale2, u_dim);
+    SCS(scale_array)(grad_f0, scale2, u_dim);
     scale2 = 1 / w[1];
-    SCS(scale_array)
-    (grad_f1, scale2, u_dim);
+    SCS(scale_array)(grad_f1, scale2, u_dim);
     KKT_precompute(u1[1], x_inv, z, w, n, &KKT_work);
 
     scs_float rhs2_aff[] = {-lmbda[0] * lmbda[0], -lmbda[1] * lmbda[1],
@@ -532,8 +517,7 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
       //  For i = 1 we compute the actual search direction.
       // ------------------------------------------------------------
       if (i == 1 && variant == 0) {
-        SCS(scale_array)
-        (rhs1_aff, 1 - sigma, u_dim + 3);
+        SCS(scale_array)(rhs1_aff, 1 - sigma, u_dim + 3);
         rhs2_aff[0] += (sigma * mu - ds[0] * dz[0]);
         rhs2_aff[1] += (sigma * mu - ds[1] * dz[1]);
         rhs2_aff[2] += (sigma * mu - ds[2] * dz[2]);
@@ -553,15 +537,12 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
       while (backtrack) {
         // u_new = u + step * du, z_new = z + step * dz, s_new = s + step
         memcpy(u1_new, u1, u1_dim * sizeof(*u1));
-        SCS(add_scaled_array)
-        (u1_new, du1, u1_dim, step_size);
+        SCS(add_scaled_array)(u1_new, du1, u1_dim, step_size);
         rnew = r + step_size * dr;
         memcpy(z_new, z, 3 * sizeof(*z));
-        SCS(add_scaled_array)
-        (z_new, dz, m, step_size);
+        SCS(add_scaled_array)(z_new, dz, m, step_size);
         memcpy(s_new, s, 3 * sizeof(*s));
-        SCS(add_scaled_array)
-        (s_new, ds, m, step_size);
+        SCS(add_scaled_array)(s_new, ds, m, step_size);
 
         // evaluate oracle in u_new
         for (scs_int i = 0; i < n; i++) {
@@ -572,10 +553,8 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
 
         // compute residuals and merit function
         memcpy(rx_new, grad_f0_new, u_dim * sizeof(*grad_f0_new));
-        SCS(scale_array)
-        (rx_new, z_new[0], u_dim);
-        SCS(add_scaled_array)
-        (rx_new, grad_f1_new, u_dim, z_new[1]);
+        SCS(scale_array)(rx_new, z_new[0], u_dim);
+        SCS(add_scaled_array)(rx_new, grad_f1_new, u_dim, z_new[1]);
         rx_new[1] -= z_new[2];
         rx_new[n + 2] += 1;
         rznl_new[0] = f_u_new[0] + s_new[0];
@@ -674,10 +653,8 @@ scs_int log_cone_IPM(scs_float t0, scs_float v0, scs_float *x0, scs_float *u1,
 
   // unscale solution
   scale1 = 1 / scale1;
-  SCS(scale_array)
-  (x0, scale1, n);
-  SCS(scale_array)
-  (u1, scale1, u1_dim);
+  SCS(scale_array)(x0, scale1, n);
+  SCS(scale_array)(u1, scale1, u1_dim);
   stats->iter = iter;
   return 0;
 }
