@@ -137,3 +137,4 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
 
   return 0;
 }
+

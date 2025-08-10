@@ -202,3 +202,4 @@ static void check_opt_cond_log_cone(const scs_float *tvx, scs_float t0,
   double scale = MAX(pri_norm, 1.0);
   residuals[2] = complementarity / MAX(scale, dual_norm);
 }
+

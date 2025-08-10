@@ -199,7 +199,7 @@ static void KKT_solve(const scs_float *z, const scs_float *w,
                       const scs_float *rhs2, KKT_solver_workspace *KKT_work,
                       scs_float *du1, scs_float *dr, scs_float *dz,
                       scs_float *ds) {
-  scs_int u_dim = n + 3;
+  blas_int u_dim = n + 3;
   scs_int u1_dim = n + 2;
 
   scs_float *temp1 = KKT_work->temp1;
