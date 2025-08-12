@@ -13,7 +13,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
@@ -22,7 +22,7 @@ jobs:
 
   #  runs-on: windows-latest
   #  steps:
-  #    - uses: actions/checkout@v4
+  #    - uses: actions/checkout@v5
   #    - run: choco install clapack
   #    - run: make
   #    - run: make test
@@ -37,7 +37,7 @@ jobs:
 
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: brew install openblas lapack
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
