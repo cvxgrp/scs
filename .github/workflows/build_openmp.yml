@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: checkout project code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: install deps
       run: sudo apt-get install libopenblas-dev liblapack-dev

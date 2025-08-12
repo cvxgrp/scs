@@ -12,7 +12,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
@@ -28,7 +28,7 @@ jobs:
 
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: brew update && brew install openblas lapack
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
