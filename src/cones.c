@@ -245,7 +245,7 @@ static inline scs_int get_csd_cone_size(scs_int cs) {
 void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   scs_int i, s_cone_sz, cs_cone_sz, count = 0;
 #ifdef USE_SPECTRAL_CONES
-  scs_int cone_boundaries_len = 1 + k->qsize + k->ssize + +k->cssize + k->ed +
+  scs_int cone_boundaries_len = 1 + k->qsize + k->ssize + k->cssize + k->ed +
                                 k->ep + k->psize + k->dsize + k->nucsize +
                                 k->ell1_size + k->sl_size;
 #else
@@ -602,7 +602,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     for (i = 0; i < k->cssize; i++) {
       csd_vars += get_csd_cone_size(k->cs[i]);
     }
-    sprintf(tmp + strlen(tmp), "\t  cs: complex psd vars: %li, ssize: %li\n",
+    sprintf(tmp + strlen(tmp), "\t  cs: complex psd vars: %li, cssize: %li\n",
             (long)csd_vars, (long)k->cssize);
   }
   if (k->ep || k->ed) {
