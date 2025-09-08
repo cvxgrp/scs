@@ -15,7 +15,7 @@ jobs:
         run: |
           sudo apt-get install doxygen
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
       - name: Install Python dependencies
         run: |
           pip install sphinx sphinx-rtd-theme breathe docutils
