@@ -139,7 +139,7 @@ GLOBAL void AMD_postorder
 
 	    fnext = Sibling [bigf] ;
 
-	    AMD_DEBUG1 (("bigf " ID " maxfrsize " ID " bigfprev " ID " fnext "ID
+	    AMD_DEBUG1 (("bigf " ID " maxfrsize " ID " bigfprev " ID " fnext " ID
 		" fprev " ID"\n", bigf, maxfrsize, bigfprev, fnext, fprev)) ;
 
 	    if (fnext != EMPTY)
