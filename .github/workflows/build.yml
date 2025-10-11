@@ -73,16 +73,13 @@ jobs:
         run: choco install -y make
 
       - name: Set up vcpkg
-        uses: microsoft/setup-vcpkg@v1
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkgTriplet: x64-windows
-          # cache is on by default
+          vcpkgGitCommitId: 7d4d2f0b7e2d3a5a0c8e3b9a1f2c5e6d7c8b9a0  # pin a commit
 
-      - name: Install OpenBLAS/LAPACK
-        run: |
-          vcpkg install openblas:x64-windows lapack-reference:x64-windows
-          dir %VCPKG_INSTALLATION_ROOT%\installed\x64-windows\lib
-          dir %VCPKG_INSTALLATION_ROOT%\installed\x64-windows\include
+      - name: Install BLAS/LAPACK
+        shell: pwsh
+        run: vcpkg install openblas:x64-windows lapack-reference:x64-windows
 
       - name: Toolchain sanity check
         shell: pwsh
