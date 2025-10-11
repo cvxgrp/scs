@@ -74,8 +74,6 @@ jobs:
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 20f2a82b7a5d6d27d5a3522b07e5c8cc83d81b34 # pin a commit
 
       - name: Install BLAS/LAPACK
         shell: pwsh
