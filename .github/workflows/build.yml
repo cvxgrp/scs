@@ -6,9 +6,7 @@ jobs:
   linux:
     strategy:
       fail-fast: false
-      matrix:
-        long: [0, 1]
-        lapack: [0, 1]
+      matrix: { long: [0, 1], lapack: [0, 1] }
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -18,19 +16,16 @@ jobs:
       - run: out/run_tests_direct
       - run: out/run_tests_indirect
 
-  windows:
+  windows-mingw:  # existing MSYS2 + GCC build
     strategy:
       fail-fast: false
-      matrix:
-        long: [0, 1]
-        lapack: [0, 1]
+      matrix: { long: [0, 1], lapack: [0, 1] }
     runs-on: windows-latest
     defaults:
       run:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v5
-
       - name: Set up MSYS2 (UCRT64) + toolchain + BLAS/LAPACK
         uses: msys2/setup-msys2@v2
         with:
@@ -43,34 +38,99 @@ jobs:
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-openblas
             mingw-w64-ucrt-x86_64-lapack
-
       - name: Toolchain sanity check
         run: |
           echo "MSYSTEM=$MSYSTEM"
-          echo "PATH=$PATH"
-          which gcc
-          gcc --version
+          which gcc && gcc --version
           which pkg-config
           pkg-config --libs --cflags openblas || true
-
       - name: Build
         run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
-
       - name: Build tests
         run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
-
       - name: Run direct tests
         run: out/run_tests_direct
-
       - name: Run indirect tests
         run: out/run_tests_indirect
+
+  windows-msvc:
+    strategy:
+      fail-fast: false
+      matrix: { long: [0, 1], lapack: [0, 1] }
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v5
+
+      # Set up MSVC environment (cl, link, nmake)
+      - name: MSVC dev cmd (x64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # Install GNU make so we can drive your Makefile,
+      # and install vcpkg BLAS/LAPACK for MSVC.
+      - name: Install make
+        run: choco install -y make
+
+      - name: Set up vcpkg
+        uses: microsoft/setup-vcpkg@v1
+        with:
+          vcpkgTriplet: x64-windows
+          # cache is on by default
+
+      - name: Install OpenBLAS/LAPACK
+        run: |
+          vcpkg install openblas:x64-windows lapack-reference:x64-windows
+          dir %VCPKG_INSTALLATION_ROOT%\installed\x64-windows\lib
+          dir %VCPKG_INSTALLATION_ROOT%\installed\x64-windows\include
+
+      - name: Toolchain sanity check
+        shell: pwsh
+        run: |
+          cl /Bv
+          where cl
+          where link
+          where nmake
+          echo "VCPKG_INSTALLATION_ROOT=$Env:VCPKG_INSTALLATION_ROOT"
+
+      # Build with MSVC (assumes your Makefile honors CC/CFLAGS/LDFLAGS/LIBS for MSVC)
+      - name: Build
+        shell: pwsh
+        env:
+          VCPKG_INC:  ${{ env.VCPKG_INSTALLATION_ROOT }}\installed\x64-windows\include
+          VCPKG_LIB:  ${{ env.VCPKG_INSTALLATION_ROOT }}\installed\x64-windows\lib
+        run: |
+          setx INCLUDE "%VCPKG_INC%;%INCLUDE%"
+          setx LIB "%VCPKG_LIB%;%LIB%"
+          # MSVC-style flags; adjust if your Makefile uses different variable names
+          make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }} CC=cl `
+               CFLAGS="/O2 /MD /Z7 /EHsc /I%VCPKG_INC%" `
+               LDFLAGS="/LINK /LIBPATH:%VCPKG_LIB%" `
+               LIBS="openblas.lib lapack.lib"
+
+      - name: Build tests
+        shell: pwsh
+        env:
+          VCPKG_INC:  ${{ env.VCPKG_INSTALLATION_ROOT }}\installed\x64-windows\include
+          VCPKG_LIB:  ${{ env.VCPKG_INSTALLATION_ROOT }}\installed\x64-windows\lib
+        run: |
+          make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }} CC=cl `
+               CFLAGS="/O2 /MD /Z7 /EHsc /I%VCPKG_INC%" `
+               LDFLAGS="/LINK /LIBPATH:%VCPKG_LIB%" `
+               LIBS="openblas.lib lapack.lib"
+
+      - name: Run direct tests
+        shell: pwsh
+        run: out\run_tests_direct.exe
+
+      - name: Run indirect tests
+        shell: pwsh
+        run: out\run_tests_indirect.exe
 
   mac:
     strategy:
       fail-fast: false
-      matrix:
-        long: [0, 1]
-        lapack: [0, 1]
+      matrix: { long: [0, 1], lapack: [0, 1] }
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
