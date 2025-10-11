@@ -1,4 +1,3 @@
----
 name: Build and Test
 
 on: [push, pull_request]
@@ -10,23 +9,61 @@ jobs:
       matrix:
         long: [0, 1]
         lapack: [0, 1]
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - run: sudo apt-get install libopenblas-dev liblapack-dev
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
-      - run: out/run_tests_direct    # test direct solver
-      - run: out/run_tests_indirect  # test indirect solver
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
 
-  #  runs-on: windows-latest
-  #  steps:
-  #    - uses: actions/checkout@v5
-  #    - run: choco install clapack
-  #    - run: make
-  #    - run: make test
-  #    - run: test/run_tests
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        lapack: [0, 1]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}   # run all 'run:' steps inside MSYS2 bash
+    steps:
+      - uses: actions/checkout@v5
+
+      # Install MSYS2 + toolchain + BLAS/LAPACK
+      - name: Set up MSYS2 with toolchain and BLAS/LAPACK
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >
+            base-devel
+            git
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-openblas
+            mingw-w64-ucrt-x86_64-lapack
+
+      # Ensure the MinGW (ucrt64) environment is active
+      - name: Export MinGW paths
+        run: |
+          echo "Using $(gcc --version | head -n1)"
+          which pkg-config
+          pkg-config --libs --cflags openblas || true
+
+      - name: Build
+        run: |
+          make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+
+      - name: Build tests
+        run: |
+          make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+
+      - name: Run direct tests
+        run: out/run_tests_direct
+
+      - name: Run indirect tests
+        run: out/run_tests_indirect
 
   mac:
     strategy:
@@ -34,12 +71,12 @@ jobs:
       matrix:
         long: [0, 1]
         lapack: [0, 1]
-
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
-      - run: brew install openblas lapack
+      - run: brew update && brew install openblas lapack
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
-      - run: out/run_tests_direct    # test direct solver
-      - run: out/run_tests_indirect  # test indirect solver
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+
