@@ -3,18 +3,36 @@
 #include "scs.h"
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
-#include <complex.h>
+#if defined(_MSC_VER)
+  /* MSVC: no C99 <complex.h> */
+#else
+  #include <complex.h>
+#endif
 
 // We need these definitions here to avoid including complex.h in scs_types.h.
 // Including complex.h in scs_types.h causes issues when building with C++
 // compilers. Reach out to Daniel Cederberg if you have any questions about the
 // following 7 lines of code.
-#ifndef SFLOAT
-#define SCS_BLAS_COMPLEX_CAST(x) ((double _Complex *)(x))
-#define SCS_BLAS_COMPLEX_TYPE double _Complex
+#if defined(_MSC_VER)
+  /* MSVC C: use POD layout compatible with interleaved BLAS complex */
+  typedef struct { double real, imag; } scs_blas_cdouble;
+  typedef struct { float  real, imag; } scs_blas_cfloat;
+  #ifndef SFLOAT
+    #define SCS_BLAS_COMPLEX_TYPE scs_blas_cdouble
+    #define SCS_BLAS_COMPLEX_CAST(x) ((scs_blas_cdouble *)(x))
+  #else
+    #define SCS_BLAS_COMPLEX_TYPE scs_blas_cfloat
+    #define SCS_BLAS_COMPLEX_CAST(x) ((scs_blas_cfloat *)(x))
+  #endif
 #else
-#define SCS_BLAS_COMPLEX_CAST(x) ((float _Complex *)(x))
-#define SCS_BLAS_COMPLEX_TYPE float _Complex
+  /* GCC/Clang: keep using C99 _Complex */
+  #ifndef SFLOAT
+    #define SCS_BLAS_COMPLEX_CAST(x) ((double _Complex *)(x))
+    #define SCS_BLAS_COMPLEX_TYPE double _Complex
+  #else
+    #define SCS_BLAS_COMPLEX_CAST(x) ((float _Complex *)(x))
+    #define SCS_BLAS_COMPLEX_TYPE float _Complex
+  #endif
 #endif
 
 #define BOX_CONE_MAX_ITERS (25)
