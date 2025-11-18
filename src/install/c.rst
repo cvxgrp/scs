@@ -56,6 +56,9 @@ The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
 :code:`scs::scsindir` as well as a header file :code:`scs.h` that defines the
 API.
 
+MKL
+"""
+
 If `MKL
 <https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html>`_
 is installed in your system and the :code:`MKLROOT` environment variable is
@@ -65,6 +68,9 @@ MKL compiler flags might not be right for your system and may need to be
 `modified
 <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
 
+
+GPU
+"""
 
 If you have a GPU and CUDA toolkit installed, along with the
 `cuDSS <https://developer.nvidia.com/cudss>`_ library, you can compile SCS
@@ -78,8 +84,11 @@ with cuDSS support using CMake. First, ensure that the :code:`CUDA_PATH` and
 
 Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
 :code:`DDLONG=OFF` is mandatory.
-This will build and install the cuDSS linear solver with target :code:`scs::scscudss`.
+This will build and install the cuDSS linear solver with target
+:code:`scs::scscudss`.
 
+Importing
+"""""""""
 The libraries can be imported using the find_package CMake command and used
 by calling target_link_libraries as in the following example:
 
@@ -154,10 +163,10 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
   make gpu DLONG=0
   out/run_tests_gpu_indirect
 
-Finally, to compile and test the :ref:`cuDSS solver <cudss>` you need to have
-CUDA toolkit, the :code:`nvcc` compiler, and
-`cuDSS <https://developer.nvidia.com/cudss>`_ library installed.
-Then set :code:`CUDA_PATH` and :code:`CUDSS_PATH` and execute
+Finally, to compile and test the :ref:`cuDSS solver <cudss_solver>` you need to
+have CUDA toolkit, the :code:`nvcc` compiler, and `cuDSS
+<https://developer.nvidia.com/cudss>`_ library installed.  Then set
+:code:`CUDA_PATH` and :code:`CUDSS_PATH` and execute
 
 .. code:: bash
 

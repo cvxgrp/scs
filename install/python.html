@@ -51,7 +51,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mkl">MKL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpu">GPU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
@@ -103,30 +108,48 @@
 <p>You can also install directly from source</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/bodono/scs-python.git
 <span class="nb">cd</span><span class="w"> </span>scs-python
-python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--verbose<span class="w"> </span>.
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
+<section id="mkl">
+<h2>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h2>
 <p>If you have MKL, you can install the MKL Pardiso interface using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--verbose<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable MKL when solving. MKL is typically
-faster than the built-in linear system solver.</p>
+<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable MKL when solving. MKL is
+typically faster than the built-in linear system solver.</p>
+</section>
+<section id="gpu">
+<h2>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h2>
+<p>If you have a GPU and cuDSS installed you can install the GPU direct sparse
+solver using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_cudss<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Dint32<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable the GPU when solving. The
+sparse direct GPU solver is typically very fast.</p>
+<p>See <a class="reference external" href="https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing">here</a> for an example colab where the cuDSS version of SCS, along with
+required dependencies, is installed and used.</p>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h2>
 <p>To test that SCS installed correctly, and you have pytest installed, run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>.
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for the full SCS python API.</p>
 <section id="legacy-options">
-<h2>Legacy options<a class="headerlink" href="#legacy-options" title="Link to this heading"></a></h2>
+<h3>Legacy options<a class="headerlink" href="#legacy-options" title="Link to this heading"></a></h3>
 <p>You can install with OpenMP parallelization support using</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--openmp
 </pre></div>
 </div>
-<p>You can install the GPU interface using (the GPU solver is no longer recommended)</p>
+<p>You can install the GPU indirect solver using</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--gpu
 </pre></div>
 </div>
+</section>
 </section>
 </section>
 

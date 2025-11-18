@@ -140,9 +140,9 @@ of the proper format, SCS will attempt to convert them. The
 <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting switches between the sparse direct
 <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the sparse indirect solver. If the MKL
 Pardiso direct solver for SCS is <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> then it can
-be used by setting <code class="code docutils literal notranslate"><span class="pre">mkl=True</span></code>. If the GPU indirect solver for SCS is
-<a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> and a GPU is available then it can be used by
-setting <code class="code docutils literal notranslate"><span class="pre">gpu=True</span></code>.  The remaining fields are explained in
+be used by setting <code class="code docutils literal notranslate"><span class="pre">mkl=True</span></code>. If a GPU solver for SCS is <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> and a GPU is available then it can be used by setting
+<code class="code docutils literal notranslate"><span class="pre">gpu=True</span></code>. For the direct GPU solver based on cuDSS set
+<code class="code docutils literal notranslate"><span class="pre">use_indirect=False</span></code>. The remaining fields are explained in
 <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>
 <p>Then to solve the problem call:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">warm_start</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>

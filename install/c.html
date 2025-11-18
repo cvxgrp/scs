@@ -50,7 +50,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">C / C++</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#cmake">CMake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cmake">CMake</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mkl">MKL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gpu">GPU</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#importing">Importing</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#makefile">Makefile</a></li>
 </ul>
 </li>
@@ -138,11 +143,16 @@ make
 <p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> that defines the
 API.</p>
+<section id="mkl">
+<h3>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h3>
 <p>If <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html">MKL</a>
 is installed in your system and the <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment variable is
 set, then additionally CMake will build and install the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a> linear solver with target <code class="code docutils literal notranslate"><span class="pre">scs::scsmkl</span></code>.  (Note that the choice of
 MKL compiler flags might not be right for your system and may need to be
 <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+</section>
+<section id="gpu">
+<h3>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h3>
 <p>If you have a GPU and CUDA toolkit installed, along with the
 <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library, you can compile SCS
 with cuDSS support using CMake. First, ensure that the <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and
@@ -153,7 +163,11 @@ make
 </div>
 <p>Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
 <code class="code docutils literal notranslate"><span class="pre">DDLONG=OFF</span></code> is mandatory.
-This will build and install the cuDSS linear solver with target <code class="code docutils literal notranslate"><span class="pre">scs::scscudss</span></code>.</p>
+This will build and install the cuDSS linear solver with target
+<code class="code docutils literal notranslate"><span class="pre">scs::scscudss</span></code>.</p>
+</section>
+<section id="importing">
+<h3>Importing<a class="headerlink" href="#importing" title="Link to this heading"></a></h3>
 <p>The libraries can be imported using the find_package CMake command and used
 by calling target_link_libraries as in the following example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION<span class="w"> </span><span class="m">3</span>.0<span class="o">)</span>
@@ -174,6 +188,7 @@ target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs:
 target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scscudss<span class="o">)</span>
 </pre></div>
 </div>
+</section>
 </section>
 <section id="makefile">
 <h2>Makefile<a class="headerlink" href="#makefile" title="Link to this heading"></a></h2>
@@ -214,10 +229,9 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
 out/run_tests_gpu_indirect
 </pre></div>
 </div>
-<p>Finally, to compile and test the <a class="reference internal" href="../linear_solver/index.html#cudss"><span class="std std-ref">cuDSS solver</span></a> you need to have
-CUDA toolkit, the <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> compiler, and
-<a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library installed.
-Then set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> and execute</p>
+<p>Finally, to compile and test the <a class="reference internal" href="../linear_solver/index.html#cudss-solver"><span class="std std-ref">cuDSS solver</span></a> you need to
+have CUDA toolkit, the <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> compiler, and <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library installed.  Then set
+<code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> and execute</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>cudss<span class="w"> </span><span class="nv">DLONG</span><span class="o">=</span><span class="m">0</span>
 out/run_tests_cudss
 </pre></div>
