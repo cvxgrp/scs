@@ -4,7 +4,6 @@
 
 [![Build Status](https://github.com/cvxgrp/scs/actions/workflows/build.yml/badge.svg)](https://github.com/cvxgrp/scs/actions/workflows/build.yml)
 [![Documentation](https://img.shields.io/badge/docs-online-brightgreen?logo=read-the-docs&style=flat)](https://www.cvxgrp.org/scs/)
-[![Coverage Status](https://coveralls.io/repos/github/cvxgrp/scs/badge.svg?branch=master)](https://coveralls.io/github/cvxgrp/scs?branch=master)
 
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
