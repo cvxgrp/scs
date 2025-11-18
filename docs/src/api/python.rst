@@ -45,9 +45,10 @@ of the proper format, SCS will attempt to convert them. The
 :code:`use_indirect` setting switches between the sparse direct
 :ref:`linear_solver` (the default) or the sparse indirect solver. If the MKL
 Pardiso direct solver for SCS is :ref:`installed <python_install>` then it can
-be used by setting :code:`mkl=True`. If the GPU indirect solver for SCS is
-:ref:`installed <python_install>` and a GPU is available then it can be used by
-setting :code:`gpu=True`.  The remaining fields are explained in
+be used by setting :code:`mkl=True`. If a GPU solver for SCS is :ref:`installed
+<python_install>` and a GPU is available then it can be used by setting
+:code:`gpu=True`. For the direct GPU solver based on cuDSS set
+:code:`use_indirect=False`. The remaining fields are explained in
 :ref:`settings`.
 
 Then to solve the problem call:
