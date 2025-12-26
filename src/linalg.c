@@ -86,6 +86,9 @@ void SCS(add_scaled_array)(scs_float *a, const scs_float *b, scs_int n,
 scs_float SCS(mean)(const scs_float *x, scs_int n) {
   scs_int i;
   scs_float mean = 0.;
+  if (n == 0) {
+    return 0.;
+  }
   for (i = 0; i < n; ++i) {
     mean += x[i];
   }
@@ -178,6 +181,9 @@ scs_float SCS(mean)(const scs_float *x, scs_int n) {
   blas_int bzero = 0;
   blas_int blen = (blas_int)n;
   scs_float y = 1.0;
+  if (n == 0) {
+    return 0.;
+  }
   return BLAS(dot)(&blen, x, &bone, &y, &bzero) / n;
 }
 

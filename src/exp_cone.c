@@ -246,7 +246,7 @@ static void exp_search_bracket(const scs_float *v0, scs_float pdist,
   scs_float baseupr = EXP_CONE_INFINITY_VALUE;
   scs_float low = -EXP_CONE_INFINITY_VALUE;
   scs_float upr = EXP_CONE_INFINITY_VALUE;
-  scs_float Dp, Dd, curbnd, fl, fu, df, tpu, tdl;
+  scs_float Dp, Dd, curbnd, fl, fu, df, tpu, tdl, sgn, val;
 
   Dp = SQRTF(pdist * pdist - MIN(s0, 0.0) * MIN(s0, 0.0));
   Dd = SQRTF(ddist * ddist - MIN(r0, 0.0) * MIN(r0, 0.0));
@@ -263,7 +263,9 @@ static void exp_search_bracket(const scs_float *v0, scs_float pdist,
     baselow = 1.0 - s0 / r0;
     low = MAX(low, baselow);
     tpu = MAX(1e-12, MIN(Dd, Dp + t0));
-    curbnd = MAX(low, baselow + tpu / r0 / pomega(low));
+    val = r0 * pomega(low);
+    sgn = val < 0 ? -1 : 1;
+    curbnd = MAX(low, baselow + SAFEDIV_POS(tpu, ABS(val)) * sgn);
     upr = MIN(upr, curbnd);
   }
 
@@ -271,7 +273,9 @@ static void exp_search_bracket(const scs_float *v0, scs_float pdist,
     baseupr = r0 / s0;
     upr = MIN(upr, baseupr);
     tdl = -MAX(1e-12, MIN(Dp, Dd - t0));
-    curbnd = MIN(upr, baseupr - tdl / s0 / domega(upr));
+    val = s0 * domega(upr);
+    sgn = val < 0 ? -1 : 1;
+    curbnd = MIN(upr, baseupr - SAFEDIV_POS(tdl, ABS(val)) * sgn);
     low = MAX(low, curbnd);
   }
 
