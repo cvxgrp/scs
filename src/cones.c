@@ -4,9 +4,9 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 #if defined(_MSC_VER)
-  /* MSVC: no C99 <complex.h> */
+/* MSVC: no C99 <complex.h> */
 #else
-  #include <complex.h>
+#include <complex.h>
 #endif
 
 // We need these definitions here to avoid including complex.h in scs_types.h.
@@ -14,25 +14,29 @@
 // compilers. Reach out to Daniel Cederberg if you have any questions about the
 // following 7 lines of code.
 #if defined(_MSC_VER)
-  /* MSVC C: use POD layout compatible with interleaved BLAS complex */
-  typedef struct { double real, imag; } scs_blas_cdouble;
-  typedef struct { float  real, imag; } scs_blas_cfloat;
-  #ifndef SFLOAT
-    #define SCS_BLAS_COMPLEX_TYPE scs_blas_cdouble
-    #define SCS_BLAS_COMPLEX_CAST(x) ((scs_blas_cdouble *)(x))
-  #else
-    #define SCS_BLAS_COMPLEX_TYPE scs_blas_cfloat
-    #define SCS_BLAS_COMPLEX_CAST(x) ((scs_blas_cfloat *)(x))
-  #endif
+/* MSVC C: use POD layout compatible with interleaved BLAS complex */
+typedef struct {
+  double real, imag;
+} scs_blas_cdouble;
+typedef struct {
+  float real, imag;
+} scs_blas_cfloat;
+#ifndef SFLOAT
+#define SCS_BLAS_COMPLEX_TYPE scs_blas_cdouble
+#define SCS_BLAS_COMPLEX_CAST(x) ((scs_blas_cdouble *)(x))
 #else
-  /* GCC/Clang: keep using C99 _Complex */
-  #ifndef SFLOAT
-    #define SCS_BLAS_COMPLEX_CAST(x) ((double _Complex *)(x))
-    #define SCS_BLAS_COMPLEX_TYPE double _Complex
-  #else
-    #define SCS_BLAS_COMPLEX_CAST(x) ((float _Complex *)(x))
-    #define SCS_BLAS_COMPLEX_TYPE float _Complex
-  #endif
+#define SCS_BLAS_COMPLEX_TYPE scs_blas_cfloat
+#define SCS_BLAS_COMPLEX_CAST(x) ((scs_blas_cfloat *)(x))
+#endif
+#else
+/* GCC/Clang: keep using C99 _Complex */
+#ifndef SFLOAT
+#define SCS_BLAS_COMPLEX_CAST(x) ((double _Complex *)(x))
+#define SCS_BLAS_COMPLEX_TYPE double _Complex
+#else
+#define SCS_BLAS_COMPLEX_CAST(x) ((float _Complex *)(x))
+#define SCS_BLAS_COMPLEX_TYPE float _Complex
+#endif
 #endif
 
 #define BOX_CONE_MAX_ITERS (25)
@@ -49,12 +53,11 @@ extern "C" {
 #endif
 
 void BLAS(syevr)(const char *jobz, const char *range, const char *uplo,
-                  blas_int *n, scs_float *a, blas_int *lda,
-                  scs_float *vl, scs_float *vu, blas_int *il, blas_int *iu,
-                  scs_float *abstol, blas_int *m, scs_float *w,
-                  scs_float *z, blas_int *ldz, blas_int *isuppz,
-                  scs_float *work, blas_int *lwork,
-                  blas_int *iwork, blas_int *liwork, blas_int *info);
+                 blas_int *n, scs_float *a, blas_int *lda, scs_float *vl,
+                 scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
+                 blas_int *m, scs_float *w, scs_float *z, blas_int *ldz,
+                 blas_int *isuppz, scs_float *work, blas_int *lwork,
+                 blas_int *iwork, blas_int *liwork, blas_int *info);
 
 void BLASC(heevr)(const char *jobz, const char *range, const char *uplo,
                   blas_int *n, SCS_BLAS_COMPLEX_TYPE *a, blas_int *lda,
@@ -252,13 +255,9 @@ void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
   }
 }
 
-static inline scs_int get_sd_cone_size(scs_int s) {
-  return (s * (s + 1)) / 2;
-}
+static inline scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
 
-static inline scs_int get_csd_cone_size(scs_int cs) {
-  return cs * cs;
-}
+static inline scs_int get_csd_cone_size(scs_int cs) { return cs * cs; }
 
 /*
  * boundaries will contain array of indices of rows of A corresponding to
@@ -686,6 +685,9 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   blas_int iwkopt = 0;
   scs_float abstol = -1.0;
   blas_int m = 0;
+  /* Dummy variables for safe LAPACK call */
+  scs_float d_f = 0.0;
+  blas_int d_i = 0;
 #if VERBOSITY > 0
 #define _STR_EXPAND(tok) #tok
 #define _STR(tok) _STR_EXPAND(tok)
@@ -758,12 +760,13 @@ static scs_int set_up_sd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   c->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n_max), sizeof(blas_int));
 
   /* workspace query */
-  BLAS(syevr)("V", "A", "L", &n_max, c->Xs, &n_max, SCS_NULL, SCS_NULL,
-	     SCS_NULL, SCS_NULL, &abstol, &m, c->e, c->Z, &n_max, c->isuppz,
-	     &wkopt, &neg_one, &iwkopt, &neg_one, &info);
+  BLAS(syevr)("V", "A", "L", &n_max, c->Xs, &n_max, &d_f, &d_f, &d_i, &d_i,
+              &abstol, &m, c->e, c->Z, &n_max, c->isuppz, &wkopt, &neg_one,
+              &iwkopt, &neg_one, &info);
 
   if (info != 0) {
-    scs_printf("FATAL: syevr workspace query failure, info = %li\n", (long)info);
+    scs_printf("FATAL: syevr workspace query failure, info = %li\n",
+               (long)info);
     return -1;
   }
 
@@ -896,6 +899,10 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_float abstol = -1.0;
   blas_int m = 0;
 
+  /* Dummy variables for safe LAPACK call */
+  scs_float d_f = 0.0;
+  blas_int d_i = 0;
+
 #endif
 
   if (n == 0) {
@@ -921,9 +928,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   BLAS(scal)(&nb, &sqrt2, Xs, &nb_plus_one); /* not n_squared */
 
   /* Solve eigenproblem, reuse workspaces */
-  BLAS(syevr)("V", "A", "L", &nb, Xs, &nb, SCS_NULL, SCS_NULL,
-   SCS_NULL, SCS_NULL, &abstol, &m, e, Z, &nb, c->isuppz,
-   work, &lwork, iwork, &liwork, &info);
+  BLAS(syevr)("V", "A", "L", &nb, Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol, &m,
+              e, Z, &nb, c->isuppz, work, &lwork, iwork, &liwork, &info);
   if (info != 0) {
     scs_printf("WARN: LAPACK syevr error, info = %i\n", (int)info);
     if (info < 0) {
@@ -957,7 +963,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Xs = Z Z' = V E V' */
   ncols_z = (blas_int)(n - first_idx);
-  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &Z[first_idx * n], &nb, &zero, Xs, &nb);
+  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &Z[first_idx * n], &nb,
+             &zero, Xs, &nb);
 
   /* undo rescaling: scale diags by 1/sqrt(2) */
   BLAS(scal)(&nb, &sqrt2_inv, Xs, &nb_plus_one); /* not n_squared */
@@ -988,6 +995,9 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
   scs_complex_float lcwork = {0.0};
   scs_float lrwork = 0.0;
   blas_int liwork = 0;
+  /* Dummy variables for safe LAPACK call */
+  scs_float d_f = 0.0;
+  blas_int d_i = 0;
 #if VERBOSITY > 0
 #define _STR_EXPAND(tok) #tok
 #define _STR(tok) _STR_EXPAND(tok)
@@ -1008,14 +1018,14 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 
   /* workspace query */
   BLASC(heevr)
-  ("V", "A", "L", &n_max, SCS_BLAS_COMPLEX_CAST(c->cXs), &n_max, SCS_NULL,
-   SCS_NULL, SCS_NULL, SCS_NULL, &abstol, &m, c->e,
-   SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max, c->isuppz,
+  ("V", "A", "L", &n_max, SCS_BLAS_COMPLEX_CAST(c->cXs), &n_max, &df, &df, &di,
+   &di, &abstol, &m, c->e, SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max, c->isuppz,
    SCS_BLAS_COMPLEX_CAST(&lcwork), &neg_one, &lrwork, &neg_one, &liwork,
    &neg_one, &info);
 
   if (info != 0) {
-    scs_printf("FATAL: heevr workspace query failure, info = %li\n", (long)info);
+    scs_printf("FATAL: heevr workspace query failure, info = %li\n",
+               (long)info);
     return -1;
   }
   c->lcwork = (blas_int)(lcwork[0]);
@@ -1068,6 +1078,9 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   blas_int m = 0;
   blas_int info = 0;
   scs_complex_float csq_eig_pos = {0.0};
+  /* Dummy variables for safe LAPACK call */
+  scs_float d_f = 0.0;
+  blas_int d_i = 0;
 
 #endif
 
@@ -1101,10 +1114,10 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Solve eigenproblem, reuse workspaces */
   BLASC(heevr)
-  ("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(cXs), &nb, SCS_NULL, SCS_NULL,
-   SCS_NULL, SCS_NULL, &abstol, &m, e, SCS_BLAS_COMPLEX_CAST(cZ), &nb,
-   c->isuppz, SCS_BLAS_COMPLEX_CAST(c->cwork), &c->lcwork, c->rwork, &c->lrwork,
-   c->iwork, &c->liwork, &info);
+  ("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(cXs), &nb, &df, &df, &di, &di,
+   &abstol, &m, e, SCS_BLAS_COMPLEX_CAST(cZ), &nb, c->isuppz,
+   SCS_BLAS_COMPLEX_CAST(c->cwork), &c->lcwork, c->rwork, &c->lrwork, c->iwork,
+   &c->liwork, &info);
 
   if (info != 0) {
     scs_printf("WARN: LAPACK heevr error, info = %i\n", (int)info);
@@ -1582,7 +1595,7 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   return c;
 }
 
-void scale_box_cone(ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
+void scale_box_cone(ScsCone *k, ScsConeWork *c, const ScsScaling *scal) {
   if (k->bsize && k->bu && k->bl) {
     c->box_t_warm_start = 1.;
     if (scal) {
@@ -1604,8 +1617,8 @@ void scale_box_cone(ScsCone *k, ScsConeWork *c, ScsScaling *scal) {
     `||x||_R = \sqrt{x ' R x}`.
 
 */
-scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c, ScsScaling *scal,
-                            scs_float *r_y) {
+scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c,
+                            const ScsScaling *scal, scs_float *r_y) {
   scs_int status, i;
   ScsCone *k = c->k;
 
