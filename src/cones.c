@@ -1018,10 +1018,10 @@ static scs_int set_up_csd_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 
   /* workspace query */
   BLASC(heevr)
-  ("V", "A", "L", &n_max, SCS_BLAS_COMPLEX_CAST(c->cXs), &n_max, &df, &df, &di,
-   &di, &abstol, &m, c->e, SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max, c->isuppz,
-   SCS_BLAS_COMPLEX_CAST(&lcwork), &neg_one, &lrwork, &neg_one, &liwork,
-   &neg_one, &info);
+  ("V", "A", "L", &n_max, SCS_BLAS_COMPLEX_CAST(c->cXs), &n_max, &d_f, &d_f,
+   &d_i, &d_i, &abstol, &m, c->e, SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max,
+   c->isuppz, SCS_BLAS_COMPLEX_CAST(&lcwork), &neg_one, &lrwork, &neg_one,
+   &liwork, &neg_one, &info);
 
   if (info != 0) {
     scs_printf("FATAL: heevr workspace query failure, info = %li\n",
@@ -1114,7 +1114,7 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Solve eigenproblem, reuse workspaces */
   BLASC(heevr)
-  ("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(cXs), &nb, &df, &df, &di, &di,
+  ("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(cXs), &nb, &d_f, &d_f, &d_i, &d_i,
    &abstol, &m, e, SCS_BLAS_COMPLEX_CAST(cZ), &nb, c->isuppz,
    SCS_BLAS_COMPLEX_CAST(c->cwork), &c->lcwork, c->rwork, &c->lrwork, c->iwork,
    &c->liwork, &info);
