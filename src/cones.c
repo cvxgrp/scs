@@ -797,7 +797,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
         return -1;
       }
     }
-    for (i = 0; i < k->csize; i++) {
+    for (i = 0; i < k->cssize; i++) {
       if (k->cs[i] > 1) {
         scs_printf("FATAL: SDP/Complex SDP requires BLAS/LAPACK.\n");
         return -1;
