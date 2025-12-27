@@ -25,7 +25,7 @@ jobs:
         # source /opt/intel/mkl/bin/mklvars.sh
 
     - name: checkout project code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Build SCS MKL and test
       run: |
