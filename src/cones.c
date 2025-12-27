@@ -48,18 +48,13 @@ extern "C" {
 #endif
 
 /* LAPACK / BLAS Function Prototypes */
-void BLAS(syevr)(const char *jobz, const char *range, const char *uplo,
-                 blas_int *n, scs_float *a, blas_int *lda, scs_float *vl,
-                 scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
-                 blas_int *m, scs_float *w, scs_float *z, blas_int *ldz,
-                 blas_int *isuppz, scs_float *work, blas_int *lwork,
+
+void BLAS(syevd)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
+                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                  blas_int *iwork, blas_int *liwork, blas_int *info);
 
-void BLASC(heevr)(const char *jobz, const char *range, const char *uplo,
-                  blas_int *n, SCS_BLAS_COMPLEX_TYPE *a, blas_int *lda,
-                  scs_float *vl, scs_float *vu, blas_int *il, blas_int *iu,
-                  scs_float *abstol, blas_int *m, scs_float *w,
-                  SCS_BLAS_COMPLEX_TYPE *z, blas_int *ldz, blas_int *isuppz,
+void BLASC(heevd)(const char *jobz, const char *uplo, blas_int *n,
+                  SCS_BLAS_COMPLEX_TYPE *a, blas_int *lda, scs_float *w,
                   SCS_BLAS_COMPLEX_TYPE *cwork, blas_int *lcwork,
                   scs_float *rwork, blas_int *lrwork, blas_int *iwork,
                   blas_int *liwork, blas_int *info);
@@ -484,8 +479,6 @@ void SCS(finish_cone)(ScsConeWork *c) {
     scs_free(c->cZ);
   if (c->e)
     scs_free(c->e);
-  if (c->isuppz)
-    scs_free(c->isuppz);
   if (c->work)
     scs_free(c->work);
   if (c->iwork)
@@ -612,15 +605,13 @@ char *SCS(get_cone_header)(const ScsCone *k) {
 static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
   scs_int i;
 #ifdef USE_LAPACK
-  /* Max dim for eigenvalues (e) and integer work (isuppz) */
+  /* Max dim for eigenvalues (e) */
   blas_int n_max = 1;
   blas_int n_max_real = 1; /* Max dim for Real PSD matrix (Xs) */
   blas_int n_max_csd = 1;  /* Max dim for Complex PSD matrix (cXs) */
 
   /* LAPACK Query Variables */
-  blas_int neg_one = -1, info = 0, m = 0;
-  blas_int d_i = 0;
-  scs_float d_f = 0.0, abstol = -1.0;
+  blas_int neg_one = -1, info = 0;
   scs_float wkopt = 0.0;
   blas_int iwkopt = 0;
   scs_complex_float lcwork_opt = {0.0};
@@ -681,14 +672,13 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
 #endif
 
   /* Allocate standard eigenvalue buffers
-   * 'e' stores eigenvalues, 'isuppz' supports them. Shared by Real/Complex.
+   * 'e' stores eigenvalues. Shared by Real/Complex.
    */
   c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
-  c->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n_max), sizeof(blas_int));
-  if (!c->e || !c->isuppz)
+  if (!c->e)
     return -1;
 
-  /* 1. Real PSD Workspace Query (syevr) */
+  /* 1. Real PSD Workspace Query (syevd) */
   if (k->ssize > 0
 #ifdef USE_SPECTRAL_CONES
       || k->dsize > 0 || k->sl_size > 0
@@ -699,12 +689,11 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
     if (!c->Xs || !c->Z)
       return -1;
 
-    BLAS(syevr)("V", "A", "L", &n_max_real, c->Xs, &n_max_real, &d_f, &d_f,
-                &d_i, &d_i, &abstol, &m, c->e, c->Z, &n_max_real, c->isuppz,
-                &wkopt, &neg_one, &iwkopt, &neg_one, &info);
+    BLAS(syevd)("V", "L", &n_max_real, c->Xs, &n_max_real, c->e, &wkopt,
+                &neg_one, &iwkopt, &neg_one, &info);
 
     if (info != 0) {
-      scs_printf("FATAL: syevr workspace query failure, info = %li\n",
+      scs_printf("FATAL: syevd workspace query failure, info = %li\n",
                  (long)info);
       return -1;
     }
@@ -712,7 +701,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
     liwork_max = MAX(liwork_max, iwkopt);
   }
 
-  /* 2. Complex PSD Workspace Query (heevr) */
+  /* 2. Complex PSD Workspace Query (heevd) */
   if (k->cssize > 0) {
     c->cXs = (scs_complex_float *)scs_calloc(n_max_csd * n_max_csd,
                                              sizeof(scs_complex_float));
@@ -721,14 +710,12 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
     if (!c->cXs || !c->cZ)
       return -1;
 
-    BLASC(heevr)("V", "A", "L", &n_max_csd, SCS_BLAS_COMPLEX_CAST(c->cXs),
-                 &n_max_csd, &d_f, &d_f, &d_i, &d_i, &abstol, &m, c->e,
-                 SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max_csd, c->isuppz,
-                 SCS_BLAS_COMPLEX_CAST(&lcwork_opt), &neg_one, &lrwork_opt,
-                 &neg_one, &liwork_opt_c, &neg_one, &info);
+    BLASC(heevd)("V", "L", &n_max_csd, SCS_BLAS_COMPLEX_CAST(c->cXs),
+                 &n_max_csd, c->e, SCS_BLAS_COMPLEX_CAST(&lcwork_opt), &neg_one,
+                 &lrwork_opt, &neg_one, &liwork_opt_c, &neg_one, &info);
 
     if (info != 0) {
-      scs_printf("FATAL: heevr workspace query failure, info = %li\n",
+      scs_printf("FATAL: heevd workspace query failure, info = %li\n",
                  (long)info);
       return -1;
     }
@@ -739,8 +726,8 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
     if (!c->cwork)
       return -1;
 
-    /* heevr uses a real 'rwork' array. We alias this to the shared real 'work'
-     * array */
+    /* heevd requires real rwork. We alias this to the shared real 'work' array
+     */
     lwork_max = MAX(lwork_max, (blas_int)lrwork_opt);
     liwork_max = MAX(liwork_max, liwork_opt_c);
   }
@@ -776,7 +763,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
 #endif
 
   /* Final Consolidated Allocation
-   * c->work aliases 'work' for syevr and 'rwork' for heevr
+   * c->work aliases 'work' for syevd and 'rwork' for heevd
    */
   if (lwork_max > 0) {
     c->lwork = lwork_max;
@@ -851,8 +838,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   blas_int nb_p1 = (blas_int)(n + 1);
   blas_int info = 0, one_int = 1, ncols_z = 0;
   scs_float zero = 0., one = 1., sqrt2 = SQRTF(2.0), sqrt2_inv = 1.0 / sqrt2;
-  scs_float abstol = -1.0, d_f = 0.0, sq_eig;
-  blas_int m = 0, d_i = 0;
+  scs_float sq_eig;
   scs_int first_idx = -1;
 
   /* Copy lower triangular part to full matrix buffer Xs */
@@ -864,22 +850,25 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* Scale diagonals by sqrt(2) */
   BLAS(scal)(&nb, &sqrt2, c->Xs, &nb_p1);
 
-  /* Solve Eigenproblem: Xs = Z * diag(e) * Z' */
-  BLAS(syevr)("V", "A", "L", &nb, c->Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol,
-              &m, c->e, c->Z, &nb, c->isuppz, c->work, &c->lwork, c->iwork,
+  /* Solve Eigenproblem: Xs = Z * diag(e) * Z'
+   * Note: syevd writes eigenvectors into the input matrix (Xs here) */
+  BLAS(syevd)("V", "L", &nb, c->Xs, &nb, c->e, c->work, &c->lwork, c->iwork,
               &c->liwork, &info);
   if (info != 0)
     return (int)info;
 
-  /* Filter negative eigenvalues and scale eigenvectors */
-  /* Note: e is in ascending order */
+  /* Filter negative eigenvalues and scale eigenvectors
+   * Note: e is in ascending order
+   * Eigenvectors are now in c->Xs (column-major)
+   */
   for (i = 0; i < n; ++i) {
     if (c->e[i] > 0) {
       if (first_idx == -1) {
         first_idx = i;
       }
       sq_eig = SQRTF(c->e[i]);
-      BLAS(scal)(&nb, &sq_eig, &c->Z[i * n], &one_int);
+      /* Scale column i of Xs by sqrt(eigenvalue) */
+      BLAS(scal)(&nb, &sq_eig, &c->Xs[i * n], &one_int);
     }
   }
   if (first_idx == -1) {
@@ -887,17 +876,20 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     memset(X, 0, sizeof(scs_float) * get_sd_cone_size(n));
     return 0;
   }
-  /* Reconstruct Xs = Z * Z' */
+  /* Reconstruct Z = Xs * Xs'.
+   * Note: We use c->Z as the destination buffer because syevd
+   * destroyed the original square matrix. We read from c->Xs.
+   */
   ncols_z = (blas_int)(n - first_idx);
-  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &c->Z[first_idx * n], &nb,
-             &zero, c->Xs, &nb);
+  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &c->Xs[first_idx * n],
+             &nb, &zero, c->Z, &nb);
 
-  /* Rescale diagonals by 1/sqrt(2) */
-  BLAS(scal)(&nb, &sqrt2_inv, c->Xs, &nb_p1);
+  /* Rescale diagonals by 1/sqrt(2) in Z */
+  BLAS(scal)(&nb, &sqrt2_inv, c->Z, &nb_p1);
 
-  /* Extract lower triangular matrix back to X */
+  /* Extract lower triangular matrix from Z back to X */
   for (i = 0; i < n; ++i) {
-    memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(c->Xs[i * (n + 1)]),
+    memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(c->Z[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
   }
   return 0;
@@ -922,9 +914,8 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   scs_int i;
   blas_int nb = (blas_int)n;
   blas_int nb_p1 = (blas_int)(n + 1);
-  blas_int info = 0, one_int = 1, d_i = 0, ncols_z = 0;
-  scs_float zero = 0., one = 1., abstol = -1.0, d_f = 0.0;
-  blas_int m = 0;
+  blas_int info = 0, one_int = 1, ncols_z = 0;
+  scs_float zero = 0., one = 1.;
   scs_int first_idx = -1;
 
   /* Complex constants */
@@ -946,10 +937,11 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2),
               SCS_BLAS_COMPLEX_CAST(c->cXs), &nb_p1);
 
-  /* Solve Eigenproblem. Note: c->work acts as rwork here. */
-  BLASC(heevr)("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(c->cXs), &nb, &d_f,
-               &d_f, &d_i, &d_i, &abstol, &m, c->e,
-               SCS_BLAS_COMPLEX_CAST(c->cZ), &nb, c->isuppz,
+  /* Solve Eigenproblem using Divide and Conquer.
+   * Note: c->work acts as rwork here.
+   * Eigenvectors are written to c->cXs.
+   */
+  BLASC(heevd)("V", "L", &nb, SCS_BLAS_COMPLEX_CAST(c->cXs), &nb, c->e,
                SCS_BLAS_COMPLEX_CAST(c->cwork), &c->lcwork, c->work, &c->lwork,
                c->iwork, &c->liwork, &info);
   if (info != 0)
@@ -962,8 +954,9 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
         first_idx = i;
       }
       csq_eig[0] = SQRTF(c->e[i]);
+      /* Scale column i of cXs */
       BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csq_eig),
-                  SCS_BLAS_COMPLEX_CAST(&c->cZ[i * n]), &one_int);
+                  SCS_BLAS_COMPLEX_CAST(&c->cXs[i * n]), &one_int);
     }
   }
   if (first_idx == -1) {
@@ -972,23 +965,24 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
     return 0;
   }
 
-  /* cXs = cZ * cZ' */
+  /* cZ = cXs * cXs'
+   * Note: Using c->cZ as destination, reading from c->cXs */
   ncols_z = (blas_int)(n - first_idx);
   BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one,
-              SCS_BLAS_COMPLEX_CAST(&c->cZ[first_idx * n]), &nb, &zero,
-              SCS_BLAS_COMPLEX_CAST(c->cXs), &nb);
+              SCS_BLAS_COMPLEX_CAST(&c->cXs[first_idx * n]), &nb, &zero,
+              SCS_BLAS_COMPLEX_CAST(c->cZ), &nb);
 
-  /* Rescale diagonals */
+  /* Rescale diagonals in cZ */
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2_inv),
-              SCS_BLAS_COMPLEX_CAST(c->cXs), &nb_p1);
+              SCS_BLAS_COMPLEX_CAST(c->cZ), &nb_p1);
 
-  /* Repack into X */
+  /* Repack from cZ into X */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = c->cXs[i * (n + 1)][0];
-    memcpy(&(X[i * (2 * n - i) + 1]), &(c->cXs[i * (n + 1) + 1]),
+    X[i * (2 * n - i)] = c->cZ[i * (n + 1)][0];
+    memcpy(&(X[i * (2 * n - i) + 1]), &(c->cZ[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = c->cXs[n * n - 1][0];
+  X[n * n - 1] = c->cZ[n * n - 1][0];
   return 0;
 #else
   return -1;
