@@ -791,8 +791,18 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
 #else
   /* Non-LAPACK fallback check */
   if (k->ssize > 0 || k->cssize > 0) {
-    scs_printf("FATAL: SDP/Complex SDP requires BLAS/LAPACK.\n");
-    return -1;
+    for (i = 0; i < k->ssize; i++) {
+      if (k->s[i] > 1) {
+        scs_printf("FATAL: SDP/Complex SDP requires BLAS/LAPACK.\n");
+        return -1;
+      }
+    }
+    for (i = 0; i < k->csize; i++) {
+      if (k->cs[i] > 1) {
+        scs_printf("FATAL: SDP/Complex SDP requires BLAS/LAPACK.\n");
+        return -1;
+      }
+    }
   }
 #ifdef USE_SPECTRAL_CONES
   if (k->dsize > 0 || k->nucsize > 0 || k->sl_size > 0) {
@@ -824,6 +834,13 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
  */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                        ScsConeWork *c) {
+  if (n == 0)
+    return 0;
+  if (n == 1) {
+    X[0] = MAX(X[0], 0.);
+    return 0;
+  }
+
 #ifdef USE_LAPACK
   scs_int i;
   blas_int nb = (blas_int)n;
@@ -832,13 +849,6 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_float zero = 0., one = 1., sqrt2 = SQRTF(2.0), sqrt2_inv = 1.0 / sqrt2;
   scs_float abstol = -1.0, d_f = 0.0, sq_eig;
   blas_int m = 0, d_i = 0;
-
-  if (n == 0)
-    return 0;
-  if (n == 1) {
-    X[0] = MAX(X[0], 0.);
-    return 0;
-  }
 
   /* Copy lower triangular part to full matrix buffer Xs */
   for (i = 0; i < n; ++i) {
@@ -891,6 +901,13 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
  */
 static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
                                                ScsConeWork *c) {
+  if (n == 0)
+    return 0;
+  if (n == 1) {
+    X[0] = MAX(X[0], 0.);
+    return 0;
+  }
+
 #ifdef USE_LAPACK
   scs_int i;
   blas_int nb = (blas_int)n;
@@ -903,13 +920,6 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   scs_complex_float csqrt2 = {0.0}, csqrt2_inv = {0.0}, csq_eig = {0.0};
   csqrt2[0] = SQRTF(2.0);
   csqrt2_inv[0] = 1.0 / csqrt2[0];
-
-  if (n == 0)
-    return 0;
-  if (n == 1) {
-    X[0] = MAX(X[0], 0.);
-    return 0;
-  }
 
   /* Unpack X (real array) into cXs (complex matrix) */
   for (i = 0; i < n - 1; ++i) {
