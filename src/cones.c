@@ -232,8 +232,12 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
  * Helper Functions
  */
 
-static inline scs_int get_sd_cone_size(scs_int s) { return (s * (s + 1)) / 2; }
-static inline scs_int get_csd_cone_size(scs_int cs) { return cs * cs; }
+static inline scs_int get_sd_cone_size(scs_int s) {
+  return (s * (s + 1)) / 2;
+}
+static inline scs_int get_csd_cone_size(scs_int cs) {
+  return cs * cs;
+}
 
 void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
   scs_int i;

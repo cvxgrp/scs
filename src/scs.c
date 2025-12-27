@@ -169,7 +169,9 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   return status;
 }
 
-static inline scs_int _is_nan(scs_float x) { return x != x; }
+static inline scs_int _is_nan(scs_float x) {
+  return x != x;
+}
 
 /* given x,y,s warm start, set v = [x; s / R + y; 1]
  * check for nans and set to zero if present
