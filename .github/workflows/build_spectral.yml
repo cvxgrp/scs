@@ -31,6 +31,7 @@ jobs:
       - uses: actions/checkout@v5
       # - run: brew update && brew install openblas lapack
       - run: export CC="clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow"
+      - run: export LDFLAGS="$LDFLAGS -framework Accelerate"
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: out/run_tests_direct    # test direct solver
