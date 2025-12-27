@@ -849,10 +849,11 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_int i;
   blas_int nb = (blas_int)n;
   blas_int nb_p1 = (blas_int)(n + 1);
-  blas_int info = 0, one_int = 1;
+  blas_int info = 0, one_int = 1, ncols_z = 0;
   scs_float zero = 0., one = 1., sqrt2 = SQRTF(2.0), sqrt2_inv = 1.0 / sqrt2;
   scs_float abstol = -1.0, d_f = 0.0, sq_eig;
   blas_int m = 0, d_i = 0;
+  scs_int first_idx = -1;
 
   /* Copy lower triangular part to full matrix buffer Xs */
   for (i = 0; i < n; ++i) {
@@ -874,17 +875,22 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   /* Note: e is in ascending order */
   for (i = 0; i < n; ++i) {
     if (c->e[i] > 0) {
+      if (first_idx == -1) {
+        first_idx = i;
+      }
       sq_eig = SQRTF(c->e[i]);
       BLAS(scal)(&nb, &sq_eig, &c->Z[i * n], &one_int);
-    } else {
-      /* Zero out eigenvectors corresponding to neg eigenvalues to avoid adding
-       * them in syrk */
-      memset(&c->Z[i * n], 0, n * sizeof(scs_float));
     }
   }
-
+  if (first_idx == -1) {
+    /* there are no positive eigenvalues, set X to 0 and return */
+    memset(X, 0, sizeof(scs_float) * get_sd_cone_size(n));
+    return 0;
+  }
   /* Reconstruct Xs = Z * Z' */
-  BLAS(syrk)("Lower", "NoTrans", &nb, &nb, &one, c->Z, &nb, &zero, c->Xs, &nb);
+  ncols_z = (blas_int)(n - first_idx);
+  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &c->Z[first_idx * n], &nb,
+             &zero, c->Xs, &nb);
 
   /* Rescale diagonals by 1/sqrt(2) */
   BLAS(scal)(&nb, &sqrt2_inv, c->Xs, &nb_p1);
@@ -916,9 +922,10 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   scs_int i;
   blas_int nb = (blas_int)n;
   blas_int nb_p1 = (blas_int)(n + 1);
-  blas_int info = 0, one_int = 1, d_i = 0;
+  blas_int info = 0, one_int = 1, d_i = 0, ncols_z = 0;
   scs_float zero = 0., one = 1., abstol = -1.0, d_f = 0.0;
   blas_int m = 0;
+  scs_int first_idx = -1;
 
   /* Complex constants */
   scs_complex_float csqrt2 = {0.0}, csqrt2_inv = {0.0}, csq_eig = {0.0};
@@ -951,17 +958,25 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   /* Reconstruct */
   for (i = 0; i < n; ++i) {
     if (c->e[i] > 0) {
+      if (first_idx == -1) {
+        first_idx = i;
+      }
       csq_eig[0] = SQRTF(c->e[i]);
       BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csq_eig),
                   SCS_BLAS_COMPLEX_CAST(&c->cZ[i * n]), &one_int);
-    } else {
-      memset(&c->cZ[i * n], 0, n * sizeof(scs_complex_float));
     }
+  }
+  if (first_idx == -1) {
+    /* there are no positive eigenvalues, set X to 0 and return */
+    memset(X, 0, sizeof(scs_float) * get_csd_cone_size(n));
+    return 0;
   }
 
   /* cXs = cZ * cZ' */
-  BLASC(herk)("Lower", "NoTrans", &nb, &nb, &one, SCS_BLAS_COMPLEX_CAST(c->cZ),
-              &nb, &zero, SCS_BLAS_COMPLEX_CAST(c->cXs), &nb);
+  ncols_z = (blas_int)(n - first_idx);
+  BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one,
+              SCS_BLAS_COMPLEX_CAST(&c->cZ[first_idx * n]), &nb, &zero,
+              SCS_BLAS_COMPLEX_CAST(c->cXs), &nb);
 
   /* Rescale diagonals */
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2_inv),
