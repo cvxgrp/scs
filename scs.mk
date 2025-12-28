@@ -4,7 +4,7 @@ else
 UNAME = $(shell uname -s)
 endif
 
-#CC = gcc
+# CC = clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow
 # For cross-compiling with mingw use these.
 #CC = i686-w64-mingw32-gcc -m32
 #CC = x86_64-w64-mingw32-gcc-4.8

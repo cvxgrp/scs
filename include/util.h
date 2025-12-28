@@ -9,6 +9,7 @@ extern "C" {
 #include "scs.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* timing code courtesy of A. Domahidi */
 #if (defined NO_TIMER)

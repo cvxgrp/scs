@@ -135,24 +135,18 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-#ifndef ABS
-#define ABS(x) (((x) < 0) ? -(x) : (x))
-#endif
-
-#ifndef POWF
-#ifdef SFLOAT
-#define POWF powf
-#else
-#define POWF pow
-#endif
-#endif
-
-#ifndef SQRTF
 #ifdef SFLOAT
 #define SQRTF sqrtf
+#define EXPF expf
+#define LOGF logf
+#define ABS fabsf
+#define POWF powf
 #else
 #define SQRTF sqrt
-#endif
+#define EXPF exp
+#define LOGF log
+#define ABS fabs
+#define POWF pow
 #endif
 
 /* Force SCS to treat the problem as (non-homogeneous) feasible for this many */

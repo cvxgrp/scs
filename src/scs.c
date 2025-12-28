@@ -900,7 +900,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   if (w->stgs->acceleration_lookback) {
     /* TODO(HACK!) negative acceleration_lookback interpreted as type-II */
-    if (!(w->accel = aa_init(l, ABS(w->stgs->acceleration_lookback),
+    if (!(w->accel = aa_init(l, abs(w->stgs->acceleration_lookback),
                              w->stgs->acceleration_lookback > 0,
                              w->stgs->acceleration_lookback > 0
                                  ? AA_REGULARIZATION_TYPE_1
