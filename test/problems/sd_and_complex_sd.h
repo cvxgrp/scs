@@ -7,6 +7,7 @@
 #include "scs_matrix.h"
 #include "util.h"
 
+/* Randomly generated problem that mixes psd and complex psd cones */
 static const char *sd_and_complex_sd(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
@@ -97,7 +98,7 @@ static const char *sd_and_complex_sd(void) {
   k->cs = cs;
   k->cssize = cssize;
 
-  /* computed offline */
+  /* computed by SCS with high precision, not confirmed that this is optimal */
   scs_float opt = -135.009872;
   /* end data */
 
