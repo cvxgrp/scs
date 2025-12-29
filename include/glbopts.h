@@ -149,6 +149,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define POWF pow
 #endif
 
+#ifdef DLONG
+#define IABS llabs
+#else
+#define IABS abs
+#endif
+
 /* Force SCS to treat the problem as (non-homogeneous) feasible for this many */
 /* iters. This acts like a warm-start that biases towards feasibility, which */
 /* is the most common use-case */
