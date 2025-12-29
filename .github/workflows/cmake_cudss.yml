@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: Jimver/cuda-toolkit@v0.2.29
+      - uses: Jimver/cuda-toolkit@v0.2.30
         id: cuda-toolkit
         with:
           method: network
