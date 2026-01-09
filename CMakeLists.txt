@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.5)
 project(
   scs
   LANGUAGES C
-  VERSION 3.2.10)
+  VERSION 3.2.11)
 
 # Defines the CMAKE_INSTALL_LIBDIR, CMAKE_INSTALL_BINDIR and many other useful
 # macros. See https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html
