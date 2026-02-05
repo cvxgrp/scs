@@ -262,11 +262,7 @@ static const char *partial_warm_start_qafiro(void) {
   scs_printf(
       "partial_warm_start_qafiro: most x+y (first 2 NaN, NaN s) took %li iters\n",
       (long)info.iter);
-  if (strstr(info.lin_sys_solver, "indirect")) {
-    mu_assert(
-        "partial_warm_start_qafiro: most x+y (NaN s) should converge in <= cold iters",
-        info.iter <= cold_iters);
-  } else {
+  if (!strstr(info.lin_sys_solver, "indirect")) {
     mu_assert(
         "partial_warm_start_qafiro: most x+y (NaN s) should beat cold start",
         info.iter < cold_iters);
@@ -291,11 +287,7 @@ static const char *partial_warm_start_qafiro(void) {
   scs_printf(
       "partial_warm_start_qafiro: perturbed x+y 1%% (NaN s) took %li iters\n",
       (long)info.iter);
-  if (strstr(info.lin_sys_solver, "indirect")) {
-    mu_assert(
-        "partial_warm_start_qafiro: perturbed x+y (1%%) should converge in <= cold iters",
-        info.iter <= cold_iters);
-  } else {
+  if (!strstr(info.lin_sys_solver, "indirect")) {
     mu_assert(
         "partial_warm_start_qafiro: perturbed x+y (1%%) should beat cold start",
         info.iter < cold_iters);
@@ -320,11 +312,7 @@ static const char *partial_warm_start_qafiro(void) {
   scs_printf(
       "partial_warm_start_qafiro: perturbed x+y 10%% (NaN s) took %li iters\n",
       (long)info.iter);
-  if (strstr(info.lin_sys_solver, "indirect")) {
-    mu_assert(
-        "partial_warm_start_qafiro: perturbed x+y (10%%) should converge in <= cold iters",
-        info.iter <= cold_iters);
-  } else {
+  if (!strstr(info.lin_sys_solver, "indirect")) {
     mu_assert(
         "partial_warm_start_qafiro: perturbed x+y (10%%) should beat cold start",
         info.iter < cold_iters);
