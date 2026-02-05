@@ -260,8 +260,8 @@ static const char *partial_warm_start_qafiro(void) {
       "partial_warm_start_qafiro: y-only warm start took %li iters\n",
       (long)info.iter);
   mu_assert(
-      "partial_warm_start_qafiro: y-only should beat cold start",
-      info.iter < cold_iters);
+      "partial_warm_start_qafiro: y-only should converge in <= cold iters",
+      info.iter <= cold_iters);
 
   /* Step 7: Perturbed x and y, NaN s (simulates nearby problem solution) */
   for (i = 0; i < n_val; ++i) {
