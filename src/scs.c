@@ -174,21 +174,46 @@ static inline scs_int _is_nan(scs_float x) {
 }
 
 /* given x,y,s warm start, set v = [x; s / R + y; 1]
- * check for nans and set to zero if present
+ * check for nans:
+ * 	x NaN -> w->g
+ * 	y NaN -> -w->g
+ * 	s NaN -> b - Ax (primal feasibility)
+ * g is set by update_work_cache
  */
 static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   scs_int n = w->d->n, m = w->d->m, i;
   scs_float *v = w->v;
+  scs_float *g = w->g;
+  scs_int s_has_nan = 0;
   /* normalize the warm-start */
   if (w->stgs->normalize) {
     SCS(normalize_sol)(w->scal, sol);
   }
   for (i = 0; i < n; ++i) {
-    v[i] = _is_nan(sol->x[i]) ? 0. : sol->x[i];
+    v[i] = _is_nan(sol->x[i]) ? g[i] : sol->x[i];
   }
+  /* check if s has any NaN entries */
   for (i = 0; i < m; ++i) {
-    v[i + n] = sol->y[i] + sol->s[i] / w->diag_r[i + n];
-    v[i + n] = _is_nan(v[i + n]) ? 0. : v[i + n];
+    if (_is_nan(sol->s[i])) {
+      s_has_nan = 1;
+      break;
+    }
+  }
+  if (s_has_nan) {
+    /* compute Ax into v[n:n+m] as scratch space */
+    memset(v + n, 0, m * sizeof(scs_float));
+    SCS(accum_by_a)(w->d->A, v, v + n); /* v[n:n+m] = A * x */
+    /* for NaN entries of s, use b - Ax (primal feasibility) */
+    for (i = 0; i < m; ++i) {
+      scs_float si = _is_nan(sol->s[i]) ? (w->d->b[i] - v[i + n]) : sol->s[i];
+      scs_float yi = _is_nan(sol->y[i]) ? -g[i + n] : sol->y[i];
+      v[i + n] = yi + si / w->diag_r[i + n];
+    }
+  } else {
+    for (i = 0; i < m; ++i) {
+      scs_float yi = _is_nan(sol->y[i]) ? -g[i + n] : sol->y[i];
+      v[i + n] = yi + sol->s[i] / w->diag_r[i + n];
+    }
   }
   v[n + m] = 1.0; /* tau = 1 */
   /* un-normalize so sol unchanged */
@@ -339,9 +364,23 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
 }
 
 static void cold_start_vars(ScsWork *w) {
-  scs_int l = w->d->n + w->d->m + 1;
-  memset(w->v, 0, l * sizeof(scs_float));
-  w->v[l - 1] = 1.;
+  scs_int n = w->d->n, m = w->d->m, i;
+  scs_float *v = w->v;
+  scs_float *g = w->g;
+
+  for (i = 0; i < n; ++i) {
+    v[i] = g[i];
+  }
+
+  memset(v + n, 0, m * sizeof(scs_float));
+  SCS(accum_by_a)(w->d->A, v, v + n); /* v[n:n+m] = A * x */
+  /* for NaN entries of s, use b - Ax (primal feasibility) */
+  for (i = 0; i < m; ++i) {
+    scs_float si = (w->d->b[i] - v[i + n]);
+    scs_float yi = -g[i + n];
+    v[i + n] = yi + si / w->diag_r[i + n];
+  }
+  v[n + m] = 1.;
 }
 
 /* utility function that computes x'Ry */
@@ -944,16 +983,17 @@ static void reset_tracking(ScsWork *w) {
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
   reset_tracking(w);
 
+  /* h = [c;b] */
+  memcpy(w->h, w->d->c, w->d->n * sizeof(scs_float));
+  memcpy(&(w->h[w->d->n]), w->d->b, w->d->m * sizeof(scs_float));
+  update_work_cache(w);
+
   if (w->stgs->warm_start) {
     warm_start_vars(w, sol);
   } else {
     cold_start_vars(w);
   }
 
-  /* h = [c;b] */
-  memcpy(w->h, w->d->c, w->d->n * sizeof(scs_float));
-  memcpy(&(w->h[w->d->n]), w->d->b, w->d->m * sizeof(scs_float));
-  update_work_cache(w);
   return 0;
 }
 
