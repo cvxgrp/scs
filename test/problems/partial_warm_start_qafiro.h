@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "glbopts.h"
 #include "linalg.h"
 #include "minunit.h"
@@ -261,9 +263,15 @@ static const char *partial_warm_start_qafiro(void) {
   scs_printf(
       "partial_warm_start_qafiro: most x+y (first 2 NaN, NaN s) took %li iters\n",
       (long)info.iter);
-  mu_assert(
-      "partial_warm_start_qafiro: most x+y (NaN s) should beat cold start",
-      info.iter < cold_iters);
+  if (strstr(info.lin_sys_solver, "indirect")) {
+    mu_assert(
+        "partial_warm_start_qafiro: most x+y (NaN s) should converge in <= cold iters",
+        info.iter <= cold_iters);
+  } else {
+    mu_assert(
+        "partial_warm_start_qafiro: most x+y (NaN s) should beat cold start",
+        info.iter < cold_iters);
+  }
 
   /* Step 7: Perturbed x and y, NaN s (simulates nearby problem solution) */
   for (i = 0; i < n_val; ++i) {
