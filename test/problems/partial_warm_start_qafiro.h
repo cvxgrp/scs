@@ -240,11 +240,13 @@ static const char *partial_warm_start_qafiro(void) {
       "partial_warm_start_qafiro: x+s (NaN y) should converge in <= cold iters",
       info.iter <= cold_iters);
 
-  /* Step 6: Keep only y, NaN out x and s */
-  for (i = 0; i < n_val; ++i) {
-    sol->x[i] = NAN;
-  }
+  /* Step 6: Keep all of x and y except first 2 entries each, NaN out s */
+  memcpy(sol->x, saved_x, n_val * sizeof(scs_float));
+  sol->x[0] = NAN;
+  sol->x[1] = NAN;
   memcpy(sol->y, saved_y, m_val * sizeof(scs_float));
+  sol->y[0] = NAN;
+  sol->y[1] = NAN;
   for (i = 0; i < m_val; ++i) {
     sol->s[i] = NAN;
   }
@@ -255,13 +257,13 @@ static const char *partial_warm_start_qafiro(void) {
   perr = info.pobj - opt;
   derr = info.dobj - opt;
   success = ABS(perr) < 1e-3 && ABS(derr) < 1e-3 && exitflag == SCS_SOLVED;
-  mu_assert("partial_warm_start_qafiro: y-only warm start failed", success);
+  mu_assert("partial_warm_start_qafiro: most x+y (NaN s) failed", success);
   scs_printf(
-      "partial_warm_start_qafiro: y-only warm start took %li iters\n",
+      "partial_warm_start_qafiro: most x+y (first 2 NaN, NaN s) took %li iters\n",
       (long)info.iter);
   mu_assert(
-      "partial_warm_start_qafiro: y-only should converge in <= cold iters",
-      info.iter <= cold_iters);
+      "partial_warm_start_qafiro: most x+y (NaN s) should beat cold start",
+      info.iter < cold_iters);
 
   /* Step 7: Perturbed x and y, NaN s (simulates nearby problem solution) */
   for (i = 0; i < n_val; ++i) {
