@@ -14,6 +14,7 @@
 #include "problems/small_qp.h"
 #include "problems/test_exp_cone.h"
 #include "problems/partial_warm_start.h"
+#include "problems/partial_warm_start_qafiro.h"
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
@@ -90,6 +91,7 @@ static const char *all_tests(void) {
   mu_run_test(partial_warm_start);
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(qafiro_tiny_qp);
+  mu_run_test(partial_warm_start_qafiro);
   mu_run_test(infeasible_tiny_qp);
   mu_run_test(unbounded_tiny_qp);
   mu_run_test(random_prob);

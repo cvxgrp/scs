@@ -174,11 +174,13 @@ static inline scs_int _is_nan(scs_float x) {
 }
 
 /* given x,y,s warm start, set v = [x; s / R + y; 1]
- * check for nans:
- * 	x NaN -> w->g
- * 	y NaN -> -w->g
- * 	s NaN -> b - Ax (primal feasibility)
- * g is set by update_work_cache
+ * check for nans, using -g (regularized KKT solution) as default:
+ *   x NaN -> -g[:n]
+ *   y NaN -> -g[n:]
+ *   s NaN -> b - Ax (primal feasibility)
+ * g = (KKT)^{-1} [c; -b] is set by update_work_cache before this call,
+ * so -g solves the regularized KKT system with RHS [-c; b] and
+ * approximates (x*, y*) as R -> 0.
  */
 static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   scs_int n = w->d->n, m = w->d->m, i;
@@ -190,7 +192,7 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
     SCS(normalize_sol)(w->scal, sol);
   }
   for (i = 0; i < n; ++i) {
-    v[i] = _is_nan(sol->x[i]) ? g[i] : sol->x[i];
+    v[i] = _is_nan(sol->x[i]) ? -g[i] : sol->x[i];
   }
   /* check if s has any NaN entries */
   for (i = 0; i < m; ++i) {
@@ -369,7 +371,7 @@ static void cold_start_vars(ScsWork *w) {
   scs_float *g = w->g;
 
   for (i = 0; i < n; ++i) {
-    v[i] = g[i];
+    v[i] = -g[i];
   }
 
   memset(v + n, 0, m * sizeof(scs_float));
