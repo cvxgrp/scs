@@ -785,7 +785,9 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
 
   if (b) {
     memcpy(w->b_orig, b, w->d->m * sizeof(scs_float));
-    memcpy(w->d->b, b, w->d->m * sizeof(scs_float));
+    if (w->d->b != b) {
+      memcpy(w->d->b, b, w->d->m * sizeof(scs_float));
+    }
   } else {
     memcpy(w->d->b, w->b_orig, w->d->m * sizeof(scs_float));
   }
@@ -793,7 +795,9 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
 
   if (c) {
     memcpy(w->c_orig, c, w->d->n * sizeof(scs_float));
-    memcpy(w->d->c, c, w->d->n * sizeof(scs_float));
+    if (w->d->c != c) {
+      memcpy(w->d->c, c, w->d->n * sizeof(scs_float));
+    }
   } else {
     memcpy(w->d->c, w->c_orig, w->d->n * sizeof(scs_float));
   }
