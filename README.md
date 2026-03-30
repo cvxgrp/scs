@@ -4,7 +4,8 @@
 
 [![Build Status](https://github.com/cvxgrp/scs/actions/workflows/build.yml/badge.svg)](https://github.com/cvxgrp/scs/actions/workflows/build.yml)
 [![Documentation](https://img.shields.io/badge/docs-online-brightgreen?logo=read-the-docs&style=flat)](https://www.cvxgrp.org/scs/)
-
+[![PyPI Downloads](https://img.shields.io/pypi/dm/scs.svg?label=PyPI%20downloads)](https://pypistats.org/packages/scs)
+[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/scs.svg?label=Conda%20downloads)](https://anaconda.org/conda-forge/scs)
 
 SCS (`splitting conic solver`) is a numerical optimization package for solving
 large-scale convex cone problems. The current version is `3.2.11`.
