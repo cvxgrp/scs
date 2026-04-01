@@ -136,8 +136,9 @@ scs_float SCS(dot)(const scs_float *x, const scs_float *y, scs_int len) {
 
 /* ||v||_2^2 */
 scs_float SCS(norm_sq)(const scs_float *v, scs_int len) {
-  scs_float nrm = SCS(norm_2)(v, len);
-  return nrm * nrm;
+  blas_int bone = 1;
+  blas_int blen = (blas_int)len;
+  return BLAS(dot)(&blen, v, &bone, v, &bone);
 }
 
 /* ||v||_2 */
