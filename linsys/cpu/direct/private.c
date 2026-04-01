@@ -181,6 +181,8 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   amd_status = _ldl_init(kkt, p->perm, &info);
   if (amd_status < 0) {
     scs_printf("AMD permutatation error.\n");
+    SCS(cs_spfree)(kkt);
+    scs_free(info);
     return SCS_NULL;
   }
 #if VERBOSITY > 0
@@ -189,6 +191,12 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
   idx_mapping = (scs_int *)scs_calloc(kkt_nnz, sizeof(scs_int));
+  if (!idx_mapping) {
+    SCS(cs_spfree)(kkt);
+    scs_free(Pinv);
+    scs_free(info);
+    return SCS_NULL;
+  }
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
@@ -221,6 +229,8 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  if (!p)
+    return SCS_NULL;
   scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
   p->m = A->m;
   p->n = A->n;

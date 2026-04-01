@@ -55,6 +55,8 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   scs_int i;
   ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
+  if (!p)
+    return SCS_NULL;
 
   /* TODO: is this necessary with pardiso_64? */
   /* Set MKL interface layer */
@@ -135,6 +137,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   if (p->iparm[21] < p->n) {
     scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.");
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
 
