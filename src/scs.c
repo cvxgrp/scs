@@ -1000,6 +1000,9 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   relative_res_dual = SAFEDIV_POS(nm_px_aty_ctau, denom_dual);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
+  /* clamp to avoid log(0) which would NaN-poison sum_log_scale_factor */
+  relative_res_pri = MAX(relative_res_pri, _DIV_EPS_TOL);
+  relative_res_dual = MAX(relative_res_dual, _DIV_EPS_TOL);
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
   w->n_log_scale_factor++;
 
