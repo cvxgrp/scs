@@ -516,12 +516,21 @@ static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   if (w->r_orig->tau > w->r_orig->kap) {
     set_solved(w, sol, info);
     info->status_val = SCS_SOLVED_INACCURATE;
-  } else if (w->r_orig->bty_tau < w->r_orig->ctx_tau) {
+  } else if (w->r_orig->bty_tau < 0 &&
+             w->r_orig->bty_tau < w->r_orig->ctx_tau) {
+    /* bty_tau must be negative to form a valid infeasibility certificate;
+     * if non-negative, set_infeasible would divide by zero or produce a
+     * certificate with the wrong sign */
     set_infeasible(w, sol, info);
     info->status_val = SCS_INFEASIBLE_INACCURATE;
-  } else {
+  } else if (w->r_orig->ctx_tau < 0) {
+    /* ctx_tau must be negative to form a valid unboundedness certificate */
     set_unbounded(w, sol, info);
     info->status_val = SCS_UNBOUNDED_INACCURATE;
+  } else {
+    /* no valid certificate available, fall back to solved inaccurate */
+    set_solved(w, sol, info);
+    info->status_val = SCS_SOLVED_INACCURATE;
   }
   /* Append inaccurate to the status string */
   if (w->time_limit_reached) {
