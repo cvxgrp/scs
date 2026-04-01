@@ -989,7 +989,7 @@ scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
-static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
+static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale, relative_res_pri, relative_res_dual;
   scs_float denom_pri, denom_dual;
@@ -1026,14 +1026,15 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
-    return;
+    return 0;
   }
   new_scale =
       MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
   if (new_scale == w->stgs->scale) {
-    return;
+    return 0;
   }
   if (should_update_r(factor)) {
+    scs_int linsys_status;
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
@@ -1044,7 +1045,10 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     set_diag_r(w);
 
     /* update linear systems */
-    scs_update_lin_sys_diag_r(w->p, w->diag_r);
+    linsys_status = scs_update_lin_sys_diag_r(w->p, w->diag_r);
+    if (linsys_status < 0) {
+      return linsys_status;
+    }
 
     /* update pre-solved quantities */
     update_work_cache(w);
@@ -1061,6 +1065,7 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
   }
+  return 0;
 }
 
 /* scs is homogeneous so scale the iterate to keep norm reasonable */
@@ -1166,7 +1171,10 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
     /* If residuals are fresh then maybe compute new scale. */
     if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
-      update_scale(w, k, i);
+      if (update_scale(w, k, i) < 0) {
+        return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
+                       "error in update_scale", "failure");
+      }
     }
 
     /****************** dual variable step **********************/

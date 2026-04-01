@@ -66,7 +66,7 @@ static void set_preconditioner(ScsLinSysWork *p, const scs_float *diag_r) {
 }
 
 /* no need to update anything in this case */
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   /* R_x to gpu */
@@ -81,6 +81,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 
   /* set preconditioner M on gpu */
   set_preconditioner(p, diag_r);
+  return 0;
 }
 
 void scs_free_lin_sys_work(ScsLinSysWork *p) {

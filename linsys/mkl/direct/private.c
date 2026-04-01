@@ -156,7 +156,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
 }
 
 /* Update factorization when R changes */
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   for (i = 0; i < p->n; ++i) {
@@ -177,6 +177,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   if (p->error != 0) {
     scs_printf("Error in PARDISO factorization when updating: %d.\n",
                (int)p->error);
-    scs_free_lin_sys_work(p);
+    return (scs_int)p->error;
   }
+  return 0;
 }

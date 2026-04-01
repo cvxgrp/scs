@@ -232,7 +232,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
 }
 
 /* Update the KKT matrix when R changes */
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   /* Update KKT matrix on CPU */
@@ -253,7 +253,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     scs_printf(
         "scs_update_lin_sys_diag_r: Error copying kkt->x to device: %d\n",
         (int)custatus);
-    return;
+    return (scs_int)custatus;
   }
 
   /* Update the matrix values in cuDSS */
@@ -264,7 +264,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     scs_printf(
         "scs_update_lin_sys_diag_r: Error updating kkt matrix on device: %d\n",
         (int)status);
-    return;
+    return (scs_int)status;
   }
 
   /* Perform Refactorization with the updated matrix */
@@ -274,6 +274,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   if (status != CUDSS_STATUS_SUCCESS) {
     scs_printf("scs_update_lin_sys_diag_r: Error during re-factorization: %d\n",
                (int)status);
-    return;
+    return (scs_int)status;
   }
+  return 0;
 }

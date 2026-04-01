@@ -200,7 +200,7 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i, ldl_status;
   for (i = 0; i < p->n; ++i) {
     /* top left is R_x + P, bottom right is -R_y */
@@ -213,10 +213,9 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   ldl_status = ldl_factor(p, p->n);
   if (ldl_status < 0) {
     scs_printf("Error in LDL factorization when updating.\n");
-    /* TODO: this is broken somehow */
-    /* SCS(free_lin_sys_work)(p); */
-    return;
+    return ldl_status;
   }
+  return 0;
 }
 
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
