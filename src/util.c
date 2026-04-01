@@ -89,7 +89,9 @@ void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
   if (src->write_data_filename) {
     /* sizeof(char) = 1 */
     tmp = (char *)scs_malloc(strlen(src->write_data_filename) + 1);
-    strcpy(tmp, src->write_data_filename);
+    if (tmp) {
+      strcpy(tmp, src->write_data_filename);
+    }
     dest->write_data_filename = tmp;
   } else {
     dest->write_data_filename = SCS_NULL;
@@ -98,7 +100,9 @@ void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
   if (src->log_csv_filename) {
     /* sizeof(char) = 1 */
     tmp = (char *)scs_malloc(strlen(src->log_csv_filename) + 1);
-    strcpy(tmp, src->log_csv_filename);
+    if (tmp) {
+      strcpy(tmp, src->log_csv_filename);
+    }
     dest->log_csv_filename = tmp;
   } else {
     dest->log_csv_filename = SCS_NULL;
