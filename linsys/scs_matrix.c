@@ -28,6 +28,10 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   /* A column pointer, size: n+1 */
   A->p = (scs_int *)scs_calloc(src->n + 1, sizeof(scs_int));
   if (!A->x || !A->i || !A->p) {
+    scs_free(A->x);
+    scs_free(A->i);
+    scs_free(A->p);
+    scs_free(A);
     return 0;
   }
   memcpy(A->x, src->x, sizeof(scs_float) * Anz);
