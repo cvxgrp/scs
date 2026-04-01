@@ -238,8 +238,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   ldl_status = ldl_factor(p, A->n);
   if (ldl_prepare_status < 0 || ldl_status < 0) {
     scs_printf("Error in LDL initial factorization.\n");
-    /* TODO: this is broken somehow */
-    /* SCS(free_lin_sys_work)(p); */
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
   return p;
