@@ -255,6 +255,11 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
     ztr_prev = ztr;
     /* ztr = z'r */
     ztr = SCS(dot)(z, r, n);
+    if (ztr_prev == 0.) {
+      /* preconditioned residual is zero; further CG steps would divide by
+       * zero, declare convergence (r must be negligibly small) */
+      break;
+    }
     /* p = beta * p, where beta = ztr / ztr_prev */
     SCS(scale_array)(p, ztr / ztr_prev, n);
     /* p = z + beta * p */
