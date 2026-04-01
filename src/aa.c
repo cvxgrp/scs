@@ -394,6 +394,13 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   } else {
     a->x_work = 0;
   }
+  if (!a->x || !a->f || !a->g || !a->g_prev || !a->y || !a->s || !a->d ||
+      !a->Y || !a->S || !a->D || !a->M || !a->work || !a->ipiv ||
+      (relaxation != 1.0 && !a->x_work)) {
+    printf("Failed to allocate memory for AA internals.\n");
+    aa_finish(a);
+    return (AaWork *)0;
+  }
   TIME_TOC
   return a;
 }
