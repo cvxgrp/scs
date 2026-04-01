@@ -789,6 +789,8 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
 
 static ScsResiduals *init_residuals(const ScsData *d) {
   ScsResiduals *r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
+  if (!r)
+    return SCS_NULL;
   r->ax = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s_btau = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
@@ -892,6 +894,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!w->c_orig) {
     scs_printf("ERROR: work memory allocation failure\n");
+    free_work(w);
     return SCS_NULL;
   }
 
@@ -910,6 +913,11 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->r_normalized = init_residuals(w->d);
     /* this allocates memory that must be freed */
     w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
+    if (!w->scal) {
+      scs_printf("ERROR: normalize_a_p failure\n");
+      free_work(w);
+      return SCS_NULL;
+    }
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
