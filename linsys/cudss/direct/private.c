@@ -222,10 +222,10 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
   /* Copy solution back to host */
   custatus = cudaMemcpy(b, p->d_sol, p->n_plus_m * sizeof(scs_float),
                         cudaMemcpyDeviceToHost);
-  if (status != cudaSuccess) {
+  if (custatus != cudaSuccess) {
     scs_printf("scs_solve_lin_sys: Error copying d_sol to host: %d\n",
-               (int)status);
-    return status;
+               (int)custatus);
+    return custatus;
   }
 
   return 0; /* Success */
