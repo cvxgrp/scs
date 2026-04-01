@@ -59,6 +59,8 @@ static size_t read_int(scs_int *dest, size_t file_int_sz, size_t nitems,
     return fread(dest, sizeof(scs_int), nitems, fin);
   }
   void *ptr = scs_calloc(nitems, file_int_sz);
+  if (!ptr)
+    return 0;
   size_t val = fread(ptr, file_int_sz, nitems, fin);
   size_t i;
   switch (file_int_sz) {
@@ -81,6 +83,8 @@ static size_t read_int(scs_int *dest, size_t file_int_sz, size_t nitems,
 
 static ScsCone *read_scs_cone(FILE *fin, size_t file_int_sz) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  if (!k)
+    return SCS_NULL;
   read_int(&(k->z), file_int_sz, 1, fin);
   read_int(&(k->l), file_int_sz, 1, fin);
   read_int(&(k->bsize), file_int_sz, 1, fin);
@@ -132,6 +136,8 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
 
 static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz) {
   ScsSettings *s = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  if (!s)
+    return SCS_NULL;
   read_int(&(s->normalize), file_int_sz, 1, fin);
   fread(&(s->scale), sizeof(scs_float), 1, fin);
   fread(&(s->rho_x), sizeof(scs_float), 1, fin);
@@ -160,6 +166,8 @@ static void write_amatrix(const ScsMatrix *A, FILE *fout) {
 static ScsMatrix *read_amatrix(FILE *fin, size_t file_int_sz) {
   scs_int Anz;
   ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  if (!A)
+    return SCS_NULL;
   read_int(&(A->m), file_int_sz, 1, fin);
   read_int(&(A->n), file_int_sz, 1, fin);
   A->p = (scs_int *)scs_calloc(A->n + 1, sizeof(scs_int));
@@ -189,7 +197,8 @@ static void write_scs_data(const ScsData *d, FILE *fout) {
 static ScsData *read_scs_data(FILE *fin, size_t file_int_sz) {
   scs_int has_p = 0;
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
-
+  if (!d)
+    return SCS_NULL;
   read_int(&(d->m), file_int_sz, 1, fin);
   read_int(&(d->n), file_int_sz, 1, fin);
   d->b = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
@@ -206,6 +215,11 @@ static ScsData *read_scs_data(FILE *fin, size_t file_int_sz) {
 void SCS(write_data)(const ScsData *d, const ScsCone *k,
                      const ScsSettings *stgs) {
   FILE *fout = fopen(stgs->write_data_filename, "wb");
+  if (!fout) {
+    scs_printf("Error: could not open %s for writing\n",
+               stgs->write_data_filename);
+    return;
+  }
   uint32_t scs_int_sz = (uint32_t)sizeof(scs_int);
   uint32_t scs_float_sz = (uint32_t)sizeof(scs_float);
   const char *scs_version = SCS_VERSION;
