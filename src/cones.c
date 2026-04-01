@@ -525,7 +525,7 @@ void SCS(finish_cone)(ScsConeWork *c) {
 }
 
 char *SCS(get_cone_header)(const ScsCone *k) {
-  char *tmp = (char *)scs_malloc(512);
+  char *tmp = (char *)scs_malloc(2048);
   scs_int i, count;
 
   sprintf(tmp, "cones: ");
