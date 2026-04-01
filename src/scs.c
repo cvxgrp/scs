@@ -678,6 +678,7 @@ static void print_footer(ScsInfo *info) {
   case SCS_UNBOUNDED_INACCURATE:
   case SCS_INFEASIBLE_INACCURATE:
     scs_printf(" (inaccurate)");
+    /* fallthrough */
   default:
     scs_printf("\n");
   }
