@@ -252,6 +252,12 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
     return -1;
   }
   fread(&(file_version_sz), sizeof(uint32_t), 1, fin);
+  if (file_version_sz >= sizeof(file_version)) {
+    scs_printf("Error: file version string length %lu exceeds buffer size\n",
+               (unsigned long)file_version_sz);
+    fclose(fin);
+    return -1;
+  }
   fread(file_version, 1, file_version_sz, fin);
   file_version[file_version_sz] = '\0';
   if (strcmp(file_version, SCS_VERSION) != 0) {
