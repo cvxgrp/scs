@@ -1065,6 +1065,9 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 /* scs is homogeneous so scale the iterate to keep norm reasonable */
 static inline void normalize_v(scs_float *v, scs_int len) {
   scs_float v_norm = SCS(norm_2)(v, len); /* always l2 norm */
+  if (v_norm == 0.) {
+    return;
+  }
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
 
