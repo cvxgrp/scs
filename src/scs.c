@@ -256,6 +256,23 @@ static void unnormalize_residuals(ScsWork *w) {
   SCS(un_normalize_dual)(w->scal, r->px_aty_ctau);
 
   compute_residuals(r, w->d->m, w->d->n);
+
+  /* The infeasibility/unboundedness checks in compute_residuals use the fixed
+   * threshold INFEAS_NEGATIVITY_TOL, which is calibrated for normalized scale.
+   * After unnormalization, bty_tau and ctx_tau are divided by pd = sigma^2.
+   * When sigma << 1 (problem with large ||b|| or ||c|| after Ruiz scaling),
+   * this amplifies floating-point noise by 1/pd, pushing bty_tau (or ctx_tau)
+   * past the threshold even when the normalized value is well above it.
+   * The correct threshold in un-normalized space is INFEAS_NEGATIVITY_TOL/pd.
+   * Override any residuals triggered only by the amplified noise (issue #350). */
+  scs_float tol = INFEAS_NEGATIVITY_TOL / pd;
+  if (r->bty_tau >= -tol) {
+    r->res_infeas = NAN;
+  }
+  if (r->ctx_tau >= -tol) {
+    r->res_unbdd_a = NAN;
+    r->res_unbdd_p = NAN;
+  }
 }
 
 /* calculates un-normalized residual quantities */
