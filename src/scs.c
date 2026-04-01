@@ -896,6 +896,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!(w->cone_work = SCS(init_cone)(w->k, w->d->m))) {
     scs_printf("ERROR: init_cone failure\n");
+    free_work(w);
     return SCS_NULL;
   }
   set_diag_r(w);
@@ -918,6 +919,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!(w->p = scs_init_lin_sys_work(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
+    SCS(finish_cone)(w->cone_work);
+    w->cone_work = SCS_NULL;
+    free_work(w);
     return SCS_NULL;
   }
   if (w->stgs->acceleration_lookback) {
