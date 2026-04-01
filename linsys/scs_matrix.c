@@ -319,8 +319,22 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
   scs_float *Dt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  if (!scal || !Dt || !Et) {
+    scs_free(scal);
+    scs_free(Dt);
+    scs_free(Et);
+    return SCS_NULL;
+  }
   scal->D = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scal->E = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  if (!scal->D || !scal->E) {
+    scs_free(scal->D);
+    scs_free(scal->E);
+    scs_free(scal);
+    scs_free(Dt);
+    scs_free(Et);
+    return SCS_NULL;
+  }
 
 #if VERBOSITY > 5
   SCS(timer) normalize_timer;
