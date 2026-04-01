@@ -985,7 +985,7 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
 }
 
 /* will update if the factor is outside of range */
-scs_int should_update_r(scs_float factor, scs_int iter) {
+scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
@@ -1033,7 +1033,7 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   if (new_scale == w->stgs->scale) {
     return;
   }
-  if (should_update_r(factor, iters_since_last_update)) {
+  if (should_update_r(factor)) {
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
