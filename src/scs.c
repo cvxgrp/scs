@@ -197,23 +197,32 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   }
 }
 
-static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n) {
+/* pd = primal_scale * dual_scale = sigma^2 from the Ruiz equilibration.
+ * Pass pd = 1 when operating on normalised residuals (no amplification).
+ *
+ * After unnormalization bty_tau and ctx_tau are divided by pd, so
+ * floating-point noise is amplified by 1/pd. INFEAS_NEGATIVITY_TOL is
+ * calibrated for normalised scale, so the correct threshold in the
+ * un-normalised space is INFEAS_NEGATIVITY_TOL/pd (issue #350). */
+static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n,
+                              scs_float pd) {
   scs_float nm_ax_s, nm_px, nm_aty;
   scs_float nm_ax_s_btau = NORM(r->ax_s_btau, m);
   scs_float nm_px_aty_ctau = NORM(r->px_aty_ctau, n);
+  scs_float tol = INFEAS_NEGATIVITY_TOL / pd;
 
   r->res_pri = SAFEDIV_POS(nm_ax_s_btau, r->tau);
   r->res_dual = SAFEDIV_POS(nm_px_aty_ctau, r->tau);
   r->res_unbdd_a = NAN;
   r->res_unbdd_p = NAN;
   r->res_infeas = NAN;
-  if (r->ctx_tau < -INFEAS_NEGATIVITY_TOL) {
+  if (r->ctx_tau < -tol) {
     nm_ax_s = NORM(r->ax_s, m);
     nm_px = NORM(r->px, n);
     r->res_unbdd_a = SAFEDIV_POS(nm_ax_s, -r->ctx_tau);
     r->res_unbdd_p = SAFEDIV_POS(nm_px, -r->ctx_tau);
   }
-  if (r->bty_tau < -INFEAS_NEGATIVITY_TOL) {
+  if (r->bty_tau < -tol) {
     nm_aty = NORM(r->aty, n);
     r->res_infeas = SAFEDIV_POS(nm_aty, -r->bty_tau);
   }
@@ -255,7 +264,7 @@ static void unnormalize_residuals(ScsWork *w) {
   SCS(un_normalize_dual)(w->scal, r->px);
   SCS(un_normalize_dual)(w->scal, r->px_aty_ctau);
 
-  compute_residuals(r, w->d->m, w->d->n);
+  compute_residuals(r, w->d->m, w->d->n, pd);
 }
 
 /* calculates un-normalized residual quantities */
@@ -327,7 +336,7 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   r->pobj = r->xt_p_x / 2. + r->ctx;
   r->dobj = -r->xt_p_x / 2. - r->bty;
 
-  compute_residuals(r, m, n);
+  compute_residuals(r, m, n, 1.0);
 
   if (w->stgs->normalize) {
     memcpy(w->xys_orig->x, w->xys_normalized->x, n * sizeof(scs_float));
