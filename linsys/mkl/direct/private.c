@@ -55,6 +55,8 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   scs_int i;
   ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
+  if (!p)
+    return SCS_NULL;
 
   /* TODO: is this necessary with pardiso_64? */
   /* Set MKL interface layer */
@@ -135,6 +137,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   if (p->iparm[21] < p->n) {
     scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.");
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
 
@@ -156,7 +159,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
 }
 
 /* Update factorization when R changes */
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   for (i = 0; i < p->n; ++i) {
@@ -177,6 +180,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   if (p->error != 0) {
     scs_printf("Error in PARDISO factorization when updating: %d.\n",
                (int)p->error);
-    scs_free_lin_sys_work(p);
+    return (scs_int)p->error;
   }
+  return 0;
 }

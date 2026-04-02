@@ -66,7 +66,7 @@ static void set_preconditioner(ScsLinSysWork *p, const scs_float *diag_r) {
 }
 
 /* no need to update anything in this case */
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
 
   /* R_x to gpu */
@@ -81,6 +81,7 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 
   /* set preconditioner M on gpu */
   set_preconditioner(p, diag_r);
+  return 0;
 }
 
 void scs_free_lin_sys_work(ScsLinSysWork *p) {
@@ -141,7 +142,7 @@ static void mat_vec(ScsLinSysWork *p, const scs_float *x, scs_float *y) {
   cusparseDnVecSetValues(p->dn_vec_n_p, (void *)y);
 
   /* y = x */
-  cudaMemcpy(y, x, p->n * sizeof(scs_float), cudaMemcpyHostToDevice);
+  cudaMemcpy(y, x, p->n * sizeof(scs_float), cudaMemcpyDeviceToDevice);
   /* y = R_x * x */
   scale_by_diag(p->cublas_handle, p->r_x_gpu, y, p->n);
 
@@ -430,6 +431,9 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
     ztr_prev = ztr;
     /* ztr = z'r */
     CUBLAS(dot)(cublas_handle, n, r, 1, z, 1, &ztr);
+    if (ztr_prev == 0.) {
+      break;
+    }
     beta = ztr / ztr_prev;
     /* p = beta * p, where beta = ztr / ztr_prev */
     CUBLAS(scal)(cublas_handle, n, &beta, p, 1);

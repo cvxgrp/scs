@@ -149,9 +149,10 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 }
 
 /* no need to update anything in this case */
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   p->diag_r = diag_r; /* this isn't needed but do it to be safe */
   set_preconditioner(p);
+  return 0;
 }
 
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
@@ -255,6 +256,11 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
     ztr_prev = ztr;
     /* ztr = z'r */
     ztr = SCS(dot)(z, r, n);
+    if (ztr_prev == 0.) {
+      /* preconditioned residual is zero; further CG steps would divide by
+       * zero, declare convergence (r must be negligibly small) */
+      break;
+    }
     /* p = beta * p, where beta = ztr / ztr_prev */
     SCS(scale_array)(p, ztr / ztr_prev, n);
     /* p = z + beta * p */

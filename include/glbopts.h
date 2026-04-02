@@ -113,17 +113,17 @@ static inline void *scs_calloc(size_t count, size_t size) {
 
 #ifndef SFLOAT
 #ifndef NAN
-#define NAN ((scs_float)0x7ff8000000000000)
+#define NAN (HUGE_VAL - HUGE_VAL)
 #endif
 #ifndef INFINITY
-#define INFINITY NAN
+#define INFINITY HUGE_VAL
 #endif
 #else
 #ifndef NAN
-#define NAN ((float)0x7fc00000)
+#define NAN ((float)(HUGE_VAL - HUGE_VAL))
 #endif
 #ifndef INFINITY
-#define INFINITY NAN
+#define INFINITY ((float)HUGE_VAL)
 #endif
 #endif
 

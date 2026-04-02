@@ -513,15 +513,22 @@ static void set_unbounded(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
 /* not yet converged, take best guess */
 static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  if (w->r_orig->tau > w->r_orig->kap) {
+  if (w->r_orig->kap > w->r_orig->tau &&
+      (w->r_orig->bty_tau < 0 || w->r_orig->ctx_tau < 0)) {
+    if (w->r_orig->bty_tau < 0 &&
+        w->r_orig->bty_tau < w->r_orig->ctx_tau) {
+      set_infeasible(w, sol, info);
+      info->status_val = SCS_INFEASIBLE_INACCURATE;
+    } else {
+      set_unbounded(w, sol, info);
+      info->status_val = SCS_UNBOUNDED_INACCURATE;
+    }
+  } else if (w->r_orig->tau > 0) {
     set_solved(w, sol, info);
     info->status_val = SCS_SOLVED_INACCURATE;
-  } else if (w->r_orig->bty_tau < w->r_orig->ctx_tau) {
-    set_infeasible(w, sol, info);
-    info->status_val = SCS_INFEASIBLE_INACCURATE;
   } else {
-    set_unbounded(w, sol, info);
-    info->status_val = SCS_UNBOUNDED_INACCURATE;
+    scs_printf("ERROR: could not determine problem status.\n");
+    info->status_val = SCS_FAILED;
   }
   /* Append inaccurate to the status string */
   if (w->time_limit_reached) {
@@ -669,6 +676,7 @@ static void print_footer(ScsInfo *info) {
   case SCS_UNBOUNDED_INACCURATE:
   case SCS_INFEASIBLE_INACCURATE:
     scs_printf(" (inaccurate)");
+    /* fallthrough */
   default:
     scs_printf("\n");
   }
@@ -779,6 +787,8 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
 
 static ScsResiduals *init_residuals(const ScsData *d) {
   ScsResiduals *r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
+  if (!r)
+    return SCS_NULL;
   r->ax = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   r->ax_s_btau = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
@@ -882,11 +892,13 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!w->c_orig) {
     scs_printf("ERROR: work memory allocation failure\n");
+    free_work(w);
     return SCS_NULL;
   }
 
   if (!(w->cone_work = SCS(init_cone)(w->k, w->d->m))) {
     scs_printf("ERROR: init_cone failure\n");
+    free_work(w);
     return SCS_NULL;
   }
   set_diag_r(w);
@@ -899,6 +911,11 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->r_normalized = init_residuals(w->d);
     /* this allocates memory that must be freed */
     w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
+    if (!w->scal) {
+      scs_printf("ERROR: normalize_a_p failure\n");
+      free_work(w);
+      return SCS_NULL;
+    }
   } else {
     w->xys_normalized = w->xys_orig;
     w->r_normalized = w->r_orig;
@@ -909,6 +926,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!(w->p = scs_init_lin_sys_work(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
+    SCS(finish_cone)(w->cone_work);
+    w->cone_work = SCS_NULL;
+    free_work(w);
     return SCS_NULL;
   }
   if (w->stgs->acceleration_lookback) {
@@ -971,11 +991,11 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
 }
 
 /* will update if the factor is outside of range */
-scs_int should_update_r(scs_float factor, scs_int iter) {
+scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
-static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
+static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale, relative_res_pri, relative_res_dual;
   scs_float denom_pri, denom_dual;
@@ -1000,6 +1020,9 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   relative_res_dual = SAFEDIV_POS(nm_px_aty_ctau, denom_dual);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
+  /* clamp to avoid log(0) which would NaN-poison sum_log_scale_factor */
+  relative_res_pri = MAX(relative_res_pri, _DIV_EPS_TOL);
+  relative_res_dual = MAX(relative_res_dual, _DIV_EPS_TOL);
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
   w->n_log_scale_factor++;
 
@@ -1009,14 +1032,15 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < RESCALING_MIN_ITERS) {
-    return;
+    return 0;
   }
   new_scale =
       MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
   if (new_scale == w->stgs->scale) {
-    return;
+    return 0;
   }
-  if (should_update_r(factor, iters_since_last_update)) {
+  if (should_update_r(factor)) {
+    scs_int linsys_status;
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
@@ -1027,7 +1051,10 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     set_diag_r(w);
 
     /* update linear systems */
-    scs_update_lin_sys_diag_r(w->p, w->diag_r);
+    linsys_status = scs_update_lin_sys_diag_r(w->p, w->diag_r);
+    if (linsys_status < 0) {
+      return linsys_status;
+    }
 
     /* update pre-solved quantities */
     update_work_cache(w);
@@ -1044,11 +1071,17 @@ static void update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
   }
+  return 0;
 }
 
 /* scs is homogeneous so scale the iterate to keep norm reasonable */
 static inline void normalize_v(scs_float *v, scs_int len) {
   scs_float v_norm = SCS(norm_2)(v, len); /* always l2 norm */
+  if (v_norm == 0.) {
+    scs_printf("WARNING: normalize_v called with zero-norm iterate; this is "
+               "highly pathological (e.g., strong duality may not hold).\n");
+    return;
+  }
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
 
@@ -1146,7 +1179,10 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
     /* If residuals are fresh then maybe compute new scale. */
     if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
-      update_scale(w, k, i);
+      if (update_scale(w, k, i) < 0) {
+        return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
+                       "error in update_scale", "failure");
+      }
     }
 
     /****************** dual variable step **********************/

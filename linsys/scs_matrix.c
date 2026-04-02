@@ -28,6 +28,10 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   /* A column pointer, size: n+1 */
   A->p = (scs_int *)scs_calloc(src->n + 1, sizeof(scs_int));
   if (!A->x || !A->i || !A->p) {
+    scs_free(A->x);
+    scs_free(A->i);
+    scs_free(A->p);
+    scs_free(A);
     return 0;
   }
   memcpy(A->x, src->x, sizeof(scs_float) * Anz);
@@ -315,8 +319,22 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
   scs_float *Dt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  if (!scal || !Dt || !Et) {
+    scs_free(scal);
+    scs_free(Dt);
+    scs_free(Et);
+    return SCS_NULL;
+  }
   scal->D = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scal->E = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  if (!scal->D || !scal->E) {
+    scs_free(scal->D);
+    scs_free(scal->E);
+    scs_free(scal);
+    scs_free(Dt);
+    scs_free(Et);
+    return SCS_NULL;
+  }
 
 #if VERBOSITY > 5
   SCS(timer) normalize_timer;

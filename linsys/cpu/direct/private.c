@@ -181,6 +181,8 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   amd_status = _ldl_init(kkt, p->perm, &info);
   if (amd_status < 0) {
     scs_printf("AMD permutatation error.\n");
+    SCS(cs_spfree)(kkt);
+    scs_free(info);
     return SCS_NULL;
   }
 #if VERBOSITY > 0
@@ -189,6 +191,12 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
   idx_mapping = (scs_int *)scs_calloc(kkt_nnz, sizeof(scs_int));
+  if (!idx_mapping) {
+    SCS(cs_spfree)(kkt);
+    scs_free(Pinv);
+    scs_free(info);
+    return SCS_NULL;
+  }
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
@@ -200,7 +208,7 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i, ldl_status;
   for (i = 0; i < p->n; ++i) {
     /* top left is R_x + P, bottom right is -R_y */
@@ -213,16 +221,18 @@ void scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   ldl_status = ldl_factor(p, p->n);
   if (ldl_status < 0) {
     scs_printf("Error in LDL factorization when updating.\n");
-    /* TODO: this is broken somehow */
-    /* SCS(free_lin_sys_work)(p); */
-    return;
+    return ldl_status;
   }
+  return 0;
 }
 
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
-  scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
+  scs_int n_plus_m, ldl_status, ldl_prepare_status;
+  if (!p)
+    return SCS_NULL;
+  n_plus_m = A->n + A->m;
   p->m = A->m;
   p->n = A->n;
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
@@ -238,8 +248,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   ldl_status = ldl_factor(p, A->n);
   if (ldl_prepare_status < 0 || ldl_status < 0) {
     scs_printf("Error in LDL initial factorization.\n");
-    /* TODO: this is broken somehow */
-    /* SCS(free_lin_sys_work)(p); */
+    scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
   return p;
