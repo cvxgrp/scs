@@ -513,16 +513,19 @@ static void set_unbounded(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
 
 /* not yet converged, take best guess */
 static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
-  if (w->r_orig->tau > w->r_orig->kap) {
+  if (w->r_orig->kap > w->r_orig->tau &&
+      (w->r_orig->bty_tau < 0 || w->r_orig->ctx_tau < 0)) {
+    if (w->r_orig->bty_tau < 0 &&
+        w->r_orig->bty_tau < w->r_orig->ctx_tau) {
+      set_infeasible(w, sol, info);
+      info->status_val = SCS_INFEASIBLE_INACCURATE;
+    } else {
+      set_unbounded(w, sol, info);
+      info->status_val = SCS_UNBOUNDED_INACCURATE;
+    }
+  } else if (w->r_orig->tau > 0) {
     set_solved(w, sol, info);
     info->status_val = SCS_SOLVED_INACCURATE;
-  } else if (w->r_orig->bty_tau < 0 &&
-             w->r_orig->bty_tau < w->r_orig->ctx_tau) {
-    set_infeasible(w, sol, info);
-    info->status_val = SCS_INFEASIBLE_INACCURATE;
-  } else if (w->r_orig->ctx_tau < 0) {
-    set_unbounded(w, sol, info);
-    info->status_val = SCS_UNBOUNDED_INACCURATE;
   } else {
     scs_printf("ERROR: could not determine problem status.\n");
     info->status_val = SCS_FAILED;
