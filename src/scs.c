@@ -518,19 +518,14 @@ static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     info->status_val = SCS_SOLVED_INACCURATE;
   } else if (w->r_orig->bty_tau < 0 &&
              w->r_orig->bty_tau < w->r_orig->ctx_tau) {
-    /* bty_tau must be negative to form a valid infeasibility certificate;
-     * if non-negative, set_infeasible would divide by zero or produce a
-     * certificate with the wrong sign */
     set_infeasible(w, sol, info);
     info->status_val = SCS_INFEASIBLE_INACCURATE;
   } else if (w->r_orig->ctx_tau < 0) {
-    /* ctx_tau must be negative to form a valid unboundedness certificate */
     set_unbounded(w, sol, info);
     info->status_val = SCS_UNBOUNDED_INACCURATE;
   } else {
-    /* no valid certificate available, fall back to solved inaccurate */
-    set_solved(w, sol, info);
-    info->status_val = SCS_SOLVED_INACCURATE;
+    scs_printf("ERROR: could not determine problem status.\n");
+    info->status_val = SCS_FAILED;
   }
   /* Append inaccurate to the status string */
   if (w->time_limit_reached) {
@@ -1080,6 +1075,8 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 static inline void normalize_v(scs_float *v, scs_int len) {
   scs_float v_norm = SCS(norm_2)(v, len); /* always l2 norm */
   if (v_norm == 0.) {
+    scs_printf("WARNING: normalize_v called with zero-norm iterate; this is "
+               "highly pathological (e.g., strong duality may not hold).\n");
     return;
   }
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);

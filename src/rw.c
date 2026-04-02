@@ -59,10 +59,11 @@ static size_t read_int(scs_int *dest, size_t file_int_sz, size_t nitems,
     return fread(dest, sizeof(scs_int), nitems, fin);
   }
   void *ptr = scs_calloc(nitems, file_int_sz);
+  size_t val;
+  size_t i;
   if (!ptr)
     return 0;
-  size_t val = fread(ptr, file_int_sz, nitems, fin);
-  size_t i;
+  val = fread(ptr, file_int_sz, nitems, fin);
   switch (file_int_sz) {
   case 4:
     for (i = 0; i < nitems; ++i) {

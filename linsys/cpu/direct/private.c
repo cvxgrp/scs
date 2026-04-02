@@ -229,9 +229,10 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  scs_int n_plus_m, ldl_status, ldl_prepare_status;
   if (!p)
     return SCS_NULL;
-  scs_int n_plus_m = A->n + A->m, ldl_status, ldl_prepare_status;
+  n_plus_m = A->n + A->m;
   p->m = A->m;
   p->n = A->n;
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
