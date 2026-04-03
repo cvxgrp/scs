@@ -300,11 +300,6 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
                tol);
   }
 
-  if (CG_NORM(b, p->n + p->m) <= 1e-12) {
-    memset(b, 0, (p->n + p->m) * sizeof(scs_float));
-    return 0;
-  }
-
   /* use p->tmp here, and in mat_vec, can do both since they don't overlap */
   /* b = [rx; ry] */
   /* tmp = ry */
@@ -313,6 +308,14 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   scale_by_r_y_inv(p->tmp, p);
   /* b[:n] = rx + A' R_y^{-1} ry */
   SCS(accum_by_atrans)(p->A, p->tmp, b);
+
+  /* Early-exit check: only test the n-length CG RHS after it is fully built.
+   * Previous check scanned n+m entries on the pre-modification b; now we scan
+   * only n entries on the correct RHS. */
+  if (CG_NORM(b, p->n) <= 1e-12) {
+    memset(b, 0, (p->n + p->m) * sizeof(scs_float));
+    return 0;
+  }
   /* set max_iters to 10 * n (though in theory n is enough for any tol) */
   max_iters = 10 * p->n;
   /* solves (R_x + P + A' R_y^{-1} A)x = b, s warm start, solution stored in
