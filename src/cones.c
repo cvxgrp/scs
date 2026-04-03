@@ -1129,12 +1129,6 @@ static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
   return MAX(x, 1e-12);
 }
 
-static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
-                             scs_float dydr, scs_float a) {
-  return POWF(x, a) * POWF(y, (1 - a)) * (a * dxdr / x + (1 - a) * dydr / y) -
-         1;
-}
-
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
   scs_float x = 0.0, y = 0.0, r;
