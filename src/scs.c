@@ -237,14 +237,6 @@ static void unnormalize_residuals(ScsWork *w) {
   r->last_iter = r_n->last_iter;
   r->tau = r_n->tau;
 
-  /* mem copy arrays */
-  memcpy(r->ax, r_n->ax, w->d->m * sizeof(scs_float));
-  memcpy(r->ax_s, r_n->ax_s, w->d->m * sizeof(scs_float));
-  memcpy(r->ax_s_btau, r_n->ax_s_btau, w->d->m * sizeof(scs_float));
-  memcpy(r->aty, r_n->aty, w->d->n * sizeof(scs_float));
-  memcpy(r->px, r_n->px, w->d->n * sizeof(scs_float));
-  memcpy(r->px_aty_ctau, r_n->px_aty_ctau, w->d->n * sizeof(scs_float));
-
   /* unnormalize */
   r->kap = r_n->kap / pd;
   r->bty_tau = r_n->bty_tau / pd;
@@ -257,12 +249,27 @@ static void unnormalize_residuals(ScsWork *w) {
   r->dobj = r_n->dobj / pd;
   r->gap = r_n->gap / pd;
 
-  SCS(un_normalize_primal)(w->scal, r->ax);
-  SCS(un_normalize_primal)(w->scal, r->ax_s);
-  SCS(un_normalize_primal)(w->scal, r->ax_s_btau);
-  SCS(un_normalize_dual)(w->scal, r->aty);
-  SCS(un_normalize_dual)(w->scal, r->px);
-  SCS(un_normalize_dual)(w->scal, r->px_aty_ctau);
+  /* Fuse the six memcpy+un_normalize calls into two loops.
+   * Primal: divide by D[i]*dual_scale. Dual: divide by E[i]*primal_scale.
+   * This reduces 6 memcpy + 6 scale passes to 2 passes. */
+  {
+    scs_int i;
+    const scs_float *D = w->scal->D, *E = w->scal->E;
+    scs_float inv_ds = 1.0 / (w->scal->dual_scale);
+    scs_float inv_ps = 1.0 / (w->scal->primal_scale);
+    for (i = 0; i < w->d->m; ++i) {
+      scs_float f = inv_ds / D[i];
+      r->ax[i]        = r_n->ax[i]        * f;
+      r->ax_s[i]      = r_n->ax_s[i]      * f;
+      r->ax_s_btau[i] = r_n->ax_s_btau[i] * f;
+    }
+    for (i = 0; i < w->d->n; ++i) {
+      scs_float f = inv_ps / E[i];
+      r->aty[i]         = r_n->aty[i]         * f;
+      r->px[i]          = r_n->px[i]           * f;
+      r->px_aty_ctau[i] = r_n->px_aty_ctau[i]  * f;
+    }
+  }
 
   compute_residuals(r, w->d->m, w->d->n, pd);
 }
