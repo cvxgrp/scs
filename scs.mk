@@ -62,9 +62,14 @@ CUDSS_FLAGS = -I$(CUDSS_PATH)/include -I$(CUDA_PATH)/include
 CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss
 
 # Add on default CFLAGS
-OPT = -O3
+OPT = -O3 -march=native -fno-math-errno
 INCLUDE = -I. -Iinclude -Ilinsys
-override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT) -Werror=incompatible-pointer-types
+DEBUG ?= 0
+DEBUG_FLAGS =
+ifneq ($(DEBUG), 0)
+DEBUG_FLAGS = -g
+endif
+override CFLAGS += $(DEBUG_FLAGS) -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT) -Werror=incompatible-pointer-types
 ifneq ($(ISWINDOWS), 1)
 override CFLAGS += -fPIC
 endif
