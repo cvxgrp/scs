@@ -1412,20 +1412,29 @@ scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c,
   /* Copy s = x */
   memcpy(c->s, x, c->m * sizeof(scs_float));
 
-  /* x -> - Rx */
-  for (i = 0; i < c->m; ++i) {
-    x[i] *= r_y ? -r_y[i] : -1.0;
+  /* x -> - Rx; hoist the r_y != NULL check outside the loop */
+  if (r_y) {
+    for (i = 0; i < c->m; ++i) {
+      x[i] *= -r_y[i];
+    }
+  } else {
+    for (i = 0; i < c->m; ++i) {
+      x[i] = -x[i];
+    }
   }
 
   /* Project -x onto cone, x -> \Pi_{C^*}^{R^{-1}}(-x) under r_y metric */
   status = proj_cone(x, k, c, scal ? 1 : 0, r_y);
 
-  /* Return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x ) */
-  for (i = 0; i < c->m; ++i) {
-    if (r_y)
+  /* Return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x ); hoist r_y check */
+  if (r_y) {
+    for (i = 0; i < c->m; ++i) {
       x[i] = x[i] / r_y[i] + c->s[i];
-    else
+    }
+  } else {
+    for (i = 0; i < c->m; ++i) {
       x[i] += c->s[i];
+    }
   }
 
   return status;
