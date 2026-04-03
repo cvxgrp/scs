@@ -996,9 +996,6 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
     cold_start_vars(w);
   }
 
-  /* h = [c;b] */
-  memcpy(w->h, w->d->c, w->d->n * sizeof(scs_float));
-  memcpy(&(w->h[w->d->n]), w->d->b, w->d->m * sizeof(scs_float));
   update_work_cache(w);
   return 0;
 }
