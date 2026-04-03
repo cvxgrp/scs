@@ -254,28 +254,22 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
                     ScsScaling *scal, ScsConeWork *cone) {
   scs_int i, j;
-  /* scale the rows of A with D */
+  /* Fuse row and col scaling of A: A[i,j] *= Dt[i] * Et[j].
+   * Single NNZ pass replaces two separate passes. */
   for (i = 0; i < A->n; ++i) {
+    scs_float ei = Et[i];
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-      A->x[j] *= Dt[A->i[j]];
+      A->x[j] *= Dt[A->i[j]] * ei;
     }
-  }
-
-  /* scale the cols of A with E */
-  for (i = 0; i < A->n; ++i) {
-    SCS(scale_array)(&(A->x[A->p[i]]), Et[i], A->p[i + 1] - A->p[i]);
   }
 
   if (P) {
-    /* scale the rows of P with E */
+    /* Fuse row and col scaling of P: P[i,j] *= Et[i] * Et[j]. */
     for (i = 0; i < P->n; ++i) {
+      scs_float ei = Et[i];
       for (j = P->p[i]; j < P->p[i + 1]; ++j) {
-        P->x[j] *= Et[P->i[j]];
+        P->x[j] *= Et[P->i[j]] * ei;
       }
-    }
-    /* scale the cols of P with E */
-    for (i = 0; i < P->n; ++i) {
-      SCS(scale_array)(&(P->x[P->p[i]]), Et[i], P->p[i + 1] - P->p[i]);
     }
   }
 
