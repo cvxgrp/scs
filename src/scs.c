@@ -960,11 +960,15 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 }
 
 static void update_work_cache(ScsWork *w) {
-  /* g = (I + M)^{-1} h */
-  memcpy(w->g, w->h, (w->d->n + w->d->m) * sizeof(scs_float));
-  SCS(scale_array)(&(w->g[w->d->n]), -1., w->d->m);
+  /* g = (I + M)^{-1} [c; -b]
+   * Build g = [c; -b] directly in one pass, avoiding a separate memcpy of h
+   * followed by a negate pass over g[n:]. */
+  scs_int i, n = w->d->n, m = w->d->m;
+  memcpy(w->g, w->d->c, n * sizeof(scs_float));
+  for (i = 0; i < m; ++i) {
+    w->g[n + i] = -w->d->b[i];
+  }
   scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL);
-  return;
 }
 
 /* Reset quantities specific to current solve */
