@@ -121,7 +121,6 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
                               scs_float *Et, ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
-  scs_float nm_a_col;
 
   /****************************  D  ****************************/
 
@@ -173,9 +172,14 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
     }
   }
 
-  /* calculate col norms, E */
+  /* calculate col norms, E — inline the norm_inf to avoid n BLAS call
+   * overheads (Fortran ABI, pointer args, 1-based return) for short cols. */
   for (i = 0; i < A->n; ++i) {
-    nm_a_col = SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    scs_float nm_a_col = 0.0, tmp;
+    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+      tmp = ABS(A->x[j]);
+      if (tmp > nm_a_col) nm_a_col = tmp;
+    }
     Et[i] = MAX(Et[i], nm_a_col);
     Et[i] = SQRTF(apply_limit(Et[i]));
     Et[i] = SAFEDIV_POS(1.0, Et[i]);
