@@ -62,10 +62,9 @@ void SCS(normalize_sol)(ScsScaling *scal, ScsSolution *sol) {
   for (i = 0; i < scal->n; ++i) {
     sol->x[i] /= (E[i] / scal->dual_scale);
   }
+  /* Fuse the y and s loops: both index D[i], halving D reads. */
   for (i = 0; i < scal->m; ++i) {
     sol->y[i] /= (D[i] / scal->primal_scale);
-  }
-  for (i = 0; i < scal->m; ++i) {
     sol->s[i] *= (D[i] * scal->dual_scale);
   }
 }
@@ -77,10 +76,9 @@ void SCS(un_normalize_sol)(ScsScaling *scal, ScsSolution *sol) {
   for (i = 0; i < scal->n; ++i) {
     sol->x[i] *= (E[i] / scal->dual_scale);
   }
+  /* Fuse the y and s loops: both index D[i], halving D reads. */
   for (i = 0; i < scal->m; ++i) {
     sol->y[i] *= (D[i] / scal->primal_scale);
-  }
-  for (i = 0; i < scal->m; ++i) {
     sol->s[i] /= (D[i] * scal->dual_scale);
   }
 }
