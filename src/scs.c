@@ -380,8 +380,11 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_float *warm_start = SCS_NULL;
   scs_float tol = -1.0; /* only used for indirect methods, overridden later */
   memcpy(w->u_t, w->v, l * sizeof(scs_float));
-  for (i = 0; i < l - 1; ++i) {
-    w->u_t[i] *= (i < n ? 1 : -1) * w->diag_r[i];
+  for (i = 0; i < n; ++i) {
+    w->u_t[i] *= w->diag_r[i];
+  }
+  for (i = n; i < l - 1; ++i) {
+    w->u_t[i] *= -w->diag_r[i];
   }
 #if INDIRECT > 0
   scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
