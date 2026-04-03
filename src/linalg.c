@@ -164,6 +164,18 @@ scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {
   if (len <= 0) {
     return 0.0;
   }
+  /* For short vectors the BLAS function-call overhead (pointer args,
+   * Fortran ABI, 1-based index return) exceeds the arithmetic cost.
+   * Use a scalar loop below a threshold. */
+  if (len <= 16) {
+    scs_float mx = 0.0, tmp;
+    scs_int i;
+    for (i = 0; i < len; ++i) {
+      tmp = ABS(a[i]);
+      if (tmp > mx) mx = tmp;
+    }
+    return mx;
+  }
   idx = (scs_int)BLASI(amax)(&blen, a, &bone);
   /* Returned idx is 1-based. */
   return ABS(a[idx - 1]);
