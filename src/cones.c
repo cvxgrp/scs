@@ -1090,6 +1090,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
  * Projection: Second Order Cone
  */
 static void proj_soc(scs_float *x, scs_int q) {
+  scs_float v1, s, alpha;
   if (q <= 0)
     return;
   if (q == 1) {
@@ -1097,9 +1098,17 @@ static void proj_soc(scs_float *x, scs_int q) {
     return;
   }
 
-  scs_float v1 = x[0];
-  scs_float s = SCS(norm_2)(&(x[1]), q - 1);
-  scs_float alpha = (s + v1) / 2.0;
+  v1 = x[0];
+  /* Fast paths for the two most common small SOC sizes avoid BLAS call
+   * overhead (function pointer dispatch + Fortran ABI arguments). */
+  if (q == 2) {
+    s = ABS(x[1]);
+  } else if (q == 3) {
+    s = SQRTF(x[1] * x[1] + x[2] * x[2]);
+  } else {
+    s = SCS(norm_2)(&(x[1]), q - 1);
+  }
+  alpha = (s + v1) / 2.0;
 
   if (s <= v1)
     return;       /* Inside cone */
