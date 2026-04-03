@@ -1137,8 +1137,10 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       normalize_v(w->v, l);
     }
 
-    /* store v_prev = v, *after* normalizing */
-    memcpy(w->v_prev, w->v, l * sizeof(scs_float));
+    /* store v_prev = v for AA safeguard; skip when acceleration is off */
+    if (w->accel) {
+      memcpy(w->v_prev, w->v, l * sizeof(scs_float));
+    }
 
     /******************* linear system solve ********************/
     SCS(tic)(&lin_sys_timer);
