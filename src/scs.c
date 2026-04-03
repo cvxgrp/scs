@@ -381,13 +381,14 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->d->n, m = w->d->m, l = n + m + 1, status, i;
   scs_float *warm_start = SCS_NULL;
   scs_float tol = -1.0; /* only used for indirect methods, overridden later */
-  memcpy(w->u_t, w->v, l * sizeof(scs_float));
+  /* Copy and scale in one pass, eliminating the intermediate memcpy. */
   for (i = 0; i < n; ++i) {
-    w->u_t[i] *= w->diag_r[i];
+    w->u_t[i] = w->v[i] * w->diag_r[i];
   }
   for (i = n; i < l - 1; ++i) {
-    w->u_t[i] *= -w->diag_r[i];
+    w->u_t[i] = -w->v[i] * w->diag_r[i];
   }
+  w->u_t[l - 1] = w->v[l - 1];
 #if INDIRECT > 0
   scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
   /* compute warm start using the cone projection output */
