@@ -451,21 +451,22 @@ void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y) {
 
 /* Since P is upper triangular need to be clever here */
 void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
-  /* returns y += P x */
-  scs_int p, j, i;
+  /* returns y += P x where P is stored upper triangular (CSC).
+   * Single pass: each stored entry (i,j) contributes to both y[i] (upper)
+   * and y[j] (symmetric lower), halving NNZ traversals vs two-pass approach. */
+  scs_int p, j;
   scs_int n = P->n;
   scs_int *Pp = P->p;
   scs_int *Pi = P->i;
   scs_float *Px = P->x;
-  /* y += P_upper x but skip diagonal entries*/
-  for (j = 0; j < n; j++) { /* col */
+  for (j = 0; j < n; j++) {
     for (p = Pp[j]; p < Pp[j + 1]; p++) {
-      i = Pi[p];    /* row */
-      if (i != j) { /* skip the diagonal */
-        y[i] += Px[p] * x[j];
+      scs_int i = Pi[p];
+      scs_float val = Px[p];
+      y[i] += val * x[j]; /* upper triangle + diagonal */
+      if (i != j) {
+        y[j] += val * x[i]; /* symmetric lower triangle */
       }
     }
   }
-  /* y += P_lower x */
-  SCS(accum_by_atrans)(P, x, y);
 }
