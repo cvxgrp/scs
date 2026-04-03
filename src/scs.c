@@ -270,7 +270,7 @@ static void unnormalize_residuals(ScsWork *w) {
 /* calculates un-normalized residual quantities */
 /* this is somewhat slow but not a bottleneck */
 static void populate_residual_struct(ScsWork *w, scs_int iter) {
-  scs_int n = w->d->n, m = w->d->m;
+  scs_int i, n = w->d->n, m = w->d->m;
   /* normalized x,y,s terms */
   scs_float *x = w->xys_normalized->x;
   scs_float *y = w->xys_normalized->y;
@@ -295,13 +295,11 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   /* ax = Ax */
   SCS(accum_by_a)(w->d->A, x, r->ax);
 
-  memcpy(r->ax_s, r->ax, m * sizeof(scs_float));
-  /* ax_s = Ax + s */
-  SCS(add_scaled_array)(r->ax_s, s, m, 1.);
-
-  memcpy(r->ax_s_btau, r->ax_s, m * sizeof(scs_float));
-  /* ax_s_btau = Ax + s - b * tau */
-  SCS(add_scaled_array)(r->ax_s_btau, w->d->b, m, -r->tau);
+  /* Build ax_s and ax_s_btau in one fused pass (saves 2 memcpy + 2 axpy). */
+  for (i = 0; i < m; ++i) {
+    r->ax_s[i] = r->ax[i] + s[i];
+    r->ax_s_btau[i] = r->ax_s[i] - r->tau * w->d->b[i];
+  }
 
   /**************** DUAL *********************/
   memset(r->px, 0, n * sizeof(scs_float));
@@ -317,12 +315,10 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   /* aty = A'y */
   SCS(accum_by_atrans)(w->d->A, y, r->aty);
 
-  /* r->px_aty_ctau = Px */
-  memcpy(r->px_aty_ctau, r->px, n * sizeof(scs_float));
-  /* r->px_aty_ctau = Px + A'y */
-  SCS(add_scaled_array)(r->px_aty_ctau, r->aty, n, 1.);
-  /* r->px_aty_ctau = Px + A'y + c * tau */
-  SCS(add_scaled_array)(r->px_aty_ctau, w->d->c, n, r->tau);
+  /* Build px_aty_ctau in one fused pass (saves 1 memcpy + 2 axpy). */
+  for (i = 0; i < n; ++i) {
+    r->px_aty_ctau[i] = r->px[i] + r->aty[i] + r->tau * w->d->c[i];
+  }
 
   /**************** OTHERS *****************/
   r->bty_tau = SCS(dot)(y, w->d->b, m);
