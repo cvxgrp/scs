@@ -1155,17 +1155,21 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
   r = rh / 2;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
-    scs_float f, fp, dxdr, dydr;
+    scs_float f, fp, dxdr, dydr, xa, y1a;
     x = pow_calc_x(r, xh, rh, a);
     y = pow_calc_x(r, yh, rh, 1 - a);
 
-    f = POWF(x, a) * POWF(y, (1 - a)) - r;
+    /* Cache POWF(x,a) and POWF(y,1-a): both are needed for f and fp,
+     * so computing them once saves two POWF calls per Newton iteration. */
+    xa  = POWF(x, a);
+    y1a = POWF(y, (1 - a));
+    f = xa * y1a - r;
     if (ABS(f) < POW_CONE_TOL)
       break;
 
     dxdr = a * (rh - 2 * r) / (2 * x - xh);
     dydr = (1 - a) * (rh - 2 * r) / (2 * y - yh);
-    fp = pow_calc_fp(x, y, dxdr, dydr, a);
+    fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
     r = MAX(r - f / fp, 0);
     r = MIN(r, rh);
