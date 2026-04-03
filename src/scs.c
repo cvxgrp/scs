@@ -353,23 +353,25 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = 1.;
 }
 
-/* utility function that computes x'Ry */
-static inline scs_float dot_r(ScsWork *w, const scs_float *x,
-                              const scs_float *y) {
-  scs_int i;
-  scs_float ip = 0.0;
-  for (i = 0; i < w->d->n + w->d->m; ++i) {
-    ip += x[i] * y[i] * w->diag_r[i];
-  }
-  return ip;
-}
-
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float a, b, c, rad, tau_scale = w->diag_r[w->d->n + w->d->m];
-  a = tau_scale + dot_r(w, w->g, w->g);
-  b = dot_r(w, mu, w->g) - 2 * dot_r(w, p, w->g) - eta * tau_scale;
-  c = dot_r(w, p, p) - dot_r(w, p, mu);
+  /* Compute all five weighted dot products (g'Rg, mu'Rg, p'Rg, p'Rp, p'Rmu)
+   * in a single pass over diag_r to minimise memory traffic. */
+  scs_int i, nm = w->d->n + w->d->m;
+  scs_float gg = 0., mug = 0., pg = 0., pp = 0., pmu = 0.;
+  scs_float a, b, c, rad, tau_scale = w->diag_r[nm];
+  const scs_float *g = w->g, *r = w->diag_r;
+  for (i = 0; i < nm; ++i) {
+    scs_float ri = r[i], gi = g[i], pi = p[i], mui = mu[i];
+    gg  += gi  * gi  * ri;
+    mug += mui * gi  * ri;
+    pg  += pi  * gi  * ri;
+    pp  += pi  * pi  * ri;
+    pmu += pi  * mui * ri;
+  }
+  a = tau_scale + gg;
+  b = mug - 2 * pg - eta * tau_scale;
+  c = pp - pmu;
   rad = b * b - 4 * a * c;
   return (-b + SQRTF(MAX(rad, 0.))) / (2 * a);
 }
