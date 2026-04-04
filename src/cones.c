@@ -402,11 +402,11 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
     }
   }
   if (k->ed && k->ed < 0) {
-    scs_printf("ep cone dimension error\n");
+    scs_printf("ed cone dimension error\n");
     return -1;
   }
   if (k->ep && k->ep < 0) {
-    scs_printf("ed cone dimension error\n");
+    scs_printf("ep cone dimension error\n");
     return -1;
   }
   if (k->psize && k->p) {
