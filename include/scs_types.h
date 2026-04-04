@@ -26,10 +26,10 @@ typedef int scs_int;
 
 #ifndef SFLOAT
 typedef double scs_float;
-typedef double scs_complex_float[2]; // [real, imaginary]
+typedef double scs_complex_float[2]; /* [real, imaginary] */
 #else
 typedef float scs_float;
-typedef float scs_complex_float[2]; // [real, imaginary]
+typedef float scs_complex_float[2]; /* [real, imaginary] */
 #endif
 
 #ifdef __cplusplus
