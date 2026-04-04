@@ -37,6 +37,7 @@ struct SCS_CONE_WORK {
   scs_int m;            /* total length of cone */
   /* box cone quantities */
   scs_float box_t_warm_start;
+  scs_float *r_box_inv; /* precomputed 1/r_box[j] for box cone Newton */
 
 #ifdef USE_LAPACK
   /* workspace for eigenvector decompositions: */
