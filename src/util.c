@@ -1,3 +1,8 @@
+/*
+ * Utility functions: platform-specific timers, deep copy helpers for
+ * ScsData/ScsSettings, memory deallocation, and default settings.
+ */
+
 #include "util.h"
 
 #include "glbopts.h"

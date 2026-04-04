@@ -1,3 +1,8 @@
+/*
+ * Read/write routines for serializing SCS problem data to binary files
+ * and logging solve progress to CSV. Compiled as no-ops when NO_READ_WRITE=1.
+ */
+
 #include "rw.h"
 
 #include <errno.h>

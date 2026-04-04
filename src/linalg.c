@@ -1,3 +1,9 @@
+/*
+ * Dense linear algebra operations: norms, dot products, scaling, axpy.
+ * Has two implementations: a plain C fallback and an optimized BLAS version
+ * (selected at compile time via USE_LAPACK).
+ */
+
 #include "linalg.h"
 #include "scs_blas.h"
 #include <math.h>

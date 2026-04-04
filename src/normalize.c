@@ -1,3 +1,9 @@
+/*
+ * Problem data normalization (equilibration) of b and c vectors,
+ * and solution normalization/un-normalization routines.
+ * Matrix normalization (A, P) is in linsys/scs_matrix.c.
+ */
+
 #include "normalize.h"
 
 #include "linalg.h"

@@ -456,30 +456,3 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   return scal;
 }
 
-/*
-void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
-  scs_int i, j;
-  scs_float *D = scal->D;
-  scs_float *E = scal->E;
-  for (i = 0; i < A->n; ++i) {
-    SCS(scale_array)
-    (&(A->x[A->p[i]]), 1. / E[i], A->p[i + 1] - A->p[i]);
-  }
-  for (i = 0; i < A->n; ++i) {
-    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-      A->x[j] /= D[A->i[j]];
-    }
-  }
-  if (P) {
-    for (i = 0; i < P->n; ++i) {
-      SCS(scale_array)
-      (&(P->x[P->p[i]]), 1. / E[i], P->p[i + 1] - P->p[i]);
-    }
-    for (i = 0; i < P->n; ++i) {
-      for (j = P->p[i]; j < P->p[i + 1]; ++j) {
-        P->x[j] /= E[P->i[j]];
-      }
-    }
-  }
-}
-*/
