@@ -111,6 +111,57 @@ static const char *test_validation(void) {
             exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
+  /* --- Cone validation tests --- */
+
+  /* cone dimension mismatch: total cone dims != m */
+  VALIDATION_SETUP();
+  k->l += 99; /* inflate l so total dims > m */
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: cone dims != m should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* negative zero-cone dimension */
+  VALIDATION_SETUP();
+  k->l = 0;
+  k->z = -1;
+  d->m = -1; /* match total so cone-dims == m check passes */
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: z < 0 should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* box cone bl > bu */
+  {
+    scs_float bl_bad[] = {5.0};
+    scs_float bu_bad[] = {1.0};
+    VALIDATION_SETUP();
+    k->l = 0;
+    k->z = 0;
+    k->bsize = 2; /* 1 t-var + 1 bounded var */
+    k->bl = bl_bad;
+    k->bu = bu_bad;
+    d->m = 2;
+    exitflag = scs(d, k, stgs, sol, &info);
+    mu_assert("validation: bl > bu should fail", exitflag == SCS_FAILED);
+    k->bl = SCS_NULL; /* prevent double-free */
+    k->bu = SCS_NULL;
+    VALIDATION_CLEANUP();
+  }
+
+  /* power cone p out of range */
+  {
+    scs_float p_bad[] = {2.0}; /* must be in [-1, 1] */
+    VALIDATION_SETUP();
+    k->l = 0;
+    k->z = 0;
+    k->psize = 1;
+    k->p = p_bad;
+    d->m = 3;
+    exitflag = scs(d, k, stgs, sol, &info);
+    mu_assert("validation: p > 1 should fail", exitflag == SCS_FAILED);
+    k->p = SCS_NULL; /* prevent double-free */
+    VALIDATION_CLEANUP();
+  }
+
 #undef VALIDATION_SETUP
 #undef VALIDATION_CLEANUP
 

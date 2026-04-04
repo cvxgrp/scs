@@ -21,6 +21,7 @@
 #include "problems/test_power_cone.h"
 #include "problems/test_soc_sizes.h"
 #include "problems/test_box_cone.h"
+#include "problems/test_psd_n1.h"
 #include "problems/test_solver_options.h"
 #include "problems/test_zero_cone.h"
 #include "problems/unbounded_lp.h"
@@ -124,6 +125,7 @@ static const char *all_tests(void) {
   mu_run_test(test_multi_soc);
   mu_run_test(test_zero_cone);
   mu_run_test(test_box_cone_lp);
+  mu_run_test(test_psd_n1);
   mu_run_test(test_solved_inaccurate);
   mu_run_test(test_infeasible_inaccurate);
   mu_run_test(test_unbounded_inaccurate);
