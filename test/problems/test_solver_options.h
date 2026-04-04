@@ -196,6 +196,93 @@ static const char *test_normalize_off(void) {
 }
 
 /*
+ * Test normalize roundtrip: verify that un_normalize_sol correctly inverts
+ * the Ruiz equilibration by solving the same problem with normalize=0 and
+ * normalize=1 and comparing the full primal solution vectors.
+ *
+ * The problem uses A entries with different magnitudes (1, 10, 100) so that
+ * Ruiz scaling actually changes D/E significantly.
+ *
+ * Problem: min x1 + x2 + x3
+ *          subject to  x1 >= 1
+ *                     x2 >= 1
+ *                     x3 >= 1
+ * with A = diag(-1, -10, -100), b = [-1, -10, -100], c = [1, 1, 1].
+ * Solution: x1 = x2 = x3 = 1, obj = 3.
+ */
+static const char *test_normalize_roundtrip(void) {
+  ScsSettings *stgs0, *stgs1;
+  ScsData *d0, *d1;
+  ScsCone *k0, *k1;
+  ScsSolution *sol0, *sol1;
+  ScsInfo info0 = {0}, info1 = {0};
+  scs_int exitflag0, exitflag1, i;
+  const char *fail;
+
+  scs_float Ax[] = {-1.0, -10.0, -100.0};
+  scs_int Ai[]   = {0, 1, 2};
+  scs_int Ap[]   = {0, 1, 2, 3};
+  scs_float b[]  = {-1.0, -10.0, -100.0};
+  scs_float c[]  = {1.0, 1.0, 1.0};
+  scs_int m = 3, n = 3;
+
+  /* helper macro to init data/settings/cone/sol */
+#define _SETUP_NRM(d, k, stgs, sol) \
+  do { \
+    (d) = (ScsData *)scs_calloc(1, sizeof(ScsData)); \
+    (d)->m = m; (d)->n = n; (d)->b = b; (d)->c = c; \
+    (d)->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix)); \
+    (d)->A->m = m; (d)->A->n = n; \
+    (d)->A->x = Ax; (d)->A->i = Ai; (d)->A->p = Ap; \
+    (k) = (ScsCone *)scs_calloc(1, sizeof(ScsCone)); \
+    (k)->l = 3; \
+    (stgs) = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings)); \
+    scs_set_default_settings(stgs); \
+    (stgs)->eps_abs = 1e-7; (stgs)->eps_rel = 1e-7; \
+    (stgs)->verbose = 0; \
+    (sol) = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution)); \
+  } while (0)
+
+#define _CLEANUP_NRM(d, k, stgs, sol) \
+  do { \
+    SCS(free_sol)(sol); \
+    scs_free((d)->A); \
+    scs_free(d); \
+    scs_free(k); \
+    scs_free(stgs); \
+  } while (0)
+
+  _SETUP_NRM(d1, k1, stgs1, sol1);
+  stgs1->normalize = 1;
+  exitflag1 = scs(d1, k1, stgs1, sol1, &info1);
+  mu_assert("test_normalize_roundtrip: normalize=1 failed", exitflag1 == SCS_SOLVED);
+  fail = verify_solution_correct(d1, k1, stgs1, &info1, sol1, exitflag1);
+  if (fail) { _CLEANUP_NRM(d1, k1, stgs1, sol1); return fail; }
+
+  _SETUP_NRM(d0, k0, stgs0, sol0);
+  stgs0->normalize = 0;
+  exitflag0 = scs(d0, k0, stgs0, sol0, &info0);
+  mu_assert("test_normalize_roundtrip: normalize=0 failed", exitflag0 == SCS_SOLVED);
+  fail = verify_solution_correct(d0, k0, stgs0, &info0, sol0, exitflag0);
+  if (fail) { _CLEANUP_NRM(d0, k0, stgs0, sol0); return fail; }
+
+  /* Compare primal solution vectors */
+  for (i = 0; i < n; ++i) {
+    mu_assert("test_normalize_roundtrip: x differs between normalize=0 and 1",
+              ABS(sol0->x[i] - sol1->x[i]) < 1e-3);
+  }
+  mu_assert("test_normalize_roundtrip: objectives differ",
+            ABS(info0.pobj - info1.pobj) < 1e-4);
+
+  _CLEANUP_NRM(d0, k0, stgs0, sol0);
+  _CLEANUP_NRM(d1, k1, stgs1, sol1);
+
+#undef _SETUP_NRM
+#undef _CLEANUP_NRM
+  return 0;
+}
+
+/*
  * Test scs_version(): the public API function should return a non-NULL,
  * non-empty version string.
  */

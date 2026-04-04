@@ -91,6 +91,14 @@ static const char *lp_update(void) {
   success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < 1e-4;
   mu_assert("lp_update: b+c-update solve failed", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  if (fail) return fail;
+
+  /* null/null update: no change to problem, result must be identical */
+  scs_update(w, SCS_NULL, SCS_NULL);
+  exitflag = scs_solve(w, sol, &info, 1);
+  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < 1e-4;
+  mu_assert("lp_update: null-null update changed result", success);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
   scs_finish(w);
   SCS(free_sol)(sol);

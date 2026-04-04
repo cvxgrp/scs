@@ -163,6 +163,46 @@ static const char *test_unbounded_inaccurate(void) {
   return 0;
 }
 
+/*
+ * Test SCS_SOLVED_INACCURATE with max_iters=1: the solver exits after a single
+ * iteration with tau > 0 (kap/tau small), so set_unfinished returns
+ * SCS_SOLVED_INACCURATE.  This exercises the minimum-iteration code path.
+ */
+static const char *test_max_iters_1(void) {
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsInfo info = {0};
+  scs_int exitflag;
+  _INACCURATE_LP_VARS;
+  scs_int m = 1, n = 1;
+
+  d->m = m; d->n = n; d->b = b_feas; d->c = c_feas;
+  d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  d->A->m = m; d->A->n = n;
+  d->A->x = Ax; d->A->i = Ai; d->A->p = Ap;
+  k->l = 1;
+
+  scs_set_default_settings(stgs);
+  stgs->max_iters = 1;
+  stgs->verbose = 0;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  mu_assert("test_max_iters_1: expected SCS_SOLVED_INACCURATE",
+            exitflag == SCS_SOLVED_INACCURATE);
+  mu_assert("test_max_iters_1: expected exactly 1 iteration",
+            info.iter == 1);
+
+  SCS(free_sol)(sol);
+  scs_free(d->A);
+  scs_free(k);
+  scs_free(stgs);
+  scs_free(d);
+  return 0;
+}
+
 #undef _INACCURATE_LP_VARS
 #undef _INACCURATE_INFEAS_VARS
 #undef _INACCURATE_UNBDD_VARS

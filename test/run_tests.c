@@ -20,6 +20,7 @@
 #include "problems/test_inaccurate.h"
 #include "problems/test_power_cone.h"
 #include "problems/test_soc_sizes.h"
+#include "problems/test_box_cone.h"
 #include "problems/test_solver_options.h"
 #include "problems/test_zero_cone.h"
 #include "problems/unbounded_lp.h"
@@ -122,13 +123,16 @@ static const char *all_tests(void) {
   mu_run_test(test_soc_size5);
   mu_run_test(test_multi_soc);
   mu_run_test(test_zero_cone);
+  mu_run_test(test_box_cone_lp);
   mu_run_test(test_solved_inaccurate);
   mu_run_test(test_infeasible_inaccurate);
   mu_run_test(test_unbounded_inaccurate);
+  mu_run_test(test_max_iters_1);
   mu_run_test(test_adaptive_scale);
   mu_run_test(test_no_acceleration);
   mu_run_test(test_type2_acceleration);
   mu_run_test(test_normalize_off);
+  mu_run_test(test_normalize_roundtrip);
   mu_run_test(test_scs_version);
   mu_run_test(test_time_limit_secs);
   mu_run_test(exp_design);
