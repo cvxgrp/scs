@@ -1,3 +1,8 @@
+/*
+ * Sparse matrix operations: normalization/equilibration, copying, validation,
+ * and matrix-vector products (A*x, A'*x, P*x) for CSC-format matrices.
+ */
+
 #ifndef SCS_MATRIX_H_GUARD
 #define SCS_MATRIX_H_GUARD
 

@@ -1,4 +1,7 @@
-/* Routines modified from CSparse, T. Davis et al */
+/*
+ * Sparse matrix utilities adapted from CSparse (T. Davis).
+ * Provides allocation, triplet-to-CSC compression, and KKT matrix formation.
+ */
 
 #ifndef CS_H_GUARD
 #define CS_H_GUARD

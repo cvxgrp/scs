@@ -1,5 +1,12 @@
 /*
- * Define ScsWork and related internal-only structs (not part of external API).
+ * Internal workspace structs used during the solve.
+ *
+ * ScsWork holds all mutable state for one solve: ADMM iterates, residuals,
+ * normalization data, and pointers to the linear system and cone workspaces.
+ * ScsScaling holds the diagonal matrices from Ruiz equilibration.
+ * ScsResiduals tracks primal/dual residuals and infeasibility certificates.
+ *
+ * These are internal to SCS -- the public API is in scs.h.
  */
 
 #ifndef SCS_WORK_H_GUARD

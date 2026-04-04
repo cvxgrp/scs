@@ -1,3 +1,9 @@
+/*
+ * Anderson acceleration (AA) interface for fixed-point iteration.
+ * Stores a sliding window of past iterates and computes an accelerated
+ * step that can dramatically speed up convergence of ADMM.
+ */
+
 #ifndef AA_H_GUARD
 #define AA_H_GUARD
 

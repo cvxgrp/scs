@@ -1,3 +1,8 @@
+/*
+ * Basic dense linear algebra operations used throughout SCS.
+ * All operate on raw arrays of scs_float.
+ */
+
 #ifndef LINALG_H_GUARD
 #define LINALG_H_GUARD
 

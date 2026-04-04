@@ -1,3 +1,12 @@
+/*
+ * Cone projection implementation.
+ *
+ * Handles projection onto the dual cone for all supported cone types:
+ * zero/free, non-negative, box, second-order, semidefinite, complex
+ * semidefinite, exponential, power, and (optionally) spectral cones.
+ * Uses Moreau decomposition: proj_K*(x) = x + proj_K(-x).
+ */
+
 #include "cones.h"
 #include "linalg.h"
 #include "scs.h"
@@ -105,9 +114,7 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
 /* Forward declare exponential cone projection (exp_cone.c) */
 scs_float SCS(proj_pd_exp_cone)(scs_float *v0, scs_int primal);
 
-/*
- * Memory Management
- */
+/* ======================== Memory Management ======================== */
 
 void SCS(free_cone)(ScsCone *k) {
   if (k) {
@@ -315,6 +322,8 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   c->cone_boundaries = b;
   c->cone_boundaries_len = total_cones + 1;
 }
+
+/* ================ Cone Validation / Initialization ================= */
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
   scs_int i, dims = k->z + k->l + k->bsize;
@@ -838,6 +847,8 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 /*
  * Projection: Real Semi-Definite Cone
  */
+/* ====================== Cone Projections =========================== */
+
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                        ScsConeWork *c) {
   if (n == 0)
@@ -1177,6 +1188,8 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 /* The r_y vector determines the INVERSE metric, ie, project under the
  * diag(r_y)^-1 norm.
  */
+/* ================= Main Cone Projection Dispatch ==================== */
+
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize, scs_float *r_y) {
   scs_int i, count = 0, status = 0;

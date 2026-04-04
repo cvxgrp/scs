@@ -1,3 +1,9 @@
+/*
+ * Read/write utilities for serializing SCS problem data to binary files
+ * and logging solve progress to CSV. Disabled when compiled with
+ * NO_READ_WRITE=1.
+ */
+
 #ifndef RW_H_GUARD
 #define RW_H_GUARD
 

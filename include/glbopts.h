@@ -1,3 +1,12 @@
+/*
+ * Global options, default parameter values, and platform-specific macros.
+ *
+ * Defines printing/memory allocation macros (adapts to MATLAB, Python, R),
+ * math precision macros (float vs double), default solver constants, and
+ * internal algorithm tuning parameters. This is an internal header; the
+ * public API is in scs.h.
+ */
+
 #ifndef GLB_H_GUARD
 #define GLB_H_GUARD
 
@@ -155,12 +164,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define IABS abs
 #endif
 
-/* Force SCS to treat the problem as (non-homogeneous) feasible for this many */
-/* iters. This acts like a warm-start that biases towards feasibility, which */
-/* is the most common use-case */
+/* Force SCS to treat the problem as (non-homogeneous) feasible for this many
+ * iterations. Acts like an implicit warm-start biased towards feasibility,
+ * which is the most common use-case. During these iterations tau is fixed
+ * at 1 and kappa is fixed at 0. */
 #define FEASIBLE_ITERS (1)
 
-/* how many iterations between heuristic residual rescaling */
+/* Minimum iterations between heuristic scale updates. Prevents scale
+ * from changing too frequently before the iterates have stabilized. */
 #define RESCALING_MIN_ITERS (100)
 
 #define _DIV_EPS_TOL (1E-18)
@@ -185,17 +196,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* #define NORM SCS(norm_2) */
 #define NORM SCS(norm_inf)
 
-/* Factor which is scales tau in the linear system update */
-/* Larger factors prevent tau from moving as much */
+/* Factor which scales the tau diagonal entry in the linear system.
+ * Larger values stabilize tau but slow convergence. 10 is a good balance
+ * for most problems. */
 #define TAU_FACTOR (10.)
 
-/* Anderson acceleration parameters: */
+/* --- Anderson Acceleration (AA) parameters --- */
 #define AA_RELAXATION (1.0)
 #define AA_REGULARIZATION_TYPE_1 (1e-6)
 #define AA_REGULARIZATION_TYPE_2 (1e-10)
-/* Safeguarding norm factor at which we reject AA steps */
+/* Reject AA steps when the output norm exceeds this multiple of the input
+ * norm. 1.0 means the AA step must not increase the iterate norm. */
 #define AA_SAFEGUARD_FACTOR (1.)
-/* Max allowable AA weight norm */
+/* Reject AA steps whose weight vector exceeds this norm (prevents
+ * numerically unstable extrapolation). */
 #define AA_MAX_WEIGHT_NORM (1e10)
 
 /* (Dual) Scale updating parameters */
@@ -203,12 +217,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define MIN_SCALE_VALUE (1e-6)
 #define SCALE_NORM NORM /* what norm to use when computing the scale factor */
 
-/* CG == Conjugate gradient */
-/* Linear system tolerances, only used with indirect */
+/* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
 #define CG_BEST_TOL (1e-12)
-/* This scales the current residuals to get the tolerance we solve the
- * linear system to at each iteration. Lower factors require more CG steps
- * but give better accuracy */
+/* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
+ * values give more accurate CG solves at the cost of more CG iterations. */
 #define CG_TOL_FACTOR (0.2)
 
 /* norm to use when deciding CG convergence */

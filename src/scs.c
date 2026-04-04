@@ -1,3 +1,11 @@
+/*
+ * Main SCS solver implementation.
+ *
+ * This file contains the ADMM iteration loop, workspace management,
+ * residual computation, convergence checking, and the public API
+ * functions (scs_init, scs_solve, scs_update, scs_finish, scs).
+ */
+
 #include "scs.h"
 #include "aa.h"
 #include "ctrlc.h"
@@ -10,7 +18,8 @@
 #include "scs_work.h"
 #include "util.h"
 
-/* printing header */
+/* ======================== Printing / Output ======================== */
+
 static const char *HEADER[] = {
     " iter ",    " pri res ", " dua res ", "   gap   ",
     "   obj   ", "  scale  ", " time (s)",
@@ -18,6 +27,8 @@ static const char *HEADER[] = {
 static const scs_int HSPACE = 9;
 static const scs_int HEADER_LEN = 7;
 static const scs_int LINE_LEN = 66;
+
+/* ======================== Memory Management ======================== */
 
 static void free_residuals(ScsResiduals *r) {
   if (r) {
@@ -125,6 +136,8 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
 #endif
 }
 
+/* ==================== Error / Failure Handling ===================== */
+
 static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
                                 ScsInfo *info, scs_int status_val,
                                 const char *msg) {
@@ -169,6 +182,8 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   return status;
 }
 
+/* =================== Warm / Cold Start Helpers ==================== */
+
 static inline scs_int _is_nan(scs_float x) {
   return x != x;
 }
@@ -196,6 +211,8 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
     SCS(un_normalize_sol)(w->scal, sol);
   }
 }
+
+/* ==================== Residual Computation ========================= */
 
 /* pd = primal_scale * dual_scale = sigma^2 from the Ruiz equilibration.
  * Pass pd = 1 when operating on normalised residuals (no amplification).
@@ -356,6 +373,8 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = 1.;
 }
 
+/* ====================== ADMM Iteration ============================= */
+
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   /* Compute all five weighted dot products (g'Rg, mu'Rg, p'Rg, p'Rp, p'Rmu)
@@ -458,6 +477,8 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   return status;
 }
+
+/* ================== Solution Extraction / Finalization ============== */
 
 static void sety(const ScsWork *w, ScsSolution *sol) {
   if (!sol->y) {
@@ -698,6 +719,8 @@ static void print_footer(ScsInfo *info) {
 #endif
 }
 
+/* ==================== Convergence Checking ========================= */
+
 static scs_int has_converged(ScsWork *w, scs_int iter) {
   scs_float abs_xt_p_x, abs_ctx, abs_bty;
   scs_float nm_s, nm_px, nm_aty, nm_ax;
@@ -737,6 +760,8 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
   }
   return 0;
 }
+
+/* ========================= Validation ============================== */
 
 #if NO_VALIDATE == 0
 static scs_int validate(const ScsData *d, const ScsCone *k,
@@ -793,6 +818,8 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
   return 0;
 }
 #endif
+
+/* ================ Workspace Init / Scale Updating ================== */
 
 static ScsResiduals *init_residuals(const ScsData *d) {
   ScsResiduals *r = (ScsResiduals *)scs_calloc(1, sizeof(ScsResiduals));
@@ -1094,6 +1121,8 @@ static inline void normalize_v(scs_float *v, scs_int len) {
   }
   SCS(scale_array)(v, SQRTF((scs_float)len) * ITERATE_NORM / v_norm, len);
 }
+
+/* ========================== Public API ============================= */
 
 scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                   scs_int warm_start) {
