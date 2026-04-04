@@ -6,6 +6,7 @@
 #include "util.h"
 
 #include "glbopts.h"
+#include <string.h>
 #include "linsys.h"
 #include "scs_matrix.h"
 

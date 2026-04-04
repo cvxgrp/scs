@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include "scs.h"
 #include "scs_work.h"
 
 /* Normalization routines, used if d->NORMALIZE is true */

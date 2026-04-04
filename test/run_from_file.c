@@ -1,6 +1,10 @@
 #include "rw.h"
+#include "cones.h"
 #include "scs.h"
 #include "util.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 scs_int override_setting(ScsSettings *s, char *param, char *val) {
   scs_printf("Attempting to override %s with value %s.\n", param, val);

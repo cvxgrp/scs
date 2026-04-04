@@ -8,6 +8,7 @@
 
 #include "scs.h"
 #include "aa.h"
+#include "cones.h"
 #include "ctrlc.h"
 #include "glbopts.h"
 #include "linalg.h"
@@ -17,6 +18,8 @@
 #include "scs_matrix.h"
 #include "scs_work.h"
 #include "util.h"
+
+#include <string.h>
 
 /* ======================= Forward Declarations ====================== */
 

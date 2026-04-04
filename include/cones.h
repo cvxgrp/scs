@@ -6,10 +6,8 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include "scs.h"
 #include "scs_blas.h"
 #include "scs_work.h"
-#include <string.h>
 
 #ifdef USE_SPECTRAL_CONES
 #include "util_spectral_cones.h" /* for Newton_stats */

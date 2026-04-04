@@ -10,6 +10,8 @@
 #include "scs_matrix.h"
 #include "util.h"
 
+#include <string.h>
+
 #define _MAX_RAND_VAL (1073741823) /* 2^30 - 1 */
 
 /* uniform random number in [-1,1] */

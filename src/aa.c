@@ -25,6 +25,10 @@
 #include "aa.h"
 #include "scs_blas.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define FILL_MEMORY_BEFORE_SOLVE (1)

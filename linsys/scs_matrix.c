@@ -3,9 +3,12 @@
 /* ======================== Includes / Constants ======================== */
 
 #include "scs_matrix.h"
+#include "cones.h"
 #include "linalg.h"
 #include "linsys.h"
 #include "util.h"
+
+#include <string.h>
 
 #define MIN_NORMALIZATION_FACTOR (1e-4)
 #define MAX_NORMALIZATION_FACTOR (1e4)

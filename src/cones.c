@@ -13,6 +13,8 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
+#include <string.h>
+
 /*
  * Cross-platform Complex Type Handling
  * MSVC uses struct layout; GCC/Clang uses C99 _Complex
