@@ -327,5 +327,52 @@ static const char *test_time_limit_secs(void) {
   return 0;
 }
 
+/*
+ * Test explicit warm start: manually set sol->x, sol->y, sol->s to values
+ * far from the optimum, then solve with warm_start=1.  The solver should
+ * still converge to the correct answer.
+ *
+ * Uses the 3-step API: scs_init / scs_solve / scs_finish.
+ *
+ * Problem: min x  s.t.  x >= 2  (same LP as _OPTS_SETUP)
+ * Optimal: x=2, obj=2.
+ */
+static const char *test_warm_start(void) {
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
+  ScsInfo info = {0};
+  scs_int exitflag;
+  const char *fail;
+
+  _OPTS_SETUP(-2.0, 1.0);
+
+  ScsWork *w = scs_init(d, k, stgs);
+  mu_assert("test_warm_start: scs_init failed", w != SCS_NULL);
+
+  /* Cold solve first to verify baseline */
+  exitflag = scs_solve(w, sol, &info, 0);
+  mu_assert("test_warm_start: cold solve failed", exitflag == SCS_SOLVED);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+  if (fail) { scs_finish(w); _OPTS_CLEANUP(); return fail; }
+
+  /* Now set sol to a bad initial guess: x=100, y=0, s=0 */
+  sol->x[0] = 100.0;
+  sol->y[0] = 0.0;
+  sol->s[0] = 0.0;
+
+  /* Warm-start solve with the bad initial guess */
+  exitflag = scs_solve(w, sol, &info, 1);
+  mu_assert("test_warm_start: warm solve failed", exitflag == SCS_SOLVED);
+  mu_assert("test_warm_start: wrong objective after warm start",
+            ABS(info.pobj - 2.0) < 1e-4);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  scs_finish(w);
+  _OPTS_CLEANUP();
+  return fail;
+}
+
 #undef _OPTS_SETUP
 #undef _OPTS_CLEANUP
