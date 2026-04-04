@@ -149,10 +149,6 @@ struct ACCEL_WORK {
   /* from previous iteration */
   aa_float *g_prev; /* x_prev - f(x_prev) */
 
-  aa_float *y; /* g - g_prev */
-  aa_float *s; /* x - x_prev */
-  aa_float *d; /* f - f_prev */
-
   aa_float *Y; /* matrix of stacked y values */
   aa_float *S; /* matrix of stacked s values */
   aa_float *D; /* matrix of stacked d values = (S-Y) */
@@ -227,34 +223,25 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
   blas_int bdim = (blas_int)a->dim;
   aa_float neg_onef = -1.0;
 
-  /* g = x */
+  /* g = x - f */
   memcpy(a->g, x, sizeof(aa_float) * a->dim);
-  /* s = x */
-  memcpy(a->s, x, sizeof(aa_float) * a->dim);
-  /* d = f */
-  memcpy(a->d, f, sizeof(aa_float) * a->dim);
-  /* g =  x - f */
   BLAS(axpy)(&bdim, &neg_onef, f, &one, a->g, &one);
-  /* s = x - x_prev */
-  BLAS(axpy)(&bdim, &neg_onef, a->x, &one, a->s, &one);
-  /* d = f - f_prev */
-  BLAS(axpy)(&bdim, &neg_onef, a->f, &one, a->d, &one);
 
-  /* g, s, d correct here */
+  /* g correct here */
 
-  /* y = g */
-  memcpy(a->y, a->g, sizeof(aa_float) * a->dim);
-  /* y = g - g_prev */
-  BLAS(axpy)(&bdim, &neg_onef, a->g_prev, &one, a->y, &one);
+  /* write s = x - x_prev directly into S[idx] column (skip a->s scratch) */
+  memcpy(&(a->S[idx * a->dim]), x, sizeof(aa_float) * a->dim);
+  BLAS(axpy)(&bdim, &neg_onef, a->x, &one, &(a->S[idx * a->dim]), &one);
 
-  /* y correct here */
+  /* write d = f - f_prev directly into D[idx] column (skip a->d scratch) */
+  memcpy(&(a->D[idx * a->dim]), f, sizeof(aa_float) * a->dim);
+  BLAS(axpy)(&bdim, &neg_onef, a->f, &one, &(a->D[idx * a->dim]), &one);
 
-  /* copy y into idx col of Y */
-  memcpy(&(a->Y[idx * a->dim]), a->y, sizeof(aa_float) * a->dim);
-  /* copy s into idx col of S */
-  memcpy(&(a->S[idx * a->dim]), a->s, sizeof(aa_float) * a->dim);
-  /* copy d into idx col of D */
-  memcpy(&(a->D[idx * a->dim]), a->d, sizeof(aa_float) * a->dim);
+  /* write y = g - g_prev directly into Y[idx] column (skip a->y scratch) */
+  memcpy(&(a->Y[idx * a->dim]), a->g, sizeof(aa_float) * a->dim);
+  BLAS(axpy)(&bdim, &neg_onef, a->g_prev, &one, &(a->Y[idx * a->dim]), &one);
+
+  /* Y, S, D correct here */
 
   /* Y, S, D correct here */
 
@@ -377,10 +364,6 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
 
   a->g_prev = (aa_float *)calloc(a->dim, sizeof(aa_float));
 
-  a->y = (aa_float *)calloc(a->dim, sizeof(aa_float));
-  a->s = (aa_float *)calloc(a->dim, sizeof(aa_float));
-  a->d = (aa_float *)calloc(a->dim, sizeof(aa_float));
-
   a->Y = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
   a->S = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
   a->D = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
@@ -394,7 +377,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   } else {
     a->x_work = 0;
   }
-  if (!a->x || !a->f || !a->g || !a->g_prev || !a->y || !a->s || !a->d ||
+  if (!a->x || !a->f || !a->g || !a->g_prev ||
       !a->Y || !a->S || !a->D || !a->M || !a->work || !a->ipiv ||
       (relaxation != 1.0 && !a->x_work)) {
     printf("Failed to allocate memory for AA internals.\n");
@@ -480,9 +463,6 @@ void aa_finish(AaWork *a) {
     free(a->f);
     free(a->g);
     free(a->g_prev);
-    free(a->y);
-    free(a->s);
-    free(a->d);
     free(a->Y);
     free(a->S);
     free(a->D);

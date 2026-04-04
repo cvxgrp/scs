@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v6
       - run: sudo apt-get update
       - run: sudo apt-get install libopenblas-dev liblapack-dev valgrind
-      - run: make
-      - run: make test
+      - run: make OPT="-O3 -g"
+      - run: make test OPT="-O3 -g"
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_direct
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_indirect

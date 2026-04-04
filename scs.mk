@@ -61,8 +61,9 @@ CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long #
 CUDSS_FLAGS = -I$(CUDSS_PATH)/include -I$(CUDA_PATH)/include
 CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss
 
-# Add on default CFLAGS
-OPT = -O3
+# Add on default CFLAGS (-march=native for speed; override with OPT="-O3" if
+# needed, e.g. for valgrind which may not support newer instruction sets)
+OPT ?= -O3 -march=native -fno-math-errno
 INCLUDE = -I. -Iinclude -Ilinsys
 override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT) -Werror=incompatible-pointer-types
 ifneq ($(ISWINDOWS), 1)

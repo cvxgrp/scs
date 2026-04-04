@@ -30,7 +30,7 @@ static void hfun(const scs_float *v0, scs_float rho, scs_float *f,
                  scs_float *df) {
   scs_float t0 = v0[2], s0 = v0[1], r0 = v0[0];
   scs_float exprho = EXPF(rho);
-  scs_float expnegrho = EXPF(-rho);
+  scs_float expnegrho = 1.0 / exprho; /* EXPF(-rho) == 1/EXPF(rho) */
 
   /* Function value at v0 */
   *f = ((rho - 1) * r0 + s0) * exprho - (r0 - rho * s0) * expnegrho -

@@ -19,7 +19,9 @@
 #include "problems/test_exp_cone.h"
 #include "problems/test_inaccurate.h"
 #include "problems/test_mixed_cones.h"
+#include "problems/test_normalize_roundtrip.h"
 #include "problems/test_power_cone.h"
+#include "problems/test_root_plus.h"
 #include "problems/test_soc_sizes.h"
 #include "problems/test_box_cone.h"
 #include "problems/test_psd_n1.h"
@@ -140,6 +142,9 @@ static const char *all_tests(void) {
   mu_run_test(test_time_limit_secs);
   mu_run_test(test_warm_start);
   mu_run_test(test_mixed_cones);
+  mu_run_test(test_root_plus_equivalence);
+  mu_run_test(test_normalize_roundtrip_lp);
+  mu_run_test(test_normalize_roundtrip_qp);
   mu_run_test(exp_design);
   mu_run_test(robust_pca);
   mu_run_test(graph_partitioning);

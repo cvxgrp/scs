@@ -121,7 +121,6 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
                               scs_float *Et, ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
-  scs_float nm_a_col;
 
   /****************************  D  ****************************/
 
@@ -173,9 +172,14 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
     }
   }
 
-  /* calculate col norms, E */
+  /* calculate col norms, E — inline the norm_inf to avoid n BLAS call
+   * overheads (Fortran ABI, pointer args, 1-based return) for short cols. */
   for (i = 0; i < A->n; ++i) {
-    nm_a_col = SCS(norm_inf)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    scs_float nm_a_col = 0.0, tmp;
+    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+      tmp = ABS(A->x[j]);
+      if (tmp > nm_a_col) nm_a_col = tmp;
+    }
     Et[i] = MAX(Et[i], nm_a_col);
     Et[i] = SQRTF(apply_limit(Et[i]));
     Et[i] = SAFEDIV_POS(1.0, Et[i]);
@@ -250,28 +254,22 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
                     ScsScaling *scal, ScsConeWork *cone) {
   scs_int i, j;
-  /* scale the rows of A with D */
+  /* Fuse row and col scaling of A: A[i,j] *= Dt[i] * Et[j].
+   * Single NNZ pass replaces two separate passes. */
   for (i = 0; i < A->n; ++i) {
+    scs_float ei = Et[i];
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-      A->x[j] *= Dt[A->i[j]];
+      A->x[j] *= Dt[A->i[j]] * ei;
     }
-  }
-
-  /* scale the cols of A with E */
-  for (i = 0; i < A->n; ++i) {
-    SCS(scale_array)(&(A->x[A->p[i]]), Et[i], A->p[i + 1] - A->p[i]);
   }
 
   if (P) {
-    /* scale the rows of P with E */
+    /* Fuse row and col scaling of P: P[i,j] *= Et[i] * Et[j]. */
     for (i = 0; i < P->n; ++i) {
+      scs_float ei = Et[i];
       for (j = P->p[i]; j < P->p[i + 1]; ++j) {
-        P->x[j] *= Et[P->i[j]];
+        P->x[j] *= Et[P->i[j]] * ei;
       }
-    }
-    /* scale the cols of P with E */
-    for (i = 0; i < P->n; ++i) {
-      SCS(scale_array)(&(P->x[P->p[i]]), Et[i], P->p[i + 1] - P->p[i]);
     }
   }
 
@@ -453,21 +451,22 @@ void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y) {
 
 /* Since P is upper triangular need to be clever here */
 void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
-  /* returns y += P x */
-  scs_int p, j, i;
+  /* returns y += P x where P is stored upper triangular (CSC).
+   * Single pass: each stored entry (i,j) contributes to both y[i] (upper)
+   * and y[j] (symmetric lower), halving NNZ traversals vs two-pass approach. */
+  scs_int p, j;
   scs_int n = P->n;
   scs_int *Pp = P->p;
   scs_int *Pi = P->i;
   scs_float *Px = P->x;
-  /* y += P_upper x but skip diagonal entries*/
-  for (j = 0; j < n; j++) { /* col */
+  for (j = 0; j < n; j++) {
     for (p = Pp[j]; p < Pp[j + 1]; p++) {
-      i = Pi[p];    /* row */
-      if (i != j) { /* skip the diagonal */
-        y[i] += Px[p] * x[j];
+      scs_int i = Pi[p];
+      scs_float val = Px[p];
+      y[i] += val * x[j]; /* upper triangle + diagonal */
+      if (i != j) {
+        y[j] += val * x[i]; /* symmetric lower triangle */
       }
     }
   }
-  /* y += P_lower x */
-  SCS(accum_by_atrans)(P, x, y);
 }

@@ -237,14 +237,6 @@ static void unnormalize_residuals(ScsWork *w) {
   r->last_iter = r_n->last_iter;
   r->tau = r_n->tau;
 
-  /* mem copy arrays */
-  memcpy(r->ax, r_n->ax, w->d->m * sizeof(scs_float));
-  memcpy(r->ax_s, r_n->ax_s, w->d->m * sizeof(scs_float));
-  memcpy(r->ax_s_btau, r_n->ax_s_btau, w->d->m * sizeof(scs_float));
-  memcpy(r->aty, r_n->aty, w->d->n * sizeof(scs_float));
-  memcpy(r->px, r_n->px, w->d->n * sizeof(scs_float));
-  memcpy(r->px_aty_ctau, r_n->px_aty_ctau, w->d->n * sizeof(scs_float));
-
   /* unnormalize */
   r->kap = r_n->kap / pd;
   r->bty_tau = r_n->bty_tau / pd;
@@ -257,12 +249,27 @@ static void unnormalize_residuals(ScsWork *w) {
   r->dobj = r_n->dobj / pd;
   r->gap = r_n->gap / pd;
 
-  SCS(un_normalize_primal)(w->scal, r->ax);
-  SCS(un_normalize_primal)(w->scal, r->ax_s);
-  SCS(un_normalize_primal)(w->scal, r->ax_s_btau);
-  SCS(un_normalize_dual)(w->scal, r->aty);
-  SCS(un_normalize_dual)(w->scal, r->px);
-  SCS(un_normalize_dual)(w->scal, r->px_aty_ctau);
+  /* Fuse the six memcpy+un_normalize calls into two loops.
+   * Primal: divide by D[i]*dual_scale. Dual: divide by E[i]*primal_scale.
+   * This reduces 6 memcpy + 6 scale passes to 2 passes. */
+  {
+    scs_int i;
+    const scs_float *D = w->scal->D, *E = w->scal->E;
+    scs_float inv_ds = 1.0 / (w->scal->dual_scale);
+    scs_float inv_ps = 1.0 / (w->scal->primal_scale);
+    for (i = 0; i < w->d->m; ++i) {
+      scs_float f = inv_ds / D[i];
+      r->ax[i]        = r_n->ax[i]        * f;
+      r->ax_s[i]      = r_n->ax_s[i]      * f;
+      r->ax_s_btau[i] = r_n->ax_s_btau[i] * f;
+    }
+    for (i = 0; i < w->d->n; ++i) {
+      scs_float f = inv_ps / E[i];
+      r->aty[i]         = r_n->aty[i]         * f;
+      r->px[i]          = r_n->px[i]           * f;
+      r->px_aty_ctau[i] = r_n->px_aty_ctau[i]  * f;
+    }
+  }
 
   compute_residuals(r, w->d->m, w->d->n, pd);
 }
@@ -270,7 +277,7 @@ static void unnormalize_residuals(ScsWork *w) {
 /* calculates un-normalized residual quantities */
 /* this is somewhat slow but not a bottleneck */
 static void populate_residual_struct(ScsWork *w, scs_int iter) {
-  scs_int n = w->d->n, m = w->d->m;
+  scs_int i, n = w->d->n, m = w->d->m;
   /* normalized x,y,s terms */
   scs_float *x = w->xys_normalized->x;
   scs_float *y = w->xys_normalized->y;
@@ -295,13 +302,11 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   /* ax = Ax */
   SCS(accum_by_a)(w->d->A, x, r->ax);
 
-  memcpy(r->ax_s, r->ax, m * sizeof(scs_float));
-  /* ax_s = Ax + s */
-  SCS(add_scaled_array)(r->ax_s, s, m, 1.);
-
-  memcpy(r->ax_s_btau, r->ax_s, m * sizeof(scs_float));
-  /* ax_s_btau = Ax + s - b * tau */
-  SCS(add_scaled_array)(r->ax_s_btau, w->d->b, m, -r->tau);
+  /* Build ax_s and ax_s_btau in one fused pass (saves 2 memcpy + 2 axpy). */
+  for (i = 0; i < m; ++i) {
+    r->ax_s[i] = r->ax[i] + s[i];
+    r->ax_s_btau[i] = r->ax_s[i] - r->tau * w->d->b[i];
+  }
 
   /**************** DUAL *********************/
   memset(r->px, 0, n * sizeof(scs_float));
@@ -317,12 +322,10 @@ static void populate_residual_struct(ScsWork *w, scs_int iter) {
   /* aty = A'y */
   SCS(accum_by_atrans)(w->d->A, y, r->aty);
 
-  /* r->px_aty_ctau = Px */
-  memcpy(r->px_aty_ctau, r->px, n * sizeof(scs_float));
-  /* r->px_aty_ctau = Px + A'y */
-  SCS(add_scaled_array)(r->px_aty_ctau, r->aty, n, 1.);
-  /* r->px_aty_ctau = Px + A'y + c * tau */
-  SCS(add_scaled_array)(r->px_aty_ctau, w->d->c, n, r->tau);
+  /* Build px_aty_ctau in one fused pass (saves 1 memcpy + 2 axpy). */
+  for (i = 0; i < n; ++i) {
+    r->px_aty_ctau[i] = r->px[i] + r->aty[i] + r->tau * w->d->c[i];
+  }
 
   /**************** OTHERS *****************/
   r->bty_tau = SCS(dot)(y, w->d->b, m);
@@ -353,23 +356,25 @@ static void cold_start_vars(ScsWork *w) {
   w->v[l - 1] = 1.;
 }
 
-/* utility function that computes x'Ry */
-static inline scs_float dot_r(ScsWork *w, const scs_float *x,
-                              const scs_float *y) {
-  scs_int i;
-  scs_float ip = 0.0;
-  for (i = 0; i < w->d->n + w->d->m; ++i) {
-    ip += x[i] * y[i] * w->diag_r[i];
-  }
-  return ip;
-}
-
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
-  scs_float a, b, c, rad, tau_scale = w->diag_r[w->d->n + w->d->m];
-  a = tau_scale + dot_r(w, w->g, w->g);
-  b = dot_r(w, mu, w->g) - 2 * dot_r(w, p, w->g) - eta * tau_scale;
-  c = dot_r(w, p, p) - dot_r(w, p, mu);
+  /* Compute all five weighted dot products (g'Rg, mu'Rg, p'Rg, p'Rp, p'Rmu)
+   * in a single pass over diag_r to minimise memory traffic. */
+  scs_int i, nm = w->d->n + w->d->m;
+  scs_float gg = 0., mug = 0., pg = 0., pp = 0., pmu = 0.;
+  scs_float a, b, c, rad, tau_scale = w->diag_r[nm];
+  const scs_float *g = w->g, *r = w->diag_r;
+  for (i = 0; i < nm; ++i) {
+    scs_float ri = r[i], gi = g[i], pi = p[i], mui = mu[i];
+    gg  += gi  * gi  * ri;
+    mug += mui * gi  * ri;
+    pg  += pi  * gi  * ri;
+    pp  += pi  * pi  * ri;
+    pmu += pi  * mui * ri;
+  }
+  a = tau_scale + gg;
+  b = mug - 2 * pg - eta * tau_scale;
+  c = pp - pmu;
   rad = b * b - 4 * a * c;
   return (-b + SQRTF(MAX(rad, 0.))) / (2 * a);
 }
@@ -379,10 +384,14 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   scs_int n = w->d->n, m = w->d->m, l = n + m + 1, status, i;
   scs_float *warm_start = SCS_NULL;
   scs_float tol = -1.0; /* only used for indirect methods, overridden later */
-  memcpy(w->u_t, w->v, l * sizeof(scs_float));
-  for (i = 0; i < l - 1; ++i) {
-    w->u_t[i] *= (i < n ? 1 : -1) * w->diag_r[i];
+  /* Copy and scale in one pass, eliminating the intermediate memcpy. */
+  for (i = 0; i < n; ++i) {
+    w->u_t[i] = w->v[i] * w->diag_r[i];
   }
+  for (i = n; i < l - 1; ++i) {
+    w->u_t[i] = -w->v[i] * w->diag_r[i];
+  }
+  w->u_t[l - 1] = w->v[l - 1];
 #if INDIRECT > 0
   scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
   /* compute warm start using the cone projection output */
@@ -951,11 +960,15 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 }
 
 static void update_work_cache(ScsWork *w) {
-  /* g = (I + M)^{-1} h */
-  memcpy(w->g, w->h, (w->d->n + w->d->m) * sizeof(scs_float));
-  SCS(scale_array)(&(w->g[w->d->n]), -1., w->d->m);
+  /* g = (I + M)^{-1} [c; -b]
+   * Build g = [c; -b] directly in one pass, avoiding a separate memcpy of h
+   * followed by a negate pass over g[n:]. */
+  scs_int i, n = w->d->n, m = w->d->m;
+  memcpy(w->g, w->d->c, n * sizeof(scs_float));
+  for (i = 0; i < m; ++i) {
+    w->g[n + i] = -w->d->b[i];
+  }
   scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL);
-  return;
 }
 
 /* Reset quantities specific to current solve */
@@ -983,9 +996,6 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
     cold_start_vars(w);
   }
 
-  /* h = [c;b] */
-  memcpy(w->h, w->d->c, w->d->n * sizeof(scs_float));
-  memcpy(&(w->h[w->d->n]), w->d->b, w->d->m * sizeof(scs_float));
   update_work_cache(w);
   return 0;
 }
@@ -1131,8 +1141,10 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       normalize_v(w->v, l);
     }
 
-    /* store v_prev = v, *after* normalizing */
-    memcpy(w->v_prev, w->v, l * sizeof(scs_float));
+    /* store v_prev = v for AA safeguard; skip when acceleration is off */
+    if (w->accel) {
+      memcpy(w->v_prev, w->v, l * sizeof(scs_float));
+    }
 
     /******************* linear system solve ********************/
     SCS(tic)(&lin_sys_timer);

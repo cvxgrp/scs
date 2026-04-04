@@ -1090,6 +1090,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
  * Projection: Second Order Cone
  */
 static void proj_soc(scs_float *x, scs_int q) {
+  scs_float v1, s, alpha;
   if (q <= 0)
     return;
   if (q == 1) {
@@ -1097,9 +1098,17 @@ static void proj_soc(scs_float *x, scs_int q) {
     return;
   }
 
-  scs_float v1 = x[0];
-  scs_float s = SCS(norm_2)(&(x[1]), q - 1);
-  scs_float alpha = (s + v1) / 2.0;
+  v1 = x[0];
+  /* Fast paths for the two most common small SOC sizes avoid BLAS call
+   * overhead (function pointer dispatch + Fortran ABI arguments). */
+  if (q == 2) {
+    s = ABS(x[1]);
+  } else if (q == 3) {
+    s = SQRTF(x[1] * x[1] + x[2] * x[2]);
+  } else {
+    s = SCS(norm_2)(&(x[1]), q - 1);
+  }
+  alpha = (s + v1) / 2.0;
 
   if (s <= v1)
     return;       /* Inside cone */
@@ -1118,12 +1127,6 @@ static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
                             scs_float a) {
   scs_float x = 0.5 * (xh + SQRTF(xh * xh + 4 * a * (rh - r) * r));
   return MAX(x, 1e-12);
-}
-
-static scs_float pow_calc_fp(scs_float x, scs_float y, scs_float dxdr,
-                             scs_float dydr, scs_float a) {
-  return POWF(x, a) * POWF(y, (1 - a)) * (a * dxdr / x + (1 - a) * dydr / y) -
-         1;
 }
 
 static void proj_power_cone(scs_float *v, scs_float a) {
@@ -1146,17 +1149,21 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
   r = rh / 2;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
-    scs_float f, fp, dxdr, dydr;
+    scs_float f, fp, dxdr, dydr, xa, y1a;
     x = pow_calc_x(r, xh, rh, a);
     y = pow_calc_x(r, yh, rh, 1 - a);
 
-    f = POWF(x, a) * POWF(y, (1 - a)) - r;
+    /* Cache POWF(x,a) and POWF(y,1-a): both are needed for f and fp,
+     * so computing them once saves two POWF calls per Newton iteration. */
+    xa  = POWF(x, a);
+    y1a = POWF(y, (1 - a));
+    f = xa * y1a - r;
     if (ABS(f) < POW_CONE_TOL)
       break;
 
     dxdr = a * (rh - 2 * r) / (2 * x - xh);
     dydr = (1 - a) * (rh - 2 * r) / (2 * y - yh);
-    fp = pow_calc_fp(x, y, dxdr, dydr, a);
+    fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
     r = MAX(r - f / fp, 0);
     r = MIN(r, rh);
@@ -1412,20 +1419,29 @@ scs_int SCS(proj_dual_cone)(scs_float *x, ScsConeWork *c,
   /* Copy s = x */
   memcpy(c->s, x, c->m * sizeof(scs_float));
 
-  /* x -> - Rx */
-  for (i = 0; i < c->m; ++i) {
-    x[i] *= r_y ? -r_y[i] : -1.0;
+  /* x -> - Rx; hoist the r_y != NULL check outside the loop */
+  if (r_y) {
+    for (i = 0; i < c->m; ++i) {
+      x[i] *= -r_y[i];
+    }
+  } else {
+    for (i = 0; i < c->m; ++i) {
+      x[i] = -x[i];
+    }
   }
 
   /* Project -x onto cone, x -> \Pi_{C^*}^{R^{-1}}(-x) under r_y metric */
   status = proj_cone(x, k, c, scal ? 1 : 0, r_y);
 
-  /* Return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x ) */
-  for (i = 0; i < c->m; ++i) {
-    if (r_y)
+  /* Return x + R^{-1} \Pi_{C^*}^{R^{-1}} ( -x ); hoist r_y check */
+  if (r_y) {
+    for (i = 0; i < c->m; ++i) {
       x[i] = x[i] / r_y[i] + c->s[i];
-    else
+    }
+  } else {
+    for (i = 0; i < c->m; ++i) {
       x[i] += c->s[i];
+    }
   }
 
   return status;

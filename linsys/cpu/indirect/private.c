@@ -26,13 +26,12 @@ static void set_preconditioner(ScsLinSysWork *p) {
       M[i] += A->x[k] * A->x[k] / p->diag_r[A->n + A->i[k]];
     }
     if (P) {
-      for (k = P->p[i]; k < P->p[i + 1]; k++) {
-        /* diagonal element only */
-        if (P->i[k] == i) { /* row == col */
-          /* M_ii += P_ii */
-          M[i] += P->x[k];
-          break;
-        }
+      /* P is upper triangular stored CSC with rows sorted ascending within
+       * each column, so the diagonal entry (row==col) is always last.
+       * Check only the last entry: O(1) instead of O(nnz_in_col). */
+      scs_int last = P->p[i + 1] - 1;
+      if (last >= P->p[i] && P->i[last] == i) {
+        M[i] += P->x[last];
       }
     }
     /* finally invert for pre-conditioner */
@@ -235,6 +234,9 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
   memcpy(p, z, n * sizeof(scs_float));
 
   for (i = 0; i < max_its; ++i) {
+    scs_float norm_r, beta;
+    scs_int k;
+    scs_float *M = pr->M;
     /* Gp = Mat * p */
     mat_vec(A, P, pr, p, Gp);
     /* alpha = z'r / p'G p */
@@ -244,27 +246,34 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
     /* r -= alpha * G p */
     SCS(add_scaled_array)(r, Gp, n, -alpha);
 
+    /* Fuse convergence norm, preconditioner apply, and z'r dot product into
+     * one pass over r, saving two separate vector scans per CG iteration. */
+    ztr_prev = ztr;
+    norm_r = 0.0;
+    ztr = 0.0;
+    for (k = 0; k < n; ++k) {
+      scs_float rk = r[k], zk = rk * M[k], ark = ABS(rk);
+      z[k] = zk;
+      ztr += zk * rk;
+      if (ark > norm_r) norm_r = ark;
+    }
 #if VERBOSITY > 3
-    scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, CG_NORM(r, n),
+    scs_printf("tol: %.4e, resid: %.4e, iters: %li\n", tol, norm_r,
                (long)i + 1);
 #endif
-    if (CG_NORM(r, n) < tol) {
+    if (norm_r < tol) {
       return i + 1;
     }
-    /* z = M r (M is inverse preconditioner) */
-    apply_pre_conditioner(z, r, n, pr);
-    ztr_prev = ztr;
-    /* ztr = z'r */
-    ztr = SCS(dot)(z, r, n);
     if (ztr_prev == 0.) {
       /* preconditioned residual is zero; further CG steps would divide by
        * zero, declare convergence (r must be negligibly small) */
       break;
     }
-    /* p = beta * p, where beta = ztr / ztr_prev */
-    SCS(scale_array)(p, ztr / ztr_prev, n);
-    /* p = z + beta * p */
-    SCS(add_scaled_array)(p, z, n, 1.);
+    /* p = z + beta * p — fuse scale and axpy into one loop */
+    beta = ztr / ztr_prev;
+    for (k = 0; k < n; ++k) {
+      p[k] = z[k] + beta * p[k];
+    }
   }
   return i;
 }
@@ -291,13 +300,12 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
                tol);
   }
 
+  /* use p->tmp here, and in mat_vec, can do both since they don't overlap */
+  /* b = [rx; ry] */
   if (CG_NORM(b, p->n + p->m) <= 1e-12) {
     memset(b, 0, (p->n + p->m) * sizeof(scs_float));
     return 0;
   }
-
-  /* use p->tmp here, and in mat_vec, can do both since they don't overlap */
-  /* b = [rx; ry] */
   /* tmp = ry */
   memcpy(p->tmp, &(b[p->n]), p->m * sizeof(scs_float));
   /* tmp = R_y^{-1} * ry */
