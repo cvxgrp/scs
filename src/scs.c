@@ -18,6 +18,46 @@
 #include "scs_work.h"
 #include "util.h"
 
+/* ======================= Forward Declarations ====================== */
+
+static void print_init_header(const ScsData *d, const ScsCone *k,
+                              const ScsSettings *stgs);
+static void print_header(ScsWork *w, const ScsCone *k);
+static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer);
+static void print_footer(ScsInfo *info);
+static void free_residuals(ScsResiduals *r);
+static ScsResiduals *init_residuals(const ScsData *d);
+static void free_work(ScsWork *w);
+static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
+                                ScsInfo *info, scs_int status_val,
+                                const char *msg);
+static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
+                       ScsInfo *info, scs_int stint, const char *msg,
+                       const char *ststr);
+static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n,
+                              scs_float pd);
+static void unnormalize_residuals(ScsWork *w);
+static void populate_residual_struct(ScsWork *w, scs_int iter);
+static scs_int has_converged(ScsWork *w, scs_int iter);
+static void warm_start_vars(ScsWork *w, ScsSolution *sol);
+static void cold_start_vars(ScsWork *w);
+static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
+                           scs_float eta);
+static scs_int project_lin_sys(ScsWork *w, scs_int iter);
+static void compute_rsk(ScsWork *w);
+static void update_dual_vars(ScsWork *w);
+static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter);
+static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
+                     scs_int iter);
+static void set_diag_r(ScsWork *w);
+static ScsWork *init_work(const ScsData *d, const ScsCone *k,
+                          const ScsSettings *stgs);
+static void update_work_cache(ScsWork *w);
+static void reset_tracking(ScsWork *w);
+static scs_int update_work(ScsWork *w, ScsSolution *sol);
+static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter);
+static inline void normalize_v(scs_float *v, scs_int len);
+
 /* ======================== Printing / Output ======================== */
 
 static const char *HEADER[] = {
@@ -115,7 +155,6 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
              stgs->eps_abs, stgs->eps_rel, stgs->eps_infeas, stgs->alpha,
              stgs->scale, (int)stgs->adaptive_scale, (int)stgs->max_iters,
              (int)stgs->normalize, stgs->rho_x);
-  /* (int)stgs->warm_start); */
   if (stgs->acceleration_lookback != 0) {
     scs_printf("\t  acceleration_lookback: %i, acceleration_interval: %i\n",
                (int)acceleration_lookback, (int)acceleration_interval);
@@ -771,10 +810,6 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
                (long)d->m, (long)d->n);
     return -1;
   }
-  if (d->m < d->n) {
-    /* scs_printf("WARN: m less than n, problem likely degenerate\n"); */
-    /* return -1; */
-  }
   if (SCS(validate_lin_sys)(d->A, d->P) < 0) {
     scs_printf("invalid linear system input data\n");
     return -1;
@@ -877,8 +912,7 @@ static void set_diag_r(ScsWork *w) {
   /* use cone information to set R_y */
   SCS(set_r_y)(w->cone_work, w->stgs->scale, &(w->diag_r[w->d->n]));
   /* if modified need to SCS(enforce_cone_boundaries)(...) */
-  w->diag_r[w->d->n + w->d->m] =
-      TAU_FACTOR; /* TODO: is this the best choice? */
+  w->diag_r[w->d->n + w->d->m] = TAU_FACTOR;
 }
 
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
@@ -1028,7 +1062,7 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
 }
 
 /* will update if the factor is outside of range */
-scs_int should_update_r(scs_float factor) {
+static scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 

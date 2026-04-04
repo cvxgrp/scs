@@ -1392,16 +1392,6 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   return c;
 }
 
-void scale_box_cone(ScsCone *k, ScsConeWork *c, const ScsScaling *scal) {
-  if (k->bsize && k->bu && k->bl) {
-    c->box_t_warm_start = 1.;
-    if (scal) {
-      /* also does some sanitizing */
-      normalize_box_cone(k, &(scal->D[k->z + k->l]), k->bsize);
-    }
-  }
-}
-
 /* Outward facing cone projection routine, performs projection in-place.
    If normalize > 0 then will use normalized (equilibrated) cones if applicable.
 
