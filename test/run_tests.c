@@ -8,11 +8,18 @@
 /* Include Tests */
 #include "problems/degenerate.h"
 #include "problems/hs21_tiny_qp.h"
+#include "problems/infeasible_lp.h"
+#include "problems/infeasible_socp.h"
 #include "problems/infeasible_tiny_qp.h"
+#include "problems/lp_update.h"
 #include "problems/qafiro_tiny_qp.h"
 #include "problems/small_lp.h"
 #include "problems/small_qp.h"
 #include "problems/test_exp_cone.h"
+#include "problems/test_power_cone.h"
+#include "problems/test_soc_sizes.h"
+#include "problems/unbounded_lp.h"
+#include "problems/unbounded_socp.h"
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
@@ -82,6 +89,7 @@ static const char *all_tests(void) {
   mu_run_test(degenerate);
   mu_run_test(small_lp);
   mu_run_test(small_qp);
+  mu_run_test(lp_update);
   mu_run_test(rob_gauss_cov_est);
   mu_run_test(complex_PSD);
   mu_run_test(sd_and_complex_sd);
@@ -89,11 +97,19 @@ static const char *all_tests(void) {
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(qafiro_tiny_qp);
   mu_run_test(infeasible_tiny_qp);
+  mu_run_test(infeasible_lp);
+  mu_run_test(infeasible_socp);
   mu_run_test(unbounded_tiny_qp);
+  mu_run_test(unbounded_lp);
+  mu_run_test(unbounded_socp);
   mu_run_test(random_prob);
   mu_run_test(max_ent);
   mu_run_test(mpc_bug);
   mu_run_test(test_exp_cone);
+  mu_run_test(test_power_cone);
+  mu_run_test(test_power_cone_infeasible);
+  mu_run_test(test_soc_size2);
+  mu_run_test(test_soc_size3);
   mu_run_test(exp_design);
   mu_run_test(robust_pca);
   mu_run_test(graph_partitioning);
