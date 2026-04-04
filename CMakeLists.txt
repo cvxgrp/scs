@@ -1,7 +1,7 @@
 # CMakeLists.txt file for scs. This software may be modified and distributed
 # under the terms of the MIT License
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(
   scs
@@ -97,51 +97,64 @@ message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 option(USE_CUDSS "Compile with cuDSS support" OFF)
 message(STATUS "cuDSS support is ${USE_CUDSS}")
 
-set(COMPILER_OPTS "-DCTRLC")
+set(COMPILER_OPTS CTRLC)
 set(LAPACK_LINK_LIBRARIES "")
 
 # Primitive types
 if(SFLOAT)
   set(SCS_FLOAT_TYPE "float")
-  set(COMPILER_OPTS "-DSFLOAT ${COMPILER_OPTS}")
+  list(APPEND COMPILER_OPTS SFLOAT)
 else()
   set(SCS_FLOAT_TYPE "double")
 endif()
 
 if(DLONG)
   set(SCS_INT_TYPE "long long")
-  set(COMPILER_OPTS "-DDLONG ${COMPILER_OPTS}")
+  list(APPEND COMPILER_OPTS DLONG)
 else()
   set(SCS_INT_TYPE "int")
 endif()
 
 if(NO_PRINTING)
-  set(COMPILER_OPTS "-DNO_PRINTING=1 ${COMPILER_OPTS}")
+  list(APPEND COMPILER_OPTS NO_PRINTING=1)
 endif()
 
 if(NO_READ_WRITE)
-  set(COMPILER_OPTS "-DNO_READ_WRITE=1 ${COMPILER_OPTS}")
+  list(APPEND COMPILER_OPTS NO_READ_WRITE=1)
 endif()
 
 if(USE_LAPACK)
-  set(COMPILER_OPTS "-DUSE_LAPACK ${COMPILER_OPTS}")
-  list(APPEND LAPACK_LINK_LIBRARIES "blas" "lapack")
+  list(APPEND COMPILER_OPTS USE_LAPACK)
+  find_package(LAPACK)
+  if(LAPACK_FOUND)
+    set(LAPACK_LINK_LIBRARIES ${LAPACK_LIBRARIES})
+  else()
+    # Fallback to linking by name (works on most Linux/Mac systems).
+    set(LAPACK_LINK_LIBRARIES blas lapack)
+  endif()
 endif()
 
 if(USE_OPENMP)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+  find_package(OpenMP)
+  if(OpenMP_C_FOUND)
+    # Link target used below via target_link_libraries.
+  else()
+    message(WARNING "OpenMP requested but not found by CMake")
+  endif()
 endif()
 
 if(USE_SPECTRAL_CONES)
-  set(COMPILER_OPTS "-DUSE_SPECTRAL_CONES ${COMPILER_OPTS}")
+  list(APPEND COMPILER_OPTS USE_SPECTRAL_CONES)
 endif()
 
+option(USE_SPECTRAL_TIMING_FLAG "Enable timing of spectral cone projections" OFF)
 if(USE_SPECTRAL_TIMING_FLAG)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSPECTRAL_TIMING_FLAG")
+  list(APPEND COMPILER_OPTS SPECTRAL_TIMING_FLAG)
 endif()
 
+option(USE_SPECTRAL_DEBUG "Enable spectral cone debug output" OFF)
 if(USE_SPECTRAL_DEBUG)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSPECTRAL_DEBUG")
+  list(APPEND COMPILER_OPTS SPECTRAL_DEBUG)
 endif()
 
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
@@ -247,7 +260,9 @@ target_include_directories(
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
 target_link_libraries(${${PROJECT_NAME}_DIRECT}
-                      PRIVATE m ${LAPACK_LINK_LIBRARIES})
+                      PRIVATE ${LAPACK_LINK_LIBRARIES}
+                              $<$<NOT:$<PLATFORM_ID:Windows>>:m>
+                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
 
 set_target_properties(
   ${${PROJECT_NAME}_DIRECT}
@@ -289,7 +304,9 @@ target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS}
                                                                -DINDIRECT)
 
 target_link_libraries(${${PROJECT_NAME}_INDIRECT}
-                      PUBLIC m ${LAPACK_LINK_LIBRARIES})
+                      PRIVATE $<$<NOT:$<PLATFORM_ID:Windows>>:m>
+                              ${LAPACK_LINK_LIBRARIES}
+                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
 
 set_target_properties(
   ${${PROJECT_NAME}_INDIRECT}
@@ -450,64 +467,30 @@ install_basic_package_files(
 
 # Tests
 if(BUILD_TESTING)
-  add_executable(run_tests_direct test/run_tests.c)
-  target_compile_definitions(run_tests_direct PRIVATE ${COMPILER_OPTS})
-  target_link_libraries(run_tests_direct PRIVATE scs::scsdir)
-  target_include_directories(
-    run_tests_direct
-    PRIVATE
-      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
-  )
-
-  add_test(
-    NAME run_tests_direct
-    COMMAND run_tests_direct
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-  add_executable(run_tests_indirect test/run_tests.c)
-  target_compile_definitions(run_tests_indirect PRIVATE ${COMPILER_OPTS})
-  target_link_libraries(run_tests_indirect PRIVATE scs::scsindir)
-  target_include_directories(
-    run_tests_indirect
-    PRIVATE
-      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
-  )
-
-  add_test(
-    NAME run_tests_indirect
-    COMMAND run_tests_indirect
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-  if(DEFINED ENV{MKLROOT})
-    add_executable(run_tests_mkl test/run_tests.c)
-    target_compile_definitions(run_tests_mkl PRIVATE ${COMPILER_OPTS})
-    target_link_libraries(run_tests_mkl PRIVATE scs::scsmkl)
+  # Helper to avoid repeating test boilerplate for each backend.
+  function(scs_add_test TEST_NAME LINK_TARGET)
+    add_executable(${TEST_NAME} test/run_tests.c)
+    target_compile_definitions(${TEST_NAME} PRIVATE ${COMPILER_OPTS})
+    target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET})
     target_include_directories(
-      run_tests_mkl
+      ${TEST_NAME}
       PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
     )
-
     add_test(
-      NAME run_tests_mkl
-      COMMAND run_tests_mkl
+      NAME ${TEST_NAME}
+      COMMAND ${TEST_NAME}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  endfunction()
+
+  scs_add_test(run_tests_direct scs::scsdir)
+  scs_add_test(run_tests_indirect scs::scsindir)
+
+  if(DEFINED ENV{MKLROOT})
+    scs_add_test(run_tests_mkl scs::scsmkl)
   endif()
 
   if(USE_CUDSS)
-    add_executable(run_tests_cudss test/run_tests.c)
-    target_compile_definitions(run_tests_cudss PRIVATE ${COMPILER_OPTS})
-    target_link_libraries(run_tests_cudss PRIVATE scs::scscudss)
-    target_include_directories(
-      run_tests_cudss
-      PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
-    )
-
-    add_test(
-      NAME run_tests_cudss
-      COMMAND run_tests_cudss
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    scs_add_test(run_tests_cudss scs::scscudss)
   endif()
-
 endif()
