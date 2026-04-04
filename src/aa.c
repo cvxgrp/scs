@@ -149,10 +149,6 @@ struct ACCEL_WORK {
   /* from previous iteration */
   aa_float *g_prev; /* x_prev - f(x_prev) */
 
-  aa_float *y; /* g - g_prev */
-  aa_float *s; /* x - x_prev */
-  aa_float *d; /* f - f_prev */
-
   aa_float *Y; /* matrix of stacked y values */
   aa_float *S; /* matrix of stacked s values */
   aa_float *D; /* matrix of stacked d values = (S-Y) */
@@ -368,10 +364,6 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
 
   a->g_prev = (aa_float *)calloc(a->dim, sizeof(aa_float));
 
-  a->y = (aa_float *)calloc(a->dim, sizeof(aa_float));
-  a->s = (aa_float *)calloc(a->dim, sizeof(aa_float));
-  a->d = (aa_float *)calloc(a->dim, sizeof(aa_float));
-
   a->Y = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
   a->S = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
   a->D = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
@@ -385,7 +377,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   } else {
     a->x_work = 0;
   }
-  if (!a->x || !a->f || !a->g || !a->g_prev || !a->y || !a->s || !a->d ||
+  if (!a->x || !a->f || !a->g || !a->g_prev ||
       !a->Y || !a->S || !a->D || !a->M || !a->work || !a->ipiv ||
       (relaxation != 1.0 && !a->x_work)) {
     printf("Failed to allocate memory for AA internals.\n");
@@ -471,9 +463,6 @@ void aa_finish(AaWork *a) {
     free(a->f);
     free(a->g);
     free(a->g_prev);
-    free(a->y);
-    free(a->s);
-    free(a->d);
     free(a->Y);
     free(a->S);
     free(a->D);
