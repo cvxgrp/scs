@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "glbopts.h"
 #include "minunit.h"
 #include "problem_utils.h"
@@ -190,6 +192,51 @@ static const char *test_normalize_off(void) {
 
   mu_assert("test_normalize_off: objectives differ between normalize=0 and 1",
             ABS(pobj0 - pobj1) < 1e-4);
+  return 0;
+}
+
+/*
+ * Test scs_version(): the public API function should return a non-NULL,
+ * non-empty version string.
+ */
+static const char *test_scs_version(void) {
+  const char *ver = scs_version();
+  mu_assert("scs_version: should not return NULL", ver != SCS_NULL);
+  mu_assert("scs_version: version string should be non-empty", ver[0] != '\0');
+  return 0;
+}
+
+/*
+ * Test time_limit_secs: setting an extremely small time limit (1e-10 s)
+ * guarantees the timer fires before any iteration completes.  The solver must
+ * exit with an inaccurate status code and append "(inaccurate - reached
+ * time_limit_secs)" to info.status.
+ */
+static const char *test_time_limit_secs(void) {
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
+  ScsInfo info = {0};
+  scs_int exitflag;
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->time_limit_secs = 1e-10; /* fires before first iteration */
+  stgs->max_iters = 100000;       /* large enough so max_iters is not the cause */
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  /* Must return an inaccurate code (not SCS_FAILED) */
+  mu_assert("test_time_limit_secs: should not return SCS_FAILED",
+            exitflag != SCS_FAILED);
+  mu_assert("test_time_limit_secs: expected inaccurate exit code",
+            exitflag == SCS_SOLVED_INACCURATE ||
+            exitflag == SCS_INFEASIBLE_INACCURATE ||
+            exitflag == SCS_UNBOUNDED_INACCURATE);
+  mu_assert("test_time_limit_secs: status should mention time_limit_secs",
+            strstr(info.status, "time_limit_secs") != SCS_NULL);
+
+  _OPTS_CLEANUP();
   return 0;
 }
 

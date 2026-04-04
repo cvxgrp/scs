@@ -306,3 +306,88 @@ static const char *test_soc_size5(void) {
   scs_free(d);
   return fail;
 }
+
+/*
+ * Multiple SOC cones test (qsize=2): exercises the loop over k->qsize in
+ * proj_cones.
+ *
+ * Problem: minimize t1 + t2
+ *          subject to (t1, x1, x2) in SOC_3    (t1 >= sqrt(x1^2+x2^2))
+ *                     (t2, x3)     in SOC_2    (t2 >= |x3|)
+ *                     x1=1, x2=1, x3=2
+ * Optimal: t1* = sqrt(2), t2* = 2, obj* = sqrt(2)+2 ~= 3.41421.
+ *
+ * Variables [t1, x1, x2, t2, x3] (n=5), m=8:
+ *   Rows 0-2 (z=3): x1=1, x2=1, x3=2
+ *   Rows 3-5 (SOC_3): (t1, x1, x2)
+ *   Rows 6-7 (SOC_2): (t2, x3)
+ *
+ * A cols (CSC):
+ *   col 0 (t1): row 3 -> -1
+ *   col 1 (x1): row 0 -> +1, row 4 -> -1
+ *   col 2 (x2): row 1 -> +1, row 5 -> -1
+ *   col 3 (t2): row 6 -> -1
+ *   col 4 (x3): row 2 -> +1, row 7 -> -1
+ */
+static const char *test_multi_soc(void) {
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsInfo info = {0};
+  scs_int exitflag;
+  scs_float perr, derr;
+  scs_int success;
+  const char *fail;
+
+  scs_float opt = 3.41421356237309504; /* sqrt(2) + 2 */
+
+  scs_float Axm[] = {-1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0};
+  scs_int Aim[]   = {3, 0, 4, 1, 5, 6, 2, 7};
+  scs_int Apm[]   = {0, 1, 3, 5, 6, 8};
+
+  scs_float bm[] = {1.0, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  scs_float cm[] = {1.0, 0.0, 0.0, 1.0, 0.0};
+
+  scs_int qm[] = {3, 2};
+  scs_int m = 8, n = 5;
+
+  d->m = m;
+  d->n = n;
+  d->b = bm;
+  d->c = cm;
+
+  d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  d->A->m = m;
+  d->A->n = n;
+  d->A->x = Axm;
+  d->A->i = Aim;
+  d->A->p = Apm;
+
+  k->z = 3;
+  k->qsize = 2;
+  k->q = qm;
+
+  scs_set_default_settings(stgs);
+  stgs->eps_abs = 1e-6;
+  stgs->eps_rel = 1e-6;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  perr = info.pobj - opt;
+  derr = info.dobj - opt;
+
+  scs_printf("primal obj error %4e\n", perr);
+  scs_printf("dual obj error %4e\n", derr);
+
+  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  mu_assert("test_multi_soc: SCS failed to produce SCS_SOLVED", success);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  SCS(free_sol)(sol);
+  scs_free(d->A);
+  scs_free(k);
+  scs_free(stgs);
+  scs_free(d);
+  return fail;
+}

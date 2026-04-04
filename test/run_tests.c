@@ -21,6 +21,7 @@
 #include "problems/test_power_cone.h"
 #include "problems/test_soc_sizes.h"
 #include "problems/test_solver_options.h"
+#include "problems/test_zero_cone.h"
 #include "problems/unbounded_lp.h"
 #include "problems/unbounded_socp.h"
 #include "problems/unbounded_tiny_qp.h"
@@ -113,11 +114,14 @@ static const char *all_tests(void) {
   mu_run_test(test_power_cone);
   mu_run_test(test_power_cone_p09);
   mu_run_test(test_dual_power_cone);
+  mu_run_test(test_multi_power);
   mu_run_test(test_power_cone_infeasible);
   mu_run_test(test_soc_size1);
   mu_run_test(test_soc_size2);
   mu_run_test(test_soc_size3);
   mu_run_test(test_soc_size5);
+  mu_run_test(test_multi_soc);
+  mu_run_test(test_zero_cone);
   mu_run_test(test_solved_inaccurate);
   mu_run_test(test_infeasible_inaccurate);
   mu_run_test(test_unbounded_inaccurate);
@@ -125,6 +129,8 @@ static const char *all_tests(void) {
   mu_run_test(test_no_acceleration);
   mu_run_test(test_type2_acceleration);
   mu_run_test(test_normalize_off);
+  mu_run_test(test_scs_version);
+  mu_run_test(test_time_limit_secs);
   mu_run_test(exp_design);
   mu_run_test(robust_pca);
   mu_run_test(graph_partitioning);
