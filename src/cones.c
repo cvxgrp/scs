@@ -235,9 +235,63 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
 #endif
 }
 
-/*
- * Helper Functions
- */
+void SCS(finish_cone)(ScsConeWork *c) {
+  if (!c)
+    return;
+#ifdef USE_LAPACK
+  if (c->Xs)
+    scs_free(c->Xs);
+  if (c->cXs)
+    scs_free(c->cXs);
+  if (c->Z)
+    scs_free(c->Z);
+  if (c->cZ)
+    scs_free(c->cZ);
+  if (c->e)
+    scs_free(c->e);
+  if (c->isuppz)
+    scs_free(c->isuppz);
+  if (c->work)
+    scs_free(c->work);
+  if (c->iwork)
+    scs_free(c->iwork);
+  if (c->cwork)
+    scs_free(c->cwork);
+  /* c->rwork is aliased to c->work in setup, no free needed */
+#endif
+  if (c->cone_boundaries)
+    scs_free(c->cone_boundaries);
+  if (c->r_box_inv)
+    scs_free(c->r_box_inv);
+  if (c->s)
+    scs_free(c->s);
+
+#ifdef USE_SPECTRAL_CONES
+  if (c->work_logdet)
+    scs_free(c->work_logdet);
+  if (c->saved_log_projs)
+    scs_free(c->saved_log_projs);
+  if (c->s_nuc)
+    scs_free(c->s_nuc);
+  if (c->u_nuc)
+    scs_free(c->u_nuc);
+  if (c->vt_nuc)
+    scs_free(c->vt_nuc);
+  if (c->work_nuc)
+    scs_free(c->work_nuc);
+  if (c->work_sum_of_largest)
+    scs_free(c->work_sum_of_largest);
+  if (c->log_cone_warmstarts)
+    scs_free(c->log_cone_warmstarts);
+  if (c->work_ell1)
+    scs_free(c->work_ell1);
+  if (c->work_ell1_proj)
+    scs_free(c->work_ell1_proj);
+#endif
+  scs_free(c);
+}
+
+/* ========================= Cone Utilities ============================ */
 
 static inline scs_int get_sd_cone_size(scs_int s) {
   return (s * (s + 1)) / 2;
@@ -323,8 +377,6 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
   c->cone_boundaries_len = total_cones + 1;
 }
 
-/* ================ Cone Validation / Initialization ================= */
-
 static scs_int get_full_cone_dims(const ScsCone *k) {
   scs_int i, dims = k->z + k->l + k->bsize;
   for (i = 0; i < k->qsize; ++i)
@@ -346,6 +398,89 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
 #endif
   return dims;
 }
+
+char *SCS(get_cone_header)(const ScsCone *k) {
+  char *tmp = (char *)scs_malloc(2048);
+  scs_int i, count;
+
+  sprintf(tmp, "cones: ");
+  if (k->z)
+    sprintf(tmp + strlen(tmp), "\t  z: primal zero / dual free vars: %li\n",
+            (long)k->z);
+  if (k->l)
+    sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
+  if (k->bsize)
+    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)k->bsize);
+
+  if (k->qsize) {
+    count = 0;
+    for (i = 0; i < k->qsize; ++i)
+      count += k->q[i];
+    sprintf(tmp + strlen(tmp), "\t  q: soc vars: %li, qsize: %li\n",
+            (long)count, (long)k->qsize);
+  }
+  if (k->ssize) {
+    count = 0;
+    for (i = 0; i < k->ssize; ++i)
+      count += get_sd_cone_size(k->s[i]);
+    sprintf(tmp + strlen(tmp), "\t  s: psd vars: %li, ssize: %li\n",
+            (long)count, (long)k->ssize);
+  }
+  if (k->cssize) {
+    count = 0;
+    for (i = 0; i < k->cssize; ++i)
+      count += get_csd_cone_size(k->cs[i]);
+    sprintf(tmp + strlen(tmp), "\t  cs: complex psd vars: %li, cssize: %li\n",
+            (long)count, (long)k->cssize);
+  }
+  if (k->ep || k->ed) {
+    sprintf(tmp + strlen(tmp), "\t  e: exp vars: %li, dual exp vars: %li\n",
+            (long)(3 * k->ep), (long)(3 * k->ed));
+  }
+  if (k->psize) {
+    sprintf(tmp + strlen(tmp), "\t  p: primal + dual power vars: %li\n",
+            (long)(3 * k->psize));
+  }
+#ifdef USE_SPECTRAL_CONES
+  scs_int ell1_vars, log_vars, nuc_vars, sl_vars;
+  log_vars = 0;
+  if (k->dsize && k->d) {
+    for (i = 0; i < k->dsize; i++) {
+      log_vars += get_sd_cone_size(k->d[i]) + 2;
+    }
+    sprintf(tmp + strlen(tmp), "\t  d: logdet vars: %li, dsize: %li\n",
+            (long)log_vars, (long)k->dsize);
+  }
+  nuc_vars = 0;
+  if (k->nucsize && k->nuc_m && k->nuc_n) {
+    for (i = 0; i < k->nucsize; i++) {
+      nuc_vars += k->nuc_m[i] * k->nuc_n[i] + 1;
+    }
+    sprintf(tmp + strlen(tmp), "\t  nuc: nuclear vars: %li, nucsize: %li\n",
+            (long)nuc_vars, (long)k->nucsize);
+  }
+  ell1_vars = 0;
+  if (k->ell1_size && k->ell1) {
+    for (i = 0; i < k->ell1_size; ++i) {
+      ell1_vars += k->ell1[i];
+    }
+    sprintf(tmp + strlen(tmp), "\t  ell1: ell1 vars: %li, ell1_size: %li\n",
+            (long)ell1_vars, (long)k->ell1_size);
+  }
+
+  sl_vars = 0;
+  if (k->sl_size && k->sl_n) {
+    for (i = 0; i < k->sl_size; ++i) {
+      sl_vars += get_sd_cone_size(k->sl_n[i]) + 1;
+    }
+    sprintf(tmp + strlen(tmp), "\t  sl: sl vars: %li, sl_size: %li\n",
+            (long)sl_vars, (long)k->sl_size);
+  }
+#endif
+  return tmp;
+}
+
+/* ========================== Validation =============================== */
 
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
   scs_int i;
@@ -479,145 +614,9 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
   return 0;
 }
 
-void SCS(finish_cone)(ScsConeWork *c) {
-  if (!c)
-    return;
-#ifdef USE_LAPACK
-  if (c->Xs)
-    scs_free(c->Xs);
-  if (c->cXs)
-    scs_free(c->cXs);
-  if (c->Z)
-    scs_free(c->Z);
-  if (c->cZ)
-    scs_free(c->cZ);
-  if (c->e)
-    scs_free(c->e);
-  if (c->isuppz)
-    scs_free(c->isuppz);
-  if (c->work)
-    scs_free(c->work);
-  if (c->iwork)
-    scs_free(c->iwork);
-  if (c->cwork)
-    scs_free(c->cwork);
-  /* c->rwork is aliased to c->work in setup, no free needed */
-#endif
-  if (c->cone_boundaries)
-    scs_free(c->cone_boundaries);
-  if (c->r_box_inv)
-    scs_free(c->r_box_inv);
-  if (c->s)
-    scs_free(c->s);
-
-#ifdef USE_SPECTRAL_CONES
-  if (c->work_logdet)
-    scs_free(c->work_logdet);
-  if (c->saved_log_projs)
-    scs_free(c->saved_log_projs);
-  if (c->s_nuc)
-    scs_free(c->s_nuc);
-  if (c->u_nuc)
-    scs_free(c->u_nuc);
-  if (c->vt_nuc)
-    scs_free(c->vt_nuc);
-  if (c->work_nuc)
-    scs_free(c->work_nuc);
-  if (c->work_sum_of_largest)
-    scs_free(c->work_sum_of_largest);
-  if (c->log_cone_warmstarts)
-    scs_free(c->log_cone_warmstarts);
-  if (c->work_ell1)
-    scs_free(c->work_ell1);
-  if (c->work_ell1_proj)
-    scs_free(c->work_ell1_proj);
-#endif
-  scs_free(c);
-}
-
-char *SCS(get_cone_header)(const ScsCone *k) {
-  char *tmp = (char *)scs_malloc(2048);
-  scs_int i, count;
-
-  sprintf(tmp, "cones: ");
-  if (k->z)
-    sprintf(tmp + strlen(tmp), "\t  z: primal zero / dual free vars: %li\n",
-            (long)k->z);
-  if (k->l)
-    sprintf(tmp + strlen(tmp), "\t  l: linear vars: %li\n", (long)k->l);
-  if (k->bsize)
-    sprintf(tmp + strlen(tmp), "\t  b: box cone vars: %li\n", (long)k->bsize);
-
-  if (k->qsize) {
-    count = 0;
-    for (i = 0; i < k->qsize; ++i)
-      count += k->q[i];
-    sprintf(tmp + strlen(tmp), "\t  q: soc vars: %li, qsize: %li\n",
-            (long)count, (long)k->qsize);
-  }
-  if (k->ssize) {
-    count = 0;
-    for (i = 0; i < k->ssize; ++i)
-      count += get_sd_cone_size(k->s[i]);
-    sprintf(tmp + strlen(tmp), "\t  s: psd vars: %li, ssize: %li\n",
-            (long)count, (long)k->ssize);
-  }
-  if (k->cssize) {
-    count = 0;
-    for (i = 0; i < k->cssize; ++i)
-      count += get_csd_cone_size(k->cs[i]);
-    sprintf(tmp + strlen(tmp), "\t  cs: complex psd vars: %li, cssize: %li\n",
-            (long)count, (long)k->cssize);
-  }
-  if (k->ep || k->ed) {
-    sprintf(tmp + strlen(tmp), "\t  e: exp vars: %li, dual exp vars: %li\n",
-            (long)(3 * k->ep), (long)(3 * k->ed));
-  }
-  if (k->psize) {
-    sprintf(tmp + strlen(tmp), "\t  p: primal + dual power vars: %li\n",
-            (long)(3 * k->psize));
-  }
-#ifdef USE_SPECTRAL_CONES
-  scs_int ell1_vars, log_vars, nuc_vars, sl_vars;
-  log_vars = 0;
-  if (k->dsize && k->d) {
-    for (i = 0; i < k->dsize; i++) {
-      log_vars += get_sd_cone_size(k->d[i]) + 2;
-    }
-    sprintf(tmp + strlen(tmp), "\t  d: logdet vars: %li, dsize: %li\n",
-            (long)log_vars, (long)k->dsize);
-  }
-  nuc_vars = 0;
-  if (k->nucsize && k->nuc_m && k->nuc_n) {
-    for (i = 0; i < k->nucsize; i++) {
-      nuc_vars += k->nuc_m[i] * k->nuc_n[i] + 1;
-    }
-    sprintf(tmp + strlen(tmp), "\t  nuc: nuclear vars: %li, nucsize: %li\n",
-            (long)nuc_vars, (long)k->nucsize);
-  }
-  ell1_vars = 0;
-  if (k->ell1_size && k->ell1) {
-    for (i = 0; i < k->ell1_size; ++i) {
-      ell1_vars += k->ell1[i];
-    }
-    sprintf(tmp + strlen(tmp), "\t  ell1: ell1 vars: %li, ell1_size: %li\n",
-            (long)ell1_vars, (long)k->ell1_size);
-  }
-
-  sl_vars = 0;
-  if (k->sl_size && k->sl_n) {
-    for (i = 0; i < k->sl_size; ++i) {
-      sl_vars += get_sd_cone_size(k->sl_n[i]) + 1;
-    }
-    sprintf(tmp + strlen(tmp), "\t  sl: sl vars: %li, sl_size: %li\n",
-            (long)sl_vars, (long)k->sl_size);
-  }
-#endif
-  return tmp;
-}
+/* ======================== Workspace Setup ============================= */
 
 /*
- * Workspace Setup
  * Consolidated setup for Real PSD, Complex PSD, and Spectral cones.
  */
 static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
@@ -844,11 +843,11 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 }
 #endif
 
+/* ====================== Cone Projections ============================= */
+
 /*
  * Projection: Real Semi-Definite Cone
  */
-/* ====================== Cone Projections =========================== */
-
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                        ScsConeWork *c) {
   if (n == 0)
@@ -1184,12 +1183,12 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   v[2] = (v[2] < 0) ? -r : r;
 }
 
+/* ================ Main Cone Projection Dispatch ====================== */
+
 /* Project onto the primal K cone in the paper */
 /* The r_y vector determines the INVERSE metric, ie, project under the
  * diag(r_y)^-1 norm.
  */
-/* ================= Main Cone Projection Dispatch ==================== */
-
 static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
                          scs_int normalize, scs_float *r_y) {
   scs_int i, count = 0, status = 0;
@@ -1346,9 +1345,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
   return 0;
 }
 
-/*
- * Public API
- */
+/* =========================== Public API ============================== */
 
 ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   ScsConeWork *c = (ScsConeWork *)scs_calloc(1, sizeof(ScsConeWork));

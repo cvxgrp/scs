@@ -1,27 +1,8 @@
+/* ======================== Includes / Types ======================== */
+
 #include "private.h"
 
-const char *scs_get_lin_sys_method(void) {
-  return "sparse-direct-amd-qdldl";
-}
-
-void scs_free_lin_sys_work(ScsLinSysWork *p) {
-  if (p) {
-    SCS(cs_spfree)(p->L);
-    SCS(cs_spfree)(p->kkt);
-    scs_free(p->diag_p);
-    scs_free(p->perm);
-    scs_free(p->Dinv);
-    scs_free(p->bp);
-    scs_free(p->diag_r_idxs);
-    scs_free(p->Lnz);
-    scs_free(p->iwork);
-    scs_free(p->etree);
-    scs_free(p->D);
-    scs_free(p->bwork);
-    scs_free(p->fwork);
-    scs_free(p);
-  }
-}
+/* ======================== LDL Factorization Internals ======================== */
 
 static scs_int _ldl_init(ScsMatrix *A, scs_int *P, scs_float **info) {
   *info = (scs_float *)scs_calloc(AMD_INFO, sizeof(scs_float));
@@ -103,6 +84,8 @@ static void _ldl_solve(scs_float *b, ScsMatrix *L, scs_float *Dinv, scs_int *P,
   QDLDL_solve(n, L->p, L->i, L->x, Dinv, bp);
   _ldl_permt(n, b, bp, P);
 }
+
+/* ======================== KKT Matrix Permutation ======================== */
 
 static scs_int *cs_pinv(scs_int const *p, scs_int n) {
   scs_int k, *pinv;
@@ -208,22 +191,10 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   return kkt_perm;
 }
 
-scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
-  scs_int i, ldl_status;
-  for (i = 0; i < p->n; ++i) {
-    /* top left is R_x + P, bottom right is -R_y */
-    p->kkt->x[p->diag_r_idxs[i]] = p->diag_p[i] + diag_r[i];
-  }
-  for (i = p->n; i < p->n + p->m; ++i) {
-    /* top left is R_x + P, bottom right is -R_y */
-    p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
-  }
-  ldl_status = ldl_factor(p, p->n);
-  if (ldl_status < 0) {
-    scs_printf("Error in LDL factorization when updating.\n");
-    return ldl_status;
-  }
-  return 0;
+/* ======================== Public API ======================== */
+
+const char *scs_get_lin_sys_method(void) {
+  return "sparse-direct-amd-qdldl";
 }
 
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
@@ -260,4 +231,41 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   /* Ax = b with solution stored in b */
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
+}
+
+scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
+  scs_int i, ldl_status;
+  for (i = 0; i < p->n; ++i) {
+    /* top left is R_x + P, bottom right is -R_y */
+    p->kkt->x[p->diag_r_idxs[i]] = p->diag_p[i] + diag_r[i];
+  }
+  for (i = p->n; i < p->n + p->m; ++i) {
+    /* top left is R_x + P, bottom right is -R_y */
+    p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
+  }
+  ldl_status = ldl_factor(p, p->n);
+  if (ldl_status < 0) {
+    scs_printf("Error in LDL factorization when updating.\n");
+    return ldl_status;
+  }
+  return 0;
+}
+
+void scs_free_lin_sys_work(ScsLinSysWork *p) {
+  if (p) {
+    SCS(cs_spfree)(p->L);
+    SCS(cs_spfree)(p->kkt);
+    scs_free(p->diag_p);
+    scs_free(p->perm);
+    scs_free(p->Dinv);
+    scs_free(p->bp);
+    scs_free(p->diag_r_idxs);
+    scs_free(p->Lnz);
+    scs_free(p->iwork);
+    scs_free(p->etree);
+    scs_free(p->D);
+    scs_free(p->bwork);
+    scs_free(p->fwork);
+    scs_free(p);
+  }
 }
