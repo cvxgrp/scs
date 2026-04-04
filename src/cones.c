@@ -496,6 +496,8 @@ void SCS(finish_cone)(ScsConeWork *c) {
 #endif
   if (c->cone_boundaries)
     scs_free(c->cone_boundaries);
+  if (c->r_box_inv)
+    scs_free(c->r_box_inv);
   if (c->s)
     scs_free(c->s);
 
@@ -1021,7 +1023,8 @@ static void normalize_box_cone(ScsCone *k, scs_float *D, scs_int bsize) {
 */
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
-                               scs_float t_wm, scs_float *r_box) {
+                               scs_float t_wm, scs_float *r_box,
+                               scs_float *r_box_inv) {
   scs_float *x = &(tx[1]);
   scs_float gt, ht, t = t_wm, t_prev, r;
   scs_float rho_t = 1.0;
@@ -1035,6 +1038,12 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   if (r_box) {
     rho_t = 1.0 / r_box[0];
     rho = &(r_box[1]);
+    /* Precompute reciprocals once, used across all Newton iterations */
+    if (r_box_inv) {
+      for (j = 0; j < bsize - 1; j++) {
+        r_box_inv[j] = 1.0 / rho[j];
+      }
+    }
   }
 
   /* Newton's method for t */
@@ -1044,7 +1053,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
     ht = rho_t;
 
     for (j = 0; j < bsize - 1; j++) {
-      r = rho ? 1.0 / rho[j] : 1.0;
+      r = (rho && r_box_inv) ? r_box_inv[j] : 1.0;
       if (x[j] > t * bu[j]) {
         gt += r * (t * bu[j] - x[j]) * bu[j];
         ht += r * bu[j] * bu[j];
@@ -1187,7 +1196,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     if (r_y)
       r_box = &(r_y[count]);
     c->box_t_warm_start = proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize,
-                                        c->box_t_warm_start, r_box);
+                                        c->box_t_warm_start, r_box,
+                                        c->r_box_inv);
     count += k->bsize;
   }
 
@@ -1331,6 +1341,12 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
 
   set_cone_boundaries(k, c);
   c->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
+
+  /* Preallocate workspace for box cone reciprocal metric */
+  if (k->bsize > 1) {
+    c->r_box_inv =
+        (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
+  }
 
   /* Set up workspaces if matrix cones are present */
   if ((k->ssize && k->s) || (k->cssize && k->cs)
