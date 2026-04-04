@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cones.h"
 #include "linalg.h"
 #include "scs.h"
 #include "scs_matrix.h"

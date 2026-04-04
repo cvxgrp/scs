@@ -1,11 +1,12 @@
 #include "cones.h"
-// #include "scs.h"
 #include "linalg.h"
 #include "scs_blas.h"
 #include "scs_types.h"
-#include "util.h" // just for timer
+#include "util.h"
 #include "util_spectral_cones.h"
-#include <stdlib.h> // qsort
+
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * Spectral matrix cone projections, from "Projection onto Spectral Matrix

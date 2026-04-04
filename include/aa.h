@@ -45,7 +45,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
  *    -  if (i > 0): aa_apply(x, x_prev, a)
  *    -  x_prev = x.copy()
  *    -  x = F(x)
- *    -  aa_safeguard(x, x_prev, a)  // optional but helps stability
+ *    -  aa_safeguard(x, x_prev, a)  (optional but helps stability)
  *
  *  Here F is the map we are trying to find the fixed point for. We put the AA
  *  before the map so that any properties of the map are maintained at the end.

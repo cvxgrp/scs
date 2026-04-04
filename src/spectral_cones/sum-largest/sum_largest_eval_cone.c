@@ -2,7 +2,9 @@
 #include "linalg.h"
 #include "scs_blas.h"
 #include "scs_types.h"
-#include "util.h" // just for timer
+#include "util.h"
+
+#include <string.h>
 
 /*
  * Spectral matrix cone projections, from "Projection onto Spectral Matrix
