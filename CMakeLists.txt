@@ -8,17 +8,10 @@ project(
   LANGUAGES C
   VERSION 3.2.11)
 
-# Defines the CMAKE_INSTALL_LIBDIR, CMAKE_INSTALL_BINDIR and many other useful
-# macros. See https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html
+# Standard GNU install directories (lib, bin, include, etc.)
 include(GNUInstallDirs)
 
-# Control where libraries and executables are placed during the build. With the
-# following settings executables are placed in <the top level of the build
-# tree>/bin and libraries/archives in <top level of the build tree>/lib. This is
-# particularly useful to run ctests on libraries built on Windows machines:
-# tests, which are executables, are placed in the same folders of dlls, which
-# are treated as executables as well, so that they can properly find the
-# libraries to run. This is a because of missing RPATH on Windows.
+# Place executables in bin/ and libraries in lib/ within the build tree.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
@@ -26,45 +19,22 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
-# To build shared libraries in Windows, we set CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS
-# to TRUE. See
-# https://cmake.org/cmake/help/v3.4/variable/CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS.html
-# See
-# https://blog.kitware.com/create-dlls-on-windows-without-declspec-using-new-cmake-export-all-feature/
+# Export all symbols on Windows (avoids __declspec(dllexport) annotations).
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-# Under MSVC, we set CMAKE_DEBUG_POSTFIX to "d" to add a trailing "d" to library
-# built in debug mode. In this Windows user can compile, build and install the
-# library in both Release and Debug configuration avoiding naming clashes in the
-# installation directories.
+# Append "d" suffix to debug libraries under MSVC to avoid name clashes.
 if(MSVC)
   set(CMAKE_DEBUG_POSTFIX "d")
 endif()
 
-# Build position independent code. Position Independent Code (PIC) is commonly
-# used for shared libraries so that the same shared library code can be loaded
-# in each program address space in a location where it will not overlap with any
-# other uses of such memory. In particular, this option avoids problems
-# occurring when a process wants to load more than one shared library at the
-# same virtual address. Since shared libraries cannot predict where other shared
-# libraries could be loaded, this is an unavoidable problem with the traditional
-# shared library concept. Generating position-independent code is often the
-# default behavior for most modern compilers. Moreover linking a static library
-# that is not built with PIC from a shared library will fail on some
-# compiler/architecture combinations. Further details on PIC can be found here:
-# https://eli.thegreenplace.net/2011/11/03/position-independent-code-pic-in-shared-libraries/
+# Position-independent code is required for shared libraries.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Disable C and C++ compiler extensions. C/CXX_EXTENSIONS are ON by default to
-# allow the compilers to use extended variants of the C/CXX language. However,
-# this could expose cross-platform bugs in user code or in the headers of
-# third-party dependencies and thus it is strongly suggested to turn extensions
-# off.
+# Disable compiler extensions for strict standard compliance.
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# Options Shared/Dynamic or Static library?
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 
 # Enable RPATH support for installed binaries and libraries
@@ -78,8 +48,7 @@ add_install_rpath_support(
   "${CMAKE_INSTALL_FULL_LIBDIR}"
   USE_LINK_PATH)
 
-# Encourage user to specify a build type (e.g. Release, Debug, etc.), otherwise
-# set it to Release.
+# Default to Release build type if none specified.
 if(NOT CMAKE_CONFIGURATION_TYPES)
   if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting build type to 'Release' as none was specified.")
@@ -87,54 +56,44 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
   endif()
 endif()
 
-# Build test related commands?
 option(BUILD_TESTING "Create tests using CMake" OFF)
 if(BUILD_TESTING)
   enable_testing()
 endif()
 
-# Add uninstall target After 'make install' can run 'make uninstall' to remove.
+# Support 'make uninstall' after install.
 include(AddUninstallTarget)
 
-# Some variables useful for sampling the building process. Note that the GPU
-# profile is not compiled.
+# Linear system solver directories.
 set(LINSYS linsys)
 set(DIRSRC ${LINSYS}/cpu/direct)
 set(INDIRSRC ${LINSYS}/cpu/indirect)
 set(EXTERNAL ${LINSYS}/external)
 
-# Options
-# ----------------------------------------------
-# Use floats instead of doubles
+# Build options
 option(SFLOAT "Use single precision floats rather than doubles" OFF)
 message(STATUS "Single precision floats (32bit) are ${SFLOAT}")
 
-# Use long integers for indexing
 option(DLONG "Use long integers (64bit) for indexing" OFF)
 message(STATUS "Long integers (64bit) are ${DLONG}")
 
-# Disable all printing
 option(NO_PRINTING "Disables all printing" OFF)
 message(STATUS "Printing is NOT ${NO_PRINTING}")
 
-# Disable all read/write functionality
 option(NO_READ_WRITE "Disables all read/write functionality" OFF)
 message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 
 option(USE_LAPACK "Whether to use BLAS/LAPACK" ON)
 message(STATUS "BLAS/LAPACK usage is ${USE_LAPACK}")
 
-# spectral cones
 option(USE_SPECTRAL_CONES "Whether to use spectral cones (requires LAPACK)" OFF)
 if(USE_SPECTRAL_CONES AND NOT USE_LAPACK)
   message(FATAL_ERROR "USE_SPECTRAL_CONES requires USE_LAPACK to be ON")
 endif()
 
-# Enable OpenMP support
 option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
-# Enable cuDSS support
 option(USE_CUDSS "Compile with cuDSS support" OFF)
 message(STATUS "cuDSS support is ${USE_CUDSS}")
 
@@ -173,7 +132,6 @@ if(USE_OPENMP)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 endif()
 
-# Flags for spectral cones.
 if(USE_SPECTRAL_CONES)
   set(COMPILER_OPTS "-DUSE_SPECTRAL_CONES ${COMPILER_OPTS}")
 endif()
@@ -189,8 +147,11 @@ endif()
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
 message(STATUS "CMAKE_C_FLAGS = ${CMAKE_C_FLAGS}")
 
-# TODO this is a hack that overwrites the scs_types.h file, we should find a way
-# to do this that doesn't pollute the master directory.
+# Generate scs_types.h from the template to match the configured type options.
+# This writes directly into include/ so the same header works for both CMake
+# and Make builds. The checked-in scs_types.h uses #ifdef guards and should
+# be restored (git checkout include/scs_types.h) after CMake builds if sharing
+# the source tree with Make.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/scs_types.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/include/scs_types.h NEWLINE_STYLE LF)
 
@@ -254,17 +215,12 @@ if(USE_SPECTRAL_CONES)
   list(APPEND ${PROJECT_NAME}_HDR ${SPECTRAL_HDR})
 endif()
 
-# get all the c file in amd/external
+# External vendored dependencies (AMD ordering, QDLDL factorization).
 file(GLOB ${PROJECT_NAME}_AMD_EXTERNAL_SRC ${EXTERNAL}/amd/*.c)
-
-# get all the h file in amd/external
 file(GLOB ${PROJECT_NAME}_AMD_EXTERNAL_HDR ${EXTERNAL}/amd/*.h)
-
-# get all the c file in amd/external
 file(GLOB ${PROJECT_NAME}_LDL_EXTERNAL_HDR ${EXTERNAL}/qdldl/*.h)
 
-# ##############################################################################
-# Direct method. Here we compile the direct method library.
+# Direct method library.
 set(${PROJECT_NAME}_DIRECT ${PROJECT_NAME}dir)
 add_library(
   ${${PROJECT_NAME}_DIRECT}
@@ -288,14 +244,11 @@ target_include_directories(
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
          "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
-# Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
-# The library depends on math (m) and (optionally) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_DIRECT}
                       PRIVATE m ${LAPACK_LINK_LIBRARIES})
 
-# Set some properties
 set_target_properties(
   ${${PROJECT_NAME}_DIRECT}
   PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
@@ -303,7 +256,6 @@ set_target_properties(
 
 add_library(scs::${${PROJECT_NAME}_DIRECT} ALIAS ${${PROJECT_NAME}_DIRECT})
 
-# Install the library
 install(
   TARGETS ${${PROJECT_NAME}_DIRECT}
   EXPORT ${PROJECT_NAME}
@@ -313,12 +265,9 @@ install(
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
 
-# Add the direct method to the set of the compiled targets
 set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_DIRECT})
 
-# ##############################################################################
-
-# Indirect method. Here we compile the indirect method library.
+# Indirect method library.
 set(${PROJECT_NAME}_INDIRECT ${PROJECT_NAME}indir)
 add_library(
   ${${PROJECT_NAME}_INDIRECT}
@@ -336,15 +285,12 @@ target_include_directories(
   PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
          "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
-# Compiled with blas and lapack, can solve LPs, SOCPs, SDPs, ECPs, and PCPs
 target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS}
                                                                -DINDIRECT)
 
-# The library depends on math (m) and (optionally) blas and lapack
 target_link_libraries(${${PROJECT_NAME}_INDIRECT}
                       PUBLIC m ${LAPACK_LINK_LIBRARIES})
 
-# Set some properties
 set_target_properties(
   ${${PROJECT_NAME}_INDIRECT}
   PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
@@ -352,7 +298,6 @@ set_target_properties(
 
 add_library(scs::${${PROJECT_NAME}_INDIRECT} ALIAS ${${PROJECT_NAME}_INDIRECT})
 
-# Install the library
 install(
   TARGETS ${${PROJECT_NAME}_INDIRECT}
   EXPORT ${PROJECT_NAME}
@@ -362,12 +307,9 @@ install(
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
 
-# Add the indirect method to the set of the compiled targets
 set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_INDIRECT})
 
-# ##############################################################################
-
-# If MKLROOT is defined, then we install the MKL version.
+# MKL Pardiso library (optional, requires MKLROOT environment variable).
 if(DEFINED ENV{MKLROOT})
 
   message(STATUS "MKLROOT set to $ENV{MKLROOT}")
@@ -375,7 +317,7 @@ if(DEFINED ENV{MKLROOT})
 
   set(MKLSRC ${LINSYS}/mkl/direct)
 
-  # Here we compile the direct MKL pardiso library
+  # MKL Pardiso direct solver library
   set(${PROJECT_NAME}_MKL ${PROJECT_NAME}mkl)
   add_library(
     ${${PROJECT_NAME}_MKL}
@@ -394,10 +336,8 @@ if(DEFINED ENV{MKLROOT})
            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
   target_compile_definitions(${${PROJECT_NAME}_MKL} PRIVATE ${COMPILER_OPTS})
-  # See:
+  # MKL flags for Linux + GCC + GNU threading. For other platforms, see:
   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
-  # This is probably not correct for other systems. TODO: make SCS-MKL work for
-  # all combinations of platform / compiler / threading options.
   target_link_options(${${PROJECT_NAME}_MKL} PRIVATE "LINKER:--no-as-needed")
   target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE $ENV{MKLROOT}/lib)
   target_link_libraries(
@@ -410,7 +350,6 @@ if(DEFINED ENV{MKLROOT})
             pthread
             dl)
 
-  # Set some properties
   set_target_properties(
     ${${PROJECT_NAME}_MKL}
     PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
@@ -418,7 +357,6 @@ if(DEFINED ENV{MKLROOT})
 
   add_library(scs::${${PROJECT_NAME}_MKL} ALIAS ${${PROJECT_NAME}_MKL})
 
-  # Install the library
   install(
     TARGETS ${${PROJECT_NAME}_MKL}
     EXPORT ${PROJECT_NAME}
@@ -428,7 +366,6 @@ if(DEFINED ENV{MKLROOT})
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
     PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
 
-  # Add the mkl method to the set of the compiled targets
   set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_MKL})
 else()
   message(
@@ -436,10 +373,7 @@ else()
   )
 endif()
 
-# ##############################################################################
-
-# If cuDSS is enabled and environment variables are set, install the cuDSS
-# version
+# cuDSS GPU solver library (optional, requires CUDA toolkit and cuDSS).
 if(USE_CUDSS)
   find_package(CUDAToolkit REQUIRED)
   find_package(cudss REQUIRED)
@@ -456,7 +390,6 @@ if(USE_CUDSS)
 
   set(CUDSSSRC ${LINSYS}/cudss/direct)
 
-  # Here we compile the direct cuDSS library
   set(${PROJECT_NAME}_CUDSS ${PROJECT_NAME}cudss)
   add_library(
     ${${PROJECT_NAME}_CUDSS} ${${PROJECT_NAME}_HDR} ${${PROJECT_NAME}_SRC}
@@ -480,7 +413,6 @@ if(USE_CUDSS)
     PRIVATE CUDA::cudart cudss $<$<NOT:$<PLATFORM_ID:Windows>>:m>
             ${LAPACK_LINK_LIBRARIES})
 
-  # Set some properties
   set_target_properties(
     ${${PROJECT_NAME}_CUDSS}
     PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
@@ -488,7 +420,6 @@ if(USE_CUDSS)
 
   add_library(scs::${${PROJECT_NAME}_CUDSS} ALIAS ${${PROJECT_NAME}_CUDSS})
 
-  # Install the library
   install(
     TARGETS ${${PROJECT_NAME}_CUDSS}
     EXPORT ${PROJECT_NAME}
@@ -498,12 +429,10 @@ if(USE_CUDSS)
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
     PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
 
-  # Add the cuDSS method to the set of the compiled targets
   set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_CUDSS})
 endif()
 
-# ##############################################################################
-# Install the .cmake file. It is possible to link scs o consumer libraries.
+# Install CMake package config files for find_package(scs) support.
 include(InstallBasicPackageFiles)
 install_basic_package_files(
   ${PROJECT_NAME}
@@ -519,7 +448,7 @@ install_basic_package_files(
   ${PROJECT_NAME}
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-# Add the tests
+# Tests
 if(BUILD_TESTING)
   add_executable(run_tests_direct test/run_tests.c)
   target_compile_definitions(run_tests_direct PRIVATE ${COMPILER_OPTS})

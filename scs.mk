@@ -4,10 +4,8 @@ else
 UNAME = $(shell uname -s)
 endif
 
-# CC = clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow
-# For cross-compiling with mingw use these.
-#CC = i686-w64-mingw32-gcc -m32
-#CC = x86_64-w64-mingw32-gcc-4.8
+# To enable sanitizers or cross-compile, override CC on the command line:
+#   make CC="clang -fsanitize=address,undefined"
 
 # For GPU must add cuda libs to path, e.g.
 # export DYLD_LIBRARY_PATH=/usr/local/cuda/lib:$DYLD_LIBRARY_PATH
@@ -49,7 +47,7 @@ SONAME = -soname
 endif
 endif
 
-#TODO: check if this works for all platforms:
+# Default CUDA path; override with CUDA_PATH=/path/to/cuda
 ifeq ($(CUDA_PATH), )
 CUDA_PATH=/usr/local/cuda
 CUCC = $(CUDA_PATH)/bin/nvcc
@@ -61,8 +59,8 @@ CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long #
 CUDSS_FLAGS = -I$(CUDSS_PATH)/include -I$(CUDA_PATH)/include
 CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss
 
-# Add on default CFLAGS (-march=native for speed; override with OPT="-O3" if
-# needed, e.g. for valgrind which may not support newer instruction sets)
+# Default optimization flags. Override with OPT="-O3 -g" for valgrind, which
+# may not support instruction sets enabled by -march=native.
 OPT ?= -O3 -march=native -fno-math-errno
 INCLUDE = -I. -Iinclude -Ilinsys
 override CFLAGS += -g -Wall -Wwrite-strings -pedantic -funroll-loops -Wstrict-prototypes $(INCLUDE) $(OPT) -Werror=incompatible-pointer-types
@@ -125,7 +123,7 @@ CUSTOM_FLAGS += -DNO_PRINTING=$(NO_PRINTING) # disable printing
 endif
 NO_READ_WRITE = 0
 ifneq ($(NO_READ_WRITE), 0)
-CUSTOM_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable printing
+CUSTOM_FLAGS += -DNO_READ_WRITE=$(NO_READ_WRITE) # disable read/write (file I/O)
 endif
 ### VERBOSITY LEVELS: 0,1,2,...
 VERBOSITY = 0
@@ -137,9 +135,8 @@ ifneq ($(COVERAGE), 0)
 CUSTOM_FLAGS += --coverage # generate test coverage data
 endif
 
-# See: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
-# This is probably not correct for other systems. TODO: update this
-# to work for all combinations of platform / compiler / threading options.
+# MKL linker flags for Linux + GCC + GNU threading. For other platforms, see:
+# https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
 MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl
 
 ############ OPENMP: ############

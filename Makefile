@@ -77,11 +77,11 @@ src/exp_cone.o	: src/exp_cone.c $(INC_FILES)
 src/aa.o	: src/aa.c $(INC_FILES)
 src/rw.o	: src/rw.c $(INC_FILES)
 src/linalg.o: src/linalg.c $(INC_FILES)
-src/ctrl.o  : src/ctrl.c $(INC_FILES)
+src/ctrlc.o : src/ctrlc.c $(INC_FILES)
 src/scs_version.o: src/scs_version.c $(INC_FILES)
 
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
-$(INDIRSRC)/indirect/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
+$(INDIRSRC)/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
 $(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
 	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
@@ -159,7 +159,7 @@ $(OUT)/run_tests_cudss: test/run_tests.c $(OUT)/libscscudss.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS) -Itest
 
 .PHONY: test_gpu
-test_gpu: $(OUT)/run_tests_gpu_indirect # $(OUT)/run_tests_gpu_direct
+test_gpu: $(OUT)/run_tests_gpu_indirect
 
 .PHONY: mkl
 mkl: mklroot $(OUT)/libscsmkl.a $(OUT)/libscsmkl.$(SHARED) $(OUT)/run_tests_mkl $(OUT)/demo_socp_mkl
@@ -168,38 +168,23 @@ ifndef MKLROOT
 	$(error MKLROOT is undefined, set MKLROOT to the MKL install location)
 endif
 
-.PHONY:
+.PHONY: cudss
 cudss: $(OUT)/libscscudss.a $(OUT)/libscscudss.$(SHARED) $(OUT)/run_tests_cudss $(OUT)/demo_socp_cudss
 
 $(OUT)/run_tests_gpu_indirect: test/run_tests.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS) -Itest
 
-# $(OUT)/run_tests_gpu_direct: test/run_tests.c $(OUT)/libscsgpudir.a
-# 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS) -Itest
-
 # REQUIRES GPU AND CUDA INSTALLED
-gpu: gpu_indirect # gpu_direct
+# Note: only the GPU indirect solver is currently implemented.
+gpu: gpu_indirect
 
-# gpu_direct: $(OUT)/demo_socp_gpu_direct $(OUT)/libscsgpudir.$(SHARED) $(OUT)/libscsgpudir.a $(OUT)/run_from_file_gpu_direct
 gpu_indirect: $(OUT)/demo_socp_gpu_indirect $(OUT)/libscsgpuindir.$(SHARED) $(OUT)/libscsgpuindir.a $(OUT)/run_from_file_gpu_indirect
 
 $(LINSYS)/gpu/gpu.o: $(LINSYS)/gpu/gpu.c
 	$(CC) -c -o $@ $^ $(CUDAFLAGS)
 
-# $(GPUDIR)/private.o: $(GPUDIR)/private.c
-# 	$(CUCC) -c -o $(GPUDIR)/private.o $^ $(CUDAFLAGS)
-
 $(GPUINDIR)/private.o: $(GPUINDIR)/private.c
 	$(CC) -c -o $@ $^ $(CUDAFLAGS)
-
-# $(OUT)/libscsgpudir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/scs_matrix.o $(LINSYS)/gpu/gpu.o
-#	 mkdir -p $(OUT)
-# 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS)
-
-# $(OUT)/libscsgpudir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUDIR)/private.o $(AMD_OBJS) $(LINSYS)/scs_matrix.o $(LINSYS)/gpu/gpu.o
-#  	mkdir -p $(OUT)
-# 	$(ARCHIVE) $@ $^
-# 	- $(RANLIB) $@
 
 $(OUT)/libscsgpuindir.$(SHARED): $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o $(LINSYS)/gpu/gpu.o
 	mkdir -p $(OUT)
@@ -209,9 +194,6 @@ $(OUT)/libscsgpuindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(GPUINDIR)/private.o $(L
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
-
-# $(OUT)/demo_socp_gpu_direct: test/random_socp_prob.c $(OUT)/libscsgpudir.a
-# 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS)
 
 $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS)
@@ -230,7 +212,7 @@ purge: clean
 INSTALL_INC_FILES = $(INC_FILES)
 
 INSTALL_TARGETS = $(OUT)/libscsdir.a $(OUT)/libscsindir.a $(OUT)/libscsdir.$(SHARED) $(OUT)/libscsindir.$(SHARED)
-INSTALL_GPU_TARGETS = $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED) # $(OUT)/libscsgpudir.a $(OUT)/libscsgpudir.$(SHARED)
+INSTALL_GPU_TARGETS = $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED)
 
 INSTALL_INC_DIR = $(DESTDIR)$(PREFIX)/include/scs/
 INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/lib/
@@ -244,5 +226,5 @@ install_gpu: $(INSTALL_INC_FILES) $(INSTALL_GPU_TARGETS)
 	$(INSTALL) -d $(INSTALL_INC_DIR) $(INSTALL_LIB_DIR)
 	$(INSTALL) -m 644 $(INSTALL_INC_FILES) $(INSTALL_INC_DIR)
 	$(INSTALL) -m 644 $(INSTALL_GPU_TARGETS) $(INSTALL_LIB_DIR)
-direct:$(OUT)/libscsdir.$(SHARED) $(OUT)/demo_socp_direct $(OUT)/run_from_file_direct $(OUT)/run_tests_direct
-indirect:$(OUT)/libscsindir.$(SHARED) $(OUT)/demo_socp_indirect $(OUT)/run_from_file_indirect $(OUT)/run_tests_indirect
+direct: $(OUT)/libscsdir.$(SHARED) $(OUT)/demo_socp_direct $(OUT)/run_from_file_direct $(OUT)/run_tests_direct
+indirect: $(OUT)/libscsindir.$(SHARED) $(OUT)/demo_socp_indirect $(OUT)/run_from_file_indirect $(OUT)/run_tests_indirect
