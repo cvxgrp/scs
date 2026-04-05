@@ -110,11 +110,9 @@ diagonal matrix <span class="math notranslate nohighlight">\(R\)</span> instead 
 matrix <span class="math notranslate nohighlight">\(R\)</span> can be selected to provide better convergence in practice.  The
 algorithm then becomes:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
-\tilde u^{k+1} &amp;= (R + \mathcal{Q})^{-1} R w^k \\
+\[\begin{split}\tilde u^{k+1} &amp;= (R + \mathcal{Q})^{-1} R w^k \\
 u^{k+1} &amp;= (R + N_{\mathcal{C}_+})^{-1} R (2 \tilde u^{k+1} - w^k) \\
-w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\
-\end{aligned}\end{split}\]</div>
+w^{k+1} &amp;= w^k + u^{k+1} - \tilde u^{k+1} \\\end{split}\]</div>
 <p>which yields <span class="math notranslate nohighlight">\(w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)\)</span> where
 <span class="math notranslate nohighlight">\(0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)\)</span>.</p>
 <p>This changes the first two steps of the procedure. The <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear projection</span></a> and the cone projection (explained next).</p>
@@ -126,11 +124,9 @@ cone are constant within that cone (with the box cone being a slight exception
 to this). This means that R does not affect the cone projection in any way,
 since for sub-cone <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
- &amp;x = (r I + \partial I_{\mathcal{K}})^{-1} (r y) \\
- \Rightarrow \quad  &amp;  0 \in r(x - y) + \partial I_{\mathcal{K}}(x) \\
- \Rightarrow \quad &amp; x = \mbox{argmin}_z || z - y ||^2 \mbox{ s.t. } z \in \mathcal{K}.
- \end{aligned}\end{split}\]</div>
+\[\begin{split}&amp;x = (r I + \partial I_{\mathcal{K}})^{-1} (r y) \\
+\Rightarrow \quad  &amp;  0 \in r(x - y) + \partial I_{\mathcal{K}}(x) \\
+\Rightarrow \quad &amp; x = \mbox{argmin}_z || z - y ||^2 \mbox{ s.t. } z \in \mathcal{K}.\end{split}\]</div>
 <p>In other words, <span class="math notranslate nohighlight">\(R\)</span> is selected such that</p>
 <div class="math notranslate nohighlight">
 \[(R +  \partial I_{\mathcal{C}_+})^{-1} R = (I +  \partial I_{\mathcal{C}_+})^{-1}\]</div>
@@ -194,13 +190,11 @@ across them. Note that the two components of the decomposition are
 \[v^{k+1} = R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \rightarrow \mathcal{Q}(u^\star),\]</div>
 <p>and we have</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
-v^{k+1} &amp;= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
+\[\begin{split}v^{k+1} &amp;= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
         &amp;= R( \Pi^R_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
         &amp;= R( R^{-1} \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1}))) \\
         &amp;= \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1})) \\
-        &amp;\in \mathcal{C}^*_+
-\end{aligned}\end{split}\]</div>
+        &amp;\in \mathcal{C}^*_+\end{split}\]</div>
 <p>by Moreau, and finally note that <span class="math notranslate nohighlight">\(v^k \perp
 u^k\)</span> from the fact that the Moreau decomposition is <span class="math notranslate nohighlight">\(R\)</span>-orthogonal.</p>
 </section>

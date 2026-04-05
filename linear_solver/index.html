@@ -158,10 +158,8 @@ though it only offers limited support for non-Intel CPUs.</p>
 <p>The indirect method solves the above linear system approximately with a
 ‘matrix-free’ method. To do this it first reduces the system to solving</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
-(R_x + P + A^\top R_y^{-1} A) x &amp; = z^k_x + A^\top R_y^{-1} z^k_y \\
-                          y &amp; = R_y^{-1}(A x - z^k_y).
-\end{aligned}\end{split}\]</div>
+\[\begin{split}(R_x + P + A^\top R_y^{-1} A) x &amp; = z^k_x + A^\top R_y^{-1} z^k_y \\
+                          y &amp; = R_y^{-1}(A x - z^k_y).\end{split}\]</div>
 <p>then solves the positive definite system using using <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">conjugate gradients</a>.  Each iteration of
 CG requires one multiply each of sparse matrices <span class="math notranslate nohighlight">\(P, A, A^\top\)</span>.  The
 system is solved up to some tolerance, which is tuned to ensure that the overall

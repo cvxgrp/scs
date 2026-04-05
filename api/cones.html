@@ -254,10 +254,8 @@ where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> opera
 \[\text{vec}(S) = (S_{11}, \sqrt{2} S_{21}, \ldots, \sqrt{2} S_{k1}, S_{22}, \sqrt{2}S_{32}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k,k-1}, S_{kk}) \in \mathbf{R}^{k(k+1)/2},\]</div>
 <p>whereas in the complex case the result is</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
-\text{cvec}(S) ={}&amp; (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\
-&amp; \sqrt{2}\Re(S_{32}), \sqrt{2}\Im(S_{32}), \dots, S_{k-1,k-1}, \sqrt{2}\Re(S_{k,k-1}), \sqrt{2}\Im(S_{k,k-1}), S_{kk}) \in \mathbf{R}^{k^2}.
-\end{aligned}\end{split}\]</div>
+\[\begin{split}\text{cvec}(S) ={} &amp; (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\
+&amp; \sqrt{2}\Re(S_{32}), \sqrt{2}\Im(S_{32}), \dots, S_{k-1,k-1}, \sqrt{2}\Re(S_{k,k-1}), \sqrt{2}\Im(S_{k,k-1}), S_{kk}) \in \mathbf{R}^{k^2}.\end{split}\]</div>
 <p>To recover the matrix solution this operation must be inverted on the components
 of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
 off-diagonal entries must be scaled by <span class="math notranslate nohighlight">\(1/\sqrt{2}\)</span> and the upper triangular
@@ -284,10 +282,8 @@ Explicitly, in the real case the inverse operation takes vector <span class="mat
 \in \mathbf{C}^{k \times k},\end{split}\]</div>
 <p>So the cone definitions that SCS uses are</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
- \mathcal{S}_\mathbf{R}^k &amp;= \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\\
- \mathcal{S}_\mathbf{C}^k &amp;= \{ \text{cvec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k^2  } \mid \text{cmat}(s) \succeq 0 \}.
-\end{aligned}\end{split}\]</div>
+\[\begin{split}\mathcal{S}_\mathbf{R}^k &amp;= \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\\
+\mathcal{S}_\mathbf{C}^k &amp;= \{ \text{cvec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k^2  } \mid \text{cmat}(s) \succeq 0 \}.\end{split}\]</div>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h3>
 <p>For a concrete example in Python see <a class="reference internal" href="../examples/python/mat_completion.html#py-mat-completion"><span class="std std-ref">Low-Rank Matrix Completion</span></a>.
@@ -299,12 +295,10 @@ variables <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</spa
 \times k}\)</span> are symmetric. We can write this in the canonical form over a new
 variable <span class="math notranslate nohighlight">\(s \in \mathcal{S}_+^k\)</span>:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{aligned}
-s &amp;= \text{vec}(S)\\
+\[\begin{split}s &amp;= \text{vec}(S)\\
   &amp;= \text{vec}(B - \sum_{i=1}^n \mathcal{A}_i x_i) \\
   &amp;= \text{vec}(B) - \sum_{i=1}^n \text{vec}(\mathcal{A}_i) x_i \\
-  &amp;= b - Ax
-\end{aligned}\end{split}\]</div>
+  &amp;= b - Ax\end{split}\]</div>
 <p>using the fact that <span class="math notranslate nohighlight">\(\text{vec}\)</span> is linear, where <span class="math notranslate nohighlight">\(b =
 \text{vec}(B)\)</span> and</p>
 <div class="math notranslate nohighlight">
