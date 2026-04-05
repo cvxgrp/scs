@@ -54,8 +54,31 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
      - :code:`p` array :math:`p\in[-1,1]` powers with :code:`psize` elements, negative entries correspond to dual power cone (sign is flipped).
      - :math:`3 \times`:code:`psize` (total for primal and dual power cone)
 
-The following cones are available when compiled with :code:`USE_SPECTRAL_CONES=1`
-(requires :code:`USE_LAPACK=1`). See :ref:`compile_flags` for details.
+.. _spectral_cones:
+
+Spectral cones (experimental)
+-----------------------------
+
+.. note::
+
+   Spectral cones are **experimental** and must be explicitly enabled at compile
+   time by setting :code:`USE_SPECTRAL_CONES=1` (which also requires
+   :code:`USE_LAPACK=1`). For example:
+
+   .. code-block:: bash
+
+      make USE_LAPACK=1 USE_SPECTRAL_CONES=1
+
+   or with CMake:
+
+   .. code-block:: bash
+
+      cmake -DUSE_LAPACK=ON -DUSE_SPECTRAL_CONES=ON ..
+
+   The API and behavior of these cones may change in future releases.
+   See :ref:`compile_flags` for more details.
+
+The following cones are available when spectral cone support is enabled.
 
 .. list-table::
    :header-rows: 1
