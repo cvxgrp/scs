@@ -19,11 +19,9 @@ of the quadratic cone program. The high level algorithm is as follows,
 from an initial :math:`w^0` for :math:`k=0,1,\ldots` do
 
 .. math::
-  \begin{aligned}
   \tilde u^{k+1} &= (I + \mathcal{Q})^{-1} w^k\\
   u^{k+1} &= \Pi_{\mathcal{C}_+}(2\tilde u^{k+1} - w^k)\\
   w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1}
-  \end{aligned}
 
 which yields :math:`w^k \rightarrow u^\star + \mathcal{Q}(u^\star)` where
 :math:`0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)`, and :math:`u^k
