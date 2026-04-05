@@ -78,5 +78,5 @@ the following fields.
      - Total time (milliseconds) spent in the :ref:`cone projection <cones>`
    * - :code:`accel_time`
      - :code:`scs_float`
-     - Total time (milliseconds) spent in the :ref:`aceleration routine <acceleration>`
+     - Total time (milliseconds) spent in the :ref:`acceleration routine <acceleration>`
 

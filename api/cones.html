@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Cones</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#spectral-cones-experimental">Spectral cones (experimental)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#semidefinite-cones">Semidefinite cones</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
 </ul>
@@ -162,6 +163,55 @@
 </tr>
 </tbody>
 </table>
+<section id="spectral-cones-experimental">
+<span id="spectral-cones"></span><h2>Spectral cones (experimental)<a class="headerlink" href="#spectral-cones-experimental" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Spectral cones are <strong>experimental</strong> and must be explicitly enabled at compile
+time by setting <code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES=1</span></code> (which also requires
+<code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>). For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span><span class="nv">USE_LAPACK</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">USE_SPECTRAL_CONES</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>or with CMake:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DUSE_LAPACK<span class="o">=</span>ON<span class="w"> </span>-DUSE_SPECTRAL_CONES<span class="o">=</span>ON<span class="w"> </span>..
+</pre></div>
+</div>
+<p>The API and behavior of these cones may change in future releases.
+See <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">Compile flags</span></a> for more details.</p>
+</div>
+<p>The following cones are available when spectral cone support is enabled.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Entries in <a class="reference internal" href="c.html#scscone"><span class="std std-ref">ScsCone</span></a></p></th>
+<th class="head"><p>Number of rows in <span class="math notranslate nohighlight">\(A, b\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Log-determinant cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, v, X) \mid t \leq v \log\det(X/v),\; v &gt; 0,\; X \succ 0 \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">d</span></code> array of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">dsize</span></code> elements, each <span class="math notranslate nohighlight">\(d_i = n_i\)</span> where <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{n_i \times n_i}\)</span>.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{dsize}} \frac{d_i(d_i+1)}{2} + 2\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Nuclear norm cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, X) \mid \|X\|_* \leq t \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">nuc_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">nuc_n</span></code> arrays of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">nucsize</span></code> elements. <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{m_i \times n_i}\)</span>.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{nucsize}} m_i n_i + 1\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\ell_1\)</span> norm cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, x) \mid \|x\|_1 \leq t \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">ell1</span></code> array of vector dimensions with <code class="code docutils literal notranslate"><span class="pre">ell1_size</span></code> elements.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{ell1\_size}} \text{ell1}_i + 1\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Sum-of-largest-eigenvalues cone</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, X) \mid \sum_{i=1}^{k} \lambda_i(X) \leq t \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">sl_n</span></code>, <code class="code docutils literal notranslate"><span class="pre">sl_k</span></code> arrays of matrix dimensions and <span class="math notranslate nohighlight">\(k\)</span> values with <code class="code docutils literal notranslate"><span class="pre">sl_size</span></code> elements.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{sl\_size}} \frac{n_i(n_i+1)}{2} + 1\)</span></p></td>
+</tr>
+</tbody>
+</table>
 <p><strong>Note</strong>:
 The rows of the data matrix <span class="math notranslate nohighlight">\(A\)</span> correspond to the cones in
 <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. The rows of <span class="math notranslate nohighlight">\(A\)</span> <strong>must be in the order of the cones
@@ -174,6 +224,7 @@ as <span class="math notranslate nohighlight">\(\{(t, s) \in \mathbf{R} \times \
 <code class="code docutils literal notranslate"><span class="pre">t</span></code> comes first then <code class="code docutils literal notranslate"><span class="pre">s</span></code>. Similarly, the exponential cone is
 defined as <span class="math notranslate nohighlight">\(\{   (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y&gt;0  \}\)</span>
 and therefore the variable vector is stacked as <code class="code docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">z]</span></code>, etc.</p>
+</section>
 <section id="semidefinite-cones">
 <span id="sdcone"></span><h2>Semidefinite cones<a class="headerlink" href="#semidefinite-cones" title="Link to this heading"></a></h2>
 <p>The real positive semidefinite cone of matrices is the set</p>

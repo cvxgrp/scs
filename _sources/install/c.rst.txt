@@ -49,7 +49,7 @@ project
 
 .. code:: bash
 
-  cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -BUILD_SHARED_LIBS=OFF ../
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DBUILD_SHARED_LIBS=OFF ../
   make
 
 The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
@@ -82,7 +82,7 @@ with cuDSS support using CMake. First, ensure that the :code:`CUDA_PATH` and
   cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DUSE_CUDSS=ON -DDLONG=OFF ../
   make
 
-Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
+Currently cuDSS only supports 32 bit integers (for sparse matrix indices) so
 :code:`DDLONG=OFF` is mandatory.
 This will build and install the cuDSS linear solver with target
 :code:`scs::scscudss`.
@@ -173,7 +173,7 @@ have CUDA toolkit, the :code:`nvcc` compiler, and `cuDSS
   make cudss DLONG=0
   out/run_tests_cudss
 
-Currently cuDSS only supports 32 bit integers (for sparse matrix idicies) so
+Currently cuDSS only supports 32 bit integers (for sparse matrix indices) so
 :code:`DLONG=0` is mandatory (see `the docs of cuDSS CSR matrix
 <https://docs.nvidia.com/cuda/cudss/functions.html#cudssmatrixcreatecsr>`_).
 

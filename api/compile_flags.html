@@ -149,18 +149,8 @@ executing, e.g., <code class="code docutils literal notranslate"><span class="pr
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">COPYAMATRIX</span></code></p></td>
-<td><p>Make a copy of A in memory</p></td>
-<td><p>True/False</p></td>
-<td><p>1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">GPU_TRANSPOSE_MAT</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">GPU_TRANSPOSE_MAT</span></code></p></td>
 <td><p>If on GPU store A transpose in memory</p></td>
-<td><p>True/False</p></td>
-<td><p>1</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">VALIDATE</span></code></p></td>
-<td><p>Whether to perform problem validation or not</p></td>
 <td><p>True/False</p></td>
 <td><p>1</p></td>
 </tr>
@@ -179,32 +169,37 @@ executing, e.g., <code class="code docutils literal notranslate"><span class="pr
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES</span></code></p></td>
+<td><p>Enable spectral cone support (log-determinant, nuclear norm, <span class="math notranslate nohighlight">\(\ell_1\)</span> norm, sum-of-largest-eigenvalues). Requires <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>.</p></td>
+<td><p>True/False</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code></p></td>
 <td><p>The BLAS library is 64 bits</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code></p></td>
 <td><p>The BLAS library has no function name suffix</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code></p></td>
 <td><p>The BLAS library uses this suffix</p></td>
 <td><p>String</p></td>
 <td><p>‘_’</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code></p></td>
 <td><p>If compiling for use in MATLAB</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code></p></td>
 <td><p>If compiling for use in python</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USING_R</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USING_R</span></code></p></td>
 <td><p>If compiling for use in R</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>

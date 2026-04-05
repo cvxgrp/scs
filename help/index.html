@@ -18,6 +18,7 @@
       <script src="../_static/documentation_options.js?v=537ea5e8"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,7 +54,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Help</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Help</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scs-returns-solved-inaccurate">SCS returns <code class="docutils literal notranslate"><span class="pre">solved_inaccurate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scs-returns-infeasible-or-unbounded-unexpectedly">SCS returns <code class="docutils literal notranslate"><span class="pre">infeasible</span></code> or <code class="docutils literal notranslate"><span class="pre">unbounded</span></code> unexpectedly</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scs-is-very-slow">SCS is very slow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#numerical-warnings-or-nan-in-output">Numerical warnings or NaN in output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complementary-slackness-warning">Complementary slackness warning</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
 
@@ -84,13 +95,91 @@
   <section id="help">
 <span id="id1"></span><h1>Help<a class="headerlink" href="#help" title="Link to this heading"></a></h1>
 <p>Currently the easiest way to get support is to file a <a class="reference external" href="https://github.com/cvxgrp/scs/issues">GitHub issue</a> or to <a class="reference external" href="mailto:splitting&#46;conic&#46;solver&#37;&#52;&#48;gmail&#46;com">email us</a> (which may be slower).</p>
-<p>If you are have a problem that SCS struggles to solve you can set the
+<p>If you have a problem that SCS struggles to solve you can set the
 <code class="code docutils literal notranslate"><span class="pre">write_data_filename</span></code> field in the <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">settings</span></a> and SCS will
 dump a file containing the problem data to disk under that filename. Zip the
 file and <a class="reference external" href="mailto:splitting&#46;conic&#46;solver&#37;&#52;&#48;gmail&#46;com">email it to us</a> or attach
 it to a GitHub issue. This makes it much easier for us to reproduce the problem.</p>
 <p>A common cause of issues is not linking <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS/LAPACK libraries</span></a> correctly. If you are having this issue please search for
 resources on installing and linking these libraries first. You can try <a class="reference external" href="https://www.openblas.net/">OpenBLAS</a> if you need a BLAS library.</p>
+<section id="troubleshooting">
+<span id="id2"></span><h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="scs-returns-solved-inaccurate">
+<h3>SCS returns <code class="docutils literal notranslate"><span class="pre">solved_inaccurate</span></code><a class="headerlink" href="#scs-returns-solved-inaccurate" title="Link to this heading"></a></h3>
+<p>This means SCS ran out of iterations (or hit the time limit) before reaching
+the desired accuracy. The returned solution may still be usable, but the
+residuals exceed the requested tolerances. Try:</p>
+<ul class="simple">
+<li><p><strong>Increase</strong> <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> (default 100,000). Some problems simply need
+more iterations to converge.</p></li>
+<li><p><strong>Loosen tolerances</strong>: increase <code class="code docutils literal notranslate"><span class="pre">eps_abs</span></code> and <code class="code docutils literal notranslate"><span class="pre">eps_rel</span></code> if you
+don’t need high accuracy.</p></li>
+<li><p><strong>Enable normalization</strong>: set <code class="code docutils literal notranslate"><span class="pre">normalize=1</span></code> (the default). This
+equilibrates the problem data and generally improves convergence. If you
+turned it off, try turning it back on.</p></li>
+<li><p><strong>Try adaptive scaling</strong>: set <code class="code docutils literal notranslate"><span class="pre">adaptive_scale=1</span></code> (the default). This
+automatically tunes the internal <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter during the solve.</p></li>
+</ul>
+</section>
+<section id="scs-returns-infeasible-or-unbounded-unexpectedly">
+<h3>SCS returns <code class="docutils literal notranslate"><span class="pre">infeasible</span></code> or <code class="docutils literal notranslate"><span class="pre">unbounded</span></code> unexpectedly<a class="headerlink" href="#scs-returns-infeasible-or-unbounded-unexpectedly" title="Link to this heading"></a></h3>
+<p>If you believe your problem is feasible and bounded but SCS disagrees:</p>
+<ul class="simple">
+<li><p><strong>Check cone ordering</strong>: the rows of <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(b\)</span> <strong>must</strong> follow
+the cone order listed in <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">Cones</span></a>. This is the most common source of
+incorrect results.</p></li>
+<li><p><strong>Check your data</strong>: verify that <span class="math notranslate nohighlight">\(A\)</span>, <span class="math notranslate nohighlight">\(P\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, <span class="math notranslate nohighlight">\(c\)</span>
+are correct. A single wrong sign or transposed matrix can make a feasible
+problem appear infeasible.</p></li>
+<li><p><strong>Tighten the infeasibility tolerance</strong>: decrease <code class="code docutils literal notranslate"><span class="pre">eps_infeas</span></code> (default
+<code class="docutils literal notranslate"><span class="pre">1e-7</span></code>). SCS may be declaring infeasibility prematurely on a
+nearly-infeasible problem.</p></li>
+<li><p><strong>Dump the problem data</strong>: set <code class="code docutils literal notranslate"><span class="pre">write_data_filename</span></code> to save the exact
+data SCS sees, then inspect it.</p></li>
+</ul>
+</section>
+<section id="scs-is-very-slow">
+<h3>SCS is very slow<a class="headerlink" href="#scs-is-very-slow" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Try the indirect solver</strong> for large, sparse problems. The direct solver
+factorizes the KKT matrix, which can be expensive for large problems. The
+indirect (conjugate gradient) solver avoids this factorization. See
+<a class="reference internal" href="../linear_solver/index.html#indirect"><span class="std std-ref">Sparse indirect</span></a>.</p></li>
+<li><p><strong>Try MKL Pardiso</strong> if you have Intel MKL installed. It offers a parallel
+direct solver that can be significantly faster than the default QDLDL
+for large problems. See <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a>.</p></li>
+<li><p><strong>Check problem scaling</strong>: if the data has entries that vary by many orders
+of magnitude, SCS will struggle. Try to rescale your problem so that the
+entries of <span class="math notranslate nohighlight">\(A\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, and <span class="math notranslate nohighlight">\(c\)</span> are roughly of order 1.
+Setting <code class="code docutils literal notranslate"><span class="pre">normalize=1</span></code> helps but cannot fix extreme scaling.</p></li>
+<li><p><strong>Reduce logging overhead</strong>: if <code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code> is set, SCS
+computes full residuals at every iteration, which is expensive. Remove it
+unless you need per-iteration logging.</p></li>
+</ul>
+</section>
+<section id="numerical-warnings-or-nan-in-output">
+<h3>Numerical warnings or NaN in output<a class="headerlink" href="#numerical-warnings-or-nan-in-output" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Poorly conditioned data</strong> is the most common cause. Check whether your
+constraint matrix <span class="math notranslate nohighlight">\(A\)</span> or objective matrix <span class="math notranslate nohighlight">\(P\)</span> is near-singular
+or has very large condition number.</p></li>
+<li><p><strong>Try adjusting</strong> <code class="code docutils literal notranslate"><span class="pre">scale</span></code>: the default is <code class="docutils literal notranslate"><span class="pre">0.1</span></code>. For some problems
+a larger value (e.g., <code class="docutils literal notranslate"><span class="pre">1.0</span></code> or <code class="docutils literal notranslate"><span class="pre">10.0</span></code>) or smaller value (e.g.,
+<code class="docutils literal notranslate"><span class="pre">0.01</span></code>) works better. Setting <code class="code docutils literal notranslate"><span class="pre">adaptive_scale=1</span></code> lets SCS tune
+this automatically.</p></li>
+<li><p><strong>Ensure</strong> <span class="math notranslate nohighlight">\(P\)</span> <strong>is symmetric positive semidefinite</strong>: SCS requires
+that only the upper triangle of <span class="math notranslate nohighlight">\(P\)</span> is provided. If <span class="math notranslate nohighlight">\(P\)</span> has
+negative eigenvalues the problem is non-convex and SCS cannot solve it.</p></li>
+</ul>
+</section>
+<section id="complementary-slackness-warning">
+<h3>Complementary slackness warning<a class="headerlink" href="#complementary-slackness-warning" title="Link to this heading"></a></h3>
+<p>The warning <code class="docutils literal notranslate"><span class="pre">large</span> <span class="pre">complementary</span> <span class="pre">slackness</span> <span class="pre">residual</span></code> means that
+<span class="math notranslate nohighlight">\(s^\top y\)</span> is not close to zero at the solution. This is usually
+harmless and indicates a near-degenerate or poorly-scaled problem. The primal
+and dual solutions are still valid if the other residuals are small.</p>
+</section>
+</section>
 </section>
 
 
