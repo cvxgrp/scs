@@ -11,11 +11,11 @@ matrix :math:`R` can be selected to provide better convergence in practice.  The
 algorithm then becomes:
 
 .. math::
-  \begin{align}
+  \begin{aligned}
   \tilde u^{k+1} &= (R + \mathcal{Q})^{-1} R w^k \\
   u^{k+1} &= (R + N_{\mathcal{C}_+})^{-1} R (2 \tilde u^{k+1} - w^k) \\
   w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1} \\
-  \end{align}
+  \end{aligned}
 
 which yields :math:`w^k \rightarrow u^\star + R^{-1} \mathcal{Q}(u^\star)` where
 :math:`0 \in \mathcal{Q}(u^\star) + N_{\mathcal{C}_+}(u^\star)`.
@@ -33,11 +33,11 @@ to this). This means that R does not affect the cone projection in any way,
 since for sub-cone :math:`\mathcal{K}`:
 
 .. math::
-   \begin{align}
+   \begin{aligned}
     &x = (r I + \partial I_{\mathcal{K}})^{-1} (r y) \\
     \Rightarrow \quad  &  0 \in r(x - y) + \partial I_{\mathcal{K}}(x) \\
     \Rightarrow \quad & x = \mbox{argmin}_z || z - y ||^2 \mbox{ s.t. } z \in \mathcal{K}.
-    \end{align}
+    \end{aligned}
 
 In other words, :math:`R` is selected such that
 
@@ -123,13 +123,13 @@ In order to get the dual vector :math:`v^k` that contains :math:`s^k` and
 and we have
 
 .. math::
-  \begin{align}
+  \begin{aligned}
   v^{k+1} &= R( u^{k+1} + w^k - 2 \tilde u^{k+1} ) \\
           &= R( \Pi^R_{\mathcal{C}_+} (2 \tilde u^{k+1} - w^k) + w^k - 2 \tilde u^{k+1}) \\
           &= R( R^{-1} \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1}))) \\
           &= \Pi^{R^{-1}}_{\mathcal{C}^*_+} (R(w^k -2 \tilde u^{k+1})) \\
           &\in \mathcal{C}^*_+
-  \end{align}
+  \end{aligned}
 
 by Moreau, and finally note that :math:`v^k \perp
 u^k` from the fact that the Moreau decomposition is :math:`R`-orthogonal.
