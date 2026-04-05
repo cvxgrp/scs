@@ -2,7 +2,9 @@
 #include "linalg.h"
 #include "scs_blas.h"
 #include "scs_types.h"
-#include "util.h" // just for timer
+#include "util.h"
+
+#include <string.h>
 
 /*
  * Spectral matrix cone projections, from "Projection onto Spectral Matrix
@@ -37,13 +39,14 @@ void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
 }
 #endif
 
-// forward declaration
+/* forward declaration */
 scs_int proj_sum_largest_cone_sorted(scs_float *t, scs_float *x, scs_int n,
                                      scs_int k);
 
 void flip(scs_float *x, int n) {
   scs_float temp;
-  for (int i = 0; i < n / 2; i++) {
+  int i;
+  for (i = 0; i < n / 2; i++) {
     temp = x[i];
     x[i] = x[n - i - 1];
     x[n - i - 1] = temp;
@@ -52,14 +55,14 @@ void flip(scs_float *x, int n) {
 
 scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
                                     ScsConeWork *c) {
-  // tvX = [t, X], where X represents the lower triangular part of a matrix
-  // stored in a compact form and off-diagonal elements have been scaled by
-  // sqrt(2)
+  /*
+   * tvX = [t, X], where X represents the lower triangular part of a matrix
+   * stored in a compact form and off-diagonal elements have been scaled by
+   * sqrt(2)
+   */
   scs_float *X = tX + 1;
 
-  // ----------------------------------------------------------------------
-  //                      compute eigendecomposition
-  // ----------------------------------------------------------------------
+  /* compute eigendecomposition */
   scs_int i;
   blas_int nb = (blas_int)n;
   blas_int nb_plus_one = (blas_int)(n + 1);
@@ -72,19 +75,26 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
   scs_float *work = c->work;
   blas_int lwork = c->lwork;
   blas_int info = 0;
+  scs_int status;
+  char transN;
+  char transY;
+  scs_float one;
+  scs_float zero;
 
-  // copy lower triangular matrix into full matrix
+  /* copy lower triangular matrix into full matrix */
   for (i = 0; i < n; ++i) {
     memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
            (n - i) * sizeof(scs_float));
   }
 
-  // rescale diags by sqrt(2)
+  /* rescale diags by sqrt(2) */
   BLAS(scal)(&nb, &sqrt2, Xs, &nb_plus_one);
 
-  // Eigendecomposition. On exit, the lower triangular part of Xs stores
-  // the eigenvectors. The vector e stores the eigenvalues in ascending
-  // order (smallest eigenvalue first) */
+  /*
+   * Eigendecomposition. On exit, the lower triangular part of Xs stores
+   * the eigenvectors. The vector e stores the eigenvalues in ascending
+   * order (smallest eigenvalue first)
+   */
   BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
   if (info != 0) {
     scs_printf("WARN: LAPACK syev error, info = %i\n", (int)info);
@@ -93,15 +103,15 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
     }
   }
 
-  // ----------------------------------------------------------------------
-  //  Project onto spectral *vector* cone. Note that e is sqrt(2) times
-  //  the eigenvalue vector we want to project. We therefore multiply
-  //  tvX[0] by sqrt(2).
-  // ----------------------------------------------------------------------
+  /*
+   * Project onto spectral *vector* cone. Note that e is sqrt(2) times
+   * the eigenvalue vector we want to project. We therefore multiply
+   * tvX[0] by sqrt(2).
+   */
   tX[0] *= sqrt2;
   SPECTRAL_TIMING(SCS(timer) _timer; SCS(tic)(&_timer);)
   flip(e, n);
-  scs_int status = proj_sum_largest_cone_sorted(&tX[0], e, n, k);
+  status = proj_sum_largest_cone_sorted(&tX[0], e, n, k);
   flip(e, n);
   SPECTRAL_TIMING(c->tot_time_vec_cone_proj += SCS(tocq)(&_timer);)
 
@@ -109,20 +119,18 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
     return status;
   }
 
-  // ----------------------------------------------------------------------
-  //             recover projection onto spectral *matrix* cone
-  // ----------------------------------------------------------------------
+  /* recover projection onto spectral *matrix* cone */
   memcpy(c->work_sum_of_largest, Xs, n * n * sizeof(*Xs));
   for (i = 0; i < n; ++i) {
     BLAS(scal)(&nb, &e[i], &Xs[i * n], &one_int);
   }
 
-  char transN = 'N';
-  char transY = 'T';
-  scs_float one = 1.0;
-  scs_float zero = 0.0;
+  transN = 'N';
+  transY = 'T';
+  one = 1.0;
+  zero = 0.0;
 
-  // it is not safe to have overlapping matrices for dgemm_.
+  /* it is not safe to have overlapping matrices for dgemm_. */
   BLAS(gemm)(&transN, &transY, &nb, &nb, &nb, &one, Xs, &nb,
              c->work_sum_of_largest, &nb, &zero, Z, &nb);
 

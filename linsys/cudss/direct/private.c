@@ -206,7 +206,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
     return custatus;
   }
 
-  // is this really needed?
+  /* is this really needed? */
   cudssMatrixSetValues(p->d_b_mat, p->d_b);
 
   /* Solve the system */

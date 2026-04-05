@@ -1,3 +1,8 @@
+/*
+ * Sparse matrix operations: normalization/equilibration, copying, validation,
+ * and matrix-vector products (A*x, A'*x, P*x) for CSC-format matrices.
+ */
+
 #ifndef SCS_MATRIX_H_GUARD
 #define SCS_MATRIX_H_GUARD
 
@@ -6,7 +11,6 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include "scs.h"
 #include "scs_work.h"
 
 /* Normalization routines, used if d->NORMALIZE is true */
@@ -15,19 +19,12 @@ extern "C" {
  * boundaries */
 ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone);
 
-/* unnormalizes A matrix, unnormalizes by w->D and w->E */
-/* void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling
- * *scal);
- */
-
 /* to free the memory allocated in a ScsMatrix (called on A and P at finish) */
 void SCS(free_scs_matrix)(ScsMatrix *A);
 
 /* copies A (instead of in-place normalization), returns 0 for failure,
  * allocates memory for dstp	*/
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src);
-
-scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 
 /**
  * Validate the linear system inputs, returns < 0 if not valid inputs.

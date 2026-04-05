@@ -1,10 +1,17 @@
+/*
+ * Read/write routines for serializing SCS problem data to binary files
+ * and logging solve progress to CSV. Compiled as no-ops when NO_READ_WRITE=1.
+ */
+
 #include "rw.h"
 
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "cones.h"
 #include "linalg.h"
 #include "scs.h"
 #include "scs_matrix.h"

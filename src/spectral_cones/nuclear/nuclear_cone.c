@@ -1,9 +1,9 @@
 #include "cones.h"
-// #include "scs.h"
+/* #include "scs.h" */
 #include "linalg.h"
 #include "scs_blas.h"
 #include "scs_types.h"
-#include "util.h" // just for timer
+#include "util.h" /* just for timer */
 
 /*
  * Spectral matrix cone projections, from "Projection onto Spectral Matrix
@@ -39,28 +39,42 @@ void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
 }
 #endif
 
-// forward declaration from ell1_cone.c
+/* forward declaration from ell1_cone.c */
 scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0,
                               scs_float *proj, scs_int n);
 
-// X is of size m x n, stored column major. It is assumed that m >= n.
+/* X is of size m x n, stored column major. It is assumed that m >= n. */
 scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n,
                                ScsConeWork *c) {
+  scs_float *X;
+  blas_int bm;
+  blas_int bn;
+  scs_float *s;
+  scs_float *u;
+  scs_float *vt;
+  scs_float *work;
+  int lwork;
+  int info;
+  scs_int status;
+  int one;
+  scs_int i;
+  char trans;
+  scs_float alpha;
+  scs_float beta;
+
   assert(m >= n);
-  scs_float *X = tX + 1;
-  blas_int bm = m;
-  blas_int bn = n;
+  X = tX + 1;
+  bm = m;
+  bn = n;
 
-  // -------------------------------------------------------------------------
-  //                            Compute SVD
-  // -------------------------------------------------------------------------
-  scs_float *s = c->s_nuc;
-  scs_float *u = c->u_nuc;
-  scs_float *vt = c->vt_nuc;
+  /* Compute SVD */
+  s = c->s_nuc;
+  u = c->u_nuc;
+  vt = c->vt_nuc;
 
-  scs_float *work = c->work_nuc;
-  int lwork = c->lwork_nuc;
-  int info = 0;
+  work = c->work_nuc;
+  lwork = c->lwork_nuc;
+  info = 0;
 
   BLAS(gesvd)("S", "A", &bm, &bn, X, &bm, s, u, &bm, vt, &bn, work, &lwork,
               &info);
@@ -70,28 +84,25 @@ scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n,
       return info;
     }
   }
-  // -------------------------------------------------------------------------
-  //                  Project onto spectral *vector* cone
-  // -------------------------------------------------------------------------
+
+  /* Project onto spectral *vector* cone */
   SPECTRAL_TIMING(SCS(timer) _timer; SCS(tic)(&_timer);)
-  scs_int status = ell1_cone_proj_sorted(tX[0], s, tX, n);
+  status = ell1_cone_proj_sorted(tX[0], s, tX, n);
   SPECTRAL_TIMING(c->tot_time_vec_cone_proj += SCS(tocq)(&_timer);)
 
   if (status < 0) {
     return status;
   }
 
-  // -------------------------------------------------------------------------
-  //  Recover projection onto spectral *matrix* cone
-  // -------------------------------------------------------------------------
-  int one = 1;
-  for (scs_int i = 0; i < n; ++i) {
+  /* Recover projection onto spectral *matrix* cone */
+  one = 1;
+  for (i = 0; i < n; ++i) {
     BLAS(scal)(&bm, &tX[i + 1], &u[i * m], &one);
   }
 
-  char trans = 'N';
-  scs_float alpha = 1.0;
-  scs_float beta = 0.0;
+  trans = 'N';
+  alpha = 1.0;
+  beta = 0.0;
   BLAS(gemm)(&trans, &trans, &bm, &bn, &bn, &alpha, u, &bm, vt, &bn, &beta,
              tX + 1, &bm);
 

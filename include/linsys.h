@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include "scs.h"
 
 /* This is the API that any new linear system solver must implement */
 

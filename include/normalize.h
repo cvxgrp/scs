@@ -1,3 +1,9 @@
+/*
+ * Problem data normalization (equilibration) routines.
+ * Applied before solving to improve numerical conditioning; undone
+ * after solving to return the solution in the original scale.
+ */
+
 #ifndef NORMALIZE_H_GUARD
 #define NORMALIZE_H_GUARD
 

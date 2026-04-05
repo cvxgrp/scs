@@ -1,13 +1,21 @@
 /* contains routines common to direct and indirect sparse solvers */
+
+/* ======================== Includes / Constants ======================== */
+
 #include "scs_matrix.h"
+#include "cones.h"
 #include "linalg.h"
 #include "linsys.h"
 #include "util.h"
+
+#include <string.h>
 
 #define MIN_NORMALIZATION_FACTOR (1e-4)
 #define MAX_NORMALIZATION_FACTOR (1e4)
 #define NUM_RUIZ_PASSES (25) /* additional passes don't help much */
 #define NUM_L2_PASSES (1)    /* do one or zero, not more since not stable */
+
+/* ======================== Matrix Copy / Free ======================== */
 
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   if (!src) {
@@ -40,6 +48,17 @@ scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
   *dstp = A;
   return 1;
 }
+
+void SCS(free_scs_matrix)(ScsMatrix *A) {
+  if (A) {
+    scs_free(A->x);
+    scs_free(A->i);
+    scs_free(A->p);
+    scs_free(A);
+  }
+}
+
+/* ======================== Validation ======================== */
 
 scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
   scs_int i, j, r_max, Anz;
@@ -101,14 +120,75 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
   return 0;
 }
 
-void SCS(free_scs_matrix)(ScsMatrix *A) {
-  if (A) {
-    scs_free(A->x);
-    scs_free(A->i);
-    scs_free(A->p);
-    scs_free(A);
+/* ======================== Matrix-Vector Products ======================== */
+
+void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
+                          scs_float *y) {
+  /* y += A'*x
+     A in column compressed format
+     parallelizes over columns (rows of A')
+   */
+  scs_int p, j;
+  scs_int c1, c2;
+  scs_float yj;
+  scs_int n = A->n;
+  scs_int *Ap = A->p;
+  scs_int *Ai = A->i;
+  scs_float *Ax = A->x;
+#ifdef _OPENMP
+#pragma omp parallel for private(p, c1, c2, yj)
+#endif
+  for (j = 0; j < n; j++) {
+    yj = y[j];
+    c1 = Ap[j];
+    c2 = Ap[j + 1];
+    for (p = c1; p < c2; p++) {
+      yj += Ax[p] * x[Ai[p]];
+    }
+    y[j] = yj;
   }
 }
+
+void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y) {
+  /*y += A*x
+    A in column compressed format
+    */
+  scs_int p, j, i;
+  scs_int n = A->n;
+  scs_int *Ap = A->p;
+  scs_int *Ai = A->i;
+  scs_float *Ax = A->x;
+  for (j = 0; j < n; j++) { /* col */
+    for (p = Ap[j]; p < Ap[j + 1]; p++) {
+      i = Ai[p]; /* row */
+      y[i] += Ax[p] * x[j];
+    }
+  }
+}
+
+/* Since P is upper triangular need to be clever here */
+void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
+  /* returns y += P x where P is stored upper triangular (CSC).
+   * Single pass: each stored entry (i,j) contributes to both y[i] (upper)
+   * and y[j] (symmetric lower), halving NNZ traversals vs two-pass approach. */
+  scs_int p, j;
+  scs_int n = P->n;
+  scs_int *Pp = P->p;
+  scs_int *Pi = P->i;
+  scs_float *Px = P->x;
+  for (j = 0; j < n; j++) {
+    for (p = Pp[j]; p < Pp[j + 1]; p++) {
+      scs_int i = Pi[p];
+      scs_float val = Px[p];
+      y[i] += val * x[j]; /* upper triangle + diagonal */
+      if (i != j) {
+        y[j] += val * x[i]; /* symmetric lower triangle */
+      }
+    }
+  }
+}
+
+/* ======================== Normalization Internals ======================== */
 
 static inline scs_float apply_limit(scs_float x) {
   /* need to bound to 1 for cols/rows of all zeros, otherwise blows up */
@@ -290,6 +370,8 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
   */
 }
 
+/* ======================== Normalization Public API ======================== */
+
 /* Will rescale as P -> EPE, A -> DAE in-place.
  * Essentially trying to rescale this matrix:
  *
@@ -377,96 +459,3 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   return scal;
 }
 
-/*
-void SCS(un_normalize_a_p)(ScsMatrix *A, ScsMatrix *P, const ScsScaling *scal) {
-  scs_int i, j;
-  scs_float *D = scal->D;
-  scs_float *E = scal->E;
-  for (i = 0; i < A->n; ++i) {
-    SCS(scale_array)
-    (&(A->x[A->p[i]]), 1. / E[i], A->p[i + 1] - A->p[i]);
-  }
-  for (i = 0; i < A->n; ++i) {
-    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
-      A->x[j] /= D[A->i[j]];
-    }
-  }
-  if (P) {
-    for (i = 0; i < P->n; ++i) {
-      SCS(scale_array)
-      (&(P->x[P->p[i]]), 1. / E[i], P->p[i + 1] - P->p[i]);
-    }
-    for (i = 0; i < P->n; ++i) {
-      for (j = P->p[i]; j < P->p[i + 1]; ++j) {
-        P->x[j] /= E[P->i[j]];
-      }
-    }
-  }
-}
-*/
-
-void SCS(accum_by_atrans)(const ScsMatrix *A, const scs_float *x,
-                          scs_float *y) {
-  /* y += A'*x
-     A in column compressed format
-     parallelizes over columns (rows of A')
-   */
-  scs_int p, j;
-  scs_int c1, c2;
-  scs_float yj;
-  scs_int n = A->n;
-  scs_int *Ap = A->p;
-  scs_int *Ai = A->i;
-  scs_float *Ax = A->x;
-#ifdef _OPENMP
-#pragma omp parallel for private(p, c1, c2, yj)
-#endif
-  for (j = 0; j < n; j++) {
-    yj = y[j];
-    c1 = Ap[j];
-    c2 = Ap[j + 1];
-    for (p = c1; p < c2; p++) {
-      yj += Ax[p] * x[Ai[p]];
-    }
-    y[j] = yj;
-  }
-}
-
-void SCS(accum_by_a)(const ScsMatrix *A, const scs_float *x, scs_float *y) {
-  /*y += A*x
-    A in column compressed format
-    */
-  scs_int p, j, i;
-  scs_int n = A->n;
-  scs_int *Ap = A->p;
-  scs_int *Ai = A->i;
-  scs_float *Ax = A->x;
-  for (j = 0; j < n; j++) { /* col */
-    for (p = Ap[j]; p < Ap[j + 1]; p++) {
-      i = Ai[p]; /* row */
-      y[i] += Ax[p] * x[j];
-    }
-  }
-}
-
-/* Since P is upper triangular need to be clever here */
-void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
-  /* returns y += P x where P is stored upper triangular (CSC).
-   * Single pass: each stored entry (i,j) contributes to both y[i] (upper)
-   * and y[j] (symmetric lower), halving NNZ traversals vs two-pass approach. */
-  scs_int p, j;
-  scs_int n = P->n;
-  scs_int *Pp = P->p;
-  scs_int *Pi = P->i;
-  scs_float *Px = P->x;
-  for (j = 0; j < n; j++) {
-    for (p = Pp[j]; p < Pp[j + 1]; p++) {
-      scs_int i = Pi[p];
-      scs_float val = Px[p];
-      y[i] += val * x[j]; /* upper triangle + diagonal */
-      if (i != j) {
-        y[j] += val * x[i]; /* symmetric lower triangle */
-      }
-    }
-  }
-}

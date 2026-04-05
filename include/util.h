@@ -5,11 +5,8 @@
 extern "C" {
 #endif
 
-#include "cones.h"
 #include "scs.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "glbopts.h"
 
 /* timing code courtesy of A. Domahidi */
 #if (defined NO_TIMER)

@@ -1,3 +1,9 @@
+/*
+ * Anderson acceleration (AA) interface for fixed-point iteration.
+ * Stores a sliding window of past iterates and computes an accelerated
+ * step that can dramatically speed up convergence of ADMM.
+ */
+
 #ifndef AA_H_GUARD
 #define AA_H_GUARD
 
@@ -6,9 +12,6 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 typedef scs_float aa_float;
 typedef scs_int aa_int;
@@ -42,7 +45,7 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
  *    -  if (i > 0): aa_apply(x, x_prev, a)
  *    -  x_prev = x.copy()
  *    -  x = F(x)
- *    -  aa_safeguard(x, x_prev, a)  // optional but helps stability
+ *    -  aa_safeguard(x, x_prev, a)  (optional but helps stability)
  *
  *  Here F is the map we are trying to find the fixed point for. We put the AA
  *  before the map so that any properties of the map are maintained at the end.

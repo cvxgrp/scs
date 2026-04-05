@@ -1,3 +1,8 @@
+/*
+ * Exponential cone projection via Newton's method.
+ * Handles both primal and dual exponential cones using Moreau decomposition.
+ */
+
 #include "cones.h"
 #include "glbopts.h"
 #include "linalg.h"

@@ -1,3 +1,8 @@
+/*
+ * Basic dense linear algebra operations used throughout SCS.
+ * All operate on raw arrays of scs_float.
+ */
+
 #ifndef LINALG_H_GUARD
 #define LINALG_H_GUARD
 
@@ -6,7 +11,6 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include <math.h>
 
 void SCS(scale_array)(scs_float *a, const scs_float b, scs_int len);
 scs_float SCS(dot)(const scs_float *x, const scs_float *y, scs_int len);

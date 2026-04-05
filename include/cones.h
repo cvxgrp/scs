@@ -6,15 +6,13 @@ extern "C" {
 #endif
 
 #include "glbopts.h"
-#include "scs.h"
 #include "scs_blas.h"
 #include "scs_work.h"
-#include <string.h>
 
 #ifdef USE_SPECTRAL_CONES
-#include "util_spectral_cones.h" // for newton_stats
+#include "util_spectral_cones.h" /* for Newton_stats */
 
-// macro for time measurements of SpectralSCS
+/* macro for time measurements of SpectralSCS */
 #ifdef SPECTRAL_TIMING_FLAG
 #define SPECTRAL_TIMING(action) action
 #else
@@ -55,7 +53,7 @@ struct SCS_CONE_WORK {
   Value_index *work_ell1;
   scs_float *work_ell1_proj;
 
-  // used for timing spectral vector cone and spectral matrix cone projections
+  /* used for timing spectral vector cone and spectral matrix cone projections */
   SPECTRAL_TIMING(scs_float tot_time_mat_cone_proj;)
   SPECTRAL_TIMING(scs_float tot_time_vec_cone_proj;)
 
