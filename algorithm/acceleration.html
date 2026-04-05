@@ -179,12 +179,12 @@ In type-II AA the weights are selected by solving a small least squares problem.
 Y_k)^{-1}Y_k^\top g_k\)</span>, and hence by the relation between <span class="math notranslate nohighlight">\(\alpha^k\)</span> and
 <span class="math notranslate nohighlight">\(\gamma^k\)</span>, the next iterate of type-II AA can be written as</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
+\[\begin{split}\begin{aligned}
 x^{k+1}&amp;=f(x^k)-\sum_{i=0}^{m_k-1}\gamma_i^k\left(f(x^{k-m_k+i+1})- f(x^{k-m_k+i})\right)\\
 &amp;=x^k-g_k-(S_k-Y_k)\gamma^k\\
 &amp;=x^k-(I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top )g_k\\
 &amp;=x^k-B_kg_k,
-\end{align}\end{split}\]</div>
+\end{aligned}\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(S_k=[s_{k-m_k}~\dots~s_{k-1}]\)</span>, <span class="math notranslate nohighlight">\(s_i=x^{i+1}-x^i\)</span> for each
 <span class="math notranslate nohighlight">\(i\)</span>, and</p>
 <div class="math notranslate nohighlight">

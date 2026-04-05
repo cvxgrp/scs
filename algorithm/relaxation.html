@@ -97,11 +97,11 @@
 <span id="id1"></span><h1>Relaxation<a class="headerlink" href="#relaxation" title="Link to this heading"></a></h1>
 <p>The (unscaled, see <a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a>) SCS update equations are:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
+\[\begin{split}\begin{aligned}
 \tilde u^{k+1} &amp;= (I + \mathcal{Q})^{-1} w^k \\
 u^{k+1} &amp;= (I + N_{\mathcal{C}_+})^{-1} (2 \tilde u^{k+1} - w^k) \\
 w^{k+1} &amp;= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
-\end{align}\end{split}\]</div>
+\end{aligned}\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\alpha \in (0,2)\)</span> is the <em>relaxation</em> parameter. Vanilla
 Douglas-Rachford corresponds to setting <span class="math notranslate nohighlight">\(\alpha = 1\)</span>. If <span class="math notranslate nohighlight">\(\alpha &lt;
 1\)</span> it is referred to as under-relaxation, if <span class="math notranslate nohighlight">\(\alpha &gt; 1\)</span> it is

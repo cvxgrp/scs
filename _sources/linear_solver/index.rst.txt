@@ -77,10 +77,10 @@ The indirect method solves the above linear system approximately with a
 
 .. math::
 
-  \begin{align}
+  \begin{aligned}
   (R_x + P + A^\top R_y^{-1} A) x & = z^k_x + A^\top R_y^{-1} z^k_y \\
                             y & = R_y^{-1}(A x - z^k_y).
-  \end{align}
+  \end{aligned}
 
 then solves the positive definite system using using `conjugate gradients
 <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.  Each iteration of

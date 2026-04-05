@@ -79,12 +79,12 @@ Y_k)^{-1}Y_k^\top g_k`, and hence by the relation between :math:`\alpha^k` and
 :math:`\gamma^k`, the next iterate of type-II AA can be written as
 
 .. math::
-  \begin{align}
+  \begin{aligned}
   x^{k+1}&=f(x^k)-\sum_{i=0}^{m_k-1}\gamma_i^k\left(f(x^{k-m_k+i+1})- f(x^{k-m_k+i})\right)\\
   &=x^k-g_k-(S_k-Y_k)\gamma^k\\
   &=x^k-(I+(S_k-Y_k)(Y_k^\top Y_k)^{-1}Y_k^\top )g_k\\
   &=x^k-B_kg_k,
-  \end{align}
+  \end{aligned}
 
 where :math:`S_k=[s_{k-m_k}~\dots~s_{k-1}]`, :math:`s_i=x^{i+1}-x^i` for each
 :math:`i`, and

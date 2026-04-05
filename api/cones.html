@@ -193,22 +193,22 @@ See <a class="reference internal" href="compile_flags.html#compile-flags"><span 
 <tr class="row-even"><td><p>Log-determinant cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, v, X) \mid t \leq v \log\det(X/v),\; v &gt; 0,\; X \succ 0 \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">d</span></code> array of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">dsize</span></code> elements, each <span class="math notranslate nohighlight">\(d_i = n_i\)</span> where <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{n_i \times n_i}\)</span>.</p></td>
-<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{dsize}} \frac{d_i(d_i+1)}{2} + 2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{dsize}} \left(\frac{d_i(d_i+1)}{2} + 2\right)\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p>Nuclear norm cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, X) \mid \|X\|_* \leq t \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">nuc_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">nuc_n</span></code> arrays of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">nucsize</span></code> elements. <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{m_i \times n_i}\)</span>.</p></td>
-<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{nucsize}} m_i n_i + 1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{nucsize}} (m_i n_i + 1)\)</span></p></td>
 </tr>
 <tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\ell_1\)</span> norm cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, x) \mid \|x\|_1 \leq t \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">ell1</span></code> array of vector dimensions with <code class="code docutils literal notranslate"><span class="pre">ell1_size</span></code> elements.</p></td>
-<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{ell1\_size}} \text{ell1}_i + 1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{ell1\_size}} (\text{ell1}_i + 1)\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p>Sum-of-largest-eigenvalues cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, X) \mid \sum_{i=1}^{k} \lambda_i(X) \leq t \}\)</span></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">sl_n</span></code>, <code class="code docutils literal notranslate"><span class="pre">sl_k</span></code> arrays of matrix dimensions and <span class="math notranslate nohighlight">\(k\)</span> values with <code class="code docutils literal notranslate"><span class="pre">sl_size</span></code> elements.</p></td>
-<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{sl\_size}} \frac{n_i(n_i+1)}{2} + 1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{sl\_size}} \left(\frac{n_i(n_i+1)}{2} + 1\right)\)</span></p></td>
 </tr>
 </tbody>
 </table>
@@ -254,10 +254,10 @@ where the <span class="math notranslate nohighlight">\(\text{vec}\)</span> opera
 \[\text{vec}(S) = (S_{11}, \sqrt{2} S_{21}, \ldots, \sqrt{2} S_{k1}, S_{22}, \sqrt{2}S_{32}, \dots, S_{k-1,k-1}, \sqrt{2}S_{k,k-1}, S_{kk}) \in \mathbf{R}^{k(k+1)/2},\]</div>
 <p>whereas in the complex case the result is</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
-\text{cvec}(S) =&amp; (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\
+\[\begin{split}\begin{aligned}
+\text{cvec}(S) ={}&amp; (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\
 &amp; \sqrt{2}\Re(S_{32}), \sqrt{2}\Im(S_{32}), \dots, S_{k-1,k-1}, \sqrt{2}\Re(S_{k,k-1}), \sqrt{2}\Im(S_{k,k-1}), S_{kk}) \in \mathbf{R}^{k^2}.
-\end{align}\end{split}\]</div>
+\end{aligned}\end{split}\]</div>
 <p>To recover the matrix solution this operation must be inverted on the components
 of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
 off-diagonal entries must be scaled by <span class="math notranslate nohighlight">\(1/\sqrt{2}\)</span> and the upper triangular
@@ -284,10 +284,10 @@ Explicitly, in the real case the inverse operation takes vector <span class="mat
 \in \mathbf{C}^{k \times k},\end{split}\]</div>
 <p>So the cone definitions that SCS uses are</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
+\[\begin{split}\begin{aligned}
  \mathcal{S}_\mathbf{R}^k &amp;= \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\\
  \mathcal{S}_\mathbf{C}^k &amp;= \{ \text{cvec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k^2  } \mid \text{cmat}(s) \succeq 0 \}.
-\end{align}\end{split}\]</div>
+\end{aligned}\end{split}\]</div>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h3>
 <p>For a concrete example in Python see <a class="reference internal" href="../examples/python/mat_completion.html#py-mat-completion"><span class="std std-ref">Low-Rank Matrix Completion</span></a>.
@@ -299,12 +299,12 @@ variables <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</spa
 \times k}\)</span> are symmetric. We can write this in the canonical form over a new
 variable <span class="math notranslate nohighlight">\(s \in \mathcal{S}_+^k\)</span>:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{align}
+\[\begin{split}\begin{aligned}
 s &amp;= \text{vec}(S)\\
   &amp;= \text{vec}(B - \sum_{i=1}^n \mathcal{A}_i x_i) \\
   &amp;= \text{vec}(B) - \sum_{i=1}^n \text{vec}(\mathcal{A}_i) x_i \\
   &amp;= b - Ax
-\end{align}\end{split}\]</div>
+\end{aligned}\end{split}\]</div>
 <p>using the fact that <span class="math notranslate nohighlight">\(\text{vec}\)</span> is linear, where <span class="math notranslate nohighlight">\(b =
 \text{vec}(B)\)</span> and</p>
 <div class="math notranslate nohighlight">
