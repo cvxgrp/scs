@@ -216,7 +216,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 /* Solve the linear system for a given RHS b */
 scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
                           scs_float tol) {
-  scs_int vec_bytes = p->n_plus_m * sizeof(scs_float);
+  size_t vec_bytes = p->n_plus_m * sizeof(scs_float);
 
   /* Copy RHS to pinned staging buffer, then to device */
   memcpy(p->h_b_pinned, b, vec_bytes);
