@@ -55,6 +55,17 @@ static void write_scs_cone(const ScsCone *k, FILE *fout) {
   fwrite(k->p, sizeof(scs_float), k->psize, fout);
 }
 
+/* Wrapper around fread that checks the return value to suppress
+ * -Wunused-result warnings and report short reads. */
+static size_t checked_fread(void *ptr, size_t size, size_t nmemb, FILE *fin) {
+  size_t ret = fread(ptr, size, nmemb, fin);
+  if (ret != nmemb) {
+    scs_printf("Error: fread expected %lu items, got %lu\n",
+               (unsigned long)nmemb, (unsigned long)ret);
+  }
+  return ret;
+}
+
 /*
  * Read integer data from file. If the integer width on file is
  * different to scs_int then it will cast the ints after reading
@@ -99,8 +110,8 @@ static ScsCone *read_scs_cone(FILE *fin, size_t file_int_sz) {
   if (k->bsize > 1) {
     k->bl = (scs_float *)scs_calloc(MAX(k->bsize - 1, 0), sizeof(scs_float));
     k->bu = (scs_float *)scs_calloc(MAX(k->bsize - 1, 0), sizeof(scs_float));
-    fread(k->bl, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
-    fread(k->bu, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
+    checked_fread(k->bl, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
+    checked_fread(k->bu, sizeof(scs_float), MAX(k->bsize - 1, 0), fin);
   }
   read_int(&(k->qsize), file_int_sz, 1, fin);
   if (k->qsize) {
@@ -117,7 +128,7 @@ static ScsCone *read_scs_cone(FILE *fin, size_t file_int_sz) {
   read_int(&(k->psize), file_int_sz, 1, fin);
   if (k->psize) {
     k->p = (scs_float *)scs_calloc(k->psize, sizeof(scs_float));
-    fread(k->p, sizeof(scs_float), k->psize, fin);
+    checked_fread(k->p, sizeof(scs_float), k->psize, fin);
   }
   return k;
 }
@@ -147,13 +158,13 @@ static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz) {
   if (!s)
     return SCS_NULL;
   read_int(&(s->normalize), file_int_sz, 1, fin);
-  fread(&(s->scale), sizeof(scs_float), 1, fin);
-  fread(&(s->rho_x), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->scale), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->rho_x), sizeof(scs_float), 1, fin);
   read_int(&(s->max_iters), file_int_sz, 1, fin);
-  fread(&(s->eps_abs), sizeof(scs_float), 1, fin);
-  fread(&(s->eps_rel), sizeof(scs_float), 1, fin);
-  fread(&(s->eps_infeas), sizeof(scs_float), 1, fin);
-  fread(&(s->alpha), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->eps_abs), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->eps_rel), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->eps_infeas), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->alpha), sizeof(scs_float), 1, fin);
   read_int(&(s->verbose), file_int_sz, 1, fin);
   read_int(&(s->warm_start), file_int_sz, 1, fin);
   read_int(&(s->acceleration_lookback), file_int_sz, 1, fin);
@@ -183,7 +194,7 @@ static ScsMatrix *read_amatrix(FILE *fin, size_t file_int_sz) {
   Anz = A->p[A->n];
   A->x = (scs_float *)scs_calloc(Anz, sizeof(scs_float));
   A->i = (scs_int *)scs_calloc(Anz, sizeof(scs_int));
-  fread(A->x, sizeof(scs_float), Anz, fin);
+  checked_fread(A->x, sizeof(scs_float), Anz, fin);
   read_int(A->i, file_int_sz, Anz, fin);
   return A;
 }
@@ -211,8 +222,8 @@ static ScsData *read_scs_data(FILE *fin, size_t file_int_sz) {
   read_int(&(d->n), file_int_sz, 1, fin);
   d->b = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   d->c = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
-  fread(d->b, sizeof(scs_float), d->m, fin);
-  fread(d->c, sizeof(scs_float), d->n, fin);
+  checked_fread(d->b, sizeof(scs_float), d->m, fin);
+  checked_fread(d->c, sizeof(scs_float), d->n, fin);
   d->A = read_amatrix(fin, file_int_sz);
   /* If has_p bit is not set or this hits end of file then has_p = 0 */
   has_p &= read_int(&has_p, file_int_sz, 1, fin);
@@ -256,8 +267,8 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
     return -1;
   }
   scs_printf("Reading data from %s\n", filename);
-  fread(&(file_int_sz), sizeof(uint32_t), 1, fin);
-  fread(&(file_float_sz), sizeof(uint32_t), 1, fin);
+  checked_fread(&(file_int_sz), sizeof(uint32_t), 1, fin);
+  checked_fread(&(file_float_sz), sizeof(uint32_t), 1, fin);
   if (file_int_sz != (uint32_t)sizeof(scs_int)) {
     scs_printf(
         "Warning, sizeof(file int) is %lu, but scs expects sizeof(int) %lu. "
@@ -273,14 +284,14 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
     fclose(fin);
     return -1;
   }
-  fread(&(file_version_sz), sizeof(uint32_t), 1, fin);
+  checked_fread(&(file_version_sz), sizeof(uint32_t), 1, fin);
   if (file_version_sz >= sizeof(file_version)) {
     scs_printf("Error: file version string length %lu exceeds buffer size\n",
                (unsigned long)file_version_sz);
     fclose(fin);
     return -1;
   }
-  fread(file_version, 1, file_version_sz, fin);
+  checked_fread(file_version, 1, file_version_sz, fin);
   file_version[file_version_sz] = '\0';
   if (strcmp(file_version, SCS_VERSION) != 0) {
     scs_printf("************************************************************\n"
