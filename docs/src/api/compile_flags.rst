@@ -46,16 +46,8 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - Disables the read/write code
      - True/False
      - 0
-   * - :code:`COPYAMATRIX`
-     - Make a copy of A in memory
-     - True/False
-     - 1
    * - :code:`GPU_TRANSPOSE_MAT`
      - If on GPU store A transpose in memory
-     - True/False
-     - 1
-   * - :code:`VALIDATE`
-     - Whether to perform problem validation or not
      - True/False
      - 1
    * - :code:`VERBOSITY`
@@ -68,6 +60,10 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - 1
    * - :code:`USE_OPENMP`
      - Use openmp to parallelize some computation
+     - True/False
+     - 0
+   * - :code:`USE_SPECTRAL_CONES`
+     - Enable spectral cone support (log-determinant, nuclear norm, :math:`\ell_1` norm, sum-of-largest-eigenvalues). Requires :code:`USE_LAPACK=1`.
      - True/False
      - 0
    * - :code:`BLAS64`
