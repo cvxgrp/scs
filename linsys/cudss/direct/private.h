@@ -30,7 +30,6 @@ struct SCS_LIN_SYS_WORK {
 
   /* CPU matrices and vectors */
   ScsMatrix *kkt; /* KKT matrix in CSR format */
-  scs_float *sol; /* solution to the KKT system */
 
   /* cuDSS handle and descriptors */
   cudssHandle_t handle;    /* cuDSS library handle */
@@ -46,6 +45,10 @@ struct SCS_LIN_SYS_WORK {
   /* Device memory for vectors */
   scs_float *d_b;   /* device copy of right-hand side */
   scs_float *d_sol; /* device copy of solution */
+
+  /* Pinned host memory for faster H<->D transfers */
+  scs_float *h_b_pinned;   /* pinned host staging buffer for RHS */
+  scs_float *h_sol_pinned; /* pinned host staging buffer for solution */
 
   /* These are required for matrix updates */
   scs_int *diag_r_idxs; /* indices where R appears in the KKT matrix */
