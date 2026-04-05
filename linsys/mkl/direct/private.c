@@ -41,8 +41,6 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     }
     if (p->kkt)
       SCS(cs_spfree)(p->kkt);
-    if (p->sol)
-      scs_free(p->sol);
     if (p->diag_r_idxs)
       scs_free(p->diag_r_idxs);
     if (p->diag_p)
@@ -71,8 +69,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->m = A->m;
   p->n_plus_m = p->n + p->m;
 
-  /* Even though we overwrite rhs with sol pardiso requires the memory */
-  p->sol = (scs_float *)scs_malloc(sizeof(scs_float) * p->n_plus_m);
   p->diag_r_idxs = (scs_int *)scs_calloc(p->n_plus_m, sizeof(scs_int));
   p->diag_p = (scs_float *)scs_calloc(p->n, sizeof(scs_float));
 
@@ -103,7 +99,9 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->iparm[1] = 3;          /* Fill-in reordering from OpenMP */
   p->iparm[5] = 1;          /* Write solution into b */
   p->iparm[7] = 0;          /* Automatic iterative refinement calculation */
-  p->iparm[9] = 8;          /* Perturb the pivot elements with 1E-8 */
+  p->iparm[9] = 13;         /* Perturb the pivot elements with 1E-13 (default) */
+  p->iparm[23] = 1;         /* Two-level scheduling for parallel factorization */
+  p->iparm[24] = 1;         /* Parallel forward/backward solve */
   p->iparm[34] = 1;         /* Use C-style indexing for indices */
   /* p->iparm[36] = -80; */ /* Form block sparse matrices */
 
@@ -151,7 +149,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
   p->phase = PARDISO_SOLVE;
   _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
            &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
-           &(p->nrhs), p->iparm, &(p->msglvl), b, p->sol, &(p->error));
+           &(p->nrhs), p->iparm, &(p->msglvl), b, SCS_NULL, &(p->error));
   if (p->error != 0) {
     scs_printf("Error during linear system solution: %d", (int)p->error);
   }
