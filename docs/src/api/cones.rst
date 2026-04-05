@@ -90,19 +90,19 @@ The following cones are available when spectral cone support is enabled.
    * - Log-determinant cone
      - :math:`\{(t, v, X) \mid t \leq v \log\det(X/v),\; v > 0,\; X \succ 0 \}`
      - :code:`d` array of matrix dimensions with :code:`dsize` elements, each :math:`d_i = n_i` where :math:`X \in \mathbf{R}^{n_i \times n_i}`.
-     - :math:`\displaystyle \sum_{i=1}^{\text{dsize}} \frac{d_i(d_i+1)}{2} + 2`
+     - :math:`\displaystyle \sum_{i=1}^{\text{dsize}} \left(\frac{d_i(d_i+1)}{2} + 2\right)`
    * - Nuclear norm cone
      - :math:`\{(t, X) \mid \|X\|_* \leq t \}`
      - :code:`nuc_m`, :code:`nuc_n` arrays of matrix dimensions with :code:`nucsize` elements. :math:`X \in \mathbf{R}^{m_i \times n_i}`.
-     - :math:`\displaystyle \sum_{i=1}^{\text{nucsize}} m_i n_i + 1`
+     - :math:`\displaystyle \sum_{i=1}^{\text{nucsize}} (m_i n_i + 1)`
    * - :math:`\ell_1` norm cone
      - :math:`\{(t, x) \mid \|x\|_1 \leq t \}`
      - :code:`ell1` array of vector dimensions with :code:`ell1_size` elements.
-     - :math:`\displaystyle \sum_{i=1}^{\text{ell1\_size}} \text{ell1}_i + 1`
+     - :math:`\displaystyle \sum_{i=1}^{\text{ell1\_size}} (\text{ell1}_i + 1)`
    * - Sum-of-largest-eigenvalues cone
      - :math:`\{(t, X) \mid \sum_{i=1}^{k} \lambda_i(X) \leq t \}`
      - :code:`sl_n`, :code:`sl_k` arrays of matrix dimensions and :math:`k` values with :code:`sl_size` elements.
-     - :math:`\displaystyle \sum_{i=1}^{\text{sl\_size}} \frac{n_i(n_i+1)}{2} + 1`
+     - :math:`\displaystyle \sum_{i=1}^{\text{sl\_size}} \left(\frac{n_i(n_i+1)}{2} + 1\right)`
 
 
 **Note**:
