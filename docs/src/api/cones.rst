@@ -163,10 +163,10 @@ and produces a vector consisting of the lower triangular real parameters scaled 
 whereas in the complex case the result is
 
 .. math::
-  \begin{align}
-  \text{cvec}(S) =& (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\
+  \begin{aligned}
+  \text{cvec}(S) ={}& (S_{11}, \sqrt{2} \Re(S_{21}), \sqrt{2} \Im(S_{21}), \ldots, \sqrt{2} \Re(S_{k1}), \sqrt{2} \Im(S_{k1}), S_{22}, \\
   & \sqrt{2}\Re(S_{32}), \sqrt{2}\Im(S_{32}), \dots, S_{k-1,k-1}, \sqrt{2}\Re(S_{k,k-1}), \sqrt{2}\Im(S_{k,k-1}), S_{kk}) \in \mathbf{R}^{k^2}.
-  \end{align}
+  \end{aligned}
 
 To recover the matrix solution this operation must be inverted on the components
 of the vectors returned by SCS corresponding to each semidefinite cone. That is, the
@@ -199,10 +199,10 @@ whereas in the complex case the inverse operation takes vector :math:`s \in
 So the cone definitions that SCS uses are
 
 .. math::
-  \begin{align}
+  \begin{aligned}
    \mathcal{S}_\mathbf{R}^k &= \{ \text{vec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k(k+1)/2} \mid \text{mat}(s) \succeq 0 \}.\\
    \mathcal{S}_\mathbf{C}^k &= \{ \text{cvec}(S) \mid S \succeq 0\} = \{s \in \mathbf{R}^{k^2  } \mid \text{cmat}(s) \succeq 0 \}.
-  \end{align}
+  \end{aligned}
 
 Example
 ^^^^^^^
@@ -219,12 +219,12 @@ where data :math:`B, \mathcal{A}_1, \ldots, \mathcal{A}_n \in \mathbf{R}^{k
 variable :math:`s \in \mathcal{S}_+^k`:
 
 .. math::
-  \begin{align}
+  \begin{aligned}
   s &= \text{vec}(S)\\
     &= \text{vec}(B - \sum_{i=1}^n \mathcal{A}_i x_i) \\
     &= \text{vec}(B) - \sum_{i=1}^n \text{vec}(\mathcal{A}_i) x_i \\
     &= b - Ax
-  \end{align}
+  \end{aligned}
 
 using the fact that :math:`\text{vec}` is linear, where :math:`b =
 \text{vec}(B)` and

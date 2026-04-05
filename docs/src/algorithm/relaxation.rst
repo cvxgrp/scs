@@ -6,11 +6,11 @@ Relaxation
 The (unscaled, see :ref:`scaling`) SCS update equations are:
 
 .. math::
-  \begin{align}
+  \begin{aligned}
   \tilde u^{k+1} &= (I + \mathcal{Q})^{-1} w^k \\
   u^{k+1} &= (I + N_{\mathcal{C}_+})^{-1} (2 \tilde u^{k+1} - w^k) \\
   w^{k+1} &= w^k + \alpha (u^{k+1} - \tilde u^{k+1}) \\
-  \end{align}
+  \end{aligned}
 
 where :math:`\alpha \in (0,2)` is the *relaxation* parameter. Vanilla
 Douglas-Rachford corresponds to setting :math:`\alpha = 1`. If :math:`\alpha <
