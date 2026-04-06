@@ -16,13 +16,10 @@ Then in a Matlab session
   cd <path/to/scs-matlab>
   make_scs
 
-Remember to include the scs-matlab directory in your Matlab path if you wish to
-use the mex file in your Matlab code.
-
-.. code:: matlab
-
-  addpath(pwd)
-  savepath
+The installer automatically adds scs-matlab to your Matlab path and calls
+``savepath`` so it persists across sessions. If ``savepath`` fails (e.g., due to
+file permissions) it will print the ``addpath`` line you need to add to your
+``startup.m``.
 
 See :ref:`here <matlab_interface>` for the API.
 
