@@ -51,6 +51,69 @@ be used by setting :code:`mkl=True`. If a GPU solver for SCS is :ref:`installed
 :code:`use_indirect=False`. The remaining fields are explained in
 :ref:`settings`.
 
+Cone dict
+---------
+
+The :code:`cone` dict supports the following keys (see :ref:`cones` for mathematical
+definitions):
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Value
+     - Description
+   * - :code:`z`
+     - :code:`int`
+     - Zero cone length.
+   * - :code:`l`
+     - :code:`int`
+     - Non-negative cone length.
+   * - :code:`bu`, :code:`bl`
+     - :code:`array`
+     - Box cone upper/lower bounds (length :math:`\text{bsize}-1`).
+   * - :code:`q`
+     - :code:`list[int]`
+     - Second-order cone lengths.
+   * - :code:`s`
+     - :code:`list[int]`
+     - PSD cone matrix dimensions.
+   * - :code:`cs`
+     - :code:`list[int]`
+     - Complex PSD cone matrix dimensions.
+   * - :code:`ep`
+     - :code:`int`
+     - Number of primal exponential cone triples.
+   * - :code:`ed`
+     - :code:`int`
+     - Number of dual exponential cone triples.
+   * - :code:`p`
+     - :code:`list[float]`
+     - Power cone parameters in :math:`[-1, 1]`.
+
+.. _python_spectral_cone_keys:
+
+**Spectral cone keys** (require :ref:`spectral cone build <python_spectral_install>`):
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Value
+     - Description
+   * - :code:`d`
+     - :code:`list[int]`
+     - Log-determinant cone matrix dimensions.
+   * - :code:`nuc_m`, :code:`nuc_n`
+     - :code:`list[int]`
+     - Nuclear norm cone matrix row/column dimensions (must be equal length, :math:`m_i \geq n_i`).
+   * - :code:`ell1`
+     - :code:`list[int]`
+     - :math:`\ell_1` norm cone vector dimensions.
+   * - :code:`sl_n`, :code:`sl_k`
+     - :code:`list[int]`
+     - Sum-of-largest-eigenvalues cone matrix dimensions and :math:`k` values (must be equal length, :math:`0 < k_i < n_i`).
+
 Then to solve the problem call:
 
 .. code:: python
