@@ -83,10 +83,27 @@ extern "C" {
 /* redefine memory allocators as needed */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
+/* Use mexMakeMemoryPersistent so allocations survive across MEX calls.
+ * Required for the workspace API (scs_init/scs_solve/scs_finish). */
+static inline void *_scs_mex_malloc(size_t n) {
+  void *p = mxMalloc(n);
+  if (p) mexMakeMemoryPersistent(p);
+  return p;
+}
+static inline void *_scs_mex_calloc(size_t count, size_t size) {
+  void *p = mxCalloc(count, size);
+  if (p) mexMakeMemoryPersistent(p);
+  return p;
+}
+static inline void *_scs_mex_realloc(void *ptr, size_t n) {
+  void *p = mxRealloc(ptr, n);
+  if (p) mexMakeMemoryPersistent(p);
+  return p;
+}
 #define scs_free mxFree
-#define scs_malloc mxMalloc
-#define scs_calloc mxCalloc
-#define scs_realloc mxRealloc
+#define scs_malloc _scs_mex_malloc
+#define scs_calloc _scs_mex_calloc
+#define scs_realloc _scs_mex_realloc
 #elif defined PYTHON
 #include <Python.h>
 #if PY_MAJOR_VERSION >= 3
