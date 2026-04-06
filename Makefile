@@ -160,7 +160,11 @@ $(OUT)/run_from_file_gpu_indirect: test/run_from_file.c $(OUT)/libscsgpuindir.a
 
 # basic testing
 .PHONY: test
-test: $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
+TEST_TARGETS = $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
+ifneq ($(USE_LAPACK),0)
+TEST_TARGETS += $(OUT)/run_tests_dense
+endif
+test: $(TEST_TARGETS)
 $(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
