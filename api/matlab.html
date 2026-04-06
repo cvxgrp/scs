@@ -18,6 +18,7 @@
       <script src="../_static/documentation_options.js?v=537ea5e8"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -60,6 +61,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">MATLAB</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#warm-starting">Warm-starting</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#solver-backends">Solver backends</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spectral-cones">Spectral cones</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#workspace-reuse">Workspace reuse</a></li>
 </ul>
 </li>
@@ -137,6 +139,20 @@ selected via the <code class="code docutils literal notranslate"><span class="pr
 <span class="nb">settings</span><span class="p">.</span><span class="n">dense</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">         </span><span class="c">% dense Cholesky (best for dense A)</span>
 <span class="nb">settings</span><span class="p">.</span><span class="n">gpu</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">           </span><span class="c">% GPU solver</span>
 </pre></div>
+</div>
+</section>
+<section id="spectral-cones">
+<h2>Spectral cones<a class="headerlink" href="#spectral-cones" title="Link to this heading"></a></h2>
+<p>The MATLAB interface is compiled with <a class="reference internal" href="cones.html#spectral-cones"><span class="std std-ref">spectral cone</span></a>
+support enabled by default.  This includes log-determinant, nuclear norm,
+<span class="math notranslate nohighlight">\(\ell_1\)</span> norm, and sum-of-largest-eigenvalues cones.  Set the
+corresponding fields in the <code class="code docutils literal notranslate"><span class="pre">cones</span></code> struct (e.g., <code class="code docutils literal notranslate"><span class="pre">cones.d</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">cones.nuc_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">cones.nuc_n</span></code>, <code class="code docutils literal notranslate"><span class="pre">cones.ell1</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">cones.sl_n</span></code>, <code class="code docutils literal notranslate"><span class="pre">cones.sl_k</span></code>) as described in the <a class="reference internal" href="cones.html#spectral-cones"><span class="std std-ref">spectral
+cones documentation</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Spectral cones are <strong>experimental</strong> — the API may change in future releases.</p>
 </div>
 </section>
 <section id="workspace-reuse">

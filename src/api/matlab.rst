@@ -42,6 +42,21 @@ selected via the :code:`settings` struct:
   settings.dense = true;         % dense Cholesky (best for dense A)
   settings.gpu = true;           % GPU solver
 
+Spectral cones
+---------------
+
+The MATLAB interface is compiled with :ref:`spectral cone <spectral_cones>`
+support enabled by default.  This includes log-determinant, nuclear norm,
+:math:`\ell_1` norm, and sum-of-largest-eigenvalues cones.  Set the
+corresponding fields in the :code:`cones` struct (e.g., :code:`cones.d`,
+:code:`cones.nuc_m`, :code:`cones.nuc_n`, :code:`cones.ell1`,
+:code:`cones.sl_n`, :code:`cones.sl_k`) as described in the :ref:`spectral
+cones documentation <spectral_cones>`.
+
+.. note::
+
+   Spectral cones are **experimental** — the API may change in future releases.
+
 Workspace reuse
 ---------------
 
