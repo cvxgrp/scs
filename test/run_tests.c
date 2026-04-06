@@ -74,6 +74,8 @@ _SKIP(rob_gauss_cov_est)
 #include "spectral_cones_problems/several_logdet_cones.h"
 #include "spectral_cones_problems/several_nuc_cone.h"
 #include "spectral_cones_problems/several_sum_largest.h"
+#include "spectral_cones_problems/test_ell1_cone.h"
+#include "spectral_cones_problems/test_ell1_and_nuc.h"
 #else
 _SKIP(exp_design)
 _SKIP(robust_pca)
@@ -81,6 +83,8 @@ _SKIP(graph_partitioning)
 _SKIP(several_sum_largest)
 _SKIP(several_nuc_cone)
 _SKIP(several_logdet_cones)
+_SKIP(test_ell1_cone)
+_SKIP(test_ell1_and_nuc)
 #endif
 
 /* solves problems from data files */
@@ -153,6 +157,8 @@ static const char *all_tests(void) {
   mu_run_test(several_sum_largest);
   mu_run_test(several_nuc_cone);
   mu_run_test(several_logdet_cones);
+  mu_run_test(test_ell1_cone);
+  mu_run_test(test_ell1_and_nuc);
   return 0;
 }
 int main(void) {
