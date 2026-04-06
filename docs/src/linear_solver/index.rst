@@ -51,6 +51,21 @@ factorization.  It relies on the external (but included) `AMD
 <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ and `QDLDL
 <https://github.com/oxfordcontrol/qdldl>`_ packages.
 
+.. _dense:
+
+Dense direct
+^^^^^^^^^^^^
+
+The dense direct method stores and factorizes the full KKT matrix as a dense
+matrix using the LAPACK ``dgetrf`` (LU factorization) routine. Each subsequent
+solve uses the cached LU factors via ``dgetrs``. When the diagonal :math:`R`
+changes, the matrix is re-formed and re-factorized.
+
+This backend is best suited for small to medium-sized problems where the KKT
+matrix is not very sparse. For such problems, dense BLAS/LAPACK routines can
+outperform sparse solvers due to highly optimized memory access patterns and
+lower overhead. It requires LAPACK (``USE_LAPACK=1``).
+
 .. _mkl:
 
 MKL Pardiso
