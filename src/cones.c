@@ -464,7 +464,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
   ell1_vars = 0;
   if (k->ell1_size && k->ell1) {
     for (i = 0; i < k->ell1_size; ++i) {
-      ell1_vars += k->ell1[i];
+      ell1_vars += k->ell1[i] + 1;
     }
     sprintf(tmp + strlen(tmp), "\t  ell1: ell1 vars: %li, ell1_size: %li\n",
             (long)ell1_vars, (long)k->ell1_size);

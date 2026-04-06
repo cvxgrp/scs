@@ -109,14 +109,6 @@ scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0,
     return 0;
   }
 
-  /* Find the value on k */
-
-  /* check if k = 0 suffices */
-  if (-t0 >= x0[0]) {
-    memset(proj, 0, (n + 1) * sizeof(*x0));
-    return 0;
-  }
-
   xSum = 0;
   tempSum = 0;
   k = -1;
@@ -193,7 +185,10 @@ static void in_place_shuffle_ell1(scs_float *x, Value_index *work, scs_int n) {
 int custom_cmp(const void *a, const void *b) {
   Value_index *elemA = (Value_index *)a;
   Value_index *elemB = (Value_index *)b;
-  return fabs(elemB->value) - fabs(elemA->value) > 0 ? 1 : -1;
+  scs_float diff = fabs(elemB->value) - fabs(elemA->value);
+  if (diff > 0) return 1;
+  if (diff < 0) return -1;
+  return 0;
 }
 
 void SCS(proj_ell_one)(scs_float *tx, scs_int n, ScsConeWork *c) {

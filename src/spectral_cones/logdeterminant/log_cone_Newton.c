@@ -80,10 +80,10 @@ scs_int log_cone_Newton(scs_float t0, scs_float v0, const scs_float *x0,
   scs_float newton_decrement;
 
   while (ix_x0_non_neg || is_x0_pos) {
-    if (x[i] < 0) {
+    if (x0[i] < 0) {
       ix_x0_non_neg = false;
       is_x0_pos = false;
-    } else if (x[i] == 0) {
+    } else if (x0[i] == 0) {
       is_x0_pos = false;
     }
 

@@ -67,7 +67,7 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
   blas_int nb = (blas_int)n;
   blas_int nb_plus_one = (blas_int)(n + 1);
   blas_int one_int = 1;
-  scs_float sqrt2 = sqrt(2.0);
+  scs_float sqrt2 = SQRTF(2.0);
   scs_float sqrt2_inv = 1.0 / sqrt2;
   scs_float *Xs = c->Xs;
   scs_float *e = c->e;
