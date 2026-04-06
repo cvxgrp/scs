@@ -45,6 +45,21 @@ sparse direct GPU solver is typically very fast.
 See `here <https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing>`_ for an example colab where the cuDSS version of SCS, along with
 required dependencies, is installed and used.
 
+.. _python_spectral_install:
+
+Spectral cones
+""""""""""""""
+
+To enable :ref:`spectral cone <spectral_cones>` support (log-determinant,
+nuclear norm, :math:`\ell_1` norm, sum-of-largest-eigenvalues), install with:
+
+.. code:: bash
+
+  python -m pip install -Csetup-args=-Duse_spectral_cones=true .
+
+This requires LAPACK (enabled by default). See
+:ref:`python_spectral_cone_keys` for the cone dict keys.
+
 Testing
 """""""
 
