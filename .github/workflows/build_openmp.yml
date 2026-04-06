@@ -22,3 +22,4 @@ jobs:
         make USE_OPENMP=1 test
         out/run_tests_direct
         out/run_tests_indirect
+        out/run_tests_dense
