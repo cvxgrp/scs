@@ -10,16 +10,15 @@ extern "C" {
 #include "scs_blas.h"
 
 struct SCS_LIN_SYS_WORK {
-  scs_int n;        /* number of QP variables */
-  scs_int m;        /* number of QP constraints */
-  scs_int n_plus_m; /* dimension of the linear system */
+  scs_int n; /* number of QP variables */
+  scs_int m; /* number of QP constraints */
 
-  /* Dense KKT matrix stored column-major */
-  scs_float *kkt;     /* n_plus_m x n_plus_m dense matrix */
-  blas_int *ipiv;     /* pivot indices from dgetrf */
+  scs_float *A_dense; /* dense A matrix, m x n column-major */
+  scs_float *G;       /* Gram matrix R_x + P + A' R_y^{-1} A, n x n col-major */
+  scs_float *r_y_inv; /* 1 / R_y diagonal, length m */
+  scs_float *tmp_m;   /* workspace of length m */
 
   /* These are required for matrix updates */
-  const ScsMatrix *A; /* does *not* own this memory */
   const ScsMatrix *P; /* does *not* own this memory */
   scs_float *diag_p;  /* Diagonal values of P */
 };
