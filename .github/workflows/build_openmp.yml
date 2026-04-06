@@ -1,7 +1,12 @@
 ---
 name: Build and Test OpenMP
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
 
 jobs:
   linux:
