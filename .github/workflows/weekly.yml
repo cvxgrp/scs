@@ -1,0 +1,199 @@
+name: Weekly Full Test Suite
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  # Standard build matrix (Linux, macOS, Windows)
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        lapack: [0, 1]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+      - name: Run dense tests
+        if: matrix.lapack == 1
+        run: out/run_tests_dense
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        lapack: [0, 1]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up MSYS2 (UCRT64) + toolchain + BLAS/LAPACK
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: UCRT64
+          install: >
+            base-devel
+            git
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-openblas
+            mingw-w64-ucrt-x86_64-lapack
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+      - name: Run dense tests
+        if: matrix.lapack == 1
+        run: out/run_tests_dense
+
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        lapack: [0, 1]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: brew update && brew install openblas lapack
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+      - name: Run dense tests
+        if: matrix.lapack == 1
+        run: out/run_tests_dense
+
+  # Spectral cones
+  spectral-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        spectral: [0, 1]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+      - run: out/run_tests_dense
+
+  spectral-mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
+        spectral: [0, 1]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: brew update && brew install openblas lapack
+      - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+      - run: out/run_tests_dense
+
+  # OpenMP
+  openmp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+      - run: make USE_OPENMP=1 test
+      - run: out/run_tests_direct
+      - run: out/run_tests_indirect
+      - run: out/run_tests_dense
+
+  # C++ compilation
+  cpp-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+          export CC=g++
+          make
+          make test
+          out/run_tests_direct
+          out/run_tests_indirect
+          out/run_tests_dense
+
+  cpp-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          brew update && brew install openblas lapack
+          export CC=clang++
+          make
+          make test
+          out/run_tests_direct
+          out/run_tests_indirect
+          out/run_tests_dense
+
+  # CMake
+  cmake-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+          mkdir out
+          export INSTALL_DIR=$PWD/out
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
+          mkdir build
+          cd build
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+          make
+          make install
+          ctest --output-on-failure
+          cd ../docs/src/examples/
+          gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsdir
+          ./qp.out
+
+  cmake-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          brew update && brew install openblas lapack
+          mkdir out
+          export INSTALL_DIR=$PWD/out
+          export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:$INSTALL_DIR/lib
+          mkdir build
+          cd build
+          cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+          make
+          make install
+          ctest --output-on-failure
+          cd ../docs/src/examples/
+          gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsdir
+          ./qp.out
+
+  # Valgrind memory check
+  valgrind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev valgrind
+      - run: make OPT="-O3 -g"
+      - run: make test OPT="-O3 -g"
+      - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_direct
+      - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_indirect
+      - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_dense
