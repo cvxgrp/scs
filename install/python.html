@@ -18,6 +18,7 @@
       <script src="../_static/documentation_options.js?v=537ea5e8"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,6 +54,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#mkl">MKL</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#gpu">GPU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spectral-cones">Spectral cones</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
 </ul>
@@ -131,6 +133,16 @@ solver using</p>
 sparse direct GPU solver is typically very fast.</p>
 <p>See <a class="reference external" href="https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing">here</a> for an example colab where the cuDSS version of SCS, along with
 required dependencies, is installed and used.</p>
+</section>
+<section id="spectral-cones">
+<span id="python-spectral-install"></span><h2>Spectral cones<a class="headerlink" href="#spectral-cones" title="Link to this heading"></a></h2>
+<p>To enable <a class="reference internal" href="../api/cones.html#spectral-cones"><span class="std std-ref">spectral cone</span></a> support (log-determinant,
+nuclear norm, <span class="math notranslate nohighlight">\(\ell_1\)</span> norm, sum-of-largest-eigenvalues), install with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_spectral_cones<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+</pre></div>
+</div>
+<p>This requires LAPACK (enabled by default). See
+<span class="xref std std-ref">python_spectral_cone_keys</span> for the cone dict keys.</p>
 </section>
 <section id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h2>
