@@ -32,7 +32,23 @@ const char *scs_get_lin_sys_method() {
 /* Free allocated resources for the linear system solver */
 void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
-    /* Free GPU resources */
+    /* Free cuDSS resources first, before freeing the GPU memory they reference */
+    if (p->solver_data && p->handle)
+      cudssDataDestroy(p->handle, p->solver_data);
+    if (p->solver_config)
+      cudssConfigDestroy(p->solver_config);
+
+    if (p->d_kkt_mat)
+      cudssMatrixDestroy(p->d_kkt_mat);
+    if (p->d_b_mat)
+      cudssMatrixDestroy(p->d_b_mat);
+    if (p->d_sol_mat)
+      cudssMatrixDestroy(p->d_sol_mat);
+
+    if (p->handle)
+      cudssDestroy(p->handle);
+
+    /* Free GPU memory */
     if (p->d_kkt_val)
       cudaFree(p->d_kkt_val);
     if (p->d_kkt_row_ptr)
@@ -49,21 +65,6 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
       cudaFreeHost(p->h_b_pinned);
     if (p->h_sol_pinned)
       cudaFreeHost(p->h_sol_pinned);
-
-    /* Free cuDSS resources */
-    if (p->d_kkt_mat)
-      cudssMatrixDestroy(p->d_kkt_mat);
-    if (p->d_b_mat)
-      cudssMatrixDestroy(p->d_b_mat);
-    if (p->d_sol_mat)
-      cudssMatrixDestroy(p->d_sol_mat);
-
-    if (p->solver_config)
-      cudssConfigDestroy(p->solver_config);
-    if (p->solver_data && p->handle)
-      cudssDataDestroy(p->handle, p->solver_data);
-    if (p->handle)
-      cudssDestroy(p->handle);
 
     /* Free CPU resources */
     if (p->kkt)
