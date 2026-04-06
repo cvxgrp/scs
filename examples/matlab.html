@@ -55,7 +55,10 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C/C++</a></li>
 <li class="toctree-l2"><a class="reference internal" href="python.html">Python</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">MATLAB</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MATLAB</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#workspace-reuse-example">Workspace reuse example</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="julia.html">Julia</a></li>
 <li class="toctree-l2"><a class="reference internal" href="r.html">R</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ruby.html">Ruby</a></li>
@@ -188,6 +191,37 @@ Optimal dual vector y*:
 
 </pre></div>
 </div>
+<section id="workspace-reuse-example">
+<h2>Workspace reuse example<a class="headerlink" href="#workspace-reuse-example" title="Link to this heading"></a></h2>
+<p>When solving many problems that share the same <code class="code docutils literal notranslate"><span class="pre">A</span></code> and <code class="code docutils literal notranslate"><span class="pre">P</span></code> but have
+different <code class="code docutils literal notranslate"><span class="pre">b</span></code> or <code class="code docutils literal notranslate"><span class="pre">c</span></code>, the workspace API avoids re-factorizing:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Set up the initial problem</span>
+<span class="n">data</span><span class="p">.</span><span class="n">P</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">2.</span><span class="p">]);</span>
+<span class="n">data</span><span class="p">.</span><span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">([</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">;</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">]);</span>
+<span class="n">data</span><span class="p">.</span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="mf">0.3</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">0.5</span><span class="p">];</span>
+<span class="n">data</span><span class="p">.</span><span class="n">c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">];</span>
+<span class="n">cone</span><span class="p">.</span><span class="n">z</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="n">cone</span><span class="p">.</span><span class="n">l</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="nb">settings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">&#39;verbose&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="c">% Initialize workspace (factorizes once)</span>
+<span class="n">work</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_init</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">cone</span><span class="p">,</span><span class="w"> </span><span class="nb">settings</span><span class="p">);</span>
+<span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+
+<span class="c">% Solve again with a different b</span>
+<span class="n">b_new</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">;</span><span class="w"> </span><span class="mf">0.1</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">0.3</span><span class="p">];</span>
+<span class="n">scs_update</span><span class="p">(</span><span class="n">work</span><span class="p">,</span><span class="w"> </span><span class="n">b_new</span><span class="p">,</span><span class="w"> </span><span class="p">[]);</span>
+<span class="p">[</span><span class="n">x2</span><span class="p">,</span><span class="w"> </span><span class="n">y2</span><span class="p">,</span><span class="w"> </span><span class="n">s2</span><span class="p">,</span><span class="w"> </span><span class="n">info2</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+
+<span class="c">% Warm-start the next solve</span>
+<span class="n">warm</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">x2</span><span class="p">;</span><span class="w"> </span><span class="n">warm</span><span class="p">.</span><span class="n">y</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">y2</span><span class="p">;</span><span class="w"> </span><span class="n">warm</span><span class="p">.</span><span class="n">s</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">s2</span><span class="p">;</span>
+<span class="p">[</span><span class="n">x3</span><span class="p">,</span><span class="w"> </span><span class="n">y3</span><span class="p">,</span><span class="w"> </span><span class="n">s3</span><span class="p">,</span><span class="w"> </span><span class="n">info3</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">work</span><span class="p">,</span><span class="w"> </span><span class="n">warm</span><span class="p">);</span>
+
+<span class="c">% Free workspace</span>
+<span class="n">scs_finish</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 

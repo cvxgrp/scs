@@ -29,3 +29,49 @@ sequentially. To do this add to the :code:`data` struct passed to :code:`scs`
 the additional fields :code:`x`, :code:`y`, and :code:`s` (or any subset
 thereof) where :code:`x` and :code:`s` correspond to the primal solution guesses
 and :code:`y` corresponds to the dual solution guess.
+
+Solver backends
+---------------
+
+By default SCS uses the sparse direct (LDL) solver. Alternative backends can be
+selected via the :code:`settings` struct:
+
+.. code:: matlab
+
+  settings.use_indirect = true;  % conjugate gradient solver
+  settings.dense = true;         % dense Cholesky (best for dense A)
+  settings.gpu = true;           % GPU solver
+
+Workspace reuse
+---------------
+
+When solving a sequence of problems where only :code:`b` and/or :code:`c` change
+(e.g., MPC, parameter sweeps), you can avoid re-factorizing by using the
+workspace API:
+
+.. code:: matlab
+
+  % Initialize workspace (factorizes A and P)
+  work = scs_init(data, cones, settings);
+
+  % Solve
+  [x, y, s, info] = scs_solve(work);
+
+  % Update b and/or c without re-factorizing (pass [] to leave unchanged)
+  scs_update(work, b_new, c_new);
+
+  % Re-solve with the updated data
+  [x, y, s, info] = scs_solve(work);
+
+  % Warm-start a re-solve
+  warm.x = x; warm.y = y; warm.s = s;
+  [x, y, s, info] = scs_solve(work, warm);
+
+  % Free workspace when done
+  scs_finish(work);
+
+This corresponds to the C API functions :code:`scs_init`, :code:`scs_solve`,
+:code:`scs_update`, and :code:`scs_finish`. The workspace handle :code:`work`
+records which solver backend was used, so calls to :code:`scs_solve`,
+:code:`scs_update`, and :code:`scs_finish` are automatically routed to the
+correct backend.

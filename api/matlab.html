@@ -59,6 +59,8 @@
 <li class="toctree-l3"><a class="reference internal" href="python.html">Python</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">MATLAB</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#warm-starting">Warm-starting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#solver-backends">Solver backends</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workspace-reuse">Workspace reuse</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="julia.html">Julia</a></li>
@@ -126,6 +128,47 @@ sequentially. To do this add to the <code class="code docutils literal notransla
 the additional fields <code class="code docutils literal notranslate"><span class="pre">x</span></code>, <code class="code docutils literal notranslate"><span class="pre">y</span></code>, and <code class="code docutils literal notranslate"><span class="pre">s</span></code> (or any subset
 thereof) where <code class="code docutils literal notranslate"><span class="pre">x</span></code> and <code class="code docutils literal notranslate"><span class="pre">s</span></code> correspond to the primal solution guesses
 and <code class="code docutils literal notranslate"><span class="pre">y</span></code> corresponds to the dual solution guess.</p>
+</section>
+<section id="solver-backends">
+<h2>Solver backends<a class="headerlink" href="#solver-backends" title="Link to this heading"></a></h2>
+<p>By default SCS uses the sparse direct (LDL) solver. Alternative backends can be
+selected via the <code class="code docutils literal notranslate"><span class="pre">settings</span></code> struct:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">settings</span><span class="p">.</span><span class="n">use_indirect</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">  </span><span class="c">% conjugate gradient solver</span>
+<span class="nb">settings</span><span class="p">.</span><span class="n">dense</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">         </span><span class="c">% dense Cholesky (best for dense A)</span>
+<span class="nb">settings</span><span class="p">.</span><span class="n">gpu</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">           </span><span class="c">% GPU solver</span>
+</pre></div>
+</div>
+</section>
+<section id="workspace-reuse">
+<h2>Workspace reuse<a class="headerlink" href="#workspace-reuse" title="Link to this heading"></a></h2>
+<p>When solving a sequence of problems where only <code class="code docutils literal notranslate"><span class="pre">b</span></code> and/or <code class="code docutils literal notranslate"><span class="pre">c</span></code> change
+(e.g., MPC, parameter sweeps), you can avoid re-factorizing by using the
+workspace API:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Initialize workspace (factorizes A and P)</span>
+<span class="n">work</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_init</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">cones</span><span class="p">,</span><span class="w"> </span><span class="nb">settings</span><span class="p">);</span>
+
+<span class="c">% Solve</span>
+<span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+
+<span class="c">% Update b and/or c without re-factorizing (pass [] to leave unchanged)</span>
+<span class="n">scs_update</span><span class="p">(</span><span class="n">work</span><span class="p">,</span><span class="w"> </span><span class="n">b_new</span><span class="p">,</span><span class="w"> </span><span class="n">c_new</span><span class="p">);</span>
+
+<span class="c">% Re-solve with the updated data</span>
+<span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+
+<span class="c">% Warm-start a re-solve</span>
+<span class="n">warm</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">warm</span><span class="p">.</span><span class="n">y</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">y</span><span class="p">;</span><span class="w"> </span><span class="n">warm</span><span class="p">.</span><span class="n">s</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">work</span><span class="p">,</span><span class="w"> </span><span class="n">warm</span><span class="p">);</span>
+
+<span class="c">% Free workspace when done</span>
+<span class="n">scs_finish</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This corresponds to the C API functions <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>, <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">scs_update</span></code>, and <code class="code docutils literal notranslate"><span class="pre">scs_finish</span></code>. The workspace handle <code class="code docutils literal notranslate"><span class="pre">work</span></code>
+records which solver backend was used, so calls to <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">scs_update</span></code>, and <code class="code docutils literal notranslate"><span class="pre">scs_finish</span></code> are automatically routed to the
+correct backend.</p>
 </section>
 </section>
 
