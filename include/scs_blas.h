@@ -49,6 +49,7 @@ extern "C" {
 #endif
 
 #ifdef MATLAB_MEX_FILE
+#include <stddef.h> /* ptrdiff_t */
 typedef ptrdiff_t blas_int;
 #elif defined BLAS64
 #include <stdint.h>
