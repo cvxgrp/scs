@@ -54,7 +54,8 @@ project
 
 The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
 :code:`scs::scsindir` as well as a header file :code:`scs.h` that defines the
-API.
+API. When LAPACK is available (the default), it also exports
+:code:`scs::scsdense` for the :ref:`dense direct <dense>` solver.
 
 MKL
 """
@@ -108,6 +109,9 @@ by calling target_link_libraries as in the following example:
   # To use the MKL Pardiso direct method
   target_link_libraries(example scs::scsmkl)
 
+  # To use the dense direct method (requires LAPACK)
+  target_link_libraries(example scs::scsdense)
+
   # To use the cuDSS direct method
   target_link_libraries(example scs::scscudss)
 
@@ -151,6 +155,18 @@ This will produce static library :code:`libscsmkl.a` and dynamic library
 :code:`out` folder.  (Note that the choice of MKL compiler flags might not be right
 for your system and may need to be `modified
 <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
+
+To compile and test the :ref:`dense direct <dense>` solver (requires LAPACK):
+
+.. code:: bash
+
+  make dense
+  out/run_tests_dense
+
+This will produce static library :code:`libscsdense.a` and dynamic library
+:code:`libscsdense.ext` (where :code:`.ext` is platform dependent) in the
+:code:`out` folder. The dense solver is best suited for small to medium-sized
+problems.
 
 If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo

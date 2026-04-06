@@ -142,7 +142,8 @@ make
 </div>
 <p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> that defines the
-API.</p>
+API. When LAPACK is available (the default), it also exports
+<code class="code docutils literal notranslate"><span class="pre">scs::scsdense</span></code> for the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> solver.</p>
 <section id="mkl">
 <h3>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h3>
 <p>If <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html">MKL</a>
@@ -184,6 +185,9 @@ target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs:
 <span class="c1"># To use the MKL Pardiso direct method</span>
 target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scsmkl<span class="o">)</span>
 
+<span class="c1"># To use the dense direct method (requires LAPACK)</span>
+target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scsdense<span class="o">)</span>
+
 <span class="c1"># To use the cuDSS direct method</span>
 target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scscudss<span class="o">)</span>
 </pre></div>
@@ -220,6 +224,15 @@ out/run_tests_mkl
 <code class="code docutils literal notranslate"><span class="pre">libscsmkl.ext</span></code> (again <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> is platform dependent) in the
 <code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.  (Note that the choice of MKL compiler flags might not be right
 for your system and may need to be <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+<p>To compile and test the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> solver (requires LAPACK):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>dense
+out/run_tests_dense
+</pre></div>
+</div>
+<p>This will produce static library <code class="code docutils literal notranslate"><span class="pre">libscsdense.a</span></code> and dynamic library
+<code class="code docutils literal notranslate"><span class="pre">libscsdense.ext</span></code> (where <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> is platform dependent) in the
+<code class="code docutils literal notranslate"><span class="pre">out</span></code> folder. The dense solver is best suited for small to medium-sized
+problems.</p>
 <p>If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo
 binaries in the out folder corresponding to the GPU version.  Note that the GPU

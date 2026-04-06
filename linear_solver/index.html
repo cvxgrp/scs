@@ -53,6 +53,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Linear System Solver</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#available-linear-solvers">Available linear solvers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-direct">Sparse direct</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dense-direct">Dense direct</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mkl-pardiso">MKL Pardiso</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-indirect">Sparse indirect</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
@@ -139,6 +140,19 @@ above matrix using a sparse permuted LDL factorization. Then it solves the
 linear system at each iteration using the cached factors.  Since the linear
 system is quasidefinite we have strong existence guarantees about the
 factorization.  It relies on the external (but included) <a class="reference external" href="https://github.com/DrTimothyAldenDavis/SuiteSparse">AMD</a> and <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> packages.</p>
+</section>
+<section id="dense-direct">
+<span id="dense"></span><h3>Dense direct<a class="headerlink" href="#dense-direct" title="Link to this heading"></a></h3>
+<p>The dense direct method reduces the KKT system to the smaller Gram matrix
+<span class="math notranslate nohighlight">\(G = R_x + P + A^\top R_y^{-1} A\)</span> (size <span class="math notranslate nohighlight">\(n \times n\)</span>) and
+factorizes it using the LAPACK <code class="docutils literal notranslate"><span class="pre">dpotrf</span></code> (Cholesky) routine. The
+<span class="math notranslate nohighlight">\(A^\top R_y^{-1} A\)</span> product is computed via <code class="docutils literal notranslate"><span class="pre">dsyrk</span></code> and subsequent
+solves use <code class="docutils literal notranslate"><span class="pre">dpotrs</span></code>. When the diagonal <span class="math notranslate nohighlight">\(R\)</span> changes, the Gram matrix is
+re-formed and re-factorized.</p>
+<p>This backend is best suited for small to medium-sized problems where the
+constraint matrix <span class="math notranslate nohighlight">\(A\)</span> is dense. For such problems, dense BLAS/LAPACK
+routines can outperform sparse solvers due to highly optimized memory access
+patterns and lower overhead. It requires LAPACK (<code class="docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>).</p>
 </section>
 <section id="mkl-pardiso">
 <span id="mkl"></span><h3>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Link to this heading"></a></h3>
