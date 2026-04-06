@@ -326,6 +326,53 @@ install(
 
 set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_INDIRECT})
 
+# Dense direct method library (optional, requires LAPACK).
+if(USE_LAPACK)
+  set(DENSESRC ${LINSYS}/cpu/dense)
+
+  set(${PROJECT_NAME}_DENSE ${PROJECT_NAME}dense)
+  add_library(
+    ${${PROJECT_NAME}_DENSE}
+    ${${PROJECT_NAME}_HDR} ${${PROJECT_NAME}_SRC} ${DENSESRC}/private.c
+    ${DENSESRC}/private.h)
+
+  target_include_directories(
+    ${${PROJECT_NAME}_DENSE}
+    PRIVATE
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${DENSESRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
+  )
+
+  target_include_directories(
+    ${${PROJECT_NAME}_DENSE}
+    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+
+  target_compile_definitions(${${PROJECT_NAME}_DENSE} PRIVATE ${COMPILER_OPTS})
+
+  target_link_libraries(${${PROJECT_NAME}_DENSE}
+                        PRIVATE ${LAPACK_LINK_LIBRARIES}
+                                $<$<NOT:$<PLATFORM_ID:Windows>>:m>
+                                $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
+
+  set_target_properties(
+    ${${PROJECT_NAME}_DENSE}
+    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+                                      "${${PROJECT_NAME}_PUBLIC_HDR}")
+
+  add_library(scs::${${PROJECT_NAME}_DENSE} ALIAS ${${PROJECT_NAME}_DENSE})
+
+  install(
+    TARGETS ${${PROJECT_NAME}_DENSE}
+    EXPORT ${PROJECT_NAME}
+    COMPONENT runtime
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
+
+  set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_DENSE})
+endif()
+
 # MKL Pardiso library (optional, requires MKLROOT environment variable).
 if(DEFINED ENV{MKLROOT})
 
@@ -485,6 +532,10 @@ if(BUILD_TESTING)
 
   scs_add_test(run_tests_direct scs::scsdir)
   scs_add_test(run_tests_indirect scs::scsindir)
+
+  if(USE_LAPACK)
+    scs_add_test(run_tests_dense scs::scsdense)
+  endif()
 
   if(DEFINED ENV{MKLROOT})
     scs_add_test(run_tests_mkl scs::scsmkl)
