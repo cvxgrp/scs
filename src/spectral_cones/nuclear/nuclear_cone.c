@@ -53,10 +53,10 @@ scs_int SCS(proj_nuclear_cone)(scs_float *tX, scs_int m, scs_int n,
   scs_float *u;
   scs_float *vt;
   scs_float *work;
-  int lwork;
-  int info;
+  blas_int lwork;
+  blas_int info;
   scs_int status;
-  int one;
+  blas_int one;
   scs_int i;
   char trans;
   scs_float alpha;
