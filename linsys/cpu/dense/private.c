@@ -73,17 +73,12 @@ static void form_gram(ScsLinSysWork *p, const scs_float *diag_r) {
     p->r_y_inv[i] = 1.0 / diag_r[n + i];
   }
 
-  /* Form S = diag(sqrt(r_y_inv)) * A in tmp workspace.
-   * We scale columns of A_dense viewed as rows of A', but it's easier to
-   * scale rows of A_dense. S is m x n, stored column-major. */
-  scs_float *S = (scs_float *)scs_calloc((size_t)m * n, sizeof(scs_float));
-  if (!S) {
-    return; /* caller checks G for validity */
-  }
+  /* Form S = diag(sqrt(r_y_inv)) * A in pre-allocated workspace.
+   * S is m x n, stored column-major. */
+  scs_float *S = p->S;
   for (j = 0; j < n; ++j) {
     for (i = 0; i < m; ++i) {
-      scs_float sqrt_ry_inv = SQRTF(p->r_y_inv[i]);
-      S[j * m + i] = sqrt_ry_inv * p->A_dense[j * m + i];
+      S[j * m + i] = SQRTF(p->r_y_inv[i]) * p->A_dense[j * m + i];
     }
   }
 
@@ -97,7 +92,6 @@ static void form_gram(ScsLinSysWork *p, const scs_float *diag_r) {
     char trans = 'T';
     BLAS(syrk)(&uplo, &trans, &bn, &bm, &one, S, &bm, &zero, G, &bn);
   }
-  scs_free(S);
 
   /* Add R_x to diagonal */
   for (i = 0; i < n; ++i) {
@@ -135,9 +129,10 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->G = (scs_float *)scs_calloc((size_t)A->n * A->n, sizeof(scs_float));
   p->r_y_inv = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   p->tmp_m = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+  p->S = (scs_float *)scs_calloc((size_t)A->m * A->n, sizeof(scs_float));
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
 
-  if (!p->A_dense || !p->G || !p->r_y_inv || !p->tmp_m || !p->diag_p) {
+  if (!p->A_dense || !p->G || !p->r_y_inv || !p->tmp_m || !p->S || !p->diag_p) {
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
@@ -247,6 +242,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p->G);
     scs_free(p->r_y_inv);
     scs_free(p->tmp_m);
+    scs_free(p->S);
     scs_free(p->diag_p);
     scs_free(p);
   }
