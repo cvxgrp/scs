@@ -16,6 +16,7 @@ jobs:
           make test
           out/run_tests_direct    # test direct solver
           out/run_tests_indirect  # test indirect solver
+          out/run_tests_dense     # test dense solver
 
   #  runs-on: windows-latest
   #  steps:
@@ -37,3 +38,4 @@ jobs:
           make test
           out/run_tests_direct    # test direct solver
           out/run_tests_indirect  # test indirect solver
+          out/run_tests_dense     # test dense solver

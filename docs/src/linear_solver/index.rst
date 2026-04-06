@@ -51,6 +51,23 @@ factorization.  It relies on the external (but included) `AMD
 <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ and `QDLDL
 <https://github.com/oxfordcontrol/qdldl>`_ packages.
 
+.. _dense:
+
+Dense direct
+^^^^^^^^^^^^
+
+The dense direct method reduces the KKT system to the smaller Gram matrix
+:math:`G = R_x + P + A^\top R_y^{-1} A` (size :math:`n \times n`) and
+factorizes it using the LAPACK ``dpotrf`` (Cholesky) routine. The
+:math:`A^\top R_y^{-1} A` product is computed via ``dsyrk`` and subsequent
+solves use ``dpotrs``. When the diagonal :math:`R` changes, the Gram matrix is
+re-formed and re-factorized.
+
+This backend is best suited for small to medium-sized problems where the
+constraint matrix :math:`A` is dense. For such problems, dense BLAS/LAPACK
+routines can outperform sparse solvers due to highly optimized memory access
+patterns and lower overhead. It requires LAPACK (``USE_LAPACK=1``).
+
 .. _mkl:
 
 MKL Pardiso

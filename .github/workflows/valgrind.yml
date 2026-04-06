@@ -14,3 +14,4 @@ jobs:
       - run: make test OPT="-O3 -g"
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_direct
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_indirect
+      - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_dense

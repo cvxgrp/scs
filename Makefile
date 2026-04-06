@@ -82,6 +82,7 @@ src/scs_version.o: src/scs_version.c $(INC_FILES)
 
 $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
+$(DENSESRC)/private.o: $(DENSESRC)/private.c  $(DENSESRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
 $(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
 	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
@@ -94,6 +95,11 @@ $(OUT)/libscsdir.a: $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LD
 	- $(RANLIB) $@
 
 $(OUT)/libscsindir.a: $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+	mkdir -p $(OUT)
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
+
+$(OUT)/libscsdense.a: $(SCS_O) $(SCS_OBJECTS) $(DENSESRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
@@ -116,6 +122,10 @@ $(OUT)/libscsindir.$(SHARED): $(SCS_INDIR_O) $(SCS_OBJECTS) $(INDIRSRC)/private.
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
+$(OUT)/libscsdense.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(DENSESRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
+
 $(OUT)/libscsmkl.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
@@ -128,6 +138,9 @@ $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
 $(OUT)/demo_socp_indirect: test/random_socp_prob.c $(OUT)/libscsindir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
+
+$(OUT)/demo_socp_dense: test/random_socp_prob.c $(OUT)/libscsdense.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
 $(OUT)/demo_socp_mkl: test/random_socp_prob.c $(OUT)/libscsmkl.a
@@ -147,10 +160,16 @@ $(OUT)/run_from_file_gpu_indirect: test/run_from_file.c $(OUT)/libscsgpuindir.a
 
 # basic testing
 .PHONY: test
-test: $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
+TEST_TARGETS = $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
+ifneq ($(USE_LAPACK),0)
+TEST_TARGETS += $(OUT)/run_tests_dense
+endif
+test: $(TEST_TARGETS)
 $(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
+$(OUT)/run_tests_dense: test/run_tests.c $(OUT)/libscsdense.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(MKLFLAGS) -Itest
@@ -200,7 +219,7 @@ $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(MKLSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
+	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
@@ -216,6 +235,9 @@ INSTALL_GPU_TARGETS = $(OUT)/libscsgpuindir.a $(OUT)/libscsgpuindir.$(SHARED)
 
 INSTALL_INC_DIR = $(DESTDIR)$(PREFIX)/include/scs/
 INSTALL_LIB_DIR = $(DESTDIR)$(PREFIX)/lib/
+
+.PHONY: dense
+dense: $(OUT)/libscsdense.a $(OUT)/libscsdense.$(SHARED) $(OUT)/run_tests_dense $(OUT)/demo_socp_dense
 
 .PHONY: install install_gpu direct indirect
 install: $(INSTALL_INC_FILES) $(INSTALL_TARGETS)

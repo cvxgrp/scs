@@ -18,6 +18,7 @@ jobs:
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: out/run_tests_direct    # test direct solver
       - run: out/run_tests_indirect  # test indirect solver
+      - run: out/run_tests_dense     # test dense solver
 
   mac:
     strategy:
@@ -35,3 +36,4 @@ jobs:
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: out/run_tests_direct    # test direct solver
       - run: out/run_tests_indirect  # test indirect solver
+      - run: out/run_tests_dense     # test dense solver

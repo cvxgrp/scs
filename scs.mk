@@ -71,6 +71,7 @@ endif
 LINSYS = linsys
 DIRSRC = $(LINSYS)/cpu/direct
 INDIRSRC = $(LINSYS)/cpu/indirect
+DENSESRC = $(LINSYS)/cpu/dense
 GPUDIR = $(LINSYS)/gpu/direct
 GPUINDIR = $(LINSYS)/gpu/indirect
 MKLSRC = $(LINSYS)/mkl/direct
