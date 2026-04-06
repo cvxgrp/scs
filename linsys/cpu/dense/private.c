@@ -68,9 +68,10 @@ static void form_gram(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_float *G = p->G;
   const ScsMatrix *P = p->P;
 
-  /* Compute r_y_inv = 1 / R_y and form scaled A: tmp_m used as scratch */
+  /* Compute r_y_inv = 1 / R_y and sqrt_r_y_inv in tmp_m */
   for (i = 0; i < m; ++i) {
     p->r_y_inv[i] = 1.0 / diag_r[n + i];
+    p->tmp_m[i] = SQRTF(p->r_y_inv[i]);
   }
 
   /* Form S = diag(sqrt(r_y_inv)) * A in pre-allocated workspace.
@@ -78,7 +79,7 @@ static void form_gram(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_float *S = p->S;
   for (j = 0; j < n; ++j) {
     for (i = 0; i < m; ++i) {
-      S[j * m + i] = SQRTF(p->r_y_inv[i]) * p->A_dense[j * m + i];
+      S[j * m + i] = p->tmp_m[i] * p->A_dense[j * m + i];
     }
   }
 
