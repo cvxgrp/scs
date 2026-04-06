@@ -4,6 +4,7 @@ name: Build C++  # test that we can compile SCS with C++ compiler
 on:
   push:
   pull_request:
+  workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1'
 
