@@ -7,6 +7,7 @@
 
 /* Include Tests */
 #include "problems/degenerate.h"
+#include "problems/dense_qp.h"
 #include "problems/hs21_tiny_qp.h"
 #include "problems/infeasible_lp.h"
 #include "problems/infeasible_socp.h"
@@ -96,6 +97,7 @@ _SKIP(mpc_bug)
 static const char *all_tests(void) {
   mu_run_test(test_validation);
   mu_run_test(degenerate);
+  mu_run_test(dense_qp);
   mu_run_test(small_lp);
   mu_run_test(small_qp);
   mu_run_test(lp_update);
