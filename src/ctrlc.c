@@ -34,17 +34,8 @@ int scs_is_interrupted(void) {
 #include <windows.h>
 
 static volatile LONG int_detected;
-static INIT_ONCE ctrlc_init_once = INIT_ONCE_STATIC_INIT;
-static CRITICAL_SECTION ctrlc_cs;
+static volatile LONG ctrlc_lock = 0;
 static int listener_count = 0;
-
-static BOOL CALLBACK init_ctrlc_cs(PINIT_ONCE once, PVOID param, PVOID *ctx) {
-  (void)once;
-  (void)param;
-  (void)ctx;
-  InitializeCriticalSection(&ctrlc_cs);
-  return TRUE;
-}
 
 static BOOL WINAPI scs_handle_ctrlc(DWORD dwCtrlType) {
   if (dwCtrlType != CTRL_C_EVENT) {
@@ -55,23 +46,22 @@ static BOOL WINAPI scs_handle_ctrlc(DWORD dwCtrlType) {
 }
 
 void scs_start_interrupt_listener(void) {
-  InitOnceExecuteOnce(&ctrlc_init_once, init_ctrlc_cs, NULL, NULL);
-  EnterCriticalSection(&ctrlc_cs);
+  while (InterlockedCompareExchange(&ctrlc_lock, 1, 0) != 0) { }
   if (listener_count == 0) {
     InterlockedExchange(&int_detected, 0);
     SetConsoleCtrlHandler(scs_handle_ctrlc, TRUE);
   }
   listener_count++;
-  LeaveCriticalSection(&ctrlc_cs);
+  InterlockedExchange(&ctrlc_lock, 0);
 }
 
 void scs_end_interrupt_listener(void) {
-  EnterCriticalSection(&ctrlc_cs);
+  while (InterlockedCompareExchange(&ctrlc_lock, 1, 0) != 0) { }
   listener_count--;
   if (listener_count == 0) {
     SetConsoleCtrlHandler(scs_handle_ctrlc, FALSE);
   }
-  LeaveCriticalSection(&ctrlc_cs);
+  InterlockedExchange(&ctrlc_lock, 0);
 }
 
 int scs_is_interrupted(void) {
