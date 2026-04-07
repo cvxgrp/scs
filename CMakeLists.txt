@@ -134,6 +134,8 @@ if(USE_LAPACK)
   endif()
 endif()
 
+find_package(Threads REQUIRED)
+
 if(USE_OPENMP)
   find_package(OpenMP)
   if(OpenMP_C_FOUND)
@@ -262,7 +264,8 @@ target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 target_link_libraries(${${PROJECT_NAME}_DIRECT}
                       PRIVATE ${LAPACK_LINK_LIBRARIES}
                               $<$<NOT:$<PLATFORM_ID:Windows>>:m>
-                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
+                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+                              Threads::Threads)
 
 set_target_properties(
   ${${PROJECT_NAME}_DIRECT}
@@ -306,7 +309,8 @@ target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS}
 target_link_libraries(${${PROJECT_NAME}_INDIRECT}
                       PRIVATE $<$<NOT:$<PLATFORM_ID:Windows>>:m>
                               ${LAPACK_LINK_LIBRARIES}
-                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
+                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+                              Threads::Threads)
 
 set_target_properties(
   ${${PROJECT_NAME}_INDIRECT}
@@ -352,7 +356,8 @@ if(USE_LAPACK)
   target_link_libraries(${${PROJECT_NAME}_DENSE}
                         PRIVATE ${LAPACK_LINK_LIBRARIES}
                                 $<$<NOT:$<PLATFORM_ID:Windows>>:m>
-                                $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
+                                $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+                                Threads::Threads)
 
   set_target_properties(
     ${${PROJECT_NAME}_DENSE}
@@ -411,7 +416,7 @@ if(DEFINED ENV{MKLROOT})
             mkl_gnu_thread
             mkl_core
             gomp
-            pthread
+            Threads::Threads
             dl)
 
   set_target_properties(
@@ -475,7 +480,8 @@ if(USE_CUDSS)
   target_link_libraries(
     ${${PROJECT_NAME}_CUDSS}
     PRIVATE CUDA::cudart cudss $<$<NOT:$<PLATFORM_ID:Windows>>:m>
-            ${LAPACK_LINK_LIBRARIES})
+            ${LAPACK_LINK_LIBRARIES}
+            Threads::Threads)
 
   set_target_properties(
     ${${PROJECT_NAME}_CUDSS}

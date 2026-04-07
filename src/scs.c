@@ -1130,7 +1130,6 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   ScsWork *w;
   SCS(timer) init_timer;
-  scs_start_interrupt_listener();
   if (!d || !k) {
     scs_printf("ERROR: Missing ScsData or ScsCone input\n");
     return SCS_NULL;
@@ -1141,6 +1140,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
     return SCS_NULL;
   }
 #endif
+  scs_start_interrupt_listener();
 #if VERBOSITY > 0
   scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
              sizeof(scs_int), sizeof(scs_float));
