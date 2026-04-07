@@ -66,10 +66,13 @@ void scs_start_interrupt_listener(void) {
 }
 
 void scs_end_interrupt_listener(void) {
+  InitOnceExecuteOnce(&ctrlc_init_once, init_ctrlc_cs, NULL, NULL);
   EnterCriticalSection(&ctrlc_cs);
-  listener_count--;
-  if (listener_count == 0) {
-    SetConsoleCtrlHandler(scs_handle_ctrlc, FALSE);
+  if (listener_count > 0) {
+    listener_count--;
+    if (listener_count == 0) {
+      SetConsoleCtrlHandler(scs_handle_ctrlc, FALSE);
+    }
   }
   LeaveCriticalSection(&ctrlc_cs);
 }
@@ -108,10 +111,12 @@ void scs_start_interrupt_listener(void) {
 
 void scs_end_interrupt_listener(void) {
   pthread_mutex_lock(&ctrlc_mutex);
-  listener_count--;
-  if (listener_count == 0) {
-    struct sigaction act;
-    sigaction(SIGINT, &oact, &act);
+  if (listener_count > 0) {
+    listener_count--;
+    if (listener_count == 0) {
+      struct sigaction act;
+      sigaction(SIGINT, &oact, &act);
+    }
   }
   pthread_mutex_unlock(&ctrlc_mutex);
 }
