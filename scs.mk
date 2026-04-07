@@ -41,7 +41,7 @@ SHARED = dll
 SONAME = -soname
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
-LDFLAGS += -lm -lrt
+LDFLAGS += -lm -lrt -lpthread
 SHARED = so
 SONAME = -soname
 endif
