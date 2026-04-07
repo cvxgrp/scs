@@ -54,11 +54,6 @@ struct SCS_LIN_SYS_WORK {
   scs_int *diag_r_idxs; /* indices where R appears in the KKT matrix */
   scs_float *diag_p;    /* Diagonal values of P */
 
-  /* GPU-side diagonal scatter for efficient R updates */
-  scs_int *d_diag_r_idxs;    /* device copy of scatter indices */
-  scs_float *d_diag_staging;  /* device staging for new diagonal values */
-  scs_float *h_diag_staging;  /* pinned host staging for new diag values */
-
   /* CUDA stream for async operations */
   cudaStream_t stream;
 

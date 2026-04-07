@@ -84,10 +84,8 @@ $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
 $(DENSESRC)/private.o: $(DENSESRC)/private.c  $(DENSESRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
-$(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h $(CUDSSSRC)/kernels.h
+$(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
 	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
-$(CUDSSSRC)/kernels.o: $(CUDSSSRC)/kernels.cu $(CUDSSSRC)/kernels.h
-	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/kernels.cu -o $@
 $(LINSYS)/scs_matrix.o: $(LINSYS)/scs_matrix.c $(LINSYS)/scs_matrix.h
 $(LINSYS)/csparse.o: $(LINSYS)/csparse.c $(LINSYS)/csparse.h
 
@@ -111,7 +109,7 @@ $(OUT)/libscsmkl.a: $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_ma
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscscudss.a: $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(CUDSSSRC)/kernels.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+$(OUT)/libscscudss.a: $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
@@ -132,9 +130,9 @@ $(OUT)/libscsmkl.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
 
-$(OUT)/libscscudss.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(CUDSSSRC)/kernels.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+$(OUT)/libscscudss.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CUDSS_LDFLAGS)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
 $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)

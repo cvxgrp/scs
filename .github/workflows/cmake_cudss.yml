@@ -38,10 +38,7 @@ jobs:
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
           mkdir build
           cd build
-          cmake -DBUILD_TESTING=ON -DDLONG=0 -DUSE_CUDSS=1 \
-            -DCMAKE_CUDA_COMPILER=${CUDA_PATH}/bin/nvcc \
-            -DCMAKE_CUDA_ARCHITECTURES=75 \
-            -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+          cmake -DBUILD_TESTING=ON -DDLONG=0 -DUSE_CUDSS=1 -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
           make
           make install
         #   ctest --output-on-failure  # requires a GPU

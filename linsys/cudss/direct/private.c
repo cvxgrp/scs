@@ -1,5 +1,4 @@
 #include "private.h"
-#include "kernels.h"
 #include "linsys.h"
 #include <string.h>
 
@@ -60,18 +59,12 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
       cudaFree(p->d_b);
     if (p->d_sol)
       cudaFree(p->d_sol);
-    if (p->d_diag_r_idxs)
-      cudaFree(p->d_diag_r_idxs);
-    if (p->d_diag_staging)
-      cudaFree(p->d_diag_staging);
 
     /* Free pinned host memory */
     if (p->h_b_pinned)
       cudaFreeHost(p->h_b_pinned);
     if (p->h_sol_pinned)
       cudaFreeHost(p->h_sol_pinned);
-    if (p->h_diag_staging)
-      cudaFreeHost(p->h_diag_staging);
 
     /* Destroy CUDA stream */
     if (p->stream)
@@ -192,25 +185,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                   p->n_plus_m * sizeof(scs_float)),
                    p, "cudaMallocHost: sol");
 
-  /* Allocate GPU-side scatter buffers for efficient diagonal R updates.
-   * This allows updating only the n+m changed diagonal entries on the GPU
-   * instead of re-uploading the entire nnz-element values array. */
-  CUDA_CHECK_ABORT(cudaMalloc((void **)&p->d_diag_r_idxs,
-                              p->n_plus_m * sizeof(scs_int)),
-                   p, "cudaMalloc: diag_r_idxs");
-  CUDA_CHECK_ABORT(
-      cudaMalloc((void **)&p->d_diag_staging, p->n_plus_m * sizeof(scs_float)),
-      p, "cudaMalloc: diag_staging");
-  CUDA_CHECK_ABORT(cudaMallocHost((void **)&p->h_diag_staging,
-                                  p->n_plus_m * sizeof(scs_float)),
-                   p, "cudaMallocHost: diag_staging");
-
-  /* Copy scatter indices to device (immutable after init) */
-  CUDA_CHECK_ABORT(cudaMemcpy(p->d_diag_r_idxs, p->diag_r_idxs,
-                              p->n_plus_m * sizeof(scs_int),
-                              cudaMemcpyHostToDevice),
-                   p, "cudaMemcpy: diag_r_idxs");
-
   /* Create RHS and solution matrix descriptors */
   scs_int nrhs = 1;
   CUDSS_CHECK_ABORT(cudssMatrixCreateDn(&p->d_b_mat, p->n_plus_m, nrhs,
@@ -248,11 +222,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
       return SCS_NULL;
     }
   }
-
-  /* CPU KKT matrix is no longer needed — diagonal updates are done GPU-side
-   * via the scatter kernel, and the structure/indices are already on device. */
-  SCS(cs_spfree)(p->kkt);
-  p->kkt = SCS_NULL;
 
   return p;
 }
@@ -305,47 +274,33 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
   return 0;
 }
 
-/* Update the KKT matrix when R changes.
- * Uses GPU-side scatter: only n+m values are transferred and written
- * directly into d_kkt_val, instead of re-uploading the full nnz array. */
+/* Update the KKT matrix when R changes */
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   scs_int i;
-  cudaError_t custatus;
-  cudssStatus_t status;
 
-  /* Build the n+m new diagonal values in the pinned staging buffer */
+  /* Update KKT matrix on CPU */
   for (i = 0; i < p->n; ++i) {
-    /* top left: R_x + P */
-    p->h_diag_staging[i] = p->diag_p[i] + diag_r[i];
+    /* top left is R_x + P */
+    p->kkt->x[p->diag_r_idxs[i]] = p->diag_p[i] + diag_r[i];
   }
-  for (i = p->n; i < p->n_plus_m; ++i) {
-    /* bottom right: -R_y */
-    p->h_diag_staging[i] = -diag_r[i];
+  for (i = p->n; i < p->n + p->m; ++i) {
+    /* bottom right is -R_y */
+    p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
   }
 
-  /* Async copy of just n+m values to device staging buffer */
-  custatus =
-      cudaMemcpyAsync(p->d_diag_staging, p->h_diag_staging,
-                      p->n_plus_m * sizeof(scs_float), cudaMemcpyHostToDevice,
-                      p->stream);
+  /* Copy updated values to device */
+  cudaError_t custatus = cudaMemcpy(p->d_kkt_val, p->kkt->x,
+                                    p->kkt->p[p->n_plus_m] * sizeof(scs_float),
+                                    cudaMemcpyHostToDevice);
   if (custatus != cudaSuccess) {
     scs_printf(
-        "scs_update_lin_sys_diag_r: Error copying diag to device: %d\n",
+        "scs_update_lin_sys_diag_r: Error copying kkt->x to device: %d\n",
         (int)custatus);
     return (scs_int)custatus;
   }
 
-  /* Scatter the n+m values into d_kkt_val at the correct indices (on GPU) */
-  custatus = scs_scatter_diag(p->d_kkt_val, p->d_diag_r_idxs,
-                              p->d_diag_staging, p->n_plus_m, p->stream);
-  if (custatus != cudaSuccess) {
-    scs_printf(
-        "scs_update_lin_sys_diag_r: Error in scatter kernel: %d\n",
-        (int)custatus);
-    return (scs_int)custatus;
-  }
-
-  /* Refresh the cuDSS matrix descriptor pointers (lightweight, no data copy) */
+  /* Update the matrix values in cuDSS */
+  cudssStatus_t status;
   status = cudssMatrixSetCsrPointers(p->d_kkt_mat, p->d_kkt_row_ptr, NULL,
                                      p->d_kkt_col_ind, p->d_kkt_val);
   if (status != CUDSS_STATUS_SUCCESS) {
@@ -355,7 +310,7 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     return (scs_int)status;
   }
 
-  /* Refactorize — queued on the same stream, so it runs after the scatter */
+  /* Perform Refactorization with the updated matrix */
   status =
       cudssExecute(p->handle, CUDSS_PHASE_REFACTORIZATION, p->solver_config,
                    p->solver_data, p->d_kkt_mat, p->d_sol_mat, p->d_b_mat);

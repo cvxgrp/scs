@@ -439,7 +439,6 @@ endif()
 
 # cuDSS GPU solver library (optional, requires CUDA toolkit and cuDSS).
 if(USE_CUDSS)
-  enable_language(CUDA)
   find_package(CUDAToolkit REQUIRED)
   find_package(cudss REQUIRED)
 
@@ -458,8 +457,7 @@ if(USE_CUDSS)
   set(${PROJECT_NAME}_CUDSS ${PROJECT_NAME}cudss)
   add_library(
     ${${PROJECT_NAME}_CUDSS} ${${PROJECT_NAME}_HDR} ${${PROJECT_NAME}_SRC}
-                             ${CUDSSSRC}/private.c ${CUDSSSRC}/private.h
-                             ${CUDSSSRC}/kernels.cu ${CUDSSSRC}/kernels.h)
+                             ${CUDSSSRC}/private.c ${CUDSSSRC}/private.h)
 
   target_include_directories(
     ${${PROJECT_NAME}_CUDSS}

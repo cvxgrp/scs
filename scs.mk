@@ -57,7 +57,7 @@ CULDFLAGS = -L$(CUDA_PATH)/lib -L$(CUDA_PATH)/lib64 -lcudart -lcublas -lcusparse
 CUDAFLAGS = $(CFLAGS) -I$(CUDA_PATH)/include -Ilinsys/gpu -Wno-c++11-long-long # turn off annoying long-long warnings in cuda header files
 
 CUDSS_FLAGS = -I$(CUDSS_PATH)/include -I$(CUDA_PATH)/include
-CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss -lstdc++
+CUDSS_LDFLAGS = $(CULDFLAGS) -L$(CUDSS_PATH)/lib -lcudss
 
 # Default optimization flags. Override with OPT="-O3 -g" for valgrind, which
 # may not support instruction sets enabled by -march=native.
