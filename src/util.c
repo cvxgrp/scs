@@ -77,18 +77,25 @@ scs_float SCS(tocq)(SCS(timer) * t) {
 
 #endif
 
-void SCS(deep_copy_data)(ScsData *dest, const ScsData *src) {
+scs_int SCS(deep_copy_data)(ScsData *dest, const ScsData *src) {
+  memset(dest, 0, sizeof(*dest));
   dest->n = src->n;
   dest->m = src->m;
-  SCS(copy_matrix)(&(dest->A), src->A);
-  SCS(copy_matrix)(&(dest->P), src->P);
+  if (!SCS(copy_matrix)(&(dest->A), src->A) ||
+      !SCS(copy_matrix)(&(dest->P), src->P)) {
+    return 0;
+  }
   dest->b = (scs_float *)scs_calloc(dest->m, sizeof(scs_float));
-  memcpy(dest->b, src->b, dest->m * sizeof(scs_float));
   dest->c = (scs_float *)scs_calloc(dest->n, sizeof(scs_float));
+  if (!dest->b || !dest->c) {
+    return 0;
+  }
+  memcpy(dest->b, src->b, dest->m * sizeof(scs_float));
   memcpy(dest->c, src->c, dest->n * sizeof(scs_float));
+  return 1;
 }
 
-void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
+scs_int SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
   memcpy(dest, src, sizeof(ScsSettings));
   /* MATLAB does something weird with strdup, so use strcpy instead */
   char *tmp;
@@ -97,6 +104,10 @@ void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
     tmp = (char *)scs_malloc(strlen(src->write_data_filename) + 1);
     if (tmp) {
       strcpy(tmp, src->write_data_filename);
+    }
+    if (!tmp) {
+      dest->write_data_filename = SCS_NULL;
+      return 0;
     }
     dest->write_data_filename = tmp;
   } else {
@@ -109,10 +120,15 @@ void SCS(deep_copy_stgs)(ScsSettings *dest, const ScsSettings *src) {
     if (tmp) {
       strcpy(tmp, src->log_csv_filename);
     }
+    if (!tmp) {
+      dest->log_csv_filename = SCS_NULL;
+      return 0;
+    }
     dest->log_csv_filename = tmp;
   } else {
     dest->log_csv_filename = SCS_NULL;
   }
+  return 1;
 }
 
 void SCS(free_data)(ScsData *d) {

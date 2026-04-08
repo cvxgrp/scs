@@ -95,8 +95,12 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
   scs_printf("\n");
   scs_printf("problem:  variables n: %i, constraints m: %i\n", (int)d->n,
              (int)d->m);
-  scs_printf("%s", cone_str);
-  scs_free(cone_str);
+  if (cone_str) {
+    scs_printf("%s", cone_str);
+    scs_free(cone_str);
+  } else {
+    scs_printf("cones: <unavailable>\n");
+  }
   scs_printf("settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e\n"
              "\t  alpha: %.2f, scale: %.2e, adaptive_scale: %i\n"
              "\t  max_iters: %i, normalize: %i, rho_x: %.2e\n",
@@ -908,17 +912,29 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   /* deep copy data */
   w->d = (ScsData *)scs_calloc(1, sizeof(ScsData));
-  SCS(deep_copy_data)(w->d, d);
+  if (!w->d || !SCS(deep_copy_data)(w->d, d)) {
+    scs_printf("ERROR: data copy failure\n");
+    free_work(w);
+    return SCS_NULL;
+  }
   d = SCS_NULL; /* for safety */
 
   /* deep copy cone */
   w->k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
-  SCS(deep_copy_cone)(w->k, k);
+  if (!w->k || !SCS(deep_copy_cone)(w->k, k)) {
+    scs_printf("ERROR: cone copy failure\n");
+    free_work(w);
+    return SCS_NULL;
+  }
   k = SCS_NULL; /* for safety */
 
   /* deep copy settings */
   w->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
-  SCS(deep_copy_stgs)(w->stgs, stgs);
+  if (!w->stgs || !SCS(deep_copy_stgs)(w->stgs, stgs)) {
+    scs_printf("ERROR: settings copy failure\n");
+    free_work(w);
+    return SCS_NULL;
+  }
   stgs = SCS_NULL; /* for safety */
 
   /* allocate workspace: */
@@ -940,7 +956,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
 
-  if (!w->c_orig) {
+  if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
+      !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
+      !w->xys_orig->x || !w->xys_orig->s || !w->xys_orig->y || !w->r_orig ||
+      !w->b_orig || !w->c_orig) {
     scs_printf("ERROR: work memory allocation failure\n");
     free_work(w);
     return SCS_NULL;
@@ -959,6 +978,12 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     w->xys_normalized->s = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
     w->xys_normalized->y = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
     w->r_normalized = init_residuals(w->d);
+    if (!w->xys_normalized || !w->xys_normalized->x || !w->xys_normalized->s ||
+        !w->xys_normalized->y || !w->r_normalized) {
+      scs_printf("ERROR: normalized work memory allocation failure\n");
+      free_work(w);
+      return SCS_NULL;
+    }
     /* this allocates memory that must be freed */
     w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
     if (!w->scal) {
@@ -1130,8 +1155,8 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   ScsWork *w;
   SCS(timer) init_timer;
-  if (!d || !k) {
-    scs_printf("ERROR: Missing ScsData or ScsCone input\n");
+  if (!d || !k || !stgs) {
+    scs_printf("ERROR: Missing ScsData, ScsCone, or ScsSettings input\n");
     return SCS_NULL;
   }
 #if NO_VALIDATE == 0

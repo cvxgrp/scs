@@ -78,7 +78,7 @@ struct SCS_CONE_WORK {
 };
 
 void SCS(free_cone)(ScsCone *k);
-void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src);
+scs_int SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src);
 ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m);
 char *SCS(get_cone_header)(const ScsCone *k);
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k);
