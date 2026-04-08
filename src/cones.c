@@ -445,6 +445,9 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
   return dims;
 }
 
+/* If buf is NULL, only accumulate the length that would be written.
+ * Otherwise append chunk, including its trailing '\0', at the current offset.
+ */
 static void append_to_header(char *buf, size_t *len, const char *chunk) {
   size_t chunk_len = strlen(chunk);
   if (buf) {
@@ -453,6 +456,18 @@ static void append_to_header(char *buf, size_t *len, const char *chunk) {
   *len += chunk_len;
 }
 
+/* Format the cone summary in one shared code path.
+ *
+ * When buf is NULL, this function performs a sizing pass only and updates
+ * *len with the number of characters required for the final string.
+ * When buf is non-NULL, it writes the same formatted output into buf and
+ * advances *len as it appends each line.
+ *
+ * This supports a two-pass implementation in get_cone_header:
+ * 1. call with buf == NULL to compute the exact allocation size
+ * 2. allocate once
+ * 3. call again with buf != NULL to render the final string
+ */
 static void format_cone_header(const ScsCone *k, char *buf, size_t *len) {
   char line[128];
   scs_int i, count;
