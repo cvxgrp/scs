@@ -445,80 +445,42 @@ static scs_int get_full_cone_dims(const ScsCone *k) {
   return dims;
 }
 
-static scs_int append_to_header(char **buf, size_t *cap, size_t *len,
-                                const char *chunk) {
+static void append_to_header(char *buf, size_t *len, const char *chunk) {
   size_t chunk_len = strlen(chunk);
-  if (*len + chunk_len + 1 > *cap) {
-    size_t new_cap = *cap;
-    char *new_buf;
-    while (*len + chunk_len + 1 > new_cap) {
-      new_cap *= 2;
-    }
-    new_buf = (char *)scs_malloc(new_cap);
-    if (!new_buf) {
-      return 0;
-    }
-    memcpy(new_buf, *buf, *len);
-    scs_free(*buf);
-    *buf = new_buf;
-    *cap = new_cap;
-    (*buf)[*len] = '\0';
-  }
-  memcpy(*buf + *len, chunk, chunk_len + 1);
+  memcpy(buf + *len, chunk, chunk_len + 1);
   *len += chunk_len;
-  return 1;
 }
 
 char *SCS(get_cone_header)(const ScsCone *k) {
   char line[128];
-  char *tmp = (char *)scs_malloc(256);
+  char *tmp;
   scs_int i, count;
-  size_t cap = 256, len = 0;
+  size_t len = 0;
 #ifdef USE_SPECTRAL_CONES
   scs_int ell1_vars, log_vars, nuc_vars, sl_vars;
 #endif
 
-  if (!tmp) {
-    return SCS_NULL;
-  }
-  tmp[0] = '\0';
-
-  if (!append_to_header(&tmp, &cap, &len, "cones: ")) {
-    scs_free(tmp);
-    return SCS_NULL;
-  }
+  strcpy(line, "cones: ");
+  len += strlen(line);
   if (k->z) {
     sprintf(line, "\t  z: primal zero / dual free vars: %li\n", (long)k->z);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   if (k->l) {
     sprintf(line, "\t  l: linear vars: %li\n", (long)k->l);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   if (k->bsize) {
     sprintf(line, "\t  b: box cone vars: %li\n", (long)k->bsize);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
-
   if (k->qsize) {
     count = 0;
     for (i = 0; i < k->qsize; ++i)
       count += k->q[i];
     sprintf(line, "\t  q: soc vars: %li, qsize: %li\n", (long)count,
             (long)k->qsize);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   if (k->ssize) {
     count = 0;
@@ -526,10 +488,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
       count += get_sd_cone_size(k->s[i]);
     sprintf(line, "\t  s: psd vars: %li, ssize: %li\n", (long)count,
             (long)k->ssize);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   if (k->cssize) {
     count = 0;
@@ -537,26 +496,17 @@ char *SCS(get_cone_header)(const ScsCone *k) {
       count += get_csd_cone_size(k->cs[i]);
     sprintf(line, "\t  cs: complex psd vars: %li, cssize: %li\n", (long)count,
             (long)k->cssize);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   if (k->ep || k->ed) {
     sprintf(line, "\t  e: exp vars: %li, dual exp vars: %li\n",
             (long)(3 * k->ep), (long)(3 * k->ed));
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   if (k->psize) {
     sprintf(line, "\t  p: primal + dual power vars: %li\n",
             (long)(3 * k->psize));
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
 #ifdef USE_SPECTRAL_CONES
   log_vars = 0;
@@ -566,10 +516,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     }
     sprintf(line, "\t  d: logdet vars: %li, dsize: %li\n", (long)log_vars,
             (long)k->dsize);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   nuc_vars = 0;
   if (k->nucsize && k->nuc_m && k->nuc_n) {
@@ -578,10 +525,7 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     }
     sprintf(line, "\t  nuc: nuclear vars: %li, nucsize: %li\n",
             (long)nuc_vars, (long)k->nucsize);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
   ell1_vars = 0;
   if (k->ell1_size && k->ell1) {
@@ -590,12 +534,8 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     }
     sprintf(line, "\t  ell1: ell1 vars: %li, ell1_size: %li\n",
             (long)ell1_vars, (long)k->ell1_size);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
-    }
+    len += strlen(line);
   }
-
   sl_vars = 0;
   if (k->sl_size && k->sl_n) {
     for (i = 0; i < k->sl_size; ++i) {
@@ -603,10 +543,99 @@ char *SCS(get_cone_header)(const ScsCone *k) {
     }
     sprintf(line, "\t  sl: sl vars: %li, sl_size: %li\n", (long)sl_vars,
             (long)k->sl_size);
-    if (!append_to_header(&tmp, &cap, &len, line)) {
-      scs_free(tmp);
-      return SCS_NULL;
+    len += strlen(line);
+  }
+#endif
+
+  tmp = (char *)scs_malloc(len + 1);
+  if (!tmp) {
+    return SCS_NULL;
+  }
+
+  len = 0;
+  append_to_header(tmp, &len, "cones: ");
+  if (k->z) {
+    sprintf(line, "\t  z: primal zero / dual free vars: %li\n", (long)k->z);
+    append_to_header(tmp, &len, line);
+  }
+  if (k->l) {
+    sprintf(line, "\t  l: linear vars: %li\n", (long)k->l);
+    append_to_header(tmp, &len, line);
+  }
+  if (k->bsize) {
+    sprintf(line, "\t  b: box cone vars: %li\n", (long)k->bsize);
+    append_to_header(tmp, &len, line);
+  }
+  if (k->qsize) {
+    count = 0;
+    for (i = 0; i < k->qsize; ++i)
+      count += k->q[i];
+    sprintf(line, "\t  q: soc vars: %li, qsize: %li\n", (long)count,
+            (long)k->qsize);
+    append_to_header(tmp, &len, line);
+  }
+  if (k->ssize) {
+    count = 0;
+    for (i = 0; i < k->ssize; ++i)
+      count += get_sd_cone_size(k->s[i]);
+    sprintf(line, "\t  s: psd vars: %li, ssize: %li\n", (long)count,
+            (long)k->ssize);
+    append_to_header(tmp, &len, line);
+  }
+  if (k->cssize) {
+    count = 0;
+    for (i = 0; i < k->cssize; ++i)
+      count += get_csd_cone_size(k->cs[i]);
+    sprintf(line, "\t  cs: complex psd vars: %li, cssize: %li\n", (long)count,
+            (long)k->cssize);
+    append_to_header(tmp, &len, line);
+  }
+  if (k->ep || k->ed) {
+    sprintf(line, "\t  e: exp vars: %li, dual exp vars: %li\n",
+            (long)(3 * k->ep), (long)(3 * k->ed));
+    append_to_header(tmp, &len, line);
+  }
+  if (k->psize) {
+    sprintf(line, "\t  p: primal + dual power vars: %li\n",
+            (long)(3 * k->psize));
+    append_to_header(tmp, &len, line);
+  }
+#ifdef USE_SPECTRAL_CONES
+  log_vars = 0;
+  if (k->dsize && k->d) {
+    for (i = 0; i < k->dsize; i++) {
+      log_vars += get_sd_cone_size(k->d[i]) + 2;
     }
+    sprintf(line, "\t  d: logdet vars: %li, dsize: %li\n", (long)log_vars,
+            (long)k->dsize);
+    append_to_header(tmp, &len, line);
+  }
+  nuc_vars = 0;
+  if (k->nucsize && k->nuc_m && k->nuc_n) {
+    for (i = 0; i < k->nucsize; i++) {
+      nuc_vars += k->nuc_m[i] * k->nuc_n[i] + 1;
+    }
+    sprintf(line, "\t  nuc: nuclear vars: %li, nucsize: %li\n",
+            (long)nuc_vars, (long)k->nucsize);
+    append_to_header(tmp, &len, line);
+  }
+  ell1_vars = 0;
+  if (k->ell1_size && k->ell1) {
+    for (i = 0; i < k->ell1_size; ++i) {
+      ell1_vars += k->ell1[i] + 1;
+    }
+    sprintf(line, "\t  ell1: ell1 vars: %li, ell1_size: %li\n",
+            (long)ell1_vars, (long)k->ell1_size);
+    append_to_header(tmp, &len, line);
+  }
+  sl_vars = 0;
+  if (k->sl_size && k->sl_n) {
+    for (i = 0; i < k->sl_size; ++i) {
+      sl_vars += get_sd_cone_size(k->sl_n[i]) + 1;
+    }
+    sprintf(line, "\t  sl: sl vars: %li, sl_size: %li\n", (long)sl_vars,
+            (long)k->sl_size);
+    append_to_header(tmp, &len, line);
   }
 #endif
   return tmp;
