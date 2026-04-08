@@ -136,6 +136,11 @@ ifneq ($(COVERAGE), 0)
 CUSTOM_FLAGS += --coverage # generate test coverage data
 endif
 
+LLVM_PROFILE = 0
+ifneq ($(LLVM_PROFILE), 0)
+override CFLAGS += -fprofile-instr-generate -fcoverage-mapping
+endif
+
 # MKL linker flags for Linux + GCC + GNU threading. For other platforms, see:
 # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
 MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl

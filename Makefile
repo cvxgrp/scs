@@ -39,6 +39,11 @@ LDL_SOURCE = $(EXTSRC)/qdldl/qdldl.c
 AMD_OBJS = $(AMD_SOURCE:.c=.o)
 LDL_OBJS = $(LDL_SOURCE:.c=.o)
 TARGETS = $(OUT)/demo_socp_indirect $(OUT)/demo_socp_direct $(OUT)/run_from_file_indirect $(OUT)/run_from_file_direct
+LLVM_PROFDATA ?= $(shell xcrun --find llvm-profdata 2>/dev/null)
+LLVM_COV ?= $(shell xcrun --find llvm-cov 2>/dev/null)
+LLVM_PROFILE_PATTERN = $(OUT)/scs-%p.profraw
+LLVM_PROFILE_DATA = $(OUT)/scs.profdata
+LLVM_PROFILE_FUNCTIONS = $(OUT)/scs_functions.txt
 
 .PHONY: default
 
@@ -177,6 +182,27 @@ $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
 $(OUT)/run_tests_cudss: test/run_tests.c $(OUT)/libscscudss.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS) -Itest
 
+.PHONY: llvm-profile llvm-profile-clean
+llvm-profile: $(OUT)/run_tests_direct
+ifndef LLVM_PROFDATA
+	$(error llvm-profdata not found; install Xcode Command Line Tools)
+endif
+ifndef LLVM_COV
+	$(error llvm-cov not found; install Xcode Command Line Tools)
+endif
+	mkdir -p $(OUT)
+	@rm -f $(OUT)/*.profraw $(LLVM_PROFILE_DATA) $(LLVM_PROFILE_FUNCTIONS)
+	LLVM_PROFILE_FILE="$(LLVM_PROFILE_PATTERN)" $(OUT)/run_tests_direct >/dev/null
+	@rm -f default.profraw
+	$(LLVM_PROFDATA) merge -sparse $(OUT)/*.profraw -o $(LLVM_PROFILE_DATA)
+	$(LLVM_COV) report $(OUT)/run_tests_direct -instr-profile=$(LLVM_PROFILE_DATA)
+	$(LLVM_PROFDATA) show --text --all-functions --counts --covered $(LLVM_PROFILE_DATA) > $(LLVM_PROFILE_FUNCTIONS)
+	@echo "Wrote merged profile to $(LLVM_PROFILE_DATA)"
+	@echo "Wrote function report to $(LLVM_PROFILE_FUNCTIONS)"
+
+llvm-profile-clean:
+	@rm -f $(OUT)/*.profraw $(LLVM_PROFILE_DATA) $(LLVM_PROFILE_FUNCTIONS) default.profraw
+
 .PHONY: test_gpu
 test_gpu: $(OUT)/run_tests_gpu_indirect
 
@@ -221,6 +247,7 @@ $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 clean:
 	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
 	@rm -rf $(OUT)/*.dSYM
+	@rm -f default.profraw
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
 	@rm -rf python/*.pyc
