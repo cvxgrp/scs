@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+
 #include "scs.h"
 
 /** Contains normalization variables. */
@@ -80,6 +82,7 @@ struct SCS_WORK {
   /* AA stats */
   scs_float aa_norm;
   scs_int rejected_accel_steps, accepted_accel_steps;
+  FILE *log_csv_file;
 };
 
 #ifdef __cplusplus
