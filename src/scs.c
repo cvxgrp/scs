@@ -1130,8 +1130,8 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   ScsWork *w;
   SCS(timer) init_timer;
-  if (!d || !k) {
-    scs_printf("ERROR: Missing ScsData or ScsCone input\n");
+  if (!d || !k || !stgs) {
+    scs_printf("ERROR: Missing ScsData, ScsCone, or ScsSettings input\n");
     return SCS_NULL;
   }
 #if NO_VALIDATE == 0

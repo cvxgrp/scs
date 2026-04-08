@@ -62,6 +62,10 @@ void SCS(free_scs_matrix)(ScsMatrix *A) {
 
 scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
   scs_int i, j, r_max, Anz;
+  if (!A) {
+    scs_printf("A matrix missing\n");
+    return -1;
+  }
   if (!A->x || !A->i || !A->p) {
     scs_printf("data incompletely specified\n");
     return -1;
@@ -99,6 +103,10 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
     return -1;
   }
   if (P) {
+    if (!P->x || !P->i || !P->p) {
+      scs_printf("P matrix incompletely specified\n");
+      return -1;
+    }
     if (P->n != A->n) {
       scs_printf("P dimension = %li, inconsistent with n = %li\n", (long)P->n,
                  (long)A->n);
@@ -458,4 +466,3 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
 #endif
   return scal;
 }
-
