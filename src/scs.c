@@ -275,9 +275,6 @@ static void free_work(ScsWork *w) {
       SCS(free_sol)(w->xys_normalized);
       free_residuals(w->r_normalized);
     }
-    if (w->log_csv_file) {
-      fclose(w->log_csv_file);
-    }
     if (w->stgs) {
       if (w->stgs->log_csv_filename)
         scs_free((char *)w->stgs->log_csv_filename);
@@ -337,10 +334,6 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
   scs_int status = stint;
   populate_on_failure(m, n, sol, info, status, ststr);
   scs_printf("Failure:%s\n", msg);
-  if (w && w->log_csv_file) {
-    fclose(w->log_csv_file);
-    w->log_csv_file = SCS_NULL;
-  }
   scs_end_interrupt_listener();
   return status;
 }
@@ -1254,17 +1247,6 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   if (w->stgs->verbose) {
     print_header(w, k);
   }
-  if (w->stgs->log_csv_filename) {
-    if (w->log_csv_file) {
-      fclose(w->log_csv_file);
-      w->log_csv_file = SCS_NULL;
-    }
-    w->log_csv_file = fopen(w->stgs->log_csv_filename, "w");
-    if (!w->log_csv_file) {
-      scs_printf("Error: Could not open %s for writing\n",
-                 w->stgs->log_csv_filename);
-    }
-  }
 
   /* SCS */
   for (i = 0; i < w->stgs->max_iters; ++i) {
@@ -1361,17 +1343,17 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     }
 
     /* Log *after* updating scale so residual recalc does not affect alg */
-    if (w->log_csv_file) {
+    if (w->stgs->log_csv_filename) {
       /* calc residuals every iter if logging to csv */
       populate_residual_struct(w, i);
-      SCS(log_data_to_csv)(w->log_csv_file, k, stgs, w, i, &solve_timer);
+      SCS(log_data_to_csv)(k, stgs, w, i, &solve_timer);
     }
   }
 
   /* Final logging after full run */
-  if (w->log_csv_file) {
+  if (w->stgs->log_csv_filename) {
     populate_residual_struct(w, i);
-    SCS(log_data_to_csv)(w->log_csv_file, k, stgs, w, i, &solve_timer);
+    SCS(log_data_to_csv)(k, stgs, w, i, &solve_timer);
   }
 
   if (w->stgs->verbose) {
@@ -1390,10 +1372,6 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
   if (w->stgs->verbose) {
     print_footer(info);
-  }
-  if (w->log_csv_file) {
-    fclose(w->log_csv_file);
-    w->log_csv_file = SCS_NULL;
   }
 
   scs_end_interrupt_listener();
