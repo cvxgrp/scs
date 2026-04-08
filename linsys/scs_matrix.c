@@ -18,12 +18,14 @@
 /* ======================== Matrix Copy / Free ======================== */
 
 scs_int SCS(copy_matrix)(ScsMatrix **dstp, const ScsMatrix *src) {
+  scs_int Anz;
+  ScsMatrix *A;
   if (!src) {
     *dstp = SCS_NULL;
     return 1;
   }
-  scs_int Anz = src->p[src->n];
-  ScsMatrix *A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  Anz = src->p[src->n];
+  A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   if (!A) {
     return 0;
   }
