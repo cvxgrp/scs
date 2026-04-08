@@ -150,13 +150,31 @@ void SCS(free_cone)(ScsCone *k) {
   }
 }
 
-void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
-  memcpy(dest, src, sizeof(ScsCone));
+scs_int SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
+  memset(dest, 0, sizeof(*dest));
+  dest->z = src->z;
+  dest->l = src->l;
+  dest->bsize = src->bsize;
+  dest->qsize = src->qsize;
+  dest->ssize = src->ssize;
+  dest->cssize = src->cssize;
+  dest->ep = src->ep;
+  dest->ed = src->ed;
+  dest->psize = src->psize;
+#ifdef USE_SPECTRAL_CONES
+  dest->dsize = src->dsize;
+  dest->nucsize = src->nucsize;
+  dest->ell1_size = src->ell1_size;
+  dest->sl_size = src->sl_size;
+#endif
 
   /* Box cone */
   if (src->bsize > 1) {
     dest->bu = (scs_float *)scs_calloc(src->bsize - 1, sizeof(scs_float));
     dest->bl = (scs_float *)scs_calloc(src->bsize - 1, sizeof(scs_float));
+    if (!dest->bu || !dest->bl) {
+      return 0;
+    }
     memcpy(dest->bu, src->bu, (src->bsize - 1) * sizeof(scs_float));
     memcpy(dest->bl, src->bl, (src->bsize - 1) * sizeof(scs_float));
   } else {
@@ -167,6 +185,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   /* SOC */
   if (src->qsize > 0) {
     dest->q = (scs_int *)scs_calloc(src->qsize, sizeof(scs_int));
+    if (!dest->q) {
+      return 0;
+    }
     memcpy(dest->q, src->q, src->qsize * sizeof(scs_int));
   } else {
     dest->q = SCS_NULL;
@@ -175,6 +196,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   /* PSD */
   if (src->ssize > 0) {
     dest->s = (scs_int *)scs_calloc(src->ssize, sizeof(scs_int));
+    if (!dest->s) {
+      return 0;
+    }
     memcpy(dest->s, src->s, src->ssize * sizeof(scs_int));
   } else {
     dest->s = SCS_NULL;
@@ -183,6 +207,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   /* Complex PSD */
   if (src->cssize > 0) {
     dest->cs = (scs_int *)scs_calloc(src->cssize, sizeof(scs_int));
+    if (!dest->cs) {
+      return 0;
+    }
     memcpy(dest->cs, src->cs, src->cssize * sizeof(scs_int));
   } else {
     dest->cs = SCS_NULL;
@@ -191,6 +218,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   /* Power */
   if (src->psize > 0) {
     dest->p = (scs_float *)scs_calloc(src->psize, sizeof(scs_float));
+    if (!dest->p) {
+      return 0;
+    }
     memcpy(dest->p, src->p, src->psize * sizeof(scs_float));
   } else {
     dest->p = SCS_NULL;
@@ -200,6 +230,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   /* Logdet */
   if (src->dsize > 0) {
     dest->d = (scs_int *)scs_calloc(src->dsize, sizeof(scs_int));
+    if (!dest->d) {
+      return 0;
+    }
     memcpy(dest->d, src->d, src->dsize * sizeof(scs_int));
   } else {
     dest->d = SCS_NULL;
@@ -209,6 +242,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   if (src->nucsize > 0) {
     dest->nuc_m = (scs_int *)scs_calloc(src->nucsize, sizeof(scs_int));
     dest->nuc_n = (scs_int *)scs_calloc(src->nucsize, sizeof(scs_int));
+    if (!dest->nuc_m || !dest->nuc_n) {
+      return 0;
+    }
     memcpy(dest->nuc_m, src->nuc_m, src->nucsize * sizeof(scs_int));
     memcpy(dest->nuc_n, src->nuc_n, src->nucsize * sizeof(scs_int));
   } else {
@@ -219,6 +255,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   /* Ell1 */
   if (src->ell1_size > 0) {
     dest->ell1 = (scs_int *)scs_calloc(src->ell1_size, sizeof(scs_int));
+    if (!dest->ell1) {
+      return 0;
+    }
     memcpy(dest->ell1, src->ell1, src->ell1_size * sizeof(scs_int));
   } else {
     dest->ell1 = SCS_NULL;
@@ -228,6 +267,9 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
   if (src->sl_size > 0) {
     dest->sl_n = (scs_int *)scs_calloc(src->sl_size, sizeof(scs_int));
     dest->sl_k = (scs_int *)scs_calloc(src->sl_size, sizeof(scs_int));
+    if (!dest->sl_n || !dest->sl_k) {
+      return 0;
+    }
     memcpy(dest->sl_n, src->sl_n, src->sl_size * sizeof(scs_int));
     memcpy(dest->sl_k, src->sl_k, src->sl_size * sizeof(scs_int));
   } else {
@@ -235,6 +277,7 @@ void SCS(deep_copy_cone)(ScsCone *dest, const ScsCone *src) {
     dest->sl_k = SCS_NULL;
   }
 #endif
+  return 1;
 }
 
 void SCS(finish_cone)(ScsConeWork *c) {
