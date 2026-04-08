@@ -486,22 +486,22 @@ char *SCS(get_cone_header)(const ScsCone *k) {
 
 scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
   scs_int i;
-  if (get_full_cone_dims(k) != d->m) {
-    scs_printf("Error: Cone dims %li != rows in A %li\n",
-               (long)get_full_cone_dims(k), (long)d->m);
-    return -1;
-  }
-  if (k->z && k->z < 0) {
+  scs_int cone_dims;
+  if (k->z < 0) {
     scs_printf("free cone dimension error\n");
     return -1;
   }
-  if (k->l && k->l < 0) {
+  if (k->l < 0) {
     scs_printf("lp cone dimension error\n");
     return -1;
   }
-  if (k->bsize) {
-    if (k->bsize < 0) {
-      scs_printf("box cone dimension error\n");
+  if (k->bsize < 0) {
+    scs_printf("box cone dimension error\n");
+    return -1;
+  }
+  if (k->bsize > 1) {
+    if (!k->bl || !k->bu) {
+      scs_printf("box cone bounds missing\n");
       return -1;
     }
     for (i = 0; i < k->bsize - 1; ++i) {
@@ -511,9 +511,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->qsize && k->q) {
-    if (k->qsize < 0) {
-      scs_printf("soc cone dimension error\n");
+  if (k->qsize < 0) {
+    scs_printf("soc cone dimension error\n");
+    return -1;
+  }
+  if (k->qsize > 0) {
+    if (!k->q) {
+      scs_printf("soc cone array missing\n");
       return -1;
     }
     for (i = 0; i < k->qsize; ++i) {
@@ -523,9 +527,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->ssize && k->s) {
-    if (k->ssize < 0) {
-      scs_printf("sd cone dimension error\n");
+  if (k->ssize < 0) {
+    scs_printf("sd cone dimension error\n");
+    return -1;
+  }
+  if (k->ssize > 0) {
+    if (!k->s) {
+      scs_printf("sd cone array missing\n");
       return -1;
     }
     for (i = 0; i < k->ssize; ++i) {
@@ -535,9 +543,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->cssize && k->cs) {
-    if (k->cssize < 0) {
-      scs_printf("complex psd cone dimension error\n");
+  if (k->cssize < 0) {
+    scs_printf("complex psd cone dimension error\n");
+    return -1;
+  }
+  if (k->cssize > 0) {
+    if (!k->cs) {
+      scs_printf("complex psd cone array missing\n");
       return -1;
     }
     for (i = 0; i < k->cssize; ++i) {
@@ -547,17 +559,21 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->ed && k->ed < 0) {
+  if (k->ed < 0) {
     scs_printf("ed cone dimension error\n");
     return -1;
   }
-  if (k->ep && k->ep < 0) {
+  if (k->ep < 0) {
     scs_printf("ep cone dimension error\n");
     return -1;
   }
-  if (k->psize && k->p) {
-    if (k->psize < 0) {
-      scs_printf("power cone dimension error\n");
+  if (k->psize < 0) {
+    scs_printf("power cone dimension error\n");
+    return -1;
+  }
+  if (k->psize > 0) {
+    if (!k->p) {
+      scs_printf("power cone array missing\n");
       return -1;
     }
     for (i = 0; i < k->psize; ++i) {
@@ -568,9 +584,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
     }
   }
 #ifdef USE_SPECTRAL_CONES
-  if (k->dsize && k->d) {
-    if (k->dsize < 0) {
-      scs_printf("logdet cone dimension error\n");
+  if (k->dsize < 0) {
+    scs_printf("logdet cone dimension error\n");
+    return -1;
+  }
+  if (k->dsize > 0) {
+    if (!k->d) {
+      scs_printf("logdet cone array missing\n");
       return -1;
     }
     for (i = 0; i < k->dsize; ++i) {
@@ -580,9 +600,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->nucsize && k->nuc_m && k->nuc_n) {
-    if (k->nucsize < 0) {
-      scs_printf("nuclear cone dimension error\n");
+  if (k->nucsize < 0) {
+    scs_printf("nuclear cone dimension error\n");
+    return -1;
+  }
+  if (k->nucsize > 0) {
+    if (!k->nuc_m || !k->nuc_n) {
+      scs_printf("nuclear cone arrays missing\n");
       return -1;
     }
     for (i = 0; i < k->nucsize; ++i) {
@@ -592,9 +616,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->ell1_size && k->ell1) {
-    if (k->ell1_size < 0) {
-      scs_printf("ell1 cone dimension error\n");
+  if (k->ell1_size < 0) {
+    scs_printf("ell1 cone dimension error\n");
+    return -1;
+  }
+  if (k->ell1_size > 0) {
+    if (!k->ell1) {
+      scs_printf("ell1 cone array missing\n");
       return -1;
     }
     for (i = 0; i < k->ell1_size; ++i) {
@@ -604,7 +632,15 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       }
     }
   }
-  if (k->sl_size && k->sl_n && k->sl_k) {
+  if (k->sl_size < 0) {
+    scs_printf("sum-of-largest-eigenvalues cone dimension error\n");
+    return -1;
+  }
+  if (k->sl_size > 0) {
+    if (!k->sl_n || !k->sl_k) {
+      scs_printf("sum-of-largest-eigenvalues cone arrays missing\n");
+      return -1;
+    }
     for (i = 0; i < k->sl_size; ++i) {
       if ((k->sl_k[i] >= k->sl_n[i]) || k->sl_k[i] <= 0) {
         scs_printf("sum-of-largest-eigenvalues cone dimension error\n");
@@ -613,6 +649,12 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
     }
   }
 #endif
+  cone_dims = get_full_cone_dims(k);
+  if (cone_dims != d->m) {
+    scs_printf("Error: Cone dims %li != rows in A %li\n", (long)cone_dims,
+               (long)d->m);
+    return -1;
+  }
   return 0;
 }
 

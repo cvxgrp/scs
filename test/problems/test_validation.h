@@ -162,6 +162,18 @@ static const char *test_validation(void) {
     VALIDATION_CLEANUP();
   }
 
+  /* soc cone array missing */
+  VALIDATION_SETUP();
+  k->l = 0;
+  k->z = 0;
+  k->qsize = 1;
+  k->q = SCS_NULL;
+  d->m = 1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: missing soc cone array should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
 #undef VALIDATION_SETUP
 #undef VALIDATION_CLEANUP
 
