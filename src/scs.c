@@ -95,8 +95,12 @@ static void print_init_header(const ScsData *d, const ScsCone *k,
   scs_printf("\n");
   scs_printf("problem:  variables n: %i, constraints m: %i\n", (int)d->n,
              (int)d->m);
-  scs_printf("%s", cone_str);
-  scs_free(cone_str);
+  if (cone_str) {
+    scs_printf("%s", cone_str);
+    scs_free(cone_str);
+  } else {
+    scs_printf("cones: <unavailable>\n");
+  }
   scs_printf("settings: eps_abs: %.1e, eps_rel: %.1e, eps_infeas: %.1e\n"
              "\t  alpha: %.2f, scale: %.2e, adaptive_scale: %i\n"
              "\t  max_iters: %i, normalize: %i, rho_x: %.2e\n",
