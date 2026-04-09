@@ -20,3 +20,10 @@ jobs:
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_direct
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_indirect
       - run: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes --error-exitcode=1 out/run_tests_dense
+
+  mac-leaks:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: make accelerate OPT="-O3 -g"
+      - run: leaks --atExit -- out/run_tests_accelerate

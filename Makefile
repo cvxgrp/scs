@@ -86,6 +86,7 @@ $(DENSESRC)/private.o: $(DENSESRC)/private.c  $(DENSESRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
 $(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
 	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
+$(ACCELSRC)/private.o: $(ACCELSRC)/private.c  $(ACCELSRC)/private.h
 $(LINSYS)/scs_matrix.o: $(LINSYS)/scs_matrix.c $(LINSYS)/scs_matrix.h
 $(LINSYS)/csparse.o: $(LINSYS)/csparse.c $(LINSYS)/csparse.h
 
@@ -114,6 +115,11 @@ $(OUT)/libscscudss.a: $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LINSYS)/sc
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
+$(OUT)/libscsaccel.a: $(SCS_O) $(SCS_OBJECTS) $(ACCELSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+	mkdir -p $(OUT)
+	$(ARCHIVE) $@ $^
+	- $(RANLIB) $@
+
 $(OUT)/libscsdir.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(DIRSRC)/private.o $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -134,6 +140,10 @@ $(OUT)/libscscudss.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LI
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(CULDFLAGS)
 
+$(OUT)/libscsaccel.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(ACCELSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+	mkdir -p $(OUT)
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) -framework Accelerate
+
 $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
@@ -148,6 +158,9 @@ $(OUT)/demo_socp_mkl: test/random_socp_prob.c $(OUT)/libscsmkl.a
 
 $(OUT)/demo_socp_cudss: test/random_socp_prob.c $(OUT)/libscscudss.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS)
+
+$(OUT)/demo_socp_accelerate: test/random_socp_prob.c $(OUT)/libscsaccel.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -framework Accelerate
 
 $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -164,6 +177,11 @@ TEST_TARGETS = $(OUT)/run_tests_indirect $(OUT)/run_tests_direct
 ifneq ($(USE_LAPACK),0)
 TEST_TARGETS += $(OUT)/run_tests_dense
 endif
+ifeq ($(UNAME), Darwin)
+ifeq ($(DLONG), 0)
+TEST_TARGETS += $(OUT)/run_tests_accelerate
+endif
+endif
 test: $(TEST_TARGETS)
 $(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
@@ -177,6 +195,9 @@ $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a
 $(OUT)/run_tests_cudss: test/run_tests.c $(OUT)/libscscudss.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS) -Itest
 
+$(OUT)/run_tests_accelerate: test/run_tests.c $(OUT)/libscsaccel.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -framework Accelerate -Itest
+
 .PHONY: test_gpu
 test_gpu: $(OUT)/run_tests_gpu_indirect
 
@@ -189,6 +210,9 @@ endif
 
 .PHONY: cudss
 cudss: $(OUT)/libscscudss.a $(OUT)/libscscudss.$(SHARED) $(OUT)/run_tests_cudss $(OUT)/demo_socp_cudss
+
+.PHONY: accelerate
+accelerate: $(OUT)/libscsaccel.a $(OUT)/libscsaccel.$(SHARED) $(OUT)/run_tests_accelerate $(OUT)/demo_socp_accelerate
 
 $(OUT)/run_tests_gpu_indirect: test/run_tests.c $(OUT)/libscsgpuindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CULDFLAGS) -Itest
@@ -219,7 +243,7 @@ $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
+	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(ACCELSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea

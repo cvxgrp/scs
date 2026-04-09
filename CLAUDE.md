@@ -57,6 +57,7 @@ Anderson acceleration (`src/aa.c`) speeds convergence. Problem normalization/equ
 - `cpu/direct/` — QDLDL sparse Cholesky (default, bundled in `linsys/external/qdldl/`)
 - `cpu/indirect/` — iterative (conjugate gradient / LSQR)
 - `mkl/direct/` — Intel MKL Pardiso (enabled via `MKLROOT`)
+- `accelerate/direct/` — Apple Accelerate sparse LDLt (macOS only, `make accelerate`)
 - `cudss/direct/` — NVIDIA cuDSS GPU solver
 - `gpu/indirect/` — GPU iterative solver
 
