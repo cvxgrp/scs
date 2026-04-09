@@ -97,6 +97,11 @@ message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 option(USE_CUDSS "Compile with cuDSS support" OFF)
 message(STATUS "cuDSS support is ${USE_CUDSS}")
 
+if(APPLE)
+  option(USE_APPLE_ACCELERATE "Use Apple Accelerate framework for sparse LDLt" OFF)
+  message(STATUS "Apple Accelerate support is ${USE_APPLE_ACCELERATE}")
+endif()
+
 set(COMPILER_OPTS CTRLC)
 set(LAPACK_LINK_LIBRARIES "")
 
@@ -502,6 +507,65 @@ if(USE_CUDSS)
   set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_CUDSS})
 endif()
 
+# Apple Accelerate library (optional, macOS only).
+if(APPLE AND USE_APPLE_ACCELERATE)
+  if(DLONG)
+    message(
+      FATAL_ERROR
+        "Apple Accelerate requires 32-bit integers. Set DLONG=OFF or do not use -DDLONG=ON"
+    )
+  endif()
+
+  message(STATUS "Will install SCS-Accelerate (libscsaccel).")
+
+  set(ACCELSRC ${LINSYS}/accelerate/direct)
+
+  set(${PROJECT_NAME}_ACCEL ${PROJECT_NAME}accel)
+  add_library(
+    ${${PROJECT_NAME}_ACCEL}
+    ${${PROJECT_NAME}_HDR} ${${PROJECT_NAME}_SRC} ${ACCELSRC}/private.c
+    ${ACCELSRC}/private.h)
+
+  target_include_directories(
+    ${${PROJECT_NAME}_ACCEL}
+    PRIVATE
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${ACCELSRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
+  )
+
+  target_include_directories(
+    ${${PROJECT_NAME}_ACCEL}
+    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+
+  target_compile_definitions(${${PROJECT_NAME}_ACCEL} PRIVATE ${COMPILER_OPTS})
+
+  find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
+  target_link_libraries(
+    ${${PROJECT_NAME}_ACCEL}
+    PRIVATE ${ACCELERATE_FRAMEWORK}
+            ${LAPACK_LINK_LIBRARIES}
+            $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+            Threads::Threads)
+
+  set_target_properties(
+    ${${PROJECT_NAME}_ACCEL}
+    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+                                      "${${PROJECT_NAME}_PUBLIC_HDR}")
+
+  add_library(scs::${${PROJECT_NAME}_ACCEL} ALIAS ${${PROJECT_NAME}_ACCEL})
+
+  install(
+    TARGETS ${${PROJECT_NAME}_ACCEL}
+    EXPORT ${PROJECT_NAME}
+    COMPONENT runtime
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
+
+  set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_ACCEL})
+endif()
+
 # Install CMake package config files for find_package(scs) support.
 include(InstallBasicPackageFiles)
 install_basic_package_files(
@@ -549,5 +613,9 @@ if(BUILD_TESTING)
 
   if(USE_CUDSS)
     scs_add_test(run_tests_cudss scs::scscudss)
+  endif()
+
+  if(APPLE AND USE_APPLE_ACCELERATE)
+    scs_add_test(run_tests_accelerate scs::scsaccel)
   endif()
 endif()

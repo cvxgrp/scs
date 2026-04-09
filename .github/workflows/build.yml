@@ -94,3 +94,6 @@ jobs:
       - name: Run dense tests
         if: matrix.lapack == 1
         run: out/run_tests_dense
+      - name: Run accelerate tests
+        if: matrix.long == 0
+        run: out/run_tests_accelerate
