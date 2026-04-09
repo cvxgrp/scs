@@ -55,6 +55,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#sparse-direct">Sparse direct</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dense-direct">Dense direct</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mkl-pardiso">MKL Pardiso</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#apple-accelerate">Apple Accelerate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-indirect">Sparse indirect</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-direct-method">Sparse GPU direct method</a></li>
@@ -166,6 +167,26 @@ usage as well as the linear system solve.
 Intel MKL is now available for
 <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/articles/news/free-ipsxe-tools-and-libraries.html">free and without restrictions for everyone</a>,
 though it only offers limited support for non-Intel CPUs.</p>
+</section>
+<section id="apple-accelerate">
+<span id="id1"></span><h3>Apple Accelerate<a class="headerlink" href="#apple-accelerate" title="Link to this heading"></a></h3>
+<p>The Apple <a class="reference external" href="https://developer.apple.com/documentation/accelerate">Accelerate</a> framework provides
+a sparse LDL<sup>T</sup> factorization that is optimized for Apple hardware
+(including Apple Silicon). This backend uses the unpivoted LDL<sup>T</sup>
+solver from the Accelerate Sparse Solvers API, which is well-suited for the
+quasi-definite KKT systems that SCS produces. Accelerate performs its own
+fill-reducing ordering internally so no external AMD package is needed.</p>
+<p>This backend is macOS-only and is available without installing any additional
+libraries since the Accelerate framework ships with Xcode / the macOS SDK.
+It does not support 64-bit integer indexing (<code class="docutils literal notranslate"><span class="pre">DLONG</span></code>).</p>
+<p>To build with Make:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">accelerate</span>
+</pre></div>
+</div>
+<p>To build with CMake:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">-</span><span class="n">DUSE_APPLE_ACCELERATE</span><span class="o">=</span><span class="n">ON</span> <span class="o">..</span>
+</pre></div>
+</div>
 </section>
 <section id="sparse-indirect">
 <span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Link to this heading"></a></h3>

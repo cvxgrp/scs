@@ -84,6 +84,31 @@ Intel MKL is now available for
 `free and without restrictions for everyone <https://www.intel.com/content/www/us/en/developer/articles/news/free-ipsxe-tools-and-libraries.html>`_,
 though it only offers limited support for non-Intel CPUs.
 
+.. _apple_accelerate:
+
+Apple Accelerate
+^^^^^^^^^^^^^^^^
+
+The Apple `Accelerate
+<https://developer.apple.com/documentation/accelerate>`_ framework provides
+a sparse LDL\ :sup:`T` factorization that is optimized for Apple hardware
+(including Apple Silicon). This backend uses the unpivoted LDL\ :sup:`T`
+solver from the Accelerate Sparse Solvers API, which is well-suited for the
+quasi-definite KKT systems that SCS produces. Accelerate performs its own
+fill-reducing ordering internally so no external AMD package is needed.
+
+This backend is macOS-only and is available without installing any additional
+libraries since the Accelerate framework ships with Xcode / the macOS SDK.
+It does not support 64-bit integer indexing (``DLONG``).
+
+To build with Make::
+
+    make accelerate
+
+To build with CMake::
+
+    cmake -DUSE_APPLE_ACCELERATE=ON ..
+
 .. _indirect:
 
 Sparse indirect
