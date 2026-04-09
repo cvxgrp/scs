@@ -33,7 +33,7 @@ nuclear norm, sum-of-largest eigenvalues).
 ## Features
 
 - Multiple linear solver backends: sparse direct (QDLDL), dense direct (LAPACK),
-  iterative (CG), Intel MKL Pardiso, NVIDIA cuDSS, GPU
+  iterative (CG), Intel MKL Pardiso, Apple Accelerate (macOS), NVIDIA cuDSS, GPU
 - Anderson acceleration for faster convergence
 - Problem data normalization/equilibration for numerical stability
 - Warm-starting and incremental `b`/`c` updates via `scs_update`
@@ -95,6 +95,7 @@ linsys/         Linear solver backends (pluggable architecture)
   cpu/indirect/   Conjugate gradient
   cpu/dense/      Dense LU (LAPACK dgetrf, for small problems)
   mkl/direct/     Intel MKL Pardiso
+  accelerate/direct/  Apple Accelerate sparse LDLt (macOS)
   cudss/direct/   NVIDIA cuDSS
   gpu/indirect/   GPU iterative solver
   external/       Vendored dependencies (AMD, QDLDL)
