@@ -19,7 +19,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   n_plus_m = A->n + A->m;
   p->m = A->m;
   p->n = A->n;
-  p->factorizations = 0;
 
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->diag_r_idxs = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
@@ -56,8 +55,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                         {
                             .kind = SparseSymmetric,
                             .triangle = SparseUpperTriangle,
-                            ._reserved = 0,
-                            ._allocatedBySparse = false,
                         },
                     .blockSize = 1},
       .data = p->kkt->x};
@@ -69,7 +66,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     scs_printf("Error in Apple Accelerate LDLt factorization: %d\n",
                (int)p->factorization.status);
     SparseCleanup(p->factorization);
-    p->factorizations = 0;
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
