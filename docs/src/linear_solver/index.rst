@@ -109,6 +109,11 @@ To build with CMake::
 
     cmake -DUSE_APPLE_ACCELERATE=ON ..
 
+In Python, the Accelerate backend is included automatically on macOS
+(``pip install scs`` is sufficient). Select it at solve time::
+
+    solver = scs.SCS(data, cone, apple_ldl=True)
+
 .. _indirect:
 
 Sparse indirect
