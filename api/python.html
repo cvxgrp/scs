@@ -115,6 +115,7 @@
                 <span class="n">cone</span><span class="p">,</span>
                 <span class="n">use_indirect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">mkl</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">apple_ldl</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">gpu</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -144,7 +145,9 @@ of the proper format, SCS will attempt to convert them. The
 <code class="code docutils literal notranslate"><span class="pre">use_indirect</span></code> setting switches between the sparse direct
 <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> (the default) or the sparse indirect solver. If the MKL
 Pardiso direct solver for SCS is <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> then it can
-be used by setting <code class="code docutils literal notranslate"><span class="pre">mkl=True</span></code>. If a GPU solver for SCS is <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> and a GPU is available then it can be used by setting
+be used by setting <code class="code docutils literal notranslate"><span class="pre">mkl=True</span></code>. On macOS the Apple Accelerate sparse
+LDL<sup>T</sup> solver is included automatically and can be used by setting
+<code class="code docutils literal notranslate"><span class="pre">apple_ldl=True</span></code>. If a GPU solver for SCS is <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">installed</span></a> and a GPU is available then it can be used by setting
 <code class="code docutils literal notranslate"><span class="pre">gpu=True</span></code>. For the direct GPU solver based on cuDSS set
 <code class="code docutils literal notranslate"><span class="pre">use_indirect=False</span></code>. The remaining fields are explained in
 <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a>.</p>

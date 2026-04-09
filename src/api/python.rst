@@ -17,6 +17,7 @@ This module provides the :code:`SCS` class which is initialized using:
                   cone,
                   use_indirect=False,
                   mkl=False,
+                  apple_ldl=False,
                   gpu=False,
                   verbose=True,
                   normalize=True,
@@ -45,7 +46,9 @@ of the proper format, SCS will attempt to convert them. The
 :code:`use_indirect` setting switches between the sparse direct
 :ref:`linear_solver` (the default) or the sparse indirect solver. If the MKL
 Pardiso direct solver for SCS is :ref:`installed <python_install>` then it can
-be used by setting :code:`mkl=True`. If a GPU solver for SCS is :ref:`installed
+be used by setting :code:`mkl=True`. On macOS the Apple Accelerate sparse
+LDL\ :sup:`T` solver is included automatically and can be used by setting
+:code:`apple_ldl=True`. If a GPU solver for SCS is :ref:`installed
 <python_install>` and a GPU is available then it can be used by setting
 :code:`gpu=True`. For the direct GPU solver based on cuDSS set
 :code:`use_indirect=False`. The remaining fields are explained in

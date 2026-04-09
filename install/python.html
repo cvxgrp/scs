@@ -52,6 +52,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#apple-accelerate-macos">Apple Accelerate (macOS)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mkl">MKL</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#gpu">GPU</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spectral-cones">Spectral cones</a></li>
@@ -113,6 +114,14 @@
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
+<section id="apple-accelerate-macos">
+<h2>Apple Accelerate (macOS)<a class="headerlink" href="#apple-accelerate-macos" title="Link to this heading"></a></h2>
+<p>On macOS the Apple Accelerate backend is built and included automatically —
+no extra install flags are needed. It uses the Accelerate framework’s sparse
+LDL<sup>T</sup> solver, which is optimized for Apple hardware including Apple
+Silicon. See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to select Accelerate when
+solving.</p>
+</section>
 <section id="mkl">
 <h2>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h2>
 <p>If you have MKL, you can install the MKL Pardiso interface using</p>

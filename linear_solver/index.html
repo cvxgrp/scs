@@ -187,6 +187,11 @@ It does not support 64-bit integer indexing (<code class="docutils literal notra
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">-</span><span class="n">DUSE_APPLE_ACCELERATE</span><span class="o">=</span><span class="n">ON</span> <span class="o">..</span>
 </pre></div>
 </div>
+<p>In Python, the Accelerate backend is included automatically on macOS
+(<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scs</span></code> is sufficient). Select it at solve time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">apple_ldl</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="sparse-indirect">
 <span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Link to this heading"></a></h3>

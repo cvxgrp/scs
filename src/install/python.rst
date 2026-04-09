@@ -17,6 +17,15 @@ You can also install directly from source
   cd scs-python
   python -m pip install .
 
+Apple Accelerate (macOS)
+""""""""""""""""""""""""
+
+On macOS the Apple Accelerate backend is built and included automatically —
+no extra install flags are needed. It uses the Accelerate framework's sparse
+LDL\ :sup:`T` solver, which is optimized for Apple hardware including Apple
+Silicon. See :ref:`here <python_interface>` for how to select Accelerate when
+solving.
+
 MKL
 """
 
