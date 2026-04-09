@@ -543,7 +543,6 @@ if(APPLE AND USE_APPLE_ACCELERATE)
   target_link_libraries(
     ${${PROJECT_NAME}_ACCEL}
     PRIVATE ${ACCELERATE_FRAMEWORK}
-            ${LAPACK_LINK_LIBRARIES}
             $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
             Threads::Threads)
 

@@ -142,7 +142,7 @@ $(OUT)/libscscudss.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LI
 
 $(OUT)/libscsaccel.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(ACCELSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
-	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -framework Accelerate
+	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) -framework Accelerate
 
 $(OUT)/demo_socp_direct: test/random_socp_prob.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -160,7 +160,7 @@ $(OUT)/demo_socp_cudss: test/random_socp_prob.c $(OUT)/libscscudss.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS)
 
 $(OUT)/demo_socp_accelerate: test/random_socp_prob.c $(OUT)/libscsaccel.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -framework Accelerate
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -framework Accelerate
 
 $(OUT)/run_from_file_direct: test/run_from_file.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
@@ -196,7 +196,7 @@ $(OUT)/run_tests_cudss: test/run_tests.c $(OUT)/libscscudss.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) $(CUDSS_LDFLAGS) -Itest
 
 $(OUT)/run_tests_accelerate: test/run_tests.c $(OUT)/libscsaccel.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -framework Accelerate -Itest
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -framework Accelerate -Itest
 
 .PHONY: test_gpu
 test_gpu: $(OUT)/run_tests_gpu_indirect
