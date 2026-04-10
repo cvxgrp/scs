@@ -89,7 +89,7 @@ aa_float tocq(timer *t) {
 
 aa_float toc(const char *str, timer *t) {
   aa_float time = tocq(t);
-  printf("%s - time: %8.4f milli-seconds.\n", str, time);
+  scs_printf("%s - time: %8.4f milli-seconds.\n", str, time);
   return time;
 }
 
@@ -174,7 +174,7 @@ static aa_float compute_regularization(AaWork *a, aa_int len) {
   nrm_m = BLAS(nrm2)(&btotal, a->M, &one);
   r = a->regularization * nrm_m;
   if (a->verbosity > 2) {
-    printf("iter: %i, norm: M %.2e, r: %.2e\n", (int)a->iter, nrm_m, r);
+    scs_printf("iter: %i, norm: M %.2e, r: %.2e\n", (int)a->iter, nrm_m, r);
   }
   TIME_TOC
   return r;
@@ -302,14 +302,14 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   BLAS(gesv)(&blen, &one, a->M, &blen, a->ipiv, a->work, &blen, &info);
   aa_norm = BLAS(nrm2)(&blen, a->work, &one);
   if (a->verbosity > 1) {
-    printf("AA type %i, iter: %i, len %i, info: %i, aa_norm %.2e\n",
+    scs_printf("AA type %i, iter: %i, len %i, info: %i, aa_norm %.2e\n",
            a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)info, aa_norm);
   }
 
   /* info < 0 input error, input > 0 matrix is singular */
   if (info != 0 || aa_norm >= a->max_weight_norm) {
     if (a->verbosity > 0) {
-      printf("Error in AA type %i, iter: %i, len %i, info: %i, aa_norm %.2e\n",
+      scs_printf("Error in AA type %i, iter: %i, len %i, info: %i, aa_norm %.2e\n",
              a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)info, aa_norm);
     }
     a->success = 0;
@@ -343,9 +343,9 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
                 aa_float relaxation, aa_float safeguard_factor,
                 aa_float max_weight_norm, aa_int verbosity) {
   TIME_TIC
-  AaWork *a = (AaWork *)calloc(1, sizeof(AaWork));
+  AaWork *a = (AaWork *)scs_calloc(1, sizeof(AaWork));
   if (!a) {
-    printf("Failed to allocate memory for AA.\n");
+    scs_printf("Failed to allocate memory for AA.\n");
     return (AaWork *)0;
   }
   a->type1 = type1;
@@ -362,29 +362,29 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
     return a;
   }
 
-  a->x = (aa_float *)calloc(a->dim, sizeof(aa_float));
-  a->f = (aa_float *)calloc(a->dim, sizeof(aa_float));
-  a->g = (aa_float *)calloc(a->dim, sizeof(aa_float));
+  a->x = (aa_float *)scs_calloc(a->dim, sizeof(aa_float));
+  a->f = (aa_float *)scs_calloc(a->dim, sizeof(aa_float));
+  a->g = (aa_float *)scs_calloc(a->dim, sizeof(aa_float));
 
-  a->g_prev = (aa_float *)calloc(a->dim, sizeof(aa_float));
+  a->g_prev = (aa_float *)scs_calloc(a->dim, sizeof(aa_float));
 
-  a->Y = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
-  a->S = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
-  a->D = (aa_float *)calloc(a->dim * a->mem, sizeof(aa_float));
+  a->Y = (aa_float *)scs_calloc(a->dim * a->mem, sizeof(aa_float));
+  a->S = (aa_float *)scs_calloc(a->dim * a->mem, sizeof(aa_float));
+  a->D = (aa_float *)scs_calloc(a->dim * a->mem, sizeof(aa_float));
 
-  a->M = (aa_float *)calloc(a->mem * a->mem, sizeof(aa_float));
-  a->work = (aa_float *)calloc(MAX(a->mem, a->dim), sizeof(aa_float));
-  a->ipiv = (blas_int *)calloc(a->mem, sizeof(blas_int));
+  a->M = (aa_float *)scs_calloc(a->mem * a->mem, sizeof(aa_float));
+  a->work = (aa_float *)scs_calloc(MAX(a->mem, a->dim), sizeof(aa_float));
+  a->ipiv = (blas_int *)scs_calloc(a->mem, sizeof(blas_int));
 
   if (relaxation != 1.0) {
-    a->x_work = (aa_float *)calloc(a->dim, sizeof(aa_float));
+    a->x_work = (aa_float *)scs_calloc(a->dim, sizeof(aa_float));
   } else {
     a->x_work = 0;
   }
   if (!a->x || !a->f || !a->g || !a->g_prev ||
       !a->Y || !a->S || !a->D || !a->M || !a->work || !a->ipiv ||
       (relaxation != 1.0 && !a->x_work)) {
-    printf("Failed to allocate memory for AA internals.\n");
+    scs_printf("Failed to allocate memory for AA internals.\n");
     aa_finish(a);
     return (AaWork *)0;
   }
@@ -450,7 +450,7 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
     memcpy(f_new, a->f, a->dim * sizeof(aa_float));
     memcpy(x_new, a->x, a->dim * sizeof(aa_float));
     if (a->verbosity > 0) {
-      printf("AA rejection, iter: %i, norm_diff %.4e, prev_norm_diff %.4e\n",
+      scs_printf("AA rejection, iter: %i, norm_diff %.4e, prev_norm_diff %.4e\n",
              (int)a->iter, norm_diff, a->norm_g);
     }
     aa_reset(a);
@@ -463,27 +463,27 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
 
 void aa_finish(AaWork *a) {
   if (a) {
-    free(a->x);
-    free(a->f);
-    free(a->g);
-    free(a->g_prev);
-    free(a->Y);
-    free(a->S);
-    free(a->D);
-    free(a->M);
-    free(a->work);
-    free(a->ipiv);
+    scs_free(a->x);
+    scs_free(a->f);
+    scs_free(a->g);
+    scs_free(a->g_prev);
+    scs_free(a->Y);
+    scs_free(a->S);
+    scs_free(a->D);
+    scs_free(a->M);
+    scs_free(a->work);
+    scs_free(a->ipiv);
     if (a->x_work) {
-      free(a->x_work);
+      scs_free(a->x_work);
     }
-    free(a);
+    scs_free(a);
   }
 }
 
 void aa_reset(AaWork *a) {
   /* to reset we simply set a->iter = 0 */
   if (a->verbosity > 0) {
-    printf("AA reset.\n");
+    scs_printf("AA reset.\n");
   }
   a->iter = 0;
 }
