@@ -30,7 +30,6 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer);
 static void print_footer(ScsInfo *info);
 static void free_residuals(ScsResiduals *r);
 static ScsResiduals *init_residuals(const ScsData *d);
-static void free_work(ScsWork *w);
 static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
                                 ScsInfo *info, scs_int status_val,
                                 const char *msg);
@@ -249,47 +248,6 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   r->aty = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   r->px_aty_ctau = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   return r;
-}
-
-static void free_work(ScsWork *w) {
-  if (w) {
-    scs_free(w->u);
-    scs_free(w->u_t);
-    scs_free(w->v);
-    scs_free(w->v_prev);
-    scs_free(w->rsk);
-    scs_free(w->h);
-    scs_free(w->g);
-    scs_free(w->b_orig);
-    scs_free(w->c_orig);
-    scs_free(w->lin_sys_warm_start);
-    scs_free(w->diag_r);
-    SCS(free_sol)(w->xys_orig);
-    if (w->scal) {
-      scs_free(w->scal->D);
-      scs_free(w->scal->E);
-      scs_free(w->scal);
-    }
-    free_residuals(w->r_orig);
-    if (w->stgs && w->stgs->normalize) {
-      SCS(free_sol)(w->xys_normalized);
-      free_residuals(w->r_normalized);
-    }
-    if (w->stgs) {
-      if (w->stgs->log_csv_filename)
-        scs_free((char *)w->stgs->log_csv_filename);
-      if (w->stgs->write_data_filename)
-        scs_free((char *)w->stgs->write_data_filename);
-      scs_free(w->stgs);
-    }
-    if (w->k) { /* deep copy */
-      SCS(free_cone)(w->k);
-    }
-    if (w->d) { /* deep copy */
-      SCS(free_data)(w->d);
-    }
-    scs_free(w);
-  }
 }
 
 /* ==================== Error / Failure Handling ===================== */
@@ -914,7 +872,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   if (!w->d || !SCS(deep_copy_data)(w->d, d)) {
     scs_printf("ERROR: data copy failure\n");
-    free_work(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   d = SCS_NULL; /* for safety */
@@ -923,7 +881,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   if (!w->k || !SCS(deep_copy_cone)(w->k, k)) {
     scs_printf("ERROR: cone copy failure\n");
-    free_work(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   k = SCS_NULL; /* for safety */
@@ -932,7 +890,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   if (!w->stgs || !SCS(deep_copy_stgs)(w->stgs, stgs)) {
     scs_printf("ERROR: settings copy failure\n");
-    free_work(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   stgs = SCS_NULL; /* for safety */
@@ -961,13 +919,13 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       !w->xys_orig->x || !w->xys_orig->s || !w->xys_orig->y || !w->r_orig ||
       !w->b_orig || !w->c_orig) {
     scs_printf("ERROR: work memory allocation failure\n");
-    free_work(w);
+    scs_finish(w);
     return SCS_NULL;
   }
 
   if (!(w->cone_work = SCS(init_cone)(w->k, w->d->m))) {
     scs_printf("ERROR: init_cone failure\n");
-    free_work(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   set_diag_r(w);
@@ -981,14 +939,14 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     if (!w->xys_normalized || !w->xys_normalized->x || !w->xys_normalized->s ||
         !w->xys_normalized->y || !w->r_normalized) {
       scs_printf("ERROR: normalized work memory allocation failure\n");
-      free_work(w);
+      scs_finish(w);
       return SCS_NULL;
     }
     /* this allocates memory that must be freed */
     w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
     if (!w->scal) {
       scs_printf("ERROR: normalize_a_p failure\n");
-      free_work(w);
+      scs_finish(w);
       return SCS_NULL;
     }
   } else {
@@ -1001,9 +959,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!(w->p = scs_init_lin_sys_work(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
-    SCS(finish_cone)(w->cone_work);
-    w->cone_work = SCS_NULL;
-    free_work(w);
+    scs_finish(w);
     return SCS_NULL;
   }
   if (w->stgs->acceleration_lookback) {
@@ -1168,7 +1124,7 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   scs_start_interrupt_listener();
 #if VERBOSITY > 0
   scs_printf("size of scs_int = %lu, size of scs_float = %lu\n",
-             sizeof(scs_int), sizeof(scs_float));
+             (unsigned long)sizeof(scs_int), (unsigned long)sizeof(scs_float));
 #endif
   SCS(tic)(&init_timer);
   if (stgs->write_data_filename) {
@@ -1192,24 +1148,30 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
   SCS(tic)(&update_timer);
 
   if (b) {
-    memcpy(w->b_orig, b, w->d->m * sizeof(scs_float));
+    if (w->b_orig != b) {
+      memcpy(w->b_orig, b, w->d->m * sizeof(scs_float));
+    }
     if (w->d->b != b) {
       memcpy(w->d->b, b, w->d->m * sizeof(scs_float));
     }
+    w->nm_b_orig = NORM(w->b_orig, w->d->m);
   } else {
+    /* b_orig unchanged so no need to recompute the norm */
     memcpy(w->d->b, w->b_orig, w->d->m * sizeof(scs_float));
   }
-  w->nm_b_orig = NORM(w->b_orig, w->d->m);
 
   if (c) {
-    memcpy(w->c_orig, c, w->d->n * sizeof(scs_float));
+    if (w->c_orig != c) {
+      memcpy(w->c_orig, c, w->d->n * sizeof(scs_float));
+    }
     if (w->d->c != c) {
       memcpy(w->d->c, c, w->d->n * sizeof(scs_float));
     }
+    w->nm_c_orig = NORM(w->c_orig, w->d->n);
   } else {
+    /* c_orig unchanged so no need to recompute the norm */
     memcpy(w->d->c, w->c_orig, w->d->n * sizeof(scs_float));
   }
-  w->nm_c_orig = NORM(w->c_orig, w->d->n);
 
   /* normalize */
   if (w->scal) {
@@ -1380,14 +1342,51 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
 void scs_finish(ScsWork *w) {
   if (w) {
-    SCS(finish_cone)(w->cone_work);
+    if (w->cone_work) {
+      SCS(finish_cone)(w->cone_work);
+    }
     if (w->p) {
       scs_free_lin_sys_work(w->p);
     }
     if (w->accel) {
       aa_finish(w->accel);
     }
-    free_work(w);
+    scs_free(w->u);
+    scs_free(w->u_t);
+    scs_free(w->v);
+    scs_free(w->v_prev);
+    scs_free(w->rsk);
+    scs_free(w->h);
+    scs_free(w->g);
+    scs_free(w->b_orig);
+    scs_free(w->c_orig);
+    scs_free(w->lin_sys_warm_start);
+    scs_free(w->diag_r);
+    SCS(free_sol)(w->xys_orig);
+    if (w->scal) {
+      scs_free(w->scal->D);
+      scs_free(w->scal->E);
+      scs_free(w->scal);
+    }
+    free_residuals(w->r_orig);
+    if (w->stgs && w->stgs->normalize) {
+      SCS(free_sol)(w->xys_normalized);
+      free_residuals(w->r_normalized);
+    }
+    if (w->stgs) {
+      if (w->stgs->log_csv_filename)
+        scs_free((char *)w->stgs->log_csv_filename);
+      if (w->stgs->write_data_filename)
+        scs_free((char *)w->stgs->write_data_filename);
+      scs_free(w->stgs);
+    }
+    if (w->k) { /* deep copy */
+      SCS(free_cone)(w->k);
+    }
+    if (w->d) { /* deep copy */
+      SCS(free_data)(w->d);
+    }
+    scs_free(w);
   }
 }
 
