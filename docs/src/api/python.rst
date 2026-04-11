@@ -45,8 +45,8 @@ Linear solver selection
 -----------------------
 
 The :code:`linear_solver` setting controls which :ref:`linear_solver` backend
-SCS uses. It accepts a :code:`scs.LinearSolver` enum value or an equivalent
-string. The default is :code:`AUTO`, which selects the best available solver for
+SCS uses. It accepts a :code:`scs.LinearSolver` enum value.
+The default is :code:`AUTO`, which selects the best available solver for
 the platform:
 
 - **macOS**: Apple Accelerate if available, otherwise QDLDL
@@ -81,11 +81,8 @@ Example:
   # Use the default (auto-detect)
   solver = scs.SCS(data, cone)
 
-  # Explicitly select MKL Pardiso
-  solver = scs.SCS(data, cone, linear_solver=scs.LinearSolver.MKL)
-
-  # String values also work
-  solver = scs.SCS(data, cone, linear_solver="indirect")
+  # Explicitly select a solver
+  solver = scs.SCS(data, cone, linear_solver=scs.LinearSolver.QDLDL)
 
 The remaining fields are explained in :ref:`settings`.
 

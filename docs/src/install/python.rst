@@ -29,14 +29,15 @@ Accelerate is selected automatically on macOS.
 MKL
 """
 
-If you have MKL, you can install the MKL Pardiso interface using
+The pre-built wheels (:code:`pip install scs`) include MKL on x86_64 Linux and
+Windows. When installing from source, you can enable MKL with:
 
 .. code:: bash
 
   python -m pip install -Csetup-args=-Dlink_mkl=true .
 
 When using the default :code:`linear_solver=scs.LinearSolver.AUTO`, MKL is
-selected automatically on Linux and Windows if installed. MKL is
+selected automatically on Linux and Windows if available. MKL is
 typically faster than the built-in QDLDL linear system solver.
 
 GPU
