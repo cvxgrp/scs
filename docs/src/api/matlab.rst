@@ -33,14 +33,15 @@ and :code:`y` corresponds to the dual solution guess.
 Solver backends
 ---------------
 
-By default SCS uses the sparse direct (LDL) solver. Alternative backends can be
-selected via the :code:`settings` struct:
+By default SCS uses the bundled QDLDL sparse direct solver. Alternative backends
+can be selected via the :code:`settings` struct:
 
 .. code:: matlab
 
-  settings.use_indirect = true;  % conjugate gradient solver
-  settings.dense = true;         % dense Cholesky (best for dense A)
-  settings.gpu = true;           % GPU solver
+  settings.use_matlab_ldl = true;  % MATLAB's built-in LDL (MA57, no compilation needed)
+  settings.use_indirect = true;    % conjugate gradient solver
+  settings.dense = true;           % dense Cholesky (best for dense A)
+  settings.gpu = true;             % GPU solver
 
 Spectral cones
 ---------------
