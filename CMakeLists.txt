@@ -86,6 +86,9 @@ message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 option(USE_LAPACK "Whether to use BLAS/LAPACK" ON)
 message(STATUS "BLAS/LAPACK usage is ${USE_LAPACK}")
 
+option(BLAS64 "Use 64-bit integers for BLAS/LAPACK" OFF)
+message(STATUS "64-bit BLAS integers are ${BLAS64}")
+
 option(USE_SPECTRAL_CONES "Whether to use spectral cones (requires LAPACK)" OFF)
 if(USE_SPECTRAL_CONES AND NOT USE_LAPACK)
   message(FATAL_ERROR "USE_SPECTRAL_CONES requires USE_LAPACK to be ON")
@@ -130,6 +133,9 @@ endif()
 
 if(USE_LAPACK)
   list(APPEND COMPILER_OPTS USE_LAPACK)
+  if(BLAS64)
+    list(APPEND COMPILER_OPTS BLAS64)
+  endif()
   find_package(LAPACK)
   if(LAPACK_FOUND)
     set(LAPACK_LINK_LIBRARIES ${LAPACK_LIBRARIES})
@@ -410,17 +416,28 @@ if(DEFINED ENV{MKLROOT})
            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
   target_compile_definitions(${${PROJECT_NAME}_MKL} PRIVATE ${COMPILER_OPTS})
-  # MKL flags for Linux + GCC + GNU threading. For other platforms, see:
-  # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
+  # Link against mkl_rt (the single dynamic library) which dispatches to the
+  # correct interface layer at runtime. The BLAS integer width (LP64 vs ILP64)
+  # is set at runtime by MKL_Set_Interface_Layer() in linsys/mkl/direct/private.c,
+  # controlled by the BLAS64 compile flag.
+  #
+  # Note: The PARDISO integer width (pardiso vs pardiso_64) is controlled by
+  # DLONG, not by the MKL interface layer. See linsys/mkl/direct/private.c.
   target_link_options(${${PROJECT_NAME}_MKL} PRIVATE "LINKER:--no-as-needed")
-  target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE $ENV{MKLROOT}/lib)
+  # MKLROOT points to the MKL installation; the compiler directory (OMPROOT
+  # or fallback) contains libiomp5 (Intel OpenMP runtime).
+  if(DEFINED ENV{OMPROOT})
+    set(_OMPROOT "$ENV{OMPROOT}")
+  else()
+    set(_OMPROOT "$ENV{MKLROOT}")
+  endif()
+  target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE
+    $ENV{MKLROOT}/lib $ENV{MKLROOT}/lib/intel64 ${_OMPROOT}/lib)
   target_link_libraries(
     ${${PROJECT_NAME}_MKL}
     PRIVATE m
             mkl_rt
-            mkl_gnu_thread
-            mkl_core
-            gomp
+            iomp5
             Threads::Threads
             dl)
 

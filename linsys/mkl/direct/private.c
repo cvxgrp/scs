@@ -5,25 +5,63 @@
 #define PARDISO_SOLVE (33)
 #define PARDISO_CLEANUP (-1)
 
-/* TODO: is it necessary to use pardiso_64 and MKL_Set_Interface_Layer ? */
 /*
+ * MKL interface layer constants. MKL has two integer interfaces:
+ *
+ *   LP64  (MKL_INTERFACE_LP64  = 0): BLAS/LAPACK use 32-bit integers (int).
+ *   ILP64 (MKL_INTERFACE_ILP64 = 1): BLAS/LAPACK use 64-bit integers (long long).
+ *
+ * These affect the standard BLAS/LAPACK symbols (dgemm, dpotrf, etc.).
+ * PARDISO has separate entry points for each integer width:
+ *
+ *   pardiso    — 32-bit integer indices (used when !DLONG)
+ *   pardiso_64 — 64-bit integer indices (used when DLONG)
+ *
+ * The pardiso/pardiso_64 choice is independent of the interface layer; each is
+ * a distinct symbol that always uses its own integer width regardless of what
+ * MKL_Set_Interface_Layer says.
+ *
+ * The BLAS integer width is controlled by the use_blas64 meson option:
+ *
+ *   use_blas64=false (default) -> links mkl-dynamic-lp64-seq,  expects LP64
+ *   use_blas64=true            -> links mkl-dynamic-ilp64-seq, expects ILP64
+ *
+ * See meson.build for the linkage logic. The runtime check in
+ * scs_init_lin_sys_work uses BLAS64 to pick the right expected layer.
+ *
+ * PARDISO is independent: pardiso_64 always uses 64-bit ints regardless of
+ * the interface layer or BLAS64 setting.
+ */
 #define MKL_INTERFACE_LP64 0
 #define MKL_INTERFACE_ILP64 1
-*/
+
 #ifdef DLONG
 #define _PARDISO pardiso_64
 #else
 #define _PARDISO pardiso
 #endif
 
-/* Prototypes for Pardiso functions */
+/* Prototypes for Pardiso and MKL service functions. */
 void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
               const scs_int *mtype, const scs_int *phase, const scs_int *n,
               const scs_float *a, const scs_int *ia, const scs_int *ja,
               scs_int *perm, const scs_int *nrhs, scs_int *iparm,
               const scs_int *msglvl, scs_float *b, scs_float *x,
               scs_int *error);
-/* scs_int MKL_Set_Interface_Layer(scs_int); */
+/* BLAS64 requires DLONG for MKL builds: the interface layer (ILP64) set by
+ * MKL_Set_Interface_Layer must match the PARDISO entry point (pardiso_64).
+ * Without DLONG, pardiso (32-bit) is used but ILP64 makes its internal BLAS
+ * calls expect 64-bit integers, causing hangs or memory corruption. */
+#if defined(BLAS64) && !defined(DLONG)
+#error "MKL PARDISO requires DLONG when BLAS64 is set (pardiso_64 needs 64-bit ints)"
+#endif
+
+/* MKL_Set_Interface_Layer and MKL_Set_Threading_Layer are exported by mkl_rt
+ * (the single dynamic library). All build systems (Makefile, CMake, Meson)
+ * should link against mkl_rt so these functions are available. */
+int MKL_Set_Interface_Layer(int);
+int MKL_Set_Threading_Layer(int);
+#define MKL_THREADING_SEQUENTIAL 2
 
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
@@ -56,15 +94,36 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   if (!p)
     return SCS_NULL;
 
-  /* TODO: is this necessary with pardiso_64? */
-  /* Set MKL interface layer */
-  /*
-#ifdef DLONG
-  MKL_Set_Interface_Layer(MKL_INTERFACE_ILP64);
-#else
-  MKL_Set_Interface_Layer(MKL_INTERFACE_LP64);
+  /* If SCS was not compiled with OpenMP, force MKL to use sequential
+   * threading. Without this, mkl_rt may try to load Intel OpenMP (libiomp5)
+   * which can deadlock if the binary was not linked against it. */
+#ifndef _OPENMP
+  MKL_Set_Threading_Layer(MKL_THREADING_SEQUENTIAL);
 #endif
-  */
+
+  /* Enforce the correct MKL interface layer for BLAS/LAPACK calls.
+   *
+   * The interface layer must match what we linked against:
+   *   BLAS64 defined   -> ILP64 (64-bit BLAS integers, mkl-dynamic-ilp64-seq)
+   *   BLAS64 undefined -> LP64  (32-bit BLAS integers, mkl-dynamic-lp64-seq)
+   *
+   * If another library in the process set the wrong layer, our BLAS calls
+   * would silently receive the wrong integer width, causing memory corruption.
+   *
+   * This only protects the BLAS layer. The pardiso_64 entry point is
+   * unaffected by the interface layer — it always uses 64-bit integers.
+   *
+   * All build systems must link against mkl_rt so that this function is
+   * available. Do NOT link component libraries (mkl_intel_lp64 etc.)
+   * directly — mkl_rt dispatches to the correct component at runtime. */
+  {
+#ifdef BLAS64
+    int expected = MKL_INTERFACE_ILP64;
+#else
+    int expected = MKL_INTERFACE_LP64;
+#endif
+    MKL_Set_Interface_Layer(expected);
+  }
   p->n = A->n;
   p->m = A->m;
   p->n_plus_m = p->n + p->m;

@@ -14,8 +14,15 @@ jobs:
       fail-fast: false
       matrix:
         long: [0, 1]
+        blas64: [0, 1]
+        exclude:
+          # BLAS64 requires DLONG for MKL: the ILP64 interface layer must match
+          # the pardiso_64 entry point (which needs 64-bit integer indices).
+          - long: 0
+            blas64: 1
 
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
     - name: Intel Apt repository
@@ -26,19 +33,22 @@ jobs:
         echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
         sudo apt-get update
 
-    - name: Install Intel oneAPI
-      run: sudo apt-get install intel-mkl
+    - name: Install Intel oneAPI MKL
+      run: sudo apt-get install -y intel-oneapi-mkl-devel
 
     - name: Setup Intel oneAPI environment
       run: |
-        # TODO: hack to set MKLROOT for now
-        echo "MKLROOT=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
-        # source /opt/intel/mkl/bin/mklvars.sh
+        ONEAPI=/opt/intel/oneapi
+        echo "MKLROOT=$ONEAPI/mkl/latest" >> $GITHUB_ENV
+        # The compiler directory contains libiomp5 (Intel OpenMP runtime).
+        # Both the linker (-L) and runtime loader (LD_LIBRARY_PATH) need it.
+        echo "OMPROOT=$ONEAPI/compiler/latest" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$ONEAPI/mkl/latest/lib/intel64:$ONEAPI/compiler/latest/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     - name: checkout project code
       uses: actions/checkout@v6
 
     - name: Build SCS MKL and test
       run: |
-        make DLONG=${{ matrix.long }} mkl
+        make DLONG=${{ matrix.long }} BLAS64=${{ matrix.blas64 }} mkl
         out/run_tests_mkl

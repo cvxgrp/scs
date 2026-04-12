@@ -139,7 +139,18 @@ endif
 
 # MKL linker flags for Linux + GCC + GNU threading. For other platforms, see:
 # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
-MKLFLAGS = -L$(MKLROOT) -L$(MKLROOT)/lib -Wl,--no-as-needed -lmkl_rt -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -ldl
+#
+# We link against mkl_rt (the single dynamic library) which dispatches to the
+# correct interface layer at runtime. The BLAS integer width (LP64 vs ILP64)
+# is set at runtime by MKL_Set_Interface_Layer() in linsys/mkl/direct/private.c,
+# controlled by the BLAS64 compile flag.
+#
+# Note: The PARDISO integer width (pardiso vs pardiso_64) is controlled by DLONG,
+# not by the MKL interface layer. See linsys/mkl/direct/private.c for details.
+# OMPROOT should point to the Intel OpenMP (iomp5) installation, typically
+# /opt/intel/oneapi/compiler/latest. If unset, fall back to MKLROOT.
+OMPROOT ?= $(MKLROOT)
+MKLFLAGS = -L$(MKLROOT)/lib -L$(MKLROOT)/lib/intel64 -L$(OMPROOT)/lib -Wl,--no-as-needed -lmkl_rt -liomp5 -lpthread -ldl
 
 ############ OPENMP: ############
 # set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies):

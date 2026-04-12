@@ -10,7 +10,19 @@ on:
 
 jobs:
   linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        # BLAS64 requires DLONG for MKL: the ILP64 interface layer must match
+        # the pardiso_64 entry point (which needs 64-bit integer indices).
+        include:
+          - blas64: OFF
+            dlong: OFF
+          - blas64: ON
+            dlong: ON
+
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - name: Intel Apt repository
       run: |
@@ -20,14 +32,17 @@ jobs:
         echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
         sudo apt-get update
 
-    - name: Install Intel oneAPI
-      run: sudo apt-get install intel-mkl
+    - name: Install Intel oneAPI MKL
+      run: sudo apt-get install -y intel-oneapi-mkl-devel
 
     - name: Setup Intel oneAPI environment
       run: |
-        # TODO: hack to set MKLROOT for now
-        echo "MKLROOT=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
-        # source /opt/intel/mkl/bin/mklvars.sh
+        ONEAPI=/opt/intel/oneapi
+        echo "MKLROOT=$ONEAPI/mkl/latest" >> $GITHUB_ENV
+        # The compiler directory contains libiomp5 (Intel OpenMP runtime).
+        # Both the linker (-L) and runtime loader (LD_LIBRARY_PATH) need it.
+        echo "OMPROOT=$ONEAPI/compiler/latest" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$ONEAPI/mkl/latest/lib/intel64:$ONEAPI/compiler/latest/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     - name: checkout project code
       uses: actions/checkout@v6
@@ -39,11 +54,20 @@ jobs:
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
         mkdir build
         cd build
-        cmake -DBUILD_TESTING=ON -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+        cmake -DBUILD_TESTING=ON -DBLAS64=${{ matrix.blas64 }} -DDLONG=${{ matrix.dlong }} -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
         make
         make install
-        ctest --output-on-failure
-        cd ../docs/src/examples/
-        gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsmkl
-        ./qp.out
-
+        # When BLAS64=ON, only run MKL tests — the other targets link system
+        # BLAS which is LP64 and would fail with 64-bit BLAS integers.
+        if [[ "${{ matrix.blas64 }}" == "ON" ]]; then
+          ctest --output-on-failure -R mkl
+        else
+          ctest --output-on-failure
+        fi
+        # The qp.c example uses int (not scs_int) for matrix indices,
+        # so it only works with 32-bit ints (DLONG=OFF).
+        if [[ "${{ matrix.dlong }}" == "OFF" ]]; then
+          cd ../docs/src/examples/
+          gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsmkl
+          ./qp.out
+        fi
