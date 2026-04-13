@@ -18,6 +18,8 @@ jobs:
         include:
           - blas64: OFF
             dlong: OFF
+          - blas64: OFF
+            dlong: ON
           - blas64: ON
             dlong: ON
 
