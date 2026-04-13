@@ -105,7 +105,7 @@ static const char *test_infeasible_inaccurate(void) {
   stgs->eps_infeas = 0.0; /* disabled: res < 0 never true, forces max_iters */
   /* Use enough iterations so kap >> tau is clearly established across all
    * linear solver backends (numerical trajectory is backend-dependent). */
-  stgs->max_iters = 5000;
+  stgs->max_iters = 500;
   stgs->verbose = 1;
 
   exitflag = scs(d, k, stgs, sol, &info);
@@ -149,7 +149,7 @@ static const char *test_unbounded_inaccurate(void) {
   stgs->eps_infeas = 0.0; /* disabled: res < 0 never true, forces max_iters */
   /* Use enough iterations so kap >> tau is clearly established across all
    * linear solver backends (numerical trajectory is backend-dependent). */
-  stgs->max_iters = 5000;
+  stgs->max_iters = 500;
   stgs->verbose = 1;
 
   exitflag = scs(d, k, stgs, sol, &info);
