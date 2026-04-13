@@ -50,7 +50,12 @@ jobs:
 
     - name: Verify MKL interface mismatch fails fast
       run: |
+        CFLAGS="-DDLONG"
+        if [[ "${{ matrix.blas64 }}" == "1" ]]; then
+          CFLAGS="$CFLAGS -DBLAS64"
+        fi
         gcc -Iinclude test/mkl_interface_mismatch.c \
+          $CFLAGS \
           -Lout -L"$MKLROOT/lib" -L"$MKLROOT/lib/intel64" -L"$OMPROOT/lib" \
           -Wl,-rpath,"$PWD/out" -o out/test_mkl_interface_mismatch \
           -lscsmkl -lmkl_rt
