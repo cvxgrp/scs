@@ -72,7 +72,9 @@ MKL compiler flags might not be right for your system and may need to be
 The :code:`BLAS64` compile flag is a general SCS flag for ILP64 BLAS/LAPACK
 libraries. When using the MKL Pardiso backend specifically, :code:`BLAS64=1`
 must be paired with :code:`DLONG=1` so that :code:`pardiso_64` matches the
-64-bit BLAS interface.
+64-bit BLAS interface. In the CMake build, :code:`BLAS64=ON` also requires
+that CMake can find an ILP64 BLAS/LAPACK implementation; if autodetection
+needs help, set :code:`BLA_VENDOR` explicitly.
 
 
 GPU
