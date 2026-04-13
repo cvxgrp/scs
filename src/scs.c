@@ -1115,6 +1115,10 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
     scs_printf("ERROR: Missing ScsData, ScsCone, or ScsSettings input\n");
     return SCS_NULL;
   }
+  if (scs_init_lin_sys_ctx() != 0) {
+    scs_printf("ERROR: linear system backend runtime initialization failed\n");
+    return SCS_NULL;
+  }
 #if NO_VALIDATE == 0
   if (validate(d, k, stgs) < 0) {
     scs_printf("ERROR: Validation returned failure\n");

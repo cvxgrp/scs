@@ -9,6 +9,14 @@ extern "C" {
 
 /* This is the API that any new linear system solver must implement */
 
+/**
+ * Perform any backend-specific runtime initialization required before common
+ * BLAS/LAPACK-using code runs. For most backends this is a no-op.
+ *
+ * @return 0 on success, nonzero on failure.
+ */
+scs_int scs_init_lin_sys_ctx(void);
+
 /* Struct containing linear system workspace. Implemented by linear solver. */
 /* This typedef is in scs.h */
 /* typedef struct SCS_LIN_SYS_WORK ScsLinSysWork; */

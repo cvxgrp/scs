@@ -74,6 +74,45 @@ static const char *scs_mkl_interface_name(int layer) {
   }
 }
 
+scs_int scs_init_lin_sys_ctx(void) {
+  /* Some builds intentionally link the sequential MKL runtime (for example,
+   * Windows wheels, or source builds that could not resolve the Intel OpenMP
+   * pkg-config dependency). In those builds, fail fast if the process already
+   * initialized MKL with a threaded runtime. */
+#ifdef SCS_MKL_FORCE_SEQUENTIAL
+  {
+    int actual = MKL_Set_Threading_Layer(MKL_THREADING_SEQUENTIAL);
+    if (actual != MKL_THREADING_SEQUENTIAL) {
+      scs_printf("MKL threading layer mismatch: expected sequential runtime, "
+                 "but MKL is using layer %d. Another library in this process "
+                 "likely initialized MKL with a threaded runtime.\n",
+                 actual);
+      return -1;
+    }
+  }
+#endif
+
+  /* Enforce the correct MKL interface layer for BLAS/LAPACK calls before any
+   * common SCS code reaches MKL-backed BLAS routines. */
+  {
+#ifdef BLAS64
+    int expected = MKL_INTERFACE_ILP64;
+#else
+    int expected = MKL_INTERFACE_LP64;
+#endif
+    int actual = MKL_Set_Interface_Layer(expected);
+    if (actual != expected) {
+      scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
+                 "%s (%d). Another library in this process likely "
+                 "initialized MKL with an incompatible LP64/ILP64 setting.\n",
+                 scs_mkl_interface_name(expected),
+                 scs_mkl_interface_name(actual), actual);
+      return -1;
+    }
+  }
+  return 0;
+}
+
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
 }
@@ -104,57 +143,6 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   ScsLinSysWork *p = scs_calloc(1, sizeof(ScsLinSysWork));
   if (!p)
     return SCS_NULL;
-
-  /* Some builds intentionally link the sequential MKL runtime (for example,
-   * Windows wheels, or source builds that could not resolve the Intel OpenMP
-   * pkg-config dependency). In those builds, fail fast if the process already
-   * initialized MKL with a threaded runtime. */
-#ifdef SCS_MKL_FORCE_SEQUENTIAL
-  {
-    int actual = MKL_Set_Threading_Layer(MKL_THREADING_SEQUENTIAL);
-    if (actual != MKL_THREADING_SEQUENTIAL) {
-      scs_printf("MKL threading layer mismatch: expected sequential runtime, "
-                 "but MKL is using layer %d. Another library in this process "
-                 "likely initialized MKL with a threaded runtime.\n",
-                 actual);
-      scs_free(p);
-      return SCS_NULL;
-    }
-  }
-#endif
-
-  /* Enforce the correct MKL interface layer for BLAS/LAPACK calls.
-   *
-   * The interface layer must match what we linked against:
-   *   BLAS64 defined   -> ILP64 (64-bit BLAS integers, mkl-dynamic-ilp64-seq)
-   *   BLAS64 undefined -> LP64  (32-bit BLAS integers, mkl-dynamic-lp64-seq)
-   *
-   * If another library in the process set the wrong layer, our BLAS calls
-   * would silently receive the wrong integer width, causing memory corruption.
-   *
-   * This only protects the BLAS layer. The pardiso_64 entry point is
-   * unaffected by the interface layer — it always uses 64-bit integers.
-   *
-   * All build systems must link against mkl_rt so that this function is
-   * available. Do NOT link component libraries (mkl_intel_lp64 etc.)
-   * directly — mkl_rt dispatches to the correct component at runtime. */
-  {
-#ifdef BLAS64
-    int expected = MKL_INTERFACE_ILP64;
-#else
-    int expected = MKL_INTERFACE_LP64;
-#endif
-    int actual = MKL_Set_Interface_Layer(expected);
-    if (actual != expected) {
-      scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
-                 "%s (%d). Another library in this process likely "
-                 "initialized MKL with an incompatible LP64/ILP64 setting.\n",
-                 scs_mkl_interface_name(expected),
-                 scs_mkl_interface_name(actual), actual);
-      scs_free(p);
-      return SCS_NULL;
-    }
-  }
   p->n = A->n;
   p->m = A->m;
   p->n_plus_m = p->n + p->m;

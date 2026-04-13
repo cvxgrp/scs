@@ -220,6 +220,8 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
 
 /* ======================== Public API ======================== */
 
+scs_int scs_init_lin_sys_ctx(void) { return 0; }
+
 const char *scs_get_lin_sys_method(void) {
   return "sparse-indirect-scs";
 }
