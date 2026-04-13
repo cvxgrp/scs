@@ -63,6 +63,17 @@ int MKL_Set_Interface_Layer(int);
 int MKL_Set_Threading_Layer(int);
 #define MKL_THREADING_SEQUENTIAL 2
 
+static const char *scs_mkl_interface_name(int layer) {
+  switch (layer) {
+  case MKL_INTERFACE_LP64:
+    return "LP64";
+  case MKL_INTERFACE_ILP64:
+    return "ILP64";
+  default:
+    return "unknown";
+  }
+}
+
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
 }
@@ -94,11 +105,22 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   if (!p)
     return SCS_NULL;
 
-  /* If SCS was not compiled with OpenMP, force MKL to use sequential
-   * threading. Without this, mkl_rt may try to load Intel OpenMP (libiomp5)
-   * which can deadlock if the binary was not linked against it. */
-#ifndef _OPENMP
-  MKL_Set_Threading_Layer(MKL_THREADING_SEQUENTIAL);
+  /* Some builds intentionally link the sequential MKL runtime (for example,
+   * Windows wheels, or source builds that could not resolve the Intel OpenMP
+   * pkg-config dependency). In those builds, fail fast if the process already
+   * initialized MKL with a threaded runtime. */
+#ifdef SCS_MKL_FORCE_SEQUENTIAL
+  {
+    int actual = MKL_Set_Threading_Layer(MKL_THREADING_SEQUENTIAL);
+    if (actual != MKL_THREADING_SEQUENTIAL) {
+      scs_printf("MKL threading layer mismatch: expected sequential runtime, "
+                 "but MKL is using layer %d. Another library in this process "
+                 "likely initialized MKL with a threaded runtime.\n",
+                 actual);
+      scs_free(p);
+      return SCS_NULL;
+    }
+  }
 #endif
 
   /* Enforce the correct MKL interface layer for BLAS/LAPACK calls.
@@ -122,7 +144,16 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 #else
     int expected = MKL_INTERFACE_LP64;
 #endif
-    MKL_Set_Interface_Layer(expected);
+    int actual = MKL_Set_Interface_Layer(expected);
+    if (actual != expected) {
+      scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
+                 "%s (%d). Another library in this process likely "
+                 "initialized MKL with an incompatible LP64/ILP64 setting.\n",
+                 scs_mkl_interface_name(expected),
+                 scs_mkl_interface_name(actual), actual);
+      scs_free(p);
+      return SCS_NULL;
+    }
   }
   p->n = A->n;
   p->m = A->m;

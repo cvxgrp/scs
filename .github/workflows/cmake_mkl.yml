@@ -57,13 +57,7 @@ jobs:
         cmake -DBUILD_TESTING=ON -DBLAS64=${{ matrix.blas64 }} -DDLONG=${{ matrix.dlong }} -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
         make
         make install
-        # When BLAS64=ON, only run MKL tests — the other targets link system
-        # BLAS which is LP64 and would fail with 64-bit BLAS integers.
-        if [[ "${{ matrix.blas64 }}" == "ON" ]]; then
-          ctest --output-on-failure -R mkl
-        else
-          ctest --output-on-failure
-        fi
+        ctest --output-on-failure
         # The qp.c example uses int (not scs_int) for matrix indices,
         # so it only works with 32-bit ints (DLONG=OFF).
         if [[ "${{ matrix.dlong }}" == "OFF" ]]; then
