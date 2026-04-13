@@ -35,7 +35,7 @@
     scs_set_default_settings(stgs);                                            \
     stgs->eps_abs = 1e-6;                                                      \
     stgs->eps_rel = 1e-6;                                                      \
-    stgs->verbose = 0;                                                         \
+    stgs->verbose = 1;                                                         \
   } while (0)
 
 #define _OPTS_CLEANUP()                                                        \
