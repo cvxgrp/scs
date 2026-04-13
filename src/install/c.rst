@@ -69,6 +69,13 @@ MKL compiler flags might not be right for your system and may need to be
 `modified
 <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
 
+The :code:`BLAS64` compile flag is a general SCS flag for ILP64 BLAS/LAPACK
+libraries. When using the MKL Pardiso backend specifically, :code:`BLAS64=1`
+must be paired with :code:`DLONG=1` so that :code:`pardiso_64` matches the
+64-bit BLAS interface. In the CMake build, :code:`BLAS64=ON` also requires
+that CMake can find an ILP64 BLAS/LAPACK implementation; if autodetection
+needs help, set :code:`BLA_VENDOR` explicitly.
+
 
 GPU
 """
@@ -156,6 +163,9 @@ This will produce static library :code:`libscsmkl.a` and dynamic library
 for your system and may need to be `modified
 <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
 
+If you want 64-bit BLAS/LAPACK integers with the MKL Pardiso backend, build
+with both :code:`BLAS64=1` and :code:`DLONG=1`.
+
 To compile and test the :ref:`dense direct <dense>` solver (requires LAPACK):
 
 .. code:: bash
@@ -197,4 +207,3 @@ To use the libraries in your own source code, compile your code with the linker
 option :code:`-L(PATH_TO_SCS_LIBS)` and :code:`-lscsdir` or :code:`-lscsindir`
 (as needed). The API and required data structures are defined in the file
 :code:`include/scs.h` and documented :ref:`here <c_interface>`.
-

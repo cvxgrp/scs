@@ -130,6 +130,20 @@ solving.</p>
 </div>
 <p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable MKL when solving. MKL is
 typically faster than the built-in linear system solver.</p>
+<p>The published Linux x86_64 wheels prefer the threaded MKL variant and include
+the Intel OpenMP runtime (<code class="code docutils literal notranslate"><span class="pre">libiomp5</span></code>). Windows currently falls back to
+sequential MKL until Intel fixes the threaded <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> metadata in
+its conda packages.</p>
+<p>To use 64-bit BLAS/LAPACK integers (ILP64 / <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code>) with any supported
+BLAS/LAPACK library, install with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_blas64<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+</pre></div>
+</div>
+<p>If you combine <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code> with the MKL Pardiso backend, SCS requires
+64-bit SCS integers as well (the default in the Meson build). At runtime SCS
+also checks that the process-wide MKL interface layer matches the LP64/ILP64
+mode it was compiled for, and fails early if another library already set an
+incompatible MKL interface.</p>
 </section>
 <section id="gpu">
 <h2>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h2>

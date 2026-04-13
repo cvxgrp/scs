@@ -67,7 +67,7 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - True/False
      - 0
    * - :code:`BLAS64`
-     - The BLAS library is 64 bits
+     - BLAS/LAPACK uses 64-bit integers (ILP64)
      - True/False
      - 0
    * - :code:`NOBLASSUFFIX`

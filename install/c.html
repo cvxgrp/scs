@@ -151,6 +151,12 @@ is installed in your system and the <code class="code docutils literal notransla
 set, then additionally CMake will build and install the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a> linear solver with target <code class="code docutils literal notranslate"><span class="pre">scs::scsmkl</span></code>.  (Note that the choice of
 MKL compiler flags might not be right for your system and may need to be
 <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code> compile flag is a general SCS flag for ILP64 BLAS/LAPACK
+libraries. When using the MKL Pardiso backend specifically, <code class="code docutils literal notranslate"><span class="pre">BLAS64=1</span></code>
+must be paired with <code class="code docutils literal notranslate"><span class="pre">DLONG=1</span></code> so that <code class="code docutils literal notranslate"><span class="pre">pardiso_64</span></code> matches the
+64-bit BLAS interface. In the CMake build, <code class="code docutils literal notranslate"><span class="pre">BLAS64=ON</span></code> also requires
+that CMake can find an ILP64 BLAS/LAPACK implementation; if autodetection
+needs help, set <code class="code docutils literal notranslate"><span class="pre">BLA_VENDOR</span></code> explicitly.</p>
 </section>
 <section id="gpu">
 <h3>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h3>
@@ -224,6 +230,8 @@ out/run_tests_mkl
 <code class="code docutils literal notranslate"><span class="pre">libscsmkl.ext</span></code> (again <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> is platform dependent) in the
 <code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.  (Note that the choice of MKL compiler flags might not be right
 for your system and may need to be <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+<p>If you want 64-bit BLAS/LAPACK integers with the MKL Pardiso backend, build
+with both <code class="code docutils literal notranslate"><span class="pre">BLAS64=1</span></code> and <code class="code docutils literal notranslate"><span class="pre">DLONG=1</span></code>.</p>
 <p>To compile and test the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> solver (requires LAPACK):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>dense
 out/run_tests_dense
