@@ -1166,7 +1166,8 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
   }
 #ifdef SCS_MKL
   if (scs_init_mkl_runtime() != 0) {
-    scs_printf("ERROR: linear system backend runtime initialization failed\n");
+    scs_printf("ERROR: MKL runtime initialization failed before solver setup. "
+               "See the MKL message above for the specific cause.\n");
     return SCS_NULL;
   }
 #endif
