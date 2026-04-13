@@ -49,7 +49,7 @@ int main(void) {
   k.l = 2;
 
   scs_set_default_settings(&stgs);
-  stgs.verbose = 0;
+  stgs.verbose = 1;
 
   w = scs_init(&d, &k, &stgs);
   if (w != SCS_NULL) {
