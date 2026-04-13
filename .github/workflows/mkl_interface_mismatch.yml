@@ -1,5 +1,5 @@
 ---
-name: Build and Test MKL
+name: MKL Interface Mismatch
 
 on:
   push:
@@ -13,13 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        long: [0, 1]
-        blas64: [0, 1]
-        exclude:
-          # BLAS64 requires DLONG for MKL: the ILP64 interface layer must match
-          # the pardiso_64 entry point (which needs 64-bit integer indices).
-          - long: 0
-            blas64: 1
+        include:
+          - blas64: 0
+            long: 1
+          - blas64: 1
+            long: 1
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -40,15 +38,35 @@ jobs:
       run: |
         ONEAPI=/opt/intel/oneapi
         echo "MKLROOT=$ONEAPI/mkl/latest" >> $GITHUB_ENV
-        # The compiler directory contains libiomp5 (Intel OpenMP runtime).
-        # Both the linker (-L) and runtime loader (LD_LIBRARY_PATH) need it.
         echo "OMPROOT=$ONEAPI/compiler/latest" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$ONEAPI/mkl/latest/lib/intel64:$ONEAPI/compiler/latest/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
-    - name: checkout project code
+    - name: Checkout project code
       uses: actions/checkout@v6
 
-    - name: Build SCS MKL and test
+    - name: Build MKL library
       run: |
         make DLONG=${{ matrix.long }} BLAS64=${{ matrix.blas64 }} mkl
-        out/run_tests_mkl
+
+    - name: Verify MKL interface mismatch fails fast
+      run: |
+        CFLAGS="-DDLONG"
+        if [[ "${{ matrix.blas64 }}" == "1" ]]; then
+          CFLAGS="$CFLAGS -DBLAS64"
+        fi
+        gcc -Iinclude test/mkl_interface_mismatch.c \
+          $CFLAGS \
+          -Lout -L"$MKLROOT/lib" -L"$MKLROOT/lib/intel64" -L"$OMPROOT/lib" \
+          -Wl,-rpath,"$PWD/out" -o out/test_mkl_interface_mismatch \
+          -lscsmkl -lmkl_rt
+        set +e
+        output=$(./out/test_mkl_interface_mismatch 2>&1)
+        status=$?
+        set -e
+        printf '%s\n' "$output"
+        if [[ $status -ne 0 ]]; then
+          echo "mismatch test program failed unexpectedly with status $status"
+          exit 1
+        fi
+        grep -q "MKL interface layer mismatch:" <<<"$output"
+        grep -q "ERROR: MKL runtime initialization failed before solver setup." <<<"$output"

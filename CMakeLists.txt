@@ -86,6 +86,9 @@ message(STATUS "Read/write functionality is NOT ${NO_READ_WRITE}")
 option(USE_LAPACK "Whether to use BLAS/LAPACK" ON)
 message(STATUS "BLAS/LAPACK usage is ${USE_LAPACK}")
 
+option(BLAS64 "Use 64-bit integers for BLAS/LAPACK" OFF)
+message(STATUS "64-bit BLAS integers are ${BLAS64}")
+
 option(USE_SPECTRAL_CONES "Whether to use spectral cones (requires LAPACK)" OFF)
 if(USE_SPECTRAL_CONES AND NOT USE_LAPACK)
   message(FATAL_ERROR "USE_SPECTRAL_CONES requires USE_LAPACK to be ON")
@@ -130,10 +133,29 @@ endif()
 
 if(USE_LAPACK)
   list(APPEND COMPILER_OPTS USE_LAPACK)
+  if(BLAS64)
+    list(APPEND COMPILER_OPTS BLAS64)
+    set(BLA_SIZEOF_INTEGER 8)
+  else()
+    set(BLA_SIZEOF_INTEGER 4)
+  endif()
+  if(DEFINED ENV{MKLROOT} AND NOT DEFINED BLA_VENDOR)
+    if(BLAS64)
+      set(BLA_VENDOR Intel10_64ilp)
+    else()
+      set(BLA_VENDOR Intel10_64lp)
+    endif()
+  endif()
   find_package(LAPACK)
   if(LAPACK_FOUND)
     set(LAPACK_LINK_LIBRARIES ${LAPACK_LIBRARIES})
   else()
+    if(BLAS64)
+      message(FATAL_ERROR
+              "BLAS64=ON requires a discoverable ILP64 BLAS/LAPACK library. "
+              "CMake did not find one. Set BLA_VENDOR explicitly or configure "
+              "with -DBLAS64=OFF.")
+    endif()
     # Fallback to linking by name (works on most Linux/Mac systems).
     set(LAPACK_LINK_LIBRARIES blas lapack)
   endif()
@@ -389,6 +411,12 @@ if(DEFINED ENV{MKLROOT})
   message(STATUS "MKLROOT set to $ENV{MKLROOT}")
   message(STATUS "Will install SCS-MKL (libscsmkl).")
 
+  if(BLAS64 AND NOT DLONG)
+    message(FATAL_ERROR
+            "MKL PARDISO with BLAS64 requires DLONG=ON so that the "
+            "pardiso_64 entry point matches the ILP64 BLAS interface.")
+  endif()
+
   set(MKLSRC ${LINSYS}/mkl/direct)
 
   # MKL Pardiso direct solver library
@@ -409,18 +437,31 @@ if(DEFINED ENV{MKLROOT})
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
-  target_compile_definitions(${${PROJECT_NAME}_MKL} PRIVATE ${COMPILER_OPTS})
-  # MKL flags for Linux + GCC + GNU threading. For other platforms, see:
-  # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
+  target_compile_definitions(
+    ${${PROJECT_NAME}_MKL}
+    PRIVATE ${COMPILER_OPTS} SCS_MKL)
+  # Link against mkl_rt (the single dynamic library) which dispatches to the
+  # correct interface layer at runtime. The BLAS integer width (LP64 vs ILP64)
+  # is set at startup by the MKL-specific path in src/scs.c, controlled by the
+  # BLAS64 compile flag.
+  #
+  # Note: The PARDISO integer width (pardiso vs pardiso_64) is controlled by
+  # DLONG, not by the MKL interface layer. See linsys/mkl/direct/private.c.
   target_link_options(${${PROJECT_NAME}_MKL} PRIVATE "LINKER:--no-as-needed")
-  target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE $ENV{MKLROOT}/lib)
+  # MKLROOT points to the MKL installation; the compiler directory (OMPROOT
+  # or fallback) contains libiomp5 (Intel OpenMP runtime).
+  if(DEFINED ENV{OMPROOT})
+    set(_OMPROOT "$ENV{OMPROOT}")
+  else()
+    set(_OMPROOT "$ENV{MKLROOT}")
+  endif()
+  target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE
+    $ENV{MKLROOT}/lib $ENV{MKLROOT}/lib/intel64 ${_OMPROOT}/lib)
   target_link_libraries(
     ${${PROJECT_NAME}_MKL}
     PRIVATE m
             mkl_rt
-            mkl_gnu_thread
-            mkl_core
-            gomp
+            iomp5
             Threads::Threads
             dl)
 
