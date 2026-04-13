@@ -46,8 +46,6 @@ const char *scs_get_lin_sys_method(void) {
   return "dense-direct-cholesky";
 }
 
-scs_int scs_init_lin_sys_ctx(void) { return 0; }
-
 /* Convert sparse CSC matrix A (m x n) to dense column-major array */
 static void sparse_to_dense(const ScsMatrix *A, scs_float *A_dense) {
   scs_int j, k;

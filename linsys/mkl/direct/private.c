@@ -23,11 +23,11 @@
  *
  * The BLAS integer width is controlled by the use_blas64 meson option:
  *
- *   use_blas64=false (default) -> links mkl-dynamic-lp64-seq,  expects LP64
- *   use_blas64=true            -> links mkl-dynamic-ilp64-seq, expects ILP64
+ *   use_blas64=false (default) -> links mkl-dynamic-lp64-*,  expects LP64
+ *   use_blas64=true            -> links mkl-dynamic-ilp64-*, expects ILP64
  *
- * See meson.build for the linkage logic. The runtime check in
- * scs_init_lin_sys_work uses BLAS64 to pick the right expected layer.
+ * See meson.build for the linkage logic. The MKL-specific initialization in
+ * src/scs.c uses BLAS64 to pick the right expected interface layer.
  *
  * PARDISO is independent: pardiso_64 always uses 64-bit ints regardless of
  * the interface layer or BLAS64 setting.
@@ -55,59 +55,6 @@ void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
 #if defined(BLAS64) && !defined(DLONG)
 #error "MKL PARDISO requires DLONG when BLAS64 is set (pardiso_64 needs 64-bit ints)"
 #endif
-
-/* MKL_Set_Interface_Layer is exported by mkl_rt (the single dynamic library).
- * All build systems (Makefile, CMake, Meson) should link against mkl_rt so
- * this function is available. */
-int MKL_Set_Interface_Layer(int);
-
-static const char *scs_mkl_interface_name(int layer) {
-  switch (layer) {
-  case MKL_INTERFACE_LP64:
-    return "LP64";
-  case MKL_INTERFACE_ILP64:
-    return "ILP64";
-  default:
-    return "unknown";
-  }
-}
-
-scs_int scs_init_lin_sys_ctx(void) {
-  /* Enforce the correct MKL interface layer for BLAS/LAPACK calls.
-   *
-   * The interface layer must match what we linked against:
-   *   BLAS64 defined   -> ILP64 (64-bit BLAS integers, mkl-dynamic-ilp64-*)
-   *   BLAS64 undefined -> LP64  (32-bit BLAS integers, mkl-dynamic-lp64-*)
-   *
-   * If another library in the process set the wrong layer, our BLAS calls
-   * would silently receive the wrong integer width, causing memory corruption.
-   *
-   * This only protects the BLAS layer. The pardiso_64 entry point is
-   * unaffected by the interface layer — it always uses 64-bit integers.
-   *
-   * All build systems must link against mkl_rt so that this function is
-   * available. Do NOT link component libraries (mkl_intel_lp64 etc.)
-   * directly — mkl_rt dispatches to the correct component at runtime.
-   *
-   * This runs before any common SCS code reaches MKL-backed BLAS routines. */
-  {
-#ifdef BLAS64
-    int expected = MKL_INTERFACE_ILP64;
-#else
-    int expected = MKL_INTERFACE_LP64;
-#endif
-    int actual = MKL_Set_Interface_Layer(expected);
-    if (actual != expected) {
-      scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
-                 "%s (%d). Another library in this process likely "
-                 "initialized MKL with an incompatible LP64/ILP64 setting.\n",
-                 scs_mkl_interface_name(expected),
-                 scs_mkl_interface_name(actual), actual);
-      return -1;
-    }
-  }
-  return 0;
-}
 
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";

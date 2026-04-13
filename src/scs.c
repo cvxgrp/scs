@@ -21,6 +21,55 @@
 
 #include <string.h>
 
+#ifdef SCS_MKL
+#define MKL_INTERFACE_LP64 0
+#define MKL_INTERFACE_ILP64 1
+int MKL_Set_Interface_Layer(int);
+
+static const char *scs_mkl_interface_name(int layer) {
+  switch (layer) {
+  case MKL_INTERFACE_LP64:
+    return "LP64";
+  case MKL_INTERFACE_ILP64:
+    return "ILP64";
+  default:
+    return "unknown";
+  }
+}
+
+static scs_int scs_init_mkl_runtime(void) {
+  /* Enforce the correct MKL interface layer for BLAS/LAPACK calls before any
+   * common SCS code reaches MKL-backed BLAS routines.
+   *
+   * The interface layer must match what we linked against:
+   *   BLAS64 defined   -> ILP64 (64-bit BLAS integers, mkl-dynamic-ilp64-*)
+   *   BLAS64 undefined -> LP64  (32-bit BLAS integers, mkl-dynamic-lp64-*)
+   *
+   * If another library in the process set the wrong layer, our BLAS calls
+   * would silently receive the wrong integer width, causing memory corruption.
+   *
+   * This only protects the BLAS layer. The pardiso_64 entry point is
+   * unaffected by the interface layer — it always uses 64-bit integers. */
+  {
+#ifdef BLAS64
+    int expected = MKL_INTERFACE_ILP64;
+#else
+    int expected = MKL_INTERFACE_LP64;
+#endif
+    int actual = MKL_Set_Interface_Layer(expected);
+    if (actual != expected) {
+      scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
+                 "%s (%d). Another library in this process likely "
+                 "initialized MKL with an incompatible LP64/ILP64 setting.\n",
+                 scs_mkl_interface_name(expected),
+                 scs_mkl_interface_name(actual), actual);
+      return -1;
+    }
+  }
+  return 0;
+}
+#endif
+
 /* ======================= Forward Declarations ====================== */
 
 static void print_init_header(const ScsData *d, const ScsCone *k,
@@ -1115,10 +1164,12 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs) {
     scs_printf("ERROR: Missing ScsData, ScsCone, or ScsSettings input\n");
     return SCS_NULL;
   }
-  if (scs_init_lin_sys_ctx() != 0) {
+#ifdef SCS_MKL
+  if (scs_init_mkl_runtime() != 0) {
     scs_printf("ERROR: linear system backend runtime initialization failed\n");
     return SCS_NULL;
   }
+#endif
 #if NO_VALIDATE == 0
   if (validate(d, k, stgs) < 0) {
     scs_printf("ERROR: Validation returned failure\n");

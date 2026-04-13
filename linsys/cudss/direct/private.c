@@ -29,8 +29,6 @@ const char *scs_get_lin_sys_method() {
   return "sparse-direct-cuDSS";
 }
 
-scs_int scs_init_lin_sys_ctx(void) { return 0; }
-
 /* Free allocated resources for the linear system solver */
 void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {

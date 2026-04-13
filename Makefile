@@ -30,6 +30,7 @@ endif
 
 SCS_O = src/scs.o
 SCS_INDIR_O = src/scs_indir.o
+SCS_MKL_O = src/scs_mkl.o
 
 SRC_FILES = $(wildcard src/*.c)
 INC_FILES = $(wildcard include/*.h)
@@ -68,6 +69,9 @@ $(SCS_O): src/scs.c $(INC_FILES)
 $(SCS_INDIR_O): src/scs.c $(INC_FILES)
 	$(CC) $(CFLAGS) -DINDIRECT=1 -c $< -o $@
 
+$(SCS_MKL_O): src/scs.c $(INC_FILES)
+	$(CC) $(CFLAGS) -DSCS_MKL=1 -c $< -o $@
+
 %.o : src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -105,7 +109,7 @@ $(OUT)/libscsdense.a: $(SCS_O) $(SCS_OBJECTS) $(DENSESRC)/private.o $(LINSYS)/sc
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
-$(OUT)/libscsmkl.a: $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+$(OUT)/libscsmkl.a: $(SCS_MKL_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
@@ -132,7 +136,7 @@ $(OUT)/libscsdense.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(DENSESRC)/private.o $(LI
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS)
 
-$(OUT)/libscsmkl.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
+$(OUT)/libscsmkl.$(SHARED): $(SCS_MKL_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) -shared -Wl,$(SONAME),$(@:$(OUT)/%=%) -o $@ $^ $(LDFLAGS) $(MKLFLAGS)
 
@@ -243,7 +247,7 @@ $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(ACCELSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
+	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_MKL_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(ACCELSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea

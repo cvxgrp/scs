@@ -8,8 +8,6 @@ const char *scs_get_lin_sys_method(void) {
   return "sparse-direct-apple-accelerate";
 }
 
-scs_int scs_init_lin_sys_ctx(void) { return 0; }
-
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   scs_int i, n_plus_m;

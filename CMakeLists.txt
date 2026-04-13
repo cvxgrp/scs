@@ -133,6 +133,9 @@ endif()
 
 if(USE_LAPACK)
   list(APPEND COMPILER_OPTS USE_LAPACK)
+  if(BLAS64)
+    list(APPEND COMPILER_OPTS BLAS64)
+  endif()
   find_package(LAPACK)
   if(LAPACK_FOUND)
     set(LAPACK_LINK_LIBRARIES ${LAPACK_LIBRARIES})
@@ -143,17 +146,6 @@ if(USE_LAPACK)
 endif()
 
 find_package(Threads REQUIRED)
-
-if(BLAS64 AND NOT DEFINED ENV{MKLROOT})
-  message(FATAL_ERROR
-          "BLAS64 is only supported for the MKL backend in the CMake build. "
-          "Set MKLROOT so the MKL target is enabled, or configure with "
-          "-DBLAS64=OFF.")
-endif()
-
-if(BLAS64 AND NOT DLONG)
-  message(FATAL_ERROR "BLAS64 requires DLONG=ON for the MKL PARDISO backend.")
-endif()
 
 if(USE_OPENMP)
   find_package(OpenMP)
@@ -403,6 +395,12 @@ if(DEFINED ENV{MKLROOT})
   message(STATUS "MKLROOT set to $ENV{MKLROOT}")
   message(STATUS "Will install SCS-MKL (libscsmkl).")
 
+  if(BLAS64 AND NOT DLONG)
+    message(FATAL_ERROR
+            "MKL PARDISO with BLAS64 requires DLONG=ON so that the "
+            "pardiso_64 entry point matches the ILP64 BLAS interface.")
+  endif()
+
   set(MKLSRC ${LINSYS}/mkl/direct)
 
   # MKL Pardiso direct solver library
@@ -425,11 +423,11 @@ if(DEFINED ENV{MKLROOT})
 
   target_compile_definitions(
     ${${PROJECT_NAME}_MKL}
-    PRIVATE ${COMPILER_OPTS} $<$<BOOL:${BLAS64}>:BLAS64>)
+    PRIVATE ${COMPILER_OPTS} SCS_MKL)
   # Link against mkl_rt (the single dynamic library) which dispatches to the
   # correct interface layer at runtime. The BLAS integer width (LP64 vs ILP64)
-  # is set at runtime by MKL_Set_Interface_Layer() in linsys/mkl/direct/private.c,
-  # controlled by the BLAS64 compile flag.
+  # is set at startup by the MKL-specific path in src/scs.c, controlled by the
+  # BLAS64 compile flag.
   #
   # Note: The PARDISO integer width (pardiso vs pardiso_64) is controlled by
   # DLONG, not by the MKL interface layer. See linsys/mkl/direct/private.c.

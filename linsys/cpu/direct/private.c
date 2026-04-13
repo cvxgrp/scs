@@ -193,8 +193,6 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 
 /* ======================== Public API ======================== */
 
-scs_int scs_init_lin_sys_ctx(void) { return 0; }
-
 const char *scs_get_lin_sys_method(void) {
   return "sparse-direct-amd-qdldl";
 }

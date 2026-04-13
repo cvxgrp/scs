@@ -142,8 +142,8 @@ endif
 #
 # We link against mkl_rt (the single dynamic library) which dispatches to the
 # correct interface layer at runtime. The BLAS integer width (LP64 vs ILP64)
-# is set at runtime by MKL_Set_Interface_Layer() in linsys/mkl/direct/private.c,
-# controlled by the BLAS64 compile flag.
+# is set at startup by the MKL-specific path in src/scs.c, controlled by the
+# BLAS64 compile flag.
 #
 # Note: The PARDISO integer width (pardiso vs pardiso_64) is controlled by DLONG,
 # not by the MKL interface layer. See linsys/mkl/direct/private.c for details.

@@ -25,8 +25,6 @@ const char *scs_get_lin_sys_method() {
   return "sparse-indirect GPU";
 }
 
-scs_int scs_init_lin_sys_ctx(void) { return 0; }
-
 /* Not possible to do this on the fly due to M_ii += a_i' (R_y)^-1 a_i */
 /* set M = inv ( diag ( R_x + P + A' R_y^{-1} A ) ) */
 static void set_preconditioner(ScsLinSysWork *p, const scs_float *diag_r) {
