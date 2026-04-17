@@ -23,20 +23,22 @@ Apple Accelerate (macOS)
 On macOS the Apple Accelerate backend is built and included automatically —
 no extra install flags are needed. It uses the Accelerate framework's sparse
 LDL\ :sup:`T` solver, which is optimized for Apple hardware including Apple
-Silicon. See :ref:`here <python_interface>` for how to select Accelerate when
-solving.
+Silicon. When using the default :code:`linear_solver=scs.LinearSolver.AUTO`,
+Accelerate is selected automatically on macOS.
 
 MKL
 """
 
-If you have MKL, you can install the MKL Pardiso interface using
+The pre-built wheels (:code:`pip install scs`) include MKL on x86_64 Linux and
+Windows. When installing from source, you can enable MKL with:
 
 .. code:: bash
 
   python -m pip install -Csetup-args=-Dlink_mkl=true .
 
-See :ref:`here <python_interface>` for how to enable MKL when solving. MKL is
-typically faster than the built-in linear system solver.
+When using the default :code:`linear_solver=scs.LinearSolver.AUTO`, MKL is
+selected automatically on Linux and Windows if available. MKL is
+typically faster than the built-in QDLDL linear system solver.
 
 The published Linux x86_64 wheels prefer the threaded MKL variant and include
 the Intel OpenMP runtime (:code:`libiomp5`). Windows currently falls back to
@@ -66,7 +68,7 @@ solver using
 
   python -m pip install -Csetup-args=-Dlink_cudss=true -Csetup-args=-Dint32=true .
 
-See :ref:`here <python_interface>` for how to enable the GPU when solving. The
+Select it at runtime with :code:`linear_solver=scs.LinearSolver.CUDSS`. The
 sparse direct GPU solver is typically very fast.
 
 See `here <https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing>`_ for an example colab where the cuDSS version of SCS, along with
