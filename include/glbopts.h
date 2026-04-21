@@ -228,6 +228,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* Reject AA steps whose weight vector exceeds this norm (prevents
  * numerically unstable extrapolation). */
 #define AA_MAX_WEIGHT_NORM (1e10)
+/* Max iterative-refinement passes on the γ solve. 0 disables IR; the loop
+ * auto-stops once the correction no longer contracts, so this is an upper
+ * bound rather than a fixed iteration count. */
+#define AA_IR_MAX_STEPS (5)
 
 /* (Dual) Scale updating parameters */
 #define MAX_SCALE_VALUE (1e6)

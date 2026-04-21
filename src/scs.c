@@ -1019,7 +1019,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                                  ? AA_REGULARIZATION_TYPE_1
                                  : AA_REGULARIZATION_TYPE_2,
                              AA_RELAXATION, AA_SAFEGUARD_FACTOR,
-                             AA_MAX_WEIGHT_NORM, VERBOSITY))) {
+                             AA_MAX_WEIGHT_NORM, AA_IR_MAX_STEPS,
+                             VERBOSITY))) {
       if (w->stgs->verbose) {
         scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
       }

@@ -24,12 +24,27 @@ typedef struct ACCEL_WORK AaWork;
  * @param dim               the dimension of the variable for AA
  * @param mem               the memory (number of past iterations used) for AA
  * @param type1             if True use type 1 AA, otherwise use type 2
- * @param regularization    type-I and type-II different, for type-I: 1e-8 works
- *                          well, type-II: more stable can use 1e-12 often
- * @param relaxation        float in [0,2], mixing parameter (1.0 is vanilla)
+ * @param regularization    Tikhonov regularization for the AA least-squares
+ *                          system. Three modes, selected by sign:
+ *                            > 0 : problem-scaled, r = regularization *
+ *                                  ||A||_F ||Y||_F. Type-I: 1e-8 works well;
+ *                                  Type-II: more stable, 1e-12 often fine.
+ *                            < 0 : pinned absolute, r = -regularization
+ *                                  (no Frobenius scaling — useful when the
+ *                                  problem scale is known).
+ *                            = 0 : no regularization.
+ *                          Only non-finite values (NaN/Inf) are rejected.
+ * @param relaxation        float \in [0,2], mixing parameter (1.0 is vanilla)
  * @param safeguard_factor  factor that controls safeguarding checks
  *                          larger is more aggressive but less stable
  * @param max_weight_norm   float, maximum norm of AA weights
+ * @param ir_max_steps      max iterative refinement passes on the γ solve.
+ *                          0 disables IR. Each step is O(mem²) and loops
+ *                          until the correction stops contracting, so on
+ *                          well-conditioned problems only one step runs
+ *                          regardless of this cap. Raise it (e.g. 5) for
+ *                          ill-conditioned systems where more digits can
+ *                          be recovered; lower it for tighter cost bounds.
  * @param verbosity         if greater than 0 prints out various info
  *
  * @return pointer to AA workspace
@@ -37,7 +52,8 @@ typedef struct ACCEL_WORK AaWork;
  */
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
                 aa_float relaxation, aa_float safeguard_factor,
-                aa_float max_weight_norm, aa_int verbosity);
+                aa_float max_weight_norm, aa_int ir_max_steps,
+                aa_int verbosity);
 /**
  * Apply Anderson Acceleration. The usage pattern should be as follows:
  *
