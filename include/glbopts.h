@@ -220,8 +220,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
 
 /* --- Anderson Acceleration (AA) parameters --- */
 #define AA_RELAXATION (1.0)
-#define AA_REGULARIZATION_TYPE_1 (1e-6)
-#define AA_REGULARIZATION_TYPE_2 (1e-10)
+#define AA_REGULARIZATION_TYPE_1 (1e-8)
+#define AA_REGULARIZATION_TYPE_2 (1e-12)
 /* Reject AA steps when the output norm exceeds this multiple of the input
  * norm. 1.0 means the AA step must not increase the iterate norm. */
 #define AA_SAFEGUARD_FACTOR (1.)
