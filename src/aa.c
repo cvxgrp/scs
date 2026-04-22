@@ -45,16 +45,15 @@
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define FILL_MEMORY_BEFORE_SOLVE (1)
 
 #ifndef USE_LAPACK
 
 typedef void *ACCEL_WORK;
 
-AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
-                aa_float relaxation, aa_float safeguard_factor,
-                aa_float max_weight_norm, aa_int ir_max_steps,
-                aa_int verbosity) {
+AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
+                aa_float regularization, aa_float relaxation,
+                aa_float safeguard_factor, aa_float max_weight_norm,
+                aa_int ir_max_steps, aa_int verbosity) {
   return SCS_NULL;
 }
 aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
@@ -66,6 +65,12 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
 void aa_finish(AaWork *a) {
 }
 void aa_reset(AaWork *a) {
+}
+AaStats aa_get_stats(const AaWork *a) {
+  AaStats s;
+  memset(&s, 0, sizeof(AaStats));
+  s.last_aa_norm = NAN;
+  return s;
 }
 
 #else
@@ -164,6 +169,7 @@ void BLAS(ormqr)(const char *side, const char *trans, const blas_int *m,
 struct ACCEL_WORK {
   aa_int type1;        /* bool, if true type 1 aa otherwise type 2 */
   aa_int mem;          /* aa memory */
+  aa_int min_len;      /* min iterates before solve starts (1..mem) */
   aa_int dim;          /* variable dimension */
   aa_int iter;         /* current iteration */
   aa_int verbosity;    /* verbosity level, 0 is no printing */
@@ -227,6 +233,19 @@ struct ACCEL_WORK {
   aa_float *work;
 
   aa_float *x_work; /* workspace (= x) for when relaxation != 1.0 */
+
+  /* Lifetime diagnostics (see AaStats in aa.h). NOT cleared by
+   * aa_reset — the internal reset path fires on safeguard rejection,
+   * and you want the rejection to stay visible in the counters. */
+  aa_int n_accept;
+  aa_int n_reject_lapack;
+  aa_int n_reject_rank0;
+  aa_int n_reject_nonfinite;
+  aa_int n_reject_weight_cap;
+  aa_int n_safeguard_reject;
+  aa_int last_rank;
+  aa_float last_aa_norm;
+  aa_float last_regularization;
 };
 
 /* Reduce a length-`mem` vector of nonnegative column norms to a single
@@ -391,12 +410,14 @@ static void relax(aa_float *f, AaWork *a, aa_int len) {
 /* Solve the regularized normal equations (A'B + rI) γ = A'g via a
  * pivoted QR (geqp3) of the augmented matrix [A; √r I]. Column pivoting
  * exposes the numerical rank directly in the diagonal of R: we truncate
- * at the first diagonal whose magnitude falls below aug_rows·ε·|R_11|
- * and solve the smaller, well-conditioned system (graceful degradation
- * instead of hard reset on near-rank-deficiency). Iterative refinement
- * on the reduced system recovers digits lost to gesv/trsv rounding; the
- * loop auto-stops when the correction no longer contracts and is capped
- * at ir_max_steps (see aa_init). γ is then validated against
+ * at the first diagonal whose magnitude falls below len·ε·|R_11|
+ * (dim-independent: the inner LS is a len-column problem, so its noise
+ * floor scales with column count, not the caller's state dim) and solve
+ * the smaller, well-conditioned system (graceful degradation instead of
+ * hard reset on near-rank-deficiency). Iterative refinement on the
+ * reduced system recovers digits lost to gesv/trsv rounding; the loop
+ * auto-stops when the correction no longer contracts and is capped at
+ * ir_max_steps (see aa_init). γ is then validated against
  * max_weight_norm in the L2 sense. */
 static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   TIME_TIC
@@ -436,6 +457,10 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   for (i = 0; i < len; ++i) a->jpvt[i] = 0;
   BLAS(geqp3)(&aug_rows, &blen, a->A_aug, &aug_rows, a->jpvt, a->tau,
               a->qr_work, &a->qr_lwork, &info);
+  /* Capture geqp3's info before the rank-0 path below overwrites it; the
+   * reject-cause attribution needs to distinguish a genuine LAPACK failure
+   * from "the matrix went numerically to zero." */
+  blas_int lapack_info = info;
 
   /* 2. Rank estimation. geqp3 sorts |R_ii| non-increasingly; find the
    *    largest `rank` with |R_rank-1,rank-1| ≥ tol. A rank of zero means
@@ -443,7 +468,12 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   if (info == 0) {
     aa_float r11 = fabs(a->A_aug[0]);
     if (r11 > 0) {
-      aa_float tol = r11 * (aa_float)aug_rows * AA_EPS;
+      /* Column-count-based rank tolerance: the effective LS problem has
+       * `len` columns, so the rounding floor for rank determination
+       * scales with `len`, not (dim + mem). Decoupling from `dim` avoids
+       * falsely dropping columns that are healthy relative to the
+       * regularizer at large state dimensions. */
+      aa_float tol = r11 * (aa_float)len * AA_EPS;
       for (rank = 0; rank < len; ++rank) {
         if (fabs(a->A_aug[rank * aug_rows + rank]) < tol) break;
       }
@@ -565,6 +595,14 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   /* 5. Validate γ via ‖γ‖₂ against max_weight_norm. */
   aa_norm = (info == 0) ? BLAS(nrm2)(&blen, gamma, &one) : -1.0;
 
+  /* Record diagnostics for this solve, regardless of accept/reject.
+   * NaN last_aa_norm signals "no valid norm this solve" — distinguishing
+   * the genuine-zero case (rank collapse gives aa_norm = 0 legitimately)
+   * from a failed/rejected solve. */
+  a->last_rank = rank;
+  a->last_regularization = r;
+  a->last_aa_norm = (info == 0 && isfinite(aa_norm)) ? aa_norm : NAN;
+
   if (a->verbosity > 1) {
     scs_printf("AA type %i, iter: %i, len %i, rank %i, info: %i, aa_norm %.2e\n",
                a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)rank, (int)info,
@@ -577,6 +615,20 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
                  "aa_norm %.2e\n",
                  a->type1 ? 1 : 2, (int)a->iter, (int)len, (int)rank, (int)info,
                  aa_norm);
+    }
+    /* Attribute the rejection to exactly one cause, in priority order.
+     * lapack_info is the original geqp3 return; the rank-0 path above may
+     * have set info=1 but that is the bookkeeping trick, not a LAPACK
+     * failure. Without this ordering, rank-0 would be miscounted as
+     * "lapack" via info. */
+    if (lapack_info != 0) {
+      a->n_reject_lapack++;
+    } else if (rank == 0) {
+      a->n_reject_rank0++;
+    } else if (!isfinite(aa_norm)) {
+      a->n_reject_nonfinite++;
+    } else {
+      a->n_reject_weight_cap++;
     }
     a->success = 0;
     aa_reset(a);
@@ -602,19 +654,26 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
 /*
  * API functions below this line, see aa.h for descriptions.
  */
-AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
-                aa_float relaxation, aa_float safeguard_factor,
-                aa_float max_weight_norm, aa_int ir_max_steps,
-                aa_int verbosity) {
+AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
+                aa_float regularization, aa_float relaxation,
+                aa_float safeguard_factor, aa_float max_weight_norm,
+                aa_int ir_max_steps, aa_int verbosity) {
   TIME_TIC
   AaWork *a;
+  aa_int mem_clamped = MIN(mem, dim);
   /* `regularization` is accepted with either sign: positive = scaled by
    * ||A||_F ||Y||_F; negative = pinned absolute |regularization|; zero = off.
-   * Only NaN / non-finite values are rejected (via the !isfinite check). */
+   * Only NaN / non-finite values are rejected (via the !isfinite check).
+   * min_len < 1 is rejected when mem > 0; min_len > mem_clamped is
+   * silently clamped down — same treatment the `mem` argument already
+   * gets against `dim`, so callers can pass `min_len = mem` without
+   * caring whether mem exceeded dim. When mem == 0 (AA off), min_len
+   * is ignored entirely. */
   if (dim <= 0 || mem < 0 || !isfinite(regularization) ||
       relaxation < 0 || relaxation > 2 ||
       safeguard_factor < 0 || max_weight_norm <= 0 ||
-      ir_max_steps < 0) {
+      ir_max_steps < 0 ||
+      (mem_clamped > 0 && min_len < 1)) {
     scs_printf("Invalid AA parameters.\n");
     return SCS_NULL;
   }
@@ -626,7 +685,12 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   a->type1 = type1;
   a->iter = 0;
   a->dim = dim;
-  a->mem = MIN(mem, dim); /* for rank stability */
+  a->mem = mem_clamped; /* clamped to dim for rank stability */
+  if (mem > dim && verbosity > 0) {
+    scs_printf("AA: mem (%d) > dim (%d); clamping mem to dim.\n",
+               (int)mem, (int)dim);
+  }
+  a->min_len = mem_clamped > 0 ? MIN(min_len, mem_clamped) : 0;
   a->regularization = regularization;
   a->relaxation = relaxation;
   a->safeguard_factor = safeguard_factor;
@@ -634,6 +698,11 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
   a->ir_max_steps = ir_max_steps;
   a->success = 0;
   a->verbosity = verbosity;
+  /* Counters are already zero from calloc; only last_aa_norm needs an
+   * explicit sentinel so callers can distinguish "never solved" from a
+   * legitimate zero norm (which never happens on a successful solve, but
+   * 0 is a bad signal either way). */
+  a->last_aa_norm = NAN;
   if (a->mem <= 0) {
     return a;
   }
@@ -769,10 +838,15 @@ aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
   /* set various accel quantities */
   update_accel_params(x, f, a, len);
 
-  /* only perform solve steps when the memory is full */
-  if (!FILL_MEMORY_BEFORE_SOLVE || a->iter >= a->mem) {
-    /* solve linear system, new point overwrites f if successful */
+  /* Hold off the solve until we have min_len residual pairs buffered. */
+  if (a->iter >= a->min_len) {
+    /* solve linear system, new point overwrites f if successful.
+     * Rejection causes are counted inside solve() where the specific
+     * failure mode is known; here we only count acceptances. */
     aa_norm = solve(f, a, len);
+    if (aa_norm > 0) {
+      a->n_accept++;
+    }
   }
   a->iter++;
   TIME_TOC
@@ -817,6 +891,7 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
       scs_printf("AA rejection, iter: %i, norm_diff %.4e, prev_norm_diff %.4e\n",
                  (int)a->iter, norm_diff, a->norm_g);
     }
+    a->n_safeguard_reject++;
     aa_reset(a);
     TIME_TOC
     return -1;
@@ -857,7 +932,20 @@ void aa_finish(AaWork *a) {
 }
 
 void aa_reset(AaWork *a) {
-  /* reset to the same logical state as a freshly calloc'd workspace */
+  /* Restore the logical state of a freshly calloc'd workspace.
+   *
+   * Most internal buffers are fully overwritten before they are read:
+   *   - x, f, g_prev are re-seeded by init_accel_params on the next
+   *     aa_apply call (which runs when iter == 0).
+   *   - g, S/Y/D columns, A_aug/B_aug/c_aug, tau, jpvt, qr_work, W/W_orig,
+   *     gamma_red, c_top_save, ir_res, work, ipiv, x_work are all
+   *     rewritten inside update_accel_params / solve / relax each
+   *     iteration before any read.
+   *
+   * The only buffers that require zeroing are nrm_{s,y}_col: they are
+   * reduced over all `mem` slots in compute_regularization, and stale
+   * entries from an earlier run would contaminate the Frobenius-norm
+   * scale until every slot has been rewritten. */
   if (!a) {
     return;
   }
@@ -867,77 +955,27 @@ void aa_reset(AaWork *a) {
   a->iter = 0;
   a->success = 0;
   a->norm_g = 0;
-  if (a->x) {
-    memset(a->x, 0, sizeof(aa_float) * a->dim);
-  }
-  if (a->f) {
-    memset(a->f, 0, sizeof(aa_float) * a->dim);
-  }
-  if (a->g) {
-    memset(a->g, 0, sizeof(aa_float) * a->dim);
-  }
-  if (a->g_prev) {
-    memset(a->g_prev, 0, sizeof(aa_float) * a->dim);
-  }
-  if (a->Y) {
-    memset(a->Y, 0, sizeof(aa_float) * a->dim * a->mem);
-  }
-  if (a->S) {
-    memset(a->S, 0, sizeof(aa_float) * a->dim * a->mem);
-  }
-  if (a->D) {
-    memset(a->D, 0, sizeof(aa_float) * a->dim * a->mem);
-  }
-  if (a->A_aug) {
-    memset(a->A_aug, 0,
-           sizeof(aa_float) * (size_t)(a->dim + a->mem) * a->mem);
-  }
-  if (a->B_aug) {
-    memset(a->B_aug, 0,
-           sizeof(aa_float) * (size_t)(a->dim + a->mem) * a->mem);
-  }
-  if (a->c_aug) {
-    memset(a->c_aug, 0, sizeof(aa_float) * (size_t)(a->dim + a->mem));
-  }
-  if (a->tau) {
-    memset(a->tau, 0, sizeof(aa_float) * a->mem);
-  }
-  if (a->qr_work) {
-    memset(a->qr_work, 0, sizeof(aa_float) * (size_t)a->qr_lwork);
-  }
-  if (a->jpvt) {
-    memset(a->jpvt, 0, sizeof(blas_int) * a->mem);
-  }
-  if (a->W) {
-    memset(a->W, 0, sizeof(aa_float) * a->mem * a->mem);
-  }
-  if (a->W_orig) {
-    memset(a->W_orig, 0, sizeof(aa_float) * a->mem * a->mem);
-  }
-  if (a->gamma_red) {
-    memset(a->gamma_red, 0, sizeof(aa_float) * a->mem);
-  }
-  if (a->c_top_save) {
-    memset(a->c_top_save, 0, sizeof(aa_float) * a->mem);
-  }
-  if (a->ir_res) {
-    memset(a->ir_res, 0, sizeof(aa_float) * a->mem);
-  }
   if (a->nrm_s_col) {
     memset(a->nrm_s_col, 0, sizeof(aa_float) * a->mem);
   }
   if (a->nrm_y_col) {
     memset(a->nrm_y_col, 0, sizeof(aa_float) * a->mem);
   }
-  if (a->work) {
-    memset(a->work, 0, sizeof(aa_float) * MAX(a->mem, a->dim));
-  }
-  if (a->ipiv) {
-    memset(a->ipiv, 0, sizeof(blas_int) * a->mem);
-  }
-  if (a->x_work) {
-    memset(a->x_work, 0, sizeof(aa_float) * a->dim);
-  }
+}
+
+AaStats aa_get_stats(const AaWork *a) {
+  AaStats s;
+  s.iter = a->iter;
+  s.n_accept = a->n_accept;
+  s.n_reject_lapack = a->n_reject_lapack;
+  s.n_reject_rank0 = a->n_reject_rank0;
+  s.n_reject_nonfinite = a->n_reject_nonfinite;
+  s.n_reject_weight_cap = a->n_reject_weight_cap;
+  s.n_safeguard_reject = a->n_safeguard_reject;
+  s.last_rank = a->last_rank;
+  s.last_aa_norm = a->last_aa_norm;
+  s.last_regularization = a->last_regularization;
+  return s;
 }
 
 #endif /* USE_LAPACK */

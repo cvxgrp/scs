@@ -1013,7 +1013,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   if (w->stgs->acceleration_lookback) {
     /* TODO(HACK!) negative acceleration_lookback interpreted as type-II */
+    /* min_len = mem preserves the previous FILL_MEMORY_BEFORE_SOLVE
+       gate — AA holds off until the sliding window is full. */
     if (!(w->accel = aa_init(l, IABS(w->stgs->acceleration_lookback),
+                             IABS(w->stgs->acceleration_lookback),
                              w->stgs->acceleration_lookback > 0,
                              w->stgs->acceleration_lookback > 0
                                  ? AA_REGULARIZATION_TYPE_1

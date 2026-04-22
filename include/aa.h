@@ -23,6 +23,18 @@ typedef struct ACCEL_WORK AaWork;
  *
  * @param dim               the dimension of the variable for AA
  * @param mem               the memory (number of past iterations used) for AA
+ * @param min_len           minimum number of past iterates required before AA
+ *                          begins producing updates. Must be >= 1 when
+ *                          mem > 0; if min_len exceeds the effective
+ *                          memory (min(mem, dim)) it is clamped down,
+ *                          mirroring how `mem` is clamped to `dim` for
+ *                          rank stability. Set min_len == mem to delay
+ *                          AA until the memory is full (stable default
+ *                          for large `mem`); set min_len == 1 to start
+ *                          extrapolating from the very first residual
+ *                          pair (useful when `mem` is large but you
+ *                          still want early acceleration). Ignored when
+ *                          mem == 0.
  * @param type1             if True use type 1 AA, otherwise use type 2
  * @param regularization    Tikhonov regularization for the AA least-squares
  *                          system. Three modes, selected by sign:
@@ -50,10 +62,11 @@ typedef struct ACCEL_WORK AaWork;
  * @return pointer to AA workspace
  *
  */
-AaWork *aa_init(aa_int dim, aa_int mem, aa_int type1, aa_float regularization,
-                aa_float relaxation, aa_float safeguard_factor,
-                aa_float max_weight_norm, aa_int ir_max_steps,
-                aa_int verbosity);
+AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
+                aa_float regularization, aa_float relaxation,
+                aa_float safeguard_factor, aa_float max_weight_norm,
+                aa_int ir_max_steps, aa_int verbosity);
+
 /**
  * Apply Anderson Acceleration. The usage pattern should be as follows:
  *
@@ -107,11 +120,56 @@ void aa_finish(AaWork *a);
  * Reset Anderson Acceleration.
  *
  * Resets AA as if at the first iteration, reuses original memory allocations.
+ * Does not clear lifetime diagnostic counters; use aa_get_stats after reset
+ * to read them, or just re-init the workspace for a clean slate.
  *
  * @param a   AA workspace from aa_init
  *
  */
 void aa_reset(AaWork *a);
+
+/**
+ * Lifetime diagnostics for an AaWork. Counters accumulate from
+ * aa_init and are NOT cleared by aa_reset (which is also called
+ * internally when a safeguard rejection forces a fresh state, and
+ * you still want the rejection itself to show up in the counts).
+ *
+ * Rejection causes are split so a caller can tell what needs tuning:
+ *   - n_reject_lapack       geqp3 returned non-zero info (rare; linear-algebra internal failure)
+ *   - n_reject_rank0        pivoted QR truncated to rank 0 (matrix numerically zero, e.g. at convergence)
+ *   - n_reject_nonfinite    ||γ||₂ was NaN/Inf (extreme ill-conditioning, raise regularization)
+ *   - n_reject_weight_cap   ||γ||₂ >= max_weight_norm (loosen cap or raise regularization)
+ *
+ * `last_*` fields reflect the most recent AA least-squares solve:
+ *   - last_rank              rank of most recent solve; 0 if never solved or rank collapsed
+ *   - last_aa_norm           ||γ||₂ on success; NaN if never solved or solve failed
+ *   - last_regularization    r used in most recent solve; 0 if never solved or regularization=0
+ */
+typedef struct {
+  aa_int iter;                  /* internal iteration counter */
+  aa_int n_accept;              /* aa_apply steps that were accepted */
+  aa_int n_reject_lapack;       /* geqp3 info != 0 */
+  aa_int n_reject_rank0;        /* pivoted QR rank truncated to 0 */
+  aa_int n_reject_nonfinite;    /* ||γ||₂ non-finite */
+  aa_int n_reject_weight_cap;   /* ||γ||₂ >= max_weight_norm */
+  aa_int n_safeguard_reject;    /* aa_safeguard rollbacks */
+  aa_int last_rank;
+  aa_float last_aa_norm;
+  aa_float last_regularization;
+} AaStats;
+
+/**
+ * Return lifetime diagnostic counters.
+ *
+ * Use for post-hoc diagnosis of why AA is or isn't accelerating a
+ * given fixed-point iteration — e.g. `n_reject_weight_cap` rising
+ * suggests loosening `max_weight_norm` or raising `regularization`;
+ * `n_safeguard_reject` rising suggests tuning `safeguard_factor` or
+ * `mem`. Do not call with `a == NULL`.
+ *
+ * @param a    AA workspace from aa_init (must be non-NULL).
+ */
+AaStats aa_get_stats(const AaWork *a);
 
 #ifdef __cplusplus
 }
