@@ -68,11 +68,13 @@
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_float"><code class="docutils literal notranslate"><span class="pre">aa_float</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv46aa_int"><code class="docutils literal notranslate"><span class="pre">aa_int</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv46AaWork"><code class="docutils literal notranslate"><span class="pre">AaWork</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"><code class="docutils literal notranslate"><span class="pre">aa_init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv47aa_init6aa_int6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int6aa_int"><code class="docutils literal notranslate"><span class="pre">aa_init()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_applyP8aa_floatPK8aa_floatP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_apply()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv412aa_safeguardP8aa_floatP8aa_floatP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_safeguard()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv49aa_finishP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_finish()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_resetP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_reset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv412aa_get_statsPK6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_get_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv47AaStats"><code class="docutils literal notranslate"><span class="pre">AaStats</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -233,9 +235,15 @@ faster and approximating a <span class="math notranslate nohighlight">\(k\)</spa
 numerical stability by ‘decorrelating’ the data. On the other hand, older
 iterates might be stale.  More work is needed to determine the optimal setting
 for this parameter, but 10 appears to work well in practice and is the default.</p>
-<p>The details about how the linear systems are solved and updated is abstracted
-away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
-how best to solve and update the equations is still open.</p>
+<p>The details about how the linear systems are solved and updated are abstracted
+away into the AA package. The current implementation uses a rank-revealing
+pivoted QR factorization (LAPACK <code class="code docutils literal notranslate"><span class="pre">geqp3</span></code>) of the augmented matrix (with
+Tikhonov regularization folded in as extra rows), followed by rank truncation
+and a few steps of iterative refinement on the <span class="math notranslate nohighlight">\(\gamma\)</span> solve. This
+keeps the update stable as the <span class="math notranslate nohighlight">\(S\)</span> and <span class="math notranslate nohighlight">\(Y\)</span> columns become nearly
+linearly dependent near convergence. An SVD-based solve would be similarly
+rank-revealing but is substantially more expensive per iteration and has not
+been benchmarked here.</p>
 <section id="regularization">
 <h3>Regularization<a class="headerlink" href="#regularization" title="Link to this heading"></a></h3>
 <p>By default we also add a small amount of regularization to the matrices
@@ -313,19 +321,21 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int">
-<span id="_CPPv37aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="_CPPv27aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int"></span><span id="aa_init__aa_int.aa_int.aa_int.aa_float.aa_float.aa_float.aa_float.aa_int"></span><span class="target" id="aa_8h_1a907055f8265cdfcd5191ae71f5b7ac02"></span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">aa_init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">type1</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">regularization</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">relaxation</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">safeguard_factor</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">max_weight_norm</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">verbosity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47aa_init6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int" title="Link to this definition"></a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv47aa_init6aa_int6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int6aa_int">
+<span id="_CPPv37aa_init6aa_int6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int6aa_int"></span><span id="_CPPv27aa_init6aa_int6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int6aa_int"></span><span id="aa_init__aa_int.aa_int.aa_int.aa_int.aa_float.aa_float.aa_float.aa_float.aa_int.aa_int"></span><span class="target" id="aa_8h_1a1c40e18d10a609fd7f132cb92f40baed"></span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">aa_init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">min_len</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">type1</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">regularization</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">relaxation</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">safeguard_factor</span></span>, <a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">max_weight_norm</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ir_max_steps</span></span>, <a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">verbosity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47aa_init6aa_int6aa_int6aa_int6aa_int8aa_float8aa_float8aa_float8aa_float6aa_int6aa_int" title="Link to this definition"></a><br /></dt>
 <dd><p>Initialize Anderson Acceleration, allocates memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dim</strong> – the dimension of the variable for AA </p></li>
 <li><p><strong>mem</strong> – the memory (number of past iterations used) for AA </p></li>
+<li><p><strong>min_len</strong> – minimum number of past iterates required before AA begins producing updates. Must be &gt;= 1 when mem &gt; 0; if min_len exceeds the effective memory (min(mem, dim)) it is clamped down, mirroring how <code class="docutils literal notranslate"><span class="pre">mem</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">dim</span></code> for rank stability. Set min_len == mem to delay AA until the memory is full (stable default for large <code class="docutils literal notranslate"><span class="pre">mem</span></code>); set min_len == 1 to start extrapolating from the very first residual pair (useful when <code class="docutils literal notranslate"><span class="pre">mem</span></code> is large but you still want early acceleration). Ignored when mem == 0. </p></li>
 <li><p><strong>type1</strong> – if True use type 1 AA, otherwise use type 2 </p></li>
-<li><p><strong>regularization</strong> – type-I and type-II different, for type-I: 1e-8 works well, type-II: more stable can use 1e-12 often </p></li>
-<li><p><strong>relaxation</strong> – float in [0,2], mixing parameter (1.0 is vanilla) </p></li>
+<li><p><strong>regularization</strong> – Tikhonov regularization for the AA least-squares system. Three modes, selected by sign: &gt; 0 : problem-scaled, r = regularization * ||A||_F ||Y||_F. Type-I: 1e-8 works well; Type-II: more stable, 1e-12 often fine. &lt; 0 : pinned absolute, r = -regularization (no Frobenius scaling — useful when the problem scale is known). = 0 : no regularization. Only non-finite values (NaN/Inf) are rejected. </p></li>
+<li><p><strong>relaxation</strong> – float \in [0,2], mixing parameter (1.0 is vanilla) </p></li>
 <li><p><strong>safeguard_factor</strong> – factor that controls safeguarding checks larger is more aggressive but less stable </p></li>
 <li><p><strong>max_weight_norm</strong> – float, maximum norm of AA weights </p></li>
+<li><p><strong>ir_max_steps</strong> – max iterative refinement passes on the γ solve. 0 disables IR. Each step is O(mem²) and loops until the correction stops contracting, so on well-conditioned problems only one step runs regardless of this cap. Raise it (e.g. 5) for ill-conditioned systems where more digits can be recovered; lower it for tighter cost bounds. </p></li>
 <li><p><strong>verbosity</strong> – if greater than 0 prints out various info</p></li>
 </ul>
 </dd>
@@ -399,7 +409,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 <dt class="sig sig-object cpp" id="_CPPv48aa_resetP6AaWork">
 <span id="_CPPv38aa_resetP6AaWork"></span><span id="_CPPv28aa_resetP6AaWork"></span><span id="aa_reset__AaWorkP"></span><span class="target" id="aa_8h_1af838479f20a0a48b7484bfdbbca6c921"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48aa_resetP6AaWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Reset Anderson Acceleration.</p>
-<p>Resets AA as if at the first iteration, reuses original memory allocations.</p>
+<p>Resets AA as if at the first iteration, reuses original memory allocations. Does not clear lifetime diagnostic counters; use aa_get_stats after reset to read them, or just re-init the workspace for a clean slate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>a</strong> – AA workspace from aa_init </p>
@@ -407,7 +417,93 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 </dl>
 </dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412aa_get_statsPK6AaWork">
+<span id="_CPPv312aa_get_statsPK6AaWork"></span><span id="_CPPv212aa_get_statsPK6AaWork"></span><span id="aa_get_stats__AaWorkCP"></span><span class="target" id="aa_8h_1aa1dddf8339a78887ff2ca6a7c778890f"></span><a class="reference internal" href="#_CPPv47AaStats" title="AaStats"><span class="n"><span class="pre">AaStats</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_get_stats</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412aa_get_statsPK6AaWork" title="Link to this definition"></a><br /></dt>
+<dd><p>Return lifetime diagnostic counters.</p>
+<p>Use for post-hoc diagnosis of why AA is or isn’t accelerating a given fixed-point iteration — e.g. <code class="docutils literal notranslate"><span class="pre">n_reject_weight_cap</span></code> rising suggests loosening <code class="docutils literal notranslate"><span class="pre">max_weight_norm</span></code> or raising <code class="docutils literal notranslate"><span class="pre">regularization</span></code>; <code class="docutils literal notranslate"><span class="pre">n_safeguard_reject</span></code> rising suggests tuning <code class="docutils literal notranslate"><span class="pre">safeguard_factor</span></code> or <code class="docutils literal notranslate"><span class="pre">mem</span></code>. Do not call with <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">NULL</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>a</strong> – AA workspace from aa_init (must be non-NULL). </p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv47AaStats">
+<span id="_CPPv37AaStats"></span><span id="_CPPv27AaStats"></span><span id="AaStats"></span><span class="target" id="struct_aa_stats"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AaStats</span></span></span><a class="headerlink" href="#_CPPv47AaStats" title="Link to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;aa.h&gt;</em></div>
+<p>Lifetime diagnostics for an AaWork. Counters accumulate from aa_init and are NOT cleared by aa_reset (which is also called internally when a safeguard rejection forces a fresh state, and you still want the rejection itself to show up in the counts).</p>
+<p>Rejection causes are split so a caller can tell what needs tuning:<ul class="simple">
+<li><p>n_reject_lapack geqp3 returned non-zero info (rare; linear-algebra internal failure)</p></li>
+<li><p>n_reject_rank0 pivoted QR truncated to rank 0 (matrix numerically zero, e.g. at convergence)</p></li>
+<li><p>n_reject_nonfinite ||γ||₂ was NaN/Inf (extreme ill-conditioning, raise regularization)</p></li>
+<li><p>n_reject_weight_cap ||γ||₂ &gt;= max_weight_norm (loosen cap or raise regularization)</p></li>
+</ul>
+</p>
+<p><code class="docutils literal notranslate"><span class="pre">last_*</span></code> fields reflect the most recent AA least-squares solve:<ul class="simple">
+<li><p>last_rank rank of most recent solve; 0 if never solved or rank collapsed</p></li>
+<li><p>last_aa_norm ||γ||₂ on success; NaN if never solved or solve failed</p></li>
+<li><p>last_regularization r used in most recent solve; 0 if never solved or regularization=0 </p></li>
+</ul>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats4iterE">
+<span id="_CPPv3N7AaStats4iterE"></span><span id="_CPPv2N7AaStats4iterE"></span><span id="AaStats::iter__aa_int"></span><span class="target" id="struct_aa_stats_1aa5373ead43e5934a326ec6596220c43d"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">iter</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats4iterE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats8n_acceptE">
+<span id="_CPPv3N7AaStats8n_acceptE"></span><span id="_CPPv2N7AaStats8n_acceptE"></span><span id="AaStats::n_accept__aa_int"></span><span class="target" id="struct_aa_stats_1ae8bb2cd453842089c23e332282cc8da5"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_accept</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats8n_acceptE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats15n_reject_lapackE">
+<span id="_CPPv3N7AaStats15n_reject_lapackE"></span><span id="_CPPv2N7AaStats15n_reject_lapackE"></span><span id="AaStats::n_reject_lapack__aa_int"></span><span class="target" id="struct_aa_stats_1a33e333178e53df68b82a862e7e376c77"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_lapack</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats15n_reject_lapackE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats14n_reject_rank0E">
+<span id="_CPPv3N7AaStats14n_reject_rank0E"></span><span id="_CPPv2N7AaStats14n_reject_rank0E"></span><span id="AaStats::n_reject_rank0__aa_int"></span><span class="target" id="struct_aa_stats_1abf8ed80ec1a96a4dee82f4d18be0c472"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_rank0</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats14n_reject_rank0E" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats18n_reject_nonfiniteE">
+<span id="_CPPv3N7AaStats18n_reject_nonfiniteE"></span><span id="_CPPv2N7AaStats18n_reject_nonfiniteE"></span><span id="AaStats::n_reject_nonfinite__aa_int"></span><span class="target" id="struct_aa_stats_1a1c6b04288007164acb07af3923c231fe"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_nonfinite</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats18n_reject_nonfiniteE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats19n_reject_weight_capE">
+<span id="_CPPv3N7AaStats19n_reject_weight_capE"></span><span id="_CPPv2N7AaStats19n_reject_weight_capE"></span><span id="AaStats::n_reject_weight_cap__aa_int"></span><span class="target" id="struct_aa_stats_1a36893e874b834a93985e2f62eec89d63"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_weight_cap</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats19n_reject_weight_capE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats18n_safeguard_rejectE">
+<span id="_CPPv3N7AaStats18n_safeguard_rejectE"></span><span id="_CPPv2N7AaStats18n_safeguard_rejectE"></span><span id="AaStats::n_safeguard_reject__aa_int"></span><span class="target" id="struct_aa_stats_1aefd3e420309657429defd44a334f2bee"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_safeguard_reject</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats18n_safeguard_rejectE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats9last_rankE">
+<span id="_CPPv3N7AaStats9last_rankE"></span><span id="_CPPv2N7AaStats9last_rankE"></span><span id="AaStats::last_rank__aa_int"></span><span class="target" id="struct_aa_stats_1a7a3e99004ace5c3d2a311d05c53796e2"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">last_rank</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats9last_rankE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats12last_aa_normE">
+<span id="_CPPv3N7AaStats12last_aa_normE"></span><span id="_CPPv2N7AaStats12last_aa_normE"></span><span id="AaStats::last_aa_norm__aa_float"></span><span class="target" id="struct_aa_stats_1ae5d133f9ba217a6c672923c0c6141b12"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">last_aa_norm</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats12last_aa_normE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7AaStats19last_regularizationE">
+<span id="_CPPv3N7AaStats19last_regularizationE"></span><span id="_CPPv2N7AaStats19last_regularizationE"></span><span id="AaStats::last_regularization__aa_float"></span><span class="target" id="struct_aa_stats_1a898b0c04a06ba3f7827e89bb57e4fc52"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">last_regularization</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats19last_regularizationE" title="Link to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
 </section>
 </section>
 
