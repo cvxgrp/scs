@@ -146,9 +146,15 @@ numerical stability by 'decorrelating' the data. On the other hand, older
 iterates might be stale.  More work is needed to determine the optimal setting
 for this parameter, but 10 appears to work well in practice and is the default.
 
-The details about how the linear systems are solved and updated is abstracted
-away into the AA package (eg, QR decomposition, SVD decomposition etc). Exactly
-how best to solve and update the equations is still open.
+The details about how the linear systems are solved and updated are abstracted
+away into the AA package. The current implementation uses a rank-revealing
+pivoted QR factorization (LAPACK :code:`geqp3`) of the augmented matrix (with
+Tikhonov regularization folded in as extra rows), followed by rank truncation
+and a few steps of iterative refinement on the :math:`\gamma` solve. This
+keeps the update stable as the :math:`S` and :math:`Y` columns become nearly
+linearly dependent near convergence. An SVD-based solve would be similarly
+rank-revealing but is substantially more expensive per iteration and has not
+been benchmarked here.
 
 Regularization
 """"""""""""""

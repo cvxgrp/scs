@@ -220,14 +220,18 @@ static inline void *scs_calloc(size_t count, size_t size) {
 
 /* --- Anderson Acceleration (AA) parameters --- */
 #define AA_RELAXATION (1.0)
-#define AA_REGULARIZATION_TYPE_1 (1e-6)
-#define AA_REGULARIZATION_TYPE_2 (1e-10)
+#define AA_REGULARIZATION_TYPE_1 (1e-8)
+#define AA_REGULARIZATION_TYPE_2 (1e-12)
 /* Reject AA steps when the output norm exceeds this multiple of the input
  * norm. 1.0 means the AA step must not increase the iterate norm. */
 #define AA_SAFEGUARD_FACTOR (1.)
 /* Reject AA steps whose weight vector exceeds this norm (prevents
  * numerically unstable extrapolation). */
 #define AA_MAX_WEIGHT_NORM (1e10)
+/* Max iterative-refinement passes on the γ solve. 0 disables IR; the loop
+ * auto-stops once the correction no longer contracts, so this is an upper
+ * bound rather than a fixed iteration count. */
+#define AA_IR_MAX_STEPS (5)
 
 /* (Dual) Scale updating parameters */
 #define MAX_SCALE_VALUE (1e6)
