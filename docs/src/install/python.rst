@@ -17,6 +17,22 @@ You can also install directly from source
   cd scs-python
   python -m pip install .
 
+Linear solver backends
+----------------------
+
+The pre-built wheels and a from-source install always include two CPU linear
+solvers that require no additional dependencies:
+
+- :code:`QDLDL` — the default sparse direct solver (bundled with SCS).
+- :code:`CPU_INDIRECT` — the sparse matrix-free solver based on conjugate
+  gradients.
+
+The remaining backends require either a platform-specific library (Apple
+Accelerate, MKL) or a build-time flag plus an external dependency (LAPACK for
+dense, CUDA + cuDSS for GPU). Each section below describes what to install and
+how to enable the backend. See :ref:`linear_solver` for an overview of each
+solver and :ref:`python_interface` for how to select one at runtime.
+
 Apple Accelerate (macOS)
 """"""""""""""""""""""""
 
@@ -40,21 +56,71 @@ When using the default :code:`linear_solver=scs.LinearSolver.AUTO`, MKL is
 selected automatically on Linux and Windows if available. MKL is
 typically faster than the built-in QDLDL linear system solver.
 
-GPU
-"""
+Dense direct (LAPACK)
+"""""""""""""""""""""
 
-If you have a GPU and cuDSS installed you can install the GPU direct sparse
-solver using
+The :ref:`dense direct solver <dense>` reduces the KKT system to a smaller
+Gram matrix and factorizes it with LAPACK's Cholesky routines. It is well
+suited to small-to-medium problems with a dense constraint matrix :math:`A`,
+where dense BLAS/LAPACK outperforms sparse factorization.
+
+Build from source with:
+
+.. code:: bash
+
+  python -m pip install -Csetup-args=-Duse_lapack=true .
+
+This requires BLAS and LAPACK development headers to be discoverable by
+:code:`pkg-config`. Most platforms satisfy this out of the box (Apple
+Accelerate on macOS, OpenBLAS / MKL on Linux, MKL on Windows). Select the
+backend at runtime with
+:code:`linear_solver=scs.LinearSolver.CPU_DENSE`.
+
+GPU direct (cuDSS)
+""""""""""""""""""
+
+The :ref:`cuDSS backend <cudss_solver>` runs the sparse direct factorization
+and solves on an NVIDIA GPU via `NVIDIA cuDSS
+<https://developer.nvidia.com/cudss>`_. For large problems it is typically
+substantially faster than any CPU backend.
+
+**Prerequisites.** The build links against both the CUDA runtime and cuDSS,
+so you need all of the following installed and discoverable by
+:code:`pkg-config` / the linker before running :code:`pip install`:
+
+1. An NVIDIA GPU with a recent CUDA-capable driver.
+2. The `CUDA Toolkit <https://developer.nvidia.com/cuda-downloads>`_
+   (provides :code:`nvcc`, the CUDA runtime headers, and :code:`cuda.pc`
+   used by the build).
+3. The `cuDSS library <https://developer.nvidia.com/cudss-downloads>`_ (ships
+   a :code:`cudss.pc` pkg-config file). cuDSS is also available on
+   `conda-forge <https://anaconda.org/conda-forge/libcudss>`_ as
+   :code:`libcudss` / :code:`libcudss-dev`.
+
+Make sure the directories containing :code:`cuda.pc` and :code:`cudss.pc` are
+on :code:`PKG_CONFIG_PATH`, and that the corresponding shared libraries are on
+:code:`LD_LIBRARY_PATH` (Linux) at runtime. A typical Linux environment looks
+like:
+
+.. code:: bash
+
+  export PATH=/usr/local/cuda/bin:$PATH
+  export PKG_CONFIG_PATH=/usr/local/cuda/lib64/pkgconfig:/opt/nvidia/cudss/lib64/pkgconfig:$PKG_CONFIG_PATH
+  export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/opt/nvidia/cudss/lib64:$LD_LIBRARY_PATH
+
+**Install.** Once the prerequisites are in place, build SCS with:
 
 .. code:: bash
 
   python -m pip install -Csetup-args=-Dlink_cudss=true -Csetup-args=-Dint32=true .
 
-Select it at runtime with :code:`linear_solver=scs.LinearSolver.CUDSS`. The
-sparse direct GPU solver is typically very fast.
+The :code:`int32=true` flag is required because cuDSS only supports 32-bit
+integer indices. Select the backend at runtime with
+:code:`linear_solver=scs.LinearSolver.CUDSS`.
 
-See `here <https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing>`_ for an example colab where the cuDSS version of SCS, along with
-required dependencies, is installed and used.
+See `this Colab notebook <https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing>`_
+for a worked end-to-end example that installs CUDA, cuDSS, and the cuDSS
+build of SCS, then solves a problem on a GPU.
 
 .. _python_spectral_install:
 
@@ -91,9 +157,12 @@ You can install with OpenMP parallelization support using
 
   python legacy_setup.py install --scs --openmp
 
-You can install the GPU indirect solver using
+You can install the :ref:`GPU indirect solver <gpu_indirect>` using
 
 .. code:: bash
 
   python legacy_setup.py install --scs --gpu
+
+The GPU indirect solver is effectively deprecated; the cuDSS direct solver
+above is the recommended GPU backend.
 
