@@ -15,10 +15,7 @@ This module provides the :code:`SCS` class which is initialized using:
 
   solver = scs.SCS(data,
                   cone,
-                  use_indirect=False,
-                  mkl=False,
-                  apple_ldl=False,
-                  gpu=False,
+                  linear_solver=scs.LinearSolver.AUTO,
                   verbose=True,
                   normalize=True,
                   max_iters=int(1e5),
@@ -42,17 +39,52 @@ the cone length or the array that defines the cone (see the third column in
 :ref:`cones` for the keys and what the corresponding values represent).  The
 :code:`b`, and :code:`c` entries must be 1d numpy arrays and the :code:`P` and
 :code:`A` entries must be scipy sparse matrices in CSC format; if they are not
-of the proper format, SCS will attempt to convert them. The
-:code:`use_indirect` setting switches between the sparse direct
-:ref:`linear_solver` (the default) or the sparse indirect solver. If the MKL
-Pardiso direct solver for SCS is :ref:`installed <python_install>` then it can
-be used by setting :code:`mkl=True`. On macOS the Apple Accelerate sparse
-LDL\ :sup:`T` solver is included automatically and can be used by setting
-:code:`apple_ldl=True`. If a GPU solver for SCS is :ref:`installed
-<python_install>` and a GPU is available then it can be used by setting
-:code:`gpu=True`. For the direct GPU solver based on cuDSS set
-:code:`use_indirect=False`. The remaining fields are explained in
-:ref:`settings`.
+of the proper format, SCS will attempt to convert them.
+
+Linear solver selection
+-----------------------
+
+The :code:`linear_solver` setting controls which :ref:`linear_solver` backend
+SCS uses. It accepts a :code:`scs.LinearSolver` enum value.
+The default is :code:`AUTO`, which selects the best available solver for
+the platform:
+
+- **macOS**: Apple Accelerate if available, otherwise QDLDL
+- **Linux / Windows**: MKL Pardiso if available, otherwise QDLDL
+
+.. list-table::
+   :header-rows: 1
+
+   * - Value
+     - Description
+   * - :code:`AUTO`
+     - Auto-detect best available solver (default).
+   * - :code:`QDLDL`
+     - Sparse direct solver using `QDLDL <https://github.com/oxfordcontrol/qdldl>`_ (always available).
+   * - :code:`CPU_INDIRECT`
+     - Sparse indirect solver using conjugate gradients (runs on CPU).
+   * - :code:`MKL`
+     - Intel MKL Pardiso direct solver (requires :ref:`MKL build <python_install>`).
+   * - :code:`ACCELERATE`
+     - Apple Accelerate sparse LDL\ :sup:`T` (macOS only, included automatically).
+   * - :code:`CPU_DENSE`
+     - Dense direct solver via LAPACK (requires LAPACK build).
+   * - :code:`GPU_INDIRECT`
+     - Sparse GPU indirect solver (requires GPU build).
+   * - :code:`CUDSS`
+     - Sparse GPU direct solver via cuDSS (requires :ref:`cuDSS build <python_install>`).
+
+Example:
+
+.. code:: python
+
+  # Use the default (auto-detect)
+  solver = scs.SCS(data, cone)
+
+  # Explicitly select a solver
+  solver = scs.SCS(data, cone, linear_solver=scs.LinearSolver.QDLDL)
+
+The remaining fields are explained in :ref:`settings`.
 
 Cone dict
 ---------
