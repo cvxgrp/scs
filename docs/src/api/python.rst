@@ -61,15 +61,15 @@ the platform:
      - Auto-detect best available solver (default).
    * - :code:`QDLDL`
      - Sparse direct solver using `QDLDL <https://github.com/oxfordcontrol/qdldl>`_ (always available).
-   * - :code:`INDIRECT`
-     - Sparse indirect solver using conjugate gradients.
+   * - :code:`CPU_INDIRECT`
+     - Sparse indirect solver using conjugate gradients (runs on CPU).
    * - :code:`MKL`
      - Intel MKL Pardiso direct solver (requires :ref:`MKL build <python_install>`).
    * - :code:`ACCELERATE`
      - Apple Accelerate sparse LDL\ :sup:`T` (macOS only, included automatically).
-   * - :code:`DENSE`
+   * - :code:`CPU_DENSE`
      - Dense direct solver via LAPACK (requires LAPACK build).
-   * - :code:`GPU`
+   * - :code:`GPU_INDIRECT`
      - Sparse GPU indirect solver (requires GPU build).
    * - :code:`CUDSS`
      - Sparse GPU direct solver via cuDSS (requires :ref:`cuDSS build <python_install>`).
