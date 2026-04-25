@@ -79,6 +79,7 @@ static void print_summary(ScsWork *w, scs_int i, SCS(timer) * solve_timer);
 static void print_footer(ScsInfo *info);
 static void free_residuals(ScsResiduals *r);
 static ScsResiduals *init_residuals(const ScsData *d);
+static void set_info_aa_stats(ScsInfo *info, const AaWork *accel);
 static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
                                 ScsInfo *info, scs_int status_val,
                                 const char *msg);
@@ -299,6 +300,17 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   return r;
 }
 
+static void set_info_aa_stats(ScsInfo *info, const AaWork *accel) {
+  if (!info) {
+    return;
+  }
+  memset(&info->aa_stats, 0, sizeof(info->aa_stats));
+  info->aa_stats.last_aa_norm = NAN;
+  if (accel) {
+    info->aa_stats = aa_get_stats(accel);
+  }
+}
+
 /* ==================== Error / Failure Handling ===================== */
 
 static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
@@ -340,6 +352,7 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
                        const char *ststr) {
   scs_int status = stint;
   populate_on_failure(m, n, sol, info, status, ststr);
+  set_info_aa_stats(info, w ? w->accel : SCS_NULL);
   scs_printf("Failure:%s\n", msg);
   scs_end_interrupt_listener();
   return status;
@@ -865,6 +878,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->scale_updates = w->scale_updates;
   info->rejected_accel_steps = w->rejected_accel_steps;
   info->accepted_accel_steps = w->accepted_accel_steps;
+  set_info_aa_stats(info, w->accel);
   info->comp_slack = ABS(sty);
 #ifdef SPECTRAL_TIMING_FLAG
   info->ave_time_matrix_cone_proj = w->cone_work->tot_time_mat_cone_proj / iter;

@@ -34,7 +34,7 @@ nuclear norm, sum-of-largest eigenvalues).
 
 - Multiple linear solver backends: sparse direct (QDLDL), dense direct (LAPACK),
   iterative (CG), Intel MKL Pardiso, Apple Accelerate (macOS), NVIDIA cuDSS, GPU
-- Anderson acceleration for faster convergence
+- Anderson acceleration for faster convergence, including solve diagnostics
 - Problem data normalization/equilibration for numerical stability
 - Warm-starting and incremental `b`/`c` updates via `scs_update`
 - Ctrl-C signal handling for graceful interruption

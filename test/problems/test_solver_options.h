@@ -123,6 +123,9 @@ static const char *test_no_acceleration(void) {
   mu_assert("test_no_acceleration: expected SCS_SOLVED", exitflag == SCS_SOLVED);
   mu_assert("test_no_acceleration: no AA steps should be accepted",
             info.accepted_accel_steps == 0);
+  mu_assert("test_no_acceleration: AA stats should be zeroed",
+            info.aa_stats.iter == 0 && info.aa_stats.n_accept == 0 &&
+                info.aa_stats.n_safeguard_reject == 0);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
   _OPTS_CLEANUP();

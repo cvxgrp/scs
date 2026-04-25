@@ -14,6 +14,7 @@ extern "C" {
 
 /* Contains definitions of primitive types `scs_int` and `scs_float`. */
 #include "scs_types.h"
+#include "aa_stats.h"
 
 #define SCS_NULL 0 /* NULL type */
 
@@ -218,6 +219,8 @@ typedef struct {
   scs_int rejected_accel_steps;
   /** Number of accepted AA steps. */
   scs_int accepted_accel_steps;
+  /** Detailed Anderson acceleration diagnostics. */
+  AaStats aa_stats;
   /** Total time (milliseconds) spent in the linear system solver. */
   scs_float lin_sys_time;
   /** Total time (milliseconds) spent in the cone projection. */

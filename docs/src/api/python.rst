@@ -133,7 +133,8 @@ the warm-start.
 At termination :code:`sol` is a dict with fields :code:`x, y, s, info` where
 :code:`x, y, s` contains the primal-dual :ref:`solution <optimality>` or the
 :ref:`certificate of infeasibility <infeasibility>`, and :code:`info` is a dict
-containing the solve :ref:`info`.
+containing the solve :ref:`info`. Detailed Anderson acceleration diagnostics are
+available in :code:`sol["info"]["aa_stats"]`.
 
 To re-use the workspace and solve a similar problem with new :code:`b`
 and / or :code:`c` data, we can update the solver using:
@@ -142,5 +143,4 @@ and / or :code:`c` data, we can update the solver using:
 
    solver.update(b=new_b, c=new_c)  # update b and c vectors (can be None)
    solver.solve()  # solve new problem with updated b and c
-
 
