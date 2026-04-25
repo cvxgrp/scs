@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#include "aa_stats.h"
 #include "glbopts.h"
 
 typedef scs_float aa_float;
@@ -127,36 +128,6 @@ void aa_finish(AaWork *a);
  *
  */
 void aa_reset(AaWork *a);
-
-/**
- * Lifetime diagnostics for an AaWork. Counters accumulate from
- * aa_init and are NOT cleared by aa_reset (which is also called
- * internally when a safeguard rejection forces a fresh state, and
- * you still want the rejection itself to show up in the counts).
- *
- * Rejection causes are split so a caller can tell what needs tuning:
- *   - n_reject_lapack       geqp3 returned non-zero info (rare; linear-algebra internal failure)
- *   - n_reject_rank0        pivoted QR truncated to rank 0 (matrix numerically zero, e.g. at convergence)
- *   - n_reject_nonfinite    ||γ||₂ was NaN/Inf (extreme ill-conditioning, raise regularization)
- *   - n_reject_weight_cap   ||γ||₂ >= max_weight_norm (loosen cap or raise regularization)
- *
- * `last_*` fields reflect the most recent AA least-squares solve:
- *   - last_rank              rank of most recent solve; 0 if never solved or rank collapsed
- *   - last_aa_norm           ||γ||₂ on success; NaN if never solved or solve failed
- *   - last_regularization    r used in most recent solve; 0 if never solved or regularization=0
- */
-typedef struct {
-  aa_int iter;                  /* internal iteration counter */
-  aa_int n_accept;              /* aa_apply steps that were accepted */
-  aa_int n_reject_lapack;       /* geqp3 info != 0 */
-  aa_int n_reject_rank0;        /* pivoted QR rank truncated to 0 */
-  aa_int n_reject_nonfinite;    /* ||γ||₂ non-finite */
-  aa_int n_reject_weight_cap;   /* ||γ||₂ >= max_weight_norm */
-  aa_int n_safeguard_reject;    /* aa_safeguard rollbacks */
-  aa_int last_rank;
-  aa_float last_aa_norm;
-  aa_float last_regularization;
-} AaStats;
 
 /**
  * Return lifetime diagnostic counters.

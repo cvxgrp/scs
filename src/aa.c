@@ -234,7 +234,7 @@ struct ACCEL_WORK {
 
   aa_float *x_work; /* workspace (= x) for when relaxation != 1.0 */
 
-  /* Lifetime diagnostics (see AaStats in aa.h). NOT cleared by
+  /* Lifetime diagnostics (see AaStats in aa_stats.h). NOT cleared by
    * aa_reset — the internal reset path fires on safeguard rejection,
    * and you want the rejection to stay visible in the counters. */
   aa_int n_accept;

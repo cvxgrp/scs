@@ -198,7 +198,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/scs_types.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/include/scs_types.h NEWLINE_STYLE LF)
 
 # Public headers
-set(${PROJECT_NAME}_PUBLIC_HDR include/scs_types.h include/scs.h)
+set(${PROJECT_NAME}_PUBLIC_HDR include/aa_stats.h include/scs_types.h include/scs.h)
 
 # Common source files
 set(${PROJECT_NAME}_SRC
@@ -235,6 +235,7 @@ endif()
 # Common header files
 set(${PROJECT_NAME}_HDR
     include/aa.h
+    include/aa_stats.h
     include/cones.h
     include/ctrlc.h
     include/glbopts.h
