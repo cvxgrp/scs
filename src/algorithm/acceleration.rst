@@ -156,6 +156,11 @@ linearly dependent near convergence. An SVD-based solve would be similarly
 rank-revealing but is substantially more expensive per iteration and has not
 been benchmarked here.
 
+SCS reports detailed AA solve diagnostics in the :code:`aa_stats` field of the
+returned :ref:`info` object. These include solve acceptances, rejection causes,
+the rank of the most recent AA solve, the most recent AA weight norm, and the
+regularization used in that solve.
+
 Regularization
 """"""""""""""
 

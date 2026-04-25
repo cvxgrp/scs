@@ -52,7 +52,10 @@
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Return information</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Return information</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#anderson-acceleration-statistics">Anderson acceleration statistics</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#interfaces">Interfaces</a></li>
@@ -185,20 +188,85 @@ the following fields.</p>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
 <td><p>Number of times an AA update was accepted by the safeguarding check (see <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">lin_sys_time</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">aa_stats</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">AaStats</span></code></p></td>
+<td><p>Detailed AA solve diagnostics, including rejection causes, last rank, last weight norm, and last regularization</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">lin_sys_time</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Total time (milliseconds) spent in the <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear system solver</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">cone_time</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">cone_time</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Total time (milliseconds) spent in the <a class="reference internal" href="cones.html#cones"><span class="std std-ref">cone projection</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">accel_time</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">accel_time</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
 <td><p>Total time (milliseconds) spent in the <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">acceleration routine</span></a></p></td>
 </tr>
 </tbody>
 </table>
+<section id="anderson-acceleration-statistics">
+<h2>Anderson acceleration statistics<a class="headerlink" href="#anderson-acceleration-statistics" title="Link to this heading"></a></h2>
+<p>The <code class="code docutils literal notranslate"><span class="pre">aa_stats</span></code> field contains detailed diagnostics from the Anderson
+acceleration linear solves. These counters are useful for diagnosing whether AA
+is active and, when AA updates are rejected, why they were rejected.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 15.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">iter</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Internal AA iteration counter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">n_accept</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of AA updates accepted by <code class="code docutils literal notranslate"><span class="pre">aa_apply</span></code> before safeguarding</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">n_reject_lapack</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of AA updates rejected because the LAPACK solve failed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">n_reject_rank0</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of AA updates rejected because rank truncation produced rank zero</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">n_reject_nonfinite</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of AA updates rejected because the AA weight norm was non-finite</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">n_reject_weight_cap</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of AA updates rejected because the AA weight norm exceeded the configured cap</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">n_safeguard_reject</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Number of AA updates rejected by the safeguarding check</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">last_rank</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Rank used in the most recent AA solve</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">last_aa_norm</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>AA weight norm from the most recent AA solve, or NaN if no AA solve was attempted</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">last_regularization</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Regularization value used in the most recent AA solve</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 

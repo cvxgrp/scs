@@ -74,7 +74,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv49aa_finishP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_finish()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv48aa_resetP6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_reset()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#_CPPv412aa_get_statsPK6AaWork"><code class="docutils literal notranslate"><span class="pre">aa_get_stats()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#_CPPv47AaStats"><code class="docutils literal notranslate"><span class="pre">AaStats</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -244,6 +243,10 @@ keeps the update stable as the <span class="math notranslate nohighlight">\(S\)<
 linearly dependent near convergence. An SVD-based solve would be similarly
 rank-revealing but is substantially more expensive per iteration and has not
 been benchmarked here.</p>
+<p>SCS reports detailed AA solve diagnostics in the <code class="code docutils literal notranslate"><span class="pre">aa_stats</span></code> field of the
+returned <a class="reference internal" href="../api/info.html#info"><span class="std std-ref">Return information</span></a> object. These include solve acceptances, rejection causes,
+the rank of the most recent AA solve, the most recent AA weight norm, and the
+regularization used in that solve.</p>
 <section id="regularization">
 <h3>Regularization<a class="headerlink" href="#regularization" title="Link to this heading"></a></h3>
 <p>By default we also add a small amount of regularization to the matrices
@@ -419,7 +422,7 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv412aa_get_statsPK6AaWork">
-<span id="_CPPv312aa_get_statsPK6AaWork"></span><span id="_CPPv212aa_get_statsPK6AaWork"></span><span id="aa_get_stats__AaWorkCP"></span><span class="target" id="aa_8h_1aa1dddf8339a78887ff2ca6a7c778890f"></span><a class="reference internal" href="#_CPPv47AaStats" title="AaStats"><span class="n"><span class="pre">AaStats</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_get_stats</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412aa_get_statsPK6AaWork" title="Link to this definition"></a><br /></dt>
+<span id="_CPPv312aa_get_statsPK6AaWork"></span><span id="_CPPv212aa_get_statsPK6AaWork"></span><span id="aa_get_stats__AaWorkCP"></span><span class="target" id="aa_8h_1aa1dddf8339a78887ff2ca6a7c778890f"></span><a class="reference internal" href="../api/c.html#_CPPv47AaStats" title="AaStats"><span class="n"><span class="pre">AaStats</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aa_get_stats</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46AaWork" title="AaWork"><span class="n"><span class="pre">AaWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412aa_get_statsPK6AaWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Return lifetime diagnostic counters.</p>
 <p>Use for post-hoc diagnosis of why AA is or isn’t accelerating a given fixed-point iteration — e.g. <code class="docutils literal notranslate"><span class="pre">n_reject_weight_cap</span></code> rising suggests loosening <code class="docutils literal notranslate"><span class="pre">max_weight_norm</span></code> or raising <code class="docutils literal notranslate"><span class="pre">regularization</span></code>; <code class="docutils literal notranslate"><span class="pre">n_safeguard_reject</span></code> rising suggests tuning <code class="docutils literal notranslate"><span class="pre">safeguard_factor</span></code> or <code class="docutils literal notranslate"><span class="pre">mem</span></code>. Do not call with <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">NULL</span></code>.</p>
 <dl class="field-list simple">
@@ -430,80 +433,6 @@ recovers vanilla AA. This can be computed using the matrices defined above using
 </dd></dl>
 
 </div>
-<dl class="cpp struct">
-<dt class="sig sig-object cpp" id="_CPPv47AaStats">
-<span id="_CPPv37AaStats"></span><span id="_CPPv27AaStats"></span><span id="AaStats"></span><span class="target" id="struct_aa_stats"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AaStats</span></span></span><a class="headerlink" href="#_CPPv47AaStats" title="Link to this definition"></a><br /></dt>
-<dd><div class="docutils container">
-<em>#include &lt;aa.h&gt;</em></div>
-<p>Lifetime diagnostics for an AaWork. Counters accumulate from aa_init and are NOT cleared by aa_reset (which is also called internally when a safeguard rejection forces a fresh state, and you still want the rejection itself to show up in the counts).</p>
-<p>Rejection causes are split so a caller can tell what needs tuning:<ul class="simple">
-<li><p>n_reject_lapack geqp3 returned non-zero info (rare; linear-algebra internal failure)</p></li>
-<li><p>n_reject_rank0 pivoted QR truncated to rank 0 (matrix numerically zero, e.g. at convergence)</p></li>
-<li><p>n_reject_nonfinite ||γ||₂ was NaN/Inf (extreme ill-conditioning, raise regularization)</p></li>
-<li><p>n_reject_weight_cap ||γ||₂ &gt;= max_weight_norm (loosen cap or raise regularization)</p></li>
-</ul>
-</p>
-<p><code class="docutils literal notranslate"><span class="pre">last_*</span></code> fields reflect the most recent AA least-squares solve:<ul class="simple">
-<li><p>last_rank rank of most recent solve; 0 if never solved or rank collapsed</p></li>
-<li><p>last_aa_norm ||γ||₂ on success; NaN if never solved or solve failed</p></li>
-<li><p>last_regularization r used in most recent solve; 0 if never solved or regularization=0 </p></li>
-</ul>
-</p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats4iterE">
-<span id="_CPPv3N7AaStats4iterE"></span><span id="_CPPv2N7AaStats4iterE"></span><span id="AaStats::iter__aa_int"></span><span class="target" id="struct_aa_stats_1aa5373ead43e5934a326ec6596220c43d"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">iter</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats4iterE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats8n_acceptE">
-<span id="_CPPv3N7AaStats8n_acceptE"></span><span id="_CPPv2N7AaStats8n_acceptE"></span><span id="AaStats::n_accept__aa_int"></span><span class="target" id="struct_aa_stats_1ae8bb2cd453842089c23e332282cc8da5"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_accept</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats8n_acceptE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats15n_reject_lapackE">
-<span id="_CPPv3N7AaStats15n_reject_lapackE"></span><span id="_CPPv2N7AaStats15n_reject_lapackE"></span><span id="AaStats::n_reject_lapack__aa_int"></span><span class="target" id="struct_aa_stats_1a33e333178e53df68b82a862e7e376c77"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_lapack</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats15n_reject_lapackE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats14n_reject_rank0E">
-<span id="_CPPv3N7AaStats14n_reject_rank0E"></span><span id="_CPPv2N7AaStats14n_reject_rank0E"></span><span id="AaStats::n_reject_rank0__aa_int"></span><span class="target" id="struct_aa_stats_1abf8ed80ec1a96a4dee82f4d18be0c472"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_rank0</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats14n_reject_rank0E" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats18n_reject_nonfiniteE">
-<span id="_CPPv3N7AaStats18n_reject_nonfiniteE"></span><span id="_CPPv2N7AaStats18n_reject_nonfiniteE"></span><span id="AaStats::n_reject_nonfinite__aa_int"></span><span class="target" id="struct_aa_stats_1a1c6b04288007164acb07af3923c231fe"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_nonfinite</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats18n_reject_nonfiniteE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats19n_reject_weight_capE">
-<span id="_CPPv3N7AaStats19n_reject_weight_capE"></span><span id="_CPPv2N7AaStats19n_reject_weight_capE"></span><span id="AaStats::n_reject_weight_cap__aa_int"></span><span class="target" id="struct_aa_stats_1a36893e874b834a93985e2f62eec89d63"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reject_weight_cap</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats19n_reject_weight_capE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats18n_safeguard_rejectE">
-<span id="_CPPv3N7AaStats18n_safeguard_rejectE"></span><span id="_CPPv2N7AaStats18n_safeguard_rejectE"></span><span id="AaStats::n_safeguard_reject__aa_int"></span><span class="target" id="struct_aa_stats_1aefd3e420309657429defd44a334f2bee"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_safeguard_reject</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats18n_safeguard_rejectE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats9last_rankE">
-<span id="_CPPv3N7AaStats9last_rankE"></span><span id="_CPPv2N7AaStats9last_rankE"></span><span id="AaStats::last_rank__aa_int"></span><span class="target" id="struct_aa_stats_1a7a3e99004ace5c3d2a311d05c53796e2"></span><a class="reference internal" href="#_CPPv46aa_int" title="aa_int"><span class="n"><span class="pre">aa_int</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">last_rank</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats9last_rankE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats12last_aa_normE">
-<span id="_CPPv3N7AaStats12last_aa_normE"></span><span id="_CPPv2N7AaStats12last_aa_normE"></span><span id="AaStats::last_aa_norm__aa_float"></span><span class="target" id="struct_aa_stats_1ae5d133f9ba217a6c672923c0c6141b12"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">last_aa_norm</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats12last_aa_normE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp var">
-<dt class="sig sig-object cpp" id="_CPPv4N7AaStats19last_regularizationE">
-<span id="_CPPv3N7AaStats19last_regularizationE"></span><span id="_CPPv2N7AaStats19last_regularizationE"></span><span id="AaStats::last_regularization__aa_float"></span><span class="target" id="struct_aa_stats_1a898b0c04a06ba3f7827e89bb57e4fc52"></span><a class="reference internal" href="#_CPPv48aa_float" title="aa_float"><span class="n"><span class="pre">aa_float</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">last_regularization</span></span></span><a class="headerlink" href="#_CPPv4N7AaStats19last_regularizationE" title="Link to this definition"></a><br /></dt>
-<dd></dd></dl>
-
-</div>
-</dd></dl>
-
 </section>
 </section>
 

@@ -134,9 +134,11 @@ See :ref:`info` for details on each of these.
 .. doxygenstruct:: ScsInfo
    :members:
 
+.. doxygenstruct:: AaStats
+   :members:
+
 Workspace
 ---------
 
 The user should not need to interact with the :code:`ScsWork` struct,
 which contains the internal workspace allocated and maintained by SCS.
-
