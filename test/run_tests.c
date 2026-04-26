@@ -142,6 +142,11 @@ static const char *all_tests(void) {
   mu_run_test(test_adaptive_scale);
   mu_run_test(test_no_acceleration);
   mu_run_test(test_type2_acceleration);
+  mu_run_test(test_aa_relaxation_sweep);
+  mu_run_test(test_aa_regularization_sweep);
+  mu_run_test(test_negative_lookback_rejected);
+  mu_run_test(test_invalid_aa_relaxation_rejected);
+  mu_run_test(test_invalid_aa_regularization_rejected);
   mu_run_test(test_normalize_off);
   mu_run_test(test_normalize_roundtrip);
   mu_run_test(test_scs_version);

@@ -148,6 +148,9 @@ static void write_scs_stgs(const ScsSettings *s, FILE *fout) {
   fwrite(&warm_start, sizeof(scs_int), 1, fout);
   fwrite(&(s->acceleration_lookback), sizeof(scs_int), 1, fout);
   fwrite(&(s->acceleration_interval), sizeof(scs_int), 1, fout);
+  fwrite(&(s->acceleration_type_1), sizeof(scs_int), 1, fout);
+  fwrite(&(s->acceleration_regularization), sizeof(scs_float), 1, fout);
+  fwrite(&(s->acceleration_relaxation), sizeof(scs_float), 1, fout);
   fwrite(&(s->adaptive_scale), sizeof(scs_int), 1, fout);
   /* Do not write the write_data_filename */
   /* Do not write the log_csv_filename */
@@ -169,6 +172,9 @@ static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz) {
   read_int(&(s->warm_start), file_int_sz, 1, fin);
   read_int(&(s->acceleration_lookback), file_int_sz, 1, fin);
   read_int(&(s->acceleration_interval), file_int_sz, 1, fin);
+  read_int(&(s->acceleration_type_1), file_int_sz, 1, fin);
+  checked_fread(&(s->acceleration_regularization), sizeof(scs_float), 1, fin);
+  checked_fread(&(s->acceleration_relaxation), sizeof(scs_float), 1, fin);
   read_int(&(s->adaptive_scale), file_int_sz, 1, fin);
   return s;
 }
