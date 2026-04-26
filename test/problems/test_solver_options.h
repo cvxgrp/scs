@@ -188,6 +188,73 @@ static const char *test_negative_lookback_rejected(void) {
 }
 
 /*
+ * Test that non-default acceleration_relaxation values still solve.
+ * Sweeps three points in [0, 2]: 0.5 (under-relaxed), 1.0 (vanilla), and 1.7
+ * (over-relaxed). All three should converge on the simple LP.
+ */
+static const char *test_aa_relaxation_sweep(void) {
+  scs_float relaxations[] = {0.5, 1.0, 1.7};
+  scs_int n_relax = sizeof(relaxations) / sizeof(relaxations[0]);
+  scs_int j;
+  for (j = 0; j < n_relax; ++j) {
+    ScsCone *k;
+    ScsData *d;
+    ScsSettings *stgs;
+    ScsSolution *sol;
+    ScsInfo info = {0};
+    scs_int exitflag;
+    const char *fail;
+
+    _OPTS_SETUP(-2.0, 1.0);
+    stgs->verbose = 0;
+    stgs->acceleration_relaxation = relaxations[j];
+
+    exitflag = scs(d, k, stgs, sol, &info);
+    mu_assert("test_aa_relaxation_sweep: expected SCS_SOLVED",
+              exitflag == SCS_SOLVED);
+    fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+    _OPTS_CLEANUP();
+    if (fail) return fail;
+  }
+  return 0;
+}
+
+/*
+ * Test that non-default acceleration_regularization values still solve.
+ * Includes 0 (regularization disabled — valid per aa.h) and a value much
+ * larger than the default (should still produce a stable solve since AA
+ * just shrinks toward the un-accelerated update).
+ */
+static const char *test_aa_regularization_sweep(void) {
+  scs_float regs[] = {0.0, 1e-12, 1e-4};
+  scs_int n_regs = sizeof(regs) / sizeof(regs[0]);
+  scs_int j;
+  for (j = 0; j < n_regs; ++j) {
+    ScsCone *k;
+    ScsData *d;
+    ScsSettings *stgs;
+    ScsSolution *sol;
+    ScsInfo info = {0};
+    scs_int exitflag;
+    const char *fail;
+
+    _OPTS_SETUP(-2.0, 1.0);
+    stgs->verbose = 0;
+    stgs->acceleration_regularization = regs[j];
+
+    exitflag = scs(d, k, stgs, sol, &info);
+    mu_assert("test_aa_regularization_sweep: expected SCS_SOLVED",
+              exitflag == SCS_SOLVED);
+    fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+    _OPTS_CLEANUP();
+    if (fail) return fail;
+  }
+  return 0;
+}
+
+/*
  * Test that an invalid acceleration_relaxation (outside [0, 2]) is rejected.
  */
 static const char *test_invalid_aa_relaxation_rejected(void) {
@@ -204,6 +271,41 @@ static const char *test_invalid_aa_relaxation_rejected(void) {
 
   exitflag = scs(d, k, stgs, sol, &info);
   mu_assert("test_invalid_aa_relaxation_rejected: expected SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+  return 0;
+}
+
+/*
+ * Test that NaN/negative acceleration_regularization is rejected by validate.
+ */
+static const char *test_invalid_aa_regularization_rejected(void) {
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
+  ScsInfo info = {0};
+  scs_int exitflag;
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_regularization = -1e-12;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("test_invalid_aa_regularization_rejected: negative reg "
+            "should be SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_regularization = NAN;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("test_invalid_aa_regularization_rejected: NaN reg "
+            "should be SCS_FAILED",
             exitflag == SCS_FAILED);
 
   _OPTS_CLEANUP();
