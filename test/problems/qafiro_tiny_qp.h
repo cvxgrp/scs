@@ -173,8 +173,10 @@ static const char *qafiro_tiny_qp(void) {
   stgs->warm_start = 0;
   stgs->normalize = 0;
   stgs->adaptive_scale = 0;
-  stgs->acceleration_lookback = -10;
+  stgs->acceleration_lookback = 10;
   stgs->acceleration_interval = 10;
+  stgs->acceleration_type_1 = 0;
+  stgs->acceleration_regularization = 1e-12;
   stgs->log_csv_filename = "qafiro_tiny_qp.csv";
 
   exitflag = scs(d, k, stgs, sol, &info);

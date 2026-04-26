@@ -133,9 +133,9 @@ static const char *test_no_acceleration(void) {
 }
 
 /*
- * Test Type-II Anderson acceleration (acceleration_lookback < 0): the
- * negative lookback is the internal signal to use AA_REGULARIZATION_TYPE_2.
- * Verify convergence on a simple LP.
+ * Test Type-II Anderson acceleration via the explicit acceleration_type_1=0
+ * setting. Lower the regularization to type-II's preferred regime since the
+ * default is tuned for type-I. Verify convergence on a simple LP.
  */
 static const char *test_type2_acceleration(void) {
   ScsCone *k;
@@ -147,7 +147,9 @@ static const char *test_type2_acceleration(void) {
   const char *fail;
 
   _OPTS_SETUP(-2.0, 1.0);
-  stgs->acceleration_lookback = -10;
+  stgs->acceleration_lookback = 10;
+  stgs->acceleration_type_1 = 0;
+  stgs->acceleration_regularization = 1e-12;
 
   exitflag = scs(d, k, stgs, sol, &info);
 
@@ -157,6 +159,55 @@ static const char *test_type2_acceleration(void) {
 
   _OPTS_CLEANUP();
   return fail;
+}
+
+/*
+ * Test that a negative acceleration_lookback is rejected by validate().
+ * Previously this was overloaded to mean type-II AA; that hack is gone now,
+ * so the only valid signal for type-II is acceleration_type_1=0.
+ */
+static const char *test_negative_lookback_rejected(void) {
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
+  ScsInfo info = {0};
+  scs_int exitflag;
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_lookback = -10;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  mu_assert("test_negative_lookback_rejected: expected SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+  return 0;
+}
+
+/*
+ * Test that an invalid acceleration_relaxation (outside [0, 2]) is rejected.
+ */
+static const char *test_invalid_aa_relaxation_rejected(void) {
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
+  ScsInfo info = {0};
+  scs_int exitflag;
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_relaxation = 2.5;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("test_invalid_aa_relaxation_rejected: expected SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+  return 0;
 }
 
 /*

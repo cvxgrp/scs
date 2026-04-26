@@ -219,9 +219,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define TAU_FACTOR (10.)
 
 /* --- Anderson Acceleration (AA) parameters --- */
+/* Default AA type: 1 = type-I (better empirical performance, default),
+ * 0 = type-II (more numerically stable but typically slower). */
+#define ACCELERATION_TYPE_1 (1)
+/* Default Tikhonov regularization for the AA least-squares solve. Tuned
+ * for type-I; type-II tolerates much smaller (e.g. 1e-12). Users picking
+ * type-II will typically lower this. */
+#define AA_REGULARIZATION (1e-8)
 #define AA_RELAXATION (1.0)
-#define AA_REGULARIZATION_TYPE_1 (1e-8)
-#define AA_REGULARIZATION_TYPE_2 (1e-12)
 /* Reject AA steps when the output norm exceeds this multiple of the input
  * norm. 1.0 means the AA step must not increase the iterate norm. */
 #define AA_SAFEGUARD_FACTOR (1.)

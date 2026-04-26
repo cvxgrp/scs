@@ -83,10 +83,17 @@ typedef struct {
   scs_int verbose;
   /** Whether to use warm start (put initial guess in ScsSolution struct). */
   scs_int warm_start;
-  /** Memory for acceleration. */
+  /** Memory for acceleration. Set to 0 to disable AA. Must be nonnegative. */
   scs_int acceleration_lookback;
   /** Interval to apply acceleration. */
   scs_int acceleration_interval;
+  /** Whether AA uses type-I (1) or type-II (0). */
+  scs_int acceleration_type_1;
+  /** Tikhonov regularization for the AA least-squares solve.
+   *  See `aa_init` in include/aa.h for the sign-encoded modes. */
+  scs_float acceleration_regularization;
+  /** AA relaxation factor in [0, 2]. 1.0 recovers vanilla AA. */
+  scs_float acceleration_relaxation;
   /** String, if set will dump raw prob data to this file. */
   const char *write_data_filename;
   /** String, if set will log data to this csv file (makes SCS very slow). */
