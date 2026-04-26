@@ -129,13 +129,16 @@ In SCS
 
 In SCS both types of acceleration are available, though by default type-I is
 used since it tends to have better performance.  If you wish to use AA then set
-the :code:`acceleration_lookback` setting to a non-zero value (10 works well for
+the :code:`acceleration_lookback` setting to a positive value (10 works well for
 many problems and is the default). This setting corresponds to :math:`m`, the
 maximum number of SCS iterates that AA will use to extrapolate to the new point.
+Set :code:`acceleration_lookback` to :code:`0` to disable AA entirely.
 
-To enable type-II acceleration then set :code:`acceleration_lookback` to a
-negative value, the sign is interpreted as switching the AA type (this is mostly
-so that we can test it without fully exposing it the user).
+To select type-II acceleration set :code:`acceleration_type_1` to :code:`0`
+(the default :code:`1` selects type-I). Type-II is more numerically stable than
+type-I but typically slower; users switching to type-II usually also lower
+:code:`acceleration_regularization` (e.g. :code:`1e-12`) since the default is
+tuned for type-I.
 
 The setting :code:`acceleration_interval` controls how frequently AA is applied.
 If :code:`acceleration_interval` :math:`=k` for some integer :math:`k \geq 1`
@@ -186,6 +189,10 @@ into the matrices by appending :math:`\sqrt{\epsilon} I` to the bottom of
 :math:`S_k` or :math:`Y_k`, which is useful when using a QR or SVD decomposition
 to solve the equations.
 
+The setting :code:`acceleration_regularization` controls :math:`\epsilon`. The
+default (:code:`1e-8`) is tuned for type-I; type-II is typically run with a
+smaller value such as :code:`1e-12`.
+
 Max :math:`\gamma` norm
 """""""""""""""""""""""
 As the algorithm converges to the fixed point the matrices to be inverted
@@ -220,8 +227,9 @@ replaces the final step of AA by mixing the map inputs and outputs as follows:
 .. math::
   x^{k+1} = \beta \sum_{j=0}^{m_k}\alpha_j^k f(x^{k-m_k+j}) + (1-\beta) \sum_{j=0}^{m_k}\alpha_j^k x^{k-m_k+j}
 
-where :math:`\beta` is the :code:`relaxation` parameter, and :math:`\beta=1`
-recovers vanilla AA. This can be computed using the matrices defined above using
+where :math:`\beta` is the :code:`acceleration_relaxation` parameter, and
+:math:`\beta=1` recovers vanilla AA. This can be computed using the matrices
+defined above using
 
 .. math::
   x^{k+1} = \beta (f(x^k) - (S_k - Y_k) \gamma^k) + (1-\beta) (x^k - S_k \gamma^k)

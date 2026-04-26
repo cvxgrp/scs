@@ -197,13 +197,31 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 <td><p><span class="math notranslate nohighlight">\(\mathbf{N}\)</span></p></td>
 <td><p>10</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">write_data_filename</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_type_1</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
+<td><p>Whether AA uses type-I (<code class="code docutils literal notranslate"><span class="pre">1</span></code>) or type-II (<code class="code docutils literal notranslate"><span class="pre">0</span></code>). See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
+<td><p>True/False</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>Tikhonov regularization for the AA least-squares solve. The default is tuned for type-I; type-II is typically more stable and tolerates a smaller value (e.g. <code class="code docutils literal notranslate"><span class="pre">1e-12</span></code>). See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
+<td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
+<td><p>1e-8</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_relaxation</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
+<td><p>AA relaxation factor <span class="math notranslate nohighlight">\(\beta\)</span>; <code class="code docutils literal notranslate"><span class="pre">1.0</span></code> recovers vanilla AA. See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
+<td><p><span class="math notranslate nohighlight">\([0, 2]\)</span></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">write_data_filename</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span></code></p></td>
 <td><p>If this is set the problem data is dumped to this filename.</p></td>
 <td><p>Any filename</p></td>
 <td><p>NULL</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span></code></p></td>
 <td><p>If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower).</p></td>
 <td><p>Any filename</p></td>

@@ -220,12 +220,15 @@ matrix.</p>
 <h2>In SCS<a class="headerlink" href="#in-scs" title="Link to this heading"></a></h2>
 <p>In SCS both types of acceleration are available, though by default type-I is
 used since it tends to have better performance.  If you wish to use AA then set
-the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a non-zero value (10 works well for
+the <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> setting to a positive value (10 works well for
 many problems and is the default). This setting corresponds to <span class="math notranslate nohighlight">\(m\)</span>, the
-maximum number of SCS iterates that AA will use to extrapolate to the new point.</p>
-<p>To enable type-II acceleration then set <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> to a
-negative value, the sign is interpreted as switching the AA type (this is mostly
-so that we can test it without fully exposing it the user).</p>
+maximum number of SCS iterates that AA will use to extrapolate to the new point.
+Set <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code> to disable AA entirely.</p>
+<p>To select type-II acceleration set <code class="code docutils literal notranslate"><span class="pre">acceleration_type_1</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code>
+(the default <code class="code docutils literal notranslate"><span class="pre">1</span></code> selects type-I). Type-II is more numerically stable than
+type-I but typically slower; users switching to type-II usually also lower
+<code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code> (e.g. <code class="code docutils literal notranslate"><span class="pre">1e-12</span></code>) since the default is
+tuned for type-I.</p>
 <p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> controls how frequently AA is applied.
 If <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> <span class="math notranslate nohighlight">\(=k\)</span> for some integer <span class="math notranslate nohighlight">\(k \geq 1\)</span>
 then AA is applied every <span class="math notranslate nohighlight">\(k\)</span> iterations (AA simply ignores the
@@ -266,6 +269,9 @@ reduces to <span class="math notranslate nohighlight">\(x^{k+1} = f(x^k)\)</span
 into the matrices by appending <span class="math notranslate nohighlight">\(\sqrt{\epsilon} I\)</span> to the bottom of
 <span class="math notranslate nohighlight">\(S_k\)</span> or <span class="math notranslate nohighlight">\(Y_k\)</span>, which is useful when using a QR or SVD decomposition
 to solve the equations.</p>
+<p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code> controls <span class="math notranslate nohighlight">\(\epsilon\)</span>. The
+default (<code class="code docutils literal notranslate"><span class="pre">1e-8</span></code>) is tuned for type-I; type-II is typically run with a
+smaller value such as <code class="code docutils literal notranslate"><span class="pre">1e-12</span></code>.</p>
 </section>
 <section id="max-gamma-norm">
 <h3>Max <span class="math notranslate nohighlight">\(\gamma\)</span> norm<a class="headerlink" href="#max-gamma-norm" title="Link to this heading"></a></h3>
@@ -294,8 +300,9 @@ revert the iterate to <span class="math notranslate nohighlight">\(x^k\)</span> 
 replaces the final step of AA by mixing the map inputs and outputs as follows:</p>
 <div class="math notranslate nohighlight">
 \[x^{k+1} = \beta \sum_{j=0}^{m_k}\alpha_j^k f(x^{k-m_k+j}) + (1-\beta) \sum_{j=0}^{m_k}\alpha_j^k x^{k-m_k+j}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\beta\)</span> is the <code class="code docutils literal notranslate"><span class="pre">relaxation</span></code> parameter, and <span class="math notranslate nohighlight">\(\beta=1\)</span>
-recovers vanilla AA. This can be computed using the matrices defined above using</p>
+<p>where <span class="math notranslate nohighlight">\(\beta\)</span> is the <code class="code docutils literal notranslate"><span class="pre">acceleration_relaxation</span></code> parameter, and
+<span class="math notranslate nohighlight">\(\beta=1\)</span> recovers vanilla AA. This can be computed using the matrices
+defined above using</p>
 <div class="math notranslate nohighlight">
 \[x^{k+1} = \beta (f(x^k) - (S_k - Y_k) \gamma^k) + (1-\beta) (x^k - S_k \gamma^k)\]</div>
 </section>

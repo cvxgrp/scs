@@ -85,6 +85,21 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - Run Anderson acceleration every :code:`acceleration_interval` iterations. See :ref:`acceleration`.
      - :math:`\mathbf{N}`
      - 10
+   * - :code:`acceleration_type_1`
+     - :code:`scs_int`
+     - Whether AA uses type-I (:code:`1`) or type-II (:code:`0`). See :ref:`acceleration`.
+     - True/False
+     - 1
+   * - :code:`acceleration_regularization`
+     - :code:`scs_float`
+     - Tikhonov regularization for the AA least-squares solve. The default is tuned for type-I; type-II is typically more stable and tolerates a smaller value (e.g. :code:`1e-12`). See :ref:`acceleration`.
+     - :math:`[0, \infty)`
+     - 1e-8
+   * - :code:`acceleration_relaxation`
+     - :code:`scs_float`
+     - AA relaxation factor :math:`\beta`; :code:`1.0` recovers vanilla AA. See :ref:`acceleration`.
+     - :math:`[0, 2]`
+     - 1.0
    * - :code:`write_data_filename`
      - :code:`char *`
      - If this is set the problem data is dumped to this filename.

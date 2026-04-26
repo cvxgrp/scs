@@ -524,13 +524,31 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings21acceleration_lookbackE">
 <span id="_CPPv3N11ScsSettings21acceleration_lookbackE"></span><span id="_CPPv2N11ScsSettings21acceleration_lookbackE"></span><span id="ScsSettings::acceleration_lookback__scs_int"></span><span class="target" id="struct_scs_settings_1a493462ada611f12889b7570feed4b4f0"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_lookback</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings21acceleration_lookbackE" title="Link to this definition"></a><br /></dt>
-<dd><p>Memory for acceleration. </p>
+<dd><p>Memory for acceleration. Set to 0 to disable AA. Must be nonnegative. </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings21acceleration_intervalE">
 <span id="_CPPv3N11ScsSettings21acceleration_intervalE"></span><span id="_CPPv2N11ScsSettings21acceleration_intervalE"></span><span id="ScsSettings::acceleration_interval__scs_int"></span><span class="target" id="struct_scs_settings_1a9ee32ae3b1f60ad00c8498796cb6c166"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_interval</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings21acceleration_intervalE" title="Link to this definition"></a><br /></dt>
 <dd><p>Interval to apply acceleration. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings19acceleration_type_1E">
+<span id="_CPPv3N11ScsSettings19acceleration_type_1E"></span><span id="_CPPv2N11ScsSettings19acceleration_type_1E"></span><span id="ScsSettings::acceleration_type_1__scs_int"></span><span class="target" id="struct_scs_settings_1a4c90c885f08b4d945fa1c5cc061174e2"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_type_1</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings19acceleration_type_1E" title="Link to this definition"></a><br /></dt>
+<dd><p>Whether AA uses type-I (1) or type-II (0). </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings27acceleration_regularizationE">
+<span id="_CPPv3N11ScsSettings27acceleration_regularizationE"></span><span id="_CPPv2N11ScsSettings27acceleration_regularizationE"></span><span id="ScsSettings::acceleration_regularization__scs_float"></span><span class="target" id="struct_scs_settings_1a42aa66a28e7b1b7e5bce6d1a523e0f86"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_regularization</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings27acceleration_regularizationE" title="Link to this definition"></a><br /></dt>
+<dd><p>Tikhonov regularization for the AA least-squares solve. See <code class="docutils literal notranslate"><span class="pre">aa_init</span></code> in include/aa.h for the sign-encoded modes. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings23acceleration_relaxationE">
+<span id="_CPPv3N11ScsSettings23acceleration_relaxationE"></span><span id="_CPPv2N11ScsSettings23acceleration_relaxationE"></span><span id="ScsSettings::acceleration_relaxation__scs_float"></span><span class="target" id="struct_scs_settings_1aad397a304046db33c0e5805de9415adf"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">acceleration_relaxation</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings23acceleration_relaxationE" title="Link to this definition"></a><br /></dt>
+<dd><p>AA relaxation factor in [0, 2]. 1.0 recovers vanilla AA. </p>
 </dd></dl>
 
 <dl class="cpp var">
