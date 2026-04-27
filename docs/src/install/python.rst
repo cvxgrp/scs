@@ -39,8 +39,9 @@ Apple Accelerate (macOS)
 On macOS the Apple Accelerate backend is built and included automatically —
 no extra install flags are needed. It uses the Accelerate framework's sparse
 LDL\ :sup:`T` solver, which is optimized for Apple hardware including Apple
-Silicon. When using the default :code:`linear_solver=scs.LinearSolver.AUTO`,
-Accelerate is selected automatically on macOS.
+Silicon. The default :code:`linear_solver=scs.LinearSolver.AUTO` selects the
+bundled QDLDL on macOS; opt in to Accelerate explicitly with
+:code:`linear_solver=scs.LinearSolver.ACCELERATE`.
 
 MKL
 """

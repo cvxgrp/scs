@@ -49,7 +49,7 @@ SCS uses. It accepts a :code:`scs.LinearSolver` enum value.
 The default is :code:`AUTO`, which selects the best available solver for
 the platform:
 
-- **macOS**: Apple Accelerate if available, otherwise QDLDL
+- **macOS**: QDLDL (Apple Accelerate is available via :code:`LinearSolver.ACCELERATE`)
 - **Linux / Windows**: MKL Pardiso if available, otherwise QDLDL
 
 .. list-table::
