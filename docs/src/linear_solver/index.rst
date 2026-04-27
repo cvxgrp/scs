@@ -110,9 +110,9 @@ To build with CMake::
     cmake -DUSE_APPLE_ACCELERATE=ON ..
 
 In Python, the Accelerate backend is included automatically on macOS
-(``pip install scs`` is sufficient). It is the default when using
-``linear_solver=scs.LinearSolver.AUTO`` on macOS. It can also be selected
-explicitly::
+(``pip install scs`` is sufficient). On macOS,
+``linear_solver=scs.LinearSolver.AUTO`` selects the bundled QDLDL; select
+Accelerate explicitly with::
 
     solver = scs.SCS(data, cone, linear_solver=scs.LinearSolver.ACCELERATE)
 
