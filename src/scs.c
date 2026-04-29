@@ -664,13 +664,34 @@ static void cold_start_vars(ScsWork *w) {
 
 /* ====================== ADMM Iteration ============================= */
 
+static scs_float root_plus_from_coeffs(scs_float a, scs_float b, scs_float c) {
+  scs_float rad, sqrt_rad, q;
+  if (!isfinite(a) || !isfinite(b) || !isfinite(c) || a <= 0.) {
+    return NAN;
+  }
+  rad = b * b - 4 * a * c;
+  if (!isfinite(rad)) {
+    return NAN;
+  }
+  if (rad < 0.) {
+    /* Preserve the historical repeated-root fallback for no-real-root cases. */
+    return -b / (2 * a);
+  }
+  sqrt_rad = SQRTF(rad);
+  if (b <= 0.) {
+    return (-b + sqrt_rad) / (2 * a);
+  }
+  q = -0.5 * (b + sqrt_rad);
+  return q != 0. ? c / q : 0.;
+}
+
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta) {
   /* Compute all five weighted dot products (g'Rg, mu'Rg, p'Rg, p'Rp, p'Rmu)
    * in a single pass over diag_r to minimise memory traffic. */
   scs_int i, nm = w->d->n + w->d->m;
   scs_float gg = 0., mug = 0., pg = 0., pp = 0., pmu = 0.;
-  scs_float a, b, c, rad, tau_scale = w->diag_r[nm];
+  scs_float a, b, c, tau_scale = w->diag_r[nm];
   const scs_float *g = w->g, *r = w->diag_r;
   for (i = 0; i < nm; ++i) {
     scs_float ri = r[i], gi = g[i], pi = p[i], mui = mu[i];
@@ -683,8 +704,7 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   a = tau_scale + gg;
   b = mug - 2 * pg - eta * tau_scale;
   c = pp - pmu;
-  rad = b * b - 4 * a * c;
-  return (-b + SQRTF(MAX(rad, 0.))) / (2 * a);
+  return root_plus_from_coeffs(a, b, c);
 }
 
 /* status != 0 indicates failure */

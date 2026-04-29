@@ -4,8 +4,9 @@
 #include "scs.h"
 
 /*
- * Test that the fused single-loop root_plus computation gives the same
- * result as the original five-separate-dot_r formulation.
+ * Test that the stable fused single-loop root_plus computation gives the same
+ * result as the original five-separate-dot_r formulation on well-conditioned
+ * cases and improves a cancellation-prone quadratic.
  *
  * root_plus solves: tau = (-b + sqrt(b^2 - 4ac)) / (2a)
  *   where a = tau_scale + g'Rg
@@ -42,14 +43,35 @@ static scs_float root_plus_old(const scs_float *g, const scs_float *p,
   return (-b + SQRTF(MAX(rad, 0.))) / (2 * a);
 }
 
-/* New implementation: fused single loop */
+static scs_float root_plus_stable_coeffs(scs_float a, scs_float b,
+                                         scs_float c) {
+  scs_float rad, sqrt_rad, q;
+  if (!isfinite(a) || !isfinite(b) || !isfinite(c) || a <= 0.) {
+    return NAN;
+  }
+  rad = b * b - 4 * a * c;
+  if (!isfinite(rad)) {
+    return NAN;
+  }
+  if (rad < 0.) {
+    return -b / (2 * a);
+  }
+  sqrt_rad = SQRTF(rad);
+  if (b <= 0.) {
+    return (-b + sqrt_rad) / (2 * a);
+  }
+  q = -0.5 * (b + sqrt_rad);
+  return q != 0. ? c / q : 0.;
+}
+
+/* New implementation: fused single loop with stable quadratic formula */
 static scs_float root_plus_new(const scs_float *g, const scs_float *p,
                                const scs_float *mu, const scs_float *r,
                                scs_int nm, scs_float tau_scale,
                                scs_float eta) {
   scs_int i;
   scs_float gg = 0., mug = 0., pg = 0., pp = 0., pmu = 0.;
-  scs_float a, b, c, rad;
+  scs_float a, b, c;
   for (i = 0; i < nm; ++i) {
     scs_float ri = r[i], gi = g[i], pi = p[i], mui = mu[i];
     gg  += gi  * gi  * ri;
@@ -61,8 +83,7 @@ static scs_float root_plus_new(const scs_float *g, const scs_float *p,
   a = tau_scale + gg;
   b = mug - 2 * pg - eta * tau_scale;
   c = pp - pmu;
-  rad = b * b - 4 * a * c;
-  return (-b + SQRTF(MAX(rad, 0.))) / (2 * a);
+  return root_plus_stable_coeffs(a, b, c);
 }
 
 static const char *test_root_plus_equivalence(void) {
@@ -153,6 +174,17 @@ static const char *test_root_plus_equivalence(void) {
     scs_printf("root_plus case 5: old=%.12e new=%.12e err=%.2e\n",
                old_val, new_val, err);
     mu_assert("root_plus case 5 mismatch", err < 1e-10 * MAX(ABS(old_val), 1.));
+  }
+
+  /* Test case 6: cancellation-prone direct formula */
+  {
+    scs_float stable_val, expected;
+    stable_val = root_plus_stable_coeffs(1., 1e8, 1.);
+    expected = -1e-8;
+    err = ABS(stable_val - expected);
+    scs_printf("root_plus case 6: stable=%.12e expected=%.12e err=%.2e\n",
+               stable_val, expected, err);
+    mu_assert("root_plus case 6 cancellation", err < 1e-14);
   }
 
   return 0;
