@@ -74,6 +74,7 @@ static const char *hs21_tiny_qp_rw(void) {
 
   stgs->write_data_filename = "hs21_tiny_qp";
   stgs->max_iters = 1;
+  stgs->time_limit_secs = 123.;
 
   exitflag = scs(d, k, stgs, sol, &info);
 
@@ -89,6 +90,9 @@ static const char *hs21_tiny_qp_rw(void) {
   if (read_status < 0) {
     return "Data read failure, exit.\n";
   }
+
+  mu_assert("hs21_tiny_qp: time_limit_secs failed to round-trip",
+            ABS(stgs->time_limit_secs - 123.) < 1e-12);
 
   stgs->max_iters = 1000;
   /* solve with read data */
