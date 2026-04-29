@@ -18,8 +18,9 @@ void SCS(write_data)(const ScsData *d, const ScsCone *k,
                      const ScsSettings *stgs);
 scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
                        ScsSettings **stgs);
-void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
-                          const ScsWork *w, scs_int iter,
+scs_int SCS(open_csv_log_file)(ScsWork *w);
+void SCS(close_csv_log_file)(ScsWork *w);
+void SCS(log_data_to_csv)(const ScsCone *k, const ScsWork *w, scs_int iter,
                           SCS(timer) * solve_timer);
 
 #ifdef __cplusplus
