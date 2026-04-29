@@ -54,6 +54,13 @@ static const char *test_validation(void) {
   mu_assert("validation: eps_abs < 0 should fail", exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
+  /* eps_abs NaN */
+  VALIDATION_SETUP();
+  stgs->eps_abs = NAN;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: eps_abs NaN should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
   /* eps_rel < 0 */
   VALIDATION_SETUP();
   stgs->eps_rel = -1;
@@ -101,6 +108,14 @@ static const char *test_validation(void) {
   stgs->scale = 0.0;
   exitflag = scs(d, k, stgs, sol, &info);
   mu_assert("validation: scale <= 0 should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* time_limit_secs NaN */
+  VALIDATION_SETUP();
+  stgs->time_limit_secs = NAN;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: time_limit_secs NaN should fail",
+            exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
   /* acceleration_interval <= 0 */
@@ -187,6 +202,37 @@ static const char *test_validation(void) {
   d->A = SCS_NULL;
   exitflag = scs(d, k, stgs, sol, &info);
   mu_assert("validation: missing A should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A dimensions inconsistent with ScsData */
+  VALIDATION_SETUP();
+  d->A->m = d->m + 1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A dims inconsistent with data should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A has negative row index */
+  VALIDATION_SETUP();
+  d->A->i[0] = -1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A negative row index should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A column pointers must be nondecreasing */
+  VALIDATION_SETUP();
+  d->A->p[0] = 1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A invalid column pointer should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A has non-finite data */
+  VALIDATION_SETUP();
+  d->A->x[0] = NAN;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A NaN entry should fail", exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
 #undef VALIDATION_SETUP

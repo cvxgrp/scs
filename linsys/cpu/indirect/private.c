@@ -67,12 +67,10 @@ static void set_preconditioner(ScsLinSysWork *p) {
       M[i] += A->x[k] * A->x[k] / p->diag_r[A->n + A->i[k]];
     }
     if (P) {
-      /* P is upper triangular stored CSC with rows sorted ascending within
-       * each column, so the diagonal entry (row==col) is always last.
-       * Check only the last entry: O(1) instead of O(nnz_in_col). */
-      scs_int last = P->p[i + 1] - 1;
-      if (last >= P->p[i] && P->i[last] == i) {
-        M[i] += P->x[last];
+      for (k = P->p[i]; k < P->p[i + 1]; ++k) {
+        if (P->i[k] == i) {
+          M[i] += P->x[k];
+        }
       }
     }
     /* finally invert for pre-conditioner */
