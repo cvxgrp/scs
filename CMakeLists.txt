@@ -629,7 +629,8 @@ if(BUILD_TESTING)
   function(scs_add_test TEST_NAME LINK_TARGET)
     add_executable(${TEST_NAME} test/run_tests.c)
     target_compile_definitions(${TEST_NAME} PRIVATE ${COMPILER_OPTS})
-    target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET})
+    target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET}
+                                               $<$<NOT:$<PLATFORM_ID:Windows>>:m>)
     target_include_directories(
       ${TEST_NAME}
       PRIVATE
