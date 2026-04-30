@@ -107,6 +107,10 @@ endif()
 
 set(COMPILER_OPTS CTRLC)
 set(LAPACK_LINK_LIBRARIES "")
+set(SCS_TEST_LINK_LIBRARIES "")
+if(NOT WIN32)
+  list(APPEND SCS_TEST_LINK_LIBRARIES m)
+endif()
 
 # Primitive types
 if(SFLOAT)
@@ -630,7 +634,7 @@ if(BUILD_TESTING)
     add_executable(${TEST_NAME} test/run_tests.c)
     target_compile_definitions(${TEST_NAME} PRIVATE ${COMPILER_OPTS})
     target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET}
-                                               $<$<NOT:$<PLATFORM_ID:Windows>>:m>)
+                                               ${SCS_TEST_LINK_LIBRARIES})
     target_include_directories(
       ${TEST_NAME}
       PRIVATE
