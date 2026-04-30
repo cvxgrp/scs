@@ -12,6 +12,8 @@
 #ifndef SCS_WORK_H_GUARD
 #define SCS_WORK_H_GUARD
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -67,6 +69,7 @@ struct SCS_WORK {
   ScsData *d;                     /* Problem data deep copy NORMALIZED */
   ScsCone *k;                     /* Problem cone deep copy */
   ScsSettings *stgs;      /* contains solver settings specified by user */
+  FILE *log_csv_fout;     /* open CSV log stream for current solve */
   ScsLinSysWork *p;       /* struct populated by linear system solver */
   ScsScaling *scal;       /* contains the re-scaling data */
   ScsConeWork *cone_work; /* workspace for the cone projection step */

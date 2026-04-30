@@ -362,6 +362,7 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
                        ScsInfo *info, scs_int stint, const char *msg,
                        const char *ststr) {
   scs_int status = stint;
+  SCS(close_csv_log_file)(w);
   populate_on_failure(m, n, sol, info, status, ststr);
   set_info_aa_stats(info, w ? w->accel : SCS_NULL);
   scs_printf("Failure:%s\n", msg);
@@ -1315,6 +1316,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   strcpy(info->lin_sys_solver, scs_get_lin_sys_method());
   info->status_val = SCS_UNFINISHED; /* not yet converged */
   update_work(w, sol);
+  SCS(open_csv_log_file)(w);
 
   if (w->stgs->verbose) {
     print_header(w, k);
@@ -1415,17 +1417,17 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     }
 
     /* Log *after* updating scale so residual recalc does not affect alg */
-    if (w->stgs->log_csv_filename) {
+    if (w->log_csv_fout) {
       /* calc residuals every iter if logging to csv */
       populate_residual_struct(w, i);
-      SCS(log_data_to_csv)(k, stgs, w, i, &solve_timer);
+      SCS(log_data_to_csv)(k, w, i, &solve_timer);
     }
   }
 
   /* Final logging after full run */
-  if (w->stgs->log_csv_filename) {
+  if (w->log_csv_fout) {
     populate_residual_struct(w, i);
-    SCS(log_data_to_csv)(k, stgs, w, i, &solve_timer);
+    SCS(log_data_to_csv)(k, w, i, &solve_timer);
   }
 
   if (w->stgs->verbose) {
@@ -1446,12 +1448,14 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     print_footer(info);
   }
 
+  SCS(close_csv_log_file)(w);
   scs_end_interrupt_listener();
   return info->status_val;
 }
 
 void scs_finish(ScsWork *w) {
   if (w) {
+    SCS(close_csv_log_file)(w);
     if (w->cone_work) {
       SCS(finish_cone)(w->cone_work);
     }

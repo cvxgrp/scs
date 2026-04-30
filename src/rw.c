@@ -28,8 +28,13 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   /* Failure */
   return -1;
 }
-void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
-                          const ScsWork *w, scs_int iter,
+scs_int SCS(open_csv_log_file)(ScsWork *w) {
+  return 0;
+}
+void SCS(close_csv_log_file)(ScsWork *w) {
+  /* Do nothing */
+}
+void SCS(log_data_to_csv)(const ScsCone *k, const ScsWork *w, scs_int iter,
                           SCS(timer) * solve_timer) {
   /* Do nothing */
 }
@@ -314,18 +319,35 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   return 0;
 }
 
-void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
-                          const ScsWork *w, scs_int iter,
+scs_int SCS(open_csv_log_file)(ScsWork *w) {
+  if (!w || !w->stgs || !w->stgs->log_csv_filename) {
+    return 0;
+  }
+  SCS(close_csv_log_file)(w);
+  w->log_csv_fout = fopen(w->stgs->log_csv_filename, "w");
+  if (!w->log_csv_fout) {
+    scs_printf("Error: Could not open %s for writing\n",
+               w->stgs->log_csv_filename);
+    return -1;
+  }
+  return 0;
+}
+
+void SCS(close_csv_log_file)(ScsWork *w) {
+  if (w && w->log_csv_fout) {
+    fclose(w->log_csv_fout);
+    w->log_csv_fout = SCS_NULL;
+  }
+}
+
+void SCS(log_data_to_csv)(const ScsCone *k, const ScsWork *w, scs_int iter,
                           SCS(timer) * solve_timer) {
   ScsResiduals *r = w->r_orig;
   ScsResiduals *r_n = w->r_normalized;
   ScsSolution *sol = w->xys_orig;
   ScsSolution *sol_n = w->xys_normalized;
-  /* if iter 0 open to write, else open to append */
-  FILE *fout = fopen(stgs->log_csv_filename, iter == 0 ? "w" : "a");
+  FILE *fout = w->log_csv_fout;
   if (!fout) {
-    scs_printf("Error: Could not open %s for writing\n",
-               stgs->log_csv_filename);
     return;
   }
   scs_int l = w->d->m + w->d->n + 1;
@@ -472,7 +494,6 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
   fprintf(fout, "%.16e,", w->cone_work->newton_stats.residuals[2]);
 #endif
   fprintf(fout, "\n");
-  fclose(fout);
 }
 
 #endif
