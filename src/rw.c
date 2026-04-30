@@ -221,6 +221,38 @@ static scs_int skip_int_array(FILE *fin, size_t file_int_sz, scs_int n) {
   return skip_bytes(fin, (uint64_t)n * (uint64_t)file_int_sz);
 }
 
+static ScsCone *free_cone_null(ScsCone *k) {
+  SCS(free_cone)(k);
+  return SCS_NULL;
+}
+
+static ScsSettings *free_stgs_null(ScsSettings *s) {
+  scs_free(s);
+  return SCS_NULL;
+}
+
+static ScsMatrix *free_matrix_null(ScsMatrix *A) {
+  SCS(free_scs_matrix)(A);
+  return SCS_NULL;
+}
+
+static ScsData *free_data_null(ScsData *d) {
+  SCS(free_data)(d);
+  return SCS_NULL;
+}
+
+static scs_int read_data_cleanup(FILE *fin, ScsData **d, ScsCone **k,
+                                 ScsSettings **stgs) {
+  fclose(fin);
+  SCS(free_data)(*d);
+  SCS(free_cone)(*k);
+  scs_free(*stgs);
+  *d = SCS_NULL;
+  *k = SCS_NULL;
+  *stgs = SCS_NULL;
+  return -1;
+}
+
 static ScsCone *read_scs_cone(FILE *fin, size_t file_int_sz) {
   scs_int box_len;
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
@@ -229,11 +261,11 @@ static ScsCone *read_scs_cone(FILE *fin, size_t file_int_sz) {
   if (read_int(&(k->z), file_int_sz, 1, fin) < 0 ||
       read_int(&(k->l), file_int_sz, 1, fin) < 0 ||
       read_int(&(k->bsize), file_int_sz, 1, fin) < 0) {
-    goto fail;
+    return free_cone_null(k);
   }
   if (k->bsize < 0) {
     scs_printf("Error: negative box cone size in data file\n");
-    goto fail;
+    return free_cone_null(k);
   }
   box_len = MAX(k->bsize - 1, 0);
   if (read_float_array(&(k->bl), box_len, fin) < 0 ||
@@ -246,13 +278,9 @@ static ScsCone *read_scs_cone(FILE *fin, size_t file_int_sz) {
       read_int(&(k->ed), file_int_sz, 1, fin) < 0 ||
       read_int(&(k->psize), file_int_sz, 1, fin) < 0 ||
       read_float_array(&(k->p), k->psize, fin) < 0) {
-    goto fail;
+    return free_cone_null(k);
   }
   return k;
-
-fail:
-  SCS(free_cone)(k);
-  return SCS_NULL;
 }
 
 static scs_int write_scs_stgs(const ScsSettings *s, FILE *fout) {
@@ -304,11 +332,11 @@ static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz,
       read_int(&(s->warm_start), file_int_sz, 1, fin) < 0 ||
       read_int(&(s->acceleration_lookback), file_int_sz, 1, fin) < 0 ||
       read_int(&(s->acceleration_interval), file_int_sz, 1, fin) < 0) {
-    goto fail;
+    return free_stgs_null(s);
   }
   if (legacy_settings) {
     if (read_int(&(s->adaptive_scale), file_int_sz, 1, fin) < 0) {
-      goto fail;
+      return free_stgs_null(s);
     }
   } else if (read_int(&(s->acceleration_type_1), file_int_sz, 1, fin) < 0 ||
              checked_fread(&(s->acceleration_regularization),
@@ -316,13 +344,9 @@ static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz,
              checked_fread(&(s->acceleration_relaxation), sizeof(scs_float), 1,
                            fin) < 0 ||
              read_int(&(s->adaptive_scale), file_int_sz, 1, fin) < 0) {
-    goto fail;
+    return free_stgs_null(s);
   }
   return s;
-
-fail:
-  scs_free(s);
-  return SCS_NULL;
 }
 
 static scs_int write_amatrix(const ScsMatrix *A, FILE *fout) {
@@ -348,33 +372,29 @@ static ScsMatrix *read_amatrix(FILE *fin, size_t file_int_sz) {
     return SCS_NULL;
   if (read_int(&(A->m), file_int_sz, 1, fin) < 0 ||
       read_int(&(A->n), file_int_sz, 1, fin) < 0) {
-    goto fail;
+    return free_matrix_null(A);
   }
   if (A->m < 0 || A->n < 0) {
     scs_printf("Error: negative matrix dimensions in data file\n");
-    goto fail;
+    return free_matrix_null(A);
   }
   A->p = (scs_int *)scs_calloc(A->n + 1, sizeof(scs_int));
   if (!A->p || read_int(A->p, file_int_sz, A->n + 1, fin) < 0) {
-    goto fail;
+    return free_matrix_null(A);
   }
   Anz = A->p[A->n];
   if (Anz < 0) {
     scs_printf("Error: negative matrix nonzero count in data file\n");
-    goto fail;
+    return free_matrix_null(A);
   }
   A->x = (scs_float *)scs_calloc(Anz, sizeof(scs_float));
   A->i = (scs_int *)scs_calloc(Anz, sizeof(scs_int));
   if (!A->x || !A->i ||
       checked_fread(A->x, sizeof(scs_float), Anz, fin) < 0 ||
       read_int(A->i, file_int_sz, Anz, fin) < 0) {
-    goto fail;
+    return free_matrix_null(A);
   }
   return A;
-
-fail:
-  SCS(free_scs_matrix)(A);
-  return SCS_NULL;
 }
 
 static scs_int write_scs_data(const ScsData *d, FILE *fout) {
@@ -403,36 +423,32 @@ static ScsData *read_scs_data(FILE *fin, size_t file_int_sz) {
     return SCS_NULL;
   if (read_int(&(d->m), file_int_sz, 1, fin) < 0 ||
       read_int(&(d->n), file_int_sz, 1, fin) < 0) {
-    goto fail;
+    return free_data_null(d);
   }
   if (d->m < 0 || d->n < 0) {
     scs_printf("Error: negative problem dimensions in data file\n");
-    goto fail;
+    return free_data_null(d);
   }
   d->b = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
   d->c = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   if (!d->b || !d->c ||
       checked_fread(d->b, sizeof(scs_float), d->m, fin) < 0 ||
       checked_fread(d->c, sizeof(scs_float), d->n, fin) < 0) {
-    goto fail;
+    return free_data_null(d);
   }
   d->A = read_amatrix(fin, file_int_sz);
   if (!d->A) {
-    goto fail;
+    return free_data_null(d);
   }
   /* If has_p bit is not set or this hits end of file then has_p = 0 */
   if (read_int(&has_p, file_int_sz, 1, fin) < 0) {
-    goto fail;
+    return free_data_null(d);
   }
   d->P = has_p ? read_amatrix(fin, file_int_sz) : SCS_NULL;
   if (has_p && !d->P) {
-    goto fail;
+    return free_data_null(d);
   }
   return d;
-
-fail:
-  SCS(free_data)(d);
-  return SCS_NULL;
 }
 
 static scs_int write_ext_int_array(const scs_int *x, scs_int n, FILE *fout) {
@@ -587,7 +603,6 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   uint32_t file_float_sz;
   uint32_t file_version_sz;
   char file_version[16];
-  scs_int status = -1;
   scs_int legacy_settings;
   errno = 0;
   FILE *fin = fopen(filename, "rb");
@@ -602,12 +617,12 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   scs_printf("Reading data from %s\n", filename);
   if (checked_fread(&(file_int_sz), sizeof(uint32_t), 1, fin) < 0 ||
       checked_fread(&(file_float_sz), sizeof(uint32_t), 1, fin) < 0) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   if (file_int_sz != 4 && file_int_sz != 8) {
     scs_printf("Error: unsupported file integer size %lu\n",
                (unsigned long)file_int_sz);
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   if (file_int_sz != (uint32_t)sizeof(scs_int)) {
     scs_printf(
@@ -621,18 +636,18 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
         "Error, sizeof(file float) is %lu, but scs expects sizeof(float) %lu, "
         "scs should be recompiled with the correct flags.\n",
         (unsigned long)file_float_sz, (unsigned long)sizeof(scs_float));
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   if (checked_fread(&(file_version_sz), sizeof(uint32_t), 1, fin) < 0) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   if (file_version_sz >= sizeof(file_version)) {
     scs_printf("Error: file version string length %lu exceeds buffer size\n",
                (unsigned long)file_version_sz);
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   if (checked_fread(file_version, 1, file_version_sz, fin) < 0) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   file_version[file_version_sz] = '\0';
   legacy_settings = strcmp(file_version, SCS_VERSION) != 0;
@@ -645,33 +660,22 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
   }
   *k = read_scs_cone(fin, file_int_sz);
   if (!*k) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   *d = read_scs_data(fin, file_int_sz);
   if (!*d) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   *stgs = read_scs_stgs(fin, file_int_sz, legacy_settings);
   if (!*stgs) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   if (read_scs_extensions(fin, file_int_sz, *k, *stgs) < 0) {
-    goto cleanup;
+    return read_data_cleanup(fin, d, k, stgs);
   }
   scs_printf("Finished reading data.\n");
-  status = 0;
-
-cleanup:
   fclose(fin);
-  if (status < 0) {
-    SCS(free_data)(*d);
-    SCS(free_cone)(*k);
-    scs_free(*stgs);
-    *d = SCS_NULL;
-    *k = SCS_NULL;
-    *stgs = SCS_NULL;
-  }
-  return status;
+  return 0;
 }
 
 void SCS(log_data_to_csv)(const ScsCone *k, const ScsSettings *stgs,
