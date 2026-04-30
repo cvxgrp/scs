@@ -189,16 +189,47 @@ endif()
 message(STATUS "COMPILER_OPTS = ${COMPILER_OPTS}")
 message(STATUS "CMAKE_C_FLAGS = ${CMAKE_C_FLAGS}")
 
-# Generate scs_types.h from the template to match the configured type options.
-# This writes directly into include/ so the same header works for both CMake
-# and Make builds. The checked-in scs_types.h uses #ifdef guards and should
-# be restored (git checkout include/scs_types.h) after CMake builds if sharing
-# the source tree with Make.
+# Generate a build-tree include overlay so CMake configuration never modifies
+# the checked-in Make-compatible headers.
+set(SCS_BUILD_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
+set(SCS_GENERATED_TYPES_HDR "${SCS_BUILD_INCLUDE_DIR}/scs_types.h")
+file(MAKE_DIRECTORY "${SCS_BUILD_INCLUDE_DIR}")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/scs_types.h.in
-               ${CMAKE_CURRENT_SOURCE_DIR}/include/scs_types.h NEWLINE_STYLE LF)
+               ${SCS_GENERATED_TYPES_HDR} NEWLINE_STYLE LF)
+
+set(SCS_CONFIGURED_INCLUDE_HDR
+    include/aa.h
+    include/aa_stats.h
+    include/cones.h
+    include/ctrlc.h
+    include/glbopts.h
+    include/linalg.h
+    include/linsys.h
+    include/normalize.h
+    include/rw.h
+    include/scs.h
+    include/scs_blas.h
+    include/scs_work.h
+    include/util.h
+    include/util_spectral_cones.h)
+
+set(SCS_BUILD_INCLUDE_HDR "")
+foreach(_scs_header ${SCS_CONFIGURED_INCLUDE_HDR})
+  get_filename_component(_scs_header_name "${_scs_header}" NAME)
+  set(_scs_build_header "${SCS_BUILD_INCLUDE_DIR}/${_scs_header_name}")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${_scs_header}"
+                 "${_scs_build_header}" COPYONLY)
+  list(APPEND SCS_BUILD_INCLUDE_HDR "${_scs_build_header}")
+endforeach()
 
 # Public headers
-set(${PROJECT_NAME}_PUBLIC_HDR include/aa_stats.h include/scs_types.h include/scs.h)
+set(${PROJECT_NAME}_PUBLIC_HDR
+    "${SCS_BUILD_INCLUDE_DIR}/aa_stats.h"
+    "${SCS_GENERATED_TYPES_HDR}"
+    "${SCS_BUILD_INCLUDE_DIR}/scs.h")
+set(SCS_PUBLIC_INCLUDE_DIRS
+    "$<BUILD_INTERFACE:${SCS_BUILD_INCLUDE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
 
 # Common source files
 set(${PROJECT_NAME}_SRC
@@ -234,25 +265,13 @@ endif()
 
 # Common header files
 set(${PROJECT_NAME}_HDR
-    include/aa.h
-    include/aa_stats.h
-    include/cones.h
-    include/ctrlc.h
-    include/glbopts.h
-    include/linalg.h
-    include/linsys.h
-    include/normalize.h
-    include/rw.h
-    include/scs.h
-    include/scs_blas.h
-    include/scs_types.h
-    include/scs_work.h
-    include/util.h
+    ${SCS_BUILD_INCLUDE_HDR}
+    ${SCS_GENERATED_TYPES_HDR}
     ${LINSYS}/csparse.h
     ${LINSYS}/scs_matrix.h)
 
 # Spectral header files
-set(SPECTRAL_HDR include/util_spectral_cones.h)
+set(SPECTRAL_HDR "${SCS_BUILD_INCLUDE_DIR}/util_spectral_cones.h")
 
 if(USE_SPECTRAL_CONES)
   list(APPEND ${PROJECT_NAME}_HDR ${SPECTRAL_HDR})
@@ -284,8 +303,7 @@ target_include_directories(
 
 target_include_directories(
   ${${PROJECT_NAME}_DIRECT}
-  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+  PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
 
 target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 
@@ -328,8 +346,7 @@ target_include_directories(
 
 target_include_directories(
   ${${PROJECT_NAME}_INDIRECT}
-  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+  PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
 
 target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS}
                                                                -DINDIRECT)
@@ -376,8 +393,7 @@ if(USE_LAPACK)
 
   target_include_directories(
     ${${PROJECT_NAME}_DENSE}
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+    PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
 
   target_compile_definitions(${${PROJECT_NAME}_DENSE} PRIVATE ${COMPILER_OPTS})
 
@@ -435,8 +451,7 @@ if(DEFINED ENV{MKLROOT})
 
   target_include_directories(
     ${${PROJECT_NAME}_MKL}
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+    PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
 
   target_compile_definitions(
     ${${PROJECT_NAME}_MKL}
@@ -519,8 +534,7 @@ if(USE_CUDSS)
 
   target_include_directories(
     ${${PROJECT_NAME}_CUDSS}
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+    PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
 
   target_compile_definitions(${${PROJECT_NAME}_CUDSS} PRIVATE ${COMPILER_OPTS})
 
@@ -576,8 +590,7 @@ if(APPLE AND USE_APPLE_ACCELERATE)
 
   target_include_directories(
     ${${PROJECT_NAME}_ACCEL}
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scs>")
+    PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
 
   target_compile_definitions(${${PROJECT_NAME}_ACCEL} PRIVATE ${COMPILER_OPTS})
 
@@ -633,7 +646,7 @@ if(BUILD_TESTING)
     target_include_directories(
       ${TEST_NAME}
       PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test;${SCS_BUILD_INCLUDE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
     )
     add_test(
       NAME ${TEST_NAME}
