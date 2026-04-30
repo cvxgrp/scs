@@ -601,6 +601,14 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       return -1;
     }
     for (i = 0; i < k->bsize - 1; ++i) {
+      if (isnan(k->bl[i]) || isnan(k->bu[i])) {
+        scs_printf("box cone bounds cannot be NaN\n");
+        return -1;
+      }
+      if (k->bl[i] == INFINITY || k->bu[i] == -INFINITY) {
+        scs_printf("box cone bounds use invalid infinity direction\n");
+        return -1;
+      }
       if (k->bl[i] > k->bu[i]) {
         scs_printf("infeasible: box lower bound larger than upper bound\n");
         return -1;
@@ -673,8 +681,8 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       return -1;
     }
     for (i = 0; i < k->psize; ++i) {
-      if (k->p[i] < -1 || k->p[i] > 1) {
-        scs_printf("power cone error, values must be in [-1,1]\n");
+      if (!isfinite(k->p[i]) || k->p[i] < -1 || k->p[i] > 1) {
+        scs_printf("power cone error, values must be finite and in [-1,1]\n");
         return -1;
       }
     }

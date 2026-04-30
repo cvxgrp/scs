@@ -380,6 +380,12 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
                (long)d->m, (long)d->n);
     return -1;
   }
+  if (d->A && (d->A->m != d->m || d->A->n != d->n)) {
+    scs_printf("A dimensions = (%li, %li), inconsistent with m = %li, "
+               "n = %li\n",
+               (long)d->A->m, (long)d->A->n, (long)d->m, (long)d->n);
+    return -1;
+  }
   if (SCS(validate_lin_sys)(d->A, d->P) < 0) {
     scs_printf("invalid linear system input data\n");
     return -1;
@@ -392,28 +398,32 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("max_iters must be positive\n");
     return -1;
   }
-  if (stgs->eps_abs < 0) {
-    scs_printf("eps_abs tolerance must be positive\n");
+  if (!isfinite(stgs->eps_abs) || stgs->eps_abs < 0) {
+    scs_printf("eps_abs tolerance must be a nonnegative finite number\n");
     return -1;
   }
-  if (stgs->eps_rel < 0) {
-    scs_printf("eps_rel tolerance must be positive\n");
+  if (!isfinite(stgs->eps_rel) || stgs->eps_rel < 0) {
+    scs_printf("eps_rel tolerance must be a nonnegative finite number\n");
     return -1;
   }
-  if (stgs->eps_infeas < 0) {
-    scs_printf("eps_infeas tolerance must be positive\n");
+  if (!isfinite(stgs->eps_infeas) || stgs->eps_infeas < 0) {
+    scs_printf("eps_infeas tolerance must be a nonnegative finite number\n");
     return -1;
   }
-  if (stgs->alpha <= 0 || stgs->alpha >= 2) {
+  if (!isfinite(stgs->alpha) || stgs->alpha <= 0 || stgs->alpha >= 2) {
     scs_printf("alpha must be in (0,2)\n");
     return -1;
   }
-  if (stgs->rho_x <= 0) {
-    scs_printf("rho_x must be positive (1e-3 works well).\n");
+  if (!isfinite(stgs->rho_x) || stgs->rho_x <= 0) {
+    scs_printf("rho_x must be a positive finite number (1e-3 works well).\n");
     return -1;
   }
-  if (stgs->scale <= 0) {
-    scs_printf("scale must be positive (1 works well).\n");
+  if (!isfinite(stgs->scale) || stgs->scale <= 0) {
+    scs_printf("scale must be a positive finite number (1 works well).\n");
+    return -1;
+  }
+  if (!isfinite(stgs->time_limit_secs) || stgs->time_limit_secs < 0) {
+    scs_printf("time_limit_secs must be a nonnegative finite number.\n");
     return -1;
   }
   if (stgs->acceleration_interval <= 0) {

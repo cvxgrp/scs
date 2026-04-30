@@ -1,4 +1,5 @@
 #include "glbopts.h"
+#include "cones.h"
 #include "minunit.h"
 #include "problem_utils.h"
 #include "scs.h"
@@ -54,6 +55,13 @@ static const char *test_validation(void) {
   mu_assert("validation: eps_abs < 0 should fail", exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
+  /* eps_abs NaN */
+  VALIDATION_SETUP();
+  stgs->eps_abs = NAN;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: eps_abs NaN should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
   /* eps_rel < 0 */
   VALIDATION_SETUP();
   stgs->eps_rel = -1;
@@ -103,6 +111,14 @@ static const char *test_validation(void) {
   mu_assert("validation: scale <= 0 should fail", exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
+  /* time_limit_secs NaN */
+  VALIDATION_SETUP();
+  stgs->time_limit_secs = NAN;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: time_limit_secs NaN should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
   /* acceleration_interval <= 0 */
   VALIDATION_SETUP();
   stgs->acceleration_interval = 0;
@@ -147,6 +163,48 @@ static const char *test_validation(void) {
     VALIDATION_CLEANUP();
   }
 
+  /* box cone one-sided infinite bounds are valid */
+  {
+    ScsData d_box = {0};
+    ScsCone k_box = {0};
+    scs_float bl_inf[] = {-INFINITY, -1.0};
+    scs_float bu_inf[] = {1.0, INFINITY};
+    d_box.m = 3;
+    k_box.bsize = 3; /* 1 t-var + 2 bounded vars */
+    k_box.bl = bl_inf;
+    k_box.bu = bu_inf;
+    mu_assert("validation: box infinite bounds should pass",
+              SCS(validate_cones)(&d_box, &k_box) == 0);
+  }
+
+  /* box cone NaN bound */
+  {
+    ScsData d_box = {0};
+    ScsCone k_box = {0};
+    scs_float bl_nan[] = {NAN};
+    scs_float bu_nan[] = {1.0};
+    d_box.m = 2;
+    k_box.bsize = 2; /* 1 t-var + 1 bounded var */
+    k_box.bl = bl_nan;
+    k_box.bu = bu_nan;
+    mu_assert("validation: box NaN bound should fail",
+              SCS(validate_cones)(&d_box, &k_box) < 0);
+  }
+
+  /* box cone infinities must point in the valid bound direction */
+  {
+    ScsData d_box = {0};
+    ScsCone k_box = {0};
+    scs_float bl_bad_inf[] = {INFINITY};
+    scs_float bu_bad_inf[] = {INFINITY};
+    d_box.m = 2;
+    k_box.bsize = 2; /* 1 t-var + 1 bounded var */
+    k_box.bl = bl_bad_inf;
+    k_box.bu = bu_bad_inf;
+    mu_assert("validation: box +inf lower bound should fail",
+              SCS(validate_cones)(&d_box, &k_box) < 0);
+  }
+
   /* power cone p out of range */
   {
     scs_float p_bad[] = {2.0}; /* must be in [-1, 1] */
@@ -187,6 +245,37 @@ static const char *test_validation(void) {
   d->A = SCS_NULL;
   exitflag = scs(d, k, stgs, sol, &info);
   mu_assert("validation: missing A should fail", exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A dimensions inconsistent with ScsData */
+  VALIDATION_SETUP();
+  d->A->m = d->m + 1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A dims inconsistent with data should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A has negative row index */
+  VALIDATION_SETUP();
+  d->A->i[0] = -1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A negative row index should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A column pointers must be nondecreasing */
+  VALIDATION_SETUP();
+  d->A->p[0] = 1;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A invalid column pointer should fail",
+            exitflag == SCS_FAILED);
+  VALIDATION_CLEANUP();
+
+  /* A has non-finite data */
+  VALIDATION_SETUP();
+  d->A->x[0] = NAN;
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("validation: A NaN entry should fail", exitflag == SCS_FAILED);
   VALIDATION_CLEANUP();
 
 #undef VALIDATION_SETUP

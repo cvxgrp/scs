@@ -63,46 +63,46 @@ void SCS(free_scs_matrix)(ScsMatrix *A) {
 /* ======================== Validation ======================== */
 
 scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
-  scs_int i, j, r_max, Anz;
+  scs_int i, j, Anz, Pnz;
   if (!A) {
     scs_printf("A matrix missing\n");
+    return -1;
+  }
+  if (A->m <= 0 || A->n <= 0) {
+    scs_printf("A matrix dimensions must be positive\n");
     return -1;
   }
   if (!A->x || !A->i || !A->p) {
     scs_printf("data incompletely specified\n");
     return -1;
   }
-  /* detects some errors in A col ptrs: */
-  Anz = A->p[A->n];
-  /* Disable this check which is slowish and typically just produces noise. */
-  /*
-  if (Anz > 0) {
-    for (i = 0; i < A->n; ++i) {
-      if (A->p[i] == A->p[i + 1]) {
-        scs_printf("WARN: A->p (column pointers) not strictly increasing, "
-                   "column %li empty\n",
-                   (long)i);
-      } else if (A->p[i] > A->p[i + 1]) {
-        scs_printf("ERROR: A->p (column pointers) decreasing\n");
-        return -1;
-      }
+  if (A->p[0] != 0) {
+    scs_printf("A->p[0] must equal 0\n");
+    return -1;
+  }
+  for (j = 0; j < A->n; ++j) {
+    if (A->p[j] < 0 || A->p[j] > A->p[j + 1]) {
+      scs_printf("A->p (column pointers) must be nonnegative and "
+                 "nondecreasing\n");
+      return -1;
     }
   }
-  */
+  Anz = A->p[A->n];
   if (((scs_float)Anz / A->m > A->n) || (Anz < 0)) {
     scs_printf("Anz (nonzeros in A) = %li, outside of valid range\n",
                (long)Anz);
     return -1;
   }
-  r_max = 0;
   for (i = 0; i < Anz; ++i) {
-    if (A->i[i] > r_max) {
-      r_max = A->i[i];
+    if (A->i[i] < 0 || A->i[i] >= A->m) {
+      scs_printf("A row index %li outside valid range [0, %li]\n",
+                 (long)A->i[i], (long)A->m - 1);
+      return -1;
     }
-  }
-  if (r_max > A->m - 1) {
-    scs_printf("number of rows in A inconsistent with input dimension\n");
-    return -1;
+    if (!isfinite(A->x[i])) {
+      scs_printf("A contains a non-finite entry\n");
+      return -1;
+    }
   }
   if (P) {
     if (!P->x || !P->i || !P->p) {
@@ -118,10 +118,36 @@ scs_int SCS(validate_lin_sys)(const ScsMatrix *A, const ScsMatrix *P) {
       scs_printf("P is not square\n");
       return -1;
     }
+    if (P->p[0] != 0) {
+      scs_printf("P->p[0] must equal 0\n");
+      return -1;
+    }
+    for (j = 0; j < P->n; ++j) {
+      if (P->p[j] < 0 || P->p[j] > P->p[j + 1]) {
+        scs_printf("P->p (column pointers) must be nonnegative and "
+                   "nondecreasing\n");
+        return -1;
+      }
+    }
+    Pnz = P->p[P->n];
+    if (((scs_float)Pnz / P->m > P->n) || (Pnz < 0)) {
+      scs_printf("Pnz (nonzeros in P) = %li, outside of valid range\n",
+                 (long)Pnz);
+      return -1;
+    }
     for (j = 0; j < P->n; j++) { /* cols */
       for (i = P->p[j]; i < P->p[j + 1]; i++) {
+        if (P->i[i] < 0 || P->i[i] >= P->n) {
+          scs_printf("P row index %li outside valid range [0, %li]\n",
+                     (long)P->i[i], (long)P->n - 1);
+          return -1;
+        }
         if (P->i[i] > j) { /* if row > */
           scs_printf("P is not upper triangular\n");
+          return -1;
+        }
+        if (!isfinite(P->x[i])) {
+          scs_printf("P contains a non-finite entry\n");
           return -1;
         }
       }
