@@ -297,6 +297,11 @@ static ScsResiduals *init_residuals(const ScsData *d) {
   r->px = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   r->aty = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
   r->px_aty_ctau = (scs_float *)scs_calloc(d->n, sizeof(scs_float));
+  if (!r->ax || !r->ax_s || !r->ax_s_btau || !r->px || !r->aty ||
+      !r->px_aty_ctau) {
+    free_residuals(r);
+    return SCS_NULL;
+  }
   return r;
 }
 
@@ -332,17 +337,23 @@ static void populate_on_failure(scs_int m, scs_int n, ScsSolution *sol,
       if (!sol->x) {
         sol->x = (scs_float *)scs_calloc(n, sizeof(scs_float));
       }
-      SCS(scale_array)(sol->x, NAN, n);
+      if (sol->x) {
+        SCS(scale_array)(sol->x, NAN, n);
+      }
     }
     if (m > 0) {
       if (!sol->y) {
         sol->y = (scs_float *)scs_calloc(m, sizeof(scs_float));
       }
-      SCS(scale_array)(sol->y, NAN, m);
+      if (sol->y) {
+        SCS(scale_array)(sol->y, NAN, m);
+      }
       if (!sol->s) {
         sol->s = (scs_float *)scs_calloc(m, sizeof(scs_float));
       }
-      SCS(scale_array)(sol->s, NAN, m);
+      if (sol->s) {
+        SCS(scale_array)(sol->s, NAN, m);
+      }
     }
   }
 }
@@ -987,6 +998,11 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
   w->xys_orig = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  if (!w->xys_orig) {
+    scs_printf("ERROR: work memory allocation failure\n");
+    scs_finish(w);
+    return SCS_NULL;
+  }
   w->xys_orig->x = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   w->xys_orig->s = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->xys_orig->y = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
@@ -1012,6 +1028,11 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (w->stgs->normalize) {
     w->xys_normalized = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+    if (!w->xys_normalized) {
+      scs_printf("ERROR: normalized work memory allocation failure\n");
+      scs_finish(w);
+      return SCS_NULL;
+    }
     w->xys_normalized->x = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
     w->xys_normalized->s = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
     w->xys_normalized->y = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));

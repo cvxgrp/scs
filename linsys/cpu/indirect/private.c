@@ -227,6 +227,9 @@ const char *scs_get_lin_sys_method(void) {
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   ScsLinSysWork *p = (ScsLinSysWork *)scs_calloc(1, sizeof(ScsLinSysWork));
+  if (!p) {
+    return SCS_NULL;
+  }
   p->A = A;
   p->P = P;
   p->m = A->m;
@@ -239,25 +242,32 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   /* memory for A transpose */
   p->At = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   p->At->m = A->n;
   p->At->n = A->m;
   p->At->i = (scs_int *)scs_calloc((A->p[A->n]), sizeof(scs_int));
   p->At->p = (scs_int *)scs_calloc((A->m + 1), sizeof(scs_int));
   p->At->x = (scs_float *)scs_calloc((A->p[A->n]), sizeof(scs_float));
+  if (!p->At->i || !p->At->p || !p->At->x) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   transpose(A, p);
 
   /* preconditioner memory */
   p->diag_r = diag_r;
   p->z = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->M = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  set_preconditioner(p);
-
-  p->tot_cg_its = 0;
-  if (!p->p || !p->r || !p->Gp || !p->tmp || !p->At || !p->At->i || !p->At->p ||
-      !p->At->x) {
+  if (!p->z || !p->M) {
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
+  set_preconditioner(p);
+
+  p->tot_cg_its = 0;
   return p;
 }
 

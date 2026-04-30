@@ -6,6 +6,9 @@
 
 static scs_int _ldl_init(ScsMatrix *A, scs_int *P, scs_float **info) {
   *info = (scs_float *)scs_calloc(AMD_INFO, sizeof(scs_float));
+  if (!*info) {
+    return -1;
+  }
   return amd_order(A->n, A->p, A->i, P, (scs_float *)SCS_NULL, *info);
 }
 
@@ -17,6 +20,9 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
   p->Lnz = (scs_int *)scs_calloc(n, sizeof(scs_int));
   p->iwork = (scs_int *)scs_calloc(3 * n, sizeof(scs_int));
   L->p = (scs_int *)scs_calloc((1 + n), sizeof(scs_int));
+  if (!p->etree || !p->Lnz || !p->iwork || !L->p) {
+    return -1;
+  }
   nzmax = QDLDL_etree(n, kkt->p, kkt->i, p->iwork, p->Lnz, p->etree);
   if (nzmax < 0) {
     scs_printf("Error in elimination tree calculation.\n");
@@ -34,6 +40,9 @@ static scs_int ldl_prepare(ScsLinSysWork *p) {
   p->D = (scs_float *)scs_calloc(n, sizeof(scs_float));
   p->bwork = (QDLDL_bool *)scs_calloc(n, sizeof(QDLDL_bool));
   p->fwork = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  if (!L->x || !L->i || !p->Dinv || !p->D || !p->bwork || !p->fwork) {
+    return -1;
+  }
   return nzmax;
 }
 
@@ -174,13 +183,20 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 #endif
   Pinv = cs_pinv(p->perm, A->n + A->m);
   idx_mapping = (scs_int *)scs_calloc(kkt_nnz, sizeof(scs_int));
-  if (!idx_mapping) {
+  if (!Pinv || !idx_mapping) {
     SCS(cs_spfree)(kkt);
     scs_free(Pinv);
     scs_free(info);
     return SCS_NULL;
   }
   kkt_perm = cs_symperm(kkt, Pinv, idx_mapping, 1);
+  if (!kkt_perm) {
+    SCS(cs_spfree)(kkt);
+    scs_free(Pinv);
+    scs_free(info);
+    scs_free(idx_mapping);
+    return SCS_NULL;
+  }
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
   }
@@ -207,16 +223,25 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->m = A->m;
   p->n = A->n;
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  p->perm = (scs_int *)scs_calloc(sizeof(scs_int), n_plus_m);
+  p->perm = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
   p->L = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
   p->bp = (scs_float *)scs_calloc(n_plus_m, sizeof(scs_float));
   p->diag_r_idxs = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
   p->factorizations = 0;
+  if (!p->diag_p || !p->perm || !p->L || !p->bp || !p->diag_r_idxs) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   p->L->m = n_plus_m;
   p->L->n = n_plus_m;
   p->kkt = permute_kkt(A, P, p, diag_r);
+  if (!p->kkt) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   ldl_prepare_status = ldl_prepare(p);
-  ldl_status = ldl_factor(p, A->n);
+  ldl_status =
+      ldl_prepare_status < 0 ? ldl_prepare_status : ldl_factor(p, A->n);
   if (ldl_prepare_status < 0 || ldl_status < 0) {
     scs_printf("Error in LDL initial factorization.\n");
     scs_free_lin_sys_work(p);
