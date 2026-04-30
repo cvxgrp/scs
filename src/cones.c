@@ -601,8 +601,12 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
       return -1;
     }
     for (i = 0; i < k->bsize - 1; ++i) {
-      if (!isfinite(k->bl[i]) || !isfinite(k->bu[i])) {
-        scs_printf("box cone bounds must be finite\n");
+      if (isnan(k->bl[i]) || isnan(k->bu[i])) {
+        scs_printf("box cone bounds cannot be NaN\n");
+        return -1;
+      }
+      if (k->bl[i] == INFINITY || k->bu[i] == -INFINITY) {
+        scs_printf("box cone bounds use invalid infinity direction\n");
         return -1;
       }
       if (k->bl[i] > k->bu[i]) {
