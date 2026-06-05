@@ -94,6 +94,18 @@ typedef struct {
   scs_float acceleration_regularization;
   /** AA relaxation factor in [0, 2]. 1.0 recovers vanilla AA. */
   scs_float acceleration_relaxation;
+  /** Trust-region cap on the AA step magnitude, opt-in. When finite and
+   *  positive, the AA solve rejects steps where the iterate displacement
+   *  ‖D γ‖_2 exceeds this multiple of the current residual ‖g‖_2, and the
+   *  Tikhonov regularization adapts via accept/reject feedback (start
+   *  large = AA ≈ DRS, shrink on accept, grow on rejection). Default
+   *  INFINITY disables both mechanisms; the original
+   *  ε·‖S‖_F·‖Y‖_F regularization path is then used unchanged. Useful for
+   *  slow-contraction maps where AA can produce large but unproductive γ
+   *  that the safeguard alone fails to catch; ~10 is a reasonable opt-in
+   *  for ADMM/DRS callers. Must be positive (INFINITY is accepted; NaN
+   *  and non-positive values are rejected). */
+  scs_float acceleration_trust_factor;
   /** String, if set will dump raw prob data to this file. */
   const char *write_data_filename;
   /** String, if set will log data to this csv file (makes SCS very slow). */

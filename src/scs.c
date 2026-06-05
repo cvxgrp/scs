@@ -447,6 +447,15 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("acceleration_relaxation must be in [0, 2].\n");
     return -1;
   }
+  /* acceleration_trust_factor: INFINITY = no cap (default), positive
+   * finite = trust-region + adaptive-r mode in aa. NaN and non-positive
+   * are rejected. */
+  if (isnan(stgs->acceleration_trust_factor) ||
+      stgs->acceleration_trust_factor <= 0) {
+    scs_printf("acceleration_trust_factor must be positive (INFINITY for "
+               "no cap, the default).\n");
+    return -1;
+  }
   return 0;
 }
 #endif
@@ -1102,9 +1111,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                              w->stgs->acceleration_type_1,
                              w->stgs->acceleration_regularization,
                              w->stgs->acceleration_relaxation,
-                             AA_SAFEGUARD_FACTOR,
-                             AA_MAX_WEIGHT_NORM, AA_IR_MAX_STEPS,
-                             VERBOSITY))) {
+                             AA_SAFEGUARD_FACTOR, AA_MAX_WEIGHT_NORM,
+                             w->stgs->acceleration_trust_factor,
+                             AA_IR_MAX_STEPS, VERBOSITY))) {
       if (w->stgs->verbose) {
         scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
       }
