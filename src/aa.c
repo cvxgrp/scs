@@ -53,7 +53,8 @@ typedef void *ACCEL_WORK;
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
                 aa_float regularization, aa_float relaxation,
                 aa_float safeguard_factor, aa_float max_weight_norm,
-                aa_int ir_max_steps, aa_int verbosity) {
+                aa_float trust_factor, aa_int ir_max_steps,
+                aa_int verbosity) {
   return SCS_NULL;
 }
 aa_float aa_apply(aa_float *f, const aa_float *x, AaWork *a) {
@@ -180,6 +181,8 @@ struct ACCEL_WORK {
   aa_float regularization;   /* regularization */
   aa_float safeguard_factor; /* safeguard tolerance factor */
   aa_float max_weight_norm;  /* maximum norm of AA weights */
+  aa_float trust_factor;     /* opt-in trust region + adaptive r; INFINITY disables */
+  aa_float r_adaptive;       /* adaptive r state, used only when trust active */
 
   aa_float *x;     /* x input to map*/
   aa_float *f;     /* f(x) output of map */
@@ -279,15 +282,32 @@ static aa_float frob_from_col_norms(const aa_float *nrm_col, aa_int mem) {
  * fresh nrm2 over dim·mem entries. */
 static aa_float compute_regularization(AaWork *a) {
   TIME_TIC
-  aa_float nrm_y = frob_from_col_norms(a->nrm_y_col, a->mem);
-  aa_float nrm_a = a->type1 ? frob_from_col_norms(a->nrm_s_col, a->mem) : nrm_y;
-  aa_float r = a->regularization * nrm_a * nrm_y;
+  aa_float r;
+  if (isfinite(a->trust_factor)) {
+    /* Trust-region mode: r adapts via accept/reject feedback */
+    r = a->r_adaptive;
+  } else {
+    /* Default mode: ε · ||S||_F · ||Y||_F (sym across both types) */
+    aa_float nrm_y = frob_from_col_norms(a->nrm_y_col, a->mem);
+    aa_float nrm_s = frob_from_col_norms(a->nrm_s_col, a->mem);
+    r = a->regularization * nrm_s * nrm_y;
+  }
   if (a->verbosity > 2) {
-    scs_printf("iter: %i, ||A||_F %.2e, ||Y||_F %.2e, r: %.2e\n",
-               (int)a->iter, nrm_a, nrm_y, r);
+    scs_printf("iter: %i, r %.2e\n", (int)a->iter, r);
   }
   TIME_TOC
   return r;
+}
+
+static void trust_grow(AaWork *a) {
+  if (!isfinite(a->trust_factor)) return;
+  a->r_adaptive *= 10.0;
+  if (a->r_adaptive > 1e30) a->r_adaptive = 1e30;
+}
+static void trust_shrink(AaWork *a) {
+  if (!isfinite(a->trust_factor)) return;
+  a->r_adaptive *= 0.9;
+  if (a->r_adaptive < 1e-12) a->r_adaptive = 1e-12;
 }
 
 /* Build [M; √r I_len] column-major into `dst` with fixed leading dim
@@ -630,11 +650,31 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
     } else {
       a->n_reject_weight_cap++;
     }
+    trust_grow(a);
     a->success = 0;
     aa_reset(a);
     TIME_TOC
     if (!isfinite(aa_norm)) aa_norm = -1.0;
     return (aa_norm < 0) ? aa_norm : -aa_norm;
+  }
+
+  /* Trust region: only in trust mode (trust_factor finite). Reject steps
+   * whose iterate displacement ||D γ|| dwarfs the current residual ||g||. */
+  if (isfinite(a->trust_factor)) {
+    aa_float zerof = 0.0;
+    aa_float d_gamma_norm;
+    BLAS(gemv)
+    ("NoTrans", &bdim, &blen, &onef, a->D, &bdim, gamma, &one, &zerof,
+     a->c_aug, &one);
+    d_gamma_norm = BLAS(nrm2)(&bdim, a->c_aug, &one);
+    if (isfinite(d_gamma_norm) && d_gamma_norm > a->trust_factor * a->norm_g) {
+      a->n_reject_weight_cap++;
+      trust_grow(a);
+      a->success = 0;
+      aa_reset(a);
+      TIME_TOC
+      return -aa_norm;
+    }
   }
 
   /* f -= D γ */
@@ -657,7 +697,8 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
                 aa_float regularization, aa_float relaxation,
                 aa_float safeguard_factor, aa_float max_weight_norm,
-                aa_int ir_max_steps, aa_int verbosity) {
+                aa_float trust_factor, aa_int ir_max_steps,
+                aa_int verbosity) {
   TIME_TIC
   AaWork *a;
   aa_int mem_clamped = MIN(mem, dim);
@@ -671,7 +712,9 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
    * is ignored entirely. */
   if (dim <= 0 || mem < 0 || !isfinite(regularization) ||
       relaxation < 0 || relaxation > 2 ||
-      safeguard_factor < 0 || max_weight_norm <= 0 ||
+      safeguard_factor < 0 ||
+      isnan(max_weight_norm) || max_weight_norm <= 0 ||
+      isnan(trust_factor) || trust_factor <= 0 ||
       ir_max_steps < 0 ||
       (mem_clamped > 0 && min_len < 1)) {
     scs_printf("Invalid AA parameters.\n");
@@ -695,6 +738,8 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
   a->relaxation = relaxation;
   a->safeguard_factor = safeguard_factor;
   a->max_weight_norm = max_weight_norm;
+  a->trust_factor = trust_factor;
+  a->r_adaptive = 1.0;
   a->ir_max_steps = ir_max_steps;
   a->success = 0;
   a->verbosity = verbosity;
@@ -892,10 +937,12 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
                  (int)a->iter, norm_diff, a->norm_g);
     }
     a->n_safeguard_reject++;
+    trust_grow(a);
     aa_reset(a);
     TIME_TOC
     return -1;
   }
+  trust_shrink(a);
   TIME_TOC
   return 0;
 }

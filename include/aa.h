@@ -50,7 +50,14 @@ typedef struct ACCEL_WORK AaWork;
  * @param relaxation        float \in [0,2], mixing parameter (1.0 is vanilla)
  * @param safeguard_factor  factor that controls safeguarding checks
  *                          larger is more aggressive but less stable
- * @param max_weight_norm   float, maximum norm of AA weights
+ * @param max_weight_norm   positive float, maximum L2 norm of AA weights γ;
+ *                          the solve is rejected when ||γ||_2 >= max_weight_norm.
+ *                          Pass INFINITY to disable the hard cap.
+ * @param trust_factor      positive float, opt-in trust region + adaptive
+ *                          regularization. When finite, the solve rejects
+ *                          steps with ||D γ||_2 > trust_factor * ||g||_2 and
+ *                          AA's regularization adapts via accept/reject
+ *                          feedback. Pass INFINITY to disable.
  * @param ir_max_steps      max iterative refinement passes on the γ solve.
  *                          0 disables IR. Each step is O(mem²) and loops
  *                          until the correction stops contracting, so on
@@ -66,7 +73,8 @@ typedef struct ACCEL_WORK AaWork;
 AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
                 aa_float regularization, aa_float relaxation,
                 aa_float safeguard_factor, aa_float max_weight_norm,
-                aa_int ir_max_steps, aa_int verbosity);
+                aa_float trust_factor, aa_int ir_max_steps,
+                aa_int verbosity);
 
 /**
  * Apply Anderson Acceleration. The usage pattern should be as follows:
