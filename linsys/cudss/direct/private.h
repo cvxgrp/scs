@@ -12,12 +12,10 @@ extern "C" {
 
 /* cuDSS 0.8.0 renamed cudaDataType_t to cudssDataType_t (so CUDA_R_* enum
  * values become CUDSS_R_*) and added an offsetType parameter to
- * cudssMatrixCreateCsr. Detect via CUDSS_VER_MAJOR / CUDSS_VER_MINOR
- * (defined in <cudss.h>) and pick the right type tokens here so the call
- * sites stay readable. */
-#if defined(CUDSS_VER_MAJOR) &&                                                \
-    ((CUDSS_VER_MAJOR > 0) ||                                                  \
-     (CUDSS_VER_MAJOR == 0 && CUDSS_VER_MINOR >= 8))
+ * cudssMatrixCreateCsr. cudss.h exposes CUDSS_VERSION = MAJOR*10000 +
+ * MINOR*100 + PATCH; gate on that so the same source still builds against
+ * older cuDSS (<=0.7.x). */
+#if defined(CUDSS_VERSION) && CUDSS_VERSION >= 800
 #define SCS_CUDSS_NEW_API 1
 #else
 #define SCS_CUDSS_NEW_API 0
