@@ -151,11 +151,23 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   cudssMatrixType_t mtype = CUDSS_MTYPE_SYMMETRIC;
   cudssMatrixViewType_t mview = CUDSS_MVIEW_LOWER;
   cudssIndexBase_t base = CUDSS_BASE_ZERO;
+  /* cuDSS 0.8.0+ added an offsetType parameter before indexType. The two
+   * arrays use the same scs_int type for us, so we pass SCS_CUDA_INDEX
+   * twice. */
+#if SCS_CUDSS_NEW_API
+  CUDSS_CHECK_ABORT(cudssMatrixCreateCsr(
+                        &p->d_kkt_mat, p->kkt->m, p->kkt->n, nnz,
+                        p->d_kkt_row_ptr, NULL, p->d_kkt_col_ind, p->d_kkt_val,
+                        SCS_CUDA_INDEX, SCS_CUDA_INDEX, SCS_CUDA_FLOAT,
+                        mtype, mview, base),
+                    p, "cudssMatrixCreateCsr");
+#else
   CUDSS_CHECK_ABORT(cudssMatrixCreateCsr(
                         &p->d_kkt_mat, p->kkt->m, p->kkt->n, nnz,
                         p->d_kkt_row_ptr, NULL, p->d_kkt_col_ind, p->d_kkt_val,
                         SCS_CUDA_INDEX, SCS_CUDA_FLOAT, mtype, mview, base),
                     p, "cudssMatrixCreateCsr");
+#endif
 
   /* Allocate device memory for vectors */
   CUDA_CHECK_ABORT(
