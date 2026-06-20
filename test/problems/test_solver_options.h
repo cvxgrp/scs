@@ -278,6 +278,85 @@ static const char *test_invalid_aa_relaxation_rejected(void) {
 }
 
 /*
+ * Sweep acceleration_trust_factor: INFINITY (default, disables the trust
+ * region) and a finite positive value (enables it). Both must converge.
+ */
+static const char *test_aa_trust_factor_sweep(void) {
+  scs_float factors[] = {INFINITY, 10.0};
+  scs_int n = sizeof(factors) / sizeof(factors[0]);
+  scs_int j;
+  for (j = 0; j < n; ++j) {
+    ScsCone *k;
+    ScsData *d;
+    ScsSettings *stgs;
+    ScsSolution *sol;
+    ScsInfo info = {0};
+    scs_int exitflag;
+    const char *fail;
+
+    _OPTS_SETUP(-2.0, 1.0);
+    stgs->verbose = 0;
+    stgs->acceleration_trust_factor = factors[j];
+
+    exitflag = scs(d, k, stgs, sol, &info);
+    mu_assert("test_aa_trust_factor_sweep: expected SCS_SOLVED",
+              exitflag == SCS_SOLVED);
+    fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+    _OPTS_CLEANUP();
+    if (fail) return fail;
+  }
+  return 0;
+}
+
+/*
+ * Test that NaN / non-positive acceleration_trust_factor is rejected by
+ * validate. INFINITY is accepted (= "no cap", the default).
+ */
+static const char *test_invalid_aa_trust_factor_rejected(void) {
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
+  ScsInfo info = {0};
+  scs_int exitflag;
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_trust_factor = -1.0;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("test_invalid_aa_trust_factor_rejected: negative factor "
+            "should be SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_trust_factor = 0.0;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("test_invalid_aa_trust_factor_rejected: zero factor "
+            "should be SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+
+  _OPTS_SETUP(-2.0, 1.0);
+  stgs->verbose = 0;
+  stgs->acceleration_trust_factor = NAN;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+  mu_assert("test_invalid_aa_trust_factor_rejected: NaN factor "
+            "should be SCS_FAILED",
+            exitflag == SCS_FAILED);
+
+  _OPTS_CLEANUP();
+  return 0;
+}
+
+/*
  * Test that NaN/negative acceleration_regularization is rejected by validate.
  */
 static const char *test_invalid_aa_regularization_rejected(void) {

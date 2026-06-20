@@ -227,6 +227,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * type-II will typically lower this. */
 #define AA_REGULARIZATION (1e-8)
 #define AA_RELAXATION (1.0)
+/* Default opt-in trust-region multiplier for the AA solve. INFINITY (the
+ * default) means "no cap"; the aa library uses its original
+ * ε·||S||_F·||Y||_F regularization. A finite positive value (e.g. 10.0)
+ * turns on the trust-region + adaptive-r mode in aa, which can recover
+ * problems where AA produces large unproductive γ but slightly slows
+ * down the standard type-I path. Left at INFINITY by default so that
+ * existing callers see no behavior change. */
+#define AA_TRUST_FACTOR (INFINITY)
 /* Reject AA steps when the output norm exceeds this multiple of the input
  * norm. 1.0 means the AA step must not increase the iterate norm. */
 #define AA_SAFEGUARD_FACTOR (1.)

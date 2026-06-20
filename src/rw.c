@@ -314,6 +314,13 @@ static scs_int write_scs_stgs(const ScsSettings *s, FILE *fout) {
       checked_fwrite(&(s->adaptive_scale), sizeof(scs_int), 1, fout) < 0) {
     return -1;
   }
+  /* acceleration_trust_factor is written last so the reader can fall back
+   * to the default INFINITY when loading data files written by an older
+   * scs that didn't include this field. */
+  if (checked_fwrite(&(s->acceleration_trust_factor), sizeof(scs_float), 1,
+                     fout) < 0) {
+    return -1;
+  }
   /* Do not write the write_data_filename */
   /* Do not write the log_csv_filename */
   return 0;
@@ -350,6 +357,12 @@ static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz,
                            fin) < 0 ||
              read_int(&(s->adaptive_scale), file_int_sz, 1, fin) < 0) {
     return free_stgs_null(s);
+  }
+  /* acceleration_trust_factor is read last and tolerates EOF: legacy
+   * files and files written by an older scs that lacked this field keep
+   * the default INFINITY already set by scs_set_default_settings above. */
+  if (fread(&(s->acceleration_trust_factor), sizeof(scs_float), 1, fin) != 1) {
+    s->acceleration_trust_factor = AA_TRUST_FACTOR;
   }
   return s;
 }
