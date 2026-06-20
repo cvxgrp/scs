@@ -398,16 +398,19 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("max_iters must be positive\n");
     return -1;
   }
-  if (!isfinite(stgs->eps_abs) || stgs->eps_abs < 0) {
-    scs_printf("eps_abs tolerance must be a nonnegative finite number\n");
+  /* +inf is a legitimate "disable this stopping criterion" sentinel for the
+   * eps_* tolerances (every comparison becomes vacuously true); NaN is not,
+   * because comparisons against NaN are always false. */
+  if (isnan(stgs->eps_abs) || stgs->eps_abs < 0) {
+    scs_printf("eps_abs tolerance must be nonnegative\n");
     return -1;
   }
-  if (!isfinite(stgs->eps_rel) || stgs->eps_rel < 0) {
-    scs_printf("eps_rel tolerance must be a nonnegative finite number\n");
+  if (isnan(stgs->eps_rel) || stgs->eps_rel < 0) {
+    scs_printf("eps_rel tolerance must be nonnegative\n");
     return -1;
   }
-  if (!isfinite(stgs->eps_infeas) || stgs->eps_infeas < 0) {
-    scs_printf("eps_infeas tolerance must be a nonnegative finite number\n");
+  if (isnan(stgs->eps_infeas) || stgs->eps_infeas < 0) {
+    scs_printf("eps_infeas tolerance must be nonnegative\n");
     return -1;
   }
   if (!isfinite(stgs->alpha) || stgs->alpha <= 0 || stgs->alpha >= 2) {
@@ -422,8 +425,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("scale must be a positive finite number (1 works well).\n");
     return -1;
   }
-  if (!isfinite(stgs->time_limit_secs) || stgs->time_limit_secs < 0) {
-    scs_printf("time_limit_secs must be a nonnegative finite number.\n");
+  /* time_limit_secs: 0 disables the limit; +inf is equivalent (every elapsed
+   * comparison stays false). NaN is not allowed. */
+  if (isnan(stgs->time_limit_secs) || stgs->time_limit_secs < 0) {
+    scs_printf("time_limit_secs must be nonnegative.\n");
     return -1;
   }
   if (stgs->acceleration_interval <= 0) {
