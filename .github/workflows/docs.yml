@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install OS dependencies
         run: |
           sudo apt-get install doxygen
@@ -23,7 +23,7 @@ jobs:
         run: |
           cd docs/src && make docs && touch ../.nojekyll
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4.7.6
+        uses: JamesIves/github-pages-deploy-action@v4.8.0
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: docs # The folder the action should deploy.

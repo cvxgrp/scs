@@ -42,7 +42,7 @@ jobs:
         echo "LD_LIBRARY_PATH=$ONEAPI/mkl/latest/lib/intel64:$ONEAPI/compiler/latest/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     - name: Checkout project code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Build MKL library
       run: |
