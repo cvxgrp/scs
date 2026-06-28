@@ -1,6 +1,3 @@
-% First, make sure SCS is in the path so MATLAB can call it
-addpath("/Users/bodonoghue/git/scs-matlab")
-
 % Set up data
 data.P = sparse([3., -1.; -1., 2.]);
 data.A = sparse([-1., 1.; 1., 0.; 0., 1.]);
