@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: Jimver/cuda-toolkit@v0.2.30
+      - uses: actions/checkout@v7
+      - uses: Jimver/cuda-toolkit@v0.2.35
         id: cuda-toolkit
         with:
           method: network

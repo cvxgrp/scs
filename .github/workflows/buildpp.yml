@@ -12,7 +12,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: |
           sudo apt-get install libopenblas-dev liblapack-dev
           export CC=g++
@@ -25,7 +25,7 @@ jobs:
 
   #  runs-on: windows-latest
   #  steps:
-  #    - uses: actions/checkout@v6
+  #    - uses: actions/checkout@v7
   #    - run: choco install clapack
   #    - run: make
   #    - run: make test
@@ -34,7 +34,7 @@ jobs:
   mac:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: |
           brew install openblas lapack
           export CC=clang++
