@@ -398,16 +398,19 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("max_iters must be positive\n");
     return -1;
   }
-  if (!isfinite(stgs->eps_abs) || stgs->eps_abs < 0) {
-    scs_printf("eps_abs tolerance must be a nonnegative finite number\n");
+  /* +inf is a legitimate "disable this stopping criterion" sentinel for the
+   * eps_* tolerances (every comparison becomes vacuously true); NaN is not,
+   * because comparisons against NaN are always false. */
+  if (isnan(stgs->eps_abs) || stgs->eps_abs < 0) {
+    scs_printf("eps_abs tolerance must be nonnegative\n");
     return -1;
   }
-  if (!isfinite(stgs->eps_rel) || stgs->eps_rel < 0) {
-    scs_printf("eps_rel tolerance must be a nonnegative finite number\n");
+  if (isnan(stgs->eps_rel) || stgs->eps_rel < 0) {
+    scs_printf("eps_rel tolerance must be nonnegative\n");
     return -1;
   }
-  if (!isfinite(stgs->eps_infeas) || stgs->eps_infeas < 0) {
-    scs_printf("eps_infeas tolerance must be a nonnegative finite number\n");
+  if (isnan(stgs->eps_infeas) || stgs->eps_infeas < 0) {
+    scs_printf("eps_infeas tolerance must be nonnegative\n");
     return -1;
   }
   if (!isfinite(stgs->alpha) || stgs->alpha <= 0 || stgs->alpha >= 2) {
@@ -422,8 +425,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("scale must be a positive finite number (1 works well).\n");
     return -1;
   }
-  if (!isfinite(stgs->time_limit_secs) || stgs->time_limit_secs < 0) {
-    scs_printf("time_limit_secs must be a nonnegative finite number.\n");
+  /* time_limit_secs: 0 disables the limit; +inf is equivalent (every elapsed
+   * comparison stays false). NaN is not allowed. */
+  if (isnan(stgs->time_limit_secs) || stgs->time_limit_secs < 0) {
+    scs_printf("time_limit_secs must be nonnegative.\n");
     return -1;
   }
   if (stgs->acceleration_interval <= 0) {
@@ -445,6 +450,15 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
       stgs->acceleration_relaxation < 0 ||
       stgs->acceleration_relaxation > 2) {
     scs_printf("acceleration_relaxation must be in [0, 2].\n");
+    return -1;
+  }
+  /* acceleration_trust_factor: INFINITY = no cap (default), positive
+   * finite = trust-region + adaptive-r mode in aa. NaN and non-positive
+   * are rejected. */
+  if (isnan(stgs->acceleration_trust_factor) ||
+      stgs->acceleration_trust_factor <= 0) {
+    scs_printf("acceleration_trust_factor must be positive (INFINITY for "
+               "no cap, the default).\n");
     return -1;
   }
   return 0;
@@ -1102,9 +1116,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                              w->stgs->acceleration_type_1,
                              w->stgs->acceleration_regularization,
                              w->stgs->acceleration_relaxation,
-                             AA_SAFEGUARD_FACTOR,
-                             AA_MAX_WEIGHT_NORM, AA_IR_MAX_STEPS,
-                             VERBOSITY))) {
+                             AA_SAFEGUARD_FACTOR, AA_MAX_WEIGHT_NORM,
+                             w->stgs->acceleration_trust_factor,
+                             AA_IR_MAX_STEPS, VERBOSITY))) {
       if (w->stgs->verbose) {
         scs_printf("WARN: aa_init returned NULL, no acceleration applied.\n");
       }
