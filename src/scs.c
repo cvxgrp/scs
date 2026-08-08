@@ -418,6 +418,11 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("rho_x must be a positive finite number (1e-3 works well).\n");
     return -1;
   }
+  if (stgs->adaptive_diag_scale < 0 || stgs->adaptive_diag_scale > 2) {
+    scs_printf("adaptive_diag_scale must be 0 (off), 1 (rows), or "
+               "2 (rows + columns).\n");
+    return -1;
+  }
   if (!isfinite(stgs->scale) || stgs->scale <= 0) {
     scs_printf("scale must be a positive finite number (1 works well).\n");
     return -1;
@@ -973,9 +978,23 @@ static void set_diag_r(ScsWork *w) {
   for (i = 0; i < w->d->n; ++i) {
     w->diag_r[i] = w->stgs->rho_x;
   }
+  if (w->col_mults) {
+    /* per-column dynamic rescaling: rho_x_j = rho_x / f_j, the metric
+     * equivalent of scaling column j of the data by sqrt(f_j) */
+    for (i = 0; i < w->d->n; ++i) {
+      w->diag_r[i] /= w->col_mults[i];
+    }
+  }
   /* use cone information to set R_y */
   SCS(set_r_y)(w->cone_work, w->stgs->scale, &(w->diag_r[w->d->n]));
-  /* if modified need to SCS(enforce_cone_boundaries)(...) */
+  if (w->scale_mults) {
+    /* per-row multipliers act like a per-row scale: R_y_i = base_i / f_i.
+     * Multipliers are kept uniform within cone blocks (enforced at update
+     * time) so no SCS(enforce_cone_boundaries) needed here. */
+    for (i = 0; i < w->d->m; ++i) {
+      w->diag_r[w->d->n + i] /= w->scale_mults[i];
+    }
+  }
   w->diag_r[w->d->n + w->d->m] = TAU_FACTOR;
 }
 
@@ -1040,6 +1059,35 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->r_orig = init_residuals(w->d);
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
+  if (w->stgs->adaptive_diag_scale) {
+    if (!w->stgs->adaptive_scale) {
+      scs_printf("WARN: adaptive_diag_scale requires adaptive_scale, "
+                 "disabling adaptive_diag_scale.\n");
+      w->stgs->adaptive_diag_scale = 0;
+    } else {
+      scs_int j;
+      w->scale_mults = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
+      if (!w->scale_mults) {
+        scs_printf("ERROR: work memory allocation failure\n");
+        scs_finish(w);
+        return SCS_NULL;
+      }
+      for (j = 0; j < w->d->m; ++j) {
+        w->scale_mults[j] = 1.0;
+      }
+      if (w->stgs->adaptive_diag_scale >= 2) {
+        w->col_mults = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
+        if (!w->col_mults) {
+          scs_printf("ERROR: work memory allocation failure\n");
+          scs_finish(w);
+          return SCS_NULL;
+        }
+        for (j = 0; j < w->d->n; ++j) {
+          w->col_mults[j] = 1.0;
+        }
+      }
+    }
+  }
 
   if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
       !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
@@ -1161,6 +1209,25 @@ static scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
+/* Relative primal residual of constraint row i in the normalized space
+ * (where diag_r acts). All quantities carry tau consistently. */
+static scs_float row_rel_res(const ScsWork *w, scs_int i) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_float den = MAX(ABS(r->ax[i]), ABS(w->xys_normalized->s[i]));
+  den = MAX(den, ABS(w->d->b[i]) * r->tau);
+  den = MAX(den, _DIV_EPS_TOL);
+  return MAX(ABS(r->ax_s_btau[i]), _DIV_EPS_TOL) / den;
+}
+
+/* Relative dual residual of column j in the normalized space. */
+static scs_float col_rel_res(const ScsWork *w, scs_int j) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_float den = MAX(ABS(r->px[j]), ABS(r->aty[j]));
+  den = MAX(den, ABS(w->d->c[j]) * r->tau);
+  den = MAX(den, _DIV_EPS_TOL);
+  return MAX(ABS(r->px_aty_ctau[j]), _DIV_EPS_TOL) / den;
+}
+
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale, relative_res_pri, relative_res_dual;
@@ -1202,16 +1269,80 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   new_scale =
       MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
-  if (new_scale == w->stgs->scale) {
+  scs_int apply_scalar =
+      (new_scale != w->stgs->scale) && should_update_r(factor);
+  scs_int apply_diag = 0;
+  scs_float log_g = 0., log_gc = 0., g, gc, step, newf, change;
+  scs_float col_f_hi = 1.;
+  if (w->col_mults) {
+    col_f_hi =
+        MIN(DIAG_SCALE_COL_MULT_MAX, w->stgs->rho_x / DIAG_RHO_X_FLOOR);
+  }
+  if (w->stgs->adaptive_diag_scale) {
+    /* residual profiles: adapt when the scalar updates, or when some
+     * row's/column's damped *clamped* step exceeds the update threshold
+     * (a railed scalar must not freeze the diagonal; a railed multiplier
+     * must not keep triggering updates it cannot take). */
+    scs_float drift = 1.0;
+    for (i = 0; i < w->d->m; ++i) {
+      log_g += log(row_rel_res(w, i));
+    }
+    log_g /= (scs_float)w->d->m;
+    g = exp(log_g);
+    for (i = 0; i < w->d->m; ++i) {
+      step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+      newf = MIN(MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+                 DIAG_SCALE_MULT_MAX);
+      change = newf / w->scale_mults[i];
+      drift = MAX(drift, MAX(change, 1. / change));
+    }
+    if (w->col_mults) {
+      for (i = 0; i < w->d->n; ++i) {
+        log_gc += log(col_rel_res(w, i));
+      }
+      log_gc /= (scs_float)w->d->n;
+      gc = exp(log_gc);
+      for (i = 0; i < w->d->n; ++i) {
+        step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
+        newf = MIN(MAX(w->col_mults[i] * step, 1.), col_f_hi);
+        change = newf / w->col_mults[i];
+        drift = MAX(drift, MAX(change, 1. / change));
+      }
+    }
+    apply_diag = apply_scalar || should_update_r(drift);
+  }
+  if (!apply_scalar && !apply_diag) {
     return 0;
   }
-  if (should_update_r(factor)) {
+  {
     scs_int linsys_status;
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
-    w->stgs->scale = new_scale;
+    if (apply_scalar) {
+      w->stgs->scale = new_scale;
+    }
+    if (apply_diag) {
+      g = exp(log_g);
+      for (i = 0; i < w->d->m; ++i) {
+        step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+        w->scale_mults[i] = MIN(
+            MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+            DIAG_SCALE_MULT_MAX);
+      }
+      /* non-polyhedral cone blocks must share a single metric entry */
+      SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, SCS(mean));
+      if (w->col_mults) {
+        /* x is unconstrained so columns carry no block structure; columns
+         * only ever heat (never anchored above the base rho_x) */
+        gc = exp(log_gc);
+        for (i = 0; i < w->d->n; ++i) {
+          step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
+          w->col_mults[i] = MIN(MAX(w->col_mults[i] * step, 1.), col_f_hi);
+        }
+      }
+    }
 
     /* update diag r vector */
     set_diag_r(w);
@@ -1506,6 +1637,8 @@ void scs_finish(ScsWork *w) {
     scs_free(w->c_orig);
     scs_free(w->lin_sys_warm_start);
     scs_free(w->diag_r);
+    scs_free(w->scale_mults);
+    scs_free(w->col_mults);
     SCS(free_sol)(w->xys_orig);
     if (w->scal) {
       scs_free(w->scal->D);
