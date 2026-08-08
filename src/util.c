@@ -173,6 +173,8 @@ void scs_set_default_settings(ScsSettings *stgs) {
   stgs->acceleration_regularization = AA_REGULARIZATION;
   stgs->acceleration_relaxation = AA_RELAXATION;
   stgs->adaptive_scale = ADAPTIVE_SCALE;
+  stgs->adaptive_diag_scale = ADAPTIVE_DIAG_SCALE;
+  stgs->restart = RESTART;
   stgs->write_data_filename = WRITE_DATA_FILENAME;
   stgs->log_csv_filename = LOG_CSV_FILENAME;
   stgs->time_limit_secs = TIME_LIMIT_SECS;

@@ -233,17 +233,27 @@ static inline scs_float apply_limit(scs_float x) {
   return x;
 }
 
-static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
-                              scs_float *Et, ScsConeWork *cone) {
+/* Equilibrates the full homogeneous-embedding operator
+ *   Q = [ 0   A'  c ]
+ *       [-A   0   b ]
+ *       [-c' -b'  0 ]
+ * with the symmetric scaling diag(E, D, st): |Q| is symmetric so row and
+ * column norms coincide, b enters the row norms, c the column norms, and
+ * the scalar st on the tau slot replaces the old one-shot clamped sigma
+ * heuristic in normalize_b_c. bt/ct are the running scaled copies of b/c
+ * maintained by the caller; *st_out receives this pass's tau scaling. */
+static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
+                              const scs_float *ct, scs_float *Dt,
+                              scs_float *Et, scs_float *st_out,
+                              ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
 
   /****************************  D  ****************************/
 
-  /* initialize D */
+  /* initialize D with the tau-column contribution */
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = 0.;
-    /* Dt[i] = ABS(b[i]); */
+    Dt[i] = ABS(bt[i]);
   }
 
   /* calculate row norms */
@@ -264,10 +274,9 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 
   /****************************  E  ****************************/
 
-  /* initialize E */
+  /* initialize E with the tau-row contribution */
   for (i = 0; i < A->n; ++i) {
-    Et[i] = 0.;
-    /* Et[i] = ABS(c[i]); */
+    Et[i] = ABS(ct[i]);
   }
 
   /* TODO: test not using P to determine scaling  */
@@ -300,19 +309,23 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
     Et[i] = SQRTF(apply_limit(Et[i]));
     Et[i] = SAFEDIV_POS(1.0, Et[i]);
   }
+
+  /**************************  tau  ****************************/
+  wrk = MAX(SCS(norm_inf)(bt, A->m), SCS(norm_inf)(ct, A->n));
+  *st_out = SAFEDIV_POS(1.0, SQRTF(apply_limit(wrk)));
 }
 
-static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
-                            scs_float *Et, ScsConeWork *cone) {
+static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
+                            const scs_float *ct, scs_float *Dt, scs_float *Et,
+                            scs_float *st_out, ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
 
   /****************************  D  ****************************/
 
-  /* initialize D */
+  /* initialize D with the tau-column contribution */
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = 0.;
-    /* Dt[i] = b[i] * b[i]; */
+    Dt[i] = bt[i] * bt[i];
   }
 
   /* calculate row norms */
@@ -335,10 +348,9 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
 
   /****************************  E  ****************************/
 
-  /* initialize E */
+  /* initialize E with the tau-row contribution */
   for (i = 0; i < A->n; ++i) {
-    Et[i] = 0.;
-    /* Et[i] = c[i] * c[i]; */
+    Et[i] = ct[i] * ct[i];
   }
 
   /* TODO: test not using P to determine scaling  */
@@ -365,9 +377,14 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, scs_float *Dt,
     Et[i] = SQRTF(apply_limit(SQRTF(Et[i])));
     Et[i] = SAFEDIV_POS(1.0, Et[i]);
   }
+
+  /**************************  tau  ****************************/
+  wrk = MAX(SCS(norm_2)(bt, A->m), SCS(norm_2)(ct, A->n));
+  *st_out = SAFEDIV_POS(1.0, SQRTF(apply_limit(wrk)));
 }
 
-static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
+static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *bt, scs_float *ct,
+                    scs_float st, scs_float *Dt, scs_float *Et,
                     ScsScaling *scal, ScsConeWork *cone) {
   scs_int i, j;
   /* Fuse row and col scaling of A: A[i,j] *= Dt[i] * Et[j].
@@ -389,6 +406,16 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
     }
   }
 
+  /* Scale the running b/c copies by their row/col factors and the tau
+   * scalar (the b entries live at (row i, col tau), c at (row tau, col j)
+   * of the stacked operator). */
+  for (i = 0; i < A->m; ++i) {
+    bt[i] *= Dt[i] * st;
+  }
+  for (i = 0; i < A->n; ++i) {
+    ct[i] *= Et[i] * st;
+  }
+
   /* Accumulate scaling */
   for (i = 0; i < A->m; ++i) {
     scal->D[i] *= Dt[i];
@@ -396,6 +423,7 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
   for (i = 0; i < A->n; ++i) {
     scal->E[i] *= Et[i];
   }
+  scal->tau_scale *= st;
 
   /* no need to scale P since later primal_scale = dual_scale */
   /*
@@ -430,17 +458,27 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *Dt, scs_float *Et,
  * The main complication is that D has to respect cone boundaries.
  *
  */
-ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
+ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
+                               const scs_float *c, ScsConeWork *cone) {
   scs_int i;
+  scs_float st;
   ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
   scs_float *Dt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scs_float *Et = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  if (!scal || !Dt || !Et) {
+  /* running scaled copies of b, c (originals must not be modified here;
+   * their actual scaling happens per-solve in normalize_b_c) */
+  scs_float *bt = (scs_float *)scs_malloc(A->m * sizeof(scs_float));
+  scs_float *ct = (scs_float *)scs_malloc(A->n * sizeof(scs_float));
+  if (!scal || !Dt || !Et || !bt || !ct) {
     scs_free(scal);
     scs_free(Dt);
     scs_free(Et);
+    scs_free(bt);
+    scs_free(ct);
     return SCS_NULL;
   }
+  memcpy(bt, b, A->m * sizeof(scs_float));
+  memcpy(ct, c, A->n * sizeof(scs_float));
   scal->D = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
   scal->E = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   if (!scal->D || !scal->E) {
@@ -469,16 +507,19 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, ScsConeWork *cone) {
   }
   scal->primal_scale = 1.;
   scal->dual_scale = 1.;
+  scal->tau_scale = 1.;
   for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
-    compute_ruiz_mats(P, A, Dt, Et, cone);
-    rescale(P, A, Dt, Et, scal, cone);
+    compute_ruiz_mats(P, A, bt, ct, Dt, Et, &st, cone);
+    rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }
   for (i = 0; i < NUM_L2_PASSES; ++i) {
-    compute_l2_mats(P, A, Dt, Et, cone);
-    rescale(P, A, Dt, Et, scal, cone);
+    compute_l2_mats(P, A, bt, ct, Dt, Et, &st, cone);
+    rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }
   scs_free(Dt);
   scs_free(Et);
+  scs_free(bt);
+  scs_free(ct);
 
 #if VERBOSITY > 5
   scs_printf("finished normalizing A and P, time: %1.2es\n",

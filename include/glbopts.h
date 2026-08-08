@@ -45,11 +45,17 @@ extern "C" {
 #define ACCELERATION_LOOKBACK (10)
 #define ACCELERATION_INTERVAL (10)
 #define ADAPTIVE_SCALE (1)
+#define ADAPTIVE_DIAG_SCALE (0)
+#define RESTART (0)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)
 /* Tolerance to check negativity condition for infeasibility */
 #define INFEAS_NEGATIVITY_TOL (1e-9)
+/* Number of consecutive residual checks an infeasibility/unboundedness
+ * certificate must pass before SCS declares it. Guards against transient
+ * iterates (e.g. from acceleration) that momentarily pass a one-shot test. */
+#define CERT_PERSISTENCE_CHECKS (2)
 /* redefine printfs as needed */
 #if NO_PRINTING > 0     /* Disable all printing */
 #define scs_printf(...) /* No-op */
@@ -190,6 +196,45 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* Minimum iterations between heuristic scale updates. Prevents scale
  * from changing too frequently before the iterates have stabilized. */
 #define RESCALING_MIN_ITERS (100)
+
+/* Halpern restart scheme parameters (active when stgs->restart is set).
+ * A restart re-anchors the Halpern iteration at the current point. The
+ * decision uses a scale-free merit measuring progress towards any
+ * termination condition (see restart_merit in scs.c). Restart when the
+ * merit has decayed sufficiently since the last restart, when decay is
+ * adequate but progress has stalled, or when the current cycle exceeds
+ * a fixed fraction of all iterations so far (PDLP-style thresholds). */
+#define RESTART_SUFFICIENT_DECAY (0.2)
+#define RESTART_NECESSARY_DECAY (0.8)
+#define RESTART_ARTIFICIAL_FACTOR (0.36)
+/* Whether restarts consider the cycle average as a candidate restart
+ * point (PDLP-style). Off: netlib ablations showed the average of the
+ * anchor-biased Halpern sequence makes a poor candidate whose transient
+ * merit can still win, degrading several solves (runs 3-4 vs run 1). */
+#define RESTART_USE_AVG_CANDIDATE (0)
+
+/* Per-row scale adaptation (stgs->adaptive_diag_scale). Row multipliers
+ * move by at most (ratio)^DIAG_SCALE_DAMP per update and live in
+ * [DIAG_SCALE_MULT_MIN, DIAG_SCALE_MULT_MAX] around the scalar scale.
+ * An update fires when the scalar scale updates, or when some row's
+ * residual profile has drifted enough that its damped step would exceed
+ * sqrt(10) (so a railed scalar cannot freeze the diagonal). */
+#define DIAG_SCALE_DAMP (0.25)
+#define DIAG_SCALE_MULT_MIN (1e-3)
+#define DIAG_SCALE_MULT_MAX (1e3)
+/* Column (rho_x) multiplier bounds. Two-sided mode (level 2) may cool a
+ * column to at most 100x the base rho_x; one-sided mode (level 3) never
+ * cools below the base (rho_x is a boundary optimum: the x prox carries
+ * no cone so anchoring healthy columns is pure loss). Both modes respect
+ * absolute bounds on the resulting rho_x_j for factorization health. */
+#define DIAG_SCALE_COL_MULT_MIN (1e-2)
+/* Cap on column heating range: the dual residual is directly proportional
+ * to rho_x_j, so the profile feedback is fully reflexive and empirically
+ * destabilizes (multiplier limit cycles, perpetual refactor/re-anchor
+ * churn) when the range exceeds ~2 orders of magnitude. */
+#define DIAG_SCALE_COL_MULT_MAX (1e2)
+#define DIAG_RHO_X_FLOOR (1e-8)
+#define DIAG_RHO_X_CEIL (10.)
 
 #define _DIV_EPS_TOL (1E-18)
 #define SAFEDIV_POS(X, Y)                                                      \

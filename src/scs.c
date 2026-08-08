@@ -248,6 +248,9 @@ static void print_footer(ScsInfo *info) {
   scs_printf("\t lin-sys: %1.2es, cones: %1.2es, accel: %1.2es\n",
              info->lin_sys_time / 1e3, info->cone_time / 1e3,
              info->accel_time / 1e3);
+  if (info->restarts > 0) {
+    scs_printf("restarts: %li\n", (long)info->restarts);
+  }
 
   for (i = 0; i < LINE_LEN; ++i) {
     scs_printf("-");
@@ -411,11 +414,21 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     return -1;
   }
   if (!isfinite(stgs->alpha) || stgs->alpha <= 0 || stgs->alpha >= 2) {
-    scs_printf("alpha must be in (0,2)\n");
-    return -1;
+    /* alpha == 2 (Peaceman-Rachford) is nonexpansive so admissible under
+     * Halpern anchoring, but not convergent as a plain fixed-point
+     * iteration. */
+    if (!(stgs->restart && stgs->alpha == 2.)) {
+      scs_printf("alpha must be in (0,2) (or (0,2] when restart is set)\n");
+      return -1;
+    }
   }
   if (!isfinite(stgs->rho_x) || stgs->rho_x <= 0) {
     scs_printf("rho_x must be a positive finite number (1e-3 works well).\n");
+    return -1;
+  }
+  if (stgs->adaptive_diag_scale < 0 || stgs->adaptive_diag_scale > 3) {
+    scs_printf("adaptive_diag_scale must be 0 (off), 1 (rows), "
+               "2 (rows + columns), or 3 (rows + one-sided columns).\n");
     return -1;
   }
   if (!isfinite(stgs->scale) || stgs->scale <= 0) {
@@ -638,14 +651,130 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
       return SCS_SOLVED;
     }
   }
-  if (isless(r->res_unbdd_a, eps_infeas) &&
-      isless(r->res_unbdd_p, eps_infeas)) {
-    return SCS_UNBOUNDED;
-  }
-  if (isless(r->res_infeas, eps_infeas)) {
-    return SCS_INFEASIBLE;
+  /* Certificate residuals divide the violation by the certificate's
+   * objective value (-c'x or -b'y), which bakes the data magnitudes into
+   * the effective tolerance: with e.g. ||c|| ~ 1e6 the unboundedness test
+   * is six orders looser than intended and produces false certificates
+   * (netlib agg/grow families). Tighten by the data-norm ratio so the
+   * test is invariant to rescaling of c (resp. b) vs A; only ever
+   * tighten. Additionally require the certificate to hold on consecutive
+   * checks to reject transient (e.g. accelerated) iterates. */
+  {
+    scs_float tighten_unbdd =
+        MAX(1., SAFEDIV_POS(w->nm_c_orig, w->nm_a_orig));
+    scs_float tighten_infeas =
+        MAX(1., SAFEDIV_POS(w->nm_b_orig, w->nm_a_orig));
+    if (isless(r->res_unbdd_a * tighten_unbdd, eps_infeas) &&
+        isless(r->res_unbdd_p, eps_infeas)) {
+      if (++w->unbdd_cert_streak >= CERT_PERSISTENCE_CHECKS) {
+        return SCS_UNBOUNDED;
+      }
+    } else {
+      w->unbdd_cert_streak = 0;
+    }
+    if (isless(r->res_infeas * tighten_infeas, eps_infeas)) {
+      if (++w->infeas_cert_streak >= CERT_PERSISTENCE_CHECKS) {
+        return SCS_INFEASIBLE;
+      }
+    } else {
+      w->infeas_cert_streak = 0;
+    }
   }
   return 0;
+}
+
+/* ================= Halpern Restarts (stgs->restart) ================ */
+
+/* Scale-free measure of progress towards *any* termination condition:
+ * each residual divided by its termination threshold (mirroring
+ * has_converged), taking the max over the three KKT conditions and the
+ * min against the infeasibility / unboundedness certificate measures.
+ * SCS terminates when this quantity drops below 1. Residuals must be
+ * fresh (populate_residual_struct) before calling.
+ */
+static scs_float restart_merit(ScsWork *w) {
+  scs_float m_kkt, m_cert, prl, drl, grl;
+  scs_float eps_abs = w->stgs->eps_abs;
+  scs_float eps_rel = w->stgs->eps_rel;
+  scs_float eps_infeas = w->stgs->eps_infeas;
+  scs_float merit = INFINITY;
+  ScsResiduals *r = w->r_orig;
+
+  if (r->tau > 0.) {
+    grl = MAX(MAX(ABS(r->xt_p_x), ABS(r->ctx)), ABS(r->bty));
+    prl = MAX(MAX(w->nm_b_orig * r->tau, NORM(w->xys_orig->s, w->d->m)),
+              NORM(r->ax, w->d->m)) /
+          r->tau;
+    drl = MAX(MAX(w->nm_c_orig * r->tau, NORM(r->px, w->d->n)),
+              NORM(r->aty, w->d->n)) /
+          r->tau;
+    m_kkt = SAFEDIV_POS(r->res_pri, eps_abs + eps_rel * prl);
+    m_kkt = MAX(m_kkt, SAFEDIV_POS(r->res_dual, eps_abs + eps_rel * drl));
+    m_kkt = MAX(m_kkt, SAFEDIV_POS(r->gap, eps_abs + eps_rel * grl));
+    merit = m_kkt;
+  }
+  m_cert = SAFEDIV_POS(MAX(r->res_unbdd_a, r->res_unbdd_p), eps_infeas);
+  m_cert = MIN(m_cert, SAFEDIV_POS(r->res_infeas, eps_infeas));
+  return MIN(merit, m_cert);
+}
+
+/* Decide whether to restart (re-anchor) the Halpern iteration at iter.
+ * Restart on sufficient merit decay since the last restart, on adequate
+ * decay + stalled progress, or when the current cycle is long relative
+ * to the total iteration count. Residuals must be fresh here.
+ */
+static scs_int should_restart(ScsWork *w, scs_int iter) {
+  scs_float merit = restart_merit(w);
+  scs_int restart = 0;
+  if (merit <= RESTART_SUFFICIENT_DECAY * w->restart_merit_last) {
+    restart = 1;
+  } else if (merit <= RESTART_NECESSARY_DECAY * w->restart_merit_last &&
+             merit > w->restart_merit_prev) {
+    restart = 1;
+  } else if ((scs_float)w->restart_inner >=
+             RESTART_ARTIFICIAL_FACTOR * (scs_float)(iter + 1)) {
+    restart = 1;
+  }
+  w->restart_merit_prev = merit;
+  if (restart) {
+    w->restart_merit_last = merit;
+  }
+  return restart;
+}
+
+/* Evaluate the restart merit of candidate point `vc` by running one DR
+ * half-step (linear solve + cone projection + rsk) from it. Costs about
+ * one iteration. Saves and restores w->{v,u,u_t,rsk} and recomputes the
+ * residual structs for the true iterate, so the caller sees no state
+ * change. Returns INFINITY if the linear solve fails.
+ */
+static scs_float candidate_merit(ScsWork *w, const scs_float *vc,
+                                 scs_int iter) {
+  scs_int l = w->d->n + w->d->m + 1;
+  scs_float merit = INFINITY;
+  scs_float *s = w->restart_scratch;
+  memcpy(s, w->v, l * sizeof(scs_float));
+  memcpy(s + l, w->u, l * sizeof(scs_float));
+  memcpy(s + 2 * l, w->u_t, l * sizeof(scs_float));
+  memcpy(s + 3 * l, w->rsk, l * sizeof(scs_float));
+
+  memcpy(w->v, vc, l * sizeof(scs_float));
+  if (project_lin_sys(w, iter) == 0 && project_cones(w, w->k, iter) >= 0) {
+    compute_rsk(w);
+    w->r_orig->last_iter = -1;
+    w->r_normalized->last_iter = -1;
+    populate_residual_struct(w, iter);
+    merit = restart_merit(w);
+  }
+
+  memcpy(w->v, s, l * sizeof(scs_float));
+  memcpy(w->u, s + l, l * sizeof(scs_float));
+  memcpy(w->u_t, s + 2 * l, l * sizeof(scs_float));
+  memcpy(w->rsk, s + 3 * l, l * sizeof(scs_float));
+  w->r_orig->last_iter = -1;
+  w->r_normalized->last_iter = -1;
+  populate_residual_struct(w, iter);
+  return merit;
 }
 
 /* =================== Warm / Cold Start Helpers ==================== */
@@ -935,6 +1064,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   info->res_unbdd_p = w->r_orig->res_unbdd_p;
   info->scale = w->stgs->scale;
   info->scale_updates = w->scale_updates;
+  info->restarts = w->restarts;
   info->rejected_accel_steps = w->rejected_accel_steps;
   info->accepted_accel_steps = w->accepted_accel_steps;
   set_info_aa_stats(info, w->accel);
@@ -973,9 +1103,23 @@ static void set_diag_r(ScsWork *w) {
   for (i = 0; i < w->d->n; ++i) {
     w->diag_r[i] = w->stgs->rho_x;
   }
+  if (w->col_mults) {
+    /* per-column dynamic rescaling: rho_x_j = rho_x / f_j, the metric
+     * equivalent of scaling column j of the data by sqrt(f_j) */
+    for (i = 0; i < w->d->n; ++i) {
+      w->diag_r[i] /= w->col_mults[i];
+    }
+  }
   /* use cone information to set R_y */
   SCS(set_r_y)(w->cone_work, w->stgs->scale, &(w->diag_r[w->d->n]));
-  /* if modified need to SCS(enforce_cone_boundaries)(...) */
+  if (w->scale_mults) {
+    /* per-row multipliers act like a per-row scale: R_y_i = base_i / f_i.
+     * Multipliers are kept uniform within cone blocks (enforced at update
+     * time) so no SCS(enforce_cone_boundaries) needed here. */
+    for (i = 0; i < w->d->m; ++i) {
+      w->diag_r[w->d->n + i] /= w->scale_mults[i];
+    }
+  }
   w->diag_r[w->d->n + w->d->m] = TAU_FACTOR;
 }
 
@@ -1017,6 +1161,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   stgs = SCS_NULL; /* for safety */
 
+  /* record the original (pre-normalization) magnitude of A for the
+   * data-scale-invariant certificate checks */
+  w->nm_a_orig = SCS(norm_inf)(w->d->A->x, w->d->A->p[w->d->A->n]);
+
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->u_t = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -1040,6 +1188,50 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->r_orig = init_residuals(w->d);
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
+  if (w->stgs->adaptive_diag_scale) {
+    if (!w->stgs->adaptive_scale) {
+      scs_printf("WARN: adaptive_diag_scale requires adaptive_scale, "
+                 "disabling adaptive_diag_scale.\n");
+      w->stgs->adaptive_diag_scale = 0;
+    } else {
+      scs_int j;
+      w->scale_mults = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
+      if (!w->scale_mults) {
+        scs_printf("ERROR: work memory allocation failure\n");
+        scs_finish(w);
+        return SCS_NULL;
+      }
+      for (j = 0; j < w->d->m; ++j) {
+        w->scale_mults[j] = 1.0;
+      }
+      if (w->stgs->adaptive_diag_scale >= 2) {
+        w->col_mults = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
+        if (!w->col_mults) {
+          scs_printf("ERROR: work memory allocation failure\n");
+          scs_finish(w);
+          return SCS_NULL;
+        }
+        for (j = 0; j < w->d->n; ++j) {
+          w->col_mults[j] = 1.0;
+        }
+      }
+    }
+  }
+  if (w->stgs->restart) {
+    w->v_anchor = (scs_float *)scs_calloc(l, sizeof(scs_float));
+    w->v_avg = (scs_float *)scs_calloc(l, sizeof(scs_float));
+    w->restart_scratch = (scs_float *)scs_calloc(4 * l, sizeof(scs_float));
+    if (!w->v_anchor || !w->v_avg || !w->restart_scratch) {
+      scs_printf("ERROR: work memory allocation failure\n");
+      scs_finish(w);
+      return SCS_NULL;
+    }
+    if (w->stgs->acceleration_lookback) {
+      scs_printf("WARN: restart is incompatible with Anderson acceleration, "
+                 "disabling acceleration.\n");
+      w->stgs->acceleration_lookback = 0;
+    }
+  }
 
   if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
       !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
@@ -1075,7 +1267,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       return SCS_NULL;
     }
     /* this allocates memory that must be freed */
-    w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
+    w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->d->b, w->d->c,
+                                 w->cone_work);
     if (!w->scal) {
       scs_printf("ERROR: normalize_a_p failure\n");
       scs_finish(w);
@@ -1134,6 +1327,16 @@ static void reset_tracking(ScsWork *w) {
   w->n_log_scale_factor = 0;
   w->scale_updates = 0;
   w->time_limit_reached = 0;
+  /* certificate persistence */
+  w->infeas_cert_streak = 0;
+  w->unbdd_cert_streak = 0;
+  /* Halpern restarts */
+  w->restart_inner = 0;
+  w->avg_count = 0;
+  w->last_restart_iter = 0;
+  w->restart_merit_last = INFINITY;
+  w->restart_merit_prev = INFINITY;
+  w->restarts = 0;
   /* Acceleration */
   w->rejected_accel_steps = 0;
   w->accepted_accel_steps = 0;
@@ -1152,6 +1355,13 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
     cold_start_vars(w);
   }
 
+  if (w->stgs->restart) {
+    /* initial Halpern anchor and cycle average are the starting point */
+    memcpy(w->v_anchor, w->v, (w->d->n + w->d->m + 1) * sizeof(scs_float));
+    memcpy(w->v_avg, w->v, (w->d->n + w->d->m + 1) * sizeof(scs_float));
+    w->avg_count = 1;
+  }
+
   update_work_cache(w);
   return 0;
 }
@@ -1159,6 +1369,25 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
 /* will update if the factor is outside of range */
 static scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
+}
+
+/* Relative primal residual of constraint row i in the normalized space
+ * (where diag_r acts). All quantities carry tau consistently. */
+static scs_float row_rel_res(const ScsWork *w, scs_int i) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_float den = MAX(ABS(r->ax[i]), ABS(w->xys_normalized->s[i]));
+  den = MAX(den, ABS(w->d->b[i]) * r->tau);
+  den = MAX(den, _DIV_EPS_TOL);
+  return MAX(ABS(r->ax_s_btau[i]), _DIV_EPS_TOL) / den;
+}
+
+/* Relative dual residual of column j in the normalized space. */
+static scs_float col_rel_res(const ScsWork *w, scs_int j) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_float den = MAX(ABS(r->px[j]), ABS(r->aty[j]));
+  den = MAX(den, ABS(w->d->c[j]) * r->tau);
+  den = MAX(den, _DIV_EPS_TOL);
+  return MAX(ABS(r->px_aty_ctau[j]), _DIV_EPS_TOL) / den;
 }
 
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
@@ -1202,16 +1431,87 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   new_scale =
       MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
-  if (new_scale == w->stgs->scale) {
+  scs_int apply_scalar =
+      (new_scale != w->stgs->scale) && should_update_r(factor);
+  scs_int apply_diag = 0;
+  scs_float log_g = 0., log_gc = 0., g, gc, step, newf, change;
+  scs_float col_f_lo = 1., col_f_hi = 1.;
+  if (w->col_mults) {
+    col_f_lo = (w->stgs->adaptive_diag_scale >= 3)
+                   ? 1.0
+                   : MAX(DIAG_SCALE_COL_MULT_MIN,
+                         w->stgs->rho_x / DIAG_RHO_X_CEIL);
+    col_f_hi =
+        MIN(DIAG_SCALE_COL_MULT_MAX, w->stgs->rho_x / DIAG_RHO_X_FLOOR);
+  }
+  if (w->stgs->adaptive_diag_scale) {
+    /* residual profiles: adapt when the scalar updates, or when some
+     * row's/column's damped *clamped* step exceeds the update threshold
+     * (a railed scalar must not freeze the diagonal; a railed multiplier
+     * must not keep triggering updates it cannot take). */
+    scs_float drift = 1.0;
+    for (i = 0; i < w->d->m; ++i) {
+      log_g += log(row_rel_res(w, i));
+    }
+    log_g /= (scs_float)w->d->m;
+    g = exp(log_g);
+    for (i = 0; i < w->d->m; ++i) {
+      step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+      newf = MIN(MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+                 DIAG_SCALE_MULT_MAX);
+      change = newf / w->scale_mults[i];
+      drift = MAX(drift, MAX(change, 1. / change));
+    }
+    if (w->col_mults) {
+      for (i = 0; i < w->d->n; ++i) {
+        log_gc += log(col_rel_res(w, i));
+      }
+      log_gc /= (scs_float)w->d->n;
+      gc = exp(log_gc);
+      for (i = 0; i < w->d->n; ++i) {
+        step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
+        newf = MIN(MAX(w->col_mults[i] * step, col_f_lo), col_f_hi);
+        change = newf / w->col_mults[i];
+        drift = MAX(drift, MAX(change, 1. / change));
+      }
+    }
+    apply_diag = apply_scalar || should_update_r(drift);
+  }
+  if (!apply_scalar && !apply_diag) {
     return 0;
   }
-  if (should_update_r(factor)) {
+  {
     scs_int linsys_status;
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
-    w->stgs->scale = new_scale;
+    if (apply_scalar) {
+      w->stgs->scale = new_scale;
+    }
+    if (apply_diag) {
+      g = exp(log_g);
+      for (i = 0; i < w->d->m; ++i) {
+        step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+        w->scale_mults[i] = MIN(
+            MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+            DIAG_SCALE_MULT_MAX);
+      }
+      /* non-polyhedral cone blocks must share a single metric entry */
+      SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, SCS(mean));
+      if (w->col_mults) {
+        /* x is unconstrained so columns carry no block structure.
+         * Multiplier bounds respect absolute limits on the resulting
+         * rho_x_j = rho_x / f_j; one-sided mode never cools below the
+         * base rho_x. */
+        gc = exp(log_gc);
+        for (i = 0; i < w->d->n; ++i) {
+          step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
+          w->col_mults[i] =
+              MIN(MAX(w->col_mults[i] * step, col_f_lo), col_f_hi);
+        }
+      }
+    }
 
     /* update diag r vector */
     set_diag_r(w);
@@ -1326,7 +1626,9 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
 
 scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                   scs_int warm_start) {
-  scs_int i;
+  scs_int i, j;
+  scs_int do_restart = 0;
+  scs_float lam;
   SCS(timer) solve_timer, lin_sys_timer, cone_timer, accel_timer;
   scs_float total_accel_time = 0.0, total_cone_time = 0.0,
             total_lin_sys_time = 0.0;
@@ -1405,6 +1707,9 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }
+      if (w->stgs->restart) {
+        do_restart = should_restart(w, i);
+      }
       if (w->stgs->time_limit_secs) {
         if (SCS(tocq)(&solve_timer) > 1000. * w->stgs->time_limit_secs) {
           w->time_limit_reached = 1;
@@ -1421,9 +1726,19 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 
     /* If residuals are fresh then maybe compute new scale. */
     if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
+      scs_int prev_scale_updates = w->scale_updates;
       if (update_scale(w, k, i) < 0) {
         return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
                        "error in update_scale", "failure");
+      }
+      /* a scale update remaps v to a new metric, so re-anchor. Netlib
+       * ablations showed this eager re-anchor also (accidentally but
+       * measurably) helps fast-converging problems by limiting Halpern
+       * anchoring drag; translating the anchor through the remap instead
+       * preserved cycles on stall-prone problems but lost more overall
+       * (runs 3-5 vs run 1). Revisit with merit-adaptive anchor refresh. */
+      if (w->stgs->restart && w->scale_updates != prev_scale_updates) {
+        do_restart = 1;
       }
     }
 
@@ -1443,6 +1758,44 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
         w->rejected_accel_steps++;
       } else {
         w->accepted_accel_steps++;
+      }
+    }
+
+    /* Halpern anchoring with restarts. At this point v = T(v_old), the
+     * plain DR / KM update. Either re-anchor here (restart) or take the
+     * Halpern step v = lam * anchor + (1 - lam) * T(v_old), which drives
+     * the fixed-point residual at the optimal O(1/inner_iters) rate.
+     */
+    if (w->stgs->restart) {
+      if (do_restart) {
+        /* PDLP-style candidate selection: restart from the cycle average
+         * when its merit beats the current iterate's (whose merit
+         * should_restart stored in restart_merit_last). */
+        if (RESTART_USE_AVG_CANDIDATE && w->avg_count > 1) {
+          scs_float m_avg = candidate_merit(w, w->v_avg, i);
+          if (m_avg < w->restart_merit_last) {
+            memcpy(w->v, w->v_avg, l * sizeof(scs_float));
+            w->restart_merit_last = m_avg;
+          }
+        }
+        memcpy(w->v_anchor, w->v, l * sizeof(scs_float));
+        memcpy(w->v_avg, w->v, l * sizeof(scs_float));
+        w->avg_count = 1;
+        w->restart_inner = 0;
+        w->last_restart_iter = i;
+        w->restarts++;
+        do_restart = 0;
+      } else {
+        lam = 1.0 / (scs_float)(w->restart_inner + 2);
+        for (j = 0; j < l; ++j) {
+          w->v[j] = lam * w->v_anchor[j] + (1.0 - lam) * w->v[j];
+        }
+        w->restart_inner++;
+        /* running average of the visited sequence over this cycle */
+        w->avg_count++;
+        for (j = 0; j < l; ++j) {
+          w->v_avg[j] += (w->v[j] - w->v_avg[j]) / (scs_float)w->avg_count;
+        }
       }
     }
 
@@ -1506,6 +1859,11 @@ void scs_finish(ScsWork *w) {
     scs_free(w->c_orig);
     scs_free(w->lin_sys_warm_start);
     scs_free(w->diag_r);
+    scs_free(w->v_anchor);
+    scs_free(w->v_avg);
+    scs_free(w->restart_scratch);
+    scs_free(w->scale_mults);
+    scs_free(w->col_mults);
     SCS(free_sol)(w->xys_orig);
     if (w->scal) {
       scs_free(w->scal->D);

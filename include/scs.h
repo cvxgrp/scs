@@ -65,6 +65,20 @@ typedef struct {
   scs_float scale;
   /** Whether to adaptively update `scale`. */
   scs_int adaptive_scale;
+  /** Dynamic diagonal rescaling from residual profiles (experimental):
+   *  0 = off, 1 = per-row (R_y from the row-wise primal residual profile,
+   *  uniform within non-polyhedral cone blocks), 2 = additionally
+   *  per-column (rho_x from the column-wise dual residual profile, two
+   *  sided) -- the dynamic analog of two-sided Ruiz equilibration with
+   *  residuals replacing the linf norms, 3 = as 2 but columns only ever
+   *  heat (rho_x_j <= rho_x, never anchored above the base).
+   *  Requires `adaptive_scale`. */
+  scs_int adaptive_diag_scale;
+  /** Whether to use Halpern anchoring with adaptive restarts (experimental).
+   *  Targets linear convergence on problems with polyhedral (e.g. LP)
+   *  structure. Incompatible with Anderson acceleration: setting this
+   *  disables AA. Permits `alpha = 2` (Peaceman-Rachford). */
+  scs_int restart;
   /** Primal constraint scaling factor. */
   scs_float rho_x;
   /** Maximum iterations to take. */
@@ -198,6 +212,8 @@ typedef struct {
   scs_int status_val;
   /** Number of updates to scale. */
   scs_int scale_updates;
+  /** Number of Halpern restarts (0 unless `restart` setting is on). */
+  scs_int restarts;
   /** Primal objective. */
   scs_float pobj;
   /** Dual objective. */

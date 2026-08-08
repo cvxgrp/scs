@@ -32,6 +32,10 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->acceleration_interval = atoi(val);
   } else if (strcmp(param, "adaptive_scale") == 0) {
     s->adaptive_scale = atoi(val);
+  } else if (strcmp(param, "restart") == 0) {
+    s->restart = atoi(val);
+  } else if (strcmp(param, "adaptive_diag_scale") == 0) {
+    s->adaptive_diag_scale = atoi(val);
   } else if (strcmp(param, "log_csv_filename") == 0) {
     s->log_csv_filename = val;
   } else {

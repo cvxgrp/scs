@@ -26,6 +26,9 @@ typedef struct {
   scs_int m;        /* Length of D */
   scs_int n;        /* Length of E */
   scs_float primal_scale, dual_scale;
+  /* accumulated tau-slot scaling from the stacked-operator equilibration;
+   * becomes the sigma applied to b, c in normalize_b_c */
+  scs_float tau_scale;
 } ScsScaling;
 
 /** Holds residual information. */
@@ -65,6 +68,9 @@ struct SCS_WORK {
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */
   scs_float nm_b_orig, nm_c_orig; /* unnormalized NORM(b), NORM(c) */
+  scs_float nm_a_orig;            /* unnormalized max abs entry of A */
+  /* consecutive checks the infeas/unbdd certificate has passed */
+  scs_int infeas_cert_streak, unbdd_cert_streak;
   AaWork *accel;                  /* struct for acceleration workspace */
   ScsData *d;                     /* Problem data deep copy NORMALIZED */
   ScsCone *k;                     /* Problem cone deep copy */
@@ -80,9 +86,23 @@ struct SCS_WORK {
   /* Scale updating workspace */
   scs_float sum_log_scale_factor;
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
+  /* per-row scale multipliers on R_y, size m (adaptive_diag_scale >= 1) */
+  scs_float *scale_mults;
+  /* per-column multipliers on rho_x, size n (adaptive_diag_scale >= 2) */
+  scs_float *col_mults;
   /* AA stats */
   scs_float aa_norm;
   scs_int rejected_accel_steps, accepted_accel_steps;
+  /* Halpern restart state (active when stgs->restart is set) */
+  scs_float *v_anchor;          /* Halpern anchor point, size n+m+1 */
+  scs_float *v_avg;             /* running average over current cycle */
+  scs_float *restart_scratch;   /* scratch for candidate eval, size 4l */
+  scs_int avg_count;            /* iterates accumulated into v_avg */
+  scs_int restart_inner;        /* iterations since last restart */
+  scs_int last_restart_iter;    /* iteration of last restart */
+  scs_float restart_merit_last; /* merit at last restart */
+  scs_float restart_merit_prev; /* merit at previous restart check */
+  scs_int restarts;             /* total restarts this solve */
 };
 
 #ifdef __cplusplus
