@@ -1075,7 +1075,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       return SCS_NULL;
     }
     /* this allocates memory that must be freed */
-    w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->cone_work);
+    w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->d->b, w->d->c,
+                                 w->cone_work);
     if (!w->scal) {
       scs_printf("ERROR: normalize_a_p failure\n");
       scs_finish(w);
