@@ -51,6 +51,10 @@ extern "C" {
 #define TIME_LIMIT_SECS (0.)
 /* Tolerance to check negativity condition for infeasibility */
 #define INFEAS_NEGATIVITY_TOL (1e-9)
+/* Number of consecutive residual checks an infeasibility/unboundedness
+ * certificate must pass before SCS declares it. Guards against transient
+ * iterates (e.g. from acceleration) that momentarily pass a one-shot test. */
+#define CERT_PERSISTENCE_CHECKS (2)
 /* redefine printfs as needed */
 #if NO_PRINTING > 0     /* Disable all printing */
 #define scs_printf(...) /* No-op */
