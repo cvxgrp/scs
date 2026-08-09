@@ -220,6 +220,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * residual profile has drifted enough that its damped step would exceed
  * sqrt(10) (so a railed scalar cannot freeze the diagonal). */
 #define DIAG_SCALE_DAMP (0.25)
+#define NUM_RUIZ_PASSES (25) /* equilibration passes, see scs_matrix.c */
+#define NUM_L2_PASSES (1)
 #define DIAG_SCALE_MULT_MIN (1e-3)
 #define DIAG_SCALE_MULT_MAX (1e3)
 /* Column (rho_x) multiplier bounds. Two-sided mode (level 2) may cool a

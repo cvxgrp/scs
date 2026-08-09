@@ -1268,7 +1268,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     }
     /* this allocates memory that must be freed */
     w->scal = SCS(normalize_a_p)(w->d->P, w->d->A, w->d->b, w->d->c,
-                                 w->cone_work);
+                                 w->cone_work, w->stgs->num_ruiz_passes,
+                                 w->stgs->num_l2_passes);
     if (!w->scal) {
       scs_printf("ERROR: normalize_a_p failure\n");
       scs_finish(w);
@@ -1426,7 +1427,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       SQRTF(exp(w->sum_log_scale_factor / (scs_float)(w->n_log_scale_factor)));
 
   /* need at least RESCALING_MIN_ITERS since last update */
-  if (iters_since_last_update < RESCALING_MIN_ITERS) {
+  if (iters_since_last_update < w->stgs->rescaling_min_iters) {
     return 0;
   }
   new_scale =
@@ -1456,7 +1457,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     log_g /= (scs_float)w->d->m;
     g = exp(log_g);
     for (i = 0; i < w->d->m; ++i) {
-      step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+      step = POWF(row_rel_res(w, i) / g, w->stgs->diag_scale_damp);
       newf = MIN(MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
                  DIAG_SCALE_MULT_MAX);
       change = newf / w->scale_mults[i];
@@ -1469,7 +1470,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       log_gc /= (scs_float)w->d->n;
       gc = exp(log_gc);
       for (i = 0; i < w->d->n; ++i) {
-        step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
+        step = POWF(col_rel_res(w, i) / gc, w->stgs->diag_scale_damp);
         newf = MIN(MAX(w->col_mults[i] * step, col_f_lo), col_f_hi);
         change = newf / w->col_mults[i];
         drift = MAX(drift, MAX(change, 1. / change));
@@ -1492,7 +1493,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     if (apply_diag) {
       g = exp(log_g);
       for (i = 0; i < w->d->m; ++i) {
-        step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+        step = POWF(row_rel_res(w, i) / g, w->stgs->diag_scale_damp);
         w->scale_mults[i] = MIN(
             MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
             DIAG_SCALE_MULT_MAX);
@@ -1506,7 +1507,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
          * base rho_x. */
         gc = exp(log_gc);
         for (i = 0; i < w->d->n; ++i) {
-          step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
+          step = POWF(col_rel_res(w, i) / gc, w->stgs->diag_scale_damp);
           w->col_mults[i] =
               MIN(MAX(w->col_mults[i] * step, col_f_lo), col_f_hi);
         }

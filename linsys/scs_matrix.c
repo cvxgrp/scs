@@ -12,8 +12,6 @@
 
 #define MIN_NORMALIZATION_FACTOR (1e-4)
 #define MAX_NORMALIZATION_FACTOR (1e4)
-#define NUM_RUIZ_PASSES (25) /* additional passes don't help much */
-#define NUM_L2_PASSES (1)    /* do one or zero, not more since not stable */
 
 /* ======================== Matrix Copy / Free ======================== */
 
@@ -459,7 +457,8 @@ static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *bt, scs_float *ct,
  *
  */
 ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
-                               const scs_float *c, ScsConeWork *cone) {
+                               const scs_float *c, ScsConeWork *cone,
+                               scs_int ruiz_passes, scs_int l2_passes) {
   scs_int i;
   scs_float st;
   ScsScaling *scal = (ScsScaling *)scs_calloc(1, sizeof(ScsScaling));
@@ -508,11 +507,11 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
   scal->primal_scale = 1.;
   scal->dual_scale = 1.;
   scal->tau_scale = 1.;
-  for (i = 0; i < NUM_RUIZ_PASSES; ++i) {
+  for (i = 0; i < ruiz_passes; ++i) {
     compute_ruiz_mats(P, A, bt, ct, Dt, Et, &st, cone);
     rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }
-  for (i = 0; i < NUM_L2_PASSES; ++i) {
+  for (i = 0; i < l2_passes; ++i) {
     compute_l2_mats(P, A, bt, ct, Dt, Et, &st, cone);
     rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }

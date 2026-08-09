@@ -18,7 +18,8 @@ extern "C" {
  * A -> D*A*E. D and E must be all positive entries, D must satisfy cone
  * boundaries */
 ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
-                               const scs_float *c, ScsConeWork *cone);
+                               const scs_float *c, ScsConeWork *cone,
+                               scs_int ruiz_passes, scs_int l2_passes);
 
 /* to free the memory allocated in a ScsMatrix (called on A and P at finish) */
 void SCS(free_scs_matrix)(ScsMatrix *A);

@@ -174,6 +174,10 @@ void scs_set_default_settings(ScsSettings *stgs) {
   stgs->acceleration_relaxation = AA_RELAXATION;
   stgs->adaptive_scale = ADAPTIVE_SCALE;
   stgs->adaptive_diag_scale = ADAPTIVE_DIAG_SCALE;
+  stgs->diag_scale_damp = DIAG_SCALE_DAMP;
+  stgs->rescaling_min_iters = RESCALING_MIN_ITERS;
+  stgs->num_ruiz_passes = NUM_RUIZ_PASSES;
+  stgs->num_l2_passes = NUM_L2_PASSES;
   stgs->restart = RESTART;
   stgs->write_data_filename = WRITE_DATA_FILENAME;
   stgs->log_csv_filename = LOG_CSV_FILENAME;

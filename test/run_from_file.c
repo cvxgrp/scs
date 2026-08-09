@@ -36,6 +36,14 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->restart = atoi(val);
   } else if (strcmp(param, "adaptive_diag_scale") == 0) {
     s->adaptive_diag_scale = atoi(val);
+  } else if (strcmp(param, "diag_scale_damp") == 0) {
+    s->diag_scale_damp = atof(val);
+  } else if (strcmp(param, "rescaling_min_iters") == 0) {
+    s->rescaling_min_iters = atoi(val);
+  } else if (strcmp(param, "num_ruiz_passes") == 0) {
+    s->num_ruiz_passes = atoi(val);
+  } else if (strcmp(param, "num_l2_passes") == 0) {
+    s->num_l2_passes = atoi(val);
   } else if (strcmp(param, "log_csv_filename") == 0) {
     s->log_csv_filename = val;
   } else {

@@ -74,6 +74,13 @@ typedef struct {
    *  heat (rho_x_j <= rho_x, never anchored above the base).
    *  Requires `adaptive_scale`. */
   scs_int adaptive_diag_scale;
+  /** (research) damping exponent for diag-scale multiplier steps. */
+  scs_float diag_scale_damp;
+  /** (research) min iterations between scale updates. */
+  scs_int rescaling_min_iters;
+  /** (research) equilibration pass counts. */
+  scs_int num_ruiz_passes;
+  scs_int num_l2_passes;
   /** Whether to use Halpern anchoring with adaptive restarts (experimental).
    *  Targets linear convergence on problems with polyhedral (e.g. LP)
    *  structure. Incompatible with Anderson acceleration: setting this
