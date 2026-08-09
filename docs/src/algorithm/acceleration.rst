@@ -146,8 +146,10 @@ then AA is applied every :math:`k` iterations (AA simply ignores the
 intermediate iterations). This has the benefit of making AA :math:`k` times
 faster and approximating a :math:`k` times larger memory, as well as improving
 numerical stability by 'decorrelating' the data. On the other hand, older
-iterates might be stale.  More work is needed to determine the optimal setting
-for this parameter, but 10 appears to work well in practice and is the default.
+iterates might be stale.  Benchmark sweeps over the netlib LP and
+Maros-Meszaros QP collections found 5 to be a robust choice in practice
+(intervals near 1 destabilize the least-squares fit, very large intervals
+leave acceleration idle), and 5 is the default.
 
 The details about how the linear systems are solved and updated are abstracted
 away into the AA package. The current implementation uses a rank-revealing
