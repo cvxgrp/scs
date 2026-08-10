@@ -313,11 +313,26 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   *st_out = SAFEDIV_POS(1.0, SQRTF(apply_limit(wrk)));
 }
 
+/* rms: divide each accumulated squared sum by its entry count before the
+ * sqrt, so the pass measures typical entry magnitude (RMS) rather than
+ * aggregate mass -- removes the ~sqrt(nnz) shrink the plain l2 pass
+ * applies to dense/flat rows and columns. */
 static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
                             const scs_float *ct, scs_float *Dt, scs_float *Et,
-                            scs_float *st_out, ScsConeWork *cone) {
+                            scs_float *st_out, scs_int rms,
+                            ScsConeWork *cone) {
   scs_int i, j, kk;
   scs_float wrk;
+  scs_float *rcnt = SCS_NULL, *ecnt = SCS_NULL;
+  if (rms) {
+    rcnt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+    ecnt = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+    if (!rcnt || !ecnt) {
+      scs_free(rcnt);
+      scs_free(ecnt);
+      rms = 0; /* fall back to plain l2 on alloc failure */
+    }
+  }
 
   /****************************  D  ****************************/
 
@@ -330,10 +345,16 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
       Dt[A->i[j]] += A->x[j] * A->x[j];
+      if (rms) {
+        rcnt[A->i[j]] += 1.;
+      }
     }
   }
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = SQRTF(Dt[i]); /* l2 norm of rows */
+    if (rms) {
+      Dt[i] /= (rcnt[i] + 1.); /* +1 for the bt (tau-column) entry */
+    }
+    Dt[i] = SQRTF(Dt[i]); /* l2 (or rms) norm of rows */
   }
 
   /* accumulate D across each cone  */
@@ -362,8 +383,14 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
         i = P->i[kk]; /* row */
         wrk = P->x[kk] * P->x[kk];
         Et[j] += wrk;
+        if (rms) {
+          ecnt[j] += 1.;
+        }
         if (i != j) {
           Et[i] += wrk;
+          if (rms) {
+            ecnt[i] += 1.;
+          }
         }
       }
     }
@@ -372,13 +399,23 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   /* calculate col norms, E */
   for (i = 0; i < A->n; ++i) {
     Et[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    if (rms) {
+      Et[i] /= (ecnt[i] + (scs_float)(A->p[i + 1] - A->p[i]) + 1.);
+    }
     Et[i] = SQRTF(apply_limit(SQRTF(Et[i])));
     Et[i] = SAFEDIV_POS(1.0, Et[i]);
   }
 
   /**************************  tau  ****************************/
-  wrk = MAX(SCS(norm_2)(bt, A->m), SCS(norm_2)(ct, A->n));
+  if (rms) {
+    wrk = MAX(SCS(norm_2)(bt, A->m) / SQRTF((scs_float)A->m),
+              SCS(norm_2)(ct, A->n) / SQRTF((scs_float)A->n));
+  } else {
+    wrk = MAX(SCS(norm_2)(bt, A->m), SCS(norm_2)(ct, A->n));
+  }
   *st_out = SAFEDIV_POS(1.0, SQRTF(apply_limit(wrk)));
+  scs_free(rcnt);
+  scs_free(ecnt);
 }
 
 static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *bt, scs_float *ct,
@@ -511,8 +548,9 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
     compute_ruiz_mats(P, A, bt, ct, Dt, Et, &st, cone);
     rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }
-  for (i = 0; i < l2_passes; ++i) {
-    compute_l2_mats(P, A, bt, ct, Dt, Et, &st, cone);
+  /* l2_passes < 0 selects |l2_passes| RMS-normalized passes (research) */
+  for (i = 0; i < (l2_passes < 0 ? -l2_passes : l2_passes); ++i) {
+    compute_l2_mats(P, A, bt, ct, Dt, Et, &st, l2_passes < 0, cone);
     rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }
   scs_free(Dt);
