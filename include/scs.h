@@ -83,6 +83,10 @@ typedef struct {
   scs_int num_l2_passes;
   /** (research) absolute floor on per-column rho_x_j. */
   scs_float diag_rho_x_floor;
+  /** (research) SOC automorphism block metric: 0 = off (default), 1 =
+   *  residual-direction-calibrated Lorentz boost metric per SOC block.
+   *  Direct CPU solver only. */
+  scs_int soc_metric;
   /** Whether to use Halpern anchoring with adaptive restarts (experimental).
    *  Targets linear convergence on problems with polyhedral (e.g. LP)
    *  structure. Incompatible with Anderson acceleration: setting this

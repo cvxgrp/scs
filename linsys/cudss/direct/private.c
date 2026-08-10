@@ -105,7 +105,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   /* Form KKT matrix as upper-triangular, CSC */
   /* Because of symmetry it is equivalent to lower-triangular, CSR */
-  p->kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 1);
+  p->kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, SCS_NULL, 1);
   if (!p->kkt) {
     scs_printf("Error in forming KKT matrix");
     scs_free_lin_sys_work(p);

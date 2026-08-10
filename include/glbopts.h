@@ -47,6 +47,7 @@ extern "C" {
 #define ADAPTIVE_SCALE (1)
 #define ADAPTIVE_DIAG_SCALE (0)
 #define RESTART (0)
+#define SOC_METRIC (0)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)
@@ -229,6 +230,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * cools below the base (rho_x is a boundary optimum: the x prox carries
  * no cone so anchoring healthy columns is pure loss). Both modes respect
  * absolute bounds on the resulting rho_x_j for factorization health. */
+/* SOC automorphism metric (stgs->soc_metric): rapidity cap bounds the
+ * block metric condition number at exp(4*tau) <= ~100 (the diag-scale
+ * range lesson); damping and EMA factor mirror the diagonal rule. */
+#define SOC_TAU_MAX (1.15)
+#define SOC_TAU_DAMP (0.25)
+#define SOC_EMA (0.9)
 #define DIAG_SCALE_COL_MULT_MIN (1e-2)
 /* Cap on column heating range: the dual residual is directly proportional
  * to rho_x_j, so the profile feedback is fully reflexive and empirically

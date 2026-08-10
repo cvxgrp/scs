@@ -19,6 +19,8 @@ struct SCS_LIN_SYS_WORK {
   scs_int *perm;      /* permutation of KKT matrix for factorization */
   scs_float *bp;      /* workspace memory for solves */
   scs_int *diag_r_idxs;
+  scs_int soc_nnz;     /* (research) SOC block-metric entry count */
+  scs_int *soc_idxs;   /* their positions in kkt->x */
   scs_int factorizations;
   /* ldl factorization workspace */
   scs_float *D, *fwork;

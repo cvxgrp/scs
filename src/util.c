@@ -180,6 +180,7 @@ void scs_set_default_settings(ScsSettings *stgs) {
   stgs->num_l2_passes = NUM_L2_PASSES;
   stgs->diag_rho_x_floor = DIAG_RHO_X_FLOOR;
   stgs->restart = RESTART;
+  stgs->soc_metric = SOC_METRIC;
   stgs->write_data_filename = WRITE_DATA_FILENAME;
   stgs->log_csv_filename = LOG_CSV_FILENAME;
   stgs->time_limit_secs = TIME_LIMIT_SECS;

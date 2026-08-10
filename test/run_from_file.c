@@ -34,6 +34,8 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->adaptive_scale = atoi(val);
   } else if (strcmp(param, "restart") == 0) {
     s->restart = atoi(val);
+  } else if (strcmp(param, "soc_metric") == 0) {
+    s->soc_metric = atoi(val);
   } else if (strcmp(param, "adaptive_diag_scale") == 0) {
     s->adaptive_diag_scale = atoi(val);
   } else if (strcmp(param, "diag_scale_damp") == 0) {

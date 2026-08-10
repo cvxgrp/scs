@@ -165,7 +165,20 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   scs_float *info;
   scs_int *Pinv, amd_status, *idx_mapping, i, kkt_nnz;
   ScsMatrix *kkt_perm;
-  ScsMatrix *kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 1);
+  ScsMatrix *kkt;
+  const ScsSocMetric *soc = SCS(get_soc_metric)();
+  p->soc_nnz = 0;
+  p->soc_idxs = SCS_NULL;
+  if (soc && soc->n > 0) {
+    for (i = 0; i < soc->n; ++i) {
+      p->soc_nnz += soc->sizes[i] * (soc->sizes[i] + 1) / 2;
+    }
+    p->soc_idxs = (scs_int *)scs_calloc(p->soc_nnz, sizeof(scs_int));
+    if (!p->soc_idxs) {
+      return SCS_NULL;
+    }
+  }
+  kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, p->soc_idxs, 1);
   if (!kkt) {
     return SCS_NULL;
   }
@@ -199,6 +212,9 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   }
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
+  }
+  for (i = 0; i < p->soc_nnz; i++) {
+    p->soc_idxs[i] = idx_mapping[p->soc_idxs[i]];
   }
   SCS(cs_spfree)(kkt);
   scs_free(Pinv);
@@ -285,6 +301,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p->Dinv);
     scs_free(p->bp);
     scs_free(p->diag_r_idxs);
+    scs_free(p->soc_idxs);
     scs_free(p->Lnz);
     scs_free(p->iwork);
     scs_free(p->etree);

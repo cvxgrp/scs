@@ -426,6 +426,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("rho_x must be a positive finite number (1e-3 works well).\n");
     return -1;
   }
+  if (stgs->soc_metric < 0 || stgs->soc_metric > 1) {
+    scs_printf("soc_metric must be 0 or 1.\n");
+    return -1;
+  }
   if (stgs->adaptive_diag_scale < 0 || stgs->adaptive_diag_scale > 3) {
     scs_printf("adaptive_diag_scale must be 0 (off), 1 (rows), "
                "2 (rows + columns), or 3 (rows + one-sided columns).\n");
@@ -777,6 +781,139 @@ static scs_float candidate_merit(ScsWork *w, const scs_float *vc,
   return merit;
 }
 
+
+/* ============= SOC automorphism metric (stgs->soc_metric) ============= */
+
+/* y = scale * P(w) x for the spin (SOC) Jordan algebra with det(w) = 1:
+ * P(w) x = 2 w (w'x) - J x, J = diag(1, -I). Safe for y == x. */
+static void soc_P_apply(const scs_float *w, scs_float *x, scs_int q,
+                        scs_float scale) {
+  scs_int i;
+  scs_float wx = 0., x0 = x[0];
+  for (i = 0; i < q; ++i) {
+    wx += w[i] * x[i];
+  }
+  x[0] = scale * (2. * w[0] * wx - x0);
+  for (i = 1; i < q; ++i) {
+    x[i] = scale * (2. * w[i] * wx + x[i]);
+  }
+}
+
+/* Apply P(J w) = P(w)^{-1} (det w = 1): J w = (w0, -wbar). */
+static void soc_Pinv_apply(const scs_float *w, scs_float *x, scs_int q,
+                           scs_float scale) {
+  scs_int i;
+  scs_float wx = w[0] * x[0], x0 = x[0];
+  for (i = 1; i < q; ++i) {
+    wx -= w[i] * x[i];
+  }
+  x[0] = scale * (2. * w[0] * wx - x0);
+  for (i = 1; i < q; ++i) {
+    x[i] = scale * (-2. * w[i] * wx + x[i]);
+  }
+}
+
+/* Fill the -W = -r P(w) upper triangle (column-major) for one block. */
+static void soc_fill_vals(const scs_float *w, scs_float r, scs_float *vals,
+                          scs_int q) {
+  scs_int i, j, c = 0;
+  for (j = 0; j < q; ++j) {
+    for (i = 0; i <= j; ++i) {
+      scs_float v = 2. * w[i] * w[j];
+      if (i == j) {
+        v -= (i == 0) ? 1. : -1.; /* J diagonal */
+      }
+      vals[c++] = -r * v;
+    }
+  }
+}
+
+/* Jordan square root of unit-determinant w: (w + e) / sqrt(2 (w0 + 1)). */
+static void soc_sqrt_w(const scs_float *w, scs_float *sw, scs_int q) {
+  scs_int i;
+  scs_float d = SQRTF(2. * (w[0] + 1.));
+  sw[0] = (w[0] + 1.) / d;
+  for (i = 1; i < q; ++i) {
+    sw[i] = w[i] / d;
+  }
+}
+
+/* Streaming residual-direction tracker: EMA power-iteration on the block
+ * primal-residual vectors. Called on fresh residuals. */
+static void soc_track(ScsWork *w) {
+  scs_int b, i, q;
+  for (b = 0; b < w->nsoc; ++b) {
+    const scs_float *p =
+        &(w->r_normalized->ax_s_btau[w->soc_starts[b]]);
+    scs_float *d = &(w->soc_dir[w->soc_off[b]]);
+    scs_float *st = &(w->soc_stat[3 * b]);
+    scs_float c = 0., nrm2 = 0., dn = 0.;
+    q = w->soc_sizes[b];
+    for (i = 0; i < q; ++i) {
+      c += p[i] * d[i];
+      nrm2 += p[i] * p[i];
+    }
+    st[0] = SOC_EMA * st[0] + (1. - SOC_EMA) * c * c;
+    st[1] = SOC_EMA * st[1] + (1. - SOC_EMA) * nrm2 / (scs_float)q;
+    for (i = 0; i < q; ++i) {
+      d[i] = SOC_EMA * d[i] + (1. - SOC_EMA) * c * p[i];
+      dn += d[i] * d[i];
+    }
+    dn = SQRTF(dn);
+    if (dn > _DIV_EPS_TOL) {
+      for (i = 0; i < q; ++i) {
+        d[i] /= dn;
+      }
+    }
+  }
+}
+
+/* Recalibrate the per-block boost from the tracked residual direction and
+ * refresh the registered -W KKT values. Called inside the update-scale
+ * apply block (after set_diag_r), so the linear system refactor that
+ * follows picks the new values up. */
+static void soc_calibrate(ScsWork *w) {
+  scs_int b, i, q, c = 0;
+  for (b = 0; b < w->nsoc; ++b) {
+    scs_float *wb = &(w->soc_w[w->soc_off[b]]);
+    scs_float *swb = &(w->soc_sw[w->soc_off[b]]);
+    const scs_float *d = &(w->soc_dir[w->soc_off[b]]);
+    scs_float *st = &(w->soc_stat[3 * b]);
+    scs_float r = w->diag_r[w->d->n + w->soc_starts[b]];
+    scs_float dbar = 0., tau_t, ap, am, ct, sh;
+    q = w->soc_sizes[b];
+    for (i = 1; i < q; ++i) {
+      dbar += d[i] * d[i];
+    }
+    dbar = SQRTF(dbar);
+    if (st[1] > _DIV_EPS_TOL && st[0] > _DIV_EPS_TOL &&
+        dbar > 1e-8) {
+      /* anisotropy sets the rapidity magnitude, alignment its sign:
+       * compress the metric along the dominant residual direction */
+      tau_t = SOC_TAU_DAMP * log(MAX(st[0] / st[1], _DIV_EPS_TOL));
+      tau_t = MIN(MAX(tau_t, 0.), SOC_TAU_MAX);
+      ap = d[0] + dbar;  /* alignment with (1, +bbar) */
+      am = d[0] - dbar;  /* alignment with (1, -bbar) */
+      if (ap * ap >= am * am) {
+        tau_t = -tau_t;
+      }
+    } else {
+      tau_t = 0.;
+    }
+    st[2] = (1. - SOC_TAU_DAMP) * st[2] + SOC_TAU_DAMP * tau_t;
+    st[2] = MIN(MAX(st[2], -SOC_TAU_MAX), SOC_TAU_MAX);
+    ct = cosh(st[2]);
+    sh = sinh(st[2]);
+    wb[0] = ct;
+    for (i = 1; i < q; ++i) {
+      wb[i] = (dbar > 1e-8) ? sh * d[i] / dbar : 0.;
+    }
+    soc_sqrt_w(wb, swb, q);
+    soc_fill_vals(wb, r, &(w->soc_vals[c]), q);
+    c += q * (q + 1) / 2;
+  }
+}
+
 /* =================== Warm / Cold Start Helpers ==================== */
 
 static inline scs_int _is_nan(scs_float x) {
@@ -799,6 +936,21 @@ static void warm_start_vars(ScsWork *w, ScsSolution *sol) {
   for (i = 0; i < m; ++i) {
     v[i + n] = sol->y[i] + sol->s[i] / w->diag_r[i + n];
     v[i + n] = _is_nan(v[i + n]) ? 0. : v[i + n];
+  }
+  if (w->nsoc) {
+    /* block metric: v = y + W^{-1} s */
+    scs_int b, j, st, q;
+    for (b = 0; b < w->nsoc; ++b) {
+      st = n + w->soc_starts[b];
+      q = w->soc_sizes[b];
+      for (j = 0; j < q; ++j) {
+        v[st + j] -= sol->y[w->soc_starts[b] + j];
+      }
+      soc_Pinv_apply(&(w->soc_w[w->soc_off[b]]), &(v[st]), q, 1.0);
+      for (j = 0; j < q; ++j) {
+        v[st + j] += sol->y[w->soc_starts[b] + j];
+      }
+    }
   }
   v[n + m] = 1.0; /* tau = 1 */
   /* un-normalize so sol unchanged */
@@ -852,6 +1004,37 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
     pp  += pi  * pi  * ri;
     pmu += pi  * mui * ri;
   }
+  if (w->nsoc) {
+    /* block metric: x'W y = r (P(w) x)'y on SOC blocks; subtract the
+     * diagonal contribution added above and add the W-weighted one */
+    scs_int b, j, st, q;
+    for (b = 0; b < w->nsoc; ++b) {
+      scs_float Pg[128], Pp[128];
+      const scs_float *wb = &(w->soc_w[w->soc_off[b]]);
+      scs_float rr;
+      st = w->d->n + w->soc_starts[b];
+      q = w->soc_sizes[b];
+      rr = r[st];
+      if (q > 128) {
+        continue; /* stack buffer cap; larger blocks keep scalar metric
+                     (calibration also skips them) */
+      }
+      for (j = 0; j < q; ++j) {
+        Pg[j] = g[st + j];
+        Pp[j] = p[st + j];
+      }
+      soc_P_apply(wb, Pg, q, 1.0);
+      soc_P_apply(wb, Pp, q, 1.0);
+      for (j = 0; j < q; ++j) {
+        scs_float gi = g[st + j], pi = p[st + j], mui = mu[st + j];
+        gg  += rr * (Pg[j] * gi  - gi  * gi);
+        mug += rr * (Pg[j] * mui - mui * gi);
+        pg  += rr * (Pg[j] * pi  - pi  * gi);
+        pp  += rr * (Pp[j] * pi  - pi  * pi);
+        pmu += rr * (Pp[j] * mui - pi  * mui);
+      }
+    }
+  }
   a = tau_scale + gg;
   b = mug - 2 * pg - eta * tau_scale;
   c = pp - pmu;
@@ -869,6 +1052,14 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   }
   for (i = n; i < l - 1; ++i) {
     w->u_t[i] = -w->v[i] * w->diag_r[i];
+  }
+  if (w->nsoc) {
+    /* block metric: rhs y-part is -W v = P(w) applied to the scalar -r v */
+    scs_int b;
+    for (b = 0; b < w->nsoc; ++b) {
+      soc_P_apply(&(w->soc_w[w->soc_off[b]]),
+                  &(w->u_t[n + w->soc_starts[b]]), w->soc_sizes[b], 1.0);
+    }
   }
   w->u_t[l - 1] = w->v[l - 1];
 #if INDIRECT > 0
@@ -912,6 +1103,16 @@ static void compute_rsk(ScsWork *w) {
   for (i = 0; i < l; ++i) {
     w->rsk[i] = (w->v[i] + w->u[i] - 2 * w->u_t[i]) * w->diag_r[i];
   }
+  if (w->nsoc) {
+    /* block metric: s = W(v + u - 2u_t) = P(w) applied to the scalar
+     * result (scalars commute through P) */
+    scs_int b;
+    for (b = 0; b < w->nsoc; ++b) {
+      soc_P_apply(&(w->soc_w[w->soc_off[b]]),
+                  &(w->rsk[w->d->n + w->soc_starts[b]]), w->soc_sizes[b],
+                  1.0);
+    }
+  }
 }
 
 static void update_dual_vars(ScsWork *w) {
@@ -927,9 +1128,27 @@ static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter) {
   for (i = 0; i < l; ++i) {
     w->u[i] = 2 * w->u_t[i] - w->v[i];
   }
-  /* u = [x;y;tau] */
+  /* u = [x;y;tau]. Under the SOC block metric the cone step is the
+   * W-metric projection u = W^{-1/2} Pi(W^{1/2} z): conjugate by the
+   * unit-determinant boost B = P(w^{1/2}) around the scalar wrapper (the
+   * scalar part of W^{1/2} slides through the projection; the boost does
+   * NOT -- cone automorphisms are not orthogonal maps). */
+  if (w->nsoc) {
+    scs_int b;
+    for (b = 0; b < w->nsoc; ++b) {
+      soc_P_apply(&(w->soc_sw[w->soc_off[b]]),
+                  &(w->u[n + w->soc_starts[b]]), w->soc_sizes[b], 1.0);
+    }
+  }
   status =
       SCS(proj_dual_cone)(&(w->u[n]), w->cone_work, w->scal, &(w->diag_r[n]));
+  if (w->nsoc) {
+    scs_int b;
+    for (b = 0; b < w->nsoc; ++b) {
+      soc_Pinv_apply(&(w->soc_sw[w->soc_off[b]]),
+                     &(w->u[n + w->soc_starts[b]]), w->soc_sizes[b], 1.0);
+    }
+  }
   if (iter < FEASIBLE_ITERS) {
     w->u[l - 1] = 1.0;
   } else {
@@ -1283,6 +1502,78 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   /* set w->*_orig and performs normalization if appropriate */
   scs_update(w, w->d->b, w->d->c);
 
+  /* (research) SOC automorphism metric setup: build blocks from the SOC
+   * cones (q >= 2), register with the linear system before init so the
+   * KKT pattern includes the dense blocks. Direct CPU solver only. */
+  if (w->stgs->soc_metric) {
+    if (strcmp(scs_get_lin_sys_method(), "sparse-direct-amd-qdldl") != 0 ||
+        !w->stgs->adaptive_scale) {
+      w->stgs->soc_metric = 0;
+    }
+  }
+  if (w->stgs->soc_metric && w->k->qsize > 0) {
+    scs_int b, row, nb = 0, wl = 0, nnz = 0;
+    row = w->k->z + w->k->l + w->k->bsize;
+    for (b = 0; b < w->k->qsize; ++b) {
+      /* q > 128 blocks stay on the scalar metric (root_plus stack cap) */
+      if (w->k->q[b] >= 2 && w->k->q[b] <= 128) {
+        nb++;
+        wl += w->k->q[b];
+        nnz += w->k->q[b] * (w->k->q[b] + 1) / 2;
+      }
+    }
+    if (nb > 0) {
+      scs_int j, qq;
+      w->nsoc = nb;
+      w->soc_wlen = wl;
+      w->soc_nnz = nnz;
+      w->soc_starts = (scs_int *)scs_calloc(nb, sizeof(scs_int));
+      w->soc_sizes = (scs_int *)scs_calloc(nb, sizeof(scs_int));
+      w->soc_off = (scs_int *)scs_calloc(nb, sizeof(scs_int));
+      w->soc_w = (scs_float *)scs_calloc(wl, sizeof(scs_float));
+      w->soc_sw = (scs_float *)scs_calloc(wl, sizeof(scs_float));
+      w->soc_vals = (scs_float *)scs_calloc(nnz, sizeof(scs_float));
+      w->soc_dir = (scs_float *)scs_calloc(wl, sizeof(scs_float));
+      w->soc_stat = (scs_float *)scs_calloc(3 * nb, sizeof(scs_float));
+      if (!w->soc_starts || !w->soc_sizes || !w->soc_off || !w->soc_w ||
+          !w->soc_sw || !w->soc_vals || !w->soc_dir || !w->soc_stat) {
+        scs_printf("ERROR: work memory allocation failure\n");
+        scs_finish(w);
+        return SCS_NULL;
+      }
+      nb = 0;
+      wl = 0;
+      nnz = 0;
+      for (b = 0; b < w->k->qsize; ++b) {
+        qq = w->k->q[b];
+        if (qq >= 2 && qq <= 128) {
+          w->soc_starts[nb] = row;
+          w->soc_sizes[nb] = qq;
+          w->soc_off[nb] = wl;
+          /* identity boost; direction tracker starts uniform */
+          w->soc_w[wl] = 1.0;
+          w->soc_sw[wl] = 1.0;
+          for (j = 0; j < qq; ++j) {
+            w->soc_dir[wl + j] = 1.0 / SQRTF((scs_float)qq);
+          }
+          soc_fill_vals(&(w->soc_w[wl]), w->diag_r[w->d->n + row],
+                        &(w->soc_vals[nnz]), qq);
+          nnz += qq * (qq + 1) / 2;
+          wl += qq;
+          nb++;
+        }
+        row += qq;
+      }
+      w->soc_sm.n = w->nsoc;
+      w->soc_sm.starts = w->soc_starts;
+      w->soc_sm.sizes = w->soc_sizes;
+      w->soc_sm.vals = w->soc_vals;
+      SCS(set_soc_metric)(&(w->soc_sm));
+    } else {
+      w->stgs->soc_metric = 0;
+    }
+  }
+
   if (!(w->p = scs_init_lin_sys_work(w->d->A, w->d->P, w->diag_r))) {
     scs_printf("ERROR: init_lin_sys_work failure\n");
     scs_finish(w);
@@ -1516,6 +1807,11 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
 
     /* update diag r vector */
     set_diag_r(w);
+    if (w->nsoc) {
+      /* recalibrate SOC block metrics and refresh registered KKT values
+       * before the refactor below */
+      soc_calibrate(w);
+    }
 
     /* update linear systems */
     linsys_status = scs_update_lin_sys_diag_r(w->p, w->diag_r);
@@ -1536,6 +1832,22 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
      */
     for (i = 0; i < w->d->n + w->d->m + 1; i++) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
+    }
+    if (w->nsoc) {
+      /* block metric: v = W^{-1} rsk + 2u_t - u; correct the scalar
+       * remap on SOC blocks: v = P(w)^{-1}(v_scalar - t) + t */
+      scs_int b, j, st, q;
+      for (b = 0; b < w->nsoc; ++b) {
+        st = w->d->n + w->soc_starts[b];
+        q = w->soc_sizes[b];
+        for (j = 0; j < q; ++j) {
+          w->v[st + j] -= 2 * w->u_t[st + j] - w->u[st + j];
+        }
+        soc_Pinv_apply(&(w->soc_w[w->soc_off[b]]), &(w->v[st]), q, 1.0);
+        for (j = 0; j < q; ++j) {
+          w->v[st + j] += 2 * w->u_t[st + j] - w->u[st + j];
+        }
+      }
     }
   }
   return 0;
@@ -1705,6 +2017,9 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                        "interrupted", "interrupted");
       }
       populate_residual_struct(w, i);
+      if (w->nsoc) {
+        soc_track(w);
+      }
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }
@@ -1865,6 +2180,15 @@ void scs_finish(ScsWork *w) {
     scs_free(w->restart_scratch);
     scs_free(w->scale_mults);
     scs_free(w->col_mults);
+    SCS(set_soc_metric)(SCS_NULL);
+    scs_free(w->soc_starts);
+    scs_free(w->soc_sizes);
+    scs_free(w->soc_off);
+    scs_free(w->soc_w);
+    scs_free(w->soc_sw);
+    scs_free(w->soc_vals);
+    scs_free(w->soc_dir);
+    scs_free(w->soc_stat);
     SCS(free_sol)(w->xys_orig);
     if (w->scal) {
       scs_free(w->scal->D);

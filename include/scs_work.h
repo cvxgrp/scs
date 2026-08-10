@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include "scs.h"
+#include "../linsys/csparse.h"
 
 /** Contains normalization variables. */
 typedef struct {
@@ -93,6 +94,16 @@ struct SCS_WORK {
   /* AA stats */
   scs_float aa_norm;
   scs_int rejected_accel_steps, accepted_accel_steps;
+  /* (research) SOC automorphism block metric (stgs->soc_metric):
+   * per-block W = r * P(w) with w a unit-determinant boost vector; sw is
+   * the cached Jordan square root of w. vals holds the -W KKT entries
+   * (upper triangle, column-major per block) registered with the linear
+   * system. dir/stat carry the streaming residual-direction tracker. */
+  scs_int nsoc, soc_wlen, soc_nnz;
+  scs_int *soc_starts, *soc_sizes, *soc_off; /* row offset, size, w offset */
+  scs_float *soc_w, *soc_sw, *soc_vals, *soc_dir;
+  scs_float *soc_stat; /* per block: ema_top, ema_tot, tau */
+  ScsSocMetric soc_sm;
   /* Halpern restart state (active when stgs->restart is set) */
   scs_float *v_anchor;          /* Halpern anchor point, size n+m+1 */
   scs_float *v_avg;             /* running average over current cycle */

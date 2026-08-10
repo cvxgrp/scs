@@ -86,9 +86,18 @@ ScsMatrix *SCS(cs_spfree)(ScsMatrix *A) {
 }
 
 /* Build the KKT matrix */
+static const ScsSocMetric *g_soc_metric = SCS_NULL;
+void SCS(set_soc_metric)(const ScsSocMetric *sm) {
+  g_soc_metric = sm;
+}
+const ScsSocMetric *SCS(get_soc_metric)(void) {
+  return g_soc_metric;
+}
+
 ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
                          scs_float *diag_p, const scs_float *diag_r,
-                         scs_int *diag_r_idxs, scs_int upper) {
+                         scs_int *diag_r_idxs, scs_int *soc_idxs,
+                         scs_int upper) {
   /*
    * Forms column compressed KKT matrix assumes column compressed A,P matrices.
    * Only upper OR lower triangular part is stuffed, depending on `upper` flag.
@@ -108,11 +117,32 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
   scs_int Anz = A->p[n];
   scs_int Knzmax;
   scs_int *idx_mapping;
+  /* (research) SOC block-metric: rows covered by registered blocks get a
+   * dense upper triangle in the -R_y region instead of a lone diagonal */
+  const ScsSocMetric *soc = soc_idxs ? SCS(get_soc_metric)() : SCS_NULL;
+  scs_int soc_extra = 0, soc_count = 0, b, q, st;
+  scs_int *soc_of_row = SCS_NULL;
+  if (soc && soc->n > 0) {
+    soc_of_row = (scs_int *)scs_calloc(m, sizeof(scs_int));
+    if (!soc_of_row) {
+      return SCS_NULL;
+    }
+    for (i = 0; i < m; ++i) {
+      soc_of_row[i] = -1;
+    }
+    for (b = 0; b < soc->n; ++b) {
+      q = soc->sizes[b];
+      soc_extra += q * (q + 1) / 2 - q;
+      for (i = 0; i < q; ++i) {
+        soc_of_row[soc->starts[b] + i] = b;
+      }
+    }
+  }
   if (P) {
     /* Upper bound P + I triangular component NNZs as Pnz + n */
-    Knzmax = n + m + Anz + P->p[n];
+    Knzmax = n + m + Anz + P->p[n] + soc_extra;
   } else {
-    Knzmax = n + m + Anz;
+    Knzmax = n + m + Anz + soc_extra;
   }
   K = SCS(cs_spalloc)(m + n, m + n, Knzmax, 1, 1);
 
@@ -197,12 +227,44 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
 
   /* -R_y at bottom right */
   for (j = 0; j < m; j++) {
+    if (soc_of_row && soc_of_row[j] >= 0) {
+      b = soc_of_row[j];
+      st = soc->starts[b];
+      if (j == st) {
+        /* emit the whole upper triangle of this SOC block, column-major,
+         * diagonal included (initial values match the scalar metric:
+         * off-diagonals 0 for the identity boost) */
+        q = soc->sizes[b];
+        for (h = 0; h < q; ++h) {   /* local column */
+          for (i = 0; i <= h; ++i) { /* local row */
+            if (upper) {
+              K->i[count] = n + st + i;
+              K->p[count] = n + st + h;
+            } else {
+              K->i[count] = n + st + h;
+              K->p[count] = n + st + i;
+            }
+            /* take current registered metric values so the initial
+             * factorization is consistent with a non-identity boost */
+            K->x[count] = soc->vals ? soc->vals[soc_count]
+                                    : ((i == h) ? -diag_r[n + st + i] : 0.);
+            if (i == h) {
+              diag_r_idxs[n + st + i] = count;
+            }
+            soc_idxs[soc_count++] = count;
+            count++;
+          }
+        }
+      }
+      continue; /* non-start block rows handled at block start */
+    }
     K->i[count] = j + n;
     K->p[count] = j + n;
     K->x[count] = -diag_r[j + n];
     diag_r_idxs[j + n] = count; /* store the indices where diag_r occurs */
     count++;
   }
+  scs_free(soc_of_row);
 
   idx_mapping = (scs_int *)scs_calloc(count, sizeof(scs_int));
   if (!idx_mapping) {
@@ -214,6 +276,9 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
   if (Kcsc) {
     for (i = 0; i < m + n; i++) {
       diag_r_idxs[i] = idx_mapping[diag_r_idxs[i]];
+    }
+    for (i = 0; i < soc_count; i++) {
+      soc_idxs[i] = idx_mapping[soc_idxs[i]];
     }
   }
   scs_free(idx_mapping);

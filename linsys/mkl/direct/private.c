@@ -95,7 +95,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   /* MKL pardiso requires upper triangular CSR matrices. The KKT matrix stuffed
    * as CSC lower triangular is equivalent. Pass upper=0. */
-  p->kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 0);
+  p->kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, SCS_NULL, 0);
   if (!(p->kkt)) {
     scs_printf("Error in forming KKT matrix");
     scs_free_lin_sys_work(p);
