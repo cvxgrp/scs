@@ -81,6 +81,8 @@ typedef struct {
   /** (research) equilibration pass counts. */
   scs_int num_ruiz_passes;
   scs_int num_l2_passes;
+  /** (research) absolute floor on per-column rho_x_j. */
+  scs_float diag_rho_x_floor;
   /** Whether to use Halpern anchoring with adaptive restarts (experimental).
    *  Targets linear convergence on problems with polyhedral (e.g. LP)
    *  structure. Incompatible with Anderson acceleration: setting this

@@ -44,6 +44,8 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->num_ruiz_passes = atoi(val);
   } else if (strcmp(param, "num_l2_passes") == 0) {
     s->num_l2_passes = atoi(val);
+  } else if (strcmp(param, "diag_rho_x_floor") == 0) {
+    s->diag_rho_x_floor = atof(val);
   } else if (strcmp(param, "log_csv_filename") == 0) {
     s->log_csv_filename = val;
   } else {

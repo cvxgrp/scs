@@ -178,6 +178,7 @@ void scs_set_default_settings(ScsSettings *stgs) {
   stgs->rescaling_min_iters = RESCALING_MIN_ITERS;
   stgs->num_ruiz_passes = NUM_RUIZ_PASSES;
   stgs->num_l2_passes = NUM_L2_PASSES;
+  stgs->diag_rho_x_floor = DIAG_RHO_X_FLOOR;
   stgs->restart = RESTART;
   stgs->write_data_filename = WRITE_DATA_FILENAME;
   stgs->log_csv_filename = LOG_CSV_FILENAME;

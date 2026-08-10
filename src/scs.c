@@ -1443,7 +1443,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
                    : MAX(DIAG_SCALE_COL_MULT_MIN,
                          w->stgs->rho_x / DIAG_RHO_X_CEIL);
     col_f_hi =
-        MIN(DIAG_SCALE_COL_MULT_MAX, w->stgs->rho_x / DIAG_RHO_X_FLOOR);
+        MIN(DIAG_SCALE_COL_MULT_MAX, w->stgs->rho_x / w->stgs->diag_rho_x_floor);
   }
   if (w->stgs->adaptive_diag_scale) {
     /* residual profiles: adapt when the scalar updates, or when some
