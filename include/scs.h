@@ -65,13 +65,14 @@ typedef struct {
   scs_float scale;
   /** Whether to adaptively update `scale`. */
   scs_int adaptive_scale;
-  /** Dynamic diagonal rescaling from residual profiles: 0 = off (default),
+  /** Dynamic diagonal rescaling from residual profiles: 0 = off,
    *  1 = per-row (rescales the R_y diagonal from the row-wise primal
    *  residual profile; uniform within non-polyhedral cone blocks),
    *  2 = additionally per-column (rho_x lowered, never raised, on columns
-   *  whose dual residuals lag the profile). The dynamic analog of
-   *  two-sided Ruiz equilibration with residuals replacing the data
-   *  norms. Requires `adaptive_scale`. */
+   *  whose dual residuals lag the profile; the default). The dynamic
+   *  analog of two-sided Ruiz equilibration with residuals replacing the
+   *  data norms. Requires `adaptive_scale` (silently disabled without
+   *  it). */
   scs_int adaptive_diag_scale;
   /** Primal constraint scaling factor. */
   scs_float rho_x;

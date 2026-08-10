@@ -1061,8 +1061,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   if (w->stgs->adaptive_diag_scale) {
     if (!w->stgs->adaptive_scale) {
-      scs_printf("WARN: adaptive_diag_scale requires adaptive_scale, "
-                 "disabling adaptive_diag_scale.\n");
+      /* silently disable: diag scaling rides the adaptive-scale update
+       * machinery, and since it defaults on, users who only turn off
+       * adaptive_scale should not see a warning */
       w->stgs->adaptive_diag_scale = 0;
     } else {
       scs_int j;

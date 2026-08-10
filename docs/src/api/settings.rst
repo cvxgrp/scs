@@ -30,6 +30,11 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - Whether to heuristically adapt dual :code:`scale` through the solve. See :ref:`scaling`.
      - True/False
      - 1
+   * - :code:`adaptive_diag_scale`
+     - :code:`scs_int`
+     - Dynamic per-row/per-column rescaling from residual profiles, the dynamic analog of two-sided Ruiz equilibration: 0 = off, 1 = rows only, 2 = rows and columns. Requires :code:`adaptive_scale` (silently disabled without it). See :ref:`scaling`.
+     - 0/1/2
+     - 2
    * - :code:`rho_x`
      - :code:`scs_float`
      - Primal scale factor. See :ref:`scaling`.
