@@ -104,6 +104,9 @@ struct SCS_WORK {
   scs_float *soc_w, *soc_sw, *soc_vals, *soc_dir;
   scs_float *soc_stat; /* per block: ema_top, ema_tot, tau */
   scs_float soc_prev_rel; /* max relative residual at last update event */
+  scs_float soc_boost_base;    /* residual level when boost first engaged */
+  scs_int soc_boost_strikes;   /* events without net progress since then */
+  scs_int soc_boost_disabled;  /* watchdog tripped: identity for the rest */
   ScsSocMetric soc_sm;
   /* Halpern restart state (active when stgs->restart is set) */
   scs_float *v_anchor;          /* Halpern anchor point, size n+m+1 */

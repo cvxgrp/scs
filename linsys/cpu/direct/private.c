@@ -2,8 +2,6 @@
 
 #include "private.h"
 
-static void soc_selftest(ScsLinSysWork *p, const char *where);
-
 /* ======================== LDL Factorization Internals ======================== */
 
 static scs_int _ldl_init(ScsMatrix *A, scs_int *P, scs_float **info) {
@@ -173,19 +171,43 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   p->soc_idxs = SCS_NULL;
   if (soc && soc->n > 0) {
     for (i = 0; i < soc->n; ++i) {
-      p->soc_nnz += soc->sizes[i] * (soc->sizes[i] + 1) / 2;
+      p->soc_nnz += soc->sizes[i] + 2; /* w column + 2 border diagonals */
     }
     p->soc_idxs = (scs_int *)scs_calloc(p->soc_nnz, sizeof(scs_int));
     if (!p->soc_idxs) {
       return SCS_NULL;
     }
   }
+  if (p->soc_idxs) {
+    /* order the CORE with AMD on the scalar-pattern KKT and append the
+     * border columns last: AMD must not see the borders, or it may
+     * eliminate one early and re-create the block clique as fill,
+     * perturbing the core ordering away from the scalar build's. With
+     * borders last the core factor matches the scalar build exactly. */
+    ScsMatrix *core =
+        SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, SCS_NULL, 1);
+    if (!core) {
+      return SCS_NULL;
+    }
+    amd_status = _ldl_init(core, p->perm, &info);
+    SCS(cs_spfree)(core);
+    if (amd_status >= 0) {
+      for (i = A->n + A->m; i < p->nkkt; i++) {
+        p->perm[i] = i;
+      }
+    }
+  }
   kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, p->soc_idxs, 1);
   if (!kkt) {
+    if (p->soc_idxs) {
+      scs_free(info);
+    }
     return SCS_NULL;
   }
   kkt_nnz = kkt->p[kkt->n];
-  amd_status = _ldl_init(kkt, p->perm, &info);
+  if (!p->soc_idxs) {
+    amd_status = _ldl_init(kkt, p->perm, &info);
+  }
   if (amd_status < 0) {
     scs_printf("AMD permutatation error.\n");
     SCS(cs_spfree)(kkt);
@@ -196,7 +218,7 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   scs_printf("Matrix factorization info:\n");
   amd_info(info);
 #endif
-  Pinv = cs_pinv(p->perm, A->n + A->m);
+  Pinv = cs_pinv(p->perm, kkt->n);
   idx_mapping = (scs_int *)scs_calloc(kkt_nnz, sizeof(scs_int));
   if (!Pinv || !idx_mapping) {
     SCS(cs_spfree)(kkt);
@@ -211,21 +233,6 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
     scs_free(info);
     scs_free(idx_mapping);
     return SCS_NULL;
-  }
-  if (p->soc_idxs) {
-    /* the dense SOC blocks degrade the no-pivot LDL accuracy enough to
-     * shift the DR fixed point (the solve error is systematic, not
-     * random); one iterative-refinement step in scs_solve_lin_sys
-     * restores it */
-    p->rb = (scs_float *)scs_calloc(A->n + A->m, sizeof(scs_float));
-    p->rx = (scs_float *)scs_calloc(A->n + A->m, sizeof(scs_float));
-    if (!p->rb || !p->rx) {
-      SCS(cs_spfree)(kkt);
-      scs_free(Pinv);
-      scs_free(info);
-      scs_free(idx_mapping);
-      return SCS_NULL;
-    }
   }
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
@@ -255,18 +262,30 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   n_plus_m = A->n + A->m;
   p->m = A->m;
   p->n = A->n;
+  {
+    /* (research) SOC border columns extend the KKT dimension */
+    const ScsSocMetric *soc = SCS(get_soc_metric)();
+    p->nkkt = n_plus_m + ((soc && soc->n > 0) ? 2 * soc->n : 0);
+  }
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
-  p->perm = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
+  p->perm = (scs_int *)scs_calloc(p->nkkt, sizeof(scs_int));
   p->L = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
-  p->bp = (scs_float *)scs_calloc(n_plus_m, sizeof(scs_float));
+  p->bp = (scs_float *)scs_calloc(p->nkkt, sizeof(scs_float));
   p->diag_r_idxs = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
   p->factorizations = 0;
   if (!p->diag_p || !p->perm || !p->L || !p->bp || !p->diag_r_idxs) {
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
-  p->L->m = n_plus_m;
-  p->L->n = n_plus_m;
+  if (p->nkkt > n_plus_m) {
+    p->bext = (scs_float *)scs_calloc(p->nkkt, sizeof(scs_float));
+    if (!p->bext) {
+      scs_free_lin_sys_work(p);
+      return SCS_NULL;
+    }
+  }
+  p->L->m = p->nkkt;
+  p->L->n = p->nkkt;
   p->kkt = permute_kkt(A, P, p, diag_r);
   if (!p->kkt) {
     scs_free_lin_sys_work(p);
@@ -280,29 +299,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
-  soc_selftest(p, "init");
   return p;
-}
-
-/* y = K x in ORIGINAL coordinates, using the permuted upper-triangle
- * CSC kkt: entry (i, j) of the permuted matrix is entry
- * (perm[i], perm[j]) of the original. x and y must not alias. */
-static void kkt_sym_matvec(ScsLinSysWork *p, const scs_float *x,
-                           scs_float *y) {
-  scs_int i, j, h, nm = p->n + p->m;
-  const ScsMatrix *K = p->kkt;
-  for (i = 0; i < nm; ++i) {
-    y[i] = 0.;
-  }
-  for (j = 0; j < nm; ++j) { /* permuted column */
-    for (h = K->p[j]; h < K->p[j + 1]; ++h) {
-      i = K->i[h]; /* permuted row, i <= j (upper) */
-      y[p->perm[i]] += K->x[h] * x[p->perm[j]];
-      if (i != j) {
-        y[p->perm[j]] += K->x[h] * x[p->perm[i]];
-      }
-    }
-  }
 }
 
 scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
@@ -310,45 +307,22 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   scs_int i, nm = p->n + p->m;
-  const ScsSocMetric *soc = p->rb ? SCS(get_soc_metric)() : SCS_NULL;
-  if (soc && soc->refine && !getenv("SCS_SOC_NO_REFINE")) {
-    /* one iterative-refinement pass (see permute_kkt) */
+  if (p->bext) {
+    /* bordered system: [K U; U' D][x; z] = [b; 0]; x solves the -W KKT */
     for (i = 0; i < nm; ++i) {
-      p->rx[i] = b[i]; /* keep original rhs */
+      p->bext[i] = b[i];
     }
-    _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
-    kkt_sym_matvec(p, b, p->rb); /* clobbers rb scratch, result in rb */
-    for (i = 0; i < nm; ++i) {
-      p->rx[i] -= p->rb[i]; /* residual r = rhs - K x */
+    for (i = nm; i < p->nkkt; ++i) {
+      p->bext[i] = 0.;
     }
-    _ldl_solve(p->rx, p->L, p->Dinv, p->perm, p->bp);
+    _ldl_solve(p->bext, p->L, p->Dinv, p->perm, p->bp);
     for (i = 0; i < nm; ++i) {
-      b[i] += p->rx[i];
+      b[i] = p->bext[i];
     }
     return 0;
   }
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
-}
-
-/* debug: verify matvec/factorization consistency: z = K^{-1}(K x) vs x */
-static void soc_selftest(ScsLinSysWork *p, const char *where) {
-  scs_int i, nm = p->n + p->m;
-  scs_float nx = 0., nd = 0.;
-  if (!p->rb || !getenv("SCS_SOC_SELFTEST")) {
-    return;
-  }
-  for (i = 0; i < nm; ++i) {
-    p->rx[i] = sin((scs_float)(i + 1));
-  }
-  kkt_sym_matvec(p, p->rx, p->rb);
-  _ldl_solve(p->rb, p->L, p->Dinv, p->perm, p->bp);
-  for (i = 0; i < nm; ++i) {
-    nx += p->rx[i] * p->rx[i];
-    nd += (p->rb[i] - p->rx[i]) * (p->rb[i] - p->rx[i]);
-  }
-  scs_printf("SOC_SELFTEST[%s]: rel err %.3e\n", where,
-             SQRTF(nd) / SQRTF(nx));
 }
 
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
@@ -362,8 +336,8 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
   }
   {
-    /* SOC block metrics: overwrite the dense -W entries (diagonals
-     * included, so this must come after the scalar diagonal writes) */
+    /* SOC block metrics: rewrite the border-column entries
+     * ([d1, w_0..w_{q-1}, d2] per block, see form_kkt) */
     const ScsSocMetric *soc = SCS(get_soc_metric)();
     if (soc && soc->n > 0 && soc->vals && p->soc_idxs) {
       for (i = 0; i < p->soc_nnz; ++i) {
@@ -376,7 +350,6 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     scs_printf("Error in LDL factorization when updating.\n");
     return ldl_status;
   }
-  soc_selftest(p, "update");
   return 0;
 }
 
@@ -390,8 +363,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p->bp);
     scs_free(p->diag_r_idxs);
     scs_free(p->soc_idxs);
-    scs_free(p->rb);
-    scs_free(p->rx);
+    scs_free(p->bext);
     scs_free(p->Lnz);
     scs_free(p->iwork);
     scs_free(p->etree);

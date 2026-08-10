@@ -21,19 +21,17 @@ ScsMatrix *SCS(cs_spfree)(ScsMatrix *A);
 scs_float SCS(cumsum)(scs_int *p, scs_int *c, scs_int n);
 /* Forms KKT matrix */
 /* (research) SOC block-metric registry: when set, supporting direct
- * solvers form dense upper-triangular SOC blocks in the KKT (2,2) region
- * instead of pure diagonal, and refresh their values from `vals` on every
- * diag_r update. vals is upper-triangle column-major per block, length
- * sum_b q_b(q_b+1)/2, holding the final KKT values (i.e. -W entries).
+ * solvers carry each block's -W = -rI + 2r e0 e0' - 2r ww' as the scalar
+ * diagonal plus two bordered columns appended to the KKT (sparse, exact,
+ * quasi-definite; see form_kkt), refreshing border values from `vals` on
+ * every diag_r update. vals layout per block, in emission order:
+ * [d1 = -1/(2r), w_0 .. w_{q-1}, d2 = +1/(2r)], length sum_b (q_b + 2).
  * Not thread-safe; single-solver research use only. */
 typedef struct {
   scs_int n;
   const scs_int *starts; /* row offsets within the y block */
   const scs_int *sizes;
   const scs_float *vals;
-  scs_int refine; /* iterative-refinement request (set by the core when a
-                   * boost is active or residuals near tolerance; sticky
-                   * so the effective solve operator changes only once) */
 } ScsSocMetric;
 void SCS(set_soc_metric)(const ScsSocMetric *sm);
 const ScsSocMetric *SCS(get_soc_metric)(void);

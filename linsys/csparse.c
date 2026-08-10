@@ -117,26 +117,22 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
   scs_int Anz = A->p[n];
   scs_int Knzmax;
   scs_int *idx_mapping;
-  /* (research) SOC block-metric: rows covered by registered blocks get a
-   * dense upper triangle in the -R_y region instead of a lone diagonal */
-  const ScsSocMetric *soc = soc_idxs ? SCS(get_soc_metric)() : SCS_NULL;
-  scs_int soc_extra = 0, soc_count = 0, b, q, st;
-  scs_int *soc_of_row = SCS_NULL;
+  /* (research) SOC block-metric: -W = -rI + 2r e0 e0' - 2r ww' is the
+   * scalar diagonal plus a rank-2 term per block, carried as two bordered
+   * columns appended after the (n+m) core: an e0 border with diagonal
+   * -1/(2r) (negative side) and a w border with diagonal +1/(2r)
+   * (positive side). Eliminating the borders reproduces -W exactly, the
+   * bordered matrix stays quasi-definite (borders split across the two
+   * sides), and the core KKT keeps the scalar pattern and ordering.
+   * Upper layout only (the sole registering backend uses upper). */
+  const ScsSocMetric *soc =
+      (soc_idxs && upper) ? SCS(get_soc_metric)() : SCS_NULL;
+  scs_int soc_extra = 0, soc_count = 0, nborder = 0, b, q, st, jb;
   if (soc && soc->n > 0) {
-    soc_of_row = (scs_int *)scs_calloc(m, sizeof(scs_int));
-    if (!soc_of_row) {
-      return SCS_NULL;
-    }
-    for (i = 0; i < m; ++i) {
-      soc_of_row[i] = -1;
-    }
     for (b = 0; b < soc->n; ++b) {
-      q = soc->sizes[b];
-      soc_extra += q * (q + 1) / 2 - q;
-      for (i = 0; i < q; ++i) {
-        soc_of_row[soc->starts[b] + i] = b;
-      }
+      soc_extra += soc->sizes[b] + 3; /* u1, q x u2, 2 border diagonals */
     }
+    nborder = 2 * soc->n;
   }
   if (P) {
     /* Upper bound P + I triangular component NNZs as Pnz + n */
@@ -144,7 +140,7 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
   } else {
     Knzmax = n + m + Anz + soc_extra;
   }
-  K = SCS(cs_spalloc)(m + n, m + n, Knzmax, 1, 1);
+  K = SCS(cs_spalloc)(m + n + nborder, m + n + nborder, Knzmax, 1, 1);
 
 #if VERBOSITY > 0
   scs_printf("forming kkt\n");
@@ -225,46 +221,50 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
-  /* -R_y at bottom right */
+  /* -R_y at bottom right (scalar diagonal for every row, SOC included) */
   for (j = 0; j < m; j++) {
-    if (soc_of_row && soc_of_row[j] >= 0) {
-      b = soc_of_row[j];
-      st = soc->starts[b];
-      if (j == st) {
-        /* emit the whole upper triangle of this SOC block, column-major,
-         * diagonal included (initial values match the scalar metric:
-         * off-diagonals 0 for the identity boost) */
-        q = soc->sizes[b];
-        for (h = 0; h < q; ++h) {   /* local column */
-          for (i = 0; i <= h; ++i) { /* local row */
-            if (upper) {
-              K->i[count] = n + st + i;
-              K->p[count] = n + st + h;
-            } else {
-              K->i[count] = n + st + h;
-              K->p[count] = n + st + i;
-            }
-            /* take current registered metric values so the initial
-             * factorization is consistent with a non-identity boost */
-            K->x[count] = soc->vals ? soc->vals[soc_count]
-                                    : ((i == h) ? -diag_r[n + st + i] : 0.);
-            if (i == h) {
-              diag_r_idxs[n + st + i] = count;
-            }
-            soc_idxs[soc_count++] = count;
-            count++;
-          }
-        }
-      }
-      continue; /* non-start block rows handled at block start */
-    }
     K->i[count] = j + n;
     K->p[count] = j + n;
     K->x[count] = -diag_r[j + n];
     diag_r_idxs[j + n] = count; /* store the indices where diag_r occurs */
     count++;
   }
-  scs_free(soc_of_row);
+
+  /* SOC border columns; registered vals per block, in emission order:
+   * [d1 = -1/(2r), w_0 .. w_{q-1}, d2 = +1/(2r)]. The u1 (e0) entry is
+   * the constant 1.0 and is not registered. */
+  if (soc && soc->n > 0) {
+    for (b = 0; b < soc->n; ++b) {
+      q = soc->sizes[b];
+      st = soc->starts[b];
+      jb = n + m + 2 * b; /* e0 border column; jb + 1 is the w border */
+      K->i[count] = n + st;
+      K->p[count] = jb;
+      K->x[count] = 1.0;
+      count++;
+      K->i[count] = jb;
+      K->p[count] = jb;
+      K->x[count] = soc->vals ? soc->vals[soc_count]
+                              : -1. / (2. * diag_r[n + st]);
+      soc_idxs[soc_count++] = count;
+      count++;
+      for (i = 0; i < q; ++i) {
+        K->i[count] = n + st + i;
+        K->p[count] = jb + 1;
+        /* identity boost w = e0 when no registered values yet */
+        K->x[count] = soc->vals ? soc->vals[soc_count]
+                                : ((i == 0) ? 1.0 : 0.0);
+        soc_idxs[soc_count++] = count;
+        count++;
+      }
+      K->i[count] = jb + 1;
+      K->p[count] = jb + 1;
+      K->x[count] = soc->vals ? soc->vals[soc_count]
+                              : 1. / (2. * diag_r[n + st]);
+      soc_idxs[soc_count++] = count;
+      count++;
+    }
+  }
 
   idx_mapping = (scs_int *)scs_calloc(count, sizeof(scs_int));
   if (!idx_mapping) {

@@ -813,19 +813,18 @@ static void soc_Pinv_apply(const scs_float *w, scs_float *x, scs_int q,
   }
 }
 
-/* Fill the -W = -r P(w) upper triangle (column-major) for one block. */
+/* Fill the border-column values for one block: -W = -rI + 2r e0 e0' -
+ * 2r ww' enters the KKT as the scalar diagonal plus two bordered
+ * columns; layout matches form_kkt: [d1 = -1/(2r), w_0..w_{q-1},
+ * d2 = +1/(2r)]. */
 static void soc_fill_vals(const scs_float *w, scs_float r, scs_float *vals,
                           scs_int q) {
-  scs_int i, j, c = 0;
-  for (j = 0; j < q; ++j) {
-    for (i = 0; i <= j; ++i) {
-      scs_float v = 2. * w[i] * w[j];
-      if (i == j) {
-        v -= (i == 0) ? 1. : -1.; /* J diagonal */
-      }
-      vals[c++] = -r * v;
-    }
+  scs_int i, c = 0;
+  vals[c++] = -1. / (2. * r);
+  for (i = 0; i < q; ++i) {
+    vals[c++] = w[i];
   }
+  vals[c++] = 1. / (2. * r);
 }
 
 /* Jordan square root of unit-determinant w: (w + e) / sqrt(2 (w0 + 1)). */
@@ -872,7 +871,8 @@ static void soc_track(ScsWork *w) {
  * refresh the registered -W KKT values. Called inside the update-scale
  * apply block (after set_diag_r), so the linear system refactor that
  * follows picks the new values up. */
-static void soc_calibrate(ScsWork *w, scs_int healthy) {
+/* mode: 0 = calibrate, 1 = decay toward identity, 2 = hard reset */
+static void soc_calibrate(ScsWork *w, scs_int mode) {
   scs_int b, i, q, c = 0;
   for (b = 0; b < w->nsoc; ++b) {
     scs_float *wb = &(w->soc_w[w->soc_off[b]]);
@@ -886,7 +886,7 @@ static void soc_calibrate(ScsWork *w, scs_int healthy) {
       dbar += d[i] * d[i];
     }
     dbar = SQRTF(dbar);
-    if (getenv("SCS_SOC_NEVER_BOOST")) {
+    if (mode == 2 || getenv("SCS_SOC_NEVER_BOOST")) {
       st[2] = 0.;
       tau_t = 0.;
     } else if (r < SOC_R_MIN || r > SOC_R_MAX) {
@@ -894,7 +894,7 @@ static void soc_calibrate(ScsWork *w, scs_int healthy) {
        * glbopts.h) rather than letting the EMA decay it slowly */
       st[2] = 0.;
       tau_t = 0.;
-    } else if (healthy) {
+    } else if (mode == 1) {
       /* the boost is a stall-recovery device: a healthily converging run
        * has residual profiles dominated by noise, and boosting on noise
        * measurably slows convergence; decay toward identity instead */
@@ -923,7 +923,7 @@ static void soc_calibrate(ScsWork *w, scs_int healthy) {
     }
     soc_sqrt_w(wb, swb, q);
     soc_fill_vals(wb, r, &(w->soc_vals[c]), q);
-    c += q * (q + 1) / 2;
+    c += q + 2; /* border layout: [d1, w..., d2] */
   }
 }
 
@@ -1532,7 +1532,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       if (w->k->q[b] >= 2 && w->k->q[b] <= 128) {
         nb++;
         wl += w->k->q[b];
-        nnz += w->k->q[b] * (w->k->q[b] + 1) / 2;
+        nnz += w->k->q[b] + 2; /* border cols: [d1, w..., d2] */
       }
     }
     if (nb > 0) {
@@ -1542,6 +1542,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       w->soc_nnz = nnz;
       w->soc_prev_rel = 1e30; /* first event always reads healthy: boost
                                * only after a demonstrated slow window */
+      w->soc_boost_base = 0.;
+      w->soc_boost_strikes = 0;
+      w->soc_boost_disabled = 0;
       w->soc_starts = (scs_int *)scs_calloc(nb, sizeof(scs_int));
       w->soc_sizes = (scs_int *)scs_calloc(nb, sizeof(scs_int));
       w->soc_off = (scs_int *)scs_calloc(nb, sizeof(scs_int));
@@ -1586,7 +1589,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
           }
           soc_fill_vals(&(w->soc_w[wl]), w->diag_r[w->d->n + row],
                         &(w->soc_vals[nnz]), qq);
-          nnz += qq * (qq + 1) / 2;
+          nnz += qq + 2;
           wl += qq;
           nb++;
         }
@@ -1596,7 +1599,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       w->soc_sm.starts = w->soc_starts;
       w->soc_sm.sizes = w->soc_sizes;
       w->soc_sm.vals = w->soc_vals;
-      w->soc_sm.refine = 0;
       SCS(set_soc_metric)(&(w->soc_sm));
     } else {
       w->stgs->soc_metric = 0;
@@ -1758,11 +1760,6 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       factor =
           MIN(MAX(factor, 1. / SOC_EVENT_FACTOR_MAX), SOC_EVENT_FACTOR_MAX);
     }
-    if (!w->soc_sm.refine &&
-        (boost_active ||
-         MAX(relative_res_pri, relative_res_dual) < SOC_REFINE_THRESH)) {
-      w->soc_sm.refine = 1; /* sticky, see glbopts.h */
-    }
   }
 
   /* need at least RESCALING_MIN_ITERS since last update */
@@ -1858,11 +1855,39 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     if (w->nsoc) {
       /* recalibrate SOC block metrics and refresh registered KKT values
        * before the refactor below; a >=10x residual improvement since the
-       * last event marks the run healthy (no boost wanted) */
+       * last event marks the run healthy (no boost wanted). A do-no-harm
+       * watchdog tracks net progress since the boost first engaged: two
+       * events without net improvement hard-revert to identity and
+       * disable boosting for the remainder of the solve. */
+      scs_int b_, mode, engaged = 0;
       scs_float cur_rel = MAX(relative_res_pri, relative_res_dual);
-      scs_int healthy = (cur_rel < 0.1 * w->soc_prev_rel);
+      scs_int healthy =
+          (cur_rel < 0.1 * w->soc_prev_rel) || (cur_rel < SOC_BOOST_MIN_RES);
+      mode = healthy ? 1 : 0;
+      if (w->soc_boost_disabled) {
+        mode = 1;
+      } else if (w->soc_boost_base > 0.) {
+        if (cur_rel < 0.1 * w->soc_boost_base) {
+          w->soc_boost_base = cur_rel; /* boost is working; rebase */
+          w->soc_boost_strikes = 0;
+        } else if (cur_rel > w->soc_boost_base &&
+                   ++w->soc_boost_strikes >= 2) {
+          w->soc_boost_disabled = 1;
+          mode = 2;
+        }
+      }
       w->soc_prev_rel = cur_rel;
-      soc_calibrate(w, healthy);
+      soc_calibrate(w, mode);
+      for (b_ = 0; b_ < w->nsoc; ++b_) {
+        engaged |= (ABS(w->soc_stat[3 * b_ + 2]) > 1e-3);
+      }
+      if (!engaged) {
+        w->soc_boost_base = 0.;
+        w->soc_boost_strikes = 0;
+      } else if (w->soc_boost_base == 0.) {
+        w->soc_boost_base = cur_rel;
+        w->soc_boost_strikes = 0;
+      }
     }
 
     /* update linear systems */
