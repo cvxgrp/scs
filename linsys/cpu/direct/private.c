@@ -210,6 +210,21 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
     scs_free(idx_mapping);
     return SCS_NULL;
   }
+  if (p->soc_idxs) {
+    /* the dense SOC blocks degrade the no-pivot LDL accuracy enough to
+     * shift the DR fixed point (the solve error is systematic, not
+     * random); one iterative-refinement step in scs_solve_lin_sys
+     * restores it */
+    p->rb = (scs_float *)scs_calloc(A->n + A->m, sizeof(scs_float));
+    p->rx = (scs_float *)scs_calloc(A->n + A->m, sizeof(scs_float));
+    if (!p->rb || !p->rx) {
+      SCS(cs_spfree)(kkt);
+      scs_free(Pinv);
+      scs_free(info);
+      scs_free(idx_mapping);
+      return SCS_NULL;
+    }
+  }
   for (i = 0; i < A->n + A->m; i++) {
     p->diag_r_idxs[i] = idx_mapping[p->diag_r_idxs[i]];
   }
@@ -266,10 +281,48 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   return p;
 }
 
+/* y = K x in ORIGINAL coordinates, using the permuted upper-triangle
+ * CSC kkt: entry (i, j) of the permuted matrix is entry
+ * (perm[i], perm[j]) of the original. x and y must not alias. */
+static void kkt_sym_matvec(ScsLinSysWork *p, const scs_float *x,
+                           scs_float *y) {
+  scs_int i, j, h, nm = p->n + p->m;
+  const ScsMatrix *K = p->kkt;
+  for (i = 0; i < nm; ++i) {
+    y[i] = 0.;
+  }
+  for (j = 0; j < nm; ++j) { /* permuted column */
+    for (h = K->p[j]; h < K->p[j + 1]; ++h) {
+      i = K->i[h]; /* permuted row, i <= j (upper) */
+      y[p->perm[i]] += K->x[h] * x[p->perm[j]];
+      if (i != j) {
+        y[p->perm[j]] += K->x[h] * x[p->perm[i]];
+      }
+    }
+  }
+}
+
 scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
                           scs_float tol) {
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
+  scs_int i, nm = p->n + p->m;
+  if (p->rb) {
+    /* one iterative-refinement pass (see permute_kkt) */
+    for (i = 0; i < nm; ++i) {
+      p->rx[i] = b[i]; /* keep original rhs */
+    }
+    _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
+    kkt_sym_matvec(p, b, p->rb); /* clobbers rb scratch, result in rb */
+    for (i = 0; i < nm; ++i) {
+      p->rx[i] -= p->rb[i]; /* residual r = rhs - K x */
+    }
+    _ldl_solve(p->rx, p->L, p->Dinv, p->perm, p->bp);
+    for (i = 0; i < nm; ++i) {
+      b[i] += p->rx[i];
+    }
+    return 0;
+  }
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
 }
@@ -283,6 +336,16 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   for (i = p->n; i < p->n + p->m; ++i) {
     /* top left is R_x + P, bottom right is -R_y */
     p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
+  }
+  {
+    /* SOC block metrics: overwrite the dense -W entries (diagonals
+     * included, so this must come after the scalar diagonal writes) */
+    const ScsSocMetric *soc = SCS(get_soc_metric)();
+    if (soc && soc->n > 0 && soc->vals && p->soc_idxs) {
+      for (i = 0; i < p->soc_nnz; ++i) {
+        p->kkt->x[p->soc_idxs[i]] = soc->vals[i];
+      }
+    }
   }
   ldl_status = ldl_factor(p, p->n);
   if (ldl_status < 0) {
@@ -302,6 +365,8 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p->bp);
     scs_free(p->diag_r_idxs);
     scs_free(p->soc_idxs);
+    scs_free(p->rb);
+    scs_free(p->rx);
     scs_free(p->Lnz);
     scs_free(p->iwork);
     scs_free(p->etree);

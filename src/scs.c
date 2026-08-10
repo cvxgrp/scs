@@ -872,7 +872,7 @@ static void soc_track(ScsWork *w) {
  * refresh the registered -W KKT values. Called inside the update-scale
  * apply block (after set_diag_r), so the linear system refactor that
  * follows picks the new values up. */
-static void soc_calibrate(ScsWork *w) {
+static void soc_calibrate(ScsWork *w, scs_int healthy) {
   scs_int b, i, q, c = 0;
   for (b = 0; b < w->nsoc; ++b) {
     scs_float *wb = &(w->soc_w[w->soc_off[b]]);
@@ -886,7 +886,17 @@ static void soc_calibrate(ScsWork *w) {
       dbar += d[i] * d[i];
     }
     dbar = SQRTF(dbar);
-    if (st[1] > _DIV_EPS_TOL && st[0] > _DIV_EPS_TOL &&
+    if (r < SOC_R_MIN || r > SOC_R_MAX) {
+      /* extreme scalar metric: snap the boost back to identity (see
+       * glbopts.h) rather than letting the EMA decay it slowly */
+      st[2] = 0.;
+      tau_t = 0.;
+    } else if (healthy) {
+      /* the boost is a stall-recovery device: a healthily converging run
+       * has residual profiles dominated by noise, and boosting on noise
+       * measurably slows convergence; decay toward identity instead */
+      tau_t = 0.;
+    } else if (st[1] > _DIV_EPS_TOL && st[0] > _DIV_EPS_TOL &&
         dbar > 1e-8) {
       /* anisotropy sets the rapidity magnitude, alignment its sign:
        * compress the metric along the dominant residual direction */
@@ -1527,6 +1537,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       w->nsoc = nb;
       w->soc_wlen = wl;
       w->soc_nnz = nnz;
+      w->soc_prev_rel = 1e30; /* first event always reads healthy: boost
+                               * only after a demonstrated slow window */
       w->soc_starts = (scs_int *)scs_calloc(nb, sizeof(scs_int));
       w->soc_sizes = (scs_int *)scs_calloc(nb, sizeof(scs_int));
       w->soc_off = (scs_int *)scs_calloc(nb, sizeof(scs_int));
@@ -1716,6 +1728,20 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   /* geometric mean */
   factor =
       SQRTF(exp(w->sum_log_scale_factor / (scs_float)(w->n_log_scale_factor)));
+  if (w->nsoc) {
+    /* bound the per-event step only while a boost is engaged: the remap
+     * through W^{-1} composes the scalar jump with the boost mixing, and
+     * an unconstrained jump can cross the safe range in one event. With
+     * the boost at identity the path must stay scalar-identical. */
+    scs_int b, boost_active = 0;
+    for (b = 0; b < w->nsoc; ++b) {
+      boost_active |= (ABS(w->soc_stat[3 * b + 2]) > 1e-3);
+    }
+    if (boost_active) {
+      factor =
+          MIN(MAX(factor, 1. / SOC_EVENT_FACTOR_MAX), SOC_EVENT_FACTOR_MAX);
+    }
+  }
 
   /* need at least RESCALING_MIN_ITERS since last update */
   if (iters_since_last_update < w->stgs->rescaling_min_iters) {
@@ -1809,8 +1835,12 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     set_diag_r(w);
     if (w->nsoc) {
       /* recalibrate SOC block metrics and refresh registered KKT values
-       * before the refactor below */
-      soc_calibrate(w);
+       * before the refactor below; a >=10x residual improvement since the
+       * last event marks the run healthy (no boost wanted) */
+      scs_float cur_rel = MAX(relative_res_pri, relative_res_dual);
+      scs_int healthy = (cur_rel < 0.1 * w->soc_prev_rel);
+      w->soc_prev_rel = cur_rel;
+      soc_calibrate(w, healthy);
     }
 
     /* update linear systems */

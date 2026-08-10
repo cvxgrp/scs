@@ -103,6 +103,7 @@ struct SCS_WORK {
   scs_int *soc_starts, *soc_sizes, *soc_off; /* row offset, size, w offset */
   scs_float *soc_w, *soc_sw, *soc_vals, *soc_dir;
   scs_float *soc_stat; /* per block: ema_top, ema_tot, tau */
+  scs_float soc_prev_rel; /* max relative residual at last update event */
   ScsSocMetric soc_sm;
   /* Halpern restart state (active when stgs->restart is set) */
   scs_float *v_anchor;          /* Halpern anchor point, size n+m+1 */

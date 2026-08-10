@@ -236,6 +236,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define SOC_TAU_MAX (1.15)
 #define SOC_TAU_DAMP (0.25)
 #define SOC_EMA (0.9)
+/* A boost composed with an extreme scalar metric mixes components across
+ * many orders of magnitude; the resulting cancellation can floor the dual
+ * residual above tolerance permanently. Boost only while the block scalar
+ * is moderate, and bound the per-event scalar step so a single update
+ * cannot jump the metric across the safe range. */
+#define SOC_R_MIN (1e-3)
+#define SOC_R_MAX (1e3)
+#define SOC_EVENT_FACTOR_MAX (10.)
 #define DIAG_SCALE_COL_MULT_MIN (1e-2)
 /* Cap on column heating range: the dual residual is directly proportional
  * to rho_x_j, so the profile feedback is fully reflexive and empirically
