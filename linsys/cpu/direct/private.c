@@ -2,6 +2,8 @@
 
 #include "private.h"
 
+static void soc_selftest(ScsLinSysWork *p, const char *where);
+
 /* ======================== LDL Factorization Internals ======================== */
 
 static scs_int _ldl_init(ScsMatrix *A, scs_int *P, scs_float **info) {
@@ -278,6 +280,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
+  soc_selftest(p, "init");
   return p;
 }
 
@@ -307,7 +310,8 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   /* returns solution to linear system */
   /* Ax = b with solution stored in b */
   scs_int i, nm = p->n + p->m;
-  if (p->rb) {
+  const ScsSocMetric *soc = p->rb ? SCS(get_soc_metric)() : SCS_NULL;
+  if (soc && soc->refine && !getenv("SCS_SOC_NO_REFINE")) {
     /* one iterative-refinement pass (see permute_kkt) */
     for (i = 0; i < nm; ++i) {
       p->rx[i] = b[i]; /* keep original rhs */
@@ -325,6 +329,26 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   }
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
+}
+
+/* debug: verify matvec/factorization consistency: z = K^{-1}(K x) vs x */
+static void soc_selftest(ScsLinSysWork *p, const char *where) {
+  scs_int i, nm = p->n + p->m;
+  scs_float nx = 0., nd = 0.;
+  if (!p->rb || !getenv("SCS_SOC_SELFTEST")) {
+    return;
+  }
+  for (i = 0; i < nm; ++i) {
+    p->rx[i] = sin((scs_float)(i + 1));
+  }
+  kkt_sym_matvec(p, p->rx, p->rb);
+  _ldl_solve(p->rb, p->L, p->Dinv, p->perm, p->bp);
+  for (i = 0; i < nm; ++i) {
+    nx += p->rx[i] * p->rx[i];
+    nd += (p->rb[i] - p->rx[i]) * (p->rb[i] - p->rx[i]);
+  }
+  scs_printf("SOC_SELFTEST[%s]: rel err %.3e\n", where,
+             SQRTF(nd) / SQRTF(nx));
 }
 
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
@@ -352,6 +376,7 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     scs_printf("Error in LDL factorization when updating.\n");
     return ldl_status;
   }
+  soc_selftest(p, "update");
   return 0;
 }
 

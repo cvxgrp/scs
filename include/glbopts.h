@@ -244,6 +244,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define SOC_R_MIN (1e-3)
 #define SOC_R_MAX (1e3)
 #define SOC_EVENT_FACTOR_MAX (10.)
+/* Engage KKT iterative refinement (sticky) once a boost is active or the
+ * residuals approach tolerance. Far from tolerance the dense-block
+ * accuracy floor (~kappa*eps) is irrelevant and the identity-boost path
+ * should track the scalar build's trajectory exactly -- always-on
+ * refinement perturbs trajectories enough to re-roll stall attractors. */
+#define SOC_REFINE_THRESH (1e-4)
 #define DIAG_SCALE_COL_MULT_MIN (1e-2)
 /* Cap on column heating range: the dual residual is directly proportional
  * to rho_x_j, so the profile feedback is fully reflexive and empirically

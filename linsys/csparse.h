@@ -31,6 +31,9 @@ typedef struct {
   const scs_int *starts; /* row offsets within the y block */
   const scs_int *sizes;
   const scs_float *vals;
+  scs_int refine; /* iterative-refinement request (set by the core when a
+                   * boost is active or residuals near tolerance; sticky
+                   * so the effective solve operator changes only once) */
 } ScsSocMetric;
 void SCS(set_soc_metric)(const ScsSocMetric *sm);
 const ScsSocMetric *SCS(get_soc_metric)(void);

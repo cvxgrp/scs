@@ -886,7 +886,10 @@ static void soc_calibrate(ScsWork *w, scs_int healthy) {
       dbar += d[i] * d[i];
     }
     dbar = SQRTF(dbar);
-    if (r < SOC_R_MIN || r > SOC_R_MAX) {
+    if (getenv("SCS_SOC_NEVER_BOOST")) {
+      st[2] = 0.;
+      tau_t = 0.;
+    } else if (r < SOC_R_MIN || r > SOC_R_MAX) {
       /* extreme scalar metric: snap the boost back to identity (see
        * glbopts.h) rather than letting the EMA decay it slowly */
       st[2] = 0.;
@@ -1568,6 +1571,19 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
           for (j = 0; j < qq; ++j) {
             w->soc_dir[wl + j] = 1.0 / SQRTF((scs_float)qq);
           }
+          {
+            /* experiment hook: generic frozen boost at init */
+            const char *it = getenv("SCS_SOC_INIT_TAU");
+            if (it) {
+              scs_float t0 = atof(it);
+              w->soc_w[wl] = cosh(t0);
+              for (j = 1; j < qq; ++j) {
+                w->soc_w[wl + j] = sinh(t0) / SQRTF((scs_float)(qq - 1));
+              }
+              soc_sqrt_w(&(w->soc_w[wl]), &(w->soc_sw[wl]), qq);
+              w->soc_stat[3 * nb + 2] = t0;
+            }
+          }
           soc_fill_vals(&(w->soc_w[wl]), w->diag_r[w->d->n + row],
                         &(w->soc_vals[nnz]), qq);
           nnz += qq * (qq + 1) / 2;
@@ -1580,6 +1596,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       w->soc_sm.starts = w->soc_starts;
       w->soc_sm.sizes = w->soc_sizes;
       w->soc_sm.vals = w->soc_vals;
+      w->soc_sm.refine = 0;
       SCS(set_soc_metric)(&(w->soc_sm));
     } else {
       w->stgs->soc_metric = 0;
@@ -1740,6 +1757,11 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     if (boost_active) {
       factor =
           MIN(MAX(factor, 1. / SOC_EVENT_FACTOR_MAX), SOC_EVENT_FACTOR_MAX);
+    }
+    if (!w->soc_sm.refine &&
+        (boost_active ||
+         MAX(relative_res_pri, relative_res_dual) < SOC_REFINE_THRESH)) {
+      w->soc_sm.refine = 1; /* sticky, see glbopts.h */
     }
   }
 
