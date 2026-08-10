@@ -1059,6 +1059,17 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->r_orig = init_residuals(w->d);
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
+#ifdef USE_SPECTRAL_CONES
+  if (w->stgs->adaptive_diag_scale &&
+      (w->k->dsize || w->k->nucsize || w->k->ell1_size || w->k->sl_size)) {
+    /* The spectral-cone projections are iterative inner solvers with
+     * warm-start state that does not currently tolerate mid-solve metric
+     * changes (observed as dual iterates leaving the cone). Disable
+     * dynamic diagonal rescaling on such problems until the inner
+     * solvers are made metric-change aware. */
+    w->stgs->adaptive_diag_scale = 0;
+  }
+#endif
   if (w->stgs->adaptive_diag_scale) {
     if (!w->stgs->adaptive_scale) {
       /* silently disable: diag scaling rides the adaptive-scale update
