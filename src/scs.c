@@ -813,18 +813,31 @@ static void soc_Pinv_apply(const scs_float *w, scs_float *x, scs_int q,
   }
 }
 
-/* Fill the border-column values for one block: -W = -rI + 2r e0 e0' -
- * 2r ww' enters the KKT as the scalar diagonal plus two bordered
- * columns; layout matches form_kkt: [d1 = -1/(2r), w_0..w_{q-1},
- * d2 = +1/(2r)]. */
-static void soc_fill_vals(const scs_float *w, scs_float r, scs_float *vals,
-                          scs_int q) {
-  scs_int i, c = 0;
+/* Fill one block's registered KKT values; hybrid layout matching
+ * form_kkt: small blocks carry the dense -W = -r P(w) upper triangle
+ * (column-major), large blocks the border columns [d1 = -1/(2r),
+ * w_0..w_{q-1}, d2 = +1/(2r)]. Returns the number of values written. */
+static scs_int soc_fill_vals(const scs_float *w, scs_float r,
+                             scs_float *vals, scs_int q) {
+  scs_int i, j, c = 0;
+  if (q < SOC_BORDER_MIN_Q) {
+    for (j = 0; j < q; ++j) {
+      for (i = 0; i <= j; ++i) {
+        scs_float v = 2. * w[i] * w[j];
+        if (i == j) {
+          v -= (i == 0) ? 1. : -1.; /* J diagonal */
+        }
+        vals[c++] = -r * v;
+      }
+    }
+    return c;
+  }
   vals[c++] = -1. / (2. * r);
   for (i = 0; i < q; ++i) {
     vals[c++] = w[i];
   }
   vals[c++] = 1. / (2. * r);
+  return c;
 }
 
 /* Jordan square root of unit-determinant w: (w + e) / sqrt(2 (w0 + 1)). */
@@ -922,8 +935,7 @@ static void soc_calibrate(ScsWork *w, scs_int mode) {
       wb[i] = (dbar > 1e-8) ? sh * d[i] / dbar : 0.;
     }
     soc_sqrt_w(wb, swb, q);
-    soc_fill_vals(wb, r, &(w->soc_vals[c]), q);
-    c += q + 2; /* border layout: [d1, w..., d2] */
+    c += soc_fill_vals(wb, r, &(w->soc_vals[c]), q);
   }
 }
 
@@ -1532,7 +1544,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       if (w->k->q[b] >= 2 && w->k->q[b] <= 128) {
         nb++;
         wl += w->k->q[b];
-        nnz += w->k->q[b] + 2; /* border cols: [d1, w..., d2] */
+        nnz += (w->k->q[b] < SOC_BORDER_MIN_Q)
+                   ? w->k->q[b] * (w->k->q[b] + 1) / 2
+                   : w->k->q[b] + 2; /* hybrid layout, see form_kkt */
       }
     }
     if (nb > 0) {
@@ -1587,9 +1601,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
               w->soc_stat[3 * nb + 2] = t0;
             }
           }
-          soc_fill_vals(&(w->soc_w[wl]), w->diag_r[w->d->n + row],
-                        &(w->soc_vals[nnz]), qq);
-          nnz += qq + 2;
+          nnz += soc_fill_vals(&(w->soc_w[wl]), w->diag_r[w->d->n + row],
+                               &(w->soc_vals[nnz]), qq);
           wl += qq;
           nb++;
         }

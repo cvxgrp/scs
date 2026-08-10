@@ -171,7 +171,11 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
   p->soc_idxs = SCS_NULL;
   if (soc && soc->n > 0) {
     for (i = 0; i < soc->n; ++i) {
-      p->soc_nnz += soc->sizes[i] + 2; /* w column + 2 border diagonals */
+      /* hybrid layout: dense upper triangle for small blocks, border
+       * columns ([d1, w..., d2]) for large ones (see form_kkt) */
+      p->soc_nnz += (soc->sizes[i] < SOC_BORDER_MIN_Q)
+                        ? soc->sizes[i] * (soc->sizes[i] + 1) / 2
+                        : soc->sizes[i] + 2;
     }
     p->soc_idxs = (scs_int *)scs_calloc(p->soc_nnz, sizeof(scs_int));
     if (!p->soc_idxs) {
@@ -263,9 +267,15 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->m = A->m;
   p->n = A->n;
   {
-    /* (research) SOC border columns extend the KKT dimension */
+    /* (research) large SOC blocks add two border columns each */
     const ScsSocMetric *soc = SCS(get_soc_metric)();
-    p->nkkt = n_plus_m + ((soc && soc->n > 0) ? 2 * soc->n : 0);
+    scs_int b;
+    p->nkkt = n_plus_m;
+    if (soc) {
+      for (b = 0; b < soc->n; ++b) {
+        p->nkkt += (soc->sizes[b] >= SOC_BORDER_MIN_Q) ? 2 : 0;
+      }
+    }
   }
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->perm = (scs_int *)scs_calloc(p->nkkt, sizeof(scs_int));
