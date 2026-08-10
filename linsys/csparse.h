@@ -36,10 +36,13 @@ typedef struct {
 void SCS(set_soc_metric)(const ScsSocMetric *sm);
 const ScsSocMetric *SCS(get_soc_metric)(void);
 
+/* borders: 0 = suppress border columns (large SOC blocks fall back to the
+ * scalar diagonal; used to compute the AMD ordering on a pattern that
+ * includes the small dense blocks but not the borders), 1 = full hybrid */
 ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
                          scs_float *diag_p, const scs_float *diag_r,
                          scs_int *diag_r_idxs, scs_int *soc_idxs,
-                         scs_int upper);
+                         scs_int borders, scs_int upper);
 #ifdef __cplusplus
 }
 #endif

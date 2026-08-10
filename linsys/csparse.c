@@ -97,7 +97,7 @@ const ScsSocMetric *SCS(get_soc_metric)(void) {
 ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
                          scs_float *diag_p, const scs_float *diag_r,
                          scs_int *diag_r_idxs, scs_int *soc_idxs,
-                         scs_int upper) {
+                         scs_int borders, scs_int upper) {
   /*
    * Forms column compressed KKT matrix assumes column compressed A,P matrices.
    * Only upper OR lower triangular part is stuffed, depending on `upper` flag.
@@ -155,10 +155,12 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
         for (i = 0; i < q; ++i) {
           soc_of_row[soc->starts[b] + i] = b;
         }
-      } else {
+      } else if (borders) {
         soc_extra += q + 3; /* u1, q x u2, 2 border diagonals */
         soc_nnz_total += q + 2;
         nborder += 2;
+      } else {
+        soc_nnz_total += q + 2; /* keep offsets stable; nothing emitted */
       }
     }
   }
@@ -286,7 +288,7 @@ ScsMatrix *SCS(form_kkt)(const ScsMatrix *A, const ScsMatrix *P,
   /* Large-block SOC border columns; registered vals per block, in
    * emission order: [d1 = -1/(2r), w_0 .. w_{q-1}, d2 = +1/(2r)]. The
    * u1 (e0) entry is the constant 1.0 and is not registered. */
-  if (soc && soc->n > 0) {
+  if (soc && soc->n > 0 && borders) {
     jb = n + m; /* next free border column */
     for (b = 0; b < soc->n; ++b) {
       q = soc->sizes[b];

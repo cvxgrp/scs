@@ -248,12 +248,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * test misreads the machine-precision plateau as a stall, and a boost
  * fitted to residual noise can wreck an essentially-converged run */
 #define SOC_BOOST_MIN_RES (1e-7)
+/* freeze scale adaptation on SOC-metric runs once residuals are this
+ * small: near convergence the residual ratio is noise-driven and
+ * chasing it rails the scale, which stalls an essentially-converged
+ * run (a mainline fragility; SOC trajectories re-roll the dice on
+ * hitting the termination window before the climb starts) */
+#define SOC_SCALE_FREEZE_RES (1e-6)
 /* KKT layout cutoff: blocks with q < this are emitted as small dense
  * -W blocks inline (a tiny clique is harmless and avoids growing the
  * KKT dimension -- decisive when a problem has thousands of q=3 cones);
  * blocks with q >= this use the two bordered columns (a large clique
- * wrecks the AMD ordering and with it the no-pivot LDL accuracy). */
-#define SOC_BORDER_MIN_Q (16)
+ * degrades the no-pivot LDL accuracy through ordering/fill; empirically
+ * the dense path is clean at eps 1e-12 through q=10 and floors ~1e-9
+ * by q=15, hence the margin here). */
+#define SOC_BORDER_MIN_Q (12)
 #define DIAG_SCALE_COL_MULT_MIN (1e-2)
 /* Cap on column heating range: the dual residual is directly proportional
  * to rho_x_j, so the profile feedback is fully reflexive and empirically

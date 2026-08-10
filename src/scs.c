@@ -1754,6 +1754,10 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   /* clamp to avoid log(0) which would NaN-poison sum_log_scale_factor */
   relative_res_pri = MAX(relative_res_pri, _DIV_EPS_TOL);
   relative_res_dual = MAX(relative_res_dual, _DIV_EPS_TOL);
+  if (w->nsoc &&
+      MAX(relative_res_pri, relative_res_dual) < SOC_SCALE_FREEZE_RES) {
+    return 0; /* see SOC_SCALE_FREEZE_RES */
+  }
   w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
   w->n_log_scale_factor++;
 
@@ -1880,11 +1884,11 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       if (w->soc_boost_disabled) {
         mode = 1;
       } else if (w->soc_boost_base > 0.) {
-        if (cur_rel < 0.1 * w->soc_boost_base) {
-          w->soc_boost_base = cur_rel; /* boost is working; rebase */
+        if (cur_rel < w->soc_boost_base) {
+          /* envelope improving: forgive oscillation along the way */
+          w->soc_boost_base = cur_rel;
           w->soc_boost_strikes = 0;
-        } else if (cur_rel > w->soc_boost_base &&
-                   ++w->soc_boost_strikes >= 2) {
+        } else if (++w->soc_boost_strikes >= 3) {
           w->soc_boost_disabled = 1;
           mode = 2;
         }

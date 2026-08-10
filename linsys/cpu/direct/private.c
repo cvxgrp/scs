@@ -189,7 +189,7 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
      * perturbing the core ordering away from the scalar build's. With
      * borders last the core factor matches the scalar build exactly. */
     ScsMatrix *core =
-        SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, SCS_NULL, 1);
+        SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, p->soc_idxs, 0, 1);
     if (!core) {
       return SCS_NULL;
     }
@@ -201,7 +201,7 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
       }
     }
   }
-  kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, p->soc_idxs, 1);
+  kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, p->soc_idxs, 1, 1);
   if (!kkt) {
     if (p->soc_idxs) {
       scs_free(info);
