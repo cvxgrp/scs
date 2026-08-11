@@ -8,6 +8,7 @@
 #include "util.h"
 
 static const char *rob_gauss_cov_est(void) {
+  scs_int cold_iter;
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -163,6 +164,7 @@ static const char *rob_gauss_cov_est(void) {
   stgs->eps_infeas = 1e-9;
 
   exitflag = scs(d, k, stgs, sol, &info);
+  cold_iter = info.iter;
 
   perr = SCS(dot)(d->c, sol->x, d->n) - opt;
   derr = -SCS(dot)(d->b, sol->y, d->m) - opt;
@@ -178,11 +180,12 @@ static const char *rob_gauss_cov_est(void) {
   if (fail)
     return fail;
 
-  /* test warm-starting */
+  /* test warm-starting: relative to the cold solve, so the bound stays
+   * meaningful when the metric (and hence the iteration count) changes */
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
-  /* 100 iters should be enough if warm-started */
-  mu_assert("rob_gauss_cov_est: warm-start failure", info.iter <= 100);
+  mu_assert("rob_gauss_cov_est: warm-start failure",
+            info.iter <= cold_iter / 2);
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
   mu_assert("rob_gauss_cov_est: SCS failed to produce outputflag SCS_SOLVED",
