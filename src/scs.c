@@ -1094,8 +1094,19 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
           scs_finish(w);
           return SCS_NULL;
         }
+        /* Static two-level column metric: columns whose objective
+         * coefficient is zero get a lighter x-prox (rho_x / RHO_X_COOL),
+         * the rest keep rho_x. Rationale: the dual optimality condition
+         * of a column with c_j = 0 is a cancellation between Px and A'y,
+         * with no dominant term to make it easy; giving those columns a
+         * lighter prox lets the linear system enforce them more exactly.
+         * Assigned once here rather than driven by a residual profile:
+         * the profile feedback is reflexive (r_dual_j is proportional to
+         * rho_x_j), which needs a stability clamp, converges to exactly
+         * this two-level split anyway, and its ramp rate degenerates on
+         * problems with many near-identical columns. */
         for (j = 0; j < w->d->n; ++j) {
-          w->col_mults[j] = 1.0;
+          w->col_mults[j] = (w->d->c[j] == 0.) ? RHO_X_COOL : 1.0;
         }
       }
     }
@@ -1284,12 +1295,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int apply_scalar =
       (new_scale != w->stgs->scale) && should_update_r(factor);
   scs_int apply_diag = 0;
-  scs_float log_g = 0., log_gc = 0., g, gc, step, newf, change;
-  scs_float col_f_hi = 1.;
-  if (w->col_mults) {
-    col_f_hi =
-        MIN(DIAG_SCALE_COL_MULT_MAX, w->stgs->rho_x / DIAG_RHO_X_FLOOR);
-  }
+  scs_float log_g = 0., g, step, newf, change;
   if (w->stgs->adaptive_diag_scale) {
     /* residual profiles: adapt when the scalar updates, or when some
      * row's/column's damped *clamped* step exceeds the update threshold
@@ -1307,19 +1313,6 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
                  DIAG_SCALE_MULT_MAX);
       change = newf / w->scale_mults[i];
       drift = MAX(drift, MAX(change, 1. / change));
-    }
-    if (w->col_mults) {
-      for (i = 0; i < w->d->n; ++i) {
-        log_gc += log(col_rel_res(w, i));
-      }
-      log_gc /= (scs_float)w->d->n;
-      gc = exp(log_gc);
-      for (i = 0; i < w->d->n; ++i) {
-        step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
-        newf = MIN(MAX(w->col_mults[i] * step, 1.), col_f_hi);
-        change = newf / w->col_mults[i];
-        drift = MAX(drift, MAX(change, 1. / change));
-      }
     }
     apply_diag = apply_scalar || should_update_r(drift);
   }
@@ -1345,15 +1338,6 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       }
       /* non-polyhedral cone blocks must share a single metric entry */
       SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, SCS(mean));
-      if (w->col_mults) {
-        /* x is unconstrained so columns carry no block structure; columns
-         * only ever heat (never anchored above the base rho_x) */
-        gc = exp(log_gc);
-        for (i = 0; i < w->d->n; ++i) {
-          step = POWF(col_rel_res(w, i) / gc, DIAG_SCALE_DAMP);
-          w->col_mults[i] = MIN(MAX(w->col_mults[i] * step, 1.), col_f_hi);
-        }
-      }
     }
 
     /* update diag r vector */

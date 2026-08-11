@@ -262,6 +262,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define DIAG_SCALE_MULT_MIN (1e-3)
 #define DIAG_SCALE_MULT_MAX (1e3)
 #define DIAG_SCALE_COL_MULT_MAX (1e2)
+/* Static column metric (adaptive_diag_scale >= 2): factor by which
+ * rho_x is lowered for columns with c_j == 0. Benchmarks are flat in
+ * this constant over 2x-30x; 10x is the middle of the plateau. */
+#define RHO_X_COOL (10.)
 #define DIAG_RHO_X_FLOOR (1e-8)
 
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
