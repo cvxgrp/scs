@@ -418,9 +418,8 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("rho_x must be a positive finite number (1e-3 works well).\n");
     return -1;
   }
-  if (stgs->adaptive_diag_scale < 0 || stgs->adaptive_diag_scale > 2) {
-    scs_printf("adaptive_diag_scale must be 0 (off), 1 (rows), or "
-               "2 (rows + columns).\n");
+  if (stgs->adaptive_diag_scale < 0 || stgs->adaptive_diag_scale > 1) {
+    scs_printf("adaptive_diag_scale must be 0 (off) or 1 (on).\n");
     return -1;
   }
   if (!isfinite(stgs->scale) || stgs->scale <= 0) {
@@ -978,13 +977,7 @@ static void set_diag_r(ScsWork *w) {
   for (i = 0; i < w->d->n; ++i) {
     w->diag_r[i] = w->stgs->rho_x;
   }
-  if (w->col_mults) {
-    /* per-column dynamic rescaling: rho_x_j = rho_x / f_j, the metric
-     * equivalent of scaling column j of the data by sqrt(f_j) */
-    for (i = 0; i < w->d->n; ++i) {
-      w->diag_r[i] /= w->col_mults[i];
-    }
-  }
+
   /* use cone information to set R_y */
   SCS(set_r_y)(w->cone_work, w->stgs->scale, &(w->diag_r[w->d->n]));
   if (w->scale_mults) {
@@ -1086,28 +1079,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
       }
       for (j = 0; j < w->d->m; ++j) {
         w->scale_mults[j] = 1.0;
-      }
-      if (w->stgs->adaptive_diag_scale >= 2) {
-        w->col_mults = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
-        if (!w->col_mults) {
-          scs_printf("ERROR: work memory allocation failure\n");
-          scs_finish(w);
-          return SCS_NULL;
-        }
-        /* Static two-level column metric: columns whose objective
-         * coefficient is zero get a lighter x-prox (rho_x / RHO_X_COOL),
-         * the rest keep rho_x. Rationale: the dual optimality condition
-         * of a column with c_j = 0 is a cancellation between Px and A'y,
-         * with no dominant term to make it easy; giving those columns a
-         * lighter prox lets the linear system enforce them more exactly.
-         * Assigned once here rather than driven by a residual profile:
-         * the profile feedback is reflexive (r_dual_j is proportional to
-         * rho_x_j), which needs a stability clamp, converges to exactly
-         * this two-level split anyway, and its ramp rate degenerates on
-         * problems with many near-identical columns. */
-        for (j = 0; j < w->d->n; ++j) {
-          w->col_mults[j] = (w->d->c[j] == 0.) ? RHO_X_COOL : 1.0;
-        }
       }
     }
   }
@@ -1234,12 +1205,35 @@ static scs_int should_update_r(scs_float factor) {
 
 /* Relative primal residual of constraint row i in the normalized space
  * (where diag_r acts). All quantities carry tau consistently. */
+/* Relative primal residual of row i, used as the per-row profile.
+ *
+ * The denominator carries a floor at DEN_FLOOR_FRAC of the block's rms
+ * denominator. Without it, a row whose b_i is zero divides only by
+ * max(|(Ax)_i|, |s_i|) -- both of which shrink as the iterates converge
+ * -- so its ratio inflates even when the row is converging perfectly
+ * well, and the profile ends up reporting which terms a row happens to
+ * contain rather than how it is converging. Rows with denominators of
+ * ordinary size are unaffected; only the collapsing ones are floored. */
 static scs_float row_rel_res(const ScsWork *w, scs_int i) {
   const ScsResiduals *r = w->r_normalized;
   scs_float den = MAX(ABS(r->ax[i]), ABS(w->xys_normalized->s[i]));
   den = MAX(den, ABS(w->d->b[i]) * r->tau);
+  den = MAX(den, w->den_floor);
   den = MAX(den, _DIV_EPS_TOL);
   return MAX(ABS(r->ax_s_btau[i]), _DIV_EPS_TOL) / den;
+}
+
+/* Recompute the row-profile denominator floor from the current iterate. */
+static void set_den_floor(ScsWork *w) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_int i, m = w->d->m;
+  scs_float s2 = 0.;
+  for (i = 0; i < m; ++i) {
+    scs_float d = MAX(ABS(r->ax[i]), ABS(w->xys_normalized->s[i]));
+    d = MAX(d, ABS(w->d->b[i]) * r->tau);
+    s2 += d * d;
+  }
+  w->den_floor = DEN_FLOOR_FRAC * SQRTF(s2 / (scs_float)MAX(m, 1));
 }
 
 /* Relative dual residual of column j in the normalized space. */
@@ -1266,6 +1260,9 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_float nm_ax_s_btau = SCALE_NORM(r->ax_s_btau, w->d->m);
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
+  if (w->scale_mults) {
+    set_den_floor(w);
+  }
   /* ||Ax + s - b * tau|| */
   denom_pri = MAX(nm_ax, nm_s);
   denom_pri = MAX(denom_pri, w->nm_b_orig * r->tau);
@@ -1634,7 +1631,6 @@ void scs_finish(ScsWork *w) {
     scs_free(w->lin_sys_warm_start);
     scs_free(w->diag_r);
     scs_free(w->scale_mults);
-    scs_free(w->col_mults);
     SCS(free_sol)(w->xys_orig);
     if (w->scal) {
       scs_free(w->scal->D);

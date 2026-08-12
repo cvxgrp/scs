@@ -182,18 +182,16 @@ problems and should be done sparingly. Also, since the changing the
 perform a reset of the :ref:`Anderson acceleration <acceleration>`.
 
 
-Per-row and per-column refinement
----------------------------------
+Per-row refinement
+------------------
 
 The :code:`scale` parameter above moves the whole :math:`R_y` block together.
-The :code:`adaptive_diag_scale` setting adds two refinements on top of it.
-
-At level 1, each row of :math:`R_y` carries its own multiplier, updated at
-scale-update events from the row's relative primal residual profile,
+With :code:`adaptive_diag_scale` each row carries its own multiplier as well,
+updated at scale-update events from that row's relative primal residual
 
 .. math::
    \hat r^k_{p,i} = \frac{|(Ax + s - b\tau)_i|}
-                         {\max(|(Ax)_i|, |s_i|, |b_i \tau|)},
+                         {\max(|(Ax)_i|, |s_i|, |b_i \tau|, \epsilon_{\rm den})},
 
 by a damped multiplicative step towards the geometric mean of the profile,
 clamped to a bounded range and held constant within each non-polyhedral cone
@@ -201,21 +199,11 @@ block (the projections require a single metric value per block). This is the
 dynamic analog of the row half of Ruiz equilibration, using the residuals the
 algorithm actually produces rather than the matrix norms.
 
-At level 2 (the default), the columns are additionally treated, but
-*statically*: a column with :math:`c_j = 0` uses a proportionally smaller
-:code:`rho_x`, while the remaining columns keep it unchanged. The reason is
-structural. The dual optimality condition for column :math:`j` reads
-:math:`(Px + A^\top y + c\tau)_j = 0`; when :math:`c_j \neq 0` that equation
-carries a term of fixed magnitude, whereas when :math:`c_j = 0` it is a pure
-cancellation between :math:`Px` and :math:`A^\top y`, which is harder to
-satisfy accurately. Lowering :code:`rho_x` there weakens the proximal term on
-those coordinates so that the linear system enforces them more exactly.
-
-This column rule is deliberately not a feedback loop. The per-column dual
-residual is exactly proportional to :math:`{\rho_x}_j`, so a controller driven
-by it partly measures its own action; it requires a stability clamp, and in
-practice it converges to precisely the two-level split above. Assigning that
-split directly at setup gives the same benefit with no clamp, no per-iteration
-adaptation, and no dependence on how quickly the loop happens to ramp -- which
-matters on problems with many near-identical columns, where the ramp rate is
-poorly determined.
+The floor :math:`\epsilon_{\rm den}` in the denominator is a small fraction
+of the root-mean-square denominator over all rows. It matters because a row
+whose :math:`b_i` is zero divides only by :math:`\max(|(Ax)_i|, |s_i|)`, and
+both of those shrink as the iterates converge, so that row's ratio inflates
+even when it is converging perfectly well. Without the floor the profile
+partly reports which terms a row happens to contain rather than how the row is
+converging, and the metric chases that artifact. Rows whose denominators are
+of ordinary size are unaffected.

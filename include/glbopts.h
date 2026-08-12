@@ -45,7 +45,7 @@ extern "C" {
 #define ACCELERATION_LOOKBACK (10)
 #define ACCELERATION_INTERVAL (10)
 #define ADAPTIVE_SCALE (1)
-#define ADAPTIVE_DIAG_SCALE (2)
+#define ADAPTIVE_DIAG_SCALE (1)
 #define WRITE_DATA_FILENAME (0)
 #define LOG_CSV_FILENAME (0)
 #define TIME_LIMIT_SECS (0.)
@@ -262,10 +262,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define DIAG_SCALE_MULT_MIN (1e-3)
 #define DIAG_SCALE_MULT_MAX (1e3)
 #define DIAG_SCALE_COL_MULT_MAX (1e2)
-/* Static column metric (adaptive_diag_scale >= 2): factor by which
- * rho_x is lowered for columns with c_j == 0. Benchmarks are flat in
- * this constant over 2x-30x; 10x is the middle of the plateau. */
-#define RHO_X_COOL (10.)
+/* Floor on the row-profile denominators, as a fraction of the block's
+ * rms denominator (see row_rel_res). Swept over 1e-4..1e-1: every value
+ * improves on no floor, 1e-3 is the best on solve count. */
+#define DEN_FLOOR_FRAC (1e-3)
 #define DIAG_RHO_X_FLOOR (1e-8)
 
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
