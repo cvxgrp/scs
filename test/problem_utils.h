@@ -207,10 +207,15 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
 
   /**************** ASSERTS *****************/
   if (status == SCS_SOLVED) {
+    /* reported-vs-recomputed consistency: the recomputation here uses a
+     * different BLAS summation order than the solver's internal pipeline,
+     * so the discrepancy scales with the magnitude of the accumulated
+     * quantities (~ the objective scale), like the gap and objective
+     * checks below already do */
     mu_assert_less("Primal residual ERROR", ABS(res_pri - info->res_pri),
-                   1e-10);
+                   1e-10 * (1 + ABS(pobj)));
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
-                   1e-10);
+                   1e-10 * (1 + ABS(pobj)));
     mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-7 * (1 + ABS(gap)));
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
                    1e-9 * (1 + ABS(pobj)));
