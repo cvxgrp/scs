@@ -134,6 +134,10 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 #ifdef USE_LAPACK
 #include "scs_blas.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
@@ -141,6 +145,10 @@ void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
                 blas_int *n, blas_int *k, scs_float *alpha, scs_float *a,
                 blas_int *lda, scs_float *b, blas_int *ldb, scs_float *beta,
                 scs_float *c, blas_int *ldc);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* Cholesky of a k x k column-major matrix, lower triangle, in place.
  * Returns nonzero on failure (also catches NaN via the negated compare). */
@@ -702,6 +710,11 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     p->dfl_harvest = 0;
 #ifndef USE_LAPACK
     p->dfl_max = 0; /* eigCG needs syev */
+#endif
+#ifdef SFLOAT
+    /* the Lanczos harvest and the small Cholesky sit below the single-
+     * precision noise floor; deflation is double-precision only */
+    p->dfl_max = 0;
 #endif
     if (p->dfl_max > 0) {
       scs_int win = wm ? (scs_int)atoi(wm) : EIGCG_WINDOW;
