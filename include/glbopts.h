@@ -271,15 +271,24 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
 #define CG_BEST_TOL (1e-12)
 /* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
- * values give more accurate CG solves at the cost of more CG iterations. */
-#define CG_TOL_FACTOR (0.2)
+ * values give more accurate CG solves at the cost of more CG iterations.
+ * With deflation making inner accuracy cheap, 0.03 measured optimal on a
+ * netlib / Maros-Meszaros / SOC suite (bracketed on both sides: 0.02
+ * starts flipping problems, 0.01 pays more CG for no outer-iteration
+ * gain); together with CG_RATE 2.0 it buys roughly 30% fewer outer
+ * iterations for roughly 8% more matvecs, which is wall-clock neutral
+ * on matvec-dominated problems and favorable on cone-dominated ones. */
+#define CG_TOL_FACTOR (0.03)
 
 /* norm to use when deciding CG convergence */
 #ifndef CG_NORM
 #define CG_NORM SCS(norm_inf)
 #endif
-/* cg tol ~ O(1/k^(CG_RATE)) */
-#define CG_RATE (1.5)
+/* cg tol ~ O(1/k^(CG_RATE)); forcing accuracy faster with the iteration
+ * count is consumed by the outer loop (Anderson acceleration
+ * especially) as fewer iterations. 2.0 is safely interior: 2.25 starts
+ * flipping problems. */
+#define CG_RATE (2.0)
 /* Number of approximate small eigenvectors of the preconditioned
  * reduced operator harvested from each cold solve for g = K^{-1}h and
  * used to deflate the warm solves until the next metric change (eigCG,
