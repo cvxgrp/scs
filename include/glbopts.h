@@ -277,8 +277,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * starts flipping problems, 0.01 pays more CG for no outer-iteration
  * gain); together with CG_RATE 2.0 it buys roughly 30% fewer outer
  * iterations for roughly 8% more matvecs, which is wall-clock neutral
- * on matvec-dominated problems and favorable on cone-dominated ones. */
+ * on matvec-dominated problems and favorable on cone-dominated ones.
+ * The retuned values target accuracies below the single-precision noise
+ * floor, so single-precision builds keep the previous calibration. */
+#ifdef SFLOAT
+#define CG_TOL_FACTOR (0.2)
+#else
 #define CG_TOL_FACTOR (0.03)
+#endif
 
 /* norm to use when deciding CG convergence */
 #ifndef CG_NORM
@@ -287,8 +293,13 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* cg tol ~ O(1/k^(CG_RATE)); forcing accuracy faster with the iteration
  * count is consumed by the outer loop (Anderson acceleration
  * especially) as fewer iterations. 2.0 is safely interior: 2.25 starts
- * flipping problems. */
+ * flipping problems. Single precision keeps the previous rate for the
+ * same reason as CG_TOL_FACTOR above. */
+#ifdef SFLOAT
+#define CG_RATE (1.5)
+#else
 #define CG_RATE (2.0)
+#endif
 /* Number of approximate small eigenvectors of the preconditioned
  * reduced operator harvested from each cold solve for g = K^{-1}h and
  * used to deflate the warm solves until the next metric change (eigCG,
