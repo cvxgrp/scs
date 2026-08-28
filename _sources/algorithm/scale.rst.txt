@@ -181,3 +181,29 @@ problems and should be done sparingly. Also, since the changing the
 :code:`scale` changes the operator we are using in DR splitting we also need to
 perform a reset of the :ref:`Anderson acceleration <acceleration>`.
 
+
+Per-row refinement
+------------------
+
+The :code:`scale` parameter above moves the whole :math:`R_y` block together.
+With :code:`adaptive_diag_scale` each row carries its own multiplier as well,
+updated at scale-update events from that row's relative primal residual
+
+.. math::
+   \hat r^k_{p,i} = \frac{|(Ax + s - b\tau)_i|}
+                         {\max(|(Ax)_i|, |s_i|, |b_i \tau|, \epsilon_{\rm den})},
+
+by a damped multiplicative step towards the geometric mean of the profile,
+clamped to a bounded range and held constant within each non-polyhedral cone
+block (the projections require a single metric value per block). This is the
+dynamic analog of the row half of Ruiz equilibration, using the residuals the
+algorithm actually produces rather than the matrix norms.
+
+The floor :math:`\epsilon_{\rm den}` in the denominator is a small fraction
+of the root-mean-square denominator over all rows. It matters because a row
+whose :math:`b_i` is zero divides only by :math:`\max(|(Ax)_i|, |s_i|)`, and
+both of those shrink as the iterates converge, so that row's ratio inflates
+even when it is converging perfectly well. Without the floor the profile
+partly reports which terms a row happens to contain rather than how the row is
+converging, and the metric chases that artifact. Rows whose denominators are
+of ordinary size are unaffected.
