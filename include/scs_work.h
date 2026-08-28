@@ -26,6 +26,9 @@ typedef struct {
   scs_int m;        /* Length of D */
   scs_int n;        /* Length of E */
   scs_float primal_scale, dual_scale;
+  /* accumulated tau-slot scaling from the stacked-operator equilibration;
+   * becomes the sigma applied to b, c in normalize_b_c */
+  scs_float tau_scale;
 } ScsScaling;
 
 /** Holds residual information. */
