@@ -84,7 +84,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - :code:`scs_int`
      - Run Anderson acceleration every :code:`acceleration_interval` iterations. See :ref:`acceleration`.
      - :math:`\mathbf{N}`
-     - 10
+     - 5
    * - :code:`acceleration_type_1`
      - :code:`scs_int`
      - Whether AA uses type-I (:code:`1`) or type-II (:code:`0`). See :ref:`acceleration`.
