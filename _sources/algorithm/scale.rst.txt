@@ -195,7 +195,9 @@ updated at scale-update events from that row's relative primal residual
 
 by a damped multiplicative step towards the geometric mean of the profile,
 clamped to a bounded range and held constant within each non-polyhedral cone
-block (the projections require a single metric value per block). This is the
+block (the projections require a single metric value per block). An update
+also fires when the accumulated per-row drift alone is large enough, so that
+a railed scalar :code:`scale` cannot freeze the diagonal. This is the
 dynamic analog of the row half of Ruiz equilibration, using the residuals the
 algorithm actually produces rather than the matrix norms.
 

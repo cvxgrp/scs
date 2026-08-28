@@ -145,7 +145,10 @@ rescales the columns of <span class="math notranslate nohighlight">\(A\)</span> 
 Equilibrating matrices is a classic problem in linear algebra, and SCS simply
 implements <code class="code docutils literal notranslate"><span class="pre">NUM_RUIZ_PASSES</span></code> (default 25) steps of Ruiz equilibration
 followed by <code class="code docutils literal notranslate"><span class="pre">NUM_L2_PASSES</span></code> (default 1) steps of <span class="math notranslate nohighlight">\(\ell_2\)</span>
-equilibration on the matrix</p>
+equilibration on the matrix (the <span class="math notranslate nohighlight">\(\ell_2\)</span> pass uses root-mean-square
+norms, i.e., <span class="math notranslate nohighlight">\(\ell_2\)</span> norms normalized by the number of nonzero
+entries, which keeps rows and columns of very different lengths comparable
+in the stacked matrix)</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
 P &amp; A^\top &amp; c\\
@@ -159,8 +162,8 @@ cone memberships, ie, it needs to satisfy for each sub-cone <span class="math no
 <p>To do this we restrict <span class="math notranslate nohighlight">\(D_\mathcal{K} = d_\mathcal{K} I_\mathcal{K}\)</span>, ie,
 <span class="math notranslate nohighlight">\(D\)</span> is constant diagonal within each cone. We take the scalar value to be
 the <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm of the calculated in-cone values for Ruiz
-equilibration and the average <span class="math notranslate nohighlight">\(\ell_2\)</span> norm of the in-cone values for
-<span class="math notranslate nohighlight">\(\ell_2\)</span> equilibration.</p>
+equilibration and the average of the calculated in-cone (root-mean-square)
+norms for the <span class="math notranslate nohighlight">\(\ell_2\)</span> equilibration.</p>
 <p>Originally the code supported separate <code class="code docutils literal notranslate"><span class="pre">primal_scale</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">dual_scale</span></code> parameters scaling <span class="math notranslate nohighlight">\(c\)</span> and <span class="math notranslate nohighlight">\(b\)</span>, but the latest
 version of SCS has set both of these to the same value of <span class="math notranslate nohighlight">\(\sigma\)</span>.</p>

@@ -204,10 +204,19 @@ Accelerate explicitly with:</p>
                           y &amp; = R_y^{-1}(A x - z^k_y).\end{split}\]</div>
 <p>then solves the positive definite system using using <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">conjugate gradients</a>.  Each iteration of
 CG requires one multiply each of sparse matrices <span class="math notranslate nohighlight">\(P, A, A^\top\)</span>.  The
-system is solved up to some tolerance, which is tuned to ensure that the overall
-algorithm converges. The tolerance decays with iteration <span class="math notranslate nohighlight">\(k\)</span> like
-<span class="math notranslate nohighlight">\(O(1/k^\gamma)\)</span> where <span class="math notranslate nohighlight">\(\gamma &gt; 1\)</span> and is determined by the constant
-<code class="code docutils literal notranslate"><span class="pre">CG_RATE</span></code> (defaults to <span class="math notranslate nohighlight">\(1.5\)</span>).</p>
+system is solved up to some tolerance, which is tuned to ensure that the
+overall algorithm converges: each solve targets a small fraction
+(<code class="code docutils literal notranslate"><span class="pre">CG_TOL_FACTOR</span></code>, default <span class="math notranslate nohighlight">\(0.03\)</span>) of the smaller of the current
+primal and dual residuals, additionally capped by a term decaying with
+iteration <span class="math notranslate nohighlight">\(k\)</span> like <span class="math notranslate nohighlight">\(O(1/k^\gamma)\)</span> where <span class="math notranslate nohighlight">\(\gamma\)</span> is
+determined by the constant <code class="code docutils literal notranslate"><span class="pre">CG_RATE</span></code> (defaults to <span class="math notranslate nohighlight">\(2\)</span>), and
+floored at <code class="code docutils literal notranslate"><span class="pre">CG_BEST_TOL</span></code>. Each solve is warm-started from the previous
+solution. The solver also harvests approximate eigenvectors of the reduced
+matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
+2010) and uses up to <code class="code docutils literal notranslate"><span class="pre">DEFLATE_VECTORS</span></code> (default 30) of them to deflate
+the smallest eigenvalues from subsequent solves, which substantially reduces
+the CG iterations needed on ill-conditioned problems at no additional
+matrix-multiply cost.</p>
 <p>The indirect method has the advantage of not requiring an expensive
 factorization but typically is slower on a per-iteration basis. In most cases
 the factorization is relatively cheap so the direct method is the default,

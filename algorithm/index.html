@@ -204,13 +204,28 @@ the <code class="code docutils literal notranslate"><span class="pre">include/gl
 declares a problem <strong>primal infeasible (dual unbounded)</strong> when it finds <span class="math notranslate nohighlight">\(y \in
 \mathbf{R}^m\)</span> that satisfies</p>
 <div class="math notranslate nohighlight">
-\[b^\top y = -1, \quad \|A^\top y\|_\infty &lt; \epsilon_\mathrm{infeas}.\]</div>
+\[b^\top y = -1, \quad \|A^\top y\|_\infty &lt; \epsilon_\mathrm{infeas} \cdot \min\left(1, \frac{\max_{ij} |A_{ij}|}{\|b\|_\infty}\right).\]</div>
 <p>Similarly, SCS declares a problem <strong>dual infeasible (primal unbounded)</strong> when it finds
 <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
 <div class="math notranslate nohighlight">
-\[c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) &lt; \epsilon_\mathrm{infeas}\]</div>
+\[c^\top x = -1, \quad \|P x\|_\infty &lt; \epsilon_\mathrm{infeas}, \quad \|A x + s\|_\infty &lt; \epsilon_\mathrm{infeas} \cdot \min\left(1, \frac{\max_{ij} |A_{ij}|}{\|c\|_\infty}\right)\]</div>
 <p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas} &gt; 0\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm here can be changed to other norms by
-changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
+changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file
+(the <span class="math notranslate nohighlight">\(\max_{ij} |A_{ij}|\)</span> factor is always the largest entry magnitude
+of <span class="math notranslate nohighlight">\(A\)</span>).</p>
+<p>The <span class="math notranslate nohighlight">\(\min(1, \cdot)\)</span> factors make the tests invariant to a rescaling of
+<span class="math notranslate nohighlight">\(b\)</span> (resp. <span class="math notranslate nohighlight">\(c\)</span>) relative to <span class="math notranslate nohighlight">\(A\)</span>. The certificate
+normalizations <span class="math notranslate nohighlight">\(b^\top y = -1\)</span> and <span class="math notranslate nohighlight">\(c^\top x = -1\)</span> otherwise bake
+the data magnitudes into the effective tolerance: with, e.g.,
+<span class="math notranslate nohighlight">\(\|c\|_\infty \sim 10^6\)</span>, a normalized certificate <span class="math notranslate nohighlight">\(x\)</span> has norm
+<span class="math notranslate nohighlight">\(\sim 10^{-6}\)</span> and the unscaled test becomes six orders of magnitude
+looser than intended, which can produce false infeasibility declarations on
+badly scaled feasible problems. The factors only ever tighten the tests,
+never loosen them.</p>
+<p>To guard against transient iterates that momentarily pass the residual tests
+(for example iterates produced by <a class="reference internal" href="acceleration.html#acceleration"><span class="std std-ref">acceleration</span></a> steps),
+SCS additionally requires the certificate conditions to hold at two
+consecutive residual checks before declaring infeasibility or unboundedness.</p>
 <p>In some rare cases a problem is both primal and dual infeasible. In this case
 SCS will return one of the two above certificates, whichever one it finds
 first. However, in that case the interpretation of infeasibility in one space
