@@ -244,29 +244,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define MIN_SCALE_VALUE (1e-6)
 #define SCALE_NORM NORM /* what norm to use when computing the scale factor */
 
-/* Dynamic diagonal rescaling (stgs->adaptive_diag_scale). Multipliers
- * move by at most (profile ratio)^DIAG_SCALE_DAMP per update. Row
- * multipliers live in [DIAG_SCALE_MULT_MIN, DIAG_SCALE_MULT_MAX] around
- * the scalar scale. Column multipliers only ever heat (rho_x_j <= rho_x;
- * rho_x is a boundary optimum -- the x prox carries no cone so anchoring
- * healthy columns is pure loss) and are capped at DIAG_SCALE_COL_MULT_MAX:
- * the dual residual is directly proportional to rho_x_j, so the profile
- * feedback is fully reflexive and destabilizes (multiplier limit cycles,
- * perpetual refactor churn) beyond ~2 orders of magnitude of range. The
- * resulting rho_x_j is additionally floored at DIAG_RHO_X_FLOOR for
- * factorization health. An update fires when the scalar scale updates, or
- * when some damped *clamped* step alone exceeds sqrt(10) (a railed scalar
- * must not freeze the diagonal; a railed multiplier must not keep
- * triggering updates it cannot take). */
+/* Dynamic diagonal rescaling (stgs->adaptive_diag_scale). Row multipliers
+ * move by at most (profile ratio)^DIAG_SCALE_DAMP per update and live in
+ * [DIAG_SCALE_MULT_MIN, DIAG_SCALE_MULT_MAX] around the scalar scale. An
+ * update fires when the scalar scale updates, or when some damped
+ * *clamped* step alone exceeds sqrt(10) (a railed scalar must not freeze
+ * the diagonal; a railed multiplier must not keep triggering updates it
+ * cannot take). */
 #define DIAG_SCALE_DAMP (0.25)
 #define DIAG_SCALE_MULT_MIN (1e-3)
 #define DIAG_SCALE_MULT_MAX (1e3)
-#define DIAG_SCALE_COL_MULT_MAX (1e2)
 /* Floor on the row-profile denominators, as a fraction of the block's
  * rms denominator (see row_rel_res). Swept over 1e-4..1e-1: every value
  * improves on no floor, 1e-3 is the best on solve count. */
 #define DEN_FLOOR_FRAC (1e-3)
-#define DIAG_RHO_X_FLOOR (1e-8)
 
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
 #define CG_BEST_TOL (1e-12)
