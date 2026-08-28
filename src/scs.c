@@ -1237,15 +1237,6 @@ static void set_den_floor(ScsWork *w) {
   w->den_floor = DEN_FLOOR_FRAC * SQRTF(s2 / (scs_float)MAX(m, 1));
 }
 
-/* Relative dual residual of column j in the normalized space. */
-static scs_float col_rel_res(const ScsWork *w, scs_int j) {
-  const ScsResiduals *r = w->r_normalized;
-  scs_float den = MAX(ABS(r->px[j]), ABS(r->aty[j]));
-  den = MAX(den, ABS(w->d->c[j]) * r->tau);
-  den = MAX(den, _DIV_EPS_TOL);
-  return MAX(ABS(r->px_aty_ctau[j]), _DIV_EPS_TOL) / den;
-}
-
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale, relative_res_pri, relative_res_dual;
