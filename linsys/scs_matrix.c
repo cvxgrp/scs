@@ -315,11 +315,31 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   *st_out = SAFEDIV_POS(1.0, SQRTF(apply_limit(wrk)));
 }
 
+/* The l2 pass normalizes by RMS (root-mean-square over stored entries)
+ * rather than the raw l2 norm. The raw l2 norm of a row/column grows like
+ * sqrt(nnz) times its typical entry magnitude, so dividing by it crushes
+ * dense or flat rows/columns by an extra nnz^(1/4) factor relative to
+ * sparse ones -- a density artifact, not a magnitude signal (the Ruiz
+ * linf passes are density-blind). RMS measures typical entry magnitude
+ * while keeping the l2 pass's averaging robustness. Under the stacked
+ * equilibration the b/c entries count toward their row/column averages,
+ * and the tau norms average over their own lengths.
+ */
 static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
                             const scs_float *ct, scs_float *Dt, scs_float *Et,
                             scs_float *st_out, ScsConeWork *cone) {
   scs_int i, j, kk;
+  scs_int rms = 1;
   scs_float wrk;
+  scs_float *rcnt = SCS_NULL, *ecnt = SCS_NULL;
+  rcnt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+  ecnt = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
+  if (!rcnt || !ecnt) {
+    scs_free(rcnt);
+    scs_free(ecnt);
+    rcnt = ecnt = SCS_NULL;
+    rms = 0; /* fall back to plain l2 on alloc failure */
+  }
 
   /****************************  D  ****************************/
 
@@ -332,10 +352,16 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   for (i = 0; i < A->n; ++i) {
     for (j = A->p[i]; j < A->p[i + 1]; ++j) {
       Dt[A->i[j]] += A->x[j] * A->x[j];
+      if (rms) {
+        rcnt[A->i[j]] += 1.;
+      }
     }
   }
   for (i = 0; i < A->m; ++i) {
-    Dt[i] = SQRTF(Dt[i]); /* l2 norm of rows */
+    if (rms) {
+      Dt[i] /= (rcnt[i] + 1.); /* +1 for the bt (tau-column) entry */
+    }
+    Dt[i] = SQRTF(Dt[i]); /* l2 (or rms) norm of rows */
   }
 
   /* accumulate D across each cone  */
@@ -364,8 +390,14 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
         i = P->i[kk]; /* row */
         wrk = P->x[kk] * P->x[kk];
         Et[j] += wrk;
+        if (rms) {
+          ecnt[j] += 1.;
+        }
         if (i != j) {
           Et[i] += wrk;
+          if (rms) {
+            ecnt[i] += 1.;
+          }
         }
       }
     }
@@ -374,13 +406,23 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   /* calculate col norms, E */
   for (i = 0; i < A->n; ++i) {
     Et[i] += SCS(norm_sq)(&(A->x[A->p[i]]), A->p[i + 1] - A->p[i]);
+    if (rms) {
+      Et[i] /= (ecnt[i] + (scs_float)(A->p[i + 1] - A->p[i]) + 1.);
+    }
     Et[i] = SQRTF(apply_limit(SQRTF(Et[i])));
     Et[i] = SAFEDIV_POS(1.0, Et[i]);
   }
 
   /**************************  tau  ****************************/
-  wrk = MAX(SCS(norm_2)(bt, A->m), SCS(norm_2)(ct, A->n));
+  if (rms) {
+    wrk = MAX(SCS(norm_2)(bt, A->m) / SQRTF((scs_float)A->m),
+              SCS(norm_2)(ct, A->n) / SQRTF((scs_float)A->n));
+  } else {
+    wrk = MAX(SCS(norm_2)(bt, A->m), SCS(norm_2)(ct, A->n));
+  }
   *st_out = SAFEDIV_POS(1.0, SQRTF(apply_limit(wrk)));
+  scs_free(rcnt);
+  scs_free(ecnt);
 }
 
 static void rescale(ScsMatrix *P, ScsMatrix *A, scs_float *bt, scs_float *ct,

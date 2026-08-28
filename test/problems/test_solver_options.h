@@ -82,6 +82,9 @@ static const char *test_adaptive_scale(void) {
   stgs->eps_abs = 1e-5;
   stgs->eps_rel = 1e-5;
   stgs->adaptive_scale = 1;
+  /* deliberately bad initial scale so the update heuristic must fire,
+   * independent of how well the equilibration balances the problem */
+  stgs->scale = 100.;
   stgs->verbose = 0;
 
   exitflag = scs(d, k, stgs, sol, &info);
