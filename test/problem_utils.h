@@ -87,6 +87,26 @@ static scs_float get_dual_cone_dist(const scs_float *y, ScsConeWork *c,
   memcpy(t, y, m * sizeof(scs_float));
   SCS(proj_dual_cone)(t, c, SCS_NULL, SCS_NULL);
   dist = SCS(norm_inf_diff)(t, y, m);
+  /* TEMPORARY CI DEBUG (revert before merge): when the distance is
+   * large, localize it and test projection idempotence */
+  if (dist > 1e-5) {
+    scs_int i, arg = 0;
+    scs_float dist2;
+    scs_float *t2 = (scs_float *)scs_calloc(m, sizeof(scs_float));
+    for (i = 0; i < m; ++i) {
+      if (ABS(t[i] - y[i]) > ABS(t[arg] - y[arg])) {
+        arg = i;
+      }
+    }
+    memcpy(t2, t, m * sizeof(scs_float));
+    SCS(proj_dual_cone)(t2, c, SCS_NULL, SCS_NULL);
+    dist2 = SCS(norm_inf_diff)(t2, t, m);
+    scs_printf("DBG ydist=%.6e argmax=%li of m=%li  y[arg]=%.6e proj[arg]=%.6e"
+               "  idempotence re-proj dist=%.6e  |y|inf=%.6e\n",
+               dist, (long)arg, (long)m, y[arg], t[arg], dist2,
+               SCS(norm_inf)(y, m));
+    scs_free(t2);
+  }
   scs_free(t);
   return dist;
 }
