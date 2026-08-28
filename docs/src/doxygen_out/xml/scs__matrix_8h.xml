@@ -1,0 +1,418 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="scs__matrix_8h" kind="file" language="C++">
+    <compoundname>scs_matrix.h</compoundname>
+    <includes refid="glbopts_8h" local="yes">glbopts.h</includes>
+    <includes refid="scs__work_8h" local="yes">scs_work.h</includes>
+    <includedby refid="scs__matrix_8c" local="yes">/private/tmp/scs-400/linsys/scs_matrix.c</includedby>
+    <includedby refid="rw_8c" local="yes">/private/tmp/scs-400/src/rw.c</includedby>
+    <includedby refid="scs_8c" local="yes">/private/tmp/scs-400/src/scs.c</includedby>
+    <includedby refid="util_8c" local="yes">/private/tmp/scs-400/src/util.c</includedby>
+    <incdepgraph>
+      <node id="5">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="9">
+        <label>scs_work.h</label>
+        <link refid="scs__work_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.h</label>
+        <link refid="scs__matrix_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>math.h</label>
+      </node>
+      <node id="7">
+        <label>stdio.h</label>
+      </node>
+      <node id="8">
+        <label>stdlib.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.c</label>
+        <link refid="scs__matrix_8c"/>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.h</label>
+        <link refid="scs__matrix_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>/private/tmp/scs-400/src/rw.c</label>
+        <link refid="rw_8c"/>
+      </node>
+      <node id="4">
+        <label>/private/tmp/scs-400/src/scs.c</label>
+        <link refid="scs_8c"/>
+      </node>
+      <node id="5">
+        <label>/private/tmp/scs-400/src/util.c</label>
+        <link refid="util_8c"/>
+      </node>
+    </invincdepgraph>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="scs__matrix_8h_1a2fbe2f7e04fc95fde4d5e975efacdff5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref> *<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>ScsScaling *SCS normalize_a_p</definition>
+        <argsstring>(ScsMatrix *P, ScsMatrix *A, const scs_float *b, const scs_float *c, ScsConeWork *cone)</argsstring>
+        <name>normalize_a_p</name>
+        <param>
+          <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>P</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>c</declname>
+        </param>
+        <param>
+          <type><ref refid="scs_8h_1a4389113106886772f3178059cd157a47" kindref="member">ScsConeWork</ref> *</type>
+          <declname>cone</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="20" column="12" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="503" bodyend="579" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="20" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="scs__matrix_8h_1a06e88acd6ee42a74cf0867a92ddb308c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>void SCS free_scs_matrix</definition>
+        <argsstring>(ScsMatrix *A)</argsstring>
+        <name>free_scs_matrix</name>
+        <param>
+          <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="24" column="6" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="54" bodyend="61" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="24" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="scs__matrix_8h_1a6e4a22a696a0b63ee7bf271666f783f7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_int SCS copy_matrix</definition>
+        <argsstring>(ScsMatrix **dstp, const ScsMatrix *src)</argsstring>
+        <name>copy_matrix</name>
+        <param>
+          <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> **</type>
+          <declname>dstp</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>src</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="28" column="9" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="20" bodyend="52" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="28" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="scs__matrix_8h_1aae671e9584d2278b797daf853b738618" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_int SCS validate_lin_sys</definition>
+        <argsstring>(const ScsMatrix *A, const ScsMatrix *P)</argsstring>
+        <name>validate_lin_sys</name>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>P</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Validate the linear system inputs, returns &lt; 0 if not valid inputs.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>A</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A data matrix </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>P</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>P data matrix </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>status &lt; 0 indicates failure </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="37" column="9" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="65" bodyend="157" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="37" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="scs__matrix_8h_1a57c20e21a4ed638b6de18ae02262e03e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>void SCS accum_by_atrans</definition>
+        <argsstring>(const ScsMatrix *A, const scs_float *x, scs_float *y)</argsstring>
+        <name>accum_by_atrans</name>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Forms y += A^T * x</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>A</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A data matrix </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Input </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>y</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Output </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="46" column="6" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="161" bodyend="186" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="46" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="scs__matrix_8h_1ae43fbfa76efede69d2ac7a2811738ddc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>void SCS accum_by_a</definition>
+        <argsstring>(const ScsMatrix *A, const scs_float *x, scs_float *y)</argsstring>
+        <name>accum_by_a</name>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Forms y += A * x</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>A</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Data matrix </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Input </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>y</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Output </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="55" column="6" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="188" bodyend="203" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="55" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="scs__matrix_8h_1a2e085d24b448ee0e46d0432570e7a34e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>void SCS accum_by_p</definition>
+        <argsstring>(const ScsMatrix *P, const scs_float *x, scs_float *y)</argsstring>
+        <name>accum_by_p</name>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>P</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Forms y += P * x</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>P</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>P data matrix </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Input </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>y</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Output </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/scs_matrix.h" line="64" column="6" bodyfile="/private/tmp/scs-400/linsys/scs_matrix.c" bodystart="206" bodyend="225" declfile="/private/tmp/scs-400/linsys/scs_matrix.h" declline="64" declcolumn="6"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Sparse<sp/>matrix<sp/>operations:<sp/>normalization/equilibration,<sp/>copying,<sp/>validation,</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>and<sp/>matrix-vector<sp/>products<sp/>(A*x,<sp/>A&apos;*x,<sp/>P*x)<sp/>for<sp/>CSC-format<sp/>matrices.</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>SCS_MATRIX_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_MATRIX_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="glbopts_8h" kindref="compound">glbopts.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs__work_8h" kindref="compound">scs_work.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Normalization<sp/>routines,<sp/>used<sp/>if<sp/>d-&gt;NORMALIZE<sp/>is<sp/>true<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>normalizes<sp/>A<sp/>matrix,<sp/>sets<sp/>scal-&gt;E<sp/>and<sp/>scal-&gt;D<sp/>diagonal<sp/>scaling<sp/>matrices,</highlight></codeline>
+<codeline lineno="18"><highlight class="comment"><sp/>*<sp/>A<sp/>-&gt;<sp/>D*A*E.<sp/>D<sp/>and<sp/>E<sp/>must<sp/>be<sp/>all<sp/>positive<sp/>entries,<sp/>D<sp/>must<sp/>satisfy<sp/>cone</highlight></codeline>
+<codeline lineno="19"><highlight class="comment"><sp/>*<sp/>boundaries<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref><sp/>*<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1a2fbe2f7e04fc95fde4d5e975efacdff5" kindref="member">normalize_a_p</ref>)(<ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*P,<sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*c,<sp/><ref refid="scs_8h_1a4389113106886772f3178059cd157a47" kindref="member">ScsConeWork</ref><sp/>*cone);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>to<sp/>free<sp/>the<sp/>memory<sp/>allocated<sp/>in<sp/>a<sp/>ScsMatrix<sp/>(called<sp/>on<sp/>A<sp/>and<sp/>P<sp/>at<sp/>finish)<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1a06e88acd6ee42a74cf0867a92ddb308c" kindref="member">free_scs_matrix</ref>)(<ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>copies<sp/>A<sp/>(instead<sp/>of<sp/>in-place<sp/>normalization),<sp/>returns<sp/>0<sp/>for<sp/>failure,</highlight></codeline>
+<codeline lineno="27"><highlight class="comment"><sp/>*<sp/>allocates<sp/>memory<sp/>for<sp/>dstp<sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1a6e4a22a696a0b63ee7bf271666f783f7" kindref="member">copy_matrix</ref>)(<ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>**dstp,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*src);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1aae671e9584d2278b797daf853b738618" kindref="member">validate_lin_sys</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*P);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1a57c20e21a4ed638b6de18ae02262e03e" kindref="member">accum_by_atrans</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1ae43fbfa76efede69d2ac7a2811738ddc" kindref="member">accum_by_a</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="scs__matrix_8c_1a2e085d24b448ee0e46d0432570e7a34e" kindref="member">accum_by_p</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*P,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/linsys/scs_matrix.h"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="dir_68267d1309a1af8e8297ef4c3efbcdba" kind="dir">
+    <compoundname>/private/tmp/scs-400/src</compoundname>
+    <innerfile refid="aa_8c">aa.c</innerfile>
+    <innerfile refid="cones_8c">cones.c</innerfile>
+    <innerfile refid="ctrlc_8c">ctrlc.c</innerfile>
+    <innerfile refid="exp__cone_8c">exp_cone.c</innerfile>
+    <innerfile refid="linalg_8c">linalg.c</innerfile>
+    <innerfile refid="normalize_8c">normalize.c</innerfile>
+    <innerfile refid="rw_8c">rw.c</innerfile>
+    <innerfile refid="scs_8c">scs.c</innerfile>
+    <innerfile refid="scs__version_8c">scs_version.c</innerfile>
+    <innerfile refid="util_8c">util.c</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/private/tmp/scs-400/src/"/>
+  </compounddef>
+</doxygen>

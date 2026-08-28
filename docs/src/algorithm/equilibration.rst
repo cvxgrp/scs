@@ -55,7 +55,10 @@ rescales the columns of :math:`A` and the rows / cols of :math:`P, c`.
 Equilibrating matrices is a classic problem in linear algebra, and SCS simply
 implements :code:`NUM_RUIZ_PASSES` (default 25) steps of Ruiz equilibration
 followed by :code:`NUM_L2_PASSES` (default 1) steps of :math:`\ell_2`
-equilibration on the matrix
+equilibration on the matrix (the :math:`\ell_2` pass uses root-mean-square
+norms, i.e., :math:`\ell_2` norms normalized by the number of nonzero
+entries, which keeps rows and columns of very different lengths comparable
+in the stacked matrix)
 
 .. math::
   \begin{bmatrix}
@@ -74,8 +77,8 @@ cone memberships, ie, it needs to satisfy for each sub-cone :math:`\mathcal{K}`
 To do this we restrict :math:`D_\mathcal{K} = d_\mathcal{K} I_\mathcal{K}`, ie,
 :math:`D` is constant diagonal within each cone. We take the scalar value to be
 the :math:`\ell_\infty` norm of the calculated in-cone values for Ruiz
-equilibration and the average :math:`\ell_2` norm of the in-cone values for
-:math:`\ell_2` equilibration.
+equilibration and the average of the calculated in-cone (root-mean-square)
+norms for the :math:`\ell_2` equilibration.
 
 Originally the code supported separate :code:`primal_scale` and
 :code:`dual_scale` parameters scaling :math:`c` and :math:`b`, but the latest

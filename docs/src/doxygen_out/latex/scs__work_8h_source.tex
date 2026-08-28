@@ -1,0 +1,105 @@
+\doxysection{scs\+\_\+work.\+h}
+\hypertarget{scs__work_8h_source}{}\label{scs__work_8h_source}\index{/private/tmp/scs-\/400/include/scs\_work.h@{/private/tmp/scs-\/400/include/scs\_work.h}}
+\doxymbox{\hyperlink{scs__work_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Internal\ workspace\ structs\ used\ during\ the\ solve.}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ ScsWork\ holds\ all\ mutable\ state\ for\ one\ solve:\ ADMM\ iterates,\ residuals,}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ normalization\ data,\ and\ pointers\ to\ the\ linear\ system\ and\ cone\ workspaces.}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ ScsScaling\ holds\ the\ diagonal\ matrices\ from\ Ruiz\ equilibration.}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ ScsResiduals\ tracks\ primal/dual\ residuals\ and\ infeasibility\ certificates.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ *\ These\ are\ internal\ to\ SCS\ -\/-\/\ the\ public\ API\ is\ in\ scs.h.}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#ifndef\ SCS\_WORK\_H\_GUARD}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ SCS\_WORK\_H\_GUARD}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <stdio.h>}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00018\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{scs_8h}{scs.h}}"{}}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00024\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{struct\ }\{}
+\DoxyCodeLine{00025\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_scs_scaling_a3abac01d7988dbdf48e4279bf892500e}{D}},\ *\doxymbox{\hyperlink{struct_scs_scaling_ae60d3998dfda658207f5d896ef6d1caa}{E}};\ \textcolor{comment}{/*\ for\ normalization\ */}}
+\DoxyCodeLine{00026\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_scs_scaling_aa9796a3a5a8356d267f656a4c8365964}{m}};\ \ \ \ \ \ \ \ \textcolor{comment}{/*\ Length\ of\ D\ */}}
+\DoxyCodeLine{00027\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_scs_scaling_ae361a04bacf9fd06779f9fc3b51dd337}{n}};\ \ \ \ \ \ \ \ \textcolor{comment}{/*\ Length\ of\ E\ */}}
+\DoxyCodeLine{00028\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_scaling_aa3a1ad44e92c287a9c1480499433170d}{primal\_scale}},\ \doxymbox{\hyperlink{struct_scs_scaling_a28c01794c9667696c865efcf93fbda31}{dual\_scale}};}
+\DoxyCodeLine{00029\ \ \ \textcolor{comment}{/*\ accumulated\ tau-\/slot\ scaling\ from\ the\ stacked-\/operator\ equilibration;}}
+\DoxyCodeLine{00030\ \textcolor{comment}{\ \ \ *\ becomes\ the\ sigma\ applied\ to\ b,\ c\ in\ normalize\_b\_c\ */}}
+\DoxyCodeLine{00031\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_scaling_aac57e3ad9597e7880d952dc7c9cd7f7c}{tau\_scale}};}
+\DoxyCodeLine{00032\ \}\ \doxymbox{\hyperlink{struct_scs_scaling}{ScsScaling}};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00035\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{struct\ }\{}
+\DoxyCodeLine{00036\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_scs_residuals_a98ce6ae4ad03f09302d56b479fcc9d92}{last\_iter}};}
+\DoxyCodeLine{00037\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_ab1a4b95a162161e7e5d4ac734e841753}{xt\_p\_x}};\ \ \ \ \ \textcolor{comment}{/*\ x'\ P\ x\ \ */}}
+\DoxyCodeLine{00038\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a5113f546b1f92d16e843cb08b42343bc}{xt\_p\_x\_tau}};\ \textcolor{comment}{/*\ x'Px\ *\ tau\string^2\ *not*\ divided\ out\ */}}
+\DoxyCodeLine{00039\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a2bf4be55401008c32312fa7095e6ca29}{ctx}};}
+\DoxyCodeLine{00040\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_aadf7ea12078d2bf26c7ebf23b3939af6}{ctx\_tau}};\ \textcolor{comment}{/*\ tau\ *not*\ divided\ out\ */}}
+\DoxyCodeLine{00041\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a21c989b358131f76e4c49dd7dc4bcb45}{bty}};}
+\DoxyCodeLine{00042\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_af82f4b935ef5d286ab18683eec10f2e9}{bty\_tau}};\ \textcolor{comment}{/*\ tau\ *not*\ divided\ out\ */}}
+\DoxyCodeLine{00043\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_ab6cb1a3090bd6007e152c84f12e5d0a2}{pobj}};\ \ \ \ \textcolor{comment}{/*\ primal\ objective\ */}}
+\DoxyCodeLine{00044\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_af115519bb7ad74d0a6287718598c9b4c}{dobj}};\ \ \ \ \textcolor{comment}{/*\ dual\ objective\ */}}
+\DoxyCodeLine{00045\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a0d236e5da0f661a7837aef5df2c825d1}{gap}};\ \ \ \ \ \textcolor{comment}{/*\ pobj\ -\/\ dobj\ */}}
+\DoxyCodeLine{00046\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_abc64055344aadda419b5a1befb6af6d1}{tau}};}
+\DoxyCodeLine{00047\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_aad1d59e96fb77b3c455348aaea7f3bb0}{kap}};}
+\DoxyCodeLine{00048\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a154327b130673f3fc9e47e133e30498d}{res\_pri}};}
+\DoxyCodeLine{00049\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a54a9c34ba599a3d32f99cb63eca988d9}{res\_dual}};}
+\DoxyCodeLine{00050\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a5f4fac727748fcb6ebef6cc79a9a3a06}{res\_infeas}};}
+\DoxyCodeLine{00051\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a99bf81732a35ce2280e5aa6cb23b3218}{res\_unbdd\_p}};}
+\DoxyCodeLine{00052\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_scs_residuals_a90f247a516f7d1b9b2f1d905afdd5cbc}{res\_unbdd\_a}};}
+\DoxyCodeLine{00053\ \ \ \textcolor{comment}{/*\ tau\ NOT\ divided\ out\ */}}
+\DoxyCodeLine{00054\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_scs_residuals_a66527c4bb6c683bbe93eed8d9691cf23}{ax}},\ *\doxymbox{\hyperlink{struct_scs_residuals_a868d9960ef594c16216ce73e6c7cacd6}{ax\_s}},\ *\doxymbox{\hyperlink{struct_scs_residuals_a8383d85142ca1aa5a2acae986bc82f66}{px}},\ *\doxymbox{\hyperlink{struct_scs_residuals_a66d8e7c0a358aba2124b395adaa887cd}{aty}},\ *\doxymbox{\hyperlink{struct_scs_residuals_aa182a3f8297d3b1daf2fc95b7446ca24}{ax\_s\_btau}},\ *\doxymbox{\hyperlink{struct_scs_residuals_a7d2faee83fe2e14c50eb73892433a0b6}{px\_aty\_ctau}};}
+\DoxyCodeLine{00055\ \}\ \doxymbox{\hyperlink{struct_scs_residuals}{ScsResiduals}};}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00058\ \textcolor{keyword}{struct\ }\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k}{SCS\_WORK}}\ \{}
+\DoxyCodeLine{00059\ \ \ \textcolor{comment}{/*\ x\_prev\ =\ x\ from\ previous\ iteration\ */}}
+\DoxyCodeLine{00060\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a251ffb2c8a3c76f07b258b5be85f2f98}{setup\_time}};\ \ \ \ \ \ \ \textcolor{comment}{/*\ time\ taken\ for\ setup\ phase\ (milliseconds)\ */}}
+\DoxyCodeLine{00061\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_adbc06b3de772d6af71a4e88f05c622a1}{time\_limit\_reached}};\ \textcolor{comment}{/*\ boolean,\ if\ the\ time-\/limit\ is\ reached\ */}}
+\DoxyCodeLine{00062\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a991bc82cd3e84ce1ac7d3625b051a577}{u}},\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a7ed43df03e524e06187a52c21d1369da}{u\_t}};}
+\DoxyCodeLine{00063\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a9549b72c9049c21af513af6c07aecf50}{v}},\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a53900162c17e41df5c9f849cf7a5cf7f}{v\_prev}};}
+\DoxyCodeLine{00064\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a5c4c6d36b0fadccbf05999451292c20f}{rsk}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ rsk\ [\ r;\ s;\ kappa\ ]\ */}}
+\DoxyCodeLine{00065\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a2859089462bc7724fcf3d817aab2ecf5}{h}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ h\ =\ [c;\ b]\ */}}
+\DoxyCodeLine{00066\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a98beb00e34a6cbcf9b9072093641f814}{g}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ g\ =\ (I\ +\ M)\string^\{-\/1\}\ h\ */}}
+\DoxyCodeLine{00067\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_ab4b6aab90e79225dca1aea1cbaf92384}{lin\_sys\_warm\_start}};\ \textcolor{comment}{/*\ linear\ system\ warm-\/start\ (indirect\ only)\ */}}
+\DoxyCodeLine{00068\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a87e0383db054c835581fce4e3d44d32f}{diag\_r}};\ \textcolor{comment}{/*\ vector\ of\ R\ matrix\ diagonals\ (affects\ cone\ proj)\ */}}
+\DoxyCodeLine{00069\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a8858fdf284b575baae836b3a1ff3840e}{b\_orig}},\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a8e01e31f8cd5e7fde79f0ad1b0bfa686}{c\_orig}};\ \ \ \ \ \textcolor{comment}{/*\ original\ unnormalized\ b\ and\ c\ vectors\ */}}
+\DoxyCodeLine{00070\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_aa2ca56c42b9d5d13c405084761fc2c20}{nm\_b\_orig}},\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a40818d2bf49e38e8c1fbdbc333f23d16}{nm\_c\_orig}};\ \textcolor{comment}{/*\ unnormalized\ NORM(b),\ NORM(c)\ */}}
+\DoxyCodeLine{00071\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a2e7b882e12c8d18ce2ebe0990917b49c}{nm\_a\_orig}};\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ unnormalized\ max\ abs\ entry\ of\ A\ */}}
+\DoxyCodeLine{00072\ \ \ \textcolor{comment}{/*\ consecutive\ checks\ the\ infeas/unbdd\ certificate\ has\ passed\ */}}
+\DoxyCodeLine{00073\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_aec82b8be2630c8dc9cc6b1f4d1810b0d}{infeas\_cert\_streak}},\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_aede28c1f8dd735524cb7435f3ff97fe7}{unbdd\_cert\_streak}};}
+\DoxyCodeLine{00074\ \ \ \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_aff98c514c38d4f45c91063bb496c4842}{accel}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ struct\ for\ acceleration\ workspace\ */}}
+\DoxyCodeLine{00075\ \ \ \doxymbox{\hyperlink{struct_scs_data}{ScsData}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a62b43fc59352679801650fecfe6e588d}{d}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ Problem\ data\ deep\ copy\ NORMALIZED\ */}}
+\DoxyCodeLine{00076\ \ \ \doxymbox{\hyperlink{struct_scs_cone}{ScsCone}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_ad8bd72df95e7ce63c2840e2dcc964f3c}{k}};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{/*\ Problem\ cone\ deep\ copy\ */}}
+\DoxyCodeLine{00077\ \ \ \doxymbox{\hyperlink{struct_scs_settings}{ScsSettings}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_affa6b58e230bf6bfdfe5e109443a62a1}{stgs}};\ \ \ \ \ \ \textcolor{comment}{/*\ contains\ solver\ settings\ specified\ by\ user\ */}}
+\DoxyCodeLine{00078\ \ \ FILE\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a5288b7dcdb69ea6f36c0ddd3d6031d46}{log\_csv\_fout}};\ \ \ \ \ \textcolor{comment}{/*\ open\ CSV\ log\ stream\ for\ current\ solve\ */}}
+\DoxyCodeLine{00079\ \ \ \doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{ScsLinSysWork}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_af4425e7b96c8195d5bab69926656cee0}{p}};\ \ \ \ \ \ \ \textcolor{comment}{/*\ struct\ populated\ by\ linear\ system\ solver\ */}}
+\DoxyCodeLine{00080\ \ \ \doxymbox{\hyperlink{struct_scs_scaling}{ScsScaling}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_ac4cadf2efb716a890620efa90b2d796a}{scal}};\ \ \ \ \ \ \ \textcolor{comment}{/*\ contains\ the\ re-\/scaling\ data\ */}}
+\DoxyCodeLine{00081\ \ \ \doxymbox{\hyperlink{scs_8h_a4389113106886772f3178059cd157a47}{ScsConeWork}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a22fba4d14ccf3163dc21c9c296959afe}{cone\_work}};\ \textcolor{comment}{/*\ workspace\ for\ the\ cone\ projection\ step\ */}}
+\DoxyCodeLine{00082\ \ \ \textcolor{comment}{/*\ normalized\ and\ unnormalized\ residuals\ */}}
+\DoxyCodeLine{00083\ \ \ \doxymbox{\hyperlink{struct_scs_residuals}{ScsResiduals}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_ac273a1a5a6d97b253e046a8a115a3328}{r\_orig}},\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_aa0d5e3bfe88cf84c9985fe6c06bbcb78}{r\_normalized}};}
+\DoxyCodeLine{00084\ \ \ \textcolor{comment}{/*\ track\ x,y,s\ as\ alg\ progresses,\ tau\ *not*\ divided\ out\ */}}
+\DoxyCodeLine{00085\ \ \ \doxymbox{\hyperlink{struct_scs_solution}{ScsSolution}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_ae2afb5edccb0f8eea533bff371450d71}{xys\_orig}},\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_ae4fc07ccc87541a1a4f01714a38344fb}{xys\_normalized}};}
+\DoxyCodeLine{00086\ \ \ \textcolor{comment}{/*\ Scale\ updating\ workspace\ */}}
+\DoxyCodeLine{00087\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a86abdefc658953595c3482b9eeeacf97}{sum\_log\_scale\_factor}};}
+\DoxyCodeLine{00088\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a9887b851316d71a0a43804e1a1c755af}{last\_scale\_update\_iter}},\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a52106eaacc56aa2b52bc762cb4e6b07f}{n\_log\_scale\_factor}},\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_af1173fd5943e07bd78ed4feb35d19175}{scale\_updates}};}
+\DoxyCodeLine{00089\ \ \ \textcolor{comment}{/*\ per-\/row\ scale\ multipliers\ on\ R\_y,\ size\ m\ (adaptive\_diag\_scale\ >=\ 1)\ */}}
+\DoxyCodeLine{00090\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *\doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a091574564bb240b0e594b840fd8aa2e4}{scale\_mults}};}
+\DoxyCodeLine{00091\ \ \ \textcolor{comment}{/*\ floor\ on\ the\ row-\/profile\ denominators,\ see\ row\_rel\_res\ */}}
+\DoxyCodeLine{00092\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a4aa73ce9704495b53231a15ca5957204}{den\_floor}};}
+\DoxyCodeLine{00093\ \ \ \textcolor{comment}{/*\ per-\/column\ multipliers\ on\ rho\_x,\ size\ n\ (adaptive\_diag\_scale\ >=\ 2)\ */}}
+\DoxyCodeLine{00094\ \ \ \textcolor{comment}{/*\ AA\ stats\ */}}
+\DoxyCodeLine{00095\ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a2d29a0d8362380d13605859587ffba21}{aa\_norm}};}
+\DoxyCodeLine{00096\ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a8029125b75807cfeb463775bb5fed519}{rejected\_accel\_steps}},\ \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k_a631f8a673e24d074f6ffd71915e648b2}{accepted\_accel\_steps}};}
+\DoxyCodeLine{00097\ \};}
+\DoxyCodeLine{00098\ }
+\DoxyCodeLine{00099\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00100\ \}}
+\DoxyCodeLine{00101\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00102\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -1,0 +1,501 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="linalg_8c" kind="file" language="C++">
+    <compoundname>linalg.c</compoundname>
+    <includes refid="linalg_8h" local="yes">linalg.h</includes>
+    <includes refid="scs__blas_8h" local="yes">scs_blas.h</includes>
+    <includes local="no">math.h</includes>
+    <incdepgraph>
+      <node id="6">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>linalg.h</label>
+        <link refid="linalg_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="10">
+        <label>scs_blas.h</label>
+        <link refid="scs__blas_8h"/>
+      </node>
+      <node id="5">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/src/linalg.c</label>
+        <link refid="linalg_8c"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>math.h</label>
+      </node>
+      <node id="8">
+        <label>stdio.h</label>
+      </node>
+      <node id="9">
+        <label>stdlib.h</label>
+      </node>
+    </incdepgraph>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="linalg_8c_1a044896766d7716f35bf275a3c67d72ae" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS norm_diff</definition>
+        <argsstring>(const scs_float *a, const scs_float *b, scs_int len)</argsstring>
+        <name>norm_diff</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="13" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="13" bodyend="21"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1ac8c14aa46137d44762293a07f6bbff06" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS norm_inf_diff</definition>
+        <argsstring>(const scs_float *a, const scs_float *b, scs_int len)</argsstring>
+        <name>norm_inf_diff</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="23" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="23" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1a1fd11317410766aa4664dd1740255391" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>void SCS scale_array</definition>
+        <argsstring>(scs_float *a, const scs_float b, scs_int len)</argsstring>
+        <name>scale_array</name>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="40" column="6" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="40" bodyend="44"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS dot</definition>
+        <argsstring>(const scs_float *x, const scs_float *y, scs_int len)</argsstring>
+        <name>dot</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="47" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="47" bodyend="54"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1aad06272d6a19a88408c807bfeaaf2ecc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS norm_sq</definition>
+        <argsstring>(const scs_float *v, scs_int len)</argsstring>
+        <name>norm_sq</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="57" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="57" bodyend="64"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1ab30dddd6b0cd81086b934402e96e5417" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS norm_2</definition>
+        <argsstring>(const scs_float *v, scs_int len)</argsstring>
+        <name>norm_2</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="67" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="67" bodyend="69"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS norm_inf</definition>
+        <argsstring>(const scs_float *a, scs_int len)</argsstring>
+        <name>norm_inf</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="71" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="71" bodyend="81"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1abf9054fc5e9776852a9824221c0bb8e1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>void SCS add_scaled_array</definition>
+        <argsstring>(scs_float *a, const scs_float *b, scs_int n, const scs_float sc)</argsstring>
+        <name>add_scaled_array</name>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+          <declname>sc</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="84" column="6" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="84" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS mean</definition>
+        <argsstring>(const scs_float *x, scs_int n)</argsstring>
+        <name>mean</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/linalg.c" line="92" column="11" bodyfile="/private/tmp/scs-400/src/linalg.c" bodystart="92" bodyend="102"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Dense<sp/>linear<sp/>algebra<sp/>operations:<sp/>norms,<sp/>dot<sp/>products,<sp/>scaling,<sp/>axpy.</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>Has<sp/>two<sp/>implementations:<sp/>a<sp/>plain<sp/>C<sp/>fallback<sp/>and<sp/>an<sp/>optimized<sp/>BLAS<sp/>version</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>(selected<sp/>at<sp/>compile<sp/>time<sp/>via<sp/>USE_LAPACK).</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="linalg_8h" kindref="compound">linalg.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs__blas_8h" kindref="compound">scs_blas.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>these<sp/>routines<sp/>do<sp/>not<sp/>have<sp/>BLAS<sp/>implementations<sp/>(that<sp/>I<sp/>can<sp/>find<sp/>at<sp/>least)<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a044896766d7716f35bf275a3c67d72ae" kindref="member">norm_diff</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>nm_diff<sp/>=<sp/>0.0,<sp/>tmp;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/>tmp<sp/>=<sp/>(a[i]<sp/>-<sp/>b[i]);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/>nm_diff<sp/>+=<sp/>tmp<sp/>*<sp/>tmp;</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a3b9d7d973bd11c5ad12d329c6ea8b308" kindref="member">SQRTF</ref>(nm_diff);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1ac8c14aa46137d44762293a07f6bbff06" kindref="member">norm_inf_diff</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>tmp,<sp/>max<sp/>=<sp/>0.0;</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>tmp<sp/>=<sp/><ref refid="glbopts_8h_1a26e668489fb528456f4bc54ba908d5b4" kindref="member">ABS</ref>(a[i]<sp/>-<sp/>b[i]);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(tmp<sp/>&gt;<sp/>max)<sp/>{</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>max<sp/>=<sp/>tmp;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>max;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>USE_LAPACK</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Self-rolled<sp/>basic<sp/>linear<sp/>algebra<sp/>routines<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>a<sp/>*=<sp/>b<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a1fd11317410766aa4664dd1740255391" kindref="member">scale_array</ref>)(<ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>a[i]<sp/>*=<sp/>b;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>x&apos;*y<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>ip<sp/>=<sp/>0.0;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>ip<sp/>+=<sp/>x[i]<sp/>*<sp/>y[i];</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>ip;</highlight></codeline>
+<codeline lineno="54"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>||v||_2^2<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1aad06272d6a19a88408c807bfeaaf2ecc" kindref="member">norm_sq</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*v,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>nmsq<sp/>=<sp/>0.0;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/>nmsq<sp/>+=<sp/>v[i]<sp/>*<sp/>v[i];</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>nmsq;</highlight></codeline>
+<codeline lineno="64"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>||v||_2<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1ab30dddd6b0cd81086b934402e96e5417" kindref="member">norm_2</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*v,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a3b9d7d973bd11c5ad12d329c6ea8b308" kindref="member">SQRTF</ref>(<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1aad06272d6a19a88408c807bfeaaf2ecc" kindref="member">norm_sq</ref>)(v,<sp/>len));</highlight></codeline>
+<codeline lineno="69"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>tmp,<sp/>max<sp/>=<sp/>0.0;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/>tmp<sp/>=<sp/><ref refid="glbopts_8h_1a26e668489fb528456f4bc54ba908d5b4" kindref="member">ABS</ref>(a[i]);</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(tmp<sp/>&gt;<sp/>max)<sp/>{</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>max<sp/>=<sp/>tmp;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>max;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>axpy<sp/>a<sp/>+=<sp/>sc*b<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1abf9054fc5e9776852a9824221c0bb8e1" kindref="member">add_scaled_array</ref>)(<ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n,</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>sc)<sp/>{</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>n;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>a[i]<sp/>+=<sp/>sc<sp/>*<sp/>b[i];</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="90"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" kindref="member">mean</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n)<sp/>{</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" kindref="member">mean</ref><sp/>=<sp/>0.;</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(n<sp/>==<sp/>0)<sp/>{</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>n;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" kindref="member">mean</ref><sp/>+=<sp/>x[i];</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" kindref="member">mean</ref><sp/>/<sp/>n;</highlight></codeline>
+<codeline lineno="102"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="105"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>If<sp/>we<sp/>have<sp/>BLAS<sp/>/<sp/>LAPACK<sp/>we<sp/>may<sp/>as<sp/>well<sp/>use<sp/>them<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"></highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>BLAS(nrm2)(blas_int<sp/>*n,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/>blas_int<sp/>*incx);</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>BLAS(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>blas_int<sp/>*n,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>blas_int<sp/>*incx,</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>blas_int<sp/>*incy);</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>BLAS(axpy)(blas_int<sp/>*n,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>blas_int<sp/>*incx,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y,<sp/>blas_int<sp/>*incy);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>BLAS(scal)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>blas_int<sp/>*n,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*sa,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*sx,</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>blas_int<sp/>*incx);</highlight></codeline>
+<codeline lineno="118"><highlight class="normal">blas_int<sp/>BLASI(amax)(blas_int<sp/>*n,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/>blas_int<sp/>*incx);</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Possibly<sp/>not<sp/>working<sp/>correctly<sp/>on<sp/>all<sp/>platforms.</highlight></codeline>
+<codeline lineno="121"><highlight class="comment">scs_float<sp/>BLAS(lange)(const<sp/>char<sp/>*norm,<sp/>const<sp/>blas_int<sp/>*m,<sp/>const<sp/>blas_int<sp/>*n,</highlight></codeline>
+<codeline lineno="122"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>scs_float<sp/>*a,<sp/>blas_int<sp/>*lda,<sp/>scs_float<sp/>*work);</highlight></codeline>
+<codeline lineno="123"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"></highlight></codeline>
+<codeline lineno="125"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="126"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="128"><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>a<sp/>*=<sp/>b<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a1fd11317410766aa4664dd1740255391" kindref="member">scale_array</ref>)(<ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/>BLAS(scal)(&amp;blen,<sp/>&amp;b,<sp/>a,<sp/>&amp;bone);</highlight></codeline>
+<codeline lineno="134"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>x&apos;*y<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>BLAS(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(&amp;blen,<sp/>x,<sp/>&amp;bone,<sp/>y,<sp/>&amp;bone);</highlight></codeline>
+<codeline lineno="141"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"></highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>||v||_2^2<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1aad06272d6a19a88408c807bfeaaf2ecc" kindref="member">norm_sq</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*v,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>BLAS(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(&amp;blen,<sp/>v,<sp/>&amp;bone,<sp/>v,<sp/>&amp;bone);</highlight></codeline>
+<codeline lineno="148"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>||v||_2<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1ab30dddd6b0cd81086b934402e96e5417" kindref="member">norm_2</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*v,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>BLAS(nrm2)(&amp;blen,<sp/>v,<sp/>&amp;bone);</highlight></codeline>
+<codeline lineno="155"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"></highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Possibly<sp/>not<sp/>working<sp/>correctly<sp/>on<sp/>all<sp/>platforms.</highlight></codeline>
+<codeline lineno="158"><highlight class="comment">scs_float<sp/>SCS(norm_inf)(const<sp/>scs_float<sp/>*a,<sp/>scs_int<sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="159"><highlight class="comment"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="160"><highlight class="comment"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="161"><highlight class="comment"><sp/><sp/>return<sp/>BLAS(lange)(&quot;Max&quot;,<sp/>&amp;blen,<sp/>&amp;bone,<sp/>a,<sp/>&amp;blen,<sp/>SCS_NULL);</highlight></codeline>
+<codeline lineno="162"><highlight class="comment">}</highlight></codeline>
+<codeline lineno="163"><highlight class="comment">*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"></highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len)<sp/>{</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>Follow<sp/>the<sp/>semantics<sp/>of<sp/>BLASI(lange)<sp/>for<sp/>zero-size<sp/>array.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>idx;</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(len<sp/>&lt;=<sp/>0)<sp/>{</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.0;</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>For<sp/>short<sp/>vectors<sp/>the<sp/>BLAS<sp/>function-call<sp/>overhead<sp/>(pointer<sp/>args,</highlight></codeline>
+<codeline lineno="174"><highlight class="comment"><sp/><sp/><sp/>*<sp/>Fortran<sp/>ABI,<sp/>1-based<sp/>index<sp/>return)<sp/>exceeds<sp/>the<sp/>arithmetic<sp/>cost.</highlight></codeline>
+<codeline lineno="175"><highlight class="comment"><sp/><sp/><sp/>*<sp/>Use<sp/>a<sp/>scalar<sp/>loop<sp/>below<sp/>a<sp/>threshold.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(len<sp/>&lt;=<sp/>16)<sp/>{</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>mx<sp/>=<sp/>0.0,<sp/>tmp;</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>len;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>tmp<sp/>=<sp/><ref refid="glbopts_8h_1a26e668489fb528456f4bc54ba908d5b4" kindref="member">ABS</ref>(a[i]);</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(tmp<sp/>&gt;<sp/>mx)<sp/>mx<sp/>=<sp/>tmp;</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>mx;</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/>idx<sp/>=<sp/>(<ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref>)BLASI(amax)(&amp;blen,<sp/>a,<sp/>&amp;bone);</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>Returned<sp/>idx<sp/>is<sp/>1-based.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="187"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a26e668489fb528456f4bc54ba908d5b4" kindref="member">ABS</ref>(a[idx<sp/>-<sp/>1]);</highlight></codeline>
+<codeline lineno="188"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"></highlight></codeline>
+<codeline lineno="190"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>axpy<sp/>a<sp/>+=<sp/>sc*b<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="191"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1abf9054fc5e9776852a9824221c0bb8e1" kindref="member">add_scaled_array</ref>)(<ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len,</highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>sc)<sp/>{</highlight></codeline>
+<codeline lineno="193"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)len;</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/>BLAS(axpy)(&amp;blen,<sp/>&amp;sc,<sp/>b,<sp/>&amp;bone,<sp/>a,<sp/>&amp;bone);</highlight></codeline>
+<codeline lineno="196"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" kindref="member">mean</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n)<sp/>{</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/>blas_int<sp/>bone<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/>blas_int<sp/>bzero<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"><sp/><sp/>blas_int<sp/>blen<sp/>=<sp/>(blas_int)n;</highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>y<sp/>=<sp/>1.0;</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(n<sp/>==<sp/>0)<sp/>{</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.;</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>BLAS(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(&amp;blen,<sp/>x,<sp/>&amp;bone,<sp/>&amp;y,<sp/>&amp;bzero)<sp/>/<sp/>n;</highlight></codeline>
+<codeline lineno="207"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"></highlight></codeline>
+<codeline lineno="209"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/src/linalg.c"/>
+  </compounddef>
+</doxygen>

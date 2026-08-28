@@ -1,0 +1,1271 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="glbopts_8h" kind="file" language="C++">
+    <compoundname>glbopts.h</compoundname>
+    <includes refid="scs_8h" local="yes">scs.h</includes>
+    <includes local="no">math.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">stdlib.h</includes>
+    <includedby refid="aa_8h" local="yes">/private/tmp/scs-400/include/aa.h</includedby>
+    <includedby refid="cones_8h" local="yes">/private/tmp/scs-400/include/cones.h</includedby>
+    <includedby refid="linalg_8h" local="yes">/private/tmp/scs-400/include/linalg.h</includedby>
+    <includedby refid="linsys_8h" local="yes">/private/tmp/scs-400/include/linsys.h</includedby>
+    <includedby refid="normalize_8h" local="yes">/private/tmp/scs-400/include/normalize.h</includedby>
+    <includedby refid="rw_8h" local="yes">/private/tmp/scs-400/include/rw.h</includedby>
+    <includedby refid="util_8h" local="yes">/private/tmp/scs-400/include/util.h</includedby>
+    <includedby refid="csparse_8h" local="yes">/private/tmp/scs-400/linsys/csparse.h</includedby>
+    <includedby refid="scs__matrix_8h" local="yes">/private/tmp/scs-400/linsys/scs_matrix.h</includedby>
+    <includedby refid="exp__cone_8c" local="yes">/private/tmp/scs-400/src/exp_cone.c</includedby>
+    <includedby refid="scs_8c" local="yes">/private/tmp/scs-400/src/scs.c</includedby>
+    <includedby refid="scs__version_8c" local="yes">/private/tmp/scs-400/src/scs_version.c</includedby>
+    <includedby refid="util_8c" local="yes">/private/tmp/scs-400/src/util.c</includedby>
+    <incdepgraph>
+      <node id="4">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="5">
+        <label>math.h</label>
+      </node>
+      <node id="6">
+        <label>stdio.h</label>
+      </node>
+      <node id="7">
+        <label>stdlib.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2">
+        <label>/private/tmp/scs-400/include/aa.h</label>
+        <link refid="aa_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>/private/tmp/scs-400/include/cones.h</label>
+        <link refid="cones_8h"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+      <node id="10">
+        <label>/private/tmp/scs-400/include/linalg.h</label>
+        <link refid="linalg_8h"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="13">
+        <label>/private/tmp/scs-400/include/linsys.h</label>
+        <link refid="linsys_8h"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+      <node id="15">
+        <label>/private/tmp/scs-400/include/normalize.h</label>
+        <link refid="normalize_8h"/>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="16">
+        <label>/private/tmp/scs-400/include/rw.h</label>
+        <link refid="rw_8h"/>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="17">
+        <label>/private/tmp/scs-400/include/util.h</label>
+        <link refid="util_8h"/>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+      <node id="19">
+        <label>/private/tmp/scs-400/linsys/csparse.c</label>
+        <link refid="csparse_8c"/>
+      </node>
+      <node id="18">
+        <label>/private/tmp/scs-400/linsys/csparse.h</label>
+        <link refid="csparse_8h"/>
+        <childnode refid="19" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.c</label>
+        <link refid="scs__matrix_8c"/>
+      </node>
+      <node id="20">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.h</label>
+        <link refid="scs__matrix_8h"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>/private/tmp/scs-400/src/aa.c</label>
+        <link refid="aa_8c"/>
+      </node>
+      <node id="7">
+        <label>/private/tmp/scs-400/src/cones.c</label>
+        <link refid="cones_8c"/>
+      </node>
+      <node id="8">
+        <label>/private/tmp/scs-400/src/exp_cone.c</label>
+        <link refid="exp__cone_8c"/>
+      </node>
+      <node id="11">
+        <label>/private/tmp/scs-400/src/linalg.c</label>
+        <link refid="linalg_8c"/>
+      </node>
+      <node id="12">
+        <label>/private/tmp/scs-400/src/normalize.c</label>
+        <link refid="normalize_8c"/>
+      </node>
+      <node id="9">
+        <label>/private/tmp/scs-400/src/rw.c</label>
+        <link refid="rw_8c"/>
+      </node>
+      <node id="4">
+        <label>/private/tmp/scs-400/src/scs.c</label>
+        <link refid="scs_8c"/>
+      </node>
+      <node id="21">
+        <label>/private/tmp/scs-400/src/scs_version.c</label>
+        <link refid="scs__version_8c"/>
+      </node>
+      <node id="14">
+        <label>/private/tmp/scs-400/src/util.c</label>
+        <link refid="util_8c"/>
+      </node>
+    </invincdepgraph>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" prot="public" static="no">
+        <name>SCS</name>
+        <param><defname>x</defname></param>
+        <initializer>_scs_##x</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="21" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1abae8a893f5f047e479a6fdeea4cad79b" prot="public" static="no">
+        <name>SCS_VERSION</name>
+        <initializer>(&quot;3.2.11&quot;)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="26" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a066901ffac09dc72c1f6a76d29b1c575" prot="public" static="no">
+        <name>VERBOSITY</name>
+        <initializer>(0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="30" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a0ea0040e87eeb2a4c9605ebc4959315e" prot="public" static="no">
+        <name>MAX_ITERS</name>
+        <initializer>(100000)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="35" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a62c40728b469a0a6e1f696793569835a" prot="public" static="no">
+        <name>EPS_REL</name>
+        <initializer>(1E-4)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="36" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a31527ac41638eec6e9b6dc36946b539a" prot="public" static="no">
+        <name>EPS_ABS</name>
+        <initializer>(1E-4)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="37" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ab2d1a8a7deda46bff854b035c0133d9a" prot="public" static="no">
+        <name>EPS_INFEAS</name>
+        <initializer>(1E-7)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="38" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1af5abd28c44c29b7397c84f1fec4b1d84" prot="public" static="no">
+        <name>ALPHA</name>
+        <initializer>(1.5)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="39" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ad723143cb262cd9996cb8c4e9894ec66" prot="public" static="no">
+        <name>RHO_X</name>
+        <initializer>(1E-6)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="40" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a0cbea62f1ce2043dd08108e65ed8de1d" prot="public" static="no">
+        <name>SCALE</name>
+        <initializer>(0.1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="41" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a42f8c497a1968074f38bf5055c650dca" prot="public" static="no">
+        <name>VERBOSE</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="42" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a29cf2d41341c861a02125541ee1c9368" prot="public" static="no">
+        <name>NORMALIZE</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="43" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a2117977538fc37cd5f66997e2cfc89bf" prot="public" static="no">
+        <name>WARM_START</name>
+        <initializer>(0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="44" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a6d6368dc21327cb17cee7a7b3ffc5ce4" prot="public" static="no">
+        <name>ACCELERATION_LOOKBACK</name>
+        <initializer>(10)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="45" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a5c68a275a1090100fc06c92e88e25aa1" prot="public" static="no">
+        <name>ACCELERATION_INTERVAL</name>
+        <initializer>(5)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="46" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a7251d070b9f02a0e7a29d7865d49ed13" prot="public" static="no">
+        <name>ADAPTIVE_SCALE</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="47" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ab171bd88dfe93d655a8b0bc78d019e31" prot="public" static="no">
+        <name>ADAPTIVE_DIAG_SCALE</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="48" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1aaffcf029bdf67759711096351f10d9d2" prot="public" static="no">
+        <name>WRITE_DATA_FILENAME</name>
+        <initializer>(0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="49" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a9183179e53af720617c7f2a7f604c4c4" prot="public" static="no">
+        <name>LOG_CSV_FILENAME</name>
+        <initializer>(0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="50" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a965146c86b95409970a359c229b1ea1a" prot="public" static="no">
+        <name>TIME_LIMIT_SECS</name>
+        <initializer>(0.)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="51" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1af8233b82d1283191933cdc8e08e14c6f" prot="public" static="no">
+        <name>INFEAS_NEGATIVITY_TOL</name>
+        <initializer>(1e-9)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="53" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a41360f9343a338b1dd9e8e9c40ea86bb" prot="public" static="no">
+        <name>CERT_PERSISTENCE_CHECKS</name>
+        <initializer>(2)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="57" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a74b592ebf6298c05fd3de8e31288fb8e" prot="public" static="no">
+        <name>scs_printf</name>
+        <initializer>printf</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="84" column="13" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1add9bab99b6df21996bab86e8fed3848f" prot="public" static="no">
+        <name>scs_free</name>
+        <initializer>free</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="139" column="12" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a2ebbeabe0deb7f63bafbe28b1c05fa57" prot="public" static="no">
+        <name>scs_malloc</name>
+        <initializer>malloc</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="140" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="140" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a9e3376e32734042399d54598125657b5" prot="public" static="no">
+        <name>scs_calloc</name>
+        <initializer>calloc</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="141" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="141" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a0fd8d21f980e3a399fcc493746f264cd" prot="public" static="no">
+        <name>scs_realloc</name>
+        <initializer>realloc</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="142" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="142" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a8abfcc76130f3f991d124dd22d7e69bc" prot="public" static="no">
+        <name>NAN</name>
+        <initializer>(HUGE_VAL - HUGE_VAL)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="147" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="147" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a956e2723d559858d08644ac99146e910" prot="public" static="no">
+        <name>INFINITY</name>
+        <initializer>HUGE_VAL</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="150" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="150" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1afa99ec4acc4ecb2dc3c2d05da15d0e3f" prot="public" static="no">
+        <name>MAX</name>
+        <param><defname>a</defname></param>
+        <param><defname>b</defname></param>
+        <initializer>(((a) &gt; (b)) ? (a) : (b))</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="162" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="162" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a3acffbd305ee72dcd4593c0d8af64a4f" prot="public" static="no">
+        <name>MIN</name>
+        <param><defname>a</defname></param>
+        <param><defname>b</defname></param>
+        <initializer>(((a) &lt; (b)) ? (a) : (b))</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="166" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="166" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a3b9d7d973bd11c5ad12d329c6ea8b308" prot="public" static="no">
+        <name>SQRTF</name>
+        <initializer>sqrt</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="176" column="10" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="176" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a501ced7ea0f78c14fd0a8f15e05d861a" prot="public" static="no">
+        <name>EXPF</name>
+        <initializer>exp</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="177" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="177" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ac4c513cbda38bfa3bace1f2420511271" prot="public" static="no">
+        <name>LOGF</name>
+        <initializer>log</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="178" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="178" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a26e668489fb528456f4bc54ba908d5b4" prot="public" static="no">
+        <name>ABS</name>
+        <initializer>fabs</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="179" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="179" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a5eb338b58f3b23067d6a87b00eca4971" prot="public" static="no">
+        <name>POWF</name>
+        <initializer>pow</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="180" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="180" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ac50afc98ae62aa5884c8756d607a127a" prot="public" static="no">
+        <name>IABS</name>
+        <initializer>abs</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="186" column="10" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="186" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a92a65c770a4ea7810c611417aaddaa90" prot="public" static="no">
+        <name>FEASIBLE_ITERS</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="193" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="193" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a819fbea5b2d786b7e8c2700e1fb47895" prot="public" static="no">
+        <name>RESCALING_MIN_ITERS</name>
+        <initializer>(100)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="197" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="197" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a0d99645761f7f98525bb64277c73946a" prot="public" static="no">
+        <name>_DIV_EPS_TOL</name>
+        <initializer>(1E-18)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="199" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="199" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a274d5c6f0e4fc5e150e00e52a3f79a32" prot="public" static="no">
+        <name>SAFEDIV_POS</name>
+        <param><defname>X</defname></param>
+        <param><defname>Y</defname></param>
+        <initializer>((Y) &lt; <ref refid="glbopts_8h_1a0d99645761f7f98525bb64277c73946a" kindref="member">_DIV_EPS_TOL</ref> ? ((X) / <ref refid="glbopts_8h_1a0d99645761f7f98525bb64277c73946a" kindref="member">_DIV_EPS_TOL</ref>) : (X) / (Y))</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="200" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="200" bodyend="201"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a515cb544d69e291ad8d0cf6813c23f93" prot="public" static="no">
+        <name>PRINT_INTERVAL</name>
+        <initializer>(250)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="209" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="209" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a4e4b717291d0110b79e2efb2e8499c55" prot="public" static="no">
+        <name>CONVERGED_INTERVAL</name>
+        <initializer>(25)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="211" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="211" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ae3b5b1ec5d433fbb08270eb765e3c3f1" prot="public" static="no">
+        <name>ITERATE_NORM</name>
+        <initializer>(1.)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="215" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="215" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ae1fc77c1a1666773a25dc88a72da4b2b" prot="public" static="no">
+        <name>NORM</name>
+        <initializer><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="219" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="219" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a9932dd6bdc84463dbb4ffee58123448b" prot="public" static="no">
+        <name>TAU_FACTOR</name>
+        <initializer>(10.)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="224" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="224" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a9a3f044dcfc5b5a255f5068ca9381305" prot="public" static="no">
+        <name>ACCELERATION_TYPE_1</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="229" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="229" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a29251dc84a38f5ac5a3173f757a0e553" prot="public" static="no">
+        <name>AA_REGULARIZATION</name>
+        <initializer>(1e-8)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="233" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="233" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a1508b7e95a6b947e849935ee8409edf8" prot="public" static="no">
+        <name>AA_RELAXATION</name>
+        <initializer>(1.0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="234" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="234" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a5cd08f9644330447904d8f4a7a6a2cec" prot="public" static="no">
+        <name>AA_SAFEGUARD_FACTOR</name>
+        <initializer>(1.)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="237" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="237" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a31a277cb938fed1a3271b75d6930de82" prot="public" static="no">
+        <name>AA_MAX_WEIGHT_NORM</name>
+        <initializer>(1e10)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="240" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="240" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a42de9453b3c5dbf3879c1385642bbdeb" prot="public" static="no">
+        <name>AA_IR_MAX_STEPS</name>
+        <initializer>(5)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="244" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="244" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a57c5c6a4a7a67e0e765e0eb910725342" prot="public" static="no">
+        <name>MAX_SCALE_VALUE</name>
+        <initializer>(1e6)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="247" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="247" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a7ce1a04c5cc110577472a6cde9fc33f8" prot="public" static="no">
+        <name>MIN_SCALE_VALUE</name>
+        <initializer>(1e-6)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="248" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="248" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1af9b30c890b01383ea91b08dbb686b28d" prot="public" static="no">
+        <name>SCALE_NORM</name>
+        <initializer><ref refid="glbopts_8h_1ae1fc77c1a1666773a25dc88a72da4b2b" kindref="member">NORM</ref> /* what norm to use when computing the scale factor */</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="249" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="249" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1aa2ebfc45e3247c0a73ce8b7114fdf70d" prot="public" static="no">
+        <name>DIAG_SCALE_DAMP</name>
+        <initializer>(0.25)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="258" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="258" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a54831c84e3c6f3362a8def571284dd62" prot="public" static="no">
+        <name>DIAG_SCALE_MULT_MIN</name>
+        <initializer>(1e-3)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="259" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="259" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a2e3f4df0f8f4f41287331f6949a14e68" prot="public" static="no">
+        <name>DIAG_SCALE_MULT_MAX</name>
+        <initializer>(1e3)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="260" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="260" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1ad839755126705383162d24dee0cfd0fb" prot="public" static="no">
+        <name>DEN_FLOOR_FRAC</name>
+        <initializer>(1e-3)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="264" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="264" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a4582d3bdac0c75af09e18b19895f5d2a" prot="public" static="no">
+        <name>CG_BEST_TOL</name>
+        <initializer>(1e-12)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="267" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="267" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1afbb74b0c723516ef3f29184080ea218d" prot="public" static="no">
+        <name>CG_TOL_FACTOR</name>
+        <initializer>(0.03)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="281" column="10" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="281" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1aff6175e7b05724c2e0fef031bc10ca76" prot="public" static="no">
+        <name>CG_NORM</name>
+        <initializer><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="286" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="286" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a12bfb0313e34bbbe9b0d083d8249655b" prot="public" static="no">
+        <name>CG_RATE</name>
+        <initializer>(2.0)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="296" column="10" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="296" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="glbopts_8h_1a218a6f6c7dd685589da9d88631306eb3" prot="public" static="no">
+        <name>DEFLATE_VECTORS</name>
+        <initializer>(30)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/glbopts.h" line="306" column="9" bodyfile="/private/tmp/scs-400/include/glbopts.h" bodystart="306" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Global<sp/>options,<sp/>default<sp/>parameter<sp/>values,<sp/>and<sp/>platform-specific<sp/>macros.</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>Defines<sp/>printing/memory<sp/>allocation<sp/>macros<sp/>(adapts<sp/>to<sp/>MATLAB,<sp/>Python,<sp/>R),</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*<sp/>math<sp/>precision<sp/>macros<sp/>(float<sp/>vs<sp/>double),<sp/>default<sp/>solver<sp/>constants,<sp/>and</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/>*<sp/>internal<sp/>algorithm<sp/>tuning<sp/>parameters.<sp/>This<sp/>is<sp/>an<sp/>internal<sp/>header;<sp/>the</highlight></codeline>
+<codeline lineno="7"><highlight class="comment"><sp/>*<sp/>public<sp/>API<sp/>is<sp/>in<sp/>scs.h.</highlight></codeline>
+<codeline lineno="8"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>GLB_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>GLB_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs_8h" kindref="compound">scs.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>SCS</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21" refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS(x)<sp/>_scs_##x</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>SCS<sp/>VERSION<sp/>NUMBER<sp/>----------------------------------------------<sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>string<sp/>literals<sp/>automatically<sp/>null-terminated<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26" refid="glbopts_8h_1abae8a893f5f047e479a6fdeea4cad79b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_VERSION<sp/>(&quot;3.2.11&quot;)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>verbosity<sp/>level<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>VERBOSITY</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30" refid="glbopts_8h_1a066901ffac09dc72c1f6a76d29b1c575" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>VERBOSITY<sp/>(0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>DEFAULT<sp/>SOLVER<sp/>PARAMETERS<sp/>AND<sp/>SETTINGS<sp/>--------------------------<sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>If<sp/>you<sp/>update<sp/>any<sp/>of<sp/>these<sp/>you<sp/>must<sp/>update<sp/>the<sp/>documentation<sp/>manually<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35" refid="glbopts_8h_1a0ea0040e87eeb2a4c9605ebc4959315e" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MAX_ITERS<sp/>(100000)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36" refid="glbopts_8h_1a62c40728b469a0a6e1f696793569835a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EPS_REL<sp/>(1E-4)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37" refid="glbopts_8h_1a31527ac41638eec6e9b6dc36946b539a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EPS_ABS<sp/>(1E-4)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38" refid="glbopts_8h_1ab2d1a8a7deda46bff854b035c0133d9a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EPS_INFEAS<sp/>(1E-7)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39" refid="glbopts_8h_1af5abd28c44c29b7397c84f1fec4b1d84" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ALPHA<sp/>(1.5)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40" refid="glbopts_8h_1ad723143cb262cd9996cb8c4e9894ec66" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>RHO_X<sp/>(1E-6)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41" refid="glbopts_8h_1a0cbea62f1ce2043dd08108e65ed8de1d" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCALE<sp/>(0.1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42" refid="glbopts_8h_1a42f8c497a1968074f38bf5055c650dca" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>VERBOSE<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43" refid="glbopts_8h_1a29cf2d41341c861a02125541ee1c9368" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>NORMALIZE<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="44" refid="glbopts_8h_1a2117977538fc37cd5f66997e2cfc89bf" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>WARM_START<sp/>(0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45" refid="glbopts_8h_1a6d6368dc21327cb17cee7a7b3ffc5ce4" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ACCELERATION_LOOKBACK<sp/>(10)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46" refid="glbopts_8h_1a5c68a275a1090100fc06c92e88e25aa1" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ACCELERATION_INTERVAL<sp/>(5)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47" refid="glbopts_8h_1a7251d070b9f02a0e7a29d7865d49ed13" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ADAPTIVE_SCALE<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48" refid="glbopts_8h_1ab171bd88dfe93d655a8b0bc78d019e31" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ADAPTIVE_DIAG_SCALE<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="49" refid="glbopts_8h_1aaffcf029bdf67759711096351f10d9d2" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>WRITE_DATA_FILENAME<sp/>(0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="50" refid="glbopts_8h_1a9183179e53af720617c7f2a7f604c4c4" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>LOG_CSV_FILENAME<sp/>(0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51" refid="glbopts_8h_1a965146c86b95409970a359c229b1ea1a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TIME_LIMIT_SECS<sp/>(0.)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Tolerance<sp/>to<sp/>check<sp/>negativity<sp/>condition<sp/>for<sp/>infeasibility<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="53" refid="glbopts_8h_1af8233b82d1283191933cdc8e08e14c6f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>INFEAS_NEGATIVITY_TOL<sp/>(1e-9)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Number<sp/>of<sp/>consecutive<sp/>residual<sp/>checks<sp/>an<sp/>infeasibility/unboundedness</highlight></codeline>
+<codeline lineno="55"><highlight class="comment"><sp/>*<sp/>certificate<sp/>must<sp/>pass<sp/>before<sp/>SCS<sp/>declares<sp/>it.<sp/>Guards<sp/>against<sp/>transient</highlight></codeline>
+<codeline lineno="56"><highlight class="comment"><sp/>*<sp/>iterates<sp/>(e.g.<sp/>from<sp/>acceleration)<sp/>that<sp/>momentarily<sp/>pass<sp/>a<sp/>one-shot<sp/>test.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57" refid="glbopts_8h_1a41360f9343a338b1dd9e8e9c40ea86bb" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CERT_PERSISTENCE_CHECKS<sp/>(2)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>redefine<sp/>printfs<sp/>as<sp/>needed<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>NO_PRINTING<sp/>&gt;<sp/>0<sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Disable<sp/>all<sp/>printing<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_printf(...)<sp/></highlight><highlight class="comment">/*<sp/>No-op<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>MATLAB_MEX_FILE</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;mex.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_printf<sp/>mexPrintf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>defined<sp/>PYTHON</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;Python.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>see:</highlight></codeline>
+<codeline lineno="68"><highlight class="comment"><sp/>*<sp/>https://cython-users.narkive.com/jRjjs3sK/reacquire-gil-for-printing-in-wrapped-c-library</highlight></codeline>
+<codeline lineno="69"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_printf(...)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="71"><highlight class="preprocessor"><sp/><sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="72"><highlight class="preprocessor"><sp/><sp/><sp/><sp/>PyGILState_STATE<sp/>gilstate<sp/>=<sp/>PyGILState_Ensure();<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="73"><highlight class="preprocessor"><sp/><sp/><sp/><sp/>PySys_WriteStdout(__VA_ARGS__);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="74"><highlight class="preprocessor"><sp/><sp/><sp/><sp/>PyGILState_Release(gilstate);<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="75"><highlight class="preprocessor"><sp/><sp/>}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>defined<sp/>R_LANG</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;R_ext/Print.h&gt;</highlight><highlight class="normal"><sp/></highlight><highlight class="comment">/*<sp/>Rprintf<sp/>etc<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_printf<sp/>Rprintf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="84" refid="glbopts_8h_1a74b592ebf6298c05fd3de8e31288fb8e" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_printf<sp/>printf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>redefine<sp/>memory<sp/>allocators<sp/>as<sp/>needed<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>MATLAB_MEX_FILE</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;mex.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Use<sp/>mexMakeMemoryPersistent<sp/>so<sp/>allocations<sp/>survive<sp/>across<sp/>MEX<sp/>calls.</highlight></codeline>
+<codeline lineno="92"><highlight class="comment"><sp/>*<sp/>Required<sp/>for<sp/>the<sp/>workspace<sp/>API<sp/>(scs_init/scs_solve/scs_finish).<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*_scs_mex_malloc(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)<sp/>{</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*p<sp/>=<sp/>mxMalloc(n);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(p)<sp/>mexMakeMemoryPersistent(p);</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>p;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*_scs_mex_calloc(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>count,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>size)<sp/>{</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*p<sp/>=<sp/>mxCalloc(count,<sp/>size);</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(p)<sp/>mexMakeMemoryPersistent(p);</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>p;</highlight></codeline>
+<codeline lineno="102"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*_scs_mex_realloc(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*ptr,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)<sp/>{</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*p<sp/>=<sp/>mxRealloc(ptr,<sp/>n);</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(p)<sp/>mexMakeMemoryPersistent(p);</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>p;</highlight></codeline>
+<codeline lineno="107"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_free<sp/>mxFree</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_malloc<sp/>_scs_mex_malloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_calloc<sp/>_scs_mex_calloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="111"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_realloc<sp/>_scs_mex_realloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>defined<sp/>PYTHON</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;Python.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>PY_MAJOR_VERSION<sp/>&gt;=<sp/>3</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_free<sp/>PyMem_RawFree</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="116"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_malloc<sp/>PyMem_RawMalloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="117"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_realloc<sp/>PyMem_RawRealloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_calloc<sp/>PyMem_RawCalloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_free<sp/>PyMem_Free</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_malloc<sp/>PyMem_Malloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_realloc<sp/>PyMem_Realloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">inline</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*<ref refid="glbopts_8h_1a9e3376e32734042399d54598125657b5" kindref="member">scs_calloc</ref>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>count,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>size)<sp/>{</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*obj<sp/>=<sp/>PyMem_Malloc(count<sp/>*<sp/>size);</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/>memset(obj,<sp/>0,<sp/>count<sp/>*<sp/>size);</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>obj;</highlight></codeline>
+<codeline lineno="127"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>defined<sp/>R_LANG</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="131"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_free<sp/>free</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_malloc<sp/>malloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="134"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_calloc<sp/>calloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_realloc<sp/>realloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="137"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="138"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdlib.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="139" refid="glbopts_8h_1add9bab99b6df21996bab86e8fed3848f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_free<sp/>free</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="140" refid="glbopts_8h_1a2ebbeabe0deb7f63bafbe28b1c05fa57" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_malloc<sp/>malloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="141" refid="glbopts_8h_1a9e3376e32734042399d54598125657b5" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_calloc<sp/>calloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="142" refid="glbopts_8h_1a0fd8d21f980e3a399fcc493746f264cd" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>scs_realloc<sp/>realloc</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="144"><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>SFLOAT</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="146"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>NAN</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="147" refid="glbopts_8h_1a8abfcc76130f3f991d124dd22d7e69bc" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>NAN<sp/>(HUGE_VAL<sp/>-<sp/>HUGE_VAL)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>INFINITY</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="150" refid="glbopts_8h_1a956e2723d559858d08644ac99146e910" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>INFINITY<sp/>HUGE_VAL</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="153"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>NAN</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="154"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>NAN<sp/>((float)(HUGE_VAL<sp/>-<sp/>HUGE_VAL))</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>INFINITY</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>INFINITY<sp/>((float)HUGE_VAL)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="159"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"></highlight></codeline>
+<codeline lineno="161"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>MAX</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="162" refid="glbopts_8h_1afa99ec4acc4ecb2dc3c2d05da15d0e3f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MAX(a,<sp/>b)<sp/>(((a)<sp/>&gt;<sp/>(b))<sp/>?<sp/>(a)<sp/>:<sp/>(b))</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="163"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"></highlight></codeline>
+<codeline lineno="165"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>MIN</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="166" refid="glbopts_8h_1a3acffbd305ee72dcd4593c0d8af64a4f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MIN(a,<sp/>b)<sp/>(((a)<sp/>&lt;<sp/>(b))<sp/>?<sp/>(a)<sp/>:<sp/>(b))</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="167"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="168"><highlight class="normal"></highlight></codeline>
+<codeline lineno="169"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>SFLOAT</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SQRTF<sp/>sqrtf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="171"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EXPF<sp/>expf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="172"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>LOGF<sp/>logf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="173"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ABS<sp/>fabsf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>POWF<sp/>powf</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="176" refid="glbopts_8h_1a3b9d7d973bd11c5ad12d329c6ea8b308" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SQRTF<sp/>sqrt</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="177" refid="glbopts_8h_1a501ced7ea0f78c14fd0a8f15e05d861a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EXPF<sp/>exp</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="178" refid="glbopts_8h_1ac4c513cbda38bfa3bace1f2420511271" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>LOGF<sp/>log</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="179" refid="glbopts_8h_1a26e668489fb528456f4bc54ba908d5b4" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ABS<sp/>fabs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="180" refid="glbopts_8h_1a5eb338b58f3b23067d6a87b00eca4971" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>POWF<sp/>pow</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="181"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="182"><highlight class="normal"></highlight></codeline>
+<codeline lineno="183"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>DLONG</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="184"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IABS<sp/>llabs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="185"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="186" refid="glbopts_8h_1ac50afc98ae62aa5884c8756d607a127a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IABS<sp/>abs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="187"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="188"><highlight class="normal"></highlight></codeline>
+<codeline lineno="189"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Force<sp/>SCS<sp/>to<sp/>treat<sp/>the<sp/>problem<sp/>as<sp/>(non-homogeneous)<sp/>feasible<sp/>for<sp/>this<sp/>many</highlight></codeline>
+<codeline lineno="190"><highlight class="comment"><sp/>*<sp/>iterations.<sp/>Acts<sp/>like<sp/>an<sp/>implicit<sp/>warm-start<sp/>biased<sp/>towards<sp/>feasibility,</highlight></codeline>
+<codeline lineno="191"><highlight class="comment"><sp/>*<sp/>which<sp/>is<sp/>the<sp/>most<sp/>common<sp/>use-case.<sp/>During<sp/>these<sp/>iterations<sp/>tau<sp/>is<sp/>fixed</highlight></codeline>
+<codeline lineno="192"><highlight class="comment"><sp/>*<sp/>at<sp/>1<sp/>and<sp/>kappa<sp/>is<sp/>fixed<sp/>at<sp/>0.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="193" refid="glbopts_8h_1a92a65c770a4ea7810c611417aaddaa90" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>FEASIBLE_ITERS<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="194"><highlight class="normal"></highlight></codeline>
+<codeline lineno="195"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Minimum<sp/>iterations<sp/>between<sp/>heuristic<sp/>scale<sp/>updates.<sp/>Prevents<sp/>scale</highlight></codeline>
+<codeline lineno="196"><highlight class="comment"><sp/>*<sp/>from<sp/>changing<sp/>too<sp/>frequently<sp/>before<sp/>the<sp/>iterates<sp/>have<sp/>stabilized.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="197" refid="glbopts_8h_1a819fbea5b2d786b7e8c2700e1fb47895" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>RESCALING_MIN_ITERS<sp/>(100)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"></highlight></codeline>
+<codeline lineno="199" refid="glbopts_8h_1a0d99645761f7f98525bb64277c73946a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>_DIV_EPS_TOL<sp/>(1E-18)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="200" refid="glbopts_8h_1a274d5c6f0e4fc5e150e00e52a3f79a32" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SAFEDIV_POS(X,<sp/>Y)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="201"><highlight class="preprocessor"><sp/><sp/>((Y)<sp/>&lt;<sp/>_DIV_EPS_TOL<sp/>?<sp/>((X)<sp/>/<sp/>_DIV_EPS_TOL)<sp/>:<sp/>(X)<sp/>/<sp/>(Y))</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="202"><highlight class="normal"></highlight></codeline>
+<codeline lineno="203"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>VERBOSITY<sp/>&gt;<sp/>0</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="204"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PRINT_INTERVAL<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="205"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CONVERGED_INTERVAL<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="206"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="207"><highlight class="normal"></highlight></codeline>
+<codeline lineno="208"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>print<sp/>summary<sp/>output<sp/>every<sp/>this<sp/>num<sp/>iterations<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="209" refid="glbopts_8h_1a515cb544d69e291ad8d0cf6813c23f93" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PRINT_INTERVAL<sp/>(250)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="210"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>check<sp/>for<sp/>convergence<sp/>every<sp/>this<sp/>num<sp/>iterations<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="211" refid="glbopts_8h_1a4e4b717291d0110b79e2efb2e8499c55" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CONVERGED_INTERVAL<sp/>(25)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="212"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="213"><highlight class="normal"></highlight></codeline>
+<codeline lineno="214"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>maintain<sp/>the<sp/>iterates<sp/>at<sp/>L2<sp/>norm<sp/>=<sp/><sp/>ITERATE_NORM<sp/>*<sp/>sqrt(n+m+1)<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="215" refid="glbopts_8h_1ae3b5b1ec5d433fbb08270eb765e3c3f1" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ITERATE_NORM<sp/>(1.)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="216"><highlight class="normal"></highlight></codeline>
+<codeline lineno="217"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Which<sp/>norm<sp/>to<sp/>use<sp/>for<sp/>termination<sp/>checking<sp/>etc<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="218"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>#define<sp/>NORM<sp/>SCS(norm_2)<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="219" refid="glbopts_8h_1ae1fc77c1a1666773a25dc88a72da4b2b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>NORM<sp/>SCS(norm_inf)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="220"><highlight class="normal"></highlight></codeline>
+<codeline lineno="221"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Factor<sp/>which<sp/>scales<sp/>the<sp/>tau<sp/>diagonal<sp/>entry<sp/>in<sp/>the<sp/>linear<sp/>system.</highlight></codeline>
+<codeline lineno="222"><highlight class="comment"><sp/>*<sp/>Larger<sp/>values<sp/>stabilize<sp/>tau<sp/>but<sp/>slow<sp/>convergence.<sp/>10<sp/>is<sp/>a<sp/>good<sp/>balance</highlight></codeline>
+<codeline lineno="223"><highlight class="comment"><sp/>*<sp/>for<sp/>most<sp/>problems.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="224" refid="glbopts_8h_1a9932dd6bdc84463dbb4ffee58123448b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TAU_FACTOR<sp/>(10.)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="225"><highlight class="normal"></highlight></codeline>
+<codeline lineno="226"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>---<sp/>Anderson<sp/>Acceleration<sp/>(AA)<sp/>parameters<sp/>---<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="227"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Default<sp/>AA<sp/>type:<sp/>1<sp/>=<sp/>type-I<sp/>(better<sp/>empirical<sp/>performance,<sp/>default),</highlight></codeline>
+<codeline lineno="228"><highlight class="comment"><sp/>*<sp/>0<sp/>=<sp/>type-II<sp/>(more<sp/>numerically<sp/>stable<sp/>but<sp/>typically<sp/>slower).<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="229" refid="glbopts_8h_1a9a3f044dcfc5b5a255f5068ca9381305" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ACCELERATION_TYPE_1<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="230"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Default<sp/>Tikhonov<sp/>regularization<sp/>for<sp/>the<sp/>AA<sp/>least-squares<sp/>solve.<sp/>Tuned</highlight></codeline>
+<codeline lineno="231"><highlight class="comment"><sp/>*<sp/>for<sp/>type-I;<sp/>type-II<sp/>tolerates<sp/>much<sp/>smaller<sp/>(e.g.<sp/>1e-12).<sp/>Users<sp/>picking</highlight></codeline>
+<codeline lineno="232"><highlight class="comment"><sp/>*<sp/>type-II<sp/>will<sp/>typically<sp/>lower<sp/>this.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="233" refid="glbopts_8h_1a29251dc84a38f5ac5a3173f757a0e553" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>AA_REGULARIZATION<sp/>(1e-8)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="234" refid="glbopts_8h_1a1508b7e95a6b947e849935ee8409edf8" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>AA_RELAXATION<sp/>(1.0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="235"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Reject<sp/>AA<sp/>steps<sp/>when<sp/>the<sp/>output<sp/>norm<sp/>exceeds<sp/>this<sp/>multiple<sp/>of<sp/>the<sp/>input</highlight></codeline>
+<codeline lineno="236"><highlight class="comment"><sp/>*<sp/>norm.<sp/>1.0<sp/>means<sp/>the<sp/>AA<sp/>step<sp/>must<sp/>not<sp/>increase<sp/>the<sp/>iterate<sp/>norm.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="237" refid="glbopts_8h_1a5cd08f9644330447904d8f4a7a6a2cec" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>AA_SAFEGUARD_FACTOR<sp/>(1.)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="238"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Reject<sp/>AA<sp/>steps<sp/>whose<sp/>weight<sp/>vector<sp/>exceeds<sp/>this<sp/>norm<sp/>(prevents</highlight></codeline>
+<codeline lineno="239"><highlight class="comment"><sp/>*<sp/>numerically<sp/>unstable<sp/>extrapolation).<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="240" refid="glbopts_8h_1a31a277cb938fed1a3271b75d6930de82" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>AA_MAX_WEIGHT_NORM<sp/>(1e10)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="241"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Max<sp/>iterative-refinement<sp/>passes<sp/>on<sp/>the<sp/>γ<sp/>solve.<sp/>0<sp/>disables<sp/>IR;<sp/>the<sp/>loop</highlight></codeline>
+<codeline lineno="242"><highlight class="comment"><sp/>*<sp/>auto-stops<sp/>once<sp/>the<sp/>correction<sp/>no<sp/>longer<sp/>contracts,<sp/>so<sp/>this<sp/>is<sp/>an<sp/>upper</highlight></codeline>
+<codeline lineno="243"><highlight class="comment"><sp/>*<sp/>bound<sp/>rather<sp/>than<sp/>a<sp/>fixed<sp/>iteration<sp/>count.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="244" refid="glbopts_8h_1a42de9453b3c5dbf3879c1385642bbdeb" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>AA_IR_MAX_STEPS<sp/>(5)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="245"><highlight class="normal"></highlight></codeline>
+<codeline lineno="246"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>(Dual)<sp/>Scale<sp/>updating<sp/>parameters<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="247" refid="glbopts_8h_1a57c5c6a4a7a67e0e765e0eb910725342" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MAX_SCALE_VALUE<sp/>(1e6)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="248" refid="glbopts_8h_1a7ce1a04c5cc110577472a6cde9fc33f8" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MIN_SCALE_VALUE<sp/>(1e-6)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="249" refid="glbopts_8h_1af9b30c890b01383ea91b08dbb686b28d" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCALE_NORM<sp/>NORM<sp/></highlight><highlight class="comment">/*<sp/>what<sp/>norm<sp/>to<sp/>use<sp/>when<sp/>computing<sp/>the<sp/>scale<sp/>factor<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="250"><highlight class="normal"></highlight></codeline>
+<codeline lineno="251"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Dynamic<sp/>diagonal<sp/>rescaling<sp/>(stgs-&gt;adaptive_diag_scale).<sp/>Row<sp/>multipliers</highlight></codeline>
+<codeline lineno="252"><highlight class="comment"><sp/>*<sp/>move<sp/>by<sp/>at<sp/>most<sp/>(profile<sp/>ratio)^DIAG_SCALE_DAMP<sp/>per<sp/>update<sp/>and<sp/>live<sp/>in</highlight></codeline>
+<codeline lineno="253"><highlight class="comment"><sp/>*<sp/>[DIAG_SCALE_MULT_MIN,<sp/>DIAG_SCALE_MULT_MAX]<sp/>around<sp/>the<sp/>scalar<sp/>scale.<sp/>An</highlight></codeline>
+<codeline lineno="254"><highlight class="comment"><sp/>*<sp/>update<sp/>fires<sp/>when<sp/>the<sp/>scalar<sp/>scale<sp/>updates,<sp/>or<sp/>when<sp/>some<sp/>damped</highlight></codeline>
+<codeline lineno="255"><highlight class="comment"><sp/>*<sp/>*clamped*<sp/>step<sp/>alone<sp/>exceeds<sp/>sqrt(10)<sp/>(a<sp/>railed<sp/>scalar<sp/>must<sp/>not<sp/>freeze</highlight></codeline>
+<codeline lineno="256"><highlight class="comment"><sp/>*<sp/>the<sp/>diagonal;<sp/>a<sp/>railed<sp/>multiplier<sp/>must<sp/>not<sp/>keep<sp/>triggering<sp/>updates<sp/>it</highlight></codeline>
+<codeline lineno="257"><highlight class="comment"><sp/>*<sp/>cannot<sp/>take).<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="258" refid="glbopts_8h_1aa2ebfc45e3247c0a73ce8b7114fdf70d" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DIAG_SCALE_DAMP<sp/>(0.25)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="259" refid="glbopts_8h_1a54831c84e3c6f3362a8def571284dd62" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DIAG_SCALE_MULT_MIN<sp/>(1e-3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="260" refid="glbopts_8h_1a2e3f4df0f8f4f41287331f6949a14e68" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DIAG_SCALE_MULT_MAX<sp/>(1e3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="261"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Floor<sp/>on<sp/>the<sp/>row-profile<sp/>denominators,<sp/>as<sp/>a<sp/>fraction<sp/>of<sp/>the<sp/>block&apos;s</highlight></codeline>
+<codeline lineno="262"><highlight class="comment"><sp/>*<sp/>rms<sp/>denominator<sp/>(see<sp/>row_rel_res).<sp/>Swept<sp/>over<sp/>1e-4..1e-1:<sp/>every<sp/>value</highlight></codeline>
+<codeline lineno="263"><highlight class="comment"><sp/>*<sp/>improves<sp/>on<sp/>no<sp/>floor,<sp/>1e-3<sp/>is<sp/>the<sp/>best<sp/>on<sp/>solve<sp/>count.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="264" refid="glbopts_8h_1ad839755126705383162d24dee0cfd0fb" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DEN_FLOOR_FRAC<sp/>(1e-3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="265"><highlight class="normal"></highlight></codeline>
+<codeline lineno="266"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>---<sp/>Conjugate<sp/>gradient<sp/>(CG)<sp/>parameters,<sp/>only<sp/>used<sp/>with<sp/>indirect<sp/>solver<sp/>---<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="267" refid="glbopts_8h_1a4582d3bdac0c75af09e18b19895f5d2a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CG_BEST_TOL<sp/>(1e-12)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="268"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Each<sp/>CG<sp/>solve<sp/>targets<sp/>tol<sp/>=<sp/>CG_TOL_FACTOR<sp/>*<sp/>current_residual.<sp/>Smaller</highlight></codeline>
+<codeline lineno="269"><highlight class="comment"><sp/>*<sp/>values<sp/>give<sp/>more<sp/>accurate<sp/>CG<sp/>solves<sp/>at<sp/>the<sp/>cost<sp/>of<sp/>more<sp/>CG<sp/>iterations.</highlight></codeline>
+<codeline lineno="270"><highlight class="comment"><sp/>*<sp/>With<sp/>deflation<sp/>making<sp/>inner<sp/>accuracy<sp/>cheap,<sp/>0.03<sp/>measured<sp/>optimal<sp/>on<sp/>a</highlight></codeline>
+<codeline lineno="271"><highlight class="comment"><sp/>*<sp/>netlib<sp/>/<sp/>Maros-Meszaros<sp/>/<sp/>SOC<sp/>suite<sp/>(bracketed<sp/>on<sp/>both<sp/>sides:<sp/>0.02</highlight></codeline>
+<codeline lineno="272"><highlight class="comment"><sp/>*<sp/>starts<sp/>flipping<sp/>problems,<sp/>0.01<sp/>pays<sp/>more<sp/>CG<sp/>for<sp/>no<sp/>outer-iteration</highlight></codeline>
+<codeline lineno="273"><highlight class="comment"><sp/>*<sp/>gain);<sp/>together<sp/>with<sp/>CG_RATE<sp/>2.0<sp/>it<sp/>buys<sp/>roughly<sp/>30%<sp/>fewer<sp/>outer</highlight></codeline>
+<codeline lineno="274"><highlight class="comment"><sp/>*<sp/>iterations<sp/>for<sp/>roughly<sp/>8%<sp/>more<sp/>matvecs,<sp/>which<sp/>is<sp/>wall-clock<sp/>neutral</highlight></codeline>
+<codeline lineno="275"><highlight class="comment"><sp/>*<sp/>on<sp/>matvec-dominated<sp/>problems<sp/>and<sp/>favorable<sp/>on<sp/>cone-dominated<sp/>ones.</highlight></codeline>
+<codeline lineno="276"><highlight class="comment"><sp/>*<sp/>The<sp/>retuned<sp/>values<sp/>target<sp/>accuracies<sp/>below<sp/>the<sp/>single-precision<sp/>noise</highlight></codeline>
+<codeline lineno="277"><highlight class="comment"><sp/>*<sp/>floor,<sp/>so<sp/>single-precision<sp/>builds<sp/>keep<sp/>the<sp/>previous<sp/>calibration.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="278"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>SFLOAT</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="279"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CG_TOL_FACTOR<sp/>(0.2)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="280"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="281" refid="glbopts_8h_1afbb74b0c723516ef3f29184080ea218d" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CG_TOL_FACTOR<sp/>(0.03)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="282"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="283"><highlight class="normal"></highlight></codeline>
+<codeline lineno="284"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>norm<sp/>to<sp/>use<sp/>when<sp/>deciding<sp/>CG<sp/>convergence<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="285"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>CG_NORM</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="286" refid="glbopts_8h_1aff6175e7b05724c2e0fef031bc10ca76" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CG_NORM<sp/>SCS(norm_inf)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="287"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="288"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>cg<sp/>tol<sp/>~<sp/>O(1/k^(CG_RATE));<sp/>forcing<sp/>accuracy<sp/>faster<sp/>with<sp/>the<sp/>iteration</highlight></codeline>
+<codeline lineno="289"><highlight class="comment"><sp/>*<sp/>count<sp/>is<sp/>consumed<sp/>by<sp/>the<sp/>outer<sp/>loop<sp/>(Anderson<sp/>acceleration</highlight></codeline>
+<codeline lineno="290"><highlight class="comment"><sp/>*<sp/>especially)<sp/>as<sp/>fewer<sp/>iterations.<sp/>2.0<sp/>is<sp/>safely<sp/>interior:<sp/>2.25<sp/>starts</highlight></codeline>
+<codeline lineno="291"><highlight class="comment"><sp/>*<sp/>flipping<sp/>problems.<sp/>Single<sp/>precision<sp/>keeps<sp/>the<sp/>previous<sp/>rate<sp/>for<sp/>the</highlight></codeline>
+<codeline lineno="292"><highlight class="comment"><sp/>*<sp/>same<sp/>reason<sp/>as<sp/>CG_TOL_FACTOR<sp/>above.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="293"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>SFLOAT</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="294"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CG_RATE<sp/>(1.5)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="295"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="296" refid="glbopts_8h_1a12bfb0313e34bbbe9b0d083d8249655b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CG_RATE<sp/>(2.0)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="297"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="298"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Number<sp/>of<sp/>approximate<sp/>small<sp/>eigenvectors<sp/>of<sp/>the<sp/>preconditioned</highlight></codeline>
+<codeline lineno="299"><highlight class="comment"><sp/>*<sp/>reduced<sp/>operator<sp/>harvested<sp/>from<sp/>each<sp/>cold<sp/>solve<sp/>for<sp/>g<sp/>=<sp/>K^{-1}h<sp/>and</highlight></codeline>
+<codeline lineno="300"><highlight class="comment"><sp/>*<sp/>used<sp/>to<sp/>deflate<sp/>the<sp/>warm<sp/>solves<sp/>until<sp/>the<sp/>next<sp/>metric<sp/>change<sp/>(eigCG,</highlight></codeline>
+<codeline lineno="301"><highlight class="comment"><sp/>*<sp/>Stathopoulos<sp/>&amp;<sp/>Orginos<sp/>2010).<sp/>Costs<sp/>2<sp/>*<sp/>DEFLATE_VECTORS<sp/>*<sp/>n<sp/>floats</highlight></codeline>
+<codeline lineno="302"><highlight class="comment"><sp/>*<sp/>persistent<sp/>plus<sp/>a<sp/>transient<sp/>Lanczos<sp/>window<sp/>during<sp/>the<sp/>deep<sp/>solve;</highlight></codeline>
+<codeline lineno="303"><highlight class="comment"><sp/>*<sp/>needs<sp/>USE_LAPACK<sp/>and<sp/>is<sp/>compiled<sp/>out<sp/>without<sp/>it.<sp/>0<sp/>disables.<sp/>The</highlight></codeline>
+<codeline lineno="304"><highlight class="comment"><sp/>*<sp/>environment<sp/>variables<sp/>SCS_DEFLATE<sp/>and<sp/>SCS_EIGCG_WIN<sp/>override<sp/>the</highlight></codeline>
+<codeline lineno="305"><highlight class="comment"><sp/>*<sp/>count<sp/>and<sp/>the<sp/>window<sp/>size<sp/>at<sp/>runtime.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="306" refid="glbopts_8h_1a218a6f6c7dd685589da9d88631306eb3" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DEFLATE_VECTORS<sp/>(30)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="307"><highlight class="normal"></highlight></codeline>
+<codeline lineno="308"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="309"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="310"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="311"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/include/glbopts.h"/>
+  </compounddef>
+</doxygen>

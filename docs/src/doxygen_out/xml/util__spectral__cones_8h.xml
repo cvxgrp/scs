@@ -1,0 +1,256 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="util__spectral__cones_8h" kind="file" language="C++">
+    <compoundname>util_spectral_cones.h</compoundname>
+    <includes refid="scs__blas_8h" local="yes">scs_blas.h</includes>
+    <includes refid="scs__types_8h" local="yes">scs_types.h</includes>
+    <includes local="no">assert.h</includes>
+    <includes local="no">math.h</includes>
+    <includes local="no">stdbool.h</includes>
+    <includes local="no">stddef.h</includes>
+    <includes local="no">stdio.h</includes>
+    <incdepgraph>
+      <node id="2">
+        <label>scs_blas.h</label>
+        <link refid="scs__blas_8h"/>
+      </node>
+      <node id="3">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/util_spectral_cones.h</label>
+        <link refid="util__spectral__cones_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>assert.h</label>
+      </node>
+      <node id="5">
+        <label>math.h</label>
+      </node>
+      <node id="6">
+        <label>stdbool.h</label>
+      </node>
+      <node id="7">
+        <label>stddef.h</label>
+      </node>
+      <node id="8">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+    <innerclass refid="struct_value__index" prot="public">Value_index</innerclass>
+    <innerclass refid="struct_newton__stats" prot="public">Newton_stats</innerclass>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="util__spectral__cones_8h_1a3ea9c58ffc278d108eacb38d8bfd3135" prot="public" static="no">
+        <name>IN_CONE</name>
+        <initializer>-1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="16" column="9" bodyfile="/private/tmp/scs-400/include/util_spectral_cones.h" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="util__spectral__cones_8h_1aa9d48c64a272447cf5907efec651b26f" prot="public" static="no">
+        <name>IN_NEGATIVE_DUAL_CONE</name>
+        <initializer>-2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="17" column="9" bodyfile="/private/tmp/scs-400/include/util_spectral_cones.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="util__spectral__cones_8h_1adca7d3a4394d3e29c8a56b022ec713c0" prot="public" static="no">
+        <name>ANALYTICAL_SOL</name>
+        <initializer>-3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="18" column="9" bodyfile="/private/tmp/scs-400/include/util_spectral_cones.h" bodystart="18" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="util__spectral__cones_8h_1a86b1b5af864dfbc91d95a03f58c6a856" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool is_pos</definition>
+        <argsstring>(const scs_float *x, scs_int n)</argsstring>
+        <name>is_pos</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="20" column="6" declfile="/private/tmp/scs-400/include/util_spectral_cones.h" declline="20" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="util__spectral__cones_8h_1a53ade871b6615fbb4a218078ae4dd8f6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool is_negative</definition>
+        <argsstring>(const scs_float *x, scs_int n)</argsstring>
+        <name>is_negative</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="21" column="6" declfile="/private/tmp/scs-400/include/util_spectral_cones.h" declline="21" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="util__spectral__cones_8h_1a879935980efd18c9dcbd23dd0960cc4c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void non_neg_proj</definition>
+        <argsstring>(const scs_float *src, scs_float *dst, scs_int n)</argsstring>
+        <name>non_neg_proj</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>src</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>dst</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="22" column="6" declfile="/private/tmp/scs-400/include/util_spectral_cones.h" declline="22" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="util__spectral__cones_8h_1ac0d98fc90b4095665736a7d38c1ff09b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float sum_log</definition>
+        <argsstring>(const scs_float *x, scs_int n)</argsstring>
+        <name>sum_log</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="23" column="11" declfile="/private/tmp/scs-400/include/util_spectral_cones.h" declline="23" declcolumn="11"/>
+      </memberdef>
+      <memberdef kind="function" id="util__spectral__cones_8h_1a053ce292af8cf3693374c717de8e18c7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float min_vec</definition>
+        <argsstring>(const scs_float *vec, scs_int n)</argsstring>
+        <name>min_vec</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>vec</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util_spectral_cones.h" line="24" column="11" declfile="/private/tmp/scs-400/include/util_spectral_cones.h" declline="24" declcolumn="11"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>UTILSPECTRALCONES_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>UTILSPECTRALCONES_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs__blas_8h" kindref="compound">scs_blas.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs__types_8h" kindref="compound">scs_types.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;assert.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;math.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdbool.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stddef.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16" refid="util__spectral__cones_8h_1a3ea9c58ffc278d108eacb38d8bfd3135" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IN_CONE<sp/>-1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17" refid="util__spectral__cones_8h_1aa9d48c64a272447cf5907efec651b26f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IN_NEGATIVE_DUAL_CONE<sp/>-2</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18" refid="util__spectral__cones_8h_1adca7d3a4394d3e29c8a56b022ec713c0" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>ANALYTICAL_SOL<sp/>-3</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="util__spectral__cones_8h_1a86b1b5af864dfbc91d95a03f58c6a856" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="util__spectral__cones_8h_1a86b1b5af864dfbc91d95a03f58c6a856" kindref="member">is_pos</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n);</highlight></codeline>
+<codeline lineno="21" refid="util__spectral__cones_8h_1a53ade871b6615fbb4a218078ae4dd8f6" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="util__spectral__cones_8h_1a53ade871b6615fbb4a218078ae4dd8f6" kindref="member">is_negative</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n);</highlight></codeline>
+<codeline lineno="22" refid="util__spectral__cones_8h_1a879935980efd18c9dcbd23dd0960cc4c" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="util__spectral__cones_8h_1a879935980efd18c9dcbd23dd0960cc4c" kindref="member">non_neg_proj</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*src,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*dst,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n);</highlight></codeline>
+<codeline lineno="23" refid="util__spectral__cones_8h_1ac0d98fc90b4095665736a7d38c1ff09b" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="util__spectral__cones_8h_1ac0d98fc90b4095665736a7d38c1ff09b" kindref="member">sum_log</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n);</highlight></codeline>
+<codeline lineno="24" refid="util__spectral__cones_8h_1a053ce292af8cf3693374c717de8e18c7" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="util__spectral__cones_8h_1a053ce292af8cf3693374c717de8e18c7" kindref="member">min_vec</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*vec,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>used<sp/>for<sp/>sorting<sp/>in<sp/>ell1-norm<sp/>cone<sp/>and<sp/>sum<sp/>of<sp/>largest<sp/>cone.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27" refid="struct_value__index" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="28" refid="struct_value__index_1a6228b4872905983be42abf535229676e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_value__index_1a6228b4872905983be42abf535229676e" kindref="member">value</ref>;</highlight></codeline>
+<codeline lineno="29" refid="struct_value__index_1a19ef7a2bdac05f409d5417dfd24819eb" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="struct_value__index_1a19ef7a2bdac05f409d5417dfd24819eb" kindref="member">index</ref>;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal">}<sp/><ref refid="struct_value__index" kindref="compound">Value_index</ref>;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32" refid="struct_newton__stats" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="33" refid="struct_newton__stats_1ad51f96697b9adf29be2d2c3d2d9ed179" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="struct_newton__stats_1ad51f96697b9adf29be2d2c3d2d9ed179" kindref="member">iter</ref>;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>if<sp/>plain<sp/>Newton<sp/>computed<sp/>the<sp/>projection<sp/>or<sp/>if<sp/>an<sp/>IPM<sp/>was<sp/>used<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36" refid="struct_newton__stats_1a6c6442b391e15ff08ca75e8a1a690782" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="struct_newton__stats_1a6c6442b391e15ff08ca75e8a1a690782" kindref="member">newton_success</ref>;</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>dual_res,<sp/>pri_res,<sp/>complementarity<sp/>for<sp/>the<sp/>projection<sp/>problem<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39" refid="struct_newton__stats_1abe7404ea468b2eb4e134b03b735247f6" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_newton__stats_1abe7404ea468b2eb4e134b03b735247f6" kindref="member">residuals</ref>[3];</highlight></codeline>
+<codeline lineno="40"><highlight class="normal">}<sp/><ref refid="struct_newton__stats" kindref="compound">Newton_stats</ref>;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/include/util_spectral_cones.h"/>
+  </compounddef>
+</doxygen>

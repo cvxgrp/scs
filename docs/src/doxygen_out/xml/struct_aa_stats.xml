@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="struct_aa_stats" kind="struct" language="C++" prot="public">
+    <compoundname>AaStats</compoundname>
+    <includes refid="aa__stats_8h" local="no">aa_stats.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_aa_stats_1a891ce47699e5c36a56b8323cbfc871fc" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::iter</definition>
+        <argsstring></argsstring>
+        <name>iter</name>
+        <qualifiedname>AaStats::iter</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Internal AA iteration counter. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="23" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1a3e0d268bbc8157c1a1142f5df2d24944" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::n_accept</definition>
+        <argsstring></argsstring>
+        <name>n_accept</name>
+        <qualifiedname>AaStats::n_accept</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of AA updates accepted by aa_apply before safeguarding. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="25" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1ab3e7fba45199eb03bfb4379643aea055" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::n_reject_lapack</definition>
+        <argsstring></argsstring>
+        <name>n_reject_lapack</name>
+        <qualifiedname>AaStats::n_reject_lapack</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of AA rejections due to LAPACK errors. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="27" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1adc57677bc2670d0e1a903e9cf75a5ac3" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::n_reject_rank0</definition>
+        <argsstring></argsstring>
+        <name>n_reject_rank0</name>
+        <qualifiedname>AaStats::n_reject_rank0</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of AA rejections due to rank-zero reduced systems. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="29" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1a8a6eab78efbc57eb07e5f0d422c95e19" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::n_reject_nonfinite</definition>
+        <argsstring></argsstring>
+        <name>n_reject_nonfinite</name>
+        <qualifiedname>AaStats::n_reject_nonfinite</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of AA rejections due to non-finite weights. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="31" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1a577fb167544ccc815985a000431bea15" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::n_reject_weight_cap</definition>
+        <argsstring></argsstring>
+        <name>n_reject_weight_cap</name>
+        <qualifiedname>AaStats::n_reject_weight_cap</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of AA rejections due to the weight-norm cap. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="33" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1af39f6b8328371640cc66621a4ffcef66" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::n_safeguard_reject</definition>
+        <argsstring></argsstring>
+        <name>n_safeguard_reject</name>
+        <qualifiedname>AaStats::n_safeguard_reject</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of AA steps rejected by safeguarding. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="35" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1a62a4f6c7c4e6731a869929f59df5d9f0" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int AaStats::last_rank</definition>
+        <argsstring></argsstring>
+        <name>last_rank</name>
+        <qualifiedname>AaStats::last_rank</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Rank of the most recent AA solve. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="37" column="11" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1a62c3c9608016171f153dfdc20e222e43" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float AaStats::last_aa_norm</definition>
+        <argsstring></argsstring>
+        <name>last_aa_norm</name>
+        <qualifiedname>AaStats::last_aa_norm</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Weight norm from the most recent AA solve. NaN if no solve was attempted. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="39" column="13" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_aa_stats_1a0b3cc2f847bef49ce6d771a8e2f9115a" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float AaStats::last_regularization</definition>
+        <argsstring></argsstring>
+        <name>last_regularization</name>
+        <qualifiedname>AaStats::last_regularization</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Regularization used in the most recent AA solve. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/aa_stats.h" line="41" column="13" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="41" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Lifetime diagnostics for an Anderson acceleration workspace.</para>
+<para>Counters accumulate from aa_init and are not cleared by aa_reset, including internal resets after safeguard rejections. Rejection causes are split so a caller can tell what needs tuning. </para>
+    </detaileddescription>
+    <location file="/private/tmp/scs-400/include/aa_stats.h" line="21" column="1" bodyfile="/private/tmp/scs-400/include/aa_stats.h" bodystart="21" bodyend="42"/>
+    <listofallmembers>
+      <member refid="struct_aa_stats_1a891ce47699e5c36a56b8323cbfc871fc" prot="public" virt="non-virtual"><scope>AaStats</scope><name>iter</name></member>
+      <member refid="struct_aa_stats_1a62c3c9608016171f153dfdc20e222e43" prot="public" virt="non-virtual"><scope>AaStats</scope><name>last_aa_norm</name></member>
+      <member refid="struct_aa_stats_1a62a4f6c7c4e6731a869929f59df5d9f0" prot="public" virt="non-virtual"><scope>AaStats</scope><name>last_rank</name></member>
+      <member refid="struct_aa_stats_1a0b3cc2f847bef49ce6d771a8e2f9115a" prot="public" virt="non-virtual"><scope>AaStats</scope><name>last_regularization</name></member>
+      <member refid="struct_aa_stats_1a3e0d268bbc8157c1a1142f5df2d24944" prot="public" virt="non-virtual"><scope>AaStats</scope><name>n_accept</name></member>
+      <member refid="struct_aa_stats_1ab3e7fba45199eb03bfb4379643aea055" prot="public" virt="non-virtual"><scope>AaStats</scope><name>n_reject_lapack</name></member>
+      <member refid="struct_aa_stats_1a8a6eab78efbc57eb07e5f0d422c95e19" prot="public" virt="non-virtual"><scope>AaStats</scope><name>n_reject_nonfinite</name></member>
+      <member refid="struct_aa_stats_1adc57677bc2670d0e1a903e9cf75a5ac3" prot="public" virt="non-virtual"><scope>AaStats</scope><name>n_reject_rank0</name></member>
+      <member refid="struct_aa_stats_1a577fb167544ccc815985a000431bea15" prot="public" virt="non-virtual"><scope>AaStats</scope><name>n_reject_weight_cap</name></member>
+      <member refid="struct_aa_stats_1af39f6b8328371640cc66621a4ffcef66" prot="public" virt="non-virtual"><scope>AaStats</scope><name>n_safeguard_reject</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

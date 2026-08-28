@@ -1,0 +1,73 @@
+\doxysection{scs\+\_\+blas.\+h}
+\hypertarget{scs__blas_8h_source}{}\label{scs__blas_8h_source}\index{/private/tmp/scs-\/400/include/scs\_blas.h@{/private/tmp/scs-\/400/include/scs\_blas.h}}
+\doxymbox{\hyperlink{scs__blas_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ BLAS/LAPACK\ function\ name\ mangling\ macros.}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Handles\ single/double\ precision\ prefixes\ (s/d)\ and\ platform-\/specific}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ suffixes\ (underscore,\ no\ suffix,\ etc.)\ for\ linking\ against\ various}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ BLAS\ libraries.\ Only\ active\ when\ USE\_LAPACK\ is\ defined.}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#ifndef\ SCS\_BLAS\_H\_GUARD}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ SCS\_BLAS\_H\_GUARD}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#ifdef\ USE\_LAPACK}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00014\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{comment}{/*\ Default\ to\ underscore\ for\ blas\ /\ lapack\ */}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#ifndef\ BLASSUFFIX}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#define\ BLASSUFFIX\ \_}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{comment}{/*\ annoying\ hack\ because\ some\ preprocessors\ can't\ handle\ empty\ macros\ */}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#if\ defined(NOBLASSUFFIX)\ \&\&\ NOBLASSUFFIX\ >\ 0}}
+\DoxyCodeLine{00024\ \textcolor{comment}{/*\ single\ or\ double\ precision\ */}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#ifndef\ SFLOAT}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ BLAS(x)\ d\#\#x}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#define\ BLASI(x)\ id\#\#x}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#define\ BLASC(x)\ z\#\#x}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#define\ BLAS(x)\ s\#\#x}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#define\ BLASI(x)\ is\#\#x}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#define\ BLASC(x)\ c\#\#x}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00035\ \textcolor{comment}{/*\ this\ extra\ indirection\ is\ needed\ for\ BLASSUFFIX\ to\ work\ correctly\ as\ a}}
+\DoxyCodeLine{00036\ \textcolor{comment}{\ *\ variable\ */}}
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#define\ stitch\_(pre,\ x,\ post)\ pre\#\#x\#\#post}}
+\DoxyCodeLine{00038\ \textcolor{preprocessor}{\#define\ stitch\_\_(pre,\ x,\ post)\ stitch\_(pre,\ x,\ post)}}
+\DoxyCodeLine{00039\ \textcolor{comment}{/*\ single\ or\ double\ precision\ */}}
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#ifndef\ SFLOAT}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#define\ BLAS(x)\ stitch\_\_(d,\ x,\ BLASSUFFIX)}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#define\ BLASI(x)\ stitch\_\_(id,\ x,\ BLASSUFFIX)}}
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#define\ BLASC(x)\ stitch\_\_(z,\ x,\ BLASSUFFIX)}}
+\DoxyCodeLine{00044\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00045\ \textcolor{preprocessor}{\#define\ BLAS(x)\ stitch\_\_(s,\ x,\ BLASSUFFIX)}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#define\ BLASI(x)\ stitch\_\_(is,\ x,\ BLASSUFFIX)}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#define\ BLASC(x)\ stitch\_\_(c,\ x,\ BLASSUFFIX)}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#ifdef\ MATLAB\_MEX\_FILE}}
+\DoxyCodeLine{00052\ \textcolor{preprocessor}{\#include\ <stddef.h>}\ \textcolor{comment}{/*\ ptrdiff\_t\ */}}
+\DoxyCodeLine{00053\ \textcolor{keyword}{typedef}\ ptrdiff\_t\ blas\_int;}
+\DoxyCodeLine{00054\ \textcolor{preprocessor}{\#elif\ defined\ BLAS64}}
+\DoxyCodeLine{00055\ \textcolor{preprocessor}{\#include\ <stdint.h>}}
+\DoxyCodeLine{00056\ \textcolor{keyword}{typedef}\ int64\_t\ blas\_int;}
+\DoxyCodeLine{00057\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00058\ \textcolor{keyword}{typedef}\ \textcolor{keywordtype}{int}\ blas\_int;}
+\DoxyCodeLine{00059\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00062\ \}}
+\DoxyCodeLine{00063\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ USE\_LAPACK\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00066\ }
+\DoxyCodeLine{00067\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ SCS\_BLAS\_H\_GUARD\ */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

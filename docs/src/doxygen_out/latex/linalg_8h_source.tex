@@ -1,0 +1,35 @@
+\doxysection{linalg.\+h}
+\hypertarget{linalg_8h_source}{}\label{linalg_8h_source}\index{/private/tmp/scs-\/400/include/linalg.h@{/private/tmp/scs-\/400/include/linalg.h}}
+\doxymbox{\hyperlink{linalg_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Basic\ dense\ linear\ algebra\ operations\ used\ throughout\ SCS.}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ All\ operate\ on\ raw\ arrays\ of\ scs\_float.}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#ifndef\ LINALG\_H\_GUARD}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#define\ LINALG\_H\_GUARD}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00010\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{glbopts_8h}{glbopts.h}}"{}}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a1fd11317410766aa4664dd1740255391}{scale\_array}})(\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *a,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ b,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ len);}
+\DoxyCodeLine{00016\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a559d71c1ccb9028d6fc6174fcfd71a95}{dot}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *x,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *y,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ len);}
+\DoxyCodeLine{00017\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_aad06272d6a19a88408c807bfeaaf2ecc}{norm\_sq}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *v,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ len);}
+\DoxyCodeLine{00018\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_ab30dddd6b0cd81086b934402e96e5417}{norm\_2}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *v,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ len);}
+\DoxyCodeLine{00019\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a0b644a555cdb215d0e7cead3d3f59bd1}{norm\_inf}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *a,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ l);}
+\DoxyCodeLine{00020\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_abf9054fc5e9776852a9824221c0bb8e1}{add\_scaled\_array}})(\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *a,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *b,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ n,}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ sc);}
+\DoxyCodeLine{00022\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a044896766d7716f35bf275a3c67d72ae}{norm\_diff}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *a,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *b,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ l);}
+\DoxyCodeLine{00023\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_ac8c14aa46137d44762293a07f6bbff06}{norm\_inf\_diff}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *a,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *b,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ l);}
+\DoxyCodeLine{00024\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a22f2febfc0df46b4abb95bf5d894e6b9}{mean}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *x,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ l);}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00027\ \}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

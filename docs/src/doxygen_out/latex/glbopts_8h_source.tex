@@ -1,0 +1,317 @@
+\doxysection{glbopts.\+h}
+\hypertarget{glbopts_8h_source}{}\label{glbopts_8h_source}\index{/private/tmp/scs-\/400/include/glbopts.h@{/private/tmp/scs-\/400/include/glbopts.h}}
+\doxymbox{\hyperlink{glbopts_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Global\ options,\ default\ parameter\ values,\ and\ platform-\/specific\ macros.}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ Defines\ printing/memory\ allocation\ macros\ (adapts\ to\ MATLAB,\ Python,\ R),}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ *\ math\ precision\ macros\ (float\ vs\ double),\ default\ solver\ constants,\ and}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ *\ internal\ algorithm\ tuning\ parameters.\ This\ is\ an\ internal\ header;\ the}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ *\ public\ API\ is\ in\ scs.h.}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#ifndef\ GLB\_H\_GUARD}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#define\ GLB\_H\_GUARD}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00014\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{scs_8h}{scs.h}}"{}}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ <math.h>}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#ifndef\ SCS}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#define\ SCS(x)\ \_scs\_\#\#x}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{comment}{/*\ SCS\ VERSION\ NUMBER\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\ \ \ \ \ */}}
+\DoxyCodeLine{00025\ \textcolor{comment}{/*\ string\ literals\ automatically\ null-\/terminated\ */}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ SCS\_VERSION\ ("{}3.2.11"{})}}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \textcolor{comment}{/*\ verbosity\ level\ */}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#ifndef\ VERBOSITY}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#define\ VERBOSITY\ (0)}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \textcolor{comment}{/*\ DEFAULT\ SOLVER\ PARAMETERS\ AND\ SETTINGS\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\ \ \ \ \ */}}
+\DoxyCodeLine{00034\ \textcolor{comment}{/*\ If\ you\ update\ any\ of\ these\ you\ must\ update\ the\ documentation\ manually\ */}}
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#define\ MAX\_ITERS\ (100000)}}
+\DoxyCodeLine{00036\ \textcolor{preprocessor}{\#define\ EPS\_REL\ (1E-\/4)}}
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#define\ EPS\_ABS\ (1E-\/4)}}
+\DoxyCodeLine{00038\ \textcolor{preprocessor}{\#define\ EPS\_INFEAS\ (1E-\/7)}}
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#define\ ALPHA\ (1.5)}}
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#define\ RHO\_X\ (1E-\/6)}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#define\ SCALE\ (0.1)}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#define\ VERBOSE\ (1)}}
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#define\ NORMALIZE\ (1)}}
+\DoxyCodeLine{00044\ \textcolor{preprocessor}{\#define\ WARM\_START\ (0)}}
+\DoxyCodeLine{00045\ \textcolor{preprocessor}{\#define\ ACCELERATION\_LOOKBACK\ (10)}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#define\ ACCELERATION\_INTERVAL\ (5)}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#define\ ADAPTIVE\_SCALE\ (1)}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#define\ ADAPTIVE\_DIAG\_SCALE\ (1)}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#define\ WRITE\_DATA\_FILENAME\ (0)}}
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#define\ LOG\_CSV\_FILENAME\ (0)}}
+\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#define\ TIME\_LIMIT\_SECS\ (0.)}}
+\DoxyCodeLine{00052\ \textcolor{comment}{/*\ Tolerance\ to\ check\ negativity\ condition\ for\ infeasibility\ */}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#define\ INFEAS\_NEGATIVITY\_TOL\ (1e-\/9)}}
+\DoxyCodeLine{00054\ \textcolor{comment}{/*\ Number\ of\ consecutive\ residual\ checks\ an\ infeasibility/unboundedness}}
+\DoxyCodeLine{00055\ \textcolor{comment}{\ *\ certificate\ must\ pass\ before\ SCS\ declares\ it.\ Guards\ against\ transient}}
+\DoxyCodeLine{00056\ \textcolor{comment}{\ *\ iterates\ (e.g.\ from\ acceleration)\ that\ momentarily\ pass\ a\ one-\/shot\ test.\ */}}
+\DoxyCodeLine{00057\ \textcolor{preprocessor}{\#define\ CERT\_PERSISTENCE\_CHECKS\ (2)}}
+\DoxyCodeLine{00058\ \textcolor{comment}{/*\ redefine\ printfs\ as\ needed\ */}}
+\DoxyCodeLine{00059\ \textcolor{preprocessor}{\#if\ NO\_PRINTING\ >\ 0\ \ \ \ \ }\textcolor{comment}{/*\ Disable\ all\ printing\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00060\ \textcolor{preprocessor}{\#define\ scs\_printf(...)\ }\textcolor{comment}{/*\ No-\/op\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00061\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00062\ \textcolor{preprocessor}{\#ifdef\ MATLAB\_MEX\_FILE}}
+\DoxyCodeLine{00063\ \textcolor{preprocessor}{\#include\ "{}mex.h"{}}}
+\DoxyCodeLine{00064\ \textcolor{preprocessor}{\#define\ scs\_printf\ mexPrintf}}
+\DoxyCodeLine{00065\ \textcolor{preprocessor}{\#elif\ defined\ PYTHON}}
+\DoxyCodeLine{00066\ \textcolor{preprocessor}{\#include\ <Python.h>}}
+\DoxyCodeLine{00067\ \textcolor{comment}{/*\ see:}}
+\DoxyCodeLine{00068\ \textcolor{comment}{\ *\ https://cython-\/users.narkive.com/jRjjs3sK/reacquire-\/gil-\/for-\/printing-\/in-\/wrapped-\/c-\/library}}
+\DoxyCodeLine{00069\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00070\ \textcolor{preprocessor}{\#define\ scs\_printf(...)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00071\ \textcolor{preprocessor}{\ \ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00072\ \textcolor{preprocessor}{\ \ \ \ PyGILState\_STATE\ gilstate\ =\ PyGILState\_Ensure();\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00073\ \textcolor{preprocessor}{\ \ \ \ PySys\_WriteStdout(\_\_VA\_ARGS\_\_);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00074\ \textcolor{preprocessor}{\ \ \ \ PyGILState\_Release(gilstate);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00075\ \textcolor{preprocessor}{\ \ \}}}
+\DoxyCodeLine{00076\ \textcolor{preprocessor}{\#elif\ defined\ R\_LANG}}
+\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#include\ <R\_ext/Print.h>}\ \textcolor{comment}{/*\ Rprintf\ etc\ */}}
+\DoxyCodeLine{00078\ \textcolor{preprocessor}{\#include\ <stdio.h>}}
+\DoxyCodeLine{00079\ \textcolor{preprocessor}{\#include\ <stdlib.h>}}
+\DoxyCodeLine{00080\ \textcolor{preprocessor}{\#define\ scs\_printf\ Rprintf}}
+\DoxyCodeLine{00081\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00082\ \textcolor{preprocessor}{\#include\ <stdio.h>}}
+\DoxyCodeLine{00083\ \textcolor{preprocessor}{\#include\ <stdlib.h>}}
+\DoxyCodeLine{00084\ \textcolor{preprocessor}{\#define\ scs\_printf\ printf}}
+\DoxyCodeLine{00085\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00086\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00088\ \textcolor{comment}{/*\ redefine\ memory\ allocators\ as\ needed\ */}}
+\DoxyCodeLine{00089\ \textcolor{preprocessor}{\#ifdef\ MATLAB\_MEX\_FILE}}
+\DoxyCodeLine{00090\ \textcolor{preprocessor}{\#include\ "{}mex.h"{}}}
+\DoxyCodeLine{00091\ \textcolor{comment}{/*\ Use\ mexMakeMemoryPersistent\ so\ allocations\ survive\ across\ MEX\ calls.}}
+\DoxyCodeLine{00092\ \textcolor{comment}{\ *\ Required\ for\ the\ workspace\ API\ (scs\_init/scs\_solve/scs\_finish).\ */}}
+\DoxyCodeLine{00093\ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{void}\ *\_scs\_mex\_malloc(\textcolor{keywordtype}{size\_t}\ n)\ \{}
+\DoxyCodeLine{00094\ \ \ \textcolor{keywordtype}{void}\ *p\ =\ mxMalloc(n);}
+\DoxyCodeLine{00095\ \ \ \textcolor{keywordflow}{if}\ (p)\ mexMakeMemoryPersistent(p);}
+\DoxyCodeLine{00096\ \ \ \textcolor{keywordflow}{return}\ p;}
+\DoxyCodeLine{00097\ \}}
+\DoxyCodeLine{00098\ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{void}\ *\_scs\_mex\_calloc(\textcolor{keywordtype}{size\_t}\ count,\ \textcolor{keywordtype}{size\_t}\ size)\ \{}
+\DoxyCodeLine{00099\ \ \ \textcolor{keywordtype}{void}\ *p\ =\ mxCalloc(count,\ size);}
+\DoxyCodeLine{00100\ \ \ \textcolor{keywordflow}{if}\ (p)\ mexMakeMemoryPersistent(p);}
+\DoxyCodeLine{00101\ \ \ \textcolor{keywordflow}{return}\ p;}
+\DoxyCodeLine{00102\ \}}
+\DoxyCodeLine{00103\ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{void}\ *\_scs\_mex\_realloc(\textcolor{keywordtype}{void}\ *ptr,\ \textcolor{keywordtype}{size\_t}\ n)\ \{}
+\DoxyCodeLine{00104\ \ \ \textcolor{keywordtype}{void}\ *p\ =\ mxRealloc(ptr,\ n);}
+\DoxyCodeLine{00105\ \ \ \textcolor{keywordflow}{if}\ (p)\ mexMakeMemoryPersistent(p);}
+\DoxyCodeLine{00106\ \ \ \textcolor{keywordflow}{return}\ p;}
+\DoxyCodeLine{00107\ \}}
+\DoxyCodeLine{00108\ \textcolor{preprocessor}{\#define\ scs\_free\ mxFree}}
+\DoxyCodeLine{00109\ \textcolor{preprocessor}{\#define\ scs\_malloc\ \_scs\_mex\_malloc}}
+\DoxyCodeLine{00110\ \textcolor{preprocessor}{\#define\ scs\_calloc\ \_scs\_mex\_calloc}}
+\DoxyCodeLine{00111\ \textcolor{preprocessor}{\#define\ scs\_realloc\ \_scs\_mex\_realloc}}
+\DoxyCodeLine{00112\ \textcolor{preprocessor}{\#elif\ defined\ PYTHON}}
+\DoxyCodeLine{00113\ \textcolor{preprocessor}{\#include\ <Python.h>}}
+\DoxyCodeLine{00114\ \textcolor{preprocessor}{\#if\ PY\_MAJOR\_VERSION\ >=\ 3}}
+\DoxyCodeLine{00115\ \textcolor{preprocessor}{\#define\ scs\_free\ PyMem\_RawFree}}
+\DoxyCodeLine{00116\ \textcolor{preprocessor}{\#define\ scs\_malloc\ PyMem\_RawMalloc}}
+\DoxyCodeLine{00117\ \textcolor{preprocessor}{\#define\ scs\_realloc\ PyMem\_RawRealloc}}
+\DoxyCodeLine{00118\ \textcolor{preprocessor}{\#define\ scs\_calloc\ PyMem\_RawCalloc}}
+\DoxyCodeLine{00119\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00120\ \textcolor{preprocessor}{\#define\ scs\_free\ PyMem\_Free}}
+\DoxyCodeLine{00121\ \textcolor{preprocessor}{\#define\ scs\_malloc\ PyMem\_Malloc}}
+\DoxyCodeLine{00122\ \textcolor{preprocessor}{\#define\ scs\_realloc\ PyMem\_Realloc}}
+\DoxyCodeLine{00123\ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{void}\ *\doxymbox{\hyperlink{glbopts_8h_a9e3376e32734042399d54598125657b5}{scs\_calloc}}(\textcolor{keywordtype}{size\_t}\ count,\ \textcolor{keywordtype}{size\_t}\ size)\ \{}
+\DoxyCodeLine{00124\ \ \ \textcolor{keywordtype}{void}\ *obj\ =\ PyMem\_Malloc(count\ *\ size);}
+\DoxyCodeLine{00125\ \ \ memset(obj,\ 0,\ count\ *\ size);}
+\DoxyCodeLine{00126\ \ \ \textcolor{keywordflow}{return}\ obj;}
+\DoxyCodeLine{00127\ \}}
+\DoxyCodeLine{00128\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00129\ \textcolor{preprocessor}{\#elif\ defined\ R\_LANG}}
+\DoxyCodeLine{00130\ \textcolor{preprocessor}{\#include\ <stdio.h>}}
+\DoxyCodeLine{00131\ \textcolor{preprocessor}{\#include\ <stdlib.h>}}
+\DoxyCodeLine{00132\ \textcolor{preprocessor}{\#define\ scs\_free\ free}}
+\DoxyCodeLine{00133\ \textcolor{preprocessor}{\#define\ scs\_malloc\ malloc}}
+\DoxyCodeLine{00134\ \textcolor{preprocessor}{\#define\ scs\_calloc\ calloc}}
+\DoxyCodeLine{00135\ \textcolor{preprocessor}{\#define\ scs\_realloc\ realloc}}
+\DoxyCodeLine{00136\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00137\ \textcolor{preprocessor}{\#include\ <stdio.h>}}
+\DoxyCodeLine{00138\ \textcolor{preprocessor}{\#include\ <stdlib.h>}}
+\DoxyCodeLine{00139\ \textcolor{preprocessor}{\#define\ scs\_free\ free}}
+\DoxyCodeLine{00140\ \textcolor{preprocessor}{\#define\ scs\_malloc\ malloc}}
+\DoxyCodeLine{00141\ \textcolor{preprocessor}{\#define\ scs\_calloc\ calloc}}
+\DoxyCodeLine{00142\ \textcolor{preprocessor}{\#define\ scs\_realloc\ realloc}}
+\DoxyCodeLine{00143\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \textcolor{preprocessor}{\#ifndef\ SFLOAT}}
+\DoxyCodeLine{00146\ \textcolor{preprocessor}{\#ifndef\ NAN}}
+\DoxyCodeLine{00147\ \textcolor{preprocessor}{\#define\ NAN\ (HUGE\_VAL\ -\/\ HUGE\_VAL)}}
+\DoxyCodeLine{00148\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00149\ \textcolor{preprocessor}{\#ifndef\ INFINITY}}
+\DoxyCodeLine{00150\ \textcolor{preprocessor}{\#define\ INFINITY\ HUGE\_VAL}}
+\DoxyCodeLine{00151\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00152\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00153\ \textcolor{preprocessor}{\#ifndef\ NAN}}
+\DoxyCodeLine{00154\ \textcolor{preprocessor}{\#define\ NAN\ ((float)(HUGE\_VAL\ -\/\ HUGE\_VAL))}}
+\DoxyCodeLine{00155\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00156\ \textcolor{preprocessor}{\#ifndef\ INFINITY}}
+\DoxyCodeLine{00157\ \textcolor{preprocessor}{\#define\ INFINITY\ ((float)HUGE\_VAL)}}
+\DoxyCodeLine{00158\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00159\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00160\ }
+\DoxyCodeLine{00161\ \textcolor{preprocessor}{\#ifndef\ MAX}}
+\DoxyCodeLine{00162\ \textcolor{preprocessor}{\#define\ MAX(a,\ b)\ (((a)\ >\ (b))\ ?\ (a)\ :\ (b))}}
+\DoxyCodeLine{00163\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00164\ }
+\DoxyCodeLine{00165\ \textcolor{preprocessor}{\#ifndef\ MIN}}
+\DoxyCodeLine{00166\ \textcolor{preprocessor}{\#define\ MIN(a,\ b)\ (((a)\ <\ (b))\ ?\ (a)\ :\ (b))}}
+\DoxyCodeLine{00167\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00168\ }
+\DoxyCodeLine{00169\ \textcolor{preprocessor}{\#ifdef\ SFLOAT}}
+\DoxyCodeLine{00170\ \textcolor{preprocessor}{\#define\ SQRTF\ sqrtf}}
+\DoxyCodeLine{00171\ \textcolor{preprocessor}{\#define\ EXPF\ expf}}
+\DoxyCodeLine{00172\ \textcolor{preprocessor}{\#define\ LOGF\ logf}}
+\DoxyCodeLine{00173\ \textcolor{preprocessor}{\#define\ ABS\ fabsf}}
+\DoxyCodeLine{00174\ \textcolor{preprocessor}{\#define\ POWF\ powf}}
+\DoxyCodeLine{00175\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00176\ \textcolor{preprocessor}{\#define\ SQRTF\ sqrt}}
+\DoxyCodeLine{00177\ \textcolor{preprocessor}{\#define\ EXPF\ exp}}
+\DoxyCodeLine{00178\ \textcolor{preprocessor}{\#define\ LOGF\ log}}
+\DoxyCodeLine{00179\ \textcolor{preprocessor}{\#define\ ABS\ fabs}}
+\DoxyCodeLine{00180\ \textcolor{preprocessor}{\#define\ POWF\ pow}}
+\DoxyCodeLine{00181\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00182\ }
+\DoxyCodeLine{00183\ \textcolor{preprocessor}{\#ifdef\ DLONG}}
+\DoxyCodeLine{00184\ \textcolor{preprocessor}{\#define\ IABS\ llabs}}
+\DoxyCodeLine{00185\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00186\ \textcolor{preprocessor}{\#define\ IABS\ abs}}
+\DoxyCodeLine{00187\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \textcolor{comment}{/*\ Force\ SCS\ to\ treat\ the\ problem\ as\ (non-\/homogeneous)\ feasible\ for\ this\ many}}
+\DoxyCodeLine{00190\ \textcolor{comment}{\ *\ iterations.\ Acts\ like\ an\ implicit\ warm-\/start\ biased\ towards\ feasibility,}}
+\DoxyCodeLine{00191\ \textcolor{comment}{\ *\ which\ is\ the\ most\ common\ use-\/case.\ During\ these\ iterations\ tau\ is\ fixed}}
+\DoxyCodeLine{00192\ \textcolor{comment}{\ *\ at\ 1\ and\ kappa\ is\ fixed\ at\ 0.\ */}}
+\DoxyCodeLine{00193\ \textcolor{preprocessor}{\#define\ FEASIBLE\_ITERS\ (1)}}
+\DoxyCodeLine{00194\ }
+\DoxyCodeLine{00195\ \textcolor{comment}{/*\ Minimum\ iterations\ between\ heuristic\ scale\ updates.\ Prevents\ scale}}
+\DoxyCodeLine{00196\ \textcolor{comment}{\ *\ from\ changing\ too\ frequently\ before\ the\ iterates\ have\ stabilized.\ */}}
+\DoxyCodeLine{00197\ \textcolor{preprocessor}{\#define\ RESCALING\_MIN\_ITERS\ (100)}}
+\DoxyCodeLine{00198\ }
+\DoxyCodeLine{00199\ \textcolor{preprocessor}{\#define\ \_DIV\_EPS\_TOL\ (1E-\/18)}}
+\DoxyCodeLine{00200\ \textcolor{preprocessor}{\#define\ SAFEDIV\_POS(X,\ Y)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00201\ \textcolor{preprocessor}{\ \ ((Y)\ <\ \_DIV\_EPS\_TOL\ ?\ ((X)\ /\ \_DIV\_EPS\_TOL)\ :\ (X)\ /\ (Y))}}
+\DoxyCodeLine{00202\ }
+\DoxyCodeLine{00203\ \textcolor{preprocessor}{\#if\ VERBOSITY\ >\ 0}}
+\DoxyCodeLine{00204\ \textcolor{preprocessor}{\#define\ PRINT\_INTERVAL\ (1)}}
+\DoxyCodeLine{00205\ \textcolor{preprocessor}{\#define\ CONVERGED\_INTERVAL\ (1)}}
+\DoxyCodeLine{00206\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00207\ }
+\DoxyCodeLine{00208\ \textcolor{comment}{/*\ print\ summary\ output\ every\ this\ num\ iterations\ */}}
+\DoxyCodeLine{00209\ \textcolor{preprocessor}{\#define\ PRINT\_INTERVAL\ (250)}}
+\DoxyCodeLine{00210\ \textcolor{comment}{/*\ check\ for\ convergence\ every\ this\ num\ iterations\ */}}
+\DoxyCodeLine{00211\ \textcolor{preprocessor}{\#define\ CONVERGED\_INTERVAL\ (25)}}
+\DoxyCodeLine{00212\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00213\ }
+\DoxyCodeLine{00214\ \textcolor{comment}{/*\ maintain\ the\ iterates\ at\ L2\ norm\ =\ \ ITERATE\_NORM\ *\ sqrt(n+m+1)\ */}}
+\DoxyCodeLine{00215\ \textcolor{preprocessor}{\#define\ ITERATE\_NORM\ (1.)}}
+\DoxyCodeLine{00216\ }
+\DoxyCodeLine{00217\ \textcolor{comment}{/*\ Which\ norm\ to\ use\ for\ termination\ checking\ etc\ */}}
+\DoxyCodeLine{00218\ \textcolor{comment}{/*\ \#define\ NORM\ SCS(norm\_2)\ */}}
+\DoxyCodeLine{00219\ \textcolor{preprocessor}{\#define\ NORM\ SCS(norm\_inf)}}
+\DoxyCodeLine{00220\ }
+\DoxyCodeLine{00221\ \textcolor{comment}{/*\ Factor\ which\ scales\ the\ tau\ diagonal\ entry\ in\ the\ linear\ system.}}
+\DoxyCodeLine{00222\ \textcolor{comment}{\ *\ Larger\ values\ stabilize\ tau\ but\ slow\ convergence.\ 10\ is\ a\ good\ balance}}
+\DoxyCodeLine{00223\ \textcolor{comment}{\ *\ for\ most\ problems.\ */}}
+\DoxyCodeLine{00224\ \textcolor{preprocessor}{\#define\ TAU\_FACTOR\ (10.)}}
+\DoxyCodeLine{00225\ }
+\DoxyCodeLine{00226\ \textcolor{comment}{/*\ -\/-\/-\/\ Anderson\ Acceleration\ (AA)\ parameters\ -\/-\/-\/\ */}}
+\DoxyCodeLine{00227\ \textcolor{comment}{/*\ Default\ AA\ type:\ 1\ =\ type-\/I\ (better\ empirical\ performance,\ default),}}
+\DoxyCodeLine{00228\ \textcolor{comment}{\ *\ 0\ =\ type-\/II\ (more\ numerically\ stable\ but\ typically\ slower).\ */}}
+\DoxyCodeLine{00229\ \textcolor{preprocessor}{\#define\ ACCELERATION\_TYPE\_1\ (1)}}
+\DoxyCodeLine{00230\ \textcolor{comment}{/*\ Default\ Tikhonov\ regularization\ for\ the\ AA\ least-\/squares\ solve.\ Tuned}}
+\DoxyCodeLine{00231\ \textcolor{comment}{\ *\ for\ type-\/I;\ type-\/II\ tolerates\ much\ smaller\ (e.g.\ 1e-\/12).\ Users\ picking}}
+\DoxyCodeLine{00232\ \textcolor{comment}{\ *\ type-\/II\ will\ typically\ lower\ this.\ */}}
+\DoxyCodeLine{00233\ \textcolor{preprocessor}{\#define\ AA\_REGULARIZATION\ (1e-\/8)}}
+\DoxyCodeLine{00234\ \textcolor{preprocessor}{\#define\ AA\_RELAXATION\ (1.0)}}
+\DoxyCodeLine{00235\ \textcolor{comment}{/*\ Reject\ AA\ steps\ when\ the\ output\ norm\ exceeds\ this\ multiple\ of\ the\ input}}
+\DoxyCodeLine{00236\ \textcolor{comment}{\ *\ norm.\ 1.0\ means\ the\ AA\ step\ must\ not\ increase\ the\ iterate\ norm.\ */}}
+\DoxyCodeLine{00237\ \textcolor{preprocessor}{\#define\ AA\_SAFEGUARD\_FACTOR\ (1.)}}
+\DoxyCodeLine{00238\ \textcolor{comment}{/*\ Reject\ AA\ steps\ whose\ weight\ vector\ exceeds\ this\ norm\ (prevents}}
+\DoxyCodeLine{00239\ \textcolor{comment}{\ *\ numerically\ unstable\ extrapolation).\ */}}
+\DoxyCodeLine{00240\ \textcolor{preprocessor}{\#define\ AA\_MAX\_WEIGHT\_NORM\ (1e10)}}
+\DoxyCodeLine{00241\ \textcolor{comment}{/*\ Max\ iterative-\/refinement\ passes\ on\ the\ γ\ solve.\ 0\ disables\ IR;\ the\ loop}}
+\DoxyCodeLine{00242\ \textcolor{comment}{\ *\ auto-\/stops\ once\ the\ correction\ no\ longer\ contracts,\ so\ this\ is\ an\ upper}}
+\DoxyCodeLine{00243\ \textcolor{comment}{\ *\ bound\ rather\ than\ a\ fixed\ iteration\ count.\ */}}
+\DoxyCodeLine{00244\ \textcolor{preprocessor}{\#define\ AA\_IR\_MAX\_STEPS\ (5)}}
+\DoxyCodeLine{00245\ }
+\DoxyCodeLine{00246\ \textcolor{comment}{/*\ (Dual)\ Scale\ updating\ parameters\ */}}
+\DoxyCodeLine{00247\ \textcolor{preprocessor}{\#define\ MAX\_SCALE\_VALUE\ (1e6)}}
+\DoxyCodeLine{00248\ \textcolor{preprocessor}{\#define\ MIN\_SCALE\_VALUE\ (1e-\/6)}}
+\DoxyCodeLine{00249\ \textcolor{preprocessor}{\#define\ SCALE\_NORM\ NORM\ }\textcolor{comment}{/*\ what\ norm\ to\ use\ when\ computing\ the\ scale\ factor\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00250\ }
+\DoxyCodeLine{00251\ \textcolor{comment}{/*\ Dynamic\ diagonal\ rescaling\ (stgs-\/>adaptive\_diag\_scale).\ Row\ multipliers}}
+\DoxyCodeLine{00252\ \textcolor{comment}{\ *\ move\ by\ at\ most\ (profile\ ratio)\string^DIAG\_SCALE\_DAMP\ per\ update\ and\ live\ in}}
+\DoxyCodeLine{00253\ \textcolor{comment}{\ *\ [DIAG\_SCALE\_MULT\_MIN,\ DIAG\_SCALE\_MULT\_MAX]\ around\ the\ scalar\ scale.\ An}}
+\DoxyCodeLine{00254\ \textcolor{comment}{\ *\ update\ fires\ when\ the\ scalar\ scale\ updates,\ or\ when\ some\ damped}}
+\DoxyCodeLine{00255\ \textcolor{comment}{\ *\ *clamped*\ step\ alone\ exceeds\ sqrt(10)\ (a\ railed\ scalar\ must\ not\ freeze}}
+\DoxyCodeLine{00256\ \textcolor{comment}{\ *\ the\ diagonal;\ a\ railed\ multiplier\ must\ not\ keep\ triggering\ updates\ it}}
+\DoxyCodeLine{00257\ \textcolor{comment}{\ *\ cannot\ take).\ */}}
+\DoxyCodeLine{00258\ \textcolor{preprocessor}{\#define\ DIAG\_SCALE\_DAMP\ (0.25)}}
+\DoxyCodeLine{00259\ \textcolor{preprocessor}{\#define\ DIAG\_SCALE\_MULT\_MIN\ (1e-\/3)}}
+\DoxyCodeLine{00260\ \textcolor{preprocessor}{\#define\ DIAG\_SCALE\_MULT\_MAX\ (1e3)}}
+\DoxyCodeLine{00261\ \textcolor{comment}{/*\ Floor\ on\ the\ row-\/profile\ denominators,\ as\ a\ fraction\ of\ the\ block's}}
+\DoxyCodeLine{00262\ \textcolor{comment}{\ *\ rms\ denominator\ (see\ row\_rel\_res).\ Swept\ over\ 1e-\/4..1e-\/1:\ every\ value}}
+\DoxyCodeLine{00263\ \textcolor{comment}{\ *\ improves\ on\ no\ floor,\ 1e-\/3\ is\ the\ best\ on\ solve\ count.\ */}}
+\DoxyCodeLine{00264\ \textcolor{preprocessor}{\#define\ DEN\_FLOOR\_FRAC\ (1e-\/3)}}
+\DoxyCodeLine{00265\ }
+\DoxyCodeLine{00266\ \textcolor{comment}{/*\ -\/-\/-\/\ Conjugate\ gradient\ (CG)\ parameters,\ only\ used\ with\ indirect\ solver\ -\/-\/-\/\ */}}
+\DoxyCodeLine{00267\ \textcolor{preprocessor}{\#define\ CG\_BEST\_TOL\ (1e-\/12)}}
+\DoxyCodeLine{00268\ \textcolor{comment}{/*\ Each\ CG\ solve\ targets\ tol\ =\ CG\_TOL\_FACTOR\ *\ current\_residual.\ Smaller}}
+\DoxyCodeLine{00269\ \textcolor{comment}{\ *\ values\ give\ more\ accurate\ CG\ solves\ at\ the\ cost\ of\ more\ CG\ iterations.}}
+\DoxyCodeLine{00270\ \textcolor{comment}{\ *\ With\ deflation\ making\ inner\ accuracy\ cheap,\ 0.03\ measured\ optimal\ on\ a}}
+\DoxyCodeLine{00271\ \textcolor{comment}{\ *\ netlib\ /\ Maros-\/Meszaros\ /\ SOC\ suite\ (bracketed\ on\ both\ sides:\ 0.02}}
+\DoxyCodeLine{00272\ \textcolor{comment}{\ *\ starts\ flipping\ problems,\ 0.01\ pays\ more\ CG\ for\ no\ outer-\/iteration}}
+\DoxyCodeLine{00273\ \textcolor{comment}{\ *\ gain);\ together\ with\ CG\_RATE\ 2.0\ it\ buys\ roughly\ 30\%\ fewer\ outer}}
+\DoxyCodeLine{00274\ \textcolor{comment}{\ *\ iterations\ for\ roughly\ 8\%\ more\ matvecs,\ which\ is\ wall-\/clock\ neutral}}
+\DoxyCodeLine{00275\ \textcolor{comment}{\ *\ on\ matvec-\/dominated\ problems\ and\ favorable\ on\ cone-\/dominated\ ones.}}
+\DoxyCodeLine{00276\ \textcolor{comment}{\ *\ The\ retuned\ values\ target\ accuracies\ below\ the\ single-\/precision\ noise}}
+\DoxyCodeLine{00277\ \textcolor{comment}{\ *\ floor,\ so\ single-\/precision\ builds\ keep\ the\ previous\ calibration.\ */}}
+\DoxyCodeLine{00278\ \textcolor{preprocessor}{\#ifdef\ SFLOAT}}
+\DoxyCodeLine{00279\ \textcolor{preprocessor}{\#define\ CG\_TOL\_FACTOR\ (0.2)}}
+\DoxyCodeLine{00280\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00281\ \textcolor{preprocessor}{\#define\ CG\_TOL\_FACTOR\ (0.03)}}
+\DoxyCodeLine{00282\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00283\ }
+\DoxyCodeLine{00284\ \textcolor{comment}{/*\ norm\ to\ use\ when\ deciding\ CG\ convergence\ */}}
+\DoxyCodeLine{00285\ \textcolor{preprocessor}{\#ifndef\ CG\_NORM}}
+\DoxyCodeLine{00286\ \textcolor{preprocessor}{\#define\ CG\_NORM\ SCS(norm\_inf)}}
+\DoxyCodeLine{00287\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00288\ \textcolor{comment}{/*\ cg\ tol\ \string~\ O(1/k\string^(CG\_RATE));\ forcing\ accuracy\ faster\ with\ the\ iteration}}
+\DoxyCodeLine{00289\ \textcolor{comment}{\ *\ count\ is\ consumed\ by\ the\ outer\ loop\ (Anderson\ acceleration}}
+\DoxyCodeLine{00290\ \textcolor{comment}{\ *\ especially)\ as\ fewer\ iterations.\ 2.0\ is\ safely\ interior:\ 2.25\ starts}}
+\DoxyCodeLine{00291\ \textcolor{comment}{\ *\ flipping\ problems.\ Single\ precision\ keeps\ the\ previous\ rate\ for\ the}}
+\DoxyCodeLine{00292\ \textcolor{comment}{\ *\ same\ reason\ as\ CG\_TOL\_FACTOR\ above.\ */}}
+\DoxyCodeLine{00293\ \textcolor{preprocessor}{\#ifdef\ SFLOAT}}
+\DoxyCodeLine{00294\ \textcolor{preprocessor}{\#define\ CG\_RATE\ (1.5)}}
+\DoxyCodeLine{00295\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00296\ \textcolor{preprocessor}{\#define\ CG\_RATE\ (2.0)}}
+\DoxyCodeLine{00297\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00298\ \textcolor{comment}{/*\ Number\ of\ approximate\ small\ eigenvectors\ of\ the\ preconditioned}}
+\DoxyCodeLine{00299\ \textcolor{comment}{\ *\ reduced\ operator\ harvested\ from\ each\ cold\ solve\ for\ g\ =\ K\string^\{-\/1\}h\ and}}
+\DoxyCodeLine{00300\ \textcolor{comment}{\ *\ used\ to\ deflate\ the\ warm\ solves\ until\ the\ next\ metric\ change\ (eigCG,}}
+\DoxyCodeLine{00301\ \textcolor{comment}{\ *\ Stathopoulos\ \&\ Orginos\ 2010).\ Costs\ 2\ *\ DEFLATE\_VECTORS\ *\ n\ floats}}
+\DoxyCodeLine{00302\ \textcolor{comment}{\ *\ persistent\ plus\ a\ transient\ Lanczos\ window\ during\ the\ deep\ solve;}}
+\DoxyCodeLine{00303\ \textcolor{comment}{\ *\ needs\ USE\_LAPACK\ and\ is\ compiled\ out\ without\ it.\ 0\ disables.\ The}}
+\DoxyCodeLine{00304\ \textcolor{comment}{\ *\ environment\ variables\ SCS\_DEFLATE\ and\ SCS\_EIGCG\_WIN\ override\ the}}
+\DoxyCodeLine{00305\ \textcolor{comment}{\ *\ count\ and\ the\ window\ size\ at\ runtime.\ */}}
+\DoxyCodeLine{00306\ \textcolor{preprocessor}{\#define\ DEFLATE\_VECTORS\ (30)}}
+\DoxyCodeLine{00307\ }
+\DoxyCodeLine{00308\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00309\ \}}
+\DoxyCodeLine{00310\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00311\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -1,0 +1,937 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="scs_8h" kind="file" language="C++">
+    <compoundname>scs.h</compoundname>
+    <includes refid="scs__types_8h" local="yes">scs_types.h</includes>
+    <includes refid="aa__stats_8h" local="yes">aa_stats.h</includes>
+    <includedby refid="glbopts_8h" local="yes">/private/tmp/scs-400/include/glbopts.h</includedby>
+    <includedby refid="scs__work_8h" local="yes">/private/tmp/scs-400/include/scs_work.h</includedby>
+    <includedby refid="util_8h" local="yes">/private/tmp/scs-400/include/util.h</includedby>
+    <includedby refid="cones_8c" local="yes">/private/tmp/scs-400/src/cones.c</includedby>
+    <includedby refid="exp__cone_8c" local="yes">/private/tmp/scs-400/src/exp_cone.c</includedby>
+    <includedby refid="normalize_8c" local="yes">/private/tmp/scs-400/src/normalize.c</includedby>
+    <includedby refid="rw_8c" local="yes">/private/tmp/scs-400/src/rw.c</includedby>
+    <includedby refid="scs_8c" local="yes">/private/tmp/scs-400/src/scs.c</includedby>
+    <incdepgraph>
+      <node id="3">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>/private/tmp/scs-400/include/aa.h</label>
+        <link refid="aa_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>/private/tmp/scs-400/include/cones.h</label>
+        <link refid="cones_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>/private/tmp/scs-400/include/glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="11">
+        <label>/private/tmp/scs-400/include/linalg.h</label>
+        <link refid="linalg_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="14">
+        <label>/private/tmp/scs-400/include/linsys.h</label>
+        <link refid="linsys_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="16">
+        <label>/private/tmp/scs-400/include/normalize.h</label>
+        <link refid="normalize_8h"/>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="17">
+        <label>/private/tmp/scs-400/include/rw.h</label>
+        <link refid="rw_8h"/>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="23">
+        <label>/private/tmp/scs-400/include/scs_work.h</label>
+        <link refid="scs__work_8h"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="18">
+        <label>/private/tmp/scs-400/include/util.h</label>
+        <link refid="util_8h"/>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="20">
+        <label>/private/tmp/scs-400/linsys/csparse.c</label>
+        <link refid="csparse_8c"/>
+      </node>
+      <node id="19">
+        <label>/private/tmp/scs-400/linsys/csparse.h</label>
+        <link refid="csparse_8h"/>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.c</label>
+        <link refid="scs__matrix_8c"/>
+      </node>
+      <node id="21">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.h</label>
+        <link refid="scs__matrix_8h"/>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>/private/tmp/scs-400/src/aa.c</label>
+        <link refid="aa_8c"/>
+      </node>
+      <node id="8">
+        <label>/private/tmp/scs-400/src/cones.c</label>
+        <link refid="cones_8c"/>
+      </node>
+      <node id="9">
+        <label>/private/tmp/scs-400/src/exp_cone.c</label>
+        <link refid="exp__cone_8c"/>
+      </node>
+      <node id="12">
+        <label>/private/tmp/scs-400/src/linalg.c</label>
+        <link refid="linalg_8c"/>
+      </node>
+      <node id="13">
+        <label>/private/tmp/scs-400/src/normalize.c</label>
+        <link refid="normalize_8c"/>
+      </node>
+      <node id="10">
+        <label>/private/tmp/scs-400/src/rw.c</label>
+        <link refid="rw_8c"/>
+      </node>
+      <node id="5">
+        <label>/private/tmp/scs-400/src/scs.c</label>
+        <link refid="scs_8c"/>
+      </node>
+      <node id="22">
+        <label>/private/tmp/scs-400/src/scs_version.c</label>
+        <link refid="scs__version_8c"/>
+      </node>
+      <node id="15">
+        <label>/private/tmp/scs-400/src/util.c</label>
+        <link refid="util_8c"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="struct_scs_matrix" prot="public">ScsMatrix</innerclass>
+    <innerclass refid="struct_scs_settings" prot="public">ScsSettings</innerclass>
+    <innerclass refid="struct_scs_data" prot="public">ScsData</innerclass>
+    <innerclass refid="struct_scs_cone" prot="public">ScsCone</innerclass>
+    <innerclass refid="struct_scs_solution" prot="public">ScsSolution</innerclass>
+    <innerclass refid="struct_scs_info" prot="public">ScsInfo</innerclass>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="scs_8h_1a0be174af2a751cfa8a91c310d799943f" prot="public" static="no">
+        <name>SCS_NULL</name>
+        <initializer>0 /* NULL type */</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="19" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1ae5e6dd1cacecc8ddb532e25ee025dab1" prot="public" static="no">
+        <name>SCS_INFEASIBLE_INACCURATE</name>
+        <initializer>(-7)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="33" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1aa9926c8e5b23495ae9195e3c444c4b5a" prot="public" static="no">
+        <name>SCS_UNBOUNDED_INACCURATE</name>
+        <initializer>(-6)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="34" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1a0d4e848eb3de81287e5e1c8fae2dab0a" prot="public" static="no">
+        <name>SCS_SIGINT</name>
+        <initializer>(-5)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="35" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1a991ff39b24ee4961b79cc7bf2e2f35db" prot="public" static="no">
+        <name>SCS_FAILED</name>
+        <initializer>(-4)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="36" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1a6087076845557b5f8d556bbf23bb577b" prot="public" static="no">
+        <name>SCS_INDETERMINATE</name>
+        <initializer>(-3)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="37" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1a0bac201fdbc84557c391490187101d8b" prot="public" static="no">
+        <name>SCS_INFEASIBLE</name>
+        <initializer>(-2) /* primal infeasible, dual unbounded   */</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="38" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1ac8c72aeee9bcd3f1ed58fcf99a76d01c" prot="public" static="no">
+        <name>SCS_UNBOUNDED</name>
+        <initializer>(-1)  /* primal unbounded, dual infeasible   */</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="39" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1a97f7a5b842fd70105d97841fcd6ee680" prot="public" static="no">
+        <name>SCS_UNFINISHED</name>
+        <initializer>(0)  /* never returned, used as placeholder */</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="40" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1a0fcae593d880f4d9a0b21b188ba58094" prot="public" static="no">
+        <name>SCS_SOLVED</name>
+        <initializer>(1)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="41" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="scs_8h_1aaeed0781b1d882d591dd2b3acaefaa4c" prot="public" static="no">
+        <name>SCS_SOLVED_INACCURATE</name>
+        <initializer>(2)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="42" column="9" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="42" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="scs_8h_1a4389113106886772f3178059cd157a47" prot="public" static="no">
+        <type>struct <ref refid="struct_s_c_s___c_o_n_e___w_o_r_k" kindref="compound">SCS_CONE_WORK</ref></type>
+        <definition>typedef struct SCS_CONE_WORK ScsConeWork</definition>
+        <argsstring></argsstring>
+        <name>ScsConeWork</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Struct containing cone projection workspace. Implemented by cones. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="26" column="28" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1" prot="public" static="no">
+        <type>struct SCS_LIN_SYS_WORK</type>
+        <definition>typedef struct SCS_LIN_SYS_WORK ScsLinSysWork</definition>
+        <argsstring></argsstring>
+        <name>ScsLinSysWork</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Struct containing linear system workspace. Implemented by linear solver. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="28" column="31" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" prot="public" static="no">
+        <type>struct <ref refid="struct_s_c_s___w_o_r_k" kindref="compound">SCS_WORK</ref></type>
+        <definition>typedef struct SCS_WORK ScsWork</definition>
+        <argsstring></argsstring>
+        <name>ScsWork</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Struct containing SCS workspace. Implemented in <computeroutput><ref refid="scs__work_8h" kindref="compound">scs_work.h</ref></computeroutput>. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="30" column="23" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+        <definition>ScsWork * scs_init</definition>
+        <argsstring>(const ScsData *d, const ScsCone *k, const ScsSettings *stgs)</argsstring>
+        <name>scs_init</name>
+        <param>
+          <type>const <ref refid="struct_scs_data" kindref="compound">ScsData</ref> *</type>
+          <declname>d</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_cone" kindref="compound">ScsCone</ref> *</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref> *</type>
+          <declname>stgs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize SCS and allocate memory.</para>
+<para>All the inputs must be already allocated in memory before calling. After this function returns then the memory associated with <computeroutput>d</computeroutput>, <computeroutput>k</computeroutput>, and <computeroutput>stgs</computeroutput> can be freed as SCS maintains deep copies of these internally.</para>
+<para>It performs:<itemizedlist>
+<listitem><para>data and settings validation</para>
+</listitem><listitem><para>problem data scaling</para>
+</listitem><listitem><para>automatic parameters tuning (if enabled)</para>
+</listitem><listitem><para>setup linear system solver:<itemizedlist>
+<listitem><para>direct solver: KKT matrix factorization is performed here</para>
+</listitem><listitem><para>indirect solver: KKT matrix preconditioning is performed here.</para>
+</listitem></itemizedlist>
+</para>
+</listitem></itemizedlist>
+</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>d</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Problem data. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>k</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Cone data. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>stgs</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>SCS solve settings. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Solver workspace. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="277" column="9" bodyfile="/private/tmp/scs-400/src/scs.c" bodystart="1390" bodyend="1430" declfile="/private/tmp/scs-400/include/scs.h" declline="277" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="scs_8h_1ae19c84d79a22890aa957067824c0b088" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int scs_update</definition>
+        <argsstring>(ScsWork *w, scs_float *b, scs_float *c)</argsstring>
+        <name>scs_update</name>
+        <param>
+          <type><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Update the <computeroutput>b</computeroutput> vector, <computeroutput>c</computeroutput> vector, or both, before another solve call.</para>
+<para>After a solve we can reuse the SCS workspace in another solve if the only problem data that has changed are the <computeroutput>b</computeroutput> and <computeroutput>c</computeroutput> vectors.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>w</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>SCS workspace from scs_init (modified in-place). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>b</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>New <computeroutput>b</computeroutput> vector (can be <computeroutput><ref refid="scs_8h_1a0be174af2a751cfa8a91c310d799943f" kindref="member">SCS_NULL</ref></computeroutput> if unchanged). </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>New <computeroutput>c</computeroutput> vector (can be <computeroutput><ref refid="scs_8h_1a0be174af2a751cfa8a91c310d799943f" kindref="member">SCS_NULL</ref></computeroutput> if unchanged).</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>0 if update successful. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="291" column="9" bodyfile="/private/tmp/scs-400/src/scs.c" bodystart="1432" bodyend="1470" declfile="/private/tmp/scs-400/include/scs.h" declline="291" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="scs_8h_1a58fd31598ebab93ce1121f87df460566" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int scs_solve</definition>
+        <argsstring>(ScsWork *w, ScsSolution *sol, ScsInfo *info, scs_int warm_start)</argsstring>
+        <name>scs_solve</name>
+        <param>
+          <type><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref> *</type>
+          <declname>sol</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_info" kindref="compound">ScsInfo</ref> *</type>
+          <declname>info</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>warm_start</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Solve quadratic cone program initialized by scs_init.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>w</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Workspace allocated by scs_init. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>sol</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Solution will be stored here. If members <computeroutput>x</computeroutput>, <computeroutput>y</computeroutput>, <computeroutput>s</computeroutput> are NULL then SCS will allocate memory for them which must be freed by the caller. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>info</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Information about the solve will be stored here. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>warm_start</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Whether to use the entries of <computeroutput>sol</computeroutput> as warm-start for the solve.</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Flag containing problem status (see <emphasis><ref refid="glbopts_8h" kindref="compound">glbopts.h</ref></emphasis>). </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="306" column="9" bodyfile="/private/tmp/scs-400/src/scs.c" bodystart="1472" bodyend="1629" declfile="/private/tmp/scs-400/include/scs.h" declline="306" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="scs_8h_1ad09d2ed5fe68896d2b7056cb5a9a3e0d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void scs_finish</definition>
+        <argsstring>(ScsWork *w)</argsstring>
+        <name>scs_finish</name>
+        <param>
+          <type><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+          <declname>w</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Clean up allocated SCS workspace.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>w</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Workspace allocated by init, will be deallocated. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="314" column="6" bodyfile="/private/tmp/scs-400/src/scs.c" bodystart="1631" bodyend="1681" declfile="/private/tmp/scs-400/include/scs.h" declline="314" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="scs_8h_1acd26da2b245ff5341bce5e3b6a803356" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int scs</definition>
+        <argsstring>(const ScsData *d, const ScsCone *k, const ScsSettings *stgs, ScsSolution *sol, ScsInfo *info)</argsstring>
+        <name>scs</name>
+        <param>
+          <type>const <ref refid="struct_scs_data" kindref="compound">ScsData</ref> *</type>
+          <declname>d</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_cone" kindref="compound">ScsCone</ref> *</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref> *</type>
+          <declname>stgs</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref> *</type>
+          <declname>sol</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_info" kindref="compound">ScsInfo</ref> *</type>
+          <declname>info</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Solve quadratic cone program defined by data in d and cone k.</para>
+<para>All the inputs must already be allocated in memory before calling.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>d</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Problem data. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>k</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Cone data. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>stgs</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>SCS solver settings. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>sol</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Solution will be stored here. If members <computeroutput>x</computeroutput>, <computeroutput>y</computeroutput>, <computeroutput>s</computeroutput> are NULL then SCS will allocate memory for them. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>info</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Information about the solve will be stored here. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Flag containing problem status (see <emphasis><ref refid="glbopts_8h" kindref="compound">glbopts.h</ref></emphasis>). </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="329" column="9" bodyfile="/private/tmp/scs-400/src/scs.c" bodystart="1684" bodyend="1697" declfile="/private/tmp/scs-400/include/scs.h" declline="329" declcolumn="9"/>
+      </memberdef>
+      <memberdef kind="function" id="scs_8h_1aaa770d8e5840e9dcbd92c5b16ce74bc7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void scs_set_default_settings</definition>
+        <argsstring>(ScsSettings *stgs)</argsstring>
+        <name>scs_set_default_settings</name>
+        <param>
+          <type><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref> *</type>
+          <declname>stgs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Helper function to set all settings to default values (see <emphasis><ref refid="glbopts_8h" kindref="compound">glbopts.h</ref></emphasis>).</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>stgs</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Settings struct that will be populated. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="337" column="6" bodyfile="/private/tmp/scs-400/src/util.c" bodystart="158" bodyend="180" declfile="/private/tmp/scs-400/include/scs.h" declline="337" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="scs_8h_1ab87c468a9caa793eb6185754d0cf2769" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const char *</type>
+        <definition>const char * scs_version</definition>
+        <argsstring>(void)</argsstring>
+        <name>scs_version</name>
+        <param>
+          <type>void</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Helper function simply returns the current version of SCS as a string.</para>
+<para><simplesect kind="return"><para>SCS version as a string. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="344" column="12" bodyfile="/private/tmp/scs-400/src/scs_version.c" bodystart="7" bodyend="9" declfile="/private/tmp/scs-400/include/scs.h" declline="344" declcolumn="12"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Public<sp/>header<sp/>containing<sp/>the<sp/>outward<sp/>facing<sp/>SCS<sp/>API.<sp/>It<sp/>includes<sp/>all<sp/>the</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>input/output<sp/>data<sp/>structs<sp/>and<sp/>the<sp/>API<sp/>functions.<sp/><sp/>Make<sp/>sure<sp/>this<sp/>file<sp/>and</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>`scs_types.h`<sp/>are<sp/>somewhere<sp/>appropriate<sp/>and<sp/>then<sp/>use<sp/>`#include<sp/>&quot;scs.h&quot;`<sp/>to</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*<sp/>access<sp/>the<sp/>SCS<sp/>public<sp/>API.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>SCS_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Contains<sp/>definitions<sp/>of<sp/>primitive<sp/>types<sp/>`scs_int`<sp/>and<sp/>`scs_float`.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs__types_8h" kindref="compound">scs_types.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="aa__stats_8h" kindref="compound">aa_stats.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19" refid="scs_8h_1a0be174af2a751cfa8a91c310d799943f" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_NULL<sp/>0<sp/></highlight><highlight class="comment">/*<sp/>NULL<sp/>type<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>The<sp/>following<sp/>abstract<sp/>structs<sp/>are<sp/>implemented<sp/>later.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="aa_8c_1a32134027ded02b6c6055bc0b1d907e6a" kindref="member">ACCEL_WORK</ref><sp/><ref refid="aa_8h_1abccab62fbdd940ce82c2e250335d8bcb" kindref="member">AaWork</ref>;</highlight></codeline>
+<codeline lineno="26" refid="scs_8h_1a4389113106886772f3178059cd157a47" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="struct_s_c_s___c_o_n_e___w_o_r_k" kindref="compound">SCS_CONE_WORK</ref><sp/><ref refid="scs_8h_1a4389113106886772f3178059cd157a47" kindref="member">ScsConeWork</ref>;</highlight></codeline>
+<codeline lineno="28" refid="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">SCS_LIN_SYS_WORK<sp/><ref refid="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1" kindref="member">ScsLinSysWork</ref>;</highlight></codeline>
+<codeline lineno="30" refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" refkind="member"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="struct_s_c_s___w_o_r_k" kindref="compound">SCS_WORK</ref><sp/><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref>;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>SCS<sp/>returns<sp/>one<sp/>of<sp/>the<sp/>following<sp/>integer<sp/>exit<sp/>flags:<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33" refid="scs_8h_1ae5e6dd1cacecc8ddb532e25ee025dab1" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_INFEASIBLE_INACCURATE<sp/>(-7)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34" refid="scs_8h_1aa9926c8e5b23495ae9195e3c444c4b5a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_UNBOUNDED_INACCURATE<sp/>(-6)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35" refid="scs_8h_1a0d4e848eb3de81287e5e1c8fae2dab0a" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_SIGINT<sp/>(-5)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36" refid="scs_8h_1a991ff39b24ee4961b79cc7bf2e2f35db" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_FAILED<sp/>(-4)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37" refid="scs_8h_1a6087076845557b5f8d556bbf23bb577b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_INDETERMINATE<sp/>(-3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38" refid="scs_8h_1a0bac201fdbc84557c391490187101d8b" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_INFEASIBLE<sp/>(-2)<sp/></highlight><highlight class="comment">/*<sp/>primal<sp/>infeasible,<sp/>dual<sp/>unbounded<sp/><sp/><sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39" refid="scs_8h_1ac8c72aeee9bcd3f1ed58fcf99a76d01c" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_UNBOUNDED<sp/>(-1)<sp/><sp/></highlight><highlight class="comment">/*<sp/>primal<sp/>unbounded,<sp/>dual<sp/>infeasible<sp/><sp/><sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40" refid="scs_8h_1a97f7a5b842fd70105d97841fcd6ee680" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_UNFINISHED<sp/>(0)<sp/><sp/></highlight><highlight class="comment">/*<sp/>never<sp/>returned,<sp/>used<sp/>as<sp/>placeholder<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41" refid="scs_8h_1a0fcae593d880f4d9a0b21b188ba58094" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_SOLVED<sp/>(1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42" refid="scs_8h_1aaeed0781b1d882d591dd2b3acaefaa4c" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SCS_SOLVED_INACCURATE<sp/>(2)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47" refid="struct_scs_matrix" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="49" refid="struct_scs_matrix_1a3905b92026499c1f3a1925a7f4dac856" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_matrix_1a3905b92026499c1f3a1925a7f4dac856" kindref="member">x</ref>;</highlight></codeline>
+<codeline lineno="51" refid="struct_scs_matrix_1a9a529e08729eab41729e458ce43dcf57" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*<ref refid="struct_scs_matrix_1a9a529e08729eab41729e458ce43dcf57" kindref="member">i</ref>;</highlight></codeline>
+<codeline lineno="53" refid="struct_scs_matrix_1a554713f4cd5a35fd93b3039c223314ba" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*<ref refid="struct_scs_matrix_1a554713f4cd5a35fd93b3039c223314ba" kindref="member">p</ref>;</highlight></codeline>
+<codeline lineno="55" refid="struct_scs_matrix_1a98fbc612985028a7790d286ebd8b74e2" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_matrix_1a98fbc612985028a7790d286ebd8b74e2" kindref="member">m</ref>;</highlight></codeline>
+<codeline lineno="57" refid="struct_scs_matrix_1ac50dcdaac67999cfff3662f388c9bd0d" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_matrix_1ac50dcdaac67999cfff3662f388c9bd0d" kindref="member">n</ref>;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal">}<sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref>;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight></codeline>
+<codeline lineno="61" refid="struct_scs_settings" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="63" refid="struct_scs_settings_1adde12365a494d540101d4227dab13a18" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1adde12365a494d540101d4227dab13a18" kindref="member">normalize</ref>;</highlight></codeline>
+<codeline lineno="65" refid="struct_scs_settings_1a05811a0cf51693d9cc09314826e1b0f9" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1a05811a0cf51693d9cc09314826e1b0f9" kindref="member">scale</ref>;</highlight></codeline>
+<codeline lineno="67" refid="struct_scs_settings_1a34b066f818ce7c3e9f34fef42ff31ce3" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a34b066f818ce7c3e9f34fef42ff31ce3" kindref="member">adaptive_scale</ref>;</highlight></codeline>
+<codeline lineno="73" refid="struct_scs_settings_1a222d6db2f694cb885709455da9499984" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a222d6db2f694cb885709455da9499984" kindref="member">adaptive_diag_scale</ref>;</highlight></codeline>
+<codeline lineno="75" refid="struct_scs_settings_1a8d9538a4016c862f544fae86858eb378" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1a8d9538a4016c862f544fae86858eb378" kindref="member">rho_x</ref>;</highlight></codeline>
+<codeline lineno="77" refid="struct_scs_settings_1a1ae1728151be99b3f0d8853c614627eb" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a1ae1728151be99b3f0d8853c614627eb" kindref="member">max_iters</ref>;</highlight></codeline>
+<codeline lineno="79" refid="struct_scs_settings_1ab689a1a138eab38c1171831d09d8bfd3" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1ab689a1a138eab38c1171831d09d8bfd3" kindref="member">eps_abs</ref>;</highlight></codeline>
+<codeline lineno="81" refid="struct_scs_settings_1a1970c2376c0c5a7076a07c66199ecd15" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1a1970c2376c0c5a7076a07c66199ecd15" kindref="member">eps_rel</ref>;</highlight></codeline>
+<codeline lineno="83" refid="struct_scs_settings_1ac615fa0b6eca766044e205be39351e8b" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1ac615fa0b6eca766044e205be39351e8b" kindref="member">eps_infeas</ref>;</highlight></codeline>
+<codeline lineno="85" refid="struct_scs_settings_1afd89acae2fe12e5e36f0fbdafd68b6d1" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1afd89acae2fe12e5e36f0fbdafd68b6d1" kindref="member">alpha</ref>;</highlight></codeline>
+<codeline lineno="87" refid="struct_scs_settings_1a2a166c20871e3c96f9f7a163699c4d16" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1a2a166c20871e3c96f9f7a163699c4d16" kindref="member">time_limit_secs</ref>;</highlight></codeline>
+<codeline lineno="89" refid="struct_scs_settings_1a5d066e6c38e3547139f7842f313f91ef" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a5d066e6c38e3547139f7842f313f91ef" kindref="member">verbose</ref>;</highlight></codeline>
+<codeline lineno="91" refid="struct_scs_settings_1af1086d138c50ed09a80d4fe4f2b11543" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1af1086d138c50ed09a80d4fe4f2b11543" kindref="member">warm_start</ref>;</highlight></codeline>
+<codeline lineno="93" refid="struct_scs_settings_1a493462ada611f12889b7570feed4b4f0" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a493462ada611f12889b7570feed4b4f0" kindref="member">acceleration_lookback</ref>;</highlight></codeline>
+<codeline lineno="95" refid="struct_scs_settings_1a9ee32ae3b1f60ad00c8498796cb6c166" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a9ee32ae3b1f60ad00c8498796cb6c166" kindref="member">acceleration_interval</ref>;</highlight></codeline>
+<codeline lineno="97" refid="struct_scs_settings_1a4c90c885f08b4d945fa1c5cc061174e2" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_settings_1a4c90c885f08b4d945fa1c5cc061174e2" kindref="member">acceleration_type_1</ref>;</highlight></codeline>
+<codeline lineno="100" refid="struct_scs_settings_1a42aa66a28e7b1b7e5bce6d1a523e0f86" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1a42aa66a28e7b1b7e5bce6d1a523e0f86" kindref="member">acceleration_regularization</ref>;</highlight></codeline>
+<codeline lineno="102" refid="struct_scs_settings_1aad397a304046db33c0e5805de9415adf" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_settings_1aad397a304046db33c0e5805de9415adf" kindref="member">acceleration_relaxation</ref>;</highlight></codeline>
+<codeline lineno="104" refid="struct_scs_settings_1a167de72c9887564aac8d3a806144669d" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*<ref refid="struct_scs_settings_1a167de72c9887564aac8d3a806144669d" kindref="member">write_data_filename</ref>;</highlight></codeline>
+<codeline lineno="106" refid="struct_scs_settings_1a3eb87e609ef062ef1a30a3c6bf7b9d15" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*<ref refid="struct_scs_settings_1a3eb87e609ef062ef1a30a3c6bf7b9d15" kindref="member">log_csv_filename</ref>;</highlight></codeline>
+<codeline lineno="107"><highlight class="normal">}<sp/><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref>;</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight></codeline>
+<codeline lineno="110" refid="struct_scs_data" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="112" refid="struct_scs_data_1aa0ad823c8208574214f38a783e2ad4e1" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_data_1aa0ad823c8208574214f38a783e2ad4e1" kindref="member">m</ref>;</highlight></codeline>
+<codeline lineno="114" refid="struct_scs_data_1a1e33f582a084060935d773ae0d3fe048" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_data_1a1e33f582a084060935d773ae0d3fe048" kindref="member">n</ref>;</highlight></codeline>
+<codeline lineno="116" refid="struct_scs_data_1a61f4e659362b25d373e5bd23fc16fe38" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="struct_scs_data_1a61f4e659362b25d373e5bd23fc16fe38" kindref="member">A</ref>;</highlight></codeline>
+<codeline lineno="120" refid="struct_scs_data_1a77fd6df51a73bf2c465a3d718964479a" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="struct_scs_data_1a77fd6df51a73bf2c465a3d718964479a" kindref="member">P</ref>;</highlight></codeline>
+<codeline lineno="122" refid="struct_scs_data_1a1a95a0a75f9a8782d20f1e2c872cb3c9" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_data_1a1a95a0a75f9a8782d20f1e2c872cb3c9" kindref="member">b</ref>;</highlight></codeline>
+<codeline lineno="124" refid="struct_scs_data_1aacc52838f93eaf56507b13744cf7530e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_data_1aacc52838f93eaf56507b13744cf7530e" kindref="member">c</ref>;</highlight></codeline>
+<codeline lineno="125"><highlight class="normal">}<sp/><ref refid="struct_scs_data" kindref="compound">ScsData</ref>;</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"></highlight></codeline>
+<codeline lineno="128" refid="struct_scs_cone" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="130" refid="struct_scs_cone_1ac6922fe401650f91caa751f3267c71c5" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1ac6922fe401650f91caa751f3267c71c5" kindref="member">z</ref>;</highlight></codeline>
+<codeline lineno="132" refid="struct_scs_cone_1a681372640b8fac21a74ff7d0afba173d" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1a681372640b8fac21a74ff7d0afba173d" kindref="member">l</ref>;</highlight></codeline>
+<codeline lineno="134" refid="struct_scs_cone_1a96281da59ac051ef9e49ca401eaaa7b5" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_cone_1a96281da59ac051ef9e49ca401eaaa7b5" kindref="member">bu</ref>;</highlight></codeline>
+<codeline lineno="136" refid="struct_scs_cone_1af94a23afc9e1e514d451420ab465143c" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_cone_1af94a23afc9e1e514d451420ab465143c" kindref="member">bl</ref>;</highlight></codeline>
+<codeline lineno="138" refid="struct_scs_cone_1aaf6a208d6887d703b3da772e96c9e94d" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1aaf6a208d6887d703b3da772e96c9e94d" kindref="member">bsize</ref>;</highlight></codeline>
+<codeline lineno="140" refid="struct_scs_cone_1a4ec650e0813fab72ad255d8ecaa73f8e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*<ref refid="struct_scs_cone_1a4ec650e0813fab72ad255d8ecaa73f8e" kindref="member">q</ref>;</highlight></codeline>
+<codeline lineno="142" refid="struct_scs_cone_1ac912d73b8dd087ddf0e0c6c5f39fc740" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1ac912d73b8dd087ddf0e0c6c5f39fc740" kindref="member">qsize</ref>;</highlight></codeline>
+<codeline lineno="144" refid="struct_scs_cone_1a8439d6bb734309682da2cee78283475e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*<ref refid="struct_scs_cone_1a8439d6bb734309682da2cee78283475e" kindref="member">s</ref>;</highlight></codeline>
+<codeline lineno="146" refid="struct_scs_cone_1ae6e4e62cbcd10d3bb731def2a31ccda7" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1ae6e4e62cbcd10d3bb731def2a31ccda7" kindref="member">ssize</ref>;</highlight></codeline>
+<codeline lineno="148" refid="struct_scs_cone_1a88ac3b564dc7f642b74b5dfab408c219" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*<ref refid="struct_scs_cone_1a88ac3b564dc7f642b74b5dfab408c219" kindref="member">cs</ref>;</highlight></codeline>
+<codeline lineno="150" refid="struct_scs_cone_1a1619240b9c71e6585b71cecb39282635" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1a1619240b9c71e6585b71cecb39282635" kindref="member">cssize</ref>;</highlight></codeline>
+<codeline lineno="152" refid="struct_scs_cone_1a9b658c756284f3afad6186432b9b2ee1" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1a9b658c756284f3afad6186432b9b2ee1" kindref="member">ep</ref>;</highlight></codeline>
+<codeline lineno="154" refid="struct_scs_cone_1a3b39a5f93c37b2d29cc7f27eb9c0c032" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1a3b39a5f93c37b2d29cc7f27eb9c0c032" kindref="member">ed</ref>;</highlight></codeline>
+<codeline lineno="157" refid="struct_scs_cone_1af10de865b1a76694b2369fcba61e842f" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_cone_1af10de865b1a76694b2369fcba61e842f" kindref="member">p</ref>;</highlight></codeline>
+<codeline lineno="159" refid="struct_scs_cone_1a39ae8f7a6788544bae4fb305b2c8b49f" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_cone_1a39ae8f7a6788544bae4fb305b2c8b49f" kindref="member">psize</ref>;</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>USE_SPECTRAL_CONES</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*d;</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>dsize;</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*nuc_m;</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*nuc_n;</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>nucsize;</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*ell1;</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>ell1_size;</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*sl_n;</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*sl_k;</highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>sl_size;</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="178"><highlight class="normal">}<sp/><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref>;</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"></highlight></codeline>
+<codeline lineno="186" refid="struct_scs_solution" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="188" refid="struct_scs_solution_1a655d98b6096451355a5d9862e854ad3e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_solution_1a655d98b6096451355a5d9862e854ad3e" kindref="member">x</ref>;</highlight></codeline>
+<codeline lineno="190" refid="struct_scs_solution_1a26f3d210490a20299f493698658c5b2f" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_solution_1a26f3d210490a20299f493698658c5b2f" kindref="member">y</ref>;</highlight></codeline>
+<codeline lineno="192" refid="struct_scs_solution_1ae104c406b1c56a37b7453be06193a1a7" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*<ref refid="struct_scs_solution_1ae104c406b1c56a37b7453be06193a1a7" kindref="member">s</ref>;</highlight></codeline>
+<codeline lineno="193"><highlight class="normal">}<sp/><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref>;</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"></highlight></codeline>
+<codeline lineno="196" refid="struct_scs_info" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="198" refid="struct_scs_info_1af6a27e1b7ca55b9fd6708d961a544c0e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_info_1af6a27e1b7ca55b9fd6708d961a544c0e" kindref="member">iter</ref>;</highlight></codeline>
+<codeline lineno="200" refid="struct_scs_info_1ac8eb8c00ec1df28d149c1584de5f151e" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/><ref refid="struct_scs_info_1ac8eb8c00ec1df28d149c1584de5f151e" kindref="member">status</ref>[128];</highlight></codeline>
+<codeline lineno="202" refid="struct_scs_info_1a7786e40fcbc1f431dee6fb49e672b6b1" refkind="member"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/><ref refid="struct_scs_info_1a7786e40fcbc1f431dee6fb49e672b6b1" kindref="member">lin_sys_solver</ref>[128];</highlight></codeline>
+<codeline lineno="204" refid="struct_scs_info_1a57cdaad22ef83459346f6903474d8822" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_info_1a57cdaad22ef83459346f6903474d8822" kindref="member">status_val</ref>;</highlight></codeline>
+<codeline lineno="206" refid="struct_scs_info_1a5a60367d92ef672fdb99a23bc999e826" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_info_1a5a60367d92ef672fdb99a23bc999e826" kindref="member">scale_updates</ref>;</highlight></codeline>
+<codeline lineno="208" refid="struct_scs_info_1a604e1346e121816d4ec117cda93f919e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a604e1346e121816d4ec117cda93f919e" kindref="member">pobj</ref>;</highlight></codeline>
+<codeline lineno="210" refid="struct_scs_info_1ae2c1d05865c2b66246bb50f1779853fb" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1ae2c1d05865c2b66246bb50f1779853fb" kindref="member">dobj</ref>;</highlight></codeline>
+<codeline lineno="212" refid="struct_scs_info_1afd4a53c87a9d2a1705976336bc985cc0" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1afd4a53c87a9d2a1705976336bc985cc0" kindref="member">res_pri</ref>;</highlight></codeline>
+<codeline lineno="214" refid="struct_scs_info_1ad3b3eb95e8f6b787c5f79c3ed151561e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1ad3b3eb95e8f6b787c5f79c3ed151561e" kindref="member">res_dual</ref>;</highlight></codeline>
+<codeline lineno="216" refid="struct_scs_info_1adddc865afba89562e7eab60e94ac7039" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1adddc865afba89562e7eab60e94ac7039" kindref="member">gap</ref>;</highlight></codeline>
+<codeline lineno="218" refid="struct_scs_info_1aaf9d4f24f8c7fef81ca8a6c91d3a2f58" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1aaf9d4f24f8c7fef81ca8a6c91d3a2f58" kindref="member">res_infeas</ref>;</highlight></codeline>
+<codeline lineno="220" refid="struct_scs_info_1a992a0e6ffd063b53bc96e69068def6de" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a992a0e6ffd063b53bc96e69068def6de" kindref="member">res_unbdd_a</ref>;</highlight></codeline>
+<codeline lineno="222" refid="struct_scs_info_1a85be8e12fbe37b2b4850f1c80832370e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a85be8e12fbe37b2b4850f1c80832370e" kindref="member">res_unbdd_p</ref>;</highlight></codeline>
+<codeline lineno="224" refid="struct_scs_info_1a368c0b96caee09382c42e92e40ca4353" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a368c0b96caee09382c42e92e40ca4353" kindref="member">setup_time</ref>;</highlight></codeline>
+<codeline lineno="226" refid="struct_scs_info_1ae23962a94d7384a56540c30439da4fa4" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1ae23962a94d7384a56540c30439da4fa4" kindref="member">solve_time</ref>;</highlight></codeline>
+<codeline lineno="228" refid="struct_scs_info_1a3db28116a26b68bad22b76e3626ccdfd" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a3db28116a26b68bad22b76e3626ccdfd" kindref="member">scale</ref>;</highlight></codeline>
+<codeline lineno="230" refid="struct_scs_info_1a1ab0e2f5f5c67e45488419bf97b0fe36" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a1ab0e2f5f5c67e45488419bf97b0fe36" kindref="member">comp_slack</ref>;</highlight></codeline>
+<codeline lineno="232" refid="struct_scs_info_1a072b8b925ff8e1ed744d6c452eb8a7d0" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_info_1a072b8b925ff8e1ed744d6c452eb8a7d0" kindref="member">rejected_accel_steps</ref>;</highlight></codeline>
+<codeline lineno="234" refid="struct_scs_info_1a426ded591998b23a0b868127857ab5dc" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="struct_scs_info_1a426ded591998b23a0b868127857ab5dc" kindref="member">accepted_accel_steps</ref>;</highlight></codeline>
+<codeline lineno="236" refid="struct_scs_info_1a123daf5d2bdf6577e4fe4c554a5f599d" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="struct_aa_stats" kindref="compound">AaStats</ref><sp/><ref refid="struct_scs_info_1a123daf5d2bdf6577e4fe4c554a5f599d" kindref="member">aa_stats</ref>;</highlight></codeline>
+<codeline lineno="238" refid="struct_scs_info_1a72c92706949663ff3451b51d12305d7e" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1a72c92706949663ff3451b51d12305d7e" kindref="member">lin_sys_time</ref>;</highlight></codeline>
+<codeline lineno="240" refid="struct_scs_info_1aaa78e44a02c03460417b389357bad73d" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1aaa78e44a02c03460417b389357bad73d" kindref="member">cone_time</ref>;</highlight></codeline>
+<codeline lineno="242" refid="struct_scs_info_1ae3b769855caae8ebd298177685e6ec03" refkind="member"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="struct_scs_info_1ae3b769855caae8ebd298177685e6ec03" kindref="member">accel_time</ref>;</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>SPECTRAL_TIMING_FLAG</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>ave_time_matrix_cone_proj;</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>ave_time_vector_cone_proj;</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="250"><highlight class="normal">}<sp/><ref refid="struct_scs_info" kindref="compound">ScsInfo</ref>;</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"></highlight></codeline>
+<codeline lineno="252"><highlight class="normal"></highlight><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="253"><highlight class="comment"><sp/>*<sp/>Main<sp/>library<sp/>API.</highlight></codeline>
+<codeline lineno="254"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="255"><highlight class="normal"></highlight></codeline>
+<codeline lineno="277"><highlight class="normal"><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*<ref refid="scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3" kindref="member">scs_init</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_data" kindref="compound">ScsData</ref><sp/>*d,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref><sp/>*k,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref><sp/>*stgs);</highlight></codeline>
+<codeline lineno="278"><highlight class="normal"></highlight></codeline>
+<codeline lineno="291"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="scs_8h_1ae19c84d79a22890aa957067824c0b088" kindref="member">scs_update</ref>(<ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*w,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*c);</highlight></codeline>
+<codeline lineno="292"><highlight class="normal"></highlight></codeline>
+<codeline lineno="306"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="scs_8h_1a58fd31598ebab93ce1121f87df460566" kindref="member">scs_solve</ref>(<ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*w,<sp/><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref><sp/>*sol,<sp/><ref refid="struct_scs_info" kindref="compound">ScsInfo</ref><sp/>*info,</highlight></codeline>
+<codeline lineno="307"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>warm_start);</highlight></codeline>
+<codeline lineno="308"><highlight class="normal"></highlight></codeline>
+<codeline lineno="314"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="scs_8h_1ad09d2ed5fe68896d2b7056cb5a9a3e0d" kindref="member">scs_finish</ref>(<ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*w);</highlight></codeline>
+<codeline lineno="315"><highlight class="normal"></highlight></codeline>
+<codeline lineno="329"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="scs_8h_1acd26da2b245ff5341bce5e3b6a803356" kindref="member">scs</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_data" kindref="compound">ScsData</ref><sp/>*d,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref><sp/>*k,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref><sp/>*stgs,</highlight></codeline>
+<codeline lineno="330"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref><sp/>*sol,<sp/><ref refid="struct_scs_info" kindref="compound">ScsInfo</ref><sp/>*info);</highlight></codeline>
+<codeline lineno="331"><highlight class="normal"></highlight></codeline>
+<codeline lineno="337"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="scs_8h_1aaa770d8e5840e9dcbd92c5b16ce74bc7" kindref="member">scs_set_default_settings</ref>(<ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref><sp/>*stgs);</highlight></codeline>
+<codeline lineno="338"><highlight class="normal"></highlight></codeline>
+<codeline lineno="344"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*<ref refid="scs_8h_1ab87c468a9caa793eb6185754d0cf2769" kindref="member">scs_version</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="345"><highlight class="normal"></highlight></codeline>
+<codeline lineno="346"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="347"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="348"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="349"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/include/scs.h"/>
+  </compounddef>
+</doxygen>

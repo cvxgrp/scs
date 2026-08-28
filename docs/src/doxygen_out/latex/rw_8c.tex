@@ -1,0 +1,293 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+src/\+rw.c File Reference}
+\hypertarget{rw_8c}{}\label{rw_8c}\index{/private/tmp/scs-\/400/src/rw.c@{/private/tmp/scs-\/400/src/rw.c}}
+{\ttfamily \+\#include "{}rw.\+h"{}}\newline
+{\ttfamily \+\#include $<$errno.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdint.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdio.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \+\#include $<$string.\+h$>$}\newline
+{\ttfamily \+\#include "{}cones.\+h"{}}\newline
+{\ttfamily \+\#include "{}linalg.\+h"{}}\newline
+{\ttfamily \+\#include "{}scs.\+h"{}}\newline
+{\ttfamily \+\#include "{}scs\+\_\+matrix.\+h"{}}\newline
+{\ttfamily \+\#include "{}util.\+h"{}}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\+\#define \doxymbox{\hyperlink{rw_8c_a84560270fb86060aeed890bb51da232d}{RW\+\_\+\+EXT\+\_\+\+MAGIC}}~((uint32\+\_\+t)0x53435345u) /\+\texorpdfstring{$\ast$}{*} "{}SCSE"{} \texorpdfstring{$\ast$}{*}/\+
+\item 
+\+\#define \doxymbox{\hyperlink{rw_8c_ac420148fbbf7b849d3fb9d6373b07b69}{RW\+\_\+\+EXT\+\_\+\+VERSION}}~((uint32\+\_\+t)1u)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a2d4709e92a4f4b67fc00938ad1830409}{checked\+\_\+fread}} (void \texorpdfstring{$\ast$}{*}ptr, size\+\_\+t size, size\+\_\+t nmemb, FILE \texorpdfstring{$\ast$}{*}fin)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a1315201ca2c21253be42877b05e93643}{checked\+\_\+fwrite}} (const void \texorpdfstring{$\ast$}{*}ptr, size\+\_\+t size, size\+\_\+t nmemb, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_aa5f5bf7b73920ca22087ca75de50f600}{write\+\_\+int\+\_\+array}} (const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}x, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_acc5ead612ff609c70498fe687b384c99}{write\+\_\+float\+\_\+array}} (const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}x, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_ad98c7b9888e23741febfe6dd0a1530d0}{write\+\_\+scs\+\_\+cone}} (const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a6370e0b26d9cbb695b0a75eb90f36709}{read\+\_\+int}} (\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}dest, size\+\_\+t file\+\_\+int\+\_\+sz, size\+\_\+t nitems, FILE \texorpdfstring{$\ast$}{*}fin)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a009ddd27058987988d68ea4591fd07a0}{read\+\_\+int\+\_\+array}} (\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}dest, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, size\+\_\+t file\+\_\+int\+\_\+sz, FILE \texorpdfstring{$\ast$}{*}fin)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a0642738fabb3b7d3fc1ac3c30a192050}{read\+\_\+float\+\_\+array}} (\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}dest, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, FILE \texorpdfstring{$\ast$}{*}fin)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a91aae2d98f250ecaa5d222713fd8f0f3}{skip\+\_\+bytes}} (FILE \texorpdfstring{$\ast$}{*}fin, uint64\+\_\+t bytes)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a82c195596c2f7aa8f31f1cf181cd3e9b}{skip\+\_\+int\+\_\+array}} (FILE \texorpdfstring{$\ast$}{*}fin, size\+\_\+t file\+\_\+int\+\_\+sz, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n)
+\item 
+static \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_a75dd3557c9dc916bec3f395b501abb2a}{free\+\_\+cone\+\_\+null}} (\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k)
+\item 
+static \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_a86df507f8628cd64173d4ffd464accb4}{free\+\_\+stgs\+\_\+null}} (\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}s)
+\item 
+static \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_a293125238e54eb31e5fb11ecdcad7c96}{free\+\_\+matrix\+\_\+null}} (\doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}A)
+\item 
+static \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_a7f5756a2df168ea67903b8d55549bf27}{free\+\_\+data\+\_\+null}} (\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a4b81c018d77353291a72108ea977e03d}{read\+\_\+data\+\_\+cleanup}} (FILE \texorpdfstring{$\ast$}{*}fin, \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}d, \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}k, \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}stgs)
+\item 
+static \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_aacd8b5b19f0c79059a61992b94a343fd}{read\+\_\+scs\+\_\+cone}} (FILE \texorpdfstring{$\ast$}{*}fin, size\+\_\+t file\+\_\+int\+\_\+sz)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_acc91bc3cac35fea83a566bb6b44805f0}{write\+\_\+scs\+\_\+stgs}} (const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}s, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_a46b61d9dd9212c15a8f45e9bdf7af509}{read\+\_\+scs\+\_\+stgs}} (FILE \texorpdfstring{$\ast$}{*}fin, size\+\_\+t file\+\_\+int\+\_\+sz, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} legacy\+\_\+settings)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a3549caeb7ef3721f6c4bc7aa258195ed}{write\+\_\+amatrix}} (const \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}A, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_a3ddf2568c98287c31df6042b02dab922}{read\+\_\+amatrix}} (FILE \texorpdfstring{$\ast$}{*}fin, size\+\_\+t file\+\_\+int\+\_\+sz)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a5e140c08e564a9e5995154254983d202}{write\+\_\+scs\+\_\+data}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{rw_8c_ad136178e70865b4e15098a56d83928df}{read\+\_\+scs\+\_\+data}} (FILE \texorpdfstring{$\ast$}{*}fin, size\+\_\+t file\+\_\+int\+\_\+sz)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_ae78bc8a866de61815ecc66705c16db55}{write\+\_\+ext\+\_\+int\+\_\+array}} (const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}x, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a05fd9dfc8b7a447a0098a0891f1007da}{write\+\_\+scs\+\_\+extensions}} (const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}s, FILE \texorpdfstring{$\ast$}{*}fout)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a3322421c35f8ac5366bf6bcc9e2f3148}{read\+\_\+ext\+\_\+int\+\_\+array}} (\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}dest, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}n, size\+\_\+t file\+\_\+int\+\_\+sz, FILE \texorpdfstring{$\ast$}{*}fin)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a9bb4383513bcece130b8ab2a93f3bead}{read\+\_\+scs\+\_\+extensions}} (FILE \texorpdfstring{$\ast$}{*}fin, size\+\_\+t file\+\_\+int\+\_\+sz, \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}s)
+\item 
+void \doxymbox{\hyperlink{rw_8c_a7b9979320b7ecb0b294c5dce42d27dc9}{\+\_\+scs\+\_\+write\+\_\+data}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_a6275633ed875514bd0cb2cd369b1a983}{\+\_\+scs\+\_\+read\+\_\+data}} (const char \texorpdfstring{$\ast$}{*}filename, \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}d, \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}k, \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}stgs)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8c_ae5713764ef8ed92a348e4d0eda568f61}{\+\_\+scs\+\_\+open\+\_\+csv\+\_\+log\+\_\+file}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+void \doxymbox{\hyperlink{rw_8c_a2a0b7de7d61184337dbd5b6eff04a185}{\+\_\+scs\+\_\+close\+\_\+csv\+\_\+log\+\_\+file}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+void \doxymbox{\hyperlink{rw_8c_af38f3b150401ab8708cdf88b624a6edc}{\+\_\+scs\+\_\+log\+\_\+data\+\_\+to\+\_\+csv}} (const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter, \doxymbox{\hyperlink{struct__scs__timer}{\+\_\+scs\+\_\+timer}} \texorpdfstring{$\ast$}{*}solve\+\_\+timer)
+\end{DoxyCompactItemize}
+
+
+\label{doc-define-members}
+\Hypertarget{rw_8c_doc-define-members}
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{rw_8c_a84560270fb86060aeed890bb51da232d}\index{rw.c@{rw.c}!RW\_EXT\_MAGIC@{RW\_EXT\_MAGIC}}
+\index{RW\_EXT\_MAGIC@{RW\_EXT\_MAGIC}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{RW\_EXT\_MAGIC}{RW\_EXT\_MAGIC}}
+{\footnotesize\ttfamily \label{rw_8c_a84560270fb86060aeed890bb51da232d} 
+\+\#define RW\+\_\+\+EXT\+\_\+\+MAGIC~((uint32\+\_\+t)0x53435345u) /\+\texorpdfstring{$\ast$}{*} "{}SCSE"{} \texorpdfstring{$\ast$}{*}/\+}
+
+\Hypertarget{rw_8c_ac420148fbbf7b849d3fb9d6373b07b69}\index{rw.c@{rw.c}!RW\_EXT\_VERSION@{RW\_EXT\_VERSION}}
+\index{RW\_EXT\_VERSION@{RW\_EXT\_VERSION}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{RW\_EXT\_VERSION}{RW\_EXT\_VERSION}}
+{\footnotesize\ttfamily \label{rw_8c_ac420148fbbf7b849d3fb9d6373b07b69} 
+\+\#define RW\+\_\+\+EXT\+\_\+\+VERSION~((uint32\+\_\+t)1u)}
+
+
+
+\label{doc-func-members}
+\Hypertarget{rw_8c_doc-func-members}
+\doxysubsection{Function Documentation}
+\Hypertarget{rw_8c_a2a0b7de7d61184337dbd5b6eff04a185}\index{rw.c@{rw.c}!\_scs\_close\_csv\_log\_file@{\_scs\_close\_csv\_log\_file}}
+\index{\_scs\_close\_csv\_log\_file@{\_scs\_close\_csv\_log\_file}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{\_scs\_close\_csv\_log\_file()}{\_scs\_close\_csv\_log\_file()}}
+{\footnotesize\ttfamily \label{rw_8c_a2a0b7de7d61184337dbd5b6eff04a185} 
+void \+\_\+scs\+\_\+close\+\_\+csv\+\_\+log\+\_\+file (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8c_af38f3b150401ab8708cdf88b624a6edc}\index{rw.c@{rw.c}!\_scs\_log\_data\_to\_csv@{\_scs\_log\_data\_to\_csv}}
+\index{\_scs\_log\_data\_to\_csv@{\_scs\_log\_data\_to\_csv}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{\_scs\_log\_data\_to\_csv()}{\_scs\_log\_data\_to\_csv()}}
+{\footnotesize\ttfamily \label{rw_8c_af38f3b150401ab8708cdf88b624a6edc} 
+void \+\_\+scs\+\_\+log\+\_\+data\+\_\+to\+\_\+csv (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{, }\item[{\doxymbox{\hyperlink{struct__scs__timer}{\+\_\+scs\+\_\+timer}} \texorpdfstring{$\ast$}{*}}]{solve\+\_\+timer}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8c_ae5713764ef8ed92a348e4d0eda568f61}\index{rw.c@{rw.c}!\_scs\_open\_csv\_log\_file@{\_scs\_open\_csv\_log\_file}}
+\index{\_scs\_open\_csv\_log\_file@{\_scs\_open\_csv\_log\_file}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{\_scs\_open\_csv\_log\_file()}{\_scs\_open\_csv\_log\_file()}}
+{\footnotesize\ttfamily \label{rw_8c_ae5713764ef8ed92a348e4d0eda568f61} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \+\_\+scs\+\_\+open\+\_\+csv\+\_\+log\+\_\+file (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8c_a6275633ed875514bd0cb2cd369b1a983}\index{rw.c@{rw.c}!\_scs\_read\_data@{\_scs\_read\_data}}
+\index{\_scs\_read\_data@{\_scs\_read\_data}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{\_scs\_read\_data()}{\_scs\_read\_data()}}
+{\footnotesize\ttfamily \label{rw_8c_a6275633ed875514bd0cb2cd369b1a983} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \+\_\+scs\+\_\+read\+\_\+data (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{filename}{, }\item[{\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{d}{, }\item[{\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{k}{, }\item[{\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8c_a7b9979320b7ecb0b294c5dce42d27dc9}\index{rw.c@{rw.c}!\_scs\_write\_data@{\_scs\_write\_data}}
+\index{\_scs\_write\_data@{\_scs\_write\_data}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{\_scs\_write\_data()}{\_scs\_write\_data()}}
+{\footnotesize\ttfamily \label{rw_8c_a7b9979320b7ecb0b294c5dce42d27dc9} 
+void \+\_\+scs\+\_\+write\+\_\+data (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8c_a2d4709e92a4f4b67fc00938ad1830409}\index{rw.c@{rw.c}!checked\_fread@{checked\_fread}}
+\index{checked\_fread@{checked\_fread}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{checked\_fread()}{checked\_fread()}}
+{\footnotesize\ttfamily \label{rw_8c_a2d4709e92a4f4b67fc00938ad1830409} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} checked\+\_\+fread (\begin{DoxyParamCaption}\item[{void \texorpdfstring{$\ast$}{*}}]{ptr}{, }\item[{size\+\_\+t}]{size}{, }\item[{size\+\_\+t}]{nmemb}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a1315201ca2c21253be42877b05e93643}\index{rw.c@{rw.c}!checked\_fwrite@{checked\_fwrite}}
+\index{checked\_fwrite@{checked\_fwrite}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{checked\_fwrite()}{checked\_fwrite()}}
+{\footnotesize\ttfamily \label{rw_8c_a1315201ca2c21253be42877b05e93643} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} checked\+\_\+fwrite (\begin{DoxyParamCaption}\item[{const void \texorpdfstring{$\ast$}{*}}]{ptr}{, }\item[{size\+\_\+t}]{size}{, }\item[{size\+\_\+t}]{nmemb}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a75dd3557c9dc916bec3f395b501abb2a}\index{rw.c@{rw.c}!free\_cone\_null@{free\_cone\_null}}
+\index{free\_cone\_null@{free\_cone\_null}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{free\_cone\_null()}{free\_cone\_null()}}
+{\footnotesize\ttfamily \label{rw_8c_a75dd3557c9dc916bec3f395b501abb2a} 
+\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*} free\+\_\+cone\+\_\+null (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a7f5756a2df168ea67903b8d55549bf27}\index{rw.c@{rw.c}!free\_data\_null@{free\_data\_null}}
+\index{free\_data\_null@{free\_data\_null}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{free\_data\_null()}{free\_data\_null()}}
+{\footnotesize\ttfamily \label{rw_8c_a7f5756a2df168ea67903b8d55549bf27} 
+\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*} free\+\_\+data\+\_\+null (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a293125238e54eb31e5fb11ecdcad7c96}\index{rw.c@{rw.c}!free\_matrix\_null@{free\_matrix\_null}}
+\index{free\_matrix\_null@{free\_matrix\_null}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{free\_matrix\_null()}{free\_matrix\_null()}}
+{\footnotesize\ttfamily \label{rw_8c_a293125238e54eb31e5fb11ecdcad7c96} 
+\doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*} free\+\_\+matrix\+\_\+null (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}}]{A}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a86df507f8628cd64173d4ffd464accb4}\index{rw.c@{rw.c}!free\_stgs\_null@{free\_stgs\_null}}
+\index{free\_stgs\_null@{free\_stgs\_null}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{free\_stgs\_null()}{free\_stgs\_null()}}
+{\footnotesize\ttfamily \label{rw_8c_a86df507f8628cd64173d4ffd464accb4} 
+\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*} free\+\_\+stgs\+\_\+null (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{s}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a3ddf2568c98287c31df6042b02dab922}\index{rw.c@{rw.c}!read\_amatrix@{read\_amatrix}}
+\index{read\_amatrix@{read\_amatrix}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_amatrix()}{read\_amatrix()}}
+{\footnotesize\ttfamily \label{rw_8c_a3ddf2568c98287c31df6042b02dab922} 
+\doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*} read\+\_\+amatrix (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a4b81c018d77353291a72108ea977e03d}\index{rw.c@{rw.c}!read\_data\_cleanup@{read\_data\_cleanup}}
+\index{read\_data\_cleanup@{read\_data\_cleanup}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_data\_cleanup()}{read\_data\_cleanup()}}
+{\footnotesize\ttfamily \label{rw_8c_a4b81c018d77353291a72108ea977e03d} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} read\+\_\+data\+\_\+cleanup (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{d}{, }\item[{\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{k}{, }\item[{\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a3322421c35f8ac5366bf6bcc9e2f3148}\index{rw.c@{rw.c}!read\_ext\_int\_array@{read\_ext\_int\_array}}
+\index{read\_ext\_int\_array@{read\_ext\_int\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_ext\_int\_array()}{read\_ext\_int\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_a3322421c35f8ac5366bf6bcc9e2f3148} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} read\+\_\+ext\+\_\+int\+\_\+array (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{dest}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}}]{n}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a0642738fabb3b7d3fc1ac3c30a192050}\index{rw.c@{rw.c}!read\_float\_array@{read\_float\_array}}
+\index{read\_float\_array@{read\_float\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_float\_array()}{read\_float\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_a0642738fabb3b7d3fc1ac3c30a192050} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} read\+\_\+float\+\_\+array (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{dest}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a6370e0b26d9cbb695b0a75eb90f36709}\index{rw.c@{rw.c}!read\_int@{read\_int}}
+\index{read\_int@{read\_int}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_int()}{read\_int()}}
+{\footnotesize\ttfamily \label{rw_8c_a6370e0b26d9cbb695b0a75eb90f36709} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} read\+\_\+int (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}}]{dest}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{, }\item[{size\+\_\+t}]{nitems}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a009ddd27058987988d68ea4591fd07a0}\index{rw.c@{rw.c}!read\_int\_array@{read\_int\_array}}
+\index{read\_int\_array@{read\_int\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_int\_array()}{read\_int\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_a009ddd27058987988d68ea4591fd07a0} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} read\+\_\+int\+\_\+array (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{dest}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_aacd8b5b19f0c79059a61992b94a343fd}\index{rw.c@{rw.c}!read\_scs\_cone@{read\_scs\_cone}}
+\index{read\_scs\_cone@{read\_scs\_cone}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_scs\_cone()}{read\_scs\_cone()}}
+{\footnotesize\ttfamily \label{rw_8c_aacd8b5b19f0c79059a61992b94a343fd} 
+\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*} read\+\_\+scs\+\_\+cone (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_ad136178e70865b4e15098a56d83928df}\index{rw.c@{rw.c}!read\_scs\_data@{read\_scs\_data}}
+\index{read\_scs\_data@{read\_scs\_data}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_scs\_data()}{read\_scs\_data()}}
+{\footnotesize\ttfamily \label{rw_8c_ad136178e70865b4e15098a56d83928df} 
+\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*} read\+\_\+scs\+\_\+data (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a9bb4383513bcece130b8ab2a93f3bead}\index{rw.c@{rw.c}!read\_scs\_extensions@{read\_scs\_extensions}}
+\index{read\_scs\_extensions@{read\_scs\_extensions}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_scs\_extensions()}{read\_scs\_extensions()}}
+{\footnotesize\ttfamily \label{rw_8c_a9bb4383513bcece130b8ab2a93f3bead} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} read\+\_\+scs\+\_\+extensions (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{, }\item[{\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{s}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a46b61d9dd9212c15a8f45e9bdf7af509}\index{rw.c@{rw.c}!read\_scs\_stgs@{read\_scs\_stgs}}
+\index{read\_scs\_stgs@{read\_scs\_stgs}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{read\_scs\_stgs()}{read\_scs\_stgs()}}
+{\footnotesize\ttfamily \label{rw_8c_a46b61d9dd9212c15a8f45e9bdf7af509} 
+\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*} read\+\_\+scs\+\_\+stgs (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{legacy\+\_\+settings}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a91aae2d98f250ecaa5d222713fd8f0f3}\index{rw.c@{rw.c}!skip\_bytes@{skip\_bytes}}
+\index{skip\_bytes@{skip\_bytes}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{skip\_bytes()}{skip\_bytes()}}
+{\footnotesize\ttfamily \label{rw_8c_a91aae2d98f250ecaa5d222713fd8f0f3} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} skip\+\_\+bytes (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{uint64\+\_\+t}]{bytes}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a82c195596c2f7aa8f31f1cf181cd3e9b}\index{rw.c@{rw.c}!skip\_int\_array@{skip\_int\_array}}
+\index{skip\_int\_array@{skip\_int\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{skip\_int\_array()}{skip\_int\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_a82c195596c2f7aa8f31f1cf181cd3e9b} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} skip\+\_\+int\+\_\+array (\begin{DoxyParamCaption}\item[{FILE \texorpdfstring{$\ast$}{*}}]{fin}{, }\item[{size\+\_\+t}]{file\+\_\+int\+\_\+sz}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a3549caeb7ef3721f6c4bc7aa258195ed}\index{rw.c@{rw.c}!write\_amatrix@{write\_amatrix}}
+\index{write\_amatrix@{write\_amatrix}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_amatrix()}{write\_amatrix()}}
+{\footnotesize\ttfamily \label{rw_8c_a3549caeb7ef3721f6c4bc7aa258195ed} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+amatrix (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}}]{A}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_ae78bc8a866de61815ecc66705c16db55}\index{rw.c@{rw.c}!write\_ext\_int\_array@{write\_ext\_int\_array}}
+\index{write\_ext\_int\_array@{write\_ext\_int\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_ext\_int\_array()}{write\_ext\_int\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_ae78bc8a866de61815ecc66705c16db55} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+ext\+\_\+int\+\_\+array (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}}]{x}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_acc5ead612ff609c70498fe687b384c99}\index{rw.c@{rw.c}!write\_float\_array@{write\_float\_array}}
+\index{write\_float\_array@{write\_float\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_float\_array()}{write\_float\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_acc5ead612ff609c70498fe687b384c99} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+float\+\_\+array (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{x}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_aa5f5bf7b73920ca22087ca75de50f600}\index{rw.c@{rw.c}!write\_int\_array@{write\_int\_array}}
+\index{write\_int\_array@{write\_int\_array}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_int\_array()}{write\_int\_array()}}
+{\footnotesize\ttfamily \label{rw_8c_aa5f5bf7b73920ca22087ca75de50f600} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+int\+\_\+array (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \texorpdfstring{$\ast$}{*}}]{x}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_ad98c7b9888e23741febfe6dd0a1530d0}\index{rw.c@{rw.c}!write\_scs\_cone@{write\_scs\_cone}}
+\index{write\_scs\_cone@{write\_scs\_cone}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_scs\_cone()}{write\_scs\_cone()}}
+{\footnotesize\ttfamily \label{rw_8c_ad98c7b9888e23741febfe6dd0a1530d0} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+scs\+\_\+cone (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a5e140c08e564a9e5995154254983d202}\index{rw.c@{rw.c}!write\_scs\_data@{write\_scs\_data}}
+\index{write\_scs\_data@{write\_scs\_data}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_scs\_data()}{write\_scs\_data()}}
+{\footnotesize\ttfamily \label{rw_8c_a5e140c08e564a9e5995154254983d202} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+scs\+\_\+data (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_a05fd9dfc8b7a447a0098a0891f1007da}\index{rw.c@{rw.c}!write\_scs\_extensions@{write\_scs\_extensions}}
+\index{write\_scs\_extensions@{write\_scs\_extensions}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_scs\_extensions()}{write\_scs\_extensions()}}
+{\footnotesize\ttfamily \label{rw_8c_a05fd9dfc8b7a447a0098a0891f1007da} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+scs\+\_\+extensions (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{s}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{rw_8c_acc91bc3cac35fea83a566bb6b44805f0}\index{rw.c@{rw.c}!write\_scs\_stgs@{write\_scs\_stgs}}
+\index{write\_scs\_stgs@{write\_scs\_stgs}!rw.c@{rw.c}}
+\doxysubsubsection{\texorpdfstring{write\_scs\_stgs()}{write\_scs\_stgs()}}
+{\footnotesize\ttfamily \label{rw_8c_acc91bc3cac35fea83a566bb6b44805f0} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} write\+\_\+scs\+\_\+stgs (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{s}{, }\item[{FILE \texorpdfstring{$\ast$}{*}}]{fout}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+

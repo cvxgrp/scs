@@ -1,0 +1,35 @@
+\doxysection{csparse.\+h}
+\hypertarget{csparse_8h_source}{}\label{csparse_8h_source}\index{/private/tmp/scs-\/400/linsys/csparse.h@{/private/tmp/scs-\/400/linsys/csparse.h}}
+\doxymbox{\hyperlink{csparse_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Sparse\ matrix\ utilities\ adapted\ from\ CSparse\ (T.\ Davis).}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Provides\ allocation,\ triplet-\/to-\/CSC\ compression,\ and\ KKT\ matrix\ formation.}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#ifndef\ CS\_H\_GUARD}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#define\ CS\_H\_GUARD}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00010\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{glbopts_8h}{glbopts.h}}"{}}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{csparse_8c_a5e44c98f37b47b4503c9c3cbff7254a6}{cs\_spalloc}})(\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ m,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ n,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ nzmax,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ values,}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ triplet);}
+\DoxyCodeLine{00017\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{csparse_8c_a9601f1c1f1e11117b6ff2de9c7c72682}{cs\_done}})(\doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *C,\ \textcolor{keywordtype}{void}\ *w,\ \textcolor{keywordtype}{void}\ *x,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ ok);}
+\DoxyCodeLine{00018\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{csparse_8c_a314a39276f469ed7a22f983c31af92ab}{cs\_compress}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *T,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ nz,}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ *idx\_mapping);}
+\DoxyCodeLine{00020\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{csparse_8c_a295150d74fe9688afb7e69e31943483b}{cs\_spfree}})(\doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *A);}
+\DoxyCodeLine{00021\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{csparse_8c_ac33339c0f2d0ae2ef4f2ad787a2b0d9d}{cumsum}})(\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ *p,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ *c,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ n);}
+\DoxyCodeLine{00022\ \textcolor{comment}{/*\ Forms\ KKT\ matrix\ */}}
+\DoxyCodeLine{00023\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{csparse_8c_ae413d0df1199ad15867ce4c28a06667e}{form\_kkt}})(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *A,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *P,}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *diag\_p,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *diag\_r,}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ *diag\_r\_idxs,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ upper);}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00027\ \}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}
