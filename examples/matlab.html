@@ -119,10 +119,7 @@ rows in <span class="math notranslate nohighlight">\(A\)</span> and <span class=
 the row corresponding to the zero cone comes first, followed by the rows for the
 positive cone.</p>
 <p>Matlab code to solve this is below.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% First, make sure SCS is in the path so MATLAB can call it</span>
-<span class="nb">addpath</span><span class="p">(</span><span class="s">&quot;/Users/bodonoghue/git/scs-matlab&quot;</span><span class="p">)</span>
-
-<span class="c">% Set up data</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Set up data</span>
 <span class="n">data</span><span class="p">.</span><span class="n">P</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">2.</span><span class="p">]);</span>
 <span class="n">data</span><span class="p">.</span><span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">([</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">;</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">]);</span>
 <span class="n">data</span><span class="p">.</span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="mf">0.3</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">0.5</span><span class="p">];</span>

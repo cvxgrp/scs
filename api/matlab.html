@@ -133,11 +133,12 @@ and <code class="code docutils literal notranslate"><span class="pre">y</span></
 </section>
 <section id="solver-backends">
 <h2>Solver backends<a class="headerlink" href="#solver-backends" title="Link to this heading"></a></h2>
-<p>By default SCS uses the sparse direct (LDL) solver. Alternative backends can be
-selected via the <code class="code docutils literal notranslate"><span class="pre">settings</span></code> struct:</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">settings</span><span class="p">.</span><span class="n">use_indirect</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">  </span><span class="c">% conjugate gradient solver</span>
-<span class="nb">settings</span><span class="p">.</span><span class="n">dense</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">         </span><span class="c">% dense Cholesky (best for dense A)</span>
-<span class="nb">settings</span><span class="p">.</span><span class="n">gpu</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">           </span><span class="c">% GPU solver</span>
+<p>By default SCS uses MATLAB’s built-in sparse LDL factorization (MA57 under
+the hood). Alternative backends can be selected via the <code class="code docutils literal notranslate"><span class="pre">settings</span></code> struct:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">settings</span><span class="p">.</span><span class="n">use_qdldl</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">       </span><span class="c">% bundled QDLDL sparse direct solver</span>
+<span class="nb">settings</span><span class="p">.</span><span class="n">use_indirect</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">    </span><span class="c">% conjugate gradient solver</span>
+<span class="nb">settings</span><span class="p">.</span><span class="n">dense</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">           </span><span class="c">% dense Cholesky (best for dense A)</span>
+<span class="nb">settings</span><span class="p">.</span><span class="n">gpu</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">             </span><span class="c">% GPU solver</span>
 </pre></div>
 </div>
 </section>
