@@ -154,17 +154,34 @@ declares a problem **primal infeasible (dual unbounded)** when it finds :math:`y
 \mathbf{R}^m` that satisfies
 
 .. math::
-  b^\top y = -1, \quad \|A^\top y\|_\infty < \epsilon_\mathrm{infeas}.
+  b^\top y = -1, \quad \|A^\top y\|_\infty < \epsilon_\mathrm{infeas} \cdot \min\left(1, \frac{\max_{ij} |A_{ij}|}{\|b\|_\infty}\right).
 
 Similarly, SCS declares a problem **dual infeasible (primal unbounded)** when it finds
 :math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m` that satisfy
 
 .. math::
-  c^\top x = -1, \quad  \max(\|P x\|_\infty, \|A x + s\|_\infty) < \epsilon_\mathrm{infeas}
+  c^\top x = -1, \quad \|P x\|_\infty < \epsilon_\mathrm{infeas}, \quad \|A x + s\|_\infty < \epsilon_\mathrm{infeas} \cdot \min\left(1, \frac{\max_{ij} |A_{ij}|}{\|c\|_\infty}\right)
 
 where :math:`\epsilon_\mathrm{infeas} > 0` is a user-defined :ref:`setting
 <settings>`.  The :math:`\ell_\infty` norm here can be changed to other norms by
-changing the definition of :code:`NORM` in the :code:`include/glbopts.h` file.
+changing the definition of :code:`NORM` in the :code:`include/glbopts.h` file
+(the :math:`\max_{ij} |A_{ij}|` factor is always the largest entry magnitude
+of :math:`A`).
+
+The :math:`\min(1, \cdot)` factors make the tests invariant to a rescaling of
+:math:`b` (resp. :math:`c`) relative to :math:`A`. The certificate
+normalizations :math:`b^\top y = -1` and :math:`c^\top x = -1` otherwise bake
+the data magnitudes into the effective tolerance: with, e.g.,
+:math:`\|c\|_\infty \sim 10^6`, a normalized certificate :math:`x` has norm
+:math:`\sim 10^{-6}` and the unscaled test becomes six orders of magnitude
+looser than intended, which can produce false infeasibility declarations on
+badly scaled feasible problems. The factors only ever tighten the tests,
+never loosen them.
+
+To guard against transient iterates that momentarily pass the residual tests
+(for example iterates produced by :ref:`acceleration <acceleration>` steps),
+SCS additionally requires the certificate conditions to hold at two
+consecutive residual checks before declaring infeasibility or unboundedness.
 
 In some rare cases a problem is both primal and dual infeasible. In this case
 SCS will return one of the two above certificates, whichever one it finds
