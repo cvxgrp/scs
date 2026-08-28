@@ -470,7 +470,7 @@ See <a class="reference internal" href="matrices.html#matrices"><span class="std
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N11ScsSettings19adaptive_diag_scaleE">
 <span id="_CPPv3N11ScsSettings19adaptive_diag_scaleE"></span><span id="_CPPv2N11ScsSettings19adaptive_diag_scaleE"></span><span id="ScsSettings::adaptive_diag_scale__scs_int"></span><span class="target" id="struct_scs_settings_1a222d6db2f694cb885709455da9499984"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adaptive_diag_scale</span></span></span><a class="headerlink" href="#_CPPv4N11ScsSettings19adaptive_diag_scaleE" title="Link to this definition"></a><br /></dt>
-<dd><p>Dynamic diagonal rescaling from residual profiles: 0 = off, 1 = per-row (rescales the R_y diagonal from the row-wise primal residual profile; uniform within non-polyhedral cone blocks), 2 = additionally per-column (rho_x lowered, never raised, on columns whose dual residuals lag the profile; the default). The dynamic analog of two-sided Ruiz equilibration with residuals replacing the data norms. Requires <code class="docutils literal notranslate"><span class="pre">adaptive_scale</span></code> (silently disabled without it). </p>
+<dd><p>Dynamic diagonal rescaling from residual profiles: 0 = off, 1 = per-row (rescales the R_y diagonal from the row-wise primal residual profile; uniform within non-polyhedral cone blocks; the default). Requires <code class="docutils literal notranslate"><span class="pre">adaptive_scale</span></code> (silently disabled without it). </p>
 </dd></dl>
 
 <dl class="cpp var">
