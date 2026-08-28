@@ -93,71 +93,64 @@ static void compute_cone_residuals_ell1(const scs_float *tx, scs_float t0,
 }
 #endif
 
-/* Asssumes that all components of x0 are positive and
- * x0[0] >= x0[1] >= ... x0[n-1]. */
+/* Assumes that all components of x0 are nonnegative and
+ * x0[0] >= x0[1] >= ... x0[n-1].
+ *
+ * Projects (t0, x0) onto {(t, x) : ||x||_1 <= t}. For sorted nonnegative
+ * input the projection is proj_x[i] = max(x0[i] - theta, 0) and
+ * proj_t = t0 + theta, where theta = (sum_{i<k} x0[i] - t0) / (k + 1) and
+ * k is the largest index with x0[k-1] - theta(k) > 0 (Duchi et al. 2008,
+ * "Efficient projections onto the l1-ball"). Scanning for the largest such
+ * k is robust to repeated entries, where two-sided bracket searches can
+ * fail to fire and produce points far outside the cone. */
 scs_int ell1_cone_proj_sorted(scs_float t0, const scs_float *x0,
                               scs_float *proj, scs_int n) {
-  scs_float xSum;
-  scs_float tempSum;
-  int k;
-  scs_int kk;
-  scs_float diff;
-  int i;
+  scs_float xSum, theta, th;
+  scs_int k, kk, i;
 
   if (-t0 >= x0[0]) {
+    /* (t0, x0) lies in the polar cone: projection is the origin */
     memset(proj, 0, (n + 1) * sizeof(*x0));
     return 0;
   }
 
   xSum = 0;
-  tempSum = 0;
-  k = -1;
-  for (kk = 1; kk < n; ++kk) {
-    xSum += x0[kk - 1];
-    tempSum = (-t0 + xSum) / (kk + 1);
+  for (i = 0; i < n; ++i) {
+    xSum += x0[i];
+  }
+  if (xSum <= t0) {
+    /* (t0, x0) already lies in the cone: projection is the identity */
+    proj[0] = t0;
+    memcpy(proj + 1, x0, n * sizeof(*x0));
+    return 0;
+  }
 
-    if (x0[kk - 1] > tempSum && x0[kk] <= tempSum) {
-      k = (int)kk;
+  xSum = 0;
+  theta = 0;
+  k = 0;
+  for (kk = 1; kk <= n; ++kk) {
+    xSum += x0[kk - 1];
+    th = (xSum - t0) / (kk + 1);
+    if (x0[kk - 1] - th > 0) {
+      k = kk;
+      theta = th;
+    } else {
+      /* x0 is nonincreasing and theta(kk) nondecreasing: no later kk works */
       break;
     }
   }
 
-  if (k == -1) {
-    k = n;
-    xSum += x0[n - 1];
+  if (k == 0) {
+    /* only reachable through rounding on polar-boundary inputs */
+    memset(proj, 0, (n + 1) * sizeof(*x0));
+    return 0;
   }
 
-  /* Execute projection */
-  proj[0] = -t0 + xSum;
-
-  if (proj[0] > 0) {
-    proj[0] = t0 + proj[0] / (k + 1);
-  } else {
-    proj[0] = t0;
-  }
-
-  memcpy(proj + 1, x0, k * sizeof(*x0));
-  diff = proj[0] - t0;
-  for (i = 1; i < k + 1; i++) {
-    proj[i] -= diff;
+  proj[0] = MAX(t0 + theta, 0.);
+  for (i = 0; i < k; ++i) {
+    proj[i + 1] = x0[i] - theta;
   }
   memset(proj + 1 + k, 0, (n - k) * sizeof(*x0));
-
-#ifdef SPECTRAL_DEBUG
-  {
-    /* Check residuals - not needed in production */
-    scs_float residuals[3];
-    compute_cone_residuals_ell1(proj, t0, x0, n, residuals);
-
-    if (residuals[0] > 1e-8 || residuals[1] > 1e-8 || residuals[2] > 1e-8) {
-      scs_printf("WARN: something is wrong in nuclear norm cone projection.\n");
-      scs_printf("dual_res / primal_res / comp : %.3e, %.3e, %.3e\n",
-                 residuals[0], residuals[1], residuals[2]);
-      return -1;
-    }
-  }
-#endif
-
   return 0;
 }
 
