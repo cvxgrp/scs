@@ -1,5 +1,5 @@
 ------------------------------------------------------------------
-	       SCS v3.1.1 - Splitting Conic Solver
+	       SCS v3.2.11 - Splitting Conic Solver
 	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 100, constraints m: 171
@@ -9,20 +9,20 @@ cones: 	  z: primal zero / dual free vars: 1
 settings: eps_abs: 1.0e-04, eps_rel: 1.0e-04, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
-	  acceleration_lookback: 10, acceleration_interval: 10
-lin-sys:  sparse-direct
+	  acceleration_lookback: 10, acceleration_interval: 5
+lin-sys:  sparse-direct-amd-qdldl
 	  nnz(A): 1150, nnz(P): 0
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.11e+01  6.95e-01  5.59e+02 -3.06e+02  1.00e-01  9.02e-04 
-   225| 8.91e-06  1.30e-05  3.24e-05 -3.89e+00  5.45e+00  1.43e-01 
+     0| 1.38e+01  7.11e-01  7.21e+02 -3.87e+02  1.00e-01  2.21e-04 
+   225| 1.46e-04  2.42e-06  4.51e-06 -3.89e+00  1.00e-01  8.58e-03 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.44e-01s = setup: 5.53e-04s + solve: 1.43e-01s
-	 lin-sys: 1.06e-03s, cones: 1.42e-01s, accel: 4.26e-05s
+timings: total: 8.58e-03s = setup: 1.75e-04s + solve: 8.41e-03s
+	 lin-sys: 6.29e-03s, cones: 1.64e-03s, accel: 2.56e-04s
 ------------------------------------------------------------------
-objective = -3.888803
+objective = -3.888788
 ------------------------------------------------------------------
-CVXPY optimal value is: 3.888784623785257
-Solution norm difference: 2.241074541050464e-06
+CVXPY optimal value is: 3.8887846237852566
+Solution norm difference: 5.640851171150041e-05
