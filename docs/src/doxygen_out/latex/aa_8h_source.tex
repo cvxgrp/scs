@@ -1,0 +1,46 @@
+\doxysection{aa.\+h}
+\hypertarget{aa_8h_source}{}\label{aa_8h_source}\index{/private/tmp/scs-\/400/include/aa.h@{/private/tmp/scs-\/400/include/aa.h}}
+\doxymbox{\hyperlink{aa_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Anderson\ acceleration\ (AA)\ interface\ for\ fixed-\/point\ iteration.}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ Stores\ a\ sliding\ window\ of\ past\ iterates\ and\ computes\ an\ accelerated}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ step\ that\ can\ dramatically\ speed\ up\ convergence\ of\ ADMM.}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#ifndef\ AA\_H\_GUARD}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#define\ AA\_H\_GUARD}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00011\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{aa__stats_8h}{aa\_stats.h}}"{}}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{glbopts_8h}{glbopts.h}}"{}}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keyword}{typedef}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}};}
+\DoxyCodeLine{00018\ \textcolor{keyword}{typedef}\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}};}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{struct\ }\doxymbox{\hyperlink{aa_8c_a32134027ded02b6c6055bc0b1d907e6a}{ACCEL\_WORK}}\ \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}};}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00066\ \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *\doxymbox{\hyperlink{aa_8h_a1c40e18d10a609fd7f132cb92f40baed}{aa\_init}}(\doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ dim,\ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ mem,\ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ min\_len,\ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ type1,}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ regularization,\ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ relaxation,}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ safeguard\_factor,\ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ max\_weight\_norm,}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ ir\_max\_steps,\ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ verbosity);}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00095\ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ \doxymbox{\hyperlink{aa_8h_addc105e961590f011f3989170cd975c6}{aa\_apply}}(\doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ *f,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ *x,\ \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *a);}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00110\ \doxymbox{\hyperlink{aa_8h_a518ce90ae9e4fcece7907247cd04d150}{aa\_int}}\ \doxymbox{\hyperlink{aa_8h_a9aa1e1902cb1d80dc5ee809e6a88189a}{aa\_safeguard}}(\doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ *f\_new,\ \doxymbox{\hyperlink{aa_8h_a6ab1ca62f04bdb4c63d1cea9cb89b36f}{aa\_float}}\ *x\_new,\ \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *a);}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00118\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{aa_8h_a38824bbb8c9e9120bb703f5d177034ec}{aa\_finish}}(\doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *a);}
+\DoxyCodeLine{00119\ }
+\DoxyCodeLine{00130\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{aa_8h_af838479f20a0a48b7484bfdbbca6c921}{aa\_reset}}(\doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *a);}
+\DoxyCodeLine{00131\ }
+\DoxyCodeLine{00143\ \doxymbox{\hyperlink{struct_aa_stats}{AaStats}}\ \doxymbox{\hyperlink{aa_8h_aa1dddf8339a78887ff2ca6a7c778890f}{aa\_get\_stats}}(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{AaWork}}\ *a);}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00146\ \}}
+\DoxyCodeLine{00147\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00148\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

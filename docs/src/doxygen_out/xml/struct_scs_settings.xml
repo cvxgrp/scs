@@ -1,0 +1,337 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="struct_scs_settings" kind="struct" language="C++" prot="public">
+    <compoundname>ScsSettings</compoundname>
+    <includes refid="scs_8h" local="no">scs.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_scs_settings_1adde12365a494d540101d4227dab13a18" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::normalize</definition>
+        <argsstring></argsstring>
+        <name>normalize</name>
+        <qualifiedname>ScsSettings::normalize</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Whether to heuristically rescale the data before solve. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="63" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a05811a0cf51693d9cc09314826e1b0f9" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::scale</definition>
+        <argsstring></argsstring>
+        <name>scale</name>
+        <qualifiedname>ScsSettings::scale</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initial dual scaling factor (may be updated if adaptive_scale is on). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="65" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="65" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a34b066f818ce7c3e9f34fef42ff31ce3" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::adaptive_scale</definition>
+        <argsstring></argsstring>
+        <name>adaptive_scale</name>
+        <qualifiedname>ScsSettings::adaptive_scale</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Whether to adaptively update <computeroutput><ref refid="struct_scs_settings_1a05811a0cf51693d9cc09314826e1b0f9" kindref="member">scale</ref></computeroutput>. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="67" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a222d6db2f694cb885709455da9499984" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::adaptive_diag_scale</definition>
+        <argsstring></argsstring>
+        <name>adaptive_diag_scale</name>
+        <qualifiedname>ScsSettings::adaptive_diag_scale</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Dynamic diagonal rescaling from residual profiles: 0 = off, 1 = per-row (rescales the R_y diagonal from the row-wise primal residual profile; uniform within non-polyhedral cone blocks; the default). Requires <computeroutput><ref refid="struct_scs_settings_1a34b066f818ce7c3e9f34fef42ff31ce3" kindref="member">adaptive_scale</ref></computeroutput> (silently disabled without it). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="73" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a8d9538a4016c862f544fae86858eb378" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::rho_x</definition>
+        <argsstring></argsstring>
+        <name>rho_x</name>
+        <qualifiedname>ScsSettings::rho_x</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Primal constraint scaling factor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="75" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a1ae1728151be99b3f0d8853c614627eb" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::max_iters</definition>
+        <argsstring></argsstring>
+        <name>max_iters</name>
+        <qualifiedname>ScsSettings::max_iters</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Maximum iterations to take. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="77" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1ab689a1a138eab38c1171831d09d8bfd3" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::eps_abs</definition>
+        <argsstring></argsstring>
+        <name>eps_abs</name>
+        <qualifiedname>ScsSettings::eps_abs</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Absolute convergence tolerance. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="79" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a1970c2376c0c5a7076a07c66199ecd15" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::eps_rel</definition>
+        <argsstring></argsstring>
+        <name>eps_rel</name>
+        <qualifiedname>ScsSettings::eps_rel</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Relative convergence tolerance. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="81" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="81" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1ac615fa0b6eca766044e205be39351e8b" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::eps_infeas</definition>
+        <argsstring></argsstring>
+        <name>eps_infeas</name>
+        <qualifiedname>ScsSettings::eps_infeas</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Infeasible convergence tolerance. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="83" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="83" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1afd89acae2fe12e5e36f0fbdafd68b6d1" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::alpha</definition>
+        <argsstring></argsstring>
+        <name>alpha</name>
+        <qualifiedname>ScsSettings::alpha</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Douglas-Rachford relaxation parameter. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="85" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="85" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a2a166c20871e3c96f9f7a163699c4d16" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::time_limit_secs</definition>
+        <argsstring></argsstring>
+        <name>time_limit_secs</name>
+        <qualifiedname>ScsSettings::time_limit_secs</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Time limit in secs (can be fractional). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="87" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a5d066e6c38e3547139f7842f313f91ef" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::verbose</definition>
+        <argsstring></argsstring>
+        <name>verbose</name>
+        <qualifiedname>ScsSettings::verbose</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Whether to log progress to stdout. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="89" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1af1086d138c50ed09a80d4fe4f2b11543" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::warm_start</definition>
+        <argsstring></argsstring>
+        <name>warm_start</name>
+        <qualifiedname>ScsSettings::warm_start</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Whether to use warm start (put initial guess in <ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref> struct). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="91" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="91" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a493462ada611f12889b7570feed4b4f0" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::acceleration_lookback</definition>
+        <argsstring></argsstring>
+        <name>acceleration_lookback</name>
+        <qualifiedname>ScsSettings::acceleration_lookback</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Memory for acceleration. Set to 0 to disable AA. Must be nonnegative. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="93" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="93" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a9ee32ae3b1f60ad00c8498796cb6c166" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::acceleration_interval</definition>
+        <argsstring></argsstring>
+        <name>acceleration_interval</name>
+        <qualifiedname>ScsSettings::acceleration_interval</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Interval to apply acceleration. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="95" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="95" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a4c90c885f08b4d945fa1c5cc061174e2" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsSettings::acceleration_type_1</definition>
+        <argsstring></argsstring>
+        <name>acceleration_type_1</name>
+        <qualifiedname>ScsSettings::acceleration_type_1</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Whether AA uses type-I (1) or type-II (0). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="97" column="11" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="97" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a42aa66a28e7b1b7e5bce6d1a523e0f86" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::acceleration_regularization</definition>
+        <argsstring></argsstring>
+        <name>acceleration_regularization</name>
+        <qualifiedname>ScsSettings::acceleration_regularization</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Tikhonov regularization for the AA least-squares solve. See <computeroutput><ref refid="aa_8h_1a1c40e18d10a609fd7f132cb92f40baed" kindref="member">aa_init</ref></computeroutput> in <ref refid="aa_8h" kindref="compound">include/aa.h</ref> for the sign-encoded modes. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="100" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="100" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1aad397a304046db33c0e5805de9415adf" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsSettings::acceleration_relaxation</definition>
+        <argsstring></argsstring>
+        <name>acceleration_relaxation</name>
+        <qualifiedname>ScsSettings::acceleration_relaxation</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>AA relaxation factor in [0, 2]. 1.0 recovers vanilla AA. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="102" column="13" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="102" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a167de72c9887564aac8d3a806144669d" prot="public" static="no" mutable="no">
+        <type>const char *</type>
+        <definition>const char* ScsSettings::write_data_filename</definition>
+        <argsstring></argsstring>
+        <name>write_data_filename</name>
+        <qualifiedname>ScsSettings::write_data_filename</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>String, if set will dump raw prob data to this file. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="104" column="14" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="104" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_settings_1a3eb87e609ef062ef1a30a3c6bf7b9d15" prot="public" static="no" mutable="no">
+        <type>const char *</type>
+        <definition>const char* ScsSettings::log_csv_filename</definition>
+        <argsstring></argsstring>
+        <name>log_csv_filename</name>
+        <qualifiedname>ScsSettings::log_csv_filename</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>String, if set will log data to this csv file (makes SCS very slow). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs.h" line="106" column="14" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="106" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Struct containing all settings. </para>
+    </detaileddescription>
+    <location file="/private/tmp/scs-400/include/scs.h" line="61" column="1" bodyfile="/private/tmp/scs-400/include/scs.h" bodystart="61" bodyend="107"/>
+    <listofallmembers>
+      <member refid="struct_scs_settings_1a9ee32ae3b1f60ad00c8498796cb6c166" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>acceleration_interval</name></member>
+      <member refid="struct_scs_settings_1a493462ada611f12889b7570feed4b4f0" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>acceleration_lookback</name></member>
+      <member refid="struct_scs_settings_1a42aa66a28e7b1b7e5bce6d1a523e0f86" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>acceleration_regularization</name></member>
+      <member refid="struct_scs_settings_1aad397a304046db33c0e5805de9415adf" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>acceleration_relaxation</name></member>
+      <member refid="struct_scs_settings_1a4c90c885f08b4d945fa1c5cc061174e2" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>acceleration_type_1</name></member>
+      <member refid="struct_scs_settings_1a222d6db2f694cb885709455da9499984" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>adaptive_diag_scale</name></member>
+      <member refid="struct_scs_settings_1a34b066f818ce7c3e9f34fef42ff31ce3" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>adaptive_scale</name></member>
+      <member refid="struct_scs_settings_1afd89acae2fe12e5e36f0fbdafd68b6d1" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>alpha</name></member>
+      <member refid="struct_scs_settings_1ab689a1a138eab38c1171831d09d8bfd3" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>eps_abs</name></member>
+      <member refid="struct_scs_settings_1ac615fa0b6eca766044e205be39351e8b" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>eps_infeas</name></member>
+      <member refid="struct_scs_settings_1a1970c2376c0c5a7076a07c66199ecd15" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>eps_rel</name></member>
+      <member refid="struct_scs_settings_1a3eb87e609ef062ef1a30a3c6bf7b9d15" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>log_csv_filename</name></member>
+      <member refid="struct_scs_settings_1a1ae1728151be99b3f0d8853c614627eb" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>max_iters</name></member>
+      <member refid="struct_scs_settings_1adde12365a494d540101d4227dab13a18" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>normalize</name></member>
+      <member refid="struct_scs_settings_1a8d9538a4016c862f544fae86858eb378" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>rho_x</name></member>
+      <member refid="struct_scs_settings_1a05811a0cf51693d9cc09314826e1b0f9" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>scale</name></member>
+      <member refid="struct_scs_settings_1a2a166c20871e3c96f9f7a163699c4d16" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>time_limit_secs</name></member>
+      <member refid="struct_scs_settings_1a5d066e6c38e3547139f7842f313f91ef" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>verbose</name></member>
+      <member refid="struct_scs_settings_1af1086d138c50ed09a80d4fe4f2b11543" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>warm_start</name></member>
+      <member refid="struct_scs_settings_1a167de72c9887564aac8d3a806144669d" prot="public" virt="non-virtual"><scope>ScsSettings</scope><name>write_data_filename</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

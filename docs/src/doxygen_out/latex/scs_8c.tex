@@ -1,0 +1,526 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+src/\+scs.c File Reference}
+\hypertarget{scs_8c}{}\label{scs_8c}\index{/private/tmp/scs-\/400/src/scs.c@{/private/tmp/scs-\/400/src/scs.c}}
+{\ttfamily \+\#include "{}scs.\+h"{}}\newline
+{\ttfamily \+\#include "{}aa.\+h"{}}\newline
+{\ttfamily \+\#include "{}cones.\+h"{}}\newline
+{\ttfamily \+\#include "{}ctrlc.\+h"{}}\newline
+{\ttfamily \+\#include "{}glbopts.\+h"{}}\newline
+{\ttfamily \+\#include "{}linalg.\+h"{}}\newline
+{\ttfamily \+\#include "{}linsys.\+h"{}}\newline
+{\ttfamily \+\#include "{}normalize.\+h"{}}\newline
+{\ttfamily \+\#include "{}rw.\+h"{}}\newline
+{\ttfamily \+\#include "{}scs\+\_\+matrix.\+h"{}}\newline
+{\ttfamily \+\#include "{}scs\+\_\+work.\+h"{}}\newline
+{\ttfamily \+\#include "{}util.\+h"{}}\newline
+{\ttfamily \+\#include $<$string.\+h$>$}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a0a593911309333290ee75409c847851d}{print\+\_\+init\+\_\+header}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a49a98a0e44657eb5e4a87cbe9d5afef7}{print\+\_\+header}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_af39bb840700b3d2b6c2ea392abbc34d6}{print\+\_\+summary}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} i, \doxymbox{\hyperlink{struct__scs__timer}{\+\_\+scs\+\_\+timer}} \texorpdfstring{$\ast$}{*}solve\+\_\+timer)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_aa59ffc5c6a44d6d5247674ecee36d5b4}{print\+\_\+footer}} (\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a6c2ab3a6d1823b96dc69d804543af4c8}{free\+\_\+residuals}} (\doxymbox{\hyperlink{struct_scs_residuals}{Scs\+Residuals}} \texorpdfstring{$\ast$}{*}r)
+\item 
+static \doxymbox{\hyperlink{struct_scs_residuals}{Scs\+Residuals}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{scs_8c_a4cffc3d4a319e9831eefc10efc268bcc}{init\+\_\+residuals}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a2958927e432149628401b47eb2bd0a84}{set\+\_\+info\+\_\+aa\+\_\+stats}} (\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info, const \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{Aa\+Work}} \texorpdfstring{$\ast$}{*}accel)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_ac9f37f1bf46a3600ea196fd9cf2f7891}{populate\+\_\+on\+\_\+failure}} (\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} m, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} status\+\_\+val, const char \texorpdfstring{$\ast$}{*}msg)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a6e550c89fa522c8ebe6b32e7647cb143}{failure}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} m, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} stint, const char \texorpdfstring{$\ast$}{*}msg, const char \texorpdfstring{$\ast$}{*}ststr)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a355522fea365a496d192c07d784d7219}{compute\+\_\+residuals}} (\doxymbox{\hyperlink{struct_scs_residuals}{Scs\+Residuals}} \texorpdfstring{$\ast$}{*}r, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} m, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} pd)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_af039217ce8e0ddb603c84ccc0354209b}{unnormalize\+\_\+residuals}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a7be12dcff5e6c1d5009f47d29af39206}{populate\+\_\+residual\+\_\+struct}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a014618fccce208a76f28c91ed116dd69}{has\+\_\+converged}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a71982c8dc8c6435da8aece4b6bb192e8}{warm\+\_\+start\+\_\+vars}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_ad3b1ac0e4637712eeaaa148a49d2bdcf}{cold\+\_\+start\+\_\+vars}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{scs_8c_ade19994549b059f234dff015d4d0caa6}{root\+\_\+plus}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}p, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}mu, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} eta)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a769e9549e90fb8e19922e3c761920a09}{project\+\_\+lin\+\_\+sys}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_acdc131528c8ac95eabd659db67752335}{compute\+\_\+rsk}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_ac1b2e39ef19d52c4365a3df7c7ae010c}{update\+\_\+dual\+\_\+vars}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_ab5ab70a50d8e9d1fff2212838ef92494}{project\+\_\+cones}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a2166e220777cd8364acf93025ac96783}{finalize}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_ad00b2a385716dbc946b99573e8d7804e}{set\+\_\+diag\+\_\+r}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{scs_8c_a396db20001a17a16fc234c3037aaed9a}{init\+\_\+work}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a2033c884abaabb4c4ec90f0ca776830e}{update\+\_\+work\+\_\+cache}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a7dd1a870c1c87ed96e72ee384fa24594}{reset\+\_\+tracking}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a179db91b40e756ab0e921dcf9ca067ab}{update\+\_\+work}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_ae2edf6679e40a2b5d0d2415712442935}{update\+\_\+scale}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a60affda4855a3f25473d1f46837da10d}{normalize\+\_\+v}} (\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}v, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} len)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a9cac101a9649bd252b96b547fec78c13}{validate}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a8fed4c72c21bbeb66f72fde2244d884e}{\+\_\+is\+\_\+nan}} (\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} x)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{scs_8c_ab339d8dc02def4f082fb18b15206df53}{root\+\_\+plus\+\_\+from\+\_\+coeffs}} (\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} a, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} b, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} c)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_aa46471cb3154154dd5d0ca15999f5308}{sety}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_adaded41c14e1d79bbd14d17efd6c8dc6}{sets}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a945045718ee3436dc39ca8dacc06a5e7}{setx}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a571cd477c98bc53db9b416f1e7e0a839}{set\+\_\+solved}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a57f9de16317927a78a62c3e6cc1bcc5d}{set\+\_\+infeasible}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_a5b719f72093e7b4bffe20ba6c6ff6271}{set\+\_\+unbounded}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_ad0da81e592273eaffe6c33a6738f474e}{set\+\_\+unfinished}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a80086e0cd63df7fd5845d5b478c4494b}{should\+\_\+update\+\_\+r}} (\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} factor)
+\item 
+static \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{scs_8c_ad9580d4eb9625dc8b67c3cdffb5d2725}{row\+\_\+rel\+\_\+res}} (const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} i)
+\item 
+static void \doxymbox{\hyperlink{scs_8c_aae8599ee1d315c6cc42c9e4c5cef55f6}{set\+\_\+den\+\_\+floor}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{scs_8c_aa8aaa18e26ccb5f65e772aef7cc168c3}{scs\+\_\+init}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_ae19c84d79a22890aa957067824c0b088}{scs\+\_\+update}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}b, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}c)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a58fd31598ebab93ce1121f87df460566}{scs\+\_\+solve}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} warm\+\_\+start)
+\item 
+void \doxymbox{\hyperlink{scs_8c_ad09d2ed5fe68896d2b7056cb5a9a3e0d}{scs\+\_\+finish}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_acd26da2b245ff5341bce5e3b6a803356}{scs}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{scs_8c_a69e443fb2cb43ab9d56b31e2e951f954}{HEADER}} \+[$\,$]\+
+\item 
+static const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_a56a7e5476d46d9db0ec7042087b6ee38}{HSPACE}} = 9
+\item 
+static const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_aa1ea2c5afe2318a0927bcb6fdbe2dce8}{HEADER\+\_\+\+LEN}} = 7
+\item 
+static const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8c_af9e827a72024a90576883983c9c8f5f5}{LINE\+\_\+\+LEN}} = 66
+\end{DoxyCompactItemize}
+
+
+\label{doc-func-members}
+\Hypertarget{scs_8c_doc-func-members}
+\doxysubsection{Function Documentation}
+\Hypertarget{scs_8c_a8fed4c72c21bbeb66f72fde2244d884e}\index{scs.c@{scs.c}!\_is\_nan@{\_is\_nan}}
+\index{\_is\_nan@{\_is\_nan}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{\_is\_nan()}{\_is\_nan()}}
+{\footnotesize\ttfamily \label{scs_8c_a8fed4c72c21bbeb66f72fde2244d884e} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \+\_\+is\+\_\+nan (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{x}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ad3b1ac0e4637712eeaaa148a49d2bdcf}\index{scs.c@{scs.c}!cold\_start\_vars@{cold\_start\_vars}}
+\index{cold\_start\_vars@{cold\_start\_vars}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{cold\_start\_vars()}{cold\_start\_vars()}}
+{\footnotesize\ttfamily \label{scs_8c_ad3b1ac0e4637712eeaaa148a49d2bdcf} 
+void cold\+\_\+start\+\_\+vars (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a355522fea365a496d192c07d784d7219}\index{scs.c@{scs.c}!compute\_residuals@{compute\_residuals}}
+\index{compute\_residuals@{compute\_residuals}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{compute\_residuals()}{compute\_residuals()}}
+{\footnotesize\ttfamily \label{scs_8c_a355522fea365a496d192c07d784d7219} 
+void compute\+\_\+residuals (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_residuals}{Scs\+Residuals}} \texorpdfstring{$\ast$}{*}}]{r}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{m}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{pd}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_acdc131528c8ac95eabd659db67752335}\index{scs.c@{scs.c}!compute\_rsk@{compute\_rsk}}
+\index{compute\_rsk@{compute\_rsk}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{compute\_rsk()}{compute\_rsk()}}
+{\footnotesize\ttfamily \label{scs_8c_acdc131528c8ac95eabd659db67752335} 
+void compute\+\_\+rsk (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a6e550c89fa522c8ebe6b32e7647cb143}\index{scs.c@{scs.c}!failure@{failure}}
+\index{failure@{failure}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{failure()}{failure()}}
+{\footnotesize\ttfamily \label{scs_8c_a6e550c89fa522c8ebe6b32e7647cb143} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} failure (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{m}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{stint}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{msg}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{ststr}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a2166e220777cd8364acf93025ac96783}\index{scs.c@{scs.c}!finalize@{finalize}}
+\index{finalize@{finalize}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{finalize()}{finalize()}}
+{\footnotesize\ttfamily \label{scs_8c_a2166e220777cd8364acf93025ac96783} 
+void finalize (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a6c2ab3a6d1823b96dc69d804543af4c8}\index{scs.c@{scs.c}!free\_residuals@{free\_residuals}}
+\index{free\_residuals@{free\_residuals}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{free\_residuals()}{free\_residuals()}}
+{\footnotesize\ttfamily \label{scs_8c_a6c2ab3a6d1823b96dc69d804543af4c8} 
+void free\+\_\+residuals (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_residuals}{Scs\+Residuals}} \texorpdfstring{$\ast$}{*}}]{r}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a014618fccce208a76f28c91ed116dd69}\index{scs.c@{scs.c}!has\_converged@{has\_converged}}
+\index{has\_converged@{has\_converged}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{has\_converged()}{has\_converged()}}
+{\footnotesize\ttfamily \label{scs_8c_a014618fccce208a76f28c91ed116dd69} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} has\+\_\+converged (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a4cffc3d4a319e9831eefc10efc268bcc}\index{scs.c@{scs.c}!init\_residuals@{init\_residuals}}
+\index{init\_residuals@{init\_residuals}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{init\_residuals()}{init\_residuals()}}
+{\footnotesize\ttfamily \label{scs_8c_a4cffc3d4a319e9831eefc10efc268bcc} 
+\doxymbox{\hyperlink{struct_scs_residuals}{Scs\+Residuals}} \texorpdfstring{$\ast$}{*} init\+\_\+residuals (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a396db20001a17a16fc234c3037aaed9a}\index{scs.c@{scs.c}!init\_work@{init\_work}}
+\index{init\_work@{init\_work}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{init\_work()}{init\_work()}}
+{\footnotesize\ttfamily \label{scs_8c_a396db20001a17a16fc234c3037aaed9a} 
+\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*} init\+\_\+work (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a60affda4855a3f25473d1f46837da10d}\index{scs.c@{scs.c}!normalize\_v@{normalize\_v}}
+\index{normalize\_v@{normalize\_v}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{normalize\_v()}{normalize\_v()}}
+{\footnotesize\ttfamily \label{scs_8c_a60affda4855a3f25473d1f46837da10d} 
+void normalize\+\_\+v (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{v}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{len}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ac9f37f1bf46a3600ea196fd9cf2f7891}\index{scs.c@{scs.c}!populate\_on\_failure@{populate\_on\_failure}}
+\index{populate\_on\_failure@{populate\_on\_failure}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{populate\_on\_failure()}{populate\_on\_failure()}}
+{\footnotesize\ttfamily \label{scs_8c_ac9f37f1bf46a3600ea196fd9cf2f7891} 
+void populate\+\_\+on\+\_\+failure (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{m}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{status\+\_\+val}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{msg}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a7be12dcff5e6c1d5009f47d29af39206}\index{scs.c@{scs.c}!populate\_residual\_struct@{populate\_residual\_struct}}
+\index{populate\_residual\_struct@{populate\_residual\_struct}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{populate\_residual\_struct()}{populate\_residual\_struct()}}
+{\footnotesize\ttfamily \label{scs_8c_a7be12dcff5e6c1d5009f47d29af39206} 
+void populate\+\_\+residual\+\_\+struct (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_aa59ffc5c6a44d6d5247674ecee36d5b4}\index{scs.c@{scs.c}!print\_footer@{print\_footer}}
+\index{print\_footer@{print\_footer}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{print\_footer()}{print\_footer()}}
+{\footnotesize\ttfamily \label{scs_8c_aa59ffc5c6a44d6d5247674ecee36d5b4} 
+void print\+\_\+footer (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a49a98a0e44657eb5e4a87cbe9d5afef7}\index{scs.c@{scs.c}!print\_header@{print\_header}}
+\index{print\_header@{print\_header}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{print\_header()}{print\_header()}}
+{\footnotesize\ttfamily \label{scs_8c_a49a98a0e44657eb5e4a87cbe9d5afef7} 
+void print\+\_\+header (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a0a593911309333290ee75409c847851d}\index{scs.c@{scs.c}!print\_init\_header@{print\_init\_header}}
+\index{print\_init\_header@{print\_init\_header}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{print\_init\_header()}{print\_init\_header()}}
+{\footnotesize\ttfamily \label{scs_8c_a0a593911309333290ee75409c847851d} 
+void print\+\_\+init\+\_\+header (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_af39bb840700b3d2b6c2ea392abbc34d6}\index{scs.c@{scs.c}!print\_summary@{print\_summary}}
+\index{print\_summary@{print\_summary}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{print\_summary()}{print\_summary()}}
+{\footnotesize\ttfamily \label{scs_8c_af39bb840700b3d2b6c2ea392abbc34d6} 
+void print\+\_\+summary (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{i}{, }\item[{\doxymbox{\hyperlink{struct__scs__timer}{\+\_\+scs\+\_\+timer}} \texorpdfstring{$\ast$}{*}}]{solve\+\_\+timer}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ab5ab70a50d8e9d1fff2212838ef92494}\index{scs.c@{scs.c}!project\_cones@{project\_cones}}
+\index{project\_cones@{project\_cones}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{project\_cones()}{project\_cones()}}
+{\footnotesize\ttfamily \label{scs_8c_ab5ab70a50d8e9d1fff2212838ef92494} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} project\+\_\+cones (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a769e9549e90fb8e19922e3c761920a09}\index{scs.c@{scs.c}!project\_lin\_sys@{project\_lin\_sys}}
+\index{project\_lin\_sys@{project\_lin\_sys}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{project\_lin\_sys()}{project\_lin\_sys()}}
+{\footnotesize\ttfamily \label{scs_8c_a769e9549e90fb8e19922e3c761920a09} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} project\+\_\+lin\+\_\+sys (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a7dd1a870c1c87ed96e72ee384fa24594}\index{scs.c@{scs.c}!reset\_tracking@{reset\_tracking}}
+\index{reset\_tracking@{reset\_tracking}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{reset\_tracking()}{reset\_tracking()}}
+{\footnotesize\ttfamily \label{scs_8c_a7dd1a870c1c87ed96e72ee384fa24594} 
+void reset\+\_\+tracking (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ade19994549b059f234dff015d4d0caa6}\index{scs.c@{scs.c}!root\_plus@{root\_plus}}
+\index{root\_plus@{root\_plus}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{root\_plus()}{root\_plus()}}
+{\footnotesize\ttfamily \label{scs_8c_ade19994549b059f234dff015d4d0caa6} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} root\+\_\+plus (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{p}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{mu}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{eta}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ab339d8dc02def4f082fb18b15206df53}\index{scs.c@{scs.c}!root\_plus\_from\_coeffs@{root\_plus\_from\_coeffs}}
+\index{root\_plus\_from\_coeffs@{root\_plus\_from\_coeffs}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{root\_plus\_from\_coeffs()}{root\_plus\_from\_coeffs()}}
+{\footnotesize\ttfamily \label{scs_8c_ab339d8dc02def4f082fb18b15206df53} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} root\+\_\+plus\+\_\+from\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{a}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{b}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{c}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ad9580d4eb9625dc8b67c3cdffb5d2725}\index{scs.c@{scs.c}!row\_rel\_res@{row\_rel\_res}}
+\index{row\_rel\_res@{row\_rel\_res}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{row\_rel\_res()}{row\_rel\_res()}}
+{\footnotesize\ttfamily \label{scs_8c_ad9580d4eb9625dc8b67c3cdffb5d2725} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} row\+\_\+rel\+\_\+res (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{i}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_acd26da2b245ff5341bce5e3b6a803356}\index{scs.c@{scs.c}!scs@{scs}}
+\index{scs@{scs}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{scs()}{scs()}}
+{\footnotesize\ttfamily \label{scs_8c_acd26da2b245ff5341bce5e3b6a803356} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})}
+
+Solve quadratic cone program defined by data in d and cone k.
+
+All the inputs must already be allocated in memory before calling.
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & Problem data. \\
+\hline
+{\em k} & Cone data. \\
+\hline
+{\em stgs} & SCS solver settings. \\
+\hline
+{\em sol} & Solution will be stored here. If members {\ttfamily x}, {\ttfamily y}, {\ttfamily s} are NULL then SCS will allocate memory for them. \\
+\hline
+{\em info} & Information about the solve will be stored here. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Flag containing problem status (see {\itshape \doxylink{glbopts_8h}{glbopts.\+h}}). 
+\end{DoxyReturn}
+\Hypertarget{scs_8c_ad09d2ed5fe68896d2b7056cb5a9a3e0d}\index{scs.c@{scs.c}!scs\_finish@{scs\_finish}}
+\index{scs\_finish@{scs\_finish}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{scs\_finish()}{scs\_finish()}}
+{\footnotesize\ttfamily \label{scs_8c_ad09d2ed5fe68896d2b7056cb5a9a3e0d} 
+void scs\+\_\+finish (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+Clean up allocated SCS workspace.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Workspace allocated by init, will be deallocated. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{scs_8c_aa8aaa18e26ccb5f65e772aef7cc168c3}\index{scs.c@{scs.c}!scs\_init@{scs\_init}}
+\index{scs\_init@{scs\_init}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{scs\_init()}{scs\_init()}}
+{\footnotesize\ttfamily \label{scs_8c_aa8aaa18e26ccb5f65e772aef7cc168c3} 
+\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*} scs\+\_\+init (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+
+Initialize SCS and allocate memory.
+
+All the inputs must be already allocated in memory before calling. After this function returns then the memory associated with {\ttfamily d}, {\ttfamily k}, and {\ttfamily stgs} can be freed as SCS maintains deep copies of these internally.
+
+It performs:\+
+\begin{DoxyItemize}
+\item data and settings validation
+\item problem data scaling
+\item automatic parameters tuning (if enabled)
+\item setup linear system solver:\+
+\begin{DoxyItemize}
+\item direct solver:\+ KKT matrix factorization is performed here
+\item indirect solver:\+ KKT matrix preconditioning is performed here.
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & Problem data. \\
+\hline
+{\em k} & Cone data. \\
+\hline
+{\em stgs} & SCS solve settings. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Solver workspace. 
+\end{DoxyReturn}
+\Hypertarget{scs_8c_a58fd31598ebab93ce1121f87df460566}\index{scs.c@{scs.c}!scs\_solve@{scs\_solve}}
+\index{scs\_solve@{scs\_solve}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{scs\_solve()}{scs\_solve()}}
+{\footnotesize\ttfamily \label{scs_8c_a58fd31598ebab93ce1121f87df460566} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs\+\_\+solve (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{warm\+\_\+start}{}\end{DoxyParamCaption})}
+
+Solve quadratic cone program initialized by scs\+\_\+init.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Workspace allocated by scs\+\_\+init. \\
+\hline
+{\em sol} & Solution will be stored here. If members {\ttfamily x}, {\ttfamily y}, {\ttfamily s} are NULL then SCS will allocate memory for them which must be freed by the caller. \\
+\hline
+{\em info} & Information about the solve will be stored here. \\
+\hline
+{\em warm\+\_\+start} & Whether to use the entries of {\ttfamily sol} as warm-\/start for the solve.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Flag containing problem status (see {\itshape \doxylink{glbopts_8h}{glbopts.\+h}}). 
+\end{DoxyReturn}
+\Hypertarget{scs_8c_ae19c84d79a22890aa957067824c0b088}\index{scs.c@{scs.c}!scs\_update@{scs\_update}}
+\index{scs\_update@{scs\_update}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{scs\_update()}{scs\_update()}}
+{\footnotesize\ttfamily \label{scs_8c_ae19c84d79a22890aa957067824c0b088} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs\+\_\+update (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{b}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{c}{}\end{DoxyParamCaption})}
+
+Update the {\ttfamily b} vector, {\ttfamily c} vector, or both, before another solve call.
+
+After a solve we can reuse the SCS workspace in another solve if the only problem data that has changed are the {\ttfamily b} and {\ttfamily c} vectors.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & SCS workspace from scs\+\_\+init (modified in-\/place). \\
+\hline
+{\em b} & New {\ttfamily b} vector (can be {\ttfamily \doxylink{scs_8h_a0be174af2a751cfa8a91c310d799943f}{SCS\+\_\+\+NULL}} if unchanged). \\
+\hline
+{\em c} & New {\ttfamily c} vector (can be {\ttfamily \doxylink{scs_8h_a0be174af2a751cfa8a91c310d799943f}{SCS\+\_\+\+NULL}} if unchanged).\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if update successful. 
+\end{DoxyReturn}
+\Hypertarget{scs_8c_aae8599ee1d315c6cc42c9e4c5cef55f6}\index{scs.c@{scs.c}!set\_den\_floor@{set\_den\_floor}}
+\index{set\_den\_floor@{set\_den\_floor}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_den\_floor()}{set\_den\_floor()}}
+{\footnotesize\ttfamily \label{scs_8c_aae8599ee1d315c6cc42c9e4c5cef55f6} 
+void set\+\_\+den\+\_\+floor (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ad00b2a385716dbc946b99573e8d7804e}\index{scs.c@{scs.c}!set\_diag\_r@{set\_diag\_r}}
+\index{set\_diag\_r@{set\_diag\_r}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_diag\_r()}{set\_diag\_r()}}
+{\footnotesize\ttfamily \label{scs_8c_ad00b2a385716dbc946b99573e8d7804e} 
+void set\+\_\+diag\+\_\+r (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a57f9de16317927a78a62c3e6cc1bcc5d}\index{scs.c@{scs.c}!set\_infeasible@{set\_infeasible}}
+\index{set\_infeasible@{set\_infeasible}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_infeasible()}{set\_infeasible()}}
+{\footnotesize\ttfamily \label{scs_8c_a57f9de16317927a78a62c3e6cc1bcc5d} 
+void set\+\_\+infeasible (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a2958927e432149628401b47eb2bd0a84}\index{scs.c@{scs.c}!set\_info\_aa\_stats@{set\_info\_aa\_stats}}
+\index{set\_info\_aa\_stats@{set\_info\_aa\_stats}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_info\_aa\_stats()}{set\_info\_aa\_stats()}}
+{\footnotesize\ttfamily \label{scs_8c_a2958927e432149628401b47eb2bd0a84} 
+void set\+\_\+info\+\_\+aa\+\_\+stats (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{, }\item[{const \doxymbox{\hyperlink{aa_8h_abccab62fbdd940ce82c2e250335d8bcb}{Aa\+Work}} \texorpdfstring{$\ast$}{*}}]{accel}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a571cd477c98bc53db9b416f1e7e0a839}\index{scs.c@{scs.c}!set\_solved@{set\_solved}}
+\index{set\_solved@{set\_solved}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_solved()}{set\_solved()}}
+{\footnotesize\ttfamily \label{scs_8c_a571cd477c98bc53db9b416f1e7e0a839} 
+void set\+\_\+solved (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a5b719f72093e7b4bffe20ba6c6ff6271}\index{scs.c@{scs.c}!set\_unbounded@{set\_unbounded}}
+\index{set\_unbounded@{set\_unbounded}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_unbounded()}{set\_unbounded()}}
+{\footnotesize\ttfamily \label{scs_8c_a5b719f72093e7b4bffe20ba6c6ff6271} 
+void set\+\_\+unbounded (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ad0da81e592273eaffe6c33a6738f474e}\index{scs.c@{scs.c}!set\_unfinished@{set\_unfinished}}
+\index{set\_unfinished@{set\_unfinished}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{set\_unfinished()}{set\_unfinished()}}
+{\footnotesize\ttfamily \label{scs_8c_ad0da81e592273eaffe6c33a6738f474e} 
+void set\+\_\+unfinished (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_adaded41c14e1d79bbd14d17efd6c8dc6}\index{scs.c@{scs.c}!sets@{sets}}
+\index{sets@{sets}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{sets()}{sets()}}
+{\footnotesize\ttfamily \label{scs_8c_adaded41c14e1d79bbd14d17efd6c8dc6} 
+void sets (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a945045718ee3436dc39ca8dacc06a5e7}\index{scs.c@{scs.c}!setx@{setx}}
+\index{setx@{setx}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{setx()}{setx()}}
+{\footnotesize\ttfamily \label{scs_8c_a945045718ee3436dc39ca8dacc06a5e7} 
+void setx (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_aa46471cb3154154dd5d0ca15999f5308}\index{scs.c@{scs.c}!sety@{sety}}
+\index{sety@{sety}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{sety()}{sety()}}
+{\footnotesize\ttfamily \label{scs_8c_aa46471cb3154154dd5d0ca15999f5308} 
+void sety (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a80086e0cd63df7fd5845d5b478c4494b}\index{scs.c@{scs.c}!should\_update\_r@{should\_update\_r}}
+\index{should\_update\_r@{should\_update\_r}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{should\_update\_r()}{should\_update\_r()}}
+{\footnotesize\ttfamily \label{scs_8c_a80086e0cd63df7fd5845d5b478c4494b} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} should\+\_\+update\+\_\+r (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{factor}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_af039217ce8e0ddb603c84ccc0354209b}\index{scs.c@{scs.c}!unnormalize\_residuals@{unnormalize\_residuals}}
+\index{unnormalize\_residuals@{unnormalize\_residuals}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{unnormalize\_residuals()}{unnormalize\_residuals()}}
+{\footnotesize\ttfamily \label{scs_8c_af039217ce8e0ddb603c84ccc0354209b} 
+void unnormalize\+\_\+residuals (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ac1b2e39ef19d52c4365a3df7c7ae010c}\index{scs.c@{scs.c}!update\_dual\_vars@{update\_dual\_vars}}
+\index{update\_dual\_vars@{update\_dual\_vars}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{update\_dual\_vars()}{update\_dual\_vars()}}
+{\footnotesize\ttfamily \label{scs_8c_ac1b2e39ef19d52c4365a3df7c7ae010c} 
+void update\+\_\+dual\+\_\+vars (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_ae2edf6679e40a2b5d0d2415712442935}\index{scs.c@{scs.c}!update\_scale@{update\_scale}}
+\index{update\_scale@{update\_scale}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{update\_scale()}{update\_scale()}}
+{\footnotesize\ttfamily \label{scs_8c_ae2edf6679e40a2b5d0d2415712442935} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} update\+\_\+scale (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a179db91b40e756ab0e921dcf9ca067ab}\index{scs.c@{scs.c}!update\_work@{update\_work}}
+\index{update\_work@{update\_work}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{update\_work()}{update\_work()}}
+{\footnotesize\ttfamily \label{scs_8c_a179db91b40e756ab0e921dcf9ca067ab} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} update\+\_\+work (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a2033c884abaabb4c4ec90f0ca776830e}\index{scs.c@{scs.c}!update\_work\_cache@{update\_work\_cache}}
+\index{update\_work\_cache@{update\_work\_cache}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{update\_work\_cache()}{update\_work\_cache()}}
+{\footnotesize\ttfamily \label{scs_8c_a2033c884abaabb4c4ec90f0ca776830e} 
+void update\+\_\+work\+\_\+cache (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a9cac101a9649bd252b96b547fec78c13}\index{scs.c@{scs.c}!validate@{validate}}
+\index{validate@{validate}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{validate()}{validate()}}
+{\footnotesize\ttfamily \label{scs_8c_a9cac101a9649bd252b96b547fec78c13} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} validate (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a71982c8dc8c6435da8aece4b6bb192e8}\index{scs.c@{scs.c}!warm\_start\_vars@{warm\_start\_vars}}
+\index{warm\_start\_vars@{warm\_start\_vars}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{warm\_start\_vars()}{warm\_start\_vars()}}
+{\footnotesize\ttfamily \label{scs_8c_a71982c8dc8c6435da8aece4b6bb192e8} 
+void warm\+\_\+start\+\_\+vars (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+\label{doc-var-members}
+\Hypertarget{scs_8c_doc-var-members}
+\doxysubsection{Variable Documentation}
+\Hypertarget{scs_8c_a69e443fb2cb43ab9d56b31e2e951f954}\index{scs.c@{scs.c}!HEADER@{HEADER}}
+\index{HEADER@{HEADER}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{HEADER}{HEADER}}
+{\footnotesize\ttfamily \label{scs_8c_a69e443fb2cb43ab9d56b31e2e951f954} 
+const char\texorpdfstring{$\ast$}{*} HEADER\+[$\,$]\+\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value:\+}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ =\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{stringliteral}{"{}\ iter\ "{}},\ \ \ \ \textcolor{stringliteral}{"{}\ pri\ res\ "{}},\ \textcolor{stringliteral}{"{}\ dua\ res\ "{}},\ \textcolor{stringliteral}{"{}\ \ \ gap\ \ \ "{}},}
+\DoxyCodeLine{\ \ \ \ \textcolor{stringliteral}{"{}\ \ \ obj\ \ \ "{}},\ \textcolor{stringliteral}{"{}\ \ scale\ \ "{}},\ \textcolor{stringliteral}{"{}\ time\ (s)"{}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\Hypertarget{scs_8c_aa1ea2c5afe2318a0927bcb6fdbe2dce8}\index{scs.c@{scs.c}!HEADER\_LEN@{HEADER\_LEN}}
+\index{HEADER\_LEN@{HEADER\_LEN}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{HEADER\_LEN}{HEADER\_LEN}}
+{\footnotesize\ttfamily \label{scs_8c_aa1ea2c5afe2318a0927bcb6fdbe2dce8} 
+const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} HEADER\+\_\+\+LEN = 7\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_a56a7e5476d46d9db0ec7042087b6ee38}\index{scs.c@{scs.c}!HSPACE@{HSPACE}}
+\index{HSPACE@{HSPACE}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{HSPACE}{HSPACE}}
+{\footnotesize\ttfamily \label{scs_8c_a56a7e5476d46d9db0ec7042087b6ee38} 
+const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} HSPACE = 9\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{scs_8c_af9e827a72024a90576883983c9c8f5f5}\index{scs.c@{scs.c}!LINE\_LEN@{LINE\_LEN}}
+\index{LINE\_LEN@{LINE\_LEN}!scs.c@{scs.c}}
+\doxysubsubsection{\texorpdfstring{LINE\_LEN}{LINE\_LEN}}
+{\footnotesize\ttfamily \label{scs_8c_af9e827a72024a90576883983c9c8f5f5} 
+const \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} LINE\+\_\+\+LEN = 66\hspace{0.3cm}{\ttfamily [static]}}
+

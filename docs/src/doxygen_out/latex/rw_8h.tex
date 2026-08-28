@@ -1,0 +1,52 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+include/\+rw.h File Reference}
+\hypertarget{rw_8h}{}\label{rw_8h}\index{/private/tmp/scs-\/400/include/rw.h@{/private/tmp/scs-\/400/include/rw.h}}
+{\ttfamily \+\#include "{}glbopts.\+h"{}}\newline
+{\ttfamily \+\#include "{}util.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \doxymbox{\hyperlink{rw_8h_a7b9979320b7ecb0b294c5dce42d27dc9}{\+\_\+scs\+\_\+write\+\_\+data}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8h_a6275633ed875514bd0cb2cd369b1a983}{\+\_\+scs\+\_\+read\+\_\+data}} (const char \texorpdfstring{$\ast$}{*}filename, \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}d, \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}k, \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}stgs)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{rw_8h_ae5713764ef8ed92a348e4d0eda568f61}{\+\_\+scs\+\_\+open\+\_\+csv\+\_\+log\+\_\+file}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+void \doxymbox{\hyperlink{rw_8h_a2a0b7de7d61184337dbd5b6eff04a185}{\+\_\+scs\+\_\+close\+\_\+csv\+\_\+log\+\_\+file}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+void \doxymbox{\hyperlink{rw_8h_af38f3b150401ab8708cdf88b624a6edc}{\+\_\+scs\+\_\+log\+\_\+data\+\_\+to\+\_\+csv}} (const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} iter, \doxymbox{\hyperlink{struct__scs__timer}{\+\_\+scs\+\_\+timer}} \texorpdfstring{$\ast$}{*}solve\+\_\+timer)
+\end{DoxyCompactItemize}
+
+
+\label{doc-func-members}
+\Hypertarget{rw_8h_doc-func-members}
+\doxysubsection{Function Documentation}
+\Hypertarget{rw_8h_a2a0b7de7d61184337dbd5b6eff04a185}\index{rw.h@{rw.h}!\_scs\_close\_csv\_log\_file@{\_scs\_close\_csv\_log\_file}}
+\index{\_scs\_close\_csv\_log\_file@{\_scs\_close\_csv\_log\_file}!rw.h@{rw.h}}
+\doxysubsubsection{\texorpdfstring{\_scs\_close\_csv\_log\_file()}{\_scs\_close\_csv\_log\_file()}}
+{\footnotesize\ttfamily \label{rw_8h_a2a0b7de7d61184337dbd5b6eff04a185} 
+void \+\_\+scs\+\_\+close\+\_\+csv\+\_\+log\+\_\+file (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8h_af38f3b150401ab8708cdf88b624a6edc}\index{rw.h@{rw.h}!\_scs\_log\_data\_to\_csv@{\_scs\_log\_data\_to\_csv}}
+\index{\_scs\_log\_data\_to\_csv@{\_scs\_log\_data\_to\_csv}!rw.h@{rw.h}}
+\doxysubsubsection{\texorpdfstring{\_scs\_log\_data\_to\_csv()}{\_scs\_log\_data\_to\_csv()}}
+{\footnotesize\ttfamily \label{rw_8h_af38f3b150401ab8708cdf88b624a6edc} 
+void \+\_\+scs\+\_\+log\+\_\+data\+\_\+to\+\_\+csv (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{iter}{, }\item[{\doxymbox{\hyperlink{struct__scs__timer}{\+\_\+scs\+\_\+timer}} \texorpdfstring{$\ast$}{*}}]{solve\+\_\+timer}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8h_ae5713764ef8ed92a348e4d0eda568f61}\index{rw.h@{rw.h}!\_scs\_open\_csv\_log\_file@{\_scs\_open\_csv\_log\_file}}
+\index{\_scs\_open\_csv\_log\_file@{\_scs\_open\_csv\_log\_file}!rw.h@{rw.h}}
+\doxysubsubsection{\texorpdfstring{\_scs\_open\_csv\_log\_file()}{\_scs\_open\_csv\_log\_file()}}
+{\footnotesize\ttfamily \label{rw_8h_ae5713764ef8ed92a348e4d0eda568f61} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \+\_\+scs\+\_\+open\+\_\+csv\+\_\+log\+\_\+file (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8h_a6275633ed875514bd0cb2cd369b1a983}\index{rw.h@{rw.h}!\_scs\_read\_data@{\_scs\_read\_data}}
+\index{\_scs\_read\_data@{\_scs\_read\_data}!rw.h@{rw.h}}
+\doxysubsubsection{\texorpdfstring{\_scs\_read\_data()}{\_scs\_read\_data()}}
+{\footnotesize\ttfamily \label{rw_8h_a6275633ed875514bd0cb2cd369b1a983} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \+\_\+scs\+\_\+read\+\_\+data (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{filename}{, }\item[{\doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{d}{, }\item[{\doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{k}{, }\item[{\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+
+\Hypertarget{rw_8h_a7b9979320b7ecb0b294c5dce42d27dc9}\index{rw.h@{rw.h}!\_scs\_write\_data@{\_scs\_write\_data}}
+\index{\_scs\_write\_data@{\_scs\_write\_data}!rw.h@{rw.h}}
+\doxysubsubsection{\texorpdfstring{\_scs\_write\_data()}{\_scs\_write\_data()}}
+{\footnotesize\ttfamily \label{rw_8h_a7b9979320b7ecb0b294c5dce42d27dc9} 
+void \+\_\+scs\+\_\+write\+\_\+data (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+

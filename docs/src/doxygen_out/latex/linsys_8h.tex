@@ -1,0 +1,108 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+include/\+linsys.h File Reference}
+\hypertarget{linsys_8h}{}\label{linsys_8h}\index{/private/tmp/scs-\/400/include/linsys.h@{/private/tmp/scs-\/400/include/linsys.h}}
+{\ttfamily \+\#include "{}glbopts.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{linsys_8h_a0b08a00fdcc184671307a1e119113ec1}{scs\+\_\+init\+\_\+lin\+\_\+sys\+\_\+work}} (const \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}A, const \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}P, const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}diag\+\_\+r)
+\item 
+void \doxymbox{\hyperlink{linsys_8h_a5ae24bcf8738840e3ddedf42fc451a26}{scs\+\_\+free\+\_\+lin\+\_\+sys\+\_\+work}} (\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{linsys_8h_a24229ab88459885462fcc7fa6759467f}{scs\+\_\+solve\+\_\+lin\+\_\+sys}} (\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}b, const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}s, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} tol)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{linsys_8h_a3a78943fd4381d97662c78f5b2586448}{scs\+\_\+update\+\_\+lin\+\_\+sys\+\_\+diag\+\_\+r}} (\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*}w, const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}new\+\_\+diag\+\_\+r)
+\item 
+const char \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{linsys_8h_a5d3ebe89707d22dc70f63a3d151e000f}{scs\+\_\+get\+\_\+lin\+\_\+sys\+\_\+method}} (void)
+\end{DoxyCompactItemize}
+
+
+\label{doc-func-members}
+\Hypertarget{linsys_8h_doc-func-members}
+\doxysubsection{Function Documentation}
+\Hypertarget{linsys_8h_a5ae24bcf8738840e3ddedf42fc451a26}\index{linsys.h@{linsys.h}!scs\_free\_lin\_sys\_work@{scs\_free\_lin\_sys\_work}}
+\index{scs\_free\_lin\_sys\_work@{scs\_free\_lin\_sys\_work}!linsys.h@{linsys.h}}
+\doxysubsubsection{\texorpdfstring{scs\_free\_lin\_sys\_work()}{scs\_free\_lin\_sys\_work()}}
+{\footnotesize\ttfamily \label{linsys_8h_a5ae24bcf8738840e3ddedf42fc451a26} 
+void scs\+\_\+free\+\_\+lin\+\_\+sys\+\_\+work (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+Frees {\ttfamily \doxylink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} structure and associated allocated memory.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Linear system private workspace. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{linsys_8h_a5d3ebe89707d22dc70f63a3d151e000f}\index{linsys.h@{linsys.h}!scs\_get\_lin\_sys\_method@{scs\_get\_lin\_sys\_method}}
+\index{scs\_get\_lin\_sys\_method@{scs\_get\_lin\_sys\_method}!linsys.h@{linsys.h}}
+\doxysubsubsection{\texorpdfstring{scs\_get\_lin\_sys\_method()}{scs\_get\_lin\_sys\_method()}}
+{\footnotesize\ttfamily \label{linsys_8h_a5d3ebe89707d22dc70f63a3d151e000f} 
+const char \texorpdfstring{$\ast$}{*} scs\+\_\+get\+\_\+lin\+\_\+sys\+\_\+method (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+Name of the linear solver.
+
+\begin{DoxyReturn}{Returns}
+name of method. 
+\end{DoxyReturn}
+\Hypertarget{linsys_8h_a0b08a00fdcc184671307a1e119113ec1}\index{linsys.h@{linsys.h}!scs\_init\_lin\_sys\_work@{scs\_init\_lin\_sys\_work}}
+\index{scs\_init\_lin\_sys\_work@{scs\_init\_lin\_sys\_work}!linsys.h@{linsys.h}}
+\doxysubsubsection{\texorpdfstring{scs\_init\_lin\_sys\_work()}{scs\_init\_lin\_sys\_work()}}
+{\footnotesize\ttfamily \label{linsys_8h_a0b08a00fdcc184671307a1e119113ec1} 
+\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*} scs\+\_\+init\+\_\+lin\+\_\+sys\+\_\+work (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}}]{A}{, }\item[{const \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}} \texorpdfstring{$\ast$}{*}}]{P}{, }\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{diag\+\_\+r}{}\end{DoxyParamCaption})}
+
+Initialize {\ttfamily \doxylink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} structure and perform any necessary preprocessing.
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & {\ttfamily A} data matrix, {\ttfamily m x n}. \\
+\hline
+{\em P} & {\ttfamily P} data matrix, {\ttfamily n x n}. \\
+\hline
+{\em diag\+\_\+r} & {\ttfamily R \texorpdfstring{$>$}{>} 0} diagonal entries of length {\ttfamily m + n}. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Linear system solver workspace. 
+\end{DoxyReturn}
+\Hypertarget{linsys_8h_a24229ab88459885462fcc7fa6759467f}\index{linsys.h@{linsys.h}!scs\_solve\_lin\_sys@{scs\_solve\_lin\_sys}}
+\index{scs\_solve\_lin\_sys@{scs\_solve\_lin\_sys}!linsys.h@{linsys.h}}
+\doxysubsubsection{\texorpdfstring{scs\_solve\_lin\_sys()}{scs\_solve\_lin\_sys()}}
+{\footnotesize\ttfamily \label{linsys_8h_a24229ab88459885462fcc7fa6759467f} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs\+\_\+solve\+\_\+lin\+\_\+sys (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{b}{, }\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{s}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}}}]{tol}{}\end{DoxyParamCaption})}
+
+Solves the linear system as required by SCS at each iteration:\+      \[   \begin{bmatrix}
+   (R_x + P) & A^\top \\
+    A   &  -R_y \\
+   \end{bmatrix} x = b
+\]
+
+for {\ttfamily x}, where {\ttfamily diag(\+R\+\_\+x, R\+\_\+y) = R}. Overwrites {\ttfamily b} with result.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Linear system private workspace. \\
+\hline
+{\em b} & Right hand side, contains solution at the end. \\
+\hline
+{\em s} & Contains warm-\/start (may be NULL). \\
+\hline
+{\em tol} & Tolerance required for the system solve. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+status != 0 indicates failure. 
+\end{DoxyReturn}
+\Hypertarget{linsys_8h_a3a78943fd4381d97662c78f5b2586448}\index{linsys.h@{linsys.h}!scs\_update\_lin\_sys\_diag\_r@{scs\_update\_lin\_sys\_diag\_r}}
+\index{scs\_update\_lin\_sys\_diag\_r@{scs\_update\_lin\_sys\_diag\_r}!linsys.h@{linsys.h}}
+\doxysubsubsection{\texorpdfstring{scs\_update\_lin\_sys\_diag\_r()}{scs\_update\_lin\_sys\_diag\_r()}}
+{\footnotesize\ttfamily \label{linsys_8h_a3a78943fd4381d97662c78f5b2586448} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs\+\_\+update\+\_\+lin\+\_\+sys\+\_\+diag\+\_\+r (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{new\+\_\+diag\+\_\+r}{}\end{DoxyParamCaption})}
+
+Update the linsys workspace when {\ttfamily R} is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Linear system private workspace. \\
+\hline
+{\em new\+\_\+diag\+\_\+r} & Updated {\ttfamily diag\+\_\+r}, diagonal entries of R. \\
+\hline
+\end{DoxyParams}

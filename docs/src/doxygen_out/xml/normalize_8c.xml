@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="normalize_8c" kind="file" language="C++">
+    <compoundname>normalize.c</compoundname>
+    <includes refid="normalize_8h" local="yes">normalize.h</includes>
+    <includes refid="linalg_8h" local="yes">linalg.h</includes>
+    <includes refid="scs_8h" local="yes">scs.h</includes>
+    <incdepgraph>
+      <node id="6">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="11">
+        <label>linalg.h</label>
+        <link refid="linalg_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>normalize.h</label>
+        <link refid="normalize_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="10">
+        <label>scs_work.h</label>
+        <link refid="scs__work_8h"/>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/src/normalize.c</label>
+        <link refid="normalize_8c"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>math.h</label>
+      </node>
+      <node id="8">
+        <label>stdio.h</label>
+      </node>
+      <node id="9">
+        <label>stdlib.h</label>
+      </node>
+    </incdepgraph>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="normalize_8c_1ac64b31c7623c2418539541c3c4f8de05" prot="public" static="no">
+        <name>MIN_NORMALIZATION_FACTOR</name>
+        <initializer>(1e-4)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/normalize.c" line="13" column="9" bodyfile="/private/tmp/scs-400/src/normalize.c" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="normalize_8c_1adfbfa4c28719afeee660d83b711ca111" prot="public" static="no">
+        <name>MAX_NORMALIZATION_FACTOR</name>
+        <initializer>(1e4)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/normalize.c" line="14" column="9" bodyfile="/private/tmp/scs-400/src/normalize.c" bodystart="14" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="normalize_8c_1ad6d7c265a52f1904a7d5b6945573d3c5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_normalize_b_c</definition>
+        <argsstring>(ScsScaling *scal, scs_float *b, scs_float *c)</argsstring>
+        <name>_scs_normalize_b_c</name>
+        <param>
+          <type><ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref> *</type>
+          <declname>scal</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/normalize.c" line="33" column="7" bodyfile="/private/tmp/scs-400/src/normalize.c" bodystart="33" bodyend="70"/>
+      </memberdef>
+      <memberdef kind="function" id="normalize_8c_1aa182c963616af38be33c17e546a932ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_normalize_sol</definition>
+        <argsstring>(ScsScaling *scal, ScsSolution *sol)</argsstring>
+        <name>_scs_normalize_sol</name>
+        <param>
+          <type><ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref> *</type>
+          <declname>scal</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref> *</type>
+          <declname>sol</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/normalize.c" line="73" column="7" bodyfile="/private/tmp/scs-400/src/normalize.c" bodystart="73" bodyend="85"/>
+      </memberdef>
+      <memberdef kind="function" id="normalize_8c_1a169cbf72410de7a21daa83e58d04a648" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_un_normalize_sol</definition>
+        <argsstring>(ScsScaling *scal, ScsSolution *sol)</argsstring>
+        <name>_scs_un_normalize_sol</name>
+        <param>
+          <type><ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref> *</type>
+          <declname>scal</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref> *</type>
+          <declname>sol</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/src/normalize.c" line="87" column="7" bodyfile="/private/tmp/scs-400/src/normalize.c" bodystart="87" bodyend="99"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Problem<sp/>data<sp/>normalization<sp/>(equilibration)<sp/>of<sp/>b<sp/>and<sp/>c<sp/>vectors,</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>and<sp/>solution<sp/>normalization/un-normalization<sp/>routines.</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>Matrix<sp/>normalization<sp/>(A,<sp/>P)<sp/>is<sp/>in<sp/>linsys/scs_matrix.c.</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="normalize_8h" kindref="compound">normalize.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="linalg_8h" kindref="compound">linalg.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="scs_8h" kindref="compound">scs.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>copied<sp/>from<sp/>linsys/scs_matrix.c<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MIN_NORMALIZATION_FACTOR<sp/>(1e-4)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MAX_NORMALIZATION_FACTOR<sp/>(1e4)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Given<sp/>D,<sp/>E<sp/>in<sp/>scaling<sp/>normalize<sp/>b,<sp/>c<sp/>and<sp/>compute<sp/>primal<sp/>/<sp/>dual<sp/>scales.</highlight></codeline>
+<codeline lineno="17"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="18"><highlight class="comment"><sp/>*<sp/>Recall<sp/>that<sp/><sp/>the<sp/>normalization<sp/>routine<sp/>is<sp/>performing:</highlight></codeline>
+<codeline lineno="19"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="20"><highlight class="comment"><sp/>*<sp/>[P<sp/><sp/>A&apos;<sp/>c]<sp/><sp/><sp/>with<sp/><sp/><sp/>[E<sp/><sp/>0<sp/><sp/>0]<sp/>on<sp/>both<sp/>sides<sp/>(D,<sp/>E<sp/>diagonal)</highlight></codeline>
+<codeline lineno="21"><highlight class="comment"><sp/>*<sp/>[A<sp/><sp/>0<sp/><sp/>b]<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>[0<sp/><sp/>D<sp/><sp/>0]</highlight></codeline>
+<codeline lineno="22"><highlight class="comment"><sp/>*<sp/>[c&apos;<sp/>b&apos;<sp/>0]<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>[0<sp/><sp/>0<sp/><sp/>s]</highlight></codeline>
+<codeline lineno="23"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="24"><highlight class="comment"><sp/>*<sp/>which<sp/>results<sp/>in:</highlight></codeline>
+<codeline lineno="25"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="26"><highlight class="comment"><sp/>*<sp/>[<sp/>EPE<sp/><sp/><sp/>EA&apos;D<sp/><sp/>sEc<sp/>]</highlight></codeline>
+<codeline lineno="27"><highlight class="comment"><sp/>*<sp/>[<sp/>DAE<sp/><sp/><sp/><sp/>0<sp/><sp/><sp/><sp/>sDb<sp/>]</highlight></codeline>
+<codeline lineno="28"><highlight class="comment"><sp/>*<sp/>[<sp/>sc&apos;E<sp/><sp/>sb&apos;D<sp/><sp/><sp/>0<sp/><sp/>]</highlight></codeline>
+<codeline lineno="29"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="30"><highlight class="comment"><sp/>*<sp/>`s`<sp/>is<sp/>incorporated<sp/>into<sp/>dual_scale<sp/>and<sp/>primal_scale</highlight></codeline>
+<codeline lineno="31"><highlight class="comment"><sp/>*</highlight></codeline>
+<codeline lineno="32"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(normalize_b_c)(<ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref><sp/>*scal,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*c)<sp/>{</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>sigma,<sp/>nm_c,<sp/>nm_b;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>scale<sp/>c<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>scal-&gt;n;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>c[i]<sp/>*=<sp/>scal-&gt;E[i];</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>scale<sp/>b<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>scal-&gt;m;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>b[i]<sp/>*=<sp/>scal-&gt;D[i];</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>sigma<sp/>comes<sp/>from<sp/>the<sp/>stacked-operator<sp/>equilibration<sp/>(the<sp/>tau-slot</highlight></codeline>
+<codeline lineno="47"><highlight class="comment"><sp/><sp/><sp/>*<sp/>scaling<sp/>computed<sp/>jointly<sp/>with<sp/>D,<sp/>E<sp/>by<sp/>normalize_a_p),<sp/>replacing<sp/>the</highlight></codeline>
+<codeline lineno="48"><highlight class="comment"><sp/><sp/><sp/>*<sp/>old<sp/>one-shot<sp/>clamped<sp/>max-norm<sp/>heuristic<sp/>which<sp/>left<sp/>problems<sp/>with</highlight></codeline>
+<codeline lineno="49"><highlight class="comment"><sp/><sp/><sp/>*<sp/>extreme<sp/>cost/rhs<sp/>magnitudes<sp/>badly<sp/>imbalanced.<sp/>Fall<sp/>back<sp/>to<sp/>the</highlight></codeline>
+<codeline lineno="50"><highlight class="comment"><sp/><sp/><sp/>*<sp/>heuristic<sp/>if<sp/>unset<sp/>(defensive;<sp/>normalize_a_p<sp/>always<sp/>sets<sp/>it).<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(scal-&gt;tau_scale<sp/>&gt;<sp/>0.)<sp/>{</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/>sigma<sp/>=<sp/>scal-&gt;tau_scale;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/>}<sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/>nm_c<sp/>=<sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)(c,<sp/>scal-&gt;n);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/>nm_b<sp/>=<sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)(b,<sp/>scal-&gt;m);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/>sigma<sp/>=<sp/><ref refid="glbopts_8h_1afa99ec4acc4ecb2dc3c2d05da15d0e3f" kindref="member">MAX</ref>(nm_c,<sp/>nm_b);</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>sigma<sp/>=<sp/>sigma<sp/>&lt;<sp/><ref refid="normalize_8c_1ac64b31c7623c2418539541c3c4f8de05" kindref="member">MIN_NORMALIZATION_FACTOR</ref><sp/>?<sp/>1.0<sp/>:<sp/>sigma;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/>sigma<sp/>=</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>sigma<sp/>&gt;<sp/><ref refid="normalize_8c_1adfbfa4c28719afeee660d83b711ca111" kindref="member">MAX_NORMALIZATION_FACTOR</ref><sp/>?<sp/><ref refid="normalize_8c_1adfbfa4c28719afeee660d83b711ca111" kindref="member">MAX_NORMALIZATION_FACTOR</ref><sp/>:<sp/>sigma;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>sigma<sp/>=<sp/><ref refid="glbopts_8h_1a274d5c6f0e4fc5e150e00e52a3f79a32" kindref="member">SAFEDIV_POS</ref>(1.0,<sp/>sigma);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>Scale<sp/>b,<sp/>c<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a1fd11317410766aa4664dd1740255391" kindref="member">scale_array</ref>)(c,<sp/>sigma,<sp/>scal-&gt;n);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a1fd11317410766aa4664dd1740255391" kindref="member">scale_array</ref>)(b,<sp/>sigma,<sp/>scal-&gt;m);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>We<sp/>assume<sp/>that<sp/>primal_scale<sp/>=<sp/>dual_scale,<sp/>otherwise<sp/>need<sp/>to<sp/>refactorize<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/>scal-&gt;primal_scale<sp/>=<sp/>sigma;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>scal-&gt;dual_scale<sp/>=<sp/>sigma;</highlight></codeline>
+<codeline lineno="70"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>needed<sp/>for<sp/>normalizing<sp/>the<sp/>warm-start<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(normalize_sol)(<ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref><sp/>*scal,<sp/><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref><sp/>*sol)<sp/>{</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*D<sp/>=<sp/>scal-&gt;D;</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*E<sp/>=<sp/>scal-&gt;E;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>scal-&gt;n;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/>sol-&gt;x[i]<sp/>/=<sp/>(E[i]<sp/>/<sp/>scal-&gt;dual_scale);</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>Fuse<sp/>the<sp/>y<sp/>and<sp/>s<sp/>loops:<sp/>both<sp/>index<sp/>D[i],<sp/>halving<sp/>D<sp/>reads.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>scal-&gt;m;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/>sol-&gt;y[i]<sp/>/=<sp/>(D[i]<sp/>/<sp/>scal-&gt;primal_scale);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/>sol-&gt;s[i]<sp/>*=<sp/>(D[i]<sp/>*<sp/>scal-&gt;dual_scale);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="85"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(un_normalize_sol)(<ref refid="struct_scs_scaling" kindref="compound">ScsScaling</ref><sp/>*scal,<sp/><ref refid="struct_scs_solution" kindref="compound">ScsSolution</ref><sp/>*sol)<sp/>{</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>i;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*D<sp/>=<sp/>scal-&gt;D;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*E<sp/>=<sp/>scal-&gt;E;</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>scal-&gt;n;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/>sol-&gt;x[i]<sp/>*=<sp/>(E[i]<sp/>/<sp/>scal-&gt;dual_scale);</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">/*<sp/>Fuse<sp/>the<sp/>y<sp/>and<sp/>s<sp/>loops:<sp/>both<sp/>index<sp/>D[i],<sp/>halving<sp/>D<sp/>reads.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>scal-&gt;m;<sp/>++i)<sp/>{</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/>sol-&gt;y[i]<sp/>*=<sp/>(D[i]<sp/>/<sp/>scal-&gt;primal_scale);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>sol-&gt;s[i]<sp/>/=<sp/>(D[i]<sp/>*<sp/>scal-&gt;dual_scale);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="99"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/src/normalize.c"/>
+  </compounddef>
+</doxygen>

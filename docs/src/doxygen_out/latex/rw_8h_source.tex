@@ -1,0 +1,35 @@
+\doxysection{rw.\+h}
+\hypertarget{rw_8h_source}{}\label{rw_8h_source}\index{/private/tmp/scs-\/400/include/rw.h@{/private/tmp/scs-\/400/include/rw.h}}
+\doxymbox{\hyperlink{rw_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Read/write\ utilities\ for\ serializing\ SCS\ problem\ data\ to\ binary\ files}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *\ and\ logging\ solve\ progress\ to\ CSV.\ Disabled\ when\ compiled\ with}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ *\ NO\_READ\_WRITE=1.}}
+\DoxyCodeLine{00005\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#ifndef\ RW\_H\_GUARD}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#define\ RW\_H\_GUARD}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00011\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{glbopts_8h}{glbopts.h}}"{}}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{util_8h}{util.h}}"{}}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(write\_data)(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_data}{ScsData}}\ *d,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_cone}{ScsCone}}\ *k,}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_settings}{ScsSettings}}\ *stgs);}
+\DoxyCodeLine{00019\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(read\_data)(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *filename,\ \doxymbox{\hyperlink{struct_scs_data}{ScsData}}\ **d,\ \doxymbox{\hyperlink{struct_scs_cone}{ScsCone}}\ **k,}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{struct_scs_settings}{ScsSettings}}\ **stgs);}
+\DoxyCodeLine{00021\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(open\_csv\_log\_file)(\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{ScsWork}}\ *w);}
+\DoxyCodeLine{00022\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(close\_csv\_log\_file)(\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{ScsWork}}\ *w);}
+\DoxyCodeLine{00023\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(log\_data\_to\_csv)(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_cone}{ScsCone}}\ *k,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{ScsWork}}\ *w,\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ iter,}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(timer)\ *\ solve\_timer);}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00027\ \}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

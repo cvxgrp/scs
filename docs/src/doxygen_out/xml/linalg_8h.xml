@@ -1,0 +1,360 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="linalg_8h" kind="file" language="C++">
+    <compoundname>linalg.h</compoundname>
+    <includes refid="glbopts_8h" local="yes">glbopts.h</includes>
+    <includedby refid="scs__matrix_8c" local="yes">/private/tmp/scs-400/linsys/scs_matrix.c</includedby>
+    <includedby refid="cones_8c" local="yes">/private/tmp/scs-400/src/cones.c</includedby>
+    <includedby refid="exp__cone_8c" local="yes">/private/tmp/scs-400/src/exp_cone.c</includedby>
+    <includedby refid="linalg_8c" local="yes">/private/tmp/scs-400/src/linalg.c</includedby>
+    <includedby refid="normalize_8c" local="yes">/private/tmp/scs-400/src/normalize.c</includedby>
+    <includedby refid="rw_8c" local="yes">/private/tmp/scs-400/src/rw.c</includedby>
+    <includedby refid="scs_8c" local="yes">/private/tmp/scs-400/src/scs.c</includedby>
+    <incdepgraph>
+      <node id="5">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/linalg.h</label>
+        <link refid="linalg_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="6">
+        <label>math.h</label>
+      </node>
+      <node id="7">
+        <label>stdio.h</label>
+      </node>
+      <node id="8">
+        <label>stdlib.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/linalg.h</label>
+        <link refid="linalg_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>/private/tmp/scs-400/linsys/scs_matrix.c</label>
+        <link refid="scs__matrix_8c"/>
+      </node>
+      <node id="3">
+        <label>/private/tmp/scs-400/src/cones.c</label>
+        <link refid="cones_8c"/>
+      </node>
+      <node id="4">
+        <label>/private/tmp/scs-400/src/exp_cone.c</label>
+        <link refid="exp__cone_8c"/>
+      </node>
+      <node id="5">
+        <label>/private/tmp/scs-400/src/linalg.c</label>
+        <link refid="linalg_8c"/>
+      </node>
+      <node id="6">
+        <label>/private/tmp/scs-400/src/normalize.c</label>
+        <link refid="normalize_8c"/>
+      </node>
+      <node id="7">
+        <label>/private/tmp/scs-400/src/rw.c</label>
+        <link refid="rw_8c"/>
+      </node>
+      <node id="8">
+        <label>/private/tmp/scs-400/src/scs.c</label>
+        <link refid="scs_8c"/>
+      </node>
+    </invincdepgraph>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="linalg_8h_1aa8e2d693604ba448e68b421f8371c378" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_scale_array</definition>
+        <argsstring>(scs_float *a, const scs_float b, scs_int len)</argsstring>
+        <name>_scs_scale_array</name>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="15" column="7" declfile="/private/tmp/scs-400/include/linalg.h" declline="15" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a10a4d4c146ae9ff62d46eb2153f5fe53" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_dot</definition>
+        <argsstring>(const scs_float *x, const scs_float *y, scs_int len)</argsstring>
+        <name>_scs_dot</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="16" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="16" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a3735a4a47264041a9c63d70da6eed3f7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_norm_sq</definition>
+        <argsstring>(const scs_float *v, scs_int len)</argsstring>
+        <name>_scs_norm_sq</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="17" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="17" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a767c99080e57f8ab4fa78ea5df191a75" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_norm_2</definition>
+        <argsstring>(const scs_float *v, scs_int len)</argsstring>
+        <name>_scs_norm_2</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="18" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="18" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a4132e9724420b5eca86a7dd423410c18" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_norm_inf</definition>
+        <argsstring>(const scs_float *a, scs_int l)</argsstring>
+        <name>_scs_norm_inf</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>l</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="19" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="19" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a3ec5aa861f4915ec5992f223e04db717" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_add_scaled_array</definition>
+        <argsstring>(scs_float *a, const scs_float *b, scs_int n, const scs_float sc)</argsstring>
+        <name>_scs_add_scaled_array</name>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+          <declname>sc</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="20" column="7" declfile="/private/tmp/scs-400/include/linalg.h" declline="20" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1af573d662977af7a3c9486dce214a5747" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_norm_diff</definition>
+        <argsstring>(const scs_float *a, const scs_float *b, scs_int l)</argsstring>
+        <name>_scs_norm_diff</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>l</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="22" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="22" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a98eb826f00010ef67532b1e8884207ad" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_norm_inf_diff</definition>
+        <argsstring>(const scs_float *a, const scs_float *b, scs_int l)</argsstring>
+        <name>_scs_norm_inf_diff</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>l</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="23" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="23" declcolumn="12"/>
+      </memberdef>
+      <memberdef kind="function" id="linalg_8h_1a2d59b90f50a4dbaf49ccd2781fa29529" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float _scs_mean</definition>
+        <argsstring>(const scs_float *x, scs_int l)</argsstring>
+        <name>_scs_mean</name>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>l</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/linalg.h" line="24" column="12" declfile="/private/tmp/scs-400/include/linalg.h" declline="24" declcolumn="12"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Basic<sp/>dense<sp/>linear<sp/>algebra<sp/>operations<sp/>used<sp/>throughout<sp/>SCS.</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>All<sp/>operate<sp/>on<sp/>raw<sp/>arrays<sp/>of<sp/>scs_float.</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>LINALG_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>LINALG_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="glbopts_8h" kindref="compound">glbopts.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15" refid="linalg_8h_1aa8e2d693604ba448e68b421f8371c378" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a1fd11317410766aa4664dd1740255391" kindref="member">scale_array</ref>)(<ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len);</highlight></codeline>
+<codeline lineno="16" refid="linalg_8h_1a10a4d4c146ae9ff62d46eb2153f5fe53" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a559d71c1ccb9028d6fc6174fcfd71a95" kindref="member">dot</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*y,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len);</highlight></codeline>
+<codeline lineno="17" refid="linalg_8h_1a3735a4a47264041a9c63d70da6eed3f7" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1aad06272d6a19a88408c807bfeaaf2ecc" kindref="member">norm_sq</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*v,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len);</highlight></codeline>
+<codeline lineno="18" refid="linalg_8h_1a767c99080e57f8ab4fa78ea5df191a75" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1ab30dddd6b0cd81086b934402e96e5417" kindref="member">norm_2</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*v,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>len);</highlight></codeline>
+<codeline lineno="19" refid="linalg_8h_1a4132e9724420b5eca86a7dd423410c18" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a0b644a555cdb215d0e7cead3d3f59bd1" kindref="member">norm_inf</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>l);</highlight></codeline>
+<codeline lineno="20" refid="linalg_8h_1a3ec5aa861f4915ec5992f223e04db717" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1abf9054fc5e9776852a9824221c0bb8e1" kindref="member">add_scaled_array</ref>)(<ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n,</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>sc);</highlight></codeline>
+<codeline lineno="22" refid="linalg_8h_1af573d662977af7a3c9486dce214a5747" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a044896766d7716f35bf275a3c67d72ae" kindref="member">norm_diff</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>l);</highlight></codeline>
+<codeline lineno="23" refid="linalg_8h_1a98eb826f00010ef67532b1e8884207ad" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1ac8c14aa46137d44762293a07f6bbff06" kindref="member">norm_inf_diff</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*a,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*b,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>l);</highlight></codeline>
+<codeline lineno="24" refid="linalg_8h_1a2d59b90f50a4dbaf49ccd2781fa29529" refkind="member"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="linalg_8c_1a22f2febfc0df46b4abb95bf5d894e6b9" kindref="member">mean</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>l);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/include/linalg.h"/>
+  </compounddef>
+</doxygen>

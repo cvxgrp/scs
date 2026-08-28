@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="struct__scs__timer" kind="struct" language="C++" prot="public">
+    <compoundname>_scs_timer</compoundname>
+    <includes refid="util_8h" local="no">util.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct__scs__timer_1a071f8fc37b885efd615900088d3c3df1" prot="public" static="no" mutable="no">
+        <type>struct timespec</type>
+        <definition>struct timespec _scs_timer::tic</definition>
+        <argsstring></argsstring>
+        <name>tic</name>
+        <qualifiedname>_scs_timer::tic</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util.h" line="36" column="17" bodyfile="/private/tmp/scs-400/include/util.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct__scs__timer_1a360f20a21a1b4e81c88b535dbadeda0c" prot="public" static="no" mutable="no">
+        <type>struct timespec</type>
+        <definition>struct timespec _scs_timer::toc</definition>
+        <argsstring></argsstring>
+        <name>toc</name>
+        <qualifiedname>_scs_timer::toc</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/util.h" line="37" column="17" bodyfile="/private/tmp/scs-400/include/util.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/private/tmp/scs-400/include/util.h" line="35" column="1" bodyfile="/private/tmp/scs-400/include/util.h" bodystart="35" bodyend="38"/>
+    <listofallmembers>
+      <member refid="struct__scs__timer_1a071f8fc37b885efd615900088d3c3df1" prot="public" virt="non-virtual"><scope>_scs_timer</scope><name>tic</name></member>
+      <member refid="struct__scs__timer_1a360f20a21a1b4e81c88b535dbadeda0c" prot="public" virt="non-virtual"><scope>_scs_timer</scope><name>toc</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,245 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="rw_8h" kind="file" language="C++">
+    <compoundname>rw.h</compoundname>
+    <includes refid="glbopts_8h" local="yes">glbopts.h</includes>
+    <includes refid="util_8h" local="yes">util.h</includes>
+    <includedby refid="rw_8c" local="yes">/private/tmp/scs-400/src/rw.c</includedby>
+    <includedby refid="scs_8c" local="yes">/private/tmp/scs-400/src/scs.c</includedby>
+    <incdepgraph>
+      <node id="5">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/rw.h</label>
+        <link refid="rw_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="9">
+        <label>util.h</label>
+        <link refid="util_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>math.h</label>
+      </node>
+      <node id="7">
+        <label>stdio.h</label>
+      </node>
+      <node id="8">
+        <label>stdlib.h</label>
+      </node>
+      <node id="10">
+        <label>time.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>/private/tmp/scs-400/include/rw.h</label>
+        <link refid="rw_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>/private/tmp/scs-400/src/rw.c</label>
+        <link refid="rw_8c"/>
+      </node>
+      <node id="3">
+        <label>/private/tmp/scs-400/src/scs.c</label>
+        <link refid="scs_8c"/>
+      </node>
+    </invincdepgraph>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="rw_8h_1a7b9979320b7ecb0b294c5dce42d27dc9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_write_data</definition>
+        <argsstring>(const ScsData *d, const ScsCone *k, const ScsSettings *stgs)</argsstring>
+        <name>_scs_write_data</name>
+        <param>
+          <type>const <ref refid="struct_scs_data" kindref="compound">ScsData</ref> *</type>
+          <declname>d</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_cone" kindref="compound">ScsCone</ref> *</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref> *</type>
+          <declname>stgs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/rw.h" line="17" column="7" bodyfile="/private/tmp/scs-400/src/rw.c" bodystart="574" bodyend="603" declfile="/private/tmp/scs-400/include/rw.h" declline="17" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="rw_8h_1a6275633ed875514bd0cb2cd369b1a983" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int _scs_read_data</definition>
+        <argsstring>(const char *filename, ScsData **d, ScsCone **k, ScsSettings **stgs)</argsstring>
+        <name>_scs_read_data</name>
+        <param>
+          <type>const char *</type>
+          <declname>filename</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_data" kindref="compound">ScsData</ref> **</type>
+          <declname>d</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref> **</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref> **</type>
+          <declname>stgs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/rw.h" line="19" column="10" bodyfile="/private/tmp/scs-400/src/rw.c" bodystart="605" bodyend="684" declfile="/private/tmp/scs-400/include/rw.h" declline="19" declcolumn="10"/>
+      </memberdef>
+      <memberdef kind="function" id="rw_8h_1ae5713764ef8ed92a348e4d0eda568f61" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int _scs_open_csv_log_file</definition>
+        <argsstring>(ScsWork *w)</argsstring>
+        <name>_scs_open_csv_log_file</name>
+        <param>
+          <type><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+          <declname>w</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/rw.h" line="21" column="10" bodyfile="/private/tmp/scs-400/src/rw.c" bodystart="686" bodyend="698" declfile="/private/tmp/scs-400/include/rw.h" declline="21" declcolumn="10"/>
+      </memberdef>
+      <memberdef kind="function" id="rw_8h_1a2a0b7de7d61184337dbd5b6eff04a185" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_close_csv_log_file</definition>
+        <argsstring>(ScsWork *w)</argsstring>
+        <name>_scs_close_csv_log_file</name>
+        <param>
+          <type><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+          <declname>w</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/rw.h" line="22" column="7" bodyfile="/private/tmp/scs-400/src/rw.c" bodystart="700" bodyend="705" declfile="/private/tmp/scs-400/include/rw.h" declline="22" declcolumn="7"/>
+      </memberdef>
+      <memberdef kind="function" id="rw_8h_1af38f3b150401ab8708cdf88b624a6edc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void _scs_log_data_to_csv</definition>
+        <argsstring>(const ScsCone *k, const ScsWork *w, scs_int iter, _scs_timer *solve_timer)</argsstring>
+        <name>_scs_log_data_to_csv</name>
+        <param>
+          <type>const <ref refid="struct_scs_cone" kindref="compound">ScsCone</ref> *</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref> *</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>iter</declname>
+        </param>
+        <param>
+          <type><ref refid="struct__scs__timer" kindref="compound">_scs_timer</ref> *</type>
+          <declname>solve_timer</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/rw.h" line="23" column="7" bodyfile="/private/tmp/scs-400/src/rw.c" bodystart="707" bodyend="861" declfile="/private/tmp/scs-400/include/rw.h" declline="23" declcolumn="7"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Read/write<sp/>utilities<sp/>for<sp/>serializing<sp/>SCS<sp/>problem<sp/>data<sp/>to<sp/>binary<sp/>files</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>and<sp/>logging<sp/>solve<sp/>progress<sp/>to<sp/>CSV.<sp/>Disabled<sp/>when<sp/>compiled<sp/>with</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>NO_READ_WRITE=1.</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>RW_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>RW_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="glbopts_8h" kindref="compound">glbopts.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="util_8h" kindref="compound">util.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(write_data)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_data" kindref="compound">ScsData</ref><sp/>*d,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref><sp/>*k,</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref><sp/>*stgs);</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(read_data)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*filename,<sp/><ref refid="struct_scs_data" kindref="compound">ScsData</ref><sp/>**d,<sp/><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref><sp/>**k,</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="struct_scs_settings" kindref="compound">ScsSettings</ref><sp/>**stgs);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(open_csv_log_file)(<ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*w);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(close_csv_log_file)(<ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*w);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(log_data_to_csv)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_cone" kindref="compound">ScsCone</ref><sp/>*k,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs_8h_1a6da91f2680fefc030d2b65ec3d6d917c" kindref="member">ScsWork</ref><sp/>*w,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>iter,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(timer)<sp/>*<sp/>solve_timer);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/include/rw.h"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,96 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+include/\+util\+\_\+spectral\+\_\+cones.h File Reference}
+\hypertarget{util__spectral__cones_8h}{}\label{util__spectral__cones_8h}\index{/private/tmp/scs-\/400/include/util\_spectral\_cones.h@{/private/tmp/scs-\/400/include/util\_spectral\_cones.h}}
+{\ttfamily \+\#include "{}scs\+\_\+blas.\+h"{}}\newline
+{\ttfamily \+\#include "{}scs\+\_\+types.\+h"{}}\newline
+{\ttfamily \+\#include $<$assert.\+h$>$}\newline
+{\ttfamily \+\#include $<$math.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdbool.\+h$>$}\newline
+{\ttfamily \+\#include $<$stddef.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdio.\+h$>$}\newline
+\doxysubsubsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \doxymbox{\hyperlink{struct_value__index}{Value\+\_\+index}}
+\item 
+struct \doxymbox{\hyperlink{struct_newton__stats}{Newton\+\_\+stats}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\+\#define \doxymbox{\hyperlink{util__spectral__cones_8h_a3ea9c58ffc278d108eacb38d8bfd3135}{IN\+\_\+\+CONE}}~-\/1
+\item 
+\+\#define \doxymbox{\hyperlink{util__spectral__cones_8h_aa9d48c64a272447cf5907efec651b26f}{IN\+\_\+\+NEGATIVE\+\_\+\+DUAL\+\_\+\+CONE}}~-\/2
+\item 
+\+\#define \doxymbox{\hyperlink{util__spectral__cones_8h_adca7d3a4394d3e29c8a56b022ec713c0}{ANALYTICAL\+\_\+\+SOL}}~-\/3
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \doxymbox{\hyperlink{util__spectral__cones_8h_a86b1b5af864dfbc91d95a03f58c6a856}{is\+\_\+pos}} (const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}x, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n)
+\item 
+bool \doxymbox{\hyperlink{util__spectral__cones_8h_a53ade871b6615fbb4a218078ae4dd8f6}{is\+\_\+negative}} (const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}x, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n)
+\item 
+void \doxymbox{\hyperlink{util__spectral__cones_8h_a879935980efd18c9dcbd23dd0960cc4c}{non\+\_\+neg\+\_\+proj}} (const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}src, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}dst, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{util__spectral__cones_8h_ac0d98fc90b4095665736a7d38c1ff09b}{sum\+\_\+log}} (const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}x, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{util__spectral__cones_8h_a053ce292af8cf3693374c717de8e18c7}{min\+\_\+vec}} (const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}vec, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} n)
+\end{DoxyCompactItemize}
+
+
+\label{doc-define-members}
+\Hypertarget{util__spectral__cones_8h_doc-define-members}
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{util__spectral__cones_8h_adca7d3a4394d3e29c8a56b022ec713c0}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!ANALYTICAL\_SOL@{ANALYTICAL\_SOL}}
+\index{ANALYTICAL\_SOL@{ANALYTICAL\_SOL}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{ANALYTICAL\_SOL}{ANALYTICAL\_SOL}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_adca7d3a4394d3e29c8a56b022ec713c0} 
+\+\#define ANALYTICAL\+\_\+\+SOL~-\/3}
+
+\Hypertarget{util__spectral__cones_8h_a3ea9c58ffc278d108eacb38d8bfd3135}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!IN\_CONE@{IN\_CONE}}
+\index{IN\_CONE@{IN\_CONE}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{IN\_CONE}{IN\_CONE}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_a3ea9c58ffc278d108eacb38d8bfd3135} 
+\+\#define IN\+\_\+\+CONE~-\/1}
+
+\Hypertarget{util__spectral__cones_8h_aa9d48c64a272447cf5907efec651b26f}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!IN\_NEGATIVE\_DUAL\_CONE@{IN\_NEGATIVE\_DUAL\_CONE}}
+\index{IN\_NEGATIVE\_DUAL\_CONE@{IN\_NEGATIVE\_DUAL\_CONE}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{IN\_NEGATIVE\_DUAL\_CONE}{IN\_NEGATIVE\_DUAL\_CONE}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_aa9d48c64a272447cf5907efec651b26f} 
+\+\#define IN\+\_\+\+NEGATIVE\+\_\+\+DUAL\+\_\+\+CONE~-\/2}
+
+
+
+\label{doc-func-members}
+\Hypertarget{util__spectral__cones_8h_doc-func-members}
+\doxysubsection{Function Documentation}
+\Hypertarget{util__spectral__cones_8h_a53ade871b6615fbb4a218078ae4dd8f6}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!is\_negative@{is\_negative}}
+\index{is\_negative@{is\_negative}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{is\_negative()}{is\_negative()}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_a53ade871b6615fbb4a218078ae4dd8f6} 
+bool is\+\_\+negative (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{x}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{}\end{DoxyParamCaption})}
+
+\Hypertarget{util__spectral__cones_8h_a86b1b5af864dfbc91d95a03f58c6a856}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!is\_pos@{is\_pos}}
+\index{is\_pos@{is\_pos}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{is\_pos()}{is\_pos()}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_a86b1b5af864dfbc91d95a03f58c6a856} 
+bool is\+\_\+pos (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{x}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{}\end{DoxyParamCaption})}
+
+\Hypertarget{util__spectral__cones_8h_a053ce292af8cf3693374c717de8e18c7}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!min\_vec@{min\_vec}}
+\index{min\_vec@{min\_vec}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{min\_vec()}{min\_vec()}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_a053ce292af8cf3693374c717de8e18c7} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} min\+\_\+vec (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{vec}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{}\end{DoxyParamCaption})}
+
+\Hypertarget{util__spectral__cones_8h_a879935980efd18c9dcbd23dd0960cc4c}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!non\_neg\_proj@{non\_neg\_proj}}
+\index{non\_neg\_proj@{non\_neg\_proj}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{non\_neg\_proj()}{non\_neg\_proj()}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_a879935980efd18c9dcbd23dd0960cc4c} 
+void non\+\_\+neg\+\_\+proj (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{src}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{dst}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{}\end{DoxyParamCaption})}
+
+\Hypertarget{util__spectral__cones_8h_ac0d98fc90b4095665736a7d38c1ff09b}\index{util\_spectral\_cones.h@{util\_spectral\_cones.h}!sum\_log@{sum\_log}}
+\index{sum\_log@{sum\_log}!util\_spectral\_cones.h@{util\_spectral\_cones.h}}
+\doxysubsubsection{\texorpdfstring{sum\_log()}{sum\_log()}}
+{\footnotesize\ttfamily \label{util__spectral__cones_8h_ac0d98fc90b4095665736a7d38c1ff09b} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} sum\+\_\+log (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{x}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{n}{}\end{DoxyParamCaption})}
+

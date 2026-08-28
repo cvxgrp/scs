@@ -1,0 +1,37 @@
+\doxysection{linsys.\+h}
+\hypertarget{linsys_8h_source}{}\label{linsys_8h_source}\index{/private/tmp/scs-\/400/include/linsys.h@{/private/tmp/scs-\/400/include/linsys.h}}
+\doxymbox{\hyperlink{linsys_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ LINSYS\_H\_GUARD}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ LINSYS\_H\_GUARD}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00005\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}\doxymbox{\hyperlink{glbopts_8h}{glbopts.h}}"{}}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{comment}{/*\ This\ is\ the\ API\ that\ any\ new\ linear\ system\ solver\ must\ implement\ */}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{comment}{/*\ Struct\ containing\ linear\ system\ workspace.\ Implemented\ by\ linear\ solver.\ */}}
+\DoxyCodeLine{00013\ \textcolor{comment}{/*\ This\ typedef\ is\ in\ scs.h\ */}}
+\DoxyCodeLine{00014\ \textcolor{comment}{/*\ typedef\ struct\ SCS\_LIN\_SYS\_WORK\ ScsLinSysWork;\ */}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00025\ \doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{ScsLinSysWork}}\ *\doxymbox{\hyperlink{linsys_8h_a0b08a00fdcc184671307a1e119113ec1}{scs\_init\_lin\_sys\_work}}(\textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *A,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{struct_scs_matrix}{ScsMatrix}}\ *P,}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *diag\_r);}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00033\ \textcolor{keywordtype}{void}\ \doxymbox{\hyperlink{linsys_8h_a5ae24bcf8738840e3ddedf42fc451a26}{scs\_free\_lin\_sys\_work}}(\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{ScsLinSysWork}}\ *w);}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00053\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{linsys_8h_a24229ab88459885462fcc7fa6759467f}{scs\_solve\_lin\_sys}}(\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{ScsLinSysWork}}\ *w,\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *b,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *s,}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ tol);}
+\DoxyCodeLine{00064\ \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\_int}}\ \doxymbox{\hyperlink{linsys_8h_a3a78943fd4381d97662c78f5b2586448}{scs\_update\_lin\_sys\_diag\_r}}(\doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{ScsLinSysWork}}\ *w,\ \textcolor{keyword}{const}\ \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\_float}}\ *new\_diag\_r);}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00071\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\doxymbox{\hyperlink{linsys_8h_a5d3ebe89707d22dc70f63a3d151e000f}{scs\_get\_lin\_sys\_method}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00073\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00074\ \}}
+\DoxyCodeLine{00075\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00076\ }
+\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

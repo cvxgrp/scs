@@ -1,0 +1,104 @@
+\doxysection{Aa\+Stats Struct Reference}
+\hypertarget{struct_aa_stats}{}\label{struct_aa_stats}\index{AaStats@{AaStats}}
+
+
+{\ttfamily \+\#include $<$aa\+\_\+stats.\+h$>$}
+
+\doxysubsubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_a891ce47699e5c36a56b8323cbfc871fc}{iter}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_a3e0d268bbc8157c1a1142f5df2d24944}{n\+\_\+accept}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_ab3e7fba45199eb03bfb4379643aea055}{n\+\_\+reject\+\_\+lapack}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_adc57677bc2670d0e1a903e9cf75a5ac3}{n\+\_\+reject\+\_\+rank0}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_a8a6eab78efbc57eb07e5f0d422c95e19}{n\+\_\+reject\+\_\+nonfinite}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_a577fb167544ccc815985a000431bea15}{n\+\_\+reject\+\_\+weight\+\_\+cap}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_af39f6b8328371640cc66621a4ffcef66}{n\+\_\+safeguard\+\_\+reject}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{struct_aa_stats_a62a4f6c7c4e6731a869929f59df5d9f0}{last\+\_\+rank}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{struct_aa_stats_a62c3c9608016171f153dfdc20e222e43}{last\+\_\+aa\+\_\+norm}}
+\item 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \doxymbox{\hyperlink{struct_aa_stats_a0b3cc2f847bef49ce6d771a8e2f9115a}{last\+\_\+regularization}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Lifetime diagnostics for an Anderson acceleration workspace.
+
+Counters accumulate from aa\+\_\+init and are not cleared by aa\+\_\+reset, including internal resets after safeguard rejections. Rejection causes are split so a caller can tell what needs tuning. 
+
+\label{doc-variable-members}
+\Hypertarget{struct_aa_stats_doc-variable-members}
+\doxysubsection{Field Documentation}
+\Hypertarget{struct_aa_stats_a891ce47699e5c36a56b8323cbfc871fc}\index{AaStats@{AaStats}!iter@{iter}}
+\index{iter@{iter}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{iter}{iter}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a891ce47699e5c36a56b8323cbfc871fc} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+iter}
+
+Internal AA iteration counter. \Hypertarget{struct_aa_stats_a62c3c9608016171f153dfdc20e222e43}\index{AaStats@{AaStats}!last\_aa\_norm@{last\_aa\_norm}}
+\index{last\_aa\_norm@{last\_aa\_norm}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{last\_aa\_norm}{last\_aa\_norm}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a62c3c9608016171f153dfdc20e222e43} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} Aa\+Stats::\+last\+\_\+aa\+\_\+norm}
+
+Weight norm from the most recent AA solve. NaN if no solve was attempted. \Hypertarget{struct_aa_stats_a62a4f6c7c4e6731a869929f59df5d9f0}\index{AaStats@{AaStats}!last\_rank@{last\_rank}}
+\index{last\_rank@{last\_rank}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{last\_rank}{last\_rank}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a62a4f6c7c4e6731a869929f59df5d9f0} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+last\+\_\+rank}
+
+Rank of the most recent AA solve. \Hypertarget{struct_aa_stats_a0b3cc2f847bef49ce6d771a8e2f9115a}\index{AaStats@{AaStats}!last\_regularization@{last\_regularization}}
+\index{last\_regularization@{last\_regularization}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{last\_regularization}{last\_regularization}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a0b3cc2f847bef49ce6d771a8e2f9115a} 
+\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} Aa\+Stats::\+last\+\_\+regularization}
+
+Regularization used in the most recent AA solve. \Hypertarget{struct_aa_stats_a3e0d268bbc8157c1a1142f5df2d24944}\index{AaStats@{AaStats}!n\_accept@{n\_accept}}
+\index{n\_accept@{n\_accept}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{n\_accept}{n\_accept}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a3e0d268bbc8157c1a1142f5df2d24944} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+n\+\_\+accept}
+
+Number of AA updates accepted by aa\+\_\+apply before safeguarding. \Hypertarget{struct_aa_stats_ab3e7fba45199eb03bfb4379643aea055}\index{AaStats@{AaStats}!n\_reject\_lapack@{n\_reject\_lapack}}
+\index{n\_reject\_lapack@{n\_reject\_lapack}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{n\_reject\_lapack}{n\_reject\_lapack}}
+{\footnotesize\ttfamily \label{struct_aa_stats_ab3e7fba45199eb03bfb4379643aea055} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+n\+\_\+reject\+\_\+lapack}
+
+Number of AA rejections due to LAPACK errors. \Hypertarget{struct_aa_stats_a8a6eab78efbc57eb07e5f0d422c95e19}\index{AaStats@{AaStats}!n\_reject\_nonfinite@{n\_reject\_nonfinite}}
+\index{n\_reject\_nonfinite@{n\_reject\_nonfinite}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{n\_reject\_nonfinite}{n\_reject\_nonfinite}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a8a6eab78efbc57eb07e5f0d422c95e19} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+n\+\_\+reject\+\_\+nonfinite}
+
+Number of AA rejections due to non-\/finite weights. \Hypertarget{struct_aa_stats_adc57677bc2670d0e1a903e9cf75a5ac3}\index{AaStats@{AaStats}!n\_reject\_rank0@{n\_reject\_rank0}}
+\index{n\_reject\_rank0@{n\_reject\_rank0}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{n\_reject\_rank0}{n\_reject\_rank0}}
+{\footnotesize\ttfamily \label{struct_aa_stats_adc57677bc2670d0e1a903e9cf75a5ac3} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+n\+\_\+reject\+\_\+rank0}
+
+Number of AA rejections due to rank-\/zero reduced systems. \Hypertarget{struct_aa_stats_a577fb167544ccc815985a000431bea15}\index{AaStats@{AaStats}!n\_reject\_weight\_cap@{n\_reject\_weight\_cap}}
+\index{n\_reject\_weight\_cap@{n\_reject\_weight\_cap}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{n\_reject\_weight\_cap}{n\_reject\_weight\_cap}}
+{\footnotesize\ttfamily \label{struct_aa_stats_a577fb167544ccc815985a000431bea15} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+n\+\_\+reject\+\_\+weight\+\_\+cap}
+
+Number of AA rejections due to the weight-\/norm cap. \Hypertarget{struct_aa_stats_af39f6b8328371640cc66621a4ffcef66}\index{AaStats@{AaStats}!n\_safeguard\_reject@{n\_safeguard\_reject}}
+\index{n\_safeguard\_reject@{n\_safeguard\_reject}!AaStats@{AaStats}}
+\doxysubsubsection{\texorpdfstring{n\_safeguard\_reject}{n\_safeguard\_reject}}
+{\footnotesize\ttfamily \label{struct_aa_stats_af39f6b8328371640cc66621a4ffcef66} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} Aa\+Stats::\+n\+\_\+safeguard\+\_\+reject}
+
+Number of AA steps rejected by safeguarding. 
+
+The documentation for this struct was generated from the following file:\+\begin{DoxyCompactItemize}
+\item 
+/\+private/\+tmp/\+scs-\/400/\+include/\+\doxymbox{\hyperlink{aa__stats_8h}{aa\+\_\+stats.\+h}}\end{DoxyCompactItemize}

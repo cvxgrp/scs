@@ -1,0 +1,546 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+include/\+glbopts.h File Reference}
+\hypertarget{glbopts_8h}{}\label{glbopts_8h}\index{/private/tmp/scs-\/400/include/glbopts.h@{/private/tmp/scs-\/400/include/glbopts.h}}
+{\ttfamily \+\#include "{}scs.\+h"{}}\newline
+{\ttfamily \+\#include $<$math.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdio.\+h$>$}\newline
+{\ttfamily \+\#include $<$stdlib.\+h$>$}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(x)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_abae8a893f5f047e479a6fdeea4cad79b}{SCS\+\_\+\+VERSION}}~("{}3.\+2.\+11"{})
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a066901ffac09dc72c1f6a76d29b1c575}{VERBOSITY}}~(0)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a0ea0040e87eeb2a4c9605ebc4959315e}{MAX\+\_\+\+ITERS}}~(100000)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a62c40728b469a0a6e1f696793569835a}{EPS\+\_\+\+REL}}~(1E-\/4)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a31527ac41638eec6e9b6dc36946b539a}{EPS\+\_\+\+ABS}}~(1E-\/4)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ab2d1a8a7deda46bff854b035c0133d9a}{EPS\+\_\+\+INFEAS}}~(1E-\/7)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_af5abd28c44c29b7397c84f1fec4b1d84}{ALPHA}}~(1.\+5)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ad723143cb262cd9996cb8c4e9894ec66}{RHO\+\_\+X}}~(1E-\/6)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a0cbea62f1ce2043dd08108e65ed8de1d}{SCALE}}~(0.\+1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a42f8c497a1968074f38bf5055c650dca}{VERBOSE}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a29cf2d41341c861a02125541ee1c9368}{NORMALIZE}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a2117977538fc37cd5f66997e2cfc89bf}{WARM\+\_\+\+START}}~(0)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a6d6368dc21327cb17cee7a7b3ffc5ce4}{ACCELERATION\+\_\+\+LOOKBACK}}~(10)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a5c68a275a1090100fc06c92e88e25aa1}{ACCELERATION\+\_\+\+INTERVAL}}~(5)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a7251d070b9f02a0e7a29d7865d49ed13}{ADAPTIVE\+\_\+\+SCALE}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ab171bd88dfe93d655a8b0bc78d019e31}{ADAPTIVE\+\_\+\+DIAG\+\_\+\+SCALE}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_aaffcf029bdf67759711096351f10d9d2}{WRITE\+\_\+\+DATA\+\_\+\+FILENAME}}~(0)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a9183179e53af720617c7f2a7f604c4c4}{LOG\+\_\+\+CSV\+\_\+\+FILENAME}}~(0)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a965146c86b95409970a359c229b1ea1a}{TIME\+\_\+\+LIMIT\+\_\+\+SECS}}~(0.)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_af8233b82d1283191933cdc8e08e14c6f}{INFEAS\+\_\+\+NEGATIVITY\+\_\+\+TOL}}~(1e-\/9)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a41360f9343a338b1dd9e8e9c40ea86bb}{CERT\+\_\+\+PERSISTENCE\+\_\+\+CHECKS}}~(2)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a74b592ebf6298c05fd3de8e31288fb8e}{scs\+\_\+printf}}~printf
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_add9bab99b6df21996bab86e8fed3848f}{scs\+\_\+free}}~free
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a2ebbeabe0deb7f63bafbe28b1c05fa57}{scs\+\_\+malloc}}~malloc
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a9e3376e32734042399d54598125657b5}{scs\+\_\+calloc}}~calloc
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a0fd8d21f980e3a399fcc493746f264cd}{scs\+\_\+realloc}}~realloc
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a8abfcc76130f3f991d124dd22d7e69bc}{NAN}}~(HUGE\+\_\+\+VAL -\/ HUGE\+\_\+\+VAL)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a956e2723d559858d08644ac99146e910}{INFINITY}}~HUGE\+\_\+\+VAL
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_afa99ec4acc4ecb2dc3c2d05da15d0e3f}{MAX}}(a,  b)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a3acffbd305ee72dcd4593c0d8af64a4f}{MIN}}(a,  b)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a3b9d7d973bd11c5ad12d329c6ea8b308}{SQRTF}}~sqrt
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a501ced7ea0f78c14fd0a8f15e05d861a}{EXPF}}~exp
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ac4c513cbda38bfa3bace1f2420511271}{LOGF}}~log
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a26e668489fb528456f4bc54ba908d5b4}{ABS}}~fabs
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a5eb338b58f3b23067d6a87b00eca4971}{POWF}}~pow
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ac50afc98ae62aa5884c8756d607a127a}{IABS}}~abs
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a92a65c770a4ea7810c611417aaddaa90}{FEASIBLE\+\_\+\+ITERS}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a819fbea5b2d786b7e8c2700e1fb47895}{RESCALING\+\_\+\+MIN\+\_\+\+ITERS}}~(100)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a0d99645761f7f98525bb64277c73946a}{\+\_\+\+DIV\+\_\+\+EPS\+\_\+\+TOL}}~(1E-\/18)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a274d5c6f0e4fc5e150e00e52a3f79a32}{SAFEDIV\+\_\+\+POS}}(X,  Y)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a515cb544d69e291ad8d0cf6813c23f93}{PRINT\+\_\+\+INTERVAL}}~(250)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a4e4b717291d0110b79e2efb2e8499c55}{CONVERGED\+\_\+\+INTERVAL}}~(25)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ae3b5b1ec5d433fbb08270eb765e3c3f1}{ITERATE\+\_\+\+NORM}}~(1.)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ae1fc77c1a1666773a25dc88a72da4b2b}{NORM}}~\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a0b644a555cdb215d0e7cead3d3f59bd1}{norm\+\_\+inf}})
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a9932dd6bdc84463dbb4ffee58123448b}{TAU\+\_\+\+FACTOR}}~(10.)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a9a3f044dcfc5b5a255f5068ca9381305}{ACCELERATION\+\_\+\+TYPE\+\_\+1}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a29251dc84a38f5ac5a3173f757a0e553}{AA\+\_\+\+REGULARIZATION}}~(1e-\/8)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a1508b7e95a6b947e849935ee8409edf8}{AA\+\_\+\+RELAXATION}}~(1.\+0)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a5cd08f9644330447904d8f4a7a6a2cec}{AA\+\_\+\+SAFEGUARD\+\_\+\+FACTOR}}~(1.)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a31a277cb938fed1a3271b75d6930de82}{AA\+\_\+\+MAX\+\_\+\+WEIGHT\+\_\+\+NORM}}~(1e10)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a42de9453b3c5dbf3879c1385642bbdeb}{AA\+\_\+\+IR\+\_\+\+MAX\+\_\+\+STEPS}}~(5)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a57c5c6a4a7a67e0e765e0eb910725342}{MAX\+\_\+\+SCALE\+\_\+\+VALUE}}~(1e6)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a7ce1a04c5cc110577472a6cde9fc33f8}{MIN\+\_\+\+SCALE\+\_\+\+VALUE}}~(1e-\/6)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_af9b30c890b01383ea91b08dbb686b28d}{SCALE\+\_\+\+NORM}}~\doxymbox{\hyperlink{glbopts_8h_ae1fc77c1a1666773a25dc88a72da4b2b}{NORM}} /\+\texorpdfstring{$\ast$}{*} what norm to use when computing the scale factor \texorpdfstring{$\ast$}{*}/\+
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_aa2ebfc45e3247c0a73ce8b7114fdf70d}{DIAG\+\_\+\+SCALE\+\_\+\+DAMP}}~(0.\+25)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a54831c84e3c6f3362a8def571284dd62}{DIAG\+\_\+\+SCALE\+\_\+\+MULT\+\_\+\+MIN}}~(1e-\/3)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a2e3f4df0f8f4f41287331f6949a14e68}{DIAG\+\_\+\+SCALE\+\_\+\+MULT\+\_\+\+MAX}}~(1e3)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_ad839755126705383162d24dee0cfd0fb}{DEN\+\_\+\+FLOOR\+\_\+\+FRAC}}~(1e-\/3)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a4582d3bdac0c75af09e18b19895f5d2a}{CG\+\_\+\+BEST\+\_\+\+TOL}}~(1e-\/12)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_afbb74b0c723516ef3f29184080ea218d}{CG\+\_\+\+TOL\+\_\+\+FACTOR}}~(0.\+03)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_aff6175e7b05724c2e0fef031bc10ca76}{CG\+\_\+\+NORM}}~\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a0b644a555cdb215d0e7cead3d3f59bd1}{norm\+\_\+inf}})
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a12bfb0313e34bbbe9b0d083d8249655b}{CG\+\_\+\+RATE}}~(2.\+0)
+\item 
+\+\#define \doxymbox{\hyperlink{glbopts_8h_a218a6f6c7dd685589da9d88631306eb3}{DEFLATE\+\_\+\+VECTORS}}~(30)
+\end{DoxyCompactItemize}
+
+
+\label{doc-define-members}
+\Hypertarget{glbopts_8h_doc-define-members}
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{glbopts_8h_a0d99645761f7f98525bb64277c73946a}\index{glbopts.h@{glbopts.h}!\_DIV\_EPS\_TOL@{\_DIV\_EPS\_TOL}}
+\index{\_DIV\_EPS\_TOL@{\_DIV\_EPS\_TOL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{\_DIV\_EPS\_TOL}{\_DIV\_EPS\_TOL}}
+{\footnotesize\ttfamily \label{glbopts_8h_a0d99645761f7f98525bb64277c73946a} 
+\+\#define \+\_\+\+DIV\+\_\+\+EPS\+\_\+\+TOL~(1E-\/18)}
+
+\Hypertarget{glbopts_8h_a42de9453b3c5dbf3879c1385642bbdeb}\index{glbopts.h@{glbopts.h}!AA\_IR\_MAX\_STEPS@{AA\_IR\_MAX\_STEPS}}
+\index{AA\_IR\_MAX\_STEPS@{AA\_IR\_MAX\_STEPS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{AA\_IR\_MAX\_STEPS}{AA\_IR\_MAX\_STEPS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a42de9453b3c5dbf3879c1385642bbdeb} 
+\+\#define AA\+\_\+\+IR\+\_\+\+MAX\+\_\+\+STEPS~(5)}
+
+\Hypertarget{glbopts_8h_a31a277cb938fed1a3271b75d6930de82}\index{glbopts.h@{glbopts.h}!AA\_MAX\_WEIGHT\_NORM@{AA\_MAX\_WEIGHT\_NORM}}
+\index{AA\_MAX\_WEIGHT\_NORM@{AA\_MAX\_WEIGHT\_NORM}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{AA\_MAX\_WEIGHT\_NORM}{AA\_MAX\_WEIGHT\_NORM}}
+{\footnotesize\ttfamily \label{glbopts_8h_a31a277cb938fed1a3271b75d6930de82} 
+\+\#define AA\+\_\+\+MAX\+\_\+\+WEIGHT\+\_\+\+NORM~(1e10)}
+
+\Hypertarget{glbopts_8h_a29251dc84a38f5ac5a3173f757a0e553}\index{glbopts.h@{glbopts.h}!AA\_REGULARIZATION@{AA\_REGULARIZATION}}
+\index{AA\_REGULARIZATION@{AA\_REGULARIZATION}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{AA\_REGULARIZATION}{AA\_REGULARIZATION}}
+{\footnotesize\ttfamily \label{glbopts_8h_a29251dc84a38f5ac5a3173f757a0e553} 
+\+\#define AA\+\_\+\+REGULARIZATION~(1e-\/8)}
+
+\Hypertarget{glbopts_8h_a1508b7e95a6b947e849935ee8409edf8}\index{glbopts.h@{glbopts.h}!AA\_RELAXATION@{AA\_RELAXATION}}
+\index{AA\_RELAXATION@{AA\_RELAXATION}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{AA\_RELAXATION}{AA\_RELAXATION}}
+{\footnotesize\ttfamily \label{glbopts_8h_a1508b7e95a6b947e849935ee8409edf8} 
+\+\#define AA\+\_\+\+RELAXATION~(1.\+0)}
+
+\Hypertarget{glbopts_8h_a5cd08f9644330447904d8f4a7a6a2cec}\index{glbopts.h@{glbopts.h}!AA\_SAFEGUARD\_FACTOR@{AA\_SAFEGUARD\_FACTOR}}
+\index{AA\_SAFEGUARD\_FACTOR@{AA\_SAFEGUARD\_FACTOR}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{AA\_SAFEGUARD\_FACTOR}{AA\_SAFEGUARD\_FACTOR}}
+{\footnotesize\ttfamily \label{glbopts_8h_a5cd08f9644330447904d8f4a7a6a2cec} 
+\+\#define AA\+\_\+\+SAFEGUARD\+\_\+\+FACTOR~(1.)}
+
+\Hypertarget{glbopts_8h_a26e668489fb528456f4bc54ba908d5b4}\index{glbopts.h@{glbopts.h}!ABS@{ABS}}
+\index{ABS@{ABS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ABS}{ABS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a26e668489fb528456f4bc54ba908d5b4} 
+\+\#define ABS~fabs}
+
+\Hypertarget{glbopts_8h_a5c68a275a1090100fc06c92e88e25aa1}\index{glbopts.h@{glbopts.h}!ACCELERATION\_INTERVAL@{ACCELERATION\_INTERVAL}}
+\index{ACCELERATION\_INTERVAL@{ACCELERATION\_INTERVAL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ACCELERATION\_INTERVAL}{ACCELERATION\_INTERVAL}}
+{\footnotesize\ttfamily \label{glbopts_8h_a5c68a275a1090100fc06c92e88e25aa1} 
+\+\#define ACCELERATION\+\_\+\+INTERVAL~(5)}
+
+\Hypertarget{glbopts_8h_a6d6368dc21327cb17cee7a7b3ffc5ce4}\index{glbopts.h@{glbopts.h}!ACCELERATION\_LOOKBACK@{ACCELERATION\_LOOKBACK}}
+\index{ACCELERATION\_LOOKBACK@{ACCELERATION\_LOOKBACK}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ACCELERATION\_LOOKBACK}{ACCELERATION\_LOOKBACK}}
+{\footnotesize\ttfamily \label{glbopts_8h_a6d6368dc21327cb17cee7a7b3ffc5ce4} 
+\+\#define ACCELERATION\+\_\+\+LOOKBACK~(10)}
+
+\Hypertarget{glbopts_8h_a9a3f044dcfc5b5a255f5068ca9381305}\index{glbopts.h@{glbopts.h}!ACCELERATION\_TYPE\_1@{ACCELERATION\_TYPE\_1}}
+\index{ACCELERATION\_TYPE\_1@{ACCELERATION\_TYPE\_1}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ACCELERATION\_TYPE\_1}{ACCELERATION\_TYPE\_1}}
+{\footnotesize\ttfamily \label{glbopts_8h_a9a3f044dcfc5b5a255f5068ca9381305} 
+\+\#define ACCELERATION\+\_\+\+TYPE\+\_\+1~(1)}
+
+\Hypertarget{glbopts_8h_ab171bd88dfe93d655a8b0bc78d019e31}\index{glbopts.h@{glbopts.h}!ADAPTIVE\_DIAG\_SCALE@{ADAPTIVE\_DIAG\_SCALE}}
+\index{ADAPTIVE\_DIAG\_SCALE@{ADAPTIVE\_DIAG\_SCALE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ADAPTIVE\_DIAG\_SCALE}{ADAPTIVE\_DIAG\_SCALE}}
+{\footnotesize\ttfamily \label{glbopts_8h_ab171bd88dfe93d655a8b0bc78d019e31} 
+\+\#define ADAPTIVE\+\_\+\+DIAG\+\_\+\+SCALE~(1)}
+
+\Hypertarget{glbopts_8h_a7251d070b9f02a0e7a29d7865d49ed13}\index{glbopts.h@{glbopts.h}!ADAPTIVE\_SCALE@{ADAPTIVE\_SCALE}}
+\index{ADAPTIVE\_SCALE@{ADAPTIVE\_SCALE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ADAPTIVE\_SCALE}{ADAPTIVE\_SCALE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a7251d070b9f02a0e7a29d7865d49ed13} 
+\+\#define ADAPTIVE\+\_\+\+SCALE~(1)}
+
+\Hypertarget{glbopts_8h_af5abd28c44c29b7397c84f1fec4b1d84}\index{glbopts.h@{glbopts.h}!ALPHA@{ALPHA}}
+\index{ALPHA@{ALPHA}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ALPHA}{ALPHA}}
+{\footnotesize\ttfamily \label{glbopts_8h_af5abd28c44c29b7397c84f1fec4b1d84} 
+\+\#define ALPHA~(1.\+5)}
+
+\Hypertarget{glbopts_8h_a41360f9343a338b1dd9e8e9c40ea86bb}\index{glbopts.h@{glbopts.h}!CERT\_PERSISTENCE\_CHECKS@{CERT\_PERSISTENCE\_CHECKS}}
+\index{CERT\_PERSISTENCE\_CHECKS@{CERT\_PERSISTENCE\_CHECKS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{CERT\_PERSISTENCE\_CHECKS}{CERT\_PERSISTENCE\_CHECKS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a41360f9343a338b1dd9e8e9c40ea86bb} 
+\+\#define CERT\+\_\+\+PERSISTENCE\+\_\+\+CHECKS~(2)}
+
+\Hypertarget{glbopts_8h_a4582d3bdac0c75af09e18b19895f5d2a}\index{glbopts.h@{glbopts.h}!CG\_BEST\_TOL@{CG\_BEST\_TOL}}
+\index{CG\_BEST\_TOL@{CG\_BEST\_TOL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{CG\_BEST\_TOL}{CG\_BEST\_TOL}}
+{\footnotesize\ttfamily \label{glbopts_8h_a4582d3bdac0c75af09e18b19895f5d2a} 
+\+\#define CG\+\_\+\+BEST\+\_\+\+TOL~(1e-\/12)}
+
+\Hypertarget{glbopts_8h_aff6175e7b05724c2e0fef031bc10ca76}\index{glbopts.h@{glbopts.h}!CG\_NORM@{CG\_NORM}}
+\index{CG\_NORM@{CG\_NORM}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{CG\_NORM}{CG\_NORM}}
+{\footnotesize\ttfamily \label{glbopts_8h_aff6175e7b05724c2e0fef031bc10ca76} 
+\+\#define CG\+\_\+\+NORM~\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a0b644a555cdb215d0e7cead3d3f59bd1}{norm\+\_\+inf}})}
+
+\Hypertarget{glbopts_8h_a12bfb0313e34bbbe9b0d083d8249655b}\index{glbopts.h@{glbopts.h}!CG\_RATE@{CG\_RATE}}
+\index{CG\_RATE@{CG\_RATE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{CG\_RATE}{CG\_RATE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a12bfb0313e34bbbe9b0d083d8249655b} 
+\+\#define CG\+\_\+\+RATE~(2.\+0)}
+
+\Hypertarget{glbopts_8h_afbb74b0c723516ef3f29184080ea218d}\index{glbopts.h@{glbopts.h}!CG\_TOL\_FACTOR@{CG\_TOL\_FACTOR}}
+\index{CG\_TOL\_FACTOR@{CG\_TOL\_FACTOR}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{CG\_TOL\_FACTOR}{CG\_TOL\_FACTOR}}
+{\footnotesize\ttfamily \label{glbopts_8h_afbb74b0c723516ef3f29184080ea218d} 
+\+\#define CG\+\_\+\+TOL\+\_\+\+FACTOR~(0.\+03)}
+
+\Hypertarget{glbopts_8h_a4e4b717291d0110b79e2efb2e8499c55}\index{glbopts.h@{glbopts.h}!CONVERGED\_INTERVAL@{CONVERGED\_INTERVAL}}
+\index{CONVERGED\_INTERVAL@{CONVERGED\_INTERVAL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{CONVERGED\_INTERVAL}{CONVERGED\_INTERVAL}}
+{\footnotesize\ttfamily \label{glbopts_8h_a4e4b717291d0110b79e2efb2e8499c55} 
+\+\#define CONVERGED\+\_\+\+INTERVAL~(25)}
+
+\Hypertarget{glbopts_8h_a218a6f6c7dd685589da9d88631306eb3}\index{glbopts.h@{glbopts.h}!DEFLATE\_VECTORS@{DEFLATE\_VECTORS}}
+\index{DEFLATE\_VECTORS@{DEFLATE\_VECTORS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{DEFLATE\_VECTORS}{DEFLATE\_VECTORS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a218a6f6c7dd685589da9d88631306eb3} 
+\+\#define DEFLATE\+\_\+\+VECTORS~(30)}
+
+\Hypertarget{glbopts_8h_ad839755126705383162d24dee0cfd0fb}\index{glbopts.h@{glbopts.h}!DEN\_FLOOR\_FRAC@{DEN\_FLOOR\_FRAC}}
+\index{DEN\_FLOOR\_FRAC@{DEN\_FLOOR\_FRAC}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{DEN\_FLOOR\_FRAC}{DEN\_FLOOR\_FRAC}}
+{\footnotesize\ttfamily \label{glbopts_8h_ad839755126705383162d24dee0cfd0fb} 
+\+\#define DEN\+\_\+\+FLOOR\+\_\+\+FRAC~(1e-\/3)}
+
+\Hypertarget{glbopts_8h_aa2ebfc45e3247c0a73ce8b7114fdf70d}\index{glbopts.h@{glbopts.h}!DIAG\_SCALE\_DAMP@{DIAG\_SCALE\_DAMP}}
+\index{DIAG\_SCALE\_DAMP@{DIAG\_SCALE\_DAMP}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{DIAG\_SCALE\_DAMP}{DIAG\_SCALE\_DAMP}}
+{\footnotesize\ttfamily \label{glbopts_8h_aa2ebfc45e3247c0a73ce8b7114fdf70d} 
+\+\#define DIAG\+\_\+\+SCALE\+\_\+\+DAMP~(0.\+25)}
+
+\Hypertarget{glbopts_8h_a2e3f4df0f8f4f41287331f6949a14e68}\index{glbopts.h@{glbopts.h}!DIAG\_SCALE\_MULT\_MAX@{DIAG\_SCALE\_MULT\_MAX}}
+\index{DIAG\_SCALE\_MULT\_MAX@{DIAG\_SCALE\_MULT\_MAX}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{DIAG\_SCALE\_MULT\_MAX}{DIAG\_SCALE\_MULT\_MAX}}
+{\footnotesize\ttfamily \label{glbopts_8h_a2e3f4df0f8f4f41287331f6949a14e68} 
+\+\#define DIAG\+\_\+\+SCALE\+\_\+\+MULT\+\_\+\+MAX~(1e3)}
+
+\Hypertarget{glbopts_8h_a54831c84e3c6f3362a8def571284dd62}\index{glbopts.h@{glbopts.h}!DIAG\_SCALE\_MULT\_MIN@{DIAG\_SCALE\_MULT\_MIN}}
+\index{DIAG\_SCALE\_MULT\_MIN@{DIAG\_SCALE\_MULT\_MIN}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{DIAG\_SCALE\_MULT\_MIN}{DIAG\_SCALE\_MULT\_MIN}}
+{\footnotesize\ttfamily \label{glbopts_8h_a54831c84e3c6f3362a8def571284dd62} 
+\+\#define DIAG\+\_\+\+SCALE\+\_\+\+MULT\+\_\+\+MIN~(1e-\/3)}
+
+\Hypertarget{glbopts_8h_a31527ac41638eec6e9b6dc36946b539a}\index{glbopts.h@{glbopts.h}!EPS\_ABS@{EPS\_ABS}}
+\index{EPS\_ABS@{EPS\_ABS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{EPS\_ABS}{EPS\_ABS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a31527ac41638eec6e9b6dc36946b539a} 
+\+\#define EPS\+\_\+\+ABS~(1E-\/4)}
+
+\Hypertarget{glbopts_8h_ab2d1a8a7deda46bff854b035c0133d9a}\index{glbopts.h@{glbopts.h}!EPS\_INFEAS@{EPS\_INFEAS}}
+\index{EPS\_INFEAS@{EPS\_INFEAS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{EPS\_INFEAS}{EPS\_INFEAS}}
+{\footnotesize\ttfamily \label{glbopts_8h_ab2d1a8a7deda46bff854b035c0133d9a} 
+\+\#define EPS\+\_\+\+INFEAS~(1E-\/7)}
+
+\Hypertarget{glbopts_8h_a62c40728b469a0a6e1f696793569835a}\index{glbopts.h@{glbopts.h}!EPS\_REL@{EPS\_REL}}
+\index{EPS\_REL@{EPS\_REL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{EPS\_REL}{EPS\_REL}}
+{\footnotesize\ttfamily \label{glbopts_8h_a62c40728b469a0a6e1f696793569835a} 
+\+\#define EPS\+\_\+\+REL~(1E-\/4)}
+
+\Hypertarget{glbopts_8h_a501ced7ea0f78c14fd0a8f15e05d861a}\index{glbopts.h@{glbopts.h}!EXPF@{EXPF}}
+\index{EXPF@{EXPF}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{EXPF}{EXPF}}
+{\footnotesize\ttfamily \label{glbopts_8h_a501ced7ea0f78c14fd0a8f15e05d861a} 
+\+\#define EXPF~exp}
+
+\Hypertarget{glbopts_8h_a92a65c770a4ea7810c611417aaddaa90}\index{glbopts.h@{glbopts.h}!FEASIBLE\_ITERS@{FEASIBLE\_ITERS}}
+\index{FEASIBLE\_ITERS@{FEASIBLE\_ITERS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{FEASIBLE\_ITERS}{FEASIBLE\_ITERS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a92a65c770a4ea7810c611417aaddaa90} 
+\+\#define FEASIBLE\+\_\+\+ITERS~(1)}
+
+\Hypertarget{glbopts_8h_ac50afc98ae62aa5884c8756d607a127a}\index{glbopts.h@{glbopts.h}!IABS@{IABS}}
+\index{IABS@{IABS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{IABS}{IABS}}
+{\footnotesize\ttfamily \label{glbopts_8h_ac50afc98ae62aa5884c8756d607a127a} 
+\+\#define IABS~abs}
+
+\Hypertarget{glbopts_8h_af8233b82d1283191933cdc8e08e14c6f}\index{glbopts.h@{glbopts.h}!INFEAS\_NEGATIVITY\_TOL@{INFEAS\_NEGATIVITY\_TOL}}
+\index{INFEAS\_NEGATIVITY\_TOL@{INFEAS\_NEGATIVITY\_TOL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{INFEAS\_NEGATIVITY\_TOL}{INFEAS\_NEGATIVITY\_TOL}}
+{\footnotesize\ttfamily \label{glbopts_8h_af8233b82d1283191933cdc8e08e14c6f} 
+\+\#define INFEAS\+\_\+\+NEGATIVITY\+\_\+\+TOL~(1e-\/9)}
+
+\Hypertarget{glbopts_8h_a956e2723d559858d08644ac99146e910}\index{glbopts.h@{glbopts.h}!INFINITY@{INFINITY}}
+\index{INFINITY@{INFINITY}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{INFINITY}{INFINITY}}
+{\footnotesize\ttfamily \label{glbopts_8h_a956e2723d559858d08644ac99146e910} 
+\+\#define INFINITY~HUGE\+\_\+\+VAL}
+
+\Hypertarget{glbopts_8h_ae3b5b1ec5d433fbb08270eb765e3c3f1}\index{glbopts.h@{glbopts.h}!ITERATE\_NORM@{ITERATE\_NORM}}
+\index{ITERATE\_NORM@{ITERATE\_NORM}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{ITERATE\_NORM}{ITERATE\_NORM}}
+{\footnotesize\ttfamily \label{glbopts_8h_ae3b5b1ec5d433fbb08270eb765e3c3f1} 
+\+\#define ITERATE\+\_\+\+NORM~(1.)}
+
+\Hypertarget{glbopts_8h_a9183179e53af720617c7f2a7f604c4c4}\index{glbopts.h@{glbopts.h}!LOG\_CSV\_FILENAME@{LOG\_CSV\_FILENAME}}
+\index{LOG\_CSV\_FILENAME@{LOG\_CSV\_FILENAME}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{LOG\_CSV\_FILENAME}{LOG\_CSV\_FILENAME}}
+{\footnotesize\ttfamily \label{glbopts_8h_a9183179e53af720617c7f2a7f604c4c4} 
+\+\#define LOG\+\_\+\+CSV\+\_\+\+FILENAME~(0)}
+
+\Hypertarget{glbopts_8h_ac4c513cbda38bfa3bace1f2420511271}\index{glbopts.h@{glbopts.h}!LOGF@{LOGF}}
+\index{LOGF@{LOGF}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{LOGF}{LOGF}}
+{\footnotesize\ttfamily \label{glbopts_8h_ac4c513cbda38bfa3bace1f2420511271} 
+\+\#define LOGF~log}
+
+\Hypertarget{glbopts_8h_afa99ec4acc4ecb2dc3c2d05da15d0e3f}\index{glbopts.h@{glbopts.h}!MAX@{MAX}}
+\index{MAX@{MAX}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{MAX}{MAX}}
+{\footnotesize\ttfamily \label{glbopts_8h_afa99ec4acc4ecb2dc3c2d05da15d0e3f} 
+\+\#define MAX(\begin{DoxyParamCaption}\item[{}]{a}{, }\item[{}]{b}{}\end{DoxyParamCaption})}
+
+{\bfseries Value:\+}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{(((a)\ >\ (b))\ ?\ (a)\ :\ (b))}
+
+\end{DoxyCode}
+\Hypertarget{glbopts_8h_a0ea0040e87eeb2a4c9605ebc4959315e}\index{glbopts.h@{glbopts.h}!MAX\_ITERS@{MAX\_ITERS}}
+\index{MAX\_ITERS@{MAX\_ITERS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{MAX\_ITERS}{MAX\_ITERS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a0ea0040e87eeb2a4c9605ebc4959315e} 
+\+\#define MAX\+\_\+\+ITERS~(100000)}
+
+\Hypertarget{glbopts_8h_a57c5c6a4a7a67e0e765e0eb910725342}\index{glbopts.h@{glbopts.h}!MAX\_SCALE\_VALUE@{MAX\_SCALE\_VALUE}}
+\index{MAX\_SCALE\_VALUE@{MAX\_SCALE\_VALUE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{MAX\_SCALE\_VALUE}{MAX\_SCALE\_VALUE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a57c5c6a4a7a67e0e765e0eb910725342} 
+\+\#define MAX\+\_\+\+SCALE\+\_\+\+VALUE~(1e6)}
+
+\Hypertarget{glbopts_8h_a3acffbd305ee72dcd4593c0d8af64a4f}\index{glbopts.h@{glbopts.h}!MIN@{MIN}}
+\index{MIN@{MIN}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{MIN}{MIN}}
+{\footnotesize\ttfamily \label{glbopts_8h_a3acffbd305ee72dcd4593c0d8af64a4f} 
+\+\#define MIN(\begin{DoxyParamCaption}\item[{}]{a}{, }\item[{}]{b}{}\end{DoxyParamCaption})}
+
+{\bfseries Value:\+}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{(((a)\ <\ (b))\ ?\ (a)\ :\ (b))}
+
+\end{DoxyCode}
+\Hypertarget{glbopts_8h_a7ce1a04c5cc110577472a6cde9fc33f8}\index{glbopts.h@{glbopts.h}!MIN\_SCALE\_VALUE@{MIN\_SCALE\_VALUE}}
+\index{MIN\_SCALE\_VALUE@{MIN\_SCALE\_VALUE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{MIN\_SCALE\_VALUE}{MIN\_SCALE\_VALUE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a7ce1a04c5cc110577472a6cde9fc33f8} 
+\+\#define MIN\+\_\+\+SCALE\+\_\+\+VALUE~(1e-\/6)}
+
+\Hypertarget{glbopts_8h_a8abfcc76130f3f991d124dd22d7e69bc}\index{glbopts.h@{glbopts.h}!NAN@{NAN}}
+\index{NAN@{NAN}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{NAN}{NAN}}
+{\footnotesize\ttfamily \label{glbopts_8h_a8abfcc76130f3f991d124dd22d7e69bc} 
+\+\#define NAN~(HUGE\+\_\+\+VAL -\/ HUGE\+\_\+\+VAL)}
+
+\Hypertarget{glbopts_8h_ae1fc77c1a1666773a25dc88a72da4b2b}\index{glbopts.h@{glbopts.h}!NORM@{NORM}}
+\index{NORM@{NORM}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{NORM}{NORM}}
+{\footnotesize\ttfamily \label{glbopts_8h_ae1fc77c1a1666773a25dc88a72da4b2b} 
+\+\#define NORM~\doxymbox{\hyperlink{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}{SCS}}(\doxymbox{\hyperlink{linalg_8c_a0b644a555cdb215d0e7cead3d3f59bd1}{norm\+\_\+inf}})}
+
+\Hypertarget{glbopts_8h_a29cf2d41341c861a02125541ee1c9368}\index{glbopts.h@{glbopts.h}!NORMALIZE@{NORMALIZE}}
+\index{NORMALIZE@{NORMALIZE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{NORMALIZE}{NORMALIZE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a29cf2d41341c861a02125541ee1c9368} 
+\+\#define NORMALIZE~(1)}
+
+\Hypertarget{glbopts_8h_a5eb338b58f3b23067d6a87b00eca4971}\index{glbopts.h@{glbopts.h}!POWF@{POWF}}
+\index{POWF@{POWF}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{POWF}{POWF}}
+{\footnotesize\ttfamily \label{glbopts_8h_a5eb338b58f3b23067d6a87b00eca4971} 
+\+\#define POWF~pow}
+
+\Hypertarget{glbopts_8h_a515cb544d69e291ad8d0cf6813c23f93}\index{glbopts.h@{glbopts.h}!PRINT\_INTERVAL@{PRINT\_INTERVAL}}
+\index{PRINT\_INTERVAL@{PRINT\_INTERVAL}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{PRINT\_INTERVAL}{PRINT\_INTERVAL}}
+{\footnotesize\ttfamily \label{glbopts_8h_a515cb544d69e291ad8d0cf6813c23f93} 
+\+\#define PRINT\+\_\+\+INTERVAL~(250)}
+
+\Hypertarget{glbopts_8h_a819fbea5b2d786b7e8c2700e1fb47895}\index{glbopts.h@{glbopts.h}!RESCALING\_MIN\_ITERS@{RESCALING\_MIN\_ITERS}}
+\index{RESCALING\_MIN\_ITERS@{RESCALING\_MIN\_ITERS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{RESCALING\_MIN\_ITERS}{RESCALING\_MIN\_ITERS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a819fbea5b2d786b7e8c2700e1fb47895} 
+\+\#define RESCALING\+\_\+\+MIN\+\_\+\+ITERS~(100)}
+
+\Hypertarget{glbopts_8h_ad723143cb262cd9996cb8c4e9894ec66}\index{glbopts.h@{glbopts.h}!RHO\_X@{RHO\_X}}
+\index{RHO\_X@{RHO\_X}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{RHO\_X}{RHO\_X}}
+{\footnotesize\ttfamily \label{glbopts_8h_ad723143cb262cd9996cb8c4e9894ec66} 
+\+\#define RHO\+\_\+X~(1E-\/6)}
+
+\Hypertarget{glbopts_8h_a274d5c6f0e4fc5e150e00e52a3f79a32}\index{glbopts.h@{glbopts.h}!SAFEDIV\_POS@{SAFEDIV\_POS}}
+\index{SAFEDIV\_POS@{SAFEDIV\_POS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{SAFEDIV\_POS}{SAFEDIV\_POS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a274d5c6f0e4fc5e150e00e52a3f79a32} 
+\+\#define SAFEDIV\+\_\+\+POS(\begin{DoxyParamCaption}\item[{}]{X}{, }\item[{}]{Y}{}\end{DoxyParamCaption})}
+
+{\bfseries Value:\+}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{((Y)\ <\ \doxymbox{\hyperlink{glbopts_8h_a0d99645761f7f98525bb64277c73946a}{\_DIV\_EPS\_TOL}}\ ?\ ((X)\ /\ \doxymbox{\hyperlink{glbopts_8h_a0d99645761f7f98525bb64277c73946a}{\_DIV\_EPS\_TOL}})\ :\ (X)\ /\ (Y))}
+
+\end{DoxyCode}
+\Hypertarget{glbopts_8h_a0cbea62f1ce2043dd08108e65ed8de1d}\index{glbopts.h@{glbopts.h}!SCALE@{SCALE}}
+\index{SCALE@{SCALE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{SCALE}{SCALE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a0cbea62f1ce2043dd08108e65ed8de1d} 
+\+\#define SCALE~(0.\+1)}
+
+\Hypertarget{glbopts_8h_af9b30c890b01383ea91b08dbb686b28d}\index{glbopts.h@{glbopts.h}!SCALE\_NORM@{SCALE\_NORM}}
+\index{SCALE\_NORM@{SCALE\_NORM}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{SCALE\_NORM}{SCALE\_NORM}}
+{\footnotesize\ttfamily \label{glbopts_8h_af9b30c890b01383ea91b08dbb686b28d} 
+\+\#define SCALE\+\_\+\+NORM~\doxymbox{\hyperlink{glbopts_8h_ae1fc77c1a1666773a25dc88a72da4b2b}{NORM}} /\+\texorpdfstring{$\ast$}{*} what norm to use when computing the scale factor \texorpdfstring{$\ast$}{*}/\+}
+
+\Hypertarget{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31}\index{glbopts.h@{glbopts.h}!SCS@{SCS}}
+\index{SCS@{SCS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{SCS}{SCS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a9ae864254e3d1390d907a33dfa7cdf31} 
+\+\#define SCS(\begin{DoxyParamCaption}\item[{}]{x}{}\end{DoxyParamCaption})}
+
+{\bfseries Value:\+}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\_scs\_\#\#x}
+
+\end{DoxyCode}
+\Hypertarget{glbopts_8h_a9e3376e32734042399d54598125657b5}\index{glbopts.h@{glbopts.h}!scs\_calloc@{scs\_calloc}}
+\index{scs\_calloc@{scs\_calloc}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{scs\_calloc}{scs\_calloc}}
+{\footnotesize\ttfamily \label{glbopts_8h_a9e3376e32734042399d54598125657b5} 
+\+\#define scs\+\_\+calloc~calloc}
+
+\Hypertarget{glbopts_8h_add9bab99b6df21996bab86e8fed3848f}\index{glbopts.h@{glbopts.h}!scs\_free@{scs\_free}}
+\index{scs\_free@{scs\_free}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{scs\_free}{scs\_free}}
+{\footnotesize\ttfamily \label{glbopts_8h_add9bab99b6df21996bab86e8fed3848f} 
+\+\#define scs\+\_\+free~free}
+
+\Hypertarget{glbopts_8h_a2ebbeabe0deb7f63bafbe28b1c05fa57}\index{glbopts.h@{glbopts.h}!scs\_malloc@{scs\_malloc}}
+\index{scs\_malloc@{scs\_malloc}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{scs\_malloc}{scs\_malloc}}
+{\footnotesize\ttfamily \label{glbopts_8h_a2ebbeabe0deb7f63bafbe28b1c05fa57} 
+\+\#define scs\+\_\+malloc~malloc}
+
+\Hypertarget{glbopts_8h_a74b592ebf6298c05fd3de8e31288fb8e}\index{glbopts.h@{glbopts.h}!scs\_printf@{scs\_printf}}
+\index{scs\_printf@{scs\_printf}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{scs\_printf}{scs\_printf}}
+{\footnotesize\ttfamily \label{glbopts_8h_a74b592ebf6298c05fd3de8e31288fb8e} 
+\+\#define scs\+\_\+printf~printf}
+
+\Hypertarget{glbopts_8h_a0fd8d21f980e3a399fcc493746f264cd}\index{glbopts.h@{glbopts.h}!scs\_realloc@{scs\_realloc}}
+\index{scs\_realloc@{scs\_realloc}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{scs\_realloc}{scs\_realloc}}
+{\footnotesize\ttfamily \label{glbopts_8h_a0fd8d21f980e3a399fcc493746f264cd} 
+\+\#define scs\+\_\+realloc~realloc}
+
+\Hypertarget{glbopts_8h_abae8a893f5f047e479a6fdeea4cad79b}\index{glbopts.h@{glbopts.h}!SCS\_VERSION@{SCS\_VERSION}}
+\index{SCS\_VERSION@{SCS\_VERSION}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_VERSION}{SCS\_VERSION}}
+{\footnotesize\ttfamily \label{glbopts_8h_abae8a893f5f047e479a6fdeea4cad79b} 
+\+\#define SCS\+\_\+\+VERSION~("{}3.\+2.\+11"{})}
+
+\Hypertarget{glbopts_8h_a3b9d7d973bd11c5ad12d329c6ea8b308}\index{glbopts.h@{glbopts.h}!SQRTF@{SQRTF}}
+\index{SQRTF@{SQRTF}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{SQRTF}{SQRTF}}
+{\footnotesize\ttfamily \label{glbopts_8h_a3b9d7d973bd11c5ad12d329c6ea8b308} 
+\+\#define SQRTF~sqrt}
+
+\Hypertarget{glbopts_8h_a9932dd6bdc84463dbb4ffee58123448b}\index{glbopts.h@{glbopts.h}!TAU\_FACTOR@{TAU\_FACTOR}}
+\index{TAU\_FACTOR@{TAU\_FACTOR}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{TAU\_FACTOR}{TAU\_FACTOR}}
+{\footnotesize\ttfamily \label{glbopts_8h_a9932dd6bdc84463dbb4ffee58123448b} 
+\+\#define TAU\+\_\+\+FACTOR~(10.)}
+
+\Hypertarget{glbopts_8h_a965146c86b95409970a359c229b1ea1a}\index{glbopts.h@{glbopts.h}!TIME\_LIMIT\_SECS@{TIME\_LIMIT\_SECS}}
+\index{TIME\_LIMIT\_SECS@{TIME\_LIMIT\_SECS}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{TIME\_LIMIT\_SECS}{TIME\_LIMIT\_SECS}}
+{\footnotesize\ttfamily \label{glbopts_8h_a965146c86b95409970a359c229b1ea1a} 
+\+\#define TIME\+\_\+\+LIMIT\+\_\+\+SECS~(0.)}
+
+\Hypertarget{glbopts_8h_a42f8c497a1968074f38bf5055c650dca}\index{glbopts.h@{glbopts.h}!VERBOSE@{VERBOSE}}
+\index{VERBOSE@{VERBOSE}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{VERBOSE}{VERBOSE}}
+{\footnotesize\ttfamily \label{glbopts_8h_a42f8c497a1968074f38bf5055c650dca} 
+\+\#define VERBOSE~(1)}
+
+\Hypertarget{glbopts_8h_a066901ffac09dc72c1f6a76d29b1c575}\index{glbopts.h@{glbopts.h}!VERBOSITY@{VERBOSITY}}
+\index{VERBOSITY@{VERBOSITY}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{VERBOSITY}{VERBOSITY}}
+{\footnotesize\ttfamily \label{glbopts_8h_a066901ffac09dc72c1f6a76d29b1c575} 
+\+\#define VERBOSITY~(0)}
+
+\Hypertarget{glbopts_8h_a2117977538fc37cd5f66997e2cfc89bf}\index{glbopts.h@{glbopts.h}!WARM\_START@{WARM\_START}}
+\index{WARM\_START@{WARM\_START}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{WARM\_START}{WARM\_START}}
+{\footnotesize\ttfamily \label{glbopts_8h_a2117977538fc37cd5f66997e2cfc89bf} 
+\+\#define WARM\+\_\+\+START~(0)}
+
+\Hypertarget{glbopts_8h_aaffcf029bdf67759711096351f10d9d2}\index{glbopts.h@{glbopts.h}!WRITE\_DATA\_FILENAME@{WRITE\_DATA\_FILENAME}}
+\index{WRITE\_DATA\_FILENAME@{WRITE\_DATA\_FILENAME}!glbopts.h@{glbopts.h}}
+\doxysubsubsection{\texorpdfstring{WRITE\_DATA\_FILENAME}{WRITE\_DATA\_FILENAME}}
+{\footnotesize\ttfamily \label{glbopts_8h_aaffcf029bdf67759711096351f10d9d2} 
+\+\#define WRITE\+\_\+\+DATA\+\_\+\+FILENAME~(0)}
+

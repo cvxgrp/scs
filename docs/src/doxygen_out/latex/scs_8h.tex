@@ -1,0 +1,310 @@
+\doxysection{/\+private/\+tmp/\+scs-\/400/\+include/\+scs.h File Reference}
+\hypertarget{scs_8h}{}\label{scs_8h}\index{/private/tmp/scs-\/400/include/scs.h@{/private/tmp/scs-\/400/include/scs.h}}
+{\ttfamily \+\#include "{}scs\+\_\+types.\+h"{}}\newline
+{\ttfamily \+\#include "{}aa\+\_\+stats.\+h"{}}\newline
+\doxysubsubsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \doxymbox{\hyperlink{struct_scs_matrix}{Scs\+Matrix}}
+\item 
+struct \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}}
+\item 
+struct \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}}
+\item 
+struct \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}}
+\item 
+struct \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}}
+\item 
+struct \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a0be174af2a751cfa8a91c310d799943f}{SCS\+\_\+\+NULL}}~0 /\+\texorpdfstring{$\ast$}{*} NULL type \texorpdfstring{$\ast$}{*}/\+
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_ae5e6dd1cacecc8ddb532e25ee025dab1}{SCS\+\_\+\+INFEASIBLE\+\_\+\+INACCURATE}}~(-\/7)
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_aa9926c8e5b23495ae9195e3c444c4b5a}{SCS\+\_\+\+UNBOUNDED\+\_\+\+INACCURATE}}~(-\/6)
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a0d4e848eb3de81287e5e1c8fae2dab0a}{SCS\+\_\+\+SIGINT}}~(-\/5)
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a991ff39b24ee4961b79cc7bf2e2f35db}{SCS\+\_\+\+FAILED}}~(-\/4)
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a6087076845557b5f8d556bbf23bb577b}{SCS\+\_\+\+INDETERMINATE}}~(-\/3)
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a0bac201fdbc84557c391490187101d8b}{SCS\+\_\+\+INFEASIBLE}}~(-\/2) /\+\texorpdfstring{$\ast$}{*} primal infeasible, dual unbounded   \texorpdfstring{$\ast$}{*}/\+
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_ac8c72aeee9bcd3f1ed58fcf99a76d01c}{SCS\+\_\+\+UNBOUNDED}}~(-\/1)  /\+\texorpdfstring{$\ast$}{*} primal unbounded, dual infeasible   \texorpdfstring{$\ast$}{*}/\+
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a97f7a5b842fd70105d97841fcd6ee680}{SCS\+\_\+\+UNFINISHED}}~(0)  /\+\texorpdfstring{$\ast$}{*} never returned, used as placeholder \texorpdfstring{$\ast$}{*}/\+
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_a0fcae593d880f4d9a0b21b188ba58094}{SCS\+\_\+\+SOLVED}}~(1)
+\item 
+\+\#define \doxymbox{\hyperlink{scs_8h_aaeed0781b1d882d591dd2b3acaefaa4c}{SCS\+\_\+\+SOLVED\+\_\+\+INACCURATE}}~(2)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \doxymbox{\hyperlink{struct_s_c_s___c_o_n_e___w_o_r_k}{SCS\+\_\+\+CONE\+\_\+\+WORK}} \doxymbox{\hyperlink{scs_8h_a4389113106886772f3178059cd157a47}{Scs\+Cone\+Work}}
+\item 
+typedef struct SCS\+\_\+\+LIN\+\_\+\+SYS\+\_\+\+WORK \doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}}
+\item 
+typedef struct \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k}{SCS\+\_\+\+WORK}} \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{scs_8h_aa8aaa18e26ccb5f65e772aef7cc168c3}{scs\+\_\+init}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8h_ae19c84d79a22890aa957067824c0b088}{scs\+\_\+update}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}b, \doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}c)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8h_a58fd31598ebab93ce1121f87df460566}{scs\+\_\+solve}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info, \doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} warm\+\_\+start)
+\item 
+void \doxymbox{\hyperlink{scs_8h_ad09d2ed5fe68896d2b7056cb5a9a3e0d}{scs\+\_\+finish}} (\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}w)
+\item 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} \doxymbox{\hyperlink{scs_8h_acd26da2b245ff5341bce5e3b6a803356}{scs}} (const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}d, const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}k, const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs, \doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}sol, \doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}info)
+\item 
+void \doxymbox{\hyperlink{scs_8h_aaa770d8e5840e9dcbd92c5b16ce74bc7}{scs\+\_\+set\+\_\+default\+\_\+settings}} (\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}stgs)
+\item 
+const char \texorpdfstring{$\ast$}{*} \doxymbox{\hyperlink{scs_8h_ab87c468a9caa793eb6185754d0cf2769}{scs\+\_\+version}} (void)
+\end{DoxyCompactItemize}
+
+
+\label{doc-define-members}
+\Hypertarget{scs_8h_doc-define-members}
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{scs_8h_a991ff39b24ee4961b79cc7bf2e2f35db}\index{scs.h@{scs.h}!SCS\_FAILED@{SCS\_FAILED}}
+\index{SCS\_FAILED@{SCS\_FAILED}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_FAILED}{SCS\_FAILED}}
+{\footnotesize\ttfamily \label{scs_8h_a991ff39b24ee4961b79cc7bf2e2f35db} 
+\+\#define SCS\+\_\+\+FAILED~(-\/4)}
+
+\Hypertarget{scs_8h_a6087076845557b5f8d556bbf23bb577b}\index{scs.h@{scs.h}!SCS\_INDETERMINATE@{SCS\_INDETERMINATE}}
+\index{SCS\_INDETERMINATE@{SCS\_INDETERMINATE}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_INDETERMINATE}{SCS\_INDETERMINATE}}
+{\footnotesize\ttfamily \label{scs_8h_a6087076845557b5f8d556bbf23bb577b} 
+\+\#define SCS\+\_\+\+INDETERMINATE~(-\/3)}
+
+\Hypertarget{scs_8h_a0bac201fdbc84557c391490187101d8b}\index{scs.h@{scs.h}!SCS\_INFEASIBLE@{SCS\_INFEASIBLE}}
+\index{SCS\_INFEASIBLE@{SCS\_INFEASIBLE}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_INFEASIBLE}{SCS\_INFEASIBLE}}
+{\footnotesize\ttfamily \label{scs_8h_a0bac201fdbc84557c391490187101d8b} 
+\+\#define SCS\+\_\+\+INFEASIBLE~(-\/2) /\+\texorpdfstring{$\ast$}{*} primal infeasible, dual unbounded   \texorpdfstring{$\ast$}{*}/\+}
+
+\Hypertarget{scs_8h_ae5e6dd1cacecc8ddb532e25ee025dab1}\index{scs.h@{scs.h}!SCS\_INFEASIBLE\_INACCURATE@{SCS\_INFEASIBLE\_INACCURATE}}
+\index{SCS\_INFEASIBLE\_INACCURATE@{SCS\_INFEASIBLE\_INACCURATE}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_INFEASIBLE\_INACCURATE}{SCS\_INFEASIBLE\_INACCURATE}}
+{\footnotesize\ttfamily \label{scs_8h_ae5e6dd1cacecc8ddb532e25ee025dab1} 
+\+\#define SCS\+\_\+\+INFEASIBLE\+\_\+\+INACCURATE~(-\/7)}
+
+\Hypertarget{scs_8h_a0be174af2a751cfa8a91c310d799943f}\index{scs.h@{scs.h}!SCS\_NULL@{SCS\_NULL}}
+\index{SCS\_NULL@{SCS\_NULL}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_NULL}{SCS\_NULL}}
+{\footnotesize\ttfamily \label{scs_8h_a0be174af2a751cfa8a91c310d799943f} 
+\+\#define SCS\+\_\+\+NULL~0 /\+\texorpdfstring{$\ast$}{*} NULL type \texorpdfstring{$\ast$}{*}/\+}
+
+\Hypertarget{scs_8h_a0d4e848eb3de81287e5e1c8fae2dab0a}\index{scs.h@{scs.h}!SCS\_SIGINT@{SCS\_SIGINT}}
+\index{SCS\_SIGINT@{SCS\_SIGINT}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_SIGINT}{SCS\_SIGINT}}
+{\footnotesize\ttfamily \label{scs_8h_a0d4e848eb3de81287e5e1c8fae2dab0a} 
+\+\#define SCS\+\_\+\+SIGINT~(-\/5)}
+
+\Hypertarget{scs_8h_a0fcae593d880f4d9a0b21b188ba58094}\index{scs.h@{scs.h}!SCS\_SOLVED@{SCS\_SOLVED}}
+\index{SCS\_SOLVED@{SCS\_SOLVED}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_SOLVED}{SCS\_SOLVED}}
+{\footnotesize\ttfamily \label{scs_8h_a0fcae593d880f4d9a0b21b188ba58094} 
+\+\#define SCS\+\_\+\+SOLVED~(1)}
+
+\Hypertarget{scs_8h_aaeed0781b1d882d591dd2b3acaefaa4c}\index{scs.h@{scs.h}!SCS\_SOLVED\_INACCURATE@{SCS\_SOLVED\_INACCURATE}}
+\index{SCS\_SOLVED\_INACCURATE@{SCS\_SOLVED\_INACCURATE}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_SOLVED\_INACCURATE}{SCS\_SOLVED\_INACCURATE}}
+{\footnotesize\ttfamily \label{scs_8h_aaeed0781b1d882d591dd2b3acaefaa4c} 
+\+\#define SCS\+\_\+\+SOLVED\+\_\+\+INACCURATE~(2)}
+
+\Hypertarget{scs_8h_ac8c72aeee9bcd3f1ed58fcf99a76d01c}\index{scs.h@{scs.h}!SCS\_UNBOUNDED@{SCS\_UNBOUNDED}}
+\index{SCS\_UNBOUNDED@{SCS\_UNBOUNDED}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_UNBOUNDED}{SCS\_UNBOUNDED}}
+{\footnotesize\ttfamily \label{scs_8h_ac8c72aeee9bcd3f1ed58fcf99a76d01c} 
+\+\#define SCS\+\_\+\+UNBOUNDED~(-\/1)  /\+\texorpdfstring{$\ast$}{*} primal unbounded, dual infeasible   \texorpdfstring{$\ast$}{*}/\+}
+
+\Hypertarget{scs_8h_aa9926c8e5b23495ae9195e3c444c4b5a}\index{scs.h@{scs.h}!SCS\_UNBOUNDED\_INACCURATE@{SCS\_UNBOUNDED\_INACCURATE}}
+\index{SCS\_UNBOUNDED\_INACCURATE@{SCS\_UNBOUNDED\_INACCURATE}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_UNBOUNDED\_INACCURATE}{SCS\_UNBOUNDED\_INACCURATE}}
+{\footnotesize\ttfamily \label{scs_8h_aa9926c8e5b23495ae9195e3c444c4b5a} 
+\+\#define SCS\+\_\+\+UNBOUNDED\+\_\+\+INACCURATE~(-\/6)}
+
+\Hypertarget{scs_8h_a97f7a5b842fd70105d97841fcd6ee680}\index{scs.h@{scs.h}!SCS\_UNFINISHED@{SCS\_UNFINISHED}}
+\index{SCS\_UNFINISHED@{SCS\_UNFINISHED}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{SCS\_UNFINISHED}{SCS\_UNFINISHED}}
+{\footnotesize\ttfamily \label{scs_8h_a97f7a5b842fd70105d97841fcd6ee680} 
+\+\#define SCS\+\_\+\+UNFINISHED~(0)  /\+\texorpdfstring{$\ast$}{*} never returned, used as placeholder \texorpdfstring{$\ast$}{*}/\+}
+
+
+
+\label{doc-typedef-members}
+\Hypertarget{scs_8h_doc-typedef-members}
+\doxysubsection{Typedef Documentation}
+\Hypertarget{scs_8h_a4389113106886772f3178059cd157a47}\index{scs.h@{scs.h}!ScsConeWork@{ScsConeWork}}
+\index{ScsConeWork@{ScsConeWork}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{ScsConeWork}{ScsConeWork}}
+{\footnotesize\ttfamily \label{scs_8h_a4389113106886772f3178059cd157a47} 
+typedef struct \doxymbox{\hyperlink{struct_s_c_s___c_o_n_e___w_o_r_k}{SCS\+\_\+\+CONE\+\_\+\+WORK}} \doxymbox{\hyperlink{scs_8h_a4389113106886772f3178059cd157a47}{Scs\+Cone\+Work}}}
+
+Struct containing cone projection workspace. Implemented by cones. \Hypertarget{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}\index{scs.h@{scs.h}!ScsLinSysWork@{ScsLinSysWork}}
+\index{ScsLinSysWork@{ScsLinSysWork}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{ScsLinSysWork}{ScsLinSysWork}}
+{\footnotesize\ttfamily \label{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1} 
+typedef struct SCS\+\_\+\+LIN\+\_\+\+SYS\+\_\+\+WORK \doxymbox{\hyperlink{scs_8h_a0f7cde25a6dc679e4612255a4bdbe6c1}{Scs\+Lin\+Sys\+Work}}}
+
+Struct containing linear system workspace. Implemented by linear solver. \Hypertarget{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}\index{scs.h@{scs.h}!ScsWork@{ScsWork}}
+\index{ScsWork@{ScsWork}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{ScsWork}{ScsWork}}
+{\footnotesize\ttfamily \label{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c} 
+typedef struct \doxymbox{\hyperlink{struct_s_c_s___w_o_r_k}{SCS\+\_\+\+WORK}} \doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}}}
+
+Struct containing SCS workspace. Implemented in {\ttfamily \doxylink{scs__work_8h}{scs\+\_\+work.\+h}}. 
+
+\label{doc-func-members}
+\Hypertarget{scs_8h_doc-func-members}
+\doxysubsection{Function Documentation}
+\Hypertarget{scs_8h_acd26da2b245ff5341bce5e3b6a803356}\index{scs.h@{scs.h}!scs@{scs}}
+\index{scs@{scs}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs()}{scs()}}
+{\footnotesize\ttfamily \label{scs_8h_acd26da2b245ff5341bce5e3b6a803356} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{}\end{DoxyParamCaption})}
+
+Solve quadratic cone program defined by data in d and cone k.
+
+All the inputs must already be allocated in memory before calling.
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & Problem data. \\
+\hline
+{\em k} & Cone data. \\
+\hline
+{\em stgs} & SCS solver settings. \\
+\hline
+{\em sol} & Solution will be stored here. If members {\ttfamily x}, {\ttfamily y}, {\ttfamily s} are NULL then SCS will allocate memory for them. \\
+\hline
+{\em info} & Information about the solve will be stored here. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Flag containing problem status (see {\itshape \doxylink{glbopts_8h}{glbopts.\+h}}). 
+\end{DoxyReturn}
+\Hypertarget{scs_8h_ad09d2ed5fe68896d2b7056cb5a9a3e0d}\index{scs.h@{scs.h}!scs\_finish@{scs\_finish}}
+\index{scs\_finish@{scs\_finish}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs\_finish()}{scs\_finish()}}
+{\footnotesize\ttfamily \label{scs_8h_ad09d2ed5fe68896d2b7056cb5a9a3e0d} 
+void scs\+\_\+finish (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{}\end{DoxyParamCaption})}
+
+Clean up allocated SCS workspace.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Workspace allocated by init, will be deallocated. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{scs_8h_aa8aaa18e26ccb5f65e772aef7cc168c3}\index{scs.h@{scs.h}!scs\_init@{scs\_init}}
+\index{scs\_init@{scs\_init}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs\_init()}{scs\_init()}}
+{\footnotesize\ttfamily \label{scs_8h_aa8aaa18e26ccb5f65e772aef7cc168c3} 
+\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*} scs\+\_\+init (\begin{DoxyParamCaption}\item[{const \doxymbox{\hyperlink{struct_scs_data}{Scs\+Data}} \texorpdfstring{$\ast$}{*}}]{d}{, }\item[{const \doxymbox{\hyperlink{struct_scs_cone}{Scs\+Cone}} \texorpdfstring{$\ast$}{*}}]{k}{, }\item[{const \doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+
+Initialize SCS and allocate memory.
+
+All the inputs must be already allocated in memory before calling. After this function returns then the memory associated with {\ttfamily d}, {\ttfamily k}, and {\ttfamily stgs} can be freed as SCS maintains deep copies of these internally.
+
+It performs:\+
+\begin{DoxyItemize}
+\item data and settings validation
+\item problem data scaling
+\item automatic parameters tuning (if enabled)
+\item setup linear system solver:\+
+\begin{DoxyItemize}
+\item direct solver:\+ KKT matrix factorization is performed here
+\item indirect solver:\+ KKT matrix preconditioning is performed here.
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d} & Problem data. \\
+\hline
+{\em k} & Cone data. \\
+\hline
+{\em stgs} & SCS solve settings. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Solver workspace. 
+\end{DoxyReturn}
+\Hypertarget{scs_8h_aaa770d8e5840e9dcbd92c5b16ce74bc7}\index{scs.h@{scs.h}!scs\_set\_default\_settings@{scs\_set\_default\_settings}}
+\index{scs\_set\_default\_settings@{scs\_set\_default\_settings}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs\_set\_default\_settings()}{scs\_set\_default\_settings()}}
+{\footnotesize\ttfamily \label{scs_8h_aaa770d8e5840e9dcbd92c5b16ce74bc7} 
+void scs\+\_\+set\+\_\+default\+\_\+settings (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{struct_scs_settings}{Scs\+Settings}} \texorpdfstring{$\ast$}{*}}]{stgs}{}\end{DoxyParamCaption})}
+
+Helper function to set all settings to default values (see {\itshape \doxylink{glbopts_8h}{glbopts.\+h}}).
+
+
+\begin{DoxyParams}{Parameters}
+{\em stgs} & Settings struct that will be populated. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{scs_8h_a58fd31598ebab93ce1121f87df460566}\index{scs.h@{scs.h}!scs\_solve@{scs\_solve}}
+\index{scs\_solve@{scs\_solve}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs\_solve()}{scs\_solve()}}
+{\footnotesize\ttfamily \label{scs_8h_a58fd31598ebab93ce1121f87df460566} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs\+\_\+solve (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{struct_scs_solution}{Scs\+Solution}} \texorpdfstring{$\ast$}{*}}]{sol}{, }\item[{\doxymbox{\hyperlink{struct_scs_info}{Scs\+Info}} \texorpdfstring{$\ast$}{*}}]{info}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}}}]{warm\+\_\+start}{}\end{DoxyParamCaption})}
+
+Solve quadratic cone program initialized by scs\+\_\+init.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Workspace allocated by scs\+\_\+init. \\
+\hline
+{\em sol} & Solution will be stored here. If members {\ttfamily x}, {\ttfamily y}, {\ttfamily s} are NULL then SCS will allocate memory for them which must be freed by the caller. \\
+\hline
+{\em info} & Information about the solve will be stored here. \\
+\hline
+{\em warm\+\_\+start} & Whether to use the entries of {\ttfamily sol} as warm-\/start for the solve.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Flag containing problem status (see {\itshape \doxylink{glbopts_8h}{glbopts.\+h}}). 
+\end{DoxyReturn}
+\Hypertarget{scs_8h_ae19c84d79a22890aa957067824c0b088}\index{scs.h@{scs.h}!scs\_update@{scs\_update}}
+\index{scs\_update@{scs\_update}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs\_update()}{scs\_update()}}
+{\footnotesize\ttfamily \label{scs_8h_ae19c84d79a22890aa957067824c0b088} 
+\doxymbox{\hyperlink{scs__types_8h_a23c48a83ce0c58783595ad45ffcaf76b}{scs\+\_\+int}} scs\+\_\+update (\begin{DoxyParamCaption}\item[{\doxymbox{\hyperlink{scs_8h_a6da91f2680fefc030d2b65ec3d6d917c}{Scs\+Work}} \texorpdfstring{$\ast$}{*}}]{w}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{b}{, }\item[{\doxymbox{\hyperlink{scs__types_8h_ad37836e6404bb2c3ae8adcc6290699b9}{scs\+\_\+float}} \texorpdfstring{$\ast$}{*}}]{c}{}\end{DoxyParamCaption})}
+
+Update the {\ttfamily b} vector, {\ttfamily c} vector, or both, before another solve call.
+
+After a solve we can reuse the SCS workspace in another solve if the only problem data that has changed are the {\ttfamily b} and {\ttfamily c} vectors.
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & SCS workspace from scs\+\_\+init (modified in-\/place). \\
+\hline
+{\em b} & New {\ttfamily b} vector (can be {\ttfamily \doxylink{scs_8h_a0be174af2a751cfa8a91c310d799943f}{SCS\+\_\+\+NULL}} if unchanged). \\
+\hline
+{\em c} & New {\ttfamily c} vector (can be {\ttfamily \doxylink{scs_8h_a0be174af2a751cfa8a91c310d799943f}{SCS\+\_\+\+NULL}} if unchanged).\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if update successful. 
+\end{DoxyReturn}
+\Hypertarget{scs_8h_ab87c468a9caa793eb6185754d0cf2769}\index{scs.h@{scs.h}!scs\_version@{scs\_version}}
+\index{scs\_version@{scs\_version}!scs.h@{scs.h}}
+\doxysubsubsection{\texorpdfstring{scs\_version()}{scs\_version()}}
+{\footnotesize\ttfamily \label{scs_8h_ab87c468a9caa793eb6185754d0cf2769} 
+const char \texorpdfstring{$\ast$}{*} scs\+\_\+version (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+Helper function simply returns the current version of SCS as a string.
+
+\begin{DoxyReturn}{Returns}
+SCS version as a string. 
+\end{DoxyReturn}

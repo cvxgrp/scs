@@ -1,0 +1,271 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="csparse_8h" kind="file" language="C++">
+    <compoundname>csparse.h</compoundname>
+    <includes refid="glbopts_8h" local="yes">glbopts.h</includes>
+    <includedby refid="csparse_8c" local="yes">/private/tmp/scs-400/linsys/csparse.c</includedby>
+    <incdepgraph>
+      <node id="5">
+        <label>aa_stats.h</label>
+        <link refid="aa__stats_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>glbopts.h</label>
+        <link refid="glbopts_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>scs.h</label>
+        <link refid="scs_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>scs_types.h</label>
+        <link refid="scs__types_8h"/>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/linsys/csparse.h</label>
+        <link refid="csparse_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>math.h</label>
+      </node>
+      <node id="7">
+        <label>stdio.h</label>
+      </node>
+      <node id="8">
+        <label>stdlib.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2">
+        <label>/private/tmp/scs-400/linsys/csparse.c</label>
+        <link refid="csparse_8c"/>
+      </node>
+      <node id="1">
+        <label>/private/tmp/scs-400/linsys/csparse.h</label>
+        <link refid="csparse_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="csparse_8h_1a5e44c98f37b47b4503c9c3cbff7254a6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>ScsMatrix *SCS cs_spalloc</definition>
+        <argsstring>(scs_int m, scs_int n, scs_int nzmax, scs_int values, scs_int triplet)</argsstring>
+        <name>cs_spalloc</name>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>m</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>nzmax</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>values</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>triplet</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/csparse.h" line="15" column="11" bodyfile="/private/tmp/scs-400/linsys/csparse.c" bodystart="5" bodyend="17" declfile="/private/tmp/scs-400/linsys/csparse.h" declline="15" declcolumn="11"/>
+      </memberdef>
+      <memberdef kind="function" id="csparse_8h_1a9601f1c1f1e11117b6ff2de9c7c72682" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>ScsMatrix *SCS cs_done</definition>
+        <argsstring>(ScsMatrix *C, void *w, void *x, scs_int ok)</argsstring>
+        <name>cs_done</name>
+        <param>
+          <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>C</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>ok</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/csparse.h" line="17" column="11" bodyfile="/private/tmp/scs-400/linsys/csparse.c" bodystart="19" bodyend="23" declfile="/private/tmp/scs-400/linsys/csparse.h" declline="17" declcolumn="11"/>
+      </memberdef>
+      <memberdef kind="function" id="csparse_8h_1a314a39276f469ed7a22f983c31af92ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>ScsMatrix *SCS cs_compress</definition>
+        <argsstring>(const ScsMatrix *T, scs_int nz, scs_int *idx_mapping)</argsstring>
+        <name>cs_compress</name>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>T</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>nz</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref> *</type>
+          <declname>idx_mapping</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/csparse.h" line="18" column="11" bodyfile="/private/tmp/scs-400/linsys/csparse.c" bodystart="26" bodyend="58" declfile="/private/tmp/scs-400/linsys/csparse.h" declline="18" declcolumn="11"/>
+      </memberdef>
+      <memberdef kind="function" id="csparse_8h_1a295150d74fe9688afb7e69e31943483b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>ScsMatrix *SCS cs_spfree</definition>
+        <argsstring>(ScsMatrix *A)</argsstring>
+        <name>cs_spfree</name>
+        <param>
+          <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/csparse.h" line="20" column="11" bodyfile="/private/tmp/scs-400/linsys/csparse.c" bodystart="76" bodyend="86" declfile="/private/tmp/scs-400/linsys/csparse.h" declline="20" declcolumn="11"/>
+      </memberdef>
+      <memberdef kind="function" id="csparse_8h_1ac33339c0f2d0ae2ef4f2ad787a2b0d9d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> <ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>scs_float SCS cumsum</definition>
+        <argsstring>(scs_int *p, scs_int *c, scs_int n)</argsstring>
+        <name>cumsum</name>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref> *</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref> *</type>
+          <declname>c</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/csparse.h" line="21" column="11" bodyfile="/private/tmp/scs-400/linsys/csparse.c" bodystart="60" bodyend="74" declfile="/private/tmp/scs-400/linsys/csparse.h" declline="21" declcolumn="11"/>
+      </memberdef>
+      <memberdef kind="function" id="csparse_8h_1ae413d0df1199ad15867ce4c28a06667e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref></type>
+        <definition>ScsMatrix *SCS form_kkt</definition>
+        <argsstring>(const ScsMatrix *A, const ScsMatrix *P, scs_float *diag_p, const scs_float *diag_r, scs_int *diag_r_idxs, scs_int upper)</argsstring>
+        <name>form_kkt</name>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref> *</type>
+          <declname>P</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>diag_p</declname>
+        </param>
+        <param>
+          <type>const <ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+          <declname>diag_r</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref> *</type>
+          <declname>diag_r_idxs</declname>
+        </param>
+        <param>
+          <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+          <declname>upper</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/linsys/csparse.h" line="23" column="11" bodyfile="/private/tmp/scs-400/linsys/csparse.c" bodystart="89" bodyend="221" declfile="/private/tmp/scs-400/linsys/csparse.h" declline="23" declcolumn="11"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Sparse<sp/>matrix<sp/>utilities<sp/>adapted<sp/>from<sp/>CSparse<sp/>(T.<sp/>Davis).</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/>Provides<sp/>allocation,<sp/>triplet-to-CSC<sp/>compression,<sp/>and<sp/>KKT<sp/>matrix<sp/>formation.</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>CS_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>CS_H_GUARD</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/></highlight><highlight class="stringliteral">&quot;C&quot;</highlight><highlight class="normal"><sp/>{</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="glbopts_8h" kindref="compound">glbopts.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="csparse_8c_1a5e44c98f37b47b4503c9c3cbff7254a6" kindref="member">cs_spalloc</ref>)(<ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>m,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>nzmax,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>values,</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>triplet);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="csparse_8c_1a9601f1c1f1e11117b6ff2de9c7c72682" kindref="member">cs_done</ref>)(<ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*C,<sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*w,<sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*x,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>ok);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="csparse_8c_1a314a39276f469ed7a22f983c31af92ab" kindref="member">cs_compress</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*T,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>nz,</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*idx_mapping);</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="csparse_8c_1a295150d74fe9688afb7e69e31943483b" kindref="member">cs_spfree</ref>)(<ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/><ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="csparse_8c_1ac33339c0f2d0ae2ef4f2ad787a2b0d9d" kindref="member">cumsum</ref>)(<ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*p,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*c,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>n);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Forms<sp/>KKT<sp/>matrix<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*<ref refid="glbopts_8h_1a9ae864254e3d1390d907a33dfa7cdf31" kindref="member">SCS</ref>(<ref refid="csparse_8c_1ae413d0df1199ad15867ce4c28a06667e" kindref="member">form_kkt</ref>)(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*A,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="struct_scs_matrix" kindref="compound">ScsMatrix</ref><sp/>*P,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*diag_p,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref><sp/>*diag_r,</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>*diag_r_idxs,<sp/><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref><sp/>upper);</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>__cplusplus</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/private/tmp/scs-400/linsys/csparse.h"/>
+  </compounddef>
+</doxygen>

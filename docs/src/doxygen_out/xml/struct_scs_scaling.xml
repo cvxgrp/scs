@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.16.1" xml:lang="en-US">
+  <compounddef id="struct_scs_scaling" kind="struct" language="C++" prot="public">
+    <compoundname>ScsScaling</compoundname>
+    <includes refid="scs__work_8h" local="no">scs_work.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_scs_scaling_1a3abac01d7988dbdf48e4279bf892500e" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+        <definition>scs_float* ScsScaling::D</definition>
+        <argsstring></argsstring>
+        <name>D</name>
+        <qualifiedname>ScsScaling::D</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="25" column="13" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_scaling_1ae60d3998dfda658207f5d896ef6d1caa" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref> *</type>
+        <definition>scs_float * ScsScaling::E</definition>
+        <argsstring></argsstring>
+        <name>E</name>
+        <qualifiedname>ScsScaling::E</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="25" column="15" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_scaling_1aa9796a3a5a8356d267f656a4c8365964" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsScaling::m</definition>
+        <argsstring></argsstring>
+        <name>m</name>
+        <qualifiedname>ScsScaling::m</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="26" column="11" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_scaling_1ae361a04bacf9fd06779f9fc3b51dd337" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1a23c48a83ce0c58783595ad45ffcaf76b" kindref="member">scs_int</ref></type>
+        <definition>scs_int ScsScaling::n</definition>
+        <argsstring></argsstring>
+        <name>n</name>
+        <qualifiedname>ScsScaling::n</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="27" column="11" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_scaling_1aa3a1ad44e92c287a9c1480499433170d" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsScaling::primal_scale</definition>
+        <argsstring></argsstring>
+        <name>primal_scale</name>
+        <qualifiedname>ScsScaling::primal_scale</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="28" column="13" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_scaling_1a28c01794c9667696c865efcf93fbda31" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsScaling::dual_scale</definition>
+        <argsstring></argsstring>
+        <name>dual_scale</name>
+        <qualifiedname>ScsScaling::dual_scale</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="28" column="26" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_scs_scaling_1aac57e3ad9597e7880d952dc7c9cd7f7c" prot="public" static="no" mutable="no">
+        <type><ref refid="scs__types_8h_1ad37836e6404bb2c3ae8adcc6290699b9" kindref="member">scs_float</ref></type>
+        <definition>scs_float ScsScaling::tau_scale</definition>
+        <argsstring></argsstring>
+        <name>tau_scale</name>
+        <qualifiedname>ScsScaling::tau_scale</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/private/tmp/scs-400/include/scs_work.h" line="31" column="13" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Contains normalization variables. </para>
+    </detaileddescription>
+    <location file="/private/tmp/scs-400/include/scs_work.h" line="24" column="1" bodyfile="/private/tmp/scs-400/include/scs_work.h" bodystart="24" bodyend="32"/>
+    <listofallmembers>
+      <member refid="struct_scs_scaling_1a3abac01d7988dbdf48e4279bf892500e" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>D</name></member>
+      <member refid="struct_scs_scaling_1a28c01794c9667696c865efcf93fbda31" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>dual_scale</name></member>
+      <member refid="struct_scs_scaling_1ae60d3998dfda658207f5d896ef6d1caa" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>E</name></member>
+      <member refid="struct_scs_scaling_1aa9796a3a5a8356d267f656a4c8365964" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>m</name></member>
+      <member refid="struct_scs_scaling_1ae361a04bacf9fd06779f9fc3b51dd337" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>n</name></member>
+      <member refid="struct_scs_scaling_1aa3a1ad44e92c287a9c1480499433170d" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>primal_scale</name></member>
+      <member refid="struct_scs_scaling_1aac57e3ad9597e7880d952dc7c9cd7f7c" prot="public" virt="non-virtual"><scope>ScsScaling</scope><name>tau_scale</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

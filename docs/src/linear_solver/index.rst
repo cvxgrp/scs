@@ -132,10 +132,19 @@ The indirect method solves the above linear system approximately with a
 then solves the positive definite system using using `conjugate gradients
 <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.  Each iteration of
 CG requires one multiply each of sparse matrices :math:`P, A, A^\top`.  The
-system is solved up to some tolerance, which is tuned to ensure that the overall
-algorithm converges. The tolerance decays with iteration :math:`k` like
-:math:`O(1/k^\gamma)` where :math:`\gamma > 1` and is determined by the constant
-:code:`CG_RATE` (defaults to :math:`1.5`).
+system is solved up to some tolerance, which is tuned to ensure that the
+overall algorithm converges: each solve targets a small fraction
+(:code:`CG_TOL_FACTOR`, default :math:`0.03`) of the smaller of the current
+primal and dual residuals, additionally capped by a term decaying with
+iteration :math:`k` like :math:`O(1/k^\gamma)` where :math:`\gamma` is
+determined by the constant :code:`CG_RATE` (defaults to :math:`2`), and
+floored at :code:`CG_BEST_TOL`. Each solve is warm-started from the previous
+solution. The solver also harvests approximate eigenvectors of the reduced
+matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
+2010) and uses up to :code:`DEFLATE_VECTORS` (default 30) of them to deflate
+the smallest eigenvalues from subsequent solves, which substantially reduces
+the CG iterations needed on ill-conditioned problems at no additional
+matrix-multiply cost.
 
 The indirect method has the advantage of not requiring an expensive
 factorization but typically is slower on a per-iteration basis. In most cases
