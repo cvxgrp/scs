@@ -280,6 +280,15 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #endif
 /* cg tol ~ O(1/k^(CG_RATE)) */
 #define CG_RATE (1.5)
+/* Number of approximate small eigenvectors of the preconditioned
+ * reduced operator harvested from each cold solve for g = K^{-1}h and
+ * used to deflate the warm solves until the next metric change (eigCG,
+ * Stathopoulos & Orginos 2010). Costs 2 * DEFLATE_VECTORS * n floats
+ * persistent plus a transient Lanczos window during the deep solve;
+ * needs USE_LAPACK and is compiled out without it. 0 disables. The
+ * environment variables SCS_DEFLATE and SCS_EIGCG_WIN override the
+ * count and the window size at runtime. */
+#define DEFLATE_VECTORS (30)
 
 #ifdef __cplusplus
 }
