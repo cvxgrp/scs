@@ -188,8 +188,10 @@ It does not support 64-bit integer indexing (<code class="docutils literal notra
 </pre></div>
 </div>
 <p>In Python, the Accelerate backend is included automatically on macOS
-(<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scs</span></code> is sufficient). Select it at solve time:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">apple_ldl</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+(<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scs</span></code> is sufficient). On macOS,
+<code class="docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code> selects the bundled QDLDL; select
+Accelerate explicitly with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">linear_solver</span><span class="o">=</span><span class="n">scs</span><span class="o">.</span><span class="n">LinearSolver</span><span class="o">.</span><span class="n">ACCELERATE</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

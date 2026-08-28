@@ -52,14 +52,16 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Install</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="c.html">C / C++</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Python</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#apple-accelerate-macos">Apple Accelerate (macOS)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mkl">MKL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#gpu">GPU</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#spectral-cones">Spectral cones</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linear-solver-backends">Linear solver backends</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#apple-accelerate-macos">Apple Accelerate (macOS)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mkl">MKL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dense-direct-lapack">Dense direct (LAPACK)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gpu-direct-cudss">GPU direct (cuDSS)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spectral-cones">Spectral cones</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#testing">Testing</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-options">Legacy options</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="matlab.html">MATLAB</a></li>
@@ -114,22 +116,39 @@
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
+<section id="linear-solver-backends">
+<h2>Linear solver backends<a class="headerlink" href="#linear-solver-backends" title="Link to this heading"></a></h2>
+<p>The pre-built wheels and a from-source install always include two CPU linear
+solvers that require no additional dependencies:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">QDLDL</span></code> — the default sparse direct solver (bundled with SCS).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">CPU_INDIRECT</span></code> — the sparse matrix-free solver based on conjugate
+gradients.</p></li>
+</ul>
+<p>The remaining backends require either a platform-specific library (Apple
+Accelerate, MKL) or a build-time flag plus an external dependency (LAPACK for
+dense, CUDA + cuDSS for GPU). Each section below describes what to install and
+how to enable the backend. See <a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">Linear System Solver</span></a> for an overview of each
+solver and <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">Python</span></a> for how to select one at runtime.</p>
 <section id="apple-accelerate-macos">
-<h2>Apple Accelerate (macOS)<a class="headerlink" href="#apple-accelerate-macos" title="Link to this heading"></a></h2>
+<h3>Apple Accelerate (macOS)<a class="headerlink" href="#apple-accelerate-macos" title="Link to this heading"></a></h3>
 <p>On macOS the Apple Accelerate backend is built and included automatically —
 no extra install flags are needed. It uses the Accelerate framework’s sparse
 LDL<sup>T</sup> solver, which is optimized for Apple hardware including Apple
-Silicon. See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to select Accelerate when
-solving.</p>
+Silicon. The default <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code> selects the
+bundled QDLDL on macOS; opt in to Accelerate explicitly with
+<code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.ACCELERATE</span></code>.</p>
 </section>
 <section id="mkl">
-<h2>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h2>
-<p>If you have MKL, you can install the MKL Pardiso interface using</p>
+<h3>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h3>
+<p>The pre-built wheels (<code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scs</span></code>) include MKL on x86_64 Linux and
+Windows. When installing from source, you can enable MKL with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable MKL when solving. MKL is
-typically faster than the built-in linear system solver.</p>
+<p>When using the default <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code>, MKL is
+selected automatically on Linux and Windows if available. MKL is
+typically faster than the built-in QDLDL linear system solver.</p>
 <p>The published Linux x86_64 wheels prefer the threaded MKL variant and include
 the Intel OpenMP runtime (<code class="code docutils literal notranslate"><span class="pre">libiomp5</span></code>). Windows currently falls back to
 sequential MKL until Intel fixes the threaded <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> metadata in
@@ -145,20 +164,62 @@ also checks that the process-wide MKL interface layer matches the LP64/ILP64
 mode it was compiled for, and fails early if another library already set an
 incompatible MKL interface.</p>
 </section>
-<section id="gpu">
-<h2>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h2>
-<p>If you have a GPU and cuDSS installed you can install the GPU direct sparse
-solver using</p>
+<section id="dense-direct-lapack">
+<h3>Dense direct (LAPACK)<a class="headerlink" href="#dense-direct-lapack" title="Link to this heading"></a></h3>
+<p>The <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct solver</span></a> reduces the KKT system to a smaller
+Gram matrix and factorizes it with LAPACK’s Cholesky routines. It is well
+suited to small-to-medium problems with a dense constraint matrix <span class="math notranslate nohighlight">\(A\)</span>,
+where dense BLAS/LAPACK outperforms sparse factorization.</p>
+<p>Build from source with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_lapack<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+</pre></div>
+</div>
+<p>This requires BLAS and LAPACK development headers to be discoverable by
+<code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code>. Most platforms satisfy this out of the box (Apple
+Accelerate on macOS, OpenBLAS / MKL on Linux, MKL on Windows). Select the
+backend at runtime with
+<code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.CPU_DENSE</span></code>.</p>
+</section>
+<section id="gpu-direct-cudss">
+<h3>GPU direct (cuDSS)<a class="headerlink" href="#gpu-direct-cudss" title="Link to this heading"></a></h3>
+<p>The <a class="reference internal" href="../linear_solver/index.html#cudss-solver"><span class="std std-ref">cuDSS backend</span></a> runs the sparse direct factorization
+and solves on an NVIDIA GPU via <a class="reference external" href="https://developer.nvidia.com/cudss">NVIDIA cuDSS</a>. For large problems it is typically
+substantially faster than any CPU backend.</p>
+<p><strong>Prerequisites.</strong> The build links against both the CUDA runtime and cuDSS,
+so you need all of the following installed and discoverable by
+<code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> / the linker before running <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>:</p>
+<ol class="arabic simple">
+<li><p>An NVIDIA GPU with a recent CUDA-capable driver.</p></li>
+<li><p>The <a class="reference external" href="https://developer.nvidia.com/cuda-downloads">CUDA Toolkit</a>
+(provides <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code>, the CUDA runtime headers, and <code class="code docutils literal notranslate"><span class="pre">cuda.pc</span></code>
+used by the build).</p></li>
+<li><p>The <a class="reference external" href="https://developer.nvidia.com/cudss-downloads">cuDSS library</a> (ships
+a <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> pkg-config file). cuDSS is also available on
+<a class="reference external" href="https://anaconda.org/conda-forge/libcudss">conda-forge</a> as
+<code class="code docutils literal notranslate"><span class="pre">libcudss</span></code> / <code class="code docutils literal notranslate"><span class="pre">libcudss-dev</span></code>.</p></li>
+</ol>
+<p>Make sure the directories containing <code class="code docutils literal notranslate"><span class="pre">cuda.pc</span></code> and <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> are
+on <code class="code docutils literal notranslate"><span class="pre">PKG_CONFIG_PATH</span></code>, and that the corresponding shared libraries are on
+<code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> (Linux) at runtime. A typical Linux environment looks
+like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span>/usr/local/cuda/bin:<span class="nv">$PATH</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PKG_CONFIG_PATH</span><span class="o">=</span>/usr/local/cuda/lib64/pkgconfig:/opt/nvidia/cudss/lib64/pkgconfig:<span class="nv">$PKG_CONFIG_PATH</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/usr/local/cuda/lib64:/opt/nvidia/cudss/lib64:<span class="nv">$LD_LIBRARY_PATH</span>
+</pre></div>
+</div>
+<p><strong>Install.</strong> Once the prerequisites are in place, build SCS with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_cudss<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Dint32<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to enable the GPU when solving. The
-sparse direct GPU solver is typically very fast.</p>
-<p>See <a class="reference external" href="https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing">here</a> for an example colab where the cuDSS version of SCS, along with
-required dependencies, is installed and used.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">int32=true</span></code> flag is required because cuDSS only supports 32-bit
+integer indices. Select the backend at runtime with
+<code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.CUDSS</span></code>.</p>
+<p>See <a class="reference external" href="https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing">this Colab notebook</a>
+for a worked end-to-end example that installs CUDA, cuDSS, and the cuDSS
+build of SCS, then solves a problem on a GPU.</p>
 </section>
 <section id="spectral-cones">
-<span id="python-spectral-install"></span><h2>Spectral cones<a class="headerlink" href="#spectral-cones" title="Link to this heading"></a></h2>
+<span id="python-spectral-install"></span><h3>Spectral cones<a class="headerlink" href="#spectral-cones" title="Link to this heading"></a></h3>
 <p>To enable <a class="reference internal" href="../api/cones.html#spectral-cones"><span class="std std-ref">spectral cone</span></a> support (log-determinant,
 nuclear norm, <span class="math notranslate nohighlight">\(\ell_1\)</span> norm, sum-of-largest-eigenvalues), install with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_spectral_cones<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
@@ -168,23 +229,26 @@ nuclear norm, <span class="math notranslate nohighlight">\(\ell_1\)</span> norm,
 <span class="xref std std-ref">python_spectral_cone_keys</span> for the cone dict keys.</p>
 </section>
 <section id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h2>
+<h3>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h3>
 <p>To test that SCS installed correctly, and you have pytest installed, run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>.
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for the full SCS python API.</p>
+</section>
+</section>
 <section id="legacy-options">
-<h3>Legacy options<a class="headerlink" href="#legacy-options" title="Link to this heading"></a></h3>
+<h2>Legacy options<a class="headerlink" href="#legacy-options" title="Link to this heading"></a></h2>
 <p>You can install with OpenMP parallelization support using</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--openmp
 </pre></div>
 </div>
-<p>You can install the GPU indirect solver using</p>
+<p>You can install the <a class="reference internal" href="../linear_solver/index.html#gpu-indirect"><span class="std std-ref">GPU indirect solver</span></a> using</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>legacy_setup.py<span class="w"> </span>install<span class="w"> </span>--scs<span class="w"> </span>--gpu
 </pre></div>
 </div>
-</section>
+<p>The GPU indirect solver is effectively deprecated; the cuDSS direct solver
+above is the recommended GPU backend.</p>
 </section>
 </section>
 
