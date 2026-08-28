@@ -9,13 +9,13 @@
 
 /* test read / write logic */
 static const char *hs21_tiny_qp_rw(void) {
+  scs_int cold_iter;
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   ScsInfo info = {0};
   scs_int exitflag;
-  scs_int cold_iters;
   scs_float perr, derr;
   scs_int success, read_status;
   const char *fail;
@@ -110,15 +110,15 @@ static const char *hs21_tiny_qp_rw(void) {
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
-  cold_iters = info.iter;
+  cold_iter = info.iter;
 
   /* test warm-starting */
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
-  /* warm-starting from the solution should cost at most half the cold
-   * solve (platform BLAS differences make an absolute bound flaky) */
-  mu_assert("hs21_tiny_qp_rw: warm-start failure",
-            info.iter <= cold_iters / 2);
+  /* relative to the cold solve: an absolute cap encodes the iteration
+   * count of one particular metric and breaks whenever the scaling
+   * changes, even though the warm solve is correct */
+  mu_assert("hs21_tiny_qp_rw: warm-start failure", info.iter <= cold_iter / 2);
   success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
 
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",

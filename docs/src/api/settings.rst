@@ -30,6 +30,11 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - Whether to heuristically adapt dual :code:`scale` through the solve. See :ref:`scaling`.
      - True/False
      - 1
+   * - :code:`adaptive_diag_scale`
+     - :code:`scs_int`
+     - Whether to refine the metric :math:`R` per row, using the primal residual profile. Requires :code:`adaptive_scale` (silently disabled without it). See :ref:`scaling`.
+     - True/False
+     - 1
    * - :code:`rho_x`
      - :code:`scs_float`
      - Primal scale factor. See :ref:`scaling`.

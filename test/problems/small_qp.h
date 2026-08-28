@@ -331,6 +331,11 @@ static const char *small_qp(void) {
   stgs->eps_abs = 1e-6;
   stgs->eps_rel = 1e-6;
   stgs->eps_infeas = 1e-10;
+  /* fixed metric for reproducible trajectories across platforms, matching
+   * the suite convention (adaptive dynamics have dedicated tests); with
+   * adaptive scaling on, this instance stalls on some architectures in
+   * the no-acceleration builds */
+  stgs->adaptive_scale = 0;
 
   ScsWork *w = scs_init(d, k, stgs);
   exitflag = scs_solve(w, sol, &info, 0);

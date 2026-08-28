@@ -418,6 +418,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("rho_x must be a positive finite number (1e-3 works well).\n");
     return -1;
   }
+  if (stgs->adaptive_diag_scale < 0 || stgs->adaptive_diag_scale > 1) {
+    scs_printf("adaptive_diag_scale must be 0 (off) or 1 (on).\n");
+    return -1;
+  }
   if (!isfinite(stgs->scale) || stgs->scale <= 0) {
     scs_printf("scale must be a positive finite number (1 works well).\n");
     return -1;
@@ -973,9 +977,17 @@ static void set_diag_r(ScsWork *w) {
   for (i = 0; i < w->d->n; ++i) {
     w->diag_r[i] = w->stgs->rho_x;
   }
+
   /* use cone information to set R_y */
   SCS(set_r_y)(w->cone_work, w->stgs->scale, &(w->diag_r[w->d->n]));
-  /* if modified need to SCS(enforce_cone_boundaries)(...) */
+  if (w->scale_mults) {
+    /* per-row multipliers act like a per-row scale: R_y_i = base_i / f_i.
+     * Multipliers are kept uniform within cone blocks (enforced at update
+     * time) so no SCS(enforce_cone_boundaries) needed here. */
+    for (i = 0; i < w->d->m; ++i) {
+      w->diag_r[w->d->n + i] /= w->scale_mults[i];
+    }
+  }
   w->diag_r[w->d->n + w->d->m] = TAU_FACTOR;
 }
 
@@ -1040,6 +1052,36 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->r_orig = init_residuals(w->d);
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
+#ifdef USE_SPECTRAL_CONES
+  if (w->stgs->adaptive_diag_scale &&
+      (w->k->dsize || w->k->nucsize || w->k->ell1_size || w->k->sl_size)) {
+    /* The spectral-cone projections are iterative inner solvers with
+     * warm-start state that does not currently tolerate mid-solve metric
+     * changes (observed as dual iterates leaving the cone). Disable
+     * dynamic diagonal rescaling on such problems until the inner
+     * solvers are made metric-change aware. */
+    w->stgs->adaptive_diag_scale = 0;
+  }
+#endif
+  if (w->stgs->adaptive_diag_scale) {
+    if (!w->stgs->adaptive_scale) {
+      /* silently disable: diag scaling rides the adaptive-scale update
+       * machinery, and since it defaults on, users who only turn off
+       * adaptive_scale should not see a warning */
+      w->stgs->adaptive_diag_scale = 0;
+    } else {
+      scs_int j;
+      w->scale_mults = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
+      if (!w->scale_mults) {
+        scs_printf("ERROR: work memory allocation failure\n");
+        scs_finish(w);
+        return SCS_NULL;
+      }
+      for (j = 0; j < w->d->m; ++j) {
+        w->scale_mults[j] = 1.0;
+      }
+    }
+  }
 
   if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
       !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
@@ -1162,6 +1204,48 @@ static scs_int should_update_r(scs_float factor) {
   return (factor > SQRTF(10.) || factor < 1. / SQRTF(10.));
 }
 
+/* Relative primal residual of constraint row i in the normalized space
+ * (where diag_r acts). All quantities carry tau consistently. */
+/* Relative primal residual of row i, used as the per-row profile.
+ *
+ * The denominator carries a floor at DEN_FLOOR_FRAC of the block's rms
+ * denominator. Without it, a row whose b_i is zero divides only by
+ * max(|(Ax)_i|, |s_i|) -- both of which shrink as the iterates converge
+ * -- so its ratio inflates even when the row is converging perfectly
+ * well, and the profile ends up reporting which terms a row happens to
+ * contain rather than how it is converging. Rows with denominators of
+ * ordinary size are unaffected; only the collapsing ones are floored. */
+static scs_float row_rel_res(const ScsWork *w, scs_int i) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_float den = MAX(ABS(r->ax[i]), ABS(w->xys_normalized->s[i]));
+  den = MAX(den, ABS(w->d->b[i]) * r->tau);
+  den = MAX(den, w->den_floor);
+  den = MAX(den, _DIV_EPS_TOL);
+  return MAX(ABS(r->ax_s_btau[i]), _DIV_EPS_TOL) / den;
+}
+
+/* Recompute the row-profile denominator floor from the current iterate. */
+static void set_den_floor(ScsWork *w) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_int i, m = w->d->m;
+  scs_float s2 = 0.;
+  for (i = 0; i < m; ++i) {
+    scs_float d = MAX(ABS(r->ax[i]), ABS(w->xys_normalized->s[i]));
+    d = MAX(d, ABS(w->d->b[i]) * r->tau);
+    s2 += d * d;
+  }
+  w->den_floor = DEN_FLOOR_FRAC * SQRTF(s2 / (scs_float)MAX(m, 1));
+}
+
+/* Relative dual residual of column j in the normalized space. */
+static scs_float col_rel_res(const ScsWork *w, scs_int j) {
+  const ScsResiduals *r = w->r_normalized;
+  scs_float den = MAX(ABS(r->px[j]), ABS(r->aty[j]));
+  den = MAX(den, ABS(w->d->c[j]) * r->tau);
+  den = MAX(den, _DIV_EPS_TOL);
+  return MAX(ABS(r->px_aty_ctau[j]), _DIV_EPS_TOL) / den;
+}
+
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
   scs_float factor, new_scale, relative_res_pri, relative_res_dual;
@@ -1177,6 +1261,9 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_float nm_ax_s_btau = SCALE_NORM(r->ax_s_btau, w->d->m);
 
   scs_int iters_since_last_update = iter - w->last_scale_update_iter;
+  if (w->scale_mults) {
+    set_den_floor(w);
+  }
   /* ||Ax + s - b * tau|| */
   denom_pri = MAX(nm_ax, nm_s);
   denom_pri = MAX(denom_pri, w->nm_b_orig * r->tau);
@@ -1203,16 +1290,53 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   new_scale =
       MIN(MAX(w->stgs->scale * factor, MIN_SCALE_VALUE), MAX_SCALE_VALUE);
-  if (new_scale == w->stgs->scale) {
+  scs_int apply_scalar =
+      (new_scale != w->stgs->scale) && should_update_r(factor);
+  scs_int apply_diag = 0;
+  scs_float log_g = 0., g, step, newf, change;
+  if (w->stgs->adaptive_diag_scale) {
+    /* residual profiles: adapt when the scalar updates, or when some
+     * row's/column's damped *clamped* step exceeds the update threshold
+     * (a railed scalar must not freeze the diagonal; a railed multiplier
+     * must not keep triggering updates it cannot take). */
+    scs_float drift = 1.0;
+    for (i = 0; i < w->d->m; ++i) {
+      log_g += log(row_rel_res(w, i));
+    }
+    log_g /= (scs_float)w->d->m;
+    g = exp(log_g);
+    for (i = 0; i < w->d->m; ++i) {
+      step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+      newf = MIN(MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+                 DIAG_SCALE_MULT_MAX);
+      change = newf / w->scale_mults[i];
+      drift = MAX(drift, MAX(change, 1. / change));
+    }
+    apply_diag = apply_scalar || should_update_r(drift);
+  }
+  if (!apply_scalar && !apply_diag) {
     return 0;
   }
-  if (should_update_r(factor)) {
+  {
     scs_int linsys_status;
     w->scale_updates++;
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
-    w->stgs->scale = new_scale;
+    if (apply_scalar) {
+      w->stgs->scale = new_scale;
+    }
+    if (apply_diag) {
+      g = exp(log_g);
+      for (i = 0; i < w->d->m; ++i) {
+        step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
+        w->scale_mults[i] = MIN(
+            MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+            DIAG_SCALE_MULT_MAX);
+      }
+      /* non-polyhedral cone blocks must share a single metric entry */
+      SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, SCS(mean));
+    }
 
     /* update diag r vector */
     set_diag_r(w);
@@ -1507,6 +1631,7 @@ void scs_finish(ScsWork *w) {
     scs_free(w->c_orig);
     scs_free(w->lin_sys_warm_start);
     scs_free(w->diag_r);
+    scs_free(w->scale_mults);
     SCS(free_sol)(w->xys_orig);
     if (w->scal) {
       scs_free(w->scal->D);
