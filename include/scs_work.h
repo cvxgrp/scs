@@ -68,6 +68,9 @@ struct SCS_WORK {
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */
   scs_float nm_b_orig, nm_c_orig; /* unnormalized NORM(b), NORM(c) */
+  scs_float nm_a_orig;            /* unnormalized max abs entry of A */
+  /* consecutive checks the infeas/unbdd certificate has passed */
+  scs_int infeas_cert_streak, unbdd_cert_streak;
   AaWork *accel;                  /* struct for acceleration workspace */
   ScsData *d;                     /* Problem data deep copy NORMALIZED */
   ScsCone *k;                     /* Problem cone deep copy */

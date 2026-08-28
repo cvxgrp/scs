@@ -642,12 +642,34 @@ static scs_int has_converged(ScsWork *w, scs_int iter) {
       return SCS_SOLVED;
     }
   }
-  if (isless(r->res_unbdd_a, eps_infeas) &&
-      isless(r->res_unbdd_p, eps_infeas)) {
-    return SCS_UNBOUNDED;
-  }
-  if (isless(r->res_infeas, eps_infeas)) {
-    return SCS_INFEASIBLE;
+  /* Certificate residuals divide the violation by the certificate's
+   * objective value (-c'x or -b'y), which bakes the data magnitudes into
+   * the effective tolerance: with e.g. ||c|| ~ 1e6 the unboundedness test
+   * is six orders looser than intended and produces false certificates
+   * (netlib agg/grow families). Tighten by the data-norm ratio so the
+   * test is invariant to rescaling of c (resp. b) vs A; only ever
+   * tighten. Additionally require the certificate to hold on consecutive
+   * checks to reject transient (e.g. accelerated) iterates. */
+  {
+    scs_float tighten_unbdd =
+        MAX(1., SAFEDIV_POS(w->nm_c_orig, w->nm_a_orig));
+    scs_float tighten_infeas =
+        MAX(1., SAFEDIV_POS(w->nm_b_orig, w->nm_a_orig));
+    if (isless(r->res_unbdd_a * tighten_unbdd, eps_infeas) &&
+        isless(r->res_unbdd_p, eps_infeas)) {
+      if (++w->unbdd_cert_streak >= CERT_PERSISTENCE_CHECKS) {
+        return SCS_UNBOUNDED;
+      }
+    } else {
+      w->unbdd_cert_streak = 0;
+    }
+    if (isless(r->res_infeas * tighten_infeas, eps_infeas)) {
+      if (++w->infeas_cert_streak >= CERT_PERSISTENCE_CHECKS) {
+        return SCS_INFEASIBLE;
+      }
+    } else {
+      w->infeas_cert_streak = 0;
+    }
   }
   return 0;
 }
@@ -1029,6 +1051,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
   stgs = SCS_NULL; /* for safety */
 
+  /* record the original (pre-normalization) magnitude of A for the
+   * data-scale-invariant certificate checks */
+  w->nm_a_orig = SCS(norm_inf)(w->d->A->x, w->d->A->p[w->d->A->n]);
+
   /* allocate workspace: */
   w->u = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->u_t = (scs_float *)scs_calloc(l, sizeof(scs_float));
@@ -1177,6 +1203,9 @@ static void reset_tracking(ScsWork *w) {
   w->n_log_scale_factor = 0;
   w->scale_updates = 0;
   w->time_limit_reached = 0;
+  /* certificate persistence */
+  w->infeas_cert_streak = 0;
+  w->unbdd_cert_streak = 0;
   /* Acceleration */
   w->rejected_accel_steps = 0;
   w->accepted_accel_steps = 0;
