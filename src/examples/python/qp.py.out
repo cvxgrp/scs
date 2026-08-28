@@ -1,5 +1,5 @@
 ------------------------------------------------------------------
-	       SCS v3.2.0 - Splitting Conic Solver
+	       SCS v3.2.11 - Splitting Conic Solver
 	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
@@ -8,22 +8,22 @@ cones: 	  z: primal zero / dual free vars: 1
 settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
-	  acceleration_lookback: 10, acceleration_interval: 10
-lin-sys:  sparse-direct
+	  acceleration_lookback: 10, acceleration_interval: 5
+lin-sys:  sparse-direct-amd-qdldl
 	  nnz(A): 4, nnz(P): 3
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.51e+00  1.00e+00  4.91e+00  1.14e+00  1.00e-01  8.39e-05 
-    75| 4.09e-10  7.93e-10  1.07e-09  1.24e+00  1.00e-01  3.93e-04 
+     0| 1.48e+00  1.00e+00  4.72e+00  1.17e+00  1.00e-01  2.16e-04 
+    50| 3.33e-10  7.78e-10  2.37e-10  1.24e+00  1.00e-01  2.80e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 5.30e-04s = setup: 1.31e-04s + solve: 3.98e-04s
-	 lin-sys: 1.55e-05s, cones: 4.71e-06s, accel: 2.72e-04s
+timings: total: 2.81e-04s = setup: 5.77e-05s + solve: 2.23e-04s
+	 lin-sys: 3.73e-06s, cones: 8.65e-07s, accel: 5.57e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------
-SCS took 75 iters
+SCS took 50 iters
 Optimal solution vector x*:
 [ 0.3 -0.7]
 Optimal dual vector y*:

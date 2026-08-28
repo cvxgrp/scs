@@ -4,7 +4,6 @@ import scipy as sp
 from scipy import sparse
 
 # Generate problem data
-sp.random.seed(1)
 np.random.seed(1)
 
 n = 200  # Variables
