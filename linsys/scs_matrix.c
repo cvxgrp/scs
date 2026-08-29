@@ -325,6 +325,66 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
  * equilibration the b/c entries count toward their row/column averages,
  * and the tau norms average over their own lengths.
  */
+/* One-shot post-equilibration pass: rank-one fit of the (rms) row-norm
+ * profile on real PSD blocks only. All other rows, the whole E, and the
+ * tau scalar are left untouched (identity scaling), so this pass moves
+ * nothing outside the PSD blocks. Kept outside the iterated Ruiz/l2
+ * loop: repeated fitting compounds pass over pass and destabilizes. */
+static void compute_l2_mats_psd_fit(ScsMatrix *P, ScsMatrix *A,
+                                    const scs_float *bt, const scs_float *ct,
+                                    scs_float *Dt, scs_float *Et,
+                                    scs_float *st_out, ScsConeWork *cone) {
+  scs_int i, j, seg, count;
+  scs_float *rcnt = (scs_float *)scs_calloc(A->m, sizeof(scs_float));
+
+  /* rms row norms of [A bt] (as in compute_l2_mats) */
+  for (i = 0; i < A->m; ++i) {
+    Dt[i] = bt[i] * bt[i];
+    if (rcnt) {
+      rcnt[i] = 1.;
+    }
+  }
+  for (i = 0; i < A->n; ++i) {
+    for (j = A->p[i]; j < A->p[i + 1]; ++j) {
+      Dt[A->i[j]] += A->x[j] * A->x[j];
+      if (rcnt) {
+        rcnt[A->i[j]] += 1.;
+      }
+    }
+  }
+  for (i = 0; i < A->m; ++i) {
+    if (rcnt) {
+      Dt[i] /= rcnt[i];
+    }
+    Dt[i] = SQRTF(Dt[i]);
+  }
+  scs_free(rcnt);
+
+  /* rank-one fit on PSD blocks, identity elsewhere */
+  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(mean), 1);
+  count = cone->cone_boundaries[0];
+  for (i = 0; i < count; ++i) {
+    Dt[i] = 1.0;
+  }
+  for (seg = 1; seg < cone->cone_boundaries_len; ++seg) {
+    scs_int delta = cone->cone_boundaries[seg];
+    if (cone->cone_boundaries_psd_n[seg] > 1) {
+      for (i = count; i < count + delta; ++i) {
+        Dt[i] = SAFEDIV_POS(1.0, SQRTF(apply_limit(Dt[i])));
+      }
+    } else {
+      for (i = count; i < count + delta; ++i) {
+        Dt[i] = 1.0;
+      }
+    }
+    count += delta;
+  }
+  for (i = 0; i < A->n; ++i) {
+    Et[i] = 1.0;
+  }
+  *st_out = 1.0;
+}
+
 static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
                             const scs_float *ct, scs_float *Dt, scs_float *Et,
                             scs_float *st_out, ScsConeWork *cone) {
@@ -557,6 +617,21 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
   for (i = 0; i < NUM_L2_PASSES; ++i) {
     compute_l2_mats(P, A, bt, ct, Dt, Et, &st, cone);
     rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
+  }
+  /* One post-equilibration rank-one fit pass for PSD blocks: a single
+   * shot (outside the iterated loop, where repeated fitting compounds
+   * and destabilizes) capturing the static within-block structure that
+   * the scalar-per-block passes cannot express. No-op without PSD
+   * cones or when the profile is flat. */
+  if (cone->cone_boundaries_psd_n) {
+    scs_int has_psd = 0;
+    for (i = 0; i < cone->cone_boundaries_len; ++i) {
+      has_psd |= (cone->cone_boundaries_psd_n[i] > 1);
+    }
+    if (has_psd) {
+      compute_l2_mats_psd_fit(P, A, bt, ct, Dt, Et, &st, cone);
+      rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
+    }
   }
   scs_free(Dt);
   scs_free(Et);

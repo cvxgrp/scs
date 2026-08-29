@@ -393,10 +393,26 @@ static void fit_psd_block_weights(scs_float *vec, scs_int n) {
   if (!ell) {
     return; /* leave profile as-is; caller falls back to scalar */
   }
+  /* Floor entries relative to the block max: (near-)zero rows carry no
+   * information about the block's scale structure (e.g. unconstrained
+   * off-diagonal svec rows are exactly zero in the equilibration
+   * profile) and an absolute floor lets them dominate the fit. */
+  {
+    scs_float vmax = 0., vfloor;
+    scs_int sz = (n * (n + 1)) / 2;
+    for (i = 0; i < sz; ++i) {
+      vmax = MAX(vmax, vec[i]);
+    }
+    vfloor = MAX(1e-3 * vmax, 1e-12);
+    for (i = 0; i < sz; ++i) {
+      vec[i] = MAX(vec[i], vfloor);
+    }
+  }
+
   /* rhs_k = 2 y_kk + sum_{j != k} y_kj */
   for (j = 0; j < n; ++j) {
     for (i = j; i < n; ++i) {
-      scs_float y = log(MAX(vec[svec_idx(i, j, n)], 1e-12));
+      scs_float y = log(vec[svec_idx(i, j, n)]);
       if (i == j) {
         ell[i] += 2. * y;
       } else {
