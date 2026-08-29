@@ -52,9 +52,11 @@ _SKIP(test_validation)
 #if defined(USE_LAPACK)
 #include "problems/complex_PSD.h"
 #include "problems/sd_and_complex_sd.h"
+#include "problems/test_psd_metric.h"
 #else
 _SKIP(complex_PSD)
 _SKIP(sd_and_complex_sd)
+_SKIP(test_psd_metric)
 #endif
 
 /* solve SDPs from data files, requires blas / lapack */
@@ -108,6 +110,7 @@ static const char *all_tests(void) {
   mu_run_test(rob_gauss_cov_est);
   mu_run_test(complex_PSD);
   mu_run_test(sd_and_complex_sd);
+  mu_run_test(test_psd_metric);
   mu_run_test(hs21_tiny_qp);
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(qafiro_tiny_qp);

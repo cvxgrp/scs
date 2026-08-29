@@ -30,6 +30,15 @@ struct SCS_CONE_WORK {
   ScsCone *k; /* original cone information */
   scs_int *cone_boundaries;
   scs_int cone_boundaries_len;
+  /* Per boundary entry: matrix dimension n if the block is a real PSD
+   * cone (svec length n(n+1)/2), else 0. PSD blocks admit a richer
+   * cone-invariant metric than a single scalar: any svec-diagonal
+   * weight of the rank-one form w_ij = delta_i * delta_j (a diagonal
+   * congruence X -> DXD). enforce_cone_boundaries fits this form for
+   * PSD blocks instead of collapsing them to one value. */
+  scs_int *cone_boundaries_psd_n;
+  /* scratch for PSD diagonal-congruence factors, length max PSD dim */
+  scs_float *psd_gamma;
   scs_int scaled_cones; /* boolean, whether the cones have been scaled */
   scs_float *s;         /* used for Moreau decomposition in projection */
   scs_int m;            /* total length of cone */
