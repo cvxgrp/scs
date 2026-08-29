@@ -390,7 +390,8 @@ static void fit_psd_block_weights(scs_float *vec, scs_int n) {
   scs_float rhs_sum = 0., corr, li, lmean = 0., base = 0., beta = 0.5;
   scs_float lo = SQRTF(DIAG_SCALE_MULT_MIN), hi = SQRTF(DIAG_SCALE_MULT_MAX);
   scs_float sb;
-  const char *beta_env = getenv("SCS_PSD_FIT_BETA"); /* TEMP: sweep knob */
+  const char *beta_env = getenv("SCS_PSD_FIT_BETA");     /* TEMP: sweep */
+  const char *cent_env = getenv("SCS_PSD_FIT_CENTER");    /* TEMP: sweep */
   scs_float *ell = (scs_float *)scs_calloc(n, sizeof(scs_float));
   if (!ell) {
     return; /* leave profile as-is; caller falls back to scalar */
@@ -398,11 +399,19 @@ static void fit_psd_block_weights(scs_float *vec, scs_int n) {
   if (beta_env) {
     beta = (scs_float)atof(beta_env);
   }
-  /* the scalar the historical code would have used: arithmetic mean */
-  for (i = 0; i < sz; ++i) {
-    base += vec[i];
+  /* block center: arithmetic mean (the historical scalar) by default,
+   * geometric mean when SCS_PSD_FIT_CENTER=geo (TEMP ablation knob) */
+  if (cent_env && cent_env[0] == 'g') {
+    for (i = 0; i < sz; ++i) {
+      base += log(MAX(vec[i], 1e-12));
+    }
+    base = exp(base / (scs_float)sz);
+  } else {
+    for (i = 0; i < sz; ++i) {
+      base += vec[i];
+    }
+    base /= (scs_float)sz;
   }
-  base /= (scs_float)sz;
   /* rhs_k = 2 y_kk + sum_{j != k} y_kj */
   for (j = 0; j < n; ++j) {
     for (i = j; i < n; ++i) {
