@@ -422,17 +422,24 @@ static void fit_psd_block_weights(scs_float *vec, scs_int n) {
   scs_free(ell);
 }
 
-/* The function f aggregates the entries within each cone. Real PSD
- * blocks instead get the rank-one (diagonal congruence) fit, which is
- * cone-invariant and strictly more expressive than a single scalar. */
+/* The function f aggregates the entries within each cone. With
+ * psd_rank1 set, real PSD blocks instead get the rank-one (diagonal
+ * congruence) fit, which is cone-invariant and strictly more
+ * expressive than a single scalar. The fit is only safe for the
+ * one-shot dynamic metric update: applied inside the iterated Ruiz
+ * equilibration loop it compounds pass over pass instead of
+ * contracting and destroys the scaling (mcp100 diverges), so the
+ * equilibration call sites keep the scalar collapse. */
 void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
-                                  scs_float (*f)(const scs_float *, scs_int)) {
+                                  scs_float (*f)(const scs_float *, scs_int),
+                                  scs_int psd_rank1) {
   scs_int i, j, delta;
   scs_int count = c->cone_boundaries[0];
   scs_float wrk;
   for (i = 1; i < c->cone_boundaries_len; ++i) {
     delta = c->cone_boundaries[i];
-    if (c->cone_boundaries_psd_n && c->cone_boundaries_psd_n[i] > 1) {
+    if (psd_rank1 && c->cone_boundaries_psd_n &&
+        c->cone_boundaries_psd_n[i] > 1) {
       fit_psd_block_weights(&(vec[count]), c->cone_boundaries_psd_n[i]);
     } else {
       wrk = f(&(vec[count]), delta);

@@ -264,7 +264,7 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   }
 
   /* accumulate D across each cone  */
-  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(norm_inf));
+  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(norm_inf), 0);
 
   /* invert temporary vec to form D */
   for (i = 0; i < A->m; ++i) {
@@ -365,7 +365,7 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   }
 
   /* accumulate D across each cone  */
-  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(mean));
+  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(mean), 0);
 
   for (i = 0; i < A->m; ++i) {
     Dt[i] = SQRTF(apply_limit(Dt[i]));

@@ -47,7 +47,7 @@ static const char *test_psd_metric(void) {
   for (i = 0; i < PSD_M; ++i) {
     prof[i] = exp(1.5 * psd_rand(&seed)); /* arbitrary positive profile */
   }
-  SCS(enforce_cone_boundaries)(cw, prof, &SCS(mean));
+  SCS(enforce_cone_boundaries)(cw, prof, &SCS(mean), 1);
   for (i = 0; i < PSD_N; ++i) {
     delta[i] = SQRTF(prof[psd_svec_idx(i, i, PSD_N)]);
   }
