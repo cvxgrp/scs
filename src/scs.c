@@ -1355,7 +1355,7 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
             DIAG_SCALE_MULT_MAX);
       }
       /* non-polyhedral cone blocks must share a single metric entry */
-      SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, SCS(mean));
+      SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, &SCS(mean), 1);
     }
 
     /* update diag r vector */

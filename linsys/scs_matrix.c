@@ -264,7 +264,7 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   }
 
   /* accumulate D across each cone  */
-  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(norm_inf));
+  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(norm_inf), 0);
 
   /* invert temporary vec to form D */
   for (i = 0; i < A->m; ++i) {
@@ -325,6 +325,7 @@ static void compute_ruiz_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
  * equilibration the b/c entries count toward their row/column averages,
  * and the tau norms average over their own lengths.
  */
+
 static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
                             const scs_float *ct, scs_float *Dt, scs_float *Et,
                             scs_float *st_out, ScsConeWork *cone) {
@@ -365,7 +366,7 @@ static void compute_l2_mats(ScsMatrix *P, ScsMatrix *A, const scs_float *bt,
   }
 
   /* accumulate D across each cone  */
-  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(mean));
+  SCS(enforce_cone_boundaries)(cone, Dt, &SCS(mean), 0);
 
   for (i = 0; i < A->m; ++i) {
     Dt[i] = SQRTF(apply_limit(Dt[i]));
@@ -558,6 +559,7 @@ ScsScaling *SCS(normalize_a_p)(ScsMatrix *P, ScsMatrix *A, const scs_float *b,
     compute_l2_mats(P, A, bt, ct, Dt, Et, &st, cone);
     rescale(P, A, bt, ct, st, Dt, Et, scal, cone);
   }
+
   scs_free(Dt);
   scs_free(Et);
   scs_free(bt);

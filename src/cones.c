@@ -307,6 +307,10 @@ void SCS(finish_cone)(ScsConeWork *c) {
 #endif
   if (c->cone_boundaries)
     scs_free(c->cone_boundaries);
+  if (c->cone_boundaries_psd_n)
+    scs_free(c->cone_boundaries_psd_n);
+  if (c->psd_gamma)
+    scs_free(c->psd_gamma);
   if (c->r_box_inv)
     scs_free(c->r_box_inv);
   if (c->s)
@@ -362,17 +366,102 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
   }
 }
 
-/* The function f aggregates the entries within each cone */
+/* svec packed index of entry (i, j), i >= j, in an n x n lower
+ * triangle stored column-major. */
+static scs_int svec_idx(scs_int i, scs_int j, scs_int n) {
+  return j * n - (j * (j - 1)) / 2 + (i - j);
+}
+
+/* Fit the rank-one form w_ij = delta_i * delta_j to a positive profile
+ * on one PSD block (svec packed, length n(n+1)/2) by least squares in
+ * log space, and overwrite the block with the fitted values. This is
+ * the richest svec-diagonal metric that maps the PSD cone to itself
+ * (the diagonal congruence X -> diag(delta) X diag(delta)), so unlike
+ * generic cones the block need not collapse to a single scalar.
+ *
+ * Normal equations: minimizing sum_{i<=j} (l_i + l_j - y_ij)^2 gives
+ * A'A = (n+2) I + 11', inverted in closed form by Sherman-Morrison.
+ * The fitted delta_i are clamped so every product w_ij stays within
+ * [DIAG_SCALE_MULT_MIN, DIAG_SCALE_MULT_MAX], preserving rank-one
+ * structure (clamping products directly would break it). */
+static void fit_psd_block_weights(scs_float *vec, scs_int n) {
+  scs_int i, j;
+  scs_float alpha = (scs_float)(n + 2);
+  scs_float rhs_sum = 0., corr, li;
+  scs_float lo = SQRTF(DIAG_SCALE_MULT_MIN), hi = SQRTF(DIAG_SCALE_MULT_MAX);
+  scs_float *ell = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  if (!ell) {
+    return; /* leave profile as-is; caller falls back to scalar */
+  }
+  /* Floor entries relative to the block max: (near-)zero rows carry no
+   * information about the block's scale structure (e.g. unconstrained
+   * off-diagonal svec rows are exactly zero in the equilibration
+   * profile) and an absolute floor lets them dominate the fit. */
+  {
+    scs_float vmax = 0., vfloor;
+    scs_int sz = (n * (n + 1)) / 2;
+    for (i = 0; i < sz; ++i) {
+      vmax = MAX(vmax, vec[i]);
+    }
+    vfloor = MAX(1e-3 * vmax, 1e-12);
+    for (i = 0; i < sz; ++i) {
+      vec[i] = MAX(vec[i], vfloor);
+    }
+  }
+
+  /* rhs_k = 2 y_kk + sum_{j != k} y_kj */
+  for (j = 0; j < n; ++j) {
+    for (i = j; i < n; ++i) {
+      scs_float y = log(vec[svec_idx(i, j, n)]);
+      if (i == j) {
+        ell[i] += 2. * y;
+      } else {
+        ell[i] += y;
+        ell[j] += y;
+      }
+    }
+  }
+  for (i = 0; i < n; ++i) {
+    rhs_sum += ell[i];
+  }
+  /* (alpha I + 11')^{-1} rhs = rhs/alpha - 1 (1'rhs) / (alpha(alpha+n)) */
+  corr = rhs_sum / (alpha * (alpha + (scs_float)n));
+  for (i = 0; i < n; ++i) {
+    li = exp(ell[i] / alpha - corr);
+    ell[i] = MIN(MAX(li, lo), hi);
+  }
+  for (j = 0; j < n; ++j) {
+    for (i = j; i < n; ++i) {
+      vec[svec_idx(i, j, n)] = ell[i] * ell[j];
+    }
+  }
+  scs_free(ell);
+}
+
+/* The function f aggregates the entries within each cone. With
+ * psd_rank1 set, real PSD blocks instead get the rank-one (diagonal
+ * congruence) fit, which is cone-invariant and strictly more
+ * expressive than a single scalar. The fit is only safe for the
+ * one-shot dynamic metric update: applied inside the iterated Ruiz
+ * equilibration loop it compounds pass over pass instead of
+ * contracting and destroys the scaling (mcp100 diverges), so the
+ * equilibration call sites keep the scalar collapse. */
 void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
-                                  scs_float (*f)(const scs_float *, scs_int)) {
+                                  scs_float (*f)(const scs_float *, scs_int),
+                                  scs_int psd_rank1) {
   scs_int i, j, delta;
   scs_int count = c->cone_boundaries[0];
   scs_float wrk;
   for (i = 1; i < c->cone_boundaries_len; ++i) {
     delta = c->cone_boundaries[i];
-    wrk = f(&(vec[count]), delta);
-    for (j = count; j < count + delta; ++j) {
-      vec[j] = wrk;
+    if (psd_rank1 && c->cone_boundaries_psd_n &&
+        c->cone_boundaries_psd_n[i] > 1) {
+      fit_psd_block_weights(&(vec[count]), c->cone_boundaries_psd_n[i]);
+    } else {
+      wrk = f(&(vec[count]), delta);
+      for (j = count; j < count + delta; ++j) {
+        vec[j] = wrk;
+      }
     }
     count += delta;
   }
@@ -394,13 +483,16 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
       k->qsize + k->ssize + k->cssize + k->ed + k->ep + k->psize;
 #endif
   scs_int *b = (scs_int *)scs_calloc(total_cones + 1, sizeof(scs_int));
+  scs_int *psd_n = (scs_int *)scs_calloc(total_cones + 1, sizeof(scs_int));
 
   /* Cones that can be scaled independently */
   b[count++] = k->z + k->l + k->bsize;
   for (i = 0; i < k->qsize; ++i)
     b[count++] = k->q[i];
-  for (i = 0; i < k->ssize; ++i)
+  for (i = 0; i < k->ssize; ++i) {
+    psd_n[count] = k->s[i];
     b[count++] = get_sd_cone_size(k->s[i]);
+  }
   for (i = 0; i < k->cssize; ++i)
     b[count++] = get_csd_cone_size(k->cs[i]);
   for (i = 0; i < k->ep + k->ed; ++i)
@@ -421,6 +513,7 @@ void set_cone_boundaries(const ScsCone *k, ScsConeWork *c) {
 
   c->cone_boundaries = b;
   c->cone_boundaries_len = total_cones + 1;
+  c->cone_boundaries_psd_n = psd_n;
 }
 
 static scs_int get_full_cone_dims(const ScsCone *k) {
@@ -842,6 +935,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
    * 'e' stores eigenvalues, 'isuppz' supports them. Shared by Real/Complex.
    */
   c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
+  c->psd_gamma = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
   c->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n_max), sizeof(blas_int));
   if (!c->e || !c->isuppz)
     return -1;
@@ -996,8 +1090,18 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 /*
  * Projection: Real Semi-Definite Cone
  */
+/* Project one svec-packed block onto the PSD cone. When rho (the
+ * block's slice of the diagonal metric R) is non-uniform it must have
+ * the rank-one structure w_ij = delta_i * delta_j (enforced by
+ * fit_psd_block_weights). The projection under the induced R^{-1}
+ * metric is then a diagonal congruence sandwich: with gamma_i =
+ * w_ii^{-1/4}, project Gamma X Gamma and unscale. Positive homogeneity
+ * of the cone makes any uniform factor in rho drop out, so the
+ * historical scalar-per-block case reduces to the unscaled path. */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
-                                       ScsConeWork *c) {
+                                       ScsConeWork *c,
+                                       const scs_float *rho) {
+  scs_int scaled = 0;
   if (n == 0)
     return 0;
   if (n == 1) {
@@ -1014,6 +1118,31 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   scs_float abstol = -1.0, d_f = 0.0, sq_eig;
   blas_int m = 0, d_i = 0;
   scs_int first_idx = -1;
+
+  /* Diagonal-congruence pre-scale (skip when the metric is uniform on
+   * this block so the historical path stays bit-identical). */
+  if (rho && c->psd_gamma) {
+    scs_float wmin = rho[0], wmax = rho[0];
+    for (i = 1; i < n; ++i) {
+      scs_float wii = rho[i * n - ((i - 1) * i) / 2];
+      wmin = MIN(wmin, wii);
+      wmax = MAX(wmax, wii);
+    }
+    if (wmax > wmin * (1. + 1e-12)) {
+      scs_int jj, ii;
+      scaled = 1;
+      for (i = 0; i < n; ++i) {
+        c->psd_gamma[i] = POWF(rho[i * n - ((i - 1) * i) / 2], -0.25);
+      }
+      for (jj = 0; jj < n; ++jj) {
+        scs_float gj = c->psd_gamma[jj];
+        scs_float *col = &(X[jj * n - ((jj - 1) * jj) / 2]);
+        for (ii = jj; ii < n; ++ii) {
+          col[ii - jj] *= c->psd_gamma[ii] * gj;
+        }
+      }
+    }
+  }
 
   /* Copy lower triangular part to full matrix buffer Xs */
   for (i = 0; i < n; ++i) {
@@ -1059,6 +1188,18 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   for (i = 0; i < n; ++i) {
     memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(c->Xs[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
+  }
+
+  /* Undo the congruence pre-scale */
+  if (scaled) {
+    scs_int jj, ii;
+    for (jj = 0; jj < n; ++jj) {
+      scs_float gj = c->psd_gamma[jj];
+      scs_float *col = &(X[jj * n - ((jj - 1) * jj) / 2]);
+      for (ii = jj; ii < n; ++ii) {
+        col[ii - jj] /= c->psd_gamma[ii] * gj;
+      }
+    }
   }
   return 0;
 #else
@@ -1382,7 +1523,8 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
 #ifdef USE_SPECTRAL_CONES
       SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
 #endif
-      status = proj_semi_definite_cone(&(x[count]), k->s[i], c);
+      status = proj_semi_definite_cone(&(x[count]), k->s[i], c,
+                                       r_y ? &(r_y[count]) : SCS_NULL);
 #ifdef USE_SPECTRAL_CONES
       SPECTRAL_TIMING(c->tot_time_mat_cone_proj +=
                       SCS(tocq)(&spec_mat_proj_timer);)
