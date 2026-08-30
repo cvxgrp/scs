@@ -45,7 +45,12 @@ void SCS(log_data_to_csv)(const ScsCone *k, const ScsWork *w, scs_int iter,
 /* This is a VERY naive implementation, doesn't care about portability etc */
 
 #define RW_EXT_MAGIC ((uint32_t)0x53435345u) /* "SCSE" */
-#define RW_EXT_VERSION ((uint32_t)1u)
+/* Extension-section schema version. Append-only: readers accept any
+ * version <= RW_EXT_VERSION, defaulting fields the file predates, and
+ * reject only files written by a NEWER schema than they understand.
+ *   v1: cs/spectral cone arrays + time_limit_secs
+ *   v2: + adaptive_diag_scale */
+#define RW_EXT_VERSION ((uint32_t)2u)
 
 static scs_int checked_fread(void *ptr, size_t size, size_t nmemb, FILE *fin) {
   size_t ret;
@@ -319,6 +324,20 @@ static scs_int write_scs_stgs(const ScsSettings *s, FILE *fout) {
   return 0;
 }
 
+/* Return 1 if `ver` (e.g. "3.2.11") sorts before 3.3.0, using the
+ * numeric major/minor prefix. Unparseable strings are treated as old
+ * (the conservative choice: the legacy layout reads fewer bytes). */
+static scs_int rw_version_before_330(const char *ver) {
+  long major = 0, minor = 0;
+  char *end = SCS_NULL;
+  major = strtol(ver, &end, 10);
+  if (end == ver || *end != '.') {
+    return 1;
+  }
+  minor = strtol(end + 1, &end, 10);
+  return (major < 3) || (major == 3 && minor < 3);
+}
+
 static ScsSettings *read_scs_stgs(FILE *fin, size_t file_int_sz,
                                   scs_int legacy_settings) {
   ScsSettings *s = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -496,7 +515,11 @@ static scs_int write_scs_extensions(const ScsCone *k, const ScsSettings *s,
     return -1;
   }
 #endif
-  return checked_fwrite(&(s->time_limit_secs), sizeof(scs_float), 1, fout);
+  if (checked_fwrite(&(s->time_limit_secs), sizeof(scs_float), 1, fout) < 0) {
+    return -1;
+  }
+  /* v2 fields */
+  return checked_fwrite(&(s->adaptive_diag_scale), sizeof(scs_int), 1, fout);
 }
 
 static scs_int read_ext_int_array(scs_int **dest, scs_int *n,
@@ -528,9 +551,10 @@ static scs_int read_scs_extensions(FILE *fin, size_t file_int_sz, ScsCone *k,
   if (checked_fread(&version, sizeof(uint32_t), 1, fin) < 0) {
     return -1;
   }
-  if (version != RW_EXT_VERSION) {
-    scs_printf("Error: unsupported SCS read/write extension version %lu\n",
-               (unsigned long)version);
+  if (version > RW_EXT_VERSION || version < 1) {
+    scs_printf("Error: SCS file uses read/write schema version %lu, this "
+               "build supports up to %lu\n",
+               (unsigned long)version, (unsigned long)RW_EXT_VERSION);
     return -1;
   }
   if (read_ext_int_array(&(k->cs), &(k->cssize), file_int_sz, fin) < 0 ||
@@ -568,7 +592,15 @@ static scs_int read_scs_extensions(FILE *fin, size_t file_int_sz, ScsCone *k,
     return -1;
   }
 #endif
-  return checked_fread(&(s->time_limit_secs), sizeof(scs_float), 1, fin);
+  if (checked_fread(&(s->time_limit_secs), sizeof(scs_float), 1, fin) < 0) {
+    return -1;
+  }
+  if (version >= 2) {
+    if (read_int(&(s->adaptive_diag_scale), file_int_sz, 1, fin) < 0) {
+      return -1;
+    }
+  } /* else: scs_set_default_settings value stands */
+  return 0;
 }
 
 void SCS(write_data)(const ScsData *d, const ScsCone *k,
@@ -655,7 +687,11 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
     return read_data_cleanup(fin, d, k, stgs);
   }
   file_version[file_version_sz] = '\0';
-  legacy_settings = strcmp(file_version, SCS_VERSION) != 0;
+  /* The settings-block layout changed in 3.3.0 (acceleration type /
+   * regularization / relaxation fields added). Key the layout off a
+   * numeric version comparison so files from other 3.3.x builds parse
+   * correctly; exact-string equality would silently misparse them. */
+  legacy_settings = rw_version_before_330(file_version);
   if (strcmp(file_version, SCS_VERSION) != 0) {
     scs_printf("************************************************************\n"
                "Warning: SCS file version %s, this is SCS version %s.\n"

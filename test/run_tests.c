@@ -92,6 +92,7 @@ _SKIP(test_ell1_and_nuc)
 /* solves problems from data files */
 #if NO_READ_WRITE == 0
 #include "problems/hs21_tiny_qp_rw.h"
+#include "problems/test_rw_settings.h"
 #include "problems/max_ent.h"
 #include "problems/mpc_bug.h"
 #else
@@ -113,6 +114,7 @@ static const char *all_tests(void) {
   mu_run_test(test_psd_metric);
   mu_run_test(hs21_tiny_qp);
   mu_run_test(hs21_tiny_qp_rw);
+  mu_run_test(test_rw_settings);
   mu_run_test(qafiro_tiny_qp);
   mu_run_test(infeasible_tiny_qp);
   mu_run_test(infeasible_lp);
