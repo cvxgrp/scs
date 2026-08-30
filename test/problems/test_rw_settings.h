@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "glbopts.h"
 #include "minunit.h"
 #include "problem_utils.h"
