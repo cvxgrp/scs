@@ -76,6 +76,9 @@ static const char *test_rw_settings(void) {
               fread(&ver_len, sizeof(uint32_t), 1, f) == 1);
     mu_assert("rw_settings: unexpected version length",
               ver_len >= 5 && ver_len < 16);
+    /* C requires a positioning call between a read and a write on an
+     * update stream; Windows enforces it. */
+    fseek(f, 0, SEEK_CUR);
     memset(patched, '9', ver_len); /* "9...9": parses as major 9 >= 3.3 */
     patched[1] = '.';
     patched[3] = '.';
