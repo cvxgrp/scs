@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.10)
 project(
   scs
   LANGUAGES C
-  VERSION 3.2.11)
+  VERSION 3.3.0)
 
 # Standard GNU install directories (lib, bin, include, etc.)
 include(GNUInstallDirs)
