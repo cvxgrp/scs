@@ -82,6 +82,25 @@ AaStats aa_get_stats(const AaWork *a) {
   tic(&__t);
 #define TIME_TOC toc(__func__, &__t);
 
+#ifdef _WIN32
+#include <windows.h>
+typedef struct timer {
+  LARGE_INTEGER tic;
+  LARGE_INTEGER toc;
+} timer;
+
+void tic(timer *t) {
+  QueryPerformanceCounter(&t->tic);
+}
+
+aa_float tocq(timer *t) {
+  LARGE_INTEGER freq;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&t->toc);
+  return (aa_float)(t->toc.QuadPart - t->tic.QuadPart) /
+         (aa_float)freq.QuadPart * 1e3;
+}
+#else
 #include <time.h>
 typedef struct timer {
   struct timespec tic;
@@ -106,6 +125,7 @@ aa_float tocq(timer *t) {
   }
   return (aa_float)temp.tv_sec * 1e3 + (aa_float)temp.tv_nsec / 1e6;
 }
+#endif
 
 aa_float toc(const char *str, timer *t) {
   aa_float time = tocq(t);
@@ -365,12 +385,17 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
   memcpy(y_col, a->g, sizeof(aa_float) * a->dim);
   BLAS(axpy)(&bdim, &neg_onef, a->g_prev, &one, y_col, &one);
 
-  /* Update the per-column cached norms for the slot we just rewrote.
-   * compute_regularization reduces these on demand. Store the norm
-   * itself (not its square) — squaring here would throw away the
-   * overflow/underflow safety that nrm2 guarantees. */
-  a->nrm_s_col[idx] = BLAS(nrm2)(&bdim, s_col, &one);
-  a->nrm_y_col[idx] = BLAS(nrm2)(&bdim, y_col, &one);
+  /* Update the per-column cached norms only when the scaled
+   * regularization path will read them. Pinned/no regularization skips
+   * compute_regularization entirely, and Type-II uses Y for both A and B,
+   * so S norms are unused there. Store the norm itself (not its square) to
+   * preserve nrm2's overflow/underflow safety. */
+  if (a->regularization > 0) {
+    if (a->type1) {
+      a->nrm_s_col[idx] = BLAS(nrm2)(&bdim, s_col, &one);
+    }
+    a->nrm_y_col[idx] = BLAS(nrm2)(&bdim, y_col, &one);
+  }
 
   /* State advance for next iter: (x_prev, f_prev, g_prev) <- (x, f, g).
    * Must follow all the reads above. */
@@ -670,8 +695,9 @@ AaWork *aa_init(aa_int dim, aa_int mem, aa_int min_len, aa_int type1,
    * caring whether mem exceeded dim. When mem == 0 (AA off), min_len
    * is ignored entirely. */
   if (dim <= 0 || mem < 0 || !isfinite(regularization) ||
-      relaxation < 0 || relaxation > 2 ||
-      safeguard_factor < 0 || max_weight_norm <= 0 ||
+      !isfinite(relaxation) || relaxation < 0 || relaxation > 2 ||
+      !isfinite(safeguard_factor) || safeguard_factor < 0 ||
+      !isfinite(max_weight_norm) || max_weight_norm <= 0 ||
       ir_max_steps < 0 ||
       (mem_clamped > 0 && min_len < 1)) {
     scs_printf("Invalid AA parameters.\n");
