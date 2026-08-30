@@ -92,6 +92,10 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   p->diag_r_idxs = (scs_int *)scs_calloc(p->n_plus_m, sizeof(scs_int));
   p->diag_p = (scs_float *)scs_calloc(p->n, sizeof(scs_float));
+  if (!p->diag_r_idxs || !p->diag_p) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
 
   /* MKL pardiso requires upper triangular CSR matrices. The KKT matrix stuffed
    * as CSC lower triangular is equivalent. Pass upper=0. */

@@ -281,7 +281,9 @@ static const char *test_invalid_aa_relaxation_rejected(void) {
 }
 
 /*
- * Test that NaN/negative acceleration_regularization is rejected by validate.
+ * Test the sign-encoded acceleration_regularization contract from
+ * include/aa.h: negative (pinned absolute) is a documented, accepted
+ * mode; only non-finite values are rejected by validate.
  */
 static const char *test_invalid_aa_regularization_rejected(void) {
   ScsCone *k;
@@ -296,9 +298,9 @@ static const char *test_invalid_aa_regularization_rejected(void) {
   stgs->acceleration_regularization = -1e-12;
 
   exitflag = scs(d, k, stgs, sol, &info);
-  mu_assert("test_invalid_aa_regularization_rejected: negative reg "
-            "should be SCS_FAILED",
-            exitflag == SCS_FAILED);
+  mu_assert("test_invalid_aa_regularization_rejected: negative (pinned) reg "
+            "is a documented mode and must be accepted",
+            exitflag != SCS_FAILED);
 
   _OPTS_CLEANUP();
 
