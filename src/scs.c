@@ -24,6 +24,12 @@
 #ifdef SCS_MKL
 #define MKL_INTERFACE_LP64 0
 #define MKL_INTERFACE_ILP64 1
+/* MKL's interface-layer value is a bitmask: bit 0 selects the integer
+ * width (LP64/ILP64) and bit 1 is the GNU Fortran calling-convention
+ * flag, so MKL_Set_Interface_Layer can legitimately return 2 (LP64|GNU)
+ * or 3 (ILP64|GNU) -- e.g. when an MKL-backed NumPy initialized MKL
+ * first. Only the width bit affects integer-size safety. */
+#define MKL_INTERFACE_GNU 2
 int MKL_Set_Interface_Layer(int);
 
 static const char *scs_mkl_interface_name(int layer) {
@@ -32,6 +38,10 @@ static const char *scs_mkl_interface_name(int layer) {
     return "LP64";
   case MKL_INTERFACE_ILP64:
     return "ILP64";
+  case MKL_INTERFACE_LP64 | MKL_INTERFACE_GNU:
+    return "LP64 (GNU)";
+  case MKL_INTERFACE_ILP64 | MKL_INTERFACE_GNU:
+    return "ILP64 (GNU)";
   default:
     return "unknown";
   }
@@ -57,7 +67,9 @@ static scs_int scs_init_mkl_runtime(void) {
     int expected = MKL_INTERFACE_LP64;
 #endif
     int actual = MKL_Set_Interface_Layer(expected);
-    if (actual != expected) {
+    /* compare only the integer-width bit: the GNU flag is a Fortran
+     * calling-convention variant with the same integer sizes */
+    if ((actual & MKL_INTERFACE_ILP64) != (expected & MKL_INTERFACE_ILP64)) {
       scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
                  "%s (%d). Another library in this process likely "
                  "initialized MKL with an incompatible LP64/ILP64 setting.\n",
