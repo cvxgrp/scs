@@ -149,6 +149,7 @@ static const char *all_tests(void) {
   mu_run_test(test_aa_regularization_sweep);
   mu_run_test(test_negative_lookback_rejected);
   mu_run_test(test_invalid_aa_relaxation_rejected);
+  mu_run_test(test_pinned_negative_regularization_solves);
   mu_run_test(test_invalid_aa_regularization_rejected);
   mu_run_test(test_normalize_off);
   mu_run_test(test_normalize_roundtrip);
