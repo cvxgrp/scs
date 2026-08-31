@@ -70,3 +70,23 @@ jobs:
         fi
         grep -q "MKL interface layer mismatch:" <<<"$output"
         grep -q "ERROR: MKL runtime initialization failed before solver setup." <<<"$output"
+
+    - name: Verify GNU interface layers are accepted and solve
+      run: |
+        # An MKL-backed NumPy that initializes MKL first leaves the layer at
+        # LP64|GNU (2) or ILP64|GNU (3); the runtime guard must accept the
+        # matching width and a full solve must succeed (#422).
+        set +e
+        output=$(./out/test_mkl_interface_mismatch gnu 2>&1)
+        status=$?
+        set -e
+        printf '%s\n' "$output"
+        if [[ $status -ne 0 ]]; then
+          echo "gnu-layer test failed with status $status"
+          exit 1
+        fi
+        grep -q "gnu-layer solve succeeded" <<<"$output"
+        if grep -q "MKL interface layer mismatch:" <<<"$output"; then
+          echo "guard fired on a compatible GNU layer"
+          exit 1
+        fi

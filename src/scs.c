@@ -67,6 +67,13 @@ static scs_int scs_init_mkl_runtime(void) {
     int expected = MKL_INTERFACE_LP64;
 #endif
     int actual = MKL_Set_Interface_Layer(expected);
+    /* MKL returns -1 for an invalid request; without this guard the width
+     * comparison below would misread it ((-1 & 1) == 1, i.e. ILP64) */
+    if (actual < 0) {
+      scs_printf("MKL_Set_Interface_Layer(%d) failed with error %d.\n",
+                 expected, actual);
+      return -1;
+    }
     /* compare only the integer-width bit: the GNU flag is a Fortran
      * calling-convention variant with the same integer sizes */
     if ((actual & MKL_INTERFACE_ILP64) != (expected & MKL_INTERFACE_ILP64)) {
