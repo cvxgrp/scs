@@ -9,6 +9,22 @@ The easiest way to install the python version is using `pip <https://pypi.org/pr
 
   pip install scs
 
+.. important::
+
+   On x86-64 Linux we strongly recommend installing with the MKL extra:
+
+   .. code:: bash
+
+     pip install "scs[mkl]"
+
+   This enables the :ref:`MKL Pardiso <mkl>` direct linear solver, which is
+   faster than the built-in solver for most problems — often dramatically so
+   on larger ones. SCS selects it automatically when it is installed; no code
+   or settings changes are needed. The MKL runtime is supplied by Intel's
+   official ``mkl`` wheels (roughly an extra 240 MB on disk). A plain
+   ``pip install scs`` works everywhere and falls back to the built-in
+   QDLDL solver.
+
 You can also install directly from source
 
 .. code:: bash
@@ -46,21 +62,35 @@ bundled QDLDL on macOS; opt in to Accelerate explicitly with
 MKL
 """
 
-The pre-built wheels (:code:`pip install scs`) include MKL on x86_64 Linux and
-Windows. When installing from source, you can enable MKL with:
+On x86-64 Linux the pre-built wheels support the MKL Pardiso solver through
+the ``mkl`` extra — this is the recommended way to install SCS there:
+
+.. code:: bash
+
+  pip install "scs[mkl]"
+
+The MKL runtime comes from Intel's official ``mkl`` and ``intel-openmp``
+wheels (threaded MKL). SCS deliberately does not copy MKL into its own
+wheels: MKL loads its CPU dispatch kernels at runtime via ``dlopen``, which
+wheel auditing tools cannot see, so a bundled MKL is silently incomplete and
+aborts the process at solve time (see `issue #423
+<https://github.com/cvxgrp/scs/issues/423>`_). With the extra installed the
+default :code:`linear_solver=scs.LinearSolver.AUTO` selects MKL
+automatically; without it SCS falls back to the built-in QDLDL solver. MKL
+is typically faster than QDLDL.
+
+If your environment already provides MKL (e.g. conda), you can instead build
+from source against it:
 
 .. code:: bash
 
   python -m pip install -Csetup-args=-Dlink_mkl=true .
 
-When using the default :code:`linear_solver=scs.LinearSolver.AUTO`, MKL is
-selected automatically on Linux and Windows if available. MKL is
-typically faster than the built-in QDLDL linear system solver.
+See :ref:`here <python_interface>` for how to select MKL when solving.
 
-The published Linux x86_64 wheels prefer the threaded MKL variant and include
-the Intel OpenMP runtime (:code:`libiomp5`). Windows currently falls back to
-sequential MKL until Intel fixes the threaded :code:`pkg-config` metadata in
-its conda packages.
+The Windows wheels do not currently include the MKL backend; on Windows MKL
+is available in source builds, which use sequential MKL until Intel fixes
+the threaded :code:`pkg-config` metadata in its conda packages.
 
 To use 64-bit BLAS/LAPACK integers (ILP64 / :code:`BLAS64`) with any supported
 BLAS/LAPACK library, install with:
