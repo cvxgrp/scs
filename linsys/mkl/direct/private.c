@@ -62,16 +62,21 @@ const char *scs_get_lin_sys_method() {
 
 void scs_free_lin_sys_work(ScsLinSysWork *p) {
   if (p) {
-    p->phase = PARDISO_CLEANUP;
-    _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-             &(p->n_plus_m), SCS_NULL, p->kkt->p, p->kkt->i, SCS_NULL,
-             &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
-             &(p->error));
-    if (p->error != 0) {
-      scs_printf("Error during MKL Pardiso cleanup: %d", (int)p->error);
-    }
-    if (p->kkt)
+    /* Pardiso cleanup needs the KKT index arrays; on early allocation
+     * failures the workspace may be freed before the KKT matrix (or
+     * the factorization) ever existed, so gate the solver teardown on
+     * what was actually initialized. */
+    if (p->kkt) {
+      p->phase = PARDISO_CLEANUP;
+      _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
+               &(p->n_plus_m), SCS_NULL, p->kkt->p, p->kkt->i, SCS_NULL,
+               &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
+               &(p->error));
+      if (p->error != 0) {
+        scs_printf("Error during MKL Pardiso cleanup: %d", (int)p->error);
+      }
       SCS(cs_spfree)(p->kkt);
+    }
     if (p->diag_r_idxs)
       scs_free(p->diag_r_idxs);
     if (p->diag_p)
