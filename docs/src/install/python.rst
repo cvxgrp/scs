@@ -100,17 +100,19 @@ The Windows wheels do not currently include the MKL backend; on Windows MKL
 is available in source builds, which use sequential MKL until Intel fixes
 the threaded :code:`pkg-config` metadata in its conda packages.
 
-To use 64-bit BLAS/LAPACK integers (ILP64 / :code:`BLAS64`) with any supported
-BLAS/LAPACK library, install with:
+To use 64-bit BLAS/LAPACK integers (ILP64 / :code:`BLAS64`), install with:
 
 .. code:: bash
 
-  python -m pip install -Csetup-args=-Duse_blas64=true .
+  python -m pip install -Csetup-args=-Duse_blas64=true -Csetup-args=-Dlink_mkl=true .
 
-If you combine :code:`BLAS64` with the MKL Pardiso backend, SCS requires
-64-bit SCS integers as well (the default in the Meson build). At runtime SCS
-also checks that the process-wide MKL interface layer matches the LP64/ILP64
-mode it was compiled for, and fails early if another library already set an
+The Meson build only supports :code:`BLAS64` together with MKL
+(:code:`-Dlink_mkl=true`): ILP64 variants of other BLAS libraries cannot be
+verified at build time, and 64-bit prototypes against an LP64 library
+corrupt every BLAS call. SCS then requires 64-bit SCS integers as well (the
+default in the Meson build). At runtime SCS also checks that the
+process-wide MKL interface layer matches the LP64/ILP64 mode it was
+compiled for, and fails early if another library already set an
 incompatible MKL interface.
 
 Dense direct (LAPACK)
