@@ -97,6 +97,7 @@ _SKIP(test_ell1_and_nuc)
 #include "problems/mpc_bug.h"
 #else
 _SKIP(hs21_tiny_qp_rw)
+_SKIP(test_rw_settings)
 _SKIP(max_ent)
 _SKIP(mpc_bug)
 #endif
