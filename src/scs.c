@@ -30,7 +30,16 @@
  * or 3 (ILP64|GNU) -- e.g. when an MKL-backed NumPy initialized MKL
  * first. Only the width bit affects integer-size safety. */
 #define MKL_INTERFACE_GNU 2
+/* bit 0 of the layer value selects the integer width (LP64/ILP64) */
+#define MKL_INTERFACE_WIDTH_MASK MKL_INTERFACE_ILP64
+/* Only libmkl_rt provides this; a static MKL link has nothing to negotiate,
+ * so the reference is weak and the check is skipped when the symbol is
+ * absent (MSVC links mkl_rt dynamically and keeps the strong reference). */
+#if defined(__GNUC__)
+int MKL_Set_Interface_Layer(int) __attribute__((weak));
+#else
 int MKL_Set_Interface_Layer(int);
+#endif
 
 static const char *scs_mkl_interface_name(int layer) {
   switch (layer) {
@@ -66,7 +75,14 @@ static scs_int scs_init_mkl_runtime(void) {
 #else
     int expected = MKL_INTERFACE_LP64;
 #endif
-    int actual = MKL_Set_Interface_Layer(expected);
+    int actual;
+#if defined(__GNUC__)
+    if (!MKL_Set_Interface_Layer) {
+      /* static MKL: no runtime interface layer exists to query */
+      return 0;
+    }
+#endif
+    actual = MKL_Set_Interface_Layer(expected);
     /* MKL returns -1 for an invalid request; without this guard the width
      * comparison below would misread it ((-1 & 1) == 1, i.e. ILP64) */
     if (actual < 0) {
@@ -76,7 +92,8 @@ static scs_int scs_init_mkl_runtime(void) {
     }
     /* compare only the integer-width bit: the GNU flag is a Fortran
      * calling-convention variant with the same integer sizes */
-    if ((actual & MKL_INTERFACE_ILP64) != (expected & MKL_INTERFACE_ILP64)) {
+    if ((actual & MKL_INTERFACE_WIDTH_MASK) !=
+        (expected & MKL_INTERFACE_WIDTH_MASK)) {
       scs_printf("MKL interface layer mismatch: expected %s, but MKL is using "
                  "%s (%d). Another library in this process likely "
                  "initialized MKL with an incompatible LP64/ILP64 setting.\n",
