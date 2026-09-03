@@ -11,20 +11,11 @@ The easiest way to install the python version is using `pip <https://pypi.org/pr
 
 .. important::
 
-   On x86-64 Linux (manylinux, glibc 2.28+) we strongly recommend installing
-   with the MKL extra:
-
-   .. code:: bash
-
-     pip install "scs[mkl]"
-
-   This enables the :ref:`MKL Pardiso <mkl>` direct linear solver, which is
-   faster than the built-in solver for most problems — often dramatically so
-   on larger ones. SCS selects it automatically when it is installed; no code
-   or settings changes are needed. The MKL runtime is supplied by Intel's
-   official ``mkl`` wheels (roughly a 300 MB download, about 1 GB on disk).
-   A plain ``pip install scs`` works everywhere and falls back to the
-   built-in QDLDL solver.
+   On x86-64 Linux the pre-built wheels include the :ref:`MKL Pardiso <mkl>`
+   direct linear solver, linked statically, and SCS selects it
+   automatically: it is faster than the built-in solver for most problems,
+   often dramatically so on larger ones, and nothing extra needs to be
+   installed. Every other wheel falls back to the built-in QDLDL solver.
 
 You can also install directly from source
 
@@ -63,29 +54,19 @@ bundled QDLDL on macOS; opt in to Accelerate explicitly with
 MKL
 """
 
-On x86-64 Linux the pre-built manylinux wheels support the MKL Pardiso
-solver through the ``mkl`` extra — this is the recommended way to install
-SCS there:
+On x86-64 Linux the pre-built manylinux wheels include the MKL Pardiso
+solver: MKL is linked statically into the ``_scs_mkl`` extension, with the
+sequential threading layer and its symbols hidden, so the wheel is
+self-contained and the default
+:code:`linear_solver=scs.LinearSolver.AUTO` selects MKL with nothing else
+installed. MKL is typically faster than QDLDL.
 
-.. code:: bash
-
-  pip install "scs[mkl]"
-
-The MKL runtime comes from Intel's official ``mkl`` and ``intel-openmp``
-wheels (threaded MKL). SCS deliberately does not copy MKL into its own
-wheels: MKL loads its CPU dispatch kernels at runtime via ``dlopen``, which
-wheel auditing tools cannot see, so a bundled MKL is silently incomplete and
-aborts the process at solve time (see `issue #423
-<https://github.com/cvxgrp/scs/issues/423>`_). With the extra installed the
-default :code:`linear_solver=scs.LinearSolver.AUTO` selects MKL
-automatically; without it SCS falls back to the built-in QDLDL solver. MKL
-is typically faster than QDLDL.
-
-The extra requires Intel's runtime wheels, which exist only for manylinux
-x86-64 with glibc 2.28 or newer: it is not available on musllinux/Alpine or
-older glibc systems, does not work with ``pip install --target`` layouts,
-and does not apply to sdist/source builds (build against your own MKL with
-``-Dlink_mkl=true`` instead, e.g. in conda environments).
+MKL is linked statically rather than bundled as shared libraries, whose
+dlopen'd CPU dispatch kernels wheel-repair tools cannot see (see `issue #423
+<https://github.com/cvxgrp/scs/issues/423>`_); the backend is
+single-threaded, and Intel's license notice ships in the wheel as
+``LICENSE-INTEL-MKL.txt``. The aarch64, musllinux, macOS and Windows wheels
+and sdist/source builds do not include it.
 
 If your environment already provides MKL (e.g. conda), you can instead build
 from source against it:

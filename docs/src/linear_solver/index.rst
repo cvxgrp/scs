@@ -82,9 +82,8 @@ your system then it is generally worth using MKL for both the blas / lapack
 usage as well as the linear system solve.
 Intel MKL is now available for
 `free and without restrictions for everyone <https://www.intel.com/content/www/us/en/developer/articles/news/free-ipsxe-tools-and-libraries.html>`_,
-though it only offers limited support for non-Intel CPUs. For the Python
-interface on x86-64 Linux, :code:`pip install "scs[mkl]"` is all that is
-needed (see :ref:`python_install`).
+though it only offers limited support for non-Intel CPUs. The Python wheels
+for x86-64 Linux include it, statically linked (see :ref:`python_install`).
 
 .. _apple_accelerate:
 
