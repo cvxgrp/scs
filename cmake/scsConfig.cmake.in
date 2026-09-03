@@ -1,0 +1,58 @@
+set(scs_VERSION @PACKAGE_VERSION@)
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# A static scs library exports its private link line, so a consumer must
+# re-find the same dependencies; a shared library carries them privately and
+# needs none of this.
+if(NOT @BUILD_SHARED_LIBS@)
+  find_dependency(Threads)
+  # The LAPACK integer width (LP64 or ILP64) is compiled into scs; empty
+  # when scs was built without LAPACK. A consumer that already resolved
+  # LAPACK at another width cannot link this package; one that has not is
+  # pinned to the right width here.
+  set(_scs_width "@SCS_LAPACK_INT_BYTES@")
+  if(_scs_width)
+    if(TARGET LAPACK::LAPACK
+       AND NOT "${BLA_SIZEOF_INTEGER}" STREQUAL "${_scs_width}")
+      message(
+        FATAL_ERROR
+          "scs was built with ${_scs_width}-byte LAPACK integers, but "
+          "LAPACK::LAPACK already exists in this scope with "
+          "BLA_SIZEOF_INTEGER='${BLA_SIZEOF_INTEGER}'. Set "
+          "BLA_SIZEOF_INTEGER=${_scs_width} before your own "
+          "find_package(LAPACK), or let scs find LAPACK.")
+    endif()
+    set(BLA_SIZEOF_INTEGER "${_scs_width}")
+    find_dependency(LAPACK)
+  endif()
+  if(@OpenMP_C_FOUND@)
+    find_dependency(OpenMP)
+  endif()
+  if(@SCS_MKL_USES_CONFIG@)
+    # scs links MKL's single dynamic library (mkl_rt); oneMKL's config
+    # defaults to the component libraries unless MKL_LINK says otherwise.
+    set(MKL_LINK sdl)
+    find_dependency(MKL CONFIG PATHS "$ENV{MKLROOT}")
+  endif()
+  if(@USE_CUDSS@)
+    find_dependency(CUDAToolkit)
+    find_dependency(cudss)
+  endif()
+endif()
+
+if(NOT TARGET scs::scsdir)
+  include("${CMAKE_CURRENT_LIST_DIR}/scsTargets.cmake")
+endif()
+
+# Compatibility variables
+set(scs_LIBRARIES)
+foreach(_scs_component scsdir scsindir scsdense scsaccel scsmkl scscudss)
+  if(TARGET scs::${_scs_component})
+    list(APPEND scs_LIBRARIES scs::${_scs_component})
+  endif()
+endforeach()
+get_property(scs_INCLUDE_DIRS TARGET scs::scsdir
+             PROPERTY INTERFACE_INCLUDE_DIRECTORIES)

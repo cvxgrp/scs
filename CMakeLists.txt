@@ -1,12 +1,19 @@
 # CMakeLists.txt file for scs. This software may be modified and distributed
 # under the terms of the MIT License
 
-cmake_minimum_required(VERSION 3.10)
+# 3.22: FindLAPACK honors BLA_SIZEOF_INTEGER (the LP64/ILP64 contract) and
+# provides the LAPACK::LAPACK target that keeps static packages relocatable.
+cmake_minimum_required(VERSION 3.22)
 
 project(
   scs
   LANGUAGES C
   VERSION 3.3.0)
+
+# ABI version, the loader identity of the shared libraries (libscsdir.so.3.3):
+# bump on ABI breaks, never on patch releases. scs.mk derives the same value
+# from SCS_VERSION in include/glbopts.h.
+set(SCS_ABI_VERSION "${scs_VERSION_MAJOR}.${scs_VERSION_MINOR}")
 
 # Standard GNU install directories (lib, bin, include, etc.)
 include(GNUInstallDirs)
@@ -36,7 +43,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_CXX_EXTENSIONS OFF)
 # Strict C99 hides POSIX declarations on glibc and illumos (sigaction,
 # clock_gettime, struct timespec) unless a feature-test macro asks for them.
 # A compile definition reaches every translation unit whatever its include
@@ -44,6 +50,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(CMAKE_SYSTEM_NAME MATCHES "Linux|SunOS")
   add_compile_definitions(_POSIX_C_SOURCE=200809L)
 endif()
+
+set(CMAKE_CXX_EXTENSIONS OFF)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
@@ -163,7 +171,10 @@ if(USE_LAPACK)
   endif()
   find_package(LAPACK)
   if(LAPACK_FOUND)
-    set(LAPACK_LINK_LIBRARIES ${LAPACK_LIBRARIES})
+    # Link the imported target, not resolved paths: a static library exports
+    # its private link line, and absolute provider paths would make the
+    # installed package usable only on this machine.
+    set(LAPACK_LINK_LIBRARIES LAPACK::LAPACK)
   else()
     if(BLAS64)
       message(FATAL_ERROR
@@ -330,7 +341,8 @@ target_link_libraries(${${PROJECT_NAME}_DIRECT}
 
 set_target_properties(
   ${${PROJECT_NAME}_DIRECT}
-  PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+  PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+             PUBLIC_HEADER
                                     "${${PROJECT_NAME}_PUBLIC_HDR}")
 
 add_library(scs::${${PROJECT_NAME}_DIRECT} ALIAS ${${PROJECT_NAME}_DIRECT})
@@ -374,7 +386,8 @@ target_link_libraries(${${PROJECT_NAME}_INDIRECT}
 
 set_target_properties(
   ${${PROJECT_NAME}_INDIRECT}
-  PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+  PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+             PUBLIC_HEADER
                                     "${${PROJECT_NAME}_PUBLIC_HDR}")
 
 add_library(scs::${${PROJECT_NAME}_INDIRECT} ALIAS ${${PROJECT_NAME}_INDIRECT})
@@ -420,7 +433,8 @@ if(USE_LAPACK)
 
   set_target_properties(
     ${${PROJECT_NAME}_DENSE}
-    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+    PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+             PUBLIC_HEADER
                                       "${${PROJECT_NAME}_PUBLIC_HDR}")
 
   add_library(scs::${${PROJECT_NAME}_DENSE} ALIAS ${${PROJECT_NAME}_DENSE})
@@ -478,27 +492,25 @@ if(DEFINED ENV{MKLROOT})
   #
   # Note: The PARDISO integer width (pardiso vs pardiso_64) is controlled by
   # DLONG, not by the MKL interface layer. See linsys/mkl/direct/private.c.
-  target_link_options(${${PROJECT_NAME}_MKL} PRIVATE "LINKER:--no-as-needed")
-  # MKLROOT points to the MKL installation; the compiler directory (OMPROOT
-  # or fallback) contains libiomp5 (Intel OpenMP runtime).
-  if(DEFINED ENV{OMPROOT})
-    set(_OMPROOT "$ENV{OMPROOT}")
-  else()
-    set(_OMPROOT "$ENV{MKLROOT}")
-  endif()
-  target_link_directories(${${PROJECT_NAME}_MKL} PRIVATE
-    $ENV{MKLROOT}/lib $ENV{MKLROOT}/lib/intel64 ${_OMPROOT}/lib)
+  # oneMKL's own package config (MKLConfig.cmake, oneMKL >= 2021.3) provides
+  # the MKL::MKL target, which keeps a static export relocatable; SDL mode
+  # links the single dynamic library (mkl_rt) whose MKL_Set_Interface_Layer
+  # the runtime check uses. --no-as-needed keeps mkl_rt as DT_NEEDED for that
+  # check; it is a GNU/ELF option, hence Linux only.
+  set(MKL_LINK sdl)
+  find_package(MKL CONFIG REQUIRED PATHS "$ENV{MKLROOT}")
+  set(SCS_MKL_USES_CONFIG TRUE)
+  target_link_options(${${PROJECT_NAME}_MKL} PRIVATE
+                      "$<$<PLATFORM_ID:Linux>:LINKER:--no-as-needed>")
   target_link_libraries(
     ${${PROJECT_NAME}_MKL}
-    PRIVATE m
-            mkl_rt
-            iomp5
-            Threads::Threads
-            dl)
+    PRIVATE $<$<NOT:$<PLATFORM_ID:Windows>>:m> MKL::MKL Threads::Threads
+            ${CMAKE_DL_LIBS})
 
   set_target_properties(
     ${${PROJECT_NAME}_MKL}
-    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+    PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+             PUBLIC_HEADER
                                       "${${PROJECT_NAME}_PUBLIC_HDR}")
 
   add_library(scs::${${PROJECT_NAME}_MKL} ALIAS ${${PROJECT_NAME}_MKL})
@@ -561,7 +573,8 @@ if(USE_CUDSS)
 
   set_target_properties(
     ${${PROJECT_NAME}_CUDSS}
-    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+    PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+             PUBLIC_HEADER
                                       "${${PROJECT_NAME}_PUBLIC_HDR}")
 
   add_library(scs::${${PROJECT_NAME}_CUDSS} ALIAS ${${PROJECT_NAME}_CUDSS})
@@ -618,7 +631,8 @@ if(APPLE AND USE_APPLE_ACCELERATE)
 
   set_target_properties(
     ${${PROJECT_NAME}_ACCEL}
-    PROPERTIES VERSION ${scs_VERSION} PUBLIC_HEADER
+    PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+             PUBLIC_HEADER
                                       "${${PROJECT_NAME}_PUBLIC_HDR}")
 
   add_library(scs::${${PROJECT_NAME}_ACCEL} ALIAS ${${PROJECT_NAME}_ACCEL})
@@ -637,6 +651,12 @@ endif()
 
 # Install CMake package config files for find_package(scs) support.
 include(InstallBasicPackageFiles)
+# The config template re-finds a static library's private dependencies at the
+# LAPACK integer width scs was built with; see cmake/scsConfig.cmake.in.
+set(SCS_LAPACK_INT_BYTES "")
+if(USE_LAPACK AND LAPACK_FOUND)
+  set(SCS_LAPACK_INT_BYTES "${BLA_SIZEOF_INTEGER}")
+endif()
 install_basic_package_files(
   ${PROJECT_NAME}
   NAMESPACE
@@ -649,6 +669,8 @@ install_basic_package_files(
   SameMajorVersion
   VARS_PREFIX
   ${PROJECT_NAME}
+  CONFIG_TEMPLATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/scsConfig.cmake.in"
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 # Tests
