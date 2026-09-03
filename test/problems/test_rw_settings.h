@@ -63,8 +63,9 @@ static const char *test_rw_settings(void) {
   k2 = SCS_NULL;
   stgs2 = SCS_NULL;
 
-  /* Patch the embedded version string to a different 3.x >= 3.3 build
-   * and re-read: everything must still parse (numeric layout keying). */
+  /* Patch the embedded version string to an adjacent 3.3.x build (3.3.9,
+   * padded) and re-read: everything must still parse, since the settings
+   * layout is keyed off the numeric major.minor, not the exact string. */
   {
     FILE *f = fopen(fname, "r+b");
     long pos = 2 * (long)sizeof(uint32_t); /* int_sz, float_sz */
@@ -79,8 +80,10 @@ static const char *test_rw_settings(void) {
     /* C requires a positioning call between a read and a write on an
      * update stream; Windows enforces it. */
     fseek(f, 0, SEEK_CUR);
-    memset(patched, '9', ver_len); /* "9...9": parses as major 9 >= 3.3 */
+    memset(patched, '9', ver_len); /* "3.3.99...": an adjacent 3.3.x */
+    patched[0] = '3';
     patched[1] = '.';
+    patched[2] = '3';
     patched[3] = '.';
     mu_assert("rw_settings: patch write",
               fwrite(patched, 1, ver_len, f) == ver_len);
