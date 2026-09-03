@@ -211,6 +211,8 @@ static scs_int read_float_array(scs_float **dest, scs_int n, FILE *fin) {
   return 0;
 }
 
+#ifndef USE_SPECTRAL_CONES
+/* skipping helpers: a non-spectral build must step over spectral data */
 static scs_int skip_bytes(FILE *fin, uint64_t bytes) {
   unsigned char buf[4096];
   while (bytes > 0) {
@@ -230,6 +232,7 @@ static scs_int skip_int_array(FILE *fin, size_t file_int_sz, scs_int n) {
   }
   return skip_bytes(fin, (uint64_t)n * (uint64_t)file_int_sz);
 }
+#endif
 
 static ScsCone *free_cone_null(ScsCone *k) {
   SCS(free_cone)(k);
@@ -328,8 +331,8 @@ static scs_int write_scs_stgs(const ScsSettings *s, FILE *fout) {
  * numeric major/minor prefix. Unparseable strings are treated as old
  * (the conservative choice: the legacy layout reads fewer bytes). */
 static scs_int rw_version_before_330(const char *ver) {
-  long major = 0, minor = 0;
-  char *end = SCS_NULL;
+  long major, minor;
+  char *end;
   major = strtol(ver, &end, 10);
   if (end == ver || *end != '.') {
     return 1;
@@ -484,7 +487,9 @@ static scs_int write_ext_int_array(const scs_int *x, scs_int n, FILE *fout) {
 
 static scs_int write_scs_extensions(const ScsCone *k, const ScsSettings *s,
                                     FILE *fout) {
+#ifndef USE_SPECTRAL_CONES
   scs_int zero = 0;
+#endif
   uint32_t magic = RW_EXT_MAGIC;
   uint32_t version = RW_EXT_VERSION;
   if (checked_fwrite(&magic, sizeof(uint32_t), 1, fout) < 0 ||
@@ -534,7 +539,10 @@ static scs_int read_scs_extensions(FILE *fin, size_t file_int_sz, ScsCone *k,
                                    ScsSettings *s) {
   unsigned char magic_buf[sizeof(uint32_t)];
   uint32_t magic, version;
-  scs_int dsize, nucsize, ell1_size, sl_size;
+  scs_int dsize, nucsize, sl_size;
+#ifndef USE_SPECTRAL_CONES
+  scs_int ell1_size; /* only the skipping path needs it */
+#endif
   size_t ret = fread(magic_buf, 1, sizeof(magic_buf), fin);
   if (ret == 0 && feof(fin)) {
     return 0;
@@ -551,7 +559,7 @@ static scs_int read_scs_extensions(FILE *fin, size_t file_int_sz, ScsCone *k,
   if (checked_fread(&version, sizeof(uint32_t), 1, fin) < 0) {
     return -1;
   }
-  if (version > RW_EXT_VERSION || version < 1) {
+  if (version > RW_EXT_VERSION) {
     scs_printf("Error: SCS file uses read/write schema version %lu, this "
                "build supports up to %lu\n",
                (unsigned long)version, (unsigned long)RW_EXT_VERSION);
@@ -687,10 +695,8 @@ scs_int SCS(read_data)(const char *filename, ScsData **d, ScsCone **k,
     return read_data_cleanup(fin, d, k, stgs);
   }
   file_version[file_version_sz] = '\0';
-  /* The settings-block layout changed in 3.3.0 (acceleration type /
-   * regularization / relaxation fields added). Key the layout off a
-   * numeric version comparison so files from other 3.3.x builds parse
-   * correctly; exact-string equality would silently misparse them. */
+  /* the settings-block layout changed in 3.3.0; key it off major.minor so
+   * files from other 3.3.x builds parse */
   legacy_settings = rw_version_before_330(file_version);
   if (strcmp(file_version, SCS_VERSION) != 0) {
     scs_printf("************************************************************\n"
