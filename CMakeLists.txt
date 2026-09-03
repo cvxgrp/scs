@@ -31,8 +31,19 @@ endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Disable compiler extensions for strict standard compliance.
+# Strict C99, the oldest standard a shipping consumer compiles scs with (the
+# MATLAB binding uses -std=c99): GNU-only constructs fail here first.
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# Strict C99 hides POSIX declarations on glibc and illumos (sigaction,
+# clock_gettime, struct timespec) unless a feature-test macro asks for them.
+# A compile definition reaches every translation unit whatever its include
+# order, which a header cannot guarantee.
+if(CMAKE_SYSTEM_NAME MATCHES "Linux|SunOS")
+  add_compile_definitions(_POSIX_C_SOURCE=200809L)
+endif()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
