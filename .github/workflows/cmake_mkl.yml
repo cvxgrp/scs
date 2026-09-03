@@ -3,10 +3,16 @@ name: CMake MKL
 
 on:
   push:
+    branches: [master]
+    tags: ['*']
   pull_request:
   workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   linux:
@@ -18,10 +24,18 @@ jobs:
         include:
           - blas64: OFF
             dlong: OFF
+            shared: ON
           - blas64: OFF
             dlong: ON
+            shared: ON
           - blas64: ON
             dlong: ON
+            shared: ON
+          # static row: the relocated package must drive a real Pardiso
+          # solve through find_package (dlong OFF: qp.c uses int indices)
+          - blas64: OFF
+            dlong: OFF
+            shared: OFF
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -56,14 +70,27 @@ jobs:
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_DIR/lib
         mkdir build
         cd build
-        cmake -DBUILD_TESTING=ON -DBLAS64=${{ matrix.blas64 }} -DDLONG=${{ matrix.dlong }} -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+        cmake -DBUILD_TESTING=ON -DBLAS64=${{ matrix.blas64 }} -DDLONG=${{ matrix.dlong }} -DBUILD_SHARED_LIBS=${{ matrix.shared }} -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
         make
         make install
         ctest --output-on-failure
-        # The qp.c example uses int (not scs_int) for matrix indices,
-        # so it only works with 32-bit ints (DLONG=OFF).
-        if [[ "${{ matrix.dlong }}" == "OFF" ]]; then
+        # qp.c uses int indices (DLONG=OFF) and links the shared library by hand
+        if [[ "${{ matrix.dlong }}" == "OFF" && "${{ matrix.shared }}" == "ON" ]]; then
           cd ../docs/src/examples/
           gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsmkl
           ./qp.out
         fi
+
+    - name: Static MKL export is relocatable and drives a real Pardiso solve
+      if: matrix.shared == 'OFF'
+      run: |
+        set -euo pipefail
+        # relocate the installed prefix: any surviving build-path
+        # reference breaks from here on
+        mv out relocated-prefix
+        # the packaging consumer, linked against scs::scsmkl through
+        # find_package on the relocated prefix, must solve via MKL Pardiso
+        cmake -S test/packaging -B qp-build -DSCS_COMPONENT=scsmkl \
+          -DCMAKE_PREFIX_PATH="$PWD/relocated-prefix"
+        cmake --build qp-build -j
+        ./qp-build/consume | grep -q mkl-pardiso
