@@ -25,6 +25,11 @@ jobs:
       - name: Run dense tests
         if: matrix.lapack == 1
         run: out/run_tests_dense
+      - name: Install and check the versioned shared library
+        run: |
+          make install DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }} PREFIX=$PWD/_inst
+          test -L _inst/lib/libscsdir.so && test -e _inst/lib/libscsdir.so
+          readelf -d _inst/lib/libscsdir.so | grep -q 'SONAME.*libscsdir\.so\.[0-9]'
 
   windows:
     strategy:
@@ -97,3 +102,8 @@ jobs:
       - name: Run accelerate tests
         if: matrix.long == 0
         run: out/run_tests_accelerate
+      - name: Install and check the versioned shared library
+        run: |
+          make install DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }} PREFIX=$PWD/_inst
+          test -L _inst/lib/libscsdir.dylib && test -e _inst/lib/libscsdir.dylib
+          otool -D _inst/lib/libscsdir.dylib | grep -q 'libscsdir\.[0-9].*\.dylib'
