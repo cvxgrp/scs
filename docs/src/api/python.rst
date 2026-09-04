@@ -51,8 +51,8 @@ The default is :code:`AUTO`, which selects the best available solver for
 the platform:
 
 - **macOS**: QDLDL (Apple Accelerate is available via :code:`LinearSolver.ACCELERATE`)
-- **Linux / Windows**: MKL Pardiso if available (built into the x86-64 Linux
-  wheels), otherwise QDLDL
+- **Linux / Windows**: MKL Pardiso if available (built into the x86-64
+  manylinux wheels), otherwise QDLDL
 
 .. list-table::
    :header-rows: 1
@@ -66,7 +66,7 @@ the platform:
    * - :code:`CPU_INDIRECT`
      - Sparse indirect solver using conjugate gradients (runs on CPU).
    * - :code:`MKL`
-     - Intel MKL Pardiso direct solver (built into the x86-64 Linux wheels,
+     - Intel MKL Pardiso direct solver (built into the x86-64 manylinux wheels,
        or an :ref:`MKL build <python_install>`).
    * - :code:`ACCELERATE`
      - Apple Accelerate sparse LDL\ :sup:`T` (macOS only, included automatically).

@@ -11,7 +11,7 @@ The easiest way to install the python version is using `pip <https://pypi.org/pr
 
 .. important::
 
-   On x86-64 Linux the pre-built wheels include the :ref:`MKL Pardiso <mkl>`
+   On x86-64 Linux the pre-built manylinux (glibc) wheels include the :ref:`MKL Pardiso <mkl>`
    direct linear solver, linked statically, and SCS selects it
    automatically: it is faster than the built-in solver for most problems,
    often dramatically so on larger ones, and nothing extra needs to be
