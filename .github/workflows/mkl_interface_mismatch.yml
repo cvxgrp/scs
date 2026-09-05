@@ -70,3 +70,7 @@ jobs:
         fi
         grep -q "MKL interface layer mismatch:" <<<"$output"
         grep -q "ERROR: MKL runtime initialization failed before solver setup." <<<"$output"
+
+    - name: Verify GNU interface layers are accepted and solve
+      # exits 0 only if the guard accepted the layer and the solve succeeded
+      run: ./out/test_mkl_interface_mismatch gnu
