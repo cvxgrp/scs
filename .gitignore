@@ -51,3 +51,6 @@ examples/DIMACS/
 # data files written by the test suite (write_data_filename)
 hs21_tiny_qp
 rob_gauss_cov_est
+
+# generated documentation (rebuilt by the docs pipeline)
+docs/src/doxygen_out/
