@@ -439,10 +439,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
                "(use acceleration_type_1=0 for type-II AA).\n");
     return -1;
   }
-  if (!isfinite(stgs->acceleration_regularization) ||
-      stgs->acceleration_regularization < 0) {
-    scs_printf("acceleration_regularization must be a nonnegative finite "
-               "number.\n");
+  if (!isfinite(stgs->acceleration_regularization)) {
+    /* Sign-encoded modes per include/aa.h: positive = scaled by
+     * ||A||_F ||Y||_F, negative = pinned absolute value, zero = off. */
+    scs_printf("acceleration_regularization must be a finite number.\n");
     return -1;
   }
   if (!isfinite(stgs->acceleration_relaxation) ||

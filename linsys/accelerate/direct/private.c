@@ -22,6 +22,10 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   p->diag_p = (scs_float *)scs_calloc(A->n, sizeof(scs_float));
   p->diag_r_idxs = (scs_int *)scs_calloc(n_plus_m, sizeof(scs_int));
+  if (!p->diag_p || !p->diag_r_idxs) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
 
   /* Form upper triangular KKT matrix in CSC format */
   p->kkt = SCS(form_kkt)(A, P, p->diag_p, diag_r, p->diag_r_idxs, 1);

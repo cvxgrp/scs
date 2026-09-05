@@ -281,9 +281,12 @@ static const char *test_invalid_aa_relaxation_rejected(void) {
 }
 
 /*
- * Test that NaN/negative acceleration_regularization is rejected by validate.
+ * Test the sign-encoded acceleration_regularization contract from
+ * include/aa.h: negative means the absolute value is used as a pinned
+ * (unscaled) regularization -- a documented mode that must not merely be
+ * tolerated but must solve the problem.
  */
-static const char *test_invalid_aa_regularization_rejected(void) {
+static const char *test_pinned_negative_regularization_solves(void) {
   ScsCone *k;
   ScsData *d;
   ScsSettings *stgs;
@@ -296,22 +299,40 @@ static const char *test_invalid_aa_regularization_rejected(void) {
   stgs->acceleration_regularization = -1e-12;
 
   exitflag = scs(d, k, stgs, sol, &info);
-  mu_assert("test_invalid_aa_regularization_rejected: negative reg "
-            "should be SCS_FAILED",
-            exitflag == SCS_FAILED);
+  mu_assert("test_pinned_negative_regularization_solves: pinned-negative reg "
+            "must solve the LP",
+            exitflag == SCS_SOLVED);
 
   _OPTS_CLEANUP();
+  return 0;
+}
 
-  _OPTS_SETUP(-2.0, 1.0);
-  stgs->verbose = 0;
-  stgs->acceleration_regularization = NAN;
+/*
+ * Non-finite acceleration_regularization values must be rejected by
+ * validate(); only the sign carries meaning, not NaN/inf.
+ */
+static const char *test_invalid_aa_regularization_rejected(void) {
+  scs_float bad[] = {NAN, INFINITY, -INFINITY};
+  scs_int j;
+  for (j = 0; j < 3; ++j) {
+    ScsCone *k;
+    ScsData *d;
+    ScsSettings *stgs;
+    ScsSolution *sol;
+    ScsInfo info = {0};
+    scs_int exitflag;
 
-  exitflag = scs(d, k, stgs, sol, &info);
-  mu_assert("test_invalid_aa_regularization_rejected: NaN reg "
-            "should be SCS_FAILED",
-            exitflag == SCS_FAILED);
+    _OPTS_SETUP(-2.0, 1.0);
+    stgs->verbose = 0;
+    stgs->acceleration_regularization = bad[j];
 
-  _OPTS_CLEANUP();
+    exitflag = scs(d, k, stgs, sol, &info);
+    mu_assert("test_invalid_aa_regularization_rejected: non-finite reg "
+              "should be SCS_FAILED",
+              exitflag == SCS_FAILED);
+
+    _OPTS_CLEANUP();
+  }
   return 0;
 }
 
