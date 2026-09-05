@@ -74,6 +74,19 @@ jobs:
           fi
           grep -q "LAPACK::LAPACK" prefix/lib/cmake/scs/scsTargets.cmake
 
+      - name: Reject an older static-package consumer
+        if: matrix.shared == 'OFF'
+        run: |
+          python3 -m venv old-cmake
+          old-cmake/bin/python -m pip install cmake==3.21.4
+          if old-cmake/bin/cmake -S test/packaging -B consume-old \
+               -DCMAKE_PREFIX_PATH="$PWD/prefix" > old.log 2>&1; then
+            echo "static consumption succeeded with CMake older than 3.22"
+            exit 1
+          fi
+          tr '\n' ' ' < old.log | tr -s ' ' | \
+            grep -q "Static scs packages require CMake 3.22"
+
       - name: Configure, build, run the consumer
         run: |
           cmake -S test/packaging -B consume-build \

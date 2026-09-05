@@ -1,5 +1,6 @@
 # Consumes an INSTALLED scs package (see .github/workflows/cmake_consume.yml).
-cmake_minimum_required(VERSION 3.22)
+# The installed package, not this fixture, must enforce its consumer floor.
+cmake_minimum_required(VERSION 3.18)
 project(scs_consume C)
 
 set(SCS_COMPONENT scsdir CACHE STRING "scs library to consume (scsdir, scsmkl, ...)")

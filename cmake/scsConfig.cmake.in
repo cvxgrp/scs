@@ -8,6 +8,14 @@ include(CMakeFindDependencyMacro)
 # re-find the same dependencies; a shared library carries them privately and
 # needs none of this.
 if(NOT @BUILD_SHARED_LIBS@)
+  # Older FindLAPACK versions ignore BLA_SIZEOF_INTEGER and can silently
+  # link an ILP64 archive against LP64 LAPACK.
+  if(CMAKE_VERSION VERSION_LESS 3.22)
+    set(scs_FOUND FALSE)
+    set(scs_NOT_FOUND_MESSAGE
+        "Static scs packages require CMake 3.22 or newer to enforce the LAPACK integer width.")
+    return()
+  endif()
   find_dependency(Threads)
   # The LAPACK integer width (LP64 or ILP64) is compiled into scs; empty
   # when scs was built without LAPACK. A consumer that already resolved
