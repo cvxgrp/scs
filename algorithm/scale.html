@@ -250,8 +250,13 @@ updated at scale-update events from that row’s relative primal residual</p>
 \[\hat r^k_{p,i} = \frac{|(Ax + s - b\tau)_i|}
                       {\max(|(Ax)_i|, |s_i|, |b_i \tau|, \epsilon_{\rm den})},\]</div>
 <p>by a damped multiplicative step towards the geometric mean of the profile,
-clamped to a bounded range and held constant within each non-polyhedral cone
-block (the projections require a single metric value per block). An update
+clamped to a bounded range and constrained within each non-polyhedral cone
+block to a form the cone projection can absorb: a single metric value for
+most cone types, but for real PSD blocks the richer rank-one family
+<span class="math notranslate nohighlight">\(w_{ij} = \delta_i \delta_j\)</span> (a diagonal congruence
+<span class="math notranslate nohighlight">\(X \to D X D\)</span>, which maps the cone to itself), fitted per block by
+least squares in log space. The PSD projection under such a metric is
+computed exactly via a congruence sandwich around the eigendecomposition. An update
 also fires when the accumulated per-row drift alone is large enough, so that
 a railed scalar <code class="code docutils literal notranslate"><span class="pre">scale</span></code> cannot freeze the diagonal. This is the
 dynamic analog of the row half of Ruiz equilibration, using the residuals the

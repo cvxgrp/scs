@@ -194,8 +194,13 @@ updated at scale-update events from that row's relative primal residual
                          {\max(|(Ax)_i|, |s_i|, |b_i \tau|, \epsilon_{\rm den})},
 
 by a damped multiplicative step towards the geometric mean of the profile,
-clamped to a bounded range and held constant within each non-polyhedral cone
-block (the projections require a single metric value per block). An update
+clamped to a bounded range and constrained within each non-polyhedral cone
+block to a form the cone projection can absorb: a single metric value for
+most cone types, but for real PSD blocks the richer rank-one family
+:math:`w_{ij} = \delta_i \delta_j` (a diagonal congruence
+:math:`X \to D X D`, which maps the cone to itself), fitted per block by
+least squares in log space. The PSD projection under such a metric is
+computed exactly via a congruence sandwich around the eigendecomposition. An update
 also fires when the accumulated per-row drift alone is large enough, so that
 a railed scalar :code:`scale` cannot freeze the diagonal. This is the
 dynamic analog of the row half of Ruiz equilibration, using the residuals the
