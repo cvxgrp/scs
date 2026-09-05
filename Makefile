@@ -191,6 +191,8 @@ $(OUT)/run_tests_indirect: test/run_tests.c $(OUT)/libscsindir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_direct: test/run_tests.c $(OUT)/libscsdir.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
+$(OUT)/test_rw_settings: test/rw_settings.c test/problems/test_rw_settings.h $(OUT)/libscsdir.a
+	$(CC) $(CFLAGS) -o $@ $< $(OUT)/libscsdir.a $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_dense: test/run_tests.c $(OUT)/libscsdense.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(BLASLDFLAGS) -Itest
 $(OUT)/run_tests_mkl: test/run_tests.c $(OUT)/libscsmkl.a

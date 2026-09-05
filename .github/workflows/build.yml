@@ -18,6 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+      - name: Check single-precision settings serialization
+        if: matrix.long == 0 && matrix.lapack == 0
+        run: |
+          make out/test_rw_settings SFLOAT=1 USE_LAPACK=0
+          out/test_rw_settings
+          make purge
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: out/run_tests_direct

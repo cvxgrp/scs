@@ -1,8 +1,9 @@
 #include <stdint.h>
+#include <string.h>
 
+#include "cones.h"
 #include "glbopts.h"
 #include "minunit.h"
-#include "problem_utils.h"
 #include "rw.h"
 #include "scs.h"
 #include "util.h"
@@ -50,11 +51,13 @@ static const char *test_rw_settings(void) {
 
   mu_assert("rw_settings: read failed",
             SCS(read_data)(fname, &d2, &k2, &stgs2) == 0);
-  pass = stgs2->adaptive_diag_scale == 0 &&
-         ABS(stgs2->time_limit_secs - 123.5) < 1e-12 &&
-         stgs2->acceleration_type_1 == 0 &&
-         ABS(stgs2->acceleration_regularization - 3e-9) < 1e-20 &&
-         ABS(stgs2->eps_abs - 2.5e-7) < 1e-15;
+  /* Binary serialization preserves the stored values exactly in either
+   * precision; comparing against double literals would fail with SFLOAT. */
+  pass = stgs2->adaptive_diag_scale == stgs->adaptive_diag_scale &&
+         stgs2->time_limit_secs == stgs->time_limit_secs &&
+         stgs2->acceleration_type_1 == stgs->acceleration_type_1 &&
+         stgs2->acceleration_regularization == stgs->acceleration_regularization &&
+         stgs2->eps_abs == stgs->eps_abs;
   mu_assert("rw_settings: nondefault round-trip lost a setting", pass);
   SCS(free_data)(d2);
   SCS(free_cone)(k2);
@@ -91,10 +94,11 @@ static const char *test_rw_settings(void) {
   }
   mu_assert("rw_settings: adjacent-version read failed",
             SCS(read_data)(fname, &d2, &k2, &stgs2) == 0);
-  pass = stgs2->adaptive_diag_scale == 0 &&
-         ABS(stgs2->time_limit_secs - 123.5) < 1e-12 &&
-         stgs2->acceleration_type_1 == 0 &&
-         ABS(stgs2->acceleration_regularization - 3e-9) < 1e-20;
+  pass = stgs2->adaptive_diag_scale == stgs->adaptive_diag_scale &&
+         stgs2->time_limit_secs == stgs->time_limit_secs &&
+         stgs2->acceleration_type_1 == stgs->acceleration_type_1 &&
+         stgs2->acceleration_regularization == stgs->acceleration_regularization &&
+         stgs2->eps_abs == stgs->eps_abs;
   mu_assert("rw_settings: adjacent-version read lost a setting", pass);
   SCS(free_data)(d2);
   SCS(free_cone)(k2);
