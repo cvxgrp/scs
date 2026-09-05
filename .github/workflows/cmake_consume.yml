@@ -1,0 +1,153 @@
+---
+name: CMake install and consume
+
+on:
+  push:
+    branches: [master]
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  consume:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shared: ON
+            name: shared
+          - shared: OFF
+            name: static
+
+    name: install-and-consume (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install LAPACK development files (build machine)
+        run: sudo apt-get update && sudo apt-get install -y liblapack-dev
+
+      - name: Configure, build, install scs
+        run: |
+          cmake -S . -B build \
+            -DBUILD_SHARED_LIBS=${{ matrix.shared }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$PWD/prefix"
+          cmake --build build -j
+          cmake --install build
+
+      - name: Verify shared-library ABI identity
+        if: matrix.shared == 'ON'
+        run: |
+          # The loader identity must be the ABI version (major.minor), never
+          # the patch version: 3.3.1 must keep satisfying libscsdir.so.3.3.
+          soname=$(objdump -p prefix/lib/libscsdir.so | awk '/SONAME/ {print $2}')
+          echo "SONAME: $soname"
+          [ "$soname" = "libscsdir.so.3.3" ]
+          ls -l prefix/lib/libscsdir.so*
+
+      - name: Remove private build dependencies (shared only)
+        if: matrix.shared == 'ON'
+        run: |
+          # A shared-library consumer has no LAPACK interface dependency and
+          # must configure/link on a machine without LAPACK development
+          # files. (The runtime library stays, as it would for any user.)
+          sudo apt-get remove -y liblapack-dev libblas-dev
+
+      - name: Assert the export is relocatable (static only)
+        if: matrix.shared == 'OFF'
+        run: |
+          # The static export must reference dependency targets by name
+          # (LAPACK::LAPACK), never absolute build-machine provider paths.
+          if grep -nE '/[^;"]*lib(lapack|blas)' \
+               prefix/lib/cmake/scs/scsTargets.cmake; then
+            echo "static export embeds absolute provider paths"
+            exit 1
+          fi
+          grep -q "LAPACK::LAPACK" prefix/lib/cmake/scs/scsTargets.cmake
+
+      - name: Reject an older static-package consumer
+        if: matrix.shared == 'OFF'
+        run: |
+          python3 -m venv old-cmake
+          old-cmake/bin/python -m pip install cmake==3.21.4
+          if old-cmake/bin/cmake -S test/packaging -B consume-old \
+               -DCMAKE_PREFIX_PATH="$PWD/prefix" > old.log 2>&1; then
+            echo "static consumption succeeded with CMake older than 3.22"
+            exit 1
+          fi
+          tr '\n' ' ' < old.log | tr -s ' ' | \
+            grep -q "Static scs packages require CMake 3.22"
+
+      - name: Configure, build, run the consumer
+        run: |
+          cmake -S test/packaging -B consume-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$PWD/prefix"
+          cmake --build consume-build -j
+          if [ "${{ matrix.shared }}" = "ON" ]; then
+            export LD_LIBRARY_PATH="$PWD/prefix/lib"
+          fi
+          ./consume-build/consume
+
+  consume-blas64:
+    # A static BLAS64 package carries its LAPACK integer width: consumers are
+    # pinned to ILP64, and one that already resolved LAPACK at the wrong
+    # width is refused rather than silently mislinked.
+    name: install-and-consume (static, BLAS64/ILP64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install ILP64 and LP64 LAPACK
+        run: sudo apt-get update && sudo apt-get install -y liblapack-dev liblapack64-dev libblas64-dev
+
+      - name: Build and install static BLAS64 scs
+        run: |
+          cmake -S . -B build -DBUILD_SHARED_LIBS=OFF -DBLAS64=ON \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/prefix"
+          cmake --build build -j
+          cmake --install build
+
+      - name: Consumer is pinned to the 8-byte width and solves
+        run: |
+          cmake -S test/packaging -B consume-build \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/prefix"
+          grep -q lapack64 consume-build/CMakeFiles/consume.dir/link.txt
+          cmake --build consume-build -j
+          ./consume-build/consume
+
+      - name: A consumer that resolved LAPACK at the wrong width is refused
+        run: |
+          if cmake -S test/packaging -B consume-wrong \
+               -DCMAKE_PREFIX_PATH="$PWD/prefix" -DPREFIND_LAPACK_WRONG_WIDTH=ON \
+               > wrong.log 2>&1; then
+            echo "configure succeeded with a 4-byte LAPACK::LAPACK in scope"
+            exit 1
+          fi
+          tr '\n' ' ' < wrong.log | tr -s ' ' | grep -q "built with 8-byte LAPACK integers"
+
+  werror:
+    # the strict C99 build (see CMAKE_C_STANDARD) must stay warning-free;
+    # -DPROFILING=1 compiles the timing paths too
+    name: strict C99 -Werror build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install LAPACK development files
+        run: sudo apt-get update && sudo apt-get install -y liblapack-dev
+      - name: Build with -Werror
+        run: |
+          cmake -S . -B build-prof -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS="-DPROFILING=1 -Wall -Werror"
+          cmake --build build-prof -j

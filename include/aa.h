@@ -17,7 +17,7 @@ extern "C" {
 typedef scs_float aa_float;
 typedef scs_int aa_int;
 
-typedef struct ACCEL_WORK AaWork;
+/* AaWork is declared in scs.h (included via glbopts.h) */
 
 /**
  * Initialize Anderson Acceleration, allocates memory.
