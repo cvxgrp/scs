@@ -9,6 +9,14 @@ The easiest way to install the python version is using `pip <https://pypi.org/pr
 
   pip install scs
 
+.. important::
+
+   On x86-64 Linux the pre-built manylinux (glibc) wheels include the :ref:`MKL Pardiso <mkl>`
+   direct linear solver, linked statically, and SCS selects it
+   automatically: it is faster than the built-in solver for most problems,
+   often dramatically so on larger ones, and nothing extra needs to be
+   installed. Every other wheel falls back to the built-in QDLDL solver.
+
 You can also install directly from source
 
 .. code:: bash
@@ -46,33 +54,46 @@ bundled QDLDL on macOS; opt in to Accelerate explicitly with
 MKL
 """
 
-The pre-built wheels (:code:`pip install scs`) include MKL on x86_64 Linux and
-Windows. When installing from source, you can enable MKL with:
+On x86-64 Linux the pre-built manylinux wheels include the MKL Pardiso
+solver: MKL is linked statically into the ``_scs_mkl`` extension, with the
+sequential threading layer and its symbols hidden, so the wheel is
+self-contained and the default
+:code:`linear_solver=scs.LinearSolver.AUTO` selects MKL with nothing else
+installed. MKL is typically faster than QDLDL.
+
+MKL is linked statically rather than bundled as shared libraries, whose
+dlopen'd CPU dispatch kernels wheel-repair tools cannot see (see `issue #423
+<https://github.com/cvxgrp/scs/issues/423>`_); the backend is
+single-threaded, and Intel's license notice ships in the wheel as
+``LICENSE-INTEL-MKL.txt``. The aarch64, musllinux, macOS and Windows wheels
+and sdist/source builds do not include it.
+
+If your environment already provides MKL (e.g. conda), you can instead build
+from source against it:
 
 .. code:: bash
 
   python -m pip install -Csetup-args=-Dlink_mkl=true .
 
-When using the default :code:`linear_solver=scs.LinearSolver.AUTO`, MKL is
-selected automatically on Linux and Windows if available. MKL is
-typically faster than the built-in QDLDL linear system solver.
+See :ref:`here <python_interface>` for how to select MKL when solving.
 
-The published Linux x86_64 wheels prefer the threaded MKL variant and include
-the Intel OpenMP runtime (:code:`libiomp5`). Windows currently falls back to
-sequential MKL until Intel fixes the threaded :code:`pkg-config` metadata in
-its conda packages.
+The Windows wheels do not currently include the MKL backend; on Windows MKL
+is available in source builds, which use sequential MKL until Intel fixes
+the threaded :code:`pkg-config` metadata in its conda packages.
 
-To use 64-bit BLAS/LAPACK integers (ILP64 / :code:`BLAS64`) with any supported
-BLAS/LAPACK library, install with:
+To use 64-bit BLAS/LAPACK integers (ILP64 / :code:`BLAS64`), install with:
 
 .. code:: bash
 
-  python -m pip install -Csetup-args=-Duse_blas64=true .
+  python -m pip install -Csetup-args=-Duse_blas64=true -Csetup-args=-Dlink_mkl=true .
 
-If you combine :code:`BLAS64` with the MKL Pardiso backend, SCS requires
-64-bit SCS integers as well (the default in the Meson build). At runtime SCS
-also checks that the process-wide MKL interface layer matches the LP64/ILP64
-mode it was compiled for, and fails early if another library already set an
+The Meson build only supports :code:`BLAS64` together with MKL
+(:code:`-Dlink_mkl=true`): ILP64 variants of other BLAS libraries cannot be
+verified at build time, and 64-bit prototypes against an LP64 library
+corrupt every BLAS call. SCS then requires 64-bit SCS integers as well (the
+default in the Meson build). At runtime SCS also checks that the
+process-wide MKL interface layer matches the LP64/ILP64 mode it was
+compiled for, and fails early if another library already set an
 incompatible MKL interface.
 
 Dense direct (LAPACK)

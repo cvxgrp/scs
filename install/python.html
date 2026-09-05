@@ -110,6 +110,14 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>scs
 </pre></div>
 </div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>On x86-64 Linux the pre-built manylinux (glibc) wheels include the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a>
+direct linear solver, linked statically, and SCS selects it
+automatically: it is faster than the built-in solver for most problems,
+often dramatically so on larger ones, and nothing extra needs to be
+installed. Every other wheel falls back to the built-in QDLDL solver.</p>
+</div>
 <p>You can also install directly from source</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/bodono/scs-python.git
 <span class="nb">cd</span><span class="w"> </span>scs-python
@@ -141,27 +149,37 @@ bundled QDLDL on macOS; opt in to Accelerate explicitly with
 </section>
 <section id="mkl">
 <h3>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h3>
-<p>The pre-built wheels (<code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scs</span></code>) include MKL on x86_64 Linux and
-Windows. When installing from source, you can enable MKL with:</p>
+<p>On x86-64 Linux the pre-built manylinux wheels include the MKL Pardiso
+solver: MKL is linked statically into the <code class="docutils literal notranslate"><span class="pre">_scs_mkl</span></code> extension, with the
+sequential threading layer and its symbols hidden, so the wheel is
+self-contained and the default
+<code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code> selects MKL with nothing else
+installed. MKL is typically faster than QDLDL.</p>
+<p>MKL is linked statically rather than bundled as shared libraries, whose
+dlopen’d CPU dispatch kernels wheel-repair tools cannot see (see <a class="reference external" href="https://github.com/cvxgrp/scs/issues/423">issue #423</a>); the backend is
+single-threaded, and Intel’s license notice ships in the wheel as
+<code class="docutils literal notranslate"><span class="pre">LICENSE-INTEL-MKL.txt</span></code>. The aarch64, musllinux, macOS and Windows wheels
+and sdist/source builds do not include it.</p>
+<p>If your environment already provides MKL (e.g. conda), you can instead build
+from source against it:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>When using the default <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code>, MKL is
-selected automatically on Linux and Windows if available. MKL is
-typically faster than the built-in QDLDL linear system solver.</p>
-<p>The published Linux x86_64 wheels prefer the threaded MKL variant and include
-the Intel OpenMP runtime (<code class="code docutils literal notranslate"><span class="pre">libiomp5</span></code>). Windows currently falls back to
-sequential MKL until Intel fixes the threaded <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> metadata in
-its conda packages.</p>
-<p>To use 64-bit BLAS/LAPACK integers (ILP64 / <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code>) with any supported
-BLAS/LAPACK library, install with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_blas64<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+<p>See <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">here</span></a> for how to select MKL when solving.</p>
+<p>The Windows wheels do not currently include the MKL backend; on Windows MKL
+is available in source builds, which use sequential MKL until Intel fixes
+the threaded <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> metadata in its conda packages.</p>
+<p>To use 64-bit BLAS/LAPACK integers (ILP64 / <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code>), install with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_blas64<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_mkl<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>If you combine <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code> with the MKL Pardiso backend, SCS requires
-64-bit SCS integers as well (the default in the Meson build). At runtime SCS
-also checks that the process-wide MKL interface layer matches the LP64/ILP64
-mode it was compiled for, and fails early if another library already set an
+<p>The Meson build only supports <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code> together with MKL
+(<code class="code docutils literal notranslate"><span class="pre">-Dlink_mkl=true</span></code>): ILP64 variants of other BLAS libraries cannot be
+verified at build time, and 64-bit prototypes against an LP64 library
+corrupt every BLAS call. SCS then requires 64-bit SCS integers as well (the
+default in the Meson build). At runtime SCS also checks that the
+process-wide MKL interface layer matches the LP64/ILP64 mode it was
+compiled for, and fails early if another library already set an
 incompatible MKL interface.</p>
 </section>
 <section id="dense-direct-lapack">

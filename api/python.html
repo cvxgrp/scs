@@ -149,7 +149,8 @@ The default is <code class="code docutils literal notranslate"><span class="pre"
 the platform:</p>
 <ul class="simple">
 <li><p><strong>macOS</strong>: QDLDL (Apple Accelerate is available via <code class="code docutils literal notranslate"><span class="pre">LinearSolver.ACCELERATE</span></code>)</p></li>
-<li><p><strong>Linux / Windows</strong>: MKL Pardiso if available, otherwise QDLDL</p></li>
+<li><p><strong>Linux / Windows</strong>: MKL Pardiso if available (built into the x86-64
+manylinux wheels), otherwise QDLDL</p></li>
 </ul>
 <table class="docutils align-default">
 <thead>
@@ -168,7 +169,8 @@ the platform:</p>
 <td><p>Sparse indirect solver using conjugate gradients (runs on CPU).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">MKL</span></code></p></td>
-<td><p>Intel MKL Pardiso direct solver (requires <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">MKL build</span></a>).</p></td>
+<td><p>Intel MKL Pardiso direct solver (built into the x86-64 manylinux wheels,
+or an <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">MKL build</span></a>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">ACCELERATE</span></code></p></td>
 <td><p>Apple Accelerate sparse LDL<sup>T</sup> (macOS only, included automatically).</p></td>
