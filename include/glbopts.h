@@ -23,7 +23,7 @@ extern "C" {
 
 /* SCS VERSION NUMBER ----------------------------------------------     */
 /* string literals automatically null-terminated */
-#define SCS_VERSION ("3.3.0")
+#define SCS_VERSION ("3.3.1")
 
 /* verbosity level */
 #ifndef VERBOSITY

@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.22)
 project(
   scs
   LANGUAGES C
-  VERSION 3.3.0)
+  VERSION 3.3.1)
 
 # ABI version, the loader identity of the shared libraries (libscsdir.so.3.3):
 # bump on ABI breaks, never on patch releases. scs.mk derives the same value
