@@ -25,7 +25,7 @@ jobs:
       - name: Make cudss target
         run: |
           export CUDSS_PATH=/usr/lib/cudss
-          export CUCC=${CUDA_PATH}/bin/nvcc
-          ${CUCC} --version
-          make cudss
+          unset CUCC
+          "${CUDA_PATH}/bin/nvcc" --version
+          make cudss CUDA_PATH="${CUDA_PATH}"
       # - run: out/run_tests_cudss           # gpus not available yet
