@@ -61,6 +61,10 @@ endif
 # Default CUDA path; override with CUDA_PATH=/path/to/cuda
 ifeq ($(CUDA_PATH), )
 CUDA_PATH=/usr/local/cuda
+endif
+
+# Default the compiler independently, including when CUDA_PATH is supplied.
+ifeq ($(CUCC), )
 CUCC = $(CUDA_PATH)/bin/nvcc
 endif
 
