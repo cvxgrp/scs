@@ -1,6 +1,8 @@
 #include "private.h"
 #include "linsys.h"
 
+#include <string.h>
+
 /* norm to use when deciding convergence */
 /* should be consistent with CG_NORM in glbopts.h */
 #define USE_L2_NORM (0)

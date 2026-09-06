@@ -17,7 +17,7 @@ jobs:
           method: network
           non-cuda-sub-packages: '["libcublas", "libcusparse", "libcudart"]'
       - run: sudo apt-get install libopenblas-dev liblapack-dev
-      - run: make gpu
+      - run: CFLAGS=-Werror=implicit-function-declaration make gpu
       - run: make test_gpu
       # - run: out/run_tests_gpu_indirect    # gpus not available yet
       - name: Install cudss
