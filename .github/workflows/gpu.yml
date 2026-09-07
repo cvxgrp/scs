@@ -20,6 +20,17 @@ jobs:
       - run: CFLAGS=-Werror=implicit-function-declaration make gpu
       - run: make test_gpu
       # - run: out/run_tests_gpu_indirect    # gpus not available yet
+      - name: Build SCS GPU with CMake
+        run: |
+          mkdir -p out
+          export INSTALL_DIR=$PWD/out
+          mkdir -p build-gpu
+          cd build-gpu
+          cmake -DBUILD_TESTING=ON -DUSE_GPU=ON \
+                -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_DIR ..
+          make
+          make install
+          # ctest needs a device; only the build is checked here
       - name: Install cudss
         run: sudo apt-get -y install cudss
       - name: Make cudss target

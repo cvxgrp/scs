@@ -49,6 +49,9 @@ if(NOT @BUILD_SHARED_LIBS@)
     find_dependency(CUDAToolkit)
     find_dependency(cudss)
   endif()
+  if(@USE_GPU@)
+    find_dependency(CUDAToolkit)
+  endif()
 endif()
 
 if(NOT TARGET scs::scsdir)
@@ -57,7 +60,8 @@ endif()
 
 # Compatibility variables
 set(scs_LIBRARIES)
-foreach(_scs_component scsdir scsindir scsdense scsaccel scsmkl scscudss)
+foreach(_scs_component scsdir scsindir scsdense scsaccel scsmkl scscudss
+                       scsgpuindir)
   if(TARGET scs::${_scs_component})
     list(APPEND scs_LIBRARIES scs::${_scs_component})
   endif()

@@ -119,6 +119,16 @@ message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 option(USE_CUDSS "Compile with cuDSS support" OFF)
 message(STATUS "cuDSS support is ${USE_CUDSS}")
 
+# SCS's own GPU linear system solver is the indirect (conjugate gradient)
+# one; the cuDSS direct solver has its own option above.
+option(USE_GPU "Compile the CUDA GPU indirect solver" OFF)
+message(STATUS "GPU (CUDA) support is ${USE_GPU}")
+
+if(USE_GPU)
+  option(GPU_TRANSPOSE_MAT "Store the transpose of A in GPU memory" ON)
+  message(STATUS "Transposing A in GPU memory is ${GPU_TRANSPOSE_MAT}")
+endif()
+
 if(APPLE)
   option(USE_APPLE_ACCELERATE "Use Apple Accelerate framework for sparse LDLt" OFF)
   message(STATUS "Apple Accelerate support is ${USE_APPLE_ACCELERATE}")
@@ -591,6 +601,68 @@ if(USE_CUDSS)
   set_property(GLOBAL APPEND PROPERTY SCS_TARGETS ${${PROJECT_NAME}_CUDSS})
 endif()
 
+# GPU indirect method library (optional, requires the CUDA toolkit).
+# The sources are plain C calling the CUDA runtime, cuBLAS and cuSPARSE, so
+# CUDA does not have to be enabled as a language: FindCUDAToolkit is enough.
+if(USE_GPU)
+  find_package(CUDAToolkit REQUIRED)
+
+  message(STATUS "Will install SCS-GPU (libscsgpuindir).")
+
+  set(GPUSRC ${LINSYS}/gpu)
+  set(GPUINDIRSRC ${LINSYS}/gpu/indirect)
+
+  set(${PROJECT_NAME}_GPU_INDIRECT ${PROJECT_NAME}gpuindir)
+  add_library(
+    ${${PROJECT_NAME}_GPU_INDIRECT}
+    ${${PROJECT_NAME}_HDR} ${${PROJECT_NAME}_SRC} ${GPUSRC}/gpu.c
+    ${GPUSRC}/gpu.h ${GPUINDIRSRC}/private.c ${GPUINDIRSRC}/private.h)
+
+  target_include_directories(
+    ${${PROJECT_NAME}_GPU_INDIRECT}
+    PRIVATE
+      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${GPUINDIRSRC};${CMAKE_CURRENT_SOURCE_DIR}/${GPUSRC};${CMAKE_CURRENT_SOURCE_DIR}/${LINSYS}>"
+  )
+
+  target_include_directories(
+    ${${PROJECT_NAME}_GPU_INDIRECT}
+    PUBLIC ${SCS_PUBLIC_INCLUDE_DIRS})
+
+  target_compile_definitions(
+    ${${PROJECT_NAME}_GPU_INDIRECT}
+    PRIVATE ${COMPILER_OPTS} -DINDIRECT
+            $<$<BOOL:${GPU_TRANSPOSE_MAT}>:-DGPU_TRANSPOSE_MAT=1>)
+
+  target_link_libraries(
+    ${${PROJECT_NAME}_GPU_INDIRECT}
+    PRIVATE CUDA::cudart CUDA::cublas CUDA::cusparse
+            $<$<NOT:$<PLATFORM_ID:Windows>>:m>
+            ${LAPACK_LINK_LIBRARIES}
+            $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+            Threads::Threads)
+
+  set_target_properties(
+    ${${PROJECT_NAME}_GPU_INDIRECT}
+    PROPERTIES VERSION ${scs_VERSION} SOVERSION ${SCS_ABI_VERSION}
+               PUBLIC_HEADER
+                                      "${${PROJECT_NAME}_PUBLIC_HDR}")
+
+  add_library(scs::${${PROJECT_NAME}_GPU_INDIRECT}
+              ALIAS ${${PROJECT_NAME}_GPU_INDIRECT})
+
+  install(
+    TARGETS ${${PROJECT_NAME}_GPU_INDIRECT}
+    EXPORT ${PROJECT_NAME}
+    COMPONENT runtime
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/scs")
+
+  set_property(GLOBAL APPEND PROPERTY SCS_TARGETS
+                                      ${${PROJECT_NAME}_GPU_INDIRECT})
+endif()
+
 # Apple Accelerate library (optional, macOS only).
 if(APPLE AND USE_APPLE_ACCELERATE)
   if(DLONG)
@@ -705,6 +777,12 @@ if(BUILD_TESTING)
 
   if(USE_CUDSS)
     scs_add_test(run_tests_cudss scs::scscudss)
+  endif()
+
+  # Builds anywhere the CUDA toolkit is present, but needs an actual device
+  # to run: on a GPU-less machine skip it with `ctest -E gpu`.
+  if(USE_GPU)
+    scs_add_test(run_tests_gpu_indirect scs::scsgpuindir)
   endif()
 
   if(APPLE AND USE_APPLE_ACCELERATE)
