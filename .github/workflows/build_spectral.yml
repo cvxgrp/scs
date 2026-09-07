@@ -37,7 +37,9 @@ jobs:
       - uses: actions/checkout@v7
       - run: brew update && brew install openblas lapack
       # Each `run:` step is a separate shell, so `export` would not persist.
-      - run: echo 'CC=clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow' >> $GITHUB_ENV
+      # -fno-sanitize-recover=all makes UBSan abort on the first report instead of
+      # printing and continuing (which would leave the job green).
+      - run: echo 'CC=clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all' >> $GITHUB_ENV
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: out/run_tests_direct    # test direct solver
