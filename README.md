@@ -52,6 +52,10 @@ make test               # Build test binaries
 ./out/run_tests_indirect
 ```
 
+Note that the spectral-cone tests are skipped unless SCS is built with
+`USE_SPECTRAL_CONES=1` (see the flag table below); a default `make test` run
+reports them as `skipped`.
+
 ### CMake
 
 ```bash
