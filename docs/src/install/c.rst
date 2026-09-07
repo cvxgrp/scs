@@ -99,7 +99,9 @@ transpose of :code:`A` is stored in GPU memory by default; configure with
 matrix-transpose-vector products.
 
 Note that the GPU is typically only faster than the CPU for very large
-problems. For a *direct* solver on the GPU see cuDSS below.
+problems, and that the indirect solver is a legacy backend: the cuDSS direct
+solver described below is the recommended GPU backend and should be preferred
+whenever cuDSS is available.
 
 cuDSS
 """""
