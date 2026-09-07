@@ -80,6 +80,7 @@ _SKIP(rob_gauss_cov_est)
 #include "spectral_cones_problems/several_sum_largest.h"
 #include "spectral_cones_problems/test_ell1_cone.h"
 #include "spectral_cones_problems/test_ell1_and_nuc.h"
+#include "spectral_cones_problems/test_spectral_metric_updates.h"
 #else
 _SKIP(exp_design)
 _SKIP(robust_pca)
@@ -89,6 +90,7 @@ _SKIP(several_nuc_cone)
 _SKIP(several_logdet_cones)
 _SKIP(test_ell1_cone)
 _SKIP(test_ell1_and_nuc)
+_SKIP(test_spectral_metric_updates)
 #endif
 
 /* solves problems from data files */
@@ -173,6 +175,7 @@ static void all_tests(void) {
   mu_run_test(several_logdet_cones);
   mu_run_test(test_ell1_cone);
   mu_run_test(test_ell1_and_nuc);
+  mu_run_test(test_spectral_metric_updates);
 }
 int main(void) {
   int i;

@@ -96,11 +96,13 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
    * order (smallest eigenvalue first)
    */
   BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
+  /* info < 0: bad argument. info > 0: no convergence, so 'e' and 'Xs' hold
+   * partial results. Either way the eigendecomposition below it is built on
+   * is meaningless, so fail rather than return a bogus projection. */
   if (info != 0) {
-    scs_printf("WARN: LAPACK syev error, info = %i\n", (int)info);
-    if (info < 0) {
-      return info;
-    }
+    scs_printf("FATAL: LAPACK syev error in sum-of-largest cone, info = %li\n",
+               (long)info);
+    return -1;
   }
 
   /*

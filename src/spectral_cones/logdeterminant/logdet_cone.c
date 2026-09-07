@@ -27,10 +27,10 @@ extern "C" {
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
-blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
-                    const blas_int *k, const scs_float *alpha,
-                    const scs_float *a, const blas_int *lda,
-                    const scs_float *beta, scs_float *c, const blas_int *ldc);
+void BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
+                const blas_int *k, const scs_float *alpha, const scs_float *a,
+                const blas_int *lda, const scs_float *beta, scs_float *c,
+                const blas_int *ldc);
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
 
@@ -96,12 +96,13 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
      * order (smallest eigenvalue first)
      */
     BLAS(syev)("Vectors", "Lower", &nb, Xs, &nb, e, work, &lwork, &info);
+    /* info < 0: bad argument. info > 0: no convergence, so 'e' and 'Xs' hold
+     * partial results. Either way the eigendecomposition below it is built on
+     * is meaningless, so fail rather than return a bogus projection. */
     if (info != 0) {
-      scs_printf("WARN: LAPACK syev error, info = %i\n", (int)info);
-      if (info < 0) {
-        scs_printf("entering LAPACK stuff!\n");
-        return info;
-      }
+      scs_printf("FATAL: LAPACK syev error in logdet cone, info = %li\n",
+                 (long)info);
+      return -1;
     }
 
     /*
