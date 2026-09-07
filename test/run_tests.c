@@ -63,9 +63,11 @@ _SKIP(test_psd_metric)
 
 /* solve SDPs from data files, requires blas / lapack */
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
+#include "problems/issue_220.h"
 #include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h" /* tests writing to data file */
 #else
+_SKIP(issue_220)
 _SKIP(random_prob)
 _SKIP(rob_gauss_cov_est)
 #endif
@@ -96,13 +98,11 @@ _SKIP(test_spectral_metric_updates)
 /* solves problems from data files */
 #if NO_READ_WRITE == 0
 #include "problems/hs21_tiny_qp_rw.h"
-#include "problems/issue_220.h"
 #include "problems/test_rw_settings.h"
 #include "problems/max_ent.h"
 #include "problems/mpc_bug.h"
 #else
 _SKIP(hs21_tiny_qp_rw)
-_SKIP(issue_220)
 _SKIP(test_rw_settings)
 _SKIP(max_ent)
 _SKIP(mpc_bug)
