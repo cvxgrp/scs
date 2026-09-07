@@ -63,9 +63,11 @@ _SKIP(test_psd_metric)
 
 /* solve SDPs from data files, requires blas / lapack */
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
+#include "problems/issue_220.h"
 #include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h" /* tests writing to data file */
 #else
+_SKIP(issue_220)
 _SKIP(random_prob)
 _SKIP(rob_gauss_cov_est)
 #endif
@@ -133,6 +135,7 @@ static void all_tests(void) {
   mu_run_test(max_ent);
   mu_run_test(mpc_bug);
   mu_run_test(issue_140);
+  mu_run_test(issue_220);
   mu_run_test(test_exp_cone);
   mu_run_test(test_dual_exp_cone);
   mu_run_test(test_power_cone);

@@ -30,6 +30,14 @@ scs_int override_setting(ScsSettings *s, char *param, char *val) {
     s->acceleration_lookback = atoi(val);
   } else if (strcmp(param, "acceleration_interval") == 0) {
     s->acceleration_interval = atoi(val);
+  } else if (strcmp(param, "acceleration_type_1") == 0) {
+    s->acceleration_type_1 = atoi(val);
+  } else if (strcmp(param, "acceleration_regularization") == 0) {
+    s->acceleration_regularization = atof(val);
+  } else if (strcmp(param, "acceleration_relaxation") == 0) {
+    s->acceleration_relaxation = atof(val);
+  } else if (strcmp(param, "time_limit_secs") == 0) {
+    s->time_limit_secs = atof(val);
   } else if (strcmp(param, "adaptive_scale") == 0) {
     s->adaptive_scale = atoi(val);
   } else if (strcmp(param, "adaptive_diag_scale") == 0) {
