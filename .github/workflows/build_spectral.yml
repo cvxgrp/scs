@@ -36,7 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: brew update && brew install openblas lapack
-      - run: export CC="clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow"
+      # Each `run:` step is a separate shell, so `export` would not persist.
+      - run: echo 'CC=clang -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow' >> $GITHUB_ENV
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=1 USE_SPECTRAL_CONES=${{ matrix.spectral }}
       - run: out/run_tests_direct    # test direct solver
