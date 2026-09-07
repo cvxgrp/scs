@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Maximum Entropy &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -124,9 +124,9 @@ has the following equivalent form,</p>
 where <span class="math notranslate nohighlight">\(\mathcal{K}_\mathrm{exp} \subset \mathbf{R}^3\)</span> denotes the
 exponential cone.</p>
 <p>Python code to solve this is below.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sparse</span>
 
 <span class="c1"># Generate problem data</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -158,7 +158,7 @@ exponential cone.</p>
         <span class="c1"># exponential cones</span>
         <span class="n">A_exp</span><span class="p">,</span>
     <span class="p">],</span>
-    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">"csc"</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">bd</span><span class="p">,</span> <span class="n">b_exp</span><span class="p">])</span>
 <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
@@ -174,13 +174,13 @@ exponential cone.</p>
     <span class="n">cone</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-<span class="n">x_scs</span> <span class="o">=</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span>
+<span class="n">x_scs</span> <span class="o">=</span> <span class="n">sol</span><span class="p">[</span><span class="s2">"x"</span><span class="p">][</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span>
 
 <span class="c1"># Verify solution with CVXPY</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cvxpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
 <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This example requires CVXPY installed to run.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"This example requires CVXPY installed to run."</span><span class="p">)</span>
     <span class="k">raise</span>
 
 <span class="n">x</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
@@ -190,15 +190,15 @@ exponential cone.</p>
 <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">ECOS</span><span class="p">)</span>
 <span class="n">x_cvxpy</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CVXPY optimal value is:&quot;</span><span class="p">,</span> <span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solution norm difference: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x_scs</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x_cvxpy</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"CVXPY optimal value is:"</span><span class="p">,</span> <span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Solution norm difference: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x_scs</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x_cvxpy</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
 run the code yielding output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
-	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 100, constraints m: 171
 cones: 	  z: primal zero / dual free vars: 1

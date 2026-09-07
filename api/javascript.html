@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JavaScript / WebAssembly &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -115,7 +115,7 @@ using the following interface.</p>
 <section id="instantiating-the-solver">
 <h2>Instantiating the Solver<a class="headerlink" href="#instantiating-the-solver" title="Link to this heading"></a></h2>
 <p>In Node.js, you can use SCS as follows using CommonJS:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;scs-solver&#39;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">'scs-solver'</span><span class="p">);</span>
 
 <span class="nx">createSCS</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="nx">SCS</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// define problem here</span>
@@ -124,7 +124,7 @@ using the following interface.</p>
 </pre></div>
 </div>
 <p>Alternatively, you can use ES6 modules, as well as async/await:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;scs-solver&#39;</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">createSCS</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'scs-solver'</span><span class="p">;</span>
 
 <span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">SCS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">createSCS</span><span class="p">();</span>
@@ -136,7 +136,7 @@ using the following interface.</p>
 </pre></div>
 </div>
 <p>In browsers, you can load SCS using a script tag:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/scs-solver/dist/scs.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">"https://unpkg.com/scs-solver/dist/scs.js"</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="w">    </span><span class="nx">createSCS</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="nx">SCS</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">// define problem here</span>
@@ -167,20 +167,20 @@ using the following interface.</p>
 <a class="reference external" href="https://mathjs.org/docs/reference/classes/sparsematrix.html">Math.js library</a>,
 for example</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// npm install mathjs</span>
-<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">matrix</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mathjs&#39;</span><span class="p">);</span>
-<span class="c1">// or import { matrix } from &#39;mathjs&#39;;</span>
-<span class="c1">// or &lt;script src=&quot;https://unpkg.com/mathjs@14.0.1/lib/browser/math.js&quot;&gt;&lt;/script&gt;</span>
+<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">matrix</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">'mathjs'</span><span class="p">);</span>
+<span class="c1">// or import { matrix } from 'mathjs';</span>
+<span class="c1">// or &lt;script src="https://unpkg.com/mathjs@14.0.1/lib/browser/math.js"&gt;&lt;/script&gt;</span>
 
 <span class="kd">const</span><span class="w"> </span><span class="nx">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">matrix</span><span class="p">([</span>
 <span class="w">    </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span>
 <span class="w">    </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span>
 <span class="w">    </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">]</span>
-<span class="p">],</span><span class="w"> </span><span class="s1">&#39;sparse&#39;</span><span class="p">);</span>
+<span class="p">],</span><span class="w"> </span><span class="s1">'sparse'</span><span class="p">);</span>
 
 <span class="kd">const</span><span class="w"> </span><span class="nx">P</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">matrix</span><span class="p">([</span>
 <span class="w">    </span><span class="p">[</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span>
 <span class="w">    </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">]</span>
-<span class="p">],</span><span class="w"> </span><span class="s1">&#39;sparse&#39;</span><span class="p">);</span>
+<span class="p">],</span><span class="w"> </span><span class="s1">'sparse'</span><span class="p">);</span>
 
 <span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">m</span><span class="o">:</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span>

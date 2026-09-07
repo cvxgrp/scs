@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Low-Rank Matrix Completion &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -144,15 +144,15 @@ we solve the problem for many choices of <span class="math notranslate nohighlig
 enters only in the linear part of the objective function, we can reuse the
 matrix factorization and use warm starting to reduce the computation time.</p>
 <p>Python code to solve this is below.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sparse</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># The vec function as documented in api/cones</span>
-<span class="k">def</span> <span class="nf">vec</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vec</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
     <span class="n">S</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
@@ -161,7 +161,7 @@ matrix factorization and use warm starting to reduce the computation time.</p>
 
 
 <span class="c1"># The mat function as documented in api/cones</span>
-<span class="k">def</span> <span class="nf">mat</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mat</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
     <span class="n">S</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">s</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
@@ -180,13 +180,13 @@ matrix factorization and use warm starting to reduce the computation time.</p>
 
 <span class="c1">#############################################################################</span>
 
-<span class="c1"># Let&#39;s first do some basic sanity checks to ensure that mat, vec are working:</span>
+<span class="c1"># Let's first do some basic sanity checks to ensure that mat, vec are working:</span>
 
 <span class="c1"># mat(vec( . )) should be identity</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Should be ~ 0: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mat</span><span class="p">(</span><span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Should be ~ 0: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mat</span><span class="p">(</span><span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-<span class="c1"># Trace( . ) should be vec(I)&#39; vec( . )</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Should be ~ 0: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">vec</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Trace( . ) should be vec(I)' vec( . )</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Should be ~ 0: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">vec</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">vec</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1">#############################################################################</span>
 
@@ -212,7 +212,7 @@ matrix factorization and use warm starting to reduce the computation time.</p>
 <span class="n">Onm</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="n">vlen</span><span class="p">,</span> <span class="n">num_measurements</span><span class="p">))</span>
 
 <span class="c1"># SCS data</span>
-<span class="n">P</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">([</span><span class="n">On</span><span class="p">,</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">([</span><span class="n">On</span><span class="p">,</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"csc"</span><span class="p">)</span>
 <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
     <span class="p">[</span>
         <span class="c1"># zero cone</span>
@@ -220,7 +220,7 @@ matrix factorization and use warm starting to reduce the computation time.</p>
         <span class="c1"># positive semidefinite cone</span>
         <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="o">-</span><span class="n">In</span><span class="p">,</span> <span class="n">Onm</span><span class="p">]),</span>
     <span class="p">],</span>
-    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">"csc"</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">measurements</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vlen</span><span class="p">)])</span>
 <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vlen</span> <span class="o">+</span> <span class="n">num_measurements</span><span class="p">)])</span>
@@ -229,23 +229,23 @@ matrix factorization and use warm starting to reduce the computation time.</p>
 <span class="n">cone</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">num_measurements</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
 <span class="c1"># Setup workspace</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">eps_rel</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solving for lambda = 0&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Solving for lambda = 0"</span><span class="p">)</span>
 <span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># lambda = 0</span>
-<span class="n">X_hat</span> <span class="o">=</span> <span class="n">mat</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][:</span><span class="n">vlen</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X_hat</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">X_hat</span> <span class="o">=</span> <span class="n">mat</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">"x"</span><span class="p">][:</span><span class="n">vlen</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X_hat</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># Solve for different values of lambda</span>
 <span class="n">lambdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">lam</span> <span class="ow">in</span> <span class="n">lambdas</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solving for lambda = </span><span class="si">{</span><span class="n">lam</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Solving for lambda = </span><span class="si">{</span><span class="n">lam</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="c1"># Re-use workspace, just update the `c` vector</span>
     <span class="n">c_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">lam</span> <span class="o">*</span> <span class="n">vec</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_measurements</span><span class="p">)])</span>
     <span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">c_new</span><span class="p">)</span>
     <span class="c1"># Solve updated problem</span>
     <span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># will warm-start automatically</span>
-    <span class="n">X_hat</span> <span class="o">=</span> <span class="n">mat</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][:</span><span class="n">vlen</span><span class="p">])</span>
+    <span class="n">X_hat</span> <span class="o">=</span> <span class="n">mat</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">"x"</span><span class="p">][:</span><span class="n">vlen</span><span class="p">])</span>
     <span class="c1"># What is the norm error?</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error : </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X_hat</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error : </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X_hat</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
@@ -254,7 +254,7 @@ run the code yielding output:</p>
 Should be ~ 0: 0.0
 ------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
-	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 180, constraints m: 180
 cones: 	  z: primal zero / dual free vars: 60

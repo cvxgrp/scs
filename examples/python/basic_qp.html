@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Basic QP &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -124,9 +124,9 @@ rows in <span class="math notranslate nohighlight">\(A\)</span> and <span class=
 the row corresponding to the zero cone comes first, followed by the rows for the
 positive cone.</p>
 <p>Python code to solve this is below.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span>
-<span class="kn">import</span> <span class="nn">scs</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="c1"># Set up the problem data</span>
 <span class="n">P</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">([[</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]])</span>
@@ -143,19 +143,19 @@ positive cone.</p>
 <span class="c1"># Solve!</span>
 <span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SCS took </span><span class="si">{</span><span class="n">sol</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">][</span><span class="s1">&#39;iter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> iters&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal solution vector x*:&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"SCS took </span><span class="si">{</span><span class="n">sol</span><span class="p">[</span><span class="s1">'info'</span><span class="p">][</span><span class="s1">'iter'</span><span class="p">]</span><span class="si">}</span><span class="s2"> iters"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Optimal solution vector x*:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">"x"</span><span class="p">])</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal dual vector y*:&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Optimal dual vector y*:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="s2">"y"</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
 run the code yielding output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
-	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
 cones: 	  z: primal zero / dual free vars: 1

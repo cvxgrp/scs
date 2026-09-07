@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C/C++ &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -116,9 +116,9 @@ rows in <span class="math notranslate nohighlight">\(A\)</span> and <span class=
 the row corresponding to the zero cone comes first, followed by the rows for the
 positive cone.</p>
 <p>C code to solve this is below.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;scs.h&quot;</span><span class="c1">    /* SCS API */</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="c1">  /* printf */</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="c1"> /* memory allocation */</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">"scs.h"</span><span class="w">    </span><span class="cm">/* SCS API */</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="w">  </span><span class="cm">/* printf */</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="w"> </span><span class="cm">/* memory allocation */</span>
 
 <span class="cm">/* Set up and solve basic qp */</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -181,22 +181,22 @@ positive cone.</p>
 <span class="w">  </span><span class="n">scs_finish</span><span class="p">(</span><span class="n">scs_work</span><span class="p">);</span>
 
 <span class="w">  </span><span class="cm">/* Verify that SCS solved the problem */</span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;SCS solved successfully: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">exitflag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SCS_SOLVED</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"SCS solved successfully: %i</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">exitflag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SCS_SOLVED</span><span class="p">);</span>
 
 <span class="w">  </span><span class="cm">/* Print some info about the solve */</span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;SCS took %i iters, using the %s linear solver.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="o">-&gt;</span><span class="n">iter</span><span class="p">,</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"SCS took %i iters, using the %s linear solver.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="o">-&gt;</span><span class="n">iter</span><span class="p">,</span>
 <span class="w">         </span><span class="n">info</span><span class="o">-&gt;</span><span class="n">lin_sys_solver</span><span class="p">);</span>
 
 <span class="w">  </span><span class="cm">/* Print solution x */</span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Optimal solution vector x*:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Optimal solution vector x*:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;x[%i] = %4f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="o">-&gt;</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"x[%i] = %4f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="o">-&gt;</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="cm">/* Print dual solution y */</span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Optimal dual vector y*:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">"Optimal dual vector y*:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;y[%i] = %4f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="o">-&gt;</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"y[%i] = %4f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="o">-&gt;</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="cm">/* Free allocated memory */</span>
@@ -222,7 +222,7 @@ the <code class="code docutils literal notranslate"><span class="pre">gcc</span>
 <p>Then running the binary yields output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
-	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
 cones: 	  z: primal zero / dual free vars: 1

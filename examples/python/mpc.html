@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Model Predictive Control &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -128,18 +128,18 @@ with terminal cost defined by <span class="math notranslate nohighlight">\(Q_T \
 \mathbf{R}^{n}\)</span>. The upper and lower bound constraints can be expressed in
 SCS using the box <a class="reference internal" href="../../api/cones.html#cones"><span class="std std-ref">cone</span></a>.</p>
 <p>Python code to solve this is below.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scs</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sparse</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">MPC</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model Predictive Controller using SCS.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MPC</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Model Predictive Controller using SCS."""</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ad</span><span class="p">,</span> <span class="n">Bd</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">QT</span><span class="p">,</span> <span class="n">qT</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">umin</span><span class="p">,</span> <span class="n">umax</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ad</span><span class="p">,</span> <span class="n">Bd</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">QT</span><span class="p">,</span> <span class="n">qT</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">umin</span><span class="p">,</span> <span class="n">umax</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
         <span class="c1"># State and action dimension</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="n">Bd</span><span class="o">.</span><span class="n">shape</span>
 
@@ -149,7 +149,7 @@ SCS using the box <a class="reference internal" href="../../api/cones.html#cones
         <span class="c1"># Quadratic objective</span>
         <span class="n">P</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
             <span class="p">[</span><span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">Q</span><span class="p">),</span> <span class="n">QT</span><span class="p">,</span> <span class="n">sparse</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">R</span><span class="p">)],</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">"csc"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Linear objective</span>
         <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">q</span><span class="p">),</span> <span class="n">qT</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)])</span>
@@ -183,7 +183,7 @@ SCS using the box <a class="reference internal" href="../../api/cones.html#cones
                 <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">+</span> <span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)),</span>
                 <span class="o">-</span><span class="n">Aineq</span><span class="p">,</span>
             <span class="p">],</span>
-            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csc&quot;</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">"csc"</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Box cone add constraint t=1</span>
@@ -194,17 +194,17 @@ SCS using the box <a class="reference internal" href="../../api/cones.html#cones
         <span class="c1"># Create an SCS object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">eps_rel</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">control</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">):</span>
         <span class="c1"># Overwrite b with new initial state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">x0</span>
         <span class="c1"># Update b</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
         <span class="n">sol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># will warm-start automatically</span>
-        <span class="k">if</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;solved&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SCS failed to solve the problem.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sol</span><span class="p">[</span><span class="s2">"info"</span><span class="p">][</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"solved"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"SCS failed to solve the problem."</span><span class="p">)</span>
 
         <span class="c1"># Return first action</span>
-        <span class="k">return</span> <span class="n">sol</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="p">:</span> <span class="o">-</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sol</span><span class="p">[</span><span class="s2">"x"</span><span class="p">][</span><span class="o">-</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="p">:</span> <span class="o">-</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">]</span>
 
 
 <span class="c1"># States dimension</span>
@@ -247,7 +247,7 @@ SCS using the box <a class="reference internal" href="../../api/cones.html#cones
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsteps</span><span class="p">):</span>
     <span class="c1"># Get control action</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">mpc</span><span class="o">.</span><span class="n">control</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Control action: </span><span class="si">{</span><span class="n">u</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Control action: </span><span class="si">{</span><span class="n">u</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># Apply first control input and update to next state</span>
     <span class="n">x0</span> <span class="o">=</span> <span class="n">Ad</span> <span class="o">@</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">Bd</span> <span class="o">@</span> <span class="n">u</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># + noise</span>
@@ -258,7 +258,7 @@ SCS using the box <a class="reference internal" href="../../api/cones.html#cones
 run the code yielding output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
-	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 770, constraints m: 1391
 cones: 	  z: primal zero / dual free vars: 620

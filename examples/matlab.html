@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MATLAB &mdash; SCS 3.3.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
 
@@ -128,15 +128,15 @@ positive cone.</p>
 <span class="n">cone</span><span class="p">.</span><span class="n">l</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
 
 <span class="c">% Optional solver settings</span>
-<span class="nb">settings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">&#39;eps_abs&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;eps_rel&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">);</span>
+<span class="nb">settings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">'eps_abs'</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">,</span><span class="w"> </span><span class="s">'eps_rel'</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">);</span>
 
 <span class="c">% Solve!</span>
 <span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">cone</span><span class="p">,</span><span class="w"> </span><span class="nb">settings</span><span class="p">);</span>
 
-<span class="nb">disp</span><span class="p">(</span><span class="nb">sprintf</span><span class="p">(</span><span class="s">&quot;SCS took %i iters&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">.</span><span class="n">iter</span><span class="p">))</span>
-<span class="nb">disp</span><span class="p">(</span><span class="s">&quot;Optimal solution vector x*:&quot;</span><span class="p">);</span>
+<span class="nb">disp</span><span class="p">(</span><span class="nb">sprintf</span><span class="p">(</span><span class="s">"SCS took %i iters"</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">.</span><span class="n">iter</span><span class="p">))</span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">"Optimal solution vector x*:"</span><span class="p">);</span>
 <span class="nb">disp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="nb">disp</span><span class="p">(</span><span class="s">&quot;Optimal dual vector y*:&quot;</span><span class="p">);</span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">"Optimal dual vector y*:"</span><span class="p">);</span>
 <span class="nb">disp</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -153,7 +153,7 @@ For product information, visit www.mathworks.com.
  
 ------------------------------------------------------------------
 	       SCS v3.0.0 - Splitting Conic Solver
-	(c) Brendan O&#39;Donoghue, Stanford University, 2012
+	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
 cones: 	  z: primal zero / dual free vars: 1
@@ -199,7 +199,7 @@ different <code class="code docutils literal notranslate"><span class="pre">b</s
 <span class="n">data</span><span class="p">.</span><span class="n">c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">;</span><span class="w"> </span><span class="o">-</span><span class="mf">1.</span><span class="p">];</span>
 <span class="n">cone</span><span class="p">.</span><span class="n">z</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="n">cone</span><span class="p">.</span><span class="n">l</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
-<span class="nb">settings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">&#39;verbose&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="nb">settings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">'verbose'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 
 <span class="c">% Initialize workspace (factorizes once)</span>
 <span class="n">work</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scs_init</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">cone</span><span class="p">,</span><span class="w"> </span><span class="nb">settings</span><span class="p">);</span>
