@@ -96,11 +96,13 @@ _SKIP(test_spectral_metric_updates)
 /* solves problems from data files */
 #if NO_READ_WRITE == 0
 #include "problems/hs21_tiny_qp_rw.h"
+#include "problems/issue_220.h"
 #include "problems/test_rw_settings.h"
 #include "problems/max_ent.h"
 #include "problems/mpc_bug.h"
 #else
 _SKIP(hs21_tiny_qp_rw)
+_SKIP(issue_220)
 _SKIP(test_rw_settings)
 _SKIP(max_ent)
 _SKIP(mpc_bug)
@@ -130,6 +132,7 @@ static void all_tests(void) {
   mu_run_test(random_prob);
   mu_run_test(max_ent);
   mu_run_test(mpc_bug);
+  mu_run_test(issue_220);
   mu_run_test(test_exp_cone);
   mu_run_test(test_dual_exp_cone);
   mu_run_test(test_power_cone);
