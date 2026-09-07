@@ -80,6 +80,32 @@ needs help, set :code:`BLA_VENDOR` explicitly.
 GPU
 """
 
+If you have a GPU and the CUDA toolkit installed, you can build the
+:ref:`GPU indirect <gpu_indirect>` solver:
+
+.. code:: bash
+
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DUSE_GPU=ON ../
+  make
+
+This builds and installs the GPU solver with target
+:code:`scs::scsgpuindir`. CMake locates the CUDA runtime, cuBLAS and cuSPARSE
+with `FindCUDAToolkit
+<https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html>`_, which
+honors :code:`CUDAToolkit_ROOT` if the toolkit lives somewhere unusual. Both
+integer widths work, so :code:`DLONG` may be left at either setting. The
+transpose of :code:`A` is stored in GPU memory by default; configure with
+:code:`-DGPU_TRANSPOSE_MAT=OFF` to save that memory at the cost of slower
+matrix-transpose-vector products.
+
+Note that the GPU is typically only faster than the CPU for very large
+problems, and that the indirect solver is a legacy backend: the cuDSS direct
+solver described below is the recommended GPU backend and should be preferred
+whenever cuDSS is available.
+
+cuDSS
+"""""
+
 If you have a GPU and CUDA toolkit installed, along with the
 `cuDSS <https://developer.nvidia.com/cudss>`_ library, you can compile SCS
 with cuDSS support using CMake. First, ensure that the :code:`CUDA_PATH` and
