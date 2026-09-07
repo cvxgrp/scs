@@ -1114,17 +1114,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->r_orig = init_residuals(w->d);
   w->b_orig = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
   w->c_orig = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
-#ifdef USE_SPECTRAL_CONES
-  if (w->stgs->adaptive_diag_scale &&
-      (w->k->dsize || w->k->nucsize || w->k->ell1_size || w->k->sl_size)) {
-    /* The spectral-cone projections are iterative inner solvers with
-     * warm-start state that does not currently tolerate mid-solve metric
-     * changes (observed as dual iterates leaving the cone). Disable
-     * dynamic diagonal rescaling on such problems until the inner
-     * solvers are made metric-change aware. */
-    w->stgs->adaptive_diag_scale = 0;
-  }
-#endif
   if (w->stgs->adaptive_diag_scale) {
     if (!w->stgs->adaptive_scale) {
       /* silently disable: diag scaling rides the adaptive-scale update
@@ -1259,6 +1248,10 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
   } else {
     cold_start_vars(w);
   }
+
+  /* the cached spectral warm starts describe the iterates of the previous
+   * solve, which the (re)start above has just discarded */
+  SCS(reset_cone_cache)(w->cone_work);
 
   update_work_cache(w);
   return 0;
@@ -1410,6 +1403,11 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     if (w->accel) {
       aa_reset(w->accel);
     }
+    /* Same reasoning for the cone projections: the spectral cones' inner
+     * solvers warm-start from state computed under the metric we just
+     * replaced, so drop it rather than let it seed the next iteration's
+     * projection (see SCS(reset_cone_cache)). */
+    SCS(reset_cone_cache)(w->cone_work);
     /* update v, using fact that rsk, u, u_t vectors should be the same */
     /* solve: R^+ (v^+ + u - 2u_t) = rsk = R(v + u - 2u_t)
      *  => v^+ = R+^-1 rsk + 2u_t - u

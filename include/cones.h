@@ -98,6 +98,7 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y);
 void SCS(enforce_cone_boundaries)(const ScsConeWork *c, scs_float *vec,
                                   scs_float (*f)(const scs_float *, scs_int),
                                   scs_int psd_rank1);
+void SCS(reset_cone_cache)(ScsConeWork *c);
 
 #ifdef __cplusplus
 }

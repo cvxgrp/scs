@@ -76,16 +76,16 @@ void BLASC(heevr)(const char *jobz, const char *range, const char *uplo,
                   scs_float *rwork, blas_int *lrwork, blas_int *iwork,
                   blas_int *liwork, blas_int *info);
 
-blas_int BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
-                    const blas_int *k, const scs_float *alpha,
-                    const scs_float *a, const blas_int *lda,
-                    const scs_float *beta, scs_float *c, const blas_int *ldc);
+void BLAS(syrk)(const char *uplo, const char *trans, const blas_int *n,
+                const blas_int *k, const scs_float *alpha, const scs_float *a,
+                const blas_int *lda, const scs_float *beta, scs_float *c,
+                const blas_int *ldc);
 
-blas_int BLASC(herk)(const char *uplo, const char *trans, const blas_int *n,
-                     const blas_int *k, const scs_float *alpha,
-                     const SCS_BLAS_COMPLEX_TYPE *a, const blas_int *lda,
-                     const scs_float *beta, SCS_BLAS_COMPLEX_TYPE *c,
-                     const blas_int *ldc);
+void BLASC(herk)(const char *uplo, const char *trans, const blas_int *n,
+                 const blas_int *k, const scs_float *alpha,
+                 const SCS_BLAS_COMPLEX_TYPE *a, const blas_int *lda,
+                 const scs_float *beta, SCS_BLAS_COMPLEX_TYPE *c,
+                 const blas_int *ldc);
 
 void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
                 const blas_int *incx);
@@ -93,6 +93,10 @@ void BLASC(scal)(const blas_int *n, const SCS_BLAS_COMPLEX_TYPE *sa,
                  SCS_BLAS_COMPLEX_TYPE *sx, const blas_int *incx);
 
 #ifdef USE_SPECTRAL_CONES
+void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
+                blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
+                blas_int *info);
+
 void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
                  const blas_int *n, scs_float *a, const blas_int *lda,
                  scs_float *s, scs_float *u, const blas_int *ldu, scs_float *vt,
@@ -964,6 +968,35 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
     liwork_max = MAX(liwork_max, iwkopt);
   }
 
+#ifdef USE_SPECTRAL_CONES
+  /* 1b. Spectral Workspace Query (syev)
+   *
+   * The logdet and sum-of-largest projections eigendecompose with syev, not
+   * syevr, but share the consolidated 'work' array sized above. Sizing that
+   * array from the syevr query alone shortchanges syev: both LAPACKs we
+   * measured (Apple Accelerate and netlib) report an optimum of 34n for
+   * syev against 33n for syevr, so every spectral syev call was running
+   * below its optimum. That stays above syev's *minimum* of 3n-1, so it
+   * costs block size rather than correctness, but a vendor whose optimum
+   * and minimum are closer together would push it under the minimum and
+   * syev would start failing with info = -8 deep inside a projection.
+   * Query syev too and keep whichever workspace is larger.
+   */
+  if (k->dsize > 0 || k->sl_size > 0) {
+    blas_int n_max_spectral = MAX(n_max_logdet, n_max_sl);
+
+    BLAS(syev)("V", "L", &n_max_spectral, c->Xs, &n_max_spectral, c->e, &wkopt,
+               &neg_one, &info);
+
+    if (info != 0) {
+      scs_printf("FATAL: syev workspace query failure, info = %li\n",
+                 (long)info);
+      return -1;
+    }
+    lwork_max = MAX(lwork_max, (blas_int)(wkopt + 1));
+  }
+#endif
+
   /* 2. Complex PSD Workspace Query (heevr) */
   if (k->cssize > 0) {
     c->cXs = (scs_complex_float *)scs_calloc(n_max_csd * n_max_csd,
@@ -1677,6 +1710,36 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
 #endif
 
   return c;
+}
+
+/* Discard inner-solver state that was cached under a previous metric.
+ *
+ * The standard cones project in closed form, so their projections are a
+ * function of the point and the current metric alone. The spectral cones
+ * are not: proj_logdet_cone runs a Newton/IPM inner solve and warm-starts
+ * Newton from the projection it produced on the previous outer iteration.
+ * That saved iterate belongs to the metric that produced it -- once diag_r
+ * changes, the point being projected jumps, and the stale iterate is no
+ * longer a good (nor necessarily a domain-interior) starting point. So
+ * callers must invalidate it whenever the metric changes, and whenever a
+ * new solve begins.
+ *
+ * Clearing the flags is a complete invalidation: saved_log_projs is read
+ * only where the matching flag is set, log_cone_Newton writes every
+ * component of its output on the cold path, and the IPM fallback always
+ * starts from the all-ones point, so it carries nothing across iterations.
+ *
+ * Dropping a warm start only costs inner iterations, never correctness,
+ * which is why this is safe to call unconditionally.
+ */
+void SCS(reset_cone_cache)(ScsConeWork *c) {
+#ifdef USE_SPECTRAL_CONES
+  if (c && c->k && c->log_cone_warmstarts && c->k->dsize > 0) {
+    memset(c->log_cone_warmstarts, 0, c->k->dsize * sizeof(bool));
+  }
+#else
+  (void)c;
+#endif
 }
 
 /* Outward facing cone projection routine, performs projection in-place.
