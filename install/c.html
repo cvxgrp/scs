@@ -53,6 +53,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#cmake">CMake</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mkl">MKL</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gpu">GPU</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cudss">cuDSS</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#importing">Importing</a></li>
 </ul>
 </li>
@@ -160,6 +161,27 @@ needs help, set <code class="code docutils literal notranslate"><span class="pre
 </section>
 <section id="gpu">
 <h3>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h3>
+<p>If you have a GPU and the CUDA toolkit installed, you can build the
+<a class="reference internal" href="../linear_solver/index.html#gpu-indirect"><span class="std std-ref">GPU indirect</span></a> solver:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt;<span class="w"> </span>-DUSE_GPU<span class="o">=</span>ON<span class="w"> </span>../
+make
+</pre></div>
+</div>
+<p>This builds and installs the GPU solver with target
+<code class="code docutils literal notranslate"><span class="pre">scs::scsgpuindir</span></code>. CMake locates the CUDA runtime, cuBLAS and cuSPARSE
+with <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html">FindCUDAToolkit</a>, which
+honors <code class="code docutils literal notranslate"><span class="pre">CUDAToolkit_ROOT</span></code> if the toolkit lives somewhere unusual. Both
+integer widths work, so <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> may be left at either setting. The
+transpose of <code class="code docutils literal notranslate"><span class="pre">A</span></code> is stored in GPU memory by default; configure with
+<code class="code docutils literal notranslate"><span class="pre">-DGPU_TRANSPOSE_MAT=OFF</span></code> to save that memory at the cost of slower
+matrix-transpose-vector products.</p>
+<p>Note that the GPU is typically only faster than the CPU for very large
+problems, and that the indirect solver is a legacy backend: the cuDSS direct
+solver described below is the recommended GPU backend and should be preferred
+whenever cuDSS is available.</p>
+</section>
+<section id="cudss">
+<h3>cuDSS<a class="headerlink" href="#cudss" title="Link to this heading"></a></h3>
 <p>If you have a GPU and CUDA toolkit installed, along with the
 <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library, you can compile SCS
 with cuDSS support using CMake. First, ensure that the <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and
