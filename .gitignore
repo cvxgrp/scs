@@ -54,3 +54,4 @@ rob_gauss_cov_est
 
 # generated documentation (rebuilt by the docs pipeline)
 docs/src/doxygen_out/
+CLAUDE.md

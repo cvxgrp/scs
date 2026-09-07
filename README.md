@@ -18,7 +18,7 @@ If you wish to cite SCS please cite the papers listed [here](https://www.cvxgrp.
 
 SCS solves convex cone programs of the form:
 
-```
+```text
 minimize    (1/2) x'Px + c'x
 subject to  Ax + s = b, s in K
 ```
@@ -87,7 +87,7 @@ SCS is the default solver in [CVXPY](https://www.cvxpy.org/).
 
 ## Project Structure
 
-```
+```text
 include/        Public API and internal headers
 src/            Core solver implementation
 linsys/         Linear solver backends (pluggable architecture)

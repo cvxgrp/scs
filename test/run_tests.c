@@ -33,6 +33,8 @@
 #include "problems/unbounded_tiny_qp.h"
 
 int tests_run = 0;
+int tests_failed = 0;
+const char *failed_tests[MU_MAX_FAILED_TESTS];
 
 /* decrement tests_run since mu_unit will increment it, so this cancels */
 #define _SKIP(problem)                                                         \
@@ -102,7 +104,7 @@ _SKIP(max_ent)
 _SKIP(mpc_bug)
 #endif
 
-static const char *all_tests(void) {
+static void all_tests(void) {
   mu_run_test(test_validation);
   mu_run_test(degenerate);
   mu_run_test(dense_qp);
@@ -171,17 +173,20 @@ static const char *all_tests(void) {
   mu_run_test(several_logdet_cones);
   mu_run_test(test_ell1_cone);
   mu_run_test(test_ell1_and_nuc);
-  return 0;
 }
 int main(void) {
-  const char *result = all_tests();
-  if (result != 0) {
-    scs_printf("%s\n", result);
+  int i;
+  all_tests();
+  if (tests_failed > 0) {
+    scs_printf("%d TEST(S) FAILED:\n", tests_failed);
+    for (i = 0; i < tests_failed && i < MU_MAX_FAILED_TESTS; ++i) {
+      scs_printf("  %s\n", failed_tests[i]);
+    }
     scs_printf("TEST FAILED!\n");
   } else {
     scs_printf("ALL TESTS PASSED\n");
   }
   scs_printf("Tests run: %d\n", tests_run);
 
-  return result != 0;
+  return tests_failed != 0;
 }
