@@ -11,14 +11,11 @@
  * dimensions in the issue's log exactly: n = 12, m = 17, nnz(A) = 25,
  * z = 6, four psd blocks of side 2, 1, 1, 3.
  *
- * SCS converges on it, but with a textbook O(1/k) tail -- one decade of
- * tolerance costs a decade of iterations:
- *
- *     eps 1e-4:    6_225 iterations
- *     eps 1e-5:   47_050 iterations
- *     eps 1e-6:  496_725 iterations
- *
- * which is why it looked like a failure to converge in 2022 at 3.2.0, and
+ * SCS converges on it, but with a textbook O(1/k) tail: each decade of
+ * tolerance costs roughly a decade of iterations (on the order of 1e4 at
+ * eps 1e-4, 1e4-1e5 at 1e-5 and 5e5 at 1e-6; the exact counts vary with the
+ * platform and BLAS), which is why it looked like a failure to converge in
+ * 2022 at 3.2.0, and
  * still does at any default iteration budget. No scale, rho_x, alpha or
  * acceleration setting removes the tail; the relaxation is degenerate (the
  * Robinson form sits on the boundary of the SOS cone), which is the regime
