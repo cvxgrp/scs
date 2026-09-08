@@ -189,7 +189,7 @@ exponential cone.</p>
 <span class="n">obj</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Maximize</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">entr</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
 <span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Ad</span> <span class="o">@</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">bd</span><span class="p">]</span>
 <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
-<span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">ECOS</span><span class="p">)</span>
+<span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">CLARABEL</span><span class="p">)</span>
 <span class="n">x_cvxpy</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"CVXPY optimal value is:"</span><span class="p">,</span> <span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -199,7 +199,7 @@ exponential cone.</p>
 <p>After following the python <a class="reference internal" href="../../install/python.html#python-install"><span class="std std-ref">install instructions</span></a>, we can
 run the code yielding output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>------------------------------------------------------------------
-	       SCS v3.2.11 - Splitting Conic Solver
+	       SCS v3.3.1 - Splitting Conic Solver
 	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 100, constraints m: 171
@@ -210,22 +210,22 @@ settings: eps_abs: 1.0e-04, eps_rel: 1.0e-04, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
 	  acceleration_lookback: 10, acceleration_interval: 5
-lin-sys:  sparse-direct-amd-qdldl
+lin-sys:  sparse-direct-mkl-pardiso
 	  nnz(A): 1150, nnz(P): 0
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.38e+01  7.11e-01  7.21e+02 -3.87e+02  1.00e-01  2.21e-04 
-   225| 1.46e-04  2.42e-06  4.51e-06 -3.89e+00  1.00e-01  8.58e-03 
+     0| 1.38e+01  7.11e-01  7.21e+02 -3.87e+02  1.00e-01  1.23e-03 
+   225| 1.47e-04  2.46e-06  4.92e-06 -3.89e+00  1.00e-01  6.45e-03 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 8.58e-03s = setup: 1.75e-04s + solve: 8.41e-03s
-	 lin-sys: 6.29e-03s, cones: 1.64e-03s, accel: 2.56e-04s
+timings: total: 6.45e-03s = setup: 1.10e-03s + solve: 5.36e-03s
+	 lin-sys: 1.58e-03s, cones: 2.93e-03s, accel: 3.79e-04s
 ------------------------------------------------------------------
 objective = -3.888788
 ------------------------------------------------------------------
-CVXPY optimal value is: 3.8887846237852566
-Solution norm difference: 5.640851171150041e-05
+CVXPY optimal value is: 3.888784626046272
+Solution norm difference: 5.796764427653395e-05
 </pre></div>
 </div>
 </section>

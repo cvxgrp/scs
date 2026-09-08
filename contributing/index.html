@@ -54,7 +54,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#building-the-docs">Building the docs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../help/index.html">Help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
 </ul>
@@ -102,6 +105,22 @@ Here are some ideas (of varying difficulty):</p>
 </ul>
 <p>If you are interested in helping out, please start by opening a <a class="reference external" href="https://github.com/cvxgrp/scs/issues">GitHub issue</a> so we can track progress and ensure
 that our priorities align.</p>
+<section id="building-the-docs">
+<h2>Building the docs<a class="headerlink" href="#building-the-docs" title="Link to this heading"></a></h2>
+<p>The example pages show real solver output, which is generated at build time
+rather than committed, so it can never drift from the solver. Building the docs
+therefore runs the C and Python examples and needs their dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>sphinx<span class="w"> </span>sphinx-rtd-theme<span class="w"> </span>breathe<span class="w"> </span>docutils<span class="w">   </span><span class="c1"># the docs themselves</span>
+pip<span class="w"> </span>install<span class="w"> </span>scs<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>cvxpy<span class="w">                      </span><span class="c1"># to run the examples</span>
+<span class="nb">cd</span><span class="w"> </span>docs/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>docs
+</pre></div>
+</div>
+<p>A C compiler and BLAS/LAPACK are also required, for the C example. Use
+<code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">example_outputs</span></code> to regenerate just the captured output, and
+<code class="code docutils literal notranslate"><span class="pre">DOCS_PYTHON=/path/to/venv/bin/python</span></code> to point at a specific interpreter.</p>
+<p>The one exception is <code class="code docutils literal notranslate"><span class="pre">examples/qp.m.out</span></code>, which is committed: refreshing
+it needs a MATLAB licence, so it is updated by hand.</p>
+</section>
 </section>
 
 

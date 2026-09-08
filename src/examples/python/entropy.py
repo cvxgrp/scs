@@ -61,7 +61,7 @@ x = cp.Variable(shape=n)
 obj = cp.Maximize(cp.sum(cp.entr(x)))
 constraints = [cp.sum(x) == 1, Ad @ x >= bd]
 prob = cp.Problem(obj, constraints)
-prob.solve(solver=cp.ECOS)
+prob.solve(solver=cp.CLARABEL)
 x_cvxpy = x.value
 
 print(f"CVXPY optimal value is:", prob.value)

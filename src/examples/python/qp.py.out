@@ -1,5 +1,5 @@
 ------------------------------------------------------------------
-	       SCS v3.2.11 - Splitting Conic Solver
+	       SCS v3.3.1 - Splitting Conic Solver
 	(c) Brendan O'Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
@@ -9,17 +9,17 @@ settings: eps_abs: 1.0e-09, eps_rel: 1.0e-09, eps_infeas: 1.0e-07
 	  alpha: 1.50, scale: 1.00e-01, adaptive_scale: 1
 	  max_iters: 100000, normalize: 1, rho_x: 1.00e-06
 	  acceleration_lookback: 10, acceleration_interval: 5
-lin-sys:  sparse-direct-amd-qdldl
+lin-sys:  sparse-direct-mkl-pardiso
 	  nnz(A): 4, nnz(P): 3
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.48e+00  1.00e+00  4.72e+00  1.17e+00  1.00e-01  2.16e-04 
-    50| 3.33e-10  7.78e-10  2.37e-10  1.24e+00  1.00e-01  2.80e-04 
+     0| 1.48e+00  1.00e+00  4.72e+00  1.17e+00  1.00e-01  3.26e-04 
+    50| 3.33e-10  7.78e-10  2.37e-10  1.24e+00  1.00e-01  4.20e-04 
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.81e-04s = setup: 5.77e-05s + solve: 2.23e-04s
-	 lin-sys: 3.73e-06s, cones: 8.65e-07s, accel: 5.57e-05s
+timings: total: 4.22e-04s = setup: 2.65e-04s + solve: 1.57e-04s
+	 lin-sys: 3.34e-05s, cones: 4.63e-06s, accel: 4.23e-05s
 ------------------------------------------------------------------
 objective = 1.235000
 ------------------------------------------------------------------
