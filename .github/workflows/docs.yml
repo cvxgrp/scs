@@ -24,7 +24,7 @@ jobs:
           python-version: '3.12'
       - name: Install Python dependencies
         run: |
-          pip install sphinx sphinx-rtd-theme breathe docutils
+          pip install -r docs/src/requirements.txt
       - name: Build docs
         run: |
           cd docs/src && make docs && touch ../.nojekyll
