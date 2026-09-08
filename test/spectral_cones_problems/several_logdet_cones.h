@@ -211,6 +211,7 @@ static const char *several_logdet_cones(void) {
   mu_assert("several logdet cones: duality gap error ",
             ABS(info.gap) < 5 * 1e-6);
 
+  remove("several_logdet_cone.csv");
   /* kill data */
   scs_free(d->A);
   scs_free(k);
