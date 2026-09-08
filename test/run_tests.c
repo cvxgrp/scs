@@ -21,6 +21,7 @@
 #include "problems/test_inaccurate.h"
 #include "problems/test_mixed_cones.h"
 #include "problems/test_normalize_roundtrip.h"
+#include "problems/test_perturb_smoothness.h"
 #include "problems/test_power_cone.h"
 #include "problems/test_root_plus.h"
 #include "problems/test_soc_sizes.h"
@@ -173,6 +174,7 @@ static void all_tests(void) {
   mu_run_test(test_root_plus_equivalence);
   mu_run_test(test_normalize_roundtrip_lp);
   mu_run_test(test_normalize_roundtrip_qp);
+  mu_run_test(test_perturb_smoothness);
   mu_run_test(exp_design);
   mu_run_test(robust_pca);
   mu_run_test(graph_partitioning);
