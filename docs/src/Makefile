@@ -3,7 +3,10 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?=
+# -W turns warnings into errors, so a broken cross reference or a missing
+# include fails the build instead of shipping to the site. Override on the
+# command line (SPHINXOPTS=) to build a work in progress that still warns.
+SPHINXOPTS    ?= -W
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
