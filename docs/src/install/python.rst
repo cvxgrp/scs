@@ -31,7 +31,8 @@ Linear solver backends
 The pre-built wheels and a from-source install always include two CPU linear
 solvers that require no additional dependencies:
 
-- :code:`QDLDL` — the default sparse direct solver (bundled with SCS).
+- :code:`QDLDL` — the default :ref:`sparse direct solver <direct>` (bundled
+  with SCS).
 - :code:`CPU_INDIRECT` — the sparse matrix-free solver based on conjugate
   gradients.
 
@@ -44,10 +45,10 @@ solver and :ref:`python_interface` for how to select one at runtime.
 Apple Accelerate (macOS)
 """"""""""""""""""""""""
 
-On macOS the Apple Accelerate backend is built and included automatically —
-no extra install flags are needed. It uses the Accelerate framework's sparse
-LDL\ :sup:`T` solver, which is optimized for Apple hardware including Apple
-Silicon. The default :code:`linear_solver=scs.LinearSolver.AUTO` selects the
+On macOS the :ref:`Apple Accelerate backend <apple_accelerate>` is built and
+included automatically — no extra install flags are needed. It uses the
+Accelerate framework's sparse LDL\ :sup:`T` solver, which is optimized for
+Apple hardware including Apple Silicon. The default :code:`linear_solver=scs.LinearSolver.AUTO` selects the
 bundled QDLDL on macOS; opt in to Accelerate explicitly with
 :code:`linear_solver=scs.LinearSolver.ACCELERATE`.
 
