@@ -26,9 +26,9 @@ subject to  Ax + s = b, s in K
 where `K` is a product of convex cones. It uses an operator-splitting method
 (ADMM) with Anderson acceleration to achieve fast convergence.
 
-**Supported cones:** linear (LP), second-order (SOCP), semidefinite (SDP),
-exponential, power, complex semidefinite, and spectral cones (log-determinant,
-nuclear norm, sum-of-largest eigenvalues).
+**Supported cones:** zero/linear (LP), box, second-order (SOCP), semidefinite
+(SDP), complex semidefinite, exponential, power, and spectral cones
+(log-determinant, nuclear norm, ell1-norm, sum-of-largest eigenvalues).
 
 ## Features
 
@@ -36,6 +36,8 @@ nuclear norm, sum-of-largest eigenvalues).
   iterative (CG), Intel MKL Pardiso, Apple Accelerate (macOS), NVIDIA cuDSS, GPU
 - Anderson acceleration for faster convergence, including solve diagnostics
 - Problem data normalization/equilibration for numerical stability
+- Adaptive dual scaling, with per-row diagonal rescaling driven by residual
+  profiles (`adaptive_diag_scale`, on by default)
 - Warm-starting and incremental `b`/`c` updates via `scs_update`
 - Ctrl-C signal handling for graceful interruption
 - Configurable precision (`float`/`double`) and index type (`int`/`long long`)
@@ -81,13 +83,15 @@ Example: `make DLONG=1 USE_LAPACK=1`
 
 SCS has interfaces for several languages:
 
-- **Python:** `pip install scs` ([PyPI](https://pypi.org/project/scs/))
+- **Python:** [scs-python](https://github.com/bodono/scs-python) (`pip install scs`, [PyPI](https://pypi.org/project/scs/))
 - **Julia:** [SCS.jl](https://github.com/jump-dev/SCS.jl)
 - **R:** [scs](https://cran.r-project.org/package=scs)
-- **MATLAB:** See the [documentation](https://www.cvxgrp.org/scs/install/matlab.html)
+- **MATLAB:** [scs-matlab](https://github.com/bodono/scs-matlab) ([install guide](https://www.cvxgrp.org/scs/install/matlab.html))
 - **Ruby:** [scs-ruby](https://github.com/ankane/scs-ruby)
 
-SCS is the default solver in [CVXPY](https://www.cvxpy.org/).
+In [CVXPY](https://www.cvxpy.org/), SCS is the default solver for semidefinite,
+exponential-cone and power-cone problems (Clarabel handles LPs and SOCPs, OSQP
+handles QPs).
 
 ## Project Structure
 
@@ -95,9 +99,9 @@ SCS is the default solver in [CVXPY](https://www.cvxpy.org/).
 include/        Public API and internal headers
 src/            Core solver implementation
 linsys/         Linear solver backends (pluggable architecture)
-  cpu/direct/     Sparse Cholesky (QDLDL, default)
+  cpu/direct/     Sparse LDLt (AMD ordering + QDLDL, default)
   cpu/indirect/   Conjugate gradient
-  cpu/dense/      Dense LU (LAPACK dgetrf, for small problems)
+  cpu/dense/      Dense Cholesky on the Gram reduction (LAPACK dpotrf)
   mkl/direct/     Intel MKL Pardiso
   accelerate/direct/  Apple Accelerate sparse LDLt (macOS)
   cudss/direct/   NVIDIA cuDSS

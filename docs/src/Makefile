@@ -3,7 +3,10 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?=
+# -W turns warnings into errors, so a broken cross reference or a missing
+# include fails the build instead of shipping to the site. Override on the
+# command line (SPHINXOPTS=) to build a work in progress that still warns.
+SPHINXOPTS    ?= -W
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
@@ -38,12 +41,15 @@ help:
 
 EXAMPLEDIR = examples
 SCSROOT    = ../..
-PYTHON    ?= python3
+# Named DOCS_PYTHON rather than PYTHON: a command-line PYTHON=... would be
+# inherited by the sub-make of the C library below, where PYTHON means
+# "build the Python extension" and adds -DPYTHON to the C flags.
+DOCS_PYTHON ?= python3
 
 .PHONY: example_outputs check_example_deps
 
 check_example_deps:
-	@$(PYTHON) -c "import scs, numpy, scipy, cvxpy" 2>/dev/null || { \
+	@$(DOCS_PYTHON) -c "import scs, numpy, scipy, cvxpy" 2>/dev/null || { \
 		echo "error: building the docs runs the examples, which need scs."; \
 		echo "       install the dependencies with:"; \
 		echo "           pip install scs numpy scipy cvxpy"; \
@@ -53,8 +59,8 @@ check_example_deps:
 example_outputs: check_example_deps
 	@echo "Generating example output..."
 	@set -e; for f in $(EXAMPLEDIR)/python/*.py; do \
-		echo "  $(PYTHON) $${f##*/}"; \
-		( cd $(EXAMPLEDIR)/python && $(PYTHON) "$${f##*/}" > "$${f##*/}.out" ); \
+		echo "  $(DOCS_PYTHON) $${f##*/}"; \
+		( cd $(EXAMPLEDIR)/python && $(DOCS_PYTHON) "$${f##*/}" > "$${f##*/}.out" ); \
 	done
 	@echo "  cc     qp.c"
 	@$(MAKE) -C $(SCSROOT) --no-print-directory out/libscsdir.a

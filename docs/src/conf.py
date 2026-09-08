@@ -15,7 +15,6 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import subprocess
-import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
 
@@ -59,9 +58,7 @@ pygments_style = "default"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-# html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
 def setup(app):
@@ -72,7 +69,6 @@ html_logo = "_static/scs_logo_transparent.png"
 html_favicon = "_static/favicon.ico"
 html_theme_options = {
     "logo_only": True,
-    "display_version": True,
     #'github_banner': True,
     #'github_user': 'cvxgrp',
     #'github_repo': 'scs',
@@ -80,8 +76,17 @@ html_theme_options = {
     #'logo_name': False,
     #'github_button': False,
     #'github_type': 'star',
-    "analytics_id": "G-9CY7R8S5N2",
 }
+
+# Google Analytics (GA4). Previously configured with the sphinx_rtd_theme
+# "analytics_id" theme option, which the theme deprecated.
+html_js_files = [
+    (
+        "https://www.googletagmanager.com/gtag/js?id=G-9CY7R8S5N2",
+        {"async": "async"},
+    ),
+    "js/analytics.js",
+]
 
 rst_epilog = ".. |version| replace:: %s" % __version__
 

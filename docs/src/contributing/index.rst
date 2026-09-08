@@ -35,7 +35,7 @@ therefore runs the C and Python examples and needs their dependencies:
 
 A C compiler and BLAS/LAPACK are also required, for the C example. Use
 :code:`make example_outputs` to regenerate just the captured output, and
-:code:`PYTHON=/path/to/venv/bin/python` to point at a specific interpreter.
+:code:`DOCS_PYTHON=/path/to/venv/bin/python` to point at a specific interpreter.
 
 The one exception is :code:`examples/qp.m.out`, which is committed: refreshing
 it needs a MATLAB licence, so it is updated by hand.
