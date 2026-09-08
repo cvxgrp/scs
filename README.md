@@ -83,10 +83,10 @@ Example: `make DLONG=1 USE_LAPACK=1`
 
 SCS has interfaces for several languages:
 
-- **Python:** `pip install scs` ([PyPI](https://pypi.org/project/scs/))
+- **Python:** [scs-python](https://github.com/bodono/scs-python) (`pip install scs`, [PyPI](https://pypi.org/project/scs/))
 - **Julia:** [SCS.jl](https://github.com/jump-dev/SCS.jl)
 - **R:** [scs](https://cran.r-project.org/package=scs)
-- **MATLAB:** See the [documentation](https://www.cvxgrp.org/scs/install/matlab.html)
+- **MATLAB:** [scs-matlab](https://github.com/bodono/scs-matlab) ([install guide](https://www.cvxgrp.org/scs/install/matlab.html))
 - **Ruby:** [scs-ruby](https://github.com/ankane/scs-ruby)
 
 In [CVXPY](https://www.cvxpy.org/), SCS is the default solver for semidefinite,
