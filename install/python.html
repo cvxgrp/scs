@@ -9,7 +9,7 @@
   <title>Python &mdash; SCS 3.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7cfa6b0f" />
 
   
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -131,7 +131,8 @@ python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </sp
 <p>The pre-built wheels and a from-source install always include two CPU linear
 solvers that require no additional dependencies:</p>
 <ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">QDLDL</span></code> — the default sparse direct solver (bundled with SCS).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">QDLDL</span></code> — the default <a class="reference internal" href="../linear_solver/index.html#direct"><span class="std std-ref">sparse direct solver</span></a> (bundled
+with SCS).</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">CPU_INDIRECT</span></code> — the sparse matrix-free solver based on conjugate
 gradients.</p></li>
 </ul>
@@ -142,10 +143,10 @@ how to enable the backend. See <a class="reference internal" href="../linear_sol
 solver and <a class="reference internal" href="../api/python.html#python-interface"><span class="std std-ref">Python</span></a> for how to select one at runtime.</p>
 <section id="apple-accelerate-macos">
 <h3>Apple Accelerate (macOS)<a class="headerlink" href="#apple-accelerate-macos" title="Link to this heading"></a></h3>
-<p>On macOS the Apple Accelerate backend is built and included automatically —
-no extra install flags are needed. It uses the Accelerate framework’s sparse
-LDL<sup>T</sup> solver, which is optimized for Apple hardware including Apple
-Silicon. The default <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code> selects the
+<p>On macOS the <a class="reference internal" href="../linear_solver/index.html#apple-accelerate"><span class="std std-ref">Apple Accelerate backend</span></a> is built and
+included automatically — no extra install flags are needed. It uses the
+Accelerate framework’s sparse LDL<sup>T</sup> solver, which is optimized for
+Apple hardware including Apple Silicon. The default <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.AUTO</span></code> selects the
 bundled QDLDL on macOS; opt in to Accelerate explicitly with
 <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.ACCELERATE</span></code>.</p>
 </section>

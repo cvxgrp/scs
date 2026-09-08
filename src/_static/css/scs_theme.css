@@ -37,16 +37,6 @@ body {
     color: rgb(46, 118, 176);
 }
 
-/* Navigation bar text */
-.wy-menu-vertical header, .wy-menu-vertical p.caption {
-    color: rgb(255, 255, 255); /* White text*/
-    font-weight: 600;
-}
-
-.wy-menu-vertical a{
-    color: rgb(178, 188, 200); /* Grey */
-}
-
 .wy-menu-vertical a:hover{
     background: rgb(46, 118, 176);
     color: rgb(255, 255, 255); /* White text*/

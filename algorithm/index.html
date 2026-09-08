@@ -9,7 +9,7 @@
   <title>Algorithm &mdash; SCS 3.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7cfa6b0f" />
 
   
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +59,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#certificate-of-infeasibility">Certificate of infeasibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">Optimality</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#infeasibility-cert">Infeasibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Infeasibility</a></li>
 </ul>
 </li>
 </ul>
@@ -199,8 +199,8 @@ user defined <a class="reference internal" href="../api/settings.html#settings">
 here can be changed to other norms by changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in
 the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
 </section>
-<section id="infeasibility-cert">
-<span id="id3"></span><h3>Infeasibility<a class="headerlink" href="#infeasibility-cert" title="Link to this heading"></a></h3>
+<section id="id3">
+<h3>Infeasibility<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <p>Since the conic constraints are always guaranteed by the iterates (<span class="math notranslate nohighlight">\(s \in
 \mathcal{K}, y \in \mathcal{K}^*, s \perp y\)</span>), SCS
 declares a problem <strong>primal infeasible (dual unbounded)</strong> when it finds <span class="math notranslate nohighlight">\(y \in

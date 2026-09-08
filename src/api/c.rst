@@ -4,8 +4,6 @@ C / C++
 =======
 
 
-.. _C_main_API:
-
 Main solver API
 ---------------
 
@@ -32,24 +30,6 @@ then you can call the :code:`scs` function documented here, which simply calls
 the :code:`scs_init`, :code:`scs_solve`, :code:`scs_finish` sequence above.
 
 .. doxygenfunction:: scs
-
-
-..
-  Lower level
-  ^^^^^^^^^^^
-
-  Under the hood the :code:`scs` function above simply calls the three functions
-  below in series.  It can be useful to call :code:`scs_solve` many times for the
-  same call to :code:`scs_init`. If you want to do this, for example because you
-  want to cache the matrix factorization for many solves, please `contact us
-  <mailto:splitting.conic.solver@gmail.com>`_, because currently that
-  functionality is disabled.
-
-  .. doxygenfunction:: scs_init
-
-  .. doxygenfunction:: scs_solve
-
-  .. doxygenfunction:: scs_finish
 
 
 Primitive types

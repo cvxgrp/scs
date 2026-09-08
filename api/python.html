@@ -9,7 +9,7 @@
   <title>Python &mdash; SCS 3.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7d28eb0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=7cfa6b0f" />
 
   
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -165,7 +165,7 @@ manylinux wheels), otherwise QDLDL</p></li>
 <td><p>Auto-detect best available solver (default).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">QDLDL</span></code></p></td>
-<td><p>Sparse direct solver using <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> (always available).</p></td>
+<td><p><a class="reference internal" href="../linear_solver/index.html#direct"><span class="std std-ref">Sparse direct</span></a> solver using <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> (always available).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">CPU_INDIRECT</span></code></p></td>
 <td><p>Sparse indirect solver using conjugate gradients (runs on CPU).</p></td>
@@ -175,7 +175,8 @@ manylinux wheels), otherwise QDLDL</p></li>
 or an <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">MKL build</span></a>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">ACCELERATE</span></code></p></td>
-<td><p>Apple Accelerate sparse LDL<sup>T</sup> (macOS only, included automatically).</p></td>
+<td><p><a class="reference internal" href="../linear_solver/index.html#apple-accelerate"><span class="std std-ref">Apple Accelerate</span></a> sparse LDL<sup>T</sup> (macOS
+only, included automatically).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">CPU_DENSE</span></code></p></td>
 <td><p>Dense direct solver via LAPACK (requires LAPACK build).</p></td>

@@ -1,5 +1,3 @@
-.. _citing :
-
 Citing SCS
 ===========
 
