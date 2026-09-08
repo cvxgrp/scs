@@ -124,6 +124,7 @@ static const char *hs21_tiny_qp_rw(void) {
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
 
+  remove("hs21_tiny_qp");
   SCS(free_data)(d);
   SCS(free_cone)(k);
   SCS(free_sol)(sol);

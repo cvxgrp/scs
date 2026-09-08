@@ -130,6 +130,7 @@ static const char *exp_design(void) {
   mu_assert("exp_design: dual feas error: ", ABS(info.res_dual) < 1e-6);
   mu_assert("exp_design: duality gap error: ", ABS(info.gap) < 1e-6);
 
+  remove("test_exp_design.csv");
   /* kill data */
   scs_free(d->A);
   scs_free(k);
