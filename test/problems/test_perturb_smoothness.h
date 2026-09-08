@@ -57,19 +57,39 @@
  *    discrepancy needs no analytic Jacobian and no assumption about the svec
  *    convention.
  *
- * Thresholds are absolute and loose. Measured across the direct, indirect,
- * dense and accelerate backends, the worst normalize=1 figures are 2.3e-06
- * (QP) and 8.8e-08 (SDP), both on the indirect solver at h=1e-06; the bound
- * of 1e-04 therefore keeps roughly a factor of 40 in hand. These errors are
- * dominated by the eps/h floor inherent to finite differencing rather than by
- * anything SCS chooses, and a genuine loss of smoothness shows up orders of
- * magnitude above them. Asserting a ratio against normalize=0 instead was
- * tried and rejected: the denominator sits at that same floor, so the ratio
- * swings between 0.3 and 11.5 across regimes where the absolute error barely
- * moves.
+ * On thresholds. A forward difference divides a solution error of order eps
+ * by h, so its error floor is ~eps/h and GROWS as h shrinks; an absolute
+ * bound cannot hold at every step size. An earlier revision used a flat 1e-04
+ * calibrated on one machine and failed CI at h=1e-06 on x86-64, where the
+ * indirect solver reported 5.5e-04 -- which is the floor behaving exactly as
+ * predicted, not a defect. The bound is therefore a multiple of eps/h; see
+ * PS_FD_SLACK.
+ *
+ * Asserting a ratio against normalize=0 instead was tried and rejected: that
+ * denominator is itself at the floor, so the ratio swings from 0.3 to 3000
+ * across backends while the absolute error tracks eps/h closely. The spread
+ * is not noise -- on this problem the unnormalized solve converges far past
+ * the requested tolerance (error ~1e-13 against a requested 1e-09) while the
+ * normalized one stops near it -- but it makes the ratio useless as a gate.
  */
 
 #define PS_N 3
+
+/* Requested tolerance, shared by both problems so the assertion bound below
+ * cannot drift away from what the solves were actually asked for. 1e-9 rather
+ * than tighter because the indirect (CG) backend does not reach 1e-12 here,
+ * and the errors saturate by 1e-8 anyway. */
+#define PS_EPS 1e-9
+
+/* A forward difference divides a solution error of order eps by h, so its
+ * error floor is ~eps/h -- it grows as h shrinks, and no absolute bound can
+ * hold at every step size. The assertion is therefore a multiple of that
+ * floor. PS_FD_SLACK is chosen for backend and platform spread, not tuned to
+ * one machine: the worst observed value is ~37x below the bound on both step
+ * sizes (x86-64 Linux and Windows, indirect solver, USE_LAPACK=0). A genuine
+ * loss of smoothness is orders of magnitude above the floor and still fails. */
+#define PS_FD_SLACK 20.0
+#define PS_FD_BOUND(h) (PS_FD_SLACK * PS_EPS / (h))
 
 /* --- 1. equality-constrained QP ------------------------------------------ */
 
@@ -125,8 +145,8 @@ static scs_int ps_solve_qp(scs_float db0, scs_int normalize,
   stgs->normalize = normalize;
 /* the indirect (CG) backend does not reach 1e-12 here; errors
    * saturate by 1e-8 anyway, so 1e-9 costs no resolution */
-  stgs->eps_abs = 1e-9;
-  stgs->eps_rel = 1e-9;
+  stgs->eps_abs = PS_EPS;
+  stgs->eps_rel = PS_EPS;
   stgs->max_iters = 200000;
   stgs->verbose = 0;
 
@@ -213,8 +233,8 @@ static scs_int ps_solve_sdp(scs_float db0, scs_int normalize,
   scs_set_default_settings(stgs);
   stgs->normalize = normalize;
   /* 1e-12 is not attainable on this SDP; 1e-9 is, comfortably */
-  stgs->eps_abs = 1e-9;
-  stgs->eps_rel = 1e-9;
+  stgs->eps_abs = PS_EPS;
+  stgs->eps_rel = PS_EPS;
   stgs->max_iters = 200000;
   stgs->verbose = 0;
 
@@ -277,7 +297,7 @@ static const char *test_perturb_smoothness(void) {
     /* normalize=1 is the shipped default and the one downstream code hits */
     mu_assert("perturb_smoothness: QP finite difference lost accuracy -- the "
               "solution map is no longer smooth enough to differentiate",
-              qp_on < 1e-4);
+              qp_on < PS_FD_BOUND(h));
 
 #if defined(USE_LAPACK)
     {
@@ -293,7 +313,7 @@ static const char *test_perturb_smoothness(void) {
 
       mu_assert("perturb_smoothness: SDP finite difference is inconsistent "
                 "between step sizes -- PSD path lost smoothness",
-                sdp_on < 1e-4);
+                sdp_on < PS_FD_BOUND(h));
     }
 #endif
   }
