@@ -175,7 +175,8 @@ nuclear norm, :math:`\ell_1` norm, sum-of-largest-eigenvalues), install with:
   python -m pip install -Csetup-args=-Duse_spectral_cones=true .
 
 This requires LAPACK (enabled by default). See
-:ref:`python_spectral_cone_keys` for the cone dict keys.
+:ref:`Spectral cone keys <python_spectral_cone_keys>` for the cone dict
+keys.
 
 Testing
 """""""
