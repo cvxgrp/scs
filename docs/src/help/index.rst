@@ -1,5 +1,3 @@
-.. _help:
-
 Help
 ====
 
@@ -17,8 +15,6 @@ A common cause of issues is not linking :ref:`BLAS/LAPACK libraries
 <blas_lapack>` correctly. If you are having this issue please search for
 resources on installing and linking these libraries first. You can try `OpenBLAS
 <https://www.openblas.net/>`_ if you need a BLAS library.
-
-.. _troubleshooting:
 
 Troubleshooting
 ---------------
