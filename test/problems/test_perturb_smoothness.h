@@ -43,7 +43,9 @@
  *    b = [1, 1000] is badly scaled on purpose, so the equilibration has real
  *    work to do and its b-dependence is not masked.
  *
- * 2. SDP with a PSD block, self-consistency. The zero cone never engages the
+ * 2. SDP with a PSD block, self-consistency -- compiled only under
+ *    USE_LAPACK, since the PSD projection needs BLAS/LAPACK and SCS refuses
+ *    the cone outright without it. The zero cone never engages the
  *    per-row metric refinement or the PSD block metric, which is where the
  *    3.3.0 changes live, so the QP alone would not exercise them.
  *
@@ -164,6 +166,11 @@ static scs_float ps_qp_fd_err(scs_float h, scs_int normalize) {
 
 /* --- 2. SDP with a PSD block --------------------------------------------- */
 
+/* PSD projection needs BLAS/LAPACK; without it SCS refuses the cone outright
+ * ("FATAL: SDP/Complex SDP requires BLAS/LAPACK"), so this half is compiled
+ * only when it can run. The QP half above needs no LAPACK and always runs. */
+#if defined(USE_LAPACK)
+
 /* Rows: 0 = trace equality (z=1), 1..3 = PSD block (s=[2]). */
 static scs_int ps_solve_sdp(scs_float db0, scs_int normalize,
                             scs_float *x_out) {
@@ -248,6 +255,8 @@ static scs_float ps_sdp_fd_incons(scs_float h, scs_int normalize) {
   return err;
 }
 
+#endif /* USE_LAPACK */
+
 /* --- the test ------------------------------------------------------------ */
 
 static const char *test_perturb_smoothness(void) {
@@ -259,24 +268,34 @@ static const char *test_perturb_smoothness(void) {
     scs_float h = hs[j];
     scs_float qp_off = ps_qp_fd_err(h, 0);
     scs_float qp_on = ps_qp_fd_err(h, 1);
-    scs_float sdp_off = ps_sdp_fd_incons(h, 0);
-    scs_float sdp_on = ps_sdp_fd_incons(h, 1);
 
     mu_assert("perturb_smoothness: QP solve failed", qp_off >= 0 && qp_on >= 0);
-    mu_assert("perturb_smoothness: SDP solve failed",
-              sdp_off >= 0 && sdp_on >= 0);
 
-    scs_printf("perturb_smoothness: h=%.0e  QP fd_err norm0/norm1 "
-               "%.2e/%.2e  SDP fd_incons norm0/norm1 %.2e/%.2e\n",
-               h, qp_off, qp_on, sdp_off, sdp_on);
+    scs_printf("perturb_smoothness: h=%.0e  QP fd_err norm0/norm1 %.2e/%.2e\n",
+               h, qp_off, qp_on);
 
     /* normalize=1 is the shipped default and the one downstream code hits */
     mu_assert("perturb_smoothness: QP finite difference lost accuracy -- the "
               "solution map is no longer smooth enough to differentiate",
               qp_on < 1e-4);
-    mu_assert("perturb_smoothness: SDP finite difference is inconsistent "
-              "between step sizes -- PSD path lost smoothness",
-              sdp_on < 1e-4);
+
+#if defined(USE_LAPACK)
+    {
+      scs_float sdp_off = ps_sdp_fd_incons(h, 0);
+      scs_float sdp_on = ps_sdp_fd_incons(h, 1);
+
+      mu_assert("perturb_smoothness: SDP solve failed",
+                sdp_off >= 0 && sdp_on >= 0);
+
+      scs_printf("perturb_smoothness: h=%.0e  SDP fd_incons norm0/norm1 "
+                 "%.2e/%.2e\n",
+                 h, sdp_off, sdp_on);
+
+      mu_assert("perturb_smoothness: SDP finite difference is inconsistent "
+                "between step sizes -- PSD path lost smoothness",
+                sdp_on < 1e-4);
+    }
+#endif
   }
   return 0;
 }
