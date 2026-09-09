@@ -274,6 +274,18 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
 out/run_tests_gpu_indirect
 </pre></div>
 </div>
+<p>The GPU sources are compiled by the host C compiler rather than by
+<code class="code docutils literal notranslate"><span class="pre">nvcc</span></code>, so they include the CUDA headers directly.  This means the
+<code class="code docutils literal notranslate"><span class="pre">crt</span></code> headers must be present alongside the runtime: up to CUDA 12 they
+were part of the <code class="code docutils literal notranslate"><span class="pre">cuda_nvcc</span></code> component, whereas CUDA 13 moved them into a
+separate <code class="code docutils literal notranslate"><span class="pre">cuda_crt</span></code> component.  A partial installation that omits it
+fails with</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>driver_types.h:59:30: fatal error: crt/host_defines.h: No such file or directory
+</pre></div>
+</div>
+<p>Installing the full CUDA toolkit pulls the component in automatically; only
+builds that pick individual components (distribution packaging, for instance)
+need to request it explicitly.</p>
 <p>Finally, to compile and test the <a class="reference internal" href="../linear_solver/index.html#cudss-solver"><span class="std std-ref">cuDSS solver</span></a> you need to
 have CUDA toolkit, the <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> compiler, and <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library installed.  Then set
 <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> and execute</p>
