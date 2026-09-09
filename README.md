@@ -109,6 +109,7 @@ linsys/         Linear solver backends (pluggable architecture)
   external/       Vendored dependencies (AMD, QDLDL)
 test/           Test suite (minunit framework)
 docs/src/       Sphinx documentation source
+docs/paper/     LaTeX write-up of the method and this implementation
 ```
 
 ## License

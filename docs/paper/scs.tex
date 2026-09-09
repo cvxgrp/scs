@@ -1,0 +1,925 @@
+% ============================================================================
+%  scs.tex -- SCS: the method and the implementation
+%
+%  A standalone write-up of the algorithm SCS implements and of the software
+%  in this repository. It is not generated from the Sphinx sources in
+%  docs/src; it is a hand-maintained companion to them, and the two should be
+%  kept consistent when the algorithm changes.
+%
+%  Build:  make          (in this directory; needs pdflatex)
+%          make clean
+% ============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% --- notation ---------------------------------------------------------------
+\newcommand{\R}{\mathbf{R}}
+\newcommand{\Sym}{\mathbf{S}}
+\newcommand{\K}{\mathcal{K}}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\Q}{\mathcal{Q}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\proj}[1]{\Pi_{#1}}
+\newcommand{\tr}{^\top}
+\DeclareMathOperator*{\minimize}{minimize}
+\DeclareMathOperator*{\maximize}{maximize}
+\DeclareMathOperator{\diag}{\mathbf{diag}}
+\DeclareMathOperator{\dist}{\mathbf{dist}}
+
+\theoremstyle{plain}
+\newtheorem{proposition}{Proposition}
+
+% Authorship: SCS is a community project whose primary maintainer is Brendan
+% O'Donoghue; the algorithm is due to the authors cited in Section 10. Replace
+% the line below with the author list appropriate to wherever this document is
+% used.
+\title{\textbf{SCS: a splitting conic solver}\\[0.4em]
+       \large The method, and the software that implements it}
+\author{The SCS developers}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+SCS solves large-scale convex quadratic cone programs. It embeds the primal-dual
+optimality conditions of such a program into a homogeneous self-dual feasibility
+problem, and applies Douglas--Rachford splitting to that embedding under a
+diagonal metric. Each iteration costs one solve of a fixed quasi-definite linear
+system and one Euclidean projection onto a product of cones; because the linear
+system does not change between iterations it can be factorized once and reused,
+or solved approximately by an iterative method. The iterates satisfy the conic
+constraints and complementary slackness exactly at every step, so termination
+reduces to checking three residuals, and the same iterates yield a certificate
+of primal or dual infeasibility when no solution exists. This document derives
+the method, describes the heuristics that make it work in practice --- data
+equilibration, an adaptive diagonal metric, and Anderson acceleration --- and
+then documents the software in this repository: its layout, its C API, its
+pluggable linear-solver backends, its build configuration and its tests.
+\end{abstract}
+
+\tableofcontents
+
+% ===========================================================================
+\section{Introduction}
+% ===========================================================================
+
+SCS (\emph{splitting conic solver}) is a numerical optimization package for
+convex cone programs with a quadratic objective. It is a first-order method: it
+does not form or factorize a Newton system involving the barrier of the cone,
+and its per-iteration cost is one linear solve with a \emph{fixed} matrix plus
+one cone projection. This buys three properties that distinguish it from
+interior-point solvers.
+
+\begin{itemize}
+\item \textbf{Scale.} The linear system is the same at every iteration, so a
+  single factorization is amortized over the whole solve; alternatively it can
+  be solved matrix-free by conjugate gradients, which needs only products with
+  $P$, $A$ and $A\tr$.
+\item \textbf{Infeasibility detection.} The method works on a homogeneous
+  embedding, in which an optimal point and a certificate of infeasibility are
+  both fixed points of the same operator. Nothing special has to be done to
+  detect an infeasible or unbounded problem.
+\item \textbf{Warm starts.} The iterate is a single vector in the embedding
+  space, so a solution of a nearby problem is a usable starting point, and the
+  factorization and equilibration can be cached across solves.
+\end{itemize}
+
+The cost is accuracy: first-order methods converge slowly to high precision.
+Sections~\ref{sec:scaling} and~\ref{sec:aa} describe the three mechanisms SCS
+uses to fight this --- equilibration of the data, an adaptively updated
+diagonal metric, and Anderson acceleration of the fixed-point iteration.
+
+The algorithm in this repository is the one derived in
+\cite{odonoghue:21}, which extends the original SCS
+method \cite{ocpb:16} to quadratic objectives and replaces its
+self-dual embedding with a homogeneous embedding of the linear complementarity
+problem. Where the two differ, this document follows the former.
+
+% ===========================================================================
+\section{The quadratic cone program}
+% ===========================================================================
+
+SCS solves the primal-dual pair
+\begin{equation}\label{eq:problem}
+\begin{array}{ll}
+\minimize & (1/2)x\tr P x + c\tr x\\
+\mbox{subject to} & Ax + s = b\\
+                  & s \in \K
+\end{array}
+\qquad\qquad
+\begin{array}{ll}
+\maximize & -(1/2)x\tr P x - b\tr y\\
+\mbox{subject to} & Px + A\tr y + c = 0\\
+                  & y \in \K^*
+\end{array}
+\end{equation}
+over the primal variable $x \in \R^n$, the dual variable $y \in \R^m$ and the
+slack $s \in \R^m$. The data are a sparse symmetric positive semidefinite
+$P \in \Sym_+^n$, a sparse $A \in \R^{m \times n}$, dense vectors
+$c \in \R^n$ and $b \in \R^m$, and a nonempty closed convex cone
+$\K \subseteq \R^m$ with dual cone $\K^*$.
+
+\subsection{Optimality conditions}
+
+When strong duality holds the Karush--Kuhn--Tucker conditions are necessary and
+sufficient for optimality \cite{boyd:04}. For \eqref{eq:problem} they read
+\begin{equation}\label{eq:kkt}
+Ax + s = b,\qquad Px + A\tr y + c = 0,\qquad
+s \in \K,\qquad y \in \K^*,\qquad s \perp y,
+\end{equation}
+that is, primal feasibility, dual feasibility, primal and dual cone membership,
+and complementary slackness. At any point satisfying the first four conditions,
+the last is equivalent to a zero duality gap,
+\begin{equation}\label{eq:gap}
+s \perp y \quad\Longleftrightarrow\quad c\tr x + b\tr y + x\tr P x = 0 .
+\end{equation}
+
+\subsection{Certificates of infeasibility}
+
+If no optimal solution exists, \eqref{eq:kkt} has no solution, but one of two
+certificates does. Any $y \in \R^m$ with
+\begin{equation}\label{eq:pinfeas}
+A\tr y = 0,\qquad y \in \K^*,\qquad b\tr y < 0
+\end{equation}
+proves the primal problem infeasible (equivalently, the dual unbounded); and
+any $x \in \R^n$ with
+\begin{equation}\label{eq:dinfeas}
+Px = 0,\qquad -Ax \in \K,\qquad c\tr x < 0
+\end{equation}
+proves the dual infeasible (the primal unbounded). Section~\ref{sec:term} gives
+the numerical tests SCS actually applies.
+
+\subsection{Cones}\label{sec:cones}
+
+$\K$ is a Cartesian product of the primitive cones in
+Table~\ref{tab:cones}. The rows of $A$ and $b$ must be ordered to match the
+order of that table, and within each cone must follow the order in the
+mathematical description --- for the box and second-order cones, for instance,
+the scalar $t$ comes first.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}l>{$}l<{$}l@{}}
+\toprule
+Cone & \text{Definition} & \texttt{ScsCone} field \\
+\midrule
+Zero          & \{s \mid s = 0\}                                          & \texttt{z} \\
+Nonnegative   & \{s \mid s \geq 0\}                                       & \texttt{l} \\
+Box           & \{(t,s) \in \R \times \R^k \mid t\,l \leq s \leq t\,u\} & \texttt{bl}, \texttt{bu}, \texttt{bsize} \\
+Second-order  & \{(t,s) \in \R \times \R^k \mid \|s\|_2 \leq t\}          & \texttt{q}, \texttt{qsize} \\
+Semidefinite  & \{s \in \R^{k(k+1)/2} \mid \mathrm{mat}(s) \succeq 0\}    & \texttt{s}, \texttt{ssize} \\
+Complex SD    & \{s \in \R^{k^2} \mid \mathrm{mat}(s) \succeq 0\}         & \texttt{cs}, \texttt{cssize} \\
+Exponential   & \{(x,y,z) \mid y e^{x/y} \leq z,\ y > 0\}                 & \texttt{ep} \\
+Dual exp.     & \{(u,v,w) \mid -u e^{v/u} \leq e w,\ u < 0\}              & \texttt{ed} \\
+Power         & \{(x,y,z) \mid x^p y^{1-p} \geq |z|\}                     & \texttt{p}, \texttt{psize} \\
+\midrule
+\multicolumn{3}{@{}l@{}}{\emph{Spectral cones (experimental; require \texttt{USE\_SPECTRAL\_CONES=1})}}\\
+Log-determinant & \{(t,v,X) \mid t \leq v \log\det(X/v),\ v>0,\ X \succ 0\} & \texttt{d}, \texttt{dsize} \\
+Nuclear norm    & \{(t,X) \mid \|X\|_* \leq t\}                             & \texttt{nuc\_m}, \texttt{nuc\_n} \\
+$\ell_1$ norm   & \{(t,x) \mid \|x\|_1 \leq t\}                             & \texttt{ell1}, \texttt{ell1\_size} \\
+Sum-of-largest-$\lambda$ & \{(t,X) \mid \textstyle\sum_{i=1}^k \lambda_i(X) \leq t\} & \texttt{sl\_n}, \texttt{sl\_k} \\
+\bottomrule
+\end{tabular}
+\caption{The primitive cones. Semidefinite cones are passed in a scaled
+lower-triangular vectorization; see the API documentation for the exact
+convention.}
+\label{tab:cones}
+\end{table}
+
+All the algorithm needs from a cone is its Euclidean projection: given $z_0$,
+solve
+\begin{equation}\label{eq:coneproj}
+\proj{\K}(z_0) = \operatorname*{argmin}_{z \in \K} \|z - z_0\|_2^2 .
+\end{equation}
+For every cone in Table~\ref{tab:cones} this has either a closed form or a
+cheap one-dimensional root-find; the semidefinite and spectral cones need an
+eigendecomposition, which is why they require LAPACK.
+
+% ===========================================================================
+\section{The homogeneous embedding}\label{sec:embedding}
+% ===========================================================================
+
+The optimality conditions \eqref{eq:kkt} are a monotone complementarity problem
+in $(x,y,s)$. To make them homogeneous --- so that infeasibility appears as a
+solution rather than as the absence of one --- introduce a scalar
+$\tau \geq 0$ that multiplies $b$ and $c$, and a scalar $\kappa \geq 0$
+complementary to it.
+
+Let $u = (x, y, \tau) \in \R^{n+m+1}$ and let
+\begin{equation}\label{eq:Q}
+\Q = \begin{bmatrix} P & A\tr & c \\ -A & 0 & b \\ -c\tr & -b\tr & 0
+     \end{bmatrix},
+\qquad
+\C = \R^n \times \K^* \times \R_+ ,
+\end{equation}
+so that $\Q$ is the sum of a positive semidefinite and a skew-symmetric matrix,
+hence monotone, and $\C$ is a closed convex cone. The embedded problem is
+\begin{equation}\label{eq:embedding}
+\text{find } u \in \C \quad\text{such that}\quad 0 \in \Q u + \N_\C(u),
+\end{equation}
+where $\N_\C$ is the normal cone of $\C$. A solution always exists.
+
+Write $v = \Q u = (r, s, \kappa)$. Unpacking \eqref{eq:embedding} block by
+block gives $r = Px + A\tr y + c\tau = 0$, then $-Ax + b\tau = s$ with
+$s \in \K$, $s \perp y$, and finally $-c\tr x - b\tr y = \kappa \geq 0$ with
+$\tau \kappa = 0$. Two cases follow.
+
+\begin{itemize}
+\item \textbf{$\tau > 0$, $\kappa = 0$.} Then $(x, y, s)/\tau$ satisfies
+  \eqref{eq:kkt} exactly: dividing through, $Ax + s = b$, $Px + A\tr y + c = 0$,
+  $s \in \K$, $y \in \K^*$ and $c\tr x + b\tr y = 0$, which by \eqref{eq:gap}
+  is complementary slackness. We recover the solution of \eqref{eq:problem} by
+  scaling.
+\item \textbf{$\tau = 0$, $\kappa > 0$.} Then $c\tr x + b\tr y = -\kappa < 0$
+  while $A\tr y = -Px$, $-Ax = s \in \K$, $y \in \K^*$. At least one of
+  $b\tr y < 0$ and $c\tr x < 0$ holds, giving a certificate
+  \eqref{eq:pinfeas} or \eqref{eq:dinfeas}. If a problem is simultaneously
+  primal and dual infeasible, SCS returns whichever certificate it finds first;
+  the usual reading of primal infeasibility as dual unboundedness does not
+  apply in that case.
+\end{itemize}
+
+The pair $(\tau = 0, \kappa = 0)$ is possible but uninformative; it corresponds
+to a problem that is neither solvable nor certifiably infeasible in the above
+sense, and in practice shows up as the residuals stalling.
+
+% ===========================================================================
+\section{Douglas--Rachford splitting}\label{sec:dr}
+% ===========================================================================
+
+Problem \eqref{eq:embedding} asks for a zero of the sum of two monotone
+operators, $\Q$ (linear, monotone) and $\N_\C$ (the normal cone, maximal
+monotone). Douglas--Rachford splitting \cite{lions:79} handles exactly this
+sum: from an initial $w^0$, for $k = 0, 1, \dots$,
+\begin{align}\label{eq:dr}
+\tilde u^{k+1} &= (I + \Q)^{-1} w^k, \nonumber\\
+u^{k+1} &= \proj{\C}\!\left(2\tilde u^{k+1} - w^k\right), \\
+w^{k+1} &= w^k + u^{k+1} - \tilde u^{k+1}, \nonumber
+\end{align}
+using that the resolvent of $\N_\C$ is the projection onto $\C$. The iterates
+satisfy $u^k \to u^\star$ with $u^\star$ solving \eqref{eq:embedding}, and
+$w^k \to u^\star + \Q u^\star$.
+
+\subsection{Relaxation}
+
+The third step admits a relaxation parameter $\alpha \in (0,2)$:
+\begin{equation}\label{eq:relax}
+w^{k+1} = w^k + \alpha\left(u^{k+1} - \tilde u^{k+1}\right).
+\end{equation}
+Plain Douglas--Rachford is $\alpha = 1$; $\alpha < 1$ is under-relaxation and
+$\alpha > 1$ over-relaxation. Values around $1.5$ work well in practice and
+$\alpha = 1.5$ is the default (setting \texttt{alpha}). At $\alpha = 2$ the
+method becomes Peaceman--Rachford splitting, which is not convergent in
+general.
+
+\subsection{A diagonal metric}\label{sec:metric}
+
+Convergence is much improved by running the splitting in a metric other than
+the Euclidean one. Replace $I$ by a positive diagonal
+$R \in \R^{(n+m+1)\times(n+m+1)}$:
+\begin{align}\label{eq:drR}
+\tilde u^{k+1} &= (R + \Q)^{-1} R\, w^k, \nonumber\\
+u^{k+1} &= (R + \N_\C)^{-1} R \left(2\tilde u^{k+1} - w^k\right), \\
+w^{k+1} &= w^k + \alpha\left(u^{k+1} - \tilde u^{k+1}\right), \nonumber
+\end{align}
+which converges to $w^k \to u^\star + R^{-1}\Q u^\star$ for the same
+$u^\star$. The relaxation $\alpha$ and the metric $R$ do not interact, so the
+two modifications compose directly.
+
+The second step of \eqref{eq:drR} is a projection in the $R$-norm
+$\|x\|_R = \sqrt{x\tr R x}$, which for a general $R$ is not the Euclidean
+projection \eqref{eq:coneproj} and would need a different routine for every
+cone. SCS avoids this by constraining $R$ to be constant within each cone
+block.
+
+\begin{proposition}\label{prop:metric}
+Let $\K$ be a cone and $r > 0$ a scalar. Then
+$(rI + \partial I_\K)^{-1}(r y) = \proj{\K}(y)$, where $I_\K$ is the indicator
+of $\K$. Consequently, if $R$ is constant on each cone block of $\C$, then
+$(R + \partial I_\C)^{-1} R = (I + \partial I_\C)^{-1} = \proj{\C}$.
+\end{proposition}
+
+\begin{proof}
+Let $x = (rI + \partial I_\K)^{-1}(ry)$. Then
+$0 \in r(x - y) + \partial I_\K(x)$, and dividing by $r > 0$ gives
+$0 \in (x - y) + \partial I_\K(x)$, whose solution is
+$x = \operatorname*{argmin}_{z\in\K}\|z-y\|_2^2$.
+\end{proof}
+
+So with $R$ blockwise constant the existing Euclidean projections are reused
+unchanged, and $R$ only affects the linear solve. SCS takes
+\begin{equation}\label{eq:R}
+R = \begin{bmatrix} \rho_x I_n & 0 & 0 \\
+                    0 & \diag(\rho_y) & 0 \\
+                    0 & 0 & d \end{bmatrix},
+\qquad \rho_x \in \R,\ \rho_y \in \R^m,\ d \in \R .
+\end{equation}
+Here $\rho_x$ is the setting \texttt{rho\_x} (default $10^{-6}$), $d$ is the
+constant \texttt{TAU\_FACTOR} in \texttt{include/glbopts.h} (default $10$), and
+$\rho_y \approx (1/\texttt{scale})\,I$ with the \texttt{scale} parameter
+updated adaptively as described in Section~\ref{sec:adaptive}. The zero cone is
+the one exception to the approximation, taking
+$\rho_y = 1/(1000\,\texttt{scale})$; the box cone is a mild exception to
+blockwise constancy. Note $d$ enters the algorithm only through the scalar
+root-find of Section~\ref{sec:linsys}, so there is considerable freedom in
+choosing it, and how best to do so is open.
+
+\subsection{Recovering the dual variable}
+
+The iterate $u^k = (x^k, y^k, \tau^k)$ carries the primal and dual variables,
+but not the slack. The companion vector
+\begin{equation}\label{eq:v}
+v^{k+1} = R\left(u^{k+1} + w^k - 2\tilde u^{k+1}\right) \to \Q u^\star
+\end{equation}
+supplies $(r^k, s^k, \kappa^k)$. That $v^{k+1} \in \C^*$ follows from the
+Moreau decomposition under a diagonal metric,
+\begin{equation}\label{eq:moreau}
+x + R^{-1}\proj{\C^*}^{R^{-1}}(-Rx) = \proj{\C}^{R}(x),
+\end{equation}
+applied to \eqref{eq:v}:
+\[
+v^{k+1}
+= R\left(\proj{\C}^R(2\tilde u^{k+1} - w^k) + w^k - 2\tilde u^{k+1}\right)
+= \proj{\C^*}^{R^{-1}}\!\left(R(w^k - 2\tilde u^{k+1})\right) \in \C^* .
+\]
+The two components of \eqref{eq:moreau} are $R$-orthogonal, so
+$v^k \perp u^k$. This is the reason the iterates satisfy $s \in \K$,
+$y \in \K^*$ and $s \perp y$ \emph{exactly} at every iteration --- a fact the
+termination criteria of Section~\ref{sec:term} rely on.
+
+% ===========================================================================
+\section{The two expensive steps}
+% ===========================================================================
+
+\subsection{The linear system}\label{sec:linsys}
+
+The first step of \eqref{eq:drR} requires applying $(R + \Q)^{-1}$, a system of
+size $n + m + 1$ whose last row and column carry the dense vectors $b$ and $c$.
+SCS reduces it to a system of size $n + m$ with a fixed sparse matrix, plus a
+scalar quadratic.
+
+Split $w^k = (\mu^k, \eta^k)$ with $\mu^k \in \R^{n+m}$ and
+$\eta^k \in \R$, write $R_{-1}$ for the leading $(n+m)$ block of $R$, and set
+\begin{equation}
+M = \begin{bmatrix} P & A\tr \\ -A & 0 \end{bmatrix},
+\qquad
+h = \begin{bmatrix} c \\ -b \end{bmatrix} .
+\end{equation}
+Then $\tilde u^{k+1}_{-1} = p^k - \tau^{k+1} g$, where
+\begin{equation}\label{eq:pg}
+p^k = (R_{-1} + M)^{-1} R_{-1}\mu^k,
+\qquad
+g = (R_{-1} + M)^{-1} h ,
+\end{equation}
+and $\tau^{k+1}$ is the positive root of $a\tau^2 + b\tau + c_0 = 0$ with
+\begin{equation}\label{eq:rootplus}
+a = d + g\tr R_{-1} g, \qquad
+b = \mu^{k\top} R_{-1} g - 2 p^{k\top} R_{-1} g - d\,\eta^k, \qquad
+c_0 = p^{k\top} R_{-1} p^k - p^{k\top} R_{-1}\mu^k .
+\end{equation}
+The vector $g$ depends only on the data and on $R$, so it is computed once
+(and recomputed whenever $R$ changes) and cached; each iteration therefore
+costs one solve for $p^k$, five weighted inner products, and a root-find. This
+is the \texttt{root\_plus} routine in \texttt{src/scs.c}.
+
+The remaining solve is with
+\begin{equation}\label{eq:kkt-mat}
+\begin{bmatrix} R_x + P & A\tr \\ A & -R_y \end{bmatrix}
+\begin{bmatrix} x \\ y \end{bmatrix}
+=
+\begin{bmatrix} z^k_x \\ z^k_y \end{bmatrix},
+\end{equation}
+the sign of the $R_y$ block flipped to make the matrix quasi-definite (the
+solution of the original system is recovered from this one). Two properties
+matter:
+
+\begin{itemize}
+\item The matrix is \emph{constant} across iterations, changing only when
+  \texttt{scale} is updated. A direct method factorizes it once and reuses the
+  factors.
+\item The system may be solved \emph{approximately}, provided the errors are
+  summable. This is what admits iterative and matrix-free solvers.
+\end{itemize}
+
+Table~\ref{tab:linsys} lists the backends in \texttt{linsys/}. The default
+sparse direct solver computes a permuted $LDL\tr$ factorization using the
+bundled AMD \cite{amd} ordering and QDLDL \cite{qdldl}; quasi-definiteness
+gives strong existence guarantees for the factorization. The indirect solver
+instead eliminates $y$ to obtain the positive definite reduced system
+\begin{equation}\label{eq:reduced}
+\left(R_x + P + A\tr R_y^{-1} A\right) x = z^k_x + A\tr R_y^{-1} z^k_y,
+\qquad y = R_y^{-1}\left(Ax - z^k_y\right),
+\end{equation}
+and solves it by conjugate gradients, each iteration costing one product each
+with $P$, $A$ and $A\tr$. The tolerance of each solve is a small fraction
+(\texttt{CG\_TOL\_FACTOR}) of the smaller of the current primal and dual
+residuals, capped by a term decaying like $O(1/k^{\texttt{CG\_RATE}})$ and
+floored at \texttt{CG\_BEST\_TOL}; solves are warm-started from the previous
+solution. The implementation also harvests approximate eigenvectors of the
+reduced matrix from the CG iterations themselves (eigCG, \cite{eigcg}) and
+deflates the smallest eigenvalues from later solves, which cuts CG iterations
+substantially on ill-conditioned problems at no extra matrix-multiply cost.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}llp{7.2cm}@{}}
+\toprule
+Backend & Directory & Method \\
+\midrule
+Sparse direct (default) & \texttt{linsys/cpu/direct}     & Permuted $LDL\tr$ via AMD + QDLDL, factors cached \\
+Sparse indirect         & \texttt{linsys/cpu/indirect}   & Conjugate gradients on \eqref{eq:reduced}, with eigCG deflation \\
+Dense direct            & \texttt{linsys/cpu/dense}      & Cholesky (\texttt{dpotrf}) of the $n \times n$ Gram matrix $R_x + P + A\tr R_y^{-1}A$ \\
+MKL Pardiso             & \texttt{linsys/mkl/direct}     & Intel oneMKL parallel sparse direct solver \\
+Apple Accelerate        & \texttt{linsys/accelerate/direct} & Accelerate unpivoted sparse $LDL\tr$ (macOS only; no \texttt{DLONG}) \\
+cuDSS                   & \texttt{linsys/cudss/direct}   & NVIDIA cuDSS direct solve on the GPU \\
+GPU indirect            & \texttt{linsys/gpu/indirect}   & Conjugate gradients with GPU matrix products \\
+\bottomrule
+\end{tabular}
+\caption{Linear-solver backends. Each is built into its own binary; a new one
+is added by implementing \texttt{ScsLinSysWork} and the functions declared in
+\texttt{include/linsys.h}.}
+\label{tab:linsys}
+\end{table}
+
+\subsection{The cone projection}
+
+The second step of \eqref{eq:drR} is the projection \eqref{eq:coneproj} onto
+$\C = \R^n \times \K^* \times \R_+$, which splits into independent projections
+onto the blocks of Table~\ref{tab:cones}. Most are closed-form. The
+semidefinite blocks require an eigendecomposition of $\mathrm{mat}(s)$ and
+clipping of the negative eigenvalues; the exponential cone needs a damped
+Newton root-find, with a bisection fallback if it fails to converge
+(\texttt{src/exp\_cone.c}); the spectral cones
+(\texttt{src/spectral\_cones}) reduce to problems on the eigenvalues or
+singular values of the matrix argument. Because $\C$ is a product, this step
+parallelizes across blocks, which is what \texttt{USE\_OPENMP} exploits.
+
+% ===========================================================================
+\section{Scaling}\label{sec:scaling}
+% ===========================================================================
+
+The practical performance of a first-order method depends heavily on how the
+problem is scaled. SCS attacks this in two places: once, statically, on the
+data, and repeatedly, dynamically, on the metric $R$.
+
+\subsection{Data equilibration}
+
+With the \texttt{normalize} setting enabled (the default), SCS computes
+diagonal matrices $E \in \R^{n \times n}$, $D \in \R^{m \times m}$ and a scalar
+$\sigma > 0$ that whiten the data,
+\begin{equation}\label{eq:equil}
+\hat P = EPE, \qquad \hat A = DAE, \qquad \hat c = \sigma E c, \qquad
+\hat b = \sigma D b,
+\end{equation}
+which is precisely a symmetric rescaling of the matrix appearing in the
+embedding \eqref{eq:Q}:
+\begin{equation}
+\begin{bmatrix} \hat P & \hat A\tr & \hat c \\
+                \hat A & 0 & \hat b \\
+                \hat c\tr & \hat b\tr & 0 \end{bmatrix}
+=
+\begin{bmatrix} E & & \\ & D & \\ & & \sigma \end{bmatrix}
+\begin{bmatrix} P & A\tr & c \\ A & 0 & b \\ c\tr & b\tr & 0 \end{bmatrix}
+\begin{bmatrix} E & & \\ & D & \\ & & \sigma \end{bmatrix} .
+\end{equation}
+To this matrix SCS applies $25$ steps of Ruiz equilibration
+\cite{ruiz:01} followed by one step of $\ell_2$ equilibration. Both counts are
+compile-time constants (\texttt{NUM\_RUIZ\_PASSES} and
+\texttt{NUM\_L2\_PASSES}) in \texttt{linsys/scs\_matrix.c}. The $\ell_2$ pass
+uses
+root-mean-square norms --- $\ell_2$ norms divided by the number of nonzeros ---
+which keeps rows and columns of very different lengths comparable in the
+stacked matrix.
+
+The one complication is that $D$ must preserve cone membership,
+$s \in \K \Leftrightarrow D_\K s \in \K$ for each sub-cone. As with the metric
+$R$, this is enforced by restricting $D_\K = d_\K I_\K$ to be constant within
+each cone; the scalar $d_\K$ is the $\ell_\infty$ norm of the computed in-cone
+values for the Ruiz passes, and the average of the in-cone root-mean-square
+norms for the $\ell_2$ pass.
+
+Equilibration moves the fixed point, so solutions and residuals are mapped
+back. From the equilibrated solution $(\hat x, \hat y, \hat s)$,
+\begin{equation}\label{eq:unequil}
+x = E\hat x/\sigma, \qquad y = D\hat y/\sigma, \qquad s = D^{-1}\hat s/\sigma,
+\end{equation}
+and the residuals of the original problem are computed from equilibrated
+quantities as
+\begin{equation}\label{eq:unequil-res}
+r_p = \tfrac{1}{\sigma}\left\|D^{-1}(\hat A\hat x + \hat s - \hat b)\right\|,
+\quad
+r_d = \tfrac{1}{\sigma}\left\|E^{-1}(\hat P\hat x + \hat A\tr\hat y + \hat c)\right\|,
+\quad
+r_g = \tfrac{1}{\sigma^2}\left|\hat x\tr\hat P\hat x + \hat b\tr\hat y + \hat c\tr\hat x\right| ,
+\end{equation}
+under any norm. Analogous relations hold for the infeasibility certificate
+quantities. Older versions of SCS carried separate \texttt{primal\_scale} and
+\texttt{dual\_scale} parameters for $c$ and $b$; both are now the single
+$\sigma$.
+
+\subsection{Adaptive metric updates}\label{sec:adaptive}
+
+The $\rho_y$ block of $R$ in \eqref{eq:R} is governed by the \texttt{scale}
+parameter, whose best value is strongly problem dependent. With
+\texttt{adaptive\_scale} enabled (the default) SCS adjusts it during the solve,
+aiming to balance the convergence of the primal and dual residuals: loosely,
+\texttt{scale} increases when the primal residual dominates and decreases when
+the dual does.
+
+Concretely, let $l$ be the number of iterations since the last update, write
+$(x, y, \tau) = u^k$ and $(0, s, \kappa) = v^k$, and define the relative
+residuals
+\begin{equation}\label{eq:relres}
+\hat r^k_p = \frac{\|Ax + s - b\tau\|}{\max(\|Ax\|, \|s\|, \|b\tau\|)},
+\qquad
+\hat r^k_d = \frac{\|Px + A\tr y + c\tau\|}{\max(\|Px\|, \|A\tr y\|, \|c\tau\|)} ,
+\end{equation}
+in the $\ell_\infty$ norm by default (\texttt{SCALE\_NORM} in
+\texttt{glbopts.h}). Let
+\begin{equation}\label{eq:beta}
+\beta = \left(\prod_{i=0}^{l-1}
+        \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
+\end{equation}
+be the geometric mean of their ratio over those iterations. If $\beta$ leaves a
+band around $1$ (say $[1/3, 3]$) and at least \texttt{RESCALING\_MIN\_ITERS}
+(default $100$) iterations have passed since the last update, then
+\begin{equation}\label{eq:scaleupdate}
+\texttt{scale}^+ = \sqrt{\beta}\;\texttt{scale} .
+\end{equation}
+The square root damps the step, to avoid overshooting and oscillating around
+the best value. Updates are not free: with a direct linear solver a new
+\texttt{scale} means refactorizing \eqref{eq:kkt-mat}, and because the operator
+itself has changed, the Anderson acceleration history must be reset. Hence the
+minimum-iteration guard.
+
+\subsection{Per-row refinement}
+
+The update \eqref{eq:scaleupdate} moves the whole $\rho_y$ block together. With
+\texttt{adaptive\_diag\_scale} (also on by default) each row additionally
+carries its own multiplier, updated at scale-update events from that row's
+relative primal residual
+\begin{equation}\label{eq:rowres}
+\hat r^k_{p,i} = \frac{|(Ax + s - b\tau)_i|}
+                      {\max(|(Ax)_i|,\ |s_i|,\ |b_i\tau|,\ \epsilon_{\rm den})} ,
+\end{equation}
+by a damped multiplicative step towards the geometric mean of the profile,
+clamped to a bounded range. This is the dynamic analogue of the row half of
+Ruiz equilibration, driven by the residuals the algorithm actually produces
+rather than by norms of the data.
+
+Within each non-polyhedral cone block the multipliers are constrained to a form
+the projection can absorb --- by Proposition~\ref{prop:metric} a single value
+per block suffices in general, but real semidefinite blocks admit the richer
+rank-one family $w_{ij} = \delta_i\delta_j$, corresponding to the diagonal
+congruence $X \mapsto DXD$ which maps the cone to itself. That family is fitted
+per block by least squares in log space, and the projection under the resulting
+metric is computed exactly by a congruence sandwich around the
+eigendecomposition.
+
+The floor $\epsilon_{\rm den}$ in \eqref{eq:rowres} is a small fraction of the
+root-mean-square denominator across rows, and it matters more than it looks. A
+row with $b_i = 0$ divides only by $\max(|(Ax)_i|, |s_i|)$, both of which
+shrink as the iterates converge, so its ratio inflates even while the row is
+converging perfectly well. Without the floor the profile would partly report
+which terms a row happens to contain rather than how it is converging, and the
+metric would chase that artifact. Rows with denominators of ordinary size are
+unaffected. A scale update also fires when the accumulated per-row drift alone
+is large enough, so that a \texttt{scale} pinned at its limits cannot freeze
+the diagonal.
+
+% ===========================================================================
+\section{Anderson acceleration}\label{sec:aa}
+% ===========================================================================
+
+The iteration \eqref{eq:drR} is a fixed-point iteration $x^{k+1} = f(x^k)$ for
+the map $f$ that takes $w^k$ to $w^{k+1}$. Anderson acceleration (AA) is a
+quasi-Newton method for such iterations \cite{anderson:65}: instead of taking
+$f(x^k)$, it takes a linear combination of the last $m_k + 1$ outputs of the
+map,
+\begin{equation}\label{eq:aa}
+\begin{array}{l}
+\text{for } k = 0, 1, \dots \\
+\quad m_k = \min\{m, k\} \\
+\quad \text{choose } \alpha^k \text{ with } \sum_{j=0}^{m_k}\alpha^k_j = 1 \\
+\quad x^{k+1} = \sum_{j=0}^{m_k}\alpha^k_j f(x^{k-m_k+j}) ,
+\end{array}
+\end{equation}
+where $m$ is the memory (setting \texttt{acceleration\_lookback}, default
+$10$; $0$ disables AA). Everything is in the choice of the weights. Define the
+residual $g(x) = x - f(x)$, which vanishes at a fixed point, and let
+$g_i = g(x^i)$ and
+\[
+Y_k = [\,y_{k-m_k}\ \cdots\ y_{k-1}\,],\quad y_i = g_{i+1} - g_i,
+\qquad
+S_k = [\,s_{k-m_k}\ \cdots\ s_{k-1}\,],\quad s_i = x^{i+1} - x^i .
+\]
+
+\paragraph{Type-II.} Choose the weights by least squares,
+\[
+\begin{array}{ll}
+\minimize & \left\|\sum_{j=0}^{m_k} \alpha_j\, g(x^{k-m_k+j})\right\|_2^2\\[0.4em]
+\mbox{subject to} & \sum_{j=0}^{m_k} \alpha_j = 1 .
+\end{array}
+\]
+Reparametrizing by
+$\gamma \in \R^{m_k}$ via $\alpha_0 = \gamma_0$,
+$\alpha_i = \gamma_i - \gamma_{i-1}$, $\alpha_{m_k} = 1 - \gamma_{m_k-1}$ turns
+this into $\minimize \|g_k - Y_k\gamma\|_2$, with solution
+$\gamma^k = (Y_k\tr Y_k)^{-1}Y_k\tr g_k$ when $Y_k$ has full column rank. The
+update becomes
+\begin{equation}\label{eq:aa2}
+x^{k+1} = x^k - B_k g_k, \qquad
+B_k = I + (S_k - Y_k)(Y_k\tr Y_k)^{-1}Y_k\tr .
+\end{equation}
+$B_k$ minimizes $\|B - I\|_F$ subject to the inverse multi-secant condition
+$BY_k = S_k$, so it is an approximate inverse Jacobian of $g$ and
+\eqref{eq:aa2} is a quasi-Newton step --- $B_k$ is a generalized type-II
+Broyden update of $I$.
+
+\paragraph{Type-I.} Symmetrically, approximate the Jacobian itself, minimizing
+$\|H - I\|_F$ subject to $HS_k = Y_k$, which gives
+$H_k = I + (Y_k - S_k)(S_k\tr S_k)^{-1}S_k\tr$ and the update
+$x^{k+1} = x^k - H_k^{-1}g_k$. The Woodbury identity yields the cheap form
+\begin{equation}\label{eq:aa1}
+H_k^{-1} = I + (S_k - Y_k)(S_k\tr Y_k)^{-1}S_k\tr ,
+\end{equation}
+in which the only inversion is of an $m_k \times m_k$ matrix.
+
+Both types are available; type-I is the default
+(\texttt{acceleration\_type\_1}) as it tends to perform better, while type-II
+is more numerically stable but usually slower. Users switching to type-II
+typically also lower \texttt{acceleration\_regularization}, whose default is
+tuned for type-I.
+
+\paragraph{Regularization.} A small $\epsilon > 0$ is added to the matrices
+being inverted: $(Y_k\tr Y_k + \epsilon I)^{-1}$ for type-II, and
+$(S_k\tr Y_k + \epsilon I)^{-1}$ for type-I (equivalent to regularizing
+$S_k\tr S_k$ before applying Woodbury). Besides guaranteeing invertibility,
+this shrinks the AA step towards the unaccelerated one: as
+$\epsilon \to \infty$, $\gamma^\star \to 0$ and \eqref{eq:aa} reduces to
+$x^{k+1} = f(x^k)$. Type-I typically needs more regularization than type-II.
+The regularization folds into the factorizations by appending
+$\sqrt{\epsilon}I$ below $S_k$ or $Y_k$.
+
+\paragraph{In this implementation.} The linear algebra lives in
+\texttt{src/aa.c}. The solve folds the Tikhonov rows into the
+augmented matrix, takes its rank-revealing pivoted QR factorization with LAPACK
+\texttt{geqp3}, truncates by rank, and applies a few steps of iterative
+refinement to the $\gamma$ solve. This keeps the update stable as the columns of $S_k$ and $Y_k$
+become nearly dependent near convergence. An SVD-based solve would be
+similarly rank-revealing but is markedly more expensive per iteration.
+
+The setting \texttt{acceleration\_interval} (default $5$) applies AA every
+$k$th iteration, ignoring the intermediate ones. This makes AA $k$ times
+cheaper, approximates a $k$ times longer memory, and decorrelates the data,
+at the risk of staler iterates. Sweeps over the netlib LP and Maros--Meszaros
+QP collections found $5$ robust: intervals near $1$ destabilize the
+least-squares fit, and very large intervals leave acceleration idle. Solve
+diagnostics --- acceptances, rejection causes, the rank of the last solve, the
+last weight norm and the regularization used --- are reported in the
+\texttt{aa\_stats} field of \texttt{ScsInfo}.
+
+AA can dramatically speed up convergence, particularly when high accuracy is
+wanted, and can also destabilize the solver badly. How best to deploy it
+across all problems is an open question, and contributions in that direction
+are welcome.
+
+% ===========================================================================
+\section{Termination}\label{sec:term}
+% ===========================================================================
+
+Because the Moreau decomposition \eqref{eq:moreau} is exact, the iterates
+\emph{always} satisfy $s \in \K$, $y \in \K^*$ and $s \perp y$. Of the KKT
+conditions \eqref{eq:kkt} only primal feasibility, dual feasibility and the
+duality gap \eqref{eq:gap} can be violated, so termination reduces to three
+residual tests. SCS stops and reports success when it has $x$, $s$, $y$ with
+\begin{align}
+r_p &:= \|Ax + s - b\|_\infty
+      \leq \epsilon_{\rm abs} + \epsilon_{\rm rel}
+            \max(\|Ax\|_\infty, \|s\|_\infty, \|b\|_\infty),
+      \label{eq:tp}\\
+r_d &:= \|Px + A\tr y + c\|_\infty
+      \leq \epsilon_{\rm abs} + \epsilon_{\rm rel}
+            \max(\|Px\|_\infty, \|A\tr y\|_\infty, \|c\|_\infty),
+      \label{eq:td}\\
+r_g &:= |x\tr Px + c\tr x + b\tr y|
+      \leq \epsilon_{\rm abs} + \epsilon_{\rm rel}
+            \max(|x\tr Px|, |c\tr x|, |b\tr y|),
+      \label{eq:tg}
+\end{align}
+where $\epsilon_{\rm abs}$ and $\epsilon_{\rm rel}$ are the settings
+\texttt{eps\_abs} and \texttt{eps\_rel} (both $10^{-4}$ by default). The
+$\ell_\infty$ norm can be changed by redefining \texttt{NORM} in
+\texttt{include/glbopts.h}.
+
+Infeasibility is declared from the same iterates. SCS reports the problem
+\textbf{primal infeasible} (dual unbounded) on finding $y$ with
+\begin{equation}\label{eq:tpinf}
+b\tr y = -1, \qquad
+\|A\tr y\|_\infty < \epsilon_{\rm infeas}
+  \cdot \min\!\left(1, \frac{\max_{ij}|A_{ij}|}{\|b\|_\infty}\right),
+\end{equation}
+and \textbf{dual infeasible} (primal unbounded) on finding $x$, $s$ with
+\begin{equation}\label{eq:tdinf}
+c\tr x = -1, \qquad
+\|Px\|_\infty < \epsilon_{\rm infeas}, \qquad
+\|Ax + s\|_\infty < \epsilon_{\rm infeas}
+  \cdot \min\!\left(1, \frac{\max_{ij}|A_{ij}|}{\|c\|_\infty}\right),
+\end{equation}
+where $\epsilon_{\rm infeas}$ is the setting \texttt{eps\_infeas} (default
+$10^{-7}$).
+
+The $\min(1,\cdot)$ factors deserve a word. The normalizations $b\tr y = -1$
+and $c\tr x = -1$ otherwise bake the magnitude of the data into the effective
+tolerance: with $\|c\|_\infty \sim 10^6$, a normalized certificate $x$ has norm
+$\sim 10^{-6}$, and the unscaled test is six orders of magnitude looser than
+intended --- enough to declare a badly scaled feasible problem infeasible. The
+factors only ever tighten the tests. As a further guard against transient
+iterates that momentarily pass --- those produced by an AA step, for instance
+--- the certificate conditions must hold at two consecutive residual checks
+before SCS declares infeasibility.
+
+% ===========================================================================
+\section{The software}
+% ===========================================================================
+
+SCS is written in C99, and CI checks that it also compiles cleanly as
+C++. It has no mandatory external dependencies: AMD and QDLDL are vendored
+under \texttt{linsys/external}, and BLAS/LAPACK --- needed for the semidefinite
+and spectral cones and for Anderson acceleration --- is on by default but can
+be compiled out. The library is MIT licensed.
+
+\subsection{Layout}
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Path & Contents \\
+\midrule
+\texttt{include/}    & Public API (\texttt{scs.h}) and internal headers \\
+\texttt{src/}        & Core solver: \texttt{scs.c}, cone projections, equilibration, AA, linear algebra \\
+\texttt{src/spectral\_cones/} & Log-det, nuclear-norm, $\ell_1$ and sum-of-largest-eigenvalue cones \\
+\texttt{linsys/}     & Linear-solver backends (Table~\ref{tab:linsys}) and matrix utilities \\
+\texttt{linsys/external/} & Vendored AMD and QDLDL \\
+\texttt{test/}       & Test suite (minunit), problem instances, packaging checks \\
+\texttt{docs/src/}   & Sphinx documentation source \\
+\texttt{docs/paper/} & This document \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{C API}
+
+The one-shot entry point is
+\begin{verbatim}
+    scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
+                ScsSolution *sol, ScsInfo *info);
+\end{verbatim}
+which returns an exit flag and fills \texttt{sol} with $(x, y, s)$ --- or with
+a certificate --- and \texttt{info} with residuals, timings, iteration count
+and AA diagnostics. Settings are initialized with
+\texttt{scs\_set\_default\_settings}.
+
+For a sequence of related problems the workspace is reused:
+\begin{verbatim}
+    ScsWork *w = scs_init(&d, &k, &stgs);     /* factorize, equilibrate */
+    scs_solve(w, &sol, &info, /* warm_start = */ 0);
+    scs_update(w, b_new, c_new);              /* new b and/or c */
+    scs_solve(w, &sol, &info, /* warm_start = */ 1);
+    scs_finish(w);
+\end{verbatim}
+As long as $A$ and $P$ are unchanged, \texttt{scs\_update} accepts new $b$ and
+$c$ while the factorization and the equilibration stay cached, which is a large
+saving. Warm starting is requested by the \texttt{warm\_start} setting, with
+the guess supplied in the \texttt{x}, \texttt{y}, \texttt{s} members of
+\texttt{ScsSolution} in the standard form \eqref{eq:problem}; those members are
+overwritten with the solution at termination. Both mechanisms pay off when
+solving a sequence of related problems --- a model-predictive-control loop, or
+a full regularization path for the lasso.
+
+\subsection{Build configuration}
+
+Both a Makefile and a CMake build are provided:
+\begin{verbatim}
+    make                       # direct + indirect solvers, with BLAS/LAPACK
+    make test && ./out/run_tests_direct
+
+    cmake -DBUILD_TESTING=ON -DUSE_LAPACK=ON .. && cmake --build . && ctest
+\end{verbatim}
+The main compile-time options are:
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Flag & Default & Effect \\
+\midrule
+\texttt{USE\_LAPACK}          & on  & BLAS/LAPACK; required for SD and spectral cones, and for AA \\
+\texttt{DLONG}                & off & 64-bit integer indexing \\
+\texttt{SFLOAT}               & off & Single-precision floats \\
+\texttt{USE\_SPECTRAL\_CONES} & off & Spectral cones (experimental; requires LAPACK) \\
+\texttt{USE\_OPENMP}          & off & OpenMP parallelism \\
+\bottomrule
+\end{tabular}
+\end{center}
+Each linear
+solver is built into its own binary, so switching backends when linking
+directly against SCS means linking the corresponding library; through a
+language interface it is a setting.
+
+\subsection{Interfaces}
+
+The C library is wrapped for Python (\texttt{pip install scs}), Julia
+(\texttt{SCS.jl}), R, MATLAB, Ruby, and JavaScript via WebAssembly. SCS is a
+supported solver in CVX, CVXPY, YALMIP, Convex.jl and JuMP; in CVXPY it is the
+default for semidefinite, exponential-cone and power-cone problems.
+
+\subsection{Testing}
+
+The suite in \texttt{test/} uses the minunit framework and runs against every
+linear-solver backend that is built, checking solutions, infeasibility
+certificates, warm starts, workspace reuse, settings round-tripping and
+problem-file I/O. Spectral-cone tests are skipped unless the build enables
+them. Continuous integration additionally covers the MKL, OpenMP, cuDSS and
+GPU backends, CMake consumption by a downstream project, a Valgrind run, and
+the documentation build.
+
+% ===========================================================================
+\section{Citing}\label{sec:citing}
+% ===========================================================================
+
+The original method and its initial numerical results are in
+\cite{ocpb:16}; the quadratic extension and the homogeneous embedding
+implemented here are in \cite{odonoghue:21}; the Anderson acceleration
+scheme is from \cite{aa2020}. To cite a specific version of the software,
+see \texttt{CITATION.cff} in the repository root.
+
+% ===========================================================================
+\begin{thebibliography}{9}
+
+\bibitem{ocpb:16}
+B.~O'Donoghue, E.~Chu, N.~Parikh and S.~Boyd,
+\emph{Conic optimization via operator splitting and homogeneous self-dual
+embedding},
+Journal of Optimization Theory and Applications, 169(3):1042--1068, 2016.
+
+\bibitem{odonoghue:21}
+B.~O'Donoghue,
+\emph{Operator splitting for a homogeneous embedding of the linear
+complementarity problem},
+SIAM Journal on Optimization, 31(3):1999--2023, 2021.
+
+\bibitem{aa2020}
+J.~Zhang, B.~O'Donoghue and S.~Boyd,
+\emph{Globally convergent type-I Anderson acceleration for non-smooth
+fixed-point iterations},
+SIAM Journal on Optimization, 30(4):3170--3197, 2020.
+
+\bibitem{anderson:65}
+D.~G.~Anderson,
+\emph{Iterative procedures for nonlinear integral equations},
+Journal of the ACM, 12(4):547--560, 1965.
+
+\bibitem{lions:79}
+P.-L.~Lions and B.~Mercier,
+\emph{Splitting algorithms for the sum of two nonlinear operators},
+SIAM Journal on Numerical Analysis, 16(6):964--979, 1979.
+
+\bibitem{boyd:04}
+S.~Boyd and L.~Vandenberghe,
+\emph{Convex Optimization},
+Cambridge University Press, 2004.
+
+\bibitem{ruiz:01}
+D.~Ruiz,
+\emph{A scaling algorithm to equilibrate both rows and columns norms in
+matrices},
+Technical Report RAL-TR-2001-034, Rutherford Appleton Laboratory, 2001.
+
+\bibitem{amd}
+P.~R.~Amestoy, T.~A.~Davis and I.~S.~Duff,
+\emph{Algorithm 837: AMD, an approximate minimum degree ordering algorithm},
+ACM Transactions on Mathematical Software, 30(3):381--388, 2004.
+
+\bibitem{qdldl}
+B.~Stellato, G.~Banjac, P.~Goulart, A.~Bemporad and S.~Boyd,
+\emph{OSQP: an operator splitting solver for quadratic programs},
+Mathematical Programming Computation, 12(4):637--672, 2020.
+
+\bibitem{eigcg}
+A.~Stathopoulos and K.~Orginos,
+\emph{Computing and deflating eigenvalues while solving multiple right-hand
+side linear systems with an application to quantum chromodynamics},
+SIAM Journal on Scientific Computing, 32(1):439--462, 2010.
+
+\end{thebibliography}
+
+\end{document}

@@ -26,8 +26,11 @@ local.mk
 *.out
 
 # Documentation (generated)
+# `make docs` copies the built HTML site into docs/, so the directory is
+# ignored wholesale and the hand-written sources are added back.
 docs/*
 !docs/src
+!docs/paper
 
 # MATLAB
 *.mex*

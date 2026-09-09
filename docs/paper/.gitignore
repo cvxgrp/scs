@@ -1,0 +1,6 @@
+# pdflatex build products
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
