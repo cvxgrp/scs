@@ -40,3 +40,56 @@ jobs:
           "${CUDA_PATH}/bin/nvcc" --version
           make cudss CUDA_PATH="${CUDA_PATH}"
       # - run: out/run_tests_cudss           # gpus not available yet
+
+  # Regression test for cvxgrp/scs#322. linsys/gpu/*.c are compiled by $(CC),
+  # not by nvcc, so they include the CUDA headers directly and driver_types.h
+  # pulls in crt/host_defines.h. Up to CUDA 12 those crt headers shipped inside
+  # cuda_nvcc; CUDA 13 split them into a separate cuda_crt redistributable, so
+  # a package build that installs only the runtime components dies with
+  #   driver_types.h:59: fatal error: crt/host_defines.h: No such file
+  # The `linux` job above installs the full apt toolkit and so never sees this.
+  # Here we assemble the minimal component set from the redistributable
+  # tarballs -- the way downstream packagers build SCS -- on both sides of the
+  # split. Bump the 13.x pin when a newer CUDA reshuffles the layout again.
+  cuda-redist:
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda: ['12.6.0', '13.0.0']
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - run: sudo apt-get update && sudo apt-get install -y libopenblas-dev liblapack-dev
+
+      - name: Assemble CUDA ${{ matrix.cuda }} from redistributables
+        run: |
+          set -euo pipefail
+          base=https://developer.download.nvidia.com/compute/cuda/redist
+          prefix="$PWD/cuda"
+          mkdir -p "$prefix"
+          curl -sSfL -o redist.json "$base/redistrib_${{ matrix.cuda }}.json"
+          # cuda_crt only exists from CUDA 13 on; before that the crt headers
+          # were part of cuda_nvcc.
+          crt=cuda_crt
+          python3 -c "import json; exit(0 if 'cuda_crt' in json.load(open('redist.json')) else 1)" || crt=cuda_nvcc
+          echo "crt headers come from $crt"
+          # libnvjitlink is not used directly, but libcusparse.so records it as
+          # a dependency and the linker has to resolve it.
+          for pkg in cuda_cudart libcublas libcusparse libnvjitlink "$crt"; do
+            path=$(python3 -c "import json; print(json.load(open('redist.json'))['$pkg']['linux-x86_64']['relative_path'])")
+            echo "==> $pkg"
+            curl -sSfL "$base/$path" | tar -xJ --strip-components=1 -C "$prefix"
+          done
+          echo "CUDA_PATH=$prefix" >> "$GITHUB_ENV"
+
+      - name: Check the headers host-compiled sources need are present
+        run: |
+          # The exact file whose absence produced the error in #322.
+          test -f "$CUDA_PATH/include/crt/host_defines.h"
+
+      - run: CFLAGS=-Werror=implicit-function-declaration make gpu CUDA_PATH="$CUDA_PATH"
+      - run: make test_gpu CUDA_PATH="$CUDA_PATH"
+      # Running out/run_tests_gpu_indirect needs a device; only the build is
+      # checked here, which is all #322 was about.

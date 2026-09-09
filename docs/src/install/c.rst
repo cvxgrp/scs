@@ -215,6 +215,21 @@ binaries in the out folder corresponding to the GPU version.  Note that the GPU
   make gpu DLONG=0
   out/run_tests_gpu_indirect
 
+The GPU sources are compiled by the host C compiler rather than by
+:code:`nvcc`, so they include the CUDA headers directly.  This means the
+:code:`crt` headers must be present alongside the runtime: up to CUDA 12 they
+were part of the :code:`cuda_nvcc` component, whereas CUDA 13 moved them into a
+separate :code:`cuda_crt` component.  A partial installation that omits it
+fails with
+
+.. code:: text
+
+  driver_types.h:59:30: fatal error: crt/host_defines.h: No such file or directory
+
+Installing the full CUDA toolkit pulls the component in automatically; only
+builds that pick individual components (distribution packaging, for instance)
+need to request it explicitly.
+
 Finally, to compile and test the :ref:`cuDSS solver <cudss_solver>` you need to
 have CUDA toolkit, the :code:`nvcc` compiler, and `cuDSS
 <https://developer.nvidia.com/cudss>`_ library installed.  Then set
