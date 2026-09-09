@@ -22,8 +22,9 @@ make purge
 ```
 
 > **The spectral-cone tests are skipped by default.** `USE_SPECTRAL_CONES`
-> defaults to `0` (see `scs.mk`), so a default `make test` reports nine tests
-> as `skipped` and exercises none of `src/spectral_cones/` — while still
+> defaults to `0` (see `scs.mk`), so a default `make test` reports the
+> spectral-cone tests as `skipped` (the summary line at the end of a run counts
+> and names them) and exercises none of `src/spectral_cones/` — while still
 > printing `ALL TESTS PASSED`. If you touch the log-determinant, nuclear-norm,
 > sum-of-largest or ell1 cone code, build and test with the flag enabled:
 >

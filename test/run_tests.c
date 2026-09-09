@@ -34,15 +34,20 @@
 
 int tests_run = 0;
 int tests_failed = 0;
+int tests_skipped = 0;
 const char *failed_tests[MU_MAX_FAILED_TESTS];
+const char *skipped_tests[MU_MAX_FAILED_TESTS];
+const char *const mu_skipped = "skipped";
 
-/* decrement tests_run since mu_unit will increment it, so this cancels */
+/* Number of mu_run_test calls in all_tests() below. A build flag can compile a
+ * test out, in which case _SKIP replaces it with a stub that reports itself
+ * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
+ * that silently loses tests therefore fails instead of printing ALL TESTS
+ * PASSED. Bump this when adding a test. */
+#define MU_TOTAL_TESTS 71
+
 #define _SKIP(problem)                                                         \
-  char *problem(void) {                                                        \
-    scs_printf("skipped\n");                                                   \
-    tests_run--;                                                               \
-    return 0;                                                                  \
-  }
+  static const char *problem(void) { return mu_skipped; }
 
 #if NO_VALIDATE == 0
 #include "problems/test_validation.h"
@@ -186,6 +191,21 @@ static void all_tests(void) {
 int main(void) {
   int i;
   all_tests();
+  scs_printf("Tests run: %d, skipped: %d, total: %d\n", tests_run, tests_skipped,
+             MU_TOTAL_TESTS);
+  if (tests_skipped > 0) {
+    scs_printf("Skipped (compiled out by build flags):");
+    for (i = 0; i < tests_skipped && i < MU_MAX_FAILED_TESTS; ++i) {
+      scs_printf(" %s", skipped_tests[i]);
+    }
+    scs_printf("\n");
+  }
+  if (tests_run + tests_skipped != MU_TOTAL_TESTS) {
+    scs_printf("TEST COUNT MISMATCH: %d run + %d skipped != %d expected "
+               "(update MU_TOTAL_TESTS in test/run_tests.c)\n",
+               tests_run, tests_skipped, MU_TOTAL_TESTS);
+    tests_failed++;
+  }
   if (tests_failed > 0) {
     scs_printf("%d TEST(S) FAILED:\n", tests_failed);
     for (i = 0; i < tests_failed && i < MU_MAX_FAILED_TESTS; ++i) {
@@ -195,7 +215,6 @@ int main(void) {
   } else {
     scs_printf("ALL TESTS PASSED\n");
   }
-  scs_printf("Tests run: %d\n", tests_run);
 
   return tests_failed != 0;
 }
