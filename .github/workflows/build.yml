@@ -97,7 +97,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - run: brew update && brew install openblas lapack
+      - uses: ./.github/actions/brew-blas
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: out/run_tests_direct

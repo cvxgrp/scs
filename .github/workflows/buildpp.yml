@@ -35,8 +35,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/brew-blas
       - run: |
-          brew install openblas lapack
           export CC=clang++
           echo $CC
           make
