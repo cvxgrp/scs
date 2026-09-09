@@ -1,0 +1,27 @@
+---
+name: Install OpenBLAS and LAPACK
+description: >
+  brew install openblas lapack, retrying the transient formulae.brew.sh
+  outages that would otherwise fail the whole job.
+
+runs:
+  using: composite
+  steps:
+    # The runner image ships a recent formula index, and both formulae are in
+    # it, so HOMEBREW_NO_AUTO_UPDATE skips the formulae.brew.sh API download
+    # that is the part that flakes. The retry covers the bottle downloads.
+    - shell: bash
+      env:
+        HOMEBREW_NO_AUTO_UPDATE: '1'
+        HOMEBREW_NO_ANALYTICS: '1'
+        HOMEBREW_NO_INSTALL_CLEANUP: '1'
+      run: |
+        for attempt in 1 2 3; do
+          if brew install openblas lapack; then
+            exit 0
+          fi
+          echo "brew install failed (attempt ${attempt}/3), retrying in $((attempt * 15))s"
+          sleep $((attempt * 15))
+        done
+        echo "brew install openblas lapack failed after 3 attempts" >&2
+        exit 1

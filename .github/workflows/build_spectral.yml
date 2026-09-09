@@ -35,7 +35,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - run: brew update && brew install openblas lapack
+      - uses: ./.github/actions/brew-blas
       # Each `run:` step is a separate shell, so `export` would not persist.
       # -fno-sanitize-recover=all makes UBSan abort on the first report instead of
       # printing and continuing (which would leave the job green).
