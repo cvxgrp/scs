@@ -75,9 +75,10 @@ jobs:
           crt=cuda_crt
           python3 -c "import json; exit(0 if 'cuda_crt' in json.load(open('redist.json')) else 1)" || crt=cuda_nvcc
           echo "crt headers come from $crt"
+          # cuda_cccl supplies <nv/target>, which cuda_fp16.h reaches for.
           # libnvjitlink is not used directly, but libcusparse.so records it as
           # a dependency and the linker has to resolve it.
-          for pkg in cuda_cudart libcublas libcusparse libnvjitlink "$crt"; do
+          for pkg in cuda_cudart cuda_cccl libcublas libcusparse libnvjitlink "$crt"; do
             path=$(python3 -c "import json; print(json.load(open('redist.json'))['$pkg']['linux-x86_64']['relative_path'])")
             echo "==> $pkg"
             curl -sSfL "$base/$path" | tar -xJ --strip-components=1 -C "$prefix"
