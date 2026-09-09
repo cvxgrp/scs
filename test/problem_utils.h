@@ -39,6 +39,11 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
   A->x = (scs_float *)scs_calloc(nnz, sizeof(scs_float));
   A->n = d->n;
   A->m = d->m;
+  /* seed before the first draw, so that the generated instance is a pure
+   * function of (seed, n, m, nnz, col_nnz, k) rather than of whatever state
+   * the generator was left in by an earlier caller */
+  ran_start(seed);
+
   /* y, s >= 0 and y'*s = 0 */
   for (i = 0; i < m; i++) {
     y[i] = z[i] = rand_scs_float();
@@ -59,7 +64,6 @@ void gen_random_prob_data(scs_int nnz, scs_int col_nnz, ScsData *d, ScsCone *k,
    c = -A'*y
    b = A*x + s
    */
-  ran_start(seed);
   A->p[0] = 0;
   for (j = 0; j < n; j++) { /* column */
     r = 0;
