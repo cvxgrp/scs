@@ -70,20 +70,22 @@ See :ref:`matrices` for more details on what SCS expects.
 Cone
 ^^^^
 
-See :ref:`cones` for more details.
+The fields are documented in the :ref:`cones` table; the struct itself is:
 
 .. doxygenstruct:: ScsCone
    :members:
+   :outline:
 
 .. _ScsSettings:
 
 Settings
 ^^^^^^^^
 
-See :ref:`settings` for details on each of these.
+Each field is documented in the :ref:`settings` table; the struct itself is:
 
 .. doxygenstruct:: ScsSettings
-  :members:
+   :members:
+   :outline:
 
 Output Types
 ------------
@@ -109,10 +111,11 @@ warm-start points (see :ref:`warm_start`).
 Info
 ^^^^^
 
-See :ref:`info` for details on each of these.
+Each field is documented in the :ref:`info` table; the struct itself is:
 
 .. doxygenstruct:: ScsInfo
    :members:
+   :outline:
 
 .. doxygenstruct:: AaStats
    :members:

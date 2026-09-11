@@ -15,7 +15,27 @@ Algorithm
 
 
 SCS applies Douglas-Rachford splitting to a homogeneous embedding
-of the quadratic cone program. The high level algorithm is as follows,
+of the quadratic cone program. The embedding collects the primal and dual
+variables and a scalar :math:`\tau \geq 0` (which multiplies :math:`b` and
+:math:`c`) into :math:`u = (x, y, \tau) \in \mathbf{R}^{n+m+1}`, and asks for
+:math:`u \in \mathcal{C}_+` with :math:`0 \in \mathcal{Q}u + N_{\mathcal{C}_+}(u)`,
+where
+
+.. math::
+  \mathcal{Q} = \begin{bmatrix} P & A^\top & c \\ -A & 0 & b \\ -c^\top & -b^\top & 0 \end{bmatrix},
+  \qquad
+  \mathcal{C}_+ = \mathbf{R}^n \times \mathcal{K}^* \times \mathbf{R}_+,
+
+:math:`N_{\mathcal{C}_+}` is the normal cone of :math:`\mathcal{C}_+`, and
+:math:`\mathcal{Q}` is the sum of a positive semidefinite and a skew-symmetric
+matrix, hence monotone. Writing :math:`v = \mathcal{Q} u = (r, s, \kappa)`, a
+solution has :math:`r = 0`, :math:`s = b\tau - Ax \in \mathcal{K}`,
+:math:`s \perp y` and :math:`\tau \kappa = 0`. If :math:`\tau > 0` then
+:math:`(x, y, s) / \tau` satisfies the :ref:`optimality conditions
+<optimality>`; if :math:`\tau = 0` and :math:`\kappa > 0` then :math:`x` or
+:math:`y` is a :ref:`certificate of infeasibility <infeasibility>`. A solution
+of the embedding always exists, so infeasibility is detected without any
+special handling. The high level algorithm is as follows,
 from an initial :math:`w^0` for :math:`k=0,1,\ldots` do
 
 .. math::
