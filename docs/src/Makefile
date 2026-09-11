@@ -46,7 +46,7 @@ SCSROOT    = ../..
 # "build the Python extension" and adds -DPYTHON to the C flags.
 DOCS_PYTHON ?= python3
 
-.PHONY: example_outputs check_example_deps
+.PHONY: example_outputs check_example_deps guide
 
 check_example_deps:
 	@$(DOCS_PYTHON) -c "import scs, numpy, scipy, cvxpy" 2>/dev/null || { \
@@ -67,6 +67,21 @@ example_outputs: check_example_deps
 	@$(CC) -I$(SCSROOT)/include -o $(EXAMPLEDIR)/qp.out $(EXAMPLEDIR)/qp.c \
 		$(SCSROOT)/out/libscsdir.a -lm -llapack -lblas
 	@( cd $(EXAMPLEDIR) && ./qp.out > qp.c.out )
+
+# --- PDF user guide ---------------------------------------------------------
+#
+# The same sources as the site, rendered through Sphinx's LaTeX builder, so the
+# guide cannot drift from the site; the release number in conf.py appears on
+# the title page. pdflatex is run directly (three passes, as for any LaTeX
+# document with a table of contents) rather than through latexmk, so the only
+# requirement beyond the docs toolchain is a TeX installation.
+guide: example_outputs
+	@$(SPHINXBUILD) -b latex "$(SOURCEDIR)" "$(BUILDDIR)/latex" $(SPHINXOPTS) $(O)
+	@cd "$(BUILDDIR)/latex" && for pass in 1 2 3; do \
+		pdflatex -interaction=nonstopmode -halt-on-error scs_user_guide.tex > pdflatex.out 2>&1 || \
+			{ tail -40 pdflatex.out; exit 1; }; \
+	done
+	@echo "PDF user guide written to $(BUILDDIR)/latex/scs_user_guide.pdf"
 
 docs: example_outputs
 	@make html

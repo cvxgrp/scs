@@ -95,3 +95,32 @@ breathe_default_project = "scs"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+# -- Options for the PDF user guide (LaTeX builder) ---------------------------
+#
+# `make guide` builds docs/src/_build/latex/scs_user_guide.pdf from the same
+# sources as the HTML site, so the two cannot drift; the release number above
+# appears on the title page, which is what versions the guide.
+latex_engine = "pdflatex"
+latex_documents = [
+    ("index", "scs_user_guide.tex", "SCS User Guide", author, "manual"),
+]
+latex_logo = "_static/scs_logo_transparent.png"
+latex_show_urls = "footnote"
+latex_elements = {
+    "papersize": "letterpaper",
+    "pointsize": "11pt",
+    # the site's front page repeats the title; the PDF gets a table of contents
+    "tableofcontents": r"\sphinxtableofcontents",
+    # pdflatex cannot typeset these characters on its own; they appear in code
+    # comments (the JavaScript example, the aa.h docstrings) that reach the
+    # PDF through literalinclude and Breathe.
+    "preamble": r"""
+\DeclareUnicodeCharacter{2208}{\ensuremath{\in}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{03B3}{\ensuremath{\gamma}}
+""",
+}

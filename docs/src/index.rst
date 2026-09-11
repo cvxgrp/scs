@@ -114,17 +114,30 @@ guide </contributing/index>`.
 
 
 
+User guide
+----------
+
+This documentation is also built as a single versioned PDF, the `SCS User
+Guide <scs_user_guide.pdf>`_, from the same sources as this site; the release
+number on its title page identifies the version of SCS it describes. It is a
+guide to using the software rather than a description of the method: to cite
+SCS, please use the :doc:`published papers </citing/index>`.
+
+.. The order below is the order of the PDF user guide: install and use first,
+   the algorithm as background near the end.
+
 .. toctree::
    :hidden:
    :maxdepth: 2
 
-   algorithm/index
-   api/index
    install/index
+   api/index
    linear_solver/index
    blas_lapack/index
    examples/index
-   contributing/index
+   guide/best_practices
    help/index
+   algorithm/index
+   contributing/index
    citing/index
 
