@@ -100,10 +100,11 @@ html_static_path = ["_static"]
 #
 # `make guide` builds docs/src/_build/latex/scs_user_guide.pdf from the same
 # sources as the HTML site, so the two cannot drift; the release number above
-# appears on the title page, which is what versions the guide.
+# appears on the title page, which is what versions the guide. Its master
+# document, guide/index.rst, selects the pages the PDF contains.
 latex_engine = "pdflatex"
 latex_documents = [
-    ("index", "scs_user_guide.tex", "SCS User Guide", author, "manual"),
+    ("guide/index", "scs_user_guide.tex", "SCS User Guide", author, "manual"),
 ]
 latex_logo = "_static/scs_logo_transparent.png"
 latex_show_urls = "footnote"
