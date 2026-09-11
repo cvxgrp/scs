@@ -35,12 +35,13 @@ jobs:
       # pdflatex (see `make guide` in docs/src/Makefile) and published next to
       # the site as scs_user_guide.pdf. texlive-latex-extra carries the
       # packages Sphinx's LaTeX output needs (tabulary, titlesec, ...) and
-      # texlive-fonts-recommended the TeX Gyre fonts it uses.
+      # tex-gyre the TeX Gyre fonts it uses, which Ubuntu ships separately
+      # from texlive-fonts-recommended.
       - name: Install TeX
         run: |
           sudo apt-get install -y --no-install-recommends \
             texlive-latex-base texlive-latex-recommended texlive-latex-extra \
-            texlive-fonts-recommended
+            texlive-fonts-recommended tex-gyre
       - name: Build PDF user guide
         run: |
           cd docs/src && make guide && cp _build/latex/scs_user_guide.pdf ../
