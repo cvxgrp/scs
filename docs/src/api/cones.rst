@@ -8,6 +8,7 @@ The cone :math:`\mathcal{K}` can be any Cartesian product of the following primi
 
 .. list-table::
    :header-rows: 1
+   :widths: 16 36 32 16
 
    * - Name
      - Description
@@ -82,6 +83,7 @@ The following cones are available when spectral cone support is enabled.
 
 .. list-table::
    :header-rows: 1
+   :widths: 16 36 32 16
 
    * - Name
      - Description

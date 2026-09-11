@@ -11,8 +11,9 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
 
 
 .. list-table::
-   :widths: 25 25 25 25
+   :widths: 30 40 15 15
    :header-rows: 1
+   :class: longtable
 
    * - Name
      - Description

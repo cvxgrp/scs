@@ -123,5 +123,23 @@ latex_elements = {
 \DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
 \DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
 \DeclareUnicodeCharacter{03B3}{\ensuremath{\gamma}}
+% Sphinx typesets every struct member and function as its own list
+% environment with generous vertical padding, which stretches the C API
+% reference over pages. Tighten it: no extra space above or below each
+% entry, and none between a signature and its one-line description.
+\makeatletter
+\renewenvironment{fulllineitems}{%
+  \begin{list}{}{\labelwidth \leftmargin
+                 \rightmargin \z@ \topsep \z@ \partopsep \z@
+                 \itemsep \z@ \parsep \z@
+                 \let\makelabel=\py@itemnewline}%
+}{\end{list}}
+\makeatother
+% Tables in a manual read better a size down, and the settings and compile
+% flag tables have long monospace names that do not fit a column at 11pt.
+\usepackage{etoolbox}
+\AtBeginEnvironment{longtable}{\small}
+\AtBeginEnvironment{tabulary}{\small}
+\AtBeginEnvironment{tabular}{\small}
 """,
 }
