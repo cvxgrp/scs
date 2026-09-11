@@ -51,8 +51,10 @@ The relevant input structs required by API are as follows.
 Data
 ^^^^
 
-.. doxygenstruct:: ScsData
-   :members:
+.. literalinclude:: ../../../include/scs.h
+   :language: c
+   :start-at: /** Struct containing problem data.
+   :end-at: } ScsData;
 
 .. _ScsMatrix:
 
@@ -62,28 +64,34 @@ Data Matrices
 The matrices must be in `Compressed Sparse Column (CSC) format <https://people.sc.fsu.edu/~jburkardt/data/cc/cc.html>`_ using zero-based indexing.
 See :ref:`matrices` for more details on what SCS expects.
 
-.. doxygenstruct:: ScsMatrix
-   :members:
+.. literalinclude:: ../../../include/scs.h
+   :language: c
+   :start-at: /** This defines the data matrices
+   :end-at: } ScsMatrix;
 
 .. _ScsCone:
 
 Cone
 ^^^^
 
-See :ref:`cones` for more details.
+The fields are documented in the :ref:`cones` table; the declaration is:
 
-.. doxygenstruct:: ScsCone
-   :members:
+.. literalinclude:: ../../../include/scs.h
+   :language: c
+   :start-at: /** Cone data.
+   :end-at: } ScsCone;
 
 .. _ScsSettings:
 
 Settings
 ^^^^^^^^
 
-See :ref:`settings` for details on each of these.
+Each field is documented in the :ref:`settings` table; the declaration is:
 
-.. doxygenstruct:: ScsSettings
-  :members:
+.. literalinclude:: ../../../include/scs.h
+   :language: c
+   :start-at: /** Struct containing all settings.
+   :end-at: } ScsSettings;
 
 Output Types
 ------------
@@ -101,21 +109,27 @@ solver, then the Solution struct is also used as an input to specify the
 warm-start points (see :ref:`warm_start`).
 
 
-.. doxygenstruct:: ScsSolution
-   :members:
+.. literalinclude:: ../../../include/scs.h
+   :language: c
+   :start-at: /** Contains primal-dual solution arrays
+   :end-at: } ScsSolution;
 
 .. _ScsInfo:
 
 Info
 ^^^^^
 
-See :ref:`info` for details on each of these.
+Each field is documented in the :ref:`info` table; the declaration is:
 
-.. doxygenstruct:: ScsInfo
-   :members:
+.. literalinclude:: ../../../include/scs.h
+   :language: c
+   :start-at: /** Contains information about the solve run
+   :end-at: } ScsInfo;
 
-.. doxygenstruct:: AaStats
-   :members:
+.. literalinclude:: ../../../include/aa_stats.h
+   :language: c
+   :start-at: typedef struct {
+   :end-at: } AaStats;
 
 Workspace
 ---------

@@ -7,8 +7,9 @@ These settings control how SCS behaves during a solve.
 They are set in the :ref:`ScsSettings <ScsSettings>` struct.
 
 .. list-table::
-   :widths: 20 20 20 20 20
+   :widths: 28 10 38 12 12
    :header-rows: 1
+   :class: longtable
 
    * - Name
      - Type

@@ -31,6 +31,20 @@ jobs:
       - name: Build docs
         run: |
           cd docs/src && make docs && touch ../.nojekyll
+      # The PDF user guide is rendered from the same Sphinx sources through
+      # pdflatex (see `make guide` in docs/src/Makefile) and published next to
+      # the site as scs_user_guide.pdf. texlive-latex-extra carries the
+      # packages Sphinx's LaTeX output needs (tabulary, titlesec, ...) and
+      # tex-gyre the TeX Gyre fonts it uses, which Ubuntu ships separately
+      # from texlive-fonts-recommended.
+      - name: Install TeX
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended tex-gyre
+      - name: Build PDF user guide
+        run: |
+          cd docs/src && make guide && cp _build/latex/scs_user_guide.pdf ../
       # Deploying needs a writable GITHUB_TOKEN, which forks do not get by
       # default, and a fork publishing its own copy of the docs is not wanted
       # anyway -- so restrict the deploy to a push on the canonical repo. On

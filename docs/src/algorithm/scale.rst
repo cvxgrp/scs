@@ -76,13 +76,28 @@ is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
 Root-plus function
 ------------------
 
-Finally, the :code:`root_plus` function is modified to be the solution
-of the following quadratic equation:
+The linear solve :math:`\tilde u^{k+1} = (R + \mathcal{Q})^{-1} R w^k` has size
+:math:`n + m + 1` and a dense last row and column (from :math:`b` and :math:`c`).
+SCS reduces it to a fixed sparse system of size :math:`n + m` plus a scalar
+quadratic. Split :math:`w^k = (\mu^k, \eta^k)` with :math:`\mu^k \in
+\mathbf{R}^{n+m}` and :math:`\eta^k \in \mathbf{R}`, let :math:`R_{-1}` be the
+leading :math:`(n+m)` block of :math:`R` and :math:`M = \begin{bmatrix} P &
+A^\top \\ -A & 0 \end{bmatrix}`. Then the first :math:`n+m` entries of
+:math:`\tilde u^{k+1}` are :math:`p^k - \tau^{k+1} g`, where
 
 .. math::
-  \tau^2 (d + r^\top R_{-1} r) + \tau (r^\top R_{-1} \mu^k - 2 r^\top R_{-1} p^k - d \eta^k) + p^k R_{-1} (p^k - \mu^k) = 0,
+  p^k = (R_{-1} + M)^{-1} R_{-1} \mu^k, \qquad
+  g = (R_{-1} + M)^{-1} \begin{bmatrix} c \\ -b \end{bmatrix},
 
-where :math:`R_{-1}` corresponds to the first :math:`n+m` entries of :math:`R`.
+and :math:`\tau^{k+1}` is the positive root of the quadratic
+
+.. math::
+  \tau^2 (d + g^\top R_{-1} g) + \tau (g^\top R_{-1} \mu^k - 2 g^\top R_{-1} p^k - d \eta^k) + p^{k\top} R_{-1} (p^k - \mu^k) = 0,
+
+which is the :code:`root_plus` function in :code:`src/scs.c`. The vector
+:math:`g` depends only on the data and :math:`R`, so it is computed once (and
+again whenever :math:`R` changes) and cached; each iteration then costs one
+solve for :math:`p^k`, a few weighted inner products, and the root-find.
 Other than when computing :math:`\kappa` (which does not affect the algorithm)
 this is the *only* place where :math:`d` appears, so we have a lot of
 flexibility in how to choose it and it can even change from iteration to
@@ -162,11 +177,11 @@ Now consider
   \beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
 
 ie, :math:`\beta` corresponds to the geometric mean of the ratio of the relative
-residuals across the last :math:`l` iterations. If this number is larger than a
-constant (eg, 3) or smaller than another constant (eg, 1/3) *and* if sufficient
-iterations have passed since the last update (eg, 100, as determined by
-:code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale` parameter is
-triggered:
+residuals across the last :math:`l` iterations. If this number is larger than
+:math:`10` or smaller than :math:`1/10` (the code tests :math:`\sqrt{\beta}`
+against :math:`\sqrt{10}`) *and* if sufficient iterations have passed since the
+last update (100 by default, as determined by :code:`RESCALING_MIN_ITERS`) then
+an update of the :code:`scale` parameter is triggered:
 
 .. math::
    \mbox{scale}^+ = \sqrt{\beta}\ \mbox{scale}

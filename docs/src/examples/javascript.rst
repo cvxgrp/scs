@@ -122,8 +122,10 @@ Next, we will consider a problem involving maximum entropy. Given a vector
 over the unit simplex.
 
 .. math::
+  :nowrap:
+
   \begin{align*}
-	  \text{minimize} \quad & \sum_{i = 1}^n x_i \log x_i - \langle y, x \rangle \\
+    \text{minimize} \quad & \sum_{i = 1}^n x_i \log x_i - \langle y, x \rangle \\
     \text{subject to} \quad & \sum_{i = 1}^n x_i = 1 \\
     & x \geq 0
   \end{align*}
@@ -134,6 +136,8 @@ This problem can be formulated using the :ref:`(primal) exponential cone <cones>
 defined as 
 
 .. math::
+  :nowrap:
+
   \begin{align*}
     \mathcal{K}_{\text{exp}} &= \{ (x,y,z) \in \mathbf{R}^3 \mid y e^{x/y} \leq z, y>0  \} \\
     &= \{ (x,y,z) \in \mathbf{R}^3 \mid y \log(z/y) \geq x, y>0, z>0 \}
@@ -142,6 +146,8 @@ defined as
 Our formulation is then:
 
 .. math::
+  :nowrap:
+
   \begin{align*}
     \text{minimize} \quad & \sum_{i = 1}^n t_i - \langle y, x \rangle \\
     \text{subject to} \quad & \sum_{i = 1}^n x_i = 1 \\
