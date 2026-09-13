@@ -89,18 +89,30 @@ Features
 Performance
 -----------
 
-SCS is a fast and reliable optimization library. For instance, it is one of the
-most performant solvers as determined by the third-party `QP solvers benchmark
-<https://github.com/qpsolvers/qpbenchmark>`_ on the challenging Maros-Meszaros
-QP test suite. This is despite SCS being a general quadratic conic solver and
-not specifically tailored for QPs.
+SCS 3.3 is fast. On the largest quarter of the standard QP test sets
+(Maros-Meszaros, QPLIB and the ``qpbenchmark`` MPC problems) it is competitive
+with the best open-source interior-point solvers, well ahead of the other
+first-order solvers, and with the cuDSS GPU backend it is the fastest solver we
+have measured. Every solve is verified independently at ten times the requested
+tolerance so that solvers with different notions of "relative accuracy" are
+compared fairly. The full methodology, the LP and SDP results, and the raw data
+are on the :ref:`benchmarks page <benchmarks>`.
 
-.. figure:: files/qp_solvers_benchmark.png
-   :scale: 80 %
+.. figure:: files/bench/qp_1e-4_profile_largest.png
+   :width: 90 %
    :align: center
-   :alt: map to buried treasure
+   :alt: Performance profile on the largest quarter of the QP test sets
 
-   SCS is faster and more reliable than most other solvers.
+   Performance profile on the largest quarter of the QP test sets at tolerance
+   :math:`10^{-4}`, with independently verified solutions.
+
+.. figure:: files/bench/lp_1e-4_profile_largest.png
+   :width: 90 %
+   :align: center
+   :alt: Performance profile on the largest quarter of the LP test sets
+
+   The same on the largest quarter of the LP test sets (Netlib, Kennington,
+   MIPLIB relaxations and Mittelmann).
 
 
 Development
@@ -119,6 +131,7 @@ guide </contributing/index>`.
    :maxdepth: 2
 
    algorithm/index
+   benchmarks/index
    api/index
    install/index
    linear_solver/index
