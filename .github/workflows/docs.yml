@@ -37,7 +37,7 @@ jobs:
       # pull requests and on forks the job stops after the build above.
       - name: Deploy
         if: github.event_name == 'push' && !github.event.repository.fork
-        uses: JamesIves/github-pages-deploy-action@v4.8.0
+        uses: JamesIves/github-pages-deploy-action@v4.9.0
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: docs # The folder the action should deploy.
