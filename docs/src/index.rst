@@ -91,9 +91,11 @@ Performance
 
 SCS 3.3 is fast. On the largest quarter of the standard QP test sets
 (Maros-Meszaros, QPLIB and the ``qpbenchmark`` MPC problems) it is competitive
-with the best open-source interior-point solvers, well ahead of the other
+with the best open-source interior-point solvers and well ahead of the other
 first-order solvers, and with the cuDSS GPU backend it is the fastest solver we
-have measured. Every solve is verified independently at ten times the requested
+have measured. On the large LPs of the Mittelmann benchmark set, up to 126
+million nonzeros, SCS with cuDSS solves more instances than any other solver
+we tested. Every solve is verified independently at ten times the requested
 tolerance so that solvers with different notions of "relative accuracy" are
 compared fairly. The full methodology, the LP and SDP results, and the raw data
 are on the :ref:`benchmarks page <benchmarks>`.
@@ -106,13 +108,13 @@ are on the :ref:`benchmarks page <benchmarks>`.
    Performance profile on the largest quarter of the QP test sets at tolerance
    :math:`10^{-4}`, with independently verified solutions.
 
-.. figure:: files/bench/lp_1e-4_profile_largest.png
+.. figure:: files/bench/lpbig_1e-4_profile.png
    :width: 90 %
    :align: center
-   :alt: Performance profile on the largest quarter of the LP test sets
+   :alt: Performance profile on the Mittelmann LP benchmark set
 
-   The same on the largest quarter of the LP test sets (Netlib, Kennington,
-   MIPLIB relaxations and Mittelmann).
+   The same on the 37 large LPs of the Mittelmann benchmark set, with an
+   1800 s limit.
 
 
 Development

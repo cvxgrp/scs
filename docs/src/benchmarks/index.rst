@@ -13,9 +13,10 @@ results, the campaign configuration and the plotting scripts live in that
 repository, so every number here can be regenerated.
 
 The short version: on the QP and LP test sets SCS is competitive with the best
-interior-point codes and clearly ahead of the other first-order solvers, and
-the cuDSS GPU backend is the fastest solver we tested on the largest quarter of
-the QP problems. On the SDP test sets the interior-point solvers are faster on
+interior-point codes and clearly ahead of the other first-order solvers, the
+cuDSS GPU backend is the fastest solver we tested on the largest quarter of the
+QP problems, and on the large LPs of the Mittelmann set SCS with cuDSS solves
+more instances than any other solver. On the SDP test sets the interior-point solvers are faster on
 the small, ill-conditioned control and truss instances, while SCS is the
 fastest solver on the large sparse combinatorial relaxations; see
 :ref:`bench_sdp` before choosing a solver for semidefinite problems.
@@ -200,7 +201,6 @@ first-order solver by a wide margin.
      - 15
      - 425.8
 
-
 .. _bench_lp:
 
 Linear programs
@@ -317,7 +317,6 @@ under independent verification (see the notes below).
      - 20
      - 346.3
 
-
 .. _bench_sdp:
 
 Semidefinite programs
@@ -405,6 +404,75 @@ an interior-point solver.
      - --
      - --
 
+.. _bench_lpbig:
+
+Large linear programs: the Mittelmann set
+-----------------------------------------
+
+The LP test sets above are dominated by small and medium instances, so we also
+ran the 37 problems of `Hans Mittelmann's LP benchmark set
+<https://plato.asu.edu/ftp/lptestset/>`_, the standard collection of large,
+hard LPs: between 100,000 and 126 million nonzeros, with several instances of
+10 to 40 million variables. Every solver ran at tolerance :math:`10^{-4}`
+with an 1800 s limit in 64 GB containers (4 cores, or an A100 80GB for the two
+GPU solvers). Mittelmann's own runs allow several hours per instance and use
+faster machines, so the simplex and interior-point codes time out here far
+more often than they do in his tables; the point of this set for us is the
+size of the problems, not a re-run of his benchmark.
+
+This is where the cuDSS backend pays off. SCS on the GPU verifies more
+solutions than any other solver and has by far the lowest geometric mean
+time, and SCS on the CPU is second. The two other first-order codes, PDLP and
+cuOpt, are the natural comparison: OR-Tools PDLP verifies about two thirds as many
+solutions as SCS with cuDSS, and cuOpt's PDLP, although it reports almost
+every instance optimal, mostly fails the independent residual check (see the
+notes below).
+
+.. figure:: ../files/bench/lpbig_1e-4_profile.png
+   :width: 90 %
+   :align: center
+
+.. figure:: ../files/bench/lpbig_1e-4_geomean.png
+   :width: 90 %
+   :align: center
+
+.. list-table:: Mittelmann LP set: verified solves out of 37 and shifted geometric mean time (s), tolerance 1e-4, 1800 s limit
+   :header-rows: 1
+   :widths: 40 20 20
+
+   * - Solver
+     - verified solves
+     - geometric mean (s)
+   * - SCS (GPU, cuDSS)
+     - 28
+     - 135
+   * - SCS (CPU, MKL Pardiso)
+     - 24
+     - 235
+   * - PDLP (OR-Tools)
+     - 19
+     - 325
+   * - Clarabel
+     - 19
+     - 340
+   * - PIQP
+     - 12
+     - 428
+   * - cuOpt (GPU)
+     - 7
+     - 528
+   * - HiGHS
+     - 9
+     - 804
+
+
+Set-specific exclusions: Clarabel could not attempt ``L1_sixm250obs`` and
+``L1_sixm1000obs`` within 64 GB (counted as failures); OR-Tools PDLP cannot
+load ``Dual2_5000`` and ``dlr2`` because the model exceeds the 2 GB protobuf
+limit (counted as failures); SCS with cuDSS ran out of GPU memory on
+``thk_48`` (counted as a failure). Four instances (``bdry2``, ``Linf_520c``
+and the two ``L1_sixm`` problems) are distributed in Netlib's compressed EMPS
+format and were decoded with ``emps`` before use.
 
 Notes on individual solvers
 ---------------------------
@@ -426,8 +494,9 @@ Notes on individual solvers
   reports the solve as optimal, and even though its own reported absolute
   dual residual is in the tens or hundreds. Under the uniform check used here
   those solves count as failures; by its own status cuOpt reports 233 of the
-  345 LPs optimal at :math:`10^{-4}`. Its QP path is a barrier method whose
-  solutions verify cleanly. We used cuOpt 26.8.0 with default settings apart
+  345 LPs optimal at :math:`10^{-4}`, and 36 of the 37 Mittelmann instances,
+  of which only 7 pass the check. Its QP path is a barrier method
+  whose solutions verify cleanly. We used cuOpt 26.8.0 with default settings apart
   from the tolerance and time limit.
 * **PDLP (OR-Tools).** The same L2-relative termination rule applies, with a
   milder effect: 26 of its 307 "optimal" LP returns at :math:`10^{-4}` have
