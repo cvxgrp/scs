@@ -103,9 +103,9 @@ including SDPs, and the raw data are on the :ref:`benchmarks page
    :align: center
    :alt: Performance profiles and geometric mean solve times on the largest QPs, largest LPs and the Mittelmann LP set
 
-   Largest quarter of the Maros-Meszaros, QPLIB and MPC QPs (top), largest
-   quarter of the Netlib, Kennington and MIPLIB-relaxation LPs (middle) and
-   the Mittelmann large-LP set (bottom), at tolerance
+   Largest quarter of the Maros-Meszaros and QPLIB QPs (top), largest quarter
+   of the Kennington and MIPLIB-relaxation LPs (middle) and the Mittelmann
+   large-LP set (bottom), at tolerance
    :math:`10^{-4}`. Left: fraction of problems solved within a factor
    :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
    time with failures charged 1000 s, and the number of verified solves.
