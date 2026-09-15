@@ -278,8 +278,8 @@ first-order solver by a wide margin.
 Linear programs
 ---------------
 
-345 problems: Netlib, Kennington, the MIPLIB 2017 LP relaxations up to 20 MB
-and the Mittelmann LP set. SCS is not an LP solver and is not marketed as one,
+344 problems: Netlib, Kennington and the MIPLIB 2017 LP relaxations up to
+20 MB. SCS is not an LP solver and is not marketed as one,
 so this comparison is included mainly to show that it is not a bad one: on the
 largest quarter of the LP set SCS with cuDSS verifies as many solutions as
 HiGHS (dual simplex) and is second only to it in geometric mean time, ahead of
@@ -303,7 +303,7 @@ verification (see the notes below).
    :width: 90 %
    :align: center
 
-.. list-table:: LP: verified solves and shifted geometric mean time (s); all 345 problems / largest quartile (87)
+.. list-table:: LP: verified solves and shifted geometric mean time (s); all 344 problems / largest quartile (86)
    :header-rows: 1
    :widths: 26 12 12 12 12 12 12 12 12
 
@@ -318,76 +318,76 @@ verification (see the notes below).
      - gm 1e-6 (largest)
    * - HiGHS
      - 331
-     - 4.8
-     - 75
-     - 25.0
+     - 4.6
+     - 74
+     - 25.5
      - 331
-     - 4.8
-     - 75
-     - 25.0
+     - 4.6
+     - 74
+     - 25.5
    * - PIQP
-     - 316
-     - 8.6
-     - 66
-     - 42.2
-     - 310
-     - 9.8
-     - 65
-     - 43.0
-   * - Clarabel
-     - 324
-     - 9.5
-     - 71
-     - 59.2
-     - 312
-     - 12.4
-     - 66
-     - 72.7
-   * - SCS (GPU, cuDSS)
-     - 316
-     - 10.8
-     - 75
-     - 33.9
-     - 299
-     - 16.5
-     - 67
-     - 49.0
-   * - SCS (CPU, MKL Pardiso)
      - 315
-     - 11.0
-     - 72
-     - 48.3
-     - 295
-     - 18.9
-     - 62
-     - 79.2
+     - 8.5
+     - 65
+     - 43.2
+     - 309
+     - 9.7
+     - 64
+     - 44.0
+   * - Clarabel
+     - 323
+     - 9.5
+     - 70
+     - 60.7
+     - 311
+     - 12.4
+     - 65
+     - 74.6
+   * - SCS (GPU, cuDSS)
+     - 315
+     - 10.8
+     - 74
+     - 34.6
+     - 298
+     - 16.5
+     - 66
+     - 50.1
+   * - SCS (CPU, MKL Pardiso)
+     - 314
+     - 10.9
+     - 71
+     - 49.4
+     - 294
+     - 18.8
+     - 61
+     - 81.3
    * - PDLP (OR-Tools)
-     - 281
-     - 23.9
-     - 48
-     - 140.5
-     - 173
-     - 129.9
-     - 40
-     - 227.8
+     - 280
+     - 24.0
+     - 47
+     - 144.8
+     - 172
+     - 130.7
+     - 39
+     - 234.6
    * - OSQP
-     - 257
+     - 256
      - 41.0
-     - 45
-     - 205.9
-     - 177
-     - 132.0
+     - 44
+     - 210.2
+     - 176
+     - 131.9
      - 23
-     - 484.3
+     - 480.3
    * - cuOpt (GPU)
      - 133
-     - 164.5
-     - 25
-     - 269.2
+     - 163.7
+     - 24
+     - 280.1
      - 123
-     - 188.3
+     - 187.4
      - 20
-     - 346.3
+     - 342.0
 
 .. _bench_sdp:
 
@@ -565,12 +565,12 @@ Notes on individual solvers
   reports the solve as optimal, and even though its own reported absolute
   dual residual is in the tens or hundreds. Under the uniform check used here
   those solves count as failures; by its own status cuOpt reports 233 of the
-  345 LPs optimal at :math:`10^{-4}`, and 36 of the 37 Mittelmann instances,
+  344 LPs optimal at :math:`10^{-4}`, and 36 of the 37 Mittelmann instances,
   of which only 7 pass the check. Its QP path is a barrier method
   whose solutions verify cleanly. We used cuOpt 26.8.0 with default settings apart
   from the tolerance and time limit.
 * **PDLP (OR-Tools).** The same L2-relative termination rule applies, with a
-  milder effect: 26 of its 307 "optimal" LP returns at :math:`10^{-4}` have
+  milder effect: 26 of its 306 "optimal" LP returns at :math:`10^{-4}` have
   infinity-norm residuals between :math:`10^{-3}` and :math:`10^{-2}`.
 * **HiGHS.** Its QP solver is an active-set method and is slow on the larger
   QPs; its LP simplex is the fastest LP code in the comparison.
