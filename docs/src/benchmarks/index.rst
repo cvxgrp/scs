@@ -376,15 +376,6 @@ an interior-point solver.
      - 108.0
      - 20
      - 88.4
-   * - Clarabel
-     - 48
-     - 79.7
-     - 13
-     - 118.1
-     - 47
-     - 81.3
-     - 11
-     - 147.1
    * - SCS (CPU, MKL Pardiso)
      - 76
      - 98.0
@@ -403,6 +394,15 @@ an interior-point solver.
      - --
      - --
      - --
+   * - Clarabel
+     - 48
+     - 137.0
+     - 13
+     - 204.6
+     - 47
+     - 139.1
+     - 11
+     - 240.2
 
 .. _bench_lpbig:
 
@@ -454,7 +454,7 @@ notes below).
      - 325
    * - Clarabel
      - 19
-     - 340
+     - 360
    * - PIQP
      - 12
      - 428
@@ -464,7 +464,6 @@ notes below).
    * - HiGHS
      - 9
      - 804
-
 
 Set-specific exclusions: Clarabel could not attempt ``L1_sixm250obs`` and
 ``L1_sixm1000obs`` within 64 GB (counted as failures); OR-Tools PDLP cannot
