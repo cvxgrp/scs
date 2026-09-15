@@ -69,7 +69,11 @@ jobs:
           base=https://developer.download.nvidia.com/compute/cuda/redist
           prefix="$PWD/cuda"
           mkdir -p "$prefix"
-          curl -sSfL -o redist.json "$base/redistrib_${{ matrix.cuda }}.json"
+          # The NVIDIA CDN occasionally drops an HTTP/2 stream mid-transfer, so
+          # retry, and download to a file rather than piping into tar: a
+          # truncated stream would otherwise surface as an xz format error.
+          fetch() { curl -sSfL --retry 5 --retry-delay 5 --retry-all-errors -o "$1" "$2"; }
+          fetch redist.json "$base/redistrib_${{ matrix.cuda }}.json"
           # cuda_crt only exists from CUDA 13 on; before that the crt headers
           # were part of cuda_nvcc.
           crt=cuda_crt
@@ -81,7 +85,9 @@ jobs:
           for pkg in cuda_cudart cuda_cccl libcublas libcusparse libnvjitlink "$crt"; do
             path=$(python3 -c "import json; print(json.load(open('redist.json'))['$pkg']['linux-x86_64']['relative_path'])")
             echo "==> $pkg"
-            curl -sSfL "$base/$path" | tar -xJ --strip-components=1 -C "$prefix"
+            fetch pkg.tar.xz "$base/$path"
+            tar -xJ --strip-components=1 -C "$prefix" -f pkg.tar.xz
+            rm pkg.tar.xz
           done
           echo "CUDA_PATH=$prefix" >> "$GITHUB_ENV"
 
