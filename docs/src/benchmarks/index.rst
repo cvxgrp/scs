@@ -39,12 +39,121 @@ first-order methods, SCS included, occasionally declare convergence on badly
 scaled problems where the unscaled residuals are large. Applying the same
 independent check to every solver makes the comparison tolerance-fair.
 
-**Tolerances.** Every solver was run at a requested relative tolerance of
-:math:`10^{-4}` (the headline plots) and :math:`10^{-6}` (the high-accuracy
-plots), passing the tolerance through each solver's own absolute and relative
-settings. For SCS this means ``eps_abs = eps_rel = tol`` with the iteration limit
-raised so that only the time limit can stop it; all other settings were left at
-their defaults.
+**Tolerances.** The first-order solvers (SCS, OSQP, ProxQP, PDLP and cuOpt)
+were run at a requested relative tolerance of :math:`10^{-4}`, which is also
+SCS's default, for the headline plots, and at :math:`10^{-6}` for the
+high-accuracy plots, passing the tolerance through each solver's own absolute
+and relative settings; for SCS this means ``eps_abs = eps_rel = tol`` with the
+iteration limit raised so that only the time limit can stop it. The
+interior-point and simplex solvers (Clarabel, PIQP, HiGHS, SDPA and CVXOPT)
+are shown from their :math:`10^{-6}` runs in every plot, and the legends say
+so. Nobody runs an interior-point solver at :math:`10^{-4}`: their defaults
+are :math:`10^{-7}` to :math:`10^{-8}`, the last few iterations are nearly
+free, and a loose setting would show them faster than a user ever sees them.
+It also removes a real comparability problem: Clarabel's termination test can
+leave large unscaled residuals when some terms in it are very large, and at
+:math:`10^{-4}` on the SDP sets its solutions were up to a hundred times
+looser than everyone else's. Every solve, whatever was requested, is then
+verified independently at ten times the plot's tolerance.
+
+A requested tolerance means different things to different solvers, so the
+table below reports the accuracy actually achieved, measured the same way for
+everyone: the largest of the three relative KKT residuals over the solves each
+solver itself reported optimal, at the :math:`10^{-4}` setting. The
+first-order solvers land at the requested tolerance; the interior-point and
+simplex codes overshoot it by orders of magnitude, except Clarabel on SDP;
+cuOpt's LP path and ProxQP have a long tail of returns that are far from
+optimal.
+
+.. list-table:: Achieved accuracy: median and 90th percentile of the largest relative KKT residual over the solves each solver reported optimal, at the 1e-4 and 1e-6 settings
+   :header-rows: 2
+   :widths: 22 13 13 13 13 13 13
+
+   * - Solver
+     - QP 1e-4
+     -
+     - LP 1e-4
+     -
+     - SDP 1e-4
+     -
+   * -
+     - median
+     - 90th
+     - median
+     - 90th
+     - median
+     - 90th
+   * - SCS (CPU)
+     - 1e-5
+     - 1e-4
+     - 3e-5
+     - 9e-5
+     - 9e-5
+     - 1e-4
+   * - SCS (GPU, cuDSS)
+     - 2e-5
+     - 9e-5
+     - 3e-5
+     - 1e-4
+     - 8e-5
+     - 1e-4
+   * - OSQP
+     - 3e-5
+     - 1e-4
+     - 6e-5
+     - 1e-4
+     - --
+     - --
+   * - PDLP (OR-Tools)
+     - --
+     - --
+     - 1e-4
+     - 8e-4
+     - --
+     - --
+   * - ProxQP
+     - 8e-5
+     - 3e-2
+     - --
+     - --
+     - --
+     - --
+   * - cuOpt (GPU)
+     - 2e-8
+     - 1e-6
+     - 1e-4
+     - 1e+00
+     - --
+     - --
+   * - Clarabel
+     - 1e-5
+     - 6e-5
+     - 2e-5
+     - 1e-4
+     - 3e-4
+     - 5e-3
+   * - PIQP
+     - 4e-10
+     - 1e-7
+     - 2e-10
+     - 6e-8
+     - --
+     - --
+   * - HiGHS
+     - 1e-7
+     - 3e-4
+     - 8e-16
+     - 1e-10
+     - --
+     - --
+   * - CVXOPT
+     - --
+     - --
+     - --
+     - --
+     - 2e-5
+     - 8e-5
+
 
 **Timing.** The reported time is wall-clock time for the solver call, including
 any presolve, factorization and GPU transfer, but excluding reading the problem
@@ -88,11 +197,11 @@ Quadratic programs
 
 221 problems: Maros-Meszaros (138), the convex continuous QPLIB instances and
 the ``qpbenchmark`` MPC set. On the largest quarter of these, SCS with cuDSS
-has the lowest shifted geometric mean solve time of any solver, and SCS on the
-CPU is within 10% of PIQP, the fastest interior-point code, with the same
-number of verified solves. Over all 221 problems the interior-point solvers
-PIQP and Clarabel are faster on the small instances, where an SCS solve is
-dominated by fixed setup cost, but SCS solves as many problems as they do.
+has the lowest shifted geometric mean solve time of any solver, SCS on the CPU
+sits between Clarabel and PIQP, and the two SCS variants verify the most
+solutions. Over all 221 problems the interior-point solvers are faster on the
+small instances, where an SCS solve is dominated by fixed setup cost, but SCS
+solves nearly as many problems as they do.
 
 .. figure:: ../files/bench/qp_1e-4_profile_largest.png
    :width: 90 %
@@ -128,24 +237,24 @@ first-order solver by a wide margin.
      - gm 1e-6
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
-   * - PIQP
+   * - Clarabel (tol 1e-6)
      - 216
-     - 2.1
+     - 2.2
      - 52
      - 9.7
-     - 214
-     - 2.5
-     - 50
-     - 11.4
-   * - Clarabel
-     - 213
-     - 2.6
-     - 49
-     - 13.0
      - 212
      - 3.0
      - 49
      - 13.9
+   * - PIQP (tol 1e-6)
+     - 214
+     - 2.5
+     - 50
+     - 11.4
+     - 214
+     - 2.5
+     - 50
+     - 11.4
    * - SCS (GPU, cuDSS)
      - 210
      - 4.4
@@ -182,11 +291,11 @@ first-order solver by a wide margin.
      - 25.2
      - 30
      - 80.8
-   * - HiGHS
-     - 162
-     - 27.7
+   * - HiGHS (tol 1e-6)
+     - 161
+     - 28.1
      - 24
-     - 164.8
+     - 163.6
      - 144
      - 43.2
      - 17
@@ -209,11 +318,11 @@ Linear programs
 345 problems: Netlib, Kennington, the MIPLIB 2017 LP relaxations up to 20 MB
 and the Mittelmann LP set. SCS is not an LP solver and is not marketed as one,
 so this comparison is included mainly to show that it is not a bad one: on the
-largest quarter of the LP set SCS with cuDSS verifies the most solutions of any
-solver and is second only to HiGHS (dual simplex) in geometric mean time,
-ahead of the interior-point solvers PIQP and Clarabel. Both PDLP
-implementations, which are first-order LP methods, trail SCS by a wide margin
-under independent verification (see the notes below).
+largest quarter of the LP set SCS with cuDSS verifies as many solutions as
+HiGHS (dual simplex) and is second only to it in geometric mean time, ahead of
+the interior-point solvers PIQP and Clarabel. Both PDLP implementations, which
+are first-order LP methods, trail SCS by a wide margin under independent
+verification (see the notes below).
 
 .. figure:: ../files/bench/lp_1e-4_profile_largest.png
    :width: 90 %
@@ -244,24 +353,33 @@ under independent verification (see the notes below).
      - gm 1e-6
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
-   * - HiGHS
-     - 329
-     - 5.3
-     - 74
-     - 27.1
+   * - HiGHS (tol 1e-6)
      - 331
      - 4.8
      - 75
      - 25.0
-   * - PIQP
-     - 318
-     - 8.5
-     - 68
-     - 40.6
+     - 331
+     - 4.8
+     - 75
+     - 25.0
+   * - PIQP (tol 1e-6)
+     - 316
+     - 8.6
+     - 66
+     - 42.2
      - 310
      - 9.8
      - 65
      - 43.0
+   * - Clarabel (tol 1e-6)
+     - 324
+     - 9.5
+     - 71
+     - 59.2
+     - 312
+     - 12.4
+     - 66
+     - 72.7
    * - SCS (GPU, cuDSS)
      - 316
      - 10.8
@@ -280,15 +398,6 @@ under independent verification (see the notes below).
      - 18.9
      - 62
      - 79.2
-   * - Clarabel
-     - 315
-     - 11.2
-     - 67
-     - 65.3
-     - 312
-     - 12.4
-     - 66
-     - 72.7
    * - PDLP (OR-Tools)
      - 281
      - 23.9
@@ -358,24 +467,33 @@ an interior-point solver.
      - gm 1e-6
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
-   * - SDPA
-     - 80
-     - 21.7
-     - 27
-     - 12.3
+   * - SDPA (tol 1e-6)
+     - 72
+     - 38.0
+     - 23
+     - 35.5
      - 66
      - 53.5
      - 23
      - 35.5
-   * - CVXOPT
-     - 79
-     - 38.4
-     - 25
-     - 35.3
+   * - CVXOPT (tol 1e-6)
+     - 73
+     - 51.6
+     - 22
+     - 62.4
      - 59
      - 108.0
      - 20
      - 88.4
+   * - Clarabel (tol 1e-6)
+     - 61
+     - 80.5
+     - 16
+     - 140.3
+     - 47
+     - 139.1
+     - 11
+     - 240.2
    * - SCS (CPU, MKL Pardiso)
      - 76
      - 98.0
@@ -394,15 +512,6 @@ an interior-point solver.
      - --
      - --
      - --
-   * - Clarabel
-     - 48
-     - 137.0
-     - 13
-     - 204.6
-     - 47
-     - 139.1
-     - 11
-     - 240.2
 
 .. _bench_lpbig:
 
@@ -452,9 +561,9 @@ notes below).
    * - PDLP (OR-Tools)
      - 19
      - 325
-   * - Clarabel
-     - 19
-     - 360
+   * - Clarabel (tol 1e-6)
+     - 20
+     - 372
    * - PIQP
      - 12
      - 428
