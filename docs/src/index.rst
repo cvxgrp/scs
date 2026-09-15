@@ -89,12 +89,14 @@ Features
 Performance
 -----------
 
-On the large QP and LP test sets SCS 3.3 is as fast and as reliable as the
-best open-source interior-point solvers, and with the cuDSS GPU backend it is
-the fastest solver we have measured. Every solution is verified independently
-at ten times the requested tolerance, so solvers with different ideas of
-"tolerance" are compared fairly. Full methodology, all problem sets including
-SDPs, and the raw data are on the :ref:`benchmarks page <benchmarks>`.
+On the large QP and LP test sets SCS 3.3 solves as many problems as the best
+open-source interior-point solvers and, at moderate accuracy (relative
+tolerance :math:`10^{-4}`), in comparable time; with the cuDSS GPU backend it
+is the fastest solver we have measured. Every solution is verified
+independently against the same residual test, so solvers with different ideas
+of "tolerance" are compared fairly. The full methodology, all problem sets
+including SDPs, and the raw data are on the :ref:`benchmarks page
+<benchmarks>`.
 
 .. figure:: files/bench/landing_grid.png
    :width: 100 %

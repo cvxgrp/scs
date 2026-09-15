@@ -46,8 +46,7 @@ high-accuracy plots, passing the tolerance through each solver's own absolute
 and relative settings; for SCS this means ``eps_abs = eps_rel = tol`` with the
 iteration limit raised so that only the time limit can stop it. The
 interior-point and simplex solvers (Clarabel, PIQP, HiGHS, SDPA and CVXOPT)
-are shown from their :math:`10^{-6}` runs in every plot, and the legends say
-so. Nobody runs an interior-point solver at :math:`10^{-4}`: their defaults
+are shown from their :math:`10^{-6}` runs in every plot. Nobody runs an interior-point solver at :math:`10^{-4}`: their defaults
 are :math:`10^{-7}` to :math:`10^{-8}`, the last few iterations are nearly
 free, and a loose setting would show them faster than a user ever sees them.
 It also removes a real comparability problem: Clarabel's termination test can
@@ -201,7 +200,7 @@ first-order solver by a wide margin.
      - gm 1e-6
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
-   * - Clarabel (tol 1e-6)
+   * - Clarabel
      - 216
      - 2.2
      - 52
@@ -210,7 +209,7 @@ first-order solver by a wide margin.
      - 3.0
      - 49
      - 13.9
-   * - PIQP (tol 1e-6)
+   * - PIQP
      - 214
      - 2.5
      - 50
@@ -255,7 +254,7 @@ first-order solver by a wide margin.
      - 25.2
      - 30
      - 80.8
-   * - HiGHS (tol 1e-6)
+   * - HiGHS
      - 161
      - 28.1
      - 24
@@ -317,7 +316,7 @@ verification (see the notes below).
      - gm 1e-6
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
-   * - HiGHS (tol 1e-6)
+   * - HiGHS
      - 331
      - 4.8
      - 75
@@ -326,7 +325,7 @@ verification (see the notes below).
      - 4.8
      - 75
      - 25.0
-   * - PIQP (tol 1e-6)
+   * - PIQP
      - 316
      - 8.6
      - 66
@@ -335,7 +334,7 @@ verification (see the notes below).
      - 9.8
      - 65
      - 43.0
-   * - Clarabel (tol 1e-6)
+   * - Clarabel
      - 324
      - 9.5
      - 71
@@ -431,7 +430,7 @@ an interior-point solver.
      - gm 1e-6
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
-   * - SDPA (tol 1e-6)
+   * - SDPA
      - 72
      - 38.0
      - 23
@@ -440,7 +439,7 @@ an interior-point solver.
      - 53.5
      - 23
      - 35.5
-   * - CVXOPT (tol 1e-6)
+   * - CVXOPT
      - 73
      - 51.6
      - 22
@@ -449,7 +448,7 @@ an interior-point solver.
      - 108.0
      - 20
      - 88.4
-   * - Clarabel (tol 1e-6)
+   * - Clarabel
      - 61
      - 80.5
      - 16
@@ -525,7 +524,7 @@ notes below).
    * - PDLP (OR-Tools)
      - 19
      - 325
-   * - Clarabel (tol 1e-6)
+   * - Clarabel
      - 20
      - 372
    * - PIQP
