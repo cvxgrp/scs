@@ -19,7 +19,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y doxygen liblapack-dev libblas-dev
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install Python dependencies
