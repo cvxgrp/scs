@@ -174,8 +174,8 @@ Clarabel, PIQP, OSQP, ProxQP, HiGHS, PDLP (OR-Tools 9.15), NVIDIA cuOpt 26.8,
 CVXOPT and SDPA, each at the latest release on PyPI at the time of the run.
 Commercial solvers were not included.
 
-**Problem sets.** QP: Maros-Meszaros (138), QPLIB continuous convex subset, and
-the ``qpbenchmark`` MPC set. LP: Netlib (feasible), Kennington and the MIPLIB 2017
+**Problem sets.** QP: Maros-Meszaros (138) and the QPLIB continuous convex
+subset (19). LP: Netlib (feasible), Kennington and the MIPLIB 2017
 LP relaxations up to 20 MB; the Mittelmann LP set is its own section. SDP: SDPLIB and the
 Mittelmann SDP set. "Largest quartile" means the quarter of each family with
 the most nonzeros in the constraint matrix (plus the Hessian for QPs).
@@ -193,11 +193,11 @@ failures.
 Quadratic programs
 ------------------
 
-221 problems: Maros-Meszaros (138), the convex continuous QPLIB instances and
-the ``qpbenchmark`` MPC set. On the largest quarter of these, SCS with cuDSS
+157 problems: Maros-Meszaros (138) and the convex continuous QPLIB instances
+(19). On the largest quarter of these, SCS with cuDSS
 has the lowest shifted geometric mean solve time of any solver, SCS on the CPU
 sits between Clarabel and PIQP, and the two SCS variants verify the most
-solutions. Over all 221 problems the interior-point solvers are faster on the
+solutions. Over all 157 problems the interior-point solvers are faster on the
 small instances, where an SCS solve is dominated by fixed setup cost, but SCS
 solves nearly as many problems as they do.
 
@@ -222,7 +222,7 @@ first-order solver by a wide margin.
    :width: 90 %
    :align: center
 
-.. list-table:: QP: verified solves and shifted geometric mean time (s); all 221 problems / largest quartile (56)
+.. list-table:: QP: verified solves and shifted geometric mean time (s); all 157 problems / largest quartile (40)
    :header-rows: 1
    :widths: 26 12 12 12 12 12 12 12 12
 
@@ -236,77 +236,77 @@ first-order solver by a wide margin.
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
    * - Clarabel
-     - 216
-     - 2.2
-     - 52
-     - 9.7
-     - 212
-     - 3.0
-     - 49
-     - 13.9
+     - 152
+     - 3.2
+     - 37
+     - 12.8
+     - 148
+     - 4.5
+     - 34
+     - 20.0
    * - PIQP
-     - 214
-     - 2.5
-     - 50
-     - 11.4
-     - 214
-     - 2.5
-     - 50
-     - 11.4
+     - 150
+     - 3.7
+     - 34
+     - 18.7
+     - 150
+     - 3.7
+     - 34
+     - 18.7
    * - SCS (GPU, cuDSS)
-     - 210
-     - 4.4
-     - 53
-     - 8.2
-     - 204
-     - 7.9
-     - 47
-     - 23.6
+     - 146
+     - 6.4
+     - 38
+     - 9.5
+     - 140
+     - 12.5
+     - 33
+     - 26.8
    * - SCS (CPU, MKL Pardiso)
-     - 208
-     - 5.0
-     - 53
-     - 10.5
-     - 202
-     - 7.3
-     - 47
-     - 25.0
-   * - OSQP
-     - 202
-     - 7.0
-     - 46
-     - 23.4
-     - 185
-     - 15.9
-     - 43
-     - 45.6
-   * - cuOpt (GPU)
-     - 169
-     - 22.1
-     - 35
-     - 58.8
-     - 163
-     - 25.2
-     - 30
-     - 80.8
-   * - HiGHS
-     - 161
-     - 28.1
-     - 24
-     - 163.6
      - 144
+     - 7.6
+     - 38
+     - 12.9
+     - 138
+     - 11.7
+     - 33
+     - 29.6
+   * - OSQP
+     - 138
+     - 11.1
+     - 32
+     - 30.2
+     - 121
+     - 28.1
+     - 30
      - 43.2
-     - 17
-     - 286.9
+   * - cuOpt (GPU)
+     - 109
+     - 35.2
+     - 32
+     - 23.1
+     - 103
+     - 41.4
+     - 27
+     - 38.7
+   * - HiGHS
+     - 100
+     - 50.2
+     - 13
+     - 288.3
+     - 84
+     - 83.5
+     - 11
+     - 349.8
    * - ProxQP
-     - 129
-     - 69.8
-     - 24
-     - 212.2
-     - 125
-     - 76.6
-     - 15
-     - 425.8
+     - 81
+     - 106.3
+     - 10
+     - 439.7
+     - 85
+     - 93.2
+     - 12
+     - 375.1
 
 .. _bench_lp:
 
