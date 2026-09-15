@@ -153,6 +153,41 @@ optimal.
      - 2e-5
      - 8e-5
 
+**Timing.** The reported time is wall-clock time for the solver call, including
+any presolve, factorization and GPU transfer, but excluding reading the problem
+from disk. QP and LP solves were limited to 300 s and SDP solves to 900 s. A
+performance profile shows, for each solver, the fraction of problems solved
+within a factor :math:`\tau` of the fastest solver on that problem; failures
+never count as solved. The shifted geometric mean uses a shift of 1 s and
+charges each failure 1000 s. Times below 10 ms are floored at 10 ms before
+computing ratios.
+
+**Hardware.** All CPU solvers ran in identical 4-core Linux x86-64 containers
+(Modal), on which the ``scs`` wheel selects the MKL Pardiso linear system
+solver by default. The two GPU solvers, SCS with cuDSS and NVIDIA cuOpt, ran on
+an NVIDIA A100 80GB with 8 host cores. GPU results include host-device transfer
+and cuDSS analysis time, so small problems pay a fixed overhead of roughly half
+a second.
+
+**Solvers.** SCS 3.3.1 (CPU with MKL Pardiso, and GPU with cuDSS),
+Clarabel, PIQP, OSQP, ProxQP, HiGHS, PDLP (OR-Tools 9.15), NVIDIA cuOpt 26.8,
+CVXOPT and SDPA, each at the latest release on PyPI at the time of the run.
+Commercial solvers were not included.
+
+**Problem sets.** QP: Maros-Meszaros (138), QPLIB continuous convex subset, and
+the ``qpbenchmark`` MPC set. LP: Netlib (feasible), Kennington and the MIPLIB 2017
+LP relaxations up to 20 MB; the Mittelmann LP set is its own section. SDP: SDPLIB and the
+Mittelmann SDP set. "Largest quartile" means the quarter of each family with
+the most nonzeros in the constraint matrix (plus the Hessian for QPs).
+
+**Exclusions.** Clarabel cannot form the dense scaling block for PSD cones of
+order 500 or more; those instances are counted as failures for it. SDPA
+ignores time limits and was allowed to run to completion. The SDPLIB archive's
+``maxG55`` and ``maxG60`` files are corrupt and were dropped for all solvers.
+cuOpt's QP path is an interior-point method whose factorization failed with a
+numerical error on a subset of the Maros-Meszaros problems; those count as
+failures.
+
 .. _bench_qp:
 
 Quadratic programs
