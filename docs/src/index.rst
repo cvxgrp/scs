@@ -89,32 +89,23 @@ Features
 Performance
 -----------
 
-SCS 3.3 is fast. On the largest quarter of the standard QP test sets
-(Maros-Meszaros, QPLIB and the ``qpbenchmark`` MPC problems) it is competitive
-with the best open-source interior-point solvers and well ahead of the other
-first-order solvers, and with the cuDSS GPU backend it is the fastest solver we
-have measured. On the large LPs of the Mittelmann benchmark set, up to 126
-million nonzeros, SCS with cuDSS solves more instances than any other solver
-we tested. Every solve is verified independently at ten times the requested
-tolerance so that solvers with different notions of "relative accuracy" are
-compared fairly. The full methodology, the LP and SDP results, and the raw data
-are on the :ref:`benchmarks page <benchmarks>`.
+On the large QP and LP test sets SCS 3.3 is as fast and as reliable as the
+best open-source interior-point solvers, and with the cuDSS GPU backend it is
+the fastest solver we have measured. Every solution is verified independently
+at ten times the requested tolerance, so solvers with different ideas of
+"tolerance" are compared fairly. Full methodology, all problem sets including
+SDPs, and the raw data are on the :ref:`benchmarks page <benchmarks>`.
 
-.. figure:: files/bench/qp_1e-4_profile_largest.png
-   :width: 90 %
+.. figure:: files/bench/landing_grid.png
+   :width: 100 %
    :align: center
-   :alt: Performance profile on the largest quarter of the QP test sets
+   :alt: Performance profiles and geometric mean solve times on the largest QPs, largest LPs and the Mittelmann LP set
 
-   Performance profile on the largest quarter of the QP test sets at tolerance
-   :math:`10^{-4}`, with independently verified solutions.
-
-.. figure:: files/bench/lpbig_1e-4_profile.png
-   :width: 90 %
-   :align: center
-   :alt: Performance profile on the Mittelmann LP benchmark set
-
-   The same on the 37 large LPs of the Mittelmann benchmark set, with an
-   1800 s limit.
+   Largest quarter of the QP test sets (top), largest quarter of the LP test
+   sets (middle) and the Mittelmann large-LP set (bottom), at tolerance
+   :math:`10^{-4}`. Left: fraction of problems solved within a factor
+   :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
+   time with failures charged 1000 s, and the number of verified solves.
 
 
 Development
