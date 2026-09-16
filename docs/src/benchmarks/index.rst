@@ -582,14 +582,6 @@ an interior-point solver.
    :width: 100 %
    :align: center
 
-At :math:`10^{-6}` on the largest quarter of the set the picture is the same:
-SCS still verifies the most solutions, and the interior-point solvers are
-faster on the instances they do solve.
-
-.. figure:: ../files/bench/sdp_1e-6_pair_largest.png
-   :width: 100 %
-   :align: center
-
 .. list-table:: SDP: verified solves and shifted geometric mean time (s); all 98 problems / largest quartile (28)
    :header-rows: 1
    :widths: 26 12 12 12 12 12 12 12 12
