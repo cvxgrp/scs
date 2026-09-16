@@ -16,10 +16,10 @@ The short version: on the QP and LP test sets SCS is competitive with the best
 interior-point codes and clearly ahead of the other first-order solvers, the
 cuDSS GPU backend is the fastest solver we tested on the largest quarter of the
 QP problems, and on the large LPs of the Mittelmann set SCS with cuDSS solves
-more instances than any other solver. On the SDP test sets the interior-point solvers are faster on
-the small, ill-conditioned control and truss instances, while SCS is the
-fastest solver on the large sparse combinatorial relaxations; see
-:ref:`bench_sdp` before choosing a solver for semidefinite problems.
+more instances than any other solver. On the SDP test sets SCS verifies the
+most solutions, but the interior-point solvers SDPA and CVXOPT are much faster
+on the problems they do solve; see :ref:`bench_sdp` before choosing a solver
+for semidefinite problems.
 
 .. _bench_headline:
 
@@ -118,7 +118,7 @@ returns that failed the check excluded for every solver.
      - 7e-5
      - 3e-4
      - 1e-4
-     - 1e-4
+     - 2e-4
    * - SCS (GPU, cuDSS)
      - 1e-4
      - 2e-5
@@ -127,7 +127,7 @@ returns that failed the check excluded for every solver.
      - 9e-5
      - 6e-5
      - 1e-4
-     - 9e-5
+     - 1e-4
      - 2e-4
    * - OSQP
      - 1e-4
@@ -177,8 +177,8 @@ returns that failed the check excluded for every solver.
      - 2e-6
      - 2e-7
      - 2e-6
-     - 1e-6
-     - 2e-5
+     - 2e-6
+     - 3e-5
    * - PIQP
      - 1e-6
      - 8e-10
@@ -252,13 +252,17 @@ via sdpa-python 0.2.3, each the latest release on PyPI in September
 **Problem sets.** QP: Maros-Meszaros (138) and the QPLIB continuous convex
 subset (19). LP: Netlib (feasible), Kennington and the root LP relaxations of
 all 240 instances of the MIPLIB 2017 benchmark set; the Mittelmann LP set is
-its own section. SDP: SDPLIB and the
-Mittelmann SDP set. "Largest quartile" means the quarter of each family with
+its own section. SDP: the 88 feasible SDPLIB instances and the 6 Mittelmann
+SDPs; SDPLIB's four infeasible instances (``infd1``, ``infd2``, ``infp1`` and
+``infp2``) are reported infeasible by every solver and are left out, since the
+plots measure the time to a verified optimum. "Largest quartile" means the quarter of each family with
 the most nonzeros in the constraint matrix (plus the Hessian for QPs).
 
-**Exclusions.** Clarabel ran out of memory (64 GB) on the SDPLIB instances
-with PSD blocks of order 500 or more; those instances are counted as failures
-for it. SDPA does not take a time limit but never needed one.
+**Exclusions.** Clarabel was killed at the 64 GB memory limit on
+``equalG11``, ``equalG51``, ``maxG55``, ``maxG60`` and ``G40mc``; those count
+as failures for it (the notes below list the outcome on every other large
+SDP). SDPA does not take a time limit; the harness killed it at the limit plus
+grace on ``maxG60``, which counts as a failure.
 cuOpt's QP path is an interior-point method whose factorization failed with a
 numerical error on a subset of the Maros-Meszaros problems; those count as
 failures.
@@ -561,28 +565,33 @@ format and were decoded with ``emps`` before use.
 Semidefinite programs
 ---------------------
 
-98 problems: SDPLIB and the Mittelmann SDP set. Two things are true at once
-here and the plots show both. SCS verifies more SDPs than any other solver,
-76 of 98 on the CPU, because it is the only solver that copes with the
-large sparse combinatorial relaxations (``theta``, ``mcp``, ``maxG``,
-``qpG`` and ``equalG``, where the interior-point methods run out of time or
-memory). But on the small, ill-conditioned ``control``, ``truss``, ``arch``
-and ``gpp`` instances an interior-point method is the right tool: SDPA and
-CVXOPT finish in seconds where SCS needs hundreds of thousands of iterations
-and often runs to the 900 s limit, so SDPA and CVXOPT have the better
-geometric mean time despite solving fewer problems. The GPU does not help on
-SDPs: the time goes into the eigendecompositions of the cone projection, not
-the linear system.
+94 problems: the 88 feasible SDPLIB instances and the 6 Mittelmann SDPs.
+This is the family where an interior-point method is the better default, and
+the plot says so: SDPA and CVXOPT verify nearly as many problems as SCS in a
+fraction of the time. SCS on the CPU has the highest success rate, 77 of 94,
+because it is the only solver without a blind spot in this set: SDPA fails
+the ``hinf`` and ``qap`` instances, CVXOPT and Clarabel run out of time or
+memory on the large sparse relaxations, while SCS's failures are the small,
+badly conditioned ``control``, ``truss`` and ``gpp`` instances, on which it
+spends hundreds of thousands of iterations and often the whole 900 s limit
+where an interior-point solver finishes in seconds. Those slow solves, more
+than the failures, are what put SCS last in geometric mean time. On the large
+sparse combinatorial relaxations (``theta``, ``mcp``, ``maxG``, ``qpG`` and
+``equalG``, 31 instances) SCS verifies 28 on the CPU and 29 on the GPU, but
+SDPA verifies 30, including ``maxG55`` with a PSD block of order 5000, so
+even there SCS is not ahead. The GPU does not help on SDPs: the time goes into
+the eigendecompositions of the cone projection, not the linear system.
 
-If your problem has a few large PSD blocks and moderate accuracy is enough,
-SCS is a good choice; if it has many small blocks or is badly conditioned, use
-an interior-point solver.
+Use an interior-point solver for SDPs when it fits in memory. SCS is the
+fallback when it does not (Clarabel and CVXOPT run out of memory or time on
+the largest instances here), or when a moderately accurate solution is enough
+and SCS is already solving the rest of your problems.
 
 .. figure:: ../files/bench/sdp_1e-4_pair.png
    :width: 100 %
    :align: center
 
-.. list-table:: SDP: verified solves and shifted geometric mean time (s); all 98 problems / largest quartile (28)
+.. list-table:: SDP: verified solves and shifted geometric mean time (s); all 94 problems / largest quartile (24)
    :header-rows: 1
    :widths: 26 12 12 12 12 12 12 12 12
 
@@ -596,46 +605,46 @@ an interior-point solver.
      - solved 1e-6 (largest)
      - gm 1e-6 (largest)
    * - SDPA
-     - 72
-     - 52.4
-     - 23
-     - 44.3
-     - 66
-     - 77.7
-     - 23
-     - 44.3
+     - 75
+     - 38.2
+     - 21
+     - 38.6
+     - 69
+     - 58.6
+     - 21
+     - 38.6
    * - CVXOPT
-     - 73
-     - 69.2
-     - 22
-     - 79.5
-     - 59
-     - 164.7
-     - 20
-     - 120.4
-   * - SCS (CPU, MKL Pardiso)
      - 76
-     - 124.8
+     - 52.4
      - 18
-     - 963.4
-     - 50
-     - 317.8
-     - 2
-     - 2489.3
+     - 111.5
+     - 62
+     - 132.5
+     - 16
+     - 178.6
    * - Clarabel
-     - 61
-     - 130.0
-     - 16
-     - 243.3
-     - 60
-     - 138.3
-     - 16
-     - 243.3
-   * - SCS (GPU, cuDSS)
-     - 72
-     - 167.5
+     - 71
+     - 68.9
      - 13
-     - 1419.1
+     - 257.0
+     - 69
+     - 75.7
+     - 12
+     - 283.1
+   * - SCS (CPU, MKL Pardiso)
+     - 77
+     - 107.5
+     - 14
+     - 1090.7
+     - 51
+     - 274.0
+     - 2
+     - 2455.8
+   * - SCS (GPU, cuDSS)
+     - 73
+     - 146.5
+     - 9
+     - 1531.0
      - 0
      - 2700.0
      - 0
@@ -848,9 +857,14 @@ Notes on individual solvers
   out on many of the larger problems.
 * **Clarabel.** Shown from its :math:`10^{-6}` run on QP and LP and from its
   default :math:`10^{-8}` run on SDP, where its termination test leaves the
-  loosest unscaled residuals of any solver at a given setting. Ran out of
-  memory (64 GB) on ``equalG11``, which has a PSD block of order 801, so the
-  other SDPLIB instances with PSD blocks of order 500 or more were not
-  attempted; all of them are counted as failures for it.
+  loosest unscaled residuals of any solver at a given setting. Every SDPLIB
+  instance with a PSD block of order 500 or more was run on its own in a
+  64 GB container: Clarabel solves ``maxG11``, ``maxG32``, ``thetaG11``,
+  ``qpG11``, ``mcp500-1`` and ``mcp500-2``; reaches the 900 s limit on
+  ``maxG51``, ``qpG51``, ``thetaG51``, ``mcp500-3``, ``mcp500-4`` and
+  ``gpp500-1`` to ``gpp500-4``; and is killed at the memory limit on
+  ``equalG11``, ``equalG51``, ``maxG55``, ``maxG60`` and the Mittelmann
+  ``G40mc``.
 * **SDPA and CVXOPT.** Interior-point SDP solvers. SDPA does not take a time
-  limit; its longest solve was 154 s, well inside the 900 s limit.
+  limit; its longest verified solve was 795 s (``maxG55``), inside the 900 s
+  limit, and it was killed at the limit on ``maxG60``.
