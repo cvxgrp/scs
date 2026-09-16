@@ -157,7 +157,11 @@ optimal.
 
 **Timing.** The reported time is wall-clock time for the solver call, including
 any presolve, factorization and GPU transfer, but excluding reading the problem
-from disk. QP and LP solves were limited to 300 s and SDP solves to 900 s. A
+from disk. QP and LP solves were limited to 300 s and SDP solves to 900 s, passed to each
+solver through its own time-limit setting; since wall time also includes
+setup and reading, a solve counts only if it finished within the limit plus a
+60 s grace, the same for every solver, and the harness killed the worker at
+that point regardless of what the solver reported. A
 performance profile shows, for each solver, the fraction of problems solved
 within a factor :math:`\tau` of the fastest solver on that problem; failures
 never count as solved. The shifted geometric mean uses a shift of 10 s and
@@ -182,9 +186,9 @@ LP relaxations up to 20 MB; the Mittelmann LP set is its own section. SDP: SDPLI
 Mittelmann SDP set. "Largest quartile" means the quarter of each family with
 the most nonzeros in the constraint matrix (plus the Hessian for QPs).
 
-**Exclusions.** Clarabel cannot form the dense scaling block for PSD cones of
-order 500 or more; those instances are counted as failures for it. SDPA
-ignores time limits and was allowed to run to completion. The SDPLIB archive's
+**Exclusions.** Clarabel ran out of memory (64 GB) on the SDPLIB instances
+with PSD blocks of order 500 or more; those instances are counted as failures
+for it. SDPA does not take a time limit but never needed one. The SDPLIB archive's
 ``maxG55`` and ``maxG60`` files are corrupt and were dropped for all solvers.
 cuOpt's QP path is an interior-point method whose factorization failed with a
 numerical error on a subset of the Maros-Meszaros problems; those count as
@@ -305,8 +309,8 @@ first-order solver by a wide margin.
      - 106.3
      - 10
      - 439.7
-     - 85
-     - 93.2
+     - 84
+     - 93.8
      - 12
      - 375.1
 
@@ -756,7 +760,6 @@ often at :math:`10^{-5}` (219 of 344 against 133), though it remains slow.
      - 9
      - 804
 
-
 Notes on individual solvers
 ---------------------------
 
@@ -765,17 +768,12 @@ Notes on individual solvers
   (``QGROW7`` and ``QGROW22`` from Maros-Meszaros, and the MIPLIB relaxation
   ``neos-4413714-turia``): on these badly scaled problems the diagonal
   rescaling drives the internal scale to its floor, and the scaled residuals
-  SCS monitors no longer track the unscaled ones. The rest (``PRIMALC8``,
-  ``QSCFXM2``, ``greenbea``, the ``pilot`` family) are marginal, with
-  residuals between one and four times the :math:`10^{-3}` cut. The same
-  check promotes SCS solves that hit the time limit with residuals inside ten
-  times the tolerance; those are counted as solved at the time limit, which
-  is what makes the SCS curves on the SDP profile reach the right edge.
+  SCS monitors no longer track the unscaled ones.
 * **cuOpt.** cuOpt's LP path is PDLP with an L2-relative stopping rule, and on
   problems with many variable bounds (Kennington, MIPLIB) its returned duals
   often have large infinity-norm stationarity residuals even though cuOpt
   reports the solve as optimal, and even though its own reported absolute
-  dual residual is in the tens or hundreds. Under the uniform check used here
+  dual residual is between :math:`3\times10^{1}` and :math:`3\times10^{2}`. Under the uniform check used here
   those solves count as failures; by its own status cuOpt reports 233 of the
   344 LPs optimal at :math:`10^{-4}`, and 36 of the 37 Mittelmann instances,
   of which only 7 pass the check. Its QP path is a barrier method
@@ -788,7 +786,8 @@ Notes on individual solvers
   QPs; its LP simplex is the fastest LP code in the comparison.
 * **ProxQP.** Run with its default dense/sparse backend selection; it times
   out on many of the larger problems.
-* **Clarabel.** Cannot attempt PSD cones of order 500 or more (it forms a
-  dense scaling block); those instances are counted as failures.
-* **SDPA and CVXOPT.** Interior-point SDP solvers; SDPA has no time limit and
-  ran to completion on every instance.
+* **Clarabel.** Ran out of memory (64 GB) on ``equalG11``, which has a PSD
+  block of order 801, so the other SDPLIB instances with PSD blocks of order
+  500 or more were not attempted; all of them are counted as failures for it.
+* **SDPA and CVXOPT.** Interior-point SDP solvers. SDPA does not take a time
+  limit; its longest solve was 154 s, well inside the 900 s limit.
