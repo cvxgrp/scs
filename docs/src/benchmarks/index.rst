@@ -54,10 +54,10 @@ A requested tolerance means different things to different solvers, so the
 plots do not pair runs by the number requested. Each plot has a target
 accuracy (:math:`10^{-4}` for the headline plots), every returned solution is
 checked against it with the same residuals, and each solver is shown from the
-run whose achieved 90th-percentile residual is closest to that target. For
-the headline plots that is the :math:`10^{-4}` run for SCS and OSQP, the
-:math:`10^{-5}` run for PDLP and cuOpt, whose own stopping rules are looser in
-this measure, the :math:`10^{-6}` run for ProxQP, and the :math:`10^{-6}` run
+run whose 90th-percentile residual over its verified solves is closest to
+that target. For the headline plots that is the :math:`10^{-4}` run for SCS,
+OSQP and cuOpt, the :math:`10^{-5}` run for PDLP and ProxQP, whose own
+stopping rules are looser in this measure, and the :math:`10^{-6}` run
 (:math:`10^{-8}` on SDP) for the interior-point solvers, which reach that
 accuracy at little extra cost and would be shown faster than any user sees
 them at a looser setting. Every solve, whatever was requested, is then
@@ -133,19 +133,19 @@ returns that failed the check excluded for every solver.
      - --
      - --
    * - cuOpt (GPU)
-     - 1e-5
+     - 1e-4
      - 4e-8
      - 4e-6
-     - 6e-11
-     - 2e-5
+     - 1e-10
      - 8e-5
-     - 8e-4
+     - 1e-4
+     - 7e-4
      - --
      - --
    * - ProxQP
-     - 1e-6
-     - 5e-7
-     - 3e-5
+     - 1e-5
+     - 5e-6
+     - 1e-4
      - --
      - --
      - --
@@ -337,9 +337,9 @@ first-order solver by a wide margin.
      - 43.2
    * - cuOpt (GPU)
      - 109
-     - 35.5
+     - 35.2
      - 32
-     - 23.3
+     - 23.1
      - 103
      - 41.4
      - 27
@@ -355,9 +355,9 @@ first-order solver by a wide margin.
      - 349.8
    * - ProxQP
      - 98
-     - 60.5
-     - 13
-     - 361.9
+     - 71.0
+     - 12
+     - 373.3
      - 84
      - 93.8
      - 12
@@ -459,15 +459,6 @@ verification (see the notes below).
      - 39.9
      - 40
      - 234.9
-   * - cuOpt (GPU)
-     - 232
-     - 39.5
-     - 31
-     - 202.8
-     - 204
-     - 59.9
-     - 20
-     - 350.5
    * - OSQP
      - 257
      - 43.7
@@ -477,6 +468,15 @@ verification (see the notes below).
      - 139.5
      - 21
      - 514.3
+   * - cuOpt (GPU)
+     - 219
+     - 47.9
+     - 25
+     - 276.2
+     - 204
+     - 59.9
+     - 20
+     - 350.5
 
 .. _bench_sdp:
 
@@ -620,8 +620,8 @@ notes below).
      - 12
      - 428
    * - cuOpt (GPU)
-     - 8
-     - 466
+     - 7
+     - 528
    * - HiGHS
      - 9
      - 804
@@ -643,7 +643,7 @@ The headline plots target :math:`10^{-4}`. To show what a tighter target
 costs, the same three rows are repeated with a target of :math:`10^{-5}`,
 every solve verified at :math:`10^{-4}`, and each solver again shown from the
 run whose achieved accuracy is closest to the target: the :math:`10^{-5}` run
-for SCS and OSQP, the :math:`10^{-6}` run for PDLP, cuOpt and ProxQP, and the
+for SCS, OSQP and cuOpt, the :math:`10^{-6}` run for PDLP and ProxQP, and the
 interior-point rows unchanged.
 
 .. figure:: ../files/bench/landing_grid_1e-5.png
@@ -715,8 +715,8 @@ tolerance ones.
      - 313
    * - 
      - ProxQP
-     - 13
-     - 362
+     - 12
+     - 373
      - 12
      - 375
    * - Kennington and MIPLIB-relaxation LPs, largest quartile (88)
@@ -757,10 +757,10 @@ tolerance ones.
      - 172
    * - 
      - cuOpt (GPU)
-     - 31
-     - 203
-     - 22
-     - 316
+     - 25
+     - 276
+     - 24
+     - 287
    * - 
      - OSQP
      - 43
@@ -799,8 +799,8 @@ tolerance ones.
      - 428
    * - 
      - cuOpt (GPU)
-     - 8
-     - 466
+     - 7
+     - 528
      - 4
      - 675
    * - 
@@ -824,9 +824,11 @@ Notes on individual solvers
   often have large infinity-norm stationarity residuals even though cuOpt
   reports the solve as optimal, and even though its own reported absolute
   dual residual is between :math:`3\times10^{1}` and :math:`3\times10^{2}`. Under the uniform check used here
-  those solves count as failures. It is shown from its :math:`10^{-5}` run,
-  which reports 341 of the 349 LPs optimal, of which 236 pass the check, and
-  35 of the 37 Mittelmann instances, of which 8 pass. Its QP path is a
+  those solves count as failures, while the returns that do pass are very
+  accurate (median residual around :math:`10^{-10}`), so the requested
+  tolerance changes little. It is shown from its :math:`10^{-4}` run, which
+  reports 331 of the 349 LPs optimal, of which 223 pass the check, and all 37
+  Mittelmann instances, of which 7 pass. Its QP path is a
   barrier method whose solutions verify cleanly. We used cuOpt 26.8.0 with default settings apart
   from the tolerance and time limit.
 * **PDLP (OR-Tools).** The same L2-relative termination rule applies, with a
