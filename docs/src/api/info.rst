@@ -7,7 +7,7 @@ the following fields.
 
 
 .. list-table::
-   :widths: 15 15 70
+   :widths: 24 12 64
    :header-rows: 1
 
    * - Name
