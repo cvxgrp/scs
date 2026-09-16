@@ -40,11 +40,14 @@ scaled problems where the unscaled residuals are large. Applying the same
 independent check to every solver makes the comparison tolerance-fair.
 
 **Tolerances.** The first-order solvers (SCS, OSQP, ProxQP, PDLP and cuOpt)
-were run at a requested relative tolerance of :math:`10^{-4}`, which is also
-SCS's default, for the headline plots, and at :math:`10^{-6}` for the
-high-accuracy plots, passing the tolerance through each solver's own absolute
-and relative settings; for SCS this means ``eps_abs = eps_rel = tol`` with the
-iteration limit raised so that only the time limit can stop it. The
+were run at a requested tolerance of :math:`10^{-4}` for the headline plots
+and :math:`10^{-6}` for the high-accuracy plots, passing the value through
+each solver's own absolute and relative settings; for SCS this means
+``eps_abs = eps_rel = tol`` with the iteration limit raised so that only the
+time limit can stop it. For reference, the solvers' own defaults are
+:math:`10^{-4}` for SCS and cuOpt, :math:`10^{-3}` for OSQP, :math:`10^{-5}`
+(absolute only) for ProxQP and :math:`10^{-6}` for OR-Tools PDLP, each in its
+own measure of the residual. The
 interior-point and simplex solvers (Clarabel, PIQP, HiGHS, SDPA and CVXOPT)
 are shown from their :math:`10^{-6}` runs in every plot. Nobody runs an interior-point solver at :math:`10^{-4}`: their defaults
 are :math:`10^{-7}` to :math:`10^{-8}`, the last few iterations are nearly
