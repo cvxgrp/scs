@@ -89,12 +89,15 @@ Features
 Performance
 -----------
 
-On the large QP and LP test sets SCS 3.3 solves as many problems as the best
-open-source interior-point solvers and, at moderate accuracy (relative
-tolerance :math:`10^{-4}`), in comparable time; with the cuDSS GPU backend it
-is the fastest solver we have measured. Every solution is verified
+SCS 3.3 is built for large problems. On the Mittelmann set of large LPs it
+solves more instances than any other open-source solver; with the cuDSS GPU
+backend it is the fastest solver we have measured on the largest QPs and
+second only to HiGHS on the largest LPs; and on the CPU it matches the best
+interior-point solvers problem for problem at a relative tolerance of
+:math:`10^{-4}`, while also handling the second-order, semidefinite,
+exponential and power cones that QP solvers cannot. Every solution is verified
 independently against the same residual test, so solvers with different ideas
-of "tolerance" are compared fairly. The full methodology, all problem sets
+of "tolerance" are compared fairly. The full methodology, all test sets
 including SDPs, and the raw data are on the :ref:`benchmarks page
 <benchmarks>`.
 
