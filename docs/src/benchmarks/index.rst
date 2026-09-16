@@ -53,7 +53,9 @@ It also removes a real comparability problem: Clarabel's termination test can
 leave large unscaled residuals when some terms in it are very large, and at
 :math:`10^{-4}` on the SDP sets its solutions were up to a hundred times
 looser than everyone else's. Every solve, whatever was requested, is then
-verified independently at ten times the plot's tolerance.
+verified independently at ten times the plot's tolerance. The first-order
+solvers were also run at :math:`10^{-5}`; see :ref:`bench_sens` for how
+much that changes the picture.
 
 A requested tolerance means different things to different solvers, so the
 table below reports the accuracy actually achieved, measured the same way for
@@ -158,7 +160,7 @@ any presolve, factorization and GPU transfer, but excluding reading the problem
 from disk. QP and LP solves were limited to 300 s and SDP solves to 900 s. A
 performance profile shows, for each solver, the fraction of problems solved
 within a factor :math:`\tau` of the fastest solver on that problem; failures
-never count as solved. The shifted geometric mean uses a shift of 1 s and
+never count as solved. The shifted geometric mean uses a shift of 10 s and
 charges each failure 1000 s. Times below 10 ms are floored at 10 ms before
 computing ratios.
 
@@ -551,23 +553,23 @@ notes below).
      - verified solves
      - geometric mean (s)
    * - SCS (GPU, cuDSS)
-     - 28
-     - 135
+     - 23
+     - 202
    * - SCS (CPU, MKL Pardiso)
-     - 24
-     - 235
-   * - PDLP (OR-Tools)
-     - 19
-     - 325
+     - 20
+     - 316
    * - Clarabel
      - 20
      - 372
+   * - PDLP (OR-Tools)
+     - 14
+     - 425
    * - PIQP
      - 12
      - 428
    * - cuOpt (GPU)
-     - 7
-     - 528
+     - 4
+     - 675
    * - HiGHS
      - 9
      - 804
@@ -579,6 +581,181 @@ limit (counted as failures); SCS with cuDSS ran out of GPU memory on
 ``thk_48`` (counted as a failure). Four instances (``bdry2``, ``Linf_520c``
 and the two ``L1_sixm`` problems) are distributed in Netlib's compressed EMPS
 format and were decoded with ``emps`` before use.
+
+.. _bench_sens:
+
+Sensitivity to the requested tolerance
+--------------------------------------
+
+The headline plots ask the first-order solvers for :math:`10^{-4}`. To show
+what a tighter request costs, every first-order solver was also run at
+:math:`10^{-5}` on the QP, LP and Mittelmann sets, verified at
+:math:`10^{-4}`; the interior-point rows are unchanged, since their runs are
+already tighter than that. The three landing-page rows at :math:`10^{-5}`:
+
+.. figure:: ../files/bench/landing_grid_1e-5.png
+   :width: 100 %
+   :align: center
+
+The LP picture barely moves and the Mittelmann set is still led by SCS with
+cuDSS and SCS on the CPU, with a smaller margin. The QP row is where the
+tolerance matters: SCS loses a few of the largest instances to the time limit
+and its geometric mean roughly doubles, so at :math:`10^{-5}` Clarabel and
+PIQP are faster on the largest QPs while SCS still matches Clarabel on the
+number solved. The other first-order solvers lose more than SCS does from the
+tighter request, OSQP and PDLP a quarter to a third of their large solves, so
+SCS's margin over them widens. cuOpt's LP returns pass verification far more
+often at :math:`10^{-5}` (219 of 344 against 133), though it remains slow.
+
+.. list-table:: Verified solves and shifted geometric mean time (s) at the 1e-4 and 1e-5 settings; interior-point solvers unchanged (shown from their tightest run in both)
+   :header-rows: 1
+   :widths: 30 24 12 12 12 12
+
+   * - Problem set
+     - Solver
+     - solved 1e-4
+     - time 1e-4
+     - solved 1e-5
+     - time 1e-5
+   * - Maros-Meszaros and QPLIB QPs, largest quartile (40)
+     - Clarabel
+     - 37
+     - 13
+     - 37
+     - 13
+   * - 
+     - PIQP
+     - 34
+     - 19
+     - 34
+     - 19
+   * - 
+     - SCS (GPU, cuDSS)
+     - 38
+     - 9
+     - 33
+     - 21
+   * - 
+     - SCS (CPU, MKL Pardiso)
+     - 38
+     - 13
+     - 35
+     - 21
+   * - 
+     - cuOpt (GPU)
+     - 32
+     - 23
+     - 31
+     - 24
+   * - 
+     - OSQP
+     - 32
+     - 30
+     - 31
+     - 39
+   * - 
+     - HiGHS
+     - 13
+     - 288
+     - 12
+     - 313
+   * - 
+     - ProxQP
+     - 10
+     - 440
+     - 12
+     - 373
+   * - Kennington and MIPLIB-relaxation LPs, largest quartile (86)
+     - HiGHS
+     - 74
+     - 25
+     - 74
+     - 25
+   * - 
+     - SCS (GPU, cuDSS)
+     - 74
+     - 35
+     - 72
+     - 37
+   * - 
+     - PIQP
+     - 65
+     - 43
+     - 65
+     - 43
+   * - 
+     - SCS (CPU, MKL Pardiso)
+     - 71
+     - 49
+     - 69
+     - 57
+   * - 
+     - Clarabel
+     - 70
+     - 61
+     - 66
+     - 72
+   * - 
+     - PDLP (OR-Tools)
+     - 47
+     - 145
+     - 41
+     - 201
+   * - 
+     - cuOpt (GPU)
+     - 24
+     - 280
+     - 24
+     - 279
+   * - 
+     - OSQP
+     - 44
+     - 210
+     - 34
+     - 360
+   * - Mittelmann LP set (37)
+     - SCS (GPU, cuDSS)
+     - 28
+     - 135
+     - 23
+     - 202
+   * - 
+     - SCS (CPU, MKL Pardiso)
+     - 24
+     - 235
+     - 20
+     - 316
+   * - 
+     - Clarabel
+     - 20
+     - 372
+     - 20
+     - 372
+   * - 
+     - PDLP (OR-Tools)
+     - 19
+     - 325
+     - 14
+     - 425
+   * - 
+     - PIQP
+     - 12
+     - 428
+     - 12
+     - 428
+   * - 
+     - cuOpt (GPU)
+     - 7
+     - 528
+     - 4
+     - 675
+   * - 
+     - HiGHS
+     - 9
+     - 804
+     - 9
+     - 804
+
 
 Notes on individual solvers
 ---------------------------
