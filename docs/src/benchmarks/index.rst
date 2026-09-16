@@ -227,11 +227,14 @@ solver through its own time-limit setting; since wall time also includes
 setup and reading, a solve counts only if it finished within the limit plus a
 60 s grace, the same for every solver, and the harness killed the worker at
 that point regardless of what the solver reported. A
-performance profile shows, for each solver, the fraction of problems solved
-within a factor :math:`\tau` of the fastest solver on that problem; failures
-never count as solved. The shifted geometric mean uses a shift of 10 s and
-charges each failure 1000 s. Times below 10 ms are floored at 10 ms before
-computing ratios.
+performance profile shows, for each solver, the fraction of all problems in
+the set solved within a factor :math:`\tau` of the fastest solver on that
+problem; failures never count as solved, so the height of a curve at the
+right edge is the solver's success rate. The shifted geometric mean uses a
+shift of 10 s and charges each failure three times the time limit (900 s for
+QP and LP, 2700 s for SDP, 5400 s for the Mittelmann set), so a failure
+always costs more than any successful solve. Times below 10 ms are floored at
+10 ms before computing ratios.
 
 **Hardware.** All CPU solvers ran in identical 4-core Linux x86-64 containers
 (Modal), on which the ``scs`` wheel selects the MKL Pardiso linear system
@@ -273,8 +276,8 @@ solutions. Over all 157 problems the interior-point solvers are faster on the
 small instances, where an SCS solve is dominated by fixed setup cost, but SCS
 solves nearly as many problems as they do.
 
-.. figure:: ../files/bench/qp_1e-4_profile.png
-   :width: 90 %
+.. figure:: ../files/bench/qp_1e-4_pair.png
+   :width: 100 %
    :align: center
 
 At the tighter :math:`10^{-6}` tolerance the interior-point solvers pull ahead,
@@ -282,8 +285,8 @@ as expected for a first-order method, but SCS still verifies more solutions
 than every solver other than PIQP and Clarabel, and remains the fastest
 first-order solver by a wide margin.
 
-.. figure:: ../files/bench/qp_1e-6_profile_largest.png
-   :width: 90 %
+.. figure:: ../files/bench/qp_1e-6_pair_largest.png
+   :width: 100 %
    :align: center
 
 .. list-table:: QP: verified solves and shifted geometric mean time (s); all 157 problems / largest quartile (40)
@@ -383,14 +386,16 @@ with cuDSS verifies the most solutions of any solver and is second only to
 HiGHS (dual simplex) in geometric mean time, ahead of the interior-point
 solvers PIQP and Clarabel. Both PDLP implementations, which
 are first-order LP methods, trail SCS by a wide margin under independent
-verification (see the notes below).
+verification (see the notes below). The first figure is the full 349-problem
+set at :math:`10^{-4}`; the second is the largest quarter at
+:math:`10^{-6}`.
 
-.. figure:: ../files/bench/lp_1e-4_profile.png
-   :width: 90 %
+.. figure:: ../files/bench/lp_1e-4_pair.png
+   :width: 100 %
    :align: center
 
-.. figure:: ../files/bench/lp_1e-6_profile_largest.png
-   :width: 90 %
+.. figure:: ../files/bench/lp_1e-6_pair_largest.png
+   :width: 100 %
    :align: center
 
 .. list-table:: LP: verified solves and shifted geometric mean time (s); all 349 problems / largest quartile (88)
@@ -479,32 +484,110 @@ verification (see the notes below).
      - 20
      - 350.5
 
+.. _bench_lpbig:
+
+Large linear programs: the Mittelmann set
+-----------------------------------------
+
+The LP test sets above are dominated by small and medium instances, so we also
+ran the 37 problems of `Hans Mittelmann's LP benchmark set
+<https://plato.asu.edu/ftp/lptestset/>`_, the standard collection of large,
+hard LPs: between 100,000 and 126 million nonzeros, with several instances of
+10 to 40 million variables. Every solver ran at tolerance :math:`10^{-4}`
+with an 1800 s limit in 64 GB containers (4 cores, or an A100 80GB for the two
+GPU solvers). Mittelmann's own runs allow several hours per instance and use
+faster machines, so the simplex and interior-point codes time out here far
+more often than they do in his tables; the point of this set for us is the
+size of the problems, not a re-run of his benchmark.
+
+This is where the cuDSS backend pays off. SCS on the GPU verifies more
+solutions than any other solver and has by far the lowest geometric mean
+time, and SCS on the CPU is second. The two other first-order codes, PDLP and
+cuOpt, are the natural comparison: OR-Tools PDLP verifies about two thirds as many
+solutions as SCS with cuDSS, and cuOpt's PDLP, although it reports almost
+every instance optimal, mostly fails the independent residual check (see the
+notes below).
+
+.. figure:: ../files/bench/lpbig_1e-4_pair.png
+   :width: 100 %
+   :align: center
+
+The ordering is unchanged at the tighter :math:`10^{-5}` setting, at which
+every first-order solver was also run on this set:
+
+.. figure:: ../files/bench/lpbig_1e-5_pair.png
+   :width: 100 %
+   :align: center
+
+.. list-table:: Mittelmann LP set: verified solves out of 37 and shifted geometric mean time (s), tolerance 1e-4, 1800 s limit
+   :header-rows: 1
+   :widths: 40 20 20
+
+   * - Solver
+     - verified solves
+     - geometric mean (s)
+   * - SCS (GPU, cuDSS)
+     - 28
+     - 135
+   * - SCS (CPU, MKL Pardiso)
+     - 24
+     - 235
+   * - PDLP (OR-Tools)
+     - 19
+     - 318
+   * - Clarabel
+     - 20
+     - 372
+   * - PIQP
+     - 12
+     - 428
+   * - cuOpt (GPU)
+     - 7
+     - 528
+   * - HiGHS
+     - 9
+     - 804
+
+Set-specific exclusions: Clarabel could not attempt ``L1_sixm250obs`` and
+``L1_sixm1000obs`` within 64 GB (counted as failures); OR-Tools PDLP cannot
+load ``Dual2_5000`` and ``dlr2`` because the model exceeds the 2 GB protobuf
+limit (counted as failures); SCS with cuDSS ran out of GPU memory on
+``thk_48`` (counted as a failure). Four instances (``bdry2``, ``Linf_520c``
+and the two ``L1_sixm`` problems) are distributed in Netlib's compressed EMPS
+format and were decoded with ``emps`` before use.
+
 .. _bench_sdp:
 
 Semidefinite programs
 ---------------------
 
-98 problems: SDPLIB and the Mittelmann SDP set. This is the family where an
-interior-point method is usually the right choice, and the plots say so: SDPA
-and CVXOPT solve the small, ill-conditioned ``control``, ``truss``, ``arch``
-and ``gpp`` instances in seconds where SCS needs hundreds of thousands of
-iterations and often hits the 900 s limit. SCS is the fastest solver on the
-large sparse combinatorial relaxations (``theta``, ``mcp``, ``maxG``, ``qpG``
-and ``equalG``), where the interior-point methods either run out of time or,
-in Clarabel's case, cannot form the dense scaling block at all. The GPU does
-not help on SDPs: the time is spent in the eigendecompositions of the cone
-projection, not in the linear system.
+98 problems: SDPLIB and the Mittelmann SDP set. Two things are true at once
+here and the plots show both. SCS verifies more SDPs than any other solver,
+76 of 98 on the CPU, because it is the only solver that copes with the
+large sparse combinatorial relaxations (``theta``, ``mcp``, ``maxG``,
+``qpG`` and ``equalG``, where the interior-point methods run out of time or
+memory). But on the small, ill-conditioned ``control``, ``truss``, ``arch``
+and ``gpp`` instances an interior-point method is the right tool: SDPA and
+CVXOPT finish in seconds where SCS needs hundreds of thousands of iterations
+and often runs to the 900 s limit, so SDPA and CVXOPT have the better
+geometric mean time despite solving fewer problems. The GPU does not help on
+SDPs: the time goes into the eigendecompositions of the cone projection, not
+the linear system.
 
 If your problem has a few large PSD blocks and moderate accuracy is enough,
 SCS is a good choice; if it has many small blocks or is badly conditioned, use
 an interior-point solver.
 
-.. figure:: ../files/bench/sdp_1e-4_profile.png
-   :width: 90 %
+.. figure:: ../files/bench/sdp_1e-4_pair.png
+   :width: 100 %
    :align: center
 
-.. figure:: ../files/bench/sdp_1e-4_geomean.png
-   :width: 90 %
+At :math:`10^{-6}` on the largest quarter of the set the picture is the same:
+SCS still verifies the most solutions, and the interior-point solvers are
+faster on the instances they do solve.
+
+.. figure:: ../files/bench/sdp_1e-6_pair_largest.png
+   :width: 100 %
    :align: center
 
 .. list-table:: SDP: verified solves and shifted geometric mean time (s); all 98 problems / largest quartile (28)
@@ -565,67 +648,6 @@ an interior-point solver.
      - 1000.0
      - 0
      - 1000.0
-
-.. _bench_lpbig:
-
-Large linear programs: the Mittelmann set
------------------------------------------
-
-The LP test sets above are dominated by small and medium instances, so we also
-ran (see the bottom row of the headline figure) the 37 problems of `Hans Mittelmann's LP benchmark set
-<https://plato.asu.edu/ftp/lptestset/>`_, the standard collection of large,
-hard LPs: between 100,000 and 126 million nonzeros, with several instances of
-10 to 40 million variables. Every solver ran at tolerance :math:`10^{-4}`
-with an 1800 s limit in 64 GB containers (4 cores, or an A100 80GB for the two
-GPU solvers). Mittelmann's own runs allow several hours per instance and use
-faster machines, so the simplex and interior-point codes time out here far
-more often than they do in his tables; the point of this set for us is the
-size of the problems, not a re-run of his benchmark.
-
-This is where the cuDSS backend pays off. SCS on the GPU verifies more
-solutions than any other solver and has by far the lowest geometric mean
-time, and SCS on the CPU is second. The two other first-order codes, PDLP and
-cuOpt, are the natural comparison: OR-Tools PDLP verifies about two thirds as many
-solutions as SCS with cuDSS, and cuOpt's PDLP, although it reports almost
-every instance optimal, mostly fails the independent residual check (see the
-notes below).
-
-.. list-table:: Mittelmann LP set: verified solves out of 37 and shifted geometric mean time (s), tolerance 1e-4, 1800 s limit
-   :header-rows: 1
-   :widths: 40 20 20
-
-   * - Solver
-     - verified solves
-     - geometric mean (s)
-   * - SCS (GPU, cuDSS)
-     - 28
-     - 135
-   * - SCS (CPU, MKL Pardiso)
-     - 24
-     - 235
-   * - PDLP (OR-Tools)
-     - 19
-     - 318
-   * - Clarabel
-     - 20
-     - 372
-   * - PIQP
-     - 12
-     - 428
-   * - cuOpt (GPU)
-     - 7
-     - 528
-   * - HiGHS
-     - 9
-     - 804
-
-Set-specific exclusions: Clarabel could not attempt ``L1_sixm250obs`` and
-``L1_sixm1000obs`` within 64 GB (counted as failures); OR-Tools PDLP cannot
-load ``Dual2_5000`` and ``dlr2`` because the model exceeds the 2 GB protobuf
-limit (counted as failures); SCS with cuDSS ran out of GPU memory on
-``thk_48`` (counted as a failure). Four instances (``bdry2``, ``Linf_520c``
-and the two ``L1_sixm`` problems) are distributed in Netlib's compressed EMPS
-format and were decoded with ``emps`` before use.
 
 .. _bench_sens:
 
