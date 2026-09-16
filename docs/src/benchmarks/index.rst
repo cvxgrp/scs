@@ -593,24 +593,16 @@ and SCS is already solving the rest of your problems.
 
 .. list-table:: SDP: verified solves and shifted geometric mean time (s); all 94 problems / largest quartile (24)
    :header-rows: 1
-   :widths: 26 12 12 12 12 12 12 12 12
+   :widths: 26 12 12 12 12
 
    * - Solver
      - solved 1e-4
      - gm 1e-4
      - solved 1e-4 (largest)
      - gm 1e-4 (largest)
-     - solved 1e-6
-     - gm 1e-6
-     - solved 1e-6 (largest)
-     - gm 1e-6 (largest)
    * - SDPA
      - 75
      - 38.2
-     - 21
-     - 38.6
-     - 69
-     - 58.6
      - 21
      - 38.6
    * - CVXOPT
@@ -618,37 +610,21 @@ and SCS is already solving the rest of your problems.
      - 52.4
      - 18
      - 111.5
-     - 62
-     - 132.5
-     - 16
-     - 178.6
    * - Clarabel
      - 71
      - 68.9
      - 13
      - 257.0
-     - 69
-     - 75.7
-     - 12
-     - 283.1
    * - SCS (CPU, MKL Pardiso)
      - 77
      - 107.5
      - 14
      - 1090.7
-     - 51
-     - 274.0
-     - 2
-     - 2455.8
    * - SCS (GPU, cuDSS)
      - 73
      - 146.5
      - 9
      - 1531.0
-     - 0
-     - 2700.0
-     - 0
-     - 2700.0
 
 .. _bench_sens:
 
