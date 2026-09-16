@@ -21,6 +21,23 @@ the small, ill-conditioned control and truss instances, while SCS is the
 fastest solver on the large sparse combinatorial relaxations; see
 :ref:`bench_sdp` before choosing a solver for semidefinite problems.
 
+.. _bench_headline:
+
+Headline results
+----------------
+
+The three rows a user is most likely to care about, at a target accuracy of
+:math:`10^{-4}`: the largest quarter of the QP test sets, the largest quarter
+of the LP test sets, and the Mittelmann large-LP set. Left, the fraction of
+problems solved within a factor :math:`\tau` of the fastest solver on each
+problem; right, the shifted geometric mean solve time with the number of
+verified solves. The same figure is on the front page; the sections below
+give the full test sets, the tighter-tolerance results and the methodology.
+
+.. figure:: ../files/bench/landing_grid.png
+   :width: 100 %
+   :align: center
+
 .. _bench_method:
 
 Methodology
@@ -256,14 +273,6 @@ solutions. Over all 157 problems the interior-point solvers are faster on the
 small instances, where an SCS solve is dominated by fixed setup cost, but SCS
 solves nearly as many problems as they do.
 
-.. figure:: ../files/bench/qp_1e-4_profile_largest.png
-   :width: 90 %
-   :align: center
-
-.. figure:: ../files/bench/qp_1e-4_geomean_largest.png
-   :width: 90 %
-   :align: center
-
 .. figure:: ../files/bench/qp_1e-4_profile.png
    :width: 90 %
    :align: center
@@ -375,14 +384,6 @@ HiGHS (dual simplex) in geometric mean time, ahead of the interior-point
 solvers PIQP and Clarabel. Both PDLP implementations, which
 are first-order LP methods, trail SCS by a wide margin under independent
 verification (see the notes below).
-
-.. figure:: ../files/bench/lp_1e-4_profile_largest.png
-   :width: 90 %
-   :align: center
-
-.. figure:: ../files/bench/lp_1e-4_geomean_largest.png
-   :width: 90 %
-   :align: center
 
 .. figure:: ../files/bench/lp_1e-4_profile.png
    :width: 90 %
@@ -571,7 +572,7 @@ Large linear programs: the Mittelmann set
 -----------------------------------------
 
 The LP test sets above are dominated by small and medium instances, so we also
-ran the 37 problems of `Hans Mittelmann's LP benchmark set
+ran (see the bottom row of the headline figure) the 37 problems of `Hans Mittelmann's LP benchmark set
 <https://plato.asu.edu/ftp/lptestset/>`_, the standard collection of large,
 hard LPs: between 100,000 and 126 million nonzeros, with several instances of
 10 to 40 million variables. Every solver ran at tolerance :math:`10^{-4}`
@@ -588,14 +589,6 @@ cuOpt, are the natural comparison: OR-Tools PDLP verifies about two thirds as ma
 solutions as SCS with cuDSS, and cuOpt's PDLP, although it reports almost
 every instance optimal, mostly fails the independent residual check (see the
 notes below).
-
-.. figure:: ../files/bench/lpbig_1e-4_profile.png
-   :width: 90 %
-   :align: center
-
-.. figure:: ../files/bench/lpbig_1e-4_geomean.png
-   :width: 90 %
-   :align: center
 
 .. list-table:: Mittelmann LP set: verified solves out of 37 and shifted geometric mean time (s), tolerance 1e-4, 1800 s limit
    :header-rows: 1
