@@ -63,11 +63,12 @@ accuracy at little extra cost and would be shown faster than any user sees
 them at a looser setting. Every solve, whatever was requested, is then
 verified independently at ten times the plot's target.
 
-The table below reports the accuracy those runs actually achieved, measured
-the same way for everyone: the largest of the three relative KKT residuals
-over the solves each solver itself reported optimal.
+The table below reports the accuracy those runs actually achieved on the
+solves that count, measured the same way for everyone: the largest of the
+three relative KKT residuals over each solver's verified solves, with the
+returns that failed the check excluded for every solver.
 
-.. list-table:: Achieved accuracy of the runs shown in the headline plots: median and 90th percentile of the largest relative KKT residual over the solves each solver itself reported optimal
+.. list-table:: Achieved accuracy of the runs shown in the headline plots: median and 90th percentile of the largest relative KKT residual over each solver's verified solves (returns that fail the check are excluded for every solver)
    :header-rows: 2
    :widths: 20 10 11 11 11 11 11 11 11 11
 
@@ -94,23 +95,23 @@ over the solves each solver itself reported optimal.
    * - SCS (CPU)
      - 1e-4
      - 1e-5
-     - 1e-4
+     - 9e-5
      - 3e-5
      - 9e-5
-     - 5e-5
-     - 9e-5
-     - 9e-5
+     - 7e-5
+     - 3e-4
+     - 1e-4
      - 1e-4
    * - SCS (GPU, cuDSS)
      - 1e-4
      - 2e-5
-     - 1e-4
-     - 3e-5
-     - 1e-4
-     - 6e-5
      - 9e-5
-     - 8e-5
+     - 3e-5
+     - 9e-5
+     - 6e-5
      - 1e-4
+     - 9e-5
+     - 2e-4
    * - OSQP
      - 1e-4
      - 5e-5
@@ -135,16 +136,16 @@ over the solves each solver itself reported optimal.
      - 1e-5
      - 4e-8
      - 4e-6
-     - 2e-7
-     - 9e-1
-     - 6e-1
-     - 1e+0
+     - 6e-11
+     - 2e-5
+     - 8e-5
+     - 8e-4
      - --
      - --
    * - ProxQP
      - 1e-6
-     - 6e-7
-     - 4e-4
+     - 5e-7
+     - 3e-5
      - --
      - --
      - --
@@ -156,26 +157,26 @@ over the solves each solver itself reported optimal.
      - 2e-7
      - 1e-6
      - 1e-7
-     - 1e-6
-     - 2e-7
-     - 1e-6
      - 2e-6
-     - 3e-5
+     - 2e-7
+     - 2e-6
+     - 1e-6
+     - 2e-5
    * - PIQP
      - 1e-6
      - 8e-10
      - 1e-7
      - 2e-10
-     - 6e-8
+     - 5e-8
      - --
      - --
      - --
      - --
    * - HiGHS
      - 1e-6
-     - 6e-8
-     - 6e-4
-     - 8e-16
+     - 4e-8
+     - 3e-5
+     - 7e-16
      - 1e-12
      - --
      - --
@@ -190,7 +191,7 @@ over the solves each solver itself reported optimal.
      - --
      - --
      - 2e-7
-     - 3e-7
+     - 4e-6
    * - CVXOPT
      - 1e-6
      - --
@@ -199,8 +200,8 @@ over the solves each solver itself reported optimal.
      - --
      - --
      - --
-     - 2e-7
-     - 4e-7
+     - 3e-7
+     - 6e-5
 
 **Timing.** The reported time is wall-clock time for the solver call, including
 any presolve, factorization and GPU transfer, but excluding reading the problem
