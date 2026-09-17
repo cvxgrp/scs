@@ -603,10 +603,11 @@ the 29 and PDLP on 5; cuOpt reports ``cplex2`` optimal. On the SDPs, SDPA
 gets all four by status, while CVXOPT's certificates fail the check and
 point the wrong way on the two unbounded instances.
 
-The plot compares the solvers that return certificates, each at the setting
-that detects most: SCS and Clarabel at a solve tolerance of :math:`10^{-8}`
-with the infeasibility tolerance at :math:`10^{-4}`, OSQP from its
-:math:`10^{-6}` run and PDLP from its :math:`10^{-5}` run. A verified
+The plot compares the solvers that return certificates, each at its
+tightest setting in the study: SCS and Clarabel at a solve tolerance of
+:math:`10^{-8}` with the infeasibility tolerance at :math:`10^{-4}`, OSQP
+at :math:`10^{-6}` and PDLP at :math:`10^{-5}`, neither of which has a
+separate infeasibility tolerance. A verified
 certificate counts as a solve and everything else as a failure, with the
 same failure charge as the other sets.
 
