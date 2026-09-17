@@ -607,15 +607,20 @@ the 29 and PDLP on 5; cuOpt reports ``cplex2`` optimal. On the SDPs, SDPA
 gets all four by status, while CVXOPT's certificates fail the check and
 point the wrong way on the two unbounded instances.
 
-The plot compares the solvers that return certificates. Each is shown from
-the run in which it certified the most. For SCS, Clarabel and OSQP that is a
-solve tolerance of :math:`10^{-8}` with the certificate tolerance at
-:math:`10^{-4}`, since a tighter solve tolerance is what stops a near-feasible
-point from being accepted as optimal (OSQP's certificate tolerances default
-to :math:`10^{-4}`). PDLP is shown from its :math:`10^{-5}` run with its
-default certificate tolerance of :math:`10^{-8}`: with that tolerance
-loosened to :math:`10^{-4}` its certificates mostly fail the check (16 of 28
-verify), so the default is its best setting here. A verified
+The plot compares the solvers that return certificates, and to keep the
+choice of settings from favouring anyone, every solver is shown from the run
+in which it certified the most out of all the settings we tried for it. For
+SCS and Clarabel that is a solve tolerance of :math:`10^{-8}` with the
+certificate tolerance at :math:`10^{-4}`, since a tighter solve tolerance is
+what stops a near-feasible point from being accepted as optimal. OSQP was run
+at :math:`10^{-4}`, :math:`10^{-6}` and :math:`10^{-8}`, always with its
+default certificate tolerances of :math:`10^{-4}`, and certifies the same 19
+at the two tighter settings; it is shown at :math:`10^{-8}`. PDLP was run at
+:math:`10^{-5}` both with its default certificate tolerance of
+:math:`10^{-8}` and with that tolerance loosened to :math:`10^{-4}` to match
+the others; the default verifies more (22 against 16, since the looser
+certificates mostly fail the independent check), so PDLP is shown at its
+default. The table below lists every run. A verified
 certificate counts as a solve and everything else as a failure, with the
 same failure charge as the other sets.
 
