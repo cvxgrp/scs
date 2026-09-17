@@ -253,7 +253,8 @@ all 240 instances of the MIPLIB 2017 benchmark set; the Mittelmann LP set is
 its own section. SDP: the 88 feasible SDPLIB instances and the 6 Mittelmann
 SDPs; SDPLIB's four infeasible instances (``infd1``, ``infd2``, ``infp1`` and
 ``infp2``) are reported infeasible by every solver and are left out, since the
-plots measure the time to a verified optimum. "Largest quartile" means the quarter of each family with
+plots measure the time to a verified optimum; they and the 29 infeasible
+Netlib LPs are used in :ref:`bench_infeasible` instead. "Largest quartile" means the quarter of each family with
 the most nonzeros in the constraint matrix (plus the Hessian for QPs).
 
 **Exclusions.** Clarabel was killed at the 64 GB memory limit on
@@ -557,6 +558,186 @@ limit (counted as failures); SCS with cuDSS ran out of GPU memory on
 ``thk_48`` (counted as a failure). Four instances (``bdry2``, ``Linf_520c``
 and the two ``L1_sixm`` problems) are distributed in Netlib's compressed EMPS
 format and were decoded with ``emps`` before use.
+
+.. _bench_infeasible:
+
+Infeasible and unbounded problems
+---------------------------------
+
+A solver should also recognise when a problem has no solution. We ran every
+LP solver on the 29 infeasible LPs of the Netlib collection and every SDP
+solver on the four infeasible SDPLIB instances (two primal infeasible, two
+unbounded). These are small problems, a median of 460 variables, so this
+tests detection rather than speed at scale. SCS, Clarabel, OSQP, PDLP and
+CVXOPT return a certificate (a Farkas ray), which the harness checks against
+the problem data at the same :math:`10^{-3}` threshold as the plots; HiGHS,
+PIQP, cuOpt and SDPA report a status only. A verified certificate of either
+kind counts as correct (``cplex1`` and ``mondou2`` are both primal and dual
+infeasible). "Near-feasible" means the solver returned a point whose
+residuals pass the check: the instance is infeasible by less than the
+tolerance asked for, a statement about the tolerance rather than an error.
+
+SCS certifies 24 of the 29 LPs at :math:`10^{-4}`, in 0.2 s geometric
+mean, 26 at a solve tolerance of :math:`10^{-8}` with the infeasibility
+tolerance kept at :math:`10^{-4}`, and all four SDPs on both backends. Its
+misses at :math:`10^{-4}` are four instances infeasible by about the
+tolerance (two within the check, two just outside it) and, on ``reactor``, a
+certificate of unboundedness that does not verify. Clarabel certifies 27,
+HiGHS detects 26 by status, and OSQP and PDLP give no answer on 10 and 5 of
+the 29. On the SDPs SDPA gets all four by status, while CVXOPT's certificates
+fail the check.
+
+Each solver in the plot is shown from the run in which it certified the most
+of all the settings we tried for it: SCS, Clarabel and OSQP at a solve
+tolerance of :math:`10^{-8}` with the certificate tolerance at
+:math:`10^{-4}` (a tighter solve tolerance is what stops a near-feasible
+point from being accepted as optimal), and PDLP at :math:`10^{-5}` with its
+default certificate tolerance, which verifies more than a loosened one. A
+verified certificate counts as a solve and everything else as a failure,
+with the same charge as the other sets. The table shows the same settings
+plus SCS at :math:`10^{-4}`; the other runs are in the archive.
+
+.. figure:: ../files/bench/infeas_pair.png
+   :width: 100 %
+   :align: center
+
+.. list-table:: Infeasibility detection, Netlib infeasible LPs (29 problems): verified certificate / correct status without certificate / certificate failing the check / reported optimal with residuals within tolerance / wrong / no answer, and shifted geometric mean time (s) over certified and status answers
+   :header-rows: 1
+   :widths: 24 11 11 11 11 11 11 12
+
+   * - Solver
+     - certified
+     - status only
+     - unverified
+     - near-feasible
+     - wrong
+     - no answer
+     - gm time
+   * - SCS (CPU, MKL Pardiso), 1e-4
+     - 24
+     - 0
+     - 0
+     - 2
+     - 3
+     - 0
+     - 0.20
+   * - SCS (CPU, MKL Pardiso), 1e-8 (infeasibility tolerance 1e-4)
+     - 26
+     - 0
+     - 0
+     - 1
+     - 1
+     - 1
+     - 0.44
+   * - SCS (GPU, cuDSS), 1e-8 (infeasibility tolerance 1e-4)
+     - 25
+     - 0
+     - 0
+     - 1
+     - 1
+     - 2
+     - 0.93
+   * - Clarabel, 1e-8 (infeasibility tolerance 1e-4)
+     - 27
+     - 0
+     - 1
+     - 1
+     - 0
+     - 0
+     - 0.35
+   * - PIQP, 1e-6
+     - 0
+     - 17
+     - 0
+     - 0
+     - 0
+     - 12
+     - 0.29
+   * - HiGHS, 1e-6
+     - 0
+     - 26
+     - 0
+     - 0
+     - 0
+     - 3
+     - 0.02
+   * - OSQP, 1e-8
+     - 19
+     - 0
+     - 0
+     - 0
+     - 0
+     - 10
+     - 1.68
+   * - PDLP (OR-Tools), 1e-5
+     - 22
+     - 0
+     - 2
+     - 0
+     - 0
+     - 5
+     - 10.91
+   * - cuOpt (GPU), 1e-4
+     - 0
+     - 27
+     - 0
+     - 0
+     - 1
+     - 1
+     - 0.40
+
+.. list-table:: Infeasibility detection, SDPLIB infeasible SDPs (4 problems): verified certificate / correct status without certificate / certificate failing the check / reported optimal with residuals within tolerance / wrong / no answer, and shifted geometric mean time (s) over certified and status answers
+   :header-rows: 1
+   :widths: 24 11 11 11 11 11 11 12
+
+   * - Solver
+     - certified
+     - status only
+     - unverified
+     - near-feasible
+     - wrong
+     - no answer
+     - gm time
+   * - SCS (CPU, MKL Pardiso)
+     - 4
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0.04
+   * - SCS (GPU, cuDSS)
+     - 4
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0.70
+   * - Clarabel
+     - 4
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0.20
+   * - CVXOPT
+     - 0
+     - 0
+     - 2
+     - 0
+     - 2
+     - 0
+     - --
+   * - SDPA
+     - 0
+     - 4
+     - 0
+     - 0
+     - 0
+     - 0
+     - 0.03
 
 .. _bench_sdp:
 

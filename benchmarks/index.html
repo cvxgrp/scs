@@ -56,6 +56,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#quadratic-programs">Quadratic programs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#linear-programs">Linear programs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#large-linear-programs-the-mittelmann-set">Large linear programs: the Mittelmann set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#infeasible-and-unbounded-problems">Infeasible and unbounded problems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#semidefinite-programs">Semidefinite programs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sensitivity-to-the-requested-tolerance">Sensitivity to the requested tolerance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#notes-on-individual-solvers">Notes on individual solvers</a></li>
@@ -359,7 +360,8 @@ all 240 instances of the MIPLIB 2017 benchmark set; the Mittelmann LP set is
 its own section. SDP: the 88 feasible SDPLIB instances and the 6 Mittelmann
 SDPs; SDPLIB’s four infeasible instances (<code class="docutils literal notranslate"><span class="pre">infd1</span></code>, <code class="docutils literal notranslate"><span class="pre">infd2</span></code>, <code class="docutils literal notranslate"><span class="pre">infp1</span></code> and
 <code class="docutils literal notranslate"><span class="pre">infp2</span></code>) are reported infeasible by every solver and are left out, since the
-plots measure the time to a verified optimum. “Largest quartile” means the quarter of each family with
+plots measure the time to a verified optimum; they and the 29 infeasible
+Netlib LPs are used in <a class="reference internal" href="#bench-infeasible"><span class="std std-ref">Infeasible and unbounded problems</span></a> instead. “Largest quartile” means the quarter of each family with
 the most nonzeros in the constraint matrix (plus the Hessian for QPs).</p>
 <p><strong>Exclusions.</strong> Clarabel was killed at the 64 GB memory limit on
 <code class="docutils literal notranslate"><span class="pre">equalG11</span></code>, <code class="docutils literal notranslate"><span class="pre">equalG51</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG55</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG60</span></code> and <code class="docutils literal notranslate"><span class="pre">G40mc</span></code>; those count
@@ -708,6 +710,221 @@ limit (counted as failures); SCS with cuDSS ran out of GPU memory on
 and the two <code class="docutils literal notranslate"><span class="pre">L1_sixm</span></code> problems) are distributed in Netlib’s compressed EMPS
 format and were decoded with <code class="docutils literal notranslate"><span class="pre">emps</span></code> before use.</p>
 </section>
+<section id="infeasible-and-unbounded-problems">
+<span id="bench-infeasible"></span><h2>Infeasible and unbounded problems<a class="headerlink" href="#infeasible-and-unbounded-problems" title="Link to this heading"></a></h2>
+<p>A solver should also recognise when a problem has no solution. We ran every
+LP solver on the 29 infeasible LPs of the Netlib collection and every SDP
+solver on the four infeasible SDPLIB instances (two primal infeasible, two
+unbounded). These are small problems, a median of 460 variables, so this
+tests detection rather than speed at scale. SCS, Clarabel, OSQP, PDLP and
+CVXOPT return a certificate (a Farkas ray), which the harness checks against
+the problem data at the same <span class="math notranslate nohighlight">\(10^{-3}\)</span> threshold as the plots; HiGHS,
+PIQP, cuOpt and SDPA report a status only. A verified certificate of either
+kind counts as correct (<code class="docutils literal notranslate"><span class="pre">cplex1</span></code> and <code class="docutils literal notranslate"><span class="pre">mondou2</span></code> are both primal and dual
+infeasible). “Near-feasible” means the solver returned a point whose
+residuals pass the check: the instance is infeasible by less than the
+tolerance asked for, a statement about the tolerance rather than an error.</p>
+<p>SCS certifies 24 of the 29 LPs at <span class="math notranslate nohighlight">\(10^{-4}\)</span>, in 0.2 s geometric
+mean, 26 at a solve tolerance of <span class="math notranslate nohighlight">\(10^{-8}\)</span> with the infeasibility
+tolerance kept at <span class="math notranslate nohighlight">\(10^{-4}\)</span>, and all four SDPs on both backends. Its
+misses at <span class="math notranslate nohighlight">\(10^{-4}\)</span> are four instances infeasible by about the
+tolerance (two within the check, two just outside it) and, on <code class="docutils literal notranslate"><span class="pre">reactor</span></code>, a
+certificate of unboundedness that does not verify. Clarabel certifies 27,
+HiGHS detects 26 by status, and OSQP and PDLP give no answer on 10 and 5 of
+the 29. On the SDPs SDPA gets all four by status, while CVXOPT’s certificates
+fail the check.</p>
+<p>Each solver in the plot is shown from the run in which it certified the most
+of all the settings we tried for it: SCS, Clarabel and OSQP at a solve
+tolerance of <span class="math notranslate nohighlight">\(10^{-8}\)</span> with the certificate tolerance at
+<span class="math notranslate nohighlight">\(10^{-4}\)</span> (a tighter solve tolerance is what stops a near-feasible
+point from being accepted as optimal), and PDLP at <span class="math notranslate nohighlight">\(10^{-5}\)</span> with its
+default certificate tolerance, which verifies more than a loosened one. A
+verified certificate counts as a solve and everything else as a failure,
+with the same charge as the other sets. The table shows the same settings
+plus SCS at <span class="math notranslate nohighlight">\(10^{-4}\)</span>; the other runs are in the archive.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/infeas_pair.png"><img alt="../_images/infeas_pair.png" src="../_images/infeas_pair.png" style="width: 100%;" />
+</a>
+</figure>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">Infeasibility detection, Netlib infeasible LPs (29 problems): verified certificate / correct status without certificate / certificate failing the check / reported optimal with residuals within tolerance / wrong / no answer, and shifted geometric mean time (s) over certified and status answers</span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 23.5%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 11.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>certified</p></th>
+<th class="head"><p>status only</p></th>
+<th class="head"><p>unverified</p></th>
+<th class="head"><p>near-feasible</p></th>
+<th class="head"><p>wrong</p></th>
+<th class="head"><p>no answer</p></th>
+<th class="head"><p>gm time</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCS (CPU, MKL Pardiso), 1e-4</p></td>
+<td><p>24</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>0</p></td>
+<td><p>0.20</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCS (CPU, MKL Pardiso), 1e-8 (infeasibility tolerance 1e-4)</p></td>
+<td><p>26</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>0.44</p></td>
+</tr>
+<tr class="row-even"><td><p>SCS (GPU, cuDSS), 1e-8 (infeasibility tolerance 1e-4)</p></td>
+<td><p>25</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>0.93</p></td>
+</tr>
+<tr class="row-odd"><td><p>Clarabel, 1e-8 (infeasibility tolerance 1e-4)</p></td>
+<td><p>27</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.35</p></td>
+</tr>
+<tr class="row-even"><td><p>PIQP, 1e-6</p></td>
+<td><p>0</p></td>
+<td><p>17</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>12</p></td>
+<td><p>0.29</p></td>
+</tr>
+<tr class="row-odd"><td><p>HiGHS, 1e-6</p></td>
+<td><p>0</p></td>
+<td><p>26</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>3</p></td>
+<td><p>0.02</p></td>
+</tr>
+<tr class="row-even"><td><p>OSQP, 1e-8</p></td>
+<td><p>19</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>10</p></td>
+<td><p>1.68</p></td>
+</tr>
+<tr class="row-odd"><td><p>PDLP (OR-Tools), 1e-5</p></td>
+<td><p>22</p></td>
+<td><p>0</p></td>
+<td><p>2</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>5</p></td>
+<td><p>10.91</p></td>
+</tr>
+<tr class="row-even"><td><p>cuOpt (GPU), 1e-4</p></td>
+<td><p>0</p></td>
+<td><p>27</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>0.40</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">Infeasibility detection, SDPLIB infeasible SDPs (4 problems): verified certificate / correct status without certificate / certificate failing the check / reported optimal with residuals within tolerance / wrong / no answer, and shifted geometric mean time (s) over certified and status answers</span><a class="headerlink" href="#id7" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 23.5%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 10.8%" />
+<col style="width: 11.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>certified</p></th>
+<th class="head"><p>status only</p></th>
+<th class="head"><p>unverified</p></th>
+<th class="head"><p>near-feasible</p></th>
+<th class="head"><p>wrong</p></th>
+<th class="head"><p>no answer</p></th>
+<th class="head"><p>gm time</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>4</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.04</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>4</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.70</p></td>
+</tr>
+<tr class="row-even"><td><p>Clarabel</p></td>
+<td><p>4</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.20</p></td>
+</tr>
+<tr class="row-odd"><td><p>CVXOPT</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>2</p></td>
+<td><p>0</p></td>
+<td><p>2</p></td>
+<td><p>0</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p>SDPA</p></td>
+<td><p>0</p></td>
+<td><p>4</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0.03</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="semidefinite-programs">
 <span id="bench-sdp"></span><h2>Semidefinite programs<a class="headerlink" href="#semidefinite-programs" title="Link to this heading"></a></h2>
 <p>94 problems: the 88 feasible SDPLIB instances and the 6 Mittelmann SDPs.
@@ -734,8 +951,8 @@ and SCS is already solving the rest of your problems.</p>
 <a class="reference internal image-reference" href="../_images/sdp_1e-4_pair.png"><img alt="../_images/sdp_1e-4_pair.png" src="../_images/sdp_1e-4_pair.png" style="width: 100%;" />
 </a>
 </figure>
-<table class="docutils align-default" id="id6">
-<caption><span class="caption-text">SDP: verified solves and shifted geometric mean time (s); all 94 problems / largest quartile (24)</span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id8">
+<caption><span class="caption-text">SDP: verified solves and shifted geometric mean time (s); all 94 problems / largest quartile (24)</span><a class="headerlink" href="#id8" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 35.1%" />
 <col style="width: 16.2%" />
@@ -807,8 +1024,8 @@ tighter request, OSQP and PDLP a quarter to a third of their large solves, so
 SCS’s margin over them widens. cuOpt’s verified LP count barely changes
 between its runs, since its failures are dual-residual failures rather than
 tolerance ones.</p>
-<table class="docutils align-default" id="id7">
-<caption><span class="caption-text">Verified solves and shifted geometric mean time (s) at the 1e-4 and 1e-5 settings; interior-point solvers unchanged (shown from their tightest run in both)</span><a class="headerlink" href="#id7" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text">Verified solves and shifted geometric mean time (s) at the 1e-4 and 1e-5 settings; interior-point solvers unchanged (shown from their tightest run in both)</span><a class="headerlink" href="#id9" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 29.4%" />
 <col style="width: 23.5%" />

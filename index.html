@@ -178,8 +178,11 @@ interior-point solvers problem for problem at a relative tolerance of
 <span class="math notranslate nohighlight">\(10^{-4}\)</span>, while also handling the second-order, semidefinite,
 exponential and power cones that QP solvers cannot. Every solution is verified
 independently against the same residual test, so solvers with different ideas
-of “tolerance” are compared fairly. The full methodology, all test sets
-including SDPs, and the raw data are on the <a class="reference internal" href="benchmarks/index.html#benchmarks"><span class="std std-ref">benchmarks page</span></a>.</p>
+of “tolerance” are compared fairly. SCS also detects when there is no
+solution, returning certificates of infeasibility or unboundedness that are
+verified the same way. The full methodology, all test sets including SDPs
+and the infeasible problems, and the raw data are on the <a class="reference internal" href="benchmarks/index.html#benchmarks"><span class="std std-ref">benchmarks
+page</span></a>.</p>
 <figure class="align-center" id="id1">
 <a class="reference internal image-reference" href="_images/landing_grid.png"><img alt="Performance profiles and geometric mean solve times on the largest QPs, largest LPs and the Mittelmann LP set" src="_images/landing_grid.png" style="width: 100%;" />
 </a>
@@ -189,7 +192,19 @@ of the Kennington and MIPLIB-relaxation LPs (middle) and the Mittelmann
 large-LP set (bottom), at tolerance
 <span class="math notranslate nohighlight">\(10^{-4}\)</span>. Left: fraction of problems solved within a factor
 <span class="math notranslate nohighlight">\(\tau\)</span> of the fastest solver. Right: shifted geometric mean solve
-time with failures charged 1000 s, and the number of verified solves.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+time with failures charged three times the time limit, and the number of
+verified solves.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="_images/infeas_pair.png"><img alt="Performance profile and geometric mean time to a verified certificate on the 29 infeasible Netlib LPs" src="_images/infeas_pair.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Infeasibility detection on the 29 infeasible Netlib LPs, for the solvers
+that return certificates: a solve is a certificate of infeasibility or
+unboundedness verified from the problem data. These are small problems
+(a median of 460 variables), so this tests detection rather than speed
+at scale; settings are described on the <a class="reference internal" href="benchmarks/index.html#bench-infeasible"><span class="std std-ref">benchmarks page</span></a>.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>

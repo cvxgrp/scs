@@ -97,9 +97,11 @@ interior-point solvers problem for problem at a relative tolerance of
 :math:`10^{-4}`, while also handling the second-order, semidefinite,
 exponential and power cones that QP solvers cannot. Every solution is verified
 independently against the same residual test, so solvers with different ideas
-of "tolerance" are compared fairly. The full methodology, all test sets
-including SDPs, and the raw data are on the :ref:`benchmarks page
-<benchmarks>`.
+of "tolerance" are compared fairly. SCS also detects when there is no
+solution, returning certificates of infeasibility or unboundedness that are
+verified the same way. The full methodology, all test sets including SDPs
+and the infeasible problems, and the raw data are on the :ref:`benchmarks
+page <benchmarks>`.
 
 .. figure:: files/bench/landing_grid.png
    :width: 100 %
@@ -111,7 +113,20 @@ including SDPs, and the raw data are on the :ref:`benchmarks page
    large-LP set (bottom), at tolerance
    :math:`10^{-4}`. Left: fraction of problems solved within a factor
    :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
-   time with failures charged 1000 s, and the number of verified solves.
+   time with failures charged three times the time limit, and the number of
+   verified solves.
+
+.. figure:: files/bench/infeas_pair.png
+   :width: 100 %
+   :align: center
+   :alt: Performance profile and geometric mean time to a verified certificate on the 29 infeasible Netlib LPs
+
+   Infeasibility detection on the 29 infeasible Netlib LPs, for the solvers
+   that return certificates: a solve is a certificate of infeasibility or
+   unboundedness verified from the problem data. These are small problems
+   (a median of 460 variables), so this tests detection rather than speed
+   at scale; settings are described on the :ref:`benchmarks page
+   <bench_infeasible>`.
 
 
 Development
