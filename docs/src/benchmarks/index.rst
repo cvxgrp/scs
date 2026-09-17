@@ -12,14 +12,12 @@ time limit, and then checks every returned solution independently. The raw
 results, the campaign configuration and the plotting scripts live in that
 repository, so every number here can be regenerated.
 
-The short version: on the QP and LP test sets SCS is competitive with the best
-interior-point codes and clearly ahead of the other first-order solvers, the
-cuDSS GPU backend is the fastest solver we tested on the largest quarter of the
-QP problems, and on the large LPs of the Mittelmann set SCS with cuDSS solves
-more instances than any other solver. On the SDP test sets SCS verifies the
-most solutions, but the interior-point solvers SDPA and CVXOPT are much faster
-on the problems they do solve; see :ref:`bench_sdp` before choosing a solver
-for semidefinite problems.
+The short version: SCS 3.3 matches the best open-source interior-point codes
+on the QP and LP test sets and is clearly ahead of every other first-order
+solver. The cuDSS GPU backend is the fastest solver we tested on the largest
+quarter of the QP problems, and on the large LPs of the Mittelmann set SCS
+with cuDSS solves more instances than any other solver, in less than half the
+geometric mean time of the runner-up.
 
 .. _bench_headline:
 
