@@ -565,66 +565,37 @@ Infeasible and unbounded problems
 ---------------------------------
 
 A solver should also recognise when a problem has no solution. We ran every
-LP solver on the 29 infeasible LPs of the Netlib collection (two of them,
-``cplex1`` and ``mondou2``, are both primal and dual infeasible) and every SDP
-solver on the four infeasible SDPLIB instances (``infp1`` and ``infp2`` are
-primal infeasible, ``infd1`` and ``infd2`` dual infeasible, that is
-unbounded), at the same settings as the plots above with each solver's
-infeasibility tolerance set equal to its solve tolerance (``eps_infeas`` for
-SCS, ``tol_infeas_abs`` and ``tol_infeas_rel`` for Clarabel; the others have
-no separate setting), plus SCS and OSQP at :math:`10^{-6}`. SCS, Clarabel,
-OSQP, PDLP and CVXOPT return a certificate
-(a Farkas ray), which the harness checks against the problem data at the
-same :math:`10^{-3}` threshold as the plots; HiGHS, PIQP, cuOpt and SDPA
-report a status only. A verified certificate of either kind is a proof and
-counts as correct; one that fails the check counts as "unverified" when its
-direction is otherwise proven and as wrong when it is not. "Near-feasible"
-means the solver returned a point whose residuals pass the same check: the
-problem is infeasible by less than the tolerance asked for (``cplex2`` is
-such an instance for every solver that solves it), so this is a statement
-about the tolerance rather than an error. These are small problems: the
-Netlib instances have a median of 460 variables and 2,100 nonzeros (the
-largest 10,700 and 108,000), and the SDPs are small too, so this is a test
-of whether a solver detects infeasibility, not of how fast a first-order
-method does so on the large problems it is built for.
+LP solver on the 29 infeasible LPs of the Netlib collection and every SDP
+solver on the four infeasible SDPLIB instances (two primal infeasible, two
+unbounded). These are small problems, a median of 460 variables, so this
+tests detection rather than speed at scale. SCS, Clarabel, OSQP, PDLP and
+CVXOPT return a certificate (a Farkas ray), which the harness checks against
+the problem data at the same :math:`10^{-3}` threshold as the plots; HiGHS,
+PIQP, cuOpt and SDPA report a status only. A verified certificate of either
+kind counts as correct (``cplex1`` and ``mondou2`` are both primal and dual
+infeasible). "Near-feasible" means the solver returned a point whose
+residuals pass the check: the instance is infeasible by less than the
+tolerance asked for, a statement about the tolerance rather than an error.
 
-SCS returns a verified certificate for 24 of the 29 infeasible LPs at
-:math:`10^{-4}`, in 0.2 s geometric mean, and for 26 at :math:`10^{-6}`
-with no wrong answer, and for all four infeasible SDPs on both backends.
-Its three wrong answers at :math:`10^{-4}` are two points reported optimal
-whose residuals just miss the check (``qual`` and ``vol1``, at
-:math:`1.1 \times 10^{-3}` and :math:`1.4 \times 10^{-3}`; at
-:math:`10^{-6}` SCS flags both as inaccurate, with residuals inside the
-check) and, on ``reactor``, a certificate of unboundedness that does not
-verify. Tightening the solve tolerance to :math:`10^{-8}` while keeping the
-infeasibility tolerance at :math:`10^{-4}` (the last SCS and Clarabel rows
-in the table) turns ``cplex2`` and ``pang`` into certificates for SCS but
-leaves ``qual`` and ``vol1`` inconclusive: they are infeasible by so little
-that Clarabel still reports ``cplex2`` optimal at :math:`10^{-8}`. Clarabel
-certifies 27 in 0.3 s and HiGHS detects 26 by status. The
-other first-order solvers are less conclusive: OSQP gives no answer on 9 of
-the 29 and PDLP on 5; cuOpt reports ``cplex2`` optimal. On the SDPs, SDPA
-gets all four by status, while CVXOPT's certificates fail the check and
-point the wrong way on the two unbounded instances.
+SCS certifies 24 of the 29 LPs at :math:`10^{-4}`, in 0.2 s geometric
+mean, 26 at a solve tolerance of :math:`10^{-8}` with the infeasibility
+tolerance kept at :math:`10^{-4}`, and all four SDPs on both backends. Its
+misses at :math:`10^{-4}` are four instances infeasible by about the
+tolerance (two within the check, two just outside it) and, on ``reactor``, a
+certificate of unboundedness that does not verify. Clarabel certifies 27,
+HiGHS detects 26 by status, and OSQP and PDLP give no answer on 10 and 5 of
+the 29. On the SDPs SDPA gets all four by status, while CVXOPT's certificates
+fail the check.
 
-The plot compares the solvers that return certificates, and to keep the
-choice of settings from favouring anyone, every solver is shown from the run
-in which it certified the most out of all the settings we tried for it. For
-SCS and Clarabel that is a solve tolerance of :math:`10^{-8}` with the
-certificate tolerance at :math:`10^{-4}`, since a tighter solve tolerance is
-what stops a near-feasible point from being accepted as optimal. OSQP was run
-at :math:`10^{-4}`, :math:`10^{-6}` and :math:`10^{-8}`, always with its
-default certificate tolerances of :math:`10^{-4}`, and certifies the same 19
-at the two tighter settings; it is shown at :math:`10^{-8}`. PDLP was run at
-:math:`10^{-5}` both with its default certificate tolerance of
-:math:`10^{-8}` and with that tolerance loosened to :math:`10^{-4}` to match
-the others; the default verifies more (22 against 16, since the looser
-certificates mostly fail the independent check), so PDLP is shown at its
-default. The table shows each solver at the setting in the plot, plus SCS at
-the page's :math:`10^{-4}` setting; the remaining runs are in the archive. A
-verified
-certificate counts as a solve and everything else as a failure, with the
-same failure charge as the other sets.
+Each solver in the plot is shown from the run in which it certified the most
+of all the settings we tried for it: SCS, Clarabel and OSQP at a solve
+tolerance of :math:`10^{-8}` with the certificate tolerance at
+:math:`10^{-4}` (a tighter solve tolerance is what stops a near-feasible
+point from being accepted as optimal), and PDLP at :math:`10^{-5}` with its
+default certificate tolerance, which verifies more than a loosened one. A
+verified certificate counts as a solve and everything else as a failure,
+with the same charge as the other sets. The table shows the same settings
+plus SCS at :math:`10^{-4}`; the other runs are in the archive.
 
 .. figure:: ../files/bench/infeas_pair.png
    :width: 100 %
