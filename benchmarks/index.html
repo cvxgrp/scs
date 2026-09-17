@@ -1,0 +1,1071 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmarks &mdash; SCS 3.3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/scs_theme.css?v=540044a0" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+      <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-9CY7R8S5N2"></script>
+      <script src="../_static/js/analytics.js?v=da59c98f"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API" href="../api/index.html" />
+    <link rel="prev" title="Relaxation" href="../algorithm/relaxation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/scs_logo_transparent.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Benchmarks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#headline-results">Headline results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#methodology">Methodology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quadratic-programs">Quadratic programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linear-programs">Linear programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#large-linear-programs-the-mittelmann-set">Large linear programs: the Mittelmann set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#semidefinite-programs">Semidefinite programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sensitivity-to-the-requested-tolerance">Sensitivity to the requested tolerance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notes-on-individual-solvers">Notes on individual solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../blas_lapack/index.html">BLAS and LAPACK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/index.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing/index.html">Citing SCS</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Benchmarks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/benchmarks/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="benchmarks">
+<span id="id1"></span><h1>Benchmarks<a class="headerlink" href="#benchmarks" title="Link to this heading"></a></h1>
+<p>This page compares SCS 3.3 against other open-source solvers on standard
+quadratic program (QP), linear program (LP) and semidefinite program (SDP)
+test sets. All results were produced with the open
+<a class="reference external" href="https://github.com/bodono/solver_benchmarks">solver_benchmarks</a> harness,
+which feeds every solver the same problem in its native form, applies the same
+time limit, and then checks every returned solution independently. The raw
+results, the campaign configuration and the plotting scripts live in that
+repository, so every number here can be regenerated.</p>
+<p>The short version: SCS 3.3 matches the best open-source interior-point codes
+on the QP and LP test sets and is clearly ahead of every other first-order
+solver. The cuDSS GPU backend is the fastest solver we tested on the largest
+quarter of the QP problems, and on the large LPs of the Mittelmann set SCS
+with cuDSS solves more instances than any other solver, in less than half the
+geometric mean time of the runner-up.</p>
+<section id="headline-results">
+<span id="bench-headline"></span><h2>Headline results<a class="headerlink" href="#headline-results" title="Link to this heading"></a></h2>
+<p>The three rows a user is most likely to care about, at a target accuracy of
+<span class="math notranslate nohighlight">\(10^{-4}\)</span>: the largest quarter of the QP test sets, the largest quarter
+of the LP test sets, and the Mittelmann large-LP set. Left, the fraction of
+problems solved within a factor <span class="math notranslate nohighlight">\(\tau\)</span> of the fastest solver on each
+problem; right, the shifted geometric mean solve time with the number of
+verified solves. The same figure is on the front page; the sections below
+give the full test sets, the tighter-tolerance results and the methodology.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/landing_grid.png"><img alt="../_images/landing_grid.png" src="../_images/landing_grid.png" style="width: 100%;" />
+</a>
+</figure>
+</section>
+<section id="methodology">
+<span id="bench-method"></span><h2>Methodology<a class="headerlink" href="#methodology" title="Link to this heading"></a></h2>
+<p><strong>Verification.</strong> A solver’s own “optimal” status is not taken at face value.
+For every returned solution the harness recomputes the relative primal
+residual, dual residual and duality gap from the problem data, and a solve
+counts as a success only when all three are below ten times the requested
+tolerance (so <span class="math notranslate nohighlight">\(10^{-3}\)</span> for the <span class="math notranslate nohighlight">\(10^{-4}\)</span> runs and <span class="math notranslate nohighlight">\(10^{-5}\)</span>
+for the <span class="math notranslate nohighlight">\(10^{-6}\)</span> runs). A solve that a solver reports as optimal but
+whose residuals fail this check is counted as a failure; a solve reported as
+inaccurate or timed out whose residuals pass is counted as a success. This
+matters because solvers define “relative tolerance” differently, and because
+first-order methods, SCS included, occasionally declare convergence on badly
+scaled problems where the unscaled residuals are large. Applying the same
+independent check to every solver makes the comparison tolerance-fair.</p>
+<p><strong>Tolerances.</strong> Every solver was run at requested tolerances of
+<span class="math notranslate nohighlight">\(10^{-4}\)</span>, <span class="math notranslate nohighlight">\(10^{-5}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span> (the interior-point and
+simplex solvers at <span class="math notranslate nohighlight">\(10^{-6}\)</span>, and Clarabel additionally at its default
+<span class="math notranslate nohighlight">\(10^{-8}\)</span> on the SDP sets), passing the value through each solver’s own
+absolute and relative settings; for SCS this means <code class="docutils literal notranslate"><span class="pre">eps_abs</span> <span class="pre">=</span> <span class="pre">eps_rel</span> <span class="pre">=</span> <span class="pre">tol</span></code>
+with the iteration limit raised so that only the time limit can stop it. For
+reference, the solvers’ own defaults are <span class="math notranslate nohighlight">\(10^{-4}\)</span> for SCS and cuOpt,
+<span class="math notranslate nohighlight">\(10^{-3}\)</span> for OSQP, <span class="math notranslate nohighlight">\(10^{-5}\)</span> (absolute only) for ProxQP,
+<span class="math notranslate nohighlight">\(10^{-6}\)</span> for OR-Tools PDLP and <span class="math notranslate nohighlight">\(10^{-7}\)</span> to <span class="math notranslate nohighlight">\(10^{-8}\)</span> for
+the interior-point codes, each in its own measure of the residual.</p>
+<p>A requested tolerance means different things to different solvers, so the
+plots do not pair runs by the number requested. Each plot has a target
+accuracy (<span class="math notranslate nohighlight">\(10^{-4}\)</span> for the headline plots), every returned solution is
+checked against it with the same residuals, and each solver is shown from the
+run whose 90th-percentile residual over its verified solves is closest to
+that target. For the headline plots that is the <span class="math notranslate nohighlight">\(10^{-4}\)</span> run for SCS,
+OSQP and cuOpt, the <span class="math notranslate nohighlight">\(10^{-5}\)</span> run for PDLP and ProxQP, whose own
+stopping rules are looser in this measure, and the <span class="math notranslate nohighlight">\(10^{-6}\)</span> run
+(<span class="math notranslate nohighlight">\(10^{-8}\)</span> on SDP) for the interior-point solvers, which reach that
+accuracy at little extra cost and would be shown faster than any user sees
+them at a looser setting. Every solve, whatever was requested, is then
+verified independently at ten times the plot’s target.</p>
+<p>The table below reports the accuracy those runs actually achieved on the
+solves that count, measured the same way for everyone: the largest of the
+three relative KKT residuals over each solver’s verified solves, with the
+returns that failed the check excluded for every solver.</p>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">Achieved accuracy of the runs shown in the headline plots: median and 90th percentile of the largest relative KKT residual over each solver’s verified solves (returns that fail the check are excluded for every solver)</span><a class="headerlink" href="#id2" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.9%" />
+<col style="width: 8.5%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+<col style="width: 9.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>run</p></th>
+<th class="head"><p>QP</p></th>
+<th class="head"></th>
+<th class="head"><p>LP</p></th>
+<th class="head"></th>
+<th class="head"><p>Mittelmann</p></th>
+<th class="head"></th>
+<th class="head"><p>SDP</p></th>
+<th class="head"></th>
+</tr>
+<tr class="row-even"><th class="head"></th>
+<th class="head"></th>
+<th class="head"><p>median</p></th>
+<th class="head"><p>90th</p></th>
+<th class="head"><p>median</p></th>
+<th class="head"><p>90th</p></th>
+<th class="head"><p>median</p></th>
+<th class="head"><p>90th</p></th>
+<th class="head"><p>median</p></th>
+<th class="head"><p>90th</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-odd"><td><p>SCS (CPU)</p></td>
+<td><p>1e-4</p></td>
+<td><p>1e-5</p></td>
+<td><p>9e-5</p></td>
+<td><p>3e-5</p></td>
+<td><p>9e-5</p></td>
+<td><p>7e-5</p></td>
+<td><p>3e-4</p></td>
+<td><p>1e-4</p></td>
+<td><p>2e-4</p></td>
+</tr>
+<tr class="row-even"><td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>1e-4</p></td>
+<td><p>2e-5</p></td>
+<td><p>9e-5</p></td>
+<td><p>3e-5</p></td>
+<td><p>9e-5</p></td>
+<td><p>6e-5</p></td>
+<td><p>1e-4</p></td>
+<td><p>1e-4</p></td>
+<td><p>2e-4</p></td>
+</tr>
+<tr class="row-odd"><td><p>OSQP</p></td>
+<td><p>1e-4</p></td>
+<td><p>5e-5</p></td>
+<td><p>1e-4</p></td>
+<td><p>6e-5</p></td>
+<td><p>1e-4</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p>PDLP (OR-Tools)</p></td>
+<td><p>1e-5</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>9e-6</p></td>
+<td><p>1e-4</p></td>
+<td><p>2e-5</p></td>
+<td><p>2e-4</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>cuOpt (GPU)</p></td>
+<td><p>1e-4</p></td>
+<td><p>4e-8</p></td>
+<td><p>4e-6</p></td>
+<td><p>1e-10</p></td>
+<td><p>8e-5</p></td>
+<td><p>1e-4</p></td>
+<td><p>7e-4</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p>ProxQP</p></td>
+<td><p>1e-5</p></td>
+<td><p>5e-6</p></td>
+<td><p>1e-4</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>Clarabel</p></td>
+<td><p>1e-6</p></td>
+<td><p>2e-7</p></td>
+<td><p>1e-6</p></td>
+<td><p>1e-7</p></td>
+<td><p>2e-6</p></td>
+<td><p>2e-7</p></td>
+<td><p>2e-6</p></td>
+<td><p>2e-6</p></td>
+<td><p>3e-5</p></td>
+</tr>
+<tr class="row-even"><td><p>PIQP</p></td>
+<td><p>1e-6</p></td>
+<td><p>8e-10</p></td>
+<td><p>1e-7</p></td>
+<td><p>2e-10</p></td>
+<td><p>5e-8</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>HiGHS</p></td>
+<td><p>1e-6</p></td>
+<td><p>4e-8</p></td>
+<td><p>3e-5</p></td>
+<td><p>7e-16</p></td>
+<td><p>1e-12</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p>SDPA</p></td>
+<td><p>1e-6</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>2e-7</p></td>
+<td><p>4e-6</p></td>
+</tr>
+<tr class="row-odd"><td><p>CVXOPT</p></td>
+<td><p>1e-6</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>3e-7</p></td>
+<td><p>6e-5</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Timing.</strong> The reported time is wall-clock time for the solver call, including
+any presolve, factorization and GPU transfer, but excluding reading the problem
+from disk. QP and LP solves were limited to 300 s and SDP solves to 900 s, passed to each
+solver through its own time-limit setting; since wall time also includes
+setup and reading, a solve counts only if it finished within the limit plus a
+60 s grace, the same for every solver, and the harness killed the worker at
+that point regardless of what the solver reported. A
+performance profile shows, for each solver, the fraction of all problems in
+the set solved within a factor <span class="math notranslate nohighlight">\(\tau\)</span> of the fastest solver on that
+problem; failures never count as solved, so the height of a curve at the
+right edge is the solver’s success rate. The shifted geometric mean uses a
+shift of 10 s and charges each failure three times the time limit (900 s for
+QP and LP, 2700 s for SDP, 5400 s for the Mittelmann set), so a failure
+always costs more than any successful solve. Times below 10 ms are floored at
+10 ms before computing ratios.</p>
+<p><strong>Hardware.</strong> All CPU solvers ran in identical 4-core Linux x86-64 containers
+(Modal), on which the <code class="docutils literal notranslate"><span class="pre">scs</span></code> wheel selects the MKL Pardiso linear system
+solver by default. The two GPU solvers, SCS with cuDSS and NVIDIA cuOpt, ran on
+an NVIDIA A100 80GB with 8 host cores. GPU results include host-device transfer
+and cuDSS analysis time, so small problems pay a fixed overhead of roughly half
+a second.</p>
+<p><strong>Solvers.</strong> SCS 3.3.1 (CPU with MKL Pardiso, and GPU with cuDSS),
+Clarabel 0.11.1, PIQP 0.6.4, OSQP 1.1.3, ProxQP 0.7.3 (proxsuite), HiGHS
+1.15.1, PDLP from OR-Tools 9.15, NVIDIA cuOpt 26.8.0, CVXOPT 1.3.3 and SDPA
+via sdpa-python 0.2.3, each the latest release on PyPI in September
+2026. Commercial solvers were not included.</p>
+<p><strong>Problem sets.</strong> QP: Maros-Meszaros (138) and the QPLIB continuous convex
+subset (19). LP: Netlib (feasible), Kennington and the root LP relaxations of
+all 240 instances of the MIPLIB 2017 benchmark set; the Mittelmann LP set is
+its own section. SDP: the 88 feasible SDPLIB instances and the 6 Mittelmann
+SDPs; SDPLIB’s four infeasible instances (<code class="docutils literal notranslate"><span class="pre">infd1</span></code>, <code class="docutils literal notranslate"><span class="pre">infd2</span></code>, <code class="docutils literal notranslate"><span class="pre">infp1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">infp2</span></code>) are reported infeasible by every solver and are left out, since the
+plots measure the time to a verified optimum. “Largest quartile” means the quarter of each family with
+the most nonzeros in the constraint matrix (plus the Hessian for QPs).</p>
+<p><strong>Exclusions.</strong> Clarabel was killed at the 64 GB memory limit on
+<code class="docutils literal notranslate"><span class="pre">equalG11</span></code>, <code class="docutils literal notranslate"><span class="pre">equalG51</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG55</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG60</span></code> and <code class="docutils literal notranslate"><span class="pre">G40mc</span></code>; those count
+as failures for it (the notes below list the outcome on every other large
+SDP). SDPA does not take a time limit; the harness killed it at the limit plus
+grace on <code class="docutils literal notranslate"><span class="pre">maxG60</span></code>, which counts as a failure.
+cuOpt’s QP path is an interior-point method whose factorization failed with a
+numerical error on a subset of the Maros-Meszaros problems; those count as
+failures.</p>
+</section>
+<section id="quadratic-programs">
+<span id="bench-qp"></span><h2>Quadratic programs<a class="headerlink" href="#quadratic-programs" title="Link to this heading"></a></h2>
+<p>157 problems: Maros-Meszaros (138) and the convex continuous QPLIB instances
+(19). On the largest quarter of these, SCS with cuDSS
+has the lowest shifted geometric mean solve time of any solver, SCS on the CPU
+sits between Clarabel and PIQP, and the two SCS variants verify the most
+solutions. Over all 157 problems the interior-point solvers are faster on the
+small instances, where an SCS solve is dominated by fixed setup cost, but SCS
+solves nearly as many problems as they do.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/qp_1e-4_pair.png"><img alt="../_images/qp_1e-4_pair.png" src="../_images/qp_1e-4_pair.png" style="width: 100%;" />
+</a>
+</figure>
+<p>At the tighter <span class="math notranslate nohighlight">\(10^{-6}\)</span> tolerance the interior-point solvers pull ahead,
+as expected for a first-order method, but SCS still verifies more solutions
+than every solver other than PIQP and Clarabel, and remains the fastest
+first-order solver by a wide margin.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/qp_1e-6_pair_largest.png"><img alt="../_images/qp_1e-6_pair_largest.png" src="../_images/qp_1e-6_pair_largest.png" style="width: 100%;" />
+</a>
+</figure>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text">QP: verified solves and shifted geometric mean time (s); all 157 problems / largest quartile (40)</span><a class="headerlink" href="#id3" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 21.3%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>solved 1e-4</p></th>
+<th class="head"><p>gm 1e-4</p></th>
+<th class="head"><p>solved 1e-4 (largest)</p></th>
+<th class="head"><p>gm 1e-4 (largest)</p></th>
+<th class="head"><p>solved 1e-6</p></th>
+<th class="head"><p>gm 1e-6</p></th>
+<th class="head"><p>solved 1e-6 (largest)</p></th>
+<th class="head"><p>gm 1e-6 (largest)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Clarabel</p></td>
+<td><p>152</p></td>
+<td><p>3.1</p></td>
+<td><p>37</p></td>
+<td><p>12.6</p></td>
+<td><p>148</p></td>
+<td><p>4.4</p></td>
+<td><p>34</p></td>
+<td><p>19.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>PIQP</p></td>
+<td><p>150</p></td>
+<td><p>3.7</p></td>
+<td><p>34</p></td>
+<td><p>18.3</p></td>
+<td><p>150</p></td>
+<td><p>3.7</p></td>
+<td><p>34</p></td>
+<td><p>18.3</p></td>
+</tr>
+<tr class="row-even"><td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>146</p></td>
+<td><p>6.3</p></td>
+<td><p>38</p></td>
+<td><p>9.4</p></td>
+<td><p>140</p></td>
+<td><p>12.2</p></td>
+<td><p>33</p></td>
+<td><p>26.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>144</p></td>
+<td><p>7.5</p></td>
+<td><p>38</p></td>
+<td><p>12.8</p></td>
+<td><p>138</p></td>
+<td><p>11.4</p></td>
+<td><p>33</p></td>
+<td><p>28.8</p></td>
+</tr>
+<tr class="row-even"><td><p>OSQP</p></td>
+<td><p>138</p></td>
+<td><p>10.9</p></td>
+<td><p>32</p></td>
+<td><p>29.4</p></td>
+<td><p>121</p></td>
+<td><p>27.2</p></td>
+<td><p>30</p></td>
+<td><p>41.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>cuOpt (GPU)</p></td>
+<td><p>109</p></td>
+<td><p>33.8</p></td>
+<td><p>32</p></td>
+<td><p>22.4</p></td>
+<td><p>103</p></td>
+<td><p>39.6</p></td>
+<td><p>27</p></td>
+<td><p>37.1</p></td>
+</tr>
+<tr class="row-even"><td><p>HiGHS</p></td>
+<td><p>100</p></td>
+<td><p>48.0</p></td>
+<td><p>13</p></td>
+<td><p>268.1</p></td>
+<td><p>84</p></td>
+<td><p>79.1</p></td>
+<td><p>11</p></td>
+<td><p>323.6</p></td>
+</tr>
+<tr class="row-odd"><td><p>ProxQP</p></td>
+<td><p>98</p></td>
+<td><p>67.9</p></td>
+<td><p>12</p></td>
+<td><p>346.3</p></td>
+<td><p>84</p></td>
+<td><p>88.9</p></td>
+<td><p>12</p></td>
+<td><p>348.0</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="linear-programs">
+<span id="bench-lp"></span><h2>Linear programs<a class="headerlink" href="#linear-programs" title="Link to this heading"></a></h2>
+<p>349 problems: Netlib (93), Kennington (16) and the root LP relaxations of the
+240 MIPLIB 2017 benchmark instances. On the largest quarter of the LP set SCS
+with cuDSS verifies the most solutions of any solver and is second only to
+HiGHS (dual simplex) in geometric mean time, ahead of the interior-point
+solvers PIQP and Clarabel. Both PDLP implementations, which
+are first-order LP methods, trail SCS by a wide margin under independent
+verification (see the notes below). The first figure is the full 349-problem
+set at <span class="math notranslate nohighlight">\(10^{-4}\)</span>; the second is the largest quarter at
+<span class="math notranslate nohighlight">\(10^{-6}\)</span>.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/lp_1e-4_pair.png"><img alt="../_images/lp_1e-4_pair.png" src="../_images/lp_1e-4_pair.png" style="width: 100%;" />
+</a>
+</figure>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/lp_1e-6_pair_largest.png"><img alt="../_images/lp_1e-6_pair_largest.png" src="../_images/lp_1e-6_pair_largest.png" style="width: 100%;" />
+</a>
+</figure>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">LP: verified solves and shifted geometric mean time (s); all 349 problems / largest quartile (88)</span><a class="headerlink" href="#id4" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 21.3%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+<col style="width: 9.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>solved 1e-4</p></th>
+<th class="head"><p>gm 1e-4</p></th>
+<th class="head"><p>solved 1e-4 (largest)</p></th>
+<th class="head"><p>gm 1e-4 (largest)</p></th>
+<th class="head"><p>solved 1e-6</p></th>
+<th class="head"><p>gm 1e-6</p></th>
+<th class="head"><p>solved 1e-6 (largest)</p></th>
+<th class="head"><p>gm 1e-6 (largest)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>HiGHS</p></td>
+<td><p>336</p></td>
+<td><p>5.0</p></td>
+<td><p>76</p></td>
+<td><p>28.2</p></td>
+<td><p>336</p></td>
+<td><p>5.0</p></td>
+<td><p>76</p></td>
+<td><p>28.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>PIQP</p></td>
+<td><p>316</p></td>
+<td><p>9.3</p></td>
+<td><p>63</p></td>
+<td><p>51.5</p></td>
+<td><p>310</p></td>
+<td><p>10.6</p></td>
+<td><p>63</p></td>
+<td><p>51.5</p></td>
+</tr>
+<tr class="row-even"><td><p>Clarabel</p></td>
+<td><p>324</p></td>
+<td><p>10.5</p></td>
+<td><p>68</p></td>
+<td><p>73.5</p></td>
+<td><p>312</p></td>
+<td><p>13.4</p></td>
+<td><p>63</p></td>
+<td><p>88.9</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>320</p></td>
+<td><p>11.3</p></td>
+<td><p>77</p></td>
+<td><p>35.6</p></td>
+<td><p>303</p></td>
+<td><p>17.0</p></td>
+<td><p>70</p></td>
+<td><p>48.6</p></td>
+</tr>
+<tr class="row-even"><td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>316</p></td>
+<td><p>11.9</p></td>
+<td><p>71</p></td>
+<td><p>56.5</p></td>
+<td><p>295</p></td>
+<td><p>19.9</p></td>
+<td><p>61</p></td>
+<td><p>84.7</p></td>
+</tr>
+<tr class="row-odd"><td><p>PDLP (OR-Tools)</p></td>
+<td><p>292</p></td>
+<td><p>24.5</p></td>
+<td><p>52</p></td>
+<td><p>139.0</p></td>
+<td><p>263</p></td>
+<td><p>38.6</p></td>
+<td><p>40</p></td>
+<td><p>221.3</p></td>
+</tr>
+<tr class="row-even"><td><p>OSQP</p></td>
+<td><p>257</p></td>
+<td><p>42.2</p></td>
+<td><p>43</p></td>
+<td><p>220.1</p></td>
+<td><p>174</p></td>
+<td><p>131.9</p></td>
+<td><p>21</p></td>
+<td><p>474.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>cuOpt (GPU)</p></td>
+<td><p>219</p></td>
+<td><p>45.7</p></td>
+<td><p>25</p></td>
+<td><p>255.6</p></td>
+<td><p>204</p></td>
+<td><p>56.9</p></td>
+<td><p>20</p></td>
+<td><p>322.6</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="large-linear-programs-the-mittelmann-set">
+<span id="bench-lpbig"></span><h2>Large linear programs: the Mittelmann set<a class="headerlink" href="#large-linear-programs-the-mittelmann-set" title="Link to this heading"></a></h2>
+<p>The LP test sets above are dominated by small and medium instances, so we also
+ran the 37 problems of <a class="reference external" href="https://plato.asu.edu/ftp/lptestset/">Hans Mittelmann’s LP benchmark set</a>, the standard collection of large,
+hard LPs: between 100,000 and 126 million nonzeros, with several instances of
+10 to 40 million variables. Every solver ran at tolerance <span class="math notranslate nohighlight">\(10^{-4}\)</span>
+with an 1800 s limit in 64 GB containers (4 cores, or an A100 80GB for the two
+GPU solvers). Mittelmann’s own runs allow several hours per instance and use
+faster machines, so the simplex and interior-point codes time out here far
+more often than they do in his tables; the point of this set for us is the
+size of the problems, not a re-run of his benchmark.</p>
+<p>This is where the cuDSS backend pays off. SCS on the GPU verifies more
+solutions than any other solver and has by far the lowest geometric mean
+time, and SCS on the CPU is second. The two other first-order codes, PDLP and
+cuOpt, are the natural comparison: OR-Tools PDLP verifies about two thirds as many
+solutions as SCS with cuDSS, and cuOpt’s PDLP, although it reports almost
+every instance optimal, mostly fails the independent residual check (see the
+notes below).</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/lpbig_1e-4_pair.png"><img alt="../_images/lpbig_1e-4_pair.png" src="../_images/lpbig_1e-4_pair.png" style="width: 100%;" />
+</a>
+</figure>
+<p>The ordering is unchanged at the tighter <span class="math notranslate nohighlight">\(10^{-5}\)</span> setting, at which
+every first-order solver was also run on this set:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/lpbig_1e-5_pair.png"><img alt="../_images/lpbig_1e-5_pair.png" src="../_images/lpbig_1e-5_pair.png" style="width: 100%;" />
+</a>
+</figure>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Mittelmann LP set: verified solves out of 37 and shifted geometric mean time (s), tolerance 1e-4, 1800 s limit</span><a class="headerlink" href="#id5" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>verified solves</p></th>
+<th class="head"><p>geometric mean (s)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>28</p></td>
+<td><p>208</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>24</p></td>
+<td><p>431</p></td>
+</tr>
+<tr class="row-even"><td><p>PDLP (OR-Tools)</p></td>
+<td><p>19</p></td>
+<td><p>733</p></td>
+</tr>
+<tr class="row-odd"><td><p>Clarabel</p></td>
+<td><p>20</p></td>
+<td><p>817</p></td>
+</tr>
+<tr class="row-even"><td><p>PIQP</p></td>
+<td><p>12</p></td>
+<td><p>1352</p></td>
+</tr>
+<tr class="row-odd"><td><p>cuOpt (GPU)</p></td>
+<td><p>7</p></td>
+<td><p>2086</p></td>
+</tr>
+<tr class="row-even"><td><p>HiGHS</p></td>
+<td><p>9</p></td>
+<td><p>2889</p></td>
+</tr>
+</tbody>
+</table>
+<p>Set-specific exclusions: Clarabel could not attempt <code class="docutils literal notranslate"><span class="pre">L1_sixm250obs</span></code> and
+<code class="docutils literal notranslate"><span class="pre">L1_sixm1000obs</span></code> within 64 GB (counted as failures); OR-Tools PDLP cannot
+load <code class="docutils literal notranslate"><span class="pre">Dual2_5000</span></code> and <code class="docutils literal notranslate"><span class="pre">dlr2</span></code> because the model exceeds the 2 GB protobuf
+limit (counted as failures); SCS with cuDSS ran out of GPU memory on
+<code class="docutils literal notranslate"><span class="pre">thk_48</span></code> (counted as a failure). Four instances (<code class="docutils literal notranslate"><span class="pre">bdry2</span></code>, <code class="docutils literal notranslate"><span class="pre">Linf_520c</span></code>
+and the two <code class="docutils literal notranslate"><span class="pre">L1_sixm</span></code> problems) are distributed in Netlib’s compressed EMPS
+format and were decoded with <code class="docutils literal notranslate"><span class="pre">emps</span></code> before use.</p>
+</section>
+<section id="semidefinite-programs">
+<span id="bench-sdp"></span><h2>Semidefinite programs<a class="headerlink" href="#semidefinite-programs" title="Link to this heading"></a></h2>
+<p>94 problems: the 88 feasible SDPLIB instances and the 6 Mittelmann SDPs.
+This is the family where an interior-point method is the better default, and
+the plot says so: SDPA and CVXOPT verify nearly as many problems as SCS in a
+fraction of the time. SCS on the CPU has the highest success rate, 77 of 94,
+because it is the only solver without a blind spot in this set: SDPA fails
+the <code class="docutils literal notranslate"><span class="pre">hinf</span></code> and <code class="docutils literal notranslate"><span class="pre">qap</span></code> instances, CVXOPT and Clarabel run out of time or
+memory on the large sparse relaxations, while SCS’s failures are the small,
+badly conditioned <code class="docutils literal notranslate"><span class="pre">control</span></code>, <code class="docutils literal notranslate"><span class="pre">truss</span></code> and <code class="docutils literal notranslate"><span class="pre">gpp</span></code> instances, on which it
+spends hundreds of thousands of iterations and often the whole 900 s limit
+where an interior-point solver finishes in seconds. Those slow solves, more
+than the failures, are what put SCS last in geometric mean time. On the large
+sparse combinatorial relaxations (<code class="docutils literal notranslate"><span class="pre">theta</span></code>, <code class="docutils literal notranslate"><span class="pre">mcp</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG</span></code>, <code class="docutils literal notranslate"><span class="pre">qpG</span></code> and
+<code class="docutils literal notranslate"><span class="pre">equalG</span></code>, 31 instances) SCS verifies 28 on the CPU and 29 on the GPU, but
+SDPA verifies 30, including <code class="docutils literal notranslate"><span class="pre">maxG55</span></code> with a PSD block of order 5000, so
+even there SCS is not ahead. The GPU does not help on SDPs: the time goes into
+the eigendecompositions of the cone projection, not the linear system.</p>
+<p>Use an interior-point solver for SDPs when it fits in memory. SCS is the
+fallback when it does not (Clarabel and CVXOPT run out of memory or time on
+the largest instances here), or when a moderately accurate solution is enough
+and SCS is already solving the rest of your problems.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/sdp_1e-4_pair.png"><img alt="../_images/sdp_1e-4_pair.png" src="../_images/sdp_1e-4_pair.png" style="width: 100%;" />
+</a>
+</figure>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">SDP: verified solves and shifted geometric mean time (s); all 94 problems / largest quartile (24)</span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 35.1%" />
+<col style="width: 16.2%" />
+<col style="width: 16.2%" />
+<col style="width: 16.2%" />
+<col style="width: 16.2%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Solver</p></th>
+<th class="head"><p>solved 1e-4</p></th>
+<th class="head"><p>gm 1e-4</p></th>
+<th class="head"><p>solved 1e-4 (largest)</p></th>
+<th class="head"><p>gm 1e-4 (largest)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SDPA</p></td>
+<td><p>75</p></td>
+<td><p>38.2</p></td>
+<td><p>21</p></td>
+<td><p>38.6</p></td>
+</tr>
+<tr class="row-odd"><td><p>CVXOPT</p></td>
+<td><p>76</p></td>
+<td><p>52.4</p></td>
+<td><p>18</p></td>
+<td><p>111.5</p></td>
+</tr>
+<tr class="row-even"><td><p>Clarabel</p></td>
+<td><p>71</p></td>
+<td><p>68.9</p></td>
+<td><p>13</p></td>
+<td><p>257.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>77</p></td>
+<td><p>107.5</p></td>
+<td><p>14</p></td>
+<td><p>1090.7</p></td>
+</tr>
+<tr class="row-even"><td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>73</p></td>
+<td><p>146.5</p></td>
+<td><p>9</p></td>
+<td><p>1531.0</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sensitivity-to-the-requested-tolerance">
+<span id="bench-sens"></span><h2>Sensitivity to the requested tolerance<a class="headerlink" href="#sensitivity-to-the-requested-tolerance" title="Link to this heading"></a></h2>
+<p>The headline plots target <span class="math notranslate nohighlight">\(10^{-4}\)</span>. To show what a tighter target
+costs, the same three rows are repeated with a target of <span class="math notranslate nohighlight">\(10^{-5}\)</span>,
+every solve verified at <span class="math notranslate nohighlight">\(10^{-4}\)</span>, and each solver again shown from the
+run whose achieved accuracy is closest to the target: the <span class="math notranslate nohighlight">\(10^{-5}\)</span> run
+for SCS, OSQP and cuOpt, the <span class="math notranslate nohighlight">\(10^{-6}\)</span> run for PDLP and ProxQP, and the
+interior-point rows unchanged.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/landing_grid_1e-5.png"><img alt="../_images/landing_grid_1e-5.png" src="../_images/landing_grid_1e-5.png" style="width: 100%;" />
+</a>
+</figure>
+<p>The LP picture barely moves and the Mittelmann set is still led by SCS with
+cuDSS and SCS on the CPU, with a smaller margin. The QP row is where the
+tolerance matters: SCS loses a few of the largest instances to the time limit
+and its geometric mean roughly doubles, so at <span class="math notranslate nohighlight">\(10^{-5}\)</span> Clarabel and
+PIQP are faster on the largest QPs while SCS still matches Clarabel on the
+number solved. The other first-order solvers lose more than SCS does from the
+tighter request, OSQP and PDLP a quarter to a third of their large solves, so
+SCS’s margin over them widens. cuOpt’s verified LP count barely changes
+between its runs, since its failures are dual-residual failures rather than
+tolerance ones.</p>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">Verified solves and shifted geometric mean time (s) at the 1e-4 and 1e-5 settings; interior-point solvers unchanged (shown from their tightest run in both)</span><a class="headerlink" href="#id7" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 29.4%" />
+<col style="width: 23.5%" />
+<col style="width: 11.8%" />
+<col style="width: 11.8%" />
+<col style="width: 11.8%" />
+<col style="width: 11.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem set</p></th>
+<th class="head"><p>Solver</p></th>
+<th class="head"><p>solved 1e-4</p></th>
+<th class="head"><p>time 1e-4</p></th>
+<th class="head"><p>solved 1e-5</p></th>
+<th class="head"><p>time 1e-5</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Maros-Meszaros and QPLIB QPs, largest quartile (40)</p></td>
+<td><p>Clarabel</p></td>
+<td><p>37</p></td>
+<td><p>13</p></td>
+<td><p>37</p></td>
+<td><p>13</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>PIQP</p></td>
+<td><p>34</p></td>
+<td><p>18</p></td>
+<td><p>34</p></td>
+<td><p>18</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>38</p></td>
+<td><p>9</p></td>
+<td><p>33</p></td>
+<td><p>20</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>38</p></td>
+<td><p>13</p></td>
+<td><p>35</p></td>
+<td><p>21</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>cuOpt (GPU)</p></td>
+<td><p>32</p></td>
+<td><p>22</p></td>
+<td><p>31</p></td>
+<td><p>24</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>OSQP</p></td>
+<td><p>32</p></td>
+<td><p>29</p></td>
+<td><p>31</p></td>
+<td><p>38</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>HiGHS</p></td>
+<td><p>13</p></td>
+<td><p>268</p></td>
+<td><p>12</p></td>
+<td><p>290</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>ProxQP</p></td>
+<td><p>12</p></td>
+<td><p>346</p></td>
+<td><p>12</p></td>
+<td><p>348</p></td>
+</tr>
+<tr class="row-even"><td><p>Kennington and MIPLIB-relaxation LPs, largest quartile (88)</p></td>
+<td><p>HiGHS</p></td>
+<td><p>76</p></td>
+<td><p>28</p></td>
+<td><p>76</p></td>
+<td><p>28</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>77</p></td>
+<td><p>36</p></td>
+<td><p>75</p></td>
+<td><p>37</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>PIQP</p></td>
+<td><p>63</p></td>
+<td><p>51</p></td>
+<td><p>63</p></td>
+<td><p>51</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>71</p></td>
+<td><p>57</p></td>
+<td><p>70</p></td>
+<td><p>63</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Clarabel</p></td>
+<td><p>68</p></td>
+<td><p>74</p></td>
+<td><p>64</p></td>
+<td><p>86</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>PDLP (OR-Tools)</p></td>
+<td><p>52</p></td>
+<td><p>139</p></td>
+<td><p>49</p></td>
+<td><p>164</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>cuOpt (GPU)</p></td>
+<td><p>25</p></td>
+<td><p>256</p></td>
+<td><p>24</p></td>
+<td><p>265</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>OSQP</p></td>
+<td><p>43</p></td>
+<td><p>220</p></td>
+<td><p>32</p></td>
+<td><p>363</p></td>
+</tr>
+<tr class="row-even"><td><p>Mittelmann LP set (37)</p></td>
+<td><p>SCS (GPU, cuDSS)</p></td>
+<td><p>28</p></td>
+<td><p>208</p></td>
+<td><p>23</p></td>
+<td><p>390</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>SCS (CPU, MKL Pardiso)</p></td>
+<td><p>24</p></td>
+<td><p>431</p></td>
+<td><p>20</p></td>
+<td><p>696</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Clarabel</p></td>
+<td><p>20</p></td>
+<td><p>817</p></td>
+<td><p>20</p></td>
+<td><p>817</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>PDLP (OR-Tools)</p></td>
+<td><p>19</p></td>
+<td><p>733</p></td>
+<td><p>14</p></td>
+<td><p>1226</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>PIQP</p></td>
+<td><p>12</p></td>
+<td><p>1352</p></td>
+<td><p>12</p></td>
+<td><p>1352</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>HiGHS</p></td>
+<td><p>9</p></td>
+<td><p>2889</p></td>
+<td><p>9</p></td>
+<td><p>2889</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>cuOpt (GPU)</p></td>
+<td><p>7</p></td>
+<td><p>2086</p></td>
+<td><p>4</p></td>
+<td><p>3050</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="notes-on-individual-solvers">
+<h2>Notes on individual solvers<a class="headerlink" href="#notes-on-individual-solvers" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>SCS.</strong> A few SCS “solved” returns fail the independent residual check
+and count as failures above. Two of them are real false certificates
+(<code class="docutils literal notranslate"><span class="pre">QGROW7</span></code> and <code class="docutils literal notranslate"><span class="pre">QGROW22</span></code> from Maros-Meszaros, and the MIPLIB relaxation
+<code class="docutils literal notranslate"><span class="pre">neos-4413714-turia</span></code>): on these badly scaled problems the diagonal
+rescaling drives the internal scale to its floor, and the scaled residuals
+SCS monitors no longer track the unscaled ones.</p></li>
+<li><p><strong>cuOpt.</strong> cuOpt’s LP path is PDLP with an L2-relative stopping rule, and on
+problems with many variable bounds (Kennington, MIPLIB) its returned duals
+often have large infinity-norm stationarity residuals even though cuOpt
+reports the solve as optimal, and even though its own reported absolute
+dual residual is between <span class="math notranslate nohighlight">\(3\times10^{1}\)</span> and <span class="math notranslate nohighlight">\(3\times10^{2}\)</span>. Under the uniform check used here
+those solves count as failures, while the returns that do pass are very
+accurate (median residual around <span class="math notranslate nohighlight">\(10^{-10}\)</span>), so the requested
+tolerance changes little. It is shown from its <span class="math notranslate nohighlight">\(10^{-4}\)</span> run, which
+reports 331 of the 349 LPs optimal, of which 223 pass the check, and all 37
+Mittelmann instances, of which 7 pass. Its QP path is a
+barrier method whose solutions verify cleanly. We used cuOpt 26.8.0 with default settings apart
+from the tolerance and time limit.</p></li>
+<li><p><strong>PDLP (OR-Tools).</strong> The same L2-relative termination rule applies, with a
+milder effect: at a requested <span class="math notranslate nohighlight">\(10^{-4}\)</span>, 28 of its 311 “optimal” LP
+returns have infinity-norm residuals above <span class="math notranslate nohighlight">\(10^{-3}\)</span>. It is shown
+from its <span class="math notranslate nohighlight">\(10^{-5}\)</span> run, where 2 of 297 do.</p></li>
+<li><p><strong>HiGHS.</strong> Its QP solver is an active-set method and is slow on the larger
+QPs; its LP simplex is the fastest LP code in the comparison.</p></li>
+<li><p><strong>ProxQP.</strong> Run with its default dense/sparse backend selection; it times
+out on many of the larger problems.</p></li>
+<li><p><strong>Clarabel.</strong> Shown from its <span class="math notranslate nohighlight">\(10^{-6}\)</span> run on QP and LP and from its
+default <span class="math notranslate nohighlight">\(10^{-8}\)</span> run on SDP, where its termination test leaves the
+loosest unscaled residuals of any solver at a given setting. Every SDPLIB
+instance with a PSD block of order 500 or more was run on its own in a
+64 GB container: Clarabel solves <code class="docutils literal notranslate"><span class="pre">maxG11</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG32</span></code>, <code class="docutils literal notranslate"><span class="pre">thetaG11</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qpG11</span></code>, <code class="docutils literal notranslate"><span class="pre">mcp500-1</span></code> and <code class="docutils literal notranslate"><span class="pre">mcp500-2</span></code>; reaches the 900 s limit on
+<code class="docutils literal notranslate"><span class="pre">maxG51</span></code>, <code class="docutils literal notranslate"><span class="pre">qpG51</span></code>, <code class="docutils literal notranslate"><span class="pre">thetaG51</span></code>, <code class="docutils literal notranslate"><span class="pre">mcp500-3</span></code>, <code class="docutils literal notranslate"><span class="pre">mcp500-4</span></code> and
+<code class="docutils literal notranslate"><span class="pre">gpp500-1</span></code> to <code class="docutils literal notranslate"><span class="pre">gpp500-4</span></code>; and is killed at the memory limit on
+<code class="docutils literal notranslate"><span class="pre">equalG11</span></code>, <code class="docutils literal notranslate"><span class="pre">equalG51</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG55</span></code>, <code class="docutils literal notranslate"><span class="pre">maxG60</span></code> and the Mittelmann
+<code class="docutils literal notranslate"><span class="pre">G40mc</span></code>.</p></li>
+<li><p><strong>SDPA and CVXOPT.</strong> Interior-point SDP solvers. SDPA does not take a time
+limit; its longest verified solve was 795 s (<code class="docutils literal notranslate"><span class="pre">maxG55</span></code>), inside the 900 s
+limit, and it was killed at the limit on <code class="docutils literal notranslate"><span class="pre">maxG60</span></code>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../algorithm/relaxation.html" class="btn btn-neutral float-left" title="Relaxation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api/index.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Brendan O&#39;Donoghue.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

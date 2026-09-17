@@ -9,7 +9,7 @@
   <title>SCS &mdash; SCS 3.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="_static/css/scs_theme.css?v=7cfa6b0f" />
+      <link rel="stylesheet" type="text/css" href="_static/css/scs_theme.css?v=540044a0" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -49,6 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="algorithm/index.html">Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks/index.html">Benchmarks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="linear_solver/index.html">Linear System Solver</a></li>
@@ -169,15 +170,26 @@ of <a class="reference internal" href="algorithm/index.html#infeasibility"><span
 </section>
 <section id="performance">
 <h1>Performance<a class="headerlink" href="#performance" title="Link to this heading"></a></h1>
-<p>SCS is a fast and reliable optimization library. For instance, it is one of the
-most performant solvers as determined by the third-party <a class="reference external" href="https://github.com/qpsolvers/qpbenchmark">QP solvers benchmark</a> on the challenging Maros-Meszaros
-QP test suite. This is despite SCS being a general quadratic conic solver and
-not specifically tailored for QPs.</p>
+<p>SCS 3.3 is built for large problems. On the Mittelmann set of large LPs it
+solves more instances than any other open-source solver; with the cuDSS GPU
+backend it is the fastest solver we have measured on the largest QPs and
+second only to HiGHS on the largest LPs; and on the CPU it matches the best
+interior-point solvers problem for problem at a relative tolerance of
+<span class="math notranslate nohighlight">\(10^{-4}\)</span>, while also handling the second-order, semidefinite,
+exponential and power cones that QP solvers cannot. Every solution is verified
+independently against the same residual test, so solvers with different ideas
+of “tolerance” are compared fairly. The full methodology, all test sets
+including SDPs, and the raw data are on the <a class="reference internal" href="benchmarks/index.html#benchmarks"><span class="std std-ref">benchmarks page</span></a>.</p>
 <figure class="align-center" id="id1">
-<a class="reference internal image-reference" href="_images/qp_solvers_benchmark.png"><img alt="map to buried treasure" height="396" src="_images/qp_solvers_benchmark.png" width="766" />
+<a class="reference internal image-reference" href="_images/landing_grid.png"><img alt="Performance profiles and geometric mean solve times on the largest QPs, largest LPs and the Mittelmann LP set" src="_images/landing_grid.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-text">SCS is faster and more reliable than most other solvers.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+<p><span class="caption-text">Largest quarter of the Maros-Meszaros and QPLIB QPs (top), largest quarter
+of the Kennington and MIPLIB-relaxation LPs (middle) and the Mittelmann
+large-LP set (bottom), at tolerance
+<span class="math notranslate nohighlight">\(10^{-4}\)</span>. Left: fraction of problems solved within a factor
+<span class="math notranslate nohighlight">\(\tau\)</span> of the fastest solver. Right: shifted geometric mean solve
+time with failures charged 1000 s, and the number of verified solves.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>
