@@ -124,11 +124,8 @@ the raw data are on the :ref:`benchmarks page <benchmarks>`.
 
    Infeasibility detection on the 29 infeasible Netlib LPs, for the solvers
    that return certificates: a solve is a certificate of infeasibility or
-   unboundedness verified from the problem data. Every solver is shown at
-   its tightest setting in the study: SCS and Clarabel at a solve tolerance
-   of :math:`10^{-8}` with the infeasibility tolerance at :math:`10^{-4}`,
-   OSQP at :math:`10^{-6}` and PDLP at :math:`10^{-5}`, neither of which has
-   a separate infeasibility tolerance.
+   unboundedness verified from the problem data. Settings are described on
+   the :ref:`benchmarks page <bench_infeasible>`.
 
 
 Development
