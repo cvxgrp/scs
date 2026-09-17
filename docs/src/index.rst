@@ -98,11 +98,10 @@ interior-point solvers problem for problem at a relative tolerance of
 exponential and power cones that QP solvers cannot. Every solution is verified
 independently against the same residual test, so solvers with different ideas
 of "tolerance" are compared fairly. SCS also detects when there is no
-solution: it returns verified certificates of infeasibility or unboundedness
-for 24 of the 29 infeasible Netlib LPs at that tolerance (26 at
-:math:`10^{-6}`) and for all four infeasible SDPs in SDPLIB. The full
-methodology, all test sets including SDPs and the infeasible problems, and
-the raw data are on the :ref:`benchmarks page <benchmarks>`.
+solution, returning certificates of infeasibility or unboundedness that are
+verified the same way. The full methodology, all test sets including SDPs
+and the infeasible problems, and the raw data are on the :ref:`benchmarks
+page <benchmarks>`.
 
 .. figure:: files/bench/landing_grid.png
    :width: 100 %
