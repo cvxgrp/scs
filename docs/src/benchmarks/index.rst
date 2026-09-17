@@ -595,6 +595,14 @@ conclusive: OSQP gives no answer on 9 of the 29 and PDLP on 5; cuOpt reports
 CVXOPT's certificates fail the check and point the wrong way on the two
 unbounded instances.
 
+The plot treats a correct answer (a verified certificate, or the right status
+for a status-only solver) as a solve and everything else as a failure, with
+the same failure charge as the other sets.
+
+.. figure:: ../files/bench/infeas_1e-4_pair.png
+   :width: 100 %
+   :align: center
+
 .. list-table:: Infeasibility detection, Netlib infeasible LPs (29 problems): verified certificate / correct status without certificate / certificate failing the check / reported optimal with residuals within tolerance / wrong / no answer, and shifted geometric mean time (s) over certified and status answers
    :header-rows: 1
    :widths: 24 11 11 11 11 11 11 12
