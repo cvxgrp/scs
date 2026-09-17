@@ -117,6 +117,17 @@ the raw data are on the :ref:`benchmarks page <benchmarks>`.
    time with failures charged three times the time limit, and the number of
    verified solves.
 
+.. figure:: files/bench/infeas_pair.png
+   :width: 100 %
+   :align: center
+   :alt: Performance profile and geometric mean time to a verified certificate on the 29 infeasible Netlib LPs
+
+   Infeasibility detection on the 29 infeasible Netlib LPs, for the solvers
+   that return certificates: a solve is a certificate of infeasibility or
+   unboundedness verified from the problem data. SCS and Clarabel at a solve
+   tolerance of :math:`10^{-8}` with infeasibility tolerance
+   :math:`10^{-4}`, OSQP and PDLP at their tightest settings.
+
 
 Development
 -----------
