@@ -592,7 +592,12 @@ whose residuals just miss the check (``qual`` and ``vol1``, at
 :math:`1.1 \times 10^{-3}` and :math:`1.4 \times 10^{-3}`; at
 :math:`10^{-6}` SCS flags both as inaccurate, with residuals inside the
 check) and, on ``reactor``, a certificate of unboundedness that does not
-verify. Clarabel certifies 27 in 0.3 s and HiGHS detects 26 by status. The
+verify. Tightening the solve tolerance to :math:`10^{-8}` while keeping the
+infeasibility tolerance at :math:`10^{-4}` (the last SCS and Clarabel rows
+in the table) turns ``cplex2`` and ``pang`` into certificates for SCS but
+leaves ``qual`` and ``vol1`` inconclusive: they are infeasible by so little
+that Clarabel still reports ``cplex2`` optimal at :math:`10^{-8}`. Clarabel
+certifies 27 in 0.3 s and HiGHS detects 26 by status. The
 other first-order solvers are less conclusive: OSQP gives no answer on 9 of
 the 29 and PDLP on 5; cuOpt reports ``cplex2`` optimal. On the SDPs, SDPA
 gets all four by status, while CVXOPT's certificates fail the check and
@@ -634,6 +639,14 @@ same failure charge as the other sets.
      - 0
      - 0
      - 0.74
+   * - SCS (CPU, MKL Pardiso), 1e-8 (infeasibility tolerance 1e-4)
+     - 26
+     - 0
+     - 0
+     - 1
+     - 1
+     - 1
+     - 0.44
    * - SCS (GPU, cuDSS), 1e-4
      - 24
      - 0
@@ -650,7 +663,15 @@ same failure charge as the other sets.
      - 0
      - 1
      - 2.66
-   * - Clarabel
+   * - SCS (GPU, cuDSS), 1e-8 (infeasibility tolerance 1e-4)
+     - 25
+     - 0
+     - 0
+     - 1
+     - 1
+     - 2
+     - 0.93
+   * - Clarabel, 1e-6
      - 27
      - 0
      - 1
@@ -658,6 +679,14 @@ same failure charge as the other sets.
      - 0
      - 0
      - 0.33
+   * - Clarabel, 1e-8 (infeasibility tolerance 1e-4)
+     - 27
+     - 0
+     - 1
+     - 1
+     - 0
+     - 0
+     - 0.35
    * - PIQP
      - 0
      - 17
