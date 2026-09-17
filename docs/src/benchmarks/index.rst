@@ -620,7 +620,9 @@ at the two tighter settings; it is shown at :math:`10^{-8}`. PDLP was run at
 :math:`10^{-8}` and with that tolerance loosened to :math:`10^{-4}` to match
 the others; the default verifies more (22 against 16, since the looser
 certificates mostly fail the independent check), so PDLP is shown at its
-default. The table below lists every run. A verified
+default. The table shows each solver at the setting in the plot, plus SCS at
+the page's :math:`10^{-4}` setting; the remaining runs are in the archive. A
+verified
 certificate counts as a solve and everything else as a failure, with the
 same failure charge as the other sets.
 
@@ -648,14 +650,6 @@ same failure charge as the other sets.
      - 3
      - 0
      - 0.20
-   * - SCS (CPU, MKL Pardiso), 1e-6
-     - 26
-     - 0
-     - 0
-     - 3
-     - 0
-     - 0
-     - 0.74
    * - SCS (CPU, MKL Pardiso), 1e-8 (infeasibility tolerance 1e-4)
      - 26
      - 0
@@ -664,23 +658,7 @@ same failure charge as the other sets.
      - 1
      - 1
      - 0.44
-   * - SCS (GPU, cuDSS), 1e-4
-     - 24
-     - 0
-     - 0
-     - 3
-     - 2
-     - 0
-     - 0.73
-   * - SCS (GPU, cuDSS), 1e-6
-     - 26
-     - 0
-     - 0
-     - 2
-     - 0
-     - 1
-     - 2.66
-   * - SCS (GPU, cuDSS), 1e-8 (infeasibility tolerance 1e-4)
+   * - SCS (GPU, cuDSS) (infeasibility tolerance 1e-4)
      - 25
      - 0
      - 0
@@ -688,15 +666,7 @@ same failure charge as the other sets.
      - 1
      - 2
      - 0.93
-   * - Clarabel, 1e-6
-     - 27
-     - 0
-     - 1
-     - 1
-     - 0
-     - 0
-     - 0.33
-   * - Clarabel, 1e-8 (infeasibility tolerance 1e-4)
+   * - Clarabel (infeasibility tolerance 1e-4)
      - 27
      - 0
      - 1
@@ -720,23 +690,7 @@ same failure charge as the other sets.
      - 0
      - 3
      - 0.02
-   * - OSQP, 1e-4
-     - 17
-     - 0
-     - 0
-     - 3
-     - 0
-     - 9
-     - 1.57
-   * - OSQP, 1e-6
-     - 19
-     - 0
-     - 0
-     - 1
-     - 0
-     - 9
-     - 1.62
-   * - OSQP, 1e-8
+   * - OSQP
      - 19
      - 0
      - 0
@@ -752,14 +706,6 @@ same failure charge as the other sets.
      - 0
      - 5
      - 10.91
-   * - PDLP (OR-Tools), certificate tolerance 1e-4
-     - 16
-     - 0
-     - 12
-     - 0
-     - 0
-     - 1
-     - 7.15
    * - cuOpt (GPU)
      - 0
      - 27
