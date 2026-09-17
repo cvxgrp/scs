@@ -608,13 +608,14 @@ gets all four by status, while CVXOPT's certificates fail the check and
 point the wrong way on the two unbounded instances.
 
 The plot compares the solvers that return certificates. Each is shown from
-the run in which it detected the most: for SCS and Clarabel that is the
-:math:`10^{-8}` solve tolerance with the infeasibility tolerance at
+the run in which it certified the most. For SCS, Clarabel and OSQP that is a
+solve tolerance of :math:`10^{-8}` with the certificate tolerance at
 :math:`10^{-4}`, since a tighter solve tolerance is what stops a near-feasible
-point from being accepted as optimal; OSQP and PDLP have no separate
-infeasibility tolerance and their :math:`10^{-6}` and :math:`10^{-5}` runs
-are their best, so nothing is asked of them that is not asked of the others.
-A verified
+point from being accepted as optimal (OSQP's certificate tolerances default
+to :math:`10^{-4}`). PDLP is shown from its :math:`10^{-5}` run with its
+default certificate tolerance of :math:`10^{-8}`: with that tolerance
+loosened to :math:`10^{-4}` its certificates mostly fail the check (16 of 28
+verify), so the default is its best setting here. A verified
 certificate counts as a solve and everything else as a failure, with the
 same failure charge as the other sets.
 
@@ -730,6 +731,14 @@ same failure charge as the other sets.
      - 0
      - 9
      - 1.62
+   * - OSQP, 1e-8
+     - 19
+     - 0
+     - 0
+     - 0
+     - 0
+     - 10
+     - 1.68
    * - PDLP (OR-Tools)
      - 22
      - 0
