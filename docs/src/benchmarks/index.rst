@@ -658,7 +658,7 @@ same failure charge as the other sets.
      - 1
      - 1
      - 0.44
-   * - SCS (GPU, cuDSS) (infeasibility tolerance 1e-4)
+   * - SCS (GPU, cuDSS), 1e-8 (infeasibility tolerance 1e-4)
      - 25
      - 0
      - 0
@@ -666,7 +666,7 @@ same failure charge as the other sets.
      - 1
      - 2
      - 0.93
-   * - Clarabel (infeasibility tolerance 1e-4)
+   * - Clarabel, 1e-8 (infeasibility tolerance 1e-4)
      - 27
      - 0
      - 1
@@ -674,7 +674,7 @@ same failure charge as the other sets.
      - 0
      - 0
      - 0.35
-   * - PIQP
+   * - PIQP, 1e-6
      - 0
      - 17
      - 0
@@ -682,7 +682,7 @@ same failure charge as the other sets.
      - 0
      - 12
      - 0.29
-   * - HiGHS
+   * - HiGHS, 1e-6
      - 0
      - 26
      - 0
@@ -690,7 +690,7 @@ same failure charge as the other sets.
      - 0
      - 3
      - 0.02
-   * - OSQP
+   * - OSQP, 1e-8
      - 19
      - 0
      - 0
@@ -698,7 +698,7 @@ same failure charge as the other sets.
      - 0
      - 10
      - 1.68
-   * - PDLP (OR-Tools)
+   * - PDLP (OR-Tools), 1e-5
      - 22
      - 0
      - 2
@@ -706,7 +706,7 @@ same failure charge as the other sets.
      - 0
      - 5
      - 10.91
-   * - cuOpt (GPU)
+   * - cuOpt (GPU), 1e-4
      - 0
      - 27
      - 0
