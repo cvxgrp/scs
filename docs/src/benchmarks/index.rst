@@ -752,6 +752,14 @@ same failure charge as the other sets.
      - 0
      - 5
      - 10.91
+   * - PDLP (OR-Tools), certificate tolerance 1e-4
+     - 16
+     - 0
+     - 12
+     - 0
+     - 0
+     - 1
+     - 7.15
    * - cuOpt (GPU)
      - 0
      - 27
