@@ -91,3 +91,8 @@ a:hover, a:active {
     color: rgb(0, 0, 0);
 }
 
+
+/* a little wider than the theme default (800px) so figures stay legible */
+.wy-nav-content {
+    max-width: 1000px;
+}

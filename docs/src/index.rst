@@ -89,18 +89,29 @@ Features
 Performance
 -----------
 
-SCS is a fast and reliable optimization library. For instance, it is one of the
-most performant solvers as determined by the third-party `QP solvers benchmark
-<https://github.com/qpsolvers/qpbenchmark>`_ on the challenging Maros-Meszaros
-QP test suite. This is despite SCS being a general quadratic conic solver and
-not specifically tailored for QPs.
+SCS 3.3 is built for large problems. On the Mittelmann set of large LPs it
+solves more instances than any other open-source solver; with the cuDSS GPU
+backend it is the fastest solver we have measured on the largest QPs and
+second only to HiGHS on the largest LPs; and on the CPU it matches the best
+interior-point solvers problem for problem at a relative tolerance of
+:math:`10^{-4}`, while also handling the second-order, semidefinite,
+exponential and power cones that QP solvers cannot. Every solution is verified
+independently against the same residual test, so solvers with different ideas
+of "tolerance" are compared fairly. The full methodology, all test sets
+including SDPs, and the raw data are on the :ref:`benchmarks page
+<benchmarks>`.
 
-.. figure:: files/qp_solvers_benchmark.png
-   :scale: 80 %
+.. figure:: files/bench/landing_grid.png
+   :width: 100 %
    :align: center
-   :alt: map to buried treasure
+   :alt: Performance profiles and geometric mean solve times on the largest QPs, largest LPs and the Mittelmann LP set
 
-   SCS is faster and more reliable than most other solvers.
+   Largest quarter of the Maros-Meszaros and QPLIB QPs (top), largest quarter
+   of the Kennington and MIPLIB-relaxation LPs (middle) and the Mittelmann
+   large-LP set (bottom), at tolerance
+   :math:`10^{-4}`. Left: fraction of problems solved within a factor
+   :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
+   time with failures charged 1000 s, and the number of verified solves.
 
 
 Development
@@ -119,6 +130,7 @@ guide </contributing/index>`.
    :maxdepth: 2
 
    algorithm/index
+   benchmarks/index
    api/index
    install/index
    linear_solver/index
