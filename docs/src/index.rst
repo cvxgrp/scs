@@ -97,7 +97,7 @@ interior-point solvers problem for problem at a relative tolerance of
 :math:`10^{-4}`, while also handling the second-order, semidefinite,
 exponential and power cones that QP solvers cannot. Every solution is verified
 independently against the same residual test, so solvers with different ideas
-of "tolerance" are compared fairly. SCS also says so when there is no
+of "tolerance" are compared fairly. SCS also detects when there is no
 solution: it returns verified certificates of infeasibility or unboundedness
 for 24 of the 29 infeasible Netlib LPs at that tolerance (26 at
 :math:`10^{-6}`) and for all four infeasible SDPs in SDPLIB. The full
@@ -114,7 +114,8 @@ the raw data are on the :ref:`benchmarks page <benchmarks>`.
    large-LP set (bottom), at tolerance
    :math:`10^{-4}`. Left: fraction of problems solved within a factor
    :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
-   time with failures charged 1000 s, and the number of verified solves.
+   time with failures charged three times the time limit, and the number of
+   verified solves.
 
 
 Development
