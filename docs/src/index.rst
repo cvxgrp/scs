@@ -123,8 +123,10 @@ page <benchmarks>`.
 
    Infeasibility detection on the 29 infeasible Netlib LPs, for the solvers
    that return certificates: a solve is a certificate of infeasibility or
-   unboundedness verified from the problem data. Settings are described on
-   the :ref:`benchmarks page <bench_infeasible>`.
+   unboundedness verified from the problem data. These are small problems
+   (a median of 460 variables), so this tests detection rather than speed
+   at scale; settings are described on the :ref:`benchmarks page
+   <bench_infeasible>`.
 
 
 Development

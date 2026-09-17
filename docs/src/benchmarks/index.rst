@@ -582,7 +582,11 @@ direction is otherwise proven and as wrong when it is not. "Near-feasible"
 means the solver returned a point whose residuals pass the same check: the
 problem is infeasible by less than the tolerance asked for (``cplex2`` is
 such an instance for every solver that solves it), so this is a statement
-about the tolerance rather than an error.
+about the tolerance rather than an error. These are small problems: the
+Netlib instances have a median of 460 variables and 2,100 nonzeros (the
+largest 10,700 and 108,000), and the SDPs are small too, so this is a test
+of whether a solver detects infeasibility, not of how fast a first-order
+method does so on the large problems it is built for.
 
 SCS returns a verified certificate for 24 of the 29 infeasible LPs at
 :math:`10^{-4}`, in 0.2 s geometric mean, and for 26 at :math:`10^{-6}`
