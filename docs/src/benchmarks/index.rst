@@ -569,8 +569,11 @@ LP solver on the 29 infeasible LPs of the Netlib collection (two of them,
 ``cplex1`` and ``mondou2``, are both primal and dual infeasible) and every SDP
 solver on the four infeasible SDPLIB instances (``infp1`` and ``infp2`` are
 primal infeasible, ``infd1`` and ``infd2`` dual infeasible, that is
-unbounded), at the same settings as the plots above, plus SCS and OSQP at
-:math:`10^{-6}`. SCS, Clarabel, OSQP, PDLP and CVXOPT return a certificate
+unbounded), at the same settings as the plots above with each solver's
+infeasibility tolerance set equal to its solve tolerance (``eps_infeas`` for
+SCS, ``tol_infeas_abs`` and ``tol_infeas_rel`` for Clarabel; the others have
+no separate setting), plus SCS and OSQP at :math:`10^{-6}`. SCS, Clarabel,
+OSQP, PDLP and CVXOPT return a certificate
 (a Farkas ray), which the harness checks against the problem data at the
 same :math:`10^{-3}` threshold as the plots; HiGHS, PIQP, cuOpt and SDPA
 report a status only. A verified certificate of either kind is a proof and
@@ -582,22 +585,22 @@ such an instance for every solver that solves it), so this is a statement
 about the tolerance rather than an error.
 
 SCS returns a verified certificate for 24 of the 29 infeasible LPs at
-:math:`10^{-4}` and for 26 at :math:`10^{-6}` with no wrong answer, in
-about 1.6 s geometric mean, and for all four infeasible SDPs on both
-backends. Its two wrong answers at :math:`10^{-4}` (``qual`` and ``vol1``)
-are points reported optimal whose residuals just miss the check, at
+:math:`10^{-4}`, in 0.2 s geometric mean, and for 26 at :math:`10^{-6}`
+with no wrong answer, and for all four infeasible SDPs on both backends.
+Its three wrong answers at :math:`10^{-4}` are two points reported optimal
+whose residuals just miss the check (``qual`` and ``vol1``, at
 :math:`1.1 \times 10^{-3}` and :math:`1.4 \times 10^{-3}`; at
 :math:`10^{-6}` SCS flags both as inaccurate, with residuals inside the
-check. Clarabel certifies 27 and HiGHS
-detects 26 by status, both faster. The other first-order solvers are less
-conclusive: OSQP gives no answer on 9 of the 29 and PDLP on 5; cuOpt reports
-``cplex2`` optimal. On the SDPs, SDPA gets all four by status, while
-CVXOPT's certificates fail the check and point the wrong way on the two
-unbounded instances.
+check) and, on ``reactor``, a certificate of unboundedness that does not
+verify. Clarabel certifies 27 in 0.3 s and HiGHS detects 26 by status. The
+other first-order solvers are less conclusive: OSQP gives no answer on 9 of
+the 29 and PDLP on 5; cuOpt reports ``cplex2`` optimal. On the SDPs, SDPA
+gets all four by status, while CVXOPT's certificates fail the check and
+point the wrong way on the two unbounded instances.
 
-The plot treats a correct answer (a verified certificate, or the right status
-for a status-only solver) as a solve and everything else as a failure, with
-the same failure charge as the other sets.
+The plot compares the solvers that return certificates. A verified
+certificate counts as a solve and everything else as a failure, with the
+same failure charge as the other sets.
 
 .. figure:: ../files/bench/infeas_1e-4_pair.png
    :width: 100 %
@@ -619,10 +622,10 @@ the same failure charge as the other sets.
      - 24
      - 0
      - 0
-     - 3
      - 2
+     - 3
      - 0
-     - 1.55
+     - 0.20
    * - SCS (CPU, MKL Pardiso), 1e-6
      - 26
      - 0
@@ -630,23 +633,23 @@ the same failure charge as the other sets.
      - 3
      - 0
      - 0
-     - 1.66
+     - 0.74
    * - SCS (GPU, cuDSS), 1e-4
-     - 23
+     - 24
      - 0
      - 0
-     - 5
-     - 1
+     - 3
+     - 2
      - 0
-     - 2.45
+     - 0.73
    * - SCS (GPU, cuDSS), 1e-6
      - 26
      - 0
      - 0
-     - 1
-     - 0
      - 2
-     - 3.03
+     - 0
+     - 1
+     - 2.66
    * - Clarabel
      - 27
      - 0
@@ -654,7 +657,7 @@ the same failure charge as the other sets.
      - 1
      - 0
      - 0
-     - 0.32
+     - 0.33
    * - PIQP
      - 0
      - 17
@@ -723,7 +726,7 @@ the same failure charge as the other sets.
      - 0
      - 0
      - 0
-     - 0.05
+     - 0.04
    * - SCS (GPU, cuDSS)
      - 4
      - 0
@@ -731,7 +734,7 @@ the same failure charge as the other sets.
      - 0
      - 0
      - 0
-     - 0.63
+     - 0.70
    * - Clarabel
      - 4
      - 0
