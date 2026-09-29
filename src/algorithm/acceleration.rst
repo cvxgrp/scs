@@ -242,4 +242,4 @@ Anderson acceleration API
 
 For completeness, we document the full Anderson acceleration API below.
 
-.. doxygenfile:: include/aa.h
+.. doxygenfile:: aa.h

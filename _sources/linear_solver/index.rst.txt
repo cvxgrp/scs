@@ -187,5 +187,5 @@ See :code:`linsys` directory for examples.
 
 .. doxygentypedef:: ScsLinSysWork
 
-.. doxygenfile:: include/linsys.h
+.. doxygenfile:: linsys.h
 
