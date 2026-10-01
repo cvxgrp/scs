@@ -68,6 +68,35 @@ jobs:
       - name: Run the GPU tests on the simulated GPU
         run: vgpu run out/run_tests_gpu_indirect
 
+  # cuDSS, SCS's GPU direct backend, run. The linux job above builds
+  # run_tests_cudss but cannot run it on a GPU-less runner. NVIDIA's libcudss
+  # cannot run on a simulated GPU (it carries its own statically linked CUDA
+  # runtime), so PantheonSim provides a cuDSS of its own, written from NVIDIA's
+  # documented API; `vgpu run` swaps it and the simulated GPU in for the test
+  # run, while the build links NVIDIA's packages as the linux job does. It
+  # checks results, not speed; a real GPU is still the final word.
+  simulated-gpu-cudss:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Simulated GPU (NVIDIA T4) and CUDA 13.0 from NVIDIA
+        # The simulator itself, pinned by commit: its cuDSS is newer than the
+        # latest setup-pantheonsim release.
+        uses: pantheongpu/pantheonsim@7bec2f7a96c381c70a4374afbd7724fc158aa8db # main, with cuDSS
+        with:
+          gpu: nvidia/t4
+          cuda-toolkit: '13.0'
+          library-path: false
+      # apt's cudss installs the CUDA 12 and 13 builds; the default libcudss.so
+      # is the CUDA 13 one, so the job uses CUDA 13 too.
+      - run: sudo apt-get install -y libopenblas-dev liblapack-dev cudss
+      - name: Make cudss target
+        run: |
+          export CUDSS_PATH=/usr/lib/cudss
+          make cudss CUDA_PATH=/usr/local/cuda-13.0
+      - name: Run the cuDSS tests on the simulated GPU
+        run: vgpu run out/run_tests_cudss
+
   # Regression test for cvxgrp/scs#322. linsys/gpu/*.c are compiled by $(CC),
   # not by nvcc, so they include the CUDA headers directly and driver_types.h
   # pulls in crt/host_defines.h. Up to CUDA 12 those crt headers shipped inside
