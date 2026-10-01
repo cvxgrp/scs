@@ -6,6 +6,11 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1'
+# Every job here only reads the repository. The simulator's action uses no
+# token or secrets, and installs packages only from Ubuntu and NVIDIA.
+permissions:
+  contents: read
+
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -40,6 +45,28 @@ jobs:
           "${CUDA_PATH}/bin/nvcc" --version
           make cudss CUDA_PATH="${CUDA_PATH}"
       # - run: out/run_tests_cudss           # gpus not available yet
+
+  # The GPU solver's test suite, run. The linux job above builds it but cannot
+  # run it on a GPU-less runner. PantheonSim simulates an NVIDIA T4 on the
+  # runner's CPU, with its own cuBLAS and cuSPARSE, so run_tests_gpu_indirect
+  # runs here. It checks results, not speed; a real GPU is still the final word.
+  # SCS links against the toolkit's own libraries, so the simulator's stay off
+  # the library path while building (library-path: false) and `vgpu run` swaps
+  # them in for the test run only.
+  simulated-gpu:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Simulated GPU (NVIDIA T4) and Ubuntu's CUDA toolkit
+        uses: pantheongpu/setup-pantheonsim@052a0ac31bf6ec72a471d51aae29b7cbd090c6bf # v0.1.1
+        with:
+          gpu: nvidia/t4
+          library-path: false
+      - run: sudo apt-get install libopenblas-dev liblapack-dev
+      - run: CFLAGS=-Werror=implicit-function-declaration make gpu CUDA_PATH=/usr
+      - run: make test_gpu CUDA_PATH=/usr
+      - name: Run the GPU tests on the simulated GPU
+        run: vgpu run out/run_tests_gpu_indirect
 
   # Regression test for cvxgrp/scs#322. linsys/gpu/*.c are compiled by $(CC),
   # not by nvcc, so they include the CUDA headers directly and driver_types.h
