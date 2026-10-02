@@ -76,6 +76,10 @@ jobs:
   # run, while the build links NVIDIA's packages as the linux job does. It
   # checks results, not speed; a real GPU is still the final word.
   simulated-gpu-cudss:
+    strategy:
+      fail-fast: false
+      matrix:
+        long: [0, 1]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -93,7 +97,7 @@ jobs:
       - name: Make cudss target
         run: |
           export CUDSS_PATH=/usr/lib/cudss
-          make cudss CUDA_PATH=/usr/local/cuda-13.0
+          make cudss DLONG=${{ matrix.long }} CUDA_PATH=/usr/local/cuda-13.0
       - name: Run the cuDSS tests on the simulated GPU
         run: vgpu run out/run_tests_cudss
 
