@@ -88,8 +88,9 @@ $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
 $(DENSESRC)/private.o: $(DENSESRC)/private.c  $(DENSESRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
+# --coverage is a host compiler option, so nvcc needs it via -Xcompiler.
 $(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
-	$(CUCC) $(INCLUDE) $(CUSTOM_FLAGS) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
+	$(CUCC) $(INCLUDE) $(patsubst --coverage,-Xcompiler=--coverage,$(CUSTOM_FLAGS)) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
 $(ACCELSRC)/private.o: $(ACCELSRC)/private.c  $(ACCELSRC)/private.h
 $(LINSYS)/scs_matrix.o: $(LINSYS)/scs_matrix.c $(LINSYS)/scs_matrix.h
 $(LINSYS)/csparse.o: $(LINSYS)/csparse.c $(LINSYS)/csparse.h
