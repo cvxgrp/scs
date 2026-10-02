@@ -88,8 +88,9 @@ $(DIRSRC)/private.o: $(DIRSRC)/private.c  $(DIRSRC)/private.h
 $(INDIRSRC)/private.o: $(INDIRSRC)/private.c $(INDIRSRC)/private.h
 $(DENSESRC)/private.o: $(DENSESRC)/private.c  $(DENSESRC)/private.h
 $(MKLSRC)/private.o: $(MKLSRC)/private.c  $(MKLSRC)/private.h
+# --coverage is a host compiler option, so nvcc needs it via -Xcompiler.
 $(CUDSSSRC)/private.o: $(CUDSSSRC)/private.c  $(CUDSSSRC)/private.h
-	$(CUCC) $(INCLUDE) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
+	$(CUCC) $(INCLUDE) $(patsubst --coverage,-Xcompiler=--coverage,$(CUSTOM_FLAGS)) $(CUDSS_FLAGS) -I$(CUDSSSRC) -c $(CUDSSSRC)/private.c -o $@
 $(ACCELSRC)/private.o: $(ACCELSRC)/private.c  $(ACCELSRC)/private.h
 $(LINSYS)/scs_matrix.o: $(LINSYS)/scs_matrix.c $(LINSYS)/scs_matrix.h
 $(LINSYS)/csparse.o: $(LINSYS)/csparse.c $(LINSYS)/csparse.h
@@ -252,7 +253,7 @@ $(OUT)/demo_socp_gpu_indirect: test/random_socp_prob.c $(OUT)/libscsgpuindir.a
 
 .PHONY: clean purge
 clean:
-	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_MKL_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(ACCELSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o src/spectral_cones/*.o src/spectral_cones/*/*.o
+	@rm -rf $(TARGETS) $(SCS_O) $(SCS_INDIR_O) $(SCS_MKL_O) $(SCS_OBJECTS) $(AMD_OBJS) $(LDL_OBJS) $(LINSYS)/*.o $(DIRSRC)/*.o $(INDIRSRC)/*.o $(DENSESRC)/*.o $(MKLSRC)/*.o $(CUDSSSRC)/*.o $(ACCELSRC)/*.o $(GPUDIR)/*.o $(GPUINDIR)/*.o $(LINSYS)/gpu/*.o src/spectral_cones/*.o src/spectral_cones/*/*.o
 	@rm -rf $(OUT)/*.dSYM
 	@rm -rf matlab/*.mex*
 	@rm -rf .idea
