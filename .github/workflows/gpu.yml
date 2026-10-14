@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Simulated GPU (NVIDIA T4) and Ubuntu's CUDA toolkit
-        uses: pantheongpu/setup-pantheonsim@06648b8c0cb091584196678593215db2e16bd7eb # v0.1.2
+        uses: pantheongpu/setup-pantheonsim@23932d9b811269d55c8d65687332fefc65daeb2c # v0.1.3
         with:
           gpu: nvidia/t4
           library-path: false
