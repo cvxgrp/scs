@@ -48,7 +48,7 @@ typedef struct {
 /* Constants */
 #define BOX_CONE_MAX_ITERS (25)
 #define POW_CONE_TOL (1e-12)
-#define POW_CONE_MAX_ITERS (20)
+#define POW_CONE_MAX_ITERS (50)
 
 /* Box cone limits (+ or -) taken to be INF */
 #define MAX_BOX_VAL (1e15)
@@ -1457,13 +1457,15 @@ static void proj_soc(scs_float *x, scs_int q) {
  */
 static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
                             scs_float a) {
-  scs_float x = 0.5 * (xh + SQRTF(xh * xh + 4 * a * (rh - r) * r));
-  return MAX(x, 1e-12);
+  /* Positive root of x^2 - xh * x - a * (rh - r) * r = 0, in a form that
+   * avoids cancellation when xh < 0. */
+  scs_float d = 4 * a * (rh - r) * r, s = SQRTF(xh * xh + d);
+  return xh >= 0 ? 0.5 * (xh + s) : 0.5 * d / (s - xh);
 }
 
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
-  scs_float x = 0.0, y = 0.0, r;
+  scs_float x = 0.0, y = 0.0, r, lo, hi;
   /* Projection onto a cone is positively homogeneous, so work on v scaled
    * to unit inf-norm; this makes the tolerances below relative to |v|. */
   scs_float nrm = MAX(MAX(ABS(xh), ABS(yh)), rh);
@@ -1488,9 +1490,14 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     return;
   }
 
+  /* Find the root r in (0, rh) of f(r) = x(r)^a * y(r)^(1-a) - r. The first
+   * term is concave in r, so f > 0 left of the root and f < 0 right of it,
+   * which gives a bracket [lo, hi] that safeguards the Newton steps. */
+  lo = 0;
+  hi = rh;
   r = rh / 2;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
-    scs_float f, fp, dxdr, dydr, xa, y1a, r_new;
+    scs_float f, fp, dxdr, dydr, xa, y1a, r_new, r_g;
     x = pow_calc_x(r, xh, rh, a);
     y = pow_calc_x(r, yh, rh, 1 - a);
 
@@ -1499,15 +1506,29 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     xa  = POWF(x, a);
     y1a = POWF(y, (1 - a));
     f = xa * y1a - r;
+    if (f > 0)
+      lo = r;
+    else
+      hi = r;
 
     dxdr = a * (rh - 2 * r) / (2 * x - xh);
     dydr = (1 - a) * (rh - 2 * r) / (2 * y - yh);
     fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
-    /* Stop on step size rather than |f|: near the polar boundary f is very
-     * flat in r, so a small |f| does not imply r is accurate. */
-    r_new = MIN(MAX(r - f / fp, 0), rh);
-    if (ABS(r_new - r) <= POW_CONE_TOL)
+    r_new = r - f / fp;
+    if (f < 0) {
+      /* Near the polar boundary f is nearly flat around a double root and
+       * Newton on f converges only linearly; Newton on f(r) / r, which
+       * removes the trivial root at 0, converges much faster there. */
+      r_g = r - r * f / (r * fp - f);
+      if (r_g > lo && r_g < hi)
+        r_new = r_g;
+    }
+    if (!(r_new > lo && r_new < hi))
+      r_new = 0.5 * (lo + hi); /* bisect (also catches NaN) */
+    /* Stop on step size rather than |f|: a small |f| does not imply r is
+     * accurate when f is flat. */
+    if (ABS(r_new - r) <= POW_CONE_TOL || hi - lo <= POW_CONE_TOL)
       break;
     r = r_new;
   }
