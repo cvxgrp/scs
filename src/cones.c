@@ -47,7 +47,7 @@ typedef struct {
 
 /* Constants */
 #define BOX_CONE_MAX_ITERS (25)
-#define POW_CONE_TOL (1e-9)
+#define POW_CONE_TOL (1e-12)
 #define POW_CONE_MAX_ITERS (20)
 
 /* Box cone limits (+ or -) taken to be INF */
@@ -1464,7 +1464,16 @@ static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
   scs_float x = 0.0, y = 0.0, r;
+  /* Projection onto a cone is positively homogeneous, so work on v scaled
+   * to unit inf-norm; this makes the tolerances below relative to |v|. */
+  scs_float nrm = MAX(MAX(ABS(xh), ABS(yh)), rh);
   scs_int i;
+
+  if (nrm <= 0)
+    return;
+  xh /= nrm;
+  yh /= nrm;
+  rh /= nrm;
 
   /* Check v membership in K_a */
   if (xh >= 0 && yh >= 0 &&
@@ -1481,7 +1490,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
   r = rh / 2;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
-    scs_float f, fp, dxdr, dydr, xa, y1a;
+    scs_float f, fp, dxdr, dydr, xa, y1a, r_new;
     x = pow_calc_x(r, xh, rh, a);
     y = pow_calc_x(r, yh, rh, 1 - a);
 
@@ -1490,19 +1499,21 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     xa  = POWF(x, a);
     y1a = POWF(y, (1 - a));
     f = xa * y1a - r;
-    if (ABS(f) < POW_CONE_TOL)
-      break;
 
     dxdr = a * (rh - 2 * r) / (2 * x - xh);
     dydr = (1 - a) * (rh - 2 * r) / (2 * y - yh);
     fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
-    r = MAX(r - f / fp, 0);
-    r = MIN(r, rh);
+    /* Stop on step size rather than |f|: near the polar boundary f is very
+     * flat in r, so a small |f| does not imply r is accurate. */
+    r_new = MIN(MAX(r - f / fp, 0), rh);
+    if (ABS(r_new - r) <= POW_CONE_TOL)
+      break;
+    r = r_new;
   }
-  v[0] = x;
-  v[1] = y;
-  v[2] = (v[2] < 0) ? -r : r;
+  v[0] = x * nrm;
+  v[1] = y * nrm;
+  v[2] = ((v[2] < 0) ? -r : r) * nrm;
 }
 
 /* ================ Main Cone Projection Dispatch ====================== */
