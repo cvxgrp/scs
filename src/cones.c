@@ -13,6 +13,7 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
+#include <float.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -50,15 +51,17 @@ typedef struct {
 /* Power cone projection: POW_CONE_TOL is the tolerance relative to |v| for
  * the Newton solve and the membership checks, POW_CONE_START_SLOPE bounds
  * |dx/dr| and |dy/dr| at r = rh for the Newton solve to start there, and
- * POW_CONE_EPS is the machine epsilon. All must suit the working precision. */
+ * POW_CONE_EPS is the machine epsilon. All must suit the working precision;
+ * in particular the first Newton step from rh is only representable when
+ * POW_CONE_START_SLOPE^2 * POW_CONE_EPS is small, hence the float value. */
 #ifdef SFLOAT
 #define POW_CONE_TOL (1e-6)
 #define POW_CONE_START_SLOPE (10)
-#define POW_CONE_EPS (1.2e-7)
+#define POW_CONE_EPS (FLT_EPSILON)
 #else
 #define POW_CONE_TOL (1e-12)
 #define POW_CONE_START_SLOPE (1e3)
-#define POW_CONE_EPS (2.2e-16)
+#define POW_CONE_EPS (DBL_EPSILON)
 #endif
 #define POW_CONE_MAX_ITERS (50)
 
@@ -1477,7 +1480,8 @@ static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
 
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
-  scs_float x = 0.0, y = 0.0, r, lo, hi, f_lo, f_hi;
+  scs_float x = 0.0, y = 0.0, r, lo, hi;
+  scs_float f_lo, f_hi; /* f at the bracket ends, for regula falsi */
   /* Projection onto a cone is positively homogeneous, so work on v scaled
    * to unit inf-norm; this makes the tolerances below relative to |v|. */
   scs_float nrm = MAX(MAX(ABS(xh), ABS(yh)), rh);
