@@ -1502,6 +1502,12 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   lo = 0;
   hi = rh;
   r = rh / 2;
+  /* Points just outside the cone (e.g. converging iterates) have their root
+   * near rh; starting there avoids Newton overshooting from the left into
+   * bisection. Only do this when x(rh) = xh and y(rh) = yh are not small,
+   * otherwise dx/dr or dy/dr at rh is huge and the first step is tiny. */
+  if (xh > 0 && yh > 0 && POWF(xh, a) * POWF(yh, (1 - a)) >= rh / 2)
+    r = rh;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
     scs_float f, fp, dxdr, dydr, xa, y1a, r_new, r_g, sens;
     x = pow_calc_x(r, xh, rh, a);
