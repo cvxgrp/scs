@@ -493,3 +493,46 @@ static const char *test_power_cone_small_scale(void) {
   scs_free(d);
   return fail;
 }
+
+/*
+ * Projection onto the power cone of points just outside it with one tiny
+ * positive component and p near 0 or 1. Starting the Newton solve at
+ * r = rh there makes the first step too small to represent, which was
+ * mistaken for convergence and returned v unprojected. Reference values
+ * are from a 60-digit bisection and satisfy the projection's optimality
+ * conditions.
+ *
+ * P_K(v) is computed from the dual projection via Moreau: v + P_K*(-v).
+ */
+static const char *test_power_cone_proj_tiny_component(void) {
+  scs_float ps[] = {0.001, 0.001, 0.999};
+  scs_float vs[][3] = {{1e-12, 1.0, 1.8482197251762336},
+                       {1e-9, 1.0, 1.8610309722765279},
+                       {1.0, 1e-12, -1.8482197251762336}};
+  scs_float refs[][3] = {
+      {0.024656240189987407, 1.42591697797449, 1.4201429843158235},
+      {0.024896473072648813, 1.4323167445745537, 1.4265242797926461},
+      {1.42591697797449, 0.024656240189987418, -1.4201429843158235}};
+  scs_float t[3], err;
+  scs_int i, j;
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsConeWork *c;
+
+  k->psize = 1;
+  for (i = 0; i < 3; ++i) {
+    k->p = &(ps[i]);
+    c = SCS(init_cone)(k, 3);
+    for (j = 0; j < 3; ++j)
+      t[j] = -vs[i][j];
+    SCS(proj_dual_cone)(t, c, SCS_NULL, SCS_NULL);
+    SCS(finish_cone)(c);
+    err = 0;
+    for (j = 0; j < 3; ++j)
+      err = MAX(err, ABS(t[j] + vs[i][j] - refs[i][j]));
+    scs_printf("power cone projection %i error %4e\n", (int)i, err);
+    mu_assert_less("test_power_cone_proj_tiny_component: projection error",
+                   err, 1e-9);
+  }
+  scs_free(k);
+  return 0;
+}
