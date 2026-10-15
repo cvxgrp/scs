@@ -1503,7 +1503,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   hi = rh;
   r = rh / 2;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
-    scs_float f, fp, dxdr, dydr, xa, y1a, r_new, r_g;
+    scs_float f, fp, dxdr, dydr, xa, y1a, r_new, r_g, sens;
     x = pow_calc_x(r, xh, rh, a);
     y = pow_calc_x(r, yh, rh, 1 - a);
 
@@ -1524,19 +1524,25 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     r_new = r - f / fp;
     if (f < 0) {
       /* Near the polar boundary f is nearly flat around a double root and
-       * Newton on f converges only linearly; Newton on f(r) / r, which
-       * removes the trivial root at 0, converges much faster there. */
+       * Newton on f converges only linearly; once r is close enough to the
+       * root, Newton on f(r) / r, which removes the trivial root at 0,
+       * converges much faster. */
       r_g = r - r * f / (r * fp - f);
       if (r_g > lo && r_g < hi)
         r_new = r_g;
     }
+    /* Stop on the step size relative to r rather than on |f|: a small |f|
+     * does not imply r is accurate when f is flat. r is an end of the
+     * bracket here, so a converged step may land exactly on it. */
+    if (ABS(r_new - r) <= POW_CONE_TOL * r && r_new >= lo && r_new <= hi)
+      break;
     if (!(r_new > lo && r_new < hi))
       r_new = 0.5 * (lo + hi); /* bisect (also catches NaN) */
-    /* Stop on the step size relative to r rather than on |f|: a small |f|
-     * does not imply r is accurate when f is flat, and near the apex the
-     * root r can be far below POW_CONE_TOL while x(r) is very sensitive
-     * to it. */
-    if (ABS(r_new - r) <= POW_CONE_TOL * r || hi - lo <= POW_CONE_TOL * hi)
+    /* The relative test above cannot be met when the root is at or near 0,
+     * so also stop once the bracket pins x, y and r down to POW_CONE_TOL
+     * (relative to |v| after normalization). */
+    sens = MAX(1, MAX(ABS(dxdr), ABS(dydr)));
+    if (hi - lo <= POW_CONE_TOL * hi || (hi - lo) * sens <= POW_CONE_TOL)
       break;
     r = r_new;
   }
