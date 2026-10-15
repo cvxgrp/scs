@@ -47,7 +47,13 @@ typedef struct {
 
 /* Constants */
 #define BOX_CONE_MAX_ITERS (25)
+/* Relative tolerance for the power cone Newton solve; it must be reachable
+ * in the working precision. */
+#ifdef SFLOAT
+#define POW_CONE_TOL (1e-6)
+#else
 #define POW_CONE_TOL (1e-12)
+#endif
 #define POW_CONE_MAX_ITERS (50)
 
 /* Box cone limits (+ or -) taken to be INF */
@@ -1526,9 +1532,11 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     }
     if (!(r_new > lo && r_new < hi))
       r_new = 0.5 * (lo + hi); /* bisect (also catches NaN) */
-    /* Stop on step size rather than |f|: a small |f| does not imply r is
-     * accurate when f is flat. */
-    if (ABS(r_new - r) <= POW_CONE_TOL || hi - lo <= POW_CONE_TOL)
+    /* Stop on the step size relative to r rather than on |f|: a small |f|
+     * does not imply r is accurate when f is flat, and near the apex the
+     * root r can be far below POW_CONE_TOL while x(r) is very sensitive
+     * to it. */
+    if (ABS(r_new - r) <= POW_CONE_TOL * r || hi - lo <= POW_CONE_TOL * hi)
       break;
     r = r_new;
   }

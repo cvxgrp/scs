@@ -419,9 +419,7 @@ static const char *test_multi_power(void) {
  * Newton solve stopped early and SCS returned SCS_SOLVED with the slack well
  * outside the cone.
  *
- * Problem: minimize -100 x  s.t.  (100, 0.01, x) in K_pow(0.25). (The issue
- * used -1000; -100 still triggers the bug but keeps |y| moderate for the
- * absolute dual cone check in verify_solution_correct.)
+ * Problem: minimize -1000 x  s.t.  (100, 0.01, x) in K_pow(0.25).
  * K_pow(0.25): u^0.25 * v^0.75 >= |z|, so x* = 100^0.25 * 0.01^0.75 = 0.1.
  *
  * Variables [x] (n=1), m=3:
@@ -448,7 +446,7 @@ static const char *test_power_cone_small_scale(void) {
   scs_int Aps[]   = {0, 1};
 
   scs_float bs[] = {100.0, 0.01, 0.0};
-  scs_float cs[] = {-100.0};
+  scs_float cs[] = {-1000.0};
 
   scs_float ps[] = {0.25};
 
