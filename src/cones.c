@@ -1482,6 +1482,7 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
   scs_float x = 0.0, y = 0.0, r, lo, hi;
   scs_float f_lo, f_hi; /* f at the bracket ends, for regula falsi */
+  scs_float phi0; /* phi(0) = phi(rh) = max(xh, 0)^a * max(yh, 0)^(1-a) */
   /* Projection onto a cone is positively homogeneous, so work on v scaled
    * to unit inf-norm; this makes the tolerances below relative to |v|. */
   scs_float nrm = MAX(MAX(ABS(xh), ABS(yh)), rh);
@@ -1493,9 +1494,15 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   yh /= nrm;
   rh /= nrm;
 
+  if (xh >= 0 && yh >= 0)
+    phi0 = POWF(xh, a) * POWF(yh, (1 - a));
+  else if (a > 0 && a < 1)
+    phi0 = 0;
+  else
+    phi0 = POWF(MAX(xh, 0), a) * POWF(MAX(yh, 0), (1 - a));
+
   /* Check v membership in K_a */
-  if (xh >= 0 && yh >= 0 &&
-      POW_CONE_TOL + POWF(xh, a) * POWF(yh, (1 - a)) >= rh)
+  if (xh >= 0 && yh >= 0 && POW_CONE_TOL + phi0 >= rh)
     return;
 
   /* Check -v membership in Polar K_a^* */
@@ -1513,15 +1520,30 @@ static void proj_power_cone(scs_float *v, scs_float a) {
    * to start, for the regula falsi fallback. */
   lo = 0;
   hi = rh;
-  f_lo = POWF(MAX(xh, 0), a) * POWF(MAX(yh, 0), (1 - a));
-  f_hi = f_lo - rh;
+  f_lo = phi0;
+  f_hi = phi0 - rh;
   r = rh / 2;
+  /* With exactly one negative component, for small r x(r) ~ a * rh * r / |xh|
+   * (or the same for y), and phi(r) = r then gives the root directly. This is
+   * the common case for ADMM iterates, and its root is often tiny, which
+   * Newton from rh / 2 reaches only slowly. */
+  if (xh < 0 && yh > 0) {
+    scs_float r0 = POWF(a * rh / (-xh), a / (1 - a)) * yh;
+    if (r0 > 0 && r0 < rh / 2)
+      r = r0;
+  } else if (yh < 0 && xh > 0) {
+    scs_float r0 = POWF((1 - a) * rh / (-yh), (1 - a) / a) * xh;
+    if (r0 > 0 && r0 < rh / 2)
+      r = r0;
+  }
   /* Points just outside the cone (e.g. converging iterates) have their root
    * near rh; starting there avoids Newton overshooting from the left into
-   * bisection. Only do this when the slopes dx/dr = -a * rh / xh and
+   * bisection. Only do this when the point is close to the cone,
+   * phi(rh) >= rh / 2, and the slopes dx/dr = -a * rh / xh and
    * dy/dr = -(1 - a) * rh / yh at rh are moderate: otherwise the first step
    * is too small to represent and looks converged. */
-  if (xh > 0 && yh > 0 && a * rh <= POW_CONE_START_SLOPE * xh &&
+  if (xh > 0 && yh > 0 && phi0 >= rh / 2 &&
+      a * rh <= POW_CONE_START_SLOPE * xh &&
       (1 - a) * rh <= POW_CONE_START_SLOPE * yh)
     r = rh;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
@@ -1555,11 +1577,13 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
     r_new = r - f / fp;
-    if (f < 0) {
+    if (f < 0 && r_new < r / 2) {
       /* Near the polar boundary f is nearly flat around a double root and
-       * Newton on f converges only linearly; once r is close enough to the
-       * root, Newton on f(r) / r, which removes the trivial root at 0,
-       * converges much faster. */
+       * Newton on f converges only linearly, more than halving r each step;
+       * there Newton on f(r) / r, which removes the trivial root at 0,
+       * converges much faster. Elsewhere Newton on f from the right of the
+       * root converges monotonically, and the f(r) / r step would overshoot
+       * to the left of it. */
       r_g = r - r * f / (r * fp - f);
       if (r_g > lo && r_g < hi)
         r_new = r_g;
