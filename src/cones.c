@@ -1577,13 +1577,12 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
     r_new = r - f / fp;
-    if (f < 0 && r_new < r / 2) {
+    if (f < 0) {
       /* Near the polar boundary f is nearly flat around a double root and
-       * Newton on f converges only linearly, more than halving r each step;
-       * there Newton on f(r) / r, which removes the trivial root at 0,
-       * converges much faster. Elsewhere Newton on f from the right of the
-       * root converges monotonically, and the f(r) / r step would overshoot
-       * to the left of it. */
+       * Newton on f converges only linearly; Newton on f(r) / r, which
+       * removes the trivial root at 0, converges much faster there. It is
+       * also taken elsewhere: restricting it saved a few projection
+       * evaluations on some inputs but made whole solves worse. */
       r_g = r - r * f / (r * fp - f);
       if (r_g > lo && r_g < hi)
         r_new = r_g;
