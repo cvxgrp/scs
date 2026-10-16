@@ -412,3 +412,127 @@ static const char *test_multi_power(void) {
   scs_free(d);
   return fail;
 }
+
+/*
+ * Regression test for issue #491: the power cone projection used absolute
+ * tolerances, so when the (homogeneous, normalized) iterates were tiny the
+ * Newton solve stopped early and SCS returned SCS_SOLVED with the slack well
+ * outside the cone.
+ *
+ * Problem: minimize -1000 x  s.t.  (100, 0.01, x) in K_pow(0.25).
+ * K_pow(0.25): u^0.25 * v^0.75 >= |z|, so x* = 100^0.25 * 0.01^0.75 = 0.1.
+ *
+ * Variables [x] (n=1), m=3:
+ *   Rows 0-2 (power p=0.25): s = b - A x = (100, 0.01, x)
+ *
+ * A cols (CSC):
+ *   col 0 (x): row 2 -> -1
+ */
+static const char *test_power_cone_small_scale(void) {
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsInfo info = {0};
+  scs_int exitflag;
+  scs_float viol;
+  scs_int success;
+  const char *fail;
+
+  scs_float xopt = 0.1;
+
+  scs_float Axs[] = {-1.0};
+  scs_int Ais[]   = {2};
+  scs_int Aps[]   = {0, 1};
+
+  scs_float bs[] = {100.0, 0.01, 0.0};
+  scs_float cs[] = {-1000.0};
+
+  scs_float ps[] = {0.25};
+
+  scs_int m = 3, n = 1;
+
+  d->m = m;
+  d->n = n;
+  d->b = bs;
+  d->c = cs;
+
+  d->A = (ScsMatrix *)scs_calloc(1, sizeof(ScsMatrix));
+  d->A->m = m;
+  d->A->n = n;
+  d->A->x = Axs;
+  d->A->i = Ais;
+  d->A->p = Aps;
+
+  k->psize = 1;
+  k->p = ps;
+
+  scs_set_default_settings(stgs);
+  stgs->eps_abs = 1e-8;
+  stgs->eps_rel = 1e-8;
+
+  exitflag = scs(d, k, stgs, sol, &info);
+
+  /* cone violation of s = (u, v, z): |z| - u^0.25 * v^0.75 */
+  viol = ABS(sol->s[2]) - POWF(MAX(sol->s[0], 0.), 0.25) *
+                              POWF(MAX(sol->s[1], 0.), 0.75);
+
+  scs_printf("x error %4e\n", sol->x[0] - xopt);
+  scs_printf("cone violation %4e\n", viol);
+
+  success = exitflag == SCS_SOLVED && ABS(sol->x[0] - xopt) < 1e-6 &&
+            viol < 1e-6;
+  mu_assert("test_power_cone_small_scale: slack outside cone or wrong x",
+            success);
+  fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
+
+  SCS(free_sol)(sol);
+  scs_free(d->A);
+  scs_free(k);
+  scs_free(stgs);
+  scs_free(d);
+  return fail;
+}
+
+/*
+ * Projection onto the power cone of points just outside it with one tiny
+ * positive component and p near 0 or 1. Starting the Newton solve at
+ * r = rh there makes the first step too small to represent, which was
+ * mistaken for convergence and returned v unprojected. Reference values
+ * are from a 60-digit bisection and satisfy the projection's optimality
+ * conditions.
+ *
+ * P_K(v) is computed from the dual projection via Moreau: v + P_K*(-v).
+ */
+static const char *test_power_cone_proj_tiny_component(void) {
+  scs_float ps[] = {0.001, 0.001, 0.999};
+  scs_float vs[][3] = {{1e-12, 1.0, 1.8482197251762336},
+                       {1e-9, 1.0, 1.8610309722765279},
+                       {1.0, 1e-12, -1.8482197251762336}};
+  scs_float refs[][3] = {
+      {0.024656240189987407, 1.42591697797449, 1.4201429843158235},
+      {0.024896473072648813, 1.4323167445745537, 1.4265242797926461},
+      {1.42591697797449, 0.024656240189987418, -1.4201429843158235}};
+  scs_float t[3], err;
+  scs_int i, j;
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsConeWork *c;
+
+  k->psize = 1;
+  for (i = 0; i < 3; ++i) {
+    k->p = &(ps[i]);
+    c = SCS(init_cone)(k, 3);
+    for (j = 0; j < 3; ++j)
+      t[j] = -vs[i][j];
+    SCS(proj_dual_cone)(t, c, SCS_NULL, SCS_NULL);
+    SCS(finish_cone)(c);
+    err = 0;
+    for (j = 0; j < 3; ++j)
+      err = MAX(err, ABS(t[j] + vs[i][j] - refs[i][j]));
+    scs_printf("power cone projection %i error %4e\n", (int)i, err);
+    mu_assert_less("test_power_cone_proj_tiny_component: projection error",
+                   err, 1e-9);
+  }
+  scs_free(k);
+  return 0;
+}

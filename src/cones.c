@@ -13,6 +13,7 @@
 #include "scs_blas.h" /* contains BLAS(X) macros and type info */
 #include "util.h"
 
+#include <float.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -47,8 +48,22 @@ typedef struct {
 
 /* Constants */
 #define BOX_CONE_MAX_ITERS (25)
-#define POW_CONE_TOL (1e-9)
-#define POW_CONE_MAX_ITERS (20)
+/* Power cone projection: POW_CONE_TOL is the tolerance relative to |v| for
+ * the Newton solve and the membership checks, POW_CONE_START_SLOPE bounds
+ * |dx/dr| and |dy/dr| at r = rh for the Newton solve to start there, and
+ * POW_CONE_EPS is the machine epsilon. All must suit the working precision;
+ * in particular the first Newton step from rh is only representable when
+ * POW_CONE_START_SLOPE^2 * POW_CONE_EPS is small, hence the float value. */
+#ifdef SFLOAT
+#define POW_CONE_TOL (1e-6)
+#define POW_CONE_START_SLOPE (10)
+#define POW_CONE_EPS (FLT_EPSILON)
+#else
+#define POW_CONE_TOL (1e-12)
+#define POW_CONE_START_SLOPE (1e3)
+#define POW_CONE_EPS (DBL_EPSILON)
+#endif
+#define POW_CONE_MAX_ITERS (50)
 
 /* Box cone limits (+ or -) taken to be INF */
 #define MAX_BOX_VAL (1e15)
@@ -1457,18 +1472,37 @@ static void proj_soc(scs_float *x, scs_int q) {
  */
 static scs_float pow_calc_x(scs_float r, scs_float xh, scs_float rh,
                             scs_float a) {
-  scs_float x = 0.5 * (xh + SQRTF(xh * xh + 4 * a * (rh - r) * r));
-  return MAX(x, 1e-12);
+  /* Positive root of x^2 - xh * x - a * (rh - r) * r = 0, in a form that
+   * avoids cancellation when xh < 0. */
+  scs_float d = 4 * a * (rh - r) * r, s = SQRTF(xh * xh + d);
+  return xh >= 0 ? 0.5 * (xh + s) : 0.5 * d / (s - xh);
 }
 
 static void proj_power_cone(scs_float *v, scs_float a) {
   scs_float xh = v[0], yh = v[1], rh = ABS(v[2]);
-  scs_float x = 0.0, y = 0.0, r;
-  scs_int i;
+  scs_float x = 0.0, y = 0.0, r, lo, hi;
+  scs_float f_lo, f_hi; /* f at the bracket ends, for regula falsi */
+  scs_float phi0; /* phi(0) = phi(rh) = max(xh, 0)^a * max(yh, 0)^(1-a) */
+  /* Projection onto a cone is positively homogeneous, so work on v scaled
+   * to unit inf-norm; this makes the tolerances below relative to |v|. */
+  scs_float nrm = MAX(MAX(ABS(xh), ABS(yh)), rh);
+  scs_int i, side = 0;
+
+  if (nrm <= 0)
+    return;
+  xh /= nrm;
+  yh /= nrm;
+  rh /= nrm;
+
+  if (xh >= 0 && yh >= 0)
+    phi0 = POWF(xh, a) * POWF(yh, (1 - a));
+  else if (a > 0 && a < 1)
+    phi0 = 0;
+  else
+    phi0 = POWF(MAX(xh, 0), a) * POWF(MAX(yh, 0), (1 - a));
 
   /* Check v membership in K_a */
-  if (xh >= 0 && yh >= 0 &&
-      POW_CONE_TOL + POWF(xh, a) * POWF(yh, (1 - a)) >= rh)
+  if (xh >= 0 && yh >= 0 && POW_CONE_TOL + phi0 >= rh)
     return;
 
   /* Check -v membership in Polar K_a^* */
@@ -1479,9 +1513,41 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     return;
   }
 
+  /* Find the root r in (0, rh) of f(r) = x(r)^a * y(r)^(1-a) - r. The first
+   * term is concave in r, so f > 0 left of the root and f < 0 right of it,
+   * which gives a bracket [lo, hi] that safeguards the Newton steps. f_lo
+   * and f_hi are f at the bracket ends, f(0) = phi(0) and f(rh) = phi(rh) - rh
+   * to start, for the regula falsi fallback. */
+  lo = 0;
+  hi = rh;
+  f_lo = phi0;
+  f_hi = phi0 - rh;
   r = rh / 2;
+  /* With exactly one negative component, for small r x(r) ~ a * rh * r / |xh|
+   * (or the same for y), and phi(r) = r then gives the root directly. This is
+   * the common case for ADMM iterates, and its root is often tiny, which
+   * Newton from rh / 2 reaches only slowly. */
+  if (xh < 0 && yh > 0) {
+    scs_float r0 = POWF(a * rh / (-xh), a / (1 - a)) * yh;
+    if (r0 > 0 && r0 < rh / 2)
+      r = r0;
+  } else if (yh < 0 && xh > 0) {
+    scs_float r0 = POWF((1 - a) * rh / (-yh), (1 - a) / a) * xh;
+    if (r0 > 0 && r0 < rh / 2)
+      r = r0;
+  }
+  /* Points just outside the cone (e.g. converging iterates) have their root
+   * near rh; starting there avoids Newton overshooting from the left into
+   * bisection. Only do this when the point is close to the cone,
+   * phi(rh) >= rh / 2, and the slopes dx/dr = -a * rh / xh and
+   * dy/dr = -(1 - a) * rh / yh at rh are moderate: otherwise the first step
+   * is too small to represent and looks converged. */
+  if (xh > 0 && yh > 0 && phi0 >= rh / 2 &&
+      a * rh <= POW_CONE_START_SLOPE * xh &&
+      (1 - a) * rh <= POW_CONE_START_SLOPE * yh)
+    r = rh;
   for (i = 0; i < POW_CONE_MAX_ITERS; ++i) {
-    scs_float f, fp, dxdr, dydr, xa, y1a;
+    scs_float f, fp, dxdr, dydr, xa, y1a, r_new, r_g, sens;
     x = pow_calc_x(r, xh, rh, a);
     y = pow_calc_x(r, yh, rh, 1 - a);
 
@@ -1490,19 +1556,64 @@ static void proj_power_cone(scs_float *v, scs_float a) {
     xa  = POWF(x, a);
     y1a = POWF(y, (1 - a));
     f = xa * y1a - r;
-    if (ABS(f) < POW_CONE_TOL)
-      break;
+    /* Illinois: halve the f value kept at an end that was not just moved
+     * twice in a row, so regula falsi does not stagnate. */
+    if (f > 0) {
+      lo = r;
+      f_lo = f;
+      if (side > 0)
+        f_hi *= 0.5;
+      side = 1;
+    } else {
+      hi = r;
+      f_hi = f;
+      if (side < 0)
+        f_lo *= 0.5;
+      side = -1;
+    }
 
     dxdr = a * (rh - 2 * r) / (2 * x - xh);
     dydr = (1 - a) * (rh - 2 * r) / (2 * y - yh);
     fp = xa * y1a * (a * dxdr / x + (1 - a) * dydr / y) - 1;
 
-    r = MAX(r - f / fp, 0);
-    r = MIN(r, rh);
+    r_new = r - f / fp;
+    if (f < 0) {
+      /* Near the polar boundary f is nearly flat around a double root and
+       * Newton on f converges only linearly; Newton on f(r) / r, which
+       * removes the trivial root at 0, converges much faster there. It is
+       * also taken elsewhere: restricting it saved a few projection
+       * evaluations on some inputs but made whole solves worse. */
+      r_g = r - r * f / (r * fp - f);
+      if (r_g > lo && r_g < hi)
+        r_new = r_g;
+    }
+    /* Stop when the step is small relative to r and moves x, y and r by at
+     * most POW_CONE_TOL (relative to |v| after normalization). Stop on the
+     * step rather than on |f|: a small |f| does not imply r is accurate when
+     * f is flat, and near the apex x can be far more sensitive to r than r
+     * is. r is an end of the bracket here, so a converged step may land
+     * exactly on it. The relative test cannot be met when the root is at or
+     * near 0, so also stop once the bracket is that narrow, or when it cannot
+     * shrink any further in the working precision. */
+    sens = MAX(1, MAX(ABS(dxdr), ABS(dydr)));
+    if (ABS(r_new - r) <= POW_CONE_TOL * r &&
+        ABS(r_new - r) * sens <= POW_CONE_TOL && r_new >= lo && r_new <= hi)
+      break;
+    /* If the Newton step leaves the bracket (from the left of a concave f it
+     * overshoots), fall back to regula falsi, then to bisection, which also
+     * catches NaN. Bisection alone is very slow when the root is within a few
+     * ulps of rh, e.g. a point just outside the cone with a tiny component. */
+    if (!(r_new > lo && r_new < hi))
+      r_new = (lo * f_hi - hi * f_lo) / (f_hi - f_lo);
+    if (!(r_new > lo && r_new < hi))
+      r_new = 0.5 * (lo + hi);
+    if ((hi - lo) * sens <= POW_CONE_TOL || hi - lo <= 4 * POW_CONE_EPS * hi)
+      break;
+    r = r_new;
   }
-  v[0] = x;
-  v[1] = y;
-  v[2] = (v[2] < 0) ? -r : r;
+  v[0] = x * nrm;
+  v[1] = y * nrm;
+  v[2] = ((v[2] < 0) ? -r : r) * nrm;
 }
 
 /* ================ Main Cone Projection Dispatch ====================== */
