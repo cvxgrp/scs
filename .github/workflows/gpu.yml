@@ -86,7 +86,7 @@ jobs:
       - name: Simulated GPU (NVIDIA T4) and CUDA 13.0 from NVIDIA
         # The simulator itself, pinned by commit: its cuDSS is newer than the
         # latest setup-pantheonsim release.
-        uses: pantheongpu/pantheonsim@7bec2f7a96c381c70a4374afbd7724fc158aa8db # main, with cuDSS
+        uses: pantheongpu/pantheonsim@c4dcb68dc69d4f668cecd9f2b70a1fc9e4514909 # main, with cuDSS
         with:
           gpu: nvidia/t4
           cuda-toolkit: '13.0'
