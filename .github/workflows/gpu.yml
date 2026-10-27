@@ -91,19 +91,12 @@ jobs:
           gpu: nvidia/t4
           cuda-toolkit: '13.0'
           library-path: false
-      # The simulator implements the cuDSS 0.x ABI (libcudss.so.0); apt's
-      # `cudss` metapackage now pulls in cuDSS 1.x (libcudss.so.1), which it
-      # cannot run. So install the 0.x series for CUDA 13 directly. Those
-      # packages put headers and libraries in separate per-CUDA directories,
-      # so gather them under one prefix in the include/ + lib/ layout scs.mk
-      # expects of CUDSS_PATH.
-      - run: sudo apt-get install -y libopenblas-dev liblapack-dev libcudss0-dev-cuda-13
+      # apt's cudss installs the CUDA 12 and 13 builds; the default libcudss.so
+      # is the CUDA 13 one, so the job uses CUDA 13 too.
+      - run: sudo apt-get install -y libopenblas-dev liblapack-dev cudss
       - name: Make cudss target
         run: |
-          export CUDSS_PATH=$RUNNER_TEMP/cudss0
-          mkdir -p "$CUDSS_PATH"
-          ln -s /usr/include/libcudss/13 "$CUDSS_PATH/include"
-          ln -s /usr/lib/x86_64-linux-gnu/libcudss/13 "$CUDSS_PATH/lib"
+          export CUDSS_PATH=/usr/lib/cudss
           make cudss DLONG=${{ matrix.long }} CUDA_PATH=/usr/local/cuda-13.0
       - name: Run the cuDSS tests on the simulated GPU
         run: vgpu run out/run_tests_cudss
