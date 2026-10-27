@@ -13,12 +13,24 @@ permissions:
 
 jobs:
   linux:
-    runs-on: ubuntu-24.04  # NVIDIA apt repo for 26.04 lacks the CUDA version Jimver installs
+    # Test the oldest CUDA scs supports and the newest Jimver can install.
+    # NVIDIA's apt repo for Ubuntu 26.04 starts at CUDA 13.3, so older CUDA
+    # needs ubuntu-24.04. Jimver installs its own default if no cuda is given.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cuda: '12.6.0'
+            os: ubuntu-24.04
+          - cuda: '13.3.1'
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: Jimver/cuda-toolkit@v0.2.36
         id: cuda-toolkit
         with:
+          cuda: ${{ matrix.cuda }}
           method: network
           non-cuda-sub-packages: '["libcublas", "libcusparse", "libcudart"]'
       - run: sudo apt-get install libopenblas-dev liblapack-dev
