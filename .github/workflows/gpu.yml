@@ -32,7 +32,11 @@ jobs:
         with:
           cuda: ${{ matrix.cuda }}
           method: network
-          non-cuda-sub-packages: '["libcublas", "libcusparse", "libcudart"]'
+          # Name the packages: without sub-packages Jimver installs the full
+          # cuda-X-Y metapackage, whose NVIDIA driver (DKMS) fails to build on
+          # the runner's kernel for CUDA 12.x. nvcc pulls cudart-dev and cccl.
+          sub-packages: '["nvcc"]'
+          non-cuda-sub-packages: '["libcublas-dev", "libcusparse-dev", "libnvjitlink-dev"]'
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: CFLAGS=-Werror=implicit-function-declaration make gpu
       - run: make test_gpu
