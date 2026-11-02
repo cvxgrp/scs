@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # NVIDIA apt repo for 26.04 lacks the CUDA version Jimver installs
 
     steps:
       - uses: actions/checkout@v7
