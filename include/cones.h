@@ -20,6 +20,19 @@ extern "C" {
 #endif
 #endif
 
+/* Workspace for the eigendecomposition of one matrix cone at a time (cones.c):
+ * one per thread of the PSD projection. */
+typedef struct SCS_PSD_WORK ScsPsdWork;
+#ifdef USE_LAPACK
+struct SCS_PSD_WORK {
+  scs_float *Xs, *Z, *e, *work;
+  scs_float *gamma; /* PSD diagonal-congruence factors */
+  scs_complex_float *cXs, *cZ, *cwork;
+  blas_int *isuppz, *iwork;
+  blas_int lwork, lcwork, liwork; /* the same for every thread */
+};
+#endif
+
 /* private data to help cone projection step */
 struct SCS_CONE_WORK {
   /*
@@ -37,8 +50,6 @@ struct SCS_CONE_WORK {
    * congruence X -> DXD). enforce_cone_boundaries fits this form for
    * PSD blocks instead of collapsing them to one value. */
   scs_int *cone_boundaries_psd_n;
-  /* scratch for PSD diagonal-congruence factors, length max PSD dim */
-  scs_float *psd_gamma;
   scs_int scaled_cones; /* boolean, whether the cones have been scaled */
   scs_float *s;         /* used for Moreau decomposition in projection */
   scs_int m;            /* total length of cone */
@@ -46,13 +57,15 @@ struct SCS_CONE_WORK {
   scs_float box_t_warm_start;
   scs_float *r_box_inv; /* precomputed 1/r_box[j] for box cone Newton */
 
-#ifdef USE_LAPACK
-  /* workspace for eigenvector decompositions: */
-  scs_float *Xs, *Z, *e, *work, *rwork;
-  scs_complex_float *cXs, *cZ, *cwork;
-  blas_int *isuppz, *iwork;
-  blas_int lwork, lcwork, lrwork, liwork;
-#endif
+  /* Eigendecomposition workspaces (with LAPACK), one per thread: psd_tw[0]
+   * serves every matrix cone, psd_tw[t] the PSD blocks of thread t. */
+  ScsPsdWork *psd_tw;
+  /* PSD blocks: block b < ssize is real block b, else complex block b - ssize,
+   * at offset psd_off[b] from the first PSD entry (psd_len entries in all).
+   * Thread t of psd_nthreads projects psd_blk[psd_tptr[t]] ..
+   * psd_blk[psd_tptr[t + 1] - 1]; with one thread, all blocks in order. */
+  scs_int psd_nthreads, psd_len;
+  scs_int *psd_blk, *psd_tptr, *psd_off;
 
 #ifdef USE_SPECTRAL_CONES
   /* if the projection onto the logarithmic cone should be warmstarted*/

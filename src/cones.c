@@ -16,6 +16,10 @@
 #include <float.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef _OPENMP
+#include <omp.h>
+#include <stdlib.h> /* qsort */
+#endif
 
 /*
  * Cross-platform Complex Type Handling
@@ -304,32 +308,31 @@ void SCS(finish_cone)(ScsConeWork *c) {
   if (!c)
     return;
 #ifdef USE_LAPACK
-  if (c->Xs)
-    scs_free(c->Xs);
-  if (c->cXs)
-    scs_free(c->cXs);
-  if (c->Z)
-    scs_free(c->Z);
-  if (c->cZ)
-    scs_free(c->cZ);
-  if (c->e)
-    scs_free(c->e);
-  if (c->isuppz)
-    scs_free(c->isuppz);
-  if (c->work)
-    scs_free(c->work);
-  if (c->iwork)
-    scs_free(c->iwork);
-  if (c->cwork)
-    scs_free(c->cwork);
-  /* c->rwork is aliased to c->work in setup, no free needed */
+  if (c->psd_tw) {
+    scs_int t, j;
+    for (t = 0; t < MAX(c->psd_nthreads, 1); ++t) {
+      ScsPsdWork *w = &(c->psd_tw[t]);
+      /* w->work is also heevr's 'rwork' */
+      void *bufs[] = {w->Xs,  w->Z,  w->e,     w->work,   w->gamma,
+                      w->cXs, w->cZ, w->cwork, w->isuppz, w->iwork};
+      for (j = 0; j < (scs_int)(sizeof(bufs) / sizeof(bufs[0])); ++j) {
+        if (bufs[j])
+          scs_free(bufs[j]);
+      }
+    }
+    scs_free(c->psd_tw);
+  }
 #endif
+  if (c->psd_blk)
+    scs_free(c->psd_blk);
+  if (c->psd_tptr)
+    scs_free(c->psd_tptr);
+  if (c->psd_off)
+    scs_free(c->psd_off);
   if (c->cone_boundaries)
     scs_free(c->cone_boundaries);
   if (c->cone_boundaries_psd_n)
     scs_free(c->cone_boundaries_psd_n);
-  if (c->psd_gamma)
-    scs_free(c->psd_gamma);
   if (c->r_box_inv)
     scs_free(c->r_box_inv);
   if (c->s)
@@ -874,6 +877,253 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
   return 0;
 }
 
+/* ================ PSD Block Workspaces and Threads ==================== */
+
+/*
+ * The real and complex PSD blocks are projected independently of each other,
+ * so with OpenMP they are split over threads. The split is fixed at setup:
+ * blocks in order of decreasing cost (n^3, 4 n^3 for complex blocks) go to the
+ * least loaded thread (LPT scheduling). Thread t projects its blocks with
+ * workspace c->psd_tw[t], sized for its own largest block; psd_tw[0] is the
+ * workspace of all the matrix cones, and thread 0 gets the largest block, so
+ * the extra memory is at most about four times the PSD part of the cone. Every
+ * workspace has the same LAPACK work-array sizes, found for the largest
+ * blocks: syevr and heevr pass the work array left after their own arrays to
+ * sytrd/hetrd, which lower their block size to fit, so the blocking (and the
+ * rounding) of a block larger than the crossover depends on the exact size.
+ * Each block then runs the same code with the same sizes on any thread, so
+ * with single-threaded BLAS the iterates do not depend on the number of
+ * threads. With one thread the blocks are projected in order.
+ *
+ * LAPACK and BLAS calls then run inside an OpenMP parallel region. OpenMP
+ * builds of OpenBLAS and BLIS, and MKL, run single threaded there by default.
+ * A pthreads OpenBLAS does not: each OpenMP thread would start its own BLAS
+ * threads and oversubscribe the cores (measured up to 3.6x slower than
+ * serial), and OpenBLAS has no thread-local way to stop it. So when the
+ * linked BLAS is a pthreads OpenBLAS set to more than one thread, the blocks
+ * stay serial (OPENBLAS_NUM_THREADS=1 enables the parallel projection).
+ * The threads are also not used when the total work is small, or when one
+ * block holds more than half of it: then the parallel loop gains less than
+ * 2x, while that block alone may run faster with multithreaded BLAS.
+ */
+#if defined(_OPENMP) && defined(USE_LAPACK)
+/* Size of PSD block b: real block b if b < ssize, else complex b - ssize */
+static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
+  return b < k->ssize ? k->s[b] : k->cs[b - k->ssize];
+}
+
+/* total cost sum(n^3) below which the threads are not used. With 4 threads
+ * the projection was faster than serial from sum(n^3) ~ 2e2 on x86-64 Linux,
+ * but only from ~4e3 on Apple M4 (0.9-1.0x at 1e3, 1.5x at 4e3). */
+#ifndef PSD_PAR_MIN_COST
+#define PSD_PAR_MIN_COST (5e3)
+#endif
+
+/* OpenBLAS: openblas_get_parallel() is 0 sequential, 1 pthreads, 2 OpenMP.
+ * Weak references, so other BLAS libraries leave them NULL (ELF only: a
+ * weak reference to a missing symbol does not link on Mach-O). C linkage,
+ * so a C++ build looks up the same symbols. */
+#if defined(__GNUC__) && defined(__ELF__)
+#ifdef __cplusplus
+extern "C" {
+#endif
+int openblas_get_parallel(void) __attribute__((weak));
+int openblas_get_num_threads(void) __attribute__((weak));
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+/* Whether BLAS calls would start threads of their own inside OpenMP */
+static scs_int blas_threads_outside_openmp(void) {
+#if defined(__GNUC__) && defined(__ELF__)
+  if (openblas_get_parallel && openblas_get_num_threads) {
+    return openblas_get_parallel() == 1 && openblas_get_num_threads() > 1;
+  }
+#endif
+  return 0;
+}
+
+typedef struct {
+  scs_float cost;
+  scs_int blk;
+} PsdBlockCost;
+
+static scs_float psd_block_cost(const ScsCone *k, scs_int b) {
+  scs_float n = (scs_float)psd_block_n(k, b);
+  return (b < k->ssize ? 1. : 4.) * n * n * n;
+}
+
+/* decreasing cost, ties by block index so the split is deterministic */
+static int cmp_psd_block_cost(const void *a, const void *b) {
+  const PsdBlockCost *x = (const PsdBlockCost *)a;
+  const PsdBlockCost *y = (const PsdBlockCost *)b;
+  if (x->cost != y->cost)
+    return x->cost < y->cost ? 1 : -1;
+  return (x->blk > y->blk) - (x->blk < y->blk);
+}
+
+/* LPT: each block, largest first, to the least loaded thread; each thread's
+ * list largest first. Fills psd_tptr and psd_blk for psd_nthreads > 1. */
+static scs_int assign_psd_blocks(ScsConeWork *c, const ScsCone *k) {
+  scs_int nblk = k->ssize + k->cssize, nt = c->psd_nthreads, i, j, t;
+  scs_int status = 0, *pos = (scs_int *)scs_calloc(nblk, sizeof(scs_int));
+  scs_float *load = (scs_float *)scs_calloc(nt, sizeof(scs_float));
+  PsdBlockCost *bc = (PsdBlockCost *)scs_calloc(nblk, sizeof(PsdBlockCost));
+  if (!pos || !load || !bc) {
+    status = -1;
+    goto out;
+  }
+  for (i = 0; i < nblk; ++i) {
+    bc[i].blk = i;
+    bc[i].cost = psd_block_cost(k, i);
+  }
+  qsort(bc, nblk, sizeof(PsdBlockCost), cmp_psd_block_cost);
+  memset(c->psd_tptr, 0, (nt + 1) * sizeof(scs_int));
+  for (j = 0; j < nblk; ++j) {
+    scs_int tmin = 0;
+    for (t = 1; t < nt; ++t) {
+      if (load[t] < load[tmin])
+        tmin = t;
+    }
+    load[tmin] += bc[j].cost;
+    pos[j] = tmin;
+    c->psd_tptr[tmin + 1]++;
+  }
+  for (t = 0; t < nt; ++t)
+    c->psd_tptr[t + 1] += c->psd_tptr[t];
+  /* psd_tptr[t] is the fill cursor of thread t, then shift back to list
+   * starts */
+  for (j = 0; j < nblk; ++j)
+    c->psd_blk[c->psd_tptr[pos[j]]++] = bc[j].blk;
+  for (t = nt; t > 0; --t)
+    c->psd_tptr[t] = c->psd_tptr[t - 1];
+  c->psd_tptr[0] = 0;
+out:
+  if (pos)
+    scs_free(pos);
+  if (load)
+    scs_free(load);
+  if (bc)
+    scs_free(bc);
+  return status;
+}
+#endif
+
+/* Number of threads for the PSD blocks (see above) */
+static scs_int psd_num_threads(const ScsCone *k) {
+#if defined(_OPENMP) && defined(USE_LAPACK)
+  scs_int b, nbig = 0, nt = omp_get_max_threads();
+  scs_float total = 0., cmax = 0.;
+  for (b = 0; b < k->ssize + k->cssize; ++b) {
+    scs_float cost = psd_block_cost(k, b);
+    total += cost;
+    cmax = MAX(cmax, cost);
+    nbig += psd_block_n(k, b) > 1;
+  }
+  nt = MIN(nt, nbig);
+  if (nt < 2 || total < PSD_PAR_MIN_COST || 2 * cmax > total ||
+      blas_threads_outside_openmp())
+    return 1;
+  return nt;
+#else
+  (void)k;
+  return 1;
+#endif
+}
+
+/* Offsets of the PSD blocks and their split over threads */
+static scs_int set_up_psd_schedule(ScsConeWork *c, const ScsCone *k) {
+  scs_int nblk = k->ssize + k->cssize, nt = psd_num_threads(k), b;
+  c->psd_tptr = (scs_int *)scs_calloc(nt + 1, sizeof(scs_int));
+  c->psd_blk = (scs_int *)scs_calloc(nblk, sizeof(scs_int));
+  c->psd_off = (scs_int *)scs_calloc(nblk, sizeof(scs_int));
+  if (!c->psd_tptr || !c->psd_blk || !c->psd_off)
+    return -1;
+  c->psd_nthreads = nt;
+  c->psd_len = 0;
+  for (b = 0; b < nblk; ++b) {
+    c->psd_off[b] = c->psd_len;
+    c->psd_len += b < k->ssize ? get_sd_cone_size(k->s[b])
+                               : get_csd_cone_size(k->cs[b - k->ssize]);
+    c->psd_blk[b] = b;
+  }
+  c->psd_tptr[1] = nblk;
+#if defined(_OPENMP) && defined(USE_LAPACK)
+  if (nt > 1)
+    return assign_psd_blocks(c, k);
+#endif
+  return 0;
+}
+
+#ifdef USE_LAPACK
+/* Buffers of a workspace for eigenvalues up to n, real matrices up to nr
+ * and complex ones up to nc (none if 0) */
+static scs_int alloc_psd_bufs(ScsPsdWork *w, blas_int n, blas_int nr,
+                              blas_int nc) {
+  w->e = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  w->gamma = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  w->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n), sizeof(blas_int));
+  if (!w->e || !w->gamma || !w->isuppz)
+    return -1;
+  if (nr > 0) {
+    w->Xs = (scs_float *)scs_calloc(nr * nr, sizeof(scs_float));
+    w->Z = (scs_float *)scs_calloc(nr * nr, sizeof(scs_float));
+    if (!w->Xs || !w->Z)
+      return -1;
+  }
+  if (nc > 0) {
+    w->cXs = (scs_complex_float *)scs_calloc(nc * nc, sizeof(scs_complex_float));
+    w->cZ = (scs_complex_float *)scs_calloc(nc * nc, sizeof(scs_complex_float));
+    if (!w->cXs || !w->cZ)
+      return -1;
+  }
+  return 0;
+}
+
+/* LAPACK work arrays, the same sizes in every workspace (see above) */
+static scs_int alloc_psd_work_arrays(ScsPsdWork *w, blas_int lwork,
+                                     blas_int liwork, blas_int lcwork) {
+  w->lwork = lwork;
+  w->liwork = liwork;
+  w->lcwork = lcwork;
+  if (lwork > 0 && !(w->work = (scs_float *)scs_calloc(lwork, sizeof(scs_float))))
+    return -1;
+  if (liwork > 0 &&
+      !(w->iwork = (blas_int *)scs_calloc(liwork, sizeof(blas_int))))
+    return -1;
+  if (lcwork > 0 && !(w->cwork = (scs_complex_float *)scs_calloc(
+                          lcwork, sizeof(scs_complex_float))))
+    return -1;
+  return 0;
+}
+
+/* Workspaces of PSD threads 1, 2, ..., sized for each thread's largest
+ * blocks, with the work-array sizes of psd_tw[0]; none on the serial path.
+ * Each is at most the size of psd_tw[0], so the extra memory is at most
+ * (psd_nthreads - 1) times the serial PSD workspace. */
+static scs_int set_up_psd_thread_work(ScsConeWork *c, const ScsCone *k) {
+  const ScsPsdWork *w0 = c->psd_tw;
+  scs_int t, j, b;
+  for (t = 1; t < c->psd_nthreads; ++t) {
+    blas_int nr = 0, nc = 0;
+    for (j = c->psd_tptr[t]; j < c->psd_tptr[t + 1]; ++j) {
+      b = c->psd_blk[j];
+      if (b < k->ssize)
+        nr = MAX(nr, (blas_int)k->s[b]);
+      else
+        nc = MAX(nc, (blas_int)k->cs[b - k->ssize]);
+    }
+    if (alloc_psd_bufs(&(c->psd_tw[t]), MAX(MAX(nr, nc), 1), nr > 1 ? nr : 0,
+                       nc > 1 ? nc : 0) < 0 ||
+        alloc_psd_work_arrays(&(c->psd_tw[t]), w0->lwork, w0->liwork,
+                              nc > 1 ? w0->lcwork : 0) < 0)
+      return -1;
+  }
+  return 0;
+}
+#endif
+
 /* ======================== Workspace Setup ============================= */
 
 /*
@@ -882,6 +1132,8 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
 static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
   scs_int i;
 #ifdef USE_LAPACK
+  ScsPsdWork *w0; /* the workspace of the matrix cones, and of PSD thread 0 */
+  scs_int real_mats = k->ssize > 0; /* whether Xs and Z are needed */
   /* Max dim for eigenvalues (e) and integer work (isuppz) */
   blas_int n_max = 1;
   blas_int n_max_real = 1; /* Max dim for Real PSD matrix (Xs) */
@@ -900,6 +1152,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
   /* Max workspace sizes across all cone types */
   blas_int lwork_max = 0;
   blas_int liwork_max = 0;
+  blas_int lcwork = 0;
 
   /* Calculate Dimensions */
   for (i = 0; i < k->ssize; ++i) {
@@ -944,19 +1197,23 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
   }
 
   /* Update Max Real Dims based on Spectral needs */
+  real_mats = real_mats || k->dsize > 0 || k->sl_size > 0;
   n_max = MAX(n_max, n_max_logdet);
   n_max = MAX(n_max, n_max_sl);
   n_max_real = MAX(n_max_real, n_max_logdet);
   n_max_real = MAX(n_max_real, n_max_sl);
 #endif
 
-  /* Allocate standard eigenvalue buffers
-   * 'e' stores eigenvalues, 'isuppz' supports them. Shared by Real/Complex.
-   */
-  c->e = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
-  c->psd_gamma = (scs_float *)scs_calloc(n_max, sizeof(scs_float));
-  c->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n_max), sizeof(blas_int));
-  if (!c->e || !c->isuppz)
+  /* Allocate the buffers: 'e' stores eigenvalues, 'isuppz' supports them
+   * (shared by Real/Complex), Xs and Z for real matrices, cXs and cZ for
+   * complex ones */
+  c->psd_tw = (ScsPsdWork *)scs_calloc(MAX(c->psd_nthreads, 1),
+                                       sizeof(ScsPsdWork));
+  if (!c->psd_tw)
+    return -1;
+  w0 = c->psd_tw;
+  if (alloc_psd_bufs(w0, n_max, real_mats ? n_max_real : 0,
+                     k->cssize > 0 ? n_max_csd : 0) < 0)
     return -1;
 
   /* 1. Real PSD Workspace Query (syevr) */
@@ -965,13 +1222,8 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
       || k->dsize > 0 || k->sl_size > 0
 #endif
   ) {
-    c->Xs = (scs_float *)scs_calloc(n_max_real * n_max_real, sizeof(scs_float));
-    c->Z = (scs_float *)scs_calloc(n_max_real * n_max_real, sizeof(scs_float));
-    if (!c->Xs || !c->Z)
-      return -1;
-
-    BLAS(syevr)("V", "A", "L", &n_max_real, c->Xs, &n_max_real, &d_f, &d_f,
-                &d_i, &d_i, &abstol, &m, c->e, c->Z, &n_max_real, c->isuppz,
+    BLAS(syevr)("V", "A", "L", &n_max_real, w0->Xs, &n_max_real, &d_f, &d_f,
+                &d_i, &d_i, &abstol, &m, w0->e, w0->Z, &n_max_real, w0->isuppz,
                 &wkopt, &neg_one, &iwkopt, &neg_one, &info);
 
     if (info != 0) {
@@ -1000,7 +1252,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
   if (k->dsize > 0 || k->sl_size > 0) {
     blas_int n_max_spectral = MAX(n_max_logdet, n_max_sl);
 
-    BLAS(syev)("V", "L", &n_max_spectral, c->Xs, &n_max_spectral, c->e, &wkopt,
+    BLAS(syev)("V", "L", &n_max_spectral, w0->Xs, &n_max_spectral, w0->e, &wkopt,
                &neg_one, &info);
 
     if (info != 0) {
@@ -1014,16 +1266,9 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
 
   /* 2. Complex PSD Workspace Query (heevr) */
   if (k->cssize > 0) {
-    c->cXs = (scs_complex_float *)scs_calloc(n_max_csd * n_max_csd,
-                                             sizeof(scs_complex_float));
-    c->cZ = (scs_complex_float *)scs_calloc(n_max_csd * n_max_csd,
-                                            sizeof(scs_complex_float));
-    if (!c->cXs || !c->cZ)
-      return -1;
-
-    BLASC(heevr)("V", "A", "L", &n_max_csd, SCS_BLAS_COMPLEX_CAST(c->cXs),
-                 &n_max_csd, &d_f, &d_f, &d_i, &d_i, &abstol, &m, c->e,
-                 SCS_BLAS_COMPLEX_CAST(c->cZ), &n_max_csd, c->isuppz,
+    BLASC(heevr)("V", "A", "L", &n_max_csd, SCS_BLAS_COMPLEX_CAST(w0->cXs),
+                 &n_max_csd, &d_f, &d_f, &d_i, &d_i, &abstol, &m, w0->e,
+                 SCS_BLAS_COMPLEX_CAST(w0->cZ), &n_max_csd, w0->isuppz,
                  SCS_BLAS_COMPLEX_CAST(&lcwork_opt), &neg_one, &lrwork_opt,
                  &neg_one, &liwork_opt_c, &neg_one, &info);
 
@@ -1033,11 +1278,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
       return -1;
     }
 
-    c->lcwork = (blas_int)(lcwork_opt[0]);
-    c->cwork =
-        (scs_complex_float *)scs_calloc(c->lcwork, sizeof(scs_complex_float));
-    if (!c->cwork)
-      return -1;
+    lcwork = (blas_int)(lcwork_opt[0]);
 
     /* heevr uses a real 'rwork' array. We alias this to the shared real 'work'
      * array */
@@ -1076,22 +1317,13 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
 #endif
 
   /* Final Consolidated Allocation
-   * c->work aliases 'work' for syevr and 'rwork' for heevr
+   * w0->work aliases 'work' for syevr and 'rwork' for heevr
    */
-  if (lwork_max > 0) {
-    c->lwork = lwork_max;
-    c->work = (scs_float *)scs_calloc(c->lwork, sizeof(scs_float));
-    if (!c->work)
-      return -1;
-  }
-  if (liwork_max > 0) {
-    c->liwork = liwork_max;
-    c->iwork = (blas_int *)scs_calloc(c->liwork, sizeof(blas_int));
-    if (!c->iwork)
-      return -1;
-  }
+  if (alloc_psd_work_arrays(w0, lwork_max, liwork_max, lcwork) < 0)
+    return -1;
 
-  return 0;
+  /* the other PSD threads */
+  return set_up_psd_thread_work(c, k);
 #else
   /* Non-LAPACK fallback check */
   if (k->ssize > 0 || k->cssize > 0) {
@@ -1147,7 +1379,7 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
  * of the cone makes any uniform factor in rho drop out, so the
  * historical scalar-per-block case reduces to the unscaled path. */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
-                                       ScsConeWork *c,
+                                       ScsPsdWork *w,
                                        const scs_float *rho) {
   scs_int scaled = 0;
   if (n == 0)
@@ -1169,7 +1401,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Diagonal-congruence pre-scale (skip when the metric is uniform on
    * this block so the historical path stays bit-identical). */
-  if (rho && c->psd_gamma) {
+  if (rho && w->gamma) {
     scs_float wmin = rho[0], wmax = rho[0];
     for (i = 1; i < n; ++i) {
       scs_float wii = rho[i * n - ((i - 1) * i) / 2];
@@ -1180,13 +1412,13 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
       scs_int jj, ii;
       scaled = 1;
       for (i = 0; i < n; ++i) {
-        c->psd_gamma[i] = POWF(rho[i * n - ((i - 1) * i) / 2], -0.25);
+        w->gamma[i] = POWF(rho[i * n - ((i - 1) * i) / 2], -0.25);
       }
       for (jj = 0; jj < n; ++jj) {
-        scs_float gj = c->psd_gamma[jj];
+        scs_float gj = w->gamma[jj];
         scs_float *col = &(X[jj * n - ((jj - 1) * jj) / 2]);
         for (ii = jj; ii < n; ++ii) {
-          col[ii - jj] *= c->psd_gamma[ii] * gj;
+          col[ii - jj] *= w->gamma[ii] * gj;
         }
       }
     }
@@ -1194,29 +1426,29 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Copy lower triangular part to full matrix buffer Xs */
   for (i = 0; i < n; ++i) {
-    memcpy(&(c->Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
+    memcpy(&(w->Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
            (n - i) * sizeof(scs_float));
   }
 
   /* Scale diagonals by sqrt(2) */
-  BLAS(scal)(&nb, &sqrt2, c->Xs, &nb_p1);
+  BLAS(scal)(&nb, &sqrt2, w->Xs, &nb_p1);
 
   /* Solve Eigenproblem: Xs = Z * diag(e) * Z' */
-  BLAS(syevr)("V", "A", "L", &nb, c->Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol,
-              &m, c->e, c->Z, &nb, c->isuppz, c->work, &c->lwork, c->iwork,
-              &c->liwork, &info);
+  BLAS(syevr)("V", "A", "L", &nb, w->Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol,
+              &m, w->e, w->Z, &nb, w->isuppz, w->work, &w->lwork, w->iwork,
+              &w->liwork, &info);
   if (info != 0)
     return (int)info;
 
   /* Filter negative eigenvalues and scale eigenvectors */
   /* Note: e is in ascending order */
   for (i = 0; i < n; ++i) {
-    if (c->e[i] > 0) {
+    if (w->e[i] > 0) {
       if (first_idx == -1) {
         first_idx = i;
       }
-      sq_eig = SQRTF(c->e[i]);
-      BLAS(scal)(&nb, &sq_eig, &c->Z[i * n], &one_int);
+      sq_eig = SQRTF(w->e[i]);
+      BLAS(scal)(&nb, &sq_eig, &w->Z[i * n], &one_int);
     }
   }
   if (first_idx == -1) {
@@ -1226,15 +1458,15 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   }
   /* Reconstruct Xs = Z * Z' */
   ncols_z = (blas_int)(n - first_idx);
-  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &c->Z[first_idx * n], &nb,
-             &zero, c->Xs, &nb);
+  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &w->Z[first_idx * n], &nb,
+             &zero, w->Xs, &nb);
 
   /* Rescale diagonals by 1/sqrt(2) */
-  BLAS(scal)(&nb, &sqrt2_inv, c->Xs, &nb_p1);
+  BLAS(scal)(&nb, &sqrt2_inv, w->Xs, &nb_p1);
 
   /* Extract lower triangular matrix back to X */
   for (i = 0; i < n; ++i) {
-    memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(c->Xs[i * (n + 1)]),
+    memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(w->Xs[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
   }
 
@@ -1242,10 +1474,10 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   if (scaled) {
     scs_int jj, ii;
     for (jj = 0; jj < n; ++jj) {
-      scs_float gj = c->psd_gamma[jj];
+      scs_float gj = w->gamma[jj];
       scs_float *col = &(X[jj * n - ((jj - 1) * jj) / 2]);
       for (ii = jj; ii < n; ++ii) {
-        col[ii - jj] /= c->psd_gamma[ii] * gj;
+        col[ii - jj] /= w->gamma[ii] * gj;
       }
     }
   }
@@ -1259,7 +1491,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
  * Projection: Complex Semi-Definite Cone
  */
 static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
-                                               ScsConeWork *c) {
+                                               ScsPsdWork *w) {
   if (n == 0)
     return 0;
   if (n == 1) {
@@ -1283,36 +1515,36 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Unpack X (real array) into cXs (complex matrix) */
   for (i = 0; i < n - 1; ++i) {
-    c->cXs[i * (n + 1)][0] = X[i * (2 * n - i)]; /* Diagonal (Real) */
-    c->cXs[i * (n + 1)][1] = 0.0;
-    memcpy(&(c->cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
+    w->cXs[i * (n + 1)][0] = X[i * (2 * n - i)]; /* Diagonal (Real) */
+    w->cXs[i * (n + 1)][1] = 0.0;
+    memcpy(&(w->cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  c->cXs[n * n - 1][0] = X[n * n - 1]; /* Last element */
-  c->cXs[n * n - 1][1] = 0.0;
+  w->cXs[n * n - 1][0] = X[n * n - 1]; /* Last element */
+  w->cXs[n * n - 1][1] = 0.0;
 
   /* Scale diagonals by sqrt*/
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2),
-              SCS_BLAS_COMPLEX_CAST(c->cXs), &nb_p1);
+              SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
 
-  /* Solve Eigenproblem. Note: c->work acts as rwork here. */
-  BLASC(heevr)("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(c->cXs), &nb, &d_f,
-               &d_f, &d_i, &d_i, &abstol, &m, c->e,
-               SCS_BLAS_COMPLEX_CAST(c->cZ), &nb, c->isuppz,
-               SCS_BLAS_COMPLEX_CAST(c->cwork), &c->lcwork, c->work, &c->lwork,
-               c->iwork, &c->liwork, &info);
+  /* Solve Eigenproblem. Note: w->work acts as rwork here. */
+  BLASC(heevr)("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(w->cXs), &nb, &d_f,
+               &d_f, &d_i, &d_i, &abstol, &m, w->e,
+               SCS_BLAS_COMPLEX_CAST(w->cZ), &nb, w->isuppz,
+               SCS_BLAS_COMPLEX_CAST(w->cwork), &w->lcwork, w->work, &w->lwork,
+               w->iwork, &w->liwork, &info);
   if (info != 0)
     return (int)info;
 
   /* Reconstruct */
   for (i = 0; i < n; ++i) {
-    if (c->e[i] > 0) {
+    if (w->e[i] > 0) {
       if (first_idx == -1) {
         first_idx = i;
       }
-      csq_eig[0] = SQRTF(c->e[i]);
+      csq_eig[0] = SQRTF(w->e[i]);
       BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csq_eig),
-                  SCS_BLAS_COMPLEX_CAST(&c->cZ[i * n]), &one_int);
+                  SCS_BLAS_COMPLEX_CAST(&w->cZ[i * n]), &one_int);
     }
   }
   if (first_idx == -1) {
@@ -1324,20 +1556,20 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   /* cXs = cZ * cZ' */
   ncols_z = (blas_int)(n - first_idx);
   BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one,
-              SCS_BLAS_COMPLEX_CAST(&c->cZ[first_idx * n]), &nb, &zero,
-              SCS_BLAS_COMPLEX_CAST(c->cXs), &nb);
+              SCS_BLAS_COMPLEX_CAST(&w->cZ[first_idx * n]), &nb, &zero,
+              SCS_BLAS_COMPLEX_CAST(w->cXs), &nb);
 
   /* Rescale diagonals */
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2_inv),
-              SCS_BLAS_COMPLEX_CAST(c->cXs), &nb_p1);
+              SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
 
   /* Repack into X */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = c->cXs[i * (n + 1)][0];
-    memcpy(&(X[i * (2 * n - i) + 1]), &(c->cXs[i * (n + 1) + 1]),
+    X[i * (2 * n - i)] = w->cXs[i * (n + 1)][0];
+    memcpy(&(X[i * (2 * n - i) + 1]), &(w->cXs[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = c->cXs[n * n - 1][0];
+  X[n * n - 1] = w->cXs[n * n - 1][0];
   return 0;
 #else
   return -1;
@@ -1616,6 +1848,50 @@ static void proj_power_cone(scs_float *v, scs_float a) {
   v[2] = ((v[2] < 0) ? -r : r) * nrm;
 }
 
+/* ===================== PSD Blocks, all Threads ======================== */
+
+/* Project the PSD blocks x (from the first PSD entry); rho is the matching
+ * part of r_y or NULL. Thread t projects its blocks with workspace t. */
+static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
+                              const scs_float *rho) {
+  const ScsCone *k = c->k;
+  scs_int status = 0;
+#ifdef _OPENMP
+#pragma omp parallel num_threads((int)c->psd_nthreads) if (c->psd_nthreads > 1)
+#endif
+  {
+    scs_int t = 0, dt = 1, j, b, st;
+#ifdef _OPENMP
+    /* a smaller team than requested (e.g. nested) still covers every list */
+    t = omp_get_thread_num();
+    dt = omp_get_num_threads();
+#endif
+    for (; t < c->psd_nthreads; t += dt) {
+      ScsPsdWork *w = SCS_NULL; /* no workspace without LAPACK */
+#ifdef USE_LAPACK
+      w = &(c->psd_tw[t]);
+#endif
+      for (j = c->psd_tptr[t]; j < c->psd_tptr[t + 1]; ++j) {
+        b = c->psd_blk[j];
+        if (b < k->ssize) {
+          st = proj_semi_definite_cone(&(x[c->psd_off[b]]), k->s[b], w,
+                                       rho ? &(rho[c->psd_off[b]]) : SCS_NULL);
+        } else {
+          st = proj_complex_semi_definite_cone(&(x[c->psd_off[b]]),
+                                               k->cs[b - k->ssize], w);
+        }
+        if (st < 0) {
+#ifdef _OPENMP
+#pragma omp critical(scs_psd_status)
+#endif
+          status = st;
+        }
+      }
+    }
+  }
+  return status;
+}
+
 /* ================ Main Cone Projection Dispatch ====================== */
 
 /* Project onto the primal K cone in the paper */
@@ -1661,32 +1937,19 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
     }
   }
 
-  /* 5. PSD Cone */
-  if (k->ssize) {
-    for (i = 0; i < k->ssize; ++i) {
+  /* 5-6. PSD and Complex PSD Cones */
+  if (c->psd_nthreads > 0) {
 #ifdef USE_SPECTRAL_CONES
-      SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
+    SPECTRAL_TIMING(SCS(tic)(&spec_mat_proj_timer);)
 #endif
-      status = proj_semi_definite_cone(&(x[count]), k->s[i], c,
-                                       r_y ? &(r_y[count]) : SCS_NULL);
+    status = proj_psd_cones(&(x[count]), c, r_y ? &(r_y[count]) : SCS_NULL);
 #ifdef USE_SPECTRAL_CONES
-      SPECTRAL_TIMING(c->tot_time_mat_cone_proj +=
-                      SCS(tocq)(&spec_mat_proj_timer);)
+    SPECTRAL_TIMING(c->tot_time_mat_cone_proj +=
+                    SCS(tocq)(&spec_mat_proj_timer);)
 #endif
-      if (status < 0)
-        return status;
-      count += get_sd_cone_size(k->s[i]);
-    }
-  }
-
-  /* 6. Complex PSD Cone */
-  if (k->cssize) {
-    for (i = 0; i < k->cssize; ++i) {
-      status = proj_complex_semi_definite_cone(&(x[count]), k->cs[i], c);
-      if (status < 0)
-        return status;
-      count += get_csd_cone_size(k->cs[i]);
-    }
+    if (status < 0)
+      return status;
+    count += c->psd_len;
   }
 
   if (k->ep || k->ed) { /* doesn't use r_y */
@@ -1799,6 +2062,14 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
         (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
   }
 
+  /* PSD blocks: offsets and threads (the workspaces are set up below) */
+  if ((k->ssize && k->s) || (k->cssize && k->cs)) {
+    if (set_up_psd_schedule(c, k) < 0) {
+      SCS(finish_cone)(c);
+      return SCS_NULL;
+    }
+  }
+
   /* Set up workspaces if matrix cones are present */
   if ((k->ssize && k->s) || (k->cssize && k->cs)
 #ifdef USE_SPECTRAL_CONES
@@ -1810,7 +2081,6 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
       return SCS_NULL;
     }
   }
-
 #ifdef USE_SPECTRAL_CONES
   if (k->ell1_size > 0 && k->ell1) {
     if (set_up_ell1_cone_work_space(c, k) < 0) {

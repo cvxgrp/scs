@@ -1148,6 +1148,10 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     scs_finish(w);
     return SCS_NULL;
   }
+  if (w->stgs->verbose && w->cone_work->psd_nthreads > 1) {
+    scs_printf("\t  psd cones projected in parallel by %li threads\n",
+               (long)w->cone_work->psd_nthreads);
+  }
   set_diag_r(w);
 
   if (w->stgs->normalize) {
