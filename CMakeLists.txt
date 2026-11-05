@@ -751,8 +751,10 @@ if(BUILD_TESTING)
   function(scs_add_test TEST_NAME LINK_TARGET)
     add_executable(${TEST_NAME} test/run_tests.c)
     target_compile_definitions(${TEST_NAME} PRIVATE ${COMPILER_OPTS})
+    # OpenMP too, so test_psd_parallel checks the parallel projection
     target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET}
-                                               ${SCS_TEST_LINK_LIBRARIES})
+                                               ${SCS_TEST_LINK_LIBRARIES}
+                          $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
     target_include_directories(
       ${TEST_NAME}
       PRIVATE
