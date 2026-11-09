@@ -19,11 +19,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # apt's cudss (1.0) defaults to its CUDA 13 build, which cannot link
+        # against CUDA 12, so cuDSS is built and tested on the CUDA 13 entry only.
         include:
           - cuda: '12.6.0'
             os: ubuntu-24.04
+            cudss: false
           - cuda: '13.3.1'
             os: ubuntu-latest
+            cudss: true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -54,8 +58,10 @@ jobs:
           make install
           # ctest needs a device; only the build is checked here
       - name: Install cudss
+        if: matrix.cudss
         run: sudo apt-get -y install cudss
       - name: Make cudss target
+        if: matrix.cudss
         run: |
           export CUDSS_PATH=/usr/lib/cudss
           unset CUCC
