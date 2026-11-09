@@ -75,19 +75,22 @@ jobs:
   # runs here. It checks results, not speed; a real GPU is still the final word.
   # SCS links against the toolkit's own libraries, so the simulator's stay off
   # the library path while building (library-path: false) and `vgpu run` swaps
-  # them in for the test run only.
+  # them in for the test run only. issue_140 and max_ent are compiled out: they
+  # took 1.5-2.5 hours here, and well over that since the runners moved to
+  # kernel 7.0.
   simulated-gpu:
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - name: Simulated GPU (NVIDIA T4) and Ubuntu's CUDA toolkit
-        uses: pantheongpu/setup-pantheonsim@23932d9b811269d55c8d65687332fefc65daeb2c # v0.1.3
+        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
         with:
           gpu: nvidia/t4
           library-path: false
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: CFLAGS=-Werror=implicit-function-declaration make gpu CUDA_PATH=/usr
-      - run: make test_gpu CUDA_PATH=/usr
+      - run: CFLAGS=-DSKIP_SLOW_TESTS make test_gpu CUDA_PATH=/usr
       - name: Run the GPU tests on the simulated GPU
         run: vgpu run out/run_tests_gpu_indirect
 
@@ -107,9 +110,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Simulated GPU (NVIDIA T4) and CUDA 13.0 from NVIDIA
-        # The simulator itself, pinned by commit: its cuDSS is newer than the
-        # latest setup-pantheonsim release.
-        uses: pantheongpu/pantheonsim@7bec2f7a96c381c70a4374afbd7724fc158aa8db # main, with cuDSS
+        # v0.1.5 builds the simulator's cuDSS as both libcudss.so.1 (cuDSS 1.0,
+        # which apt's cudss now installs) and libcudss.so.0.
+        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
         with:
           gpu: nvidia/t4
           cuda-toolkit: '13.0'
