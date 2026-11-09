@@ -70,11 +70,11 @@ scs_int SCS(proj_logdet_cone)(scs_float *tvX, scs_int n, ScsConeWork *c,
     scs_float zero = 0., one = 1.;
     scs_float sqrt2 = SQRTF(2.0);
     scs_float sqrt2_inv = 1.0 / sqrt2;
-    scs_float *Xs = c->Xs;
-    scs_float *Z = c->Z;
-    scs_float *e = c->e;
-    scs_float *work = c->work;
-    blas_int lwork = c->lwork;
+    scs_float *Xs = c->psd_tw->Xs;
+    scs_float *Z = c->psd_tw->Z;
+    scs_float *e = c->psd_tw->e;
+    scs_float *work = c->psd_tw->work;
+    blas_int lwork = c->psd_tw->lwork;
     blas_int info = 0;
     scs_float sq_eig_pos;
     scs_float *current_log_proj;

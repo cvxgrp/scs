@@ -69,11 +69,11 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
   blas_int one_int = 1;
   scs_float sqrt2 = SQRTF(2.0);
   scs_float sqrt2_inv = 1.0 / sqrt2;
-  scs_float *Xs = c->Xs;
-  scs_float *e = c->e;
-  scs_float *Z = c->Z;
-  scs_float *work = c->work;
-  blas_int lwork = c->lwork;
+  scs_float *Xs = c->psd_tw->Xs;
+  scs_float *e = c->psd_tw->e;
+  scs_float *Z = c->psd_tw->Z;
+  scs_float *work = c->psd_tw->work;
+  blas_int lwork = c->psd_tw->lwork;
   blas_int info = 0;
   scs_int status;
   char transN;
