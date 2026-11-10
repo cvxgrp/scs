@@ -59,7 +59,7 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - True/False
      - 1
    * - :code:`USE_OPENMP`
-     - Use openmp to parallelize some computation (matrix-vector products, exponential cones, and the projection onto many :ref:`PSD blocks <blas_lapack_openmp>`); the thread count is :code:`OMP_NUM_THREADS`
+     - Use openmp to parallelize some computation (matrix-vector products, exponential cones, and the projection onto many :ref:`PSD blocks <blas_lapack_openmp>`). The OpenMP thread count (:code:`OMP_NUM_THREADS`) is the number of threads, and :code:`SCS_PSD_NUM_THREADS` is an upper bound on those of the PSD projection (1: serial)
      - True/False
      - 0
    * - :code:`USE_SPECTRAL_CONES`

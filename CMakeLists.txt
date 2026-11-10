@@ -751,10 +751,15 @@ if(BUILD_TESTING)
   function(scs_add_test TEST_NAME LINK_TARGET)
     add_executable(${TEST_NAME} test/run_tests.c)
     target_compile_definitions(${TEST_NAME} PRIVATE ${COMPILER_OPTS})
-    # OpenMP too, so test_psd_parallel checks the parallel projection
     target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET}
-                                               ${SCS_TEST_LINK_LIBRARIES}
-                          $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
+                                               ${SCS_TEST_LINK_LIBRARIES})
+    # OpenMP in the test when its library is built with it: the PSD tests then
+    # check the parallel projection, and skip for a library that stays serial
+    # (scsmkl and scscudss do not link OpenMP)
+    get_target_property(_scs_test_libs ${LINK_TARGET} LINK_LIBRARIES)
+    if(OpenMP_C_FOUND AND "${_scs_test_libs}" MATCHES "OpenMP::OpenMP_C")
+      target_link_libraries(${TEST_NAME} PRIVATE OpenMP::OpenMP_C)
+    endif()
     target_include_directories(
       ${TEST_NAME}
       PRIVATE

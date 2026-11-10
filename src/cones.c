@@ -18,7 +18,7 @@
 #include <string.h>
 #ifdef _OPENMP
 #include <omp.h>
-#include <stdlib.h> /* qsort */
+#include <stdlib.h> /* qsort, getenv, strtol */
 #endif
 
 /*
@@ -312,7 +312,6 @@ void SCS(finish_cone)(ScsConeWork *c) {
     scs_int t, j;
     for (t = 0; t < MAX(c->psd_nthreads, 1); ++t) {
       ScsPsdWork *w = &(c->psd_tw[t]);
-      /* w->work is also heevr's 'rwork' */
       void *bufs[] = {w->Xs,  w->Z,  w->e,     w->work,   w->gamma,
                       w->cXs, w->cZ, w->cwork, w->isuppz, w->iwork};
       for (j = 0; j < (scs_int)(sizeof(bufs) / sizeof(bufs[0])); ++j) {
@@ -883,28 +882,47 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * The real and complex PSD blocks are projected independently of each other,
  * so with OpenMP they are split over threads. The split is fixed at setup:
  * blocks in order of decreasing cost (n^3, 4 n^3 for complex blocks) go to the
- * least loaded thread (LPT scheduling). Thread t projects its blocks with
- * workspace c->psd_tw[t], sized for its own largest block; psd_tw[0] is the
- * workspace of all the matrix cones, and thread 0 gets the largest block, so
- * the extra memory is at most about four times the PSD part of the cone. Every
+ * least loaded thread (LPT scheduling). Thread t projects its blocks (list t)
+ * with workspace c->psd_tw[t], sized for its own largest block; psd_tw[0] is
+ * the workspace of all the matrix cones and no other is larger, so the extra
+ * memory is at most (psd_nthreads - 1) times the serial PSD workspace. Every
  * workspace has the same LAPACK work-array sizes, found for the largest
  * blocks: syevr and heevr pass the work array left after their own arrays to
  * sytrd/hetrd, which lower their block size to fit, so the blocking (and the
  * rounding) of a block larger than the crossover depends on the exact size.
  * Each block then runs the same code with the same sizes on any thread, so
  * with single-threaded BLAS the iterates do not depend on the number of
- * threads. With one thread the blocks are projected in order.
+ * threads.
  *
- * LAPACK and BLAS calls then run inside an OpenMP parallel region. OpenMP
- * builds of OpenBLAS and BLIS, and MKL, run single threaded there by default.
- * A pthreads OpenBLAS does not: each OpenMP thread would start its own BLAS
- * threads and oversubscribe the cores (measured up to 3.6x slower than
- * serial), and OpenBLAS has no thread-local way to stop it. So when the
- * linked BLAS is a pthreads OpenBLAS set to more than one thread, the blocks
- * stay serial (OPENBLAS_NUM_THREADS=1 enables the parallel projection).
- * The threads are also not used when the total work is small, or when one
- * block holds more than half of it: then the parallel loop gains less than
- * 2x, while that block alone may run faster with multithreaded BLAS.
+ * The number of threads is the OpenMP thread count at setup, at most the
+ * number of blocks with n > 1, and at most SCS_PSD_NUM_THREADS if that
+ * environment variable is set to a positive number when the workspace is set
+ * up (1 keeps the projection serial). A projection uses fewer threads when
+ * the OpenMP thread count has been lowered since: a smaller team still
+ * projects every list, each with its own workspace. With one thread there is
+ * no parallel region and the blocks are projected in order, so a multithreaded
+ * BLAS runs as it does without OpenMP.
+ *
+ * With more threads, each calls LAPACK and BLAS inside an OpenMP parallel
+ * region. OpenMP builds of OpenBLAS and BLIS run single threaded there, and so
+ * does MKL on the OpenMP runtime of SCS. MKL on another runtime (libiomp5 under
+ * a GNU-compiled SCS) would start its own threads in each of ours, so each
+ * thread sets MKL's thread-local thread count to one for the projection. This
+ * goes through a weak reference: it needs MKL's symbols visible to SCS.
+ * A pthreads OpenBLAS does not stay single threaded either: each OpenMP thread
+ * would start its own BLAS threads and oversubscribe the cores (measured up to
+ * 3.6x slower than serial), and OpenBLAS has no thread-local way to stop it.
+ * So when the linked BLAS is a pthreads OpenBLAS set to more than one thread,
+ * the blocks stay serial (OPENBLAS_NUM_THREADS=1 enables the parallel
+ * projection). This check needs the OpenBLAS symbols too: it is off for a
+ * static OpenBLAS, one with suffixed symbols, and one loaded privately by
+ * another library (libblastrampoline in Julia). SCS_PSD_NUM_THREADS=1 is the
+ * switch for those.
+ * The threads are also not used when the total work is small, when one block
+ * holds more than half of it (the parallel loop then gains less than 2x, while
+ * that block alone may run faster with multithreaded BLAS), or when the
+ * workspace is set up inside an active parallel region (the caller's threads
+ * are the parallelism then).
  */
 #if defined(_OPENMP) && defined(USE_LAPACK)
 /* Size of PSD block b: real block b if b < ssize, else complex b - ssize */
@@ -920,6 +938,8 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
 #endif
 
 /* OpenBLAS: openblas_get_parallel() is 0 sequential, 1 pthreads, 2 OpenMP.
+ * MKL: MKL_Set_Num_Threads_Local(n) sets the number of MKL threads for the
+ * calling thread only, and returns the previous one (0: the global setting).
  * Weak references, so other BLAS libraries leave them NULL (ELF only: a
  * weak reference to a missing symbol does not link on Mach-O). C linkage,
  * so a C++ build looks up the same symbols. */
@@ -929,6 +949,7 @@ extern "C" {
 #endif
 int openblas_get_parallel(void) __attribute__((weak));
 int openblas_get_num_threads(void) __attribute__((weak));
+int MKL_Set_Num_Threads_Local(int) __attribute__((weak));
 #ifdef __cplusplus
 }
 #endif
@@ -941,6 +962,18 @@ static scs_int blas_threads_outside_openmp(void) {
     return openblas_get_parallel() == 1 && openblas_get_num_threads() > 1;
   }
 #endif
+  return 0;
+}
+
+/* Set the number of MKL threads for the calling thread and return the previous
+ * setting, to restore it with. Does nothing, and returns 0, without MKL. */
+static int mkl_set_local_threads(int nt) {
+#if defined(__GNUC__) && defined(__ELF__)
+  if (MKL_Set_Num_Threads_Local) {
+    return MKL_Set_Num_Threads_Local(nt);
+  }
+#endif
+  (void)nt;
   return 0;
 }
 
@@ -1015,6 +1048,9 @@ static scs_int psd_num_threads(const ScsCone *k) {
 #if defined(_OPENMP) && defined(USE_LAPACK)
   scs_int b, nbig = 0, nt = omp_get_max_threads();
   scs_float total = 0., cmax = 0.;
+  /* upper bound set by the user; unset, 0 or not a number: no bound */
+  const char *s = getenv("SCS_PSD_NUM_THREADS");
+  long cap = s ? strtol(s, SCS_NULL, 10) : 0;
   for (b = 0; b < k->ssize + k->cssize; ++b) {
     scs_float cost = psd_block_cost(k, b);
     total += cost;
@@ -1022,8 +1058,10 @@ static scs_int psd_num_threads(const ScsCone *k) {
     nbig += psd_block_n(k, b) > 1;
   }
   nt = MIN(nt, nbig);
+  if (cap > 0 && cap < (long)nt)
+    nt = (scs_int)cap;
   if (nt < 2 || total < PSD_PAR_MIN_COST || 2 * cmax > total ||
-      blas_threads_outside_openmp())
+      omp_in_parallel() || blas_threads_outside_openmp())
     return 1;
   return nt;
 #else
@@ -1217,11 +1255,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
     return -1;
 
   /* 1. Real PSD Workspace Query (syevr) */
-  if (k->ssize > 0
-#ifdef USE_SPECTRAL_CONES
-      || k->dsize > 0 || k->sl_size > 0
-#endif
-  ) {
+  if (real_mats) {
     BLAS(syevr)("V", "A", "L", &n_max_real, w0->Xs, &n_max_real, &d_f, &d_f,
                 &d_i, &d_i, &abstol, &m, w0->e, w0->Z, &n_max_real, w0->isuppz,
                 &wkopt, &neg_one, &iwkopt, &neg_one, &info);
@@ -1401,7 +1435,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
 
   /* Diagonal-congruence pre-scale (skip when the metric is uniform on
    * this block so the historical path stays bit-identical). */
-  if (rho && w->gamma) {
+  if (rho) {
     scs_float wmin = rho[0], wmax = rho[0];
     for (i = 1; i < n; ++i) {
       scs_float wii = rho[i * n - ((i - 1) * i) / 2];
@@ -1437,8 +1471,11 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   BLAS(syevr)("V", "A", "L", &nb, w->Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol,
               &m, w->e, w->Z, &nb, w->isuppz, w->work, &w->lwork, w->iwork,
               &w->liwork, &info);
+  /* info < 0: bad argument. info > 0: no convergence. Either way there is no
+   * eigendecomposition to project with, so fail (the caller reports it: this
+   * may run in a PSD thread, which must not print). */
   if (info != 0)
-    return (int)info;
+    return -1;
 
   /* Filter negative eigenvalues and scale eigenvectors */
   /* Note: e is in ascending order */
@@ -1533,8 +1570,9 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
                SCS_BLAS_COMPLEX_CAST(w->cZ), &nb, w->isuppz,
                SCS_BLAS_COMPLEX_CAST(w->cwork), &w->lcwork, w->work, &w->lwork,
                w->iwork, &w->liwork, &info);
+  /* info != 0: no eigendecomposition, so fail (see the real case) */
   if (info != 0)
-    return (int)info;
+    return -1;
 
   /* Reconstruct */
   for (i = 0; i < n; ++i) {
@@ -1850,46 +1888,65 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* ===================== PSD Blocks, all Threads ======================== */
 
-/* Project the PSD blocks x (from the first PSD entry); rho is the matching
- * part of r_y or NULL. Thread t projects its blocks with workspace t. */
-static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
-                              const scs_float *rho) {
+/* Project the blocks of lists t, t + dt, t + 2 dt, ..., each list with its own
+ * workspace: all of them in order for t = 0 and dt = 1, the share of thread t
+ * in a team of dt otherwise. x and rho as in proj_psd_cones. */
+static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
+                              const scs_float *rho, scs_int t, scs_int dt) {
   const ScsCone *k = c->k;
-  scs_int status = 0;
-#ifdef _OPENMP
-#pragma omp parallel num_threads((int)c->psd_nthreads) if (c->psd_nthreads > 1)
-#endif
-  {
-    scs_int t = 0, dt = 1, j, b, st;
-#ifdef _OPENMP
-    /* a smaller team than requested (e.g. nested) still covers every list */
-    t = omp_get_thread_num();
-    dt = omp_get_num_threads();
-#endif
-    for (; t < c->psd_nthreads; t += dt) {
-      ScsPsdWork *w = SCS_NULL; /* no workspace without LAPACK */
+  scs_int j, b, st, status = 0;
+  for (; t < c->psd_nthreads; t += dt) {
+    ScsPsdWork *w = SCS_NULL; /* no workspace without LAPACK */
 #ifdef USE_LAPACK
-      w = &(c->psd_tw[t]);
+    w = &(c->psd_tw[t]);
 #endif
-      for (j = c->psd_tptr[t]; j < c->psd_tptr[t + 1]; ++j) {
-        b = c->psd_blk[j];
-        if (b < k->ssize) {
-          st = proj_semi_definite_cone(&(x[c->psd_off[b]]), k->s[b], w,
-                                       rho ? &(rho[c->psd_off[b]]) : SCS_NULL);
-        } else {
-          st = proj_complex_semi_definite_cone(&(x[c->psd_off[b]]),
-                                               k->cs[b - k->ssize], w);
-        }
-        if (st < 0) {
-#ifdef _OPENMP
-#pragma omp critical(scs_psd_status)
-#endif
-          status = st;
-        }
+    for (j = c->psd_tptr[t]; j < c->psd_tptr[t + 1]; ++j) {
+      b = c->psd_blk[j];
+      if (b < k->ssize) {
+        st = proj_semi_definite_cone(&(x[c->psd_off[b]]), k->s[b], w,
+                                     rho ? &(rho[c->psd_off[b]]) : SCS_NULL);
+      } else {
+        st = proj_complex_semi_definite_cone(&(x[c->psd_off[b]]),
+                                             k->cs[b - k->ssize], w);
       }
+      if (st < 0)
+        status = st;
     }
   }
   return status;
+}
+
+/* Project the PSD blocks x (from the first PSD entry); rho is the matching
+ * part of r_y or NULL. */
+static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
+                              const scs_float *rho) {
+#if defined(_OPENMP) && defined(USE_LAPACK)
+  /* the threads of the split, or fewer if the OpenMP thread count has been
+   * lowered since setup */
+  int nt = omp_get_max_threads();
+  if ((scs_int)nt > c->psd_nthreads)
+    nt = (int)c->psd_nthreads;
+  if (nt > 1) {
+    scs_int status = 0;
+#pragma omp parallel num_threads(nt)
+    {
+      /* thread t of a team of dt, which may be smaller than asked for (e.g.
+       * nested), projects lists t, t + dt, ...: every list is covered. One
+       * MKL thread meanwhile (see above), then back to the setting before. */
+      int mkl_nt = mkl_set_local_threads(1);
+      scs_int st = proj_psd_lists(x, c, rho, omp_get_thread_num(),
+                                  omp_get_num_threads());
+      mkl_set_local_threads(mkl_nt);
+      if (st < 0) {
+#pragma omp critical(scs_psd_status)
+        status = st;
+      }
+    }
+    return status;
+  }
+#endif
+  /* no parallel region: BLAS is free to use its own threads */
+  return proj_psd_lists(x, c, rho, 0, 1);
 }
 
 /* ================ Main Cone Projection Dispatch ====================== */
