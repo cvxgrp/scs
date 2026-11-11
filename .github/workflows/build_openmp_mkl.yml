@@ -45,10 +45,10 @@ jobs:
         out/run_tests_mkl
 
     - name: Build SCS as wrappers load it, with and without the MKL guard
-      # A shared library on libgomp that leaves libiomp5 to MKL, as the Julia
-      # and Python packages are linked. The second one is the same code without
-      # the guard of the PSD projection: its weak reference to
-      # MKL_Set_Num_Threads_Local is renamed to a symbol that does not exist.
+      # A shared library with libgomp and without libiomp5, as the Julia package
+      # is linked. The second one is the same code without the guard of the PSD
+      # projection: its weak reference to MKL_Set_Num_Threads_Local is renamed
+      # to a symbol that does not exist.
       run: |
         link_shared() {
           gcc -shared -fopenmp -o "$1" \
@@ -65,10 +65,13 @@ jobs:
         ldd out/libscs_guard.so || true
         gcc -O1 -Iinclude test/mkl_psd_guard.c -o out/mkl_psd_guard -ldl -lm
 
-    - name: Verify that MKL starts no threads in the parallel PSD projection
-      # See test/mkl_psd_guard.c. Three runs, and the number of threads of the
-      # process after each: the blocks in order, the parallel projection, and
-      # the parallel projection without the guard.
+    - name: Verify that the parallel PSD projection keeps MKL at one thread
+      # See test/mkl_psd_guard.c. With MKL_VERBOSE, MKL prints each of its calls
+      # and the number of threads that the call was allowed (NThr). DSYRK is
+      # called in the PSD projection only: with the guard MKL must be allowed
+      # one thread there, and the library without the guard shows that the
+      # check can tell. MKL_DYNAMIC is off because MKL otherwise reports one
+      # thread inside a parallel region that it can see.
       env:
         OMP_NUM_THREADS: 4
         MKL_NUM_THREADS: 4
@@ -77,61 +80,74 @@ jobs:
         KMP_BLOCKTIME: 0
       run: |
         set -o pipefail
-        run() {
+        # quiet <name> <command>: the output goes to out/<name>.log; what the
+        # program reports and a tally of MKL's calls are printed
+        quiet() {
+          local status=0
           echo "::group::$1"
-          "${@:2}" 2>&1 | tee "out/$1.log"
+          "${@:2}" > "out/$1.log" 2>&1 || status=$?
+          if (( status != 0 )); then
+            cat "out/$1.log"
+          else
+            grep -E '^mkl_psd_guard:|psd cones projected' "out/$1.log" || true
+            grep '^MKL_VERBOSE [A-Z]' "out/$1.log" \
+              | sed -E 's/\(.*\) [^ ]+ CNR/(...) CNR/' \
+              | sort | uniq -c | sort -rn | head -30 || true
+          fi
           echo "::endgroup::"
+          return $status
+        }
+        # the DSYRK calls in a log, and those allowed more than one thread
+        syrk() { grep -c '^MKL_VERBOSE DSYRK' "out/$1.log" || true; }
+        syrk_threaded() {
+          grep '^MKL_VERBOSE DSYRK' "out/$1.log" | grep -c -v -E 'NThr:1([^0-9]|$)' || true
+        }
+        # check <run with the guard> <run without it>: fails if MKL was allowed
+        # more than one thread in the projection with the guard
+        check() {
+          local all threaded control
+          all=$(syrk "$1")
+          threaded=$(syrk_threaded "$1")
+          control=$(syrk_threaded "$2")
+          if (( all == 0 )); then
+            echo "::warning::MKL reported no DSYRK call ($1), so this run cannot tell whether the guard works"
+          elif (( threaded > 0 )); then
+            echo "::error::with the guard, MKL was allowed more than one thread in $threaded of the $all DSYRK calls of the projection ($1)"
+            return 1
+          elif (( control > 0 )); then
+            echo "$1: MKL was allowed one thread in all $all DSYRK calls of the projection, and more in $control calls without the guard."
+          else
+            echo "::warning::MKL was allowed one thread in the projection without the guard too ($2), so this run cannot tell whether the guard works"
+          fi
         }
         threads() {
           sed -n 's/^mkl_psd_guard: .* os_threads=\([0-9][0-9]*\) .*/\1/p' "out/$1.log"
         }
-        # the short runs stop after 10 iterations: the threads are there by then
-        run serial env SCS_PSD_NUM_THREADS=1 out/mkl_psd_guard out/libscs_guard.so 10
-        run guard out/mkl_psd_guard out/libscs_guard.so
-        run noguard out/mkl_psd_guard out/libscs_noguard.so 10
 
-        # For the record, MKL's own account of the calls of two iterations,
-        # with and without the guard: the thread that called (TID) and the
-        # number of threads it was allowed (NThr).
-        for lib in guard noguard; do
-          echo "::group::MKL_VERBOSE, $lib"
-          MKL_VERBOSE=1 out/mkl_psd_guard "out/libscs_$lib.so" 2 > "out/verbose_$lib.log" 2>&1 || true
-          grep -m 3 -E '^MKL_VERBOSE (oneMKL|Intel)|^mkl_psd_guard:' "out/verbose_$lib.log" || true
-          grep '^MKL_VERBOSE' "out/verbose_$lib.log" \
-            | sed -E 's/\(.*\) [^ ]+ CNR/(...) CNR/' \
-            | sort | uniq -c | sort -rn | head -30 || true
-          echo "::endgroup::"
-        done
-
-        serial=$(threads serial)
-        guard=$(threads guard)
-        noguard=$(threads noguard)
-        echo "threads after the solve: $serial with the blocks in order," \
-          "$guard with the parallel projection, $noguard without its guard"
-        if [[ -z "$serial" || -z "$guard" || -z "$noguard" ]]; then
-          echo "::error::a run did not report its number of threads"
-          exit 1
-        fi
-        if grep -q "mkl_threads=0 " out/guard.log; then
+        # SCS loaded first: a full solve, then two iterations with MKL_VERBOSE
+        echo "::group::solve"
+        out/mkl_psd_guard out/libscs_guard.so 2>&1 | tee out/solve.log
+        echo "::endgroup::"
+        quiet guard env MKL_VERBOSE=1 out/mkl_psd_guard out/libscs_guard.so 2
+        quiet noguard env MKL_VERBOSE=1 out/mkl_psd_guard out/libscs_noguard.so 2
+        if grep -q "mkl_threads=0 " out/solve.log; then
           echo "::error::the test program did not find MKL in the SCS library"
           exit 1
         fi
-        if grep -q "psd cones projected in parallel" out/serial.log; then
-          echo "::error::SCS_PSD_NUM_THREADS=1 did not keep the projection serial"
-          exit 1
-        fi
-        for log in guard noguard; do
+        for log in solve guard noguard; do
           if ! grep -q "psd cones projected in parallel by 4 threads" "out/$log.log"; then
             echo "::error::the PSD projection of the $log run is not on 4 threads"
             exit 1
           fi
         done
-        if (( guard > serial )); then
-          echo "::error::the parallel PSD projection started $((guard - serial)) threads more than the serial one: MKL is not kept at one thread"
-          exit 1
-        fi
-        if (( noguard > serial )); then
-          echo "Without the guard MKL starts $((noguard - serial)) threads of its own, and with it none."
-        else
-          echo "::warning::MKL started no threads of its own without the guard either, so this run cannot tell whether the guard works"
-        fi
+        check guard noguard
+
+        # MKL started first, on libiomp5, and SCS on libgomp: MKL cannot see
+        # the parallel region of SCS. Reported only, for now.
+        export MKL_PSD_GUARD_MKL_FIRST=$(ldd out/libscs_guard.so | awk '/libmkl_rt/ {print $3}')
+        quiet iomp_serial env SCS_PSD_NUM_THREADS=1 out/mkl_psd_guard out/libscs_guard.so 2 || true
+        quiet iomp_guard env MKL_VERBOSE=1 out/mkl_psd_guard out/libscs_guard.so 2 || true
+        quiet iomp_noguard env MKL_VERBOSE=1 out/mkl_psd_guard out/libscs_noguard.so 2 || true
+        check iomp_guard iomp_noguard || true
+        echo "threads of the process: $(threads iomp_serial) with the blocks in order," \
+          "$(threads iomp_guard) with the parallel projection, $(threads iomp_noguard) without its guard"

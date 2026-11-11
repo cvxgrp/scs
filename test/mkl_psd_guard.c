@@ -1,3 +1,7 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE /* RTLD_DEEPBIND */
+#endif
+
 #include "scs.h"
 
 #include <dlfcn.h>
@@ -6,33 +10,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Checks, with a real MKL, that the parallel PSD projection keeps MKL at one
- * thread in each of its threads: the calls of MKL_Set_Num_Threads_Local around
- * the projection in src/cones.c. Built and run only by
- * .github/workflows/build_openmp_mkl.yml.
+/* Checks, with a real MKL, the guard of the parallel PSD projection: each of
+ * its threads sets MKL's thread-local thread count to one
+ * (MKL_Set_Num_Threads_Local, in src/cones.c), so that MKL starts no threads
+ * of its own in the threads of SCS. Built and run only by
+ * .github/workflows/build_openmp_mkl.yml, which has the checks.
  *
- * That guard matters when MKL cannot see the parallel region of SCS, because
- * the two run on different OpenMP runtimes: a GNU-compiled SCS on libgomp and
- * MKL on libiomp5, its default threading layer. Wrappers get them that way (a
- * Python extension module, a Julia JLL), each library with its own symbols,
- * and this program loads SCS as they do: it links neither runtime, and opens
- * the SCS library given as its argument with a local scope. All symbols are
- * bound at that point (RTLD_NOW), before MKL loads libiomp5, so the regions of
- * SCS stay on libgomp.
+ * This program loads an SCS library the way wrappers do: it links neither
+ * SCS, MKL nor an OpenMP runtime, and opens the library given as its argument
+ * with a local scope. It solves an SDP with four PSD blocks and prints what
+ * the workflow needs: the result, the number of threads of the process, and
+ * the OpenMP runtimes and MKL threading layers that are loaded. With
+ * MKL_VERBOSE=1 in the environment, MKL itself prints each of its calls with
+ * the number of threads that the call was allowed.
  *
- * It solves an SDP with four PSD blocks, large enough for MKL to use threads,
- * and prints the number of threads of the process after the solve. The
- * workflow compares that number between three runs:
- *   - SCS_PSD_NUM_THREADS=1: the blocks are projected in order,
- *   - the parallel projection,
- *   - the parallel projection of a library built without the guard.
- * With the guard the parallel projection starts no MKL thread, so it ends with
- * the threads of the serial run. Without it every thread of SCS gets MKL
- * threads of its own, which shows that the comparison can tell.
+ * The OpenMP runtime of MKL depends on what is loaded when MKL starts:
+ *   - By default SCS is loaded first, and libgomp with it. MKL then takes its
+ *     GNU threading layer, on that same libgomp (seen with oneMKL 2026), and
+ *     sees the parallel region of SCS.
+ *   - With MKL_PSD_GUARD_MKL_FIRST=<path of libmkl_rt> in the environment, MKL
+ *     is loaded and started first. No OpenMP runtime is loaded yet, so it takes
+ *     its Intel threading layer, on libiomp5. SCS is then loaded with deep
+ *     binding, as Julia loads libraries, which keeps its regions on libgomp.
+ *     MKL cannot see them: this is the case that the guard is for.
  *
  * usage: mkl_psd_guard <SCS shared library> [iterations]
- * With a number of iterations the run stops there and only counts threads
- * (they all start in the first iterations); without, the solve must succeed.
+ * With a number of iterations the run stops there, for the checks that need
+ * only a few projections; without, the solve must succeed.
  *
  * The problem is: minimize x subject to I - x * M_k >= 0 (PSD) for each block
  * k, with M_k = I - (1 + a_k) v_k v_k' for a unit vector v_k. M_k has the
@@ -121,7 +125,8 @@ int main(int argc, char **argv) {
   double v[PSD_N], nrm, a, x = 0.;
   unsigned long seed = 1234;
   int mkl_nt = 0, mkl_now = 0, threads, fail = 0;
-  int short_run = argc > 2;
+  int short_run = argc > 2, flags = RTLD_NOW | RTLD_LOCAL;
+  const char *mkl_first = getenv("MKL_PSD_GUARD_MKL_FIRST");
   ScsMatrix A = {0};
   ScsData d = {0};
   ScsCone cone = {0};
@@ -142,7 +147,22 @@ int main(int argc, char **argv) {
     return 1;
   }
   setvbuf(stdout, NULL, _IOLBF, 0); /* keep the output if the solve crashes */
-  lib = dlopen(argv[1], RTLD_NOW | RTLD_LOCAL);
+  if (mkl_first && *mkl_first) {
+    /* MKL chooses its threading layer in its first call */
+    lib = dlopen(mkl_first, RTLD_NOW | RTLD_LOCAL);
+    if (lib) {
+      *(void **)(&mkl_get_max) = dlsym(lib, "MKL_Get_Max_Threads");
+    }
+    if (!lib || !mkl_get_max) {
+      fprintf(stderr, "cannot start MKL from %s\n", mkl_first);
+      return 1;
+    }
+    mkl_get_max();
+#ifdef RTLD_DEEPBIND
+    flags |= RTLD_DEEPBIND;
+#endif
+  }
+  lib = dlopen(argv[1], flags);
   if (!lib) {
     fprintf(stderr, "cannot load %s: %s\n", argv[1], dlerror());
     return 1;
