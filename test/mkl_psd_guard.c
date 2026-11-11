@@ -75,6 +75,42 @@ static int os_threads(void) {
   return n;
 }
 
+/* Print the OpenMP runtimes and MKL threading layers loaded in this process */
+static void print_runtimes(void) {
+  static const char *const names[] = {
+      "libgomp",           "libiomp",           "libomp.",
+      "libmkl_intel_thr",  "libmkl_gnu_thr",    "libmkl_sequential",
+      "libmkl_tbb_thread", "libtbb",
+  };
+  char line[1024], seen[16][256], *path;
+  int n_seen = 0, n_names = (int)(sizeof(names) / sizeof(names[0])), i;
+  FILE *f = fopen("/proc/self/maps", "r");
+  if (!f) {
+    return;
+  }
+  printf("mkl_psd_guard: loaded");
+  while (n_seen < 16 && fgets(line, sizeof(line), f)) {
+    path = strchr(line, '/');
+    if (!path) {
+      continue;
+    }
+    path[strcspn(path, "\n")] = '\0';
+    for (i = 0; i < n_names && !strstr(path, names[i]); ++i) {
+    }
+    if (i == n_names || strlen(path) >= sizeof(seen[0])) {
+      continue;
+    }
+    for (i = 0; i < n_seen && strcmp(seen[i], path) != 0; ++i) {
+    }
+    if (i == n_seen) {
+      strcpy(seen[n_seen++], path);
+      printf(" %s", path);
+    }
+  }
+  printf("\n");
+  fclose(f);
+}
+
 int main(int argc, char **argv) {
   scs_int m = PSD_BLOCKS * PSD_LEN, blocks[PSD_BLOCKS];
   scs_int i, j, k, idx = 0, status = -1;
@@ -192,6 +228,7 @@ int main(int argc, char **argv) {
   if (mkl_set_local && mkl_get_max) {
     mkl_now = mkl_set_local(0); /* returns the setting and removes it */
   }
+  print_runtimes();
 
   printf("mkl_psd_guard: status=%d iters=%ld x=%.6f os_threads=%d "
          "mkl_threads=%d mkl_threads_after=%d\n",

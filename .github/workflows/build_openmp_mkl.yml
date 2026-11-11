@@ -62,6 +62,7 @@ jobs:
           OPT="-O3 -march=native -fno-math-errno -DMKL_Set_Num_Threads_Local=scs_no_mkl_guard_" \
           out/libscsmkl.a
         link_shared out/libscs_noguard.so
+        ldd out/libscs_guard.so || true
         gcc -O1 -Iinclude test/mkl_psd_guard.c -o out/mkl_psd_guard -ldl -lm
 
     - name: Verify that MKL starts no threads in the parallel PSD projection
@@ -88,6 +89,19 @@ jobs:
         run serial env SCS_PSD_NUM_THREADS=1 out/mkl_psd_guard out/libscs_guard.so 10
         run guard out/mkl_psd_guard out/libscs_guard.so
         run noguard out/mkl_psd_guard out/libscs_noguard.so 10
+
+        # For the record, MKL's own account of the calls of two iterations,
+        # with and without the guard: the thread that called (TID) and the
+        # number of threads it was allowed (NThr).
+        for lib in guard noguard; do
+          echo "::group::MKL_VERBOSE, $lib"
+          MKL_VERBOSE=1 out/mkl_psd_guard "out/libscs_$lib.so" 2 > "out/verbose_$lib.log" 2>&1 || true
+          grep -m 3 -E '^MKL_VERBOSE (oneMKL|Intel)|^mkl_psd_guard:' "out/verbose_$lib.log" || true
+          grep '^MKL_VERBOSE' "out/verbose_$lib.log" \
+            | sed -E 's/\(.*\) [^ ]+ CNR/(...) CNR/' \
+            | sort | uniq -c | sort -rn | head -30 || true
+          echo "::endgroup::"
+        done
 
         serial=$(threads serial)
         guard=$(threads guard)
