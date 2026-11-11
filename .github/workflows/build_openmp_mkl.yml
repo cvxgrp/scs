@@ -1,0 +1,123 @@
+---
+name: Build and Test OpenMP with MKL
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Intel Apt repository
+      run: |
+        # apt-key was removed in Ubuntu 26.04; use a signed-by keyring instead.
+        wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB \
+          | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+
+    - name: Install Intel oneAPI MKL
+      run: sudo apt-get install -y intel-oneapi-mkl-devel
+
+    - name: Setup Intel oneAPI environment
+      run: |
+        ONEAPI=/opt/intel/oneapi
+        echo "MKLROOT=$ONEAPI/mkl/latest" >> $GITHUB_ENV
+        # The compiler directory contains libiomp5 (Intel OpenMP runtime).
+        # Both the linker (-L) and runtime loader (LD_LIBRARY_PATH) need it.
+        echo "OMPROOT=$ONEAPI/compiler/latest" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$ONEAPI/mkl/latest/lib/intel64:$ONEAPI/compiler/latest/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+    - name: checkout project code
+      uses: actions/checkout@v7
+
+    - name: Build SCS MKL with OpenMP and test
+      # The makefile links libiomp5 ahead of libgomp, so SCS and MKL share the
+      # Intel OpenMP runtime here.
+      run: |
+        make USE_OPENMP=1 mkl
+        out/run_tests_mkl
+
+    - name: Build SCS as wrappers load it, with and without the MKL guard
+      # A shared library on libgomp that leaves libiomp5 to MKL, as the Julia
+      # and Python packages are linked. The second one is the same code without
+      # the guard of the PSD projection: its weak reference to
+      # MKL_Set_Num_Threads_Local is renamed to a symbol that does not exist.
+      run: |
+        link_shared() {
+          gcc -shared -fopenmp -o "$1" \
+            -Wl,--whole-archive out/libscsmkl.a -Wl,--no-whole-archive \
+            -L"$MKLROOT/lib" -L"$MKLROOT/lib/intel64" \
+            -Wl,--no-as-needed -lmkl_rt -lm
+        }
+        link_shared out/libscs_guard.so
+        make clean
+        make USE_OPENMP=1 \
+          OPT="-O3 -march=native -fno-math-errno -DMKL_Set_Num_Threads_Local=scs_no_mkl_guard_" \
+          out/libscsmkl.a
+        link_shared out/libscs_noguard.so
+        gcc -O1 -Iinclude test/mkl_psd_guard.c -o out/mkl_psd_guard -ldl -lm
+
+    - name: Verify that MKL starts no threads in the parallel PSD projection
+      # See test/mkl_psd_guard.c. Three runs, and the number of threads of the
+      # process after each: the blocks in order, the parallel projection, and
+      # the parallel projection without the guard.
+      env:
+        OMP_NUM_THREADS: 4
+        MKL_NUM_THREADS: 4
+        MKL_DYNAMIC: "FALSE"
+        MKL_THREADING_LAYER: INTEL
+        KMP_BLOCKTIME: 0
+      run: |
+        set -o pipefail
+        run() {
+          echo "::group::$1"
+          "${@:2}" 2>&1 | tee "out/$1.log"
+          echo "::endgroup::"
+        }
+        threads() {
+          sed -n 's/^mkl_psd_guard: .* os_threads=\([0-9][0-9]*\) .*/\1/p' "out/$1.log"
+        }
+        # the short runs stop after 10 iterations: the threads are there by then
+        run serial env SCS_PSD_NUM_THREADS=1 out/mkl_psd_guard out/libscs_guard.so 10
+        run guard out/mkl_psd_guard out/libscs_guard.so
+        run noguard out/mkl_psd_guard out/libscs_noguard.so 10
+
+        serial=$(threads serial)
+        guard=$(threads guard)
+        noguard=$(threads noguard)
+        echo "threads after the solve: $serial with the blocks in order," \
+          "$guard with the parallel projection, $noguard without its guard"
+        if [[ -z "$serial" || -z "$guard" || -z "$noguard" ]]; then
+          echo "::error::a run did not report its number of threads"
+          exit 1
+        fi
+        if grep -q "mkl_threads=0 " out/guard.log; then
+          echo "::error::the test program did not find MKL in the SCS library"
+          exit 1
+        fi
+        if grep -q "psd cones projected in parallel" out/serial.log; then
+          echo "::error::SCS_PSD_NUM_THREADS=1 did not keep the projection serial"
+          exit 1
+        fi
+        for log in guard noguard; do
+          if ! grep -q "psd cones projected in parallel by 4 threads" "out/$log.log"; then
+            echo "::error::the PSD projection of the $log run is not on 4 threads"
+            exit 1
+          fi
+        done
+        if (( guard > serial )); then
+          echo "::error::the parallel PSD projection started $((guard - serial)) threads more than the serial one: MKL is not kept at one thread"
+          exit 1
+        fi
+        if (( noguard > serial )); then
+          echo "Without the guard MKL starts $((noguard - serial)) threads of its own, and with it none."
+        else
+          echo "::warning::MKL started no threads of its own without the guard either, so this run cannot tell whether the guard works"
+        fi
