@@ -158,14 +158,20 @@ How SCS uses the threads
 The number of threads is fixed when the solver is set up. It is the OpenMP
 thread count at that point (as set by :code:`OMP_NUM_THREADS` or
 :code:`omp_set_num_threads`), at most the number of blocks larger than
-:math:`1 \times 1`. A solve uses fewer threads if the OpenMP thread count has
-been lowered since the setup.
+:math:`1 \times 1`. It is also bounded by the amount of work, because each
+thread takes a few microseconds to start: a projection of some tens of
+microseconds gets two threads, and one of a millisecond or more gets all of
+them. A solve uses fewer threads if the OpenMP thread count has been lowered
+since the setup.
 
 Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when
 
-* the total work is small, or one block holds more than half of it (the
-  parallel projection would then gain less than a factor of two, and a
+* the threads would gain little: the blocks are too little work, or one block
+  holds most of it (the parallel projection is no faster than its largest
+  block),
+* a block larger than :math:`512 \times 512` holds more than half of the work
+  (the parallel projection would then gain less than a factor of two, and a
   multithreaded BLAS may do better on that block),
 * the BLAS is a pthreads build of OpenBLAS set to more than one thread, where
   SCS can see that (see below), or
