@@ -996,7 +996,15 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
 
 /* Estimated serial time, in nanoseconds, below which the threads are not
  * used. Zero, because the rules of psd_num_threads keep little work serial
- * already. A large value keeps every projection serial. */
+ * already. A large value keeps every projection serial. Those rules take the
+ * threads to be awake. Where they sleep between projections (the GNU runtime
+ * on Linux, when the rest of an iteration takes long enough), waking them can
+ * cost more than a projection of less than a millisecond gains, and a minimum
+ * of that size here would avoid it. It is zero there too, on purpose: the
+ * same minimum would keep small problems serial, whose threads stay awake and
+ * gain the most (an iteration 2.5 times faster, against one up to 27% slower,
+ * both measured). OMP_WAIT_POLICY=active, or a build without
+ * USE_PARALLEL_PSD, is the switch for the other case. */
 #ifndef PSD_PAR_MIN_COST
 #define PSD_PAR_MIN_COST (0.)
 #endif

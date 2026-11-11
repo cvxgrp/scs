@@ -178,6 +178,17 @@ is free to use its own threads, when
 * the solver is set up inside an active OpenMP parallel region, where the
   threads of the caller are the parallelism.
 
+The number of threads is chosen as if the threads were awake when a projection
+starts. With the GNU OpenMP runtime on Linux they wait actively for a short
+time after a parallel region (:code:`GOMP_SPINCOUNT`) and then sleep, and
+waking them can cost more than a small projection gains. On one machine, PSD
+blocks that took less than a millisecond in all made an iteration up to 27%
+slower when the rest of the iteration took a millisecond or more. If the PSD
+blocks are a small part of a large problem, a build without
+:code:`USE_PARALLEL_PSD` suits it better. :code:`OMP_WAIT_POLICY=active` keeps
+the threads awake between projections, at the price of cores that are busy
+while they wait.
+
 What SCS checks, and where it cannot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SCS guards against two of the cases in the table, on some platforms only. That
