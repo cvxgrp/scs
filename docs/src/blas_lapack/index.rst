@@ -189,12 +189,17 @@ is the reason the option is left to whoever builds SCS and knows its BLAS.
   and the MKL symbols visible to SCS. It does not work on Windows or macOS,
   with a static MKL, or with an MKL loaded privately by another library.
 * A pthreads build of OpenBLAS with more than one thread: on ELF platforms SCS
-  checks for it at setup and then projects the blocks one after another. The
-  check needs the functions :code:`openblas_get_parallel` and
-  :code:`openblas_get_num_threads` visible to SCS: it is off for a static
-  :code:`libopenblas.a` (the weak references can stay unresolved), for an
-  OpenBLAS with suffixed symbol names, and for one loaded privately by another
-  library (libblastrampoline in Julia).
+  checks for it at setup and then projects the blocks one after another. With
+  :code:`OPENBLAS_NUM_THREADS=1` the projection is parallel, but the BLAS calls
+  of the threads still wait for one lock inside an OpenBLAS that was not built
+  with OpenMP. SCS counts that when it chooses the number of threads: small
+  blocks mostly stay serial, and blocks of :math:`10 \times 10` to
+  :math:`32 \times 32` get two to six threads. An OpenMP build of OpenBLAS
+  does not have this limit. Both checks need the functions
+  :code:`openblas_get_parallel` and :code:`openblas_get_num_threads` visible to
+  SCS: they are off for a static :code:`libopenblas.a` (the weak references
+  can stay unresolved), for an OpenBLAS with suffixed symbol names, and for
+  one loaded privately by another library (libblastrampoline in Julia).
 * In all other cases (other platforms, other libraries, another OpenMP
   runtime) SCS does nothing and assumes that the BLAS runs on one thread.
 

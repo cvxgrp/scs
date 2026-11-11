@@ -941,7 +941,11 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  *   OPENBLAS_NUM_THREADS=1 is what enables the parallel projection. This
  *   check goes through weak references too: it is off for a static OpenBLAS,
  *   one with suffixed symbols, and one loaded privately by another library
- *   (libblastrampoline in Julia).
+ *   (libblastrampoline in Julia). On one thread an OpenBLAS without OpenMP
+ *   still makes the BLAS calls of our threads wait for one lock, and the
+ *   estimate of the thread count adds that (PSD_PAR_LOCK_COST): small
+ *   blocks then stay serial, and the others get fewer threads than there
+ *   are. That needs the same symbols.
  * - Accelerate keeps threads of its own as well, which stayed mostly idle
  *   inside ours: at its default settings the parallel projection was 2.3 to
  *   3.3x faster than the serial one on 4 threads, and at most 17% slower
@@ -1027,6 +1031,24 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
 #define PSD_PAR_BLAS_N (512)
 #endif
 
+/* An OpenBLAS that was not built with OpenMP takes one mutex in every BLAS
+ * call that needs a work buffer (dsymv: one call per column in the reduction
+ * to tridiagonal form), so the calls of the threads of a team wait for each
+ * other. A block of size n then takes longer in a team of t threads than
+ * alone, by n * (PSD_PAR_LOCK_COST * (t - 1) + PSD_PAR_LOCK_COST2 * (t - 1)^2)
+ * nanoseconds. Measured on a Cortex-X925 under Linux (OpenBLAS 0.3.31,
+ * pthreads build on one thread), the time per column depended little on the
+ * size of the block, for n = 3 to 32: about 0.3, 0.5, 1.1, 1.7 and 4.8 us
+ * with 2, 3, 4, 5 and 10 threads. The constants are a third above the fit to
+ * that, because the smallest blocks lost more. An OpenMP build did not show
+ * this (measured on macOS). */
+#ifndef PSD_PAR_LOCK_COST
+#define PSD_PAR_LOCK_COST (300.)
+#endif
+#ifndef PSD_PAR_LOCK_COST2
+#define PSD_PAR_LOCK_COST2 (50.)
+#endif
+
 /* OpenBLAS: openblas_get_parallel() is 0 sequential, 1 pthreads, 2 OpenMP.
  * MKL: MKL_Set_Num_Threads_Local(n) sets the number of MKL threads for the
  * calling thread only, and returns the previous one (0: the global setting).
@@ -1050,6 +1072,17 @@ static scs_int blas_threads_outside_openmp(void) {
 #if defined(__GNUC__) && defined(__ELF__)
   if (openblas_get_parallel && openblas_get_num_threads) {
     return openblas_get_parallel() == 1 && openblas_get_num_threads() > 1;
+  }
+#endif
+  return 0;
+}
+
+/* Whether the BLAS is an OpenBLAS without OpenMP, whose calls from several
+ * threads wait for one lock (PSD_PAR_LOCK_COST) */
+static scs_int blas_calls_share_lock(void) {
+#if defined(__GNUC__) && defined(__ELF__)
+  if (openblas_get_parallel) {
+    return openblas_get_parallel() != 2;
   }
 #endif
   return 0;
@@ -1148,25 +1181,35 @@ out:
 }
 
 /* Estimated time of the parallel loop with nt threads over nblk blocks, which
- * take total in all and cmax for the largest */
+ * take total in all and cmax for the largest. With a lock in the BLAS
+ * (PSD_PAR_LOCK_COST), ncol is the number of columns of these blocks and nmax
+ * that of the largest; without one, both are zero. */
 static scs_float psd_par_time(scs_int nt, scs_int nblk, scs_float total,
-                              scs_float cmax) {
-  scs_float list = (scs_float)((nblk + nt - 1) / nt) * (total / nblk);
-  return MAX(cmax, list) + nt * PSD_PAR_THREAD_COST;
+                              scs_float cmax, scs_float ncol, scs_float nmax) {
+  scs_float lock =
+      (nt - 1) * (PSD_PAR_LOCK_COST + (nt - 1) * PSD_PAR_LOCK_COST2);
+  scs_float list =
+      (scs_float)((nblk + nt - 1) / nt) * ((total + lock * ncol) / nblk);
+  return MAX(cmax + lock * nmax, list) + nt * PSD_PAR_THREAD_COST;
 }
 #endif
 
 /* Number of threads for the PSD blocks (see above) */
 static scs_int psd_num_threads(const ScsCone *k) {
 #ifdef PSD_PARALLEL
-  scs_int b, t, ntmax, nbig = 0, nmax = 0, nt = omp_get_max_threads();
-  scs_float total = 0., cmax = 0., est, best = 0.;
+  scs_int b, t, ntmax, nbig = 0, nmax = 0, ncol = 0;
+  scs_int nt = omp_get_max_threads(), lock = blas_calls_share_lock();
+  scs_float total = 0., cmax = 0., est, best = 0., lcol, lmax;
   for (b = 0; b < k->ssize + k->cssize; ++b) {
+    scs_int n = psd_block_n(k, b);
     scs_float cost = psd_block_cost(k, b);
     total += cost;
     cmax = MAX(cmax, cost);
-    nmax = MAX(nmax, psd_block_n(k, b));
-    nbig += psd_block_n(k, b) > 1;
+    nmax = MAX(nmax, n);
+    if (n > 1) {
+      nbig++;
+      ncol += n;
+    }
   }
   nt = MIN(nt, nbig);
   if (nt < 2 || total < PSD_PAR_MIN_COST || omp_in_parallel() ||
@@ -1177,16 +1220,24 @@ static scs_int psd_num_threads(const ScsCone *k) {
   /* With t threads the parallel loop takes about as long as its longest
    * list, which is at least the largest block and at least its share of the
    * blocks at their average time, plus the time of the t threads. Find the
-   * smallest such estimate, then take the most threads that come within 5%
-   * of it: the estimate is flat where one block bounds the loop, and more
-   * threads are then safer for the lists of the other blocks. */
+   * fewest threads with the smallest such estimate. Without a lock in the
+   * BLAS, then take the most threads that come within 5% of it: the estimate
+   * is flat where one block bounds the loop, and more threads are then safer
+   * for the lists of the other blocks. With a lock every thread slows the
+   * others down. */
+  lcol = lock ? (scs_float)ncol : 0.;
+  lmax = lock ? (scs_float)nmax : 0.;
   ntmax = nt;
   for (t = 2; t <= ntmax; ++t) {
-    est = psd_par_time(t, nbig, total, cmax);
-    if (t == 2 || est < best)
+    est = psd_par_time(t, nbig, total, cmax, lcol, lmax);
+    if (t == 2 || est < best) {
       best = est;
+      nt = t;
+    }
   }
-  for (nt = ntmax; psd_par_time(nt, nbig, total, cmax) > 1.05 * best; --nt) {
+  for (t = ntmax; !lock && t > nt; --t) {
+    if (psd_par_time(t, nbig, total, cmax, lcol, lmax) <= 1.05 * best)
+      nt = t; /* the last pass: t > nt no longer holds */
   }
   return total < PSD_PAR_MIN_GAIN * best ? 1 : nt;
 #else
