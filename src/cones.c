@@ -16,9 +16,12 @@
 #include <float.h>
 #include <stdio.h>
 #include <string.h>
-/* The PSD blocks are projected in parallel only in a build that asks for it
- * (USE_PARALLEL_PSD) and that has OpenMP and LAPACK. Every other build, with
- * OpenMP or not, projects them one after another. */
+/* USE_PARALLEL_PSD is a build option, off by default, that compiles in the
+ * parallel projection of the PSD blocks. It needs OpenMP and LAPACK. Every
+ * other build, with OpenMP or not, projects the blocks one after another. It
+ * is an option because it is only faster when the BLAS runs on one thread
+ * inside the threads of SCS: see "PARALLEL PROJECTION OF THE PSD BLOCKS"
+ * below for what it does and what it asks of the BLAS. */
 #if defined(USE_PARALLEL_PSD) && defined(_OPENMP) && defined(USE_LAPACK)
 #define PSD_PARALLEL (1)
 #include <omp.h>
@@ -883,55 +886,95 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
 /* ================ PSD Block Workspaces and Threads ==================== */
 
 /*
- * The real and complex PSD blocks are projected independently of each other,
- * so a build with USE_PARALLEL_PSD splits them over OpenMP threads. It is not
- * the default because it pays only when the BLAS stays on one thread inside
- * the threads of SCS, which SCS can neither ensure nor check for every BLAS
- * (see below): the build has to know its BLAS. The split is fixed at setup:
- * blocks in order of decreasing cost (n^3, 4 n^3 for complex blocks) go to the
- * least loaded thread (LPT scheduling). Thread t projects its blocks (list t)
- * with workspace c->psd_tw[t], sized for its own largest block; psd_tw[0] is
- * the workspace of all the matrix cones and no other is larger, so the extra
- * memory is at most (psd_nthreads - 1) times the serial PSD workspace. Every
- * workspace has the same LAPACK work-array sizes, found for the largest
- * blocks: syevr and heevr pass the work array left after their own arrays to
- * sytrd/hetrd, which lower their block size to fit, so the blocking (and the
- * rounding) of a block larger than the crossover depends on the exact size.
- * Each block then runs the same code with the same sizes on any thread, so
- * with single-threaded BLAS the iterates do not depend on the number of
- * threads.
+ * PARALLEL PROJECTION OF THE PSD BLOCKS (build option USE_PARALLEL_PSD)
+ *
+ * What the option does. The real and complex PSD blocks of a cone are
+ * projected independently of each other. A build with USE_PARALLEL_PSD, OpenMP
+ * and LAPACK shares them out over OpenMP threads, and each thread calls LAPACK
+ * for its own blocks. Every other build projects them one after another on
+ * the calling thread.
+ *
+ * Two levels of threads, one at a time. The projection of a block is an
+ * eigendecomposition in LAPACK, which runs on BLAS, and a BLAS can have
+ * threads of its own. So the cores can be used in two ways:
+ * - by the BLAS, inside one block at a time. This is what a build without
+ *   the option does, and what a build with it does when it keeps a
+ *   projection serial (psd_num_threads): there is no parallel region then,
+ *   and the BLAS is as free to use its threads as it is without OpenMP;
+ * - by SCS, across the blocks, with the BLAS on one thread inside each.
+ * Across the blocks is the faster way when there are several of them: on 4
+ * threads, 4 to 16 blocks of n = 256 to 1024 were projected 3 times faster,
+ * while the threads of the BLAS inside one block gained nothing below n of
+ * about 1000 (OpenBLAS, Accelerate, NVPL). It cannot be faster than its
+ * largest block, though, so a cone with one dominant block is left to the
+ * BLAS. What must not happen is both at once: t threads of SCS that each
+ * start the threads of the BLAS are more threads than cores, and slower than
+ * either way alone.
+ *
+ * What the BLAS does inside the threads of SCS. This decides whether the
+ * option pays. SCS cannot ensure it, and cannot even see it for every BLAS,
+ * which is why the option is off by default and left to the build, which
+ * knows its BLAS:
+ * - A BLAS on the OpenMP runtime of SCS (OpenMP builds of OpenBLAS and BLIS,
+ *   NVPL, MKL on the matching threading layer) runs on one thread there by
+ *   itself. Its parallel regions are nested in ours, and OpenMP gives a
+ *   nested region one thread by default. This is the setup the option is
+ *   for. The OpenMP thread count (OMP_NUM_THREADS) is then one budget for
+ *   both levels: our team during a parallel projection, the threads of the
+ *   BLAS everywhere else. It rests on that default: with nested parallelism
+ *   switched on (OMP_MAX_ACTIVE_LEVELS above 1), such a BLAS may start
+ *   threads inside ours.
+ * - A BLAS on another OpenMP runtime (libiomp5 or libomp under a GNU-compiled
+ *   SCS) cannot see our region and starts its own threads in each of our
+ *   threads. Measured with an OpenBLAS on libomp: 16 threads for 4, at half
+ *   the speed. For MKL, each of our threads therefore sets MKL's thread-local
+ *   thread count to one for the projection (mkl_set_local_threads). This
+ *   goes through a weak reference: it needs ELF and MKL's symbols visible to
+ *   SCS.
+ * - A BLAS with a thread pool of its own knows nothing of OpenMP. That is a
+ *   pthreads OpenBLAS: the default on Debian and Ubuntu, and what Julia and
+ *   the SciPy wheels ship. With more than one thread, the BLAS calls of our
+ *   threads go to its pool as well and the cores are oversubscribed (measured
+ *   up to 3.6x slower than serial), and it has no thread-local setting to
+ *   stop that. So when the linked BLAS is a pthreads OpenBLAS on more than
+ *   one thread the blocks stay serial (blas_threads_outside_openmp), and
+ *   OPENBLAS_NUM_THREADS=1 is what enables the parallel projection. This
+ *   check goes through weak references too: it is off for a static OpenBLAS,
+ *   one with suffixed symbols, and one loaded privately by another library
+ *   (libblastrampoline in Julia).
+ * - Accelerate keeps threads of its own as well, which stayed mostly idle
+ *   inside ours: at its default settings the parallel projection was 2.3 to
+ *   3.3x faster than the serial one on 4 threads, and at most 17% slower
+ *   than with Accelerate on one thread.
+ * Neither check exists on Mach-O or Windows, and there is none for other
+ * libraries, or for a BLAS other than MKL on another OpenMP runtime. There
+ * the BLAS has to be put on one thread for the whole process, or the build
+ * left without the option. An environment variable cannot do that for an
+ * OpenMP BLAS on another runtime: OMP_NUM_THREADS is read by both runtimes,
+ * and an OpenMP build of OpenBLAS ignores OPENBLAS_NUM_THREADS.
+ *
+ * The split over threads is fixed at setup: blocks in order of decreasing
+ * cost (n^3, 4 n^3 for complex blocks) go to the least loaded thread (LPT
+ * scheduling). Thread t projects its blocks (list t) with workspace
+ * c->psd_tw[t], sized for its own largest block; psd_tw[0] is the workspace
+ * of all the matrix cones and no other is larger, so the extra memory is at
+ * most (psd_nthreads - 1) times the serial PSD workspace. Every workspace has
+ * the same LAPACK work-array sizes, found for the largest blocks: syevr and
+ * heevr pass the work array left after their own arrays to sytrd/hetrd, which
+ * lower their block size to fit, so the blocking (and the rounding) of a
+ * block larger than the crossover depends on the exact size. Each block then
+ * runs the same code with the same sizes on any thread, so with
+ * single-threaded BLAS the iterates do not depend on the number of threads.
  *
  * The number of threads is the OpenMP thread count at setup, at most the
  * number of blocks with n > 1. A projection uses fewer threads when the
  * OpenMP thread count has been lowered since: a smaller team still projects
- * every list, each with its own workspace. With one thread there is no
- * parallel region and the blocks are projected in order, so a multithreaded
- * BLAS runs as it does without OpenMP.
- *
- * With more threads, each calls LAPACK and BLAS inside an OpenMP parallel
- * region. A BLAS on the OpenMP runtime of SCS runs single threaded there
- * (OpenMP builds of OpenBLAS and BLIS, MKL on that runtime): OpenMP does not
- * nest parallel regions by default. A BLAS on another OpenMP runtime cannot
- * see the region and starts its own threads in each of ours (measured with an
- * OpenBLAS on libomp under a GNU-compiled SCS: 16 threads for 4, at half the
- * speed). For MKL (libiomp5 under a GNU-compiled SCS) each thread therefore
- * sets MKL's thread-local thread count to one for the projection. This goes
- * through a weak reference: it needs MKL's symbols visible to SCS.
- * A pthreads OpenBLAS does not stay single threaded either: each OpenMP thread
- * would start its own BLAS threads and oversubscribe the cores (measured up to
- * 3.6x slower than serial), and OpenBLAS has no thread-local way to stop it.
- * So when the linked BLAS is a pthreads OpenBLAS set to more than one thread,
- * the blocks stay serial (OPENBLAS_NUM_THREADS=1 enables the parallel
- * projection). This check needs the OpenBLAS symbols too: it is off for a
- * static OpenBLAS, one with suffixed symbols, and one loaded privately by
- * another library (libblastrampoline in Julia). Neither check exists on
- * Mach-O or Windows, and none for other libraries: there the BLAS has to be
- * set to one thread, or the build left without USE_PARALLEL_PSD.
- * The threads are also not used when the total work is small, when one block
- * holds more than half of it (the parallel loop then gains less than 2x, while
- * that block alone may run faster with multithreaded BLAS), or when the
- * workspace is set up inside an active parallel region (the caller's threads
- * are the parallelism then).
+ * every list, each with its own workspace. The threads are not used, and the
+ * BLAS is left to its own, when the total work is small, when one block
+ * holds more than half of it (the parallel loop then gains less than 2x,
+ * while that block alone may run faster with multithreaded BLAS), or when
+ * the workspace is set up inside an active parallel region (the caller's
+ * threads are the parallelism then).
  */
 #ifdef PSD_PARALLEL
 /* Size of PSD block b: real block b if b < ssize, else complex b - ssize */
@@ -1935,8 +1978,10 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
 #pragma omp parallel num_threads(nt)
     {
       /* thread t of a team of dt, which may be smaller than asked for (e.g.
-       * nested), projects lists t, t + dt, ...: every list is covered. One
-       * MKL thread meanwhile (see above), then back to the setting before. */
+       * nested), projects lists t, t + dt, ...: every list is covered. The
+       * BLAS has to run on one thread in here (see the comment on the option
+       * above). SCS can only see to that for MKL: one MKL thread meanwhile,
+       * then back to the setting before. */
       int mkl_nt = mkl_set_local_threads(1);
       scs_int st = proj_psd_lists(x, c, rho, omp_get_thread_num(),
                                   omp_get_num_threads());
@@ -1949,7 +1994,8 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
     return status;
   }
 #endif
-  /* no parallel region: BLAS is free to use its own threads */
+  /* no parallel region: the BLAS is free to use its own threads, as in a
+   * build without USE_PARALLEL_PSD */
   return proj_psd_lists(x, c, rho, 0, 1);
 }
 

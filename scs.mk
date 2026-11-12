@@ -210,11 +210,23 @@ endif
 
 ############ PARALLEL PSD PROJECTION ############
 # set USE_PARALLEL_PSD = 1, with USE_OPENMP = 1, to project the PSD blocks of
-# a problem in parallel, on up to OMP_NUM_THREADS threads. Off by default,
-# because it is only faster when the BLAS runs on one thread inside the
-# threads of SCS: a BLAS on the same OpenMP runtime as SCS does, and so does
-# one that is set to one thread. Other setups can get slower. See the BLAS and
-# LAPACK page of the documentation.
+# a problem in parallel: on up to OMP_NUM_THREADS threads, each of which calls
+# LAPACK for its own blocks. Without it the blocks are projected one after
+# another, and a multithreaded BLAS uses its threads inside each block.
+#
+# It is off by default because it is only faster when the BLAS runs on ONE
+# thread inside the threads of SCS. Otherwise the threads of the two multiply,
+# and the projection is slower than without the option.
+# - A BLAS on the same OpenMP runtime as SCS does that by itself (an OpenMP
+#   build of OpenBLAS or BLIS, MKL on the matching threading layer). This is
+#   the setup to enable the option for.
+# - A BLAS with threads of its own (a pthreads OpenBLAS, the default on Debian
+#   and Ubuntu) has to be set to one thread (OPENBLAS_NUM_THREADS=1).
+# - A BLAS on another OpenMP runtime than SCS starts its own threads in every
+#   thread of SCS. SCS stops MKL from doing so where it can (Linux, shared
+#   MKL); for any other, build SCS and the BLAS with the same compiler family.
+# See "Parallel projection of PSD blocks" on the BLAS and LAPACK page of the
+# documentation, and the comment on the option in src/cones.c.
 USE_PARALLEL_PSD = 0
 ifneq ($(USE_PARALLEL_PSD), 0)
   ifeq ($(USE_OPENMP), 0)

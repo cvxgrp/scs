@@ -116,8 +116,13 @@ endif()
 option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
-# Off by default: only faster when the BLAS runs on one thread inside the
-# threads of SCS (see the BLAS and LAPACK page of the documentation).
+# Projects the PSD blocks of a problem in parallel, on up to OMP_NUM_THREADS
+# threads that each call LAPACK for their own blocks. Off by default, because
+# it is only faster when the BLAS runs on one thread inside the threads of SCS:
+# a BLAS on the same OpenMP runtime as SCS does that by itself, and any other
+# multithreaded BLAS has to be set to one thread, or the threads of the two
+# multiply. See "Parallel projection of PSD blocks" on the BLAS and LAPACK page
+# of the documentation, and the comment on the option in src/cones.c.
 option(USE_PARALLEL_PSD
        "Project PSD blocks in parallel (requires USE_OPENMP and USE_LAPACK)" OFF)
 if(USE_PARALLEL_PSD AND NOT (USE_OPENMP AND USE_LAPACK))
