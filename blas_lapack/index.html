@@ -253,19 +253,35 @@ is not faster, leave the option off.</p></li>
 <p>The number of threads is fixed when the solver is set up. It is the OpenMP
 thread count at that point (as set by <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> or
 <code class="code docutils literal notranslate"><span class="pre">omp_set_num_threads</span></code>), at most the number of blocks larger than
-<span class="math notranslate nohighlight">\(1 \times 1\)</span>. A solve uses fewer threads if the OpenMP thread count has
-been lowered since the setup.</p>
+<span class="math notranslate nohighlight">\(1 \times 1\)</span>. It is also bounded by the amount of work, because each
+thread takes a few microseconds to start: a projection of some tens of
+microseconds gets two threads, and one of a millisecond or more gets all of
+them. A solve uses fewer threads if the OpenMP thread count has been lowered
+since the setup.</p>
 <p>Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when</p>
 <ul class="simple">
-<li><p>the total work is small, or one block holds more than half of it (the
-parallel projection would then gain less than a factor of two, and a
+<li><p>the threads would gain little: the blocks are too little work, or one block
+holds most of it (the parallel projection is no faster than its largest
+block),</p></li>
+<li><p>a block larger than <span class="math notranslate nohighlight">\(512 \times 512\)</span> holds more than half of the work
+(the parallel projection would then gain less than a factor of two, and a
 multithreaded BLAS may do better on that block),</p></li>
 <li><p>the BLAS is a pthreads build of OpenBLAS set to more than one thread, where
 SCS can see that (see below), or</p></li>
 <li><p>the solver is set up inside an active OpenMP parallel region, where the
 threads of the caller are the parallelism.</p></li>
 </ul>
+<p>The number of threads is chosen as if the threads were awake when a projection
+starts. With the GNU OpenMP runtime on Linux they wait actively for a short
+time after a parallel region (<code class="code docutils literal notranslate"><span class="pre">GOMP_SPINCOUNT</span></code>) and then sleep, and
+waking them can cost more than a small projection gains. On one machine, PSD
+blocks that took less than a millisecond in all made an iteration up to 27%
+slower when the rest of the iteration took a millisecond or more. If the PSD
+blocks are a small part of a large problem, a build without
+<code class="code docutils literal notranslate"><span class="pre">USE_PARALLEL_PSD</span></code> suits it better. <code class="code docutils literal notranslate"><span class="pre">OMP_WAIT_POLICY=active</span></code> keeps
+the threads awake between projections, at the price of cores that are busy
+while they wait.</p>
 </section>
 <section id="what-scs-checks-and-where-it-cannot">
 <h3>What SCS checks, and where it cannot<a class="headerlink" href="#what-scs-checks-and-where-it-cannot" title="Link to this heading"></a></h3>
@@ -278,12 +294,17 @@ to one during the projection. This goes through a weak reference to
 and the MKL symbols visible to SCS. It does not work on Windows or macOS,
 with a static MKL, or with an MKL loaded privately by another library.</p></li>
 <li><p>A pthreads build of OpenBLAS with more than one thread: on ELF platforms SCS
-checks for it at setup and then projects the blocks one after another. The
-check needs the functions <code class="code docutils literal notranslate"><span class="pre">openblas_get_parallel</span></code> and
-<code class="code docutils literal notranslate"><span class="pre">openblas_get_num_threads</span></code> visible to SCS: it is off for a static
-<code class="code docutils literal notranslate"><span class="pre">libopenblas.a</span></code> (the weak references can stay unresolved), for an
-OpenBLAS with suffixed symbol names, and for one loaded privately by another
-library (libblastrampoline in Julia).</p></li>
+checks for it at setup and then projects the blocks one after another. With
+<code class="code docutils literal notranslate"><span class="pre">OPENBLAS_NUM_THREADS=1</span></code> the projection is parallel, but the BLAS calls
+of the threads still wait for one lock inside an OpenBLAS that was not built
+with OpenMP. SCS counts that when it chooses the number of threads: small
+blocks mostly stay serial, and blocks of <span class="math notranslate nohighlight">\(10 \times 10\)</span> to
+<span class="math notranslate nohighlight">\(32 \times 32\)</span> get two to six threads. An OpenMP build of OpenBLAS
+does not have this limit. Both checks need the functions
+<code class="code docutils literal notranslate"><span class="pre">openblas_get_parallel</span></code> and <code class="code docutils literal notranslate"><span class="pre">openblas_get_num_threads</span></code> visible to
+SCS: they are off for a static <code class="code docutils literal notranslate"><span class="pre">libopenblas.a</span></code> (the weak references
+can stay unresolved), for an OpenBLAS with suffixed symbol names, and for
+one loaded privately by another library (libblastrampoline in Julia).</p></li>
 <li><p>In all other cases (other platforms, other libraries, another OpenMP
 runtime) SCS does nothing and assumes that the BLAS runs on one thread.</p></li>
 </ul>
