@@ -116,6 +116,21 @@ endif()
 option(USE_OPENMP "Compile with OpenMP support" OFF)
 message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
+# Projects the PSD blocks of a problem in parallel, on up to OMP_NUM_THREADS
+# threads that each call LAPACK for their own blocks. Off by default, because
+# it is only faster when the BLAS runs on one thread inside the threads of SCS:
+# a BLAS on the same OpenMP runtime as SCS does that by itself, and any other
+# multithreaded BLAS has to be set to one thread, or the threads of the two
+# multiply. See "Parallel projection of PSD blocks" on the BLAS and LAPACK page
+# of the documentation, and the comment on the option in src/cones.c.
+option(USE_PARALLEL_PSD
+       "Project PSD blocks in parallel (requires USE_OPENMP and USE_LAPACK)" OFF)
+if(USE_PARALLEL_PSD AND NOT (USE_OPENMP AND USE_LAPACK))
+  message(FATAL_ERROR
+          "USE_PARALLEL_PSD requires USE_OPENMP and USE_LAPACK to be ON")
+endif()
+message(STATUS "Parallel PSD projection is ${USE_PARALLEL_PSD}")
+
 option(USE_CUDSS "Compile with cuDSS support" OFF)
 message(STATUS "cuDSS support is ${USE_CUDSS}")
 
@@ -203,6 +218,10 @@ if(USE_OPENMP)
   find_package(OpenMP)
   if(OpenMP_C_FOUND)
     # Link target used below via target_link_libraries.
+    if(USE_PARALLEL_PSD)
+      # Takes effect in the libraries that are compiled with OpenMP.
+      list(APPEND COMPILER_OPTS USE_PARALLEL_PSD)
+    endif()
   else()
     message(WARNING "OpenMP requested but not found by CMake")
   endif()
@@ -751,10 +770,16 @@ if(BUILD_TESTING)
   function(scs_add_test TEST_NAME LINK_TARGET)
     add_executable(${TEST_NAME} test/run_tests.c)
     target_compile_definitions(${TEST_NAME} PRIVATE ${COMPILER_OPTS})
-    # OpenMP too, so test_psd_parallel checks the parallel projection
     target_link_libraries(${TEST_NAME} PRIVATE ${LINK_TARGET}
-                                               ${SCS_TEST_LINK_LIBRARIES}
-                          $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>)
+                                               ${SCS_TEST_LINK_LIBRARIES})
+    # OpenMP in the test when its library is built with it: the PSD tests then
+    # check the projection under several OpenMP threads (parallel with
+    # USE_PARALLEL_PSD, serial without), and skip for a library without OpenMP
+    # (scsmkl and scscudss do not link it)
+    get_target_property(_scs_test_libs ${LINK_TARGET} LINK_LIBRARIES)
+    if(OpenMP_C_FOUND AND "${_scs_test_libs}" MATCHES "OpenMP::OpenMP_C")
+      target_link_libraries(${TEST_NAME} PRIVATE OpenMP::OpenMP_C)
+    endif()
     target_include_directories(
       ${TEST_NAME}
       PRIVATE
