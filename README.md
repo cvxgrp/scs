@@ -76,6 +76,7 @@ ctest
 | `SFLOAT` | `0` | Use single-precision floats |
 | `USE_SPECTRAL_CONES` | `0` | Enable spectral cone support (requires LAPACK) |
 | `USE_OPENMP` | `0` | Enable OpenMP parallelization |
+| `USE_PARALLEL_PSD` | `0` | Project PSD blocks in parallel (requires OpenMP and LAPACK; see the docs before enabling) |
 
 Example: `make DLONG=1 USE_LAPACK=1`
 

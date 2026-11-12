@@ -12,12 +12,16 @@
 #include <omp.h>
 #endif
 
-/* With OpenMP the PSD blocks are projected in parallel (cones.c). Each block
- * goes through the same LAPACK calls with the same workspace sizes as in the
- * serial projection, so with single-threaded BLAS the result is the same bit
- * for bit, whatever the number of threads. test_psd_parallel projects one
- * vector with 1 and with 4 threads, and test_psd_parallel_solve solves one
- * problem both ways.
+/* A build with USE_PARALLEL_PSD and OpenMP projects the PSD blocks in parallel
+ * (cones.c). Each block goes through the same LAPACK calls with the same
+ * workspace sizes as in the serial projection, so with single-threaded BLAS
+ * the result is the same bit for bit, whatever the number of threads.
+ * test_psd_parallel projects one vector with 1 and with 4 threads, and
+ * test_psd_parallel_solve solves one problem both ways.
+ *
+ * Every other build projects the blocks one after another. With OpenMP and
+ * without USE_PARALLEL_PSD, test_psd_parallel checks that the projection stays
+ * serial under 4 OpenMP threads.
  *
  * The comparisons are bit for bit when the BLAS is an OpenBLAS that the tests
  * can set to one thread. They are to rounding error for the other libraries,
@@ -25,7 +29,12 @@
  * can depend on the alignment of the workspace) or cannot be set to one
  * thread from here (Accelerate). */
 
-#ifdef _OPENMP
+#if defined(USE_PARALLEL_PSD) && defined(_OPENMP)
+/* this build projects the PSD blocks in parallel */
+#define PSD_PAR_BUILD (1)
+#endif
+
+#ifdef PSD_PAR_BUILD
 #if defined(__GNUC__) && defined(__ELF__)
 /* weak references, NULL when the library is not linked (ELF only) */
 #define PSD_PAR_WEAK_BLAS (1)
@@ -51,44 +60,22 @@ int MKL_Get_Max_Threads(void) __attribute__((weak));
 #define PSD_PAR_TOL (1e-9)
 #endif
 
-#define PSD_PAR_ENV "SCS_PSD_NUM_THREADS"
-
 /* the thread settings before a test, and what the test can rely on */
 typedef struct {
   int omp_nt;          /* OpenMP threads */
   int ob_nt;           /* OpenBLAS threads, 0: no OpenBLAS found */
   int mkl_nt;          /* MKL threads, 0: no MKL found */
-  char *env;           /* SCS_PSD_NUM_THREADS, NULL: not set */
   scs_int exact;       /* projections are the same bit for bit */
   scs_int exact_solve; /* and so is everything else in a solve */
 } PsdParState;
 
-/* set SCS_PSD_NUM_THREADS to val, or unset it if val is NULL */
-static void psd_par_setenv(const char *val) {
-#ifdef _WIN32
-  _putenv_s(PSD_PAR_ENV, val ? val : "");
-#else
-  if (val)
-    setenv(PSD_PAR_ENV, val, 1);
-  else
-    unsetenv(PSD_PAR_ENV);
-#endif
-}
-
-/* Save the thread settings in st. Then no SCS_PSD_NUM_THREADS, and BLAS on one
- * thread where the library can be told: a threaded BLAS rounds differently in
- * the serial projection, and a pthreads OpenBLAS with more than one thread
- * keeps the projection serial. */
+/* Save the thread settings in st. Then BLAS on one thread where the library
+ * can be told: a threaded BLAS rounds differently in the serial projection,
+ * and a pthreads OpenBLAS with more than one thread keeps the projection
+ * serial. */
 static void psd_par_enter(PsdParState *st) {
-  const char *env = getenv(PSD_PAR_ENV);
   memset(st, 0, sizeof(PsdParState));
   st->omp_nt = omp_get_max_threads();
-  if (env) {
-    st->env = (char *)scs_malloc(strlen(env) + 1);
-    if (st->env)
-      memcpy(st->env, env, strlen(env) + 1);
-  }
-  psd_par_setenv(SCS_NULL);
 #if PSD_PAR_WEAK_BLAS
   if (openblas_set_num_threads && openblas_get_num_threads) {
     st->ob_nt = openblas_get_num_threads();
@@ -109,8 +96,6 @@ static void psd_par_enter(PsdParState *st) {
 /* back to the settings saved in st */
 static void psd_par_leave(PsdParState *st) {
   omp_set_num_threads(st->omp_nt);
-  psd_par_setenv(st->env);
-  scs_free(st->env);
 #if PSD_PAR_WEAK_BLAS
   if (st->ob_nt > 0)
     openblas_set_num_threads(st->ob_nt);
@@ -151,7 +136,9 @@ static scs_int psd_par_proj(ScsConeWork *c, const scs_float *v, scs_float *out,
   omp_set_num_threads(nt);
   return SCS(proj_dual_cone)(out, c, SCS_NULL, r_y);
 }
+#endif /* PSD_PAR_BUILD */
 
+#ifdef _OPENMP
 /* 40 real blocks (four above LAPACK's blocking crossover, ~32, of different
  * sizes) and 4 complex ones: with workspaces sized per thread instead of the
  * serial sizes, the large blocks would round differently, and this mix shows
@@ -164,12 +151,6 @@ static scs_int psd_par_s[] = {1,  2,  3, 5,  8, 13, 21, 1, 2,  3,  48, 5, 8, 13,
 static scs_int psd_par_cs[] = {2, 3, 6, 10};
 static scs_int psd_par_q[] = {4, 6};
 
-/* the cone of test_psd_parallel_solve: enough work in the PSD blocks for the
- * parallel path, and no block with more than half of it */
-static scs_int psd_par_solve_s[] = {12, 12, 11, 12};
-static scs_int psd_par_solve_cs[] = {6};
-static scs_int psd_par_solve_q[] = {5};
-
 /* number of rows of the cone k */
 static scs_int psd_par_rows(const ScsCone *k) {
   scs_int i, m = k->z + k->l + 3 * k->ep;
@@ -181,6 +162,29 @@ static scs_int psd_par_rows(const ScsCone *k) {
     m += k->cs[i] * k->cs[i];
   return m;
 }
+
+/* the cone of test_psd_parallel: its rows are returned */
+static scs_int psd_par_cone(ScsCone *k) {
+  memset(k, 0, sizeof(ScsCone));
+  k->z = 5;
+  k->l = 10;
+  k->qsize = sizeof(psd_par_q) / sizeof(scs_int);
+  k->q = psd_par_q;
+  k->ssize = sizeof(psd_par_s) / sizeof(scs_int);
+  k->s = psd_par_s;
+  k->cssize = sizeof(psd_par_cs) / sizeof(scs_int);
+  k->cs = psd_par_cs;
+  k->ep = 2;
+  return psd_par_rows(k);
+}
+#endif /* _OPENMP */
+
+#ifdef PSD_PAR_BUILD
+/* the cone of test_psd_parallel_solve: enough work in the PSD blocks for the
+ * parallel path, and no block with more than half of it */
+static scs_int psd_par_solve_s[] = {12, 12, 11, 12};
+static scs_int psd_par_solve_cs[] = {6};
+static scs_int psd_par_solve_q[] = {5};
 
 /* Solve with nt OpenMP threads; psd_nt is set to the number of PSD threads of
  * the workspace. Returns NULL if the problem is solved and the solution is
@@ -205,13 +209,31 @@ static const char *psd_par_solve(ScsData *d, ScsCone *k, ScsSettings *stgs,
             status == SCS_SOLVED && ABS(perr) < 1e-4 && ABS(derr) < 1e-4);
   return verify_solution_correct(d, k, stgs, info, sol, status);
 }
-#endif /* _OPENMP */
+#endif /* PSD_PAR_BUILD */
 
 static const char *test_psd_parallel(void) {
 #ifndef _OPENMP
   return mu_skipped; /* the projection is serial without OpenMP */
+#elif !defined(PSD_PAR_BUILD)
+  /* OpenMP without USE_PARALLEL_PSD: serial, whatever the OpenMP threads */
+  ScsCone k;
+  scs_int m = psd_par_cone(&k), nt = 0;
+  int omp_nt = omp_get_max_threads();
+  ScsConeWork *c;
+  omp_set_num_threads(4);
+  c = SCS(init_cone)(&k, m);
+  if (c)
+    nt = c->psd_nthreads;
+  SCS(finish_cone)(c);
+  omp_set_num_threads(omp_nt);
+  mu_assert("test_psd_parallel: cone setup failed", c);
+  mu_assert("test_psd_parallel: PSD projection in parallel without "
+            "USE_PARALLEL_PSD",
+            nt == 1);
+  scs_printf("psd blocks projected serially: no USE_PARALLEL_PSD\n");
+  return 0;
 #else
-  ScsCone k = {0};
+  ScsCone k;
   ScsConeWork *cs = SCS_NULL, *cp = SCS_NULL, *cc;
   scs_float *v, *vs, *vp, *r_y;
   scs_int i, m;
@@ -224,16 +246,7 @@ static const char *test_psd_parallel(void) {
     return mu_skipped;
   }
 
-  k.z = 5;
-  k.l = 10;
-  k.qsize = sizeof(psd_par_q) / sizeof(scs_int);
-  k.q = psd_par_q;
-  k.ssize = sizeof(psd_par_s) / sizeof(scs_int);
-  k.s = psd_par_s;
-  k.cssize = sizeof(psd_par_cs) / sizeof(scs_int);
-  k.cs = psd_par_cs;
-  k.ep = 2;
-  m = psd_par_rows(&k);
+  m = psd_par_cone(&k);
 
   v = (scs_float *)scs_calloc(m, sizeof(scs_float));
   vs = (scs_float *)scs_calloc(m, sizeof(scs_float));
@@ -274,20 +287,14 @@ static const char *test_psd_parallel(void) {
   }
 
   if (!fail) {
-    /* SCS_PSD_NUM_THREADS, read at setup, is an upper bound */
-    omp_set_num_threads(4);
-    psd_par_setenv("1");
+    /* the OpenMP thread count at setup is the upper bound, also later */
+    omp_set_num_threads(2);
     cc = SCS(init_cone)(&k, m);
-    if (!cc || cc->psd_nthreads != 1)
-      fail = "test_psd_parallel: SCS_PSD_NUM_THREADS=1 is not serial";
-    SCS(finish_cone)(cc);
-    psd_par_setenv("2");
-    cc = SCS(init_cone)(&k, m);
-    if (!fail && (!cc || cc->psd_nthreads != 2))
-      fail = "test_psd_parallel: SCS_PSD_NUM_THREADS=2 is not 2 threads";
-    else if (!fail && (psd_par_proj(cc, v, vp, r_y, m, 4) ||
-                       !psd_par_same(vs, vp, m, st.exact)))
-      fail = "test_psd_parallel: SCS_PSD_NUM_THREADS=2 differs from serial";
+    if (!cc || cc->psd_nthreads != 2)
+      fail = "test_psd_parallel: 2 OpenMP threads at setup are not 2 threads";
+    else if (psd_par_proj(cc, v, vp, r_y, m, 4) ||
+             !psd_par_same(vs, vp, m, st.exact))
+      fail = "test_psd_parallel: a split for 2 threads differs from serial";
     SCS(finish_cone)(cc);
   }
 
@@ -309,8 +316,8 @@ static const char *test_psd_parallel(void) {
  * fewer (n = 50) a solver that left one list of blocks unprojected still
  * reached the optimum, and here it reports an unbounded problem. */
 static const char *test_psd_parallel_solve(void) {
-#ifndef _OPENMP
-  return mu_skipped; /* the projection is serial without OpenMP */
+#ifndef PSD_PAR_BUILD
+  return mu_skipped; /* the projection is serial in this build */
 #else
   ScsCone k = {0};
   ScsData *d;

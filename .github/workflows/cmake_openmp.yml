@@ -27,4 +27,14 @@ jobs:
           cd ../docs/src/examples/
           gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsdir
           ./qp.out
+      - name: The same with the parallel PSD projection
+        # The grep fails the step if the PSD thread tests did not run the
+        # parallel projection.
+        run: |
+          mkdir build_psd
+          cd build_psd
+          cmake -DUSE_OPENMP=ON -DUSE_PARALLEL_PSD=ON -DBUILD_TESTING=ON ..
+          make
+          ctest -V > ctest.log 2>&1 || { cat ctest.log; exit 1; }
+          grep "psd blocks projected by" ctest.log
 

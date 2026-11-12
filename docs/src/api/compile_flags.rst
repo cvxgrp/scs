@@ -59,7 +59,11 @@ executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG` flag to True.
      - True/False
      - 1
    * - :code:`USE_OPENMP`
-     - Use openmp to parallelize some computation (matrix-vector products, exponential cones, and the projection onto many :ref:`PSD blocks <blas_lapack_openmp>`). The OpenMP thread count (:code:`OMP_NUM_THREADS`) is the number of threads, and :code:`SCS_PSD_NUM_THREADS` is an upper bound on those of the PSD projection (1: serial)
+     - Use openmp to parallelize some computation (matrix-vector products and the projection onto exponential cones). The OpenMP thread count (:code:`OMP_NUM_THREADS`) is the number of threads
+     - True/False
+     - 0
+   * - :code:`USE_PARALLEL_PSD`
+     - Project the :ref:`PSD blocks <blas_lapack_openmp>` of a problem in parallel. Requires :code:`USE_OPENMP=1` and :code:`USE_LAPACK=1`. Only faster when the BLAS runs on one thread inside the threads of SCS, so it is off by default
      - True/False
      - 0
    * - :code:`USE_SPECTRAL_CONES`

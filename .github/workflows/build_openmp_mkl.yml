@@ -39,29 +39,40 @@ jobs:
 
     - name: Build SCS MKL with OpenMP and test
       # The makefile links libiomp5 ahead of libgomp, so SCS and MKL share the
-      # Intel OpenMP runtime here.
+      # Intel OpenMP runtime here. Without USE_PARALLEL_PSD the PSD blocks are
+      # projected one after another; with it, in parallel.
       run: |
+        set -o pipefail
         make USE_OPENMP=1 mkl
-        out/run_tests_mkl
+        out/run_tests_mkl | tee out/mkl_serial.log
+        grep "psd blocks projected serially" out/mkl_serial.log
+        cp out/libscsmkl.a out/libscsmkl_serial.a
+        make clean
+        make USE_OPENMP=1 USE_PARALLEL_PSD=1 mkl
+        out/run_tests_mkl | tee out/mkl_parallel.log
+        grep "psd blocks projected by" out/mkl_parallel.log
 
     - name: Build SCS as wrappers load it, with and without the MKL guard
-      # A shared library with libgomp and without libiomp5, as the Julia package
-      # is linked. The second one is the same code without the guard of the PSD
-      # projection: its weak reference to MKL_Set_Num_Threads_Local is renamed
-      # to a symbol that does not exist.
+      # Shared libraries with libgomp and without libiomp5, as the Julia package
+      # is linked: the build without USE_PARALLEL_PSD, the build with it, and
+      # the latter without the guard of the PSD projection (its weak reference
+      # to MKL_Set_Num_Threads_Local is renamed to a symbol that does not
+      # exist).
       run: |
+        # link_shared <static library> <shared library>
         link_shared() {
-          gcc -shared -fopenmp -o "$1" \
-            -Wl,--whole-archive out/libscsmkl.a -Wl,--no-whole-archive \
+          gcc -shared -fopenmp -o "$2" \
+            -Wl,--whole-archive "$1" -Wl,--no-whole-archive \
             -L"$MKLROOT/lib" -L"$MKLROOT/lib/intel64" \
             -Wl,--no-as-needed -lmkl_rt -lm
         }
-        link_shared out/libscs_guard.so
+        link_shared out/libscsmkl_serial.a out/libscs_serial.so
+        link_shared out/libscsmkl.a out/libscs_guard.so
         make clean
-        make USE_OPENMP=1 \
+        make USE_OPENMP=1 USE_PARALLEL_PSD=1 \
           OPT="-O3 -march=native -fno-math-errno -DMKL_Set_Num_Threads_Local=scs_no_mkl_guard_" \
           out/libscsmkl.a
-        link_shared out/libscs_noguard.so
+        link_shared out/libscsmkl.a out/libscs_noguard.so
         ldd out/libscs_guard.so || true
         gcc -O1 -Iinclude test/mkl_psd_guard.c -o out/mkl_psd_guard -ldl -lm
 
@@ -160,11 +171,11 @@ jobs:
           exit 1
         fi
         export MKL_PSD_GUARD_MKL_FIRST
-        quiet iomp_serial env SCS_PSD_NUM_THREADS=1 out/mkl_psd_guard out/libscs_guard.so 2
+        quiet iomp_serial out/mkl_psd_guard out/libscs_serial.so 2
         quiet iomp_guard env MKL_VERBOSE=1 out/mkl_psd_guard out/libscs_guard.so 2
         quiet iomp_noguard env MKL_VERBOSE=1 out/mkl_psd_guard out/libscs_noguard.so 2
         if grep -q "psd cones projected in parallel" out/iomp_serial.log; then
-          echo "::error::SCS_PSD_NUM_THREADS=1 did not keep the projection serial"
+          echo "::error::the build without USE_PARALLEL_PSD projected the PSD blocks in parallel"
           exit 1
         fi
         parallel iomp_guard iomp_noguard

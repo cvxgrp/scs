@@ -16,9 +16,13 @@
 #include <float.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef _OPENMP
+/* The PSD blocks are projected in parallel only in a build that asks for it
+ * (USE_PARALLEL_PSD) and that has OpenMP and LAPACK. Every other build, with
+ * OpenMP or not, projects them one after another. */
+#if defined(USE_PARALLEL_PSD) && defined(_OPENMP) && defined(USE_LAPACK)
+#define PSD_PARALLEL (1)
 #include <omp.h>
-#include <stdlib.h> /* qsort, getenv, strtol */
+#include <stdlib.h> /* qsort */
 #endif
 
 /*
@@ -880,7 +884,10 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
 
 /*
  * The real and complex PSD blocks are projected independently of each other,
- * so with OpenMP they are split over threads. The split is fixed at setup:
+ * so a build with USE_PARALLEL_PSD splits them over OpenMP threads. It is not
+ * the default because it pays only when the BLAS stays on one thread inside
+ * the threads of SCS, which SCS can neither ensure nor check for every BLAS
+ * (see below): the build has to know its BLAS. The split is fixed at setup:
  * blocks in order of decreasing cost (n^3, 4 n^3 for complex blocks) go to the
  * least loaded thread (LPT scheduling). Thread t projects its blocks (list t)
  * with workspace c->psd_tw[t], sized for its own largest block; psd_tw[0] is
@@ -895,20 +902,21 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * threads.
  *
  * The number of threads is the OpenMP thread count at setup, at most the
- * number of blocks with n > 1, and at most SCS_PSD_NUM_THREADS if that
- * environment variable is set to a positive number when the workspace is set
- * up (1 keeps the projection serial). A projection uses fewer threads when
- * the OpenMP thread count has been lowered since: a smaller team still
- * projects every list, each with its own workspace. With one thread there is
- * no parallel region and the blocks are projected in order, so a multithreaded
+ * number of blocks with n > 1. A projection uses fewer threads when the
+ * OpenMP thread count has been lowered since: a smaller team still projects
+ * every list, each with its own workspace. With one thread there is no
+ * parallel region and the blocks are projected in order, so a multithreaded
  * BLAS runs as it does without OpenMP.
  *
  * With more threads, each calls LAPACK and BLAS inside an OpenMP parallel
- * region. OpenMP builds of OpenBLAS and BLIS run single threaded there, and so
- * does MKL on the OpenMP runtime of SCS. MKL on another runtime (libiomp5 under
- * a GNU-compiled SCS) would start its own threads in each of ours, so each
- * thread sets MKL's thread-local thread count to one for the projection. This
- * goes through a weak reference: it needs MKL's symbols visible to SCS.
+ * region. A BLAS on the OpenMP runtime of SCS runs single threaded there
+ * (OpenMP builds of OpenBLAS and BLIS, MKL on that runtime): OpenMP does not
+ * nest parallel regions by default. A BLAS on another OpenMP runtime cannot
+ * see the region and starts its own threads in each of ours (measured with an
+ * OpenBLAS on libomp under a GNU-compiled SCS: 16 threads for 4, at half the
+ * speed). For MKL (libiomp5 under a GNU-compiled SCS) each thread therefore
+ * sets MKL's thread-local thread count to one for the projection. This goes
+ * through a weak reference: it needs MKL's symbols visible to SCS.
  * A pthreads OpenBLAS does not stay single threaded either: each OpenMP thread
  * would start its own BLAS threads and oversubscribe the cores (measured up to
  * 3.6x slower than serial), and OpenBLAS has no thread-local way to stop it.
@@ -916,15 +924,16 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * the blocks stay serial (OPENBLAS_NUM_THREADS=1 enables the parallel
  * projection). This check needs the OpenBLAS symbols too: it is off for a
  * static OpenBLAS, one with suffixed symbols, and one loaded privately by
- * another library (libblastrampoline in Julia). SCS_PSD_NUM_THREADS=1 is the
- * switch for those.
+ * another library (libblastrampoline in Julia). Neither check exists on
+ * Mach-O or Windows, and none for other libraries: there the BLAS has to be
+ * set to one thread, or the build left without USE_PARALLEL_PSD.
  * The threads are also not used when the total work is small, when one block
  * holds more than half of it (the parallel loop then gains less than 2x, while
  * that block alone may run faster with multithreaded BLAS), or when the
  * workspace is set up inside an active parallel region (the caller's threads
  * are the parallelism then).
  */
-#if defined(_OPENMP) && defined(USE_LAPACK)
+#ifdef PSD_PARALLEL
 /* Size of PSD block b: real block b if b < ssize, else complex b - ssize */
 static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
   return b < k->ssize ? k->s[b] : k->cs[b - k->ssize];
@@ -1045,12 +1054,9 @@ out:
 
 /* Number of threads for the PSD blocks (see above) */
 static scs_int psd_num_threads(const ScsCone *k) {
-#if defined(_OPENMP) && defined(USE_LAPACK)
+#ifdef PSD_PARALLEL
   scs_int b, nbig = 0, nt = omp_get_max_threads();
   scs_float total = 0., cmax = 0.;
-  /* upper bound set by the user; unset, 0 or not a number: no bound */
-  const char *s = getenv("SCS_PSD_NUM_THREADS");
-  long cap = s ? strtol(s, SCS_NULL, 10) : 0;
   for (b = 0; b < k->ssize + k->cssize; ++b) {
     scs_float cost = psd_block_cost(k, b);
     total += cost;
@@ -1058,8 +1064,6 @@ static scs_int psd_num_threads(const ScsCone *k) {
     nbig += psd_block_n(k, b) > 1;
   }
   nt = MIN(nt, nbig);
-  if (cap > 0 && cap < (long)nt)
-    nt = (scs_int)cap;
   if (nt < 2 || total < PSD_PAR_MIN_COST || 2 * cmax > total ||
       omp_in_parallel() || blas_threads_outside_openmp())
     return 1;
@@ -1087,7 +1091,7 @@ static scs_int set_up_psd_schedule(ScsConeWork *c, const ScsCone *k) {
     c->psd_blk[b] = b;
   }
   c->psd_tptr[1] = nblk;
-#if defined(_OPENMP) && defined(USE_LAPACK)
+#ifdef PSD_PARALLEL
   if (nt > 1)
     return assign_psd_blocks(c, k);
 #endif
@@ -1920,7 +1924,7 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
  * part of r_y or NULL. */
 static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
                               const scs_float *rho) {
-#if defined(_OPENMP) && defined(USE_LAPACK)
+#ifdef PSD_PARALLEL
   /* the threads of the split, or fewer if the OpenMP thread count has been
    * lowered since setup */
   int nt = omp_get_max_threads();

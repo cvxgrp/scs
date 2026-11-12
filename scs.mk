@@ -168,11 +168,11 @@ OMPROOT ?= $(MKLROOT)
 MKLFLAGS = -L$(MKLROOT)/lib -L$(MKLROOT)/lib/intel64 -L$(OMPROOT)/lib -Wl,--no-as-needed -lmkl_rt -liomp5 -lpthread -ldl
 
 ############ OPENMP: ############
-# set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies, and
-# projections onto exponential cones and onto many PSD blocks):
+# set USE_OPENMP = 1 to allow openmp (multi-threaded matrix multiplies and
+# projections onto exponential cones):
 # set the number of threads to, for example, 4 by entering the command:
 # export OMP_NUM_THREADS=4
-# SCS_PSD_NUM_THREADS bounds the threads of the PSD projection (1: serial)
+# The PSD blocks are projected in parallel only with USE_PARALLEL_PSD (below)
 
 USE_OPENMP = 0
 ifneq ($(USE_OPENMP), 0)
@@ -206,6 +206,24 @@ ifneq ($(USE_LAPACK), 0)
   ifneq ($(BLASSUFFIX), "_")
   CUSTOM_FLAGS += -DBLASSUFFIX=$(BLASSUFFIX) # blas suffix (underscore usually)
   endif
+endif
+
+############ PARALLEL PSD PROJECTION ############
+# set USE_PARALLEL_PSD = 1, with USE_OPENMP = 1, to project the PSD blocks of
+# a problem in parallel, on up to OMP_NUM_THREADS threads. Off by default,
+# because it is only faster when the BLAS runs on one thread inside the
+# threads of SCS: a BLAS on the same OpenMP runtime as SCS does, and so does
+# one that is set to one thread. Other setups can get slower. See the BLAS and
+# LAPACK page of the documentation.
+USE_PARALLEL_PSD = 0
+ifneq ($(USE_PARALLEL_PSD), 0)
+  ifeq ($(USE_OPENMP), 0)
+    $(error USE_PARALLEL_PSD requires USE_OPENMP to be enabled)
+  endif
+  ifeq ($(USE_LAPACK), 0)
+    $(error USE_PARALLEL_PSD requires USE_LAPACK to be enabled)
+  endif
+  CUSTOM_FLAGS += -DUSE_PARALLEL_PSD
 endif
 
 ############ SPECTRAL CONES ############

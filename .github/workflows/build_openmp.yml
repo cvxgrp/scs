@@ -23,8 +23,24 @@ jobs:
       run: sudo apt-get install libopenblas-dev liblapack-dev
 
     - name: Build SCS with OpenMP and test
+      # Without USE_PARALLEL_PSD the PSD blocks are projected one after
+      # another: the PSD thread test checks that and says so.
       run: |
+        set -o pipefail
         make USE_OPENMP=1 test
-        out/run_tests_direct
+        out/run_tests_direct | tee out/direct.log
         out/run_tests_indirect
         out/run_tests_dense
+        grep "psd blocks projected serially" out/direct.log
+
+    - name: Build SCS with the parallel PSD projection and test
+      # The grep fails the step if the PSD thread tests did not run the
+      # parallel projection (a flag that did not reach the compiler, say).
+      run: |
+        set -o pipefail
+        make purge
+        make USE_OPENMP=1 USE_PARALLEL_PSD=1 test
+        out/run_tests_direct | tee out/direct.log
+        out/run_tests_indirect
+        out/run_tests_dense
+        grep "psd blocks projected by" out/direct.log
