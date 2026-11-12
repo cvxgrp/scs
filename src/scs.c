@@ -1301,8 +1301,10 @@ static void set_den_floor(ScsWork *w) {
 
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int i;
-  scs_float factor, new_scale, relative_res_pri, relative_res_dual;
-  scs_float denom_pri, denom_dual;
+  scs_float factor, new_scale, dist_pri, dist_dual;
+  scs_float terms_pri, terms_dual, abs_pri, abs_dual, sat_pri, sat_dual, wt;
+  const scs_float eps_abs = w->stgs->eps_abs;
+  const scs_float eps_rel = w->stgs->eps_rel;
 
   ScsResiduals *r = w->r_orig;
 
@@ -1317,20 +1319,44 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   if (w->scale_mults) {
     set_den_floor(w);
   }
+  /* The scale is moved toward whichever residual is further behind, so each
+   * sample is the log of a primal-to-dual ratio. Two ratios are blended.
+   *
+   * (1) Distance to stopping: each residual over its own threshold in
+   * has_converged, with tau multiplied through. At or below one, that side
+   * would pass. Balancing these evens out how far each side has to go. */
   /* ||Ax + s - b * tau|| */
-  denom_pri = MAX(nm_ax, nm_s);
-  denom_pri = MAX(denom_pri, w->nm_b_orig * r->tau);
-  relative_res_pri = SAFEDIV_POS(nm_ax_s_btau, denom_pri);
+  terms_pri = MAX(MAX(nm_ax, nm_s), w->nm_b_orig * r->tau);
+  dist_pri = SAFEDIV_POS(nm_ax_s_btau, eps_abs * r->tau + eps_rel * terms_pri);
   /* ||Px + A'y + c * tau|| */
-  denom_dual = MAX(nm_px, nm_aty);
-  denom_dual = MAX(denom_dual, w->nm_c_orig * r->tau);
-  relative_res_dual = SAFEDIV_POS(nm_px_aty_ctau, denom_dual);
+  terms_dual = MAX(MAX(nm_px, nm_aty), w->nm_c_orig * r->tau);
+  dist_dual =
+      SAFEDIV_POS(nm_px_aty_ctau, eps_abs * r->tau + eps_rel * terms_dual);
+  /* clamp to avoid log(0) which would NaN-poison sum_log_scale_factor */
+  dist_pri = MAX(dist_pri, _DIV_EPS_TOL);
+  dist_dual = MAX(dist_dual, _DIV_EPS_TOL);
+
+  /* (2) The residuals themselves, in the space the iteration runs in
+   * (equilibrated when normalize is on), with nothing divided out. */
+  abs_pri = MAX(SCALE_NORM(w->r_normalized->ax_s_btau, w->d->m), _DIV_EPS_TOL);
+  abs_dual =
+      MAX(SCALE_NORM(w->r_normalized->px_aty_ctau, w->d->n), _DIV_EPS_TOL);
+
+  /* A residual as large as the terms it is measured against has no correct
+   * digits, and its distance then sits at a ceiling of about 1 / eps_rel
+   * whatever the iterate does. With c = 0 and P = 0 the dual is there on
+   * every iteration, because the residual A'y is the only term: (1) alone
+   * then reads the dual as permanently behind and walks the scale to its
+   * floor. sat is 1 at that ceiling and 0 when the residual is negligible
+   * against its terms; (1) gets weight wt, the trust in both sides, and (2)
+   * gets the rest. */
+  sat_pri = MIN(1., eps_rel * dist_pri);
+  sat_dual = MIN(1., eps_rel * dist_dual);
+  wt = (1. - sat_pri) * (1. - sat_dual);
 
   /* higher scale makes res_pri go down faster, so increase if res_pri larger */
-  /* clamp to avoid log(0) which would NaN-poison sum_log_scale_factor */
-  relative_res_pri = MAX(relative_res_pri, _DIV_EPS_TOL);
-  relative_res_dual = MAX(relative_res_dual, _DIV_EPS_TOL);
-  w->sum_log_scale_factor += log(relative_res_pri) - log(relative_res_dual);
+  w->sum_log_scale_factor += wt * (log(dist_pri) - log(dist_dual)) +
+                             (1. - wt) * (log(abs_pri) - log(abs_dual));
   w->n_log_scale_factor++;
 
   /* geometric mean */
