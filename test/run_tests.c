@@ -10,6 +10,7 @@
 #include "problems/dense_qp.h"
 #include "problems/hs21_tiny_qp.h"
 #include "problems/infeasible_lp.h"
+#include "problems/issue_499.h"
 #include "problems/infeasible_socp.h"
 #include "problems/infeasible_tiny_qp.h"
 #include "problems/lp_update.h"
@@ -44,7 +45,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 75
+#define MU_TOTAL_TESTS 76
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -152,6 +153,7 @@ static void all_tests(void) {
   mu_run_test(mpc_bug);
   mu_run_test(issue_140);
   mu_run_test(issue_220);
+  mu_run_test(issue_499);
   mu_run_test(test_exp_cone);
   mu_run_test(test_dual_exp_cone);
   mu_run_test(test_power_cone);
