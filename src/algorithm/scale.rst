@@ -144,25 +144,57 @@ than the dual and decreased if the opposite is true.
 
 Specifically, at iteration :math:`k` consider the case where :math:`l`
 iterations have elapsed since the last update of the :code:`scale` parameter,
-and denote by :math:`(x, y, \tau) = u^k` and :math:`(0, s, \kappa) = v^k`, and
-the *relative* residuals as
+and denote by :math:`(x, y, \tau) = u^k` and :math:`(0, s, \kappa) = v^k`.
+Two measures of the imbalance between the primal and the dual residual are
+blended. The first is how far each residual is from its own :ref:`stopping
+threshold <termination>`, with :math:`\tau` multiplied through:
 
 .. math::
-   \hat r^k_p = \frac{\|Ax + s - b \tau\|}{\max(\|Ax\|, \|s\|, \|b \tau \|)}
+   d^k_p = \frac{\|Ax + s - b \tau\|}{\epsilon_\mathrm{abs} \tau + \epsilon_\mathrm{rel} \max(\|Ax\|, \|s\|, \|b \tau \|)}
 
 .. math::
-   \hat r^k_d = \frac{\|Px + A^\top y + c \tau\|}{\max(\|Px\|, \|A^\top y\|, \|c \tau \|)}
+   d^k_d = \frac{\|Px + A^\top y + c \tau\|}{\epsilon_\mathrm{abs} \tau + \epsilon_\mathrm{rel} \max(\|Px\|, \|A^\top y\|, \|c \tau \|)}
 
-where by default we use the :math:`\ell_\infty` norm for these quantities,
-but can be changed using the :code:`SCALE_NORM` constant in
-:code:`include/glbopts.h`.
+so a value of one or less means that residual would pass the test. By default
+we use the :math:`\ell_\infty` norm for these quantities, which can be changed
+using the :code:`SCALE_NORM` constant in :code:`include/glbopts.h`. The second
+measure is the residuals themselves, :math:`\tilde r^k_p` and
+:math:`\tilde r^k_d`, in the space the iteration runs in (that is, after
+:ref:`equilibration <equilibration>` when :code:`normalize` is on), with
+nothing divided out.
+
+Balancing the distances :math:`d^k_p` and :math:`d^k_d` evens out how far each
+side still has to go, which is the right target whenever both can be trusted.
+A distance cannot be trusted when the residual is as large as the terms it is
+measured against: such a residual has no correct digits, and its distance then
+sits at a ceiling of about :math:`1 / \epsilon_\mathrm{rel}` whatever the
+iterate does. The clearest case is a feasibility problem, :math:`c = 0` and
+:math:`P = 0`, where the dual residual is :math:`A^\top y` and is therefore
+the only term it is measured against. Its distance is at the ceiling on every
+iteration, so balancing the distances alone would read the dual as permanently
+behind and drive the :code:`scale` down to its lower limit. To handle this,
+define the saturation of each side and the resulting weight
+
+.. math::
+   \sigma^k_p = \min(1, \epsilon_\mathrm{rel} d^k_p), \quad
+   \sigma^k_d = \min(1, \epsilon_\mathrm{rel} d^k_d), \quad
+   w^k = (1 - \sigma^k_p)(1 - \sigma^k_d),
+
+so that :math:`w^k` is close to one when both residuals are small against
+their terms and zero when either is at its ceiling. The sample taken at
+iteration :math:`k` is
+
+.. math::
+   \rho^k = \left(\frac{d^k_p}{d^k_d}\right)^{w^k}
+            \left(\frac{\|\tilde r^k_p\|}{\|\tilde r^k_d\|}\right)^{1 - w^k}.
+
 Now consider
 
 .. math::
-  \beta = \left(\prod_{i=0}^{l-1} \frac{\hat r^{k-i}_p}{\hat r^{k-i}_d}\right)^{1/l}
+  \beta = \left(\prod_{i=0}^{l-1} \rho^{k-i}\right)^{1/l}
 
-ie, :math:`\beta` corresponds to the geometric mean of the ratio of the relative
-residuals across the last :math:`l` iterations. If this number is larger than a
+ie, :math:`\beta` corresponds to the geometric mean of the samples
+across the last :math:`l` iterations. If this number is larger than a
 constant (eg, 3) or smaller than another constant (eg, 1/3) *and* if sufficient
 iterations have passed since the last update (eg, 100, as determined by
 :code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale` parameter is
