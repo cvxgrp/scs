@@ -168,41 +168,46 @@ executing, e.g., <code class="code docutils literal notranslate"><span class="pr
 <td><p>1</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_OPENMP</span></code></p></td>
-<td><p>Use openmp to parallelize some computation (matrix-vector products, exponential cones, and the projection onto many <a class="reference internal" href="../blas_lapack/index.html#blas-lapack-openmp"><span class="std std-ref">PSD blocks</span></a>); the thread count is <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code></p></td>
+<td><p>Use openmp to parallelize some computation (matrix-vector products and the projection onto exponential cones). The OpenMP thread count (<code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>) is the number of threads</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_PARALLEL_PSD</span></code></p></td>
+<td><p>Project the <a class="reference internal" href="../blas_lapack/index.html#blas-lapack-openmp"><span class="std std-ref">PSD blocks</span></a> of a problem in parallel. Requires <code class="code docutils literal notranslate"><span class="pre">USE_OPENMP=1</span></code> and <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>. Only faster when the BLAS runs on one thread inside the threads of SCS, so it is off by default</p></td>
+<td><p>True/False</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES</span></code></p></td>
 <td><p>Enable spectral cone support (log-determinant, nuclear norm, <span class="math notranslate nohighlight">\(\ell_1\)</span> norm, sum-of-largest-eigenvalues). Requires <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>.</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code></p></td>
 <td><p>BLAS/LAPACK uses 64-bit integers (ILP64)</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code></p></td>
 <td><p>The BLAS library has no function name suffix</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code></p></td>
 <td><p>The BLAS library uses this suffix</p></td>
 <td><p>String</p></td>
 <td><p>‘_’</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code></p></td>
 <td><p>If compiling for use in MATLAB</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code></p></td>
 <td><p>If compiling for use in python</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USING_R</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USING_R</span></code></p></td>
 <td><p>If compiling for use in R</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>

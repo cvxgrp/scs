@@ -55,7 +55,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">BLAS and LAPACK</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#openmp-and-blas-threads">OpenMP and BLAS threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parallel-projection-of-psd-blocks">Parallel projection of PSD blocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#when-it-helps">When it helps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-turn-it-on">How to turn it on</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-the-blas">Setting up the BLAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checking-that-it-works">Checking that it works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-scs-uses-the-threads">How SCS uses the threads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-scs-checks-and-where-it-cannot">What SCS checks, and where it cannot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thread-safety-memory-and-reproducibility">Thread safety, memory and reproducibility</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
@@ -116,30 +125,192 @@ the speed of the operations in practice. If the speed of the SDP projection
 or the acceleration step is a bottleneck you can experiment with faster
 libraries like <a class="reference external" href="https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html">MKL</a>
 or <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>.</p>
-<section id="openmp-and-blas-threads">
-<span id="blas-lapack-openmp"></span><h2>OpenMP and BLAS threads<a class="headerlink" href="#openmp-and-blas-threads" title="Link to this heading"></a></h2>
-<p>When SCS is compiled with <code class="code docutils literal notranslate"><span class="pre">USE_OPENMP=1</span></code> and a problem has several real
-or complex PSD blocks, the blocks are projected in parallel over
-<code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> threads (read when the solver is set up); with
-single-threaded BLAS the result is the same, bit for bit, as the serial
-projection. Each thread calls LAPACK itself, so BLAS should not start threads of
-its own: set <code class="code docutils literal notranslate"><span class="pre">OPENBLAS_NUM_THREADS=1</span></code> for a pthreads build of OpenBLAS
-(on Linux and other ELF platforms SCS detects one and then projects serially;
-elsewhere, and for other BLAS libraries, it assumes BLAS is single threaded).
-The check needs OpenBLAS linked dynamically: with a static <code class="code docutils literal notranslate"><span class="pre">libopenblas.a</span></code>
-the weak references can stay unresolved, and the check is off.</p>
-<p>Several threads then call BLAS and LAPACK at once, so the library must be safe
-to call that way. A single-threaded OpenBLAS (built with <code class="code docutils literal notranslate"><span class="pre">USE_THREAD=0</span></code>)
-is safe only if it was built with <code class="code docutils literal notranslate"><span class="pre">USE_LOCKING=1</span></code> (see OpenBLAS’s
-<code class="code docutils literal notranslate"><span class="pre">Makefile.rule</span></code>); SCS cannot detect this at run time.</p>
-<p>The blocks are projected serially, with no extra memory, when the total work is
-small or one block holds more than half of it. Otherwise each extra thread has
-its own eigendecomposition workspace: matrix buffers for the largest block that
-thread projects, plus LAPACK work arrays of the serial sizes. The extra memory is
-therefore at most <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span> <span class="pre">-</span> <span class="pre">1</span></code> times the PSD workspace of the
-serial projection, which is about <span class="math notranslate nohighlight">\(2n^2\)</span> floats for the largest real block
-of size <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(2n^2\)</span> complex numbers for the largest complex block,
-plus LAPACK work arrays linear in <span class="math notranslate nohighlight">\(n\)</span>.</p>
+<section id="parallel-projection-of-psd-blocks">
+<span id="blas-lapack-openmp"></span><h2>Parallel projection of PSD blocks<a class="headerlink" href="#parallel-projection-of-psd-blocks" title="Link to this heading"></a></h2>
+<p>A problem with several positive semidefinite (PSD) blocks spends much of its
+time projecting them, and SCS can project several blocks at the same time on
+different threads. It does so <strong>only in a build that asks for it</strong>, with the
+build option <code class="code docutils literal notranslate"><span class="pre">USE_PARALLEL_PSD</span></code>. Without the option the blocks are
+projected one after another. That is the default, and it is how the Python
+wheels and the Julia packages are built.</p>
+<p>The option is off by default because it is faster only with a BLAS that is set
+up for it, and slower with one that is not. This section explains when it
+helps, how to turn it on, and how to set up the BLAS.</p>
+<section id="when-it-helps">
+<h3>When it helps<a class="headerlink" href="#when-it-helps" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>It helps with <strong>several PSD blocks of comparable size</strong>, many small ones or a
+few large ones. On 4 threads, 4 to 16 blocks of size 256 to 1024 were
+projected about 3 times faster, and a thousand blocks of size 10 to 32 about
+3.5 times faster.</p></li>
+<li><p>It does not help with <strong>one block, or one block much larger than the rest</strong>:
+a parallel projection is no faster than its largest block. SCS recognizes
+such a problem and projects its blocks one after another, as it does without
+the option.</p></li>
+<li><p>It speeds up the projection, not the rest of a solve. If most of the time
+goes into the linear system, the solve as a whole gains little.</p></li>
+</ul>
+</section>
+<section id="how-to-turn-it-on">
+<h3>How to turn it on<a class="headerlink" href="#how-to-turn-it-on" title="Link to this heading"></a></h3>
+<p>Build SCS with OpenMP and with the option:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span><span class="nv">USE_OPENMP</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">USE_PARALLEL_PSD</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>or, with CMake,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DUSE_OPENMP<span class="o">=</span>ON<span class="w"> </span>-DUSE_PARALLEL_PSD<span class="o">=</span>ON<span class="w"> </span>..
+</pre></div>
+</div>
+<p>Then set the OpenMP thread count to the number of cores to use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">OMP_NUM_THREADS</span><span class="o">=</span><span class="m">4</span>
+</pre></div>
+</div>
+<p>On a machine with fast and slow cores, count only the fast ones. Every thread
+gets an equal share of the blocks, so a thread on a slow core holds the others
+up.</p>
+</section>
+<section id="setting-up-the-blas">
+<h3>Setting up the BLAS<a class="headerlink" href="#setting-up-the-blas" title="Link to this heading"></a></h3>
+<p>Threads can work on the projection at two levels. SCS can project several
+blocks at once, and the BLAS can use several threads inside the
+eigendecomposition of a single block. <strong>Only one of the two should be active at
+a time.</strong> With the option on, every thread of SCS calls the BLAS, so the BLAS
+has to run on one thread there. If it does not, each thread of SCS starts the
+threads of the BLAS as well. There are then more threads than cores, and the
+projection is slower than it should be: in one measurement the process had 16
+threads where 4 were asked for, and ran at half the speed.</p>
+<p>Whether the BLAS stays on one thread depends on where it gets its threads from:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 34.0%" />
+<col style="width: 33.0%" />
+<col style="width: 33.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Your BLAS</p></th>
+<th class="head"><p>Inside the threads of SCS</p></th>
+<th class="head"><p>What to do</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Built with OpenMP, on the same OpenMP runtime as SCS: an OpenMP build of
+OpenBLAS or BLIS, NVPL, or MKL on the threading layer that matches the
+compiler of SCS</p></td>
+<td><p>Runs on one thread by itself, because OpenMP does not nest parallel
+regions by default</p></td>
+<td><p>Nothing. <strong>This is the setup to use</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>MKL on Intel’s OpenMP runtime (its default), with SCS compiled by GCC</p></td>
+<td><p>Would start its own threads. On Linux, with MKL as a shared library,
+SCS holds it to one thread during the projection</p></td>
+<td><p>Nothing on Linux. Elsewhere set <code class="code docutils literal notranslate"><span class="pre">MKL_THREADING_LAYER=GNU</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">MKL_NUM_THREADS=1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>A pthreads build of OpenBLAS, which has a thread pool of its own. The
+default <code class="code docutils literal notranslate"><span class="pre">libopenblas-dev</span></code> of Debian and Ubuntu is one</p></td>
+<td><p>Keeps its threads. On Linux SCS sees that and projects the blocks one
+after another instead</p></td>
+<td><p>Use an OpenMP build of OpenBLAS if you can. Otherwise set
+<code class="code docutils literal notranslate"><span class="pre">OPENBLAS_NUM_THREADS=1</span></code>: the projection is then parallel, but
+this OpenBLAS takes a lock in its calls and gains less</p></td>
+</tr>
+<tr class="row-odd"><td><p>Built with OpenMP, on a different OpenMP runtime from SCS (the BLAS on
+LLVM’s runtime and SCS compiled by GCC, say)</p></td>
+<td><p>Cannot see the threads of SCS and starts its own in each of them</p></td>
+<td><p>Build SCS and the BLAS with the same compiler family. No variable puts
+only the BLAS on one thread: <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> is read by both</p></td>
+</tr>
+<tr class="row-even"><td><p>Accelerate (macOS)</p></td>
+<td><p>Keeps a pool of threads of its own, which stays almost idle</p></td>
+<td><p>Nothing. At its default settings the parallel projection was 2.3 to 3.3
+times faster than the serial one on 4 threads</p></td>
+</tr>
+</tbody>
+</table>
+<p>Putting a BLAS on one thread with an environment variable holds for the whole
+process: that BLAS then runs on one thread wherever else it is used, in SCS
+(the dense linear solver) and in your own code. A BLAS on the OpenMP runtime of
+SCS has no such cost. The OpenMP thread count is then one budget, which SCS
+uses during a parallel projection and the BLAS uses everywhere else.</p>
+</section>
+<section id="checking-that-it-works">
+<h3>Checking that it works<a class="headerlink" href="#checking-that-it-works" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>With <code class="code docutils literal notranslate"><span class="pre">verbose</span></code> set, the header of a solve says how many threads project
+the PSD blocks, for example <code class="docutils literal notranslate"><span class="pre">psd</span> <span class="pre">cones</span> <span class="pre">projected</span> <span class="pre">in</span> <span class="pre">parallel</span> <span class="pre">by</span> <span class="pre">4</span> <span class="pre">threads</span></code>.
+Without that line the blocks are projected one after another; the next part
+lists the reasons.</p></li>
+<li><p>Count the threads of the process during a solve (<code class="docutils literal notranslate"><span class="pre">top</span> <span class="pre">-H</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">ps</span> <span class="pre">-o</span> <span class="pre">nlwp=</span> <span class="pre">-p</span> <span class="pre">&lt;pid&gt;</span></code> on Linux). There should be about as many as the
+OpenMP thread count. Several times more means that the BLAS is running its
+own threads inside those of SCS.</p></li>
+<li><p>Compare the time of a solve with that of a build without the option. If it
+is not faster, leave the option off.</p></li>
+</ul>
+</section>
+<section id="how-scs-uses-the-threads">
+<h3>How SCS uses the threads<a class="headerlink" href="#how-scs-uses-the-threads" title="Link to this heading"></a></h3>
+<p>The number of threads is fixed when the solver is set up. It is the OpenMP
+thread count at that point (as set by <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">omp_set_num_threads</span></code>), at most the number of blocks larger than
+<span class="math notranslate nohighlight">\(1 \times 1\)</span>. A solve uses fewer threads if the OpenMP thread count has
+been lowered since the setup.</p>
+<p>Even with the option, the blocks are projected one after another, and the BLAS
+is free to use its own threads, when</p>
+<ul class="simple">
+<li><p>the total work is small, or one block holds more than half of it (the
+parallel projection would then gain less than a factor of two, and a
+multithreaded BLAS may do better on that block),</p></li>
+<li><p>the BLAS is a pthreads build of OpenBLAS set to more than one thread, where
+SCS can see that (see below), or</p></li>
+<li><p>the solver is set up inside an active OpenMP parallel region, where the
+threads of the caller are the parallelism.</p></li>
+</ul>
+</section>
+<section id="what-scs-checks-and-where-it-cannot">
+<h3>What SCS checks, and where it cannot<a class="headerlink" href="#what-scs-checks-and-where-it-cannot" title="Link to this heading"></a></h3>
+<p>SCS guards against two of the cases in the table, on some platforms only. That
+is the reason the option is left to whoever builds SCS and knows its BLAS.</p>
+<ul class="simple">
+<li><p>MKL on another OpenMP runtime: SCS sets the thread-local thread count of MKL
+to one during the projection. This goes through a weak reference to
+<code class="code docutils literal notranslate"><span class="pre">MKL_Set_Num_Threads_Local</span></code>, which needs an ELF platform such as Linux
+and the MKL symbols visible to SCS. It does not work on Windows or macOS,
+with a static MKL, or with an MKL loaded privately by another library.</p></li>
+<li><p>A pthreads build of OpenBLAS with more than one thread: on ELF platforms SCS
+checks for it at setup and then projects the blocks one after another. The
+check needs the functions <code class="code docutils literal notranslate"><span class="pre">openblas_get_parallel</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">openblas_get_num_threads</span></code> visible to SCS: it is off for a static
+<code class="code docutils literal notranslate"><span class="pre">libopenblas.a</span></code> (the weak references can stay unresolved), for an
+OpenBLAS with suffixed symbol names, and for one loaded privately by another
+library (libblastrampoline in Julia).</p></li>
+<li><p>In all other cases (other platforms, other libraries, another OpenMP
+runtime) SCS does nothing and assumes that the BLAS runs on one thread.</p></li>
+</ul>
+</section>
+<section id="thread-safety-memory-and-reproducibility">
+<h3>Thread safety, memory and reproducibility<a class="headerlink" href="#thread-safety-memory-and-reproducibility" title="Link to this heading"></a></h3>
+<p>Several threads call BLAS and LAPACK at once, so the library must be safe to
+call that way. A single-threaded OpenBLAS (built with <code class="code docutils literal notranslate"><span class="pre">USE_THREAD=0</span></code>) is
+safe only if it was built with <code class="code docutils literal notranslate"><span class="pre">USE_LOCKING=1</span></code> (see OpenBLAS’s
+<code class="code docutils literal notranslate"><span class="pre">Makefile.rule</span></code>). SCS does not check this; OpenBLAS 0.3.28 and later list
+<code class="code docutils literal notranslate"><span class="pre">USE_LOCKING</span></code> in <code class="code docutils literal notranslate"><span class="pre">openblas_get_config()</span></code>. OpenBLAS also has a table
+of memory buffers of a size fixed when it is built (by <code class="code docutils literal notranslate"><span class="pre">NUM_THREADS</span></code>, and
+at least 50), and a thread holds one during a BLAS call: with more threads than
+buffers, OpenBLAS 0.3.18 and later print a warning and allocate more, and
+earlier versions fail. The OpenMP thread count bounds the number of threads.</p>
+<p>A parallel projection takes more memory: each thread after the first has its
+own eigendecomposition workspace, with matrix buffers for the largest block
+that thread projects and LAPACK work arrays of the serial sizes. The extra
+memory is therefore at most the PSD workspace of the serial projection times
+the number of threads less one. That workspace is about <span class="math notranslate nohighlight">\(2n^2\)</span> floats for
+the largest real block of size <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(2n^2\)</span> complex numbers for
+the largest complex block, plus LAPACK work arrays linear in <span class="math notranslate nohighlight">\(n\)</span>.</p>
+<p>Each block goes through the same LAPACK calls as in the serial projection, so
+with single-threaded BLAS the result is the same bit for bit, whatever the
+number of threads (unless the rounding of the BLAS depends on the memory
+alignment of its arguments, as it can with MKL).</p>
+</section>
 </section>
 </section>
 
