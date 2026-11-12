@@ -181,9 +181,10 @@ static scs_int psd_par_cone(ScsCone *k) {
 
 #ifdef PSD_PAR_BUILD
 /* the cone of test_psd_parallel_solve: enough work in the PSD blocks for the
- * parallel path, and no block with more than half of it */
-static scs_int psd_par_solve_s[] = {12, 12, 11, 12};
-static scs_int psd_par_solve_cs[] = {6};
+ * parallel path, also with an OpenBLAS whose lock makes blocks of n = 12 not
+ * worth the threads, and no block with more than half of it */
+static scs_int psd_par_solve_s[] = {24, 24, 22, 24};
+static scs_int psd_par_solve_cs[] = {12};
 static scs_int psd_par_solve_q[] = {5};
 
 /* Solve with nt OpenMP threads; psd_nt is set to the number of PSD threads of

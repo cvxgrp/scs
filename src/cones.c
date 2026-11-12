@@ -941,7 +941,11 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  *   OPENBLAS_NUM_THREADS=1 is what enables the parallel projection. This
  *   check goes through weak references too: it is off for a static OpenBLAS,
  *   one with suffixed symbols, and one loaded privately by another library
- *   (libblastrampoline in Julia).
+ *   (libblastrampoline in Julia). On one thread an OpenBLAS without OpenMP
+ *   still makes the BLAS calls of our threads wait for one lock, and the
+ *   estimate of the thread count adds that (PSD_PAR_LOCK_COST): small
+ *   blocks then stay serial, and the others get fewer threads than there
+ *   are. That needs the same symbols.
  * - Accelerate keeps threads of its own as well, which stayed mostly idle
  *   inside ours: at its default settings the parallel projection was 2.3 to
  *   3.3x faster than the serial one on 4 threads, and at most 17% slower
@@ -954,7 +958,7 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * and an OpenMP build of OpenBLAS ignores OPENBLAS_NUM_THREADS.
  *
  * The split over threads is fixed at setup: blocks in order of decreasing
- * cost (n^3, 4 n^3 for complex blocks) go to the least loaded thread (LPT
+ * estimated time (psd_block_cost) go to the least loaded thread (LPT
  * scheduling). Thread t projects its blocks (list t) with workspace
  * c->psd_tw[t], sized for its own largest block; psd_tw[0] is the workspace
  * of all the matrix cones and no other is larger, so the extra memory is at
@@ -969,12 +973,20 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * The number of threads is the OpenMP thread count at setup, at most the
  * number of blocks with n > 1. A projection uses fewer threads when the
  * OpenMP thread count has been lowered since: a smaller team still projects
- * every list, each with its own workspace. The threads are not used, and the
- * BLAS is left to its own, when the total work is small, when one block
- * holds more than half of it (the parallel loop then gains less than 2x,
- * while that block alone may run faster with multithreaded BLAS), or when
- * the workspace is set up inside an active parallel region (the caller's
- * threads are the parallelism then).
+ * every list, each with its own workspace. The number of threads is also
+ * bounded by the work. Each thread of a parallel region takes time to wake
+ * and to join (PSD_PAR_THREAD_COST), so the region is fastest with fewer
+ * threads than there are when the blocks are little work: about
+ * sqrt(S / PSD_PAR_THREAD_COST) of them for an estimated serial time S over
+ * many blocks. The threads are not used, and the BLAS is left to its own,
+ * when
+ * - the estimated gain is below PSD_PAR_MIN_GAIN: little work, or one block
+ *   with most of it (the parallel loop is no faster than its largest block),
+ * - a block larger than PSD_PAR_BLAS_N holds more than half of the work (the
+ *   parallel loop then gains less than 2x, while that block alone may run
+ *   faster with multithreaded BLAS), or
+ * - the workspace is set up inside an active parallel region (the caller's
+ *   threads are the parallelism then).
  */
 #ifdef PSD_PARALLEL
 /* Size of PSD block b: real block b if b < ssize, else complex b - ssize */
@@ -982,11 +994,67 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
   return b < k->ssize ? k->s[b] : k->cs[b - k->ssize];
 }
 
-/* total cost sum(n^3) below which the threads are not used. With 4 threads
- * the projection was faster than serial from sum(n^3) ~ 2e2 on x86-64 Linux,
- * but only from ~4e3 on Apple M4 (0.9-1.0x at 1e3, 1.5x at 4e3). */
+/* Estimated serial time, in nanoseconds, below which the threads are not
+ * used. Zero, because the rules of psd_num_threads keep little work serial
+ * already. A large value keeps every projection serial. Those rules take the
+ * threads to be awake. Where they sleep between projections (the GNU runtime
+ * on Linux, when the rest of an iteration takes long enough), waking them can
+ * cost more than a projection of less than a millisecond gains, and a minimum
+ * of that size here would avoid it. It is zero there too, on purpose: the
+ * same minimum would keep small problems serial, whose threads stay awake and
+ * gain the most (an iteration 2.5 times faster, against one up to 27% slower,
+ * both measured). OMP_WAIT_POLICY=active, or a build without
+ * USE_PARALLEL_PSD, is the switch for the other case. */
 #ifndef PSD_PAR_MIN_COST
-#define PSD_PAR_MIN_COST (5e3)
+#define PSD_PAR_MIN_COST (0.)
+#endif
+
+/* Time, in nanoseconds, that each thread adds to a parallel region, measured
+ * with the GNU runtime on projections that follow each other closely: about
+ * 5 us per thread on macOS (Apple M4), where the threads of a team sleep
+ * between regions, and 1.5 to 2 us on Linux (Cortex-X925), where they spin
+ * for a while after a region. */
+#ifndef PSD_PAR_THREAD_COST
+#ifdef __APPLE__
+#define PSD_PAR_THREAD_COST (5e3)
+#else
+#define PSD_PAR_THREAD_COST (2e3)
+#endif
+#endif
+
+/* smallest estimated gain for which the threads are used */
+#ifndef PSD_PAR_MIN_GAIN
+#define PSD_PAR_MIN_GAIN (1.25)
+#endif
+
+/* Largest block for which the threads of the BLAS are not worth more than
+ * the loop. With a block of n = 300 or 500 that holds more than half of the
+ * work, the loop was 1.6x faster than the serial projection, and the serial
+ * projection with a multithreaded BLAS 0.7x to 1.25x (NVPL, OpenBLAS;
+ * Accelerate 1.0x at 300). At n = 1000 the two were about equal, and at 2000
+ * the BLAS threads were ahead (1.7x to 1.9x against 1.2x to 1.4x). Blocks of
+ * n = 1000 to 2000 were 1.3x to 2.1x faster with BLAS threads in #505
+ * (OpenBLAS, MKL). */
+#ifndef PSD_PAR_BLAS_N
+#define PSD_PAR_BLAS_N (512)
+#endif
+
+/* An OpenBLAS that was not built with OpenMP takes one mutex in every BLAS
+ * call that needs a work buffer (dsymv: one call per column in the reduction
+ * to tridiagonal form), so the calls of the threads of a team wait for each
+ * other. A block of size n then takes longer in a team of t threads than
+ * alone, by n * (PSD_PAR_LOCK_COST * (t - 1) + PSD_PAR_LOCK_COST2 * (t - 1)^2)
+ * nanoseconds. Measured on a Cortex-X925 under Linux (OpenBLAS 0.3.31,
+ * pthreads build on one thread), the time per column depended little on the
+ * size of the block, for n = 3 to 32: about 0.3, 0.5, 1.1, 1.7 and 4.8 us
+ * with 2, 3, 4, 5 and 10 threads. The constants are a third above the fit to
+ * that, because the smallest blocks lost more. An OpenMP build did not show
+ * this (measured on macOS). */
+#ifndef PSD_PAR_LOCK_COST
+#define PSD_PAR_LOCK_COST (300.)
+#endif
+#ifndef PSD_PAR_LOCK_COST2
+#define PSD_PAR_LOCK_COST2 (50.)
 #endif
 
 /* OpenBLAS: openblas_get_parallel() is 0 sequential, 1 pthreads, 2 OpenMP.
@@ -1017,6 +1085,17 @@ static scs_int blas_threads_outside_openmp(void) {
   return 0;
 }
 
+/* Whether the BLAS is an OpenBLAS without OpenMP, whose calls from several
+ * threads wait for one lock (PSD_PAR_LOCK_COST) */
+static scs_int blas_calls_share_lock(void) {
+#if defined(__GNUC__) && defined(__ELF__)
+  if (openblas_get_parallel) {
+    return openblas_get_parallel() != 2;
+  }
+#endif
+  return 0;
+}
+
 /* Set the number of MKL threads for the calling thread and return the previous
  * setting, to restore it with. Does nothing, and returns 0, without MKL. */
 static int mkl_set_local_threads(int nt) {
@@ -1034,9 +1113,24 @@ typedef struct {
   scs_int blk;
 } PsdBlockCost;
 
+/* Estimated time of the projection of block b, in nanoseconds: a cubic in n
+ * fitted to the measured times of single blocks, with 4x the n^3 term for a
+ * complex block. It is within 25% of them for n from 2 to 300 on an Apple
+ * M4 with Accelerate and on a Cortex-X925 with OpenBLAS, and within 30% of
+ * the times of n = 1000 to 2000 on x86-64 with OpenBLAS and with MKL (#505).
+ * It is up to 1.5x too low at n = 1000 on the Cortex-X925, and up to 1.9x too
+ * low below n = 10 with NVPL, which takes longer for small blocks. Only the
+ * relative sizes and the order of magnitude matter. n^3 alone makes small
+ * blocks far too cheap: a block of n = 10 takes 1/650 of the time of one of
+ * n = 300, not 1/27000. LAPACK takes a short path for n = 2 (0.2 us, but
+ * 1.5 us with NVPL), and a block of n = 1 is a clamp. */
 static scs_float psd_block_cost(const ScsCone *k, scs_int b) {
   scs_float n = (scs_float)psd_block_n(k, b);
-  return (b < k->ssize ? 1. : 4.) * n * n * n;
+  if (b < k->ssize)
+    return n < 3. ? (n < 2. ? 2. : 200.)
+                  : 600. + n * (250. + n * (45. + 0.06 * n));
+  return n < 3. ? (n < 2. ? 2. : 300.)
+                : 600. + n * (250. + n * (70. + 0.24 * n));
 }
 
 /* decreasing cost, ties by block index so the split is deterministic */
@@ -1093,24 +1187,67 @@ out:
     scs_free(bc);
   return status;
 }
+
+/* Estimated time of the parallel loop with nt threads over nblk blocks, which
+ * take total in all and cmax for the largest. With a lock in the BLAS
+ * (PSD_PAR_LOCK_COST), ncol is the number of columns of these blocks and nmax
+ * that of the largest; without one, both are zero. */
+static scs_float psd_par_time(scs_int nt, scs_int nblk, scs_float total,
+                              scs_float cmax, scs_float ncol, scs_float nmax) {
+  scs_float lock =
+      (nt - 1) * (PSD_PAR_LOCK_COST + (nt - 1) * PSD_PAR_LOCK_COST2);
+  scs_float list =
+      (scs_float)((nblk + nt - 1) / nt) * ((total + lock * ncol) / nblk);
+  return MAX(cmax + lock * nmax, list) + nt * PSD_PAR_THREAD_COST;
+}
 #endif
 
 /* Number of threads for the PSD blocks (see above) */
 static scs_int psd_num_threads(const ScsCone *k) {
 #ifdef PSD_PARALLEL
-  scs_int b, nbig = 0, nt = omp_get_max_threads();
-  scs_float total = 0., cmax = 0.;
+  scs_int b, t, ntmax, nbig = 0, nmax = 0, ncol = 0;
+  scs_int nt = omp_get_max_threads(), lock = blas_calls_share_lock();
+  scs_float total = 0., cmax = 0., est, best = 0., lcol, lmax;
   for (b = 0; b < k->ssize + k->cssize; ++b) {
+    scs_int n = psd_block_n(k, b);
     scs_float cost = psd_block_cost(k, b);
     total += cost;
     cmax = MAX(cmax, cost);
-    nbig += psd_block_n(k, b) > 1;
+    nmax = MAX(nmax, n);
+    if (n > 1) {
+      nbig++;
+      ncol += n;
+    }
   }
   nt = MIN(nt, nbig);
-  if (nt < 2 || total < PSD_PAR_MIN_COST || 2 * cmax > total ||
-      omp_in_parallel() || blas_threads_outside_openmp())
+  if (nt < 2 || total < PSD_PAR_MIN_COST || omp_in_parallel() ||
+      blas_threads_outside_openmp())
     return 1;
-  return nt;
+  if (2 * cmax > total && nmax > PSD_PAR_BLAS_N)
+    return 1;
+  /* With t threads the parallel loop takes about as long as its longest
+   * list, which is at least the largest block and at least its share of the
+   * blocks at their average time, plus the time of the t threads. Find the
+   * fewest threads with the smallest such estimate. Without a lock in the
+   * BLAS, then take the most threads that come within 5% of it: the estimate
+   * is flat where one block bounds the loop, and more threads are then safer
+   * for the lists of the other blocks. With a lock every thread slows the
+   * others down. */
+  lcol = lock ? (scs_float)ncol : 0.;
+  lmax = lock ? (scs_float)nmax : 0.;
+  ntmax = nt;
+  for (t = 2; t <= ntmax; ++t) {
+    est = psd_par_time(t, nbig, total, cmax, lcol, lmax);
+    if (t == 2 || est < best) {
+      best = est;
+      nt = t;
+    }
+  }
+  for (t = ntmax; !lock && t > nt; --t) {
+    if (psd_par_time(t, nbig, total, cmax, lcol, lmax) <= 1.05 * best)
+      nt = t; /* the last pass: t > nt no longer holds */
+  }
+  return total < PSD_PAR_MIN_GAIN * best ? 1 : nt;
 #else
   (void)k;
   return 1;
