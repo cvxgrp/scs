@@ -136,10 +136,12 @@ static const char *test_spectral_metric_updates(void) {
     scs_printf("scale %.0e: y cone dist %.4e, s cone dist %.4e\n",
                stgs->scale, ydist, sdist);
 
+    /* cone_dist_tol: the distances are measured with the logdet projection,
+     * which is the limit on how tightly they can be asserted */
     mu_assert_less("test_spectral_metric_updates: y cone dist ERROR",
-                   ABS(ydist), 1e-5);
+                   ABS(ydist), cone_dist_tol(k));
     mu_assert_less("test_spectral_metric_updates: s cone dist ERROR",
-                   ABS(sdist), 1e-5);
+                   ABS(sdist), cone_dist_tol(k));
 
     total_scale_updates += info.scale_updates;
 
