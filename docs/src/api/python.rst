@@ -29,6 +29,9 @@ This module provides the :code:`SCS` class which is initialized using:
                   rho_x=1e-6,
                   acceleration_lookback=10,
                   acceleration_interval=5,
+                  acceleration_type_1=1,
+                  acceleration_regularization=1e-8,
+                  acceleration_relaxation=1.0,
                   time_limit_secs=0,
                   write_data_filename=None,
                   log_csv_filename=None)
@@ -73,7 +76,8 @@ the platform:
      - :ref:`Apple Accelerate <apple_accelerate>` sparse LDL\ :sup:`T` (macOS
        only, included automatically).
    * - :code:`CPU_DENSE`
-     - Dense direct solver via LAPACK (requires LAPACK build).
+     - Dense direct solver via LAPACK (in the wheels and in a default source
+       build, see :ref:`python_install`).
    * - :code:`GPU_INDIRECT`
      - Sparse GPU indirect solver (requires GPU build).
    * - :code:`CUDSS`

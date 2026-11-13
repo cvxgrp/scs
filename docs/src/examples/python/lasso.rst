@@ -18,7 +18,7 @@ quality of fit. Concretely the lasso solves
 
 
 over variable :math:`x \in \mathbf{R}^{n}`, with data :math:`A \in
-\mathbf{R}^{m \times n}` and :math:`b \in \mathbf{R}^n`.  The problem has the
+\mathbf{R}^{m \times n}` and :math:`b \in \mathbf{R}^m`.  The problem has the
 following equivalent form,
 
 .. math::

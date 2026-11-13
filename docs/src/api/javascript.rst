@@ -157,7 +157,7 @@ Available settings:
 - ``epsInfeas`` (number): Infeasible convergence tolerance
 - ``alpha`` (number): Douglas-Rachford relaxation parameter
 - ``timeLimitSecs`` (number): Time limit in seconds
-- ``verbose`` (number): Output level (0-3)
+- ``verbose`` (number): Whether to print solver output (``0`` turns it off, any nonzero value turns it on)
 - ``warmStart`` (boolean): Use warm starting
 
 Solving Problems

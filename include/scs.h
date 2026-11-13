@@ -1,8 +1,8 @@
 /*
  * Public header containing the outward facing SCS API. It includes all the
- * input/output data structs and the API functions.  Make sure this file and
- * `scs_types.h` are somewhere appropriate and then use `#include "scs.h"` to
- * access the SCS public API.
+ * input/output data structs and the API functions.  Make sure this file,
+ * `scs_types.h` and `aa_stats.h` are somewhere appropriate and then use
+ * `#include "scs.h"` to access the SCS public API.
  */
 
 #ifndef SCS_H_GUARD
@@ -200,7 +200,7 @@ typedef struct {
   char status[128];
   /** Linear system solver used. */
   char lin_sys_solver[128];
-  /** Status as scs_int, defined in glbopts.h. */
+  /** Status as scs_int, one of the exit flags defined at the top of scs.h. */
   scs_int status_val;
   /** Number of updates to scale. */
   scs_int scale_updates;
@@ -301,7 +301,8 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c);
  * @param  warm_start   Whether to use the entries of `sol` as warm-start for
  *                      the solve.
  *
- * @return       Flag containing problem status (see \a glbopts.h).
+ * @return       Flag containing problem status (one of the exit flags
+ *               defined at the top of \a scs.h).
  */
 scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                   scs_int warm_start);
@@ -324,7 +325,8 @@ void scs_finish(ScsWork *w);
  * @param  sol    Solution will be stored here. If members `x`, `y`, `s` are
  *                NULL then SCS will allocate memory for them.
  * @param  info   Information about the solve will be stored here.
- * @return        Flag containing problem status (see \a glbopts.h).
+ * @return        Flag containing problem status (one of the exit flags
+ *                defined at the top of \a scs.h).
  */
 scs_int scs(const ScsData *d, const ScsCone *k, const ScsSettings *stgs,
             ScsSolution *sol, ScsInfo *info);
