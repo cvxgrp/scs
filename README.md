@@ -40,7 +40,8 @@ where `K` is a product of convex cones. It uses an operator-splitting method
   profiles (`adaptive_diag_scale`, on by default)
 - Warm-starting and incremental `b`/`c` updates via `scs_update`
 - Ctrl-C signal handling for graceful interruption
-- Configurable precision (`float`/`double`) and index type (`int`/`long long`)
+- Configurable index type (`int`/`long long`); single precision (`float`) is
+  experimental and not covered by the test suite
 - MIT licensed
 
 ## Building from Source
@@ -73,7 +74,7 @@ ctest
 |------|---------|-------------|
 | `USE_LAPACK` | `1` | Enable BLAS/LAPACK (required for SDP support) |
 | `DLONG` | `0` | Use 64-bit integer indexing |
-| `SFLOAT` | `0` | Use single-precision floats |
+| `SFLOAT` | `0` | Use single-precision floats (experimental, not covered by the test suite; see the docs before enabling) |
 | `USE_SPECTRAL_CONES` | `0` | Enable spectral cone support (requires LAPACK) |
 | `USE_OPENMP` | `0` | Enable OpenMP parallelization |
 | `USE_PARALLEL_PSD` | `0` | Project PSD blocks in parallel (requires OpenMP and LAPACK; see the docs before enabling) |

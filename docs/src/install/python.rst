@@ -36,9 +36,12 @@ solvers that require no additional dependencies:
 - :code:`CPU_INDIRECT` — the sparse matrix-free solver based on conjugate
   gradients.
 
+They also include :code:`CPU_DENSE`, the :ref:`dense direct solver <dense>`,
+unless a source build turns LAPACK off (see below).
+
 The remaining backends require either a platform-specific library (Apple
-Accelerate, MKL) or a build-time flag plus an external dependency (LAPACK for
-dense, CUDA + cuDSS for GPU). Each section below describes what to install and
+Accelerate, MKL) or a build-time flag plus an external dependency (CUDA +
+cuDSS for GPU). Each section below describes what to install and
 how to enable the backend. See :ref:`linear_solver` for an overview of each
 solver and :ref:`python_interface` for how to select one at runtime.
 
@@ -105,17 +108,16 @@ Gram matrix and factorizes it with LAPACK's Cholesky routines. It is well
 suited to small-to-medium problems with a dense constraint matrix :math:`A`,
 where dense BLAS/LAPACK outperforms sparse factorization.
 
-Build from source with:
-
-.. code:: bash
-
-  python -m pip install -Csetup-args=-Duse_lapack=true .
-
-This requires BLAS and LAPACK development headers to be discoverable by
-:code:`pkg-config`. Most platforms satisfy this out of the box (Apple
-Accelerate on macOS, OpenBLAS / MKL on Linux, MKL on Windows). Select the
-backend at runtime with
+It is part of the pre-built wheels and of a default source build: the Meson
+option :code:`use_lapack` is on by default, so no extra flag is needed. Only
+a source build with :code:`-Csetup-args=-Duse_lapack=false` leaves it out.
+Select the backend at runtime with
 :code:`linear_solver=scs.LinearSolver.CPU_DENSE`.
+
+Every source build needs a BLAS/LAPACK library that Meson can find, also one
+with :code:`use_lapack=false`: Apple Accelerate on macOS, OpenBLAS (or a
+reference BLAS and LAPACK) on Linux and Windows, or MKL with
+:code:`-Csetup-args=-Dlink_mkl=true`.
 
 GPU direct (cuDSS)
 """"""""""""""""""
@@ -190,20 +192,59 @@ To test that SCS installed correctly, and you have pytest installed, run
 
 See :ref:`here <python_interface>` for the full SCS python API.
 
-Legacy options
---------------
+OpenMP and the GPU indirect solver
+----------------------------------
 
-You can install with OpenMP parallelization support using
+These are options of the Meson build, like the ones above. They are off by
+default and the pre-built wheels are built without them, so they need an
+install from source.
+
+.. _python_openmp_install:
+
+OpenMP and parallel PSD projection
+""""""""""""""""""""""""""""""""""
+
+To compile SCS with OpenMP, install with:
 
 .. code:: bash
 
-  python legacy_setup.py install --scs --openmp
+  python -m pip install -Csetup-args=-Duse_openmp=true .
 
-You can install the :ref:`GPU indirect solver <gpu_indirect>` using
+SCS then uses several threads for its matrix-vector products and for the
+projection onto exponential cones. The number of threads is the OpenMP thread
+count: set the environment variable :code:`OMP_NUM_THREADS` before starting
+Python.
+
+To also project the positive semidefinite (PSD) blocks of a problem in
+parallel, add the option :code:`use_parallel_psd`:
 
 .. code:: bash
 
-  python legacy_setup.py install --scs --gpu
+  python -m pip install -Csetup-args=-Duse_openmp=true -Csetup-args=-Duse_parallel_psd=true .
+
+:code:`use_parallel_psd` requires :code:`use_openmp` and :code:`use_lapack`
+(on by default). The build stops with an error without them. Read
+:ref:`blas_lapack_openmp` before turning it on: the projection is only faster
+when the BLAS runs on one thread inside the threads of SCS, and slower when it
+does not. That section also says how to check that the blocks are projected in
+parallel.
+
+GPU indirect
+""""""""""""
+
+To build the :ref:`GPU indirect solver <gpu_indirect>`, with the CUDA toolkit
+(including cuBLAS and cuSPARSE) installed, install with:
+
+.. code:: bash
+
+  python -m pip install -Csetup-args=-Duse_gpu=true -Csetup-args=-Dint32=true .
+
+The :code:`int32=true` flag is required: the build stops with an error for a
+GPU build with 64-bit integers. By default this build does not store the
+transpose of :code:`A` in GPU memory. Add
+:code:`-Csetup-args=-Dgpu_atrans=true` to store it, which uses more GPU memory
+and makes the products with :code:`A` faster. Select the backend at runtime
+with :code:`linear_solver=scs.LinearSolver.GPU_INDIRECT`.
 
 The GPU indirect solver is effectively deprecated; the cuDSS direct solver
 above is the recommended GPU backend.
