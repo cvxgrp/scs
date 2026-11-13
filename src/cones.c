@@ -419,7 +419,7 @@ static void fit_psd_block_weights(scs_float *vec, scs_int n) {
   scs_float lo = SQRTF(DIAG_SCALE_MULT_MIN), hi = SQRTF(DIAG_SCALE_MULT_MAX);
   scs_float *ell = (scs_float *)scs_calloc(n, sizeof(scs_float));
   if (!ell) {
-    return; /* leave profile as-is; caller falls back to scalar */
+    return; /* leave the block as it is */
   }
   /* Floor entries relative to the block max: (near-)zero rows carry no
    * information about the block's scale structure (e.g. unconstrained

@@ -45,7 +45,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 76
+#define MU_TOTAL_TESTS 77
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -62,12 +62,14 @@ _SKIP(test_validation)
 #include "problems/sd_and_complex_sd.h"
 #include "problems/test_psd_metric.h"
 #include "problems/test_psd_parallel.h"
+#include "problems/test_psd_scale_updates.h"
 #else
 _SKIP(complex_PSD)
 _SKIP(sd_and_complex_sd)
 _SKIP(test_psd_metric)
 _SKIP(test_psd_parallel)
 _SKIP(test_psd_parallel_solve)
+_SKIP(test_psd_scale_updates)
 #endif
 
 /* solve SDPs from data files, requires blas / lapack */
@@ -138,6 +140,7 @@ static void all_tests(void) {
   mu_run_test(test_psd_metric);
   mu_run_test(test_psd_parallel);
   mu_run_test(test_psd_parallel_solve);
+  mu_run_test(test_psd_scale_updates);
   mu_run_test(hs21_tiny_qp);
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(test_rw_settings);

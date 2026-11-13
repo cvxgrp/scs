@@ -67,8 +67,8 @@ typedef struct {
   scs_int adaptive_scale;
   /** Dynamic diagonal rescaling from residual profiles: 0 = off,
    *  1 = per-row (rescales the R_y diagonal from the row-wise primal
-   *  residual profile; uniform within non-polyhedral cone blocks; the
-   *  default). Requires `adaptive_scale` (silently disabled without
+   *  residual profile; one value per non-polyhedral cone block, except
+   *  that a real PSD block gets a rank-one form; the default). Requires `adaptive_scale` (silently disabled without
    *  it). */
   scs_int adaptive_diag_scale;
   /** Primal constraint scaling factor. */

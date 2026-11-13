@@ -143,8 +143,8 @@ rate of the primal residual with the dual residual. Loosely speaking, the
 than the dual and decreased if the opposite is true.
 
 Specifically, at iteration :math:`k` consider the case where :math:`l`
-iterations have elapsed since the last update of the :code:`scale` parameter,
-and denote by :math:`(x, y, \tau) = u^k` and :math:`(0, s, \kappa) = v^k`.
+iterations have elapsed since the last update of the :code:`scale` parameter
+or of the per-row multipliers described below, and denote by :math:`(x, y, \tau) = u^k` and :math:`(0, s, \kappa) = v^k`.
 Two measures of the imbalance between the primal and the dual residual are
 blended. The first is how far each residual is from its own :ref:`stopping
 threshold <termination>`, with :math:`\tau` multiplied through:
@@ -195,7 +195,7 @@ Now consider
 
 ie, :math:`\beta` corresponds to the geometric mean of the samples
 across the last :math:`l` iterations. If this number is larger than a
-constant (eg, 3) or smaller than another constant (eg, 1/3) *and* if sufficient
+constant (eg, 10) or smaller than another constant (eg, 1/10) *and* if sufficient
 iterations have passed since the last update (eg, 100, as determined by
 :code:`RESCALING_MIN_ITERS`) then an update of the :code:`scale` parameter is
 triggered:
@@ -232,11 +232,20 @@ most cone types, but for real PSD blocks the richer rank-one family
 :math:`w_{ij} = \delta_i \delta_j` (a diagonal congruence
 :math:`X \to D X D`, which maps the cone to itself), fitted per block by
 least squares in log space. The PSD projection under such a metric is
-computed exactly via a congruence sandwich around the eigendecomposition. An update
-also fires when the accumulated per-row drift alone is large enough, so that
-a railed scalar :code:`scale` cannot freeze the diagonal. This is the
+computed exactly via a congruence sandwich around the eigendecomposition. This is the
 dynamic analog of the row half of Ruiz equilibration, using the residuals the
 algorithm actually produces rather than the matrix norms.
+
+The multipliers are updated whenever the scalar :code:`scale` is. They are
+also updated on their own, with a new factorization, when some multiplier
+would move by more than the threshold used for the scalar (a factor of
+:math:`\sqrt{10}`), so that a scalar :code:`scale` sitting at its limit cannot
+freeze the diagonal. The move is measured on the multipliers as they would be
+installed, after each cone block has been given its form. A single row of a
+second-order or PSD block that asks for a large step therefore does not cost a
+factorization when the value its block ends up with has barely changed. Rows
+of the zero, nonnegative and box cones each keep their own multiplier, so for
+them nothing is averaged away.
 
 The floor :math:`\epsilon_{\rm den}` in the denominator is a small fraction
 of the root-mean-square denominator over all rows. It matters because a row

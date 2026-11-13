@@ -251,10 +251,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* Dynamic diagonal rescaling (stgs->adaptive_diag_scale). Row multipliers
  * move by at most (profile ratio)^DIAG_SCALE_DAMP per update and live in
  * [DIAG_SCALE_MULT_MIN, DIAG_SCALE_MULT_MAX] around the scalar scale. An
- * update fires when the scalar scale updates, or when some damped
- * *clamped* step alone exceeds sqrt(10) (a railed scalar must not freeze
- * the diagonal; a railed multiplier must not keep triggering updates it
- * cannot take). */
+ * update fires when the scalar scale updates, or when some multiplier, as
+ * it would be installed (damped, clamped, and after its cone block has been
+ * given its form), would move by more than sqrt(10) (a railed scalar must
+ * not freeze the diagonal; a railed multiplier must not keep triggering
+ * updates it cannot take; a row whose step its block averages away must
+ * not trigger one either). */
 #define DIAG_SCALE_DAMP (0.25)
 #define DIAG_SCALE_MULT_MIN (1e-3)
 #define DIAG_SCALE_MULT_MAX (1e3)
