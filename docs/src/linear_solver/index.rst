@@ -175,6 +175,14 @@ phase) is executed on the host while symbolic factorization (another part of
 the analysis phase), numerical factorization, and solve are executed on the
 GPU.
 
+SCS runs cuDSS without pivoting and with one step of iterative refinement per
+solve. The linear system is quasi-definite, so it can be factorized without
+pivoting, as the CPU direct solver does. From version 1.0, cuDSS by default
+uses Bunch-Kaufman pivoting for a symmetric indefinite matrix, which makes the
+factorization several times larger and slower; the refinement step makes up
+for the accuracy that pivoting would otherwise provide. With older versions of
+cuDSS the default pivoting was different and the saving is not known.
+
 .. _new_linear_solver:
 
 Implementing a new linear solver
