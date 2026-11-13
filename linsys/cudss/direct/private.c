@@ -125,11 +125,12 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
    *
    * The KKT matrix [R_x + P, A'; A, -R_y] is quasi-definite, so it has an
    * LDL' factorization with a diagonal D under any ordering; the CPU direct
-   * solver relies on the same fact. cuDSS's default for a symmetric indefinite
-   * matrix is to pivot. That costs several times the fill and the
-   * factorization time (cuDSS 1.0, KKT dimension 50000: 535M against 152M
-   * factor entries, 19 s against 3 s), and SCS refactorizes on every scale
-   * update.
+   * solver relies on the same fact. From version 1.0, cuDSS's default for a
+   * symmetric indefinite matrix is Bunch-Kaufman pivoting. That costs several
+   * times the fill and the factorization time (cuDSS 1.0, KKT dimension
+   * 50000: 535M against 152M factor entries, 19 s against 3 s), and SCS
+   * refactorizes on every scale update. Before 1.0 the default was a
+   * different pivoting, and what is saved there was not measured.
    *
    * Without pivoting the solves are less accurate (relative residuals up to
    * 5e-8 on the test problems, against 4e-11 with pivoting). One refinement
