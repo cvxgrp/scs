@@ -88,9 +88,10 @@ struct SCS_WORK {
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
   /* per-row scale multipliers on R_y, size m (adaptive_diag_scale >= 1) */
   scs_float *scale_mults;
+  /* the multipliers the next update would install, size m (scratch) */
+  scs_float *scale_mults_next;
   /* floor on the row-profile denominators, see row_rel_res */
   scs_float den_floor;
-  /* per-column multipliers on rho_x, size n (adaptive_diag_scale >= 2) */
   /* AA stats */
   scs_float aa_norm;
   scs_int rejected_accel_steps, accepted_accel_steps;

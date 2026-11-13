@@ -1040,8 +1040,8 @@ static void set_diag_r(ScsWork *w) {
   SCS(set_r_y)(w->cone_work, w->stgs->scale, &(w->diag_r[w->d->n]));
   if (w->scale_mults) {
     /* per-row multipliers act like a per-row scale: R_y_i = base_i / f_i.
-     * Multipliers are kept uniform within cone blocks (enforced at update
-     * time) so no SCS(enforce_cone_boundaries) needed here. */
+     * Multipliers are kept in the form their cone block needs (enforced
+     * at update time) so no SCS(enforce_cone_boundaries) needed here. */
     for (i = 0; i < w->d->m; ++i) {
       w->diag_r[w->d->n + i] /= w->scale_mults[i];
     }
@@ -1123,7 +1123,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     } else {
       scs_int j;
       w->scale_mults = (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
-      if (!w->scale_mults) {
+      w->scale_mults_next =
+          (scs_float *)scs_calloc(w->d->m, sizeof(scs_float));
+      if (!w->scale_mults || !w->scale_mults_next) {
         scs_printf("ERROR: work memory allocation failure\n");
         scs_finish(w);
         return SCS_NULL;
@@ -1372,13 +1374,28 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   scs_int apply_scalar =
       (new_scale != w->stgs->scale) && should_update_r(factor);
   scs_int apply_diag = 0;
-  scs_float log_g = 0., g, step, newf, change;
+  scs_float log_g = 0., g, step, change;
   if (w->stgs->adaptive_diag_scale) {
-    /* residual profiles: adapt when the scalar updates, or when some
-     * row's/column's damped *clamped* step exceeds the update threshold
-     * (a railed scalar must not freeze the diagonal; a railed multiplier
-     * must not keep triggering updates it cannot take). */
-    scs_float drift = 1.0;
+    /* Residual profiles. The multipliers the update would install are
+     * built in full first: a damped step along the row profile, the clamp,
+     * and then the form each cone block must take (one value for most
+     * non-polyhedral cones, a rank-one fit for PSD blocks). The diagonal
+     * adapts when the scalar updates, or when some multiplier would move
+     * by more than the update threshold, so that a railed scalar does not
+     * freeze the diagonal and a railed multiplier does not keep asking for
+     * an update it cannot take.
+     *
+     * The change is measured on what would be installed, after the cone
+     * blocks have been given their form. Measured before that, a single
+     * row of a block that wants a large step refactorizes the matrix even
+     * though its block then moves by almost nothing: the factorization,
+     * the acceleration memory and the cone cache are thrown away as often
+     * as every RESCALING_MIN_ITERS iterations for a metric that has not
+     * changed. (The fit of a PSD block can also move an entry further than
+     * any one row asked for; that change is real and is counted too.)
+     * Rows of the zero, nonnegative and box cones are not shared, so for
+     * them the two measures are the same. */
+    scs_float change_max = 1.0;
     for (i = 0; i < w->d->m; ++i) {
       log_g += log(row_rel_res(w, i));
     }
@@ -1386,12 +1403,17 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     g = exp(log_g);
     for (i = 0; i < w->d->m; ++i) {
       step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
-      newf = MIN(MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
-                 DIAG_SCALE_MULT_MAX);
-      change = newf / w->scale_mults[i];
-      drift = MAX(drift, MAX(change, 1. / change));
+      w->scale_mults_next[i] =
+          MIN(MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
+              DIAG_SCALE_MULT_MAX);
     }
-    apply_diag = apply_scalar || should_update_r(drift);
+    SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults_next,
+                                 &SCS(mean), 1);
+    for (i = 0; i < w->d->m; ++i) {
+      change = w->scale_mults_next[i] / w->scale_mults[i];
+      change_max = MAX(change_max, MAX(change, 1. / change));
+    }
+    apply_diag = apply_scalar || should_update_r(change_max);
   }
   if (!apply_scalar && !apply_diag) {
     return 0;
@@ -1406,15 +1428,9 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       w->stgs->scale = new_scale;
     }
     if (apply_diag) {
-      g = exp(log_g);
-      for (i = 0; i < w->d->m; ++i) {
-        step = POWF(row_rel_res(w, i) / g, DIAG_SCALE_DAMP);
-        w->scale_mults[i] = MIN(
-            MAX(w->scale_mults[i] * step, DIAG_SCALE_MULT_MIN),
-            DIAG_SCALE_MULT_MAX);
-      }
-      /* non-polyhedral cone blocks must share a single metric entry */
-      SCS(enforce_cone_boundaries)(w->cone_work, w->scale_mults, &SCS(mean), 1);
+      /* already clamped and in the form the cone blocks need */
+      memcpy(w->scale_mults, w->scale_mults_next,
+             w->d->m * sizeof(scs_float));
     }
 
     /* update diag r vector */
@@ -1716,6 +1732,7 @@ void scs_finish(ScsWork *w) {
     scs_free(w->lin_sys_warm_start);
     scs_free(w->diag_r);
     scs_free(w->scale_mults);
+    scs_free(w->scale_mults_next);
     SCS(free_sol)(w->xys_orig);
     if (w->scal) {
       scs_free(w->scal->D);
