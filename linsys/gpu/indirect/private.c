@@ -125,12 +125,23 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
   }
 }
 
-/* z = M * z elementwise in place, assumes M, z on GPU */
+/* z = M * z elementwise in place, assumes M, z on GPU.
+ *
+ * dgmm computes C = diag(M) * A; here A and C are both z, as an n x 1 matrix.
+ * cuBLAS allows C == A when their leading dimensions are equal.
+ *
+ * This runs three times per CG iteration. It used to be tbmv with zero
+ * bandwidth, which gives the same values but whose time grows as n^2 (cuBLAS
+ * 13.1: 0.7 ms per call at n = 1e5 and 63 ms at n = 1e6, against 0.01 ms and
+ * 0.1 ms for dgmm).
+ */
 static void scale_by_diag(cublasHandle_t cublas_handle, scs_float *M,
                           scs_float *z, scs_int n) {
-  CUBLAS(tbmv)
-  (cublas_handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, n,
-   0, M, 1, z, 1);
+  if (n <= 0) {
+    return; /* dgmm rejects a leading dimension of 0 */
+  }
+  CUBLAS(dgmm)
+  (cublas_handle, CUBLAS_SIDE_LEFT, n, 1, z, n, M, 1, z, n);
 }
 
 /* y = (R_x + P + A' R_y^{-1} A) x */
