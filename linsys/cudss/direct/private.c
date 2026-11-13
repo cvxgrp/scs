@@ -121,6 +121,31 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   CUDSS_CHECK_ABORT(cudssDataCreate(p->handle, &p->solver_data), p,
                     "cudssDataCreate");
 
+  /* No pivoting, and one step of iterative refinement per solve.
+   *
+   * The KKT matrix [R_x + P, A'; A, -R_y] is quasi-definite, so it has an
+   * LDL' factorization with a diagonal D under any ordering; the CPU direct
+   * solver relies on the same fact. cuDSS's default for a symmetric indefinite
+   * matrix is to pivot. That costs several times the fill and the
+   * factorization time (cuDSS 1.0, KKT dimension 50000: 535M against 152M
+   * factor entries, 19 s against 3 s), and SCS refactorizes on every scale
+   * update.
+   *
+   * Without pivoting the solves are less accurate (relative residuals up to
+   * 5e-8 on the test problems, against 4e-11 with pivoting). One refinement
+   * step brings them to 3e-14. It doubles the cost of a solve, which is small
+   * next to what the factorization saves. */
+  {
+    cudssPivotType_t pivot_type = CUDSS_PIVOT_NONE;
+    int ir_n_steps = 1;
+    CUDSS_CHECK_ABORT(cudssConfigSet(p->solver_config, CUDSS_CONFIG_PIVOT_TYPE,
+                                     &pivot_type, sizeof(pivot_type)),
+                      p, "cudssConfigSet: pivot type");
+    CUDSS_CHECK_ABORT(cudssConfigSet(p->solver_config, CUDSS_CONFIG_IR_N_STEPS,
+                                     &ir_n_steps, sizeof(ir_n_steps)),
+                      p, "cudssConfigSet: refinement steps");
+  }
+
   /* Allocate device memory for KKT matrix */
   scs_int nnz = p->kkt->p[p->n_plus_m];
 
