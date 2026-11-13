@@ -79,8 +79,15 @@ Numerical warnings or NaN in output
   or has very large condition number.
 * **Try adjusting** :code:`scale`: the default is ``0.1``. For some problems
   a larger value (e.g., ``1.0`` or ``10.0``) or smaller value (e.g.,
-  ``0.01``) works better. Setting :code:`adaptive_scale=1` lets SCS tune
-  this automatically.
+  ``0.01``) works better. With :code:`adaptive_scale=1` (the default) the
+  value you set is only the starting value: SCS updates :code:`scale` during
+  the solve, and the value it ends with is returned in the :code:`scale`
+  field of the :ref:`info <info>` struct. To hold :code:`scale` at the value
+  you set, use :code:`adaptive_scale=0`. This also turns off the per-row
+  refinement (:code:`adaptive_diag_scale`, on by default), which only runs
+  when :code:`adaptive_scale` is on. To keep the automatic tuning of
+  :code:`scale` but drop the per-row refinement, set
+  :code:`adaptive_diag_scale=0`. See :ref:`scaling`.
 * **Ensure** :math:`P` **is symmetric positive semidefinite**: SCS requires
   that only the upper triangle of :math:`P` is provided. If :math:`P` has
   negative eigenvalues the problem is non-convex and SCS cannot solve it.

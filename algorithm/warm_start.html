@@ -106,6 +106,21 @@ quantities such as the matrix factorization and the data equilibration.
 Moreover, SCS supports warm-starting the solver with a guess of the solution,
 which can significantly reduce the total number of iterations required for
 convergence.</p>
+<p>The workspace also keeps the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter and the per-row
+multipliers of <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> as the previous solve left them (see
+<a class="reference internal" href="scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>), together with the linear
+system set up for them (the factorization, for a direct solver). When
+<code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code> is enabled, a later solve on the same workspace, with or
+without a warm-start and with or without a call to <code class="code docutils literal notranslate"><span class="pre">scs_update</span></code> in
+between, therefore starts from these adapted values and not from the
+<code class="code docutils literal notranslate"><span class="pre">scale</span></code> that was passed to <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>. Only the bookkeeping of the
+update procedure starts again in each solve: the samples it averages and the
+count of iterations since the last update. So the first update in a solve is
+made no earlier than iteration 100, and <code class="code docutils literal notranslate"><span class="pre">scale_updates</span></code> in the
+<a class="reference internal" href="../api/info.html#info"><span class="std std-ref">info</span></a> struct counts the updates of that solve only. One
+consequence is that solving the same problem twice on one workspace need not
+take the same number of iterations both times. To start again from the
+original <code class="code docutils literal notranslate"><span class="pre">scale</span></code>, create a new workspace with <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>.</p>
 <p>Re-using the workspace and warm-starting can be useful, for example, when
 solving a sequence of related problems such as in <a class="reference internal" href="../examples/python/mpc.html#py-mpc"><span class="std std-ref">Model predictive control</span></a> or solving for the entire regularization path in the <a class="reference internal" href="../examples/python/lasso.html#py-lasso"><span class="std std-ref">the Lasso</span></a>.</p>
 <p>In the <a class="reference internal" href="../api/c.html#c-interface"><span class="std std-ref">C API</span></a> call <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code> once to initialize the

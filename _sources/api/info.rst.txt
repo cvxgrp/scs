@@ -27,7 +27,7 @@ the following fields.
      - Status integer :ref:`exit flag <exit_flags>`
    * - :code:`scale_updates`
      - :code:`scs_int`
-     - Number of updates to the scale parameter  (see :ref:`updating_scale`)
+     - Number of updates to the :code:`scale` parameter or to the per-row multipliers of :code:`adaptive_diag_scale` in this solve; an update of both at once is counted once. Each update requires a new factorization when a direct linear solver is used. This can be nonzero even if :code:`scale` never changes (see :ref:`updating_scale`)
    * - :code:`pobj`
      - :code:`scs_float`
      - Primal objective
@@ -63,7 +63,7 @@ the following fields.
      - Time taken for solve (milliseconds)
    * - :code:`scale`
      - :code:`scs_float`
-     - Final scale parameter, useful for initializing next solve (see :ref:`updating_scale`)
+     - Final value of the scalar :code:`scale` parameter, which can be passed as the :code:`scale` setting of a new workspace for a similar problem (see :ref:`updating_scale`). The per-row multipliers of :code:`adaptive_diag_scale` are not returned and start at one in a new workspace. When the same workspace is solved again both the :code:`scale` and the multipliers carry over from the previous solve (see :ref:`warm_start`)
    * - :code:`rejected_accel_steps`
      - :code:`scs_int`
      - Number of times an AA update was rejected by the safeguarding check (see :ref:`acceleration`)
@@ -90,6 +90,16 @@ The :code:`aa_stats` field contains detailed diagnostics from the Anderson
 acceleration linear solves. These counters are useful for diagnosing whether AA
 is active and, when AA updates are rejected, why they were rejected.
 
+Unlike :code:`rejected_accel_steps` and :code:`accepted_accel_steps`, which are
+set to zero at the start of every solve, the :code:`aa_stats` fields belong to
+the workspace and are not cleared between solves. If a workspace is reused for
+several solves, the :code:`n_*` counters are totals over all the solves so far,
+and the :code:`last_*` fields describe the most recent AA solve, which may have
+been in an earlier solve. The exception is :code:`iter`, which counts the calls
+to AA since its memory was last cleared: it restarts whenever an AA update is
+rejected and whenever the :code:`scale` or the per-row multipliers are updated
+(see :ref:`updating_scale`), but not at the start of a solve.
+
 .. list-table::
    :widths: 25 15 60
    :header-rows: 1
@@ -99,7 +109,7 @@ is active and, when AA updates are rejected, why they were rejected.
      - Description
    * - :code:`iter`
      - :code:`scs_int`
-     - Internal AA iteration counter
+     - Number of calls to AA since its memory was last cleared
    * - :code:`n_accept`
      - :code:`scs_int`
      - Number of AA updates accepted by :code:`aa_apply` before safeguarding

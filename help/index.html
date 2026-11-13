@@ -168,8 +168,15 @@ constraint matrix <span class="math notranslate nohighlight">\(A\)</span> or obj
 or has very large condition number.</p></li>
 <li><p><strong>Try adjusting</strong> <code class="code docutils literal notranslate"><span class="pre">scale</span></code>: the default is <code class="docutils literal notranslate"><span class="pre">0.1</span></code>. For some problems
 a larger value (e.g., <code class="docutils literal notranslate"><span class="pre">1.0</span></code> or <code class="docutils literal notranslate"><span class="pre">10.0</span></code>) or smaller value (e.g.,
-<code class="docutils literal notranslate"><span class="pre">0.01</span></code>) works better. Setting <code class="code docutils literal notranslate"><span class="pre">adaptive_scale=1</span></code> lets SCS tune
-this automatically.</p></li>
+<code class="docutils literal notranslate"><span class="pre">0.01</span></code>) works better. With <code class="code docutils literal notranslate"><span class="pre">adaptive_scale=1</span></code> (the default) the
+value you set is only the starting value: SCS updates <code class="code docutils literal notranslate"><span class="pre">scale</span></code> during
+the solve, and the value it ends with is returned in the <code class="code docutils literal notranslate"><span class="pre">scale</span></code>
+field of the <a class="reference internal" href="../api/info.html#info"><span class="std std-ref">info</span></a> struct. To hold <code class="code docutils literal notranslate"><span class="pre">scale</span></code> at the value
+you set, use <code class="code docutils literal notranslate"><span class="pre">adaptive_scale=0</span></code>. This also turns off the per-row
+refinement (<code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code>, on by default), which only runs
+when <code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code> is on. To keep the automatic tuning of
+<code class="code docutils literal notranslate"><span class="pre">scale</span></code> but drop the per-row refinement, set
+<code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale=0</span></code>. See <a class="reference internal" href="../algorithm/scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a>.</p></li>
 <li><p><strong>Ensure</strong> <span class="math notranslate nohighlight">\(P\)</span> <strong>is symmetric positive semidefinite</strong>: SCS requires
 that only the upper triangle of <span class="math notranslate nohighlight">\(P\)</span> is provided. If <span class="math notranslate nohighlight">\(P\)</span> has
 negative eigenvalues the problem is non-convex and SCS cannot solve it.</p></li>

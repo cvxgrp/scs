@@ -133,7 +133,7 @@ the following fields.</p>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">scale_updates</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Number of updates to the scale parameter  (see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>)</p></td>
+<td><p>Number of updates to the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter or to the per-row multipliers of <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> in this solve; an update of both at once is counted once. Each update requires a new factorization when a direct linear solver is used. This can be nonzero even if <code class="code docutils literal notranslate"><span class="pre">scale</span></code> never changes (see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">pobj</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
@@ -181,7 +181,7 @@ the following fields.</p>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Final scale parameter, useful for initializing next solve (see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>)</p></td>
+<td><p>Final value of the scalar <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter, which can be passed as the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> setting of a new workspace for a similar problem (see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>). The per-row multipliers of <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> are not returned and start at one in a new workspace. When the same workspace is solved again both the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> and the multipliers carry over from the previous solve (see <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Caching the workspace and warm-starts</span></a>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">rejected_accel_steps</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
@@ -214,6 +214,15 @@ the following fields.</p>
 <p>The <code class="code docutils literal notranslate"><span class="pre">aa_stats</span></code> field contains detailed diagnostics from the Anderson
 acceleration linear solves. These counters are useful for diagnosing whether AA
 is active and, when AA updates are rejected, why they were rejected.</p>
+<p>Unlike <code class="code docutils literal notranslate"><span class="pre">rejected_accel_steps</span></code> and <code class="code docutils literal notranslate"><span class="pre">accepted_accel_steps</span></code>, which are
+set to zero at the start of every solve, the <code class="code docutils literal notranslate"><span class="pre">aa_stats</span></code> fields belong to
+the workspace and are not cleared between solves. If a workspace is reused for
+several solves, the <code class="code docutils literal notranslate"><span class="pre">n_*</span></code> counters are totals over all the solves so far,
+and the <code class="code docutils literal notranslate"><span class="pre">last_*</span></code> fields describe the most recent AA solve, which may have
+been in an earlier solve. The exception is <code class="code docutils literal notranslate"><span class="pre">iter</span></code>, which counts the calls
+to AA since its memory was last cleared: it restarts whenever an AA update is
+rejected and whenever the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> or the per-row multipliers are updated
+(see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>), but not at the start of a solve.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 25.0%" />
@@ -229,7 +238,7 @@ is active and, when AA updates are rejected, why they were rejected.</p>
 <tbody>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">iter</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Internal AA iteration counter</p></td>
+<td><p>Number of calls to AA since its memory was last cleared</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">n_accept</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>

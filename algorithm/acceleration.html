@@ -241,6 +241,14 @@ iterates might be stale.  Benchmark sweeps over the netlib LP and
 Maros-Meszaros QP collections found 5 to be a robust choice in practice
 (intervals near 1 destabilize the least-squares fit, very large intervals
 leave acceleration idle), and 5 is the default.</p>
+<p>In SCS, unlike the scheme above where <span class="math notranslate nohighlight">\(m_k = \min\{m, k\}\)</span>, AA does not
+produce a step until its memory is full. After a reset of the AA state the
+memory has to be filled again, which takes about <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code>
+calls, that is <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> times
+<code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> iterations (50 to 55 with the default settings),
+during which no accelerated step is taken. The AA state is reset
+after a rejected step (see below) and whenever the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> or the
+per-row multipliers are updated, see <a class="reference internal" href="scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>.</p>
 <p>The details about how the linear systems are solved and updated are abstracted
 away into the AA package. The current implementation uses a rank-revealing
 pivoted QR factorization (LAPACK <code class="code docutils literal notranslate"><span class="pre">geqp3</span></code>) of the augmented matrix (with
