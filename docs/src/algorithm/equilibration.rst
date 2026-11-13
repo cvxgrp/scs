@@ -116,7 +116,7 @@ Primal residual:
 
 .. math::
 
-  r_p = \|A x + s - b\| = (1/\sigma) \| D^{-1} (\hat A \hat x + \hat s + \hat b)\|
+  r_p = \|A x + s - b\| = (1/\sigma) \| D^{-1} (\hat A \hat x + \hat s - \hat b)\|
 
 Dual residual:
 

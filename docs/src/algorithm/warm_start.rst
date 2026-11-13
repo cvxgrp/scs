@@ -10,7 +10,23 @@ substantially speed up subsequent solve times since we can cache important
 quantities such as the matrix factorization and the data equilibration.
 Moreover, SCS supports warm-starting the solver with a guess of the solution,
 which can significantly reduce the total number of iterations required for
-convergence.  
+convergence.
+
+The workspace also keeps the :code:`scale` parameter and the per-row
+multipliers of :code:`adaptive_diag_scale` as the previous solve left them (see
+:ref:`Dynamic scale updating <updating_scale>`), together with the linear
+system set up for them (the factorization, for a direct solver). When
+:code:`adaptive_scale` is enabled, a later solve on the same workspace, with or
+without a warm-start and with or without a call to :code:`scs_update` in
+between, therefore starts from these adapted values and not from the
+:code:`scale` that was passed to :code:`scs_init`. Only the bookkeeping of the
+update procedure starts again in each solve: the samples it averages and the
+count of iterations since the last update. So the first update in a solve is
+made no earlier than iteration 100, and :code:`scale_updates` in the
+:ref:`info <info>` struct counts the updates of that solve only. One
+consequence is that solving the same problem twice on one workspace need not
+take the same number of iterations both times. To start again from the
+original :code:`scale`, create a new workspace with :code:`scs_init`.
 
 Re-using the workspace and warm-starting can be useful, for example, when
 solving a sequence of related problems such as in :ref:`Model predictive control
