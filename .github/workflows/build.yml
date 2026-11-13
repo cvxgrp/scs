@@ -24,6 +24,18 @@ jobs:
           make out/test_rw_settings SFLOAT=1 USE_LAPACK=0
           out/test_rw_settings
           make purge
+      - name: Check that USING_R compiles the R printing path
+        # This job does not use R: a one-line header stands in for R's
+        # R_ext/Print.h. The library must then call Rprintf, which it only
+        # does when USING_R reaches the compiler as the macro the source reads.
+        if: matrix.long == 0 && matrix.lapack == 0
+        run: |
+          mkdir -p "$RUNNER_TEMP/r_headers/R_ext"
+          echo 'void Rprintf(const char *, ...);' > "$RUNNER_TEMP/r_headers/R_ext/Print.h"
+          make out/libscsdir.a USING_R=1 USE_LAPACK=0 CFLAGS="-I$RUNNER_TEMP/r_headers"
+          nm out/libscsdir.a > "$RUNNER_TEMP/nm.txt"
+          grep -c ' U Rprintf' "$RUNNER_TEMP/nm.txt" || { echo "::error::USING_R=1 did not make the library call Rprintf"; exit 1; }
+          make purge
       - run: make DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: make test DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }}
       - run: out/run_tests_direct

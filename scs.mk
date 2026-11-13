@@ -255,9 +255,14 @@ PYTHON = 0
 ifneq ($(PYTHON), 0)
 CUSTOM_FLAGS += -DPYTHON=$(PYTHON) # python extension
 endif
+# Compiling for use in R: SCS then prints with Rprintf, which needs the R
+# headers on the include path. The macro the source reads is R_LANG, which is
+# also what the R package passes in CFLAGS when it builds SCS. Only the
+# libraries can be built this way without R: the demo and test programs call
+# Rprintf and do not link.
 USING_R = 0
 ifneq ($(USING_R), 0)
-CUSTOM_FLAGS += -DUSING_R=$(USING_R) # R extension
+CUSTOM_FLAGS += -DR_LANG # R extension
 endif
 
 # debug to see var values, e.g. 'make print-OBJECTS' shows OBJECTS value
