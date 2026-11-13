@@ -11,21 +11,27 @@
  * dimensions in the issue's log exactly: n = 12, m = 17, nnz(A) = 25,
  * z = 6, four psd blocks of side 2, 1, 1, 3.
  *
- * SCS converges on it, but with a textbook O(1/k) tail: each decade of
- * tolerance costs roughly a decade of iterations (on the order of 1e4 at
- * eps 1e-4, 1e4-1e5 at 1e-5 and 5e5 at 1e-6; the exact counts vary with the
- * platform and BLAS), which is why it looked like a failure to converge in
- * 2022 at 3.2.0, and
- * still does at any default iteration budget. No scale, rho_x, alpha or
- * acceleration setting removes the tail; the relaxation is degenerate (the
- * Robinson form sits on the boundary of the SOS cone), which is the regime
- * where a first-order method's rate collapses.
+ * SCS converges on it, but slowly: the relaxation is degenerate (the Robinson
+ * form sits on the boundary of the SOS cone), which is the regime where a
+ * first-order method's rate collapses. That is why it looked like a failure
+ * to converge in 2022 at 3.2.0. No scale, rho_x, alpha or acceleration
+ * setting removes it.
  *
- * The test therefore runs at eps 1e-5, where the iteration count is
- * reasonable, and pins the objective against the exact value. It guards the
- * data, not a bug.
+ * The test runs at eps 1e-4, which the iterates reach steadily, in about
+ * 1e3 to 4e3 iterations. It must not be tightened to 1e-5. There the
+ * residuals sit on a plateau just above the tolerance (the dual residual
+ * moves from 2.7e-5 to 2.5e-5 between iteration 1e4 and 2e5) and the solve
+ * ends only when a jump happens to land inside it, so the iteration count
+ * is decided by rounding: changing `scale` by one part in 1e13 moved it
+ * between 6e3 and more than 2e5, and CI runners with different CPUs (and so
+ * different BLAS kernels) took 3e4 to more than 2e5, which is the limit
+ * stored in the data file.
+ *
+ * The price of 1e-4 is a less accurate objective: it lands within 2.6e-3 of
+ * the exact value, against 8e-4 at 1e-5, hence the tolerance of 5e-3 below.
+ * The test guards the data, not a bug.
  */
 static const char *issue_220(void) {
   scs_float OPT = 3825. / 4096.; /* exact */
-  return _test_prob_from_data_eps("test/problems/issue_220", OPT, 1e-5, 1e-3);
+  return _test_prob_from_data_eps("test/problems/issue_220", OPT, 1e-4, 5e-3);
 }
