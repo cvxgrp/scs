@@ -219,8 +219,29 @@ solution. The solver also harvests approximate eigenvectors of the reduced
 matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
 2010) and uses up to <code class="code docutils literal notranslate"><span class="pre">DEFLATE_VECTORS</span></code> (default 30) of them to deflate
 the smallest eigenvalues from subsequent solves, which substantially reduces
-the CG iterations needed on ill-conditioned problems at no additional
-matrix-multiply cost.</p>
+the CG iterations needed on ill-conditioned problems. Applying the deflation
+in a solve costs no matrix multiplies. Each harvest costs the multiplies of
+one CG iteration per vector.</p>
+<p>Deflation needs LAPACK and double precision. It is switched off when SCS is
+built without LAPACK (<code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=0</span></code>) or in single precision
+(<code class="code docutils literal notranslate"><span class="pre">SFLOAT=1</span></code>), and only the CPU indirect solver has it. Single precision
+builds also use <span class="math notranslate nohighlight">\(0.2\)</span> for <code class="code docutils literal notranslate"><span class="pre">CG_TOL_FACTOR</span></code> and <span class="math notranslate nohighlight">\(1.5\)</span> for
+<code class="code docutils literal notranslate"><span class="pre">CG_RATE</span></code>.</p>
+<p>Deflation keeps <span class="math notranslate nohighlight">\(2n\)</span> numbers per vector in memory (<span class="math notranslate nohighlight">\(60n\)</span> by
+default), and a harvest takes a further <span class="math notranslate nohighlight">\(n\)</span> numbers per window entry and
+<span class="math notranslate nohighlight">\(2n\)</span> per vector while it runs (<span class="math notranslate nohighlight">\(150n\)</span> by default). Two environment
+variables change this for a run without recompiling. Both are read once, when
+the solver is set up (<code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>):</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">SCS_DEFLATE</span></code> sets the number of deflation vectors in place of
+<code class="code docutils literal notranslate"><span class="pre">DEFLATE_VECTORS</span></code>. <code class="code docutils literal notranslate"><span class="pre">SCS_DEFLATE=0</span></code> turns deflation off.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">SCS_EIGCG_WIN</span></code> sets the size of the eigCG window, the number of CG
+vectors that a harvest keeps in memory (default 60, <code class="code docutils literal notranslate"><span class="pre">EIGCG_WINDOW</span></code> in
+<code class="code docutils literal notranslate"><span class="pre">linsys/cpu/indirect/private.c</span></code>). The window is never smaller than
+three times the number of deflation vectors, so with the default 30 vectors
+it is 90 and a smaller <code class="code docutils literal notranslate"><span class="pre">SCS_EIGCG_WIN</span></code> has no effect unless
+<code class="code docutils literal notranslate"><span class="pre">SCS_DEFLATE</span></code> is lowered as well.</p></li>
+</ul>
 <p>The indirect method has the advantage of not requiring an expensive
 factorization but typically is slower on a per-iteration basis. In most cases
 the factorization is relatively cheap so the direct method is the default,

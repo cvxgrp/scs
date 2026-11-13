@@ -109,14 +109,25 @@ that our priorities align.</p>
 <section id="building-the-docs">
 <h2>Building the docs<a class="headerlink" href="#building-the-docs" title="Link to this heading"></a></h2>
 <p>The example pages show real solver output, which is generated at build time
-rather than committed, so it can never drift from the solver. Building the docs
-therefore runs the C and Python examples and needs their dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>sphinx<span class="w"> </span>sphinx-rtd-theme<span class="w"> </span>breathe<span class="w"> </span>docutils<span class="w">   </span><span class="c1"># the docs themselves</span>
-pip<span class="w"> </span>install<span class="w"> </span>scs<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>cvxpy<span class="w">                      </span><span class="c1"># to run the examples</span>
+rather than committed. The C example is built from this source tree, so its
+output matches the code being documented. The Python examples run the
+<code class="code docutils literal notranslate"><span class="pre">scs</span></code> package that the interpreter imports, which is the latest release
+on PyPI in the docs workflow (<code class="code docutils literal notranslate"><span class="pre">.github/workflows/docs.yml</span></code>), so their
+output, version banner included, is that of the installed Python package and
+not of this tree. After a release of the C library the Python example pages
+show the new version only once the Python package has been released and the
+docs have been built again. Building the docs therefore runs the C and Python
+examples and needs their dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>docs/src/requirements.txt<span class="w">   </span><span class="c1"># the docs themselves (pinned versions)</span>
+pip<span class="w"> </span>install<span class="w"> </span>scs<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>cvxpy<span class="w">          </span><span class="c1"># to run the examples</span>
 <span class="nb">cd</span><span class="w"> </span>docs/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>docs
 </pre></div>
 </div>
-<p>A C compiler and BLAS/LAPACK are also required, for the C example. Use
+<p>Doxygen is also required: the C API pages are generated from the headers by
+<code class="code docutils literal notranslate"><span class="pre">doxygen</span></code>, which must be on the <code class="code docutils literal notranslate"><span class="pre">PATH</span></code>. A C compiler and
+BLAS/LAPACK are required too, for the C example. Sphinx warnings fail the
+build. Pass <code class="code docutils literal notranslate"><span class="pre">SPHINXOPTS=</span></code> to <code class="code docutils literal notranslate"><span class="pre">make</span></code> to build a work in progress
+that still warns. Use
 <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">example_outputs</span></code> to regenerate just the captured output, and
 <code class="code docutils literal notranslate"><span class="pre">DOCS_PYTHON=/path/to/venv/bin/python</span></code> to point at a specific interpreter.</p>
 <p>The one exception is <code class="code docutils literal notranslate"><span class="pre">examples/qp.m.out</span></code>, which is committed: refreshing

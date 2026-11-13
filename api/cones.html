@@ -180,6 +180,20 @@ time by setting <code class="code docutils literal notranslate"><span class="pre
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DUSE_LAPACK<span class="o">=</span>ON<span class="w"> </span>-DUSE_SPECTRAL_CONES<span class="o">=</span>ON<span class="w"> </span>..
 </pre></div>
 </div>
+<p>The flag also changes the public header: the spectral cone fields of
+<code class="code docutils literal notranslate"><span class="pre">ScsCone</span></code> (<code class="code docutils literal notranslate"><span class="pre">d</span></code>, <code class="code docutils literal notranslate"><span class="pre">dsize</span></code>, <code class="code docutils literal notranslate"><span class="pre">nuc_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">nuc_n</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">nucsize</span></code>, <code class="code docutils literal notranslate"><span class="pre">ell1</span></code>, <code class="code docutils literal notranslate"><span class="pre">ell1_size</span></code>, <code class="code docutils literal notranslate"><span class="pre">sl_n</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">sl_k</span></code>, <code class="code docutils literal notranslate"><span class="pre">sl_size</span></code>) exist only when <code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES</span></code>
+is defined, so the struct is larger with it. Any code that includes
+<code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> and links against a library built with spectral cones must
+therefore be compiled with <code class="code docutils literal notranslate"><span class="pre">-DUSE_SPECTRAL_CONES</span></code> as well. Neither
+build system does this for you: the installed <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> is the same
+file in both cases, and the CMake targets do not pass the definition on to
+the projects that link them. This applies even to programs that use none of
+the spectral cones: the library reads these fields each time a problem is
+set up (in <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>, which <code class="code docutils literal notranslate"><span class="pre">scs</span></code> calls), so they must be
+present and set to zero (<code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code> for the arrays) when unused. A program compiled without the definition passes a struct that is
+too short, and the library reads past the end of it.</p>
 <p>The API and behavior of these cones may change in future releases.
 See <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">Compile flags</span></a> for more details.</p>
 </div>
@@ -194,13 +208,13 @@ See <a class="reference internal" href="compile_flags.html#compile-flags"><span 
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Log-determinant cone</p></td>
-<td><p><span class="math notranslate nohighlight">\(\{(t, v, X) \mid t \leq v \log\det(X/v),\; v &gt; 0,\; X \succ 0 \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">d</span></code> array of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">dsize</span></code> elements, each <span class="math notranslate nohighlight">\(d_i = n_i\)</span> where <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{n_i \times n_i}\)</span>.</p></td>
+<td><p><span class="math notranslate nohighlight">\(\{(t, v, X) \mid -v \log\det(X/v) \leq t,\; v &gt; 0,\; X \succ 0 \}\)</span></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">d</span></code> array of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">dsize</span></code> elements, each <span class="math notranslate nohighlight">\(d_i = n_i\)</span> where <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{n_i \times n_i}\)</span> (See <a class="reference internal" href="#spectral-vec"><span class="std std-ref">note</span></a>).</p></td>
 <td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{dsize}} \left(\frac{d_i(d_i+1)}{2} + 2\right)\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p>Nuclear norm cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, X) \mid \|X\|_* \leq t \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">nuc_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">nuc_n</span></code> arrays of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">nucsize</span></code> elements. <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{m_i \times n_i}\)</span>.</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">nuc_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">nuc_n</span></code> arrays of matrix dimensions with <code class="code docutils literal notranslate"><span class="pre">nucsize</span></code> elements. <span class="math notranslate nohighlight">\(X \in \mathbf{R}^{m_i \times n_i}\)</span> with <span class="math notranslate nohighlight">\(m_i \geq n_i \geq 1\)</span> (See <a class="reference internal" href="#spectral-vec"><span class="std std-ref">note</span></a>).</p></td>
 <td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{nucsize}} (m_i n_i + 1)\)</span></p></td>
 </tr>
 <tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\ell_1\)</span> norm cone</p></td>
@@ -210,11 +224,30 @@ See <a class="reference internal" href="compile_flags.html#compile-flags"><span 
 </tr>
 <tr class="row-odd"><td><p>Sum-of-largest-eigenvalues cone</p></td>
 <td><p><span class="math notranslate nohighlight">\(\{(t, X) \mid \sum_{i=1}^{k} \lambda_i(X) \leq t \}\)</span></p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">sl_n</span></code>, <code class="code docutils literal notranslate"><span class="pre">sl_k</span></code> arrays of matrix dimensions and <span class="math notranslate nohighlight">\(k\)</span> values with <code class="code docutils literal notranslate"><span class="pre">sl_size</span></code> elements.</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">sl_n</span></code>, <code class="code docutils literal notranslate"><span class="pre">sl_k</span></code> arrays of matrix dimensions and <span class="math notranslate nohighlight">\(k\)</span> values with <code class="code docutils literal notranslate"><span class="pre">sl_size</span></code> elements, with <span class="math notranslate nohighlight">\(0 &lt; k_i &lt; n_i\)</span> (See <a class="reference internal" href="#spectral-vec"><span class="std std-ref">note</span></a>).</p></td>
 <td><p><span class="math notranslate nohighlight">\(\displaystyle \sum_{i=1}^{\text{sl\_size}} \left(\frac{n_i(n_i+1)}{2} + 1\right)\)</span></p></td>
 </tr>
 </tbody>
 </table>
+<p id="spectral-vec">The matrix <span class="math notranslate nohighlight">\(X\)</span> in these cones must be vectorized as follows. In the
+log-determinant and sum-of-largest-eigenvalues cones <span class="math notranslate nohighlight">\(X\)</span> is symmetric and
+is vectorized as for the <a class="reference internal" href="#sdcone"><span class="std std-ref">semidefinite cone</span></a>: the lower triangle
+is stacked column-wise with the off-diagonal entries scaled by <span class="math notranslate nohighlight">\(\sqrt{2}\)</span>,
+which gives a vector of length <span class="math notranslate nohighlight">\(n_i(n_i+1)/2\)</span>. In the nuclear norm cone
+<span class="math notranslate nohighlight">\(X\)</span> is a general <span class="math notranslate nohighlight">\(m_i \times n_i\)</span> matrix and its entries are stacked
+column by column with no scaling, which gives a vector of length
+<span class="math notranslate nohighlight">\(m_i n_i\)</span>. The scalar entries come first: the rows are stacked as
+<code class="code docutils literal notranslate"><span class="pre">[t;</span> <span class="pre">v;</span> <span class="pre">vec(X)]</span></code> for the log-determinant cone and as <code class="code docutils literal notranslate"><span class="pre">[t;</span> <span class="pre">vec(X)]</span></code>
+for the nuclear norm and sum-of-largest-eigenvalues cones.</p>
+<p>The nuclear norm cone requires <span class="math notranslate nohighlight">\(m_i \geq n_i\)</span>. Since
+<span class="math notranslate nohighlight">\(\|X\|_* = \|X^\top\|_*\)</span> a wide matrix can be handled by passing its
+transpose. The sum-of-largest-eigenvalues cone requires <span class="math notranslate nohighlight">\(0 &lt; k_i &lt; n_i\)</span>
+(for <span class="math notranslate nohighlight">\(k_i = n_i\)</span> the constraint is the linear inequality
+<span class="math notranslate nohighlight">\(\text{Trace}(X) \leq t\)</span>). SCS reports a cone validation error at setup
+if these conditions do not hold.</p>
+<p>The log-determinant cone is the epigraph of the perspective of
+<span class="math notranslate nohighlight">\(-\log\det\)</span>, so with <span class="math notranslate nohighlight">\(v = 1\)</span> minimizing <span class="math notranslate nohighlight">\(t\)</span> maximizes
+<span class="math notranslate nohighlight">\(\log\det X\)</span>.</p>
 <p><strong>Note</strong>:
 The rows of the data matrix <span class="math notranslate nohighlight">\(A\)</span> correspond to the cones in
 <span class="math notranslate nohighlight">\(\mathcal{K}\)</span>. The rows of <span class="math notranslate nohighlight">\(A\)</span> <strong>must be in the order of the cones

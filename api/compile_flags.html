@@ -57,7 +57,11 @@
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Compile flags</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Compile flags</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#other-makefile-variables">Other Makefile variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cmake">CMake</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#interfaces">Interfaces</a></li>
 </ul>
 </li>
@@ -98,10 +102,15 @@
   <section id="compile-flags">
 <span id="id1"></span><h1>Compile flags<a class="headerlink" href="#compile-flags" title="Link to this heading"></a></h1>
 <p>Typically the user will not need to interact with these flags, but we document them
-here for completeness.  Note this list is not exhaustive, others are not exposed
-but defined in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>.  The list below are defined in
-<code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code> and can be overridden via the command line when compiling by
-executing, e.g., <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">DLONG=1</span></code>, to set the <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> flag to True.</p>
+here for completeness.  The flags in the table below are defined in
+<code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code> (all but <code class="code docutils literal notranslate"><span class="pre">R_LANG</span></code>, see its row) and can be overridden via
+the command line when compiling with the Makefile by executing, e.g.,
+<code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">DLONG=1</span></code>, to set the <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> flag to True.  Only some of them
+are available in the CMake build, see <a class="reference internal" href="#compile-flags-cmake"><span class="std std-ref">below</span></a>.  Note
+this list is not exhaustive: more variables of the Makefile are listed
+<a class="reference internal" href="#compile-flags-make"><span class="std std-ref">below</span></a> (those of the CUDA builds are on the
+<a class="reference internal" href="../install/c.html#c-install"><span class="std std-ref">install</span></a> page), and further constants are not exposed but
+defined in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 25.0%" />
@@ -123,7 +132,7 @@ executing, e.g., <code class="code docutils literal notranslate"><span class="pr
 <td><p>0</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code></p></td>
-<td><p>If True use 32 bit floats, else 64 bit (WARNING: currently broken)</p></td>
+<td><p>If True use 32 bit floats, else 64 bit. WARNING: experimental. Single precision is not covered by the test suite, and most of the solver tests fail when built with it. It does not work with Apple’s Accelerate BLAS, which is what <code class="code docutils literal notranslate"><span class="pre">make</span></code> links on macOS when <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>: Accelerate returns a <code class="code docutils literal notranslate"><span class="pre">double</span></code> from the single precision <code class="code docutils literal notranslate"><span class="pre">dot</span></code> and <code class="code docutils literal notranslate"><span class="pre">nrm2</span></code>, where SCS expects a <code class="code docutils literal notranslate"><span class="pre">float</span></code> (see <code class="code docutils literal notranslate"><span class="pre">src/linalg.c</span></code>)</p></td>
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
@@ -207,13 +216,118 @@ executing, e.g., <code class="code docutils literal notranslate"><span class="pr
 <td><p>True/False</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USING_R</span></code></p></td>
-<td><p>If compiling for use in R</p></td>
-<td><p>True/False</p></td>
-<td><p>0</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">R_LANG</span></code></p></td>
+<td><p>If compiling for use in R: SCS prints with <code class="code docutils literal notranslate"><span class="pre">Rprintf</span></code>. This is not a variable of <code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code>, so define it for the compiler, e.g., <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">CFLAGS=-DR_LANG</span></code>, with the R headers on the include path. The <code class="code docutils literal notranslate"><span class="pre">USING_R</span></code> variable of <code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code> has no effect, the source does not read it</p></td>
+<td><p>Defined or not defined</p></td>
+<td><p>Not defined</p></td>
 </tr>
 </tbody>
 </table>
+<section id="other-makefile-variables">
+<span id="compile-flags-make"></span><h2>Other Makefile variables<a class="headerlink" href="#other-makefile-variables" title="Link to this heading"></a></h2>
+<p>The Makefile also uses the variables below. They are set in the same way, e.g.,
+<code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">OPT=-O3</span> <span class="pre">BLASLDFLAGS=-lopenblas</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 55.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">OPT</span></code></p></td>
+<td><p>Optimization flags for the compiler. The default includes <code class="code docutils literal notranslate"><span class="pre">-march=native</span></code>, so the libraries are tuned to the processor of the machine they are built on and may not run on a different one. Use, e.g., <code class="code docutils literal notranslate"><span class="pre">OPT=-O3</span></code> for libraries that will run on other machines. (The CMake build does not use <code class="code docutils literal notranslate"><span class="pre">-march=native</span></code>)</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">-O3</span> <span class="pre">-march=native</span> <span class="pre">-fno-math-errno</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">BLASLDFLAGS</span></code></p></td>
+<td><p>Linker flags for the <a class="reference internal" href="../blas_lapack/index.html#blas-lapack"><span class="std std-ref">BLAS and LAPACK</span></a> libraries, e.g., <code class="code docutils literal notranslate"><span class="pre">BLASLDFLAGS=-lopenblas</span></code> or <code class="code docutils literal notranslate"><span class="pre">BLASLDFLAGS=&quot;-L&lt;folder&gt;</span> <span class="pre">-lopenblas&quot;</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">-llapack</span> <span class="pre">-lblas</span></code> (empty if <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK=0</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">PREFIX</span></code></p></td>
+<td><p>Where <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> copies the header files (to <code class="code docutils literal notranslate"><span class="pre">$(PREFIX)/include/scs</span></code>) and the direct and indirect libraries (to <code class="code docutils literal notranslate"><span class="pre">$(PREFIX)/lib</span></code>). <code class="code docutils literal notranslate"><span class="pre">DESTDIR</span></code>, if set, is put in front of <code class="code docutils literal notranslate"><span class="pre">PREFIX</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">/usr/local</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code></p></td>
+<td><p>Location of MKL, for <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">mkl</span></code></p></td>
+<td><p>Not set</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">OMPROOT</span></code></p></td>
+<td><p>Folder whose <code class="code docutils literal notranslate"><span class="pre">lib</span></code> subfolder holds the Intel OpenMP library (<code class="code docutils literal notranslate"><span class="pre">libiomp5</span></code>) that <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">mkl</span></code> links, typically <code class="code docutils literal notranslate"><span class="pre">/opt/intel/oneapi/compiler/latest</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">$(MKLROOT)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">COVERAGE</span></code></p></td>
+<td><p>If True compile with <code class="code docutils literal notranslate"><span class="pre">--coverage</span></code> to generate test coverage data</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">CFLAGS</span></code></p></td>
+<td><p>Additional compiler flags, e.g., <code class="code docutils literal notranslate"><span class="pre">CFLAGS=-DSPECTRAL_DEBUG</span></code>. SCS adds its own flags after them</p></td>
+<td><p>Empty</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="code docutils literal notranslate"><span class="pre">OPT</span></code>, <code class="code docutils literal notranslate"><span class="pre">PREFIX</span></code>, <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code>, <code class="code docutils literal notranslate"><span class="pre">OMPROOT</span></code> and <code class="code docutils literal notranslate"><span class="pre">CFLAGS</span></code>
+can also be set as environment variables. <code class="code docutils literal notranslate"><span class="pre">BLASLDFLAGS</span></code>, <code class="code docutils literal notranslate"><span class="pre">COVERAGE</span></code>
+and the <code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code> flags of the first table are only read from the command
+line of <code class="code docutils literal notranslate"><span class="pre">make</span></code>.</p>
+</section>
+<section id="cmake">
+<span id="compile-flags-cmake"></span><h2>CMake<a class="headerlink" href="#cmake" title="Link to this heading"></a></h2>
+<p>With CMake the flags are options that are set when configuring, e.g.,
+<code class="code docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-DDLONG=ON</span> <span class="pre">..</span></code>. The following flags of the first table are CMake
+options, with the same default: <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code>, <code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">NO_PRINTING</span></code>, <code class="code docutils literal notranslate"><span class="pre">NO_READ_WRITE</span></code>, <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code>, <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">USE_OPENMP</span></code>, <code class="code docutils literal notranslate"><span class="pre">USE_PARALLEL_PSD</span></code> and <code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES</span></code>.
+<code class="code docutils literal notranslate"><span class="pre">GPU_TRANSPOSE_MAT</span></code> is a CMake option too, but only together with
+<code class="code docutils literal notranslate"><span class="pre">-DUSE_GPU=ON</span></code>.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">CTRLC</span></code> is always enabled in a CMake build. <code class="code docutils literal notranslate"><span class="pre">NO_TIMER</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">NO_VALIDATE</span></code>, <code class="code docutils literal notranslate"><span class="pre">VERBOSITY</span></code>, <code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code> are not CMake options, and CMake ignores them with a warning
+if they are passed as one (<code class="code docutils literal notranslate"><span class="pre">-DNO_TIMER=ON</span></code>, say). They can be passed to
+the compiler directly, e.g., <code class="code docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-DCMAKE_C_FLAGS=&quot;-DNO_TIMER=1&quot;</span> <span class="pre">..</span></code>.</p>
+<p>CMake finds the BLAS and LAPACK libraries itself. To choose a particular
+library set CMake’s <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FindBLAS.html">BLA_VENDOR</a>, e.g.,
+<code class="code docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-DBLA_VENDOR=OpenBLAS</span> <span class="pre">..</span></code>. If the <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment
+variable is set and <code class="code docutils literal notranslate"><span class="pre">BLA_VENDOR</span></code> is not, SCS asks CMake for MKL. If CMake
+finds no LAPACK, SCS links <code class="code docutils literal notranslate"><span class="pre">blas</span></code> and <code class="code docutils literal notranslate"><span class="pre">lapack</span></code> by name, except with
+<code class="code docutils literal notranslate"><span class="pre">BLAS64=ON</span></code>, where the configuration stops with an error.</p>
+<p>The options that select what is built (<code class="code docutils literal notranslate"><span class="pre">BUILD_SHARED_LIBS</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">BUILD_TESTING</span></code> and the options for the other linear solvers) are
+described in the <a class="reference internal" href="../install/c.html#c-install"><span class="std std-ref">install</span></a> and
+<a class="reference internal" href="../linear_solver/index.html#linear-solver"><span class="std std-ref">linear solver</span></a> pages. CMake has two more options, which
+the Makefile does not have (there, pass the definition in <code class="code docutils literal notranslate"><span class="pre">CFLAGS</span></code>):</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Permitted values</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_TIMING_FLAG</span></code></p></td>
+<td><p>Time the projections onto the matrix cones and the spectral vector cones. Requires <code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_CONES=ON</span></code>. Defines <code class="code docutils literal notranslate"><span class="pre">SPECTRAL_TIMING_FLAG</span></code>, which adds the fields <code class="code docutils literal notranslate"><span class="pre">ave_time_matrix_cone_proj</span></code> and <code class="code docutils literal notranslate"><span class="pre">ave_time_vector_cone_proj</span></code> (average time per iteration, in milliseconds) to the end of <a class="reference internal" href="c.html#scsinfo"><span class="std std-ref">ScsInfo</span></a>. Code that calls a library built this way must be compiled with <code class="code docutils literal notranslate"><span class="pre">-DSPECTRAL_TIMING_FLAG</span></code> as well, so that both use the same <code class="code docutils literal notranslate"><span class="pre">ScsInfo</span></code></p></td>
+<td><p>ON/OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">USE_SPECTRAL_DEBUG</span></code></p></td>
+<td><p>Print debugging output from the spectral cone projections (defines <code class="code docutils literal notranslate"><span class="pre">SPECTRAL_DEBUG</span></code>)</p></td>
+<td><p>ON/OFF</p></td>
+<td><p>OFF</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 

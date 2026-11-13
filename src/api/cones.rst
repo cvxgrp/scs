@@ -75,6 +75,21 @@ Spectral cones (experimental)
 
       cmake -DUSE_LAPACK=ON -DUSE_SPECTRAL_CONES=ON ..
 
+   The flag also changes the public header: the spectral cone fields of
+   :code:`ScsCone` (:code:`d`, :code:`dsize`, :code:`nuc_m`, :code:`nuc_n`,
+   :code:`nucsize`, :code:`ell1`, :code:`ell1_size`, :code:`sl_n`,
+   :code:`sl_k`, :code:`sl_size`) exist only when :code:`USE_SPECTRAL_CONES`
+   is defined, so the struct is larger with it. Any code that includes
+   :code:`scs.h` and links against a library built with spectral cones must
+   therefore be compiled with :code:`-DUSE_SPECTRAL_CONES` as well. Neither
+   build system does this for you: the installed :code:`scs.h` is the same
+   file in both cases, and the CMake targets do not pass the definition on to
+   the projects that link them. This applies even to programs that use none of
+   the spectral cones: the library reads these fields each time a problem is
+   set up (in :code:`scs_init`, which :code:`scs` calls), so they must be
+   present and set to zero (:code:`SCS_NULL` for the arrays) when unused. A program compiled without the definition passes a struct that is
+   too short, and the library reads past the end of it.
+
    The API and behavior of these cones may change in future releases.
    See :ref:`compile_flags` for more details.
 
@@ -88,12 +103,12 @@ The following cones are available when spectral cone support is enabled.
      - Entries in :ref:`ScsCone <ScsCone>`
      - Number of rows in :math:`A, b`
    * - Log-determinant cone
-     - :math:`\{(t, v, X) \mid t \leq v \log\det(X/v),\; v > 0,\; X \succ 0 \}`
-     - :code:`d` array of matrix dimensions with :code:`dsize` elements, each :math:`d_i = n_i` where :math:`X \in \mathbf{R}^{n_i \times n_i}`.
+     - :math:`\{(t, v, X) \mid -v \log\det(X/v) \leq t,\; v > 0,\; X \succ 0 \}`
+     - :code:`d` array of matrix dimensions with :code:`dsize` elements, each :math:`d_i = n_i` where :math:`X \in \mathbf{R}^{n_i \times n_i}` (See :ref:`note <spectral_vec>`).
      - :math:`\displaystyle \sum_{i=1}^{\text{dsize}} \left(\frac{d_i(d_i+1)}{2} + 2\right)`
    * - Nuclear norm cone
      - :math:`\{(t, X) \mid \|X\|_* \leq t \}`
-     - :code:`nuc_m`, :code:`nuc_n` arrays of matrix dimensions with :code:`nucsize` elements. :math:`X \in \mathbf{R}^{m_i \times n_i}`.
+     - :code:`nuc_m`, :code:`nuc_n` arrays of matrix dimensions with :code:`nucsize` elements. :math:`X \in \mathbf{R}^{m_i \times n_i}` with :math:`m_i \geq n_i \geq 1` (See :ref:`note <spectral_vec>`).
      - :math:`\displaystyle \sum_{i=1}^{\text{nucsize}} (m_i n_i + 1)`
    * - :math:`\ell_1` norm cone
      - :math:`\{(t, x) \mid \|x\|_1 \leq t \}`
@@ -101,8 +116,32 @@ The following cones are available when spectral cone support is enabled.
      - :math:`\displaystyle \sum_{i=1}^{\text{ell1\_size}} (\text{ell1}_i + 1)`
    * - Sum-of-largest-eigenvalues cone
      - :math:`\{(t, X) \mid \sum_{i=1}^{k} \lambda_i(X) \leq t \}`
-     - :code:`sl_n`, :code:`sl_k` arrays of matrix dimensions and :math:`k` values with :code:`sl_size` elements.
+     - :code:`sl_n`, :code:`sl_k` arrays of matrix dimensions and :math:`k` values with :code:`sl_size` elements, with :math:`0 < k_i < n_i` (See :ref:`note <spectral_vec>`).
      - :math:`\displaystyle \sum_{i=1}^{\text{sl\_size}} \left(\frac{n_i(n_i+1)}{2} + 1\right)`
+
+.. _spectral_vec:
+
+The matrix :math:`X` in these cones must be vectorized as follows. In the
+log-determinant and sum-of-largest-eigenvalues cones :math:`X` is symmetric and
+is vectorized as for the :ref:`semidefinite cone <sdcone>`: the lower triangle
+is stacked column-wise with the off-diagonal entries scaled by :math:`\sqrt{2}`,
+which gives a vector of length :math:`n_i(n_i+1)/2`. In the nuclear norm cone
+:math:`X` is a general :math:`m_i \times n_i` matrix and its entries are stacked
+column by column with no scaling, which gives a vector of length
+:math:`m_i n_i`. The scalar entries come first: the rows are stacked as
+:code:`[t; v; vec(X)]` for the log-determinant cone and as :code:`[t; vec(X)]`
+for the nuclear norm and sum-of-largest-eigenvalues cones.
+
+The nuclear norm cone requires :math:`m_i \geq n_i`. Since
+:math:`\|X\|_* = \|X^\top\|_*` a wide matrix can be handled by passing its
+transpose. The sum-of-largest-eigenvalues cone requires :math:`0 < k_i < n_i`
+(for :math:`k_i = n_i` the constraint is the linear inequality
+:math:`\text{Trace}(X) \leq t`). SCS reports a cone validation error at setup
+if these conditions do not hold.
+
+The log-determinant cone is the epigraph of the perspective of
+:math:`-\log\det`, so with :math:`v = 1` minimizing :math:`t` maximizes
+:math:`\log\det X`.
 
 
 **Note**:

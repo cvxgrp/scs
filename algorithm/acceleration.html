@@ -281,7 +281,10 @@ reduces to <span class="math notranslate nohighlight">\(x^{k+1} = f(x^k)\)</span
 into the matrices by appending <span class="math notranslate nohighlight">\(\sqrt{\epsilon} I\)</span> to the bottom of
 <span class="math notranslate nohighlight">\(S_k\)</span> or <span class="math notranslate nohighlight">\(Y_k\)</span>, which is useful when using a QR or SVD decomposition
 to solve the equations.</p>
-<p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code> controls <span class="math notranslate nohighlight">\(\epsilon\)</span>. The
+<p>The setting <code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code> controls <span class="math notranslate nohighlight">\(\epsilon\)</span>: a
+positive value is scaled by the norms of the matrices, a negative value is
+used as it is (its magnitude), and zero turns the regularization off (see
+<a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">Settings</span></a>). The
 default (<code class="code docutils literal notranslate"><span class="pre">1e-8</span></code>) is tuned for type-I; type-II is typically run with a
 smaller value such as <code class="code docutils literal notranslate"><span class="pre">1e-12</span></code>.</p>
 </section>

@@ -100,20 +100,34 @@
   <section id="blas-and-lapack">
 <span id="blas-lapack"></span><h1>BLAS and LAPACK<a class="headerlink" href="#blas-and-lapack" title="Link to this heading"></a></h1>
 <p>BLAS and LAPACK are dense numerical linear algebra packages. SCS uses these
-libraries in two places:</p>
+libraries in the following places:</p>
 <ul class="simple">
-<li><p>To compute the eigen-decomposition for the semidefinite <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">cone</span></a> projection</p></li>
+<li><p>To compute the eigen-decomposition for the semidefinite <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">cone</span></a>
+projection, and the eigen-decompositions and singular value decompositions
+for the <a class="reference internal" href="../api/cones.html#spectral-cones"><span class="std std-ref">spectral cones</span></a></p></li>
 <li><p>To solve the linear system in <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a></p></li>
+<li><p>To form and factorize the matrix in the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> linear
+solver</p></li>
+<li><p>To compute the eigenvectors that the <a class="reference internal" href="../linear_solver/index.html#indirect"><span class="std std-ref">indirect</span></a> linear
+solver uses for deflation</p></li>
+<li><p>For the basic vector operations (norms, inner products, scaling and adding
+vectors), which are plain C loops otherwise</p></li>
 </ul>
-<p>Therefore compiling with BLAS / LAPACK <strong>is optional</strong>. If you are
-not interested in solving SDPs or using acceleration then there is no need to
-use these libraries. To compile without these libraries you can set the
+<p>Compiling with BLAS / LAPACK <strong>is optional</strong>: SCS builds and runs without
+them. A build without them cannot solve SDPs (the setup fails for a
+semidefinite cone larger than <span class="math notranslate nohighlight">\(1 \times 1\)</span>), cannot include the spectral
+cones or the <a class="reference internal" href="#blas-lapack-openmp"><span class="std std-ref">parallel PSD projection</span></a>, does not
+apply Anderson acceleration (whatever the value of
+<code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code>), does not have the dense direct linear solver,
+and runs the indirect linear solver without deflation. If you need none of
+these then there is no need to use these libraries. To compile without these
+libraries you can set the
 <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code>, e.g., if
 <a class="reference internal" href="../install/index.html#install"><span class="std std-ref">installing</span></a> using <code class="code docutils literal notranslate"><span class="pre">make</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span><span class="nv">USE_LAPACK</span><span class="o">=</span><span class="m">0</span>
 </pre></div>
 </div>
-<p>If you do want to solve SDPs or use Anderson acceleration, then you will need
+<p>If you do want any of the above, then you will need
 to install BLAS and LAPACK libraries (these are pre-installed in most machines).
 If calling SCS from another language (Python, MATLAB etc.) then these libraries
 should be pre-installed and SCS will try to link against them. Otherwise
@@ -161,6 +175,18 @@ goes into the linear system, the solve as a whole gains little.</p></li>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DUSE_OPENMP<span class="o">=</span>ON<span class="w"> </span>-DUSE_PARALLEL_PSD<span class="o">=</span>ON<span class="w"> </span>..
 </pre></div>
 </div>
+<p>With CMake the option takes effect only in the libraries that CMake compiles
+with OpenMP: <code class="code docutils literal notranslate"><span class="pre">scsdir</span></code>, <code class="code docutils literal notranslate"><span class="pre">scsindir</span></code>, <code class="code docutils literal notranslate"><span class="pre">scsdense</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">scsaccel</span></code> and <code class="code docutils literal notranslate"><span class="pre">scsgpuindir</span></code>. CMake compiles the MKL Pardiso and
+cuDSS libraries (<code class="code docutils literal notranslate"><span class="pre">scsmkl</span></code> and <code class="code docutils literal notranslate"><span class="pre">scscudss</span></code>) without OpenMP, so they
+project the blocks one after another whatever the option is set to. The
+Makefile compiles every library with OpenMP, these two included.</p>
+<p>If CMake does not find OpenMP it prints the warning <code class="docutils literal notranslate"><span class="pre">OpenMP</span> <span class="pre">requested</span> <span class="pre">but</span> <span class="pre">not</span>
+<span class="pre">found</span> <span class="pre">by</span> <span class="pre">CMake</span></code> and builds every library without the parallel projection. The
+configure output still says <code class="docutils literal notranslate"><span class="pre">Parallel</span> <span class="pre">PSD</span> <span class="pre">projection</span> <span class="pre">is</span> <span class="pre">ON</span></code>, so check the
+header of a solve as described below.</p>
+<p>For the Python package the option is <code class="code docutils literal notranslate"><span class="pre">use_parallel_psd</span></code>, in an install
+from source: see <a class="reference internal" href="../install/python.html#python-openmp-install"><span class="std std-ref">the Python install page</span></a>.</p>
 <p>Then set the OpenMP thread count to the number of cores to use:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">OMP_NUM_THREADS</span><span class="o">=</span><span class="m">4</span>
 </pre></div>
@@ -254,13 +280,19 @@ is not faster, leave the option off.</p></li>
 thread count at that point (as set by <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> or
 <code class="code docutils literal notranslate"><span class="pre">omp_set_num_threads</span></code>), at most the number of blocks larger than
 <span class="math notranslate nohighlight">\(1 \times 1\)</span>. It is also bounded by the amount of work, because each
-thread takes a few microseconds to start: a projection of some tens of
-microseconds gets two threads, and one of a millisecond or more gets all of
-them. A solve uses fewer threads if the OpenMP thread count has been lowered
-since the setup.</p>
+thread takes a few microseconds to start. SCS counts 2 microseconds for each
+thread, and 5 on macOS (<code class="code docutils literal notranslate"><span class="pre">PSD_PAR_THREAD_COST</span></code> in <code class="code docutils literal notranslate"><span class="pre">src/cones.c</span></code>).
+The number of threads grows with about the square root of the time that SCS
+estimates for the projection on one thread. With many blocks of similar size,
+a projection of less than about 13 microseconds (32 on macOS) stays on one
+thread, one of 50 microseconds gets about 6 threads (4 on macOS), and one of a
+millisecond gets up to about 30 (20 on macOS). A solve uses fewer threads if
+the OpenMP thread count has been lowered since the setup.</p>
 <p>Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when</p>
 <ul class="simple">
+<li><p>the library was compiled without OpenMP (<code class="code docutils literal notranslate"><span class="pre">scsmkl</span></code> and <code class="code docutils literal notranslate"><span class="pre">scscudss</span></code>
+built with CMake, or any library if CMake did not find OpenMP),</p></li>
 <li><p>the threads would gain little: the blocks are too little work, or one block
 holds most of it (the parallel projection is no faster than its largest
 block),</p></li>

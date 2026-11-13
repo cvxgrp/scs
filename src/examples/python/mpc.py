@@ -49,7 +49,7 @@ class MPC(object):
             [
                 # zero cone
                 Aeq,
-                # Box cone {(t, s) | -t l <= s <= t u }
+                # Box cone {(t, s) | t l <= s <= t u }
                 sparse.csc_matrix((1, (T + 1) * self.nx + T * self.nu)),
                 -Aineq,
             ],

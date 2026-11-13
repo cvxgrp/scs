@@ -3,14 +3,28 @@
 BLAS and LAPACK
 ===============
 BLAS and LAPACK are dense numerical linear algebra packages. SCS uses these
-libraries in two places:
+libraries in the following places:
 
-* To compute the eigen-decomposition for the semidefinite :ref:`cone <cones>` projection
+* To compute the eigen-decomposition for the semidefinite :ref:`cone <cones>`
+  projection, and the eigen-decompositions and singular value decompositions
+  for the :ref:`spectral cones <spectral_cones>`
 * To solve the linear system in :ref:`Anderson acceleration <acceleration>`
+* To form and factorize the matrix in the :ref:`dense direct <dense>` linear
+  solver
+* To compute the eigenvectors that the :ref:`indirect <indirect>` linear
+  solver uses for deflation
+* For the basic vector operations (norms, inner products, scaling and adding
+  vectors), which are plain C loops otherwise
 
-Therefore compiling with BLAS / LAPACK **is optional**. If you are
-not interested in solving SDPs or using acceleration then there is no need to
-use these libraries. To compile without these libraries you can set the
+Compiling with BLAS / LAPACK **is optional**: SCS builds and runs without
+them. A build without them cannot solve SDPs (the setup fails for a
+semidefinite cone larger than :math:`1 \times 1`), cannot include the spectral
+cones or the :ref:`parallel PSD projection <blas_lapack_openmp>`, does not
+apply Anderson acceleration (whatever the value of
+:code:`acceleration_lookback`), does not have the dense direct linear solver,
+and runs the indirect linear solver without deflation. If you need none of
+these then there is no need to use these libraries. To compile without these
+libraries you can set the
 :ref:`compiler flag <compile_flags>` :code:`USE_LAPACK` to :code:`0`, e.g., if
 :ref:`installing <install>` using :code:`make`:
 
@@ -18,7 +32,7 @@ use these libraries. To compile without these libraries you can set the
 
   make USE_LAPACK=0 
 
-If you do want to solve SDPs or use Anderson acceleration, then you will need
+If you do want any of the above, then you will need
 to install BLAS and LAPACK libraries (these are pre-installed in most machines).
 If calling SCS from another language (Python, MATLAB etc.) then these libraries
 should be pre-installed and SCS will try to link against them. Otherwise
@@ -75,6 +89,21 @@ or, with CMake,
 .. code:: bash
 
   cmake -DUSE_OPENMP=ON -DUSE_PARALLEL_PSD=ON ..
+
+With CMake the option takes effect only in the libraries that CMake compiles
+with OpenMP: :code:`scsdir`, :code:`scsindir`, :code:`scsdense`,
+:code:`scsaccel` and :code:`scsgpuindir`. CMake compiles the MKL Pardiso and
+cuDSS libraries (:code:`scsmkl` and :code:`scscudss`) without OpenMP, so they
+project the blocks one after another whatever the option is set to. The
+Makefile compiles every library with OpenMP, these two included.
+
+If CMake does not find OpenMP it prints the warning ``OpenMP requested but not
+found by CMake`` and builds every library without the parallel projection. The
+configure output still says ``Parallel PSD projection is ON``, so check the
+header of a solve as described below.
+
+For the Python package the option is :code:`use_parallel_psd`, in an install
+from source: see :ref:`the Python install page <python_openmp_install>`.
 
 Then set the OpenMP thread count to the number of cores to use:
 
@@ -159,14 +188,20 @@ The number of threads is fixed when the solver is set up. It is the OpenMP
 thread count at that point (as set by :code:`OMP_NUM_THREADS` or
 :code:`omp_set_num_threads`), at most the number of blocks larger than
 :math:`1 \times 1`. It is also bounded by the amount of work, because each
-thread takes a few microseconds to start: a projection of some tens of
-microseconds gets two threads, and one of a millisecond or more gets all of
-them. A solve uses fewer threads if the OpenMP thread count has been lowered
-since the setup.
+thread takes a few microseconds to start. SCS counts 2 microseconds for each
+thread, and 5 on macOS (:code:`PSD_PAR_THREAD_COST` in :code:`src/cones.c`).
+The number of threads grows with about the square root of the time that SCS
+estimates for the projection on one thread. With many blocks of similar size,
+a projection of less than about 13 microseconds (32 on macOS) stays on one
+thread, one of 50 microseconds gets about 6 threads (4 on macOS), and one of a
+millisecond gets up to about 30 (20 on macOS). A solve uses fewer threads if
+the OpenMP thread count has been lowered since the setup.
 
 Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when
 
+* the library was compiled without OpenMP (:code:`scsmkl` and :code:`scscudss`
+  built with CMake, or any library if CMake did not find OpenMP),
 * the threads would gain little: the blocks are too little work, or one block
   holds most of it (the parallel projection is no faster than its largest
   block),

@@ -131,6 +131,9 @@
                 <span class="n">rho_x</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
                 <span class="n">acceleration_lookback</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                 <span class="n">acceleration_interval</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                <span class="n">acceleration_type_1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">acceleration_regularization</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
+                <span class="n">acceleration_relaxation</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                 <span class="n">time_limit_secs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">write_data_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">log_csv_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -180,7 +183,8 @@ or an <a class="reference internal" href="../install/python.html#python-install"
 only, included automatically).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">CPU_DENSE</span></code></p></td>
-<td><p>Dense direct solver via LAPACK (requires LAPACK build).</p></td>
+<td><p>Dense direct solver via LAPACK (in the wheels and in a default source
+build, see <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">Python</span></a>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">GPU_INDIRECT</span></code></p></td>
 <td><p>Sparse GPU indirect solver (requires GPU build).</p></td>

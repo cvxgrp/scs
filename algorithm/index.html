@@ -195,7 +195,7 @@ found <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, 
 </ul>
 <div class="math notranslate nohighlight">
 \[r_g := |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs}&gt;0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel}&gt;0\)</span> are
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{abs} \geq 0\)</span> and <span class="math notranslate nohighlight">\(\epsilon_\mathrm{rel} \geq 0\)</span> are
 user defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">settings</span></a>. The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm
 here can be changed to other norms by changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in
 the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file.</p>
@@ -212,7 +212,7 @@ declares a problem <strong>primal infeasible (dual unbounded)</strong> when it f
 <span class="math notranslate nohighlight">\(x \in \mathbf{R}^n\)</span>, <span class="math notranslate nohighlight">\(s \in \mathbf{R}^m\)</span> that satisfy</p>
 <div class="math notranslate nohighlight">
 \[c^\top x = -1, \quad \|P x\|_\infty &lt; \epsilon_\mathrm{infeas}, \quad \|A x + s\|_\infty &lt; \epsilon_\mathrm{infeas} \cdot \min\left(1, \frac{\max_{ij} |A_{ij}|}{\|c\|_\infty}\right)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas} &gt; 0\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm here can be changed to other norms by
+<p>where <span class="math notranslate nohighlight">\(\epsilon_\mathrm{infeas} \geq 0\)</span> is a user-defined <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a>.  The <span class="math notranslate nohighlight">\(\ell_\infty\)</span> norm here can be changed to other norms by
 changing the definition of <code class="code docutils literal notranslate"><span class="pre">NORM</span></code> in the <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> file
 (the <span class="math notranslate nohighlight">\(\max_{ij} |A_{ij}|\)</span> factor is always the largest entry magnitude
 of <span class="math notranslate nohighlight">\(A\)</span>).</p>

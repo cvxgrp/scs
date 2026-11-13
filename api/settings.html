@@ -154,20 +154,20 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_abs</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Absolute feasibility tolerance, see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>.</p></td>
-<td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
+<td><p>Absolute feasibility tolerance, see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>. <code class="code docutils literal notranslate"><span class="pre">0</span></code> gives a purely relative test.</p></td>
+<td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
 <td><p>1e-4</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_rel</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Relative feasibility tolerance, see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>.</p></td>
-<td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
+<td><p>Relative feasibility tolerance, see <a class="reference internal" href="../algorithm/index.html#termination"><span class="std std-ref">Termination criteria</span></a>. <code class="code docutils literal notranslate"><span class="pre">0</span></code> gives a purely absolute test. If <code class="code docutils literal notranslate"><span class="pre">eps_abs</span></code> and <code class="code docutils literal notranslate"><span class="pre">eps_rel</span></code> are both <code class="code docutils literal notranslate"><span class="pre">0</span></code> the optimality test can never pass (the code tests with a strict inequality), and a problem that has a solution runs until <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> or <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code>.</p></td>
+<td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
 <td><p>1e-4</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_infeas</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Infeasibility tolerance (primal and dual), see <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">Certificate of infeasibility</span></a>.</p></td>
-<td><p><span class="math notranslate nohighlight">\((0, \infty)\)</span></p></td>
+<td><p>Infeasibility tolerance (primal and dual), see <a class="reference internal" href="../algorithm/index.html#infeasibility"><span class="std std-ref">Certificate of infeasibility</span></a>. <code class="code docutils literal notranslate"><span class="pre">0</span></code> switches the infeasibility and unboundedness tests off, so SCS never stops early with an infeasible or unbounded status.</p></td>
+<td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
 <td><p>1e-7</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
@@ -178,7 +178,7 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Time limit for solve run in seconds (can be fractional). <code class="code docutils literal notranslate"><span class="pre">0</span></code> is interpreted as no limit.</p></td>
+<td><p>Time limit for the solve in seconds (can be fractional). <code class="code docutils literal notranslate"><span class="pre">0</span></code> is interpreted as no limit. The clock starts when <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code> is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (<code class="code docutils literal notranslate"><span class="pre">CONVERGED_INTERVAL</span></code> in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, see <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flags</span></a>. It has no effect if SCS is compiled with the <code class="code docutils literal notranslate"><span class="pre">NO_TIMER</span></code> <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compile flag</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
 <td><p>0</p></td>
 </tr>
@@ -214,8 +214,8 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Tikhonov regularization for the AA least-squares solve. The default is tuned for type-I; type-II is typically more stable and tolerates a smaller value (e.g. <code class="code docutils literal notranslate"><span class="pre">1e-12</span></code>). See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
-<td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
+<td><p>Tikhonov regularization <span class="math notranslate nohighlight">\(\epsilon\)</span> for the AA least-squares solve. A positive value is relative: <span class="math notranslate nohighlight">\(\epsilon\)</span> is the value times <span class="math notranslate nohighlight">\(\|S_k\|_F \|Y_k\|_F\)</span> for type-I and times <span class="math notranslate nohighlight">\(\|Y_k\|_F^2\)</span> for type-II. A negative value is absolute: <span class="math notranslate nohighlight">\(\epsilon\)</span> is its magnitude, with no scaling. <code class="code docutils literal notranslate"><span class="pre">0</span></code> turns the regularization off. The default is tuned for type-I; type-II is typically more stable and tolerates a smaller value (e.g. <code class="code docutils literal notranslate"><span class="pre">1e-12</span></code>). See <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>.</p></td>
+<td><p><span class="math notranslate nohighlight">\((-\infty, \infty)\)</span></p></td>
 <td><p>1e-8</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_relaxation</span></code></p></td>

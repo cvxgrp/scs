@@ -47,18 +47,18 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1e5
    * - :code:`eps_abs`
      - :code:`scs_float`
-     - Absolute feasibility tolerance, see :ref:`termination`.
-     - :math:`(0, \infty)`
+     - Absolute feasibility tolerance, see :ref:`termination`. :code:`0` gives a purely relative test.
+     - :math:`[0, \infty)`
      - 1e-4
    * - :code:`eps_rel`
      - :code:`scs_float`
-     - Relative feasibility tolerance, see :ref:`termination`.
-     - :math:`(0, \infty)`
+     - Relative feasibility tolerance, see :ref:`termination`. :code:`0` gives a purely absolute test. If :code:`eps_abs` and :code:`eps_rel` are both :code:`0` the optimality test can never pass (the code tests with a strict inequality), and a problem that has a solution runs until :code:`max_iters` or :code:`time_limit_secs`.
+     - :math:`[0, \infty)`
      - 1e-4
    * - :code:`eps_infeas`
      - :code:`scs_float`
-     - Infeasibility tolerance (primal and dual), see :ref:`infeasibility`.
-     - :math:`(0, \infty)`
+     - Infeasibility tolerance (primal and dual), see :ref:`infeasibility`. :code:`0` switches the infeasibility and unboundedness tests off, so SCS never stops early with an infeasible or unbounded status.
+     - :math:`[0, \infty)`
      - 1e-7
    * - :code:`alpha`
      - :code:`scs_float`
@@ -67,7 +67,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1.5
    * - :code:`time_limit_secs`
      - :code:`scs_float`
-     - Time limit for solve run in seconds (can be fractional). :code:`0` is interpreted as no limit.
+     - Time limit for the solve in seconds (can be fractional). :code:`0` is interpreted as no limit. The clock starts when :code:`scs_solve` is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (:code:`CONVERGED_INTERVAL` in :code:`include/glbopts.h`), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, see :ref:`exit flags <exit_flags>`. It has no effect if SCS is compiled with the :code:`NO_TIMER` :ref:`compile flag <compile_flags>`.
      - :math:`[0, \infty)`
      - 0
    * - :code:`verbose`
@@ -97,8 +97,8 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1
    * - :code:`acceleration_regularization`
      - :code:`scs_float`
-     - Tikhonov regularization for the AA least-squares solve. The default is tuned for type-I; type-II is typically more stable and tolerates a smaller value (e.g. :code:`1e-12`). See :ref:`acceleration`.
-     - :math:`[0, \infty)`
+     - Tikhonov regularization :math:`\epsilon` for the AA least-squares solve. A positive value is relative: :math:`\epsilon` is the value times :math:`\|S_k\|_F \|Y_k\|_F` for type-I and times :math:`\|Y_k\|_F^2` for type-II. A negative value is absolute: :math:`\epsilon` is its magnitude, with no scaling. :code:`0` turns the regularization off. The default is tuned for type-I; type-II is typically more stable and tolerates a smaller value (e.g. :code:`1e-12`). See :ref:`acceleration`.
+     - :math:`(-\infty, \infty)`
      - 1e-8
    * - :code:`acceleration_relaxation`
      - :code:`scs_float`

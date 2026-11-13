@@ -146,15 +146,27 @@ make
 </div>
 <p>The CMake build-system exports two CMake targets called <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> as well as a header file <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> that defines the
-API. When LAPACK is available (the default), it also exports
+API (installed with the two headers it includes, <code class="code docutils literal notranslate"><span class="pre">scs_types.h</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">aa_stats.h</span></code>). When LAPACK is available (the default), it also exports
 <code class="code docutils literal notranslate"><span class="pre">scs::scsdense</span></code> for the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> solver.</p>
 <section id="mkl">
 <h3>MKL<a class="headerlink" href="#mkl" title="Link to this heading"></a></h3>
 <p>If <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html">MKL</a>
 is installed in your system and the <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment variable is
-set, then additionally CMake will build and install the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a> linear solver with target <code class="code docutils literal notranslate"><span class="pre">scs::scsmkl</span></code>.  (Note that the choice of
-MKL compiler flags might not be right for your system and may need to be
-<a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+set, then additionally CMake will build and install the <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a> linear solver with target <code class="code docutils literal notranslate"><span class="pre">scs::scsmkl</span></code>. CMake finds MKL through
+the CMake package that oneMKL installs (<code class="code docutils literal notranslate"><span class="pre">MKLConfig.cmake</span></code>, oneMKL 2021.3
+or later), which it looks for under <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code>. Configuration stops with
+an error if that package is not found. SCS links the single dynamic library
+(<code class="code docutils literal notranslate"><span class="pre">mkl_rt</span></code>) through the <code class="code docutils literal notranslate"><span class="pre">MKL::MKL</span></code> target of that package, so there
+is no MKL link line to edit in the CMake build.</p>
+<p>Setting <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> also changes the BLAS/LAPACK of the other SCS
+libraries. When <code class="code docutils literal notranslate"><span class="pre">USE_LAPACK</span></code> is on (the default), CMake then looks for
+MKL as the BLAS/LAPACK library (it sets <code class="code docutils literal notranslate"><span class="pre">BLA_VENDOR</span></code> to
+<code class="code docutils literal notranslate"><span class="pre">Intel10_64lp</span></code>, or to <code class="code docutils literal notranslate"><span class="pre">Intel10_64ilp</span></code> with <code class="code docutils literal notranslate"><span class="pre">BLAS64=ON</span></code>), and
+every SCS library that links the BLAS/LAPACK found by CMake links against it,
+<code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code>, <code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> and <code class="code docutils literal notranslate"><span class="pre">scs::scsdense</span></code> among
+them. To keep another BLAS/LAPACK for those libraries, pass
+<code class="code docutils literal notranslate"><span class="pre">BLA_VENDOR</span></code> on the command line, e.g. <code class="code docutils literal notranslate"><span class="pre">-DBLA_VENDOR=OpenBLAS</span></code>.</p>
 <p>The <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code> compile flag is a general SCS flag for ILP64 BLAS/LAPACK
 libraries. When using the MKL Pardiso backend specifically, <code class="code docutils literal notranslate"><span class="pre">BLAS64=1</span></code>
 must be paired with <code class="code docutils literal notranslate"><span class="pre">DLONG=1</span></code> so that <code class="code docutils literal notranslate"><span class="pre">pardiso_64</span></code> matches the
@@ -201,8 +213,13 @@ This will build and install the cuDSS linear solver with target
 <section id="importing">
 <h3>Importing<a class="headerlink" href="#importing" title="Link to this heading"></a></h3>
 <p>The libraries can be imported using the find_package CMake command and used
-by calling target_link_libraries as in the following example:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION<span class="w"> </span><span class="m">3</span>.0<span class="o">)</span>
+by calling target_link_libraries as in the following example. SCS needs CMake
+3.22 or newer to build, and a static SCS package
+(<code class="code docutils literal notranslate"><span class="pre">-DBUILD_SHARED_LIBS=OFF</span></code>) cannot be imported by an older CMake. Link
+the target for the linear solver you want: <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> are always installed, the others only when SCS was
+built with that solver.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION<span class="w"> </span><span class="m">3</span>.22<span class="o">)</span>
 project<span class="o">(</span>myproject<span class="o">)</span>
 find_package<span class="o">(</span>scs<span class="w"> </span>REQUIRED<span class="o">)</span>
 add_executable<span class="o">(</span>example<span class="w"> </span>example.cpp<span class="o">)</span>
@@ -221,6 +238,13 @@ target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs:
 
 <span class="c1"># To use the cuDSS direct method</span>
 target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scscudss<span class="o">)</span>
+
+<span class="c1"># To use the GPU indirect method (requires -DUSE_GPU=ON)</span>
+target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scsgpuindir<span class="o">)</span>
+
+<span class="c1"># To use the Apple Accelerate direct method (macOS only, requires</span>
+<span class="c1"># -DUSE_APPLE_ACCELERATE=ON)</span>
+target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs::scsaccel<span class="o">)</span>
 </pre></div>
 </div>
 </section>
@@ -228,8 +252,10 @@ target_link_libraries<span class="o">(</span>example<span class="w"> </span>scs:
 <section id="makefile">
 <h2>Makefile<a class="headerlink" href="#makefile" title="Link to this heading"></a></h2>
 <p>Alternatively you can use the Makefile and manage the libraries and header
-files yourself.  The public header files are <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> and
-<code class="code docutils literal notranslate"><span class="pre">scs_types.h</span></code>.</p>
+files yourself.  The public header files are <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">scs_types.h</span></code> and <code class="code docutils literal notranslate"><span class="pre">aa_stats.h</span></code>.  Your code only needs to include
+<code class="code docutils literal notranslate"><span class="pre">scs.h</span></code>, but <code class="code docutils literal notranslate"><span class="pre">scs.h</span></code> includes the other two, so all three must be
+on the include path.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>scs
 make
 </pre></div>
@@ -253,8 +279,13 @@ out/run_tests_mkl
 </div>
 <p>This will produce static library <code class="code docutils literal notranslate"><span class="pre">libscsmkl.a</span></code> and dynamic library
 <code class="code docutils literal notranslate"><span class="pre">libscsmkl.ext</span></code> (again <code class="code docutils literal notranslate"><span class="pre">.ext</span></code> is platform dependent) in the
-<code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.  (Note that the choice of MKL compiler flags might not be right
-for your system and may need to be <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>).</p>
+<code class="code docutils literal notranslate"><span class="pre">out</span></code> folder.  The MKL link line (<code class="code docutils literal notranslate"><span class="pre">MKLFLAGS</span></code> in <code class="code docutils literal notranslate"><span class="pre">scs.mk</span></code>) is
+written for Linux with GCC and may need to be <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html">modified</a>
+for your system. It links Intel’s OpenMP library (<code class="code docutils literal notranslate"><span class="pre">libiomp5</span></code>), which it
+looks for in the <code class="code docutils literal notranslate"><span class="pre">lib</span></code> folder of <code class="code docutils literal notranslate"><span class="pre">OMPROOT</span></code>. <code class="code docutils literal notranslate"><span class="pre">OMPROOT</span></code>
+defaults to <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code>. If <code class="code docutils literal notranslate"><span class="pre">libiomp5</span></code> is somewhere else, as in a
+oneAPI installation, set <code class="code docutils literal notranslate"><span class="pre">OMPROOT</span></code>, e.g.
+<code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">mkl</span> <span class="pre">OMPROOT=/opt/intel/oneapi/compiler/latest</span></code>.</p>
 <p>If you want 64-bit BLAS/LAPACK integers with the MKL Pardiso backend, build
 with both <code class="code docutils literal notranslate"><span class="pre">BLAS64=1</span></code> and <code class="code docutils literal notranslate"><span class="pre">DLONG=1</span></code>.</p>
 <p>To compile and test the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> solver (requires LAPACK):</p>

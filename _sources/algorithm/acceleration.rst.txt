@@ -200,7 +200,10 @@ into the matrices by appending :math:`\sqrt{\epsilon} I` to the bottom of
 :math:`S_k` or :math:`Y_k`, which is useful when using a QR or SVD decomposition
 to solve the equations.
 
-The setting :code:`acceleration_regularization` controls :math:`\epsilon`. The
+The setting :code:`acceleration_regularization` controls :math:`\epsilon`: a
+positive value is scaled by the norms of the matrices, a negative value is
+used as it is (its magnitude), and zero turns the regularization off (see
+:ref:`settings`). The
 default (:code:`1e-8`) is tuned for type-I; type-II is typically run with a
 smaller value such as :code:`1e-12`.
 

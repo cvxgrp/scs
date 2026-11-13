@@ -144,8 +144,30 @@ solution. The solver also harvests approximate eigenvectors of the reduced
 matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
 2010) and uses up to :code:`DEFLATE_VECTORS` (default 30) of them to deflate
 the smallest eigenvalues from subsequent solves, which substantially reduces
-the CG iterations needed on ill-conditioned problems at no additional
-matrix-multiply cost.
+the CG iterations needed on ill-conditioned problems. Applying the deflation
+in a solve costs no matrix multiplies. Each harvest costs the multiplies of
+one CG iteration per vector.
+
+Deflation needs LAPACK and double precision. It is switched off when SCS is
+built without LAPACK (:code:`USE_LAPACK=0`) or in single precision
+(:code:`SFLOAT=1`), and only the CPU indirect solver has it. Single precision
+builds also use :math:`0.2` for :code:`CG_TOL_FACTOR` and :math:`1.5` for
+:code:`CG_RATE`.
+
+Deflation keeps :math:`2n` numbers per vector in memory (:math:`60n` by
+default), and a harvest takes a further :math:`n` numbers per window entry and
+:math:`2n` per vector while it runs (:math:`150n` by default). Two environment
+variables change this for a run without recompiling. Both are read once, when
+the solver is set up (:code:`scs_init`):
+
+* :code:`SCS_DEFLATE` sets the number of deflation vectors in place of
+  :code:`DEFLATE_VECTORS`. :code:`SCS_DEFLATE=0` turns deflation off.
+* :code:`SCS_EIGCG_WIN` sets the size of the eigCG window, the number of CG
+  vectors that a harvest keeps in memory (default 60, :code:`EIGCG_WINDOW` in
+  :code:`linsys/cpu/indirect/private.c`). The window is never smaller than
+  three times the number of deflation vectors, so with the default 30 vectors
+  it is 90 and a smaller :code:`SCS_EIGCG_WIN` has no effect unless
+  :code:`SCS_DEFLATE` is lowered as well.
 
 The indirect method has the advantage of not requiring an expensive
 factorization but typically is slower on a per-iteration basis. In most cases
