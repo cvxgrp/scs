@@ -23,7 +23,7 @@ constants are not exposed but defined in :code:`include/glbopts.h`.
      - Permitted values
      - Default
    * - :code:`DLONG`
-     - If True use 64 bit integers, else 32 bit
+     - If True use 64 bit integers, else 32 bit. The GPU indirect and Apple Accelerate solvers need 32 bit integers, and so does the cuDSS solver in the CMake build (see the :ref:`install <c_install>` page)
      - True/False
      - 0
    * - :code:`SFLOAT`
@@ -51,7 +51,7 @@ constants are not exposed but defined in :code:`include/glbopts.h`.
      - True/False
      - 0
    * - :code:`GPU_TRANSPOSE_MAT`
-     - If on GPU store A transpose in memory
+     - GPU indirect solver only: store the transpose of :code:`A` in GPU memory, which uses more GPU memory and makes the products with :code:`A` faster. The Python build has it as the option :code:`gpu_atrans`, off by default there
      - True/False
      - 1
    * - :code:`VERBOSITY`
@@ -121,7 +121,7 @@ The Makefile also uses the variables below. They are set in the same way, e.g.,
      - Linker flags for the :ref:`BLAS and LAPACK <blas_lapack>` libraries, e.g., :code:`BLASLDFLAGS=-lopenblas` or :code:`BLASLDFLAGS="-L<folder> -lopenblas"`
      - :code:`-llapack -lblas` (empty if :code:`USE_LAPACK=0`)
    * - :code:`PREFIX`
-     - Where :code:`make install` copies the header files (to :code:`$(PREFIX)/include/scs`) and the direct and indirect libraries (to :code:`$(PREFIX)/lib`). :code:`DESTDIR`, if set, is put in front of :code:`PREFIX`
+     - Where :code:`make install` copies the header files (to :code:`$(PREFIX)/include/scs`) and the direct and indirect libraries (to :code:`$(PREFIX)/lib`), and :code:`make install_gpu` the GPU indirect library. :code:`DESTDIR`, if set, is put in front of :code:`PREFIX`
      - :code:`/usr/local`
    * - :code:`MKLROOT`
      - Location of MKL, for :code:`make mkl`
