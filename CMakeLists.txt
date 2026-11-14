@@ -586,11 +586,13 @@ if(USE_CUDSS)
   find_package(CUDAToolkit REQUIRED)
   find_package(cudss REQUIRED)
 
-  # Force 32-bit integers for cuDSS compatibility
+  # The cuDSS source supports 64-bit indices and the Makefile build accepts
+  # DLONG=1, but the CMake build has not been tested with them, so it refuses
+  # DLONG=ON.
   if(DLONG)
     message(
       FATAL_ERROR
-        "cuDSS requires 32-bit integers. Set DLONG=OFF or do not use -DDLONG=ON"
+        "The CMake build of the cuDSS solver requires 32-bit integers (DLONG=OFF); the Makefile build accepts DLONG=1"
     )
   endif()
 

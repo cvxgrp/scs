@@ -119,37 +119,49 @@ with :code:`use_lapack=false`: Apple Accelerate on macOS, OpenBLAS (or a
 reference BLAS and LAPACK) on Linux and Windows, or MKL with
 :code:`-Csetup-args=-Dlink_mkl=true`.
 
+.. _python_cudss_install:
+
 GPU direct (cuDSS)
 """"""""""""""""""
 
 The :ref:`cuDSS backend <cudss_solver>` runs the sparse direct factorization
 and solves on an NVIDIA GPU via `NVIDIA cuDSS
-<https://developer.nvidia.com/cudss>`_. For large problems it is typically
-substantially faster than any CPU backend.
+<https://developer.nvidia.com/cudss>`_. On the large LPs and QPs of the
+:ref:`benchmarks <benchmarks>` it was faster than SCS on the CPU with MKL
+Pardiso. It does not help on SDPs, where the time goes into the cone
+projection, which runs on the CPU.
 
 **Prerequisites.** The build links against both the CUDA runtime and cuDSS,
-so you need all of the following installed and discoverable by
-:code:`pkg-config` / the linker before running :code:`pip install`:
+so you need all of the following installed before running
+:code:`pip install`:
 
 1. An NVIDIA GPU with a recent CUDA-capable driver.
-2. The `CUDA Toolkit <https://developer.nvidia.com/cuda-downloads>`_
-   (provides :code:`nvcc`, the CUDA runtime headers, and :code:`cuda.pc`
-   used by the build).
-3. The `cuDSS library <https://developer.nvidia.com/cudss-downloads>`_ (ships
-   a :code:`cudss.pc` pkg-config file). cuDSS is also available on
+2. The `CUDA Toolkit <https://developer.nvidia.com/cuda-downloads>`_ (the
+   CUDA runtime headers and libraries). Meson finds it itself, from the
+   :code:`CUDA_PATH` environment variable (or :code:`CUDA_HOME` or
+   :code:`CUDA_ROOT`) or else in :code:`/usr/local/cuda`; it does not look for
+   it with :code:`pkg-config`.
+3. The `cuDSS library <https://developer.nvidia.com/cudss-downloads>`_. Meson
+   finds it with :code:`pkg-config` (:code:`cudss.pc`) or, failing that,
+   through the CMake package that cuDSS installs. cuDSS is built for one CUDA
+   major version, so use the build that matches your CUDA toolkit: NVIDIA's
+   :code:`cudss` apt package installs the builds for CUDA 12 and CUDA 13 and
+   makes the CUDA 13 one the default. cuDSS is also available on
    `conda-forge <https://anaconda.org/conda-forge/libcudss>`_ as
    :code:`libcudss` / :code:`libcudss-dev`.
 
-Make sure the directories containing :code:`cuda.pc` and :code:`cudss.pc` are
-on :code:`PKG_CONFIG_PATH`, and that the corresponding shared libraries are on
-:code:`LD_LIBRARY_PATH` (Linux) at runtime. A typical Linux environment looks
-like:
+Make sure Meson can find cuDSS: put the directory containing :code:`cudss.pc`
+on :code:`PKG_CONFIG_PATH` or, for a cuDSS without :code:`cudss.pc`, set the
+environment variable :code:`cudss_DIR` to the folder that holds
+:code:`cudss-config.cmake`. Set :code:`CUDA_PATH` if the toolkit is not in
+:code:`/usr/local/cuda`, and put the cuDSS shared library on
+:code:`LD_LIBRARY_PATH` (Linux) at runtime. For example, with cuDSS unpacked
+from NVIDIA's archive under :code:`<cudss-prefix>`:
 
 .. code:: bash
 
-  export PATH=/usr/local/cuda/bin:$PATH
-  export PKG_CONFIG_PATH=/usr/local/cuda/lib64/pkgconfig:/opt/nvidia/cudss/lib64/pkgconfig:$PKG_CONFIG_PATH
-  export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/opt/nvidia/cudss/lib64:$LD_LIBRARY_PATH
+  export cudss_DIR=<cudss-prefix>/lib/cmake/cudss
+  export LD_LIBRARY_PATH=/usr/local/cuda/lib64:<cudss-prefix>/lib:$LD_LIBRARY_PATH
 
 **Install.** Once the prerequisites are in place, build SCS with:
 
@@ -158,8 +170,9 @@ like:
   python -m pip install -Csetup-args=-Dlink_cudss=true -Csetup-args=-Dint32=true .
 
 The :code:`int32=true` flag is required: the Python build only supports the
-GPU solvers with 32-bit integers and stops with an error without it. Select
-the backend at runtime with
+GPU solvers with 32-bit integers and stops with an error without it. It
+applies to the whole build, so the CPU solvers of that installation use
+32-bit integers too. Select the backend at runtime with
 :code:`linear_solver=scs.LinearSolver.CUDSS`.
 
 See `this Colab notebook <https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing>`_
@@ -230,6 +243,8 @@ when the BLAS runs on one thread inside the threads of SCS, and slower when it
 does not. That section also says how to check that the blocks are projected in
 parallel.
 
+.. _python_gpu_indirect_install:
+
 GPU indirect
 """"""""""""
 
@@ -241,8 +256,9 @@ To build the :ref:`GPU indirect solver <gpu_indirect>`, with the CUDA toolkit
   python -m pip install -Csetup-args=-Duse_gpu=true -Csetup-args=-Dint32=true .
 
 The :code:`int32=true` flag is required: the build stops with an error for a
-GPU build with 64-bit integers. By default this build does not store the
-transpose of :code:`A` in GPU memory. Add
+GPU build with 64-bit integers. It applies to the whole build, so the CPU
+solvers of that installation use 32-bit integers too. By default this build
+does not store the transpose of :code:`A` in GPU memory. Add
 :code:`-Csetup-args=-Dgpu_atrans=true` to store it, which uses more GPU memory
 and makes the products with :code:`A` faster. Select the backend at runtime
 with :code:`linear_solver=scs.LinearSolver.GPU_INDIRECT`.

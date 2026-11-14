@@ -33,7 +33,8 @@ where `K` is a product of convex cones. It uses an operator-splitting method
 ## Features
 
 - Multiple linear solver backends: sparse direct (QDLDL), dense direct (LAPACK),
-  iterative (CG), Intel MKL Pardiso, Apple Accelerate (macOS), NVIDIA cuDSS, GPU
+  iterative (CG), Intel MKL Pardiso, Apple Accelerate (macOS), NVIDIA cuDSS
+  (GPU direct), GPU conjugate gradient
 - Anderson acceleration for faster convergence, including solve diagnostics
 - Problem data normalization/equilibration for numerical stability
 - Adaptive dual scaling, with per-row diagonal rescaling driven by residual
