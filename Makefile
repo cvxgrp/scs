@@ -148,7 +148,7 @@ $(OUT)/libscsmkl.$(SHARED): $(SCS_MKL_O) $(SCS_OBJECTS) $(MKLSRC)/private.o $(LI
 	$(call link_shared,$(MKLFLAGS))
 
 $(OUT)/libscscudss.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(CUDSSSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
-	$(call link_shared,$(CULDFLAGS))
+	$(call link_shared,$(BLASLDFLAGS) $(CUDSS_LDFLAGS))
 
 $(OUT)/libscsaccel.$(SHARED): $(SCS_O) $(SCS_OBJECTS) $(ACCELSRC)/private.o $(LINSYS)/scs_matrix.o $(LINSYS)/csparse.o
 	$(call link_shared,-framework Accelerate)

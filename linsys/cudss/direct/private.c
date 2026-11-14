@@ -234,7 +234,14 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                  p->d_sol_mat, p->d_b_mat),
                     p, "cudssExecute: factorization");
 
-  /* Inertia check: verify P is PSD by checking positive eigenvalue count */
+  /* Inertia check. The KKT matrix has n positive eigenvalues exactly when
+   * R_x + P + A' R_y^{-1} A is positive definite, which holds whenever P is
+   * PSD. Fewer means P is not PSD (a P that is only mildly indefinite can
+   * still pass). cuDSS returns the two counts in the matrix's index type
+   * (SCS_CUDA_INDEX): 64-bit integers under DLONG, where it writes 16 bytes,
+   * and 32-bit ones otherwise, where it rejects a 16-byte buffer (cuDSS 1.0.0).
+   * scs_int follows DLONG in the same way, so it matches; test_non_psd_p
+   * covers both widths. */
   {
     scs_int inertia[2]; /* [0] = positive, [1] = negative */
     size_t inertia_written;
@@ -243,7 +250,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                      sizeof(inertia), &inertia_written),
         p, "cudssDataGet: inertia");
     if (inertia[0] < p->n) {
-      scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.");
+      scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.\n");
       scs_free_lin_sys_work(p);
       return SCS_NULL;
     }
