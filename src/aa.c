@@ -145,7 +145,9 @@ extern "C" {
 #endif
 
 /* BLAS / LAPACK functions used */
+#ifndef SFLOAT
 aa_float BLAS(nrm2)(blas_int *n, aa_float *x, blas_int *incx);
+#endif
 void BLAS(axpy)(blas_int *n, aa_float *a, const aa_float *x, blas_int *incx,
                 aa_float *y, blas_int *incy);
 void BLAS(gemv)(const char *trans, const blas_int *m, const blas_int *n,
@@ -176,6 +178,24 @@ void BLAS(ormqr)(const char *side, const char *trans, const blas_int *m,
 
 #ifdef __cplusplus
 }
+#endif
+
+/* Single precision does not call snrm2: the legacy Accelerate interface macOS
+ * links for -lblas returns REAL functions as a C double (the f2c convention)
+ * while other BLAS return a float, so no prototype is right for both. Summing
+ * squares in double keeps nrm2's overflow and underflow safety. */
+#ifdef SFLOAT
+static aa_float aa_nrm2(const blas_int *n, const aa_float *x,
+                        const blas_int *incx) {
+  double nmsq = 0.;
+  blas_int i;
+  for (i = 0; i < *n; ++i) {
+    nmsq += (double)x[i * *incx] * (double)x[i * *incx];
+  }
+  return (aa_float)sqrt(nmsq);
+}
+#else
+#define aa_nrm2 BLAS(nrm2)
 #endif
 
 /* This file uses Anderson acceleration to improve the convergence of
@@ -392,9 +412,9 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
    * preserve nrm2's overflow/underflow safety. */
   if (a->regularization > 0) {
     if (a->type1) {
-      a->nrm_s_col[idx] = BLAS(nrm2)(&bdim, s_col, &one);
+      a->nrm_s_col[idx] = aa_nrm2(&bdim, s_col, &one);
     }
-    a->nrm_y_col[idx] = BLAS(nrm2)(&bdim, y_col, &one);
+    a->nrm_y_col[idx] = aa_nrm2(&bdim, y_col, &one);
   }
 
   /* State advance for next iter: (x_prev, f_prev, g_prev) <- (x, f, g).
@@ -409,7 +429,7 @@ static void update_accel_params(const aa_float *x, const aa_float *f, AaWork *a,
   }
 
   /* ||g|| = ||x - f|| (current residual norm, used by the safeguard). */
-  a->norm_g = BLAS(nrm2)(&bdim, a->g, &one);
+  a->norm_g = aa_nrm2(&bdim, a->g, &one);
 
   TIME_TOC
 }
@@ -568,7 +588,7 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
             ("NoTrans", &brank, &one, a->W, &bmem, a->ipiv, a->ir_res,
              &brank, &info);
             if (info != 0) break;
-            dnorm = BLAS(nrm2)(&brank, a->ir_res, &one);
+            dnorm = aa_nrm2(&brank, a->ir_res, &one);
             BLAS(axpy)(&brank, &onef, a->ir_res, &one, a->gamma_red, &one);
             if (k > 0 && dnorm >= 0.5 * prev_dnorm) break;
             prev_dnorm = dnorm;
@@ -599,7 +619,7 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
           }
           BLAS(trsv)("Upper", "NoTrans", "NonUnit", &brank, a->A_aug,
                      &aug_rows, a->ir_res, &one);
-          dnorm = BLAS(nrm2)(&brank, a->ir_res, &one);
+          dnorm = aa_nrm2(&brank, a->ir_res, &one);
           BLAS(axpy)(&brank, &onef, a->ir_res, &one, a->gamma_red, &one);
           if (k > 0 && dnorm >= 0.5 * prev_dnorm) break;
           prev_dnorm = dnorm;
@@ -618,7 +638,7 @@ static aa_float solve(aa_float *f, AaWork *a, aa_int len) {
   }
 
   /* 5. Validate γ via ‖γ‖₂ against max_weight_norm. */
-  aa_norm = (info == 0) ? BLAS(nrm2)(&blen, gamma, &one) : -1.0;
+  aa_norm = (info == 0) ? aa_nrm2(&blen, gamma, &one) : -1.0;
 
   /* Record diagnostics for this solve, regardless of accept/reject.
    * NaN last_aa_norm signals "no valid norm this solve" — distinguishing
@@ -907,7 +927,7 @@ aa_int aa_safeguard(aa_float *f_new, aa_float *x_new, AaWork *a) {
   /* work = x_new - f_new */
   BLAS(axpy)(&bdim, &neg_onef, f_new, &one, a->work, &one);
   /* norm_diff = || f_new - x_new || */
-  norm_diff = BLAS(nrm2)(&bdim, a->work, &one);
+  norm_diff = aa_nrm2(&bdim, a->work, &one);
   /* g = f - x */
   if (norm_diff > a->safeguard_factor * a->norm_g) {
     /* in this case we reject the AA step and reset */

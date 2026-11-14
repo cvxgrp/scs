@@ -285,6 +285,13 @@ scs_float c[] = {0.00000,     0.00000,    -35.02643,   0.00000,     0.00000,
 scs_int A_nnz = 465;
 
 static const char *small_qp(void) {
+#ifdef SFLOAT
+  /* The optimal objective is about 1e6, so single precision leaves the gap with
+   * roundoff well above any useful tolerance. With this test's fixed scale the
+   * solve does not converge in max_iters; with adaptive scaling it does on some
+   * platforms and not others. */
+  return mu_skipped;
+#endif
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));

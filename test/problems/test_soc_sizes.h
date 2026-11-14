@@ -66,7 +66,8 @@ static const char *test_soc_size1(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_soc_size1: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -140,7 +141,8 @@ static const char *test_soc_size2(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_soc_size2: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -215,7 +217,8 @@ static const char *test_soc_size3(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_soc_size3: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -295,7 +298,8 @@ static const char *test_soc_size5(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_soc_size5: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -380,7 +384,8 @@ static const char *test_multi_soc(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_multi_soc: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 

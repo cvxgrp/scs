@@ -1,7 +1,7 @@
 /*
  * Dense linear algebra operations: norms, dot products, scaling, axpy.
  * Has two implementations: a plain C fallback and an optimized BLAS version
- * (selected at compile time via USE_LAPACK).
+ * (selected at compile time via USE_LAPACK, double precision only).
  */
 
 #include "linalg.h"
@@ -33,7 +33,13 @@ scs_float SCS(norm_inf_diff)(const scs_float *a, const scs_float *b,
   return max;
 }
 
-#ifndef USE_LAPACK
+/* Single precision uses these loops for every routine, BLAS or not. The ones
+ * that matter are dot and nrm2, which return a REAL: the legacy Accelerate
+ * interface macOS links for -lblas returns a REAL as a C double (the f2c
+ * convention), while OpenBLAS, MKL, etc. return a float, so no prototype is
+ * right for both and a wrong one silently reads garbage. The rest follow so
+ * that one switch covers the file. */
+#if !defined(USE_LAPACK) || defined(SFLOAT)
 /* Self-rolled basic linear algebra routines */
 
 /* a *= b */
@@ -65,7 +71,14 @@ scs_float SCS(norm_sq)(const scs_float *v, scs_int len) {
 
 /* ||v||_2 */
 scs_float SCS(norm_2)(const scs_float *v, scs_int len) {
-  return SQRTF(SCS(norm_sq)(v, len));
+  /* accumulate in double so that single-precision builds keep nrm2's
+   * protection against overflow and underflow in the squares */
+  double nmsq = 0.;
+  scs_int i;
+  for (i = 0; i < len; ++i) {
+    nmsq += (double)v[i] * (double)v[i];
+  }
+  return (scs_float)sqrt(nmsq);
 }
 
 scs_float SCS(norm_inf)(const scs_float *a, scs_int len) {

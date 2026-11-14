@@ -92,9 +92,9 @@ static const char *test_normalize_roundtrip_lp(void) {
 
   /* Both should match the known optimal */
   mu_assert("normalize_roundtrip: unnormalized obj wrong",
-            ABS(info0.pobj - opt) < 1e-4);
+            ABS(info0.pobj - opt) < SOL_TOL);
   mu_assert("normalize_roundtrip: normalized obj wrong",
-            ABS(info1.pobj - opt) < 1e-4);
+            ABS(info1.pobj - opt) < SOL_TOL);
 
   /* Solutions should agree (un-normalization must be correct) */
   err_x = 0; err_y = 0; err_s = 0;
@@ -113,10 +113,11 @@ static const char *test_normalize_roundtrip_lp(void) {
   scs_printf("normalize_roundtrip: x_err=%.2e y_err=%.2e s_err=%.2e "
              "obj_err=%.2e\n", err_x, err_y, err_s, err_obj);
 
-  mu_assert("normalize_roundtrip: x vectors differ too much", err_x < 1e-4);
-  mu_assert("normalize_roundtrip: y vectors differ too much", err_y < 1e-4);
-  mu_assert("normalize_roundtrip: s vectors differ too much", err_s < 1e-4);
-  mu_assert("normalize_roundtrip: obj values differ too much", err_obj < 1e-5);
+  mu_assert("normalize_roundtrip: x vectors differ too much", err_x < SOL_TOL);
+  mu_assert("normalize_roundtrip: y vectors differ too much", err_y < SOL_TOL);
+  mu_assert("normalize_roundtrip: s vectors differ too much", err_s < SOL_TOL);
+  mu_assert("normalize_roundtrip: obj values differ too much",
+            err_obj < VERIFY_TOL(1e-5, 1e-2));
 
   /* Cleanup */
   SCS(free_sol)(sol0);
@@ -235,9 +236,9 @@ static const char *test_normalize_roundtrip_qp(void) {
             exitflag1 == SCS_SOLVED);
 
   mu_assert("normalize_qp: unnormalized obj wrong",
-            ABS(info0.pobj - opt) < 1e-4);
+            ABS(info0.pobj - opt) < SOL_TOL);
   mu_assert("normalize_qp: normalized obj wrong",
-            ABS(info1.pobj - opt) < 1e-4);
+            ABS(info1.pobj - opt) < SOL_TOL);
 
   err_x = 0; err_y = 0; err_s = 0;
   for (i = 0; i < n; ++i) {
@@ -255,10 +256,11 @@ static const char *test_normalize_roundtrip_qp(void) {
   scs_printf("normalize_qp: x_err=%.2e y_err=%.2e s_err=%.2e "
              "obj_err=%.2e\n", err_x, err_y, err_s, err_obj);
 
-  mu_assert("normalize_qp: x vectors differ too much", err_x < 1e-4);
-  mu_assert("normalize_qp: y vectors differ too much", err_y < 1e-4);
-  mu_assert("normalize_qp: s vectors differ too much", err_s < 1e-4);
-  mu_assert("normalize_qp: obj values differ too much", err_obj < 1e-5);
+  mu_assert("normalize_qp: x vectors differ too much", err_x < SOL_TOL);
+  mu_assert("normalize_qp: y vectors differ too much", err_y < SOL_TOL);
+  mu_assert("normalize_qp: s vectors differ too much", err_s < SOL_TOL);
+  mu_assert("normalize_qp: obj values differ too much",
+            err_obj < VERIFY_TOL(1e-5, 1e-2));
 
   /* Cleanup */
   SCS(free_sol)(sol0);

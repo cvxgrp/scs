@@ -73,7 +73,8 @@ static const char *test_power_cone(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_power_cone: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -81,7 +82,7 @@ static const char *test_power_cone(void) {
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
   mu_assert("test_power_cone: warm-start failure", info.iter <= 25);
-  success = ABS(info.pobj - opt) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(info.pobj - opt) < SOL_TOL && exitflag == SCS_SOLVED;
   mu_assert("test_power_cone: SCS warm-start failed", success);
 
   SCS(free_sol)(sol);
@@ -160,7 +161,8 @@ static const char *test_power_cone_p09(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_power_cone_p09: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -244,7 +246,8 @@ static const char *test_dual_power_cone(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_dual_power_cone: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -401,7 +404,8 @@ static const char *test_multi_power(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("test_multi_power: SCS failed to produce SCS_SOLVED", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
@@ -429,6 +433,12 @@ static const char *test_multi_power(void) {
  *   col 0 (x): row 2 -> -1
  */
 static const char *test_power_cone_small_scale(void) {
+#ifdef SFLOAT
+  /* Checks x and the cone violation to 1e-6 with c = 1000 and b = 100, and in
+   * single precision the gap stalls near 1e-3 relative, with the status and
+   * the error both depending on the platform's rounding. */
+  return mu_skipped;
+#endif
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -531,7 +541,7 @@ static const char *test_power_cone_proj_tiny_component(void) {
       err = MAX(err, ABS(t[j] + vs[i][j] - refs[i][j]));
     scs_printf("power cone projection %i error %4e\n", (int)i, err);
     mu_assert_less("test_power_cone_proj_tiny_component: projection error",
-                   err, 1e-9);
+                   err, VERIFY_TOL(1e-9, 1e-4));
   }
   scs_free(k);
   return 0;

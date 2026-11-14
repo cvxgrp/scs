@@ -7,6 +7,10 @@
 #include "util.h"
 
 /* test degenerate cones */
+/* The four solves below pose one problem and must agree on its objective.
+ * In single precision they differ by rounding, and with a linear-system
+ * library that is not reproducible run to run (cuDSS) by about 2e-6. */
+#define DEGENERATE_AGREE_TOL VERIFY_TOL(1e-8, 1e-4)
 static const char *degenerate(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
@@ -87,7 +91,8 @@ static const char *degenerate(void) {
   }
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
-  success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < DEGENERATE_AGREE_TOL && ABS(derr) < DEGENERATE_AGREE_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("degenerate box cone failure", success);
 
   /* degenerate SOC cone */
@@ -102,7 +107,8 @@ static const char *degenerate(void) {
   }
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
-  success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < DEGENERATE_AGREE_TOL && ABS(derr) < DEGENERATE_AGREE_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("degenerate SOC cone failure", success);
 
   /* degenerate PSD cone */
@@ -118,7 +124,8 @@ static const char *degenerate(void) {
   }
   perr = info.pobj - tpobj;
   derr = info.dobj - tdobj;
-  success = ABS(perr) < 1e-8 && ABS(derr) < 1e-8 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < DEGENERATE_AGREE_TOL && ABS(derr) < DEGENERATE_AGREE_TOL &&
+            exitflag == SCS_SOLVED;
   mu_assert("degenerate PSD cone failure", success);
 
   SCS(free_sol)(sol);
