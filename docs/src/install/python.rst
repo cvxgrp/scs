@@ -143,20 +143,37 @@ so you need all of the following installed before running
    it with :code:`pkg-config`.
 3. The `cuDSS library <https://developer.nvidia.com/cudss-downloads>`_. Meson
    finds it with :code:`pkg-config` (:code:`cudss.pc`) or, failing that,
-   through the CMake package that cuDSS installs. cuDSS is built for one CUDA
-   major version, so use the build that matches your CUDA toolkit: NVIDIA's
-   :code:`cudss` apt package installs the builds for CUDA 12 and CUDA 13 and
-   makes the CUDA 13 one the default. cuDSS is also available on
+   through the CMake package that cuDSS installs, which needs :code:`cmake` to
+   be installed. NVIDIA's apt package and archive ship the CMake package and
+   no :code:`cudss.pc`. cuDSS is also available on
    `conda-forge <https://anaconda.org/conda-forge/libcudss>`_ as
-   :code:`libcudss` / :code:`libcudss-dev`.
+   :code:`libcudss` / :code:`libcudss-dev`. The pip packages
+   (:code:`nvidia-cudss-cu12` and :code:`nvidia-cudss-cu13`) ship neither
+   :code:`cudss.pc` nor the CMake package, so the build does not find them.
 
-Make sure Meson can find cuDSS: put the directory containing :code:`cudss.pc`
-on :code:`PKG_CONFIG_PATH` or, for a cuDSS without :code:`cudss.pc`, set the
-environment variable :code:`cudss_DIR` to the folder that holds
-:code:`cudss-config.cmake`. Set :code:`CUDA_PATH` if the toolkit is not in
-:code:`/usr/local/cuda`, and put the cuDSS shared library on
-:code:`LD_LIBRARY_PATH` (Linux) at runtime. For example, with cuDSS unpacked
-from NVIDIA's archive under :code:`<cudss-prefix>`:
+cuDSS is built for one CUDA major version, so use the build that matches your
+CUDA toolkit. NVIDIA's :code:`cudss` apt package installs the builds for
+CUDA 12 and CUDA 13 side by side and makes the CUDA 13 one the default. When
+Meson finds cuDSS through its CMake package, the build checks that cuDSS was
+built for the CUDA major version of your toolkit, and stops with an error that
+names :code:`cudss_DIR` if it was not. (A cuDSS found through
+:code:`cudss.pc` is not checked.) Without the check, a mismatched cuDSS builds
+a module that fails when it is imported, for example with
+:code:`libcublas.so.13: cannot open shared object file` under CUDA 12.
+
+Make sure Meson can find the right cuDSS: put the directory containing
+:code:`cudss.pc` on :code:`PKG_CONFIG_PATH` or, for a cuDSS without
+:code:`cudss.pc`, set the environment variable :code:`cudss_DIR` to the folder
+that holds :code:`cudss-config.cmake`. Set :code:`CUDA_PATH` if the toolkit is
+not in :code:`/usr/local/cuda`, and put the cuDSS shared library on
+:code:`LD_LIBRARY_PATH` (Linux) at runtime if the loader does not find it. For
+example, for NVIDIA's apt package with CUDA 12 on x86-64:
+
+.. code:: bash
+
+  export cudss_DIR=/usr/lib/x86_64-linux-gnu/libcudss/12/cmake/cudss
+
+or with cuDSS unpacked from NVIDIA's archive under :code:`<cudss-prefix>`:
 
 .. code:: bash
 
