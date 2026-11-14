@@ -183,8 +183,9 @@ The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU. It runs conjugate gradients with the same diagonal preconditioner,
 tolerance schedule and warm start as the CPU indirect solver, but it does not
-harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` has no effect on
-it. Usually the direct GPU solver will be faster than this solver.
+harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` and the
+:code:`SCS_DEFLATE` and :code:`SCS_EIGCG_WIN` environment variables have no
+effect on it. Usually the direct GPU solver will be faster than this solver.
 
 .. _cudss_solver:
 
@@ -211,14 +212,22 @@ cuDSS the default pivoting was different and the saving is not known.
 .. _gpu_reproducibility:
 
 Reproducibility of the GPU solvers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
-With either GPU solver a solve is not reproduced bit for bit from one run to
-the next. Two runs of the same problem on the same machine give iterates that
-differ slightly, so the printed residuals and the objective differ in their
-later digits, and the iteration count can differ. The variation comes from the
-GPU libraries, the sparse matrix-vector products of cuSPARSE and the
-factorization and solves of cuDSS, and not from SCS itself.
+With either GPU solver, two runs of the same problem on the same machine are
+not guaranteed to give bit for bit the same result. The GPU indirect solver
+does its sparse matrix-vector products with cuSPARSE's
+:code:`CUSPARSE_SPMV_CSR_ALG1`, which cuSPARSE does not guarantee to give the
+same bits on every run, and SCS runs cuDSS without its deterministic mode
+(:code:`CUDSS_CONFIG_DETERMINISTIC_MODE`), which cuDSS 1.0 rejects together
+with the refinement step that SCS uses. SCS has no setting to change either
+choice. When two runs differ, their iterates differ slightly. Printed values
+that are small near the end of a solve, such as the dual residual and the gap,
+can then differ in every digit, and the iteration count can change if a
+residual ends close to its tolerance. In a check on an NVIDIA GB10 (CUDA 13.0,
+cuDSS 1.0.0), three runs of a random SOCP with each GPU solver all took 150
+iterations, and their last iterations differed in the dual residual and the
+gap (the gap of the GPU indirect solver by a factor of 13).
 
 .. _new_linear_solver:
 

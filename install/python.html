@@ -209,30 +209,40 @@ reference BLAS and LAPACK) on Linux and Windows, or MKL with
 <code class="code docutils literal notranslate"><span class="pre">-Csetup-args=-Dlink_mkl=true</span></code>.</p>
 </section>
 <section id="gpu-direct-cudss">
-<h3>GPU direct (cuDSS)<a class="headerlink" href="#gpu-direct-cudss" title="Link to this heading"></a></h3>
+<span id="python-cudss-install"></span><h3>GPU direct (cuDSS)<a class="headerlink" href="#gpu-direct-cudss" title="Link to this heading"></a></h3>
 <p>The <a class="reference internal" href="../linear_solver/index.html#cudss-solver"><span class="std std-ref">cuDSS backend</span></a> runs the sparse direct factorization
-and solves on an NVIDIA GPU via <a class="reference external" href="https://developer.nvidia.com/cudss">NVIDIA cuDSS</a>. For large problems it is typically
-substantially faster than any CPU backend.</p>
+and solves on an NVIDIA GPU via <a class="reference external" href="https://developer.nvidia.com/cudss">NVIDIA cuDSS</a>. On the large LPs and QPs of the
+<a class="reference internal" href="../benchmarks/index.html#benchmarks"><span class="std std-ref">benchmarks</span></a> it was faster than SCS on the CPU with MKL
+Pardiso. It does not help on SDPs, where the time goes into the cone
+projection, which runs on the CPU.</p>
 <p><strong>Prerequisites.</strong> The build links against both the CUDA runtime and cuDSS,
-so you need all of the following installed and discoverable by
-<code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> / the linker before running <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>:</p>
+so you need all of the following installed before running
+<code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>:</p>
 <ol class="arabic simple">
 <li><p>An NVIDIA GPU with a recent CUDA-capable driver.</p></li>
-<li><p>The <a class="reference external" href="https://developer.nvidia.com/cuda-downloads">CUDA Toolkit</a>
-(provides <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code>, the CUDA runtime headers, and <code class="code docutils literal notranslate"><span class="pre">cuda.pc</span></code>
-used by the build).</p></li>
-<li><p>The <a class="reference external" href="https://developer.nvidia.com/cudss-downloads">cuDSS library</a> (ships
-a <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> pkg-config file). cuDSS is also available on
+<li><p>The <a class="reference external" href="https://developer.nvidia.com/cuda-downloads">CUDA Toolkit</a> (the
+CUDA runtime headers and libraries). Meson finds it itself, from the
+<code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> environment variable (or <code class="code docutils literal notranslate"><span class="pre">CUDA_HOME</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">CUDA_ROOT</span></code>) or else in <code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>; it does not look for
+it with <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code>.</p></li>
+<li><p>The <a class="reference external" href="https://developer.nvidia.com/cudss-downloads">cuDSS library</a>. Meson
+finds it with <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> (<code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>) or, failing that,
+through the CMake package that cuDSS installs. cuDSS is built for one CUDA
+major version, so use the build that matches your CUDA toolkit: NVIDIA’s
+<code class="code docutils literal notranslate"><span class="pre">cudss</span></code> apt package installs the builds for CUDA 12 and CUDA 13 and
+makes the CUDA 13 one the default. cuDSS is also available on
 <a class="reference external" href="https://anaconda.org/conda-forge/libcudss">conda-forge</a> as
 <code class="code docutils literal notranslate"><span class="pre">libcudss</span></code> / <code class="code docutils literal notranslate"><span class="pre">libcudss-dev</span></code>.</p></li>
 </ol>
-<p>Make sure the directories containing <code class="code docutils literal notranslate"><span class="pre">cuda.pc</span></code> and <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> are
-on <code class="code docutils literal notranslate"><span class="pre">PKG_CONFIG_PATH</span></code>, and that the corresponding shared libraries are on
-<code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> (Linux) at runtime. A typical Linux environment looks
-like:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span>/usr/local/cuda/bin:<span class="nv">$PATH</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">PKG_CONFIG_PATH</span><span class="o">=</span>/usr/local/cuda/lib64/pkgconfig:/opt/nvidia/cudss/lib64/pkgconfig:<span class="nv">$PKG_CONFIG_PATH</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/usr/local/cuda/lib64:/opt/nvidia/cudss/lib64:<span class="nv">$LD_LIBRARY_PATH</span>
+<p>Make sure Meson can find cuDSS: put the directory containing <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>
+on <code class="code docutils literal notranslate"><span class="pre">PKG_CONFIG_PATH</span></code> or, for a cuDSS without <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>, set the
+environment variable <code class="code docutils literal notranslate"><span class="pre">cudss_DIR</span></code> to the folder that holds
+<code class="code docutils literal notranslate"><span class="pre">cudss-config.cmake</span></code>. Set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> if the toolkit is not in
+<code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>, and put the cuDSS shared library on
+<code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> (Linux) at runtime. For example, with cuDSS unpacked
+from NVIDIA’s archive under <code class="code docutils literal notranslate"><span class="pre">&lt;cudss-prefix&gt;</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">cudss_DIR</span><span class="o">=</span>&lt;cudss-prefix&gt;/lib/cmake/cudss
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/usr/local/cuda/lib64:&lt;cudss-prefix&gt;/lib:<span class="nv">$LD_LIBRARY_PATH</span>
 </pre></div>
 </div>
 <p><strong>Install.</strong> Once the prerequisites are in place, build SCS with:</p>
@@ -240,8 +250,9 @@ like:</p>
 </pre></div>
 </div>
 <p>The <code class="code docutils literal notranslate"><span class="pre">int32=true</span></code> flag is required: the Python build only supports the
-GPU solvers with 32-bit integers and stops with an error without it. Select
-the backend at runtime with
+GPU solvers with 32-bit integers and stops with an error without it. It
+applies to the whole build, so the CPU solvers of that installation use
+32-bit integers too. Select the backend at runtime with
 <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.CUDSS</span></code>.</p>
 <p>See <a class="reference external" href="https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing">this Colab notebook</a>
 for a worked end-to-end example that installs CUDA, cuDSS, and the cuDSS
@@ -295,15 +306,16 @@ does not. That section also says how to check that the blocks are projected in
 parallel.</p>
 </section>
 <section id="gpu-indirect">
-<h3>GPU indirect<a class="headerlink" href="#gpu-indirect" title="Link to this heading"></a></h3>
+<span id="python-gpu-indirect-install"></span><h3>GPU indirect<a class="headerlink" href="#gpu-indirect" title="Link to this heading"></a></h3>
 <p>To build the <a class="reference internal" href="../linear_solver/index.html#gpu-indirect"><span class="std std-ref">GPU indirect solver</span></a>, with the CUDA toolkit
 (including cuBLAS and cuSPARSE) installed, install with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_gpu<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Dint32<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
 <p>The <code class="code docutils literal notranslate"><span class="pre">int32=true</span></code> flag is required: the build stops with an error for a
-GPU build with 64-bit integers. By default this build does not store the
-transpose of <code class="code docutils literal notranslate"><span class="pre">A</span></code> in GPU memory. Add
+GPU build with 64-bit integers. It applies to the whole build, so the CPU
+solvers of that installation use 32-bit integers too. By default this build
+does not store the transpose of <code class="code docutils literal notranslate"><span class="pre">A</span></code> in GPU memory. Add
 <code class="code docutils literal notranslate"><span class="pre">-Csetup-args=-Dgpu_atrans=true</span></code> to store it, which uses more GPU memory
 and makes the products with <code class="code docutils literal notranslate"><span class="pre">A</span></code> faster. Select the backend at runtime
 with <code class="code docutils literal notranslate"><span class="pre">linear_solver=scs.LinearSolver.GPU_INDIRECT</span></code>.</p>

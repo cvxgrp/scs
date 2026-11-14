@@ -79,9 +79,9 @@ the platform:
      - Dense direct solver via LAPACK (in the wheels and in a default source
        build, see :ref:`python_install`).
    * - :code:`GPU_INDIRECT`
-     - Sparse GPU indirect solver (requires GPU build).
+     - Sparse GPU indirect solver (requires a :ref:`GPU build <python_gpu_indirect_install>`).
    * - :code:`CUDSS`
-     - Sparse GPU direct solver via cuDSS (requires :ref:`cuDSS build <python_install>`).
+     - Sparse GPU direct solver via cuDSS (requires a :ref:`cuDSS build <python_cudss_install>`).
 
 Example:
 

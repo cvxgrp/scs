@@ -180,6 +180,7 @@ needs help, set <code class="code docutils literal notranslate"><span class="pre
 <a class="reference internal" href="../linear_solver/index.html#gpu-indirect"><span class="std std-ref">GPU indirect</span></a> solver:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt;<span class="w"> </span>-DUSE_GPU<span class="o">=</span>ON<span class="w"> </span>../
 make
+make<span class="w"> </span>install
 </pre></div>
 </div>
 <p>This builds and installs the GPU solver with target
@@ -187,10 +188,12 @@ make
 with <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html">FindCUDAToolkit</a>, which
 honors <code class="code docutils literal notranslate"><span class="pre">CUDAToolkit_ROOT</span></code> if the toolkit lives somewhere unusual. Build
 it with 32 bit integers, that is with <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code> left off (the default).
-The solver passes its integers to cuBLAS and cuSPARSE routines that take 32
-bit ones, and CMake does not check this: with <code class="code docutils literal notranslate"><span class="pre">-DDLONG=ON</span></code> the build
-either fails or, with a compiler that only warns about the mismatched pointer
-types, produces a solver that does not work. The transpose of <code class="code docutils literal notranslate"><span class="pre">A</span></code> is
+The solver passes some of its integers to cuBLAS and cuSPARSE routines that
+only take 32 bit ones (<code class="code docutils literal notranslate"><span class="pre">cublasIdamax</span></code> and <code class="code docutils literal notranslate"><span class="pre">cusparseCsr2cscEx2</span></code>),
+and CMake does not check this: with <code class="code docutils literal notranslate"><span class="pre">-DDLONG=ON</span></code> the build stops with an
+error under compilers that reject the mismatched pointer types (GCC 14 and
+later), and under compilers that only warn about them (GCC 13, for instance)
+it builds a solver that fails its tests. The transpose of <code class="code docutils literal notranslate"><span class="pre">A</span></code> is
 stored in GPU memory by default; configure with
 <code class="code docutils literal notranslate"><span class="pre">-DGPU_TRANSPOSE_MAT=OFF</span></code> to save that memory at the cost of slower
 products with <code class="code docutils literal notranslate"><span class="pre">A</span></code>.</p>
@@ -204,7 +207,8 @@ machine without one (a packaging machine, for instance) leave it out with</p>
 <p>Note that the GPU is typically only faster than the CPU for very large
 problems, and that the indirect solver is a legacy backend: the cuDSS direct
 solver described below is the recommended GPU backend and should be preferred
-whenever cuDSS is available.</p>
+whenever cuDSS is available. See <a class="reference internal" href="../linear_solver/index.html#gpu-reproducibility"><span class="std std-ref">Reproducibility of the GPU solvers</span></a> for why two runs
+on a GPU can differ.</p>
 </section>
 <section id="cudss">
 <h3>cuDSS<a class="headerlink" href="#cudss" title="Link to this heading"></a></h3>
@@ -213,21 +217,25 @@ whenever cuDSS is available.</p>
 with cuDSS support using CMake. CMake locates the CUDA toolkit with
 FindCUDAToolkit, as for the GPU indirect solver above, and cuDSS through the
 CMake package that cuDSS itself installs (<code class="code docutils literal notranslate"><span class="pre">find_package(cudss)</span></code>), so
-nothing needs to be set when both are in standard locations. If cuDSS is
+nothing needs to be set when both are in standard locations and that cuDSS
+was built for your CUDA major version (see below). If cuDSS is
 somewhere else, pass its install prefix with
 <code class="code docutils literal notranslate"><span class="pre">-DCMAKE_PREFIX_PATH=&lt;cudss-prefix&gt;</span></code>, or the folder that holds its CMake
 package files (<code class="code docutils literal notranslate"><span class="pre">cudss-config.cmake</span></code>) with <code class="code docutils literal notranslate"><span class="pre">-Dcudss_DIR=&lt;folder&gt;</span></code>.
 The <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> variable is only used by the Makefile build and has no
-effect here. Then configure with cuDSS enabled:</p>
+effect here. cuDSS is built for one CUDA major version, so use the cuDSS build
+that matches your CUDA toolkit. NVIDIA’s <code class="code docutils literal notranslate"><span class="pre">cudss</span></code> apt package installs
+the builds for CUDA 12 and CUDA 13 and makes the CUDA 13 one the default; with
+CUDA 12, point CMake at the CUDA 12 build. Then configure with cuDSS enabled:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span>&lt;custom-folder&gt;<span class="w"> </span>-DUSE_CUDSS<span class="o">=</span>ON<span class="w"> </span>-DDLONG<span class="o">=</span>OFF<span class="w"> </span>../
 make
+make<span class="w"> </span>install
 </pre></div>
 </div>
-<p>The CMake build of the cuDSS solver only accepts 32 bit integers (for sparse
-matrix indices), so <code class="code docutils literal notranslate"><span class="pre">-DDLONG=OFF</span></code> (the default) is mandatory:
-configuring with <code class="code docutils literal notranslate"><span class="pre">-DDLONG=ON</span></code> is an error.
-This will build and install the cuDSS linear solver with target
-<code class="code docutils literal notranslate"><span class="pre">scs::scscudss</span></code>.</p>
+<p>This builds and installs the cuDSS linear solver with target
+<code class="code docutils literal notranslate"><span class="pre">scs::scscudss</span></code>. The CMake build of the cuDSS solver only accepts 32 bit
+integers: <code class="code docutils literal notranslate"><span class="pre">-DDLONG=OFF</span></code> (the default) is mandatory, and configuring with
+<code class="code docutils literal notranslate"><span class="pre">-DDLONG=ON</span></code> is an error.</p>
 <p>With <code class="code docutils literal notranslate"><span class="pre">-DBUILD_TESTING=ON</span></code> the test program <code class="code docutils literal notranslate"><span class="pre">run_tests_cudss</span></code> is
 registered with CTest in the same way as the GPU indirect one, and it also
 needs a GPU to run. On a machine without one leave it out with
@@ -242,7 +250,12 @@ by calling target_link_libraries as in the following example. SCS needs CMake
 (<code class="code docutils literal notranslate"><span class="pre">-DBUILD_SHARED_LIBS=OFF</span></code>) cannot be imported by an older CMake. Link
 the target for the linear solver you want: <code class="code docutils literal notranslate"><span class="pre">scs::scsdir</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">scs::scsindir</span></code> are always installed, the others only when SCS was
-built with that solver.</p>
+built with that solver. If SCS was built as a static library
+(<code class="code docutils literal notranslate"><span class="pre">-DBUILD_SHARED_LIBS=OFF</span></code>) with the GPU indirect solver or cuDSS,
+<code class="code docutils literal notranslate"><span class="pre">find_package(scs)</span></code> also looks for the CUDA toolkit (and for cuDSS, if
+SCS was built with it), so give the consuming project the same
+<code class="code docutils literal notranslate"><span class="pre">CUDAToolkit_ROOT</span></code>, <code class="code docutils literal notranslate"><span class="pre">CMAKE_PREFIX_PATH</span></code> or <code class="code docutils literal notranslate"><span class="pre">cudss_DIR</span></code> that
+SCS was configured with.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake_minimum_required<span class="o">(</span>VERSION<span class="w"> </span><span class="m">3</span>.22<span class="o">)</span>
 project<span class="o">(</span>myproject<span class="o">)</span>
 find_package<span class="o">(</span>scs<span class="w"> </span>REQUIRED<span class="o">)</span>
@@ -323,12 +336,17 @@ out/run_tests_dense
 problems.</p>
 <p>If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo
-binaries in the out folder corresponding to the GPU version.  Unlike the other
-targets, <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">gpu</span></code> does not build the test program, which has its own
-target <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">test_gpu</span></code>.  The Makefile looks for the CUDA toolkit in
-<code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>; set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> if it is somewhere else.  The
-GPU indirect solver requires 32 bit integers, which is the default
-(<code class="code docutils literal notranslate"><span class="pre">DLONG=0</span></code>): <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">gpu</span> <span class="pre">DLONG=1</span></code> does not compile.</p>
+binaries in the out folder corresponding to the GPU version.  Unlike
+<code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">mkl</span></code>, <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">dense</span></code> and <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">cudss</span></code>, <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">gpu</span></code>
+does not build the test program; build it with <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">test_gpu</span></code>.  The
+Makefile looks for the CUDA toolkit in <code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>; set
+<code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> if it is somewhere else.  The GPU indirect solver requires
+32 bit integers, which is the default (<code class="code docutils literal notranslate"><span class="pre">DLONG=0</span></code>):
+<code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">gpu</span> <span class="pre">DLONG=1</span></code> does not compile.  <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> installs the
+headers and the direct and indirect libraries (<code class="code docutils literal notranslate"><span class="pre">libscsdir</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">libscsindir</span></code>); <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">install_gpu</span></code> installs the headers and
+<code class="code docutils literal notranslate"><span class="pre">libscsgpuindir</span></code>.  The Makefile has no install target for the other
+libraries, the cuDSS ones included.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>gpu
 make<span class="w"> </span>test_gpu
 out/run_tests_gpu_indirect
@@ -347,21 +365,44 @@ fails with</p>
 builds that pick individual components (distribution packaging, for instance)
 need to request it explicitly.</p>
 <p>Finally, to compile and test the <a class="reference internal" href="../linear_solver/index.html#cudss-solver"><span class="std std-ref">cuDSS solver</span></a> you need to
-have CUDA toolkit, the <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> compiler, and <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library installed.  Then set
-<code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> and execute</p>
+have CUDA toolkit, the <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> compiler, and <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library installed.  Set
+<code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> to the folder where cuDSS is installed (the one that holds
+its <code class="code docutils literal notranslate"><span class="pre">include</span></code> and <code class="code docutils literal notranslate"><span class="pre">lib</span></code> folders).  cuDSS is built for one CUDA
+major version, so with CUDA 12 point <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> at the CUDA 12 build
+of cuDSS, not at the CUDA 13 one that NVIDIA’s <code class="code docutils literal notranslate"><span class="pre">cudss</span></code> apt package
+makes the default.  Set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> if the CUDA toolkit is not in
+<code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code> (the Makefile compiles the cuDSS source with
+<code class="code docutils literal notranslate"><span class="pre">$(CUDA_PATH)/bin/nvcc</span></code>; set <code class="code docutils literal notranslate"><span class="pre">CUCC</span></code> to use another <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code>),
+and execute</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>cudss
 out/run_tests_cudss
 </pre></div>
 </div>
+<p>The programs in <code class="code docutils literal notranslate"><span class="pre">out</span></code> are linked against the shared CUDA libraries (and
+for cuDSS, <code class="code docutils literal notranslate"><span class="pre">libcudss</span></code>) without a run path. If the loader does not find
+them, add their folders, e.g.
+<code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH=&lt;cudss&gt;/lib:/usr/local/cuda/lib64</span> <span class="pre">out/run_tests_cudss</span></code>
+(and <code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH=/usr/local/cuda/lib64</span> <span class="pre">out/run_tests_gpu_indirect</span></code>),
+where <code class="code docutils literal notranslate"><span class="pre">&lt;cudss&gt;</span></code> is the folder that <code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> names, and with the
+folder of <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> in place of <code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code> if you set it.</p>
 <p>The default is 32 bit integers (<code class="code docutils literal notranslate"><span class="pre">DLONG=0</span></code>). The Makefile build also
 accepts <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">cudss</span> <span class="pre">DLONG=1</span></code>, in which case SCS passes 64 bit sparse
 matrix indices to cuDSS (see <a class="reference external" href="https://docs.nvidia.com/cuda/cudss/functions.html#cudssmatrixcreatecsr">the docs of cuDSS CSR matrix</a>).
-That build passes the tests on a GPU with cuDSS 1.0; it has not been run
+That build passed the test suite on one GPU, an NVIDIA GB10 (aarch64) with
+CUDA 13.0 and cuDSS 1.0.0, in a build without LAPACK, so the SDP tests were
+not run; CI also runs it against a simulated cuDSS. It has not been run
 against older cuDSS releases. The CMake build only accepts 32 bit integers.</p>
 <p>To use the libraries in your own source code, compile your code with the linker
 option <code class="code docutils literal notranslate"><span class="pre">-L(PATH_TO_SCS_LIBS)</span></code> and <code class="code docutils literal notranslate"><span class="pre">-lscsdir</span></code> or <code class="code docutils literal notranslate"><span class="pre">-lscsindir</span></code>
-(as needed). The API and required data structures are defined in the file
-<code class="code docutils literal notranslate"><span class="pre">include/scs.h</span></code> and documented <a class="reference internal" href="../api/c.html#c-interface"><span class="std std-ref">here</span></a>.</p>
+(as needed). The GPU libraries need the CUDA libraries as well: link
+<code class="code docutils literal notranslate"><span class="pre">-lscsgpuindir</span></code> with
+<code class="code docutils literal notranslate"><span class="pre">-L&lt;cuda&gt;/lib64</span> <span class="pre">-lcudart</span> <span class="pre">-lcublas</span> <span class="pre">-lcusparse</span></code>, and
+<code class="code docutils literal notranslate"><span class="pre">-lscscudss</span></code> with
+<code class="code docutils literal notranslate"><span class="pre">-L&lt;cudss&gt;/lib</span> <span class="pre">-lcudss</span> <span class="pre">-L&lt;cuda&gt;/lib64</span> <span class="pre">-lcudart</span></code>, where <code class="code docutils literal notranslate"><span class="pre">&lt;cuda&gt;</span></code>
+and <code class="code docutils literal notranslate"><span class="pre">&lt;cudss&gt;</span></code> are the folders that <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">CUDSS_PATH</span></code> name. The API
+and required data structures are defined in the file <code class="code docutils literal notranslate"><span class="pre">include/scs.h</span></code>
+and documented <a class="reference internal" href="../api/c.html#c-interface"><span class="std std-ref">here</span></a>.</p>
 </section>
 </section>
 
