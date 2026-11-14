@@ -104,11 +104,24 @@ This builds and installs the GPU solver with target
 :code:`scs::scsgpuindir`. CMake locates the CUDA runtime, cuBLAS and cuSPARSE
 with `FindCUDAToolkit
 <https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html>`_, which
-honors :code:`CUDAToolkit_ROOT` if the toolkit lives somewhere unusual. Both
-integer widths work, so :code:`DLONG` may be left at either setting. The
-transpose of :code:`A` is stored in GPU memory by default; configure with
+honors :code:`CUDAToolkit_ROOT` if the toolkit lives somewhere unusual. Build
+it with 32 bit integers, that is with :code:`DLONG` left off (the default).
+The solver passes its integers to cuBLAS and cuSPARSE routines that take 32
+bit ones, and CMake does not check this: with :code:`-DDLONG=ON` the build
+either fails or, with a compiler that only warns about the mismatched pointer
+types, produces a solver that does not work. The transpose of :code:`A` is
+stored in GPU memory by default; configure with
 :code:`-DGPU_TRANSPOSE_MAT=OFF` to save that memory at the cost of slower
-matrix-transpose-vector products.
+products with :code:`A`.
+
+If the tests are enabled as well (:code:`-DBUILD_TESTING=ON`), the test
+program :code:`run_tests_gpu_indirect` is built and registered with CTest. It
+builds wherever the CUDA toolkit is installed, but it needs a GPU to run. On a
+machine without one (a packaging machine, for instance) leave it out with
+
+.. code:: bash
+
+  ctest -E gpu
 
 Note that the GPU is typically only faster than the CPU for very large
 problems, and that the indirect solver is a legacy backend: the cuDSS direct
@@ -120,18 +133,32 @@ cuDSS
 
 If you have a GPU and CUDA toolkit installed, along with the
 `cuDSS <https://developer.nvidia.com/cudss>`_ library, you can compile SCS
-with cuDSS support using CMake. First, ensure that the :code:`CUDA_PATH` and
-:code:`CUDSS_PATH` environment variables are set, then configure with cuDSS enabled:
+with cuDSS support using CMake. CMake locates the CUDA toolkit with
+FindCUDAToolkit, as for the GPU indirect solver above, and cuDSS through the
+CMake package that cuDSS itself installs (:code:`find_package(cudss)`), so
+nothing needs to be set when both are in standard locations. If cuDSS is
+somewhere else, pass its install prefix with
+:code:`-DCMAKE_PREFIX_PATH=<cudss-prefix>`, or the folder that holds its CMake
+package files (:code:`cudss-config.cmake`) with :code:`-Dcudss_DIR=<folder>`.
+The :code:`CUDSS_PATH` variable is only used by the Makefile build and has no
+effect here. Then configure with cuDSS enabled:
 
 .. code:: bash
 
   cmake -DCMAKE_INSTALL_PREFIX:PATH=<custom-folder> -DUSE_CUDSS=ON -DDLONG=OFF ../
   make
 
-Currently cuDSS only supports 32 bit integers (for sparse matrix indices) so
-:code:`DDLONG=OFF` is mandatory.
+The CMake build of the cuDSS solver only accepts 32 bit integers (for sparse
+matrix indices), so :code:`-DDLONG=OFF` (the default) is mandatory:
+configuring with :code:`-DDLONG=ON` is an error.
 This will build and install the cuDSS linear solver with target
 :code:`scs::scscudss`.
+
+With :code:`-DBUILD_TESTING=ON` the test program :code:`run_tests_cudss` is
+registered with CTest in the same way as the GPU indirect one, and it also
+needs a GPU to run. On a machine without one leave it out with
+:code:`ctest -E cudss` (or :code:`ctest -E 'gpu|cudss'` if both GPU solvers
+were built).
 
 Importing
 """""""""
@@ -237,13 +264,17 @@ problems.
 
 If you have a GPU and have CUDA installed, you can also execute make gpu to
 compile SCS to run on the GPU which will create additional libraries and demo
-binaries in the out folder corresponding to the GPU version.  Note that the GPU
-(usually) requires 32 bit ints, which can be enforced by compiling with
-:code:`DLONG=0`.
+binaries in the out folder corresponding to the GPU version.  Unlike the other
+targets, :code:`make gpu` does not build the test program, which has its own
+target :code:`make test_gpu`.  The Makefile looks for the CUDA toolkit in
+:code:`/usr/local/cuda`; set :code:`CUDA_PATH` if it is somewhere else.  The
+GPU indirect solver requires 32 bit integers, which is the default
+(:code:`DLONG=0`): :code:`make gpu DLONG=1` does not compile.
 
 .. code:: bash
 
-  make gpu DLONG=0
+  make gpu
+  make test_gpu
   out/run_tests_gpu_indirect
 
 The GPU sources are compiled by the host C compiler rather than by
@@ -268,12 +299,15 @@ have CUDA toolkit, the :code:`nvcc` compiler, and `cuDSS
 
 .. code:: bash
 
-  make cudss DLONG=0
+  make cudss
   out/run_tests_cudss
 
-Currently cuDSS only supports 32 bit integers (for sparse matrix indices) so
-:code:`DLONG=0` is mandatory (see `the docs of cuDSS CSR matrix
+The default is 32 bit integers (:code:`DLONG=0`). The Makefile build also
+accepts :code:`make cudss DLONG=1`, in which case SCS passes 64 bit sparse
+matrix indices to cuDSS (see `the docs of cuDSS CSR matrix
 <https://docs.nvidia.com/cuda/cudss/functions.html#cudssmatrixcreatecsr>`_).
+That build passes the tests on a GPU with cuDSS 1.0; it has not been run
+against older cuDSS releases. The CMake build only accepts 32 bit integers.
 
 To use the libraries in your own source code, compile your code with the linker
 option :code:`-L(PATH_TO_SCS_LIBS)` and :code:`-lscsdir` or :code:`-lscsindir`
