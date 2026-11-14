@@ -181,7 +181,10 @@ Sparse GPU indirect method
 
 The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
-GPU. Usually the direct GPU solver will be faster than this solver.
+GPU. It runs conjugate gradients with the same diagonal preconditioner,
+tolerance schedule and warm start as the CPU indirect solver, but it does not
+harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` has no effect on
+it. Usually the direct GPU solver will be faster than this solver.
 
 .. _cudss_solver:
 
@@ -204,6 +207,18 @@ uses Bunch-Kaufman pivoting for a symmetric indefinite matrix, which makes the
 factorization several times larger and slower; the refinement step makes up
 for the accuracy that pivoting would otherwise provide. With older versions of
 cuDSS the default pivoting was different and the saving is not known.
+
+.. _gpu_reproducibility:
+
+Reproducibility of the GPU solvers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With either GPU solver a solve is not reproduced bit for bit from one run to
+the next. Two runs of the same problem on the same machine give iterates that
+differ slightly, so the printed residuals and the objective differ in their
+later digits, and the iteration count can differ. The variation comes from the
+GPU libraries, the sparse matrix-vector products of cuSPARSE and the
+factorization and solves of cuDSS, and not from SCS itself.
 
 .. _new_linear_solver:
 
