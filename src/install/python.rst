@@ -157,8 +157,9 @@ like:
 
   python -m pip install -Csetup-args=-Dlink_cudss=true -Csetup-args=-Dint32=true .
 
-The :code:`int32=true` flag is required because cuDSS only supports 32-bit
-integer indices. Select the backend at runtime with
+The :code:`int32=true` flag is required: the Python build only supports the
+GPU solvers with 32-bit integers and stops with an error without it. Select
+the backend at runtime with
 :code:`linear_solver=scs.LinearSolver.CUDSS`.
 
 See `this Colab notebook <https://colab.research.google.com/drive/1POCgDNFg8fycHMI9T9N6V3iHFhXRthjn?usp=sharing>`_

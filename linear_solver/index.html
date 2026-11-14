@@ -62,6 +62,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#sparse-indirect">Sparse indirect</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-direct-method">Sparse GPU direct method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reproducibility-of-the-gpu-solvers">Reproducibility of the GPU solvers</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a><ul>
@@ -251,7 +252,10 @@ however for very large problems the indirect solver can be faster.</p>
 <span id="gpu-indirect"></span><h3>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Link to this heading"></a></h3>
 <p>The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
-GPU. Usually the direct GPU solver will be faster than this solver.</p>
+GPU. It runs conjugate gradients with the same diagonal preconditioner,
+tolerance schedule and warm start as the CPU indirect solver, but it does not
+harvest eigenvectors or deflate, so <code class="code docutils literal notranslate"><span class="pre">DEFLATE_VECTORS</span></code> has no effect on
+it. Usually the direct GPU solver will be faster than this solver.</p>
 </section>
 <section id="sparse-gpu-direct-method">
 <span id="cudss-solver"></span><h3>Sparse GPU direct method<a class="headerlink" href="#sparse-gpu-direct-method" title="Link to this heading"></a></h3>
@@ -269,6 +273,15 @@ uses Bunch-Kaufman pivoting for a symmetric indefinite matrix, which makes the
 factorization several times larger and slower; the refinement step makes up
 for the accuracy that pivoting would otherwise provide. With older versions of
 cuDSS the default pivoting was different and the saving is not known.</p>
+</section>
+<section id="reproducibility-of-the-gpu-solvers">
+<span id="gpu-reproducibility"></span><h3>Reproducibility of the GPU solvers<a class="headerlink" href="#reproducibility-of-the-gpu-solvers" title="Link to this heading"></a></h3>
+<p>With either GPU solver a solve is not reproduced bit for bit from one run to
+the next. Two runs of the same problem on the same machine give iterates that
+differ slightly, so the printed residuals and the objective differ in their
+later digits, and the iteration count can differ. The variation comes from the
+GPU libraries, the sparse matrix-vector products of cuSPARSE and the
+factorization and solves of cuDSS, and not from SCS itself.</p>
 </section>
 </section>
 <section id="implementing-a-new-linear-solver">
