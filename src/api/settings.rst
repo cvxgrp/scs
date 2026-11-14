@@ -39,7 +39,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - :code:`scs_float`
      - Primal scale factor. See :ref:`scaling`.
      - :math:`(0, \infty)`
-     - 1e-6
+     - 1e-6 (1e-2 in single precision builds)
    * - :code:`max_iters`
      - :code:`scs_int`
      - Maximum number of iterations to run.

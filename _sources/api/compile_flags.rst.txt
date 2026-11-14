@@ -27,7 +27,7 @@ constants are not exposed but defined in :code:`include/glbopts.h`.
      - True/False
      - 0
    * - :code:`SFLOAT`
-     - If True use 32 bit floats, else 64 bit. WARNING: experimental. Single precision is not covered by the test suite, and most of the solver tests fail when built with it. It does not work with Apple's Accelerate BLAS, which is what :code:`make` links on macOS when :code:`USE_LAPACK=1`: Accelerate returns a :code:`double` from the single precision :code:`dot` and :code:`nrm2`, where SCS expects a :code:`float` (see :code:`src/linalg.c`)
+     - If True use 32 bit floats, else 64 bit. Single precision solves to about 1e-4 or 1e-5; tighter :code:`eps_abs`, :code:`eps_rel` or :code:`eps_infeas` may not be reached. Two defaults change with it: :code:`rho_x` is 1e-2 instead of 1e-6 (see :ref:`settings`), and the indirect solver's most accurate CG solves stop at 1e-6 instead of 1e-12. Dot products and norms are computed by SCS's own loops with any BLAS, since Apple's Accelerate returns the single precision :code:`dot` and :code:`nrm2` as a :code:`double`. A single precision build cannot read data files written by a double precision one, and the spectral cones (:code:`USE_SPECTRAL_CONES`) are not supported: their inner solvers use tolerances that float arithmetic cannot reach. The test suite runs in single precision in CI.
      - True/False
      - 0
    * - :code:`CTRLC`
