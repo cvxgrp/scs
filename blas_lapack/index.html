@@ -181,10 +181,14 @@ with OpenMP: <code class="code docutils literal notranslate"><span class="pre">s
 cuDSS libraries (<code class="code docutils literal notranslate"><span class="pre">scsmkl</span></code> and <code class="code docutils literal notranslate"><span class="pre">scscudss</span></code>) without OpenMP, so they
 project the blocks one after another whatever the option is set to. The
 Makefile compiles every library with OpenMP, these two included.</p>
-<p>If CMake does not find OpenMP it prints the warning <code class="docutils literal notranslate"><span class="pre">OpenMP</span> <span class="pre">requested</span> <span class="pre">but</span> <span class="pre">not</span>
-<span class="pre">found</span> <span class="pre">by</span> <span class="pre">CMake</span></code> and builds every library without the parallel projection. The
-configure output still says <code class="docutils literal notranslate"><span class="pre">Parallel</span> <span class="pre">PSD</span> <span class="pre">projection</span> <span class="pre">is</span> <span class="pre">ON</span></code>, so check the
-header of a solve as described below.</p>
+<p>With <code class="code docutils literal notranslate"><span class="pre">-DUSE_PARALLEL_PSD=ON</span></code>, if CMake does not find OpenMP the
+configuration stops with an error, because no library would then have the
+parallel projection. OpenMP that is installed where CMake does not look can be
+pointed to with <code class="code docutils literal notranslate"><span class="pre">-DOpenMP_ROOT=&lt;folder&gt;</span></code>: Homebrew’s <code class="code docutils literal notranslate"><span class="pre">libomp</span></code> on
+macOS needs this, e.g. <code class="code docutils literal notranslate"><span class="pre">-DOpenMP_ROOT=$(brew</span> <span class="pre">--prefix</span> <span class="pre">libomp)</span></code>. (With
+<code class="code docutils literal notranslate"><span class="pre">-DUSE_OPENMP=ON</span></code> alone CMake prints a warning instead and builds the
+libraries without OpenMP.) The configure output reports what is built in the
+lines <code class="docutils literal notranslate"><span class="pre">OpenMP</span> <span class="pre">parallelization</span> <span class="pre">is</span> <span class="pre">ON</span></code> and <code class="docutils literal notranslate"><span class="pre">Parallel</span> <span class="pre">PSD</span> <span class="pre">projection</span> <span class="pre">is</span> <span class="pre">ON</span></code>.</p>
 <p>For the Python package the option is <code class="code docutils literal notranslate"><span class="pre">use_parallel_psd</span></code>, in an install
 from source: see <a class="reference internal" href="../install/python.html#python-openmp-install"><span class="std std-ref">the Python install page</span></a>.</p>
 <p>Then set the OpenMP thread count to the number of cores to use:</p>
@@ -292,7 +296,7 @@ the OpenMP thread count has been lowered since the setup.</p>
 is free to use its own threads, when</p>
 <ul class="simple">
 <li><p>the library was compiled without OpenMP (<code class="code docutils literal notranslate"><span class="pre">scsmkl</span></code> and <code class="code docutils literal notranslate"><span class="pre">scscudss</span></code>
-built with CMake, or any library if CMake did not find OpenMP),</p></li>
+built with CMake),</p></li>
 <li><p>the threads would gain little: the blocks are too little work, or one block
 holds most of it (the parallel projection is no faster than its largest
 block),</p></li>

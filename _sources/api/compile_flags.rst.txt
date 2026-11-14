@@ -5,14 +5,13 @@ Compile flags
 
 Typically the user will not need to interact with these flags, but we document them
 here for completeness.  The flags in the table below are defined in
-:code:`scs.mk` (all but :code:`R_LANG`, see its row) and can be overridden via
-the command line when compiling with the Makefile by executing, e.g.,
-:code:`make DLONG=1`, to set the :code:`DLONG` flag to True.  Only some of them
-are available in the CMake build, see :ref:`below <compile_flags_cmake>`.  Note
-this list is not exhaustive: more variables of the Makefile are listed
-:ref:`below <compile_flags_make>` (those of the CUDA builds are on the
-:ref:`install <c_install>` page), and further constants are not exposed but
-defined in :code:`include/glbopts.h`.
+:code:`scs.mk` and can be overridden via the command line when compiling with
+the Makefile by executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG`
+flag to True.  Only some of them are available in the CMake build, see
+:ref:`below <compile_flags_cmake>`.  Note this list is not exhaustive: more
+variables of the Makefile are listed :ref:`below <compile_flags_make>` (those
+of the CUDA builds are on the :ref:`install <c_install>` page), and further
+constants are not exposed but defined in :code:`include/glbopts.h`.
 
 
 .. list-table::
@@ -95,10 +94,10 @@ defined in :code:`include/glbopts.h`.
      - If compiling for use in python
      - True/False
      - 0
-   * - :code:`R_LANG`
-     - If compiling for use in R: SCS prints with :code:`Rprintf`. This is not a variable of :code:`scs.mk`, so define it for the compiler, e.g., :code:`make CFLAGS=-DR_LANG`, with the R headers on the include path. The :code:`USING_R` variable of :code:`scs.mk` has no effect, the source does not read it
-     - Defined or not defined
-     - Not defined
+   * - :code:`USING_R`
+     - If compiling for use in R: SCS prints with :code:`Rprintf`, so the R headers must be on the include path. It defines the macro :code:`R_LANG`, which is the name the source reads and what the R package passes in :code:`CFLAGS`. Build only the libraries, e.g., :code:`make out/libscsdir.a USING_R=1 CFLAGS=-I<R include folder>`: the demo and test programs call :code:`Rprintf` and do not link without R
+     - True/False
+     - 0
 
 .. _compile_flags_make:
 
@@ -139,8 +138,8 @@ The Makefile also uses the variables below. They are set in the same way, e.g.,
 
 :code:`OPT`, :code:`PREFIX`, :code:`MKLROOT`, :code:`OMPROOT` and :code:`CFLAGS`
 can also be set as environment variables. :code:`BLASLDFLAGS`, :code:`COVERAGE`
-and the :code:`scs.mk` flags of the first table are only read from the command
-line of :code:`make`.
+and the flags of the first table are only read from the command line of
+:code:`make`.
 
 .. _compile_flags_cmake:
 
@@ -156,10 +155,12 @@ options, with the same default: :code:`DLONG`, :code:`SFLOAT`,
 :code:`-DUSE_GPU=ON`.
 
 :code:`CTRLC` is always enabled in a CMake build. :code:`NO_TIMER`,
-:code:`NO_VALIDATE`, :code:`VERBOSITY`, :code:`NOBLASSUFFIX` and
-:code:`BLASSUFFIX` are not CMake options, and CMake ignores them with a warning
-if they are passed as one (:code:`-DNO_TIMER=ON`, say). They can be passed to
-the compiler directly, e.g., :code:`cmake -DCMAKE_C_FLAGS="-DNO_TIMER=1" ..`.
+:code:`NO_VALIDATE`, :code:`VERBOSITY`, :code:`NOBLASSUFFIX`,
+:code:`BLASSUFFIX`, :code:`MATLAB_MEX_FILE`, :code:`PYTHON` and :code:`USING_R`
+are not CMake options, and CMake ignores them with a warning if they are passed
+as one (:code:`-DNO_TIMER=ON`, say). They can be passed to the compiler
+directly, e.g., :code:`cmake -DCMAKE_C_FLAGS="-DNO_TIMER=1" ..` (for R the
+macro is :code:`R_LANG`, so :code:`-DCMAKE_C_FLAGS="-DR_LANG"`).
 
 CMake finds the BLAS and LAPACK libraries itself. To choose a particular
 library set CMake's `BLA_VENDOR
@@ -168,6 +169,13 @@ library set CMake's `BLA_VENDOR
 variable is set and :code:`BLA_VENDOR` is not, SCS asks CMake for MKL. If CMake
 finds no LAPACK, SCS links :code:`blas` and :code:`lapack` by name, except with
 :code:`BLAS64=ON`, where the configuration stops with an error.
+
+If CMake finds no OpenMP, :code:`USE_OPENMP=ON` gives a warning and libraries
+without OpenMP (the configure output then says ``OpenMP parallelization is
+OFF``), except with :code:`USE_PARALLEL_PSD=ON`, where the configuration stops
+with an error. OpenMP that is installed where CMake does not look can be
+pointed to with :code:`-DOpenMP_ROOT=<folder>`, which Homebrew's
+:code:`libomp` on macOS needs.
 
 The options that select what is built (:code:`BUILD_SHARED_LIBS`,
 :code:`BUILD_TESTING` and the options for the other linear solvers) are
