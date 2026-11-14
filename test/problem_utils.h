@@ -14,6 +14,46 @@
 
 #define _MAX_RAND_VAL (1073741823) /* 2^30 - 1 */
 
+/* The tolerances and checks in this suite assume double precision: many sit
+ * below what a single-precision solve can reach (machine epsilon is 1.2e-7, and
+ * the KKT solve loses a further factor of 1 / rho_x). So in SFLOAT builds every
+ * solve is run with tolerances no tighter than these, which keeps each test's
+ * problem and expected status while asking for an achievable accuracy. A
+ * tolerance of zero or less is left alone since it can be deliberate (disabling
+ * a check) or the invalid input a validation test wants rejected. */
+#ifdef SFLOAT
+#define SFLOAT_TEST_EPS (1e-4)
+#define SFLOAT_TEST_EPS_INFEAS (1e-4)
+static void raise_tols_for_single_precision(ScsSettings *stgs) {
+  if (!stgs) {
+    return;
+  }
+  if (stgs->eps_abs > 0 && stgs->eps_abs < SFLOAT_TEST_EPS) {
+    stgs->eps_abs = SFLOAT_TEST_EPS;
+  }
+  if (stgs->eps_rel > 0 && stgs->eps_rel < SFLOAT_TEST_EPS) {
+    stgs->eps_rel = SFLOAT_TEST_EPS;
+  }
+  if (stgs->eps_infeas > 0 && stgs->eps_infeas < SFLOAT_TEST_EPS_INFEAS) {
+    stgs->eps_infeas = SFLOAT_TEST_EPS_INFEAS;
+  }
+}
+#define scs_init(d, k, stgs)                                                   \
+  (raise_tols_for_single_precision(stgs), scs_init(d, k, stgs))
+#define scs(d, k, stgs, sol, info)                                             \
+  (raise_tols_for_single_precision(stgs), scs(d, k, stgs, sol, info))
+/* double, single: recomputing a residual or objective outside the solver
+ * disagrees by roundoff, about 1e-7 of the magnitudes involved */
+#define VERIFY_TOL(dbl, sgl) (sgl)
+#else
+#define VERIFY_TOL(dbl, sgl) (dbl)
+#endif
+/* how close a solve must get to a known optimal objective or solution */
+#define SOL_TOL VERIFY_TOL(1e-4, 1e-2)
+/* the solver stops as soon as it meets its tolerances, so its roundoff can put
+ * a recomputed residual just outside them */
+#define FEAS_SLACK VERIFY_TOL(1., 1.1)
+
 /* uniform random number in [-1,1] */
 static scs_float rand_scs_float(void) {
   return 2 * (((scs_float)ran_arr_next()) / _MAX_RAND_VAL) - 1; /* in [-1, 1] */
@@ -108,6 +148,22 @@ static scs_float cone_dist_tol(const ScsCone *k) {
   (void)k;
   return 1e-5;
 }
+
+/* distance of v (length len) from the cone: in single precision a projection
+ * is accurate to about 1e-7 of the vector's size, so the limit grows with it */
+#define CONE_DIST_TOL(k, v, len)                                               \
+  VERIFY_TOL(cone_dist_tol(k),                                                 \
+             MAX(cone_dist_tol(k), 1e-4 * (1 + NORM(v, len))))
+
+/* single precision: the rounding in recomputing M v, where v is a certificate
+ * (scaled so that b'y or c'x is -1, so its size is set by the problem) and the
+ * product nearly cancels: a few machine epsilons of ||M||_F ||v|| */
+#define PRODUCT_ROUND(M, v, len)                                               \
+  (1e-5 * (1 + NORM((M)->x, (M)->p[(M)->n]) * NORM(v, len)))
+/* the same for |Ax + s| and |Px| of an unboundedness certificate x */
+#define UNBDD_A_ROUND(d, x, s, n, m)                                           \
+  (PRODUCT_ROUND((d)->A, x, n) + 1e-5 * NORM(s, m))
+#define UNBDD_P_ROUND(d, x, n) ((d)->P ? PRODUCT_ROUND((d)->P, x, n) : 0.)
 
 static scs_float get_dual_cone_dist(const scs_float *y, ScsConeWork *c,
                                     scs_int m) {
@@ -242,39 +298,55 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
      * quantities (~ the objective scale), like the gap and objective
      * checks below already do */
     mu_assert_less("Primal residual ERROR", ABS(res_pri - info->res_pri),
-                   1e-10 * (1 + ABS(pobj)));
+                   VERIFY_TOL(1e-10, 1e-4) * (1 + ABS(pobj)));
     mu_assert_less("Dual residual ERROR", ABS(res_dual - info->res_dual),
-                   1e-10 * (1 + ABS(pobj)));
-    mu_assert_less("Gap ERROR", ABS(gap - info->gap), 1e-7 * (1 + ABS(gap)));
+                   VERIFY_TOL(1e-10, 1e-4) * (1 + ABS(pobj)));
+    mu_assert_less("Gap ERROR", ABS(gap - info->gap),
+                   VERIFY_TOL(1e-7 * (1 + ABS(gap)), 1e-4 * (1 + grl)));
     mu_assert_less("Primal obj ERROR", ABS(pobj - info->pobj),
-                   1e-9 * (1 + ABS(pobj)));
+                   VERIFY_TOL(1e-9, 1e-4) * (1 + ABS(pobj)));
     mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj),
-                   1e-9 * (1 + ABS(dobj)));
+                   VERIFY_TOL(1e-9, 1e-4) * (1 + ABS(dobj)));
     /* slightly looser tol */
     mu_assert_less("Complementary slackness ERROR", ABS(sty),
-                   5e-8 * MAX(NORM(s, m), NORM(y, m)));
-    mu_assert_less("s cone dist ERROR", ABS(sdist), cone_dist_tol(k));
-    mu_assert_less("y cone dist ERROR", ABS(ydist), cone_dist_tol(k));
+                   VERIFY_TOL(5e-8, 1e-4) * MAX(NORM(s, m), NORM(y, m)));
+    mu_assert_less("s cone dist ERROR", ABS(sdist), CONE_DIST_TOL(k, s, m));
+    mu_assert_less("y cone dist ERROR", ABS(ydist), CONE_DIST_TOL(k, y, m));
 
     mu_assert_less("Primal feas ERROR", res_pri,
-                   stgs->eps_abs + stgs->eps_rel * prl);
+                   FEAS_SLACK * (stgs->eps_abs + stgs->eps_rel * prl));
     mu_assert_less("Dual feas ERROR", res_dual,
-                   stgs->eps_abs + stgs->eps_rel * drl);
-    mu_assert_less("Gap feas ERROR", gap, stgs->eps_abs + stgs->eps_rel * grl);
+                   FEAS_SLACK * (stgs->eps_abs + stgs->eps_rel * drl));
+    mu_assert_less("Gap feas ERROR", gap,
+                   FEAS_SLACK * (stgs->eps_abs + stgs->eps_rel * grl));
 
   } else if (status == SCS_INFEASIBLE) {
-    mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas), 1e-8);
-    mu_assert_less("bty ERROR", ABS(bty + 1), 1e-12);
-    mu_assert_less("y cone dist ERROR", ABS(ydist), cone_dist_tol(k));
-    mu_assert_less("Infeas invalid ERROR", res_infeas, stgs->eps_infeas);
+    mu_assert_less("Infeas ERROR", ABS(res_infeas - info->res_infeas),
+                   VERIFY_TOL(1e-8, PRODUCT_ROUND(d->A, y, m)));
+    /* the solver scales y so that b'y = -1; recomputing the sum rounds in
+     * proportion to its terms, which can be far larger than 1 */
+    mu_assert_less("bty ERROR", ABS(bty + 1),
+                   VERIFY_TOL(1e-12, 1e-5 * (1 + NORM(b, m) * NORM(y, m))));
+    mu_assert_less("y cone dist ERROR", ABS(ydist), CONE_DIST_TOL(k, y, m));
+    mu_assert_less("Infeas invalid ERROR", res_infeas,
+                   FEAS_SLACK * stgs->eps_infeas +
+                       VERIFY_TOL(0., PRODUCT_ROUND(d->A, y, m)));
 
   } else if (status == SCS_UNBOUNDED) {
-    mu_assert_less("Unbdd_a ERROR", ABS(res_unbdd_a - info->res_unbdd_a), 1e-8);
-    mu_assert_less("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p), 1e-8);
-    mu_assert_less("ctx ERROR", ABS(ctx + 1), 1e-12);
-    mu_assert_less("s cone dist ERROR", ABS(sdist), cone_dist_tol(k));
-    mu_assert_less("Unbounded P invalid ERROR", res_unbdd_p, stgs->eps_infeas);
-    mu_assert_less("Unbounded A invalid ERROR", res_unbdd_a, stgs->eps_infeas);
+    mu_assert_less("Unbdd_a ERROR", ABS(res_unbdd_a - info->res_unbdd_a),
+                   VERIFY_TOL(1e-8, UNBDD_A_ROUND(d, x, s, n, m)));
+    mu_assert_less("Unbdd_p ERROR", ABS(res_unbdd_p - info->res_unbdd_p),
+                   VERIFY_TOL(1e-8, UNBDD_P_ROUND(d, x, n)));
+    /* as for b'y above */
+    mu_assert_less("ctx ERROR", ABS(ctx + 1),
+                   VERIFY_TOL(1e-12, 1e-5 * (1 + NORM(c, n) * NORM(x, n))));
+    mu_assert_less("s cone dist ERROR", ABS(sdist), CONE_DIST_TOL(k, s, m));
+    mu_assert_less("Unbounded P invalid ERROR", res_unbdd_p,
+                   FEAS_SLACK * stgs->eps_infeas +
+                       VERIFY_TOL(0., UNBDD_P_ROUND(d, x, n)));
+    mu_assert_less("Unbounded A invalid ERROR", res_unbdd_a,
+                   FEAS_SLACK * stgs->eps_infeas +
+                       VERIFY_TOL(0., UNBDD_A_ROUND(d, x, s, n, m)));
 
   } else {
     return "INVALID STATUS";

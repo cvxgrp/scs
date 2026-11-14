@@ -37,7 +37,15 @@ extern "C" {
 #define EPS_ABS (1E-4)
 #define EPS_INFEAS (1E-7)
 #define ALPHA (1.5)
+/* Back-substitution through the KKT factorization loses about eps / rho_x
+ * relative accuracy in x, where eps is the machine precision. Single precision
+ * cannot afford 1e-6: even min x s.t. x >= 2 stalls at an 8% primal residual.
+ * 1e-2 leaves that error around 1e-5, below the default eps_abs and eps_rel. */
+#ifdef SFLOAT
+#define RHO_X (1E-2)
+#else
 #define RHO_X (1E-6)
+#endif
 #define SCALE (0.1)
 #define VERBOSE (1)
 #define NORMALIZE (1)
@@ -266,7 +274,17 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define DEN_FLOOR_FRAC (1e-3)
 
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
+/* Accuracy of the most accurate CG solves (the cold solve for g, and the floor
+ * of the warm ones). Single precision cannot reach 1e-12: a CG asked for it
+ * runs to its iteration limit on every solve and its rounding errors then
+ * reach the iterates (issue_499's infeasibility certificate stalled with
+ * tau at rounding level). 1e-6 is about ten times float's machine epsilon;
+ * 1e-7 also passes the test suite, 1e-5 starts losing accuracy. */
+#ifdef SFLOAT
+#define CG_BEST_TOL (1e-6)
+#else
 #define CG_BEST_TOL (1e-12)
+#endif
 /* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
  * values give more accurate CG solves at the cost of more CG iterations.
  * With deflation making inner accuracy cheap, 0.03 measured optimal on a

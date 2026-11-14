@@ -74,17 +74,28 @@ _SKIP(test_psd_scale_updates)
 
 /* solve SDPs from data files, requires blas / lapack */
 #if defined(USE_LAPACK) && NO_READ_WRITE == 0
-#include "problems/issue_220.h"
-#include "problems/random_prob.h"
 #include "problems/rob_gauss_cov_est.h" /* tests writing to data file */
 #else
-_SKIP(issue_220)
-_SKIP(random_prob)
 _SKIP(rob_gauss_cov_est)
 #endif
 
-/* solve SDPs with spectral cones, requires blas / lapack */
-#if defined(USE_SPECTRAL_CONES)
+/* The problems stored in test/problems store their floats as doubles, and
+ * SCS(read_data) refuses a file whose float size differs from the build's, so
+ * single-precision builds cannot load them. */
+#if defined(USE_LAPACK) && NO_READ_WRITE == 0 && !defined(SFLOAT)
+#include "problems/issue_220.h"
+#include "problems/random_prob.h"
+#else
+_SKIP(issue_220)
+_SKIP(random_prob)
+#endif
+
+/* solve SDPs with spectral cones, requires blas / lapack. Not in single
+ * precision: the inner Newton and interior-point solvers of these cones use
+ * fixed tolerances of 1e-7 to 1e-14, which float arithmetic cannot reach, so
+ * they run to their iteration limits inside every cone projection. Some
+ * problems then fail and the rest take minutes. */
+#if defined(USE_SPECTRAL_CONES) && !defined(SFLOAT)
 #include "spectral_cones_problems/exp_design.h"
 #include "spectral_cones_problems/graph_partitioning.h"
 #include "spectral_cones_problems/robust_pca.h"
@@ -110,12 +121,17 @@ _SKIP(test_spectral_metric_updates)
 #if NO_READ_WRITE == 0
 #include "problems/hs21_tiny_qp_rw.h"
 #include "problems/test_rw_settings.h"
+#else
+_SKIP(hs21_tiny_qp_rw)
+_SKIP(test_rw_settings)
+#endif
+
+/* stored as doubles too, see above */
+#if NO_READ_WRITE == 0 && !defined(SFLOAT)
 #include "problems/issue_140.h"
 #include "problems/max_ent.h"
 #include "problems/mpc_bug.h"
 #else
-_SKIP(hs21_tiny_qp_rw)
-_SKIP(test_rw_settings)
 _SKIP(issue_140)
 _SKIP(max_ent)
 _SKIP(mpc_bug)

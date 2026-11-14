@@ -27,9 +27,6 @@ extern "C" {
 void BLAS(axpy)(blas_int *n, const scs_float *a, const scs_float *x,
                 blas_int *incx, scs_float *y, blas_int *incy);
 
-scs_float BLAS(dot)(const blas_int *n, const scs_float *x, const blas_int *incx,
-                    const scs_float *y, const blas_int *incy);
-
 #ifdef __cplusplus
 }
 #endif
@@ -62,7 +59,7 @@ static void compute_cone_residuals_ell1(const scs_float *tx, scs_float t0,
    *     Compute complementarity measure
    * --------------------------------------- */
   complementarity =
-      tx[0] * dualt + BLAS(dot)(&int_n, dualx, &one, tx + 1, &one);
+      tx[0] * dualt + SCS(dot)(dualx, tx + 1, n);
 
   /* -----------------------------------------------
    *   Compute primal feasibility measure

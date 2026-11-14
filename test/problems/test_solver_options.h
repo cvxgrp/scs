@@ -60,6 +60,13 @@
  * at least once during the solve.
  */
 static const char *test_adaptive_scale(void) {
+#ifdef SFLOAT
+  /* From this test's deliberately bad scale, the single-precision unpivoted
+   * LDLT in Apple Accelerate diverges (residuals near 1e18 at max_iters). */
+  if (strstr(scs_get_lin_sys_method(), "accelerate")) {
+    return mu_skipped;
+  }
+#endif
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -371,7 +378,7 @@ static const char *test_normalize_off(void) {
   if (fail) return fail;
 
   mu_assert("test_normalize_off: objectives differ between normalize=0 and 1",
-            ABS(pobj0 - pobj1) < 1e-4);
+            ABS(pobj0 - pobj1) < SOL_TOL);
   return 0;
 }
 
@@ -452,7 +459,7 @@ static const char *test_normalize_roundtrip(void) {
               ABS(sol0->x[i] - sol1->x[i]) < 1e-3);
   }
   mu_assert("test_normalize_roundtrip: objectives differ",
-            ABS(info0.pobj - info1.pobj) < 1e-4);
+            ABS(info0.pobj - info1.pobj) < SOL_TOL);
 
   _CLEANUP_NRM(d0, k0, stgs0, sol0);
   _CLEANUP_NRM(d1, k1, stgs1, sol1);
@@ -546,7 +553,7 @@ static const char *test_warm_start(void) {
   exitflag = scs_solve(w, sol, &info, 1);
   mu_assert("test_warm_start: warm solve failed", exitflag == SCS_SOLVED);
   mu_assert("test_warm_start: wrong objective after warm start",
-            ABS(info.pobj - 2.0) < 1e-4);
+            ABS(info.pobj - 2.0) < SOL_TOL);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
   scs_finish(w);

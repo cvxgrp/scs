@@ -48,6 +48,14 @@ jobs:
           make install DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }} PREFIX=$PWD/_inst
           test -L _inst/lib/libscsdir.so && test -e _inst/lib/libscsdir.so
           readelf -d _inst/lib/libscsdir.so | grep -q 'SONAME.*libscsdir\.so\.[0-9]'
+      - name: Single precision tests
+        if: matrix.long == 0
+        run: |
+          make purge
+          make test SFLOAT=1 USE_LAPACK=${{ matrix.lapack }}
+          out/run_tests_direct
+          out/run_tests_indirect
+          if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi
 
   windows:
     strategy:
@@ -125,3 +133,12 @@ jobs:
           make install DLONG=${{ matrix.long }} USE_LAPACK=${{ matrix.lapack }} PREFIX=$PWD/_inst
           test -L _inst/lib/libscsdir.dylib && test -e _inst/lib/libscsdir.dylib
           otool -D _inst/lib/libscsdir.dylib | grep -q 'libscsdir\.[0-9].*\.dylib'
+      - name: Single precision tests
+        if: matrix.long == 0
+        run: |
+          make purge
+          make test SFLOAT=1 USE_LAPACK=${{ matrix.lapack }}
+          out/run_tests_direct
+          out/run_tests_indirect
+          out/run_tests_accelerate
+          if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi

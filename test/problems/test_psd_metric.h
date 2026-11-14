@@ -55,10 +55,11 @@ static const char *test_psd_metric(void) {
     for (i = j; i < PSD_N; ++i) {
       scs_float w = prof[psd_svec_idx(i, j, PSD_N)];
       mu_assert("psd_metric: fit not rank-one",
-                ABS(w - delta[i] * delta[j]) <= 1e-12 * (1. + ABS(w)));
+                ABS(w - delta[i] * delta[j]) <=
+                    VERIFY_TOL(1e-12, 1e-5) * (1. + ABS(w)));
       mu_assert("psd_metric: fit outside clamp bounds",
-                w >= DIAG_SCALE_MULT_MIN * (1. - 1e-12) &&
-                    w <= DIAG_SCALE_MULT_MAX * (1. + 1e-12));
+                w >= DIAG_SCALE_MULT_MIN * (1. - VERIFY_TOL(1e-12, 1e-5)) &&
+                    w <= DIAG_SCALE_MULT_MAX * (1. + VERIFY_TOL(1e-12, 1e-5)));
     }
   }
 
@@ -79,17 +80,20 @@ static const char *test_psd_metric(void) {
   SCS(proj_dual_cone)(chk, eucl, SCS_NULL, SCS_NULL);
   dist = SCS(norm_inf_diff)(chk, out, PSD_M);
   nrm = SCS(norm_inf)(out, PSD_M);
-  mu_assert("psd_metric: primal part not in cone", dist <= 1e-9 * (1. + nrm));
+  mu_assert("psd_metric: primal part not in cone",
+            dist <= VERIFY_TOL(1e-9, 1e-4) * (1. + nrm));
 
   memcpy(chk, p, PSD_M * sizeof(scs_float));
   SCS(proj_dual_cone)(chk, eucl, SCS_NULL, SCS_NULL);
   dist = SCS(norm_inf_diff)(chk, p, PSD_M);
   nrm = SCS(norm_inf)(p, PSD_M);
-  mu_assert("psd_metric: dual part not in cone", dist <= 1e-9 * (1. + nrm));
+  mu_assert("psd_metric: dual part not in cone",
+            dist <= VERIFY_TOL(1e-9, 1e-4) * (1. + nrm));
 
   dot = SCS(dot)(out, p, PSD_M);
   mu_assert("psd_metric: Moreau parts not orthogonal",
-            ABS(dot) <= 1e-9 * (1. + SCS(norm_inf)(x, PSD_M)));
+            ABS(dot) <=
+                VERIFY_TOL(1e-9, 1e-4) * (1. + SCS(norm_inf)(x, PSD_M)));
 
   /* uniform metric must reproduce the Euclidean projection exactly */
   for (i = 0; i < PSD_M; ++i) {
@@ -100,7 +104,7 @@ static const char *test_psd_metric(void) {
   SCS(proj_dual_cone)(out, cw, SCS_NULL, r_y);
   SCS(proj_dual_cone)(chk, eucl, SCS_NULL, SCS_NULL);
   mu_assert("psd_metric: uniform metric deviates from Euclidean",
-            SCS(norm_inf_diff)(chk, out, PSD_M) <= 1e-13);
+            SCS(norm_inf_diff)(chk, out, PSD_M) <= VERIFY_TOL(1e-13, 1e-5));
 
   SCS(finish_cone)(cw);
   SCS(finish_cone)(eucl);

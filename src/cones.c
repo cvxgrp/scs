@@ -1871,7 +1871,7 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
      * should) if ht is very large, which can happen with some pathological
      * problems.
      */
-    if (ABS(gt / MAX(ht, 1e-6)) < 1e-12 * MAX(t, 1.) ||
+    if (ABS(gt / MAX(ht, (scs_float)1e-6)) < 1e-12 * MAX(t, 1.) ||
         ABS(t - t_prev) < 1e-11 * MAX(t, 1.))
       break;
   }

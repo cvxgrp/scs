@@ -105,7 +105,8 @@ static const char *hs21_tiny_qp_rw(void) {
   scs_printf("primal obj error %4e\n", perr);
   scs_printf("dual obj error %4e\n", derr);
 
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
 
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
@@ -119,7 +120,8 @@ static const char *hs21_tiny_qp_rw(void) {
    * count of one particular metric and breaks whenever the scaling
    * changes, even though the warm solve is correct */
   mu_assert("hs21_tiny_qp_rw: warm-start failure", info.iter <= cold_iter / 2);
-  success = ABS(perr) < 1e-4 && ABS(derr) < 1e-4 && exitflag == SCS_SOLVED;
+  success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
+            exitflag == SCS_SOLVED;
 
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);

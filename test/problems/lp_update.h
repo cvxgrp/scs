@@ -60,7 +60,7 @@ static const char *lp_update(void) {
 
   /* base solve: min x s.t. x >= 2, expected obj=2 */
   exitflag = scs_solve(w, sol, &info, 0);
-  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < 1e-4;
+  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < SOL_TOL;
   mu_assert("lp_update: base solve failed", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
   if (fail) return fail;
@@ -69,7 +69,7 @@ static const char *lp_update(void) {
   b[0] = -3.0;
   scs_update(w, b, SCS_NULL);
   exitflag = scs_solve(w, sol, &info, 1);
-  success = exitflag == SCS_SOLVED && ABS(info.pobj - 3.0) < 1e-4;
+  success = exitflag == SCS_SOLVED && ABS(info.pobj - 3.0) < SOL_TOL;
   mu_assert("lp_update: b-update solve failed", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
   if (fail) return fail;
@@ -78,7 +78,7 @@ static const char *lp_update(void) {
   c[0] = 2.0;
   scs_update(w, SCS_NULL, c);
   exitflag = scs_solve(w, sol, &info, 1);
-  success = exitflag == SCS_SOLVED && ABS(info.pobj - 6.0) < 1e-4;
+  success = exitflag == SCS_SOLVED && ABS(info.pobj - 6.0) < SOL_TOL;
   mu_assert("lp_update: c-update solve failed", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
   if (fail) return fail;
@@ -88,7 +88,7 @@ static const char *lp_update(void) {
   c[0] = 1.0;
   scs_update(w, b, c);
   exitflag = scs_solve(w, sol, &info, 1);
-  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < 1e-4;
+  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < SOL_TOL;
   mu_assert("lp_update: b+c-update solve failed", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
   if (fail) return fail;
@@ -96,7 +96,7 @@ static const char *lp_update(void) {
   /* null/null update: no change to problem, result must be identical */
   scs_update(w, SCS_NULL, SCS_NULL);
   exitflag = scs_solve(w, sol, &info, 1);
-  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < 1e-4;
+  success = exitflag == SCS_SOLVED && ABS(info.pobj - 2.0) < SOL_TOL;
   mu_assert("lp_update: null-null update changed result", success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
