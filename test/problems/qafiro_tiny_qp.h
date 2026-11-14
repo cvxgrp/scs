@@ -146,8 +146,9 @@ static const char *qafiro_tiny_qp(void) {
    * the cold solve ends on a point that meets the tolerance by a margin of
    * the order of the rounding, and the warm-started solve can wander away
    * from it before converging. With Apple's Accelerate, whose factorization
-   * differs from run to run, it took 0 to 625 iterations over 150 local runs
-   * and 1,500 on a CI runner; with QDLDL and the indirect solver it takes 0. */
+   * differs from run to run, it took 0 to 2,000 iterations over 300 local
+   * runs without LAPACK and 1,500 on a CI runner; with QDLDL and the indirect
+   * solver it takes 0. */
 #ifndef SFLOAT
   mu_assert("qafiro_tiny_qp: warm-start failure", info.iter <= 100);
 #endif
