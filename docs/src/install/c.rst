@@ -54,7 +54,8 @@ project
 
 The CMake build-system exports two CMake targets called :code:`scs::scsdir` and
 :code:`scs::scsindir` as well as a header file :code:`scs.h` that defines the
-API. When LAPACK is available (the default), it also exports
+API (installed with the two headers it includes, :code:`scs_types.h` and
+:code:`aa_stats.h`). When LAPACK is available (the default), it also exports
 :code:`scs::scsdense` for the :ref:`dense direct <dense>` solver.
 
 MKL
@@ -64,10 +65,21 @@ If `MKL
 <https://www.intel.com/content/www/us/en/develop/documentation/get-started-with-mkl-for-dpcpp/top.html>`_
 is installed in your system and the :code:`MKLROOT` environment variable is
 set, then additionally CMake will build and install the :ref:`MKL Pardiso
-<mkl>` linear solver with target :code:`scs::scsmkl`.  (Note that the choice of
-MKL compiler flags might not be right for your system and may need to be
-`modified
-<https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
+<mkl>` linear solver with target :code:`scs::scsmkl`. CMake finds MKL through
+the CMake package that oneMKL installs (:code:`MKLConfig.cmake`, oneMKL 2021.3
+or later), which it looks for under :code:`MKLROOT`. Configuration stops with
+an error if that package is not found. SCS links the single dynamic library
+(:code:`mkl_rt`) through the :code:`MKL::MKL` target of that package, so there
+is no MKL link line to edit in the CMake build.
+
+Setting :code:`MKLROOT` also changes the BLAS/LAPACK of the other SCS
+libraries. When :code:`USE_LAPACK` is on (the default), CMake then looks for
+MKL as the BLAS/LAPACK library (it sets :code:`BLA_VENDOR` to
+:code:`Intel10_64lp`, or to :code:`Intel10_64ilp` with :code:`BLAS64=ON`), and
+every SCS library that links the BLAS/LAPACK found by CMake links against it,
+:code:`scs::scsdir`, :code:`scs::scsindir` and :code:`scs::scsdense` among
+them. To keep another BLAS/LAPACK for those libraries, pass
+:code:`BLA_VENDOR` on the command line, e.g. :code:`-DBLA_VENDOR=OpenBLAS`.
 
 The :code:`BLAS64` compile flag is a general SCS flag for ILP64 BLAS/LAPACK
 libraries. When using the MKL Pardiso backend specifically, :code:`BLAS64=1`
@@ -124,11 +136,16 @@ This will build and install the cuDSS linear solver with target
 Importing
 """""""""
 The libraries can be imported using the find_package CMake command and used
-by calling target_link_libraries as in the following example:
+by calling target_link_libraries as in the following example. SCS needs CMake
+3.22 or newer to build, and a static SCS package
+(:code:`-DBUILD_SHARED_LIBS=OFF`) cannot be imported by an older CMake. Link
+the target for the linear solver you want: :code:`scs::scsdir` and
+:code:`scs::scsindir` are always installed, the others only when SCS was
+built with that solver.
 
 .. code:: bash
 
-  cmake_minimum_required(VERSION 3.0)
+  cmake_minimum_required(VERSION 3.22)
   project(myproject)
   find_package(scs REQUIRED)
   add_executable(example example.cpp)
@@ -148,11 +165,20 @@ by calling target_link_libraries as in the following example:
   # To use the cuDSS direct method
   target_link_libraries(example scs::scscudss)
 
+  # To use the GPU indirect method (requires -DUSE_GPU=ON)
+  target_link_libraries(example scs::scsgpuindir)
+
+  # To use the Apple Accelerate direct method (macOS only, requires
+  # -DUSE_APPLE_ACCELERATE=ON)
+  target_link_libraries(example scs::scsaccel)
+
 Makefile
 ^^^^^^^^
 Alternatively you can use the Makefile and manage the libraries and header
-files yourself.  The public header files are :code:`scs.h` and
-:code:`scs_types.h`.
+files yourself.  The public header files are :code:`scs.h`,
+:code:`scs_types.h` and :code:`aa_stats.h`.  Your code only needs to include
+:code:`scs.h`, but :code:`scs.h` includes the other two, so all three must be
+on the include path.
 
 .. code:: bash
 
@@ -185,9 +211,14 @@ then you can compile and test the :ref:`MKL Pardiso <mkl>` version of SCS using:
 
 This will produce static library :code:`libscsmkl.a` and dynamic library
 :code:`libscsmkl.ext` (again :code:`.ext` is platform dependent) in the
-:code:`out` folder.  (Note that the choice of MKL compiler flags might not be right
-for your system and may need to be `modified
-<https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_).
+:code:`out` folder.  The MKL link line (:code:`MKLFLAGS` in :code:`scs.mk`) is
+written for Linux with GCC and may need to be `modified
+<https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html>`_
+for your system. It links Intel's OpenMP library (:code:`libiomp5`), which it
+looks for in the :code:`lib` folder of :code:`OMPROOT`. :code:`OMPROOT`
+defaults to :code:`MKLROOT`. If :code:`libiomp5` is somewhere else, as in a
+oneAPI installation, set :code:`OMPROOT`, e.g.
+:code:`make mkl OMPROOT=/opt/intel/oneapi/compiler/latest`.
 
 If you want 64-bit BLAS/LAPACK integers with the MKL Pardiso backend, build
 with both :code:`BLAS64=1` and :code:`DLONG=1`.

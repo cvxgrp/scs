@@ -138,7 +138,7 @@ found :math:`x \in \mathbf{R}^n`, :math:`s \in \mathbf{R}^m`, and :math:`y \in
 .. math::
   r_g := |x^\top Px + c^\top x + b^\top y| \leq \epsilon_\mathrm{abs} + \epsilon_\mathrm{rel} \max(|x^\top P x|, |c^\top x|, |b^\top y|),
 
-where :math:`\epsilon_\mathrm{abs}>0` and :math:`\epsilon_\mathrm{rel}>0` are
+where :math:`\epsilon_\mathrm{abs} \geq 0` and :math:`\epsilon_\mathrm{rel} \geq 0` are
 user defined :ref:`settings <settings>`. The :math:`\ell_\infty` norm
 here can be changed to other norms by changing the definition of :code:`NORM` in
 the :code:`include/glbopts.h` file.
@@ -160,7 +160,7 @@ Similarly, SCS declares a problem **dual infeasible (primal unbounded)** when it
 .. math::
   c^\top x = -1, \quad \|P x\|_\infty < \epsilon_\mathrm{infeas}, \quad \|A x + s\|_\infty < \epsilon_\mathrm{infeas} \cdot \min\left(1, \frac{\max_{ij} |A_{ij}|}{\|c\|_\infty}\right)
 
-where :math:`\epsilon_\mathrm{infeas} > 0` is a user-defined :ref:`setting
+where :math:`\epsilon_\mathrm{infeas} \geq 0` is a user-defined :ref:`setting
 <settings>`.  The :math:`\ell_\infty` norm here can be changed to other norms by
 changing the definition of :code:`NORM` in the :code:`include/glbopts.h` file
 (the :math:`\max_{ij} |A_{ij}|` factor is always the largest entry magnitude

@@ -151,6 +151,15 @@ Maros-Meszaros QP collections found 5 to be a robust choice in practice
 (intervals near 1 destabilize the least-squares fit, very large intervals
 leave acceleration idle), and 5 is the default.
 
+In SCS, unlike the scheme above where :math:`m_k = \min\{m, k\}`, AA does not
+produce a step until its memory is full. After a reset of the AA state the
+memory has to be filled again, which takes about :code:`acceleration_lookback`
+calls, that is :code:`acceleration_lookback` times
+:code:`acceleration_interval` iterations (50 to 55 with the default settings),
+during which no accelerated step is taken. The AA state is reset
+after a rejected step (see below) and whenever the :code:`scale` or the
+per-row multipliers are updated, see :ref:`updating_scale`.
+
 The details about how the linear systems are solved and updated are abstracted
 away into the AA package. The current implementation uses a rank-revealing
 pivoted QR factorization (LAPACK :code:`geqp3`) of the augmented matrix (with
@@ -191,7 +200,10 @@ into the matrices by appending :math:`\sqrt{\epsilon} I` to the bottom of
 :math:`S_k` or :math:`Y_k`, which is useful when using a QR or SVD decomposition
 to solve the equations.
 
-The setting :code:`acceleration_regularization` controls :math:`\epsilon`. The
+The setting :code:`acceleration_regularization` controls :math:`\epsilon`: a
+positive value is scaled by the norms of the matrices, a negative value is
+used as it is (its magnitude), and zero turns the regularization off (see
+:ref:`settings`). The
 default (:code:`1e-8`) is tuned for type-I; type-II is typically run with a
 smaller value such as :code:`1e-12`.
 

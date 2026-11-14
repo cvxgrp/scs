@@ -75,9 +75,7 @@ jobs:
   # runs here. It checks results, not speed; a real GPU is still the final word.
   # SCS links against the toolkit's own libraries, so the simulator's stay off
   # the library path while building (library-path: false) and `vgpu run` swaps
-  # them in for the test run only. issue_140 and max_ent are compiled out: they
-  # took 1.5-2.5 hours here, and well over that since the runners moved to
-  # kernel 7.0.
+  # them in for the test run only.
   simulated-gpu:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -90,7 +88,7 @@ jobs:
           library-path: false
       - run: sudo apt-get install libopenblas-dev liblapack-dev
       - run: CFLAGS=-Werror=implicit-function-declaration make gpu CUDA_PATH=/usr
-      - run: CFLAGS=-DSKIP_SLOW_TESTS make test_gpu CUDA_PATH=/usr
+      - run: make test_gpu CUDA_PATH=/usr
       - name: Run the GPU tests on the simulated GPU
         run: vgpu run out/run_tests_gpu_indirect
 

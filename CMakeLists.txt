@@ -113,8 +113,9 @@ if(USE_SPECTRAL_CONES AND NOT USE_LAPACK)
   message(FATAL_ERROR "USE_SPECTRAL_CONES requires USE_LAPACK to be ON")
 endif()
 
+# Whether OpenMP and the parallel PSD projection are in the build is reported
+# further down, once CMake has looked for OpenMP.
 option(USE_OPENMP "Compile with OpenMP support" OFF)
-message(STATUS "OpenMP parallelization is ${USE_OPENMP}")
 
 # Projects the PSD blocks of a problem in parallel, on up to OMP_NUM_THREADS
 # threads that each call LAPACK for their own blocks. Off by default, because
@@ -129,7 +130,6 @@ if(USE_PARALLEL_PSD AND NOT (USE_OPENMP AND USE_LAPACK))
   message(FATAL_ERROR
           "USE_PARALLEL_PSD requires USE_OPENMP and USE_LAPACK to be ON")
 endif()
-message(STATUS "Parallel PSD projection is ${USE_PARALLEL_PSD}")
 
 option(USE_CUDSS "Compile with cuDSS support" OFF)
 message(STATUS "cuDSS support is ${USE_CUDSS}")
@@ -214,18 +214,39 @@ endif()
 
 find_package(Threads REQUIRED)
 
+# SCS_WITH_OPENMP and SCS_WITH_PARALLEL_PSD say what is built, which is not
+# what was asked for when CMake does not find OpenMP. USE_OPENMP alone then
+# gives a warning and libraries without OpenMP. With USE_PARALLEL_PSD the
+# configuration stops, because no library would then have the parallel
+# projection and the option would otherwise be dropped with no more than that
+# warning. The libraries below link OpenMP::OpenMP_C, and the installed package
+# asks for OpenMP, when SCS_WITH_OPENMP is ON.
+set(SCS_WITH_OPENMP OFF)
+set(SCS_WITH_PARALLEL_PSD OFF)
 if(USE_OPENMP)
   find_package(OpenMP)
   if(OpenMP_C_FOUND)
-    # Link target used below via target_link_libraries.
+    set(SCS_WITH_OPENMP ON)
     if(USE_PARALLEL_PSD)
       # Takes effect in the libraries that are compiled with OpenMP.
       list(APPEND COMPILER_OPTS USE_PARALLEL_PSD)
+      set(SCS_WITH_PARALLEL_PSD ON)
     endif()
+  elseif(USE_PARALLEL_PSD)
+    message(FATAL_ERROR
+            "USE_PARALLEL_PSD requires OpenMP, which CMake did not find. "
+            "Install OpenMP for this compiler, or if it is installed tell "
+            "CMake where with -DOpenMP_ROOT=<folder> (needed for Homebrew's "
+            "libomp on macOS), or configure with -DUSE_PARALLEL_PSD=OFF")
   else()
-    message(WARNING "OpenMP requested but not found by CMake")
+    message(WARNING
+            "OpenMP requested but not found by CMake: the libraries are built "
+            "without it. If OpenMP is installed, tell CMake where with "
+            "-DOpenMP_ROOT=<folder>")
   endif()
 endif()
+message(STATUS "OpenMP parallelization is ${SCS_WITH_OPENMP}")
+message(STATUS "Parallel PSD projection is ${SCS_WITH_PARALLEL_PSD}")
 
 if(USE_SPECTRAL_CONES)
   list(APPEND COMPILER_OPTS USE_SPECTRAL_CONES)
@@ -365,7 +386,7 @@ target_compile_definitions(${${PROJECT_NAME}_DIRECT} PRIVATE ${COMPILER_OPTS})
 target_link_libraries(${${PROJECT_NAME}_DIRECT}
                       PRIVATE ${LAPACK_LINK_LIBRARIES}
                               $<$<NOT:$<PLATFORM_ID:Windows>>:m>
-                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+                              $<$<BOOL:${SCS_WITH_OPENMP}>:OpenMP::OpenMP_C>
                               Threads::Threads)
 
 set_target_properties(
@@ -410,7 +431,7 @@ target_compile_definitions(${${PROJECT_NAME}_INDIRECT} PRIVATE ${COMPILER_OPTS}
 target_link_libraries(${${PROJECT_NAME}_INDIRECT}
                       PRIVATE $<$<NOT:$<PLATFORM_ID:Windows>>:m>
                               ${LAPACK_LINK_LIBRARIES}
-                              $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+                              $<$<BOOL:${SCS_WITH_OPENMP}>:OpenMP::OpenMP_C>
                               Threads::Threads)
 
 set_target_properties(
@@ -457,7 +478,7 @@ if(USE_LAPACK)
   target_link_libraries(${${PROJECT_NAME}_DENSE}
                         PRIVATE ${LAPACK_LINK_LIBRARIES}
                                 $<$<NOT:$<PLATFORM_ID:Windows>>:m>
-                                $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+                                $<$<BOOL:${SCS_WITH_OPENMP}>:OpenMP::OpenMP_C>
                                 Threads::Threads)
 
   set_target_properties(
@@ -657,7 +678,7 @@ if(USE_GPU)
     PRIVATE CUDA::cudart CUDA::cublas CUDA::cusparse
             $<$<NOT:$<PLATFORM_ID:Windows>>:m>
             ${LAPACK_LINK_LIBRARIES}
-            $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+            $<$<BOOL:${SCS_WITH_OPENMP}>:OpenMP::OpenMP_C>
             Threads::Threads)
 
   set_target_properties(
@@ -717,7 +738,7 @@ if(APPLE AND USE_APPLE_ACCELERATE)
   target_link_libraries(
     ${${PROJECT_NAME}_ACCEL}
     PRIVATE ${ACCELERATE_FRAMEWORK}
-            $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+            $<$<BOOL:${SCS_WITH_OPENMP}>:OpenMP::OpenMP_C>
             Threads::Threads)
 
   set_target_properties(
@@ -777,7 +798,7 @@ if(BUILD_TESTING)
     # USE_PARALLEL_PSD, serial without), and skip for a library without OpenMP
     # (scsmkl and scscudss do not link it)
     get_target_property(_scs_test_libs ${LINK_TARGET} LINK_LIBRARIES)
-    if(OpenMP_C_FOUND AND "${_scs_test_libs}" MATCHES "OpenMP::OpenMP_C")
+    if(SCS_WITH_OPENMP AND "${_scs_test_libs}" MATCHES "OpenMP::OpenMP_C")
       target_link_libraries(${TEST_NAME} PRIVATE OpenMP::OpenMP_C)
     endif()
     target_include_directories(

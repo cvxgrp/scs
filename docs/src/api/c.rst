@@ -8,9 +8,9 @@ Main solver API
 ---------------
 
 The C API is imported from the header :code:`scs.h`, available `here
-<https://github.com/cvxgrp/scs/blob/master/include/scs.h>`_. This file
-and :code:`scs_types.h` are the only public header files required
-for downstream applications.
+<https://github.com/cvxgrp/scs/blob/master/include/scs.h>`_. This file,
+:code:`scs_types.h` and :code:`aa_stats.h` (which :code:`scs.h` includes) are
+the only public header files required for downstream applications.
 
 .. doxygenfunction:: scs_init
 .. doxygenfunction:: scs_solve
@@ -37,7 +37,7 @@ Primitive types
 
 These are defined in header file :code:`scs_types.h`.
 
-* :code:`scs_int`: is :code:`long` if the :ref:`compiler flag <compile_flags>` :code:`DLONG` is set, otherwise it is :code:`int`
+* :code:`scs_int`: is :code:`long long` (64-bit) if the :ref:`compiler flag <compile_flags>` :code:`DLONG` is set, otherwise it is :code:`int`
 * :code:`scs_float`: is :code:`float` if the :ref:`compiler flag <compile_flags>` :code:`SFLOAT` is set, otherwise it is :code:`double`
 
 

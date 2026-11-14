@@ -37,4 +37,19 @@ jobs:
           make
           ctest -V > ctest.log 2>&1 || { cat ctest.log; exit 1; }
           grep "psd blocks projected by" ctest.log
+      - name: OpenMP that CMake does not find
+        # CMAKE_DISABLE_FIND_PACKAGE_OpenMP makes CMake behave as on a machine
+        # without OpenMP. USE_OPENMP alone must then configure a build without
+        # it and say so, and with USE_PARALLEL_PSD the configuration must stop.
+        run: |
+          mkdir build_no_openmp
+          cd build_no_openmp
+          cmake -DUSE_OPENMP=ON -DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON .. > configure.log 2>&1 || { cat configure.log; exit 1; }
+          grep "OpenMP parallelization is OFF" configure.log || { cat configure.log; exit 1; }
+          if cmake -DUSE_OPENMP=ON -DUSE_PARALLEL_PSD=ON -DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON .. > configure_psd.log 2>&1; then
+            cat configure_psd.log
+            echo "::error::CMake configured USE_PARALLEL_PSD without OpenMP"
+            exit 1
+          fi
+          grep "USE_PARALLEL_PSD requires OpenMP" configure_psd.log || { cat configure_psd.log; exit 1; }
 
