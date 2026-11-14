@@ -234,7 +234,11 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                  p->d_sol_mat, p->d_b_mat),
                     p, "cudssExecute: factorization");
 
-  /* Inertia check: verify P is PSD by checking positive eigenvalue count */
+  /* Inertia check: verify P is PSD by checking positive eigenvalue count.
+   * cuDSS returns the two counts in the matrix's index type (SCS_CUDA_INDEX):
+   * 32-bit integers, or 64-bit under DLONG, and it rejects a buffer of the
+   * other size. scs_int follows DLONG in the same way, so it matches. (Checked
+   * with cuDSS 1.0.0 on a GPU; test_non_psd_p covers both widths.) */
   {
     scs_int inertia[2]; /* [0] = positive, [1] = negative */
     size_t inertia_written;
