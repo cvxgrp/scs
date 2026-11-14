@@ -10,8 +10,8 @@ authors:
 - family-names: "Boyd"
   given-names: "Stephen"
 title: "SCS: Splitting Conic Solver"
-version: 3.3.1
-date-released: '2026-09-05'
+version: 3.3.2
+date-released: '2026-11-14'
 url: "https://github.com/cvxgrp/scs"
 
 # Original SCS paper:
