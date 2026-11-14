@@ -11,8 +11,11 @@
  * that check the inertia of the KKT matrix at setup must refuse it, so scs
  * returns SCS_FAILED: QDLDL through its pivots, MKL Pardiso and cuDSS
  * through the number of positive eigenvalues, the dense solver through its
- * Cholesky factorization. The indirect solvers and Apple Accelerate do not
- * check, so for them the test only runs a few iterations. */
+ * Cholesky factorization. What they test is whether R_x + P + A' R_y^{-1} A
+ * is positive definite, so P11 = -10 is chosen to outweigh the A' R_y^{-1} A
+ * term after equilibration by a wide margin; a mildly negative P11 such as
+ * -0.1 would pass every backend's check. The indirect solvers and Apple
+ * Accelerate do not check, so for them the test only runs a few iterations. */
 static const char *test_non_psd_p(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));

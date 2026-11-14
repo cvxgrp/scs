@@ -164,7 +164,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   }
 
   if (p->iparm[21] < p->n) {
-    scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.");
+    scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.\n");
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
