@@ -154,12 +154,16 @@ so you need all of the following installed before running
 cuDSS is built for one CUDA major version, so use the build that matches your
 CUDA toolkit. NVIDIA's :code:`cudss` apt package installs the builds for
 CUDA 12 and CUDA 13 side by side and makes the CUDA 13 one the default. When
-Meson finds cuDSS through its CMake package, the build checks that cuDSS was
-built for the CUDA major version of your toolkit, and stops with an error that
-names :code:`cudss_DIR` if it was not. (A cuDSS found through
-:code:`cudss.pc` is not checked.) Without the check, a mismatched cuDSS builds
-a module that fails when it is imported, for example with
-:code:`libcublas.so.13: cannot open shared object file` under CUDA 12.
+Meson finds cuDSS through its CMake package, the build passes it the CUDA major
+version of your toolkit, and cuDSS's CMake package (cuDSS 1.0 does this)
+refuses a build for another major version; the build then stops with an error
+that names :code:`cudss_DIR`. (A cuDSS found through :code:`cudss.pc` is not
+checked.) Without the check, a mismatched cuDSS builds a module that fails
+when it is imported, for example with
+:code:`libcublas.so.13: cannot open shared object file` under CUDA 12. pip
+deletes its build directory, so to see the reason a build stopped, rerun with
+:code:`-Csetup-args` as below plus :code:`-Cbuild-dir=build` and read
+:code:`build/meson-logs/meson-log.txt`.
 
 Make sure Meson can find the right cuDSS: put the directory containing
 :code:`cudss.pc` on :code:`PKG_CONFIG_PATH` or, for a cuDSS without
@@ -180,7 +184,9 @@ or with cuDSS unpacked from NVIDIA's archive under :code:`<cudss-prefix>`:
   export cudss_DIR=<cudss-prefix>/lib/cmake/cudss
   export LD_LIBRARY_PATH=/usr/local/cuda/lib64:<cudss-prefix>/lib:$LD_LIBRARY_PATH
 
-**Install.** Once the prerequisites are in place, build SCS with:
+**Install.** Once the prerequisites are in place, build SCS with the command
+below. It needs pip 23.1 or later for the :code:`-C` option (upgrade with
+:code:`python -m pip install --upgrade pip`):
 
 .. code:: bash
 
