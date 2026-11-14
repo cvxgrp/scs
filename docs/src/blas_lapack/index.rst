@@ -97,10 +97,14 @@ cuDSS libraries (:code:`scsmkl` and :code:`scscudss`) without OpenMP, so they
 project the blocks one after another whatever the option is set to. The
 Makefile compiles every library with OpenMP, these two included.
 
-If CMake does not find OpenMP it prints the warning ``OpenMP requested but not
-found by CMake`` and builds every library without the parallel projection. The
-configure output still says ``Parallel PSD projection is ON``, so check the
-header of a solve as described below.
+With :code:`-DUSE_PARALLEL_PSD=ON`, if CMake does not find OpenMP the
+configuration stops with an error, because no library would then have the
+parallel projection. OpenMP that is installed where CMake does not look can be
+pointed to with :code:`-DOpenMP_ROOT=<folder>`: Homebrew's :code:`libomp` on
+macOS needs this, e.g. :code:`-DOpenMP_ROOT=$(brew --prefix libomp)`. (With
+:code:`-DUSE_OPENMP=ON` alone CMake prints a warning instead and builds the
+libraries without OpenMP.) The configure output reports what is built in the
+lines ``OpenMP parallelization is ON`` and ``Parallel PSD projection is ON``.
 
 For the Python package the option is :code:`use_parallel_psd`, in an install
 from source: see :ref:`the Python install page <python_openmp_install>`.
@@ -201,7 +205,7 @@ Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when
 
 * the library was compiled without OpenMP (:code:`scsmkl` and :code:`scscudss`
-  built with CMake, or any library if CMake did not find OpenMP),
+  built with CMake),
 * the threads would gain little: the blocks are too little work, or one block
   holds most of it (the parallel projection is no faster than its largest
   block),
