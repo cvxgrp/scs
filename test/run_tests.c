@@ -19,6 +19,7 @@
 #include "problems/small_qp.h"
 #include "problems/test_dual_exp_cone.h"
 #include "problems/test_exp_cone.h"
+#include "problems/test_g_accuracy.h"
 #include "problems/test_inaccurate.h"
 #include "problems/test_mixed_cones.h"
 #include "problems/test_non_psd_p.h"
@@ -46,7 +47,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 78
+#define MU_TOTAL_TESTS 79
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -145,6 +146,7 @@ static void all_tests(void) {
   mu_run_test(small_lp);
   mu_run_test(small_qp);
   mu_run_test(lp_update);
+  mu_run_test(test_g_accuracy);
   mu_run_test(rob_gauss_cov_est);
   mu_run_test(complex_PSD);
   mu_run_test(sd_and_complex_sd);
