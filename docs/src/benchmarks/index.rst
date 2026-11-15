@@ -14,13 +14,16 @@ tables are in `bodono/solver_benchmarks_results
 <https://github.com/bodono/solver_benchmarks_results>`_ (campaign
 ``scs332_2026-11``), so every number here can be regenerated.
 
-The short version: SCS 3.3 matches the best open-source interior-point codes
-on the QP and LP test sets and is clearly ahead of every other first-order
-solver. At a target accuracy of :math:`10^{-4}`, the cuDSS GPU backend is the
-fastest solver we tested on the largest quarter of the QP problems and on the
-largest quarter of the LP problems, and on the large LPs of the Mittelmann set
-SCS with cuDSS solves more instances than any other solver, in less than half
-the geometric mean time of the runner-up.
+The short version: SCS 3.3 is clearly ahead of every other first-order
+solver. At a target accuracy of :math:`10^{-4}` it verifies as many of the
+LPs as the best open-source interior-point codes, in less geometric mean
+time, and is competitive with them on the largest quarter of the QPs; they
+are faster over the full QP set, which is mostly small problems, and on the
+QPs at :math:`10^{-6}`. At that target, the cuDSS GPU backend is the fastest
+solver we tested on the largest quarter of the QP problems and on the largest
+quarter of the LP problems, and on the large LPs of the Mittelmann set SCS
+with cuDSS solves more instances within the 30-minute limit than any other
+solver, in less than half the geometric mean time of the runner-up.
 
 .. _bench_headline:
 
@@ -59,23 +62,13 @@ first-order methods, SCS included, occasionally declare convergence on badly
 scaled problems where the unscaled residuals are large. Applying the same
 independent check to every solver makes the comparison tolerance-fair.
 
-**Tolerances.** SCS, OSQP, ProxQP, PDLP and cuOpt were run at requested
-tolerances of :math:`10^{-4}`, :math:`10^{-5}` and :math:`10^{-6}` on the QP
-and LP sets, and SCS, PDLP and cuOpt at :math:`10^{-4}` and :math:`10^{-5}` on
-the Mittelmann set. The interior-point and simplex solvers were run at
-:math:`10^{-4}` and :math:`10^{-6}` (PIQP and HiGHS only at :math:`10^{-4}` on
-the Mittelmann set). On the SDP sets every solver was run at :math:`10^{-4}`
-and :math:`10^{-6}`, and Clarabel additionally at its default
-:math:`10^{-8}`; Clarabel's :math:`10^{-4}` and :math:`10^{-6}` SDP runs
-leave out the 19 SDPLIB instances with a PSD block of order 500 or more and
-the Mittelmann ``G40mc`` (its :math:`10^{-8}` run, the one shown, covers them
-as described under Exclusions). The value is passed through each solver's own
-absolute and
-relative settings; for SCS this means ``eps_abs = eps_rel = tol`` with the
-iteration limit raised to :math:`10^{6}`, which only a few fast-iterating
-solves reach before the time limit (in the :math:`10^{-4}` runs, ``LASER``,
-``QGROW7`` and ``control1``, all on the CPU). For
-reference, the solvers' own defaults are :math:`10^{-4}` for SCS and cuOpt,
+**Tolerances.** Each solver was run at two or three requested tolerances,
+listed in the table below. The value is passed through each solver's own
+absolute and relative settings; for SCS this means ``eps_abs = eps_rel = tol``
+with the iteration limit raised to :math:`10^{6}`, which only a few
+fast-iterating solves reach before the time limit (in the :math:`10^{-4}`
+runs, ``LASER``, ``QGROW7`` and ``control1``, all on the CPU). For reference,
+the solvers' own defaults are :math:`10^{-4}` for SCS and cuOpt,
 :math:`10^{-3}` for OSQP, :math:`10^{-5}` (absolute only) for ProxQP,
 :math:`10^{-6}` for OR-Tools PDLP and :math:`10^{-7}` to :math:`10^{-8}` for
 the interior-point codes, each in its own measure of the residual.
@@ -83,28 +76,76 @@ the interior-point codes, each in its own measure of the residual.
 A requested tolerance means different things to different solvers, so the
 plots do not pair runs by the number requested. Each plot has a target
 accuracy (:math:`10^{-4}` for the headline plots), and every returned
-solution is checked against it with the same residuals. SCS, OSQP, ProxQP,
-PDLP and cuOpt are each shown from the run whose 90th-percentile residual over
-its verified solves is closest to that target. For the headline plots that is
-the :math:`10^{-4}` run for SCS, OSQP and cuOpt and the :math:`10^{-5}` run
-for PDLP and ProxQP, whose own stopping rules are looser in this measure; the
-one exception is SCS on the CPU on the SDPs, shown from its :math:`10^{-4}`
-run although its :math:`10^{-6}` run is marginally closer. In the
-tighter-target plots the exception is cuOpt on the LPs, shown from the run
-requested at the target although another of its runs is closer. The
-interior-point and simplex solvers are not picked by this rule: they are
-shown from their :math:`10^{-6}` run (Clarabel from its default
-:math:`10^{-8}` run on the SDPs, and PIQP and HiGHS from their
-:math:`10^{-4}` run on the Mittelmann set, the only run they have there),
+solution, whatever was requested, is checked at ten times that target with
+the same residuals. SCS, OSQP, ProxQP, PDLP and cuOpt are each shown from the
+run whose 90th-percentile residual over its verified solves is closest to the
+target, except SCS on the CPU on the SDPs and cuOpt on the LPs at the tighter
+targets, which are shown from the run requested at the target although
+another of their runs is closer. The interior-point and simplex solvers are
+not picked by this rule: they are shown from their :math:`10^{-6}` run,
 nearer their own defaults, although their looser runs are closer to the
 target. On the QP, LP and Mittelmann sets this costs them little or nothing:
 their :math:`10^{-4}` runs are at most about 6% faster in geometric mean, and
 Clarabel's are slower. On the SDPs, SDPA and CVXOPT are faster and verify more
-at :math:`10^{-4}` (see :ref:`bench_sdp`). Every solve, whatever was
-requested, is then verified independently at ten times the plot's target.
+at :math:`10^{-4}` (see :ref:`bench_sdp`).
 
-The table below reports the accuracy those runs actually achieved on the
-solves that count, measured the same way for everyone: the largest of the
+.. list-table:: Runs made (requested tolerance) and the run shown at each target accuracy; the 1e-4 target is used on every set, 1e-5 on the QP, LP and Mittelmann sets, and 1e-6 on the QP and LP sets
+   :header-rows: 1
+   :widths: 26 34 16 12 12
+
+   * - Solver
+     - runs
+     - shown at 1e-4
+     - at 1e-5
+     - at 1e-6
+   * - SCS (CPU and GPU)
+     - 1e-4, 1e-5, 1e-6 (Mittelmann: 1e-4, 1e-5; SDP: 1e-4, 1e-6)
+     - 1e-4
+     - 1e-5
+     - 1e-6
+   * - OSQP (QP, LP)
+     - 1e-4, 1e-5, 1e-6
+     - 1e-4
+     - 1e-5
+     - 1e-6
+   * - cuOpt (QP, LP, Mittelmann)
+     - 1e-4, 1e-5, 1e-6 (Mittelmann: 1e-4, 1e-5)
+     - 1e-4
+     - 1e-5
+     - 1e-6
+   * - ProxQP (QP)
+     - 1e-4, 1e-5, 1e-6
+     - 1e-5
+     - 1e-6
+     - 1e-6
+   * - PDLP (LP, Mittelmann)
+     - 1e-4, 1e-5, 1e-6 (Mittelmann: 1e-4, 1e-5)
+     - 1e-5
+     - 1e-6 (Mittelmann: 1e-5)
+     - 1e-6
+   * - Clarabel
+     - 1e-4, 1e-6 (SDP: also 1e-8)
+     - 1e-6 (SDP: 1e-8)
+     - 1e-6
+     - 1e-6
+   * - PIQP, HiGHS (QP, LP, Mittelmann)
+     - 1e-4, 1e-6 (Mittelmann: 1e-4 only)
+     - 1e-6 (Mittelmann: 1e-4)
+     - 1e-6 (Mittelmann: 1e-4)
+     - 1e-6
+   * - SDPA, CVXOPT (SDP)
+     - 1e-4, 1e-6
+     - 1e-6
+     - --
+     - --
+
+Clarabel's :math:`10^{-4}` and :math:`10^{-6}` SDP runs leave out the 19
+SDPLIB instances with a PSD block of order 500 or more and the Mittelmann
+``G40mc``; its :math:`10^{-8}` run, the one shown, covers them as described
+under Exclusions.
+
+The table below reports the accuracy that the runs shown at the
+:math:`10^{-4}` target actually achieved on the solves that count, measured the same way for everyone: the largest of the
 three relative KKT residuals over each solver's verified solves, with the
 returns that failed the check excluded for every solver.
 
@@ -436,9 +477,8 @@ Linear programs
 with cuDSS verifies the most solutions of any solver and has the lowest
 geometric mean time, ahead of HiGHS (dual simplex) and of the interior-point
 solvers PIQP and Clarabel; SCS on the CPU verifies the second most and is
-third in time, after HiGHS. The two PDLP-based solvers, OR-Tools PDLP and
-cuOpt, trail SCS by a wide margin under independent verification (see the
-notes below). The first figure is the full 349-problem
+third in time, after HiGHS. OR-Tools PDLP and cuOpt trail SCS by a wide
+margin under independent verification (see the notes below). The first figure is the full 349-problem
 set at :math:`10^{-4}`; the second is the largest quarter at
 :math:`10^{-6}`.
 
@@ -557,8 +597,9 @@ size of the problems, not a re-run of his benchmark.
 
 This is where the cuDSS backend pays off. SCS on the GPU verifies more
 solutions than any other solver and has by far the lowest geometric mean
-time, and SCS on the CPU is second. The two PDLP-based codes, OR-Tools PDLP
-and cuOpt, are the natural comparison: OR-Tools PDLP verifies about two thirds
+time, and SCS on the CPU is second. The natural comparison is with OR-Tools
+PDLP, the other first-order solver run on this set, and cuOpt, the other GPU
+solver: OR-Tools PDLP verifies about two thirds
 as many solutions as SCS with cuDSS, and cuOpt, although it reports almost
 every instance optimal, mostly fails the independent residual check (see the
 notes below).
@@ -805,41 +846,46 @@ Semidefinite programs
 ---------------------
 
 94 problems: the 88 feasible SDPLIB instances and the 6 Mittelmann SDPs.
-This is the family where an interior-point method is the better default, and
-the plot says so: SDPA and CVXOPT have the lowest geometric mean times, and on
-the largest quarter of the set they are several times faster than SCS. SCS
-verifies the most problems of the runs shown, 83 of 94 on both backends
-against 76 for CVXOPT and 75 for SDPA. SDPA, shown from its :math:`10^{-6}`
-run, fails 3 of the 6 ``qap`` and 8 of the 15 ``hinf`` instances at that
-setting, stopping within about a second on all of them without an optimal
-point (on ``hinf13`` with a wrong claim of infeasibility); its
-:math:`10^{-4}` run, which is not shown, verifies 84 problems in all. CVXOPT
-and Clarabel fail on many of the large sparse relaxations, CVXOPT at its
-``INT_MAX`` array-size limit or the time limit and Clarabel at the memory or
-time limit. Most of SCS's failures are
-badly conditioned ``control`` and ``gpp`` instances and the truss design
-problems ``buck3`` and ``trto3``. On these it runs to the 900 s limit (on the
-CPU, ``control1`` to the iteration limit), where an interior-point solver
-finishes in under half a minute. Its other failures include the two largest
-max-cut relaxations. Many of SCS's verified solves are slow too: 27 take more
-than 100 s on the CPU, against 2 for SDPA. Those slow solves, more than the
-failures, are what leave SCS on the CPU level with Clarabel and behind SDPA
-and CVXOPT in geometric mean time, and SCS on the GPU last. On the large
-sparse combinatorial relaxations (``theta``, ``mcp``, ``maxG``, ``qpG``,
-``equalG`` and the Mittelmann ``G40mc``, 31 instances) SCS verifies 29 on the
-CPU and 28 on the GPU, and SDPA also verifies 29. Neither SCS nor SDPA's
-:math:`10^{-6}` run solves ``maxG55`` or ``maxG60``, with PSD blocks of order
-5000 and 7000, within the limit (SDPA's :math:`10^{-4}` run solves ``maxG55``
-in 766 s). On the 29 that both SCS on the CPU and SDPA solve, SDPA is faster
-on 24, and the median over those instances of SCS's time divided by SDPA's is
-about ten, so even there SCS is not ahead. The GPU does not
-help on SDPs: the time goes into the eigendecompositions of the cone
-projection, not the linear system.
+This is the family where an interior-point method is the better default: use
+one for SDPs when it fits in memory. SCS is the fallback when it does not
+(Clarabel and CVXOPT hit memory, array-size or time limits on the largest
+instances here), or when a moderately accurate solution is enough and SCS is
+already solving the rest of your problems.
 
-Use an interior-point solver for SDPs when it fits in memory. SCS is the
-fallback when it does not (Clarabel and CVXOPT hit memory, array-size or time
-limits on the largest instances here), or when a moderately accurate solution is enough
-and SCS is already solving the rest of your problems.
+SDPA and CVXOPT have the lowest geometric mean times, and on the largest
+quarter of the set they are several times faster than SCS. They are shown
+from their :math:`10^{-6}` run (see :ref:`bench_method`), in which they
+verify 75 (SDPA) and 76 (CVXOPT) of the 94 problems, against 83
+for SCS on both backends; SDPA's :math:`10^{-6}` run fails 3 of the 6
+``qap`` and 8 of the 15 ``hinf`` instances, stopping within about a second
+on all of them without an optimal point (on ``hinf13`` with a wrong claim of
+infeasibility). Their :math:`10^{-4}` runs, not shown, are faster still and
+verify more: SDPA verifies 84 in 16.9 s geometric mean (23 of the largest 24
+in 17.4 s) and CVXOPT 81 in 32.4 s (21 in 52.2 s), against 83 in 63.8 s (19
+in 404.5 s) for SCS on the CPU.
+
+Most of SCS's failures are badly conditioned ``control`` and ``gpp``
+instances and the truss design problems ``buck3`` and ``trto3``. On these it
+runs to the 900 s limit (on the CPU, ``control1`` to the iteration limit),
+where an interior-point solver finishes in under half a minute. Its other
+failures include the two largest max-cut relaxations, ``maxG55`` and
+``maxG60``, with PSD blocks of order 5000 and 7000, which SDPA's
+:math:`10^{-6}` run does not solve within the limit either (its
+:math:`10^{-4}` run solves ``maxG55`` in 766 s). Many of SCS's verified
+solves are slow too: 27 take more than 100 s on the CPU, against 2 or 3 for
+SDPA. Those slow solves, more than the failures, are what leave SCS on the
+CPU level with Clarabel and behind SDPA and CVXOPT in geometric mean time,
+and SCS on the GPU last. The GPU does not help on SDPs: the time goes into
+the eigendecompositions of the cone projection, not the linear system.
+
+On the large sparse combinatorial relaxations (``theta``, ``mcp``, ``maxG``,
+``qpG``, ``equalG`` and the Mittelmann ``G40mc``, 31 instances) SCS verifies
+29 on the CPU and 28 on the GPU, and SDPA also verifies 29 (30 at
+:math:`10^{-4}`). CVXOPT and Clarabel fail on many of them, CVXOPT at its
+``INT_MAX`` array-size limit or the time limit and Clarabel at the memory or
+time limit. On the 29 that both SCS on the CPU and SDPA's :math:`10^{-6}` run
+solve, SDPA is faster on 24, and the median over those instances of SCS's
+time divided by SDPA's is about ten, so even there SCS is not ahead.
 
 .. figure:: ../files/bench/sdp_1e-4_pair.png
    :width: 100 %
@@ -887,14 +933,11 @@ Sensitivity to the requested tolerance
 
 The headline plots target :math:`10^{-4}`. To show what a tighter target
 costs, the same three rows are repeated with a target of :math:`10^{-5}`,
-every solve verified at :math:`10^{-4}`, and SCS, OSQP, ProxQP, PDLP and
-cuOpt again shown from the run whose achieved accuracy is closest to the
-target: the :math:`10^{-5}` run for SCS, OSQP and cuOpt (on the LPs cuOpt's
-:math:`10^{-4}` run is in fact closer) and the :math:`10^{-6}` run for PDLP
-and ProxQP (on the Mittelmann set, where PDLP has no :math:`10^{-6}` run, its
-:math:`10^{-5}` run, the same run as at :math:`10^{-4}`). The interior-point
-and simplex solvers are shown from the same runs as at :math:`10^{-4}`, but
-the tighter check still costs Clarabel and HiGHS some solves.
+every solve verified at :math:`10^{-4}`, and each solver shown from the run
+given for that target in the table under :ref:`bench_method`. The
+interior-point and simplex solvers are shown from the same runs as at
+:math:`10^{-4}`, but the tighter check still costs Clarabel and HiGHS some
+solves.
 
 .. figure:: ../files/bench/landing_grid_1e-5.png
    :width: 100 %
@@ -910,12 +953,9 @@ and cuOpt are faster than SCS on the CPU, while SCS with cuDSS still verifies
 the most (38 of 40, against 37 for Clarabel). On the LP sets OSQP and cuOpt
 lose more than SCS does, about a third and a quarter of their large LP solves
 (46 to 32 and 27 to 20), and so does PDLP on the Mittelmann set, a quarter of
-its solves (19 to 14), so SCS's margin over them widens there. Only OSQP's
-loss comes from the tighter request: cuOpt's :math:`10^{-5}` run verifies as
-many large LPs at :math:`10^{-3}` as its :math:`10^{-4}` run, and PDLP's
-Mittelmann row is the same run at both targets, so theirs come from the
-tighter check. On the largest LPs PDLP loses about as many as SCS (52 to 49),
-and on the largest QPs OSQP loses only one (32 to 31).
+its solves (19 to 14), so SCS's margin over them widens there. On the
+largest LPs PDLP loses about as many as SCS (52 to 49), and on the largest
+QPs OSQP loses only one (32 to 31).
 
 .. list-table:: Verified solves and shifted geometric mean time (s) at the 1e-4 and 1e-5 settings; interior-point solvers unchanged (shown from their tightest run in both)
    :header-rows: 1
@@ -1080,11 +1120,13 @@ Notes on individual solvers
 * **cuOpt.** cuOpt ran its default LP method, and not all of its LP answers
   come from PDLP: for 216 of the 230 LP returns that pass the check it
   reports an exactly zero duality gap, which a PDLP iterate would not have.
-  Its PDLP stops on an L2-relative rule, and on problems with many variable
-  bounds (Kennington, MIPLIB) cuOpt's returned duals often have large
-  infinity-norm stationarity residuals even though it reports the solve as
-  optimal (on the Kennington
-  failures, even though its own reported absolute dual residual is between
+  Most of the 105 LP returns it reports as optimal that fail the check (77,
+  including all 8 Kennington ones) have a nonzero gap, as a PDLP iterate
+  would. Its PDLP stops on an L2-relative rule, and on problems with many
+  variable bounds (Kennington, MIPLIB) cuOpt's returned duals often have
+  large infinity-norm stationarity residuals although it reports the solve
+  as optimal (on the Kennington failures, even though its own reported
+  absolute dual residual is between
   :math:`3\times10^{1}` and :math:`3\times10^{2}`). Under the uniform check
   used here those solves count as failures. Most of the LP returns that do
   pass are very accurate (median residual around :math:`10^{-10}`), and a
@@ -1111,15 +1153,13 @@ Notes on individual solvers
 * **Clarabel.** Shown from its :math:`10^{-6}` run on QP and LP and from its
   default :math:`10^{-8}` run on SDP, where its termination test leaves the
   loosest unscaled residuals of any interior-point solver at a given
-  setting. Clarabel exceeded the 64 GB memory limit on ``equalG11``,
-  ``equalG51``, ``maxG55`` and the Mittelmann ``G40mc`` in September and was
-  not run on them again. Every other SDPLIB instance with a PSD block of order
-  500 or more was run on its own in a 64 GB container: Clarabel solves
+  setting. Apart from those it was not run on (see Exclusions), every SDPLIB
+  instance with a PSD block of order 500 or more was run on its own in a
+  64 GB container: Clarabel solves
   ``maxG11``, ``maxG32``, ``thetaG11``, ``qpG11``, ``mcp500-1`` and
   ``mcp500-2``; reaches the 900 s limit on ``maxG51``, ``qpG51``,
   ``thetaG51``, ``mcp500-3``, ``mcp500-4`` and ``gpp500-1`` to ``gpp500-4``;
   and aborts on ``maxG60``.
 * **SDPA and CVXOPT.** Interior-point SDP solvers. SDPA does not take a time
   limit. In the :math:`10^{-6}` run shown, its longest verified solve was
-  154 s (``equalG51``), well inside the 900 s limit, and the harness killed it
-  at 990 s on ``maxG55`` and ``maxG60``.
+  154 s (``equalG51``), well inside the 900 s limit.

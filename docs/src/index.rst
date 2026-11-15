@@ -90,7 +90,8 @@ Performance
 -----------
 
 SCS 3.3 is built for large problems. On the Mittelmann set of large LPs it
-solves more instances than any other open-source solver; with the cuDSS GPU
+solves more instances within a 30-minute limit than any other open-source
+solver we tested; with the cuDSS GPU
 backend it is, at a target accuracy of :math:`10^{-4}`, the fastest solver we
 have measured on the largest QPs and on the largest LPs; and on the CPU, at
 the same target, it verifies more of the largest LPs and of the Mittelmann
