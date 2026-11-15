@@ -1307,30 +1307,36 @@ static scs_float iter_residual(const ScsWork *w, const scs_float *u,
   return SCS(norm_inf)(r, n + m);
 }
 
+/* Sets the tol that refine_iter compares with, at a convergence check, right
+ * after the residuals are computed: the size of the residuals SCS is driving
+ * to zero (normalized, tau not divided out), but not below REFINE_TOL_FLOOR:
+ * one of them can be zero (an infeasibility or unboundedness certificate),
+ * and refinement would then chase rounding errors on every remaining
+ * iteration. It is kept here rather than read from r_normalized when
+ * refine_iter runs because logging to CSV (log_csv_filename) recomputes
+ * r_normalized every iteration, and logging must not change the iterates. */
+static void set_refine_tol(ScsWork *w) {
+  scs_float tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, w->d->m),
+                      SCS(norm_inf)(w->r_normalized->px_aty_ctau, w->d->n));
+  w->refine_tol = MAX(tol, REFINE_TOL_FLOOR);
+}
+
 /* Refinement of this iteration's solve, see REFINE_CHECK_INTERVAL and
  * REFINE_FACTOR in glbopts.h. Called right after the solve in
  * project_lin_sys, while u_t[:n+m] holds its solution. Returns the status of
  * the refinement solve (0 when there is none). */
 static scs_int refine_iter(ScsWork *w, scs_int iter) {
   scs_int status, n = w->d->n, m = w->d->m;
-  scs_float res, tol;
+  scs_float res;
   if (!w->refine_on && iter % REFINE_CHECK_INTERVAL != 0) {
     return 0;
   }
-  if (w->r_normalized->last_iter < 0) {
-    return 0; /* this solve has no residuals yet to compare with */
+  if (w->refine_tol < 0) {
+    return 0; /* no convergence check yet, so no residuals to compare with */
   }
   res = iter_residual(w, w->u_t, w->kkt_res);
-  /* the size of the residuals SCS is driving to zero (normalized, tau not
-   * divided out, from the last convergence check), but not below
-   * REFINE_TOL_FLOOR: one of them can be zero (an infeasibility or
-   * unboundedness certificate), and refinement would then chase rounding
-   * errors on every remaining iteration */
-  tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, m),
-            SCS(norm_inf)(w->r_normalized->px_aty_ctau, n));
-  tol = MAX(tol, REFINE_TOL_FLOOR);
   w->refine_checks++;
-  w->refine_on = res > REFINE_FACTOR * tol;
+  w->refine_on = res > REFINE_FACTOR * w->refine_tol;
   if (!w->refine_on) {
     return 0;
   }
@@ -1373,10 +1379,12 @@ static void reset_tracking(ScsWork *w) {
   /* Need this to force residual calc if previous solve solved at iter 0 */
   w->r_normalized->last_iter = -1;
   w->r_orig->last_iter = -1;
-  /* per-iteration refinement starts off and checks at its own interval */
+  /* per-iteration refinement starts off and checks at its own interval, from
+   * the first convergence check on */
   w->refine_on = 0;
   w->refine_checks = 0;
   w->refine_steps = 0;
+  w->refine_tol = -1.;
 }
 
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
@@ -1760,6 +1768,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                        "interrupted", "interrupted");
       }
       populate_residual_struct(w, i);
+      set_refine_tol(w);
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }

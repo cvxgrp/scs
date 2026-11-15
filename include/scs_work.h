@@ -70,8 +70,11 @@ struct SCS_WORK {
   scs_float *kkt_res, *kkt_corr;
   /* per-iteration refinement (refine_iter), reset at the start of each solve:
    * whether it is on (checking every iteration), how many residual checks
-   * and how many refinement steps this solve has made */
+   * and how many refinement steps this solve has made, and the tol it
+   * compares with (set_refine_tol, at each convergence check; -1 before the
+   * first) */
   scs_int refine_on, refine_checks, refine_steps;
+  scs_float refine_tol;
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */

@@ -31,6 +31,10 @@
  * test_solve_refine_idle solves it at the default tolerances in double
  * precision: the residual is checked and refinement does not fire, whatever
  * the linear solver.
+ *
+ * test_solve_refine_csv repeats the tight solve with QDLDL while logging to
+ * CSV, which recomputes the residuals every iteration, and requires the same
+ * refinement and the same result.
  */
 
 /* the instance (seeds 10 and 43 also pass in double precision, but refine
@@ -96,18 +100,20 @@ static void solve_refine_data(ScsData *d, ScsCone *k) {
   scs_free(s);
 }
 
-/* solves the instance at eps (eps <= 0: the default tolerances); returns the
- * status, and the iterations, residual checks and refinement steps made */
-static scs_int solve_refine_solve(scs_float eps, scs_int *iter,
-                                  scs_int *checks, scs_int *steps) {
+/* solves the instance at eps (eps <= 0: the default tolerances), logging to
+ * csv unless it is SCS_NULL; returns the status, SCS's info, and the residual
+ * checks and refinement steps made */
+static scs_int solve_refine_solve(scs_float eps, const char *csv,
+                                  ScsInfo *info, scs_int *checks,
+                                  scs_int *steps) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
   ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
-  ScsInfo info = {0};
   ScsWork *w;
   scs_int status = SCS_FAILED;
-  *iter = *checks = *steps = -1;
+  memset(info, 0, sizeof(ScsInfo));
+  info->iter = *checks = *steps = -1;
   solve_refine_data(d, k);
   scs_set_default_settings(stgs);
   if (eps > 0) {
@@ -116,10 +122,10 @@ static scs_int solve_refine_solve(scs_float eps, scs_int *iter,
   }
   stgs->max_iters = 100000;
   stgs->verbose = 0;
+  stgs->log_csv_filename = csv;
   w = scs_init(d, k, stgs);
   if (w) {
-    status = scs_solve(w, sol, &info, 0);
-    *iter = info.iter;
+    status = scs_solve(w, sol, info, 0);
     *checks = w->refine_checks;
     *steps = w->refine_steps;
     scs_finish(w);
@@ -134,12 +140,14 @@ static scs_int solve_refine_solve(scs_float eps, scs_int *iter,
 /* solved with every linear solver, and with QDLDL only because refinement
  * fired */
 static const char *test_solve_refine_tight(void) {
-  scs_int status, iter, checks, steps;
-  status = solve_refine_solve(SOLVE_REFINE_TIGHT_EPS, &iter, &checks, &steps);
+  scs_int status, checks, steps;
+  ScsInfo info;
+  status = solve_refine_solve(SOLVE_REFINE_TIGHT_EPS, SCS_NULL, &info, &checks,
+                              &steps);
   scs_printf("test_solve_refine_tight: %s, status %li, %li iterations, %li "
              "checks, %li refinement steps\n",
-             scs_get_lin_sys_method(), (long)status, (long)iter, (long)checks,
-             (long)steps);
+             scs_get_lin_sys_method(), (long)status, (long)info.iter,
+             (long)checks, (long)steps);
   mu_assert("test_solve_refine_tight: not solved", status == SCS_SOLVED);
   if (strstr(scs_get_lin_sys_method(), "qdldl")) {
     mu_assert("test_solve_refine_tight: QDLDL solved without refinement, "
@@ -156,12 +164,13 @@ static const char *test_solve_refine_idle(void) {
 #ifdef SFLOAT
   return mu_skipped;
 #else
-  scs_int status, iter, checks, steps;
-  status = solve_refine_solve(0., &iter, &checks, &steps);
+  scs_int status, checks, steps;
+  ScsInfo info;
+  status = solve_refine_solve(0., SCS_NULL, &info, &checks, &steps);
   scs_printf("test_solve_refine_idle: %s, status %li, %li iterations, %li "
              "checks, %li refinement steps\n",
-             scs_get_lin_sys_method(), (long)status, (long)iter, (long)checks,
-             (long)steps);
+             scs_get_lin_sys_method(), (long)status, (long)info.iter,
+             (long)checks, (long)steps);
   mu_assert("test_solve_refine_idle: not solved", status == SCS_SOLVED);
   mu_assert("test_solve_refine_idle: the residual was never checked",
             checks > 0);
@@ -169,4 +178,37 @@ static const char *test_solve_refine_idle(void) {
             steps == 0);
   return SCS_NULL;
 #endif
+}
+
+/* Logging to CSV (log_csv_filename) recomputes SCS's residuals on every
+ * iteration. Refinement compares with the residuals of the last convergence
+ * check only, so logging must not change when it fires or the iterates: the
+ * tight solve with and without logging must agree exactly. Checked with QDLDL,
+ * where refinement fires on this instance and the solve is deterministic (the
+ * CG solvers' own tolerance follows the logged residuals, so there logging
+ * changes the iterates whether or not refinement fires). */
+static const char *test_solve_refine_csv(void) {
+  scs_int status0, status1, checks0, checks1, steps0, steps1;
+  ScsInfo info0, info1;
+  if (!strstr(scs_get_lin_sys_method(), "qdldl")) {
+    return mu_skipped;
+  }
+  status0 = solve_refine_solve(SOLVE_REFINE_TIGHT_EPS, SCS_NULL, &info0,
+                               &checks0, &steps0);
+  status1 = solve_refine_solve(SOLVE_REFINE_TIGHT_EPS, "test_solve_refine.csv",
+                               &info1, &checks1, &steps1);
+  scs_printf("test_solve_refine_csv: without logging %li iterations, %li "
+             "checks, %li steps; with logging %li iterations, %li checks, %li "
+             "steps\n",
+             (long)info0.iter, (long)checks0, (long)steps0, (long)info1.iter,
+             (long)checks1, (long)steps1);
+  mu_assert("test_solve_refine_csv: not solved",
+            status0 == SCS_SOLVED && status1 == SCS_SOLVED);
+  mu_assert("test_solve_refine_csv: logging changed the refinement or the "
+            "iterates",
+            info0.iter == info1.iter && checks0 == checks1 &&
+                steps0 == steps1 && info0.pobj == info1.pobj &&
+                info0.dobj == info1.dobj && info0.res_pri == info1.res_pri &&
+                info0.res_dual == info1.res_dual);
+  return SCS_NULL;
 }

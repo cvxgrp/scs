@@ -43,12 +43,12 @@ indirect solvers a refinement step is another conjugate gradient solve.
 
 The solve in each iteration is checked too, more cheaply. Every 25 iterations
 SCS computes the residual of that iteration's solve from the problem data and
-compares it with the smaller of SCS's own primal and dual residuals (but at
-least :math:`10^{-12}`, :math:`10^{-5}` in single precision). If the solve's
-error is the larger, the iterates cannot become more accurate than the solve,
-so SCS refines it with one more solve, for the residual, and then checks on
-every iteration until the error is back below the residuals. Nothing needs to
-be set for this; what to expect:
+compares it with the smaller of SCS's own primal and dual residuals at its last
+convergence check (but at least :math:`10^{-12}`, :math:`10^{-5}` in single
+precision). If the solve's error is the larger, the iterates cannot become
+more accurate than the solve, so SCS refines it with one more solve, for the
+residual, and then checks on every iteration until the error is back below the
+residuals. Nothing needs to be set for this; what to expect:
 
 - At the default tolerances in double precision it almost never fires (9 of
   336 benchmark runs, 0.01% of the solves). The check alone costs about 1% of

@@ -317,11 +317,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * solve misses that (it stops early or, in single precision, the residual it
  * tracks drifts from the true one).
  *
- * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and two
+ * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
- * the whole solve). 25 is CONVERGED_INTERVAL, so each check sees new
- * residuals; a shorter interval catches an inaccurate solve sooner and costs
- * proportionally more. */
+ * the whole solve). 25 is CONVERGED_INTERVAL (except in debug builds with
+ * VERBOSITY > 0), so each check has a tol the previous one did not. That tol
+ * is 25 iterations old: the solve of iteration i comes before the
+ * convergence check of iteration i, so the check at iteration 25k compares
+ * with the residuals of iteration 25(k-1). A shorter interval catches an
+ * inaccurate solve sooner and costs proportionally more. */
 #define REFINE_CHECK_INTERVAL (25)
 /* REFINE_FACTOR: refine when the solve's error is larger than the residuals
  * SCS is driving to zero. While on, each iteration costs one more multiply
