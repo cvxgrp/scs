@@ -91,11 +91,13 @@ Performance
 
 SCS 3.3 is built for large problems. On the Mittelmann set of large LPs it
 solves more instances than any other open-source solver; with the cuDSS GPU
-backend it is the fastest solver we have measured on the largest QPs and
-second only to HiGHS on the largest LPs; and on the CPU it matches the best
-interior-point solvers problem for problem at a relative tolerance of
-:math:`10^{-4}`, while also handling the second-order, semidefinite,
-exponential and power cones that QP solvers cannot. Every solution is verified
+backend it is, at a target accuracy of :math:`10^{-4}`, the fastest solver we
+have measured on the largest QPs and on the largest LPs; and on the CPU, at
+the same target, it verifies more of the largest LPs and of the Mittelmann
+LPs than any interior-point solver, in less geometric mean time, and sits
+between Clarabel and PIQP on the largest QPs, while also handling the
+second-order, semidefinite, exponential and power cones that QP solvers
+cannot. Every solution is verified
 independently against the same residual test, so solvers with different ideas
 of "tolerance" are compared fairly. SCS also detects when there is no
 solution, returning certificates of infeasibility or unboundedness that are
@@ -109,8 +111,8 @@ page <benchmarks>`.
    :alt: Performance profiles and geometric mean solve times on the largest QPs, largest LPs and the Mittelmann LP set
 
    Largest quarter of the Maros-Meszaros and QPLIB QPs (top), largest quarter
-   of the Kennington and MIPLIB-relaxation LPs (middle) and the Mittelmann
-   large-LP set (bottom), at tolerance
+   of the Netlib, Kennington and MIPLIB-relaxation LPs (middle) and the
+   Mittelmann large-LP set (bottom), at tolerance
    :math:`10^{-4}`. Left: fraction of problems solved within a factor
    :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
    time with failures charged three times the time limit, and the number of
