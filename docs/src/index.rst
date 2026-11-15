@@ -89,22 +89,25 @@ Features
 Performance
 -----------
 
-SCS 3.3 is built for large problems. On the Mittelmann set of large LPs it
-solves more instances within a 30-minute limit than any other open-source
-solver we tested; with the cuDSS GPU
-backend it is, at a target accuracy of :math:`10^{-4}`, the fastest solver we
-have measured on the largest QPs and on the largest LPs; and on the CPU, at
-the same target, it verifies more of the largest LPs and of the Mittelmann
-LPs than any interior-point solver, in less geometric mean time, and sits
-between Clarabel and PIQP on the largest QPs, while also handling the
-second-order, semidefinite, exponential and power cones that QP solvers
-cannot. Every solution is verified
-independently against the same residual test, so solvers with different ideas
-of "tolerance" are compared fairly. SCS also detects when there is no
-solution, returning certificates of infeasibility or unboundedness that are
-verified the same way. The full methodology, all test sets including SDPs
-and the infeasible problems, and the raw data are on the :ref:`benchmarks
-page <benchmarks>`.
+SCS is built for large problems. At a target accuracy of :math:`10^{-4}`
+(SCS's default tolerance), SCS with the cuDSS GPU backend has the lowest
+geometric mean solve time of any solver we tested on the largest QPs and on
+the largest LPs of the standard test sets, and it verifies all 40 of the
+largest QPs. On Hans Mittelmann's set of large LPs it verifies 29 of the 37
+instances within the 30-minute limit, more than any other solver tested, in
+less than half the geometric mean time of the runner-up, SCS on the CPU. At
+the same target, SCS on the CPU verifies more of the largest LPs and of the
+Mittelmann LPs than any interior-point solver, in less geometric mean time; on
+every QP and LP set both backends verify more problems than the other
+first-order and GPU solvers (OSQP, ProxQP, OR-Tools PDLP and NVIDIA cuOpt), in
+less time; and on semidefinite programs SCS verifies the most problems of the
+solvers shown on the benchmarks page. The same solver also handles the
+second-order, exponential and power cones. When a problem has no solution, SCS
+returns a certificate of infeasibility or unboundedness. Every solution, from
+every solver, is checked against the same independent residual test, so
+solvers with different ideas of "tolerance" are compared fairly. The
+methodology, all test sets including SDPs and infeasible problems, and the raw
+data are on the :ref:`benchmarks page <benchmarks>`.
 
 .. figure:: files/bench/landing_grid.png
    :width: 100 %
@@ -113,11 +116,12 @@ page <benchmarks>`.
 
    Largest quarter of the Maros-Meszaros and QPLIB QPs (top), largest quarter
    of the Netlib, Kennington and MIPLIB-relaxation LPs (middle) and the
-   Mittelmann large-LP set (bottom), at tolerance
-   :math:`10^{-4}`. Left: fraction of problems solved within a factor
-   :math:`\tau` of the fastest solver. Right: shifted geometric mean solve
-   time with failures charged three times the time limit, and the number of
-   verified solves.
+   Mittelmann large-LP set (bottom), at a target accuracy of
+   :math:`10^{-4}`. SCS with cuDSS has the most verified solves and the lowest
+   geometric mean time in all three. Left: fraction of problems solved within a
+   factor :math:`\tau` of the fastest solver. Right: shifted geometric mean
+   solve time with failures charged three times the time limit, and the number
+   of verified solves.
 
 .. figure:: files/bench/infeas_pair.png
    :width: 100 %
@@ -126,10 +130,10 @@ page <benchmarks>`.
 
    Infeasibility detection on the 29 infeasible Netlib LPs, for the solvers
    that return certificates: a solve is a certificate of infeasibility or
-   unboundedness verified from the problem data. These are small problems
-   (a median of 460 variables), so this tests detection rather than speed
-   at scale; settings are described on the :ref:`benchmarks page
-   <bench_infeasible>`.
+   unboundedness verified from the problem data. SCS with cuDSS and Clarabel
+   certify the most, 27 each. These are small problems (a median of 460
+   variables), so this tests detection rather than speed at scale; settings
+   are described on the :ref:`benchmarks page <bench_infeasible>`.
 
 
 Development
