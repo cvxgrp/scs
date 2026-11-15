@@ -201,13 +201,21 @@ phase) is executed on the host while symbolic factorization (another part of
 the analysis phase), numerical factorization, and solve are executed on the
 GPU.
 
-SCS runs cuDSS without pivoting and with one step of iterative refinement per
-solve. The linear system is quasi-definite, so it can be factorized without
-pivoting, as the CPU direct solver does. From version 1.0, cuDSS by default
-uses Bunch-Kaufman pivoting for a symmetric indefinite matrix, which makes the
-factorization several times larger and slower; the refinement step makes up
-for the accuracy that pivoting would otherwise provide. With older versions of
-cuDSS the default pivoting was different and the saving is not known.
+SCS runs cuDSS without pivoting, matching or iterative refinement, so it
+computes a plain LDL' factorization, as the CPU direct solver does. The linear
+system is quasi-definite, so this factorization exists under any ordering, and
+each iteration costs one solve. From version 1.0, cuDSS by default applies a
+matching to a symmetric indefinite matrix. With its default pivoting that
+makes the factorization up to four times larger (2.4 times larger on average
+on the LPs and QPs measured), and without pivoting it made the solves
+inaccurate enough for SCS to stall on some LPs. Older versions of cuDSS do not
+apply a matching unless asked to, so SCS factorizes the same way with every
+cuDSS version it supports. The tradeoff is that the accuracy of a solve rests
+on the conditioning of the system: the worst relative residual of a solve in
+the test suite was about 6e-8, against 5e-11 with cuDSS's default pivoting and
+matching. Single-precision builds keep one step of iterative refinement per
+solve, which about doubles the cost of a solve, because without it one problem
+in the test suite does not converge.
 
 .. _gpu_reproducibility:
 
@@ -219,8 +227,8 @@ not guaranteed to give bit for bit the same result. The GPU indirect solver
 does its sparse matrix-vector products with cuSPARSE's
 :code:`CUSPARSE_SPMV_CSR_ALG1`, which cuSPARSE does not guarantee to give the
 same bits on every run, and SCS runs cuDSS without its deterministic mode
-(:code:`CUDSS_CONFIG_DETERMINISTIC_MODE`), which cuDSS 1.0 rejects together
-with the refinement step that SCS uses. SCS has no setting to change either
+(:code:`CUDSS_CONFIG_DETERMINISTIC_MODE`), which made LPs and QPs several
+times slower to solve on an NVIDIA GB10. SCS has no setting to change either
 choice. When two runs differ, their iterates differ slightly. Printed values
 that are small near the end of a solve, such as the dual residual and the gap,
 can then differ in every digit, and the iteration count can change if a
