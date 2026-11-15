@@ -227,25 +227,45 @@ CUDA runtime headers and libraries). Meson finds it itself, from the
 it with <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code>.</p></li>
 <li><p>The <a class="reference external" href="https://developer.nvidia.com/cudss-downloads">cuDSS library</a>. Meson
 finds it with <code class="code docutils literal notranslate"><span class="pre">pkg-config</span></code> (<code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>) or, failing that,
-through the CMake package that cuDSS installs. cuDSS is built for one CUDA
-major version, so use the build that matches your CUDA toolkit: NVIDIA’s
-<code class="code docutils literal notranslate"><span class="pre">cudss</span></code> apt package installs the builds for CUDA 12 and CUDA 13 and
-makes the CUDA 13 one the default. cuDSS is also available on
+through the CMake package that cuDSS installs, which needs <code class="code docutils literal notranslate"><span class="pre">cmake</span></code> to
+be installed. NVIDIA’s apt package and archive ship the CMake package and
+no <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>. cuDSS is also available on
 <a class="reference external" href="https://anaconda.org/conda-forge/libcudss">conda-forge</a> as
-<code class="code docutils literal notranslate"><span class="pre">libcudss</span></code> / <code class="code docutils literal notranslate"><span class="pre">libcudss-dev</span></code>.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">libcudss</span></code> / <code class="code docutils literal notranslate"><span class="pre">libcudss-dev</span></code>. The pip packages
+(<code class="code docutils literal notranslate"><span class="pre">nvidia-cudss-cu12</span></code> and <code class="code docutils literal notranslate"><span class="pre">nvidia-cudss-cu13</span></code>) ship neither
+<code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> nor the CMake package, so the build does not find them.</p></li>
 </ol>
-<p>Make sure Meson can find cuDSS: put the directory containing <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>
-on <code class="code docutils literal notranslate"><span class="pre">PKG_CONFIG_PATH</span></code> or, for a cuDSS without <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>, set the
-environment variable <code class="code docutils literal notranslate"><span class="pre">cudss_DIR</span></code> to the folder that holds
-<code class="code docutils literal notranslate"><span class="pre">cudss-config.cmake</span></code>. Set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> if the toolkit is not in
-<code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>, and put the cuDSS shared library on
-<code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> (Linux) at runtime. For example, with cuDSS unpacked
-from NVIDIA’s archive under <code class="code docutils literal notranslate"><span class="pre">&lt;cudss-prefix&gt;</span></code>:</p>
+<p>cuDSS is built for one CUDA major version, so use the build that matches your
+CUDA toolkit. NVIDIA’s <code class="code docutils literal notranslate"><span class="pre">cudss</span></code> apt package installs the builds for
+CUDA 12 and CUDA 13 side by side and makes the CUDA 13 one the default. When
+Meson finds cuDSS through its CMake package, the build passes it the CUDA major
+version of your toolkit, and cuDSS’s CMake package (cuDSS 1.0 does this)
+refuses a build for another major version; the build then stops with an error
+that names <code class="code docutils literal notranslate"><span class="pre">cudss_DIR</span></code>. (A cuDSS found through <code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> is not
+checked.) Without the check, a mismatched cuDSS builds a module that fails
+when it is imported, for example with
+<code class="code docutils literal notranslate"><span class="pre">libcublas.so.13:</span> <span class="pre">cannot</span> <span class="pre">open</span> <span class="pre">shared</span> <span class="pre">object</span> <span class="pre">file</span></code> under CUDA 12. pip
+deletes its build directory, so to see the reason a build stopped, rerun with
+<code class="code docutils literal notranslate"><span class="pre">-Csetup-args</span></code> as below plus <code class="code docutils literal notranslate"><span class="pre">-Cbuild-dir=build</span></code> and read
+<code class="code docutils literal notranslate"><span class="pre">build/meson-logs/meson-log.txt</span></code>.</p>
+<p>Make sure Meson can find the right cuDSS: put the directory containing
+<code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code> on <code class="code docutils literal notranslate"><span class="pre">PKG_CONFIG_PATH</span></code> or, for a cuDSS without
+<code class="code docutils literal notranslate"><span class="pre">cudss.pc</span></code>, set the environment variable <code class="code docutils literal notranslate"><span class="pre">cudss_DIR</span></code> to the folder
+that holds <code class="code docutils literal notranslate"><span class="pre">cudss-config.cmake</span></code>. Set <code class="code docutils literal notranslate"><span class="pre">CUDA_PATH</span></code> if the toolkit is
+not in <code class="code docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>, and put the cuDSS shared library on
+<code class="code docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> (Linux) at runtime if the loader does not find it. For
+example, for NVIDIA’s apt package with CUDA 12 on x86-64:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">cudss_DIR</span><span class="o">=</span>/usr/lib/x86_64-linux-gnu/libcudss/12/cmake/cudss
+</pre></div>
+</div>
+<p>or with cuDSS unpacked from NVIDIA’s archive under <code class="code docutils literal notranslate"><span class="pre">&lt;cudss-prefix&gt;</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">cudss_DIR</span><span class="o">=</span>&lt;cudss-prefix&gt;/lib/cmake/cudss
 <span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/usr/local/cuda/lib64:&lt;cudss-prefix&gt;/lib:<span class="nv">$LD_LIBRARY_PATH</span>
 </pre></div>
 </div>
-<p><strong>Install.</strong> Once the prerequisites are in place, build SCS with:</p>
+<p><strong>Install.</strong> Once the prerequisites are in place, build SCS with the command
+below. It needs pip 23.1 or later for the <code class="code docutils literal notranslate"><span class="pre">-C</span></code> option (upgrade with
+<code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">pip</span></code>):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Dlink_cudss<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Dint32<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
 </pre></div>
 </div>
