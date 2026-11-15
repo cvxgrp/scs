@@ -285,9 +285,11 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * does not at least halve the residual, and undoes a step that makes it
  * larger. Tradeoff: one multiply by K per factorization, plus one solve and
  * one multiply per refinement step; factorizations are rare, so this is a
- * small cost next to the factorization. A solver that already solves to this
- * accuracy (CG, which runs the g solve to CG_BEST_TOL) pays only the
- * multiply. Single precision cannot reach 1e-12, so it uses 1e-5. */
+ * small cost next to the factorization. When the solve is already that
+ * accurate it pays only the multiply. CG stops on an absolute residual of its
+ * reduced system (CG_BEST_TOL), which on badly scaled data can leave a much
+ * larger relative residual here, so CG's g is checked and refined too. Single
+ * precision cannot reach 1e-12, so it uses 1e-5. */
 #ifdef SFLOAT
 #define G_SOLVE_TOL (1e-5)
 #else

@@ -17,8 +17,9 @@
  * not normalized (so the KKT matrix keeps the bad scaling).
  */
 
-/* ||[c; -b] - K g||_inf over the largest inf-norm of [c; -b] and of the
- * terms of K g, written independently of the solver's own check */
+/* ||[c; -b] - K g||_inf over the largest inf-norm among [c; -b], R g, A' g_y,
+ * P g_x + A' g_y and A g_x: the measure the solver checks against
+ * G_SOLVE_TOL (g_residual in src/scs.c), written out again here */
 static scs_float g_accuracy_rel_res(const ScsWork *w, const scs_float *g) {
   scs_int i, n = w->d->n, m = w->d->m;
   scs_float *ax = (scs_float *)scs_calloc(m, sizeof(scs_float));
@@ -34,7 +35,7 @@ static scs_float g_accuracy_rel_res(const ScsWork *w, const scs_float *g) {
     ri = w->d->c[i] - (w->diag_r[i] * g[i] + px[i] + aty[i]);
     res = MAX(res, ABS(ri));
     scale = MAX(scale, MAX(ABS(w->d->c[i]), ABS(w->diag_r[i] * g[i])));
-    scale = MAX(scale, MAX(ABS(px[i]), ABS(aty[i])));
+    scale = MAX(scale, MAX(ABS(px[i] + aty[i]), ABS(aty[i])));
   }
   for (i = 0; i < m; ++i) {
     ri = -w->d->b[i] - (ax[i] - w->diag_r[n + i] * g[n + i]);
@@ -72,6 +73,12 @@ static scs_float g_accuracy_unrefined(ScsWork *w) {
 #define G_ACC_ROW_SCALE (1e4)
 #define G_ACC_COL_SCALE (1e3)
 #endif
+
+/* the solver refines g until this measure is at most G_SOLVE_TOL; recomputing
+ * it rounds differently, hence the factor of 10. A plain solve of this
+ * problem measures about 1e-7 (QDLDL, Accelerate, CG, cuDSS) in double
+ * precision, so the limit still tells a refined g from an unrefined one. */
+#define G_ACC_LIMIT (10 * G_SOLVE_TOL)
 
 static const char *test_g_accuracy(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
@@ -139,7 +146,7 @@ static const char *test_g_accuracy(void) {
              res, res0);
   if (info.scale_updates != 0) {
     fail = "test_g_accuracy: unexpected scale update in one iteration";
-  } else if (res > G_SOLVE_TOL) {
+  } else if (res > G_ACC_LIMIT) {
     fail = "test_g_accuracy: g not accurate for the first factorization";
   }
 
@@ -154,7 +161,7 @@ static const char *test_g_accuracy(void) {
                (long)info.iter, (long)info.scale_updates, res, res0);
     if (info.scale_updates < 1) {
       fail = "test_g_accuracy: no scale update, the second check is vacuous";
-    } else if (res > G_SOLVE_TOL) {
+    } else if (res > G_ACC_LIMIT) {
       fail = "test_g_accuracy: g not accurate after scale updates";
     }
   }
