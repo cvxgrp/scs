@@ -18,12 +18,14 @@ The short version: SCS 3.3 is clearly ahead of every other first-order
 solver. At a target accuracy of :math:`10^{-4}` it verifies as many of the
 LPs as the best open-source interior-point codes, in less geometric mean
 time, and is competitive with them on the largest quarter of the QPs; they
-are faster over the full QP set, which is mostly small problems, and on the
-QPs at :math:`10^{-6}`. At that target, the cuDSS GPU backend is the fastest
-solver we tested on the largest quarter of the QP problems and on the largest
-quarter of the LP problems, and on the large LPs of the Mittelmann set SCS
-with cuDSS solves more instances within the 30-minute limit than any other
-solver, in less than half the geometric mean time of the runner-up.
+are faster over the full QP set, which is mostly small problems, and HiGHS's
+dual simplex has the lowest geometric mean time over the full LP set. At
+:math:`10^{-4}` the cuDSS GPU backend is the fastest solver we tested on the
+largest quarter of the QP problems and on the largest quarter of the LP
+problems, and on the large LPs of the Mittelmann set SCS with cuDSS solves
+more instances within the 30-minute limit than any other solver, in less than
+half the geometric mean time of the runner-up. At :math:`10^{-6}` the
+interior-point codes are ahead on the QPs.
 
 .. _bench_headline:
 
