@@ -132,6 +132,17 @@ modified one. Note that the matrix does not change from iteration to iteration,
 which is a major advantage of this approach. Moreover, this system can be solved
 approximately so long as the errors satisfy a summability condition, which
 permits the use of approximate solvers that can scale to very large problems.</p>
+<p>One solve is treated differently. At the start of every solve, and whenever
+the scaling <span class="math notranslate nohighlight">\(R\)</span> changes, SCS solves the system once for the right-hand
+side <span class="math notranslate nohighlight">\((c, -b)\)</span> and uses that solution in every iteration until the next
+change, so an error in it is repeated in every iteration rather than averaged
+out. SCS therefore checks that solve, whatever the linear solver:
+it computes the residual from the problem data and, while the residual is
+larger than <span class="math notranslate nohighlight">\(10^{-12}\)</span> relative to the size of the terms
+(<span class="math notranslate nohighlight">\(10^{-5}\)</span> in single precision), it refines the solution by solving for
+the residual, for at most three steps. This costs one multiply by the matrix
+each time, plus one solve and one multiply per refinement step; with the
+indirect solvers a refinement step is another conjugate gradient solve.</p>
 <section id="available-linear-solvers">
 <h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Link to this heading"></a></h2>
 <p>Each of the below linear solvers is included in their own binary. If linking

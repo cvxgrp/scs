@@ -29,6 +29,18 @@ which is a major advantage of this approach. Moreover, this system can be solved
 approximately so long as the errors satisfy a summability condition, which
 permits the use of approximate solvers that can scale to very large problems.
 
+One solve is treated differently. At the start of every solve, and whenever
+the scaling :math:`R` changes, SCS solves the system once for the right-hand
+side :math:`(c, -b)` and uses that solution in every iteration until the next
+change, so an error in it is repeated in every iteration rather than averaged
+out. SCS therefore checks that solve, whatever the linear solver:
+it computes the residual from the problem data and, while the residual is
+larger than :math:`10^{-12}` relative to the size of the terms
+(:math:`10^{-5}` in single precision), it refines the solution by solving for
+the residual, for at most three steps. This costs one multiply by the matrix
+each time, plus one solve and one multiply per refinement step; with the
+indirect solvers a refinement step is another conjugate gradient solve.
+
 
 Available linear solvers
 ------------------------
