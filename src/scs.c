@@ -132,6 +132,7 @@ static void cold_start_vars(ScsWork *w);
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta);
 static scs_int project_lin_sys(ScsWork *w, scs_int iter);
+static scs_int refine_iter(ScsWork *w, scs_int iter);
 static void compute_rsk(ScsWork *w);
 static void update_dual_vars(ScsWork *w);
 static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter);
@@ -823,6 +824,9 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   tol = MAX(CG_BEST_TOL, tol);
 #endif
   status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol);
+  if (status == 0) {
+    status = refine_iter(w, iter);
+  }
   if (iter < FEASIBLE_ITERS) {
     w->u_t[l - 1] = 1.;
   } else {
@@ -1099,8 +1103,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->rsk = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
-  w->g_res = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
-  w->g_corr = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->kkt_res = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->kkt_corr = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->lin_sys_warm_start = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
@@ -1139,7 +1143,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
 
   if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
-      !w->g_res || !w->g_corr ||
+      !w->kkt_res || !w->kkt_corr ||
       !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
       !w->xys_orig->x || !w->xys_orig->s || !w->xys_orig->y || !w->r_orig ||
       !w->b_orig || !w->c_orig) {
@@ -1256,23 +1260,87 @@ static scs_float g_residual(const ScsWork *w, const scs_float *g,
 static void refine_g(ScsWork *w) {
   scs_int k, l = w->d->n + w->d->m;
   scs_float res, res_new;
-  res = g_residual(w, w->g, w->g_res);
+  res = g_residual(w, w->g, w->kkt_res);
   for (k = 0; k < G_REFINE_MAX_STEPS && res > G_SOLVE_TOL; ++k) {
-    /* the candidate g + d is formed in g_corr and kept only if it is better,
-     * so a rejected step leaves g exactly as it was */
-    memcpy(w->g_corr, w->g_res, l * sizeof(scs_float));
-    scs_solve_lin_sys(w->p, w->g_corr, SCS_NULL, CG_BEST_TOL);
-    SCS(add_scaled_array)(w->g_corr, w->g, l, 1.);
-    res_new = g_residual(w, w->g_corr, w->g_res);
+    /* the candidate g + d is formed in kkt_corr and kept only if it is
+     * better, so a rejected step leaves g exactly as it was */
+    memcpy(w->kkt_corr, w->kkt_res, l * sizeof(scs_float));
+    scs_solve_lin_sys(w->p, w->kkt_corr, SCS_NULL, CG_BEST_TOL);
+    SCS(add_scaled_array)(w->kkt_corr, w->g, l, 1.);
+    res_new = g_residual(w, w->kkt_corr, w->kkt_res);
     if (!(res_new <= res)) {
       break; /* the step made it worse (or is not finite): keep g */
     }
-    memcpy(w->g, w->g_corr, l * sizeof(scs_float));
+    memcpy(w->g, w->kkt_corr, l * sizeof(scs_float));
     if (res_new > 0.5 * res) {
       break; /* no longer contracting */
     }
     res = res_new;
   }
+}
+
+/* r = rhs - K u with K = [R_x + P, A'; A, -R_y] and rhs = [R_x v_x; -R_y v_y],
+ * the right-hand side of this iteration's solve in project_lin_sys, from the
+ * (normalized) problem data, so it is the same for every linear solver.
+ * Returns ||r||_inf. rhs is rebuilt from v and diag_r rather than copied
+ * (v does not change in project_lin_sys), in its own statement so that it is
+ * rounded as it is there. */
+static scs_float iter_residual(const ScsWork *w, const scs_float *u,
+                               scs_float *r) {
+  scs_int i, n = w->d->n, m = w->d->m;
+  const scs_float *v = w->v, *dr = w->diag_r;
+  scs_float rhs;
+  memset(r, 0, (n + m) * sizeof(scs_float));
+  SCS(accum_by_atrans)(w->d->A, &(u[n]), r);
+  if (w->d->P) {
+    SCS(accum_by_p)(w->d->P, u, r);
+  }
+  SCS(accum_by_a)(w->d->A, u, &(r[n]));
+  for (i = 0; i < n; ++i) {
+    rhs = v[i] * dr[i];
+    r[i] = rhs - (r[i] + dr[i] * u[i]);
+  }
+  for (i = n; i < n + m; ++i) {
+    rhs = -v[i] * dr[i];
+    r[i] = rhs - (r[i] - dr[i] * u[i]);
+  }
+  return SCS(norm_inf)(r, n + m);
+}
+
+/* Refinement of this iteration's solve, see REFINE_CHECK_INTERVAL and
+ * REFINE_FACTOR in glbopts.h. Called right after the solve in
+ * project_lin_sys, while u_t[:n+m] holds its solution. Returns the status of
+ * the refinement solve (0 when there is none). */
+static scs_int refine_iter(ScsWork *w, scs_int iter) {
+  scs_int status, n = w->d->n, m = w->d->m;
+  scs_float res, tol;
+  if (!w->refine_on && iter % REFINE_CHECK_INTERVAL != 0) {
+    return 0;
+  }
+  if (w->r_normalized->last_iter < 0) {
+    return 0; /* this solve has no residuals yet to compare with */
+  }
+  res = iter_residual(w, w->u_t, w->kkt_res);
+  /* the size of the residuals SCS is driving to zero (normalized, tau not
+   * divided out, from the last convergence check), but not below
+   * REFINE_TOL_FLOOR: one of them can be zero (an infeasibility or
+   * unboundedness certificate), and refinement would then chase rounding
+   * errors on every remaining iteration */
+  tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, m),
+            SCS(norm_inf)(w->r_normalized->px_aty_ctau, n));
+  tol = MAX(tol, REFINE_TOL_FLOOR);
+  w->refine_checks++;
+  w->refine_on = res > REFINE_FACTOR * tol;
+  if (!w->refine_on) {
+    return 0;
+  }
+  /* u_t += K^{-1} r: one solve, cold, to the CG solvers' best accuracy */
+  status = scs_solve_lin_sys(w->p, w->kkt_res, SCS_NULL, CG_BEST_TOL);
+  if (status == 0) {
+    SCS(add_scaled_array)(w->u_t, w->kkt_res, n + m, 1.);
+    w->refine_steps++;
+  }
+  return status;
 }
 
 static void update_work_cache(ScsWork *w) {
@@ -1305,6 +1373,10 @@ static void reset_tracking(ScsWork *w) {
   /* Need this to force residual calc if previous solve solved at iter 0 */
   w->r_normalized->last_iter = -1;
   w->r_orig->last_iter = -1;
+  /* per-iteration refinement starts off and checks at its own interval */
+  w->refine_on = 0;
+  w->refine_checks = 0;
+  w->refine_steps = 0;
 }
 
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
@@ -1788,8 +1860,8 @@ void scs_finish(ScsWork *w) {
     scs_free(w->rsk);
     scs_free(w->h);
     scs_free(w->g);
-    scs_free(w->g_res);
-    scs_free(w->g_corr);
+    scs_free(w->kkt_res);
+    scs_free(w->kkt_corr);
     scs_free(w->b_orig);
     scs_free(w->c_orig);
     scs_free(w->lin_sys_warm_start);

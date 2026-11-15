@@ -64,7 +64,14 @@ struct SCS_WORK {
   scs_float *rsk;                /* rsk [ r; s; kappa ] */
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
-  scs_float *g_res, *g_corr; /* residual and correction of the g solve */
+  /* scratch, n + m each: residual and correction of a solve with the KKT
+   * matrix, used by refine_g (the solve for g) and refine_iter (each
+   * iteration's solve); nothing is kept in them between calls */
+  scs_float *kkt_res, *kkt_corr;
+  /* per-iteration refinement (refine_iter), reset at the start of each solve:
+   * whether it is on (checking every iteration), how many residual checks
+   * and how many refinement steps this solve has made */
+  scs_int refine_on, refine_checks, refine_steps;
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */

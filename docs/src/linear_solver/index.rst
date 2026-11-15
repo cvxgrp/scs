@@ -41,6 +41,28 @@ the residual, for at most three steps. This costs one multiply by the matrix
 each time, plus one solve and one multiply per refinement step; with the
 indirect solvers a refinement step is another conjugate gradient solve.
 
+The solve in each iteration is checked too, more cheaply. Every 25 iterations
+SCS computes the residual of that iteration's solve from the problem data and
+compares it with the smaller of SCS's own primal and dual residuals (but at
+least :math:`10^{-12}`, :math:`10^{-5}` in single precision). If the solve's
+error is the larger, the iterates cannot become more accurate than the solve,
+so SCS refines it with one more solve, for the residual, and then checks on
+every iteration until the error is back below the residuals. Nothing needs to
+be set for this; what to expect:
+
+- At the default tolerances in double precision it almost never fires (9 of
+  336 benchmark runs, 0.01% of the solves). The check alone costs about 1% of
+  the linear-system time: one multiply by the matrix every 25 iterations.
+- At tight tolerances such as :math:`10^{-8}` or :math:`10^{-9}` the error of a
+  direct solve can be as large as the residuals SCS has to reach. That is
+  where it fires, and it is what lets such solves converge. While it is on,
+  each iteration costs one more multiply and one more solve.
+- In single precision the error of the default sparse direct solve can be as
+  large as the residuals at the default tolerances, so it can fire there too.
+- The indirect solvers already solve to a tolerance tied to these residuals,
+  so with them it fires only when a conjugate gradient solve misses that
+  tolerance.
+
 
 Available linear solvers
 ------------------------
