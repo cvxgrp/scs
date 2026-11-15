@@ -274,22 +274,25 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define DEN_FLOOR_FRAC (1e-3)
 
 /* --- Accuracy of the solve for g = K^{-1} [c; -b] ---
- * SCS solves for g once per factorization of K (at setup and after every
- * scale update) and uses it in every iteration until the next one, so an
+ * SCS solves for g at the start of every solve and after every scale update
+ * (once per factorization of K) and uses it in every iteration until the
+ * next one, so an
  * error in g is repeated in every iteration instead of being averaged out,
  * and it can limit the accuracy SCS reaches. After that solve SCS computes
  * the residual [c; -b] - K g from the problem data, whatever the linear
  * solver, and while the residual is larger than G_SOLVE_TOL times the largest
  * term of the product (and of [c; -b]) it refines g: it solves K d = residual
  * and adds d to g. It stops after G_REFINE_MAX_STEPS steps, or when a step
- * does not at least halve the residual, and undoes a step that makes it
- * larger. Tradeoff: one multiply by K per factorization, plus one solve and
- * one multiply per refinement step; factorizations are rare, so this is a
- * small cost next to the factorization. When the solve is already that
- * accurate it pays only the multiply. CG stops on an absolute residual of its
- * reduced system (CG_BEST_TOL), which on badly scaled data can leave a much
- * larger relative residual here, so CG's g is checked and refined too. Single
- * precision cannot reach 1e-12, so it uses 1e-5. */
+ * does not at least halve the residual, and discards a step that makes it
+ * larger. Tradeoff: one multiply by K per solve for g, plus one solve and one
+ * multiply per refinement step. For the direct solvers that is small next to
+ * the factorization; when the solve is already that accurate only the
+ * multiply is paid. CG stops on an absolute residual of its reduced system
+ * (CG_BEST_TOL), which on badly scaled data can leave a much larger relative
+ * residual here, so CG's g is checked and refined too, and for CG a
+ * refinement step is another cold CG solve, which can cost up to about as
+ * many iterations as the solve for g itself. Single precision cannot reach
+ * 1e-12, so it uses 1e-5. */
 #ifdef SFLOAT
 #define G_SOLVE_TOL (1e-5)
 #else

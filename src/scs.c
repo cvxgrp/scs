@@ -1258,15 +1258,16 @@ static void refine_g(ScsWork *w) {
   scs_float res, res_new;
   res = g_residual(w, w->g, w->g_res);
   for (k = 0; k < G_REFINE_MAX_STEPS && res > G_SOLVE_TOL; ++k) {
+    /* the candidate g + d is formed in g_corr and kept only if it is better,
+     * so a rejected step leaves g exactly as it was */
     memcpy(w->g_corr, w->g_res, l * sizeof(scs_float));
     scs_solve_lin_sys(w->p, w->g_corr, SCS_NULL, CG_BEST_TOL);
-    SCS(add_scaled_array)(w->g, w->g_corr, l, 1.);
-    res_new = g_residual(w, w->g, w->g_res);
-    if (res_new > res) {
-      /* the step made it worse: undo it */
-      SCS(add_scaled_array)(w->g, w->g_corr, l, -1.);
-      break;
+    SCS(add_scaled_array)(w->g_corr, w->g, l, 1.);
+    res_new = g_residual(w, w->g_corr, w->g_res);
+    if (!(res_new <= res)) {
+      break; /* the step made it worse (or is not finite): keep g */
     }
+    memcpy(w->g, w->g_corr, l * sizeof(scs_float));
     if (res_new > 0.5 * res) {
       break; /* no longer contracting */
     }

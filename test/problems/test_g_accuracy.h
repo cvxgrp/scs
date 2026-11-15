@@ -11,10 +11,13 @@
  * factorization and uses g in every iteration until the next one, so it
  * checks the residual of that solve and refines g until it is at most
  * G_SOLVE_TOL relative to the terms (glbopts.h). This test checks that
- * guarantee for the g of the first factorization (a one-iteration solve) and
- * for the g of the last one after a solve with scale updates, for every
- * linear solver the test binary is built with, on a badly scaled QP that is
- * not normalized (so the KKT matrix keeps the bad scaling).
+ * guarantee, for every linear solver the test binary is built with, on a
+ * badly scaled QP that is not normalized (so the KKT matrix keeps the bad
+ * scaling). The first check, on the g of the first factorization (a
+ * one-iteration solve), is the one a plain solve fails (its residual is about
+ * 1e-7). The second, after a solve with scale updates, guards the update
+ * path: g recomputed with the new R and still accurate. A plain solve
+ * usually passes it too, because the scale updates improve the conditioning.
  */
 
 /* ||[c; -b] - K g||_inf over the largest inf-norm among [c; -b], R g, A' g_y,
@@ -151,7 +154,7 @@ static const char *test_g_accuracy(void) {
   }
 
   if (!fail) {
-    /* scale updates refactorize and solve for g again */
+    /* scale updates refactorize and solve for g again with the new R */
     w->stgs->max_iters = 2000;
     scs_solve(w, sol, &info, 0);
     res = g_accuracy_rel_res(w, w->g);
