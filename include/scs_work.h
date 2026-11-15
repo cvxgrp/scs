@@ -64,6 +64,7 @@ struct SCS_WORK {
   scs_float *rsk;                /* rsk [ r; s; kappa ] */
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
+  scs_float *g_res, *g_corr; /* residual and correction of the g solve */
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */

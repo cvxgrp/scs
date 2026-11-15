@@ -273,6 +273,28 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * improves on no floor, 1e-3 is the best on solve count. */
 #define DEN_FLOOR_FRAC (1e-3)
 
+/* --- Accuracy of the solve for g = K^{-1} [c; -b] ---
+ * SCS solves for g once per factorization of K (at setup and after every
+ * scale update) and uses it in every iteration until the next one, so an
+ * error in g is repeated in every iteration instead of being averaged out,
+ * and it can limit the accuracy SCS reaches. After that solve SCS computes
+ * the residual [c; -b] - K g from the problem data, whatever the linear
+ * solver, and while the residual is larger than G_SOLVE_TOL times the largest
+ * term of the product (and of [c; -b]) it refines g: it solves K d = residual
+ * and adds d to g. It stops after G_REFINE_MAX_STEPS steps, or when a step
+ * does not at least halve the residual, and undoes a step that makes it
+ * larger. Tradeoff: one multiply by K per factorization, plus one solve and
+ * one multiply per refinement step; factorizations are rare, so this is a
+ * small cost next to the factorization. A solver that already solves to this
+ * accuracy (CG, which runs the g solve to CG_BEST_TOL) pays only the
+ * multiply. Single precision cannot reach 1e-12, so it uses 1e-5. */
+#ifdef SFLOAT
+#define G_SOLVE_TOL (1e-5)
+#else
+#define G_SOLVE_TOL (1e-12)
+#endif
+#define G_REFINE_MAX_STEPS (3)
+
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
 /* Accuracy of the most accurate CG solves (the cold solve for g, and the floor
  * of the warm ones). Single precision cannot reach 1e-12: a CG asked for it

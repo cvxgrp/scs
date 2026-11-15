@@ -1099,6 +1099,8 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->rsk = (scs_float *)scs_calloc(l, sizeof(scs_float));
   w->h = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->g_res = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+  w->g_corr = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->lin_sys_warm_start = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
@@ -1137,6 +1139,7 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
 
   if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
+      !w->g_res || !w->g_corr ||
       !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
       !w->xys_orig->x || !w->xys_orig->s || !w->xys_orig->y || !w->r_orig ||
       !w->b_orig || !w->c_orig) {
@@ -1215,6 +1218,62 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   return w;
 }
 
+/* r = [c; -b] - K g with K = [R_x + P, A'; A, -R_y], from the (normalized)
+ * problem data, so it is the same for every linear solver. Returns
+ * ||r||_inf divided by the largest inf-norm among [c; -b], R g, A' g_y,
+ * P g_x + A' g_y and A g_x: the size of the terms whose rounding errors the
+ * residual is compared with (P g_x on its own is at most the sum of the two
+ * that contain it). */
+static scs_float g_residual(const ScsWork *w, const scs_float *g,
+                            scs_float *r) {
+  scs_int i, n = w->d->n, m = w->d->m;
+  scs_float *rx = r, *ry = &(r[n]), rg, scale;
+  const scs_float *gx = g, *gy = &(g[n]);
+  memset(r, 0, (n + m) * sizeof(scs_float));
+  SCS(accum_by_atrans)(w->d->A, gy, rx);
+  scale = MAX(SCS(norm_inf)(w->d->c, n), SCS(norm_inf)(w->d->b, m));
+  scale = MAX(scale, SCS(norm_inf)(rx, n));
+  if (w->d->P) {
+    SCS(accum_by_p)(w->d->P, gx, rx);
+    scale = MAX(scale, SCS(norm_inf)(rx, n));
+  }
+  SCS(accum_by_a)(w->d->A, gx, ry);
+  scale = MAX(scale, SCS(norm_inf)(ry, m));
+  for (i = 0; i < n; ++i) {
+    rg = w->diag_r[i] * gx[i];
+    scale = MAX(scale, ABS(rg));
+    rx[i] = w->d->c[i] - (rx[i] + rg);
+  }
+  for (i = 0; i < m; ++i) {
+    rg = w->diag_r[n + i] * gy[i];
+    scale = MAX(scale, ABS(rg));
+    ry[i] = -w->d->b[i] - (ry[i] - rg);
+  }
+  return SCS(norm_inf)(r, n + m) / MAX(scale, _DIV_EPS_TOL);
+}
+
+/* Iterative refinement of g, see G_SOLVE_TOL in glbopts.h. */
+static void refine_g(ScsWork *w) {
+  scs_int k, l = w->d->n + w->d->m;
+  scs_float res, res_new;
+  res = g_residual(w, w->g, w->g_res);
+  for (k = 0; k < G_REFINE_MAX_STEPS && res > G_SOLVE_TOL; ++k) {
+    memcpy(w->g_corr, w->g_res, l * sizeof(scs_float));
+    scs_solve_lin_sys(w->p, w->g_corr, SCS_NULL, CG_BEST_TOL);
+    SCS(add_scaled_array)(w->g, w->g_corr, l, 1.);
+    res_new = g_residual(w, w->g, w->g_res);
+    if (res_new > res) {
+      /* the step made it worse: undo it */
+      SCS(add_scaled_array)(w->g, w->g_corr, l, -1.);
+      break;
+    }
+    if (res_new > 0.5 * res) {
+      break; /* no longer contracting */
+    }
+    res = res_new;
+  }
+}
+
 static void update_work_cache(ScsWork *w) {
   /* g = (I + M)^{-1} [c; -b]
    * Build g = [c; -b] directly in one pass, avoiding a separate memcpy of h
@@ -1225,6 +1284,7 @@ static void update_work_cache(ScsWork *w) {
     w->g[n + i] = -w->d->b[i];
   }
   scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL);
+  refine_g(w);
 }
 
 /* Reset quantities specific to current solve */
@@ -1727,6 +1787,8 @@ void scs_finish(ScsWork *w) {
     scs_free(w->rsk);
     scs_free(w->h);
     scs_free(w->g);
+    scs_free(w->g_res);
+    scs_free(w->g_corr);
     scs_free(w->b_orig);
     scs_free(w->c_orig);
     scs_free(w->lin_sys_warm_start);
