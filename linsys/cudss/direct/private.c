@@ -121,30 +121,45 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   CUDSS_CHECK_ABORT(cudssDataCreate(p->handle, &p->solver_data), p,
                     "cudssDataCreate");
 
-  /* No pivoting, and one step of iterative refinement per solve.
+  /* Plain LDL' with no pivoting, matching or refinement, as in the CPU direct
+   * solver (QDLDL): the KKT matrix [R_x + P, A'; A, -R_y] is quasi-definite,
+   * so the factorization exists under any ordering. From version 1.0 cuDSS by
+   * default applies a matching to a symmetric indefinite matrix. With its
+   * default pivoting that makes the factor up to four times larger (2.4 times
+   * in geometric mean on 17 LPs and QPs), and without pivoting it made the
+   * solves inaccurate enough to stall SCS on some LPs. Tradeoff: one solve
+   * per iteration, but the accuracy of a solve rests on the conditioning of
+   * the system (worst test-suite residual 6e-8, against 5e-11 with cuDSS's
+   * default pivoting and matching).
    *
-   * The KKT matrix [R_x + P, A'; A, -R_y] is quasi-definite, so it has an
-   * LDL' factorization with a diagonal D under any ordering; the CPU direct
-   * solver relies on the same fact. From version 1.0, cuDSS's default for a
-   * symmetric indefinite matrix is Bunch-Kaufman pivoting. That costs several
-   * times the fill and the factorization time (cuDSS 1.0, KKT dimension
-   * 50000: 535M against 152M factor entries, 19 s against 3 s), and SCS
-   * refactorizes on every scale update. Before 1.0 the default was a
-   * different pivoting, and what is saved there was not measured.
-   *
-   * Without pivoting the solves are less accurate (relative residuals up to
-   * 5e-8 on the test problems, against 4e-11 with pivoting). One refinement
-   * step brings them to 3e-14. It doubles the cost of a solve, which is small
-   * next to what the factorization saves. */
+   * Single precision keeps one refinement step per solve, which about doubles
+   * the cost of a solve: without it the test suite fails (rob_gauss_cov_est
+   * does not converge), and Bunch-Kaufman pivoting instead of refinement does
+   * not fix that. */
   {
     cudssPivotType_t pivot_type = CUDSS_PIVOT_NONE;
+#ifdef SFLOAT
     int ir_n_steps = 1;
+#else
+    int ir_n_steps = 0; /* cuDSS's default, set so that it stays fixed */
+#endif
     CUDSS_CHECK_ABORT(cudssConfigSet(p->solver_config, CUDSS_CONFIG_PIVOT_TYPE,
                                      &pivot_type, sizeof(pivot_type)),
                       p, "cudssConfigSet: pivot type");
     CUDSS_CHECK_ABORT(cudssConfigSet(p->solver_config, CUDSS_CONFIG_IR_N_STEPS,
                                      &ir_n_steps, sizeof(ir_n_steps)),
                       p, "cudssConfigSet: refinement steps");
+#if defined(CUDSS_VERSION) && CUDSS_VERSION >= 10000
+    /* cuDSS 1.0 turned matching on by default (CUDSS_MATCHING_ALG_AUTO).
+     * Older versions do not match unless asked to (0.5 has no matching, 0.6
+     * and 0.7 default to CUDSS_CONFIG_USE_MATCHING = 0, 0.8 to
+     * CUDSS_MATCHING_ALG_NONE), so they need no call. */
+    cudssMatchingAlg_t matching_alg = CUDSS_MATCHING_ALG_NONE;
+    CUDSS_CHECK_ABORT(cudssConfigSet(p->solver_config,
+                                     CUDSS_CONFIG_MATCHING_ALG, &matching_alg,
+                                     sizeof(matching_alg)),
+                      p, "cudssConfigSet: matching");
+#endif
   }
 
   /* Allocate device memory for KKT matrix */
