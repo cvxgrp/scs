@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Simulated GPU (NVIDIA T4) and Ubuntu's CUDA toolkit
-        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        uses: pantheongpu/setup-pantheonsim@68edfd58c091361dd6baf060b63de412e544d858 # v0.1.7
         with:
           gpu: nvidia/t4
           library-path: false
@@ -110,7 +110,7 @@ jobs:
       - name: Simulated GPU (NVIDIA T4) and CUDA 13.0 from NVIDIA
         # v0.1.5 builds the simulator's cuDSS as both libcudss.so.1 (cuDSS 1.0,
         # which apt's cudss now installs) and libcudss.so.0.
-        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        uses: pantheongpu/setup-pantheonsim@68edfd58c091361dd6baf060b63de412e544d858 # v0.1.7
         with:
           gpu: nvidia/t4
           cuda-toolkit: '13.0'
