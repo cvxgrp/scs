@@ -158,7 +158,8 @@ and stalled a few.) Nothing needs to be set for this; what to expect:</p>
 of 336 benchmark runs at <span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span>, on 0.01% of
 the solves). The check alone costs one multiply by the matrix every 25
 iterations: about 1% of the linear-system time with the default sparse
-direct solver and about 2% with cuDSS.</p></li>
+direct solver and about 2% with cuDSS (from 0.5% to 8% on the 7 problems
+measured).</p></li>
 <li><p>At tight tolerances such as <span class="math notranslate nohighlight">\(10^{-8}\)</span> or <span class="math notranslate nohighlight">\(10^{-9}\)</span> the error of a
 direct solve can be as large as the residuals SCS has to reach. That is
 where it fires, and it is what lets such solves converge. While it is on,
