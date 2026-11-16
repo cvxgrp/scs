@@ -38,7 +38,8 @@
  *
  * test_solve_refine_csv repeats the tight solve with QDLDL while logging to
  * CSV, which recomputes the residuals every iteration, and requires the same
- * refinement and the same result.
+ * refinement (iterations, residual checks and refinement steps) and the same
+ * objectives to 1e-6.
  */
 
 /* the instance (seeds 10 and 43 also pass in double precision; in single
@@ -187,11 +188,18 @@ static const char *test_solve_refine_idle(void) {
 
 /* Logging to CSV (log_csv_filename) recomputes SCS's residuals on every
  * iteration. Refinement compares with the residuals of the last convergence
- * check only, so logging must not change when it fires or the iterates: the
- * tight solve with and without logging must agree exactly. Checked with QDLDL,
- * where refinement fires on this instance and the solve is deterministic (the
- * CG solvers' own tolerance follows the logged residuals, so there logging
- * changes the iterates whether or not refinement fires). */
+ * check only, so logging must not change when it fires: the tight solve with
+ * and without logging must take the same iterations, residual checks and
+ * refinement steps. Comparing with residuals recomputed at the solve instead
+ * changed all three (200 iterations instead of 225). The results are only
+ * compared to 1e-6: with USE_LAPACK every vector operation goes through BLAS,
+ * and MKL's BLAS can round differently when the logged solve's arrays are
+ * aligned differently in memory (it did in CI, with identical counts). The
+ * counts are robust to such rounding: from 101 initial scales within 50 ulps
+ * of the default they are 225, 33 and 26 in every build checked. Checked with
+ * QDLDL, where refinement fires on this instance (the CG solvers' own
+ * tolerance follows the logged residuals, so there logging changes the
+ * iterates whether or not refinement fires). */
 static const char *test_solve_refine_csv(void) {
   scs_int status0, status1, checks0, checks1, steps0, steps1;
   ScsInfo info0, info1;
@@ -204,17 +212,18 @@ static const char *test_solve_refine_csv(void) {
                                &info1, &checks1, &steps1);
   remove("test_solve_refine.csv");
   scs_printf("test_solve_refine_csv: without logging %li iterations, %li "
-             "checks, %li steps; with logging %li iterations, %li checks, %li "
-             "steps\n",
-             (long)info0.iter, (long)checks0, (long)steps0, (long)info1.iter,
-             (long)checks1, (long)steps1);
+             "checks, %li steps, pobj %.17g; with logging %li iterations, %li "
+             "checks, %li steps, pobj %.17g\n",
+             (long)info0.iter, (long)checks0, (long)steps0, info0.pobj,
+             (long)info1.iter, (long)checks1, (long)steps1, info1.pobj);
   mu_assert("test_solve_refine_csv: not solved",
             status0 == SCS_SOLVED && status1 == SCS_SOLVED);
-  mu_assert("test_solve_refine_csv: logging changed the refinement or the "
-            "iterates",
+  mu_assert("test_solve_refine_csv: logging changed the refinement",
             info0.iter == info1.iter && checks0 == checks1 &&
-                steps0 == steps1 && info0.pobj == info1.pobj &&
-                info0.dobj == info1.dobj && info0.res_pri == info1.res_pri &&
-                info0.res_dual == info1.res_dual);
+                steps0 == steps1);
+  mu_assert("test_solve_refine_csv: logging changed the result",
+            ABS(info0.pobj - info1.pobj) <= 1e-6 * MAX(1., ABS(info0.pobj)) &&
+                ABS(info0.dobj - info1.dobj) <=
+                    1e-6 * MAX(1., ABS(info0.dobj)));
   return SCS_NULL;
 }
