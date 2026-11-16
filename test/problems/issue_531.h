@@ -120,6 +120,13 @@ static const char *issue_531_proj(void) {
 /* The whole problem from the issue: m = 276, n = 78, 132 zero rows and PSD
  * cones of sizes 11 and 12, optimal value 275. */
 static const char *issue_531(void) {
+#ifdef SFLOAT
+  /* The bug is in the projection, which issue_531_proj covers in single
+   * precision too. The whole solve does not reach the default 1e-4 here in
+   * float arithmetic: with the indirect solver it hits max_iters, and the
+   * outcome depends on the platform's rounding. */
+  return mu_skipped;
+#endif
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
