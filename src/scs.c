@@ -1321,8 +1321,9 @@ static void set_refine_tol(ScsWork *w) {
   w->refine_tol = MAX(tol, REFINE_TOL_FLOOR);
 }
 
-/* Refinement of this iteration's solve, see REFINE_CHECK_INTERVAL and
- * REFINE_FACTOR in glbopts.h. Called right after the solve in
+/* Refinement of this iteration's solve, see REFINE_CHECK_INTERVAL,
+ * REFINE_FACTOR and REFINE_OFF_FACTOR in glbopts.h. Called right after the
+ * solve in
  * project_lin_sys, while u_t[:n+m] holds its solution. Returns the status of
  * the refinement solve (0 when there is none). */
 static scs_int refine_iter(ScsWork *w, scs_int iter) {
@@ -1336,7 +1337,10 @@ static scs_int refine_iter(ScsWork *w, scs_int iter) {
   }
   res = iter_residual(w, w->u_t, w->kkt_res);
   w->refine_checks++;
-  w->refine_on = res > REFINE_FACTOR * w->refine_tol;
+  /* on above REFINE_FACTOR * tol, off only at or below REFINE_OFF_FACTOR *
+   * tol: the gap keeps it from switching off and on again */
+  w->refine_on =
+      res > (w->refine_on ? REFINE_OFF_FACTOR : REFINE_FACTOR) * w->refine_tol;
   if (!w->refine_on) {
     return 0;
   }

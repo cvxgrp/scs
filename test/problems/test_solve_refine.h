@@ -7,8 +7,9 @@
 #include <string.h>
 
 /*
- * Refinement of each iteration's solve (refine_iter in src/scs.c,
- * REFINE_CHECK_INTERVAL and REFINE_FACTOR in glbopts.h), on an LP with a
+ * Refinement of each iteration's solve (refine_iter in src/scs.c;
+ * REFINE_CHECK_INTERVAL, REFINE_FACTOR and REFINE_OFF_FACTOR in glbopts.h),
+ * on an LP with a
  * second-order cone built like the MATLAB interface's mixed-cone test, at a
  * larger size: A dense, 130 x 100, entries uniform in [-1, 1]; b = A x + s
  * and c = -A' s for a random x and an s inside the cones (50 LP rows, then
@@ -23,10 +24,13 @@
  * FMA contraction) and near 0.1 in single precision, where 49 of 50 seeds
  * fail. With it, QDLDL refines and solves it in every build checked (with and
  * without FMA contraction, with and without Anderson acceleration, each from
- * 101 initial scales up to 50 ulps apart): in 225 iterations in double
- * precision, in at most 225 in single. CG, the dense solver and Apple
+ * 101 initial scales within 50 ulps of the default): in 225 iterations in
+ * double precision, in at most 225 in single. CG, the dense solver and Apple
  * Accelerate solve this system accurately enough that refinement does not
- * fire there, so only QDLDL is required to refine.
+ * fire there, so only QDLDL is required to refine. Once refinement fires on
+ * this instance it stays on until SCS converges, so these tests would also
+ * pass with REFINE_OFF_FACTOR equal to REFINE_FACTOR; the flicker that
+ * REFINE_OFF_FACTOR prevents was measured on benchmark sets (glbopts.h).
  *
  * test_solve_refine_idle solves it at the default tolerances in double
  * precision: the residual is checked and refinement does not fire, whatever
@@ -37,8 +41,9 @@
  * refinement and the same result.
  */
 
-/* the instance (seeds 10 and 43 also pass in double precision, but refine
- * less reliably in single precision) */
+/* the instance (seeds 10 and 43 also pass in double precision; in single
+ * precision seed 43 sometimes converges without refining, in 7 of 404 runs
+ * from perturbed initial scales) */
 #define SOLVE_REFINE_SEED (9)
 
 /* the tight tolerance (0: SCS's defaults) */
