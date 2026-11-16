@@ -36,10 +36,10 @@
  * precision: the residual is checked and refinement does not fire, whatever
  * the linear solver.
  *
- * test_solve_refine_csv repeats the tight solve with QDLDL while logging to
- * CSV, which recomputes the residuals every iteration, and requires the same
- * refinement (iterations, residual checks and refinement steps) and the same
- * objectives to 1e-6.
+ * test_solve_refine_csv repeats the tight solve with QDLDL in double precision
+ * while logging to CSV, which recomputes the residuals every iteration, and
+ * requires the same refinement (iterations, residual checks and refinement
+ * steps) and the same objectives to 1e-6.
  */
 
 /* the instance (seeds 10 and 43 also pass in double precision; in single
@@ -194,13 +194,21 @@ static const char *test_solve_refine_idle(void) {
  * changed all three (200 iterations instead of 225). The results are only
  * compared to 1e-6: with USE_LAPACK every vector operation goes through BLAS,
  * and MKL's BLAS can round differently when the logged solve's arrays are
- * aligned differently in memory (it did in CI, with identical counts). The
- * counts are robust to such rounding: from 101 initial scales within 50 ulps
- * of the default they are 225, 33 and 26 in every build checked. Checked with
- * QDLDL, where refinement fires on this instance (the CG solvers' own
- * tolerance follows the logged residuals, so there logging changes the
- * iterates whether or not refinement fires). */
+ * aligned differently in memory (it did in CI, with identical counts). In
+ * double precision the counts are robust to such rounding: from 101 initial
+ * scales within 50 ulps of the default they are 225, 33 and 26 in every build
+ * checked, and with USE_LAPACK, where BLAS is used, refinement first fires
+ * with the solve's error 53 to 99 times tol. In single precision they are
+ * not: from the same 101 scales 100 runs gave
+ * 125, 29 and 26 and one gave 100, 4 and 1, so a last-bit difference could
+ * change them. The test is skipped there; the bug it guards against does not
+ * depend on the precision. Checked with QDLDL, where refinement fires on this
+ * instance (the CG solvers' own tolerance follows the logged residuals, so
+ * there logging changes the iterates whether or not refinement fires). */
 static const char *test_solve_refine_csv(void) {
+#ifdef SFLOAT
+  return mu_skipped;
+#else
   scs_int status0, status1, checks0, checks1, steps0, steps1;
   ScsInfo info0, info1;
   if (!strstr(scs_get_lin_sys_method(), "qdldl")) {
@@ -226,4 +234,5 @@ static const char *test_solve_refine_csv(void) {
                 ABS(info0.dobj - info1.dobj) <=
                     1e-6 * MAX(1., ABS(info0.dobj)));
   return SCS_NULL;
+#endif
 }

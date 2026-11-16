@@ -320,7 +320,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
  *
  * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
- * the whole solve) and about 2% with cuDSS. 25 is CONVERGED_INTERVAL
+ * the whole solve) and about 2% with cuDSS (0.5% to 8% on the 7 problems
+ * measured where it did not fire). 25 is CONVERGED_INTERVAL
  * (except in debug builds with VERBOSITY > 0), so each check has a tol the
  * previous one did not. That tol
  * is 25 iterations old: the solve of iteration i comes before the
