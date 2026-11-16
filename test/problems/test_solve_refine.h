@@ -202,6 +202,7 @@ static const char *test_solve_refine_csv(void) {
                                &checks0, &steps0);
   status1 = solve_refine_solve(SOLVE_REFINE_TIGHT_EPS, "test_solve_refine.csv",
                                &info1, &checks1, &steps1);
+  remove("test_solve_refine.csv");
   scs_printf("test_solve_refine_csv: without logging %li iterations, %li "
              "checks, %li steps; with logging %li iterations, %li checks, %li "
              "steps\n",
