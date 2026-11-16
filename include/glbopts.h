@@ -300,6 +300,99 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #endif
 #define G_REFINE_MAX_STEPS (3)
 
+/* --- Accuracy of each iteration's solve ---
+ * Every iteration solves K u = [R_x v_x; -R_y v_y] (K as above), and SCS's
+ * residuals cannot fall much below the error of that solve. On iterations
+ * that are multiples of REFINE_CHECK_INTERVAL SCS computes the residual of
+ * the solve from the problem data, whatever the linear solver, and compares
+ * its inf-norm with tol, the smaller inf-norm of SCS's primal and dual
+ * residual vectors at the last convergence check, but at least
+ * REFINE_TOL_FLOOR. If it is larger than REFINE_FACTOR * tol, SCS solves
+ * K d = residual and adds d to u, and then checks every iteration until a
+ * residual is at or below REFINE_OFF_FACTOR * tol. In double precision at
+ * default tolerances this almost never fires (in 9 of 336 benchmark runs at
+ * 1e-4 and 1e-6, on 0.01% of solves); at 1e-8 or 1e-9 a direct solver's
+ * error can be as large as the residuals, and refining is what lets SCS
+ * converge. CG
+ * already solves to a fraction of tol, so with CG it fires only when a CG
+ * solve misses that (it stops early or, in single precision, the residual it
+ * tracks drifts from the true one).
+ *
+ * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
+ * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
+ * the whole solve) and about 2% with cuDSS. 25 is CONVERGED_INTERVAL
+ * (except in debug builds with VERBOSITY > 0), so each check has a tol the
+ * previous one did not. That tol
+ * is 25 iterations old: the solve of iteration i comes before the
+ * convergence check of iteration i, so the check at iteration 25k compares
+ * with the residuals of iteration 25(k-1). A shorter interval catches an
+ * inaccurate solve sooner and costs proportionally more. 50 halved the cost
+ * but caught inaccurate solves later: at 1e-9 it took more iterations than 25
+ * in 49 of 500 runs with QDLDL (fewer in 4) and in 134 of 400 with cuDSS
+ * (fewer in 53). */
+#define REFINE_CHECK_INTERVAL (25)
+/* REFINE_FACTOR: refine when the solve's error is larger than the residuals
+ * SCS is driving to zero. While on, each iteration costs one more multiply
+ * and one more solve. A smaller factor refines more: 0.1 took slightly fewer
+ * iterations at 1e-9 but fired in 15 of the 336 runs at 1e-4 and 1e-6
+ * instead of 9, and where refinement fires it cost more (4% more
+ * linear-system time on stalled SDPs, 3% with CG). A larger one leaves
+ * solves that limit accuracy unrefined. The alternatives measured worse:
+ * refining every solve costs 2.2x linear-system time and lost problems, and
+ * refining near convergence refined 17% of solves at default tolerances.
+ * Single precision uses the same factor: there a QDLDL solve's error is
+ * about the size of the residuals at the default tolerances, and refining is
+ * what lets SCS converge (test_solve_refine_tight). */
+#define REFINE_FACTOR (1.0)
+/* REFINE_OFF_FACTOR: once on, refinement stays on until the solve's error is
+ * at or below this fraction of tol. Turning it off as soon as the error is
+ * back below tol (an off factor of REFINE_FACTOR) made it flicker: the
+ * residuals fall to the error of the refined solves, refinement turns off,
+ * and until the next check up to REFINE_CHECK_INTERVAL iterations later the
+ * unrefined solves undo the progress. At 1e-9 that stalled 20 of 400 runs at
+ * max_iters with cuDSS, and with QDLDL 12 of 500 runs took at least twice the
+ * iterations they took with 0.1 (up to 34 times). With 0.1 no cuDSS run
+ * stalled (1,000 runs, with and without Anderson acceleration) and none of
+ * the 500 QDLDL runs took more iterations. On other problems it moved
+ * chaotic runs both ways: with QDLDL at 1e-8 and 1e-9, 0.1 took more
+ * iterations in 4 of 252 runs (up to 36% more) and fewer in 14, and on SDPs
+ * that stall at 1e-6 more in 9 of 62 (up to 3.3 times) and fewer in 3. The
+ * price is that refinement stays on longer once it fires: with CG it refined
+ * about twice as many solves, and on a problem that stalls it can stay on
+ * for most of the remaining iterations (an SDP that ran to max_iters at 1e-6
+ * refined 64% of its solves), at up to one more solve and multiply per
+ * iteration. In single precision the off threshold is at least 0.1 *
+ * REFINE_TOL_FLOOR, near what a refined solve can reach, so this happens
+ * more often: at the default tolerances, on 30 LPs and QPs from 3 starts
+ * each, refinement was on for most of the solve in 27 of 90 runs with QDLDL
+ * (12 with an off factor of 1) and in 41 with CG (21), mostly runs that
+ * stall, where it cost up to 2.1 times the linear-system time per iteration.
+ * It also solved more: 60 instead of 57 with QDLDL, and 47 instead of 41
+ * with CG (gaining 8, losing 2). A smaller value keeps it on
+ * longer still; values between 0.1 and 1 were not measured. */
+#define REFINE_OFF_FACTOR (0.1)
+/* REFINE_TOL_FLOOR: the smallest tol. Refinement cannot take a residual
+ * much below rounding level, so below this floor it would chase rounding
+ * errors on every remaining iteration: when one of SCS's residual vectors is
+ * zero (an infeasibility or unboundedness certificate: without the floor it
+ * fired on test-suite certificates with every linear solver, and with CG
+ * stayed on for 75 of 100 iterations of test_unbounded_inaccurate), or in
+ * single precision when the residuals near rounding level. A higher floor
+ * skips refinement that could still help, a lower one refines in vain.
+ * Double precision uses 1e-12 (CG_BEST_TOL, the accuracy of SCS's most
+ * accurate solves), which changed none of the 520 benchmark runs it was
+ * checked on. Single precision uses 1e-5: the single-precision solves that
+ * need refinement have tol near 1e-3, and 1e-6 refined more without
+ * converging faster (test_adaptive_scale with CG, measured with an off
+ * factor of 1: 54 refinement steps and 225 iterations, against 22 and 175
+ * with 1e-5; that test takes 175 to 275 iterations from nearby initial
+ * scales). */
+#ifdef SFLOAT
+#define REFINE_TOL_FLOOR (1e-5)
+#else
+#define REFINE_TOL_FLOOR (1e-12)
+#endif
+
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
 /* Accuracy of the most accurate CG solves (the cold solve for g, and the floor
  * of the warm ones). Single precision cannot reach 1e-12: a CG asked for it
