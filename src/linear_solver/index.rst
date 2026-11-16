@@ -41,6 +41,35 @@ the residual, for at most three steps. This costs one multiply by the matrix
 each time, plus one solve and one multiply per refinement step; with the
 indirect solvers a refinement step is another conjugate gradient solve.
 
+The solve in each iteration is checked too, more cheaply. Every 25 iterations
+SCS computes the residual of that iteration's solve from the problem data and
+compares it with the smaller of SCS's own primal and dual residuals at its last
+convergence check (but at least :math:`10^{-12}`, :math:`10^{-5}` in single
+precision). If the solve's error is the larger, the iterates cannot become
+more accurate than the solve, so SCS refines it with one more solve, for the
+residual, and then checks on every iteration until the error is down to a
+tenth of the residuals. (Stopping as soon as the error was back below the
+residuals made refinement switch off and on again, which slowed some solves
+and stalled a few.) Nothing needs to be set for this; what to expect:
+
+- At the default tolerances in double precision it almost never fires (in 9
+  of 336 benchmark runs at :math:`10^{-4}` and :math:`10^{-6}`, on 0.01% of
+  the solves). The check alone costs one multiply by the matrix every 25
+  iterations: about 1% of the linear-system time with the default sparse
+  direct solver and about 2% with cuDSS.
+- At tight tolerances such as :math:`10^{-8}` or :math:`10^{-9}` the error of a
+  direct solve can be as large as the residuals SCS has to reach. That is
+  where it fires, and it is what lets such solves converge. While it is on,
+  each iteration costs one more multiply and one more solve. On a problem
+  that stalls it can stay on for most of the remaining iterations (in the
+  benchmarks, SDPs that stalled at :math:`10^{-6}`).
+- In single precision the error of the default sparse direct solve can be as
+  large as the residuals at the default tolerances, so it can fire there too,
+  and on problems that stall it often stays on for most of the solve.
+- The indirect solvers already solve to a tolerance tied to these residuals,
+  so with them it fires only when a conjugate gradient solve misses that
+  tolerance.
+
 
 Available linear solvers
 ------------------------
