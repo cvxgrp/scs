@@ -56,7 +56,8 @@ and stalled a few.) Nothing needs to be set for this; what to expect:
   of 336 benchmark runs at :math:`10^{-4}` and :math:`10^{-6}`, on 0.01% of
   the solves). The check alone costs one multiply by the matrix every 25
   iterations: about 1% of the linear-system time with the default sparse
-  direct solver and about 2% with cuDSS.
+  direct solver and about 2% with cuDSS (from 0.5% to 8% on the 7 problems
+  measured).
 - At tight tolerances such as :math:`10^{-8}` or :math:`10^{-9}` the error of a
   direct solve can be as large as the residuals SCS has to reach. That is
   where it fires, and it is what lets such solves converge. While it is on,
