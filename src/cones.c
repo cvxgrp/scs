@@ -118,11 +118,18 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 void BLASC(scal)(const blas_int *n, const SCS_BLAS_COMPLEX_TYPE *sa,
                  SCS_BLAS_COMPLEX_TYPE *sx, const blas_int *incx);
 
-#ifdef USE_SPECTRAL_CONES
+/* Fallbacks for when the MRRR solvers (syevr / heevr) report no convergence,
+ * see proj_semi_definite_cone. syev is also used by the spectral cones. */
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
 
+void BLASC(heev)(const char *jobz, const char *uplo, blas_int *n,
+                 SCS_BLAS_COMPLEX_TYPE *a, blas_int *lda, scs_float *w,
+                 SCS_BLAS_COMPLEX_TYPE *work, blas_int *lwork, scs_float *rwork,
+                 blas_int *info);
+
+#ifdef USE_SPECTRAL_CONES
 void BLAS(gesvd)(const char *jobu, const char *jobvt, const blas_int *m,
                  const blas_int *n, scs_float *a, const blas_int *lda,
                  scs_float *s, scs_float *u, const blas_int *ldu, scs_float *vt,
@@ -1588,6 +1595,33 @@ static scs_int set_up_ell1_cone_work_space(ScsConeWork *c, const ScsCone *k) {
 /*
  * Projection: Real Semi-Definite Cone
  */
+#ifdef USE_LAPACK
+/* Unpack the lower triangle of an n x n block, stored column-wise in X, into
+ * the full column-major buffer Xs (only the lower triangle is written). */
+static void unpack_sd_lower(const scs_float *X, scs_int n, scs_float *Xs) {
+  scs_int i;
+  for (i = 0; i < n; ++i) {
+    memcpy(&(Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
+           (n - i) * sizeof(scs_float));
+  }
+}
+
+/* Unpack a complex n x n block (lower triangle, packed as reals in X) into
+ * the full column-major complex buffer cXs. */
+static void unpack_csd_lower(const scs_float *X, scs_int n,
+                             scs_complex_float *cXs) {
+  scs_int i;
+  for (i = 0; i < n - 1; ++i) {
+    cXs[i * (n + 1)][0] = X[i * (2 * n - i)]; /* Diagonal (Real) */
+    cXs[i * (n + 1)][1] = 0.0;
+    memcpy(&(cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
+           2 * (n - i - 1) * sizeof(scs_float));
+  }
+  cXs[n * n - 1][0] = X[n * n - 1]; /* Last element */
+  cXs[n * n - 1][1] = 0.0;
+}
+#endif
+
 /* Project one svec-packed block onto the PSD cone. When rho (the
  * block's slice of the diagonal metric R) is non-uniform it must have
  * the rank-one structure w_ij = delta_i * delta_j (enforced by
@@ -1642,22 +1676,31 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     }
   }
 
-  /* Copy lower triangular part to full matrix buffer Xs */
-  for (i = 0; i < n; ++i) {
-    memcpy(&(w->Xs[i * (n + 1)]), &(X[i * n - ((i - 1) * i) / 2]),
-           (n - i) * sizeof(scs_float));
-  }
-
-  /* Scale diagonals by sqrt(2) */
+  /* Copy lower triangular part to full matrix buffer Xs, scale diagonals by
+   * sqrt(2) */
+  unpack_sd_lower(X, n, w->Xs);
   BLAS(scal)(&nb, &sqrt2, w->Xs, &nb_p1);
 
   /* Solve Eigenproblem: Xs = Z * diag(e) * Z' */
   BLAS(syevr)("V", "A", "L", &nb, w->Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol,
               &m, w->e, w->Z, &nb, w->isuppz, w->work, &w->lwork, w->iwork,
               &w->liwork, &info);
-  /* info < 0: bad argument. info > 0: no convergence. Either way there is no
-   * eigendecomposition to project with, so fail (the caller reports it: this
-   * may run in a PSD thread, which must not print). */
+  if (info > 0) {
+    /* syevr's MRRR algorithm reported no convergence. Some LAPACKs (Apple
+     * Accelerate, see #531) do this on tightly clustered eigenvalues, e.g. a
+     * block a*I + b*11', which the QR-based syev handles. syevr has
+     * overwritten Xs, so unpack again and retry with syev; it leaves the
+     * eigenvectors in Xs, which then serves as Z. syev needs lwork >= 3n-1,
+     * well below syevr's minimum of 26n, so the work array is large enough. */
+    unpack_sd_lower(X, n, w->Xs);
+    BLAS(scal)(&nb, &sqrt2, w->Xs, &nb_p1);
+    BLAS(syev)("V", "L", &nb, w->Xs, &nb, w->e, w->work, &w->lwork, &info);
+    if (info == 0)
+      memcpy(w->Z, w->Xs, (size_t)n * n * sizeof(scs_float));
+  }
+  /* info < 0: bad argument. info > 0: no convergence (from the fallback too).
+   * Either way there is no eigendecomposition to project with, so fail (the
+   * caller reports it: this may run in a PSD thread, which must not print). */
   if (info != 0)
     return -1;
 
@@ -1734,17 +1777,9 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   csqrt2[0] = SQRTF(2.0);
   csqrt2_inv[0] = 1.0 / csqrt2[0];
 
-  /* Unpack X (real array) into cXs (complex matrix) */
-  for (i = 0; i < n - 1; ++i) {
-    w->cXs[i * (n + 1)][0] = X[i * (2 * n - i)]; /* Diagonal (Real) */
-    w->cXs[i * (n + 1)][1] = 0.0;
-    memcpy(&(w->cXs[i * (n + 1) + 1]), &(X[i * (2 * n - i) + 1]),
-           2 * (n - i - 1) * sizeof(scs_float));
-  }
-  w->cXs[n * n - 1][0] = X[n * n - 1]; /* Last element */
-  w->cXs[n * n - 1][1] = 0.0;
-
-  /* Scale diagonals by sqrt*/
+  /* Unpack X (real array) into cXs (complex matrix), scale diagonals by
+   * sqrt(2) */
+  unpack_csd_lower(X, n, w->cXs);
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2),
               SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
 
@@ -1754,6 +1789,18 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
                SCS_BLAS_COMPLEX_CAST(w->cZ), &nb, w->isuppz,
                SCS_BLAS_COMPLEX_CAST(w->cwork), &w->lcwork, w->work, &w->lwork,
                w->iwork, &w->liwork, &info);
+  if (info > 0) {
+    /* heevr reported no convergence: unpack again and retry with heev, as
+     * the real case retries with syev. heev needs lwork >= 2n-1 and
+     * rwork >= 3n-2, below heevr's minima of 2n and 24n. */
+    unpack_csd_lower(X, n, w->cXs);
+    BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2),
+                SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
+    BLASC(heev)("V", "L", &nb, SCS_BLAS_COMPLEX_CAST(w->cXs), &nb, w->e,
+                SCS_BLAS_COMPLEX_CAST(w->cwork), &w->lcwork, w->work, &info);
+    if (info == 0)
+      memcpy(w->cZ, w->cXs, (size_t)n * n * sizeof(scs_complex_float));
+  }
   /* info != 0: no eigendecomposition, so fail (see the real case) */
   if (info != 0)
     return -1;
