@@ -410,6 +410,10 @@ static scs_int failure(ScsWork *w, scs_int m, scs_int n, ScsSolution *sol,
 /* ========================= Validation ============================== */
 
 #if NO_VALIDATE == 0
+/* Checks the values of the settings alone; scs_init and scs_update_settings
+ * both use it, so a value is accepted by one exactly when by the other. */
+static scs_int validate_settings(const ScsSettings *stgs);
+
 static scs_int validate(const ScsData *d, const ScsCone *k,
                         const ScsSettings *stgs) {
   if (d->m <= 0 || d->n <= 0) {
@@ -431,6 +435,10 @@ static scs_int validate(const ScsData *d, const ScsCone *k,
     scs_printf("cone validation error\n");
     return -1;
   }
+  return validate_settings(stgs);
+}
+
+static scs_int validate_settings(const ScsSettings *stgs) {
   if (stgs->max_iters <= 0) {
     scs_printf("max_iters must be positive\n");
     return -1;
@@ -1090,6 +1098,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     return SCS_NULL;
   }
   stgs = SCS_NULL; /* for safety */
+  /* before either is changed below or by the solve, see scs_work.h */
+  w->scale_init = w->stgs->scale;
+  w->adaptive_diag_scale_init = w->stgs->adaptive_diag_scale;
 
   /* record the original (pre-normalization) magnitude of A for the
    * data-scale-invariant certificate checks */
@@ -1691,6 +1702,137 @@ scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c) {
 
   /* override setup time with update time, since the update is the 'setup' */
   w->setup_time = SCS(tocq)(&update_timer);
+  return 0;
+}
+
+/* Settings that scs_init uses to build the workspace, and why each cannot
+ * change once it is built:
+ *   normalize        the data in w->d were equilibrated in init_work and the
+ *                    normalized iterates allocated (or aliased) there
+ *   scale, rho_x     they set diag_r, which is inside the factorized (or
+ *                    preconditioned) matrix built by scs_init_lin_sys_work
+ *   adaptive_scale   decided in init_work whether the adaptive_diag_scale
+ *                    multipliers exist; switching it on or off afterwards
+ *                    would leave adaptive_diag_scale meaning something other
+ *                    than what was asked for
+ *   adaptive_diag_scale  its multipliers are allocated in init_work
+ *   acceleration_lookback, _type_1, _regularization, _relaxation
+ *                    passed to aa_init, which sized and configured the
+ *                    acceleration memory with them
+ *   acceleration_interval  read only by the solve loop, but the acceleration
+ *                    memory is kept from one solve to the next and holds
+ *                    steps taken at the old interval
+ *   write_data_filename  the data were written in scs_init; a new name
+ *                    would write nothing
+ * Changing any of them would need the setup redone, which is what scs_init
+ * is for, so the call refuses rather than ignoring the new value or
+ * redoing part of the setup behind the caller's back.
+ *
+ * Exact comparison is intended: the caller passes back the values it gave
+ * scs_init, so any difference is a request for a change. */
+static scs_int str_differ(const char *a, const char *b) {
+  if (!a || !b) {
+    return a != b;
+  }
+  return strcmp(a, b) != 0;
+}
+
+static scs_int setup_setting_changed(const char *name, scs_int changed) {
+  if (changed) {
+    scs_printf("ERROR: scs_update_settings: %s is used to set up the "
+               "workspace and cannot be changed after scs_init; it must "
+               "equal the value passed to scs_init (create a new workspace "
+               "to change it).\n",
+               name);
+  }
+  return changed;
+}
+
+static scs_int setup_settings_changed(const ScsWork *w,
+                                      const ScsSettings *stgs) {
+  const ScsSettings *old = w->stgs;
+  scs_int n = 0;
+  n += setup_setting_changed("normalize", stgs->normalize != old->normalize);
+  n += setup_setting_changed("scale", stgs->scale != w->scale_init);
+  n += setup_setting_changed("adaptive_scale",
+                             stgs->adaptive_scale != old->adaptive_scale);
+  n += setup_setting_changed("adaptive_diag_scale",
+                             stgs->adaptive_diag_scale !=
+                                 w->adaptive_diag_scale_init);
+  n += setup_setting_changed("rho_x", stgs->rho_x != old->rho_x);
+  n += setup_setting_changed("acceleration_lookback",
+                             stgs->acceleration_lookback !=
+                                 old->acceleration_lookback);
+  n += setup_setting_changed("acceleration_interval",
+                             stgs->acceleration_interval !=
+                                 old->acceleration_interval);
+  n += setup_setting_changed("acceleration_type_1",
+                             stgs->acceleration_type_1 !=
+                                 old->acceleration_type_1);
+  n += setup_setting_changed("acceleration_regularization",
+                             stgs->acceleration_regularization !=
+                                 old->acceleration_regularization);
+  n += setup_setting_changed("acceleration_relaxation",
+                             stgs->acceleration_relaxation !=
+                                 old->acceleration_relaxation);
+  n += setup_setting_changed("write_data_filename",
+                             str_differ(stgs->write_data_filename,
+                                        old->write_data_filename));
+  return n;
+}
+
+scs_int scs_update_settings(ScsWork *w, const ScsSettings *stgs) {
+  char *log_csv_filename = SCS_NULL;
+  if (!w || !stgs) {
+    scs_printf("ERROR: scs_update_settings: missing ScsWork or ScsSettings "
+               "input\n");
+    return -1;
+  }
+  if (setup_settings_changed(w, stgs) > 0) {
+    scs_printf("ERROR: scs_update_settings: no settings were changed.\n");
+    return -1;
+  }
+#if NO_VALIDATE == 0
+  if (validate_settings(stgs) < 0) {
+    scs_printf("ERROR: scs_update_settings: no settings were changed.\n");
+    return -1;
+  }
+#endif
+  /* copy the one string first: if that fails nothing has been changed */
+  if (stgs->log_csv_filename) {
+    log_csv_filename = (char *)scs_malloc(strlen(stgs->log_csv_filename) + 1);
+    if (!log_csv_filename) {
+      scs_printf("ERROR: scs_update_settings: allocation failure, no "
+                 "settings were changed.\n");
+      return -1;
+    }
+    strcpy(log_csv_filename, stgs->log_csv_filename);
+  }
+  /* The settings below are read only by scs_solve (the CSV log is opened at
+   * the start of each solve and closed at its end, so no file is open now).
+   * The setup settings are left alone: they are equal to the stored ones
+   * except scale and adaptive_diag_scale, whose stored values are the ones
+   * the solver is using and must stay. */
+  w->stgs->max_iters = stgs->max_iters;
+  w->stgs->eps_abs = stgs->eps_abs;
+  w->stgs->eps_rel = stgs->eps_rel;
+  w->stgs->eps_infeas = stgs->eps_infeas;
+  w->stgs->alpha = stgs->alpha;
+  w->stgs->time_limit_secs = stgs->time_limit_secs;
+  w->stgs->verbose = stgs->verbose;
+  w->stgs->warm_start = stgs->warm_start;
+  if (w->stgs->log_csv_filename) {
+    scs_free((char *)w->stgs->log_csv_filename);
+  }
+  w->stgs->log_csv_filename = log_csv_filename;
+  if (w->stgs->verbose) {
+    scs_printf("settings updated: eps_abs: %.1e, eps_rel: %.1e, "
+               "eps_infeas: %.1e\n\t  alpha: %.2f, max_iters: %i, "
+               "time_limit_secs: %.2e\n",
+               w->stgs->eps_abs, w->stgs->eps_rel, w->stgs->eps_infeas,
+               w->stgs->alpha, (int)w->stgs->max_iters,
+               w->stgs->time_limit_secs);
+  }
   return 0;
 }
 

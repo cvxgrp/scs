@@ -15,7 +15,13 @@ the only public header files required for downstream applications.
 .. doxygenfunction:: scs_init
 .. doxygenfunction:: scs_solve
 .. doxygenfunction:: scs_update
+.. doxygenfunction:: scs_update_settings
 .. doxygenfunction:: scs_finish
+
+:code:`scs_update_settings` changes the settings that only the solve reads,
+such as :code:`time_limit_secs` and the tolerances, on an existing
+workspace; see :ref:`update_settings` for when to use it and what it does
+not change.
 
 Helper functions
 ^^^^^^^^^^^^^^^^
