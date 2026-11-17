@@ -221,10 +221,11 @@ static const char *test_update_settings_matches_init(void) {
     goto out;
   }
 #ifndef SFLOAT
-  /* In single precision both tolerances end in the same number of
-   * iterations on this LP (1e-6 is below what it reaches), so only double
-   * precision checks it; the stored settings above and the max_iters update
-   * below show the call took effect in both. */
+  /* In single precision the counts of the two tolerances overlap (with
+   * Accelerate the base settings took 350 to 500 iterations and the tight
+   * ones 375 to 525), so only double precision checks it, where they are 275
+   * and 175 on every backend; the stored settings above and the max_iters
+   * update below show the call took effect in both. */
   if (info.iter <= base_info.iter) {
     fail = "update_settings_matches_init: tighter tolerances had no effect";
     goto out;
