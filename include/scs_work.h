@@ -75,6 +75,12 @@ struct SCS_WORK {
   ScsData *d;                     /* Problem data deep copy NORMALIZED */
   ScsCone *k;                     /* Problem cone deep copy */
   ScsSettings *stgs;      /* contains solver settings specified by user */
+  /* scale and adaptive_diag_scale as given to scs_init. The solve overwrites
+   * stgs->scale with the adapted scale, and setup sets
+   * stgs->adaptive_diag_scale to 0 when adaptive_scale is off, so
+   * scs_update_settings compares a caller's settings with these instead */
+  scs_float scale_init;
+  scs_int adaptive_diag_scale_init;
   FILE *log_csv_fout;     /* open CSV log stream for current solve */
   ScsLinSysWork *p;       /* struct populated by linear system solver */
   ScsScaling *scal;       /* contains the re-scaling data */
