@@ -273,11 +273,12 @@ Multithreaded static MKL (x86-64 Linux)
 """""""""""""""""""""""""""""""""""""""
 
 The MKL Pardiso backend of the wheel runs on one thread: MKL is linked with its
-sequential layer, so the parallel reordering, factorization and solve that SCS
-asks Pardiso for, and MKL's LAPACK in the PSD projection, use one core. A
-source build on x86-64 Linux with GCC can link the same static MKL on its
-OpenMP layer instead, with the scs-python Meson option
-:code:`mkl_static_threading=gnu_thread` (in scs-python releases after 3.3.2).
+sequential layer, so the parallel reordering and factorization that SCS asks
+Pardiso for, and MKL's LAPACK in the PSD projection, use one core. A source
+build on x86-64 Linux with GCC can link the same static MKL on its OpenMP layer
+instead, with the scs-python Meson option
+:code:`mkl_static_threading=gnu_thread` (scs-python master, and releases after
+3.3.2).
 It needs Intel's static MKL archives, for example from the :code:`mkl-static`
 PyPI package, unpacked so that :code:`<prefix>/lib/libmkl_core.a` exists:
 
@@ -299,8 +300,9 @@ runtime would be a second one beside libgomp. The default,
 :code:`mkl_static_threading=sequential`, is the wheel's configuration.
 
 Threads help most on large linear systems and large PSD blocks. On small
-problems a parallel solve in every iteration can cost more than it gains, so
-compare with the sequential build on your problems before switching.
+problems the threaded MKL calls made in every iteration can cost more than
+they gain, so compare with the sequential build on your problems before
+switching.
 
 .. _python_gpu_indirect_install:
 
