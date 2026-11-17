@@ -188,7 +188,8 @@ and / or :code:`c` data, we can update the solver using:
 The settings that only the solve reads, :code:`time_limit_secs`,
 :code:`max_iters`, :code:`eps_abs`, :code:`eps_rel`, :code:`eps_infeas`,
 :code:`alpha`, :code:`verbose` and :code:`log_csv_filename`, can be changed
-the same way, alone or together with :code:`b` and :code:`c`:
+the same way, alone or together with :code:`b` and :code:`c` (new after SCS
+3.3.2; see :ref:`update_settings`):
 
 .. code:: python
 

@@ -125,6 +125,11 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
 Changing settings after setup
 -----------------------------
 
+.. note::
+   :code:`scs_update_settings` is new after SCS 3.3.2: SCS 3.3.2 and earlier
+   do not have it, and the Python :code:`update(**settings)` below needs an
+   scs-python release built on an SCS that does.
+
 Some settings are read only while SCS iterates, so they can be changed on an
 existing workspace between solves, without repeating the setup (the data
 scaling and the factorization or preconditioning of the linear system). This
@@ -242,8 +247,8 @@ What it does not do
   the :code:`adaptive_diag_scale` multipliers and the acceleration memory
   (see :ref:`warm_start`). A solve after the call therefore starts from the
   same state it would have started from without it. Called before the first
-  solve, it gives the same result as setting the values in
-  :code:`scs_init`.
+  solve, it solves with the same settings as passing the values to
+  :code:`scs_init` (the results agree up to the backend's rounding).
 * It must not be called while a solve on the same workspace is running.
 
 Settings fixed at setup, and why:

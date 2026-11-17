@@ -155,17 +155,18 @@ static scs_float upd_sol_diff(const ScsSolution *a, const ScsSolution *b,
 
 /*
  * A workspace set up with one set of settings and changed with
- * scs_update_settings before its first solve must give the result of a
- * workspace set up with the new settings: the call changes the settings
- * and nothing else. The comparison is exact whenever the backend
- * reproduces its own result exactly, which is checked by solving the
- * reference twice. Apple Accelerate does not: its results for this problem
- * differ between two identical runs by about 1e-5 of the largest entry in
- * double precision and by several percent in single precision (rounding
- * differences in its factorization, grown over a few hundred iterations).
- * There only the exit flag is compared, and the differences are printed;
- * the exact check on the other backends is the real test. Then max_iters
- * is lowered on the same workspace and the next solve stops there.
+ * scs_update_settings before its first solve must solve with the new
+ * settings: the stored settings are the new values, the exit flag is that
+ * of a workspace set up with them, the tighter tolerances take more
+ * iterations than the base settings, and the iteration count is within 50
+ * (two convergence checks) of that workspace's. The solutions are not compared
+ * exactly: with USE_LAPACK every vector operation goes through BLAS, and
+ * MKL's BLAS can round differently in a third solve than in two identical
+ * earlier ones (it did in CI: 275 iterations each, solutions 3.5e-6 apart),
+ * and Apple Accelerate is not reproducible run to run (about 1e-5 of the
+ * largest entry in double precision, several percent in single precision).
+ * The difference is printed. Then max_iters is lowered on the same
+ * workspace and the next solve stops there.
  */
 static const char *test_update_settings_matches_init(void) {
   ScsData *d;
@@ -173,12 +174,11 @@ static const char *test_update_settings_matches_init(void) {
   ScsSolution *opt_sol;
   ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   ScsSolution *ref = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
-  ScsSolution *ref2 = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   ScsSettings base, upd;
-  ScsInfo info = {0}, ref_info = {0};
+  ScsInfo info = {0}, ref_info = {0}, base_info = {0};
   ScsWork *w;
   scs_int exitflag, ref_exitflag;
-  scs_float ref_diff, diff, ref_size;
+  scs_float diff, ref_size;
   const char *fail = 0;
 
   upd_gen_lp(&d, &k, &opt_sol);
@@ -192,8 +192,7 @@ static const char *test_update_settings_matches_init(void) {
   upd.max_iters = 2000;
 
   ref_exitflag = scs(d, k, &upd, ref, &ref_info);
-  scs(d, k, &upd, ref2, &info);
-  ref_diff = upd_sol_diff(ref, ref2, d->n, d->m);
+  scs(d, k, &base, sol, &base_info);
 
   w = scs_init(d, k, &base);
   mu_assert("update_settings_matches_init: scs_init failed", w);
@@ -201,20 +200,38 @@ static const char *test_update_settings_matches_init(void) {
     fail = "update_settings_matches_init: update refused";
     goto out;
   }
+  if (w->stgs->eps_abs != upd.eps_abs || w->stgs->eps_rel != upd.eps_rel ||
+      w->stgs->eps_infeas != upd.eps_infeas || w->stgs->alpha != upd.alpha ||
+      w->stgs->max_iters != upd.max_iters) {
+    fail = "update_settings_matches_init: settings not stored";
+    goto out;
+  }
   exitflag = scs_solve(w, sol, &info, 0);
   diff = upd_sol_diff(sol, ref, d->n, d->m);
   ref_size = MAX(MAX(SCS(norm_inf)(ref->x, d->n), SCS(norm_inf)(ref->y, d->m)),
                  SCS(norm_inf)(ref->s, d->m));
   scs_printf("update_settings_matches_init: %li iterations, %li with the "
-             "settings given to scs_init; difference %.2e (%.2e between two "
-             "identical reference solves), largest entry %.2e\n",
-             (long)info.iter, (long)ref_info.iter, diff, ref_diff, ref_size);
+             "settings given to scs_init, %li with the base settings; "
+             "difference %.2e, largest entry %.2e\n",
+             (long)info.iter, (long)ref_info.iter, (long)base_info.iter, diff,
+             ref_size);
   if (exitflag != ref_exitflag) {
     fail = "update_settings_matches_init: exit flag differs from scs_init";
     goto out;
   }
-  if (ref_diff == 0. && (info.iter != ref_info.iter || diff != 0.)) {
-    fail = "update_settings_matches_init: result differs from scs_init";
+#ifndef SFLOAT
+  /* In single precision both tolerances end in the same number of
+   * iterations on this LP (1e-6 is below what it reaches), so only double
+   * precision checks it; the stored settings above and the max_iters update
+   * below show the call took effect in both. */
+  if (info.iter <= base_info.iter) {
+    fail = "update_settings_matches_init: tighter tolerances had no effect";
+    goto out;
+  }
+#endif
+  /* 50: two convergence checks at the default CONVERGED_INTERVAL of 25 */
+  if (info.iter > ref_info.iter + 50 || ref_info.iter > info.iter + 50) {
+    fail = "update_settings_matches_init: iterations far from scs_init's";
     goto out;
   }
 
@@ -232,7 +249,6 @@ static const char *test_update_settings_matches_init(void) {
 out:
   scs_finish(w);
   SCS(free_sol)(ref);
-  SCS(free_sol)(ref2);
   upd_free(d, k, opt_sol, sol);
   return fail;
 }
