@@ -185,3 +185,23 @@ and / or :code:`c` data, we can update the solver using:
    solver.update(b=new_b, c=new_c)  # update b and c vectors (can be None)
    solver.solve()  # solve new problem with updated b and c
 
+The settings that only the solve reads, :code:`time_limit_secs`,
+:code:`max_iters`, :code:`eps_abs`, :code:`eps_rel`, :code:`eps_infeas`,
+:code:`alpha`, :code:`verbose` and :code:`log_csv_filename`, can be changed
+the same way, alone or together with :code:`b` and :code:`c`:
+
+.. code:: python
+
+   solver.update(time_limit_secs=10.0, eps_abs=1e-6)  # kept for later solves
+   solver.solve()
+
+Only the settings you pass change, and they stay in force for every later
+solve until you change them again. Passing a setting that was used to set up
+the solver (for example :code:`scale`, :code:`rho_x`, :code:`normalize` or
+:code:`linear_solver`) raises :code:`ValueError` and changes nothing: create
+a new :code:`SCS` object to change it. An unknown name raises
+:code:`TypeError`. Changing only settings does not change the
+:code:`setup_time` reported in :code:`info`. See :ref:`update_settings` for
+when this helps (for example, to make a time limit cover the setup as well)
+and what it does not change.
+
