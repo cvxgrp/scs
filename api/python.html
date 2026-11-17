@@ -55,6 +55,7 @@
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#changing-settings-after-setup">Changing settings after setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
@@ -302,6 +303,24 @@ and / or <code class="code docutils literal notranslate"><span class="pre">c</sp
 <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>  <span class="c1"># solve new problem with updated b and c</span>
 </pre></div>
 </div>
+<p>The settings that only the solve reads, <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">max_iters</span></code>, <code class="code docutils literal notranslate"><span class="pre">eps_abs</span></code>, <code class="code docutils literal notranslate"><span class="pre">eps_rel</span></code>, <code class="code docutils literal notranslate"><span class="pre">eps_infeas</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="code docutils literal notranslate"><span class="pre">verbose</span></code> and <code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code>, can be changed
+the same way, alone or together with <code class="code docutils literal notranslate"><span class="pre">b</span></code> and <code class="code docutils literal notranslate"><span class="pre">c</span></code> (new after SCS
+3.3.2; see <a class="reference internal" href="settings.html#update-settings"><span class="std std-ref">Changing settings after setup</span></a>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">time_limit_secs</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>  <span class="c1"># kept for later solves</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Only the settings you pass change, and they stay in force for every later
+solve until you change them again. Passing a setting that was used to set up
+the solver (for example <code class="code docutils literal notranslate"><span class="pre">scale</span></code>, <code class="code docutils literal notranslate"><span class="pre">rho_x</span></code>, <code class="code docutils literal notranslate"><span class="pre">normalize</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">linear_solver</span></code>) raises <code class="code docutils literal notranslate"><span class="pre">ValueError</span></code> and changes nothing: create
+a new <code class="code docutils literal notranslate"><span class="pre">SCS</span></code> object to change it. An unknown name raises
+<code class="code docutils literal notranslate"><span class="pre">TypeError</span></code>. Changing only settings does not change the
+<code class="code docutils literal notranslate"><span class="pre">setup_time</span></code> reported in <code class="code docutils literal notranslate"><span class="pre">info</span></code>. See <a class="reference internal" href="settings.html#update-settings"><span class="std std-ref">Changing settings after setup</span></a> for
+when this helps (for example, to make a time limit cover the setup as well)
+and what it does not change.</p>
 </section>
 </section>
 

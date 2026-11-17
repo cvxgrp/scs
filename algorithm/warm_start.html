@@ -132,6 +132,9 @@ by setting the warm-start <a class="reference internal" href="../api/settings.ht
 to the guess of the solution in the <a class="reference internal" href="index.html#optimality"><span class="std std-ref">standard form</span></a>.  SCS will
 initialize the solver at those points and then overwrite the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a>
 struct members with the real solution at termination.</p>
+<p>The settings that only the solve reads, such as the tolerances,
+<code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> and <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code>, can also be changed between
+solves with <code class="code docutils literal notranslate"><span class="pre">scs_update_settings</span></code>, see <a class="reference internal" href="../api/settings.html#update-settings"><span class="std std-ref">Changing settings after setup</span></a>.</p>
 <p>In other languages caching the workspace and warm-starting is documented in
 their respective <a class="reference internal" href="../api/index.html#interfaces"><span class="std std-ref">Interfaces</span></a>.</p>
 </section>

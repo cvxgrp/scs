@@ -54,6 +54,7 @@
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#changing-settings-after-setup">Changing settings after setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
@@ -186,6 +187,26 @@ the only public header files required for downstream applications.</p>
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419scs_update_settingsP7ScsWorkPK11ScsSettings">
+<span id="_CPPv319scs_update_settingsP7ScsWorkPK11ScsSettings"></span><span id="_CPPv219scs_update_settingsP7ScsWorkPK11ScsSettings"></span><span id="scs_update_settings__ScsWorkP.ScsSettingsCP"></span><span class="target" id="scs_8h_1ab3f8b9f4a57f3b715e0801f36ec7430d"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_settings</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ScsSettings" title="ScsSettings"><span class="n"><span class="pre">ScsSettings</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">stgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419scs_update_settingsP7ScsWorkPK11ScsSettings" title="Link to this definition"></a><br /></dt>
+<dd><p>Change the settings that only the solve reads, before another solve call.</p>
+<p>Pass a complete settings struct: typically the one given to <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3"><span class="std std-ref"><span class="pre">scs_init</span></span></a></code> with the fields you want to change edited. These fields take the new values: <code class="docutils literal notranslate"><span class="pre">max_iters</span></code>, <code class="docutils literal notranslate"><span class="pre">eps_abs</span></code>, <code class="docutils literal notranslate"><span class="pre">eps_rel</span></code>, <code class="docutils literal notranslate"><span class="pre">eps_infeas</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">time_limit_secs</span></code>, <code class="docutils literal notranslate"><span class="pre">verbose</span></code>, <code class="docutils literal notranslate"><span class="pre">log_csv_filename</span></code> and <code class="docutils literal notranslate"><span class="pre">warm_start</span></code> (the last is always replaced by the <code class="docutils literal notranslate"><span class="pre">warm_start</span></code> argument of <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1a58fd31598ebab93ce1121f87df460566"><span class="std std-ref"><span class="pre">scs_solve</span></span></a></code>). They stay in force for every later solve on this workspace until changed again.</p>
+<p>Every other field is used by <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3"><span class="std std-ref"><span class="pre">scs_init</span></span></a></code> to set up the workspace (data scaling, the factorized matrix, the acceleration memory, …) and must equal the value that was passed to <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3"><span class="std std-ref"><span class="pre">scs_init</span></span></a></code>; <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> are compared with the values passed to <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3"><span class="std std-ref"><span class="pre">scs_init</span></span></a></code>, not with the values the solver adapted them to. If any of them differs, or a new value fails the same validation <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1aa8aaa18e26ccb5f65e772aef7cc168c3"><span class="std std-ref"><span class="pre">scs_init</span></span></a></code> applies, an error naming the field is printed, nothing is changed and a negative value is returned. To change a setup setting, create a new workspace.</p>
+<p>This does not change the setup time reported in <code class="docutils literal notranslate"><a class="reference internal" href="#struct_scs_info"><span class="std std-ref"><span class="pre">ScsInfo</span></span></a></code>, does not re-run any part of the setup, and does not reset what the workspace carries from one solve to the next (the adapted <code class="docutils literal notranslate"><span class="pre">scale</span></code>, the <code class="docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> multipliers and the acceleration memory). Nothing else in the workspace is touched, so it is deterministic and the same on every linear solver backend. It must not be called while <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1a58fd31598ebab93ce1121f87df460566"><span class="std std-ref"><span class="pre">scs_solve</span></span></a></code> is running on the same workspace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – SCS workspace from scs_init (modified in-place). </p></li>
+<li><p><strong>stgs</strong> – New settings (read only; SCS keeps its own copy of <code class="docutils literal notranslate"><span class="pre">log_csv_filename</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 if the settings were changed, negative if nothing was changed. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv410scs_finishP7ScsWork">
 <span id="_CPPv310scs_finishP7ScsWork"></span><span id="_CPPv210scs_finishP7ScsWork"></span><span id="scs_finish__ScsWorkP"></span><span class="target" id="scs_8h_1ad09d2ed5fe68896d2b7056cb5a9a3e0d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_finish</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ScsWork</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410scs_finishP7ScsWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Clean up allocated SCS workspace.</p>
@@ -196,6 +217,10 @@ the only public header files required for downstream applications.</p>
 </dl>
 </dd></dl>
 
+<p><code class="code docutils literal notranslate"><span class="pre">scs_update_settings</span></code> changes the settings that only the solve reads,
+such as <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> and the tolerances, on an existing
+workspace; see <a class="reference internal" href="settings.html#update-settings"><span class="std std-ref">Changing settings after setup</span></a> for when to use it and what it does
+not change.</p>
 <section id="helper-functions">
 <h3>Helper functions<a class="headerlink" href="#helper-functions" title="Link to this heading"></a></h3>
 <p>This sets the <a class="reference internal" href="#scssettings"><span class="std std-ref">ScsSettings</span></a> struct to the default values as

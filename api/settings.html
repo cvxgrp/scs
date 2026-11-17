@@ -55,6 +55,13 @@
 <li class="toctree-l2"><a class="reference internal" href="cones.html">Cones</a></li>
 <li class="toctree-l2"><a class="reference internal" href="matrices.html">Data matrices</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changing-settings-after-setup">Changing settings after setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#in-c">In C</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#in-python">In Python</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-check-it-worked">How to check it worked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-it-does-not-do">What it does not do</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="info.html">Return information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="exit_flags.html">Exit flags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compile_flags.html">Compile flags</a></li>
@@ -178,7 +185,7 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_float</span></code></p></td>
-<td><p>Time limit for the solve in seconds (can be fractional). <code class="code docutils literal notranslate"><span class="pre">0</span></code> is interpreted as no limit. The clock starts when <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code> is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (<code class="code docutils literal notranslate"><span class="pre">CONVERGED_INTERVAL</span></code> in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, see <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flags</span></a>. It has no effect if SCS is compiled with the <code class="code docutils literal notranslate"><span class="pre">NO_TIMER</span></code> <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compile flag</span></a>.</p></td>
+<td><p>Time limit for the solve in seconds (can be fractional). <code class="code docutils literal notranslate"><span class="pre">0</span></code> is interpreted as no limit. The clock starts when <code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code> is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (<code class="code docutils literal notranslate"><span class="pre">CONVERGED_INTERVAL</span></code> in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, see <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flags</span></a>. It has no effect if SCS is compiled with the <code class="code docutils literal notranslate"><span class="pre">NO_TIMER</span></code> <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compile flag</span></a>. It can be changed after setup, for example to give the solve what is left of a total time budget, see <a class="reference internal" href="#update-settings"><span class="std std-ref">Changing settings after setup</span></a>.</p></td>
 <td><p><span class="math notranslate nohighlight">\([0, \infty)\)</span></p></td>
 <td><p>0</p></td>
 </tr>
@@ -238,6 +245,173 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 </tbody>
 </table>
+</section>
+<section id="changing-settings-after-setup">
+<span id="update-settings"></span><h1>Changing settings after setup<a class="headerlink" href="#changing-settings-after-setup" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="code docutils literal notranslate"><span class="pre">scs_update_settings</span></code> is new after SCS 3.3.2: SCS 3.3.2 and earlier
+do not have it, and the Python <code class="code docutils literal notranslate"><span class="pre">update(**settings)</span></code> below needs an
+scs-python release built on an SCS that does.</p>
+</div>
+<p>Some settings are read only while SCS iterates, so they can be changed on an
+existing workspace between solves, without repeating the setup (the data
+scaling and the factorization or preconditioning of the linear system). This
+helps when:</p>
+<ul class="simple">
+<li><p>you have a <strong>total time budget that includes the setup</strong>.
+<code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> counts the solve only, so a solve that stops on
+the limit overruns the budget by the setup time. Set up first, measure how
+long it took, then give the solve what is left;</p></li>
+<li><p>you want to solve to a loose tolerance first and then tighten it, or
+change <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code>, on the same workspace;</p></li>
+<li><p>you want verbose output or a CSV log for some solves and not others.</p></li>
+</ul>
+<p>The settings that can be changed after setup are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code></p></td>
+<td><p>The clock still starts when the solve starts. <code class="code docutils literal notranslate"><span class="pre">0</span></code> means no limit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">max_iters</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">eps_abs</span></code>, <code class="code docutils literal notranslate"><span class="pre">eps_rel</span></code>, <code class="code docutils literal notranslate"><span class="pre">eps_infeas</span></code></p></td>
+<td><p>Also used by the <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">scale updates</span></a>, which happen
+during the solve.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
+<td><p>Only the solve output: the setup output has already been printed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code></p></td>
+<td><p>The file is opened when each solve starts. SCS keeps its own copy of
+the name.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">warm_start</span></code></p></td>
+<td><p>Accepted, but in C the <code class="code docutils literal notranslate"><span class="pre">warm_start</span></code> argument of
+<code class="code docutils literal notranslate"><span class="pre">scs_solve</span></code> always replaces it.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Every other setting is used to set up the workspace and cannot be changed
+after it (see the table at the end of this section). To change one of those,
+set up a new workspace.</p>
+<section id="in-c">
+<h2>In C<a class="headerlink" href="#in-c" title="Link to this heading"></a></h2>
+<p>Call <code class="code docutils literal notranslate"><span class="pre">scs_update_settings</span></code> with a complete <a class="reference internal" href="c.html#scssettings"><span class="std std-ref">ScsSettings</span></a> struct, normally the one you passed to <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code> with
+the fields you want to change edited. The setup settings in it must still
+have the values you passed to <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>; if any differs, or a new
+value fails the checks <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code> applies, SCS prints a message naming
+the setting, changes nothing, and returns a negative value. The new values
+stay in force for every later solve on the workspace until you change them
+again. To spend a total budget of <code class="code docutils literal notranslate"><span class="pre">budget</span></code> seconds:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* time scs_init with your own clock: the setup time SCS measures is only</span>
+<span class="cm"> * reported in ScsInfo after a solve */</span>
+<span class="kt">double</span><span class="w"> </span><span class="n">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now_in_seconds</span><span class="p">();</span>
+<span class="n">ScsWork</span><span class="w"> </span><span class="o">*</span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scs_init</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">stgs</span><span class="p">);</span>
+<span class="kt">double</span><span class="w"> </span><span class="n">remaining</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">budget</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">now_in_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="p">);</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">remaining</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">stgs</span><span class="o">-&gt;</span><span class="n">time_limit_secs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">remaining</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 0 would mean no limit */</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scs_update_settings</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">stgs</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* nothing was changed; SCS printed why */</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">exitflag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scs_solve</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="cm">/* else the budget is spent: do not solve */</span>
+</pre></div>
+</div>
+<p>Do not set <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> to <code class="code docutils literal notranslate"><span class="pre">0</span></code> when the budget is spent:
+<code class="code docutils literal notranslate"><span class="pre">0</span></code> means no limit. Either skip the solve or set a tiny positive value,
+which stops the solve at its first convergence check, after one iteration.</p>
+</section>
+<section id="in-python">
+<h2>In Python<a class="headerlink" href="#in-python" title="Link to this heading"></a></h2>
+<p>Pass the new values to <code class="code docutils literal notranslate"><span class="pre">update</span></code> as keyword arguments, see
+<a class="reference internal" href="python.html#python-interface"><span class="std std-ref">Python</span></a>. Only the settings you pass change; passing a setup
+setting raises an error and changes nothing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">scs</span><span class="o">.</span><span class="n">SCS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cone</span><span class="p">,</span> <span class="n">eps_abs</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">eps_rel</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+<span class="n">remaining</span> <span class="o">=</span> <span class="n">budget</span> <span class="o">-</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">time_limit_secs</span><span class="o">=</span><span class="n">remaining</span><span class="p">)</span>
+    <span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-check-it-worked">
+<h2>How to check it worked<a class="headerlink" href="#how-to-check-it-worked" title="Link to this heading"></a></h2>
+<p>A solve stopped by the time limit returns an inaccurate <a class="reference internal" href="exit_flags.html#exit-flags"><span class="std std-ref">exit flag</span></a> and its status ends in <code class="code docutils literal notranslate"><span class="pre">(inaccurate</span> <span class="pre">-</span> <span class="pre">reached</span>
+<span class="pre">time_limit_secs)</span></code>. With <code class="code docutils literal notranslate"><span class="pre">verbose</span></code> on, <code class="code docutils literal notranslate"><span class="pre">scs_update_settings</span></code>
+prints the values now in force, starting <code class="code docutils literal notranslate"><span class="pre">settings</span> <span class="pre">updated:</span></code>.</p>
+</section>
+<section id="what-it-does-not-do">
+<h2>What it does not do<a class="headerlink" href="#what-it-does-not-do" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>It does not make <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> include the setup: the limit
+still counts from the start of the solve, so subtract the setup time
+yourself as above.</p></li>
+<li><p>It does not make the limit exact: SCS tests the time only when it checks
+convergence, every 25 iterations, so a solve can overrun the limit by up to
+25 iterations plus the time to finish (as with any time limit). The limit
+has no effect in a build with the <code class="code docutils literal notranslate"><span class="pre">NO_TIMER</span></code> <a class="reference internal" href="compile_flags.html#compile-flags"><span class="std std-ref">compile flag</span></a>.</p></li>
+<li><p>It does not change the setup time reported in the <a class="reference internal" href="info.html#info"><span class="std std-ref">info</span></a>
+struct (<code class="code docutils literal notranslate"><span class="pre">scs_update</span></code> does: it reports its own time as the setup
+time).</p></li>
+<li><p>It does not redo any part of the setup, and it does not reset what the
+workspace carries from one solve to the next: the adapted <code class="code docutils literal notranslate"><span class="pre">scale</span></code>,
+the <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> multipliers and the acceleration memory
+(see <a class="reference internal" href="../algorithm/warm_start.html#warm-start"><span class="std std-ref">Caching the workspace and warm-starts</span></a>). A solve after the call therefore starts from the
+same state it would have started from without it. Called before the first
+solve, it solves with the same settings as passing the values to
+<code class="code docutils literal notranslate"><span class="pre">scs_init</span></code> (the results agree up to the backend’s rounding).</p></li>
+<li><p>It must not be called while a solve on the same workspace is running.</p></li>
+</ul>
+<p>Settings fixed at setup, and why:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Why it cannot change after setup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">normalize</span></code></p></td>
+<td><p>The data were rescaled during setup.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">scale</span></code>, <code class="code docutils literal notranslate"><span class="pre">rho_x</span></code></p></td>
+<td><p>They are in the matrix the linear solver factorized (or
+preconditioned) during setup. <code class="code docutils literal notranslate"><span class="pre">scale</span></code> is compared with the value
+passed to <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code>, not the value <code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code> has
+moved it to, so passing the original struct back is accepted.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code>, <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code></p></td>
+<td><p>Setup decides from them whether the per-row multipliers of
+<code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> exist (it switches
+<code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> off when <code class="code docutils literal notranslate"><span class="pre">adaptive_scale</span></code> is off;
+the value passed to <code class="code docutils literal notranslate"><span class="pre">scs_init</span></code> is the one compared).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code>, <code class="code docutils literal notranslate"><span class="pre">acceleration_type_1</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">acceleration_regularization</span></code>, <code class="code docutils literal notranslate"><span class="pre">acceleration_relaxation</span></code></p></td>
+<td><p>The acceleration memory was sized and configured with them during
+setup.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code></p></td>
+<td><p>Read only by the solve, but the acceleration memory is kept from one
+solve to the next and holds steps taken at the old interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">write_data_filename</span></code></p></td>
+<td><p>The data were written during setup.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 
