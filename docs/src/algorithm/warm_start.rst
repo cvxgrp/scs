@@ -43,6 +43,10 @@ to the guess of the solution in the :ref:`standard form <optimality>`.  SCS will
 initialize the solver at those points and then overwrite the :ref:`ScsSolution`
 struct members with the real solution at termination.
 
+The settings that only the solve reads, such as the tolerances,
+:code:`max_iters` and :code:`time_limit_secs`, can also be changed between
+solves with :code:`scs_update_settings`, see :ref:`update_settings`.
+
 In other languages caching the workspace and warm-starting is documented in
 their respective :ref:`interfaces`.
 

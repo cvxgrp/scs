@@ -291,6 +291,42 @@ ScsWork *scs_init(const ScsData *d, const ScsCone *k, const ScsSettings *stgs);
 scs_int scs_update(ScsWork *w, scs_float *b, scs_float *c);
 
 /**
+ * Change the settings that only the solve reads, before another solve call.
+ *
+ * Pass a complete settings struct: typically the one given to `scs_init`
+ * with the fields you want to change edited. These fields take the new
+ * values: `max_iters`, `eps_abs`, `eps_rel`, `eps_infeas`, `alpha`,
+ * `time_limit_secs`, `verbose`, `log_csv_filename` and `warm_start` (the
+ * last is always replaced by the `warm_start` argument of `scs_solve`). They
+ * stay in force for every later solve on this workspace until changed again.
+ *
+ * Every other field is used by `scs_init` to set up the workspace (data
+ * scaling, the factorized matrix, the acceleration memory, ...) and must
+ * equal the value that was passed to `scs_init`; `scale` and
+ * `adaptive_diag_scale` are compared with the values passed to `scs_init`,
+ * not with the values the solver adapted them to. If any of them differs,
+ * or a new value fails the same validation `scs_init` applies, an error
+ * naming the field is printed, nothing is changed and a negative value is
+ * returned. To change a setup setting, create a new workspace.
+ *
+ * This does not change the setup time reported in `ScsInfo`, does not
+ * re-run any part of the setup, and does not reset what the workspace
+ * carries from one solve to the next (the adapted `scale`, the
+ * `adaptive_diag_scale` multipliers and the acceleration memory). Nothing
+ * else in the workspace is touched, so it is deterministic and the same on
+ * every linear solver backend. It must not be called while `scs_solve` is
+ * running on the same workspace.
+ *
+ * @param  w     SCS workspace from scs_init (modified in-place).
+ * @param  stgs  New settings (read only; SCS keeps its own copy of
+ *               `log_csv_filename`).
+ *
+ * @return       0 if the settings were changed, negative if nothing was
+ *               changed.
+ */
+scs_int scs_update_settings(ScsWork *w, const ScsSettings *stgs);
+
+/**
  * Solve quadratic cone program initialized by scs_init.
  *
  * @param  w            Workspace allocated by scs_init.
