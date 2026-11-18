@@ -40,17 +40,22 @@ Iterative refinement
 Write :math:`K` for the matrix above. How accurately SCS can solve a problem
 is limited by how accurately it solves systems with :math:`K`: its residuals
 cannot become much smaller than the error of those solves. Inexact solves are
-fine while the residuals are large (the summability condition above allows
-for them), but near the requested accuracy an inexact solve holds the iterates
-back. A factorization can lose accuracy on a badly scaled or ill-conditioned
-:math:`K`, and conjugate gradients stops at a tolerance. So SCS checks the
-solves it depends on, by computing their residuals, and when one is not
-accurate enough it refines it: it solves with :math:`K` again for the residual
-and adds the correction. Two solves are checked, each in its own way:
+fine while the residuals are large (the algorithm tolerates errors that
+satisfy the summability condition above), but near the requested accuracy an
+inexact solve holds the iterates back. A factorization can lose accuracy on a
+badly scaled or ill-conditioned :math:`K`, and conjugate gradients stops at a
+tolerance. So SCS checks the solves it depends on, by computing their
+residuals, and when one is not accurate enough it refines it: it solves with
+:math:`K` for the residual and adds the correction to the solution that
+residual belongs to. For :math:`g` and with the indirect solvers that is an
+extra solve; for the direct solvers' per-iteration solves it takes the place
+of the plain solve (see below). Two solves are checked, each in its own way:
 
 - the solve for the right-hand side :math:`(c, -b)`, made at the start of a
   solve and whenever :math:`R` changes and used in every iteration until the
-  next change, is refined until it is accurate to near rounding level (see
+  next change, is checked every time it is made against a fixed relative
+  threshold (:math:`10^{-12}`, :math:`10^{-5}` in single precision), and
+  refined for at most three steps while it is above it (see
   :ref:`g_refinement`);
 - each iteration's solve is checked every 25 iterations (every iteration
   while an indirect solver is refining) against SCS's own residuals, and made
@@ -76,32 +81,34 @@ The solve for :math:`(c, -b)`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **When and why.** At the start of every solve, and whenever the scaling
-:math:`R` changes (see :ref:`updating_scale`), that is, whenever :math:`K`
-changes, SCS solves :math:`K g = (c, -b)`. Every iteration until the next
-change uses that :math:`g`: it enters the quadratic that gives :math:`\tau`
-(the root-plus function in :ref:`scaling`), and :math:`\tau g` is subtracted
-from that iteration's solve. An error in an iteration's own solve affects one
-iteration; an error in :math:`g` is repeated in every iteration rather than
-averaged out, and can limit the accuracy SCS reaches. So :math:`g` is checked
-every time it is computed, against a fixed threshold near rounding level,
-rather than against SCS's current residuals as each iteration's solve is.
+:math:`R`, and so :math:`K`, changes (see :ref:`updating_scale`), SCS solves
+:math:`K g = (c, -b)`. Every iteration until the next change uses that
+:math:`g`: it enters the quadratic that gives :math:`\tau` (the root-plus
+function in :ref:`scaling`, where it is written :math:`r`), and :math:`\tau g`
+is subtracted from that iteration's solve. An error in an iteration's own
+solve affects one iteration; an error in :math:`g` is repeated in every
+iteration rather than averaged out, and can limit the accuracy SCS reaches. So
+:math:`g` is checked every time it is computed, against a fixed small
+threshold, rather than against SCS's current residuals as each iteration's
+solve is.
 
-**The check.** After the solve, SCS computes the residual
-:math:`r = (c, -b) - K g` with its own products from the problem data, also
-with a linear solver that computes the per-iteration products itself (see
-below), and divides :math:`\|r\|_\infty` by the size of the terms whose
-rounding errors it is compared with: the largest :math:`\infty`-norm among
-:math:`(c, -b)`, :math:`R g`, :math:`A^\top g_y`, :math:`P g_x + A^\top g_y`
-and :math:`A g_x`. If this relative residual is above :math:`10^{-12}`
-(:math:`10^{-5}` in single precision, which cannot reach :math:`10^{-12}`;
-``G_SOLVE_TOL`` in ``include/glbopts.h``), SCS refines :math:`g`.
+**The check.** After the solve, SCS computes the residual :math:`r = (c, -b) -
+K g` with its own products from the problem data, also with a linear solver
+that computes the per-iteration products itself (see "Who computes the
+multiplies" in :ref:`refinement`), and divides :math:`\|r\|_\infty` by the
+size of the terms whose rounding errors it is compared with: the largest
+:math:`\infty`-norm among :math:`(c, -b)`, :math:`R g`, :math:`A^\top g_y`,
+:math:`P g_x + A^\top g_y` and :math:`A g_x`. If this relative residual is
+above :math:`10^{-12}` (:math:`10^{-5}` in single precision, which cannot
+reach :math:`10^{-12}`; ``G_SOLVE_TOL`` in ``include/glbopts.h``), SCS refines
+:math:`g`.
 
 **The refinement.** Each step solves :math:`K d = r` and computes the residual
 of :math:`g + d`. SCS keeps :math:`g + d` unless its residual is larger (or
 not finite), in which case it keeps :math:`g` and stops. It also stops once
 the residual is at most the threshold, after a step that does not at least
 halve the residual, or after three steps (``G_REFINE_MAX_STEPS``). So the
-refined :math:`g` is never less accurate than the first solve.
+refined :math:`g` never has a larger residual than the first solve.
 
 **Cost.** One multiply by :math:`K` each time :math:`g` is solved for, paid
 even when the first solve is already accurate enough, plus one solve and one
@@ -120,17 +127,17 @@ many conjugate gradient iterations as the solve for :math:`g` itself.
 Accuracy of each iteration's solve
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The right-hand side of each iteration's solve changes every iteration, and
-its error only matters once it is comparable to SCS's residuals. So SCS checks
-it periodically and makes the solves more accurate only while their error
-would hold the iterates back.
+The right-hand side of each iteration's solve changes every iteration, and the
+solve's error only matters once it is comparable to SCS's residuals. So SCS
+checks it periodically and makes the solves more accurate only while their
+error would hold the iterates back.
 
 **The check.** Every 25 iterations SCS computes the residual of that
 iteration's solve, :math:`\|z^k - K u\|_\infty` with :math:`K` the matrix
 above, and compares it with *tol*, the smaller of SCS's own primal and dual
 residuals at its last convergence check (but at least :math:`10^{-12}`,
-:math:`10^{-5}` in single precision). The check costs one multiply by
-:math:`K` every 25 iterations.
+:math:`10^{-5}` in single precision). While refinement is off, the check costs
+one multiply by :math:`K` every 25 iterations.
 
 **Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
@@ -176,12 +183,12 @@ iterations on the badly scaled problems.
 already solves to a tolerance tied to SCS's residuals, and its error is set by
 that tolerance rather than by the size of the right-hand side, so the
 correction form would not make it more accurate. When a check finds the
-residual above *tol*, each following iteration's solve is followed by one
-refinement step (one more conjugate gradient solve, for the residual). While
-this is on, every iteration is a check (one multiply by :math:`K`, of the
-solve before its refinement step), and it turns off at the first that finds
-the residual at most :math:`0.1\,` *tol*. This fires only when a conjugate
-gradient solve misses its tolerance.
+residual above *tol*, that iteration's solve and each following one is
+followed by one refinement step (one more conjugate gradient solve, for the
+residual). While this is on, every iteration is a check (one multiply by
+:math:`K`, of the solve before its refinement step), and it turns off at the
+first that finds the residual at most :math:`0.1\,` *tol*. This fires only
+when a conjugate gradient solve misses its tolerance.
 
 **What to expect** (direct solvers):
 

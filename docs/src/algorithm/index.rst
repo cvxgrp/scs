@@ -41,7 +41,7 @@ linear system <linear_solver>` of equations:
 SCS also solves this system (with the diagonal scaling :math:`R` of
 :ref:`scaling` in place of the identity) for the right-hand side
 :math:`(c, -b)` at the start of every solve and whenever :math:`R` changes,
-and checks and refines the accuracy of these solves as described in
+and checks and refines the accuracy of both kinds of solve as described in
 :ref:`iterative_refinement`.
 
 The second step is the Euclidean projection onto a convex :ref:`cone <cones>`, ie,
