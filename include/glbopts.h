@@ -373,9 +373,11 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * check while on. Against the previous rule (factors 1 and 0.1, one
  * refinement step instead of the correction form): QDLDL on random LPs and
  * SOCPs at 1e-9 (500 runs) took 2.6% fewer iterations and 2.3% less time;
- * Accelerate on 30 LPs, QPs and SDPs at 1e-4 and 1e-6 (180 runs) took 0.89
- * times the time in shifted geometric mean (QFORPLAN at 1e-6: 700 to 975
- * iterations from 3 starts, instead of 1,300 to 140,900); cuDSS at 1e-9 took
+ * Accelerate on 30 LPs, QPs and SDPs at 1e-4 and 1e-6 (180 runs) took 0.95
+ * times the time in geometric mean of the per-run ratios, and 0.89 times
+ * the shifted geometric mean of the times (shift 10 s, weighing the long
+ * runs more; QFORPLAN at 1e-6: 700 to 975 iterations from 3 starts, instead
+ * of 1,300 to 140,900); cuDSS at 1e-9 took
  * 0.86 to 0.91 times the solve time. At the default tolerances (QDLDL, 112
  * problems from 3 starts each) it was on for 1.3% of the iterations, at about
  * 1% more time. Other factors, all in correction form (measured on the

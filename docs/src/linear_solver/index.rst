@@ -73,7 +73,13 @@ better a guess than zero (:math:`\|z^k - K u_0\| \ge \|z^k\|`, which
 happens after :math:`R` changes) that iteration solves plainly. At each check
 while it is on, SCS also makes a plain solve of the same right-hand side, only
 to measure its error, and turns the correction form off once that error is at
-most :math:`0.001\,` *tol*; the iterate stays the correction-form solution.
+most :math:`0.001\,` *tol*; the iterate stays the correction-form solution,
+unless the correction-form solution's own residual (one more multiply by
+:math:`K` per check) is more than twice the plain solve's and above rounding
+level (:math:`10^{-14}\,\|z^k\|_\infty`). That safeguard is for a
+factorization so inaccurate that the correction form does not reduce the
+error; normally the correction-form residual is near rounding level and the
+safeguard changes nothing.
 
 Why these choices: what slows SCS down is switching between accurate and
 inexact solves, more than the inexact solves themselves. On QFORPLAN at
@@ -112,9 +118,10 @@ fires only when a conjugate gradient solve misses its tolerance.
   solve time (14% less without Anderson acceleration); with Apple Accelerate,
   whose solves can be inaccurate on badly scaled problems, on 30 LPs, QPs and
   SDPs at :math:`10^{-4}` and :math:`10^{-6}` from 3 starting points each,
-  0.89 times the shifted geometric mean time (QFORPLAN at :math:`10^{-6}`: 700
-  to 975 iterations, where the previous rule took 1,300 to 140,900 depending
-  on the starting point). On 45 LPs and QPs at :math:`10^{-8}` and
+  0.95 times the time in geometric mean of the per-run ratios, and 0.89 times
+  the shifted geometric mean of the times (shift 10 s), which weighs the long
+  runs more (QFORPLAN at :math:`10^{-6}`: 700 to 975 iterations, where the
+  previous rule took 1,300 to 140,900 depending on the starting point). On 45 LPs and QPs at :math:`10^{-8}` and
   :math:`10^{-9}` with QDLDL the results were the same within noise. MKL
   Pardiso's solves are accurate enough that it turns on less often: on 33 LPs
   and QPs at :math:`10^{-9}`, in 15 of them, for 3.5% fewer iterations and the
@@ -240,7 +247,14 @@ as slow as one thread. In the solves, an iteration with the correction form
 on cost 1.32 times a plain one, against 1.45 with SCS's product (33 LPs and QPs
 at :math:`10^{-9}`). The products add no run-to-run variation of their own:
 with the same number of threads they gave the same bits in repeated runs (a
-different thread count can change their last bits).
+different thread count can change their last bits). The products also cost
+setup time that has not been measured: MKL analyses :math:`K`
+(``mkl_sparse_optimize``) at setup and again at every update of :math:`R`,
+whether or not the correction form ever turns on, since the check every 25
+iterations uses the product too. If they cannot be set up (out of memory, or
+a :math:`K` with more than :math:`2^{31}` stored nonzeros in a build with
+``DLONG`` but 32-bit MKL integers, where ``BLAS64=1``, or Meson's
+``use_blas64``, is needed), setup fails with a message.
 
 .. _apple_accelerate:
 
@@ -389,6 +403,15 @@ GB10, per multiply, the GPU took 0.12 to 0.37 times the CPU's time above
 In the solves, on 10 large LPs, QPs and SOCPs at :math:`10^{-8}`, an
 iteration with the correction form on cost 1.19 times a plain one, against
 1.48 with the multiplies on the CPU, and the time per iteration fell by 4%.
+Setting them up (building :math:`K` with both triangles, copying it to the
+GPU, creating the cuSPARSE and cuBLAS handles) is done at setup whether or not
+the correction form ever turns on, since the check every 25 iterations uses
+the multiply too. On the GB10 it took 3, 35 and 340 ms for random :math:`K`
+with :math:`10^5`, :math:`10^6` and :math:`8 \cdot 10^6` nonzeros, 5 to 13%
+of the time cuDSS's own setup (analysis and factorization) took; the two
+handles took 0.4 to 0.8 ms of that. If they cannot be set up (out of GPU
+memory, or a :math:`K` too large for 32-bit indices in a build without
+``DLONG``), setup fails with a message.
 
 .. _gpu_reproducibility:
 
@@ -435,20 +458,48 @@ them faster with its own copy, by implementing three functions:
   :math:`\|r\|_\infty`. If :code:`x` is :code:`SCS_NULL`, :math:`x` is the
   vector stored by the last :code:`scs_lin_sys_keep`.
 - :code:`scs_lin_sys_keep(w, x)` stores :math:`x` as the guess :math:`x_0`.
-  SCS calls it only right after a solve, with that solve's solution, unchanged,
-  so a GPU solver can copy the solution it still has on the device and not read
-  :code:`x` at all.
+  SCS calls it with the solution of the latest solve (a
+  :code:`scs_solve_lin_sys` or :code:`scs_lin_sys_correct` call), unchanged,
+  so a GPU solver can copy the solution it still has on the device and not
+  read :code:`x` at all. Between that solve and this call SCS may call
+  :code:`scs_lin_sys_residual` (when it turns the correction form on, it
+  checks the solve with :code:`scs_lin_sys_residual(w, b, x)` first), but no
+  other solve, so the residual must not overwrite the solver's copy of the
+  solution.
 - :code:`scs_lin_sys_correct(w, x)` returns :math:`x = x_0 + K^{-1} r` for the
   :math:`r` of the latest :code:`scs_lin_sys_residual(w, b, SCS_NULL)`.
 
-Every solver must define the three functions so that it links. One that does
-not provide the products returns a negative value from
-:code:`scs_lin_sys_residual` and does nothing in the other two: SCS calls it
-once at setup, with zero vectors, and from then on computes the products
-itself. If a solver provides them, a negative return during a solve is treated
-as a failure of the linear solver. SCS makes every decision (when to check, the
-thresholds, when to use the guess); the solver only computes, so the refinement
-behaves the same with every solver, up to the rounding of the product.
+Every solver must define the three functions so that it links (an
+out-of-tree solver written for an earlier SCS needs the three stubs below).
+The contract:
+
+- :code:`scs_lin_sys_residual` returns :math:`\|r\|_\infty \ge 0`,
+  :code:`SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED` if the workspace does not compute
+  the products, or :code:`SCS_LIN_SYS_PRODUCTS_FAILED` on an error.
+- Whether a workspace provides the products is fixed when
+  :code:`scs_init_lin_sys_work` returns, by a rule stated up front (cuDSS: the
+  number of nonzeros of :math:`K`; MKL Pardiso: always), never by whether
+  memory or a library happened to be available. A solver that should provide
+  them but cannot set them up makes :code:`scs_init_lin_sys_work` fail with a
+  message saying why, rather than returning "not provided".
+- SCS calls :code:`scs_lin_sys_residual` once at setup, with zero vectors:
+  "not provided" makes SCS compute every product itself (and never call the
+  other two functions); a failure makes SCS's setup fail; a norm means the
+  solver provides them. During a solve any negative return is a failure of
+  the linear solver.
+
+A solver without the products defines::
+
+    scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
+                                   const scs_float *x) {
+      return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
+    }
+    void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {}
+    scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) { return -1; }
+
+SCS makes every decision (when to check, the thresholds, when to use the
+guess); the solver only computes, so the refinement behaves the same with
+every solver, up to the rounding of the product.
 :code:`test_lin_sys_products` in the test suite checks a solver's products
 against SCS's own. The MKL Pardiso solver (:code:`linsys/mkl/direct/private.c`,
 with MKL's sparse BLAS) and the cuDSS solver
