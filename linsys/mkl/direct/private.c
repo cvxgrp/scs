@@ -313,16 +313,17 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
-  /* the refinement's products with K in MKL's sparse BLAS, always: if they
-   * cannot be set up, setup fails (prod_setup says why) rather than leaving
-   * them to SCS */
+  /* the refinement's products with K in MKL's sparse BLAS, except for a K too
+   * large for MKL's 32-bit sparse integers (prod_setup's size rule, then SCS
+   * computes them): if they cannot be set up, setup fails (prod_setup says
+   * why) rather than leaving them to SCS */
   if (prod_setup(p) != 0) {
     scs_printf("MKL Pardiso: the refinement's products with K could not be "
                "set up\n");
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
-  p->prod_ok = 1;
+  p->prod_ok = !p->prod_none;
 
   return p;
 }
@@ -406,8 +407,8 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
  * needed; the types and enum values are those of mkl_spblas.h. MKL's integer
  * is 64-bit with BLAS64 (ILP64, as for Pardiso) and in MATLAB, else 32-bit;
  * when that differs from scs_int (DLONG without BLAS64) the indices are
- * copied once, and a K too large for 32-bit indices makes setup fail (build
- * with BLAS64=1 for such a K). scs_mkl_int has the width of scs_blas.h's
+ * copied once; a K too large for 32-bit indices gets SCS's own products
+ * (not provided, by size), while a BLAS64=1 build provides them at any size. scs_mkl_int has the width of scs_blas.h's
  * blas_int, which is defined only with USE_LAPACK; an MKL build need not use
  * LAPACK, so it is defined here.
  * ---------------------------------------------------------------------- */
@@ -530,10 +531,17 @@ static scs_int prod_setup(ScsLinSysWork *p) {
   }
   if (sizeof(scs_mkl_int) != sizeof(scs_int)) {
     scs_mkl_int *ptr, *ind;
-    if ((scs_int)(scs_mkl_int)nnz != nnz) {
-      scs_printf("MKL sparse BLAS: K has too many nonzeros for MKL's 32-bit "
-                 "integers; build with BLAS64=1 (ILP64 MKL)\n");
-      return -1;
+    if ((scs_int)(scs_mkl_int)nnz != nnz || (scs_int)(scs_mkl_int)nm != nm) {
+      /* A size rule, fixed by the problem data: K does not fit MKL's 32-bit
+       * sparse BLAS integers (DLONG without BLAS64), while Pardiso, with
+       * 64-bit indices, still solves it. So this workspace does not provide
+       * the products and SCS computes them, as on master, instead of failing
+       * setup. A BLAS64 (ILP64) build provides them at any size. */
+      scs_free(p->prod_r);
+      scs_free(p->prod_x0);
+      p->prod_r = p->prod_x0 = SCS_NULL;
+      p->prod_none = 1;
+      return 0;
     }
     ptr = (scs_mkl_int *)scs_calloc(nm + 1, sizeof(scs_mkl_int));
     ind = (scs_mkl_int *)scs_calloc(nnz > 0 ? nnz : 1, sizeof(scs_mkl_int));
@@ -566,7 +574,10 @@ scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
   scs_float res = 0.;
   int prev, st;
   if (!p->prod_ok) {
-    return SCS_LIN_SYS_PRODUCTS_FAILED; /* never: setup fails without them */
+    /* the size rule in prod_setup; otherwise never (setup fails without
+     * them) */
+    return p->prod_none ? SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED
+                        : SCS_LIN_SYS_PRODUCTS_FAILED;
   }
   memcpy(p->prod_r, b, nm * sizeof(scs_float));
   prev = prod_threads_begin(p);

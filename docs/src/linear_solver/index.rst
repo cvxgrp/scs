@@ -251,10 +251,11 @@ different thread count can change their last bits). The products also cost
 setup time that has not been measured: MKL analyses :math:`K`
 (``mkl_sparse_optimize``) at setup and again at every update of :math:`R`,
 whether or not the correction form ever turns on, since the check every 25
-iterations uses the product too. If they cannot be set up (out of memory, or
-a :math:`K` with more than :math:`2^{31}` stored nonzeros in a build with
-``DLONG`` but 32-bit MKL integers, where ``BLAS64=1``, or Meson's
-``use_blas64``, is needed), setup fails with a message.
+iterations uses the product too. In a build with ``DLONG`` but 32-bit MKL
+integers, a :math:`K` too large for those integers (more than :math:`2^{31}`
+stored nonzeros) gets SCS's own products instead, as before this change;
+``BLAS64=1`` (Meson's ``use_blas64``) provides MKL's at any size. If they
+cannot be set up otherwise (out of memory), setup fails with a message.
 
 .. _apple_accelerate:
 
@@ -478,7 +479,8 @@ The contract:
   the products, or :code:`SCS_LIN_SYS_PRODUCTS_FAILED` on an error.
 - Whether a workspace provides the products is fixed when
   :code:`scs_init_lin_sys_work` returns, by a rule stated up front (cuDSS: the
-  number of nonzeros of :math:`K`; MKL Pardiso: always), never by whether
+  number of nonzeros of :math:`K`; MKL Pardiso: always, except a :math:`K` too
+large for 32-bit MKL integers in a ``DLONG`` build without ``BLAS64``), never by whether
   memory or a library happened to be available. A solver that should provide
   them but cannot set them up makes :code:`scs_init_lin_sys_work` fail with a
   message saying why, rather than returning "not provided".

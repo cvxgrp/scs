@@ -34,8 +34,10 @@ struct SCS_LIN_SYS_WORK {
   /* Products with K for SCS's per-iteration refinement (scs_lin_sys_residual
    * and friends, see private.c): K in MKL's sparse BLAS, the guess x0 and
    * the residual r. prod_ok = 1 once set up; setup fails if they cannot
-   * be. */
+   * be. prod_none = 1 when, by the size rule in prod_setup, this solver
+   * does not provide them and SCS computes them. */
   scs_int prod_ok;
+  scs_int prod_none;
   void *prod_k;          /* MKL sparse_matrix_t handle of K */
   void *prod_ind;        /* column indices in MKL's integer type, or NULL
                             when kkt->i already has that type */
