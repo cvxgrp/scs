@@ -127,6 +127,24 @@ Intel MKL is now available for
 though it only offers limited support for non-Intel CPUs. The x86-64 manylinux
 Python wheels include it, statically linked (see :ref:`python_install`).
 
+**Threads.** With a threaded MKL, Pardiso runs on MKL's threads
+(``MKL_NUM_THREADS``, else ``OMP_NUM_THREADS``). Starting and synchronizing
+them costs a few tens of microseconds per call, which on a small linear system
+is more than the work. So SCS runs Pardiso on one thread when the factor
+Pardiso computes has fewer than 50,000 nonzeros (``PARDISO_MIN_THREADED_NNZ``
+in ``linsys/mkl/direct/private.c``). The choice is made once, at setup, from
+the problem data and the ordering Pardiso computes; all the Pardiso calls of a
+solve then use the same thread count, and MKL's BLAS and LAPACK keep their
+threads. On 4 threads, small problems iterated up to about 2x faster this
+way with ``MKL_DYNAMIC=FALSE``, and up to about 1.3x with MKL's default
+(dynamic mode, which already runs the smallest systems on one thread by
+itself); larger ones were unaffected. The break-even point depends on the
+problem and the machine; in our measurements it was between about 30,000 and
+60,000 factor nonzeros. A sequential MKL, such as the one in the Python
+wheels, always runs on one thread, so there this changes nothing. On small
+problems a sequential MKL is still faster than a threaded one, because a
+threaded MKL costs more per call even on one thread.
+
 .. _apple_accelerate:
 
 Apple Accelerate

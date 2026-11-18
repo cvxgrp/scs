@@ -1104,9 +1104,13 @@ static scs_int blas_calls_share_lock(void) {
 }
 
 /* Set the number of MKL threads for the calling thread and return the previous
- * setting, to restore it with. Does nothing, and returns 0, without MKL. */
+ * setting, to restore it with. Does nothing, and returns 0, without MKL.
+ * SCS_NO_MKL_PSD_GUARD (a test-only build flag) turns this off, so CI can
+ * check that the parallel PSD projection oversubscribes without it; the MKL
+ * symbol itself cannot be renamed for that, since the MKL linear solver
+ * references it too. */
 static int mkl_set_local_threads(int nt) {
-#if defined(__GNUC__) && defined(__ELF__)
+#if defined(__GNUC__) && defined(__ELF__) && !defined(SCS_NO_MKL_PSD_GUARD)
   if (MKL_Set_Num_Threads_Local) {
     return MKL_Set_Num_Threads_Local(nt);
   }
