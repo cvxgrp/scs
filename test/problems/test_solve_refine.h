@@ -248,18 +248,21 @@ static const char *test_solve_refine_csv(void) {
  * at 1e-9 (QDLDL, the dense solver and Accelerate checked from 21 initial
  * scales within 10 ulps of the default: every run solved, solving 74 to 749
  * of its iterations in correction form; MKL Pardiso and cuDSS as well). In
- * single precision it runs at the default tolerances, where only QDLDL is
- * required to refine (the dense solver and Accelerate solve it accurately
- * enough there).
+ * single precision it runs at the default tolerances.
  *
  * Each direct solver solves it as set up and, if the linear solver computes
  * the refinement's products, again with SCS computing them itself
- * (refine_hook = 0). Every run must be solved, in correction form, with a
- * solution whose relative primal and dual residuals and gap, recomputed from
- * the data, are at most 1e-5 (1e-2 in single precision): a correction-form
- * bug gives a wrong answer of order one or no convergence. The objectives of
- * the two runs are only printed: the products round differently, and how a
- * run continues from there is not reproducible.
+ * (refine_hook = 0). Every run must be solved with a solution whose relative
+ * primal and dual residuals and gap, recomputed from the data, are at most
+ * 1e-5 (1e-2 in single precision): a correction-form bug gives a wrong
+ * answer of order one or no convergence. Only QDLDL, which SCS bundles, is
+ * also required to have solved iterations in correction form: whether a
+ * third-party solver (dense LAPACK, Accelerate, MKL Pardiso, cuDSS) turns
+ * refinement on depends on the accuracy of its solves, which can change
+ * with its version, and on iteration counts that change chaotically with
+ * rounding; for them the count is printed. The objectives of the two runs
+ * are only printed: the products round differently, and how a run continues
+ * from there is not reproducible.
  * The indirect solvers skip it: their rule is separate, and without
  * deflation the GPU conjugate gradient solver needs minutes on this
  * ill-conditioned instance at 1e-9.
@@ -376,11 +379,8 @@ static const char *test_solve_refine_correction(void) {
   if (strstr(scs_get_lin_sys_method(), "indirect")) {
     return mu_skipped;
   }
-#ifdef SFLOAT
+  /* only the bundled QDLDL must refine, see above */
   must_refine = strstr(scs_get_lin_sys_method(), "qdldl") != SCS_NULL;
-#else
-  must_refine = 1;
-#endif
   for (own = 0, hook = 1; own <= 1 && hook; ++own) {
     status = solve_refine_dep_solve(own, &info, &corrections, &hook, &err);
     scs_printf("test_solve_refine_correction: %s, products by %s, status "

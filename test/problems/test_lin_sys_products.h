@@ -11,9 +11,10 @@
  * The optional products of a linear solver with its own copy of the KKT
  * matrix K = [R_x + P, A'; A, -R_y] (scs_lin_sys_residual, scs_lin_sys_keep
  * and scs_lin_sys_correct in linsys.h), against SCS's own product from the
- * problem data. A solver that does not provide them must say so (a negative
- * return); the MKL and cuDSS solvers must provide them. A solver that does
- * must, for random b, x, R and a P with off-diagonal entries:
+ * problem data. A solver that does not provide them must say so
+ * (SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED); the MKL and cuDSS solvers must
+ * provide them. A solver that does must, for random b, x, R and a P with
+ * off-diagonal entries:
  *  - return ||b - K x||_inf equal to SCS's to rounding (relative 1e-10 of
  *    the size of the terms, 1e-4 in single precision; a missing or
  *    transposed block, a sign error or a stale R gives a difference of order
@@ -21,8 +22,13 @@
  *  - after scs_lin_sys_keep of a solve's solution x1, give ||b - K x1|| for
  *    x == SCS_NULL, and from it scs_lin_sys_correct must return x1 +
  *    K^{-1}(b - K x1), the solution of K x = b (residual at most 1e-8
- *    relative, 1e-2 in single precision; a wrong correction is off by order
- *    one);
+ *    relative, 0.1 in single precision; a wrong correction is off by order
+ *    one), and equal SCS's own correction form x1 + K^{-1}(b - K x1) with
+ *    the residual vector from the problem data, entry by entry (relative
+ *    1e-8, 0.1 in single precision): the inf-norms above do not see a
+ *    residual vector that is permuted or wrong in entries below its largest;
+ *    the solver's residual vector itself is not visible, so it is compared
+ *    through the solve;
  *  - do the same after scs_update_lin_sys_diag_r changed R.
  */
 
@@ -34,9 +40,10 @@
  * ||b||); a bug gives errors of order one */
 #ifdef SFLOAT
 /* a single-precision MKL Pardiso solve of this K leaves a relative residual
- * of up to about 2.4e-3 */
+ * of up to about 2.4e-3; MKL is not tested in single precision in CI, so
+ * leave a wide margin (a bug still gives errors of order one) */
 #define LSP_PROD_TOL (1e-4)
-#define LSP_SOLVE_TOL (1e-2)
+#define LSP_SOLVE_TOL (1e-1)
 #else
 #define LSP_PROD_TOL (1e-10)
 #define LSP_SOLVE_TOL (1e-8)
@@ -122,7 +129,7 @@ static const char *lsp_check(ScsLinSysWork *p, const ScsMatrix *A,
                              scs_float *b, scs_float *x, scs_float *x1,
                              scs_float *r) {
   scs_int i, nm = A->n + A->m;
-  scs_float hook, ref, scale, res;
+  scs_float hook, ref, scale, res, diff;
   for (i = 0; i < nm; ++i) {
     b[i] = rand_scs_float();
     x[i] = rand_scs_float();
@@ -160,6 +167,21 @@ static const char *lsp_check(ScsLinSysWork *p, const ScsMatrix *A,
   mu_assert("test_lin_sys_products: the correction form does not solve "
             "K x = b",
             res <= LSP_SOLVE_TOL * SCS(norm_inf)(b, nm));
+  /* SCS's own correction form in r: x1 + K^{-1}(b - K x1), the residual
+   * from the problem data */
+  lsp_ref_residual(A, P, diag_r, b, x1, r);
+  mu_assert("test_lin_sys_products: solve failed",
+            scs_solve_lin_sys(p, r, SCS_NULL, 1e-12) == 0);
+  SCS(add_scaled_array)(r, x1, nm, 1.);
+  diff = 0.;
+  for (i = 0; i < nm; ++i) {
+    diff = MAX(diff, ABS(x[i] - r[i]));
+  }
+  scs_printf("test_lin_sys_products: correction form, max |solver - SCS| / "
+             "||x|| = %.3e\n",
+             (double)(diff / MAX(1., SCS(norm_inf)(r, nm))));
+  mu_assert("test_lin_sys_products: the correction form differs from SCS's",
+            diff <= LSP_SOLVE_TOL * MAX(1., SCS(norm_inf)(r, nm)));
   return SCS_NULL;
 }
 
@@ -180,7 +202,8 @@ static const char *test_lin_sys_products(void) {
   p = scs_init_lin_sys_work(A, P, diag_r);
   if (!p) {
     fail = "test_lin_sys_products: scs_init_lin_sys_work failed";
-  } else if (scs_lin_sys_residual(p, b, x) < 0) {
+  } else if (scs_lin_sys_residual(p, b, x) ==
+             SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED) {
     scs_printf("test_lin_sys_products: %s does not provide the products\n",
                method);
     if (expected) {
