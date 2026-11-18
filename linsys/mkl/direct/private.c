@@ -1,4 +1,5 @@
 #include "private.h"
+#include <string.h>
 
 #define PARDISO_SYMBOLIC (11)
 #define PARDISO_NUMERIC (22)
@@ -147,6 +148,11 @@ static void pardiso_call(ScsLinSysWork *p, scs_int phase, const scs_float *a,
   }
 }
 
+static scs_int prod_setup(ScsLinSysWork *p);
+static scs_int prod_make_handle(ScsLinSysWork *p);
+static void prod_free_handle(ScsLinSysWork *p);
+static void prod_free(ScsLinSysWork *p);
+
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
 }
@@ -156,7 +162,9 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     /* Pardiso cleanup needs the KKT index arrays; on early allocation
      * failures the workspace may be freed before the KKT matrix (or
      * the factorization) ever existed, so gate the solver teardown on
-     * what was actually initialized. */
+     * what was actually initialized. The sparse BLAS handle of the
+     * products refers to the KKT arrays, so it goes first. */
+    prod_free(p);
     if (p->kkt) {
       /* release on the handle's own thread count, like every other call */
       p->phase = PARDISO_CLEANUP;
@@ -305,6 +313,18 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
+  /* the refinement's products with K in MKL's sparse BLAS, except for a K too
+   * large for MKL's 32-bit sparse integers (prod_setup's size rule, then SCS
+   * computes them): if they cannot be set up, setup fails (prod_setup says
+   * why) rather than leaving them to SCS */
+  if (prod_setup(p) != 0) {
+    scs_printf("MKL Pardiso: the refinement's products with K could not be "
+               "set up\n");
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
+  p->prod_ok = !p->prod_none;
+
   return p;
 }
 
@@ -342,5 +362,257 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
                (int)p->error);
     return (scs_int)p->error;
   }
+
+  /* MKL may keep its own copy of the values after mkl_sparse_optimize, so
+   * the product's handle is rebuilt from the updated kkt->x */
+  if (p->prod_ok) {
+    prod_free_handle(p);
+    if (prod_make_handle(p) != 0) {
+      scs_printf("Error in MKL sparse BLAS when updating.\n");
+      return -1;
+    }
+  }
   return 0;
+}
+
+/* ------------------------------------------------------------------------
+ * Products with K for SCS's per-iteration refinement (optional, linsys.h),
+ * in MKL's inspector-executor sparse BLAS: K is the upper triangle Pardiso
+ * gets (kkt, CSR), passed as a symmetric matrix, analysed once by
+ * mkl_sparse_optimize, and r = b - K x is one mkl_sparse_?_mv. The guess x0
+ * and r are host vectors of this workspace.
+ *
+ * Threads. The product runs on MKL's threads, except for a small system,
+ * where Pardiso runs on one thread (one_thread, see PARDISO_MIN_THREADED_NNZ
+ * above): there the product runs on one thread too, around every MKL sparse
+ * call on this handle (create, optimize, mv), so that the handle never
+ * mixes thread counts either. Measured per product against SCS's own
+ * single-threaded one (November 2026, oneMKL 2026.1, AMD Zen 3 on Modal, 4
+ * threads, 46 LPs and QPs): 0.2 to 0.5 times its time on MKL's threads
+ * (co-100: 0.76 against 2.39 ms) and 0.45 to 0.93 times on one thread, so
+ * MKL's product is the faster one at every size; forcing 4 threads on the
+ * smallest systems made the product about 2 times slower than on one, which
+ * is why it follows Pardiso's thread rule.
+ *
+ * Reproducibility: on a fixed number of threads the product gave the same
+ * bits in repeated runs (same measurements); a different thread count can
+ * change its last bits.
+ *
+ * Setup cost: the handle is created and analysed (mkl_sparse_optimize) at
+ * setup and again at every scs_update_lin_sys_diag_r (each scale update),
+ * whether or not the refinement turns on, since the every-25-iterations
+ * check uses the product too. That cost has not been measured on its own.
+ *
+ * The functions are declared here, like Pardiso's, so that no MKL header is
+ * needed; the types and enum values are those of mkl_spblas.h. MKL's integer
+ * is 64-bit with BLAS64 (ILP64, as for Pardiso) and in MATLAB, else 32-bit;
+ * when that differs from scs_int (DLONG without BLAS64) the indices are
+ * copied once; a K too large for 32-bit indices gets SCS's own products
+ * (not provided, by size), while a BLAS64=1 build provides them at any
+ * size. scs_mkl_int has the width of scs_blas.h's blas_int, which is defined
+ * only with USE_LAPACK; an MKL build need not use LAPACK, so it is defined
+ * here.
+ * ---------------------------------------------------------------------- */
+#if defined(MATLAB_MEX_FILE)
+#include <stddef.h>
+typedef ptrdiff_t scs_mkl_int;
+#elif defined(BLAS64)
+typedef long long scs_mkl_int;
+#else
+typedef int scs_mkl_int;
+#endif
+
+typedef struct scs_mkl_sparse_matrix *scs_mkl_sparse_t; /* sparse_matrix_t */
+struct scs_mkl_matrix_descr { /* struct matrix_descr */
+  int type;                   /* sparse_matrix_type_t */
+  int mode;                   /* sparse_fill_mode_t */
+  int diag;                   /* sparse_diag_type_t */
+};
+#define SCS_MKL_SPARSE_STATUS_SUCCESS (0)
+#define SCS_MKL_SPARSE_OPERATION_NON_TRANSPOSE (10)
+#define SCS_MKL_SPARSE_MATRIX_TYPE_SYMMETRIC (21)
+#define SCS_MKL_SPARSE_INDEX_BASE_ZERO (0)
+#define SCS_MKL_SPARSE_FILL_MODE_UPPER (41)
+#define SCS_MKL_SPARSE_DIAG_NON_UNIT (50)
+
+#ifndef SFLOAT
+#define SCS_MKL_SPARSE_CREATE_CSR mkl_sparse_d_create_csr
+#define SCS_MKL_SPARSE_MV mkl_sparse_d_mv
+#else
+#define SCS_MKL_SPARSE_CREATE_CSR mkl_sparse_s_create_csr
+#define SCS_MKL_SPARSE_MV mkl_sparse_s_mv
+#endif
+int SCS_MKL_SPARSE_CREATE_CSR(scs_mkl_sparse_t *A, int indexing,
+                              scs_mkl_int rows, scs_mkl_int cols,
+                              scs_mkl_int *rows_start, scs_mkl_int *rows_end,
+                              scs_mkl_int *col_indx, scs_float *values);
+int SCS_MKL_SPARSE_MV(int operation, scs_float alpha,
+                      const scs_mkl_sparse_t A,
+                      struct scs_mkl_matrix_descr descr, const scs_float *x,
+                      scs_float beta, scs_float *y);
+int mkl_sparse_set_mv_hint(const scs_mkl_sparse_t A, int operation,
+                           struct scs_mkl_matrix_descr descr,
+                           scs_mkl_int expected_calls);
+int mkl_sparse_optimize(scs_mkl_sparse_t A);
+int mkl_sparse_destroy(scs_mkl_sparse_t A);
+
+static struct scs_mkl_matrix_descr prod_descr(void) {
+  struct scs_mkl_matrix_descr d;
+  d.type = SCS_MKL_SPARSE_MATRIX_TYPE_SYMMETRIC;
+  d.mode = SCS_MKL_SPARSE_FILL_MODE_UPPER;
+  d.diag = SCS_MKL_SPARSE_DIAG_NON_UNIT;
+  return d;
+}
+
+/* the MKL thread count of every sparse BLAS call on this handle: one for a
+ * small system, as for Pardiso (see the threads note above) */
+static int prod_threads_begin(const ScsLinSysWork *p) {
+  return p->one_thread ? MKL_Set_Num_Threads_Local(1) : 0;
+}
+
+static void prod_threads_end(const ScsLinSysWork *p, int prev) {
+  if (p->one_thread) {
+    MKL_Set_Num_Threads_Local(prev);
+  }
+}
+
+static void prod_free_handle(ScsLinSysWork *p) {
+  if (p->prod_k) {
+    int prev = prod_threads_begin(p);
+    mkl_sparse_destroy((scs_mkl_sparse_t)p->prod_k);
+    prod_threads_end(p, prev);
+    p->prod_k = SCS_NULL;
+  }
+}
+
+/* the handle of K (upper triangle of kkt as a symmetric matrix), analysed for
+ * many products; uses kkt->x as it is now */
+static scs_int prod_make_handle(ScsLinSysWork *p) {
+  scs_mkl_sparse_t A = SCS_NULL;
+  scs_mkl_int nm = (scs_mkl_int)p->n_plus_m;
+  scs_mkl_int *ptr = p->prod_ptr ? (scs_mkl_int *)p->prod_ptr
+                                 : (scs_mkl_int *)p->kkt->p;
+  scs_mkl_int *ind = p->prod_ind ? (scs_mkl_int *)p->prod_ind
+                                 : (scs_mkl_int *)p->kkt->i;
+  struct scs_mkl_matrix_descr descr = prod_descr();
+  int prev = prod_threads_begin(p), st;
+  st = SCS_MKL_SPARSE_CREATE_CSR(&A, SCS_MKL_SPARSE_INDEX_BASE_ZERO, nm, nm,
+                                 ptr, ptr + 1, ind, p->kkt->x);
+  if (st == SCS_MKL_SPARSE_STATUS_SUCCESS) {
+    p->prod_k = (void *)A;
+    /* expected calls: one per iteration while refinement is on, which is
+     * many; the hint only tells mkl_sparse_optimize that analysis pays */
+    st = mkl_sparse_set_mv_hint(A, SCS_MKL_SPARSE_OPERATION_NON_TRANSPOSE,
+                                descr, 1000000);
+    if (st == SCS_MKL_SPARSE_STATUS_SUCCESS) {
+      st = mkl_sparse_optimize(A);
+    }
+  }
+  prod_threads_end(p, prev);
+  return st == SCS_MKL_SPARSE_STATUS_SUCCESS ? 0 : -1;
+}
+
+static void prod_free(ScsLinSysWork *p) {
+  prod_free_handle(p);
+  scs_free(p->prod_ind);
+  scs_free(p->prod_ptr);
+  scs_free(p->prod_r);
+  scs_free(p->prod_x0);
+  p->prod_ind = p->prod_ptr = SCS_NULL;
+  p->prod_r = p->prod_x0 = SCS_NULL;
+}
+
+static scs_int prod_setup(ScsLinSysWork *p) {
+  scs_int k, nm = p->n_plus_m, nnz = p->kkt->p[nm];
+  p->prod_r = (scs_float *)scs_calloc(nm, sizeof(scs_float));
+  p->prod_x0 = (scs_float *)scs_calloc(nm, sizeof(scs_float));
+  if (!p->prod_r || !p->prod_x0) {
+    scs_printf("MKL sparse BLAS: out of memory\n");
+    return -1;
+  }
+  if (sizeof(scs_mkl_int) != sizeof(scs_int)) {
+    scs_mkl_int *ptr, *ind;
+    if ((scs_int)(scs_mkl_int)nnz != nnz || (scs_int)(scs_mkl_int)nm != nm) {
+      /* A size rule, fixed by the problem data: K does not fit MKL's 32-bit
+       * sparse BLAS integers (DLONG without BLAS64), while Pardiso, with
+       * 64-bit indices, still solves it. So this workspace does not provide
+       * the products and SCS computes them, as on master, instead of failing
+       * setup. A BLAS64 (ILP64) build provides them at any size. */
+      scs_free(p->prod_r);
+      scs_free(p->prod_x0);
+      p->prod_r = p->prod_x0 = SCS_NULL;
+      p->prod_none = 1;
+      return 0;
+    }
+    ptr = (scs_mkl_int *)scs_calloc(nm + 1, sizeof(scs_mkl_int));
+    ind = (scs_mkl_int *)scs_calloc(nnz > 0 ? nnz : 1, sizeof(scs_mkl_int));
+    p->prod_ptr = ptr;
+    p->prod_ind = ind;
+    if (!ptr || !ind) {
+      scs_printf("MKL sparse BLAS: out of memory\n");
+      return -1;
+    }
+    for (k = 0; k <= nm; ++k) {
+      ptr[k] = (scs_mkl_int)p->kkt->p[k];
+    }
+    for (k = 0; k < nnz; ++k) {
+      ind[k] = (scs_mkl_int)p->kkt->i[k];
+    }
+  }
+  if (prod_make_handle(p) != 0) {
+    scs_printf("MKL sparse BLAS: creating or analysing the handle of K "
+               "failed\n");
+    return -1;
+  }
+  return 0;
+}
+
+/* r = b - K x (x = x0 when x is SCS_NULL), r kept in prod_r. Returns
+ * ||r||_inf or SCS_LIN_SYS_PRODUCTS_FAILED. */
+scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
+                               const scs_float *x) {
+  scs_int i, nm = p->n_plus_m;
+  scs_float res = 0.;
+  int prev, st;
+  if (!p->prod_ok) {
+    /* the size rule in prod_setup; otherwise never (setup fails without
+     * them) */
+    return p->prod_none ? SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED
+                        : SCS_LIN_SYS_PRODUCTS_FAILED;
+  }
+  memcpy(p->prod_r, b, nm * sizeof(scs_float));
+  prev = prod_threads_begin(p);
+  st = SCS_MKL_SPARSE_MV(SCS_MKL_SPARSE_OPERATION_NON_TRANSPOSE, -1.,
+                         (scs_mkl_sparse_t)p->prod_k, prod_descr(),
+                         x ? x : p->prod_x0, 1., p->prod_r);
+  prod_threads_end(p, prev);
+  if (st != SCS_MKL_SPARSE_STATUS_SUCCESS) {
+    return SCS_LIN_SYS_PRODUCTS_FAILED;
+  }
+  for (i = 0; i < nm; ++i) {
+    res = MAX(res, ABS(p->prod_r[i]));
+  }
+  return res;
+}
+
+void scs_lin_sys_keep(ScsLinSysWork *p, const scs_float *x) {
+  if (p->prod_ok) {
+    memcpy(p->prod_x0, x, p->n_plus_m * sizeof(scs_float));
+  }
+}
+
+/* x = x0 + K^{-1} r */
+scs_int scs_lin_sys_correct(ScsLinSysWork *p, scs_float *x) {
+  scs_int i, status;
+  if (!p->prod_ok) {
+    return -1;
+  }
+  memcpy(x, p->prod_r, p->n_plus_m * sizeof(scs_float));
+  status = scs_solve_lin_sys(p, x, SCS_NULL, -1.);
+  if (status == 0) {
+    for (i = 0; i < p->n_plus_m; ++i) {
+      x[i] += p->prod_x0[i];
+    }
+  }
+  return status;
 }

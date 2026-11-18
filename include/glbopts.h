@@ -304,19 +304,51 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * Every iteration solves K u = [R_x v_x; -R_y v_y] (K as above), and SCS's
  * residuals cannot fall much below the error of that solve. On iterations
  * that are multiples of REFINE_CHECK_INTERVAL SCS computes the residual of
- * the solve from the problem data, whatever the linear solver, and compares
- * its inf-norm with tol, the smaller inf-norm of SCS's primal and dual
- * residual vectors at the last convergence check, but at least
- * REFINE_TOL_FLOOR. If it is larger than REFINE_FACTOR * tol, SCS solves
- * K d = residual and adds d to u, and then checks every iteration until a
- * residual is at or below REFINE_OFF_FACTOR * tol. In double precision at
- * default tolerances this almost never fires (in 9 of 336 benchmark runs at
- * 1e-4 and 1e-6, on 0.01% of solves); at 1e-8 or 1e-9 a direct solver's
- * error can be as large as the residuals, and refining is what lets SCS
- * converge. CG
- * already solves to a fraction of tol, so with CG it fires only when a CG
- * solve misses that (it stops early or, in single precision, the residual it
- * tracks drifts from the true one).
+ * the solve, whatever the linear solver, and compares its inf-norm with tol,
+ * the smaller inf-norm of SCS's primal and dual residual vectors at the last
+ * convergence check, but at least REFINE_TOL_FLOOR. When the residual is
+ * above an "on" factor times tol, refinement turns on; once on, it turns off
+ * at a later check whose residual is at or below a smaller "off" factor
+ * times tol (with one factor for both it switched off and on again, and the
+ * unrefined solves in between undid the progress: at 1e-9 that stalled 20
+ * of 400 runs with cuDSS). What "on" means depends on the kind of linear
+ * solver, chosen at compile time by INDIRECT, so each solver behaves the
+ * same in every build and interface:
+ *
+ * Direct solvers (a factorization: QDLDL, dense, Accelerate, MKL Pardiso,
+ * cuDSS). The error of a solve with a factorization is about proportional to
+ * the size of the right-hand side. While on, each iteration therefore solves
+ * in correction form from the previous iteration's solution u0:
+ * K d = rhs - K u0 and u = u0 + d. The iterates move little from one
+ * iteration to the next, so rhs - K u0 is far smaller than rhs (10^-3 to
+ * 10^-7 of it in the measurements) and u is that much more accurate than a
+ * plain solve: on a problem whose plain solves had errors of 1e-7, u stayed
+ * at 1e-16 for 70,000 iterations; the errors do not build up, because each
+ * solve's error is a contraction of the previous one. The cost is one more
+ * multiply by K per iteration, and no extra solve. When the guess is no better
+ * than zero (||rhs - K u0|| >= ||rhs||, which happens after a scale update
+ * changes K and rhs) that iteration solves plainly instead. At a check while
+ * on, a plain solve of the same right-hand side, made only for the decision,
+ * decides whether to stay on; the iterate stays the correction-form solution
+ * (unless its own residual, one more multiply per check, is clearly larger
+ * than the plain solve's: a safeguard for a factorization too inaccurate for
+ * the correction form to contract, see REFINE_DIRECT_SAFEGUARD_FACTOR).
+ * That matters: a run that put the plain solve in the iterate at every check
+ * mixed one inexact solve into every REFINE_CHECK_INTERVAL accurate ones and
+ * took up to 31 times the iterations (QFORPLAN at 1e-6 with Accelerate);
+ * what slows SCS down is switching between inexact and accurate solves, not
+ * the inexact solves themselves. A linear solver can compute the multiplies
+ * by K with its own copy of K (scs_lin_sys_residual in linsys.h; cuDSS keeps
+ * the vectors on the GPU), else SCS uses the problem data.
+ *
+ * Indirect solvers (conjugate gradients, CPU and GPU). CG already solves to a
+ * tolerance tied to SCS's residuals, and its error is set by that tolerance,
+ * not by the size of the right-hand side, so the correction form would not
+ * make it more accurate. While on, each iteration's solve is followed by one
+ * refinement step: SCS solves K d = rhs - K u (cold, to CG_BEST_TOL) and adds
+ * d to u. That costs one more multiply and one more CG solve per iteration;
+ * CG fires only when a CG solve misses its tolerance (it stops early or, in
+ * single precision, the residual it tracks drifts from the true one).
  *
  * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
@@ -332,46 +364,84 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * in 49 of 500 runs with QDLDL (fewer in 4) and in 134 of 400 with cuDSS
  * (fewer in 53). */
 #define REFINE_CHECK_INTERVAL (25)
-/* REFINE_FACTOR: refine when the solve's error is larger than the residuals
- * SCS is driving to zero. While on, each iteration costs one more multiply
- * and one more solve. A smaller factor refines more: 0.1 took slightly fewer
- * iterations at 1e-9 but fired in 15 of the 336 runs at 1e-4 and 1e-6
- * instead of 9, and where refinement fires it cost more (4% more
- * linear-system time on stalled SDPs, 3% with CG). A larger one leaves
- * solves that limit accuracy unrefined. The alternatives measured worse:
- * refining every solve costs 2.2x linear-system time and lost problems, and
- * refining near convergence refined 17% of solves at default tolerances.
- * Single precision uses the same factor: there a QDLDL solve's error is
- * about the size of the residuals at the default tolerances, and refining is
- * what lets SCS converge (test_solve_refine_tight). */
-#define REFINE_FACTOR (1.0)
-/* REFINE_OFF_FACTOR: once on, refinement stays on until the solve's error is
- * at or below this fraction of tol. Turning it off as soon as the error is
- * back below tol (an off factor of REFINE_FACTOR) made it flicker: the
- * residuals fall to the error of the refined solves, refinement turns off,
- * and until the next check up to REFINE_CHECK_INTERVAL iterations later the
- * unrefined solves undo the progress. At 1e-9 that stalled 20 of 400 runs at
- * max_iters with cuDSS, and with QDLDL 12 of 500 runs took at least twice the
- * iterations they took with 0.1 (up to 34 times). With 0.1 no cuDSS run
- * stalled (1,000 runs, with and without Anderson acceleration) and none of
- * the 500 QDLDL runs took more iterations. On other problems it moved
- * chaotic runs both ways: with QDLDL at 1e-8 and 1e-9, 0.1 took more
- * iterations in 4 of 252 runs (up to 36% more) and fewer in 14, and on SDPs
- * that stall at 1e-6 more in 9 of 62 (up to 3.3 times) and fewer in 3. The
- * price is that refinement stays on longer once it fires: with CG it refined
- * about twice as many solves, and on a problem that stalls it can stay on
- * for most of the remaining iterations (an SDP that ran to max_iters at 1e-6
- * refined 64% of its solves), at up to one more solve and multiply per
- * iteration. In single precision the off threshold is at least 0.1 *
- * REFINE_TOL_FLOOR, near what a refined solve can reach, so this happens
- * more often: at the default tolerances, on 30 LPs and QPs from 3 starts
- * each, refinement was on for most of the solve in 27 of 90 runs with QDLDL
- * (12 with an off factor of 1) and in 41 with CG (21), mostly runs that
- * stall, where it cost up to 2.1 times the linear-system time per iteration.
- * It also solved more: 60 instead of 57 with QDLDL, and 47 instead of 41
- * with CG (gaining 8, losing 2). A smaller value keeps it on
- * longer still; values between 0.1 and 1 were not measured. */
-#define REFINE_OFF_FACTOR (0.1)
+/* REFINE_DIRECT_ON_FACTOR, REFINE_DIRECT_OFF_FACTOR: direct solvers turn the
+ * correction form on when a plain solve's residual is above 0.01 * tol and
+ * off when it is at or below 0.001 * tol. Low factors turn it on before the
+ * solve's error limits SCS, and keep it on while the residuals fall, so a run
+ * rarely switches between inexact and accurate solves. The price is one more
+ * multiply per iteration while on, and a plain solve and a multiply at each
+ * check while on. Against the previous rule (factors 1 and 0.1, one
+ * refinement step instead of the correction form): QDLDL on random LPs and
+ * SOCPs at 1e-9 (500 runs) took 2.6% fewer iterations and 2.3% less time;
+ * Accelerate on 30 LPs, QPs and SDPs at 1e-4 and 1e-6 (180 runs) took 0.95
+ * times the time in geometric mean of the per-run ratios, and 0.89 times
+ * the shifted geometric mean of the times (shift 10 s, weighing the long
+ * runs more; QFORPLAN at 1e-6: 700 to 975 iterations from 3 starts, instead
+ * of 1,300 to 140,900); cuDSS at 1e-9 took
+ * 0.86 to 0.91 times the solve time. At the default tolerances (QDLDL, 112
+ * problems from 3 starts each) it was on for 1.3% of the iterations, at about
+ * 1% more time. Other factors, all in correction form (measured on the
+ * prototype): 1 and 0.1 took as many iterations as the previous rule at 1e-9
+ * and 0.94 of its time on the Accelerate set (0.89 here), 0.1 and 0.01 1.4%
+ * fewer iterations and 0.91; 0.001 and 0.0001 were on for 12.6% of the
+ * iterations at the default tolerances, on for most of the solve on more QPs
+ * at 1e-8 and 1e-9 (48% of their iterations, against 6.7%), and solved fewer
+ * SDPs that stall. A problem that stalls can keep it on for most of its
+ * iterations (on 26 that stall at 1e-4 to 1e-6, for most of the solve in 11
+ * of 78 runs). In single precision REFINE_TOL_FLOOR puts the off threshold
+ * near or below what a single-precision solve reaches, so once on it tends
+ * to stay on. */
+#define REFINE_DIRECT_ON_FACTOR (0.01)
+#define REFINE_DIRECT_OFF_FACTOR (0.001)
+/* REFINE_DIRECT_SAFEGUARD_FACTOR, REFINE_DIRECT_SAFEGUARD_FLOOR: at each check
+ * while the correction form is on, SCS also computes the correction-form
+ * solution's own residual (one more multiply by K per REFINE_CHECK_INTERVAL
+ * iterations while on) and replaces the iterate and the next guess with the
+ * check's plain solve when that residual is above
+ * REFINE_DIRECT_SAFEGUARD_FACTOR times the plain solve's and above
+ * REFINE_DIRECT_SAFEGUARD_FLOOR * ||rhs||_inf (or is NaN). This is for a
+ * factorization so inaccurate that the correction form does not contract:
+ * otherwise the only fallback is ||rhs - K u0|| >= ||rhs||, which lets the
+ * error of the iterates grow to the size of rhs first. With both conditions
+ * the error at a check is at most about twice a plain solve's.
+ * Why not factor 1 and no floor (fall back whenever the correction form is
+ * not more accurate): that swapped an equally accurate plain solve into the
+ * iterate where both residuals were at rounding level (1.7e-16 of ||rhs||,
+ * truss5 at 1e-6 with Accelerate, 9 times in one run) or within 30% of each
+ * other (hinf13, 2 times), and each swap perturbs the iterates as the
+ * mixing described above does: 3 of 1,240 runs changed (T, TA, A and named
+ * QPs), hinf13 from 215,625 to 582,350 iterations. With factor 2 and the
+ * floor it fired in none of them, so their iterates are bit for bit those
+ * without the safeguard. The floor is 45 (double) to 85 (single) times
+ * machine epsilon: a computed residual below it is mostly the rounding of
+ * its own computation, so comparing two of them says nothing. */
+#define REFINE_DIRECT_SAFEGUARD_FACTOR (2.0)
+#ifdef SFLOAT
+#define REFINE_DIRECT_SAFEGUARD_FLOOR (1e-5)
+#else
+#define REFINE_DIRECT_SAFEGUARD_FLOOR (1e-14)
+#endif
+/* REFINE_INDIRECT_ON_FACTOR: indirect solvers refine when the solve's error
+ * is larger than the residuals SCS is driving to zero. While on, each
+ * iteration costs one more multiply and one more solve. A smaller factor
+ * refines more: 0.1 took slightly fewer iterations at 1e-9 with QDLDL but
+ * fired in 15 of the 336 runs at 1e-4 and 1e-6 instead of 9, and where
+ * refinement fires it cost more (3% more linear-system time with CG). A
+ * larger one leaves solves that limit accuracy unrefined. */
+#define REFINE_INDIRECT_ON_FACTOR (1.0)
+/* REFINE_INDIRECT_OFF_FACTOR: once on, CG refinement stays on until the
+ * solve's error is at or below this fraction of tol. With an off factor of 1
+ * the residuals fell to the error of the refined solves, refinement turned
+ * off, and until the next check the unrefined solves undid the progress.
+ * The price is that refinement stays on longer once it fires: with CG it
+ * refined about twice as many solves. In single precision the off threshold
+ * is at least 0.1 * REFINE_TOL_FLOOR, near what a refined solve can reach, so
+ * this happens more often: at the default tolerances, on 30 LPs and QPs from
+ * 3 starts each, refinement was on for most of the solve in 41 of 90 runs
+ * with CG (21 with an off factor of 1), mostly runs that stall, where it cost
+ * up to 2.1 times the linear-system time per iteration. It also solved more:
+ * 47 instead of 41 (gaining 8, losing 2). */
+#define REFINE_INDIRECT_OFF_FACTOR (0.1)
 /* REFINE_TOL_FLOOR: the smallest tol. Refinement cannot take a residual
  * much below rounding level, so below this floor it would chase rounding
  * errors on every remaining iteration: when one of SCS's residual vectors is
