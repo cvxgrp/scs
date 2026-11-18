@@ -93,7 +93,7 @@ void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
  *     lies between about 3e4 and 6e4 factor nonzeros and depends on the
  *     problem (PRIMAL3 3.4e4: one thread 1.12x slower; QSHIP08S 4.4e4: 0.81x;
  *     QSHIP12S 5.4e4: 1.32x), and above it threads win clearly (DTOC3 1.1e5:
- *     one thread 1.8x slower, CONT-201 5.0e6: 3.9x);
+ *     one thread 1.8x slower, CONT-201 5.0e6: 2.3x);
  *   - with the threshold at 5e4, ms per iteration with the rule against
  *     without it: geometric mean 0.845 below the threshold (15 problems) with
  *     MKL_DYNAMIC=FALSE and 0.968 with MKL's default MKL_DYNAMIC=TRUE (which
@@ -110,12 +110,10 @@ void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
  * slower, and the break-even point moves with the CPU, the thread count and
  * the MKL version.
  *
- * Deterministic: the choice depends on the problem data and on the ordering
- * Pardiso computes, once at setup, never on timings or load. The parallel
- * nested-dissection ordering (iparm[1] = 3) can depend on the thread count
- * (ex9: 1.215e7 factor nonzeros on 4 threads, 1.228e7 on 1), so a system
- * within about 1% of the threshold can be decided differently on another
- * thread count.
+ * Deterministic: the choice depends only on the problem data, once at setup,
+ * never on timings or load. The factor size it reads always comes from a
+ * symbolic phase run on one thread (the factor is only tested when the KKT
+ * matrix is small), so the decision is the same whatever the thread count.
  *
  * Where it does nothing: a sequential MKL (the Python wheels) and MKL on one
  * thread. It does not remove the per-call overhead of a threaded MKL on one
@@ -160,11 +158,9 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
      * the factorization) ever existed, so gate the solver teardown on
      * what was actually initialized. */
     if (p->kkt) {
+      /* release on the handle's own thread count, like every other call */
       p->phase = PARDISO_CLEANUP;
-      _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-               &(p->n_plus_m), SCS_NULL, p->kkt->p, p->kkt->i, SCS_NULL,
-               &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL,
-               &(p->error));
+      pardiso_call(p, PARDISO_CLEANUP, SCS_NULL, SCS_NULL);
       if (p->error != 0) {
         scs_printf("Error during MKL Pardiso cleanup: %d", (int)p->error);
       }

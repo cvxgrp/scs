@@ -55,9 +55,9 @@ jobs:
     - name: Build SCS as wrappers load it, with and without the MKL guard
       # Shared libraries with libgomp and without libiomp5, as the Julia package
       # is linked: the build without USE_PARALLEL_PSD, the build with it, and
-      # the latter without the guard of the PSD projection (its weak reference
-      # to MKL_Set_Num_Threads_Local is renamed to a symbol that does not
-      # exist).
+      # the latter without the guard of the PSD projection (built with the
+      # test-only flag SCS_NO_MKL_PSD_GUARD; the MKL symbol cannot be renamed,
+      # since the MKL linear solver references it too).
       run: |
         # link_shared <static library> <shared library>
         link_shared() {
@@ -70,7 +70,7 @@ jobs:
         link_shared out/libscsmkl.a out/libscs_guard.so
         make clean
         make USE_OPENMP=1 USE_PARALLEL_PSD=1 \
-          OPT="-O3 -march=native -fno-math-errno -DMKL_Set_Num_Threads_Local=scs_no_mkl_guard_" \
+          OPT="-O3 -march=native -fno-math-errno -DSCS_NO_MKL_PSD_GUARD" \
           out/libscsmkl.a
         link_shared out/libscsmkl.a out/libscs_noguard.so
         ldd out/libscs_guard.so || true
