@@ -47,7 +47,7 @@ badly scaled or ill-conditioned :math:`K`, and conjugate gradients stops at a
 tolerance. So SCS checks the solves it depends on, by computing their
 residuals, and when one is not accurate enough it refines it: it solves with
 :math:`K` for the residual and adds the correction to the solution that
-residual belongs to. For :math:`g` and with the indirect solvers that is an
+residual belongs to. For the :math:`(c, -b)` solve and with the indirect solvers that is an
 extra solve; for the direct solvers' per-iteration solves it takes the place
 of the plain solve (see below). Two solves are checked, each in its own way:
 
