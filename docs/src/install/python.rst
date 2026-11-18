@@ -68,7 +68,8 @@ installed. MKL is typically faster than QDLDL.
 MKL is linked statically rather than bundled as shared libraries, whose
 dlopen'd CPU dispatch kernels wheel-repair tools cannot see (see `issue #423
 <https://github.com/cvxgrp/scs/issues/423>`_); the backend is
-single-threaded, and Intel's license notice ships in the wheel as
+single-threaded (see :ref:`python_mkl_threaded_install` for a multithreaded
+source build), and Intel's license notice ships in the wheel as
 ``LICENSE-INTEL-MKL.txt``. The aarch64, musllinux, macOS and Windows wheels
 and sdist/source builds do not include it.
 
@@ -265,6 +266,47 @@ parallel, add the option :code:`use_parallel_psd`:
 when the BLAS runs on one thread inside the threads of SCS, and slower when it
 does not. That section also says how to check that the blocks are projected in
 parallel.
+
+.. _python_mkl_threaded_install:
+
+Multithreaded static MKL (x86-64 Linux)
+"""""""""""""""""""""""""""""""""""""""
+
+The MKL Pardiso backend of the wheel runs on one thread: MKL is linked with its
+sequential layer, so Pardiso's reordering, factorization and per-iteration
+solves, and MKL's LAPACK in the PSD projection, use one core. A source
+build on x86-64 Linux with GCC can link the same static MKL on its OpenMP layer
+instead, with the scs-python Meson option
+:code:`mkl_static_threading=gnu_thread` (scs-python master, and releases after
+3.3.2).
+It needs Intel's static MKL archives, for example from the :code:`mkl-static`
+PyPI package, unpacked so that :code:`<prefix>/lib/libmkl_core.a` exists:
+
+.. code:: bash
+
+  python -m pip install \
+    -Csetup-args=-Dmkl_static_prefix=<prefix> \
+    -Csetup-args=-Dmkl_static_threading=gnu_thread \
+    -Csetup-args=-Duse_openmp=true -Csetup-args=-Duse_parallel_psd=true .
+
+MKL then uses :code:`MKL_NUM_THREADS` (or :code:`OMP_NUM_THREADS`) threads.
+The build links GCC's OpenMP runtime, libgomp, which must be present when SCS
+is imported. With :code:`use_openmp`, SCS's own OpenMP code runs on the same
+libgomp, so MKL called inside a parallel region of SCS (the parallel PSD
+projection) runs on one thread instead of starting threads of its own (see
+:ref:`blas_lapack_openmp`). The build stops with an error without
+:code:`mkl_static_prefix`, or with a compiler other than GCC, whose OpenMP
+runtime would be a second one beside libgomp. The default,
+:code:`mkl_static_threading=sequential`, is the wheel's configuration.
+
+Threads help most on large linear systems and large PSD blocks: in our
+measurements on large linear systems (oneMKL 2026.1, 4 threads), Pardiso's
+per-iteration solve ran 2 to 3 times faster and its factorization up to about
+3 times faster. SCS runs Pardiso on one thread for small linear systems (a
+factor with fewer than 50,000 nonzeros, see the threads paragraph of
+:ref:`MKL Pardiso <mkl>`), but a threaded MKL still costs more per call than a
+sequential one, so on small problems the sequential build can be faster.
+Compare the two on your problems before switching.
 
 .. _python_gpu_indirect_install:
 
