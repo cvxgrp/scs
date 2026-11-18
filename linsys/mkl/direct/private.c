@@ -215,14 +215,44 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->error = 0;          /* Initialize error flag */
   p->msglvl = VERBOSITY; /* Printing information */
 
-  /* For all iparm vars see MKL documentation */
-  p->iparm[0] = 1;          /* Parsido must inspect iparm */
-  p->iparm[1] = 3;          /* Fill-in reordering from OpenMP */
-  p->iparm[5] = 1;          /* Write solution into b */
-  p->iparm[7] = 0;          /* Automatic iterative refinement calculation */
-  p->iparm[9] = 13;         /* Perturb the pivot elements with 1E-13 (default) */
-  p->iparm[23] = 1;         /* Two-level scheduling for parallel factorization */
-  p->iparm[24] = 1;         /* Parallel forward/backward solve */
+  /* For all iparm vars see the oneMKL "pardiso iparm Parameter" table, which
+   * uses C, zero-based indices (iparm[24] here is iparm(25) in the Fortran
+   * docs; iparm[34] below only sets the indexing of the matrix arrays, not of
+   * iparm). With iparm[0] = 1 every entry not set here is 0 rather than
+   * Intel's default. That differs from the default for iparm[20]: 0 is 1x1
+   * diagonal pivoting (the default would be Bunch-Kaufman), enough for SCS's
+   * quasi-definite KKT matrix. iparm[10] = iparm[12] = 0 (no scaling or
+   * matching) is the default for symmetric indefinite matrices and what the
+   * two-level factorization below requires. */
+  p->iparm[0] = 1;  /* Pardiso must inspect iparm */
+  p->iparm[1] = 3;  /* Parallel (OpenMP) nested dissection reordering */
+  p->iparm[5] = 1;  /* Write solution into b */
+  p->iparm[7] = 0;  /* Automatic iterative refinement calculation */
+  p->iparm[9] = 13; /* Perturb small pivots with 1e-13 (Intel's default for
+                       symmetric indefinite matrices is 8, i.e. 1e-8) */
+  /* Two-level scheduling for the parallel factorization. Measured on oneMKL
+   * 2026.1 (2026-11): 0 (the classic algorithm) segfaulted in the solve phase
+   * on every run, and 10 (the improved two-level algorithm) broke the inertia
+   * check below (iparm[21]), so keep 1. */
+  p->iparm[23] = 1;
+  /* Forward/backward solve, run in every iteration. Intel's table: 0 (the
+   * default) is the parallel solve, which for one right-hand side, as here,
+   * partitions the matrix; 1 is the sequential solve; 2 always partitions the
+   * matrix. SCS set 1 up to and including 3.3.2, with a comment calling it
+   * parallel. Measured on oneMKL 2026.1 (2026-11, threaded static MKL,
+   * AMD Zen 3 (Milan) on Modal, 4 threads): 0, 1 and 2 all gave a parallel
+   * solve, 2-2.7x faster than on one thread, with no difference between them
+   * beyond run-to-run noise; the value was traced to reach Pardiso as
+   * element 24, so this was not an indexing mix-up. Why 1 is not sequential
+   * there is unknown; two untested guesses: only the traversal of the
+   * elimination tree is sequential while the dense kernels inside it still
+   * use MKL's threads, or the two-level factorization (iparm[23] = 1) has a
+   * solve path of its own that ignores iparm[24]. 0 is set because it is the
+   * documented parallel solve, so SCS does not depend on that undocumented
+   * behaviour if a later MKL honours 1 = sequential. With a sequential MKL
+   * (as in the PyPI wheel), or for a small system (PARDISO_MIN_THREADED_NNZ
+   * above), every value runs on one thread. */
+  p->iparm[24] = 0;
   p->iparm[17] = -1;        /* Report the factor nonzeros after phase 11 */
   p->iparm[34] = 1;         /* Use C-style indexing for indices */
   /* p->iparm[36] = -80; */ /* Form block sparse matrices */

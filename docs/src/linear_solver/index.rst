@@ -128,8 +128,10 @@ though it only offers limited support for non-Intel CPUs. The x86-64 manylinux
 Python wheels include it, statically linked (see :ref:`python_install`).
 
 **Threads.** With a threaded MKL, Pardiso runs on MKL's threads
-(``MKL_NUM_THREADS``, else ``OMP_NUM_THREADS``). Starting and synchronizing
-them costs a few tens of microseconds per call, which on a small linear system
+(``MKL_NUM_THREADS``, else ``OMP_NUM_THREADS``): the reordering, the
+factorization and the solve done in every iteration, which SCS asks Pardiso to
+run in parallel. Starting and synchronizing
+the threads costs a few tens of microseconds per call, which on a small linear system
 is more than the work. So SCS runs Pardiso on one thread when the factor
 Pardiso computes has fewer than 50,000 nonzeros (``PARDISO_MIN_THREADED_NNZ``
 in ``linsys/mkl/direct/private.c``). The choice is made once, at setup, from
@@ -143,7 +145,9 @@ problem and the machine; in our measurements it was between about 30,000 and
 60,000 factor nonzeros. A sequential MKL, such as the one in the Python
 wheels, always runs on one thread, so there this changes nothing. On small
 problems a sequential MKL is still faster than a threaded one, because a
-threaded MKL costs more per call even on one thread.
+threaded MKL costs more per call even on one thread. On several threads
+Pardiso may round differently from run to run, so two runs of the same problem
+can differ slightly in their results and iteration counts.
 
 .. _apple_accelerate:
 
