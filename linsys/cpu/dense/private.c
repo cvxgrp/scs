@@ -248,3 +248,25 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p);
   }
 }
+
+/* Products with this solver's own copy of K for SCS's per-iteration
+ * refinement (optional, see linsys.h): not provided, so SCS computes them
+ * from the problem data. */
+scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
+                               const scs_float *x) {
+  (void)w;
+  (void)b;
+  (void)x;
+  return -1.;
+}
+
+void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {
+  (void)w;
+  (void)x;
+}
+
+scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) {
+  (void)w;
+  (void)x;
+  return -1;
+}

@@ -63,6 +63,72 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,
  */
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *w, const scs_float *new_diag_r);
 
+/*
+ * Optional: products with the linear solver's own copy of the matrix.
+ *
+ * Direct solvers refine each iteration's solve in correction form while the
+ * solve's error limits SCS (see "Accuracy of each iteration's solve" in
+ * glbopts.h): from the previous iteration's solution x0 they solve
+ * K d = b - K x0 and take x = x0 + d, where
+ * \f$K = \begin{bmatrix} R_x + P & A^\top \\ A & -R_y \end{bmatrix}\f$
+ * with the current `diag_r`. That costs one multiply by K per iteration, and
+ * SCS checks the residual b - K x of a solve every 25 iterations. By default
+ * SCS computes these products itself, from the problem data. A solver that
+ * holds K anyway can compute them with its own copy instead, for instance
+ * with a threaded or GPU sparse matrix-vector product, by implementing the
+ * three functions below. A solver that does not returns a negative value
+ * from `scs_lin_sys_residual` (and does nothing in the other two): SCS asks
+ * once, at setup, and then computes every product itself. SCS makes every
+ * decision (when to check, when to use the correction form, the
+ * thresholds); the solver only computes. All vectors are host vectors of
+ * length n + m.
+ */
+
+/**
+ * Computes \f$r = b - K x\f$ with the solver's own copy of K (as updated by
+ * the last `scs_update_lin_sys_diag_r`) and returns \f$\|r\|_\infty\f$. The
+ * solver keeps r for a following `scs_lin_sys_correct`. If `x` is `SCS_NULL`,
+ * x is the vector stored by the last `scs_lin_sys_keep`.
+ *
+ * Return a negative value if the solver does not provide these products: SCS
+ * calls this once at setup (with zero vectors) to find out. If the solver
+ * provides them, a negative return later in the solve is treated as a
+ * failure of the linear solver.
+ *
+ *  @param  w    Linear system private workspace.
+ *  @param  b    Right-hand side.
+ *  @param  x    Point at which the residual is evaluated, or `SCS_NULL`.
+ *  @return      \f$\|b - K x\|_\infty\f$, or a negative value if not
+ *               provided.
+ */
+scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
+                               const scs_float *x);
+
+/**
+ * Stores `x` as the guess x0 of the next correction-form solve. `x` is always
+ * the solution just returned by the latest `scs_solve_lin_sys` or
+ * `scs_lin_sys_correct` call, unchanged, so a solver that keeps that solution
+ * on its side (a GPU solver) may store its own copy and not read `x`. Called
+ * only if the solver provides the products.
+ *
+ *  @param  w    Linear system private workspace.
+ *  @param  x    The solution of the latest solve.
+ */
+void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x);
+
+/**
+ * Solves in correction form: \f$x = x_0 + K^{-1} r\f$, where r is the
+ * residual of the latest `scs_lin_sys_residual` call, which SCS always makes
+ * with `x` equal to `SCS_NULL` (so \f$r = b - K x_0\f$) right before. The
+ * result counts as the latest solve for `scs_lin_sys_keep`. Called only if
+ * the solver provides the products.
+ *
+ *  @param  w    Linear system private workspace.
+ *  @param  x    Output, the solution.
+ *  @return      status != 0 indicates failure.
+ */
+scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x);
+
 /**
  * Name of the linear solver.
  *

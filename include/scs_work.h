@@ -82,6 +82,11 @@ struct SCS_WORK {
    * refine_prev_ok. Unused (NULL) in indirect builds. */
   scs_float *refine_prev;
   scs_int refine_prev_ok;
+  /* direct solvers: the linear solver computes the products with K for the
+   * refinement itself (scs_lin_sys_residual and friends in linsys.h; then
+   * refine_prev is unused and the solver keeps the guess), else SCS computes
+   * them from the problem data. Set once, at setup. */
+  scs_int refine_hook;
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */

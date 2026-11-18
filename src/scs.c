@@ -1231,6 +1231,11 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
     scs_finish(w);
     return SCS_NULL;
   }
+#if INDIRECT == 0
+  /* does the linear solver compute the refinement's products with its own
+   * K (linsys.h)? kkt_res and kkt_corr are zero here, so this is 0 - K 0. */
+  w->refine_hook = scs_lin_sys_residual(w->p, w->kkt_res, w->kkt_corr) >= 0;
+#endif
   if (w->stgs->acceleration_lookback) {
     /* min_len = mem preserves the previous FILL_MEMORY_BEFORE_SOLVE
        gate — AA holds off until the sliding window is full. */
@@ -1396,11 +1401,29 @@ static scs_int refine_iter(ScsWork *w, scs_int iter) {
 
 #else
 
-/* Direct solvers: refine_prev = u_t[:n+m], the solution of this iteration's
- * solve, as the guess of the next iteration's correction form */
+/* Direct solvers: u_t[:n+m], the solution of this iteration's solve, becomes
+ * the guess of the next iteration's correction form (kept by the linear
+ * solver when it computes the products, else in refine_prev). Called right
+ * after that solve, before any other, as scs_lin_sys_keep requires. */
 static void keep_prev(ScsWork *w) {
-  memcpy(w->refine_prev, w->u_t, (w->d->n + w->d->m) * sizeof(scs_float));
+  if (w->refine_hook) {
+    scs_lin_sys_keep(w->p, w->u_t);
+  } else {
+    memcpy(w->refine_prev, w->u_t, (w->d->n + w->d->m) * sizeof(scs_float));
+  }
   w->refine_prev_ok = 1;
+}
+
+/* Direct solvers: ||rhs - K u||_inf for this iteration's rhs, with the linear
+ * solver's product when it has one (rhs built in kkt_res), else SCS's
+ * (iter_residual, r in kkt_res). u may not be kkt_res. A negative value
+ * means the linear solver failed. */
+static scs_float check_residual(ScsWork *w, const scs_float *u) {
+  if (w->refine_hook) {
+    iter_rhs(w, w->kkt_res);
+    return scs_lin_sys_residual(w->p, w->kkt_res, u);
+  }
+  return iter_residual(w, u, w->kkt_res, SCS_NULL);
 }
 
 /* Direct solvers: this iteration's solve in correction form from the
@@ -1412,14 +1435,32 @@ static void keep_prev(ScsWork *w) {
 static scs_int correction_solve(ScsWork *w, scs_int *status) {
   scs_int nm = w->d->n + w->d->m;
   scs_float nr, nrhs;
-  /* r = rhs - K u0, computed into u_t, which the solve then overwrites */
-  nr = iter_residual(w, w->refine_prev, w->u_t, &nrhs);
-  if (!(nr < nrhs)) {
-    return 0;
+  if (w->refine_hook) {
+    /* the linear solver computes r = rhs - K u0 with its own K and guess
+     * and keeps r; u_t holds rhs, for the plain solve if r is not used */
+    iter_rhs(w, w->u_t);
+    nrhs = SCS(norm_inf)(w->u_t, nm);
+    nr = scs_lin_sys_residual(w->p, w->u_t, SCS_NULL);
+    if (nr < 0) {
+      *status = -1; /* the linear solver failed */
+      return 1;
+    }
+    if (!(nr < nrhs)) {
+      return 0;
+    }
+    *status = scs_lin_sys_correct(w->p, w->u_t); /* u0 + K^{-1} r */
+  } else {
+    /* r = rhs - K u0, computed into u_t, which the solve then overwrites */
+    nr = iter_residual(w, w->refine_prev, w->u_t, &nrhs);
+    if (!(nr < nrhs)) {
+      return 0;
+    }
+    *status = scs_solve_lin_sys(w->p, w->u_t, SCS_NULL, -1.);
+    if (*status == 0) {
+      SCS(add_scaled_array)(w->u_t, w->refine_prev, nm, 1.); /* u0 + d */
+    }
   }
-  *status = scs_solve_lin_sys(w->p, w->u_t, SCS_NULL, -1.);
   if (*status == 0) {
-    SCS(add_scaled_array)(w->u_t, w->refine_prev, nm, 1.); /* u0 + d */
     w->refine_corrections++;
   }
   return 1;
@@ -1468,9 +1509,12 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
     if (status != 0) {
       return status;
     }
-    res = iter_residual(w, w->kkt_corr, w->kkt_res, SCS_NULL);
+    res = check_residual(w, w->kkt_corr);
   } else {
-    res = iter_residual(w, w->u_t, w->kkt_res, SCS_NULL);
+    res = check_residual(w, w->u_t);
+  }
+  if (res < 0) {
+    return -1; /* the linear solver failed (NaN iterates give NaN: off) */
   }
   w->refine_checks++;
   /* on above REFINE_DIRECT_ON_FACTOR * tol, off only at or below
