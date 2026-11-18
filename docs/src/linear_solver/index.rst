@@ -131,7 +131,7 @@ Python wheels include it, statically linked (see :ref:`python_install`).
 (``MKL_NUM_THREADS``, else ``OMP_NUM_THREADS``): the reordering, the
 factorization and the solve done in every iteration, which SCS asks Pardiso to
 run in parallel. Starting and synchronizing
-them costs a few tens of microseconds per call, which on a small linear system
+the threads costs a few tens of microseconds per call, which on a small linear system
 is more than the work. So SCS runs Pardiso on one thread when the factor
 Pardiso computes has fewer than 50,000 nonzeros (``PARDISO_MIN_THREADED_NNZ``
 in ``linsys/mkl/direct/private.c``). The choice is made once, at setup, from
