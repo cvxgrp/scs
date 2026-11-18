@@ -7,7 +7,9 @@ on:
   schedule:
     - cron: '0 6 * * 1'
 # Every job here only reads the repository. The simulator's action uses no
-# token or secrets, and installs packages only from Ubuntu and NVIDIA.
+# token or secrets, and installs packages only from Ubuntu and NVIDIA. (The
+# simulated-gpu job may fetch Ubuntu's packages from a mirror of Ubuntu's
+# archive, but keeps only files that match Ubuntu's signed index.)
 permissions:
   contents: read
 
@@ -86,12 +88,13 @@ jobs:
       # on only after an error. On 2026-11-18 the AWS-hosted runners' mirror,
       # us-east-2.ec2.archive.ubuntu.com, ran at about 60 kB/s, and every job
       # there used up the action's three 15-minute install attempts. So fetch
-      # the same files first, from that mirror and two others at once, dropping
-      # any connection slower than 1 MB/s. apt trusts a file it finds in its
-      # cache, so each one goes there only after matching the SHA-256 that
-      # Ubuntu's signed index gives for it. The action then installs exactly
-      # the packages it did before, fetching anything missing itself, so a
-      # failed prefetch only warns.
+      # the same files first, from two other mirrors and that one at once,
+      # dropping any connection slower than 512 KiB/s (with aria2's default
+      # URI selector: the adaptive one lowers that floor). apt trusts a file
+      # it finds in its cache, so each one goes there only after matching the
+      # SHA-256 that Ubuntu's signed index gives for it. The action then
+      # installs exactly the packages it did before, fetching anything missing
+      # itself, so a failed prefetch only warns.
       - name: Prefetch Ubuntu's CUDA toolkit from several mirrors
         env:
           # The action's packages, then this job's own.
@@ -100,9 +103,9 @@ jobs:
           set +e
           skip() { echo "::warning::Prefetch skipped: $*. apt downloads the packages itself."; exit 0; }
           command -v aria2c > /dev/null || skip "aria2c is not installed"
-          sudo timeout 300 apt-get update -qq || skip "apt-get update failed"
+          sudo timeout 120 apt-get update -qq || skip "apt-get update failed"
           own=$(awk 'NR == 1 { print $1 }' /etc/apt/apt-mirrors.txt 2> /dev/null)
-          mirrors="${own%/} http://archive.ubuntu.com/ubuntu http://mirrors.edge.kernel.org/ubuntu"
+          mirrors="http://archive.ubuntu.com/ubuntu http://mirrors.edge.kernel.org/ubuntu ${own%/}"
           echo "Mirrors: $mirrors"
           tmp="$RUNNER_TEMP/prefetch" dir="$RUNNER_TEMP/prefetch/debs"
           mkdir -p "$tmp" && : > "$tmp/sums"
@@ -128,9 +131,11 @@ jobs:
           want=$(wc -l < "$tmp/sums")
           echo "apt would fetch $(wc -l < "$tmp/uris") files; $want of them can be prefetched"
           [[ $want -gt 0 ]] || skip "no file to prefetch"
-          timeout 600 aria2c --input-file="$tmp/aria2" --dir="$dir" --max-concurrent-downloads=8 \
-            --split=4 --max-connection-per-server=4 --min-split-size=16M --uri-selector=adaptive \
-            --lowest-speed-limit=1M --max-tries=5 --retry-wait=2 --connect-timeout=10 --timeout=30 \
+          # At most 120 + 420 s here, so the action's 3 x 15-minute install
+          # still ends inside the job's 60 minutes if every mirror is down.
+          timeout 420 aria2c --input-file="$tmp/aria2" --dir="$dir" --max-concurrent-downloads=8 \
+            --split=4 --max-connection-per-server=4 --min-split-size=4M \
+            --lowest-speed-limit=512K --max-tries=5 --retry-wait=2 --connect-timeout=10 --timeout=30 \
             --file-allocation=none --auto-file-renaming=false --allow-overwrite=true \
             --summary-interval=0 --console-log-level=warn --download-result=hide
           rc=$?
