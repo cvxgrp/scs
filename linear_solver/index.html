@@ -54,24 +54,32 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Linear System Solver</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#available-linear-solvers">Available linear solvers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sparse-direct">Sparse direct</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dense-direct">Dense direct</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mkl-pardiso">MKL Pardiso</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#apple-accelerate">Apple Accelerate</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sparse-indirect">Sparse indirect</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sparse-gpu-direct-method">Sparse GPU direct method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accuracy-of-each-iteration-s-solve">Accuracy of each iteration’s solve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#available-linear-solvers">Available linear solvers</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#reproducibility-of-the-gpu-solvers">Reproducibility of the GPU solvers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv413ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_init_lin_sys_work()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv421scs_free_lin_sys_workP13ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">scs_free_lin_sys_work()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_solve_lin_sys()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv422scs_get_lin_sys_methodv"><code class="docutils literal notranslate"><span class="pre">scs_get_lin_sys_method()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-direct">Sparse direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dense-direct">Dense direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mkl-pardiso">MKL Pardiso</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apple-accelerate">Apple Accelerate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-indirect">Sparse indirect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-gpu-indirect-method">Sparse GPU indirect method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-gpu-direct-method">Sparse GPU direct method</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reproducibility-of-the-gpu-solvers">Reproducibility of the GPU solvers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv413ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#c.SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED"><code class="docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#c.SCS_LIN_SYS_PRODUCTS_FAILED"><code class="docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_init_lin_sys_work()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv421scs_free_lin_sys_workP13ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">scs_free_lin_sys_work()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_solve_lin_sys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv420scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_lin_sys_residual()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv416scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_lin_sys_keep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv419scs_lin_sys_correctP13ScsLinSysWorkP9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_lin_sys_correct()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#_CPPv422scs_get_lin_sys_methodv"><code class="docutils literal notranslate"><span class="pre">scs_get_lin_sys_method()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -143,44 +151,122 @@ larger than <span class="math notranslate nohighlight">\(10^{-12}\)</span> relat
 the residual, for at most three steps. This costs one multiply by the matrix
 each time, plus one solve and one multiply per refinement step; with the
 indirect solvers a refinement step is another conjugate gradient solve.</p>
-<p>The solve in each iteration is checked too, more cheaply. Every 25 iterations
-SCS computes the residual of that iteration’s solve from the problem data and
-compares it with the smaller of SCS’s own primal and dual residuals at its last
-convergence check (but at least <span class="math notranslate nohighlight">\(10^{-12}\)</span>, <span class="math notranslate nohighlight">\(10^{-5}\)</span> in single
-precision). If the solve’s error is the larger, the iterates cannot become
-more accurate than the solve, so SCS refines it with one more solve, for the
-residual, and then checks on every iteration until the error is down to a
-tenth of the residuals. (Stopping as soon as the error was back below the
-residuals made refinement switch off and on again, which slowed some solves
-and stalled a few.) Nothing needs to be set for this; what to expect:</p>
+<section id="accuracy-of-each-iteration-s-solve">
+<span id="refinement"></span><h2>Accuracy of each iteration’s solve<a class="headerlink" href="#accuracy-of-each-iteration-s-solve" title="Link to this heading"></a></h2>
+<p>SCS’s residuals cannot become much smaller than the error of the linear-system
+solve in each iteration, so SCS checks that error and makes the solves more
+accurate when it would limit the iterates. Nothing needs to be set for this.</p>
+<p><strong>The check.</strong> Every 25 iterations SCS computes the residual of that
+iteration’s solve, <span class="math notranslate nohighlight">\(\|z^k - K u\|_\infty\)</span> with <span class="math notranslate nohighlight">\(K\)</span> the matrix
+above, and compares it with <em>tol</em>, the smaller of SCS’s own primal and dual
+residuals at its last convergence check (but at least <span class="math notranslate nohighlight">\(10^{-12}\)</span>,
+<span class="math notranslate nohighlight">\(10^{-5}\)</span> in single precision). The check costs one multiply by
+<span class="math notranslate nohighlight">\(K\)</span> every 25 iterations.</p>
+<p><strong>Direct solvers</strong> (sparse direct, dense, Apple Accelerate, MKL Pardiso,
+cuDSS). When the residual of a check is above <span class="math notranslate nohighlight">\(0.01\,\)</span> <em>tol</em>, each
+following iteration solves in <em>correction form</em>: from the previous
+iteration’s solution <span class="math notranslate nohighlight">\(u_0\)</span> it solves <span class="math notranslate nohighlight">\(K d = z^k - K u_0\)</span> and takes
+<span class="math notranslate nohighlight">\(u = u_0 + d\)</span>. The error of a solve with a factorization is about
+proportional to the size of the right-hand side it is given. The iterates
+move little from one iteration to the next, so <span class="math notranslate nohighlight">\(z^k - K u_0\)</span> is
+<span class="math notranslate nohighlight">\(10^{-3}\)</span> to <span class="math notranslate nohighlight">\(10^{-7}\)</span> of <span class="math notranslate nohighlight">\(z^k\)</span>, and <span class="math notranslate nohighlight">\(u\)</span> is that much
+more accurate than a plain solve, for one more multiply by <span class="math notranslate nohighlight">\(K\)</span> per
+iteration and no extra solve. The errors do not build up from one iteration to
+the next: each correction-form solve shrinks the error it inherits by the same
+factor as it shrinks the right-hand side. When the previous solution is no
+better a guess than zero (<span class="math notranslate nohighlight">\(\|z^k - K u_0\| \ge \|z^k\|\)</span>, which
+happens after <span class="math notranslate nohighlight">\(R\)</span> changes) that iteration solves plainly. At each check
+while it is on, SCS also makes a plain solve of the same right-hand side, only
+to measure its error, and turns the correction form off once that error is at
+most <span class="math notranslate nohighlight">\(0.001\,\)</span> <em>tol</em>; the iterate stays the correction-form solution,
+unless the correction-form solution’s own residual (one more multiply by
+<span class="math notranslate nohighlight">\(K\)</span> per check) is more than twice the plain solve’s and above rounding
+level (<span class="math notranslate nohighlight">\(10^{-14}\,\|z^k\|_\infty\)</span> in double precision,
+<span class="math notranslate nohighlight">\(10^{-5}\,\|z^k\|_\infty\)</span> in single). That safeguard is for a
+factorization so inaccurate that the correction form does not reduce the
+error; normally the correction-form residual is near rounding level and the
+safeguard changes nothing.</p>
+<p>Why these choices: what slows SCS down is switching between accurate and
+inexact solves, more than the inexact solves themselves. On QFORPLAN at
+<span class="math notranslate nohighlight">\(10^{-6}\)</span> with Apple Accelerate, the previous rule (refine only once the
+error exceeds <em>tol</em>, with one more solve per iteration, until it falls below
+<span class="math notranslate nohighlight">\(0.1\,\)</span> <em>tol</em>) took 1,300 to 140,900 iterations depending on the
+starting point, and the correction form with the plain solve put into the
+iterate at every check (one inexact solve every 25 accurate ones) took up to
+31 times the iterations of the rule here, which took 700 to 975. Turning on at
+<span class="math notranslate nohighlight">\(0.01\,\)</span> <em>tol</em> and off at <span class="math notranslate nohighlight">\(0.001\,\)</span> <em>tol</em> starts the accurate
+solves before they are needed and keeps them while the residuals fall.
+Thresholds ten times lower were on for 12.6% of the iterations at the default
+tolerances instead of 1.3%, and for most of the solve on more problems, with
+similar results at tight tolerances; ten times higher ones took more
+iterations on the badly scaled problems.</p>
+<p><strong>Indirect solvers</strong> (CPU and GPU conjugate gradients). Conjugate gradients
+already solves to a tolerance tied to SCS’s residuals, and its error is set by
+that tolerance rather than by the size of the right-hand side, so the
+correction form would not make it more accurate. When a check finds the
+residual above <em>tol</em>, each following iteration’s solve is followed by one
+refinement step (one more multiply and one more conjugate gradient solve, for
+the residual), until a check finds it at most <span class="math notranslate nohighlight">\(0.1\,\)</span> <em>tol</em>. This
+fires only when a conjugate gradient solve misses its tolerance.</p>
+<p><strong>What to expect</strong> (direct solvers):</p>
 <ul class="simple">
-<li><p>At the default tolerances in double precision it almost never fires (in 9
-of 336 benchmark runs at <span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span>, on 0.01% of
-the solves). The check alone costs one multiply by the matrix every 25
-iterations: about 1% of the linear-system time with the default sparse
-direct solver and about 2% with cuDSS (from 0.5% to 8% on the 7 problems
-measured).</p></li>
-<li><p>At tight tolerances such as <span class="math notranslate nohighlight">\(10^{-8}\)</span> or <span class="math notranslate nohighlight">\(10^{-9}\)</span> the error of a
-direct solve can be as large as the residuals SCS has to reach. That is
-where it fires, and it is what lets such solves converge. While it is on,
-each iteration costs one more multiply and one more solve. On a problem
-that stalls it can stay on for most of the remaining iterations (in the
-benchmarks, SDPs that stalled at <span class="math notranslate nohighlight">\(10^{-6}\)</span>).</p></li>
-<li><p>In single precision the error of the default sparse direct solve can be as
-large as the residuals at the default tolerances, so it can fire there too,
-and on problems that stall it often stays on for most of the solve.</p></li>
-<li><p>The indirect solvers already solve to a tolerance tied to these residuals,
-so with them it fires only when a conjugate gradient solve misses that
-tolerance.</p></li>
+<li><p>At the default tolerances it rarely turns on: on 112 LPs, QPs and SDPs at
+<span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span> from 3 starting points each (QDLDL), for
+1.3% of the iterations, with the same iterations in 318 of the 336 runs (9
+fewer, 9 more) and about 1% more time, within the run-to-run noise.</p></li>
+<li><p>At tight tolerances it is what lets direct solves converge, and it takes
+fewer iterations than refining once the error is already too large: on 500
+random LPs and SOCPs at <span class="math notranslate nohighlight">\(10^{-9}\)</span> with QDLDL, 2.6% fewer iterations and
+2.3% less time; with cuDSS on 200 of them, 7% fewer iterations and 9% less
+solve time (14% less without Anderson acceleration); with Apple Accelerate,
+whose solves can be inaccurate on badly scaled problems, on 30 LPs, QPs and
+SDPs at <span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span> from 3 starting points each,
+0.95 times the time in geometric mean of the per-run ratios, and 0.89 times
+the shifted geometric mean of the times (shift 10 s), which weighs the long
+runs more (QFORPLAN at <span class="math notranslate nohighlight">\(10^{-6}\)</span>: 700 to 975 iterations, where the
+previous rule took 1,300 to 140,900 depending on the starting point). On 45 LPs and QPs at <span class="math notranslate nohighlight">\(10^{-8}\)</span> and
+<span class="math notranslate nohighlight">\(10^{-9}\)</span> with QDLDL the results were the same within noise. MKL
+Pardiso’s solves are accurate enough that it turns on less often: on 33 LPs
+and QPs at <span class="math notranslate nohighlight">\(10^{-9}\)</span>, in 15 of them, for 3.5% fewer iterations and the
+same time.</p></li>
+<li><p>While it is on, an iteration’s linear-system time is about 1.1 to 1.5 times
+that of a plain one: the extra multiply by <span class="math notranslate nohighlight">\(K\)</span> costs most, relative to
+the solve, on small and very sparse systems (1.4 with QDLDL on small LPs,
+1.1 with Accelerate on larger QPs).</p></li>
+<li><p>On a problem that stalls it can stay on for most of the remaining
+iterations: on 26 SDPs and QPs that stall at <span class="math notranslate nohighlight">\(10^{-4}\)</span> to
+<span class="math notranslate nohighlight">\(10^{-6}\)</span> (78 runs), it was on for 19% of the iterations and for most
+of the solve in 11 runs, which solved one run more and took 6% more time.
+In single precision it tends to stay on once it turns on, because the
+threshold to turn it off is near or below what a single-precision solve can
+reach.</p></li>
 </ul>
+<p><strong>Who computes the multiplies.</strong> By default SCS computes the multiplies by
+<span class="math notranslate nohighlight">\(K\)</span> itself, from the problem data, on one thread. A linear solver can
+compute them with its own copy of <span class="math notranslate nohighlight">\(K\)</span> instead (see
+<a class="reference internal" href="#new-linear-solver"><span class="std std-ref">Implementing a new linear solver</span></a>): MKL Pardiso uses MKL’s threaded sparse matrix-vector
+product, and cuDSS computes them on the GPU, where the vectors stay. The
+decisions above are the same either way; only the cost of the multiply and its
+rounding change.</p>
+<p>What the solver’s own multiplies buy is a cheaper iteration while the
+correction form is on. With cuDSS on 10 large LPs, QPs and SOCPs at
+<span class="math notranslate nohighlight">\(10^{-8}\)</span> (NVIDIA GB10), such an iteration cost 1.19 times a plain one
+with the multiplies on the GPU, against 1.48 with SCS’s on the CPU (on BOYD1
+1.61 ms against 2.63, a plain iteration taking 1.33). With MKL Pardiso on 33
+LPs and QPs at <span class="math notranslate nohighlight">\(10^{-9}\)</span> (4 threads, AMD Zen 3) it cost 1.32 times a plain
+one against 1.45. Whole solves changed by a few percent at most, within the
+run-to-run variation of the iteration counts, because the correction form is
+on for a small part of most solves.</p>
 <section id="available-linear-solvers">
-<h2>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Link to this heading"></a></h2>
+<h3>Available linear solvers<a class="headerlink" href="#available-linear-solvers" title="Link to this heading"></a></h3>
 <p>Each of the below linear solvers is included in their own binary. If linking
 against SCS directly, then to switch between them you must compile and link
 against the right binary. If calling SCS via one of the interfaces then you can
 choose between the different linear solvers using the appropriate settings.</p>
+</section>
+</section>
 <section id="sparse-direct">
-<span id="direct"></span><h3>Sparse direct<a class="headerlink" href="#sparse-direct" title="Link to this heading"></a></h3>
+<span id="direct"></span><h2>Sparse direct<a class="headerlink" href="#sparse-direct" title="Link to this heading"></a></h2>
 <p>The direct method is the default linear system solver in SCS and factorizes the
 above matrix using a sparse permuted LDL factorization. Then it solves the
 linear system at each iteration using the cached factors.  Since the linear
@@ -188,7 +274,7 @@ system is quasidefinite we have strong existence guarantees about the
 factorization.  It relies on the external (but included) <a class="reference external" href="https://github.com/DrTimothyAldenDavis/SuiteSparse">AMD</a> and <a class="reference external" href="https://github.com/oxfordcontrol/qdldl">QDLDL</a> packages.</p>
 </section>
 <section id="dense-direct">
-<span id="dense"></span><h3>Dense direct<a class="headerlink" href="#dense-direct" title="Link to this heading"></a></h3>
+<span id="dense"></span><h2>Dense direct<a class="headerlink" href="#dense-direct" title="Link to this heading"></a></h2>
 <p>The dense direct method reduces the KKT system to the smaller Gram matrix
 <span class="math notranslate nohighlight">\(G = R_x + P + A^\top R_y^{-1} A\)</span> (size <span class="math notranslate nohighlight">\(n \times n\)</span>) and
 factorizes it using the LAPACK <code class="docutils literal notranslate"><span class="pre">dpotrf</span></code> (Cholesky) routine. The
@@ -201,7 +287,7 @@ routines can outperform sparse solvers due to highly optimized memory access
 patterns and lower overhead. It requires LAPACK (<code class="docutils literal notranslate"><span class="pre">USE_LAPACK=1</span></code>).</p>
 </section>
 <section id="mkl-pardiso">
-<span id="mkl"></span><h3>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Link to this heading"></a></h3>
+<span id="mkl"></span><h2>MKL Pardiso<a class="headerlink" href="#mkl-pardiso" title="Link to this heading"></a></h2>
 <p>The <a class="reference external" href="https://www.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-c/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-iface.html">Intel MKL Pardiso solver</a>
 is a shared-memory multiprocessing parallel direct sparse solver which is
 included Intel oneAPI MKL library. This offers an alternative to the single
@@ -234,9 +320,31 @@ problems a sequential MKL is still faster than a threaded one, because a
 threaded MKL costs more per call even on one thread. On several threads
 Pardiso may round differently from run to run, so two runs of the same problem
 can differ slightly in their results and iteration counts.</p>
+<p><strong>Multiplies for the refinement.</strong> MKL Pardiso computes the multiplies by
+<span class="math notranslate nohighlight">\(K\)</span> of the per-iteration refinement (see <a class="reference internal" href="#refinement"><span class="std std-ref">Accuracy of each iteration’s solve</span></a>) with MKL’s
+sparse BLAS, on the same upper triangle Pardiso factorizes, analysed once at
+setup (<code class="docutils literal notranslate"><span class="pre">mkl_sparse_optimize</span></code>). They run on MKL’s threads, or on one thread
+when Pardiso does (the rule above), so that a solve never mixes thread counts.
+Measured per multiply against SCS’s own single-threaded product (AMD Zen 3, 4
+threads, 46 LPs and QPs): 0.2 to 0.5 times the time where it runs on MKL’s
+threads (0.76 against 2.39 ms on co-100), and 0.45 to 0.93 times where it runs
+on one thread; forcing 4 threads on the smallest systems made it about twice
+as slow as one thread. In the solves, an iteration with the correction form
+on cost 1.32 times a plain one, against 1.45 with SCS’s product (33 LPs and QPs
+at <span class="math notranslate nohighlight">\(10^{-9}\)</span>). The products add no run-to-run variation of their own:
+with the same number of threads they gave the same bits in repeated runs (a
+different thread count can change their last bits). The products also cost
+setup time that has not been measured: MKL analyses <span class="math notranslate nohighlight">\(K\)</span>
+(<code class="docutils literal notranslate"><span class="pre">mkl_sparse_optimize</span></code>) at setup and again at every update of <span class="math notranslate nohighlight">\(R\)</span>,
+whether or not the correction form ever turns on, since the check every 25
+iterations uses the product too. In a build with <code class="docutils literal notranslate"><span class="pre">DLONG</span></code> but 32-bit MKL
+integers, a <span class="math notranslate nohighlight">\(K\)</span> too large for those integers (more than <span class="math notranslate nohighlight">\(2^{31}\)</span>
+stored nonzeros) gets SCS’s own products instead, as before this change;
+<code class="docutils literal notranslate"><span class="pre">BLAS64=1</span></code> (Meson’s <code class="docutils literal notranslate"><span class="pre">use_blas64</span></code>) provides MKL’s at any size. If they
+cannot be set up otherwise (out of memory), setup fails with a message.</p>
 </section>
 <section id="apple-accelerate">
-<span id="id1"></span><h3>Apple Accelerate<a class="headerlink" href="#apple-accelerate" title="Link to this heading"></a></h3>
+<span id="id1"></span><h2>Apple Accelerate<a class="headerlink" href="#apple-accelerate" title="Link to this heading"></a></h2>
 <p>The Apple <a class="reference external" href="https://developer.apple.com/documentation/accelerate">Accelerate</a> framework provides
 a sparse LDL<sup>T</sup> factorization that is optimized for Apple hardware
 (including Apple Silicon). This backend uses the unpivoted LDL<sup>T</sup>
@@ -263,7 +371,7 @@ Accelerate explicitly with:</p>
 </div>
 </section>
 <section id="sparse-indirect">
-<span id="indirect"></span><h3>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Link to this heading"></a></h3>
+<span id="indirect"></span><h2>Sparse indirect<a class="headerlink" href="#sparse-indirect" title="Link to this heading"></a></h2>
 <p>The indirect method solves the above linear system approximately with a
 ‘matrix-free’ method. To do this it first reduces the system to solving</p>
 <div class="math notranslate nohighlight">
@@ -311,7 +419,7 @@ the factorization is relatively cheap so the direct method is the default,
 however for very large problems the indirect solver can be faster.</p>
 </section>
 <section id="sparse-gpu-indirect-method">
-<span id="gpu-indirect"></span><h3>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Link to this heading"></a></h3>
+<span id="gpu-indirect"></span><h2>Sparse GPU indirect method<a class="headerlink" href="#sparse-gpu-indirect-method" title="Link to this heading"></a></h2>
 <p>The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU. It runs conjugate gradients with the same diagonal preconditioner,
@@ -321,7 +429,7 @@ harvest eigenvectors or deflate, so <code class="code docutils literal notransla
 effect on it. Usually the direct GPU solver will be faster than this solver.</p>
 </section>
 <section id="sparse-gpu-direct-method">
-<span id="cudss-solver"></span><h3>Sparse GPU direct method<a class="headerlink" href="#sparse-gpu-direct-method" title="Link to this heading"></a></h3>
+<span id="cudss-solver"></span><h2>Sparse GPU direct method<a class="headerlink" href="#sparse-gpu-direct-method" title="Link to this heading"></a></h2>
 <p>This is a linear solver that uses the <a class="reference external" href="https://developer.nvidia.com/cudss">cuDSS</a> library to solve the linear system on
 the GPU. It is similar to the direct solver, but uses the calls to cuDSS
 library to perform the analysis, numerical (re-)factorization and subsequent
@@ -344,37 +452,137 @@ the test suite was about 6e-8, against 5e-11 with cuDSS’s default pivoting and
 matching. Single-precision builds keep one step of iterative refinement per
 solve, which about doubles the cost of a solve, because without it one problem
 in the test suite does not converge.</p>
-</section>
-</section>
+<p><strong>Multiplies for the refinement.</strong> When <span class="math notranslate nohighlight">\(K\)</span> has at least 60,000 nonzeros
+(<code class="docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code> in <code class="docutils literal notranslate"><span class="pre">linsys/cudss/direct/private.c</span></code>), the cuDSS
+solver computes the multiplies by <span class="math notranslate nohighlight">\(K\)</span> of the per-iteration refinement
+(see <a class="reference internal" href="#refinement"><span class="std std-ref">Accuracy of each iteration’s solve</span></a>) on the GPU: one cuSPARSE sparse matrix-vector product
+and one cuBLAS reduction, with the guess and the residual kept on the GPU, so
+an iteration in correction form copies no more vectors between the host and
+the GPU than a plain solve. cuSPARSE has no symmetric product, so <span class="math notranslate nohighlight">\(K\)</span>
+is stored a second time with both triangles, about twice the nonzeros of the
+copy cuDSS factorizes. A call costs about 0.04 ms whatever the size, so smaller
+systems use SCS’s product on the CPU, which was faster there. On an NVIDIA
+GB10, per multiply, the GPU took 0.12 to 0.37 times the CPU’s time above
+<span class="math notranslate nohighlight">\(3.7 \cdot 10^5\)</span> nonzeros (0.18 against 1.27 ms on BOYD1).
+In the solves, on 10 large LPs, QPs and SOCPs at <span class="math notranslate nohighlight">\(10^{-8}\)</span>, an
+iteration with the correction form on cost 1.19 times a plain one, against
+1.48 with the multiplies on the CPU, and the time per iteration fell by 4%.
+Setting them up (building <span class="math notranslate nohighlight">\(K\)</span> with both triangles, copying it to the
+GPU, creating the cuSPARSE and cuBLAS handles) is done at setup whether or not
+the correction form ever turns on, since the check every 25 iterations uses
+the multiply too. On the GB10 it took 3, 35 and 340 ms for random <span class="math notranslate nohighlight">\(K\)</span>
+with <span class="math notranslate nohighlight">\(10^5\)</span>, <span class="math notranslate nohighlight">\(10^6\)</span> and <span class="math notranslate nohighlight">\(8 \cdot 10^6\)</span> nonzeros, 5 to 13%
+of the time cuDSS’s own setup (analysis and factorization) took; the two
+handles took 0.4 to 0.8 ms of that. If they cannot be set up (out of GPU
+memory, or a <span class="math notranslate nohighlight">\(K\)</span> too large for 32-bit indices in a build without
+<code class="docutils literal notranslate"><span class="pre">DLONG</span></code>), setup fails with a message.</p>
 <section id="reproducibility-of-the-gpu-solvers">
-<span id="gpu-reproducibility"></span><h2>Reproducibility of the GPU solvers<a class="headerlink" href="#reproducibility-of-the-gpu-solvers" title="Link to this heading"></a></h2>
+<span id="gpu-reproducibility"></span><h3>Reproducibility of the GPU solvers<a class="headerlink" href="#reproducibility-of-the-gpu-solvers" title="Link to this heading"></a></h3>
 <p>With either GPU solver, two runs of the same problem on the same machine are
 not guaranteed to give bit for bit the same result. The GPU indirect solver
 does its sparse matrix-vector products with cuSPARSE’s
 <code class="code docutils literal notranslate"><span class="pre">CUSPARSE_SPMV_CSR_ALG1</span></code>, which cuSPARSE does not guarantee to give the
 same bits on every run, and SCS runs cuDSS without its deterministic mode
-(<code class="code docutils literal notranslate"><span class="pre">CUDSS_CONFIG_DETERMINISTIC_MODE</span></code>), which made LPs and QPs several
-times slower to solve on an NVIDIA GB10. SCS has no setting to change either
-choice. When two runs differ, their iterates differ slightly. Printed values
-that are small near the end of a solve, such as the dual residual and the gap,
-can then differ in every digit, and the iteration count can change if a
-residual ends close to its tolerance. In a check on an NVIDIA GB10 (CUDA 13.0,
-cuDSS 1.0.0), three runs of a random SOCP with each GPU solver all took 150
-iterations, and their last iterations differed in the dual residual and the
-gap (the gap of the GPU indirect solver by a factor of 13).</p>
+(<code class="code docutils literal notranslate"><span class="pre">CUDSS_CONFIG_DETERMINISTIC_MODE</span></code>), which made LPs and QPs several times
+slower to solve on an NVIDIA GB10. SCS has no setting to change either choice.
+The multiplies of the refinement on the GPU (cuDSS, see above) use
+<code class="code docutils literal notranslate"><span class="pre">CUSPARSE_SPMV_CSR_ALG2</span></code>, which gives the same result every run, so they
+add no variation of their own. When two runs differ, their iterates differ
+slightly. Printed values that are small near the end of a solve, such as the
+dual residual and the gap, can then differ in every digit, and the iteration
+count can change if a residual ends close to its tolerance. In a check on an
+NVIDIA GB10 (CUDA 13.0, cuDSS 1.0.0), three runs of a random SOCP with each GPU
+solver all took 150 iterations, and their last iterations differed in the dual
+residual and the gap (the gap of the GPU indirect solver by a factor of 13).</p>
 </section>
 <section id="implementing-a-new-linear-solver">
-<span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Link to this heading"></a></h2>
+<span id="new-linear-solver"></span><h3>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Link to this heading"></a></h3>
 <p>In order to implement you own linear system solver, you need to implement the
 struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> that contains the workspace your solver requires,
 and implement the functions in <code class="code docutils literal notranslate"><span class="pre">include/linsys.h</span></code> as detailed below.
 See <code class="code docutils literal notranslate"><span class="pre">linsys</span></code> directory for examples.</p>
+<p><strong>Products with the matrix (optional).</strong> The per-iteration refinement of the
+direct solvers (see <a class="reference internal" href="#refinement"><span class="std std-ref">Accuracy of each iteration’s solve</span></a>) multiplies by the matrix <span class="math notranslate nohighlight">\(K\)</span>:
+every 25 iterations to check a solve, and once per iteration while the
+correction form is on. By default SCS computes these products itself, from the
+problem data, on one thread. A solver that holds <span class="math notranslate nohighlight">\(K\)</span> anyway can compute
+them faster with its own copy, by implementing three functions:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual(w,</span> <span class="pre">b,</span> <span class="pre">x)</span></code> computes <span class="math notranslate nohighlight">\(r = b - K x\)</span> with the
+solver’s current <span class="math notranslate nohighlight">\(K\)</span> (including the latest <span class="math notranslate nohighlight">\(R\)</span> from
+<code class="code docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r</span></code>), keeps <span class="math notranslate nohighlight">\(r\)</span>, and returns
+<span class="math notranslate nohighlight">\(\|r\|_\infty\)</span>. If <code class="code docutils literal notranslate"><span class="pre">x</span></code> is <code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, <span class="math notranslate nohighlight">\(x\)</span> is the
+vector stored by the last <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_keep</span></code>.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_keep(w,</span> <span class="pre">x)</span></code> stores <span class="math notranslate nohighlight">\(x\)</span> as the guess <span class="math notranslate nohighlight">\(x_0\)</span>.
+SCS calls it with the solution of the latest solve (a
+<code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys</span></code> or <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_correct</span></code> call), unchanged,
+so a GPU solver can copy the solution it still has on the device and not
+read <code class="code docutils literal notranslate"><span class="pre">x</span></code> at all. Between that solve and this call SCS may call
+<code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code> (when it turns the correction form on, it
+checks the solve with <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual(w,</span> <span class="pre">b,</span> <span class="pre">x)</span></code> first), but no
+other solve, so the residual must not overwrite the solver’s copy of the
+solution.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_correct(w,</span> <span class="pre">x)</span></code> returns <span class="math notranslate nohighlight">\(x = x_0 + K^{-1} r\)</span> for the
+<span class="math notranslate nohighlight">\(r\)</span> of the latest <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual(w,</span> <span class="pre">b,</span> <span class="pre">SCS_NULL)</span></code>.</p></li>
+</ul>
+<p>Every solver must define the three functions so that it links (an
+out-of-tree solver written for an earlier SCS needs the three stubs below).
+The contract:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code> returns <span class="math notranslate nohighlight">\(\|r\|_\infty \ge 0\)</span>,
+<code class="code docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></code> if the workspace does not compute
+the products, or <code class="code docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></code> on an error.</p></li>
+<li><p>Whether a workspace provides the products is fixed when
+<code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code> returns, by a rule stated up front (cuDSS: the
+number of nonzeros of <span class="math notranslate nohighlight">\(K\)</span>; MKL Pardiso: always, except a <span class="math notranslate nohighlight">\(K\)</span> too
+large for 32-bit MKL integers in a <code class="docutils literal notranslate"><span class="pre">DLONG</span></code> build without <code class="docutils literal notranslate"><span class="pre">BLAS64</span></code>), never
+by whether memory or a library happened to be available. A solver that should provide
+them but cannot set them up makes <code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code> fail with a
+message saying why, rather than returning “not provided”.</p></li>
+<li><p>SCS calls <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code> once at setup, with zero vectors:
+“not provided” makes SCS compute every product itself (and never call the
+other two functions); a failure makes SCS’s setup fail; a norm means the
+solver provides them. During a solve any negative return is a failure of
+the linear solver.</p></li>
+</ul>
+<p>A solver without the products defines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scs_float</span> <span class="n">scs_lin_sys_residual</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span>
+                               <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">void</span> <span class="n">scs_lin_sys_keep</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{}</span>
+<span class="n">scs_int</span> <span class="n">scs_lin_sys_correct</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>SCS makes every decision (when to check, the thresholds, when to use the
+guess); the solver only computes, so the refinement behaves the same with
+every solver, up to the rounding of the product.
+<code class="code docutils literal notranslate"><span class="pre">test_lin_sys_products</span></code> in the test suite checks a solver’s products
+against SCS’s own. The MKL Pardiso solver (<code class="code docutils literal notranslate"><span class="pre">linsys/mkl/direct/private.c</span></code>,
+with MKL’s sparse BLAS) and the cuDSS solver
+(<code class="code docutils literal notranslate"><span class="pre">linsys/cudss/direct/private.c</span></code>, on the GPU with cuSPARSE and cuBLAS)
+are examples; the other solvers return “not provided”.</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv413ScsLinSysWork">
 <span id="_CPPv313ScsLinSysWork"></span><span id="_CPPv213ScsLinSysWork"></span><span id="ScsLinSysWork"></span><span class="target" id="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">SCS_LIN_SYS_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsLinSysWork</span></span></span><a class="headerlink" href="#_CPPv413ScsLinSysWork" title="Link to this definition"></a><br /></dt>
 <dd><p>Struct containing linear system workspace. Implemented by linear solver. </p>
 </dd></dl>
 
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-defines">Defines</p>
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED">
+<span class="target" id="linsys_8h_1a654cadbc9c2e587ffc5716fcb277fd1b"></span><span class="sig-name descname"><span class="n"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></span></span><a class="headerlink" href="#c.SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED" title="Link to this definition"></a><br /></dt>
+<dd><p>Returned by <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code>: this workspace does not compute the products, SCS computes them itself. </p>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.SCS_LIN_SYS_PRODUCTS_FAILED">
+<span class="target" id="linsys_8h_1a2c19f3e9ad5a6d78a6454dee1e202c33"></span><span class="sig-name descname"><span class="n"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></span></span><a class="headerlink" href="#c.SCS_LIN_SYS_PRODUCTS_FAILED" title="Link to this definition"></a><br /></dt>
+<dd><p>Returned by <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code>: the product failed. </p>
+</dd></dl>
+
+</div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
@@ -447,6 +655,55 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float">
+<span id="_CPPv320scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float"></span><span id="_CPPv220scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float"></span><span id="scs_lin_sys_residual__ScsLinSysWorkP.scs_floatCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_lin_sys_residual</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float" title="Link to this definition"></a><br /></dt>
+<dd><p>Computes <span class="math notranslate nohighlight">\(r = b - K x\)</span> with the solver’s own copy of K (as updated by the last <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a3a78943fd4381d97662c78f5b2586448"><span class="std std-ref"><span class="pre">scs_update_lin_sys_diag_r</span></span></a></code>) and returns <span class="math notranslate nohighlight">\(\|r\|_\infty\)</span>. The solver keeps r for a following <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a2c4f985262e6d933f05387f9da083482"><span class="std std-ref"><span class="pre">scs_lin_sys_correct</span></span></a></code>. If <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, x is the vector stored by the last <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1af0111de544e9b0ad34f342e9636e7175"><span class="std std-ref"><span class="pre">scs_lin_sys_keep</span></span></a></code>. It must not change the solver’s copy of the solution of its latest solve (see <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1af0111de544e9b0ad34f342e9636e7175"><span class="std std-ref"><span class="pre">scs_lin_sys_keep</span></span></a></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – Linear system private workspace. </p></li>
+<li><p><strong>b</strong> – Right-hand side. </p></li>
+<li><p><strong>x</strong> – Point at which the residual is evaluated, or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>, <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a654cadbc9c2e587ffc5716fcb277fd1b"><span class="std std-ref"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></span></a></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a2c19f3e9ad5a6d78a6454dee1e202c33"><span class="std std-ref"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></span></a></code> (see the contract above). </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float">
+<span id="_CPPv316scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float"></span><span id="_CPPv216scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float"></span><span id="scs_lin_sys_keep__ScsLinSysWorkP.scs_floatCP"></span><span class="target" id="linsys_8h_1af0111de544e9b0ad34f342e9636e7175"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_lin_sys_keep</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float" title="Link to this definition"></a><br /></dt>
+<dd><p>Stores <code class="docutils literal notranslate"><span class="pre">x</span></code> as the guess x0 of the next correction-form solve. <code class="docutils literal notranslate"><span class="pre">x</span></code> is always the solution returned by the latest <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a24229ab88459885462fcc7fa6759467f"><span class="std std-ref"><span class="pre">scs_solve_lin_sys</span></span></a></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a2c4f985262e6d933f05387f9da083482"><span class="std std-ref"><span class="pre">scs_lin_sys_correct</span></span></a></code> call, unchanged, so a solver that keeps that solution on its side (a GPU solver) may store its own copy and not read <code class="docutils literal notranslate"><span class="pre">x</span></code>. Between that solve and this call SCS may call <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code> (with that solution or another vector as <code class="docutils literal notranslate"><span class="pre">x</span></code>, or with <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>), but no other solve: the residual must therefore leave the solver’s copy of the solution as it is. Called only if the solver provides the products.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – Linear system private workspace. </p></li>
+<li><p><strong>x</strong> – The solution of the latest solve. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419scs_lin_sys_correctP13ScsLinSysWorkP9scs_float">
+<span id="_CPPv319scs_lin_sys_correctP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv219scs_lin_sys_correctP13ScsLinSysWorkP9scs_float"></span><span id="scs_lin_sys_correct__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1a2c4f985262e6d933f05387f9da083482"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_lin_sys_correct</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419scs_lin_sys_correctP13ScsLinSysWorkP9scs_float" title="Link to this definition"></a><br /></dt>
+<dd><p>Solves in correction form: <span class="math notranslate nohighlight">\(x = x_0 + K^{-1} r\)</span>, where r is the residual of the latest <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code> call, which SCS always makes with <code class="docutils literal notranslate"><span class="pre">x</span></code> equal to <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> (so <span class="math notranslate nohighlight">\(r = b - K x_0\)</span>) right before. The result counts as the latest solve for <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1af0111de544e9b0ad34f342e9636e7175"><span class="std std-ref"><span class="pre">scs_lin_sys_keep</span></span></a></code>. Called only if the solver provides the products.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> – Linear system private workspace. </p></li>
+<li><p><strong>x</strong> – Output, the solution. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>status != 0 indicates failure. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv422scs_get_lin_sys_methodv">
 <span id="_CPPv322scs_get_lin_sys_methodv"></span><span id="_CPPv222scs_get_lin_sys_methodv"></span><span id="scs_get_lin_sys_method__void"></span><span class="target" id="linsys_8h_1a5d3ebe89707d22dc70f63a3d151e000f"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_get_lin_sys_method</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422scs_get_lin_sys_methodv" title="Link to this definition"></a><br /></dt>
 <dd><p>Name of the linear solver.</p>
@@ -458,6 +715,7 @@ See <code class="code docutils literal notranslate"><span class="pre">linsys</sp
 </dd></dl>
 
 </div>
+</section>
 </section>
 </section>
 
