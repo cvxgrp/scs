@@ -238,17 +238,20 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   /* Forward/backward solve, run in every iteration. Intel's table: 0 (the
    * default) is the parallel solve, which for one right-hand side, as here,
    * partitions the matrix; 1 is the sequential solve; 2 always partitions the
-   * matrix. SCS set 1 until 3.3.2, with a comment calling it parallel.
-   * Measured on oneMKL 2026.1 (2026-11, threaded static MKL, AMD Milan,
-   * 4 threads): 0, 1 and 2 all gave a parallel solve, 2-2.7x faster than on
-   * one thread, with no difference between them beyond run-to-run noise; the
-   * value was traced to reach Pardiso as element 24, so this was not an
-   * indexing mix-up. Why 1 is not sequential there is unknown (perhaps only
-   * the traversal of the elimination tree is sequential while the dense
-   * kernels inside it still use MKL's threads). 0 is set because it is the
+   * matrix. SCS set 1 up to and including 3.3.2, with a comment calling it
+   * parallel. Measured on oneMKL 2026.1 (2026-11, threaded static MKL,
+   * AMD Zen 3 (Milan) on Modal, 4 threads): 0, 1 and 2 all gave a parallel
+   * solve, 2-2.7x faster than on one thread, with no difference between them
+   * beyond run-to-run noise; the value was traced to reach Pardiso as
+   * element 24, so this was not an indexing mix-up. Why 1 is not sequential
+   * there is unknown; two untested guesses: only the traversal of the
+   * elimination tree is sequential while the dense kernels inside it still
+   * use MKL's threads, or the two-level factorization (iparm[23] = 1) has a
+   * solve path of its own that ignores iparm[24]. 0 is set because it is the
    * documented parallel solve, so SCS does not depend on that undocumented
    * behaviour if a later MKL honours 1 = sequential. With a sequential MKL
-   * (as in the PyPI wheel) every value runs on one thread. */
+   * (as in the PyPI wheel), or for a small system (PARDISO_MIN_THREADED_NNZ
+   * above), every value runs on one thread. */
   p->iparm[24] = 0;
   p->iparm[17] = -1;        /* Report the factor nonzeros after phase 11 */
   p->iparm[34] = 1;         /* Use C-style indexing for indices */
