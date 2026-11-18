@@ -132,7 +132,11 @@ static void cold_start_vars(ScsWork *w);
 static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
                            scs_float eta);
 static scs_int project_lin_sys(ScsWork *w, scs_int iter);
+#if INDIRECT > 0
 static scs_int refine_iter(ScsWork *w, scs_int iter);
+#else
+static scs_int solve_direct(ScsWork *w, scs_int iter);
+#endif
 static void compute_rsk(ScsWork *w);
 static void update_dual_vars(ScsWork *w);
 static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter);
@@ -800,21 +804,27 @@ static scs_float root_plus(ScsWork *w, scs_float *p, scs_float *mu,
   return root_plus_from_coeffs(a, b, c);
 }
 
-/* status != 0 indicates failure */
-static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
-  scs_int n = w->d->n, m = w->d->m, l = n + m + 1, status, i;
-  scs_float *warm_start = SCS_NULL;
-  scs_float tol = -1.0; /* only used for indirect methods, overridden later */
+/* b = [R_x v_x; -R_y v_y], the right-hand side of this iteration's solve
+ * (n + m entries) */
+static void iter_rhs(const ScsWork *w, scs_float *b) {
+  scs_int i, n = w->d->n, nm = n + w->d->m;
   /* Copy and scale in one pass, eliminating the intermediate memcpy. */
   for (i = 0; i < n; ++i) {
-    w->u_t[i] = w->v[i] * w->diag_r[i];
+    b[i] = w->v[i] * w->diag_r[i];
   }
-  for (i = n; i < l - 1; ++i) {
-    w->u_t[i] = -w->v[i] * w->diag_r[i];
+  for (i = n; i < nm; ++i) {
+    b[i] = -w->v[i] * w->diag_r[i];
   }
-  w->u_t[l - 1] = w->v[l - 1];
+}
+
+/* status != 0 indicates failure */
+static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
+  scs_int n = w->d->n, m = w->d->m, l = n + m + 1, status;
 #if INDIRECT > 0
+  scs_float *warm_start = SCS_NULL;
+  scs_float tol = -1.0;
   scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
+  iter_rhs(w, w->u_t);
   /* compute warm start using the cone projection output */
   nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, m);
   nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, n);
@@ -830,11 +840,14 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
   nm_ws = CG_NORM(warm_start, n) / POWF((scs_float)iter + 1, CG_RATE);
   tol = CG_TOL_FACTOR * MIN(tol, nm_ws);
   tol = MAX(CG_BEST_TOL, tol);
-#endif
   status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol);
   if (status == 0) {
     status = refine_iter(w, iter);
   }
+#else
+  status = solve_direct(w, iter);
+#endif
+  w->u_t[l - 1] = w->v[l - 1];
   if (iter < FEASIBLE_ITERS) {
     w->u_t[l - 1] = 1.;
   } else {
@@ -1116,6 +1129,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   w->g = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->kkt_res = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
   w->kkt_corr = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+#if INDIRECT == 0
+  w->refine_prev = (scs_float *)scs_calloc((l - 1), sizeof(scs_float));
+#endif
   w->lin_sys_warm_start = (scs_float *)scs_calloc(w->d->n, sizeof(scs_float));
   w->diag_r = (scs_float *)scs_calloc(l, sizeof(scs_float));
   /* x,y,s struct */
@@ -1155,6 +1171,9 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 
   if (!w->u || !w->u_t || !w->v || !w->v_prev || !w->rsk || !w->h || !w->g ||
       !w->kkt_res || !w->kkt_corr ||
+#if INDIRECT == 0
+      !w->refine_prev ||
+#endif
       !w->lin_sys_warm_start || !w->diag_r || !w->xys_orig ||
       !w->xys_orig->x || !w->xys_orig->s || !w->xys_orig->y || !w->r_orig ||
       !w->b_orig || !w->c_orig) {
@@ -1293,14 +1312,15 @@ static void refine_g(ScsWork *w) {
 /* r = rhs - K u with K = [R_x + P, A'; A, -R_y] and rhs = [R_x v_x; -R_y v_y],
  * the right-hand side of this iteration's solve in project_lin_sys, from the
  * (normalized) problem data, so it is the same for every linear solver.
- * Returns ||r||_inf. rhs is rebuilt from v and diag_r rather than copied
- * (v does not change in project_lin_sys), in its own statement so that it is
- * rounded as it is there. */
+ * Returns ||r||_inf, and ||rhs||_inf in *nrhs unless nrhs is SCS_NULL. rhs
+ * is rebuilt from v and diag_r rather than copied (v does not change in
+ * project_lin_sys), in its own statement so that it is rounded as it is in
+ * iter_rhs. r may not alias u. */
 static scs_float iter_residual(const ScsWork *w, const scs_float *u,
-                               scs_float *r) {
+                               scs_float *r, scs_float *nrhs) {
   scs_int i, n = w->d->n, m = w->d->m;
   const scs_float *v = w->v, *dr = w->diag_r;
-  scs_float rhs;
+  scs_float rhs, nb = 0.;
   memset(r, 0, (n + m) * sizeof(scs_float));
   SCS(accum_by_atrans)(w->d->A, &(u[n]), r);
   if (w->d->P) {
@@ -1309,22 +1329,29 @@ static scs_float iter_residual(const ScsWork *w, const scs_float *u,
   SCS(accum_by_a)(w->d->A, u, &(r[n]));
   for (i = 0; i < n; ++i) {
     rhs = v[i] * dr[i];
+    nb = MAX(nb, ABS(rhs));
     r[i] = rhs - (r[i] + dr[i] * u[i]);
   }
   for (i = n; i < n + m; ++i) {
     rhs = -v[i] * dr[i];
+    nb = MAX(nb, ABS(rhs));
     r[i] = rhs - (r[i] - dr[i] * u[i]);
+  }
+  if (nrhs) {
+    *nrhs = nb;
   }
   return SCS(norm_inf)(r, n + m);
 }
 
-/* Sets the tol that refine_iter compares with, at a convergence check, right
- * after the residuals are computed: the size of the residuals SCS is driving
- * to zero (normalized, tau not divided out), but not below REFINE_TOL_FLOOR:
+/* Sets the tol that the per-iteration refinement (refine_iter for indirect
+ * solvers, solve_direct for direct ones) compares with, at a convergence
+ * check, right after the residuals are computed: the size of the residuals
+ * SCS is driving to zero (normalized, tau not divided out), but not below
+ * REFINE_TOL_FLOOR:
  * one of them can be zero (an infeasibility or unboundedness certificate),
  * and refinement would then chase rounding errors on every remaining
- * iteration. It is kept here rather than read from r_normalized when
- * refine_iter runs because logging to CSV (log_csv_filename) recomputes
+ * iteration. It is kept here rather than read from r_normalized when the
+ * refinement runs because logging to CSV (log_csv_filename) recomputes
  * r_normalized every iteration, and logging must not change the iterates. */
 static void set_refine_tol(ScsWork *w) {
   scs_float tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, w->d->m),
@@ -1332,9 +1359,10 @@ static void set_refine_tol(ScsWork *w) {
   w->refine_tol = MAX(tol, REFINE_TOL_FLOOR);
 }
 
-/* Refinement of this iteration's solve, see REFINE_CHECK_INTERVAL,
- * REFINE_FACTOR and REFINE_OFF_FACTOR in glbopts.h. Called right after the
- * solve in
+#if INDIRECT > 0
+/* Indirect solvers: refinement of this iteration's solve, see
+ * REFINE_CHECK_INTERVAL, REFINE_INDIRECT_ON_FACTOR and
+ * REFINE_INDIRECT_OFF_FACTOR in glbopts.h. Called right after the solve in
  * project_lin_sys, while u_t[:n+m] holds its solution. Returns the status of
  * the refinement solve (0 when there is none). */
 static scs_int refine_iter(ScsWork *w, scs_int iter) {
@@ -1346,12 +1374,14 @@ static scs_int refine_iter(ScsWork *w, scs_int iter) {
   if (w->refine_tol < 0) {
     return 0; /* no convergence check yet, so no residuals to compare with */
   }
-  res = iter_residual(w, w->u_t, w->kkt_res);
+  res = iter_residual(w, w->u_t, w->kkt_res, SCS_NULL);
   w->refine_checks++;
-  /* on above REFINE_FACTOR * tol, off only at or below REFINE_OFF_FACTOR *
-   * tol: the gap keeps it from switching off and on again */
-  w->refine_on =
-      res > (w->refine_on ? REFINE_OFF_FACTOR : REFINE_FACTOR) * w->refine_tol;
+  /* on above REFINE_INDIRECT_ON_FACTOR * tol, off only at or below
+   * REFINE_INDIRECT_OFF_FACTOR * tol: the gap keeps it from switching off
+   * and on again */
+  w->refine_on = res > (w->refine_on ? REFINE_INDIRECT_OFF_FACTOR
+                                     : REFINE_INDIRECT_ON_FACTOR) *
+                           w->refine_tol;
   if (!w->refine_on) {
     return 0;
   }
@@ -1363,6 +1393,100 @@ static scs_int refine_iter(ScsWork *w, scs_int iter) {
   }
   return status;
 }
+
+#else
+
+/* Direct solvers: refine_prev = u_t[:n+m], the solution of this iteration's
+ * solve, as the guess of the next iteration's correction form */
+static void keep_prev(ScsWork *w) {
+  memcpy(w->refine_prev, w->u_t, (w->d->n + w->d->m) * sizeof(scs_float));
+  w->refine_prev_ok = 1;
+}
+
+/* Direct solvers: this iteration's solve in correction form from the
+ * previous iteration's solution u0 = refine_prev: u_t = u0 + d with
+ * K d = rhs - K u0. Returns 0, leaving u_t untouched, when the guess is no
+ * better than zero (||rhs - K u0|| >= ||rhs||, e.g. after a scale update
+ * changed K and rhs, or not finite): the caller then solves plainly.
+ * Otherwise returns 1 with the solve's status in *status. */
+static scs_int correction_solve(ScsWork *w, scs_int *status) {
+  scs_int nm = w->d->n + w->d->m;
+  scs_float nr, nrhs;
+  /* r = rhs - K u0, computed into u_t, which the solve then overwrites */
+  nr = iter_residual(w, w->refine_prev, w->u_t, &nrhs);
+  if (!(nr < nrhs)) {
+    return 0;
+  }
+  *status = scs_solve_lin_sys(w->p, w->u_t, SCS_NULL, -1.);
+  if (*status == 0) {
+    SCS(add_scaled_array)(w->u_t, w->refine_prev, nm, 1.); /* u0 + d */
+    w->refine_corrections++;
+  }
+  return 1;
+}
+
+/* Direct solvers: this iteration's solve, with refinement in correction
+ * form, see "Accuracy of each iteration's solve" in glbopts.h. Leaves the
+ * solution in u_t[:n+m]. Every decision below is a function of the iterates
+ * and the residuals, never of timings. While off: a plain solve, and at every
+ * REFINE_CHECK_INTERVAL-th iteration its residual is compared with tol (on
+ * above REFINE_DIRECT_ON_FACTOR * tol). While on: the correction form from
+ * the previous iteration's solution (plain when that guess is no better than
+ * zero); at a check, a plain solve of the same right-hand side, into
+ * scratch, decides whether to stay on (off at or below
+ * REFINE_DIRECT_OFF_FACTOR * tol), and the iterate stays the correction-form
+ * solution either way. Returns the status of the last solve (0: success). */
+static scs_int solve_direct(ScsWork *w, scs_int iter) {
+  scs_int status = 0, corrected = 0, was_on = w->refine_on;
+  scs_float res;
+  if (was_on && w->refine_prev_ok) {
+    corrected = correction_solve(w, &status);
+  }
+  if (!corrected) {
+    iter_rhs(w, w->u_t);
+    status = scs_solve_lin_sys(w->p, w->u_t, SCS_NULL, -1.);
+  }
+  if (status != 0) {
+    return status;
+  }
+  if (iter % REFINE_CHECK_INTERVAL != 0 || w->refine_tol < 0) {
+    /* no check (none before the first convergence check, which sets tol) */
+    if (was_on) {
+      keep_prev(w);
+    }
+    return 0;
+  }
+  if (corrected) {
+    /* the decision is made on a plain solve of this right-hand side, in
+     * kkt_corr; the iterate stays the correction-form solution. (Using the
+     * plain solve as the iterate instead mixes an inexact solve into the
+     * accurate ones every REFINE_CHECK_INTERVAL iterations, which took up to
+     * 31 times the iterations on a badly scaled QP.) */
+    keep_prev(w);
+    iter_rhs(w, w->kkt_corr);
+    status = scs_solve_lin_sys(w->p, w->kkt_corr, SCS_NULL, -1.);
+    if (status != 0) {
+      return status;
+    }
+    res = iter_residual(w, w->kkt_corr, w->kkt_res, SCS_NULL);
+  } else {
+    res = iter_residual(w, w->u_t, w->kkt_res, SCS_NULL);
+  }
+  w->refine_checks++;
+  /* on above REFINE_DIRECT_ON_FACTOR * tol, off only at or below
+   * REFINE_DIRECT_OFF_FACTOR * tol: the gap keeps it from switching off and
+   * on again */
+  w->refine_on = res > (was_on ? REFINE_DIRECT_OFF_FACTOR
+                               : REFINE_DIRECT_ON_FACTOR) *
+                           w->refine_tol;
+  if (!w->refine_on) {
+    w->refine_prev_ok = 0;
+  } else if (!corrected) {
+    keep_prev(w);
+  }
+  return 0;
+}
+#endif
 
 static void update_work_cache(ScsWork *w) {
   /* g = (I + M)^{-1} [c; -b]
@@ -1399,7 +1523,9 @@ static void reset_tracking(ScsWork *w) {
   w->refine_on = 0;
   w->refine_checks = 0;
   w->refine_steps = 0;
+  w->refine_corrections = 0;
   w->refine_tol = -1.;
+  w->refine_prev_ok = 0;
 }
 
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
@@ -2017,6 +2143,7 @@ void scs_finish(ScsWork *w) {
     scs_free(w->g);
     scs_free(w->kkt_res);
     scs_free(w->kkt_corr);
+    scs_free(w->refine_prev);
     scs_free(w->b_orig);
     scs_free(w->c_orig);
     scs_free(w->lin_sys_warm_start);

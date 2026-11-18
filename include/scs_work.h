@@ -65,16 +65,23 @@ struct SCS_WORK {
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
   /* scratch, n + m each: residual and correction of a solve with the KKT
-   * matrix, used by refine_g (the solve for g) and refine_iter (each
-   * iteration's solve); nothing is kept in them between calls */
+   * matrix, used by refine_g (the solve for g) and the per-iteration
+   * refinement (refine_iter, solve_direct); nothing is kept in them between
+   * calls */
   scs_float *kkt_res, *kkt_corr;
-  /* per-iteration refinement (refine_iter), reset at the start of each solve:
-   * whether it is on (checking every iteration), how many residual checks
-   * and how many refinement steps this solve has made, and the tol it
-   * compares with (set_refine_tol, at each convergence check; -1 before the
-   * first) */
-  scs_int refine_on, refine_checks, refine_steps;
+  /* per-iteration refinement, reset at the start of each solve (see
+   * "Accuracy of each iteration's solve" in glbopts.h): whether it is on,
+   * how many residual checks this solve has made, how many refinement steps
+   * (indirect solvers, refine_iter) and how many iterations solved in
+   * correction form (direct solvers, solve_direct), and the tol it compares
+   * with (set_refine_tol, at each convergence check; -1 before the first) */
+  scs_int refine_on, refine_checks, refine_steps, refine_corrections;
   scs_float refine_tol;
+  /* direct solvers: the solution of the previous iteration's solve (n + m),
+   * the guess of the correction form while refinement is on, valid when
+   * refine_prev_ok. Unused (NULL) in indirect builds. */
+  scs_float *refine_prev;
+  scs_int refine_prev_ok;
   scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */

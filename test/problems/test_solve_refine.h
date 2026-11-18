@@ -7,14 +7,13 @@
 #include <string.h>
 
 /*
- * Refinement of each iteration's solve (refine_iter in src/scs.c;
- * REFINE_CHECK_INTERVAL, REFINE_FACTOR and REFINE_OFF_FACTOR in glbopts.h),
- * on an LP with a
- * second-order cone built like the MATLAB interface's mixed-cone test, at a
- * larger size: A dense, 130 x 100, entries uniform in [-1, 1]; b = A x + s
- * and c = -A' s for a random x and an s inside the cones (50 LP rows, then
- * one second-order cone of size 80), so that both the primal and the dual
- * are strictly feasible.
+ * Refinement of each iteration's solve (solve_direct and refine_iter in
+ * src/scs.c; "Accuracy of each iteration's solve" in glbopts.h), on an LP
+ * with a second-order cone built like the MATLAB interface's mixed-cone test,
+ * at a larger size: A dense, 130 x 100, entries uniform in [-1, 1];
+ * b = A x + s and c = -A' s for a random x and an s inside the cones (50 LP
+ * rows, then one second-order cone of size 80), so that both the primal and
+ * the dual are strictly feasible.
  *
  * test_solve_refine_tight solves it at a tolerance where the error of a QDLDL
  * solve is as large as the residuals SCS has to reach: 1e-9 in double
@@ -22,15 +21,12 @@
  * per-iteration refinement QDLDL does not converge there: it reaches
  * max_iters with residuals near 1e-4 in double precision (with and without
  * FMA contraction) and near 0.1 in single precision, where 49 of 50 seeds
- * fail. With it, QDLDL refines and solves it in every build checked (with and
- * without FMA contraction, with and without Anderson acceleration, each from
- * 101 initial scales within 50 ulps of the default): in 225 iterations in
- * double precision, in at most 225 in single. CG, the dense solver and Apple
- * Accelerate solve this system accurately enough that refinement does not
- * fire there, so only QDLDL is required to refine. Once refinement fires on
- * this instance it stays on until SCS converges, so these tests would also
- * pass with REFINE_OFF_FACTOR equal to REFINE_FACTOR; the flicker that
- * REFINE_OFF_FACTOR prevents was measured on benchmark sets (glbopts.h).
+ * fail. With it, QDLDL refines (in correction form, the direct solvers' way)
+ * and solves it: in 175 iterations in double precision (225 with one
+ * refinement step per iteration instead, the rule before the correction
+ * form). CG, the dense solver and Apple Accelerate solve this system
+ * accurately enough that refinement need not fire there, so only QDLDL is
+ * required to refine.
  *
  * test_solve_refine_idle solves it at the default tolerances in double
  * precision: the residual is checked and refinement does not fire, whatever
@@ -38,8 +34,12 @@
  *
  * test_solve_refine_csv repeats the tight solve with QDLDL in double precision
  * while logging to CSV, which recomputes the residuals every iteration, and
- * requires the same refinement (iterations, residual checks and refinement
- * steps) and the same objectives to 1e-6.
+ * requires the same refinement (iterations, residual checks and refined
+ * iterations) and the same objectives to 1e-6.
+ *
+ * "refined" below counts the refinement steps (indirect solvers) plus the
+ * iterations solved in correction form (direct solvers); a build has only
+ * one of the two.
  */
 
 /* the instance (seeds 10 and 43 also pass in double precision; in single
@@ -108,7 +108,8 @@ static void solve_refine_data(ScsData *d, ScsCone *k) {
 
 /* solves the instance at eps (eps <= 0: the default tolerances), logging to
  * csv unless it is SCS_NULL; returns the status, SCS's info, and the residual
- * checks and refinement steps made */
+ * checks and refined solves made (refinement steps plus iterations solved in
+ * correction form) */
 static scs_int solve_refine_solve(scs_float eps, const char *csv,
                                   ScsInfo *info, scs_int *checks,
                                   scs_int *steps) {
@@ -133,7 +134,7 @@ static scs_int solve_refine_solve(scs_float eps, const char *csv,
   if (w) {
     status = scs_solve(w, sol, info, 0);
     *checks = w->refine_checks;
-    *steps = w->refine_steps;
+    *steps = w->refine_steps + w->refine_corrections;
     scs_finish(w);
   }
   SCS(free_data)(d);
@@ -151,7 +152,7 @@ static const char *test_solve_refine_tight(void) {
   status = solve_refine_solve(SOLVE_REFINE_TIGHT_EPS, SCS_NULL, &info, &checks,
                               &steps);
   scs_printf("test_solve_refine_tight: %s, status %li, %li iterations, %li "
-             "checks, %li refinement steps\n",
+             "checks, %li refined\n",
              scs_get_lin_sys_method(), (long)status, (long)info.iter,
              (long)checks, (long)steps);
   mu_assert("test_solve_refine_tight: not solved", status == SCS_SOLVED);
@@ -174,7 +175,7 @@ static const char *test_solve_refine_idle(void) {
   ScsInfo info;
   status = solve_refine_solve(0., SCS_NULL, &info, &checks, &steps);
   scs_printf("test_solve_refine_idle: %s, status %li, %li iterations, %li "
-             "checks, %li refinement steps\n",
+             "checks, %li refined\n",
              scs_get_lin_sys_method(), (long)status, (long)info.iter,
              (long)checks, (long)steps);
   mu_assert("test_solve_refine_idle: not solved", status == SCS_SOLVED);
