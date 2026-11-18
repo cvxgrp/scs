@@ -66,6 +66,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#openmp-and-the-gpu-indirect-solver">OpenMP and the GPU indirect solver</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#openmp-and-parallel-psd-projection">OpenMP and parallel PSD projection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#multithreaded-static-mkl-x86-64-linux">Multithreaded static MKL (x86-64 Linux)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gpu-indirect">GPU indirect</a></li>
 </ul>
 </li>
@@ -167,7 +168,8 @@ self-contained and the default
 installed. MKL is typically faster than QDLDL.</p>
 <p>MKL is linked statically rather than bundled as shared libraries, whose
 dlopen’d CPU dispatch kernels wheel-repair tools cannot see (see <a class="reference external" href="https://github.com/cvxgrp/scs/issues/423">issue #423</a>); the backend is
-single-threaded, and Intel’s license notice ships in the wheel as
+single-threaded (see <a class="reference internal" href="#python-mkl-threaded-install"><span class="std std-ref">Multithreaded static MKL (x86-64 Linux)</span></a> for a multithreaded
+source build), and Intel’s license notice ships in the wheel as
 <code class="docutils literal notranslate"><span class="pre">LICENSE-INTEL-MKL.txt</span></code>. The aarch64, musllinux, macOS and Windows wheels
 and sdist/source builds do not include it.</p>
 <p>If your environment already provides MKL (e.g. conda), you can instead build
@@ -324,6 +326,41 @@ parallel, add the option <code class="code docutils literal notranslate"><span c
 when the BLAS runs on one thread inside the threads of SCS, and slower when it
 does not. That section also says how to check that the blocks are projected in
 parallel.</p>
+</section>
+<section id="multithreaded-static-mkl-x86-64-linux">
+<span id="python-mkl-threaded-install"></span><h3>Multithreaded static MKL (x86-64 Linux)<a class="headerlink" href="#multithreaded-static-mkl-x86-64-linux" title="Link to this heading"></a></h3>
+<p>The MKL Pardiso backend of the wheel runs on one thread: MKL is linked with its
+sequential layer, so Pardiso’s reordering, factorization and per-iteration
+solves, and MKL’s LAPACK in the PSD projection, use one core. A source
+build on x86-64 Linux with GCC can link the same static MKL on its OpenMP layer
+instead, with the scs-python Meson option
+<code class="code docutils literal notranslate"><span class="pre">mkl_static_threading=gnu_thread</span></code> (scs-python master, and releases after
+3.3.2).
+It needs Intel’s static MKL archives, for example from the <code class="code docutils literal notranslate"><span class="pre">mkl-static</span></code>
+PyPI package, unpacked so that <code class="code docutils literal notranslate"><span class="pre">&lt;prefix&gt;/lib/libmkl_core.a</span></code> exists:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-Csetup-args<span class="o">=</span>-Dmkl_static_prefix<span class="o">=</span>&lt;prefix&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-Csetup-args<span class="o">=</span>-Dmkl_static_threading<span class="o">=</span>gnu_thread<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-Csetup-args<span class="o">=</span>-Duse_openmp<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_parallel_psd<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
+</pre></div>
+</div>
+<p>MKL then uses <code class="code docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code> (or <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>) threads.
+The build links GCC’s OpenMP runtime, libgomp, which must be present when SCS
+is imported. With <code class="code docutils literal notranslate"><span class="pre">use_openmp</span></code>, SCS’s own OpenMP code runs on the same
+libgomp, so MKL called inside a parallel region of SCS (the parallel PSD
+projection) runs on one thread instead of starting threads of its own (see
+<a class="reference internal" href="../blas_lapack/index.html#blas-lapack-openmp"><span class="std std-ref">Parallel projection of PSD blocks</span></a>). The build stops with an error without
+<code class="code docutils literal notranslate"><span class="pre">mkl_static_prefix</span></code>, or with a compiler other than GCC, whose OpenMP
+runtime would be a second one beside libgomp. The default,
+<code class="code docutils literal notranslate"><span class="pre">mkl_static_threading=sequential</span></code>, is the wheel’s configuration.</p>
+<p>Threads help most on large linear systems and large PSD blocks: in our
+measurements on large linear systems (oneMKL 2026.1, 4 threads), Pardiso’s
+per-iteration solve ran 2 to 3 times faster and its factorization up to about
+3 times faster. SCS runs Pardiso on one thread for small linear systems (a
+factor with fewer than 50,000 nonzeros, see the threads paragraph of
+<a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a>), but a threaded MKL still costs more per call than a
+sequential one, so on small problems the sequential build can be faster.
+Compare the two on your problems before switching.</p>
 </section>
 <section id="gpu-indirect">
 <span id="python-gpu-indirect-install"></span><h3>GPU indirect<a class="headerlink" href="#gpu-indirect" title="Link to this heading"></a></h3>

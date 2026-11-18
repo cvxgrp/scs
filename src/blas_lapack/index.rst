@@ -237,7 +237,14 @@ is the reason the option is left to whoever builds SCS and knows its BLAS.
   to one during the projection. This goes through a weak reference to
   :code:`MKL_Set_Num_Threads_Local`, which needs an ELF platform such as Linux
   and the MKL symbols visible to SCS. It does not work on Windows or macOS,
-  with a static MKL, or with an MKL loaded privately by another library.
+  with a static MKL linked without the MKL Pardiso linear solver (which
+  references the function and so links it in), or with an MKL loaded
+  privately by another library. A static MKL on its GNU OpenMP layer in a
+  build with :code:`USE_OPENMP` and GCC (the scs-python option
+  :code:`mkl_static_threading=gnu_thread`, see
+  :ref:`python_mkl_threaded_install`) does not depend on the guard: SCS and MKL
+  share one runtime, which runs MKL on one thread inside SCS's parallel
+  region.
 * A pthreads build of OpenBLAS with more than one thread: on ELF platforms SCS
   checks for it at setup and then projects the blocks one after another. With
   :code:`OPENBLAS_NUM_THREADS=1` the projection is parallel, but the BLAS calls
