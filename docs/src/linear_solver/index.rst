@@ -41,35 +41,113 @@ the residual, for at most three steps. This costs one multiply by the matrix
 each time, plus one solve and one multiply per refinement step; with the
 indirect solvers a refinement step is another conjugate gradient solve.
 
-The solve in each iteration is checked too, more cheaply. Every 25 iterations
-SCS computes the residual of that iteration's solve from the problem data and
-compares it with the smaller of SCS's own primal and dual residuals at its last
-convergence check (but at least :math:`10^{-12}`, :math:`10^{-5}` in single
-precision). If the solve's error is the larger, the iterates cannot become
-more accurate than the solve, so SCS refines it with one more solve, for the
-residual, and then checks on every iteration until the error is down to a
-tenth of the residuals. (Stopping as soon as the error was back below the
-residuals made refinement switch off and on again, which slowed some solves
-and stalled a few.) Nothing needs to be set for this; what to expect:
+.. _refinement:
 
-- At the default tolerances in double precision it almost never fires (in 9
-  of 336 benchmark runs at :math:`10^{-4}` and :math:`10^{-6}`, on 0.01% of
-  the solves). The check alone costs one multiply by the matrix every 25
-  iterations: about 1% of the linear-system time with the default sparse
-  direct solver and about 2% with cuDSS (from 0.5% to 8% on the 7 problems
-  measured).
-- At tight tolerances such as :math:`10^{-8}` or :math:`10^{-9}` the error of a
-  direct solve can be as large as the residuals SCS has to reach. That is
-  where it fires, and it is what lets such solves converge. While it is on,
-  each iteration costs one more multiply and one more solve. On a problem
-  that stalls it can stay on for most of the remaining iterations (in the
-  benchmarks, SDPs that stalled at :math:`10^{-6}`).
-- In single precision the error of the default sparse direct solve can be as
-  large as the residuals at the default tolerances, so it can fire there too,
-  and on problems that stall it often stays on for most of the solve.
-- The indirect solvers already solve to a tolerance tied to these residuals,
-  so with them it fires only when a conjugate gradient solve misses that
-  tolerance.
+Accuracy of each iteration's solve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SCS's residuals cannot become much smaller than the error of the linear-system
+solve in each iteration, so SCS checks that error and makes the solves more
+accurate when it would limit the iterates. Nothing needs to be set for this.
+
+**The check.** Every 25 iterations SCS computes the residual of that
+iteration's solve, :math:`\|z^k - K u\|_\infty` with :math:`K` the matrix
+above, and compares it with *tol*, the smaller of SCS's own primal and dual
+residuals at its last convergence check (but at least :math:`10^{-12}`,
+:math:`10^{-5}` in single precision). The check costs one multiply by
+:math:`K` every 25 iterations.
+
+**Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
+cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
+following iteration solves in *correction form*: from the previous
+iteration's solution :math:`u_0` it solves :math:`K d = z^k - K u_0` and takes
+:math:`u = u_0 + d`. The error of a solve with a factorization is about
+proportional to the size of the right-hand side it is given. The iterates
+move little from one iteration to the next, so :math:`z^k - K u_0` is
+:math:`10^{-3}` to :math:`10^{-7}` of :math:`z^k`, and :math:`u` is that much
+more accurate than a plain solve, for one more multiply by :math:`K` per
+iteration and no extra solve. The errors do not build up from one iteration to
+the next: each correction-form solve shrinks the error it inherits by the same
+factor as it shrinks the right-hand side. When the previous solution is no
+better a guess than zero (:math:`\|z^k - K u_0\| \ge \|z^k\|`, which
+happens after :math:`R` changes) that iteration solves plainly. At each check
+while it is on, SCS also makes a plain solve of the same right-hand side, only
+to measure its error, and turns the correction form off once that error is at
+most :math:`0.001\,` *tol*; the iterate stays the correction-form solution.
+
+Why these choices: what slows SCS down is switching between accurate and
+inexact solves, more than the inexact solves themselves. On QFORPLAN at
+:math:`10^{-6}` with Apple Accelerate, the previous rule (refine only once the
+error exceeds *tol*, with one more solve per iteration, until it falls below
+:math:`0.1\,` *tol*) took 1,300 to 140,900 iterations depending on the
+starting point, and the correction form with the plain solve put into the
+iterate at every check (one inexact solve every 25 accurate ones) took up to
+31 times the iterations of the rule here, which took 700 to 975. Turning on at
+:math:`0.01\,` *tol* and off at :math:`0.001\,` *tol* starts the accurate
+solves before they are needed and keeps them while the residuals fall.
+Thresholds ten times lower were on for 12.6% of the iterations at the default
+tolerances instead of 1.3%, and for most of the solve on more problems, with
+similar results at tight tolerances; ten times higher ones took more
+iterations on the badly scaled problems.
+
+**Indirect solvers** (CPU and GPU conjugate gradients). Conjugate gradients
+already solves to a tolerance tied to SCS's residuals, and its error is set by
+that tolerance rather than by the size of the right-hand side, so the
+correction form would not make it more accurate. When a check finds the
+residual above *tol*, each following iteration's solve is followed by one
+refinement step (one more multiply and one more conjugate gradient solve, for
+the residual), until a check finds it at most :math:`0.1\,` *tol*. This
+fires only when a conjugate gradient solve misses its tolerance.
+
+**What to expect** (direct solvers):
+
+- At the default tolerances it rarely turns on: on 112 LPs, QPs and SDPs at
+  :math:`10^{-4}` and :math:`10^{-6}` from 3 starting points each (QDLDL), for
+  1.3% of the iterations, with the same iterations in 318 of the 336 runs (9
+  fewer, 9 more) and about 1% more time, within the run-to-run noise.
+- At tight tolerances it is what lets direct solves converge, and it takes
+  fewer iterations than refining once the error is already too large: on 500
+  random LPs and SOCPs at :math:`10^{-9}` with QDLDL, 2.6% fewer iterations and
+  2.3% less time; with cuDSS on 200 of them, 7% fewer iterations and 9% less
+  solve time (14% less without Anderson acceleration); with Apple Accelerate,
+  whose solves can be inaccurate on badly scaled problems, on 30 LPs, QPs and
+  SDPs at :math:`10^{-4}` and :math:`10^{-6}` from 3 starting points each,
+  0.89 times the shifted geometric mean time (QFORPLAN at :math:`10^{-6}`: 700
+  to 975 iterations, where the previous rule took 1,300 to 140,900 depending
+  on the starting point). On 45 LPs and QPs at :math:`10^{-8}` and
+  :math:`10^{-9}` with QDLDL the results were the same within noise. MKL
+  Pardiso's solves are accurate enough that it turns on less often: on 33 LPs
+  and QPs at :math:`10^{-9}`, in 15 of them, for 3.5% fewer iterations and the
+  same time.
+- While it is on, an iteration's linear-system time is about 1.1 to 1.5 times
+  that of a plain one: the extra multiply by :math:`K` costs most, relative to
+  the solve, on small and very sparse systems (1.4 with QDLDL on small LPs,
+  1.1 with Accelerate on larger QPs).
+- On a problem that stalls it can stay on for most of the remaining
+  iterations: on 26 SDPs and QPs that stall at :math:`10^{-4}` to
+  :math:`10^{-6}` (78 runs), it was on for 19% of the iterations and for most
+  of the solve in 11 runs, which solved one run more and took 6% more time.
+  In single precision it tends to stay on once it turns on, because the
+  threshold to turn it off is near or below what a single-precision solve can
+  reach.
+
+**Who computes the multiplies.** By default SCS computes the multiplies by
+:math:`K` itself, from the problem data, on one thread. A linear solver can
+compute them with its own copy of :math:`K` instead (see
+:ref:`new_linear_solver`): MKL Pardiso uses MKL's threaded sparse matrix-vector
+product, and cuDSS computes them on the GPU, where the vectors stay. The
+decisions above are the same either way; only the cost of the multiply and its
+rounding change.
+
+What the solver's own multiplies buy is a cheaper iteration while the
+correction form is on. With cuDSS on 10 large LPs, QPs and SOCPs at
+:math:`10^{-8}` (NVIDIA GB10), such an iteration cost 1.19 times a plain one
+with the multiplies on the GPU, against 1.48 with SCS's on the CPU (on BOYD1
+1.61 ms against 2.63, a plain iteration taking 1.33). With MKL Pardiso on 33
+LPs and QPs at :math:`10^{-9}` (4 threads, AMD Zen 3) it cost 1.32 times a plain
+one against 1.45. Whole solves changed by a few percent at most, within the
+run-to-run variation of the iteration counts, because the correction form is
+on for a small part of most solves.
 
 
 Available linear solvers
@@ -148,6 +226,21 @@ problems a sequential MKL is still faster than a threaded one, because a
 threaded MKL costs more per call even on one thread. On several threads
 Pardiso may round differently from run to run, so two runs of the same problem
 can differ slightly in their results and iteration counts.
+
+**Multiplies for the refinement.** MKL Pardiso computes the multiplies by
+:math:`K` of the per-iteration refinement (see :ref:`refinement`) with MKL's
+sparse BLAS, on the same upper triangle Pardiso factorizes, analysed once at
+setup (``mkl_sparse_optimize``). They run on MKL's threads, or on one thread
+when Pardiso does (the rule above), so that a solve never mixes thread counts.
+Measured per multiply against SCS's own single-threaded product (AMD Zen 3, 4
+threads, 46 LPs and QPs): 0.2 to 0.5 times the time where it runs on MKL's
+threads (0.76 against 2.39 ms on co-100), and 0.45 to 0.93 times where it runs
+on one thread; forcing 4 threads on the smallest systems made it about twice
+as slow as one thread. In the solves, an iteration with the correction form
+on cost 1.32 times a plain one, against 1.45 with SCS's product (33 LPs and QPs
+at :math:`10^{-9}`). The products add no run-to-run variation of their own:
+with the same number of threads they gave the same bits in repeated runs (a
+different thread count can change their last bits).
 
 .. _apple_accelerate:
 
@@ -281,6 +374,22 @@ matching. Single-precision builds keep one step of iterative refinement per
 solve, which about doubles the cost of a solve, because without it one problem
 in the test suite does not converge.
 
+**Multiplies for the refinement.** When :math:`K` has at least 60,000 nonzeros
+(``CUDSS_MIN_PRODUCT_NNZ`` in ``linsys/cudss/direct/private.c``), the cuDSS
+solver computes the multiplies by :math:`K` of the per-iteration refinement
+(see :ref:`refinement`) on the GPU: one cuSPARSE sparse matrix-vector product
+and one cuBLAS reduction, with the guess and the residual kept on the GPU, so
+an iteration in correction form copies no more vectors between the host and
+the GPU than a plain solve. cuSPARSE has no symmetric product, so :math:`K`
+is stored a second time with both triangles, about twice the nonzeros of the
+copy cuDSS factorizes. A call costs about 0.04 ms whatever the size, so smaller
+systems use SCS's product on the CPU, which was faster there. On an NVIDIA
+GB10, per multiply, the GPU took 0.12 to 0.37 times the CPU's time above
+:math:`3.7 \cdot 10^5` nonzeros (0.18 against 1.27 ms on BOYD1).
+In the solves, on 10 large LPs, QPs and SOCPs at :math:`10^{-8}`, an
+iteration with the correction form on cost 1.19 times a plain one, against
+1.48 with the multiplies on the CPU, and the time per iteration fell by 4%.
+
 .. _gpu_reproducibility:
 
 Reproducibility of the GPU solvers
@@ -291,15 +400,17 @@ not guaranteed to give bit for bit the same result. The GPU indirect solver
 does its sparse matrix-vector products with cuSPARSE's
 :code:`CUSPARSE_SPMV_CSR_ALG1`, which cuSPARSE does not guarantee to give the
 same bits on every run, and SCS runs cuDSS without its deterministic mode
-(:code:`CUDSS_CONFIG_DETERMINISTIC_MODE`), which made LPs and QPs several
-times slower to solve on an NVIDIA GB10. SCS has no setting to change either
-choice. When two runs differ, their iterates differ slightly. Printed values
-that are small near the end of a solve, such as the dual residual and the gap,
-can then differ in every digit, and the iteration count can change if a
-residual ends close to its tolerance. In a check on an NVIDIA GB10 (CUDA 13.0,
-cuDSS 1.0.0), three runs of a random SOCP with each GPU solver all took 150
-iterations, and their last iterations differed in the dual residual and the
-gap (the gap of the GPU indirect solver by a factor of 13).
+(:code:`CUDSS_CONFIG_DETERMINISTIC_MODE`), which made LPs and QPs several times
+slower to solve on an NVIDIA GB10. SCS has no setting to change either choice.
+The multiplies of the refinement on the GPU (cuDSS, see above) use
+:code:`CUSPARSE_SPMV_CSR_ALG2`, which gives the same result every run, so they
+add no variation of their own. When two runs differ, their iterates differ
+slightly. Printed values that are small near the end of a solve, such as the
+dual residual and the gap, can then differ in every digit, and the iteration
+count can change if a residual ends close to its tolerance. In a check on an
+NVIDIA GB10 (CUDA 13.0, cuDSS 1.0.0), three runs of a random SOCP with each GPU
+solver all took 150 iterations, and their last iterations differed in the dual
+residual and the gap (the gap of the GPU indirect solver by a factor of 13).
 
 .. _new_linear_solver:
 
@@ -310,6 +421,39 @@ In order to implement you own linear system solver, you need to implement the
 struct :code:`ScsLinSysWork` that contains the workspace your solver requires,
 and implement the functions in :code:`include/linsys.h` as detailed below.
 See :code:`linsys` directory for examples.
+
+**Products with the matrix (optional).** The per-iteration refinement of the
+direct solvers (see :ref:`refinement`) multiplies by the matrix :math:`K`:
+every 25 iterations to check a solve, and once per iteration while the
+correction form is on. By default SCS computes these products itself, from the
+problem data, on one thread. A solver that holds :math:`K` anyway can compute
+them faster with its own copy, by implementing three functions:
+
+- :code:`scs_lin_sys_residual(w, b, x)` computes :math:`r = b - K x` with the
+  solver's current :math:`K` (including the latest :math:`R` from
+  :code:`scs_update_lin_sys_diag_r`), keeps :math:`r`, and returns
+  :math:`\|r\|_\infty`. If :code:`x` is :code:`SCS_NULL`, :math:`x` is the
+  vector stored by the last :code:`scs_lin_sys_keep`.
+- :code:`scs_lin_sys_keep(w, x)` stores :math:`x` as the guess :math:`x_0`.
+  SCS calls it only right after a solve, with that solve's solution, unchanged,
+  so a GPU solver can copy the solution it still has on the device and not read
+  :code:`x` at all.
+- :code:`scs_lin_sys_correct(w, x)` returns :math:`x = x_0 + K^{-1} r` for the
+  :math:`r` of the latest :code:`scs_lin_sys_residual(w, b, SCS_NULL)`.
+
+Every solver must define the three functions so that it links. One that does
+not provide the products returns a negative value from
+:code:`scs_lin_sys_residual` and does nothing in the other two: SCS calls it
+once at setup, with zero vectors, and from then on computes the products
+itself. If a solver provides them, a negative return during a solve is treated
+as a failure of the linear solver. SCS makes every decision (when to check, the
+thresholds, when to use the guess); the solver only computes, so the refinement
+behaves the same with every solver, up to the rounding of the product.
+:code:`test_lin_sys_products` in the test suite checks a solver's products
+against SCS's own. The MKL Pardiso solver (:code:`linsys/mkl/direct/private.c`,
+with MKL's sparse BLAS) and the cuDSS solver
+(:code:`linsys/cudss/direct/private.c`, on the GPU with cuSPARSE and cuBLAS)
+are examples; the other solvers return "not provided".
 
 .. doxygentypedef:: ScsLinSysWork
 
