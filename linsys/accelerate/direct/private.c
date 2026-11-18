@@ -133,7 +133,7 @@ scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
   (void)w;
   (void)b;
   (void)x;
-  return -1.;
+  return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
 }
 
 void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {

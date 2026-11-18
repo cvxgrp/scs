@@ -1233,8 +1233,25 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   }
 #if INDIRECT == 0
   /* does the linear solver compute the refinement's products with its own
-   * K (linsys.h)? kkt_res and kkt_corr are zero here, so this is 0 - K 0. */
-  w->refine_hook = scs_lin_sys_residual(w->p, w->kkt_res, w->kkt_corr) >= 0;
+   * K (linsys.h)? kkt_res and kkt_corr are zero here, so this is 0 - K 0.
+   * "Not provided": SCS computes them. Any other negative value is an error
+   * of the linear solver, and setup fails, as when scs_init_lin_sys_work
+   * fails: SCS does not switch to its own products when the solver's fail,
+   * so a solve does not depend on a transient error. A NaN (K holds an inf)
+   * counts as provided, and the solve deals with it as with any NaN. */
+  {
+    scs_float probe = scs_lin_sys_residual(w->p, w->kkt_res, w->kkt_corr);
+    if (probe == SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED) {
+      w->refine_hook = 0;
+    } else if (probe < 0) {
+      scs_printf("ERROR: the linear solver's products with the KKT matrix "
+                 "failed at setup\n");
+      scs_finish(w);
+      return SCS_NULL;
+    } else {
+      w->refine_hook = 1;
+    }
+  }
 #endif
   if (w->stgs->acceleration_lookback) {
     /* min_len = mem preserves the previous FILL_MEMORY_BEFORE_SOLVE

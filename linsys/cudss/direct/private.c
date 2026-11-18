@@ -1,5 +1,6 @@
 #include "private.h"
 #include "linsys.h"
+#include <limits.h>
 #include <string.h>
 
 /* The smallest K (nonzeros of the stored triangle, diagonal included) whose
@@ -15,7 +16,14 @@
  * nonzeros at 1e-9, an iteration with the correction form on cost 1.6 times
  * a plain one with the GPU products against 1.1 with SCS's. A discrete GPU,
  * where copies cross PCIe, likely moves the break-even point up; not
- * measured. Deterministic: the choice depends on the problem's size only. */
+ * measured. Deterministic: the choice depends on the problem's size only.
+ * At or above it the products are part of the solver: if they cannot be set
+ * up (GPU memory for the second copy of K, a cuBLAS or cuSPARSE error, K too
+ * large for the index type, see products_setup), scs_init_lin_sys_work fails
+ * with a message, rather than leaving the products to SCS. Setup cost
+ * (products_setup, NVIDIA GB10, random K): 3, 35 and 340 ms at 1e5, 1e6
+ * and 8e6 nonzeros, 5 to 13% of cuDSS's analysis and factorization; of that
+ * cusparseCreate and cublasCreate took 0.4 to 0.8 ms. */
 #ifndef CUDSS_MIN_PRODUCT_NNZ
 #define CUDSS_MIN_PRODUCT_NNZ (60000)
 #endif
@@ -296,15 +304,17 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   }
 
   /* the refinement's products with K on the GPU for a large enough K (see
-   * CUDSS_MIN_PRODUCT_NNZ); if that cannot be set up, SCS computes them on
-   * the CPU instead */
+   * CUDSS_MIN_PRODUCT_NNZ); setup fails if they cannot be set up */
   if (p->kkt->p[p->n_plus_m] >= CUDSS_MIN_PRODUCT_NNZ) {
-    p->products_ok = products_setup(p) == 0;
-    if (!p->products_ok) {
-      products_free(p);
-      scs_printf("cuDSS: products with K on the GPU not available, SCS "
-                 "computes them on the CPU\n");
+    if (products_setup(p) != 0) {
+      scs_printf("cuDSS: K has %li nonzeros, at least CUDSS_MIN_PRODUCT_NNZ "
+                 "= %li, so the refinement's products with K run on the GPU, "
+                 "and they could not be set up (see above)\n",
+                 (long)p->kkt->p[p->n_plus_m], (long)CUDSS_MIN_PRODUCT_NNZ);
+      scs_free_lin_sys_work(p);
+      return SCS_NULL;
     }
+    p->products_ok = 1;
   }
 
   return p;
@@ -481,10 +491,27 @@ static scs_int products_refresh(ScsLinSysWork *p) {
              : -1;
 }
 
+/* the largest scs_int, for the size checks of products_setup */
+#ifdef DLONG
+#define CUDSS_SCS_INT_MAX ((double)LLONG_MAX)
+#else
+#define CUDSS_SCS_INT_MAX ((double)INT_MAX)
+#endif
+
+/* reports why products_setup failed and leaves it */
+#define PRODUCTS_FAIL(what)                                                    \
+  do {                                                                         \
+    scs_printf("cuDSS: setting up the products with K on the GPU: %s\n",       \
+               what);                                                          \
+    goto done;                                                                 \
+  } while (0)
+
 /* Builds K with both triangles from kkt (the lower triangle in CSR: row r
  * holds columns kkt->i[k] <= r), with the columns of each row in increasing
- * order, copies it to the GPU and creates the cuSPARSE and cuBLAS objects.
- * Returns 0 on success; on failure the caller frees what was allocated. */
+ * order, copies it to the GPU and creates the cuSPARSE and cuBLAS objects
+ * (cusparseCreate and cublasCreate are part of this setup cost). Returns 0
+ * on success, else prints why and returns -1; the caller frees what was
+ * allocated. */
 static scs_int products_setup(ScsLinSysWork *p) {
   scs_int nm = p->n_plus_m, r, c, k, q, nnz, ok = -1;
   const scs_int *lp = p->kkt->p, *li = p->kkt->i;
@@ -492,10 +519,20 @@ static scs_int products_setup(ScsLinSysWork *p) {
   scs_int *tsrc = SCS_NULL, *ptr = SCS_NULL, *ind = SCS_NULL;
   size_t vb = nm * sizeof(scs_float), buf_size = 0;
   scs_float alpha = -1., beta = 1.;
+  /* sizes: cuBLAS takes the vector length as an int, and K with both
+   * triangles (at most twice the stored nonzeros) must fit scs_int, the
+   * index type of the cuSPARSE matrix (32-bit unless DLONG) */
+  if ((double)nm > (double)INT_MAX) {
+    PRODUCTS_FAIL("n + m is larger than cuBLAS's int vector length");
+  }
+  if (2. * (double)lp[nm] > CUDSS_SCS_INT_MAX) {
+    PRODUCTS_FAIL("K with both triangles has too many nonzeros for 32-bit "
+                  "indices; build with DLONG=1");
+  }
   colptr = (scs_int *)scs_calloc(nm + 1, sizeof(scs_int));
   fill = (scs_int *)scs_calloc(nm + 1, sizeof(scs_int));
   if (!colptr || !fill) {
-    goto done;
+    PRODUCTS_FAIL("out of host memory");
   }
   /* entries per column of the full matrix (per row too, by symmetry) */
   for (r = 0; r < nm; ++r) {
@@ -518,7 +555,7 @@ static scs_int products_setup(ScsLinSysWork *p) {
   p->full_src = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
   p->full_val_h = (scs_float *)scs_calloc(nnz, sizeof(scs_float));
   if (!trow || !tsrc || !ptr || !ind || !p->full_src || !p->full_val_h) {
-    goto done;
+    PRODUCTS_FAIL("out of host memory");
   }
   /* bucket the entries by column (entry (r, c) and its mirror (c, r)) */
   memcpy(fill, colptr, nm * sizeof(scs_int));
@@ -556,7 +593,7 @@ static scs_int products_setup(ScsLinSysWork *p) {
       cudaMalloc((void **)&p->d_r, vb) != cudaSuccess ||
       cudaMalloc((void **)&p->d_x0, vb) != cudaSuccess ||
       cudaMalloc((void **)&p->d_xv, vb) != cudaSuccess) {
-    goto done;
+    PRODUCTS_FAIL("out of GPU memory (cudaMalloc failed)");
   }
   if (cudaMemcpy(p->d_full_row_ptr, ptr, (nm + 1) * sizeof(scs_int),
                  cudaMemcpyHostToDevice) != cudaSuccess ||
@@ -564,11 +601,13 @@ static scs_int products_setup(ScsLinSysWork *p) {
                  cudaMemcpyHostToDevice) != cudaSuccess ||
       cudaMemset(p->d_x0, 0, vb) != cudaSuccess ||
       products_refresh(p) != 0) {
-    goto done;
+    PRODUCTS_FAIL("copying K to the GPU failed");
   }
-  if (cusparseCreate(&p->sp_handle) != CUSPARSE_STATUS_SUCCESS ||
-      cublasCreate(&p->bl_handle) != CUBLAS_STATUS_SUCCESS) {
-    goto done;
+  if (cusparseCreate(&p->sp_handle) != CUSPARSE_STATUS_SUCCESS) {
+    PRODUCTS_FAIL("cusparseCreate failed");
+  }
+  if (cublasCreate(&p->bl_handle) != CUBLAS_STATUS_SUCCESS) {
+    PRODUCTS_FAIL("cublasCreate failed");
   }
   if (cusparseCreateCsr(&p->sp_k, nm, nm, nnz, p->d_full_row_ptr,
                         p->d_full_col_ind, p->d_full_val, SCS_CUSPARSE_INDEX,
@@ -580,16 +619,16 @@ static scs_int products_setup(ScsLinSysWork *p) {
           CUSPARSE_STATUS_SUCCESS ||
       cusparseCreateDnVec(&p->sp_xv, nm, p->d_xv, SCS_CUSPARSE_FLOAT) !=
           CUSPARSE_STATUS_SUCCESS) {
-    goto done;
+    PRODUCTS_FAIL("creating the cuSPARSE descriptors failed");
   }
   if (cusparseSpMV_bufferSize(p->sp_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
                               &alpha, p->sp_k, p->sp_xv, &beta, p->sp_r,
                               SCS_CUSPARSE_FLOAT, CUSPARSE_SPMV_CSR_ALG2,
                               &buf_size) != CUSPARSE_STATUS_SUCCESS) {
-    goto done;
+    PRODUCTS_FAIL("cusparseSpMV_bufferSize failed");
   }
   if (buf_size > 0 && cudaMalloc(&p->d_spmv_buf, buf_size) != cudaSuccess) {
-    goto done;
+    PRODUCTS_FAIL("out of GPU memory (cudaMalloc failed)");
   }
   ok = 0;
 done:
@@ -603,26 +642,29 @@ done:
 }
 
 /* r = b - K x on the GPU (x = the guess x0 when x is SCS_NULL); r stays on
- * the GPU in d_r. Returns ||r||_inf, or -1 if not provided or on error. */
+ * the GPU in d_r. Returns ||r||_inf, SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED below
+ * CUDSS_MIN_PRODUCT_NNZ, or SCS_LIN_SYS_PRODUCTS_FAILED on error. Uses d_xv,
+ * d_r and the pinned staging buffers, never d_sol, so the latest solve's
+ * solution stays for scs_lin_sys_keep. */
 scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
                                const scs_float *x) {
   size_t vb = p->n_plus_m * sizeof(scs_float);
   scs_float alpha = -1., beta = 1., res = 0.;
   int imax = 0;
   if (!p->products_ok) {
-    return -1.;
+    return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
   }
   /* d_r = b, through the pinned staging buffer of the solve */
   memcpy(p->h_b_pinned, b, vb);
   if (cudaMemcpy(p->d_r, p->h_b_pinned, vb, cudaMemcpyHostToDevice) !=
       cudaSuccess) {
-    return -1.;
+    return SCS_LIN_SYS_PRODUCTS_FAILED;
   }
   if (x) {
     memcpy(p->h_sol_pinned, x, vb);
     if (cudaMemcpy(p->d_xv, p->h_sol_pinned, vb, cudaMemcpyHostToDevice) !=
         cudaSuccess) {
-      return -1.;
+      return SCS_LIN_SYS_PRODUCTS_FAILED;
     }
   }
   /* d_r = -K x + d_r, then the index of its largest |entry| (1-based) */
@@ -632,11 +674,11 @@ scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
                    p->d_spmv_buf) != CUSPARSE_STATUS_SUCCESS ||
       SCS_CUBLAS_IAMAX(p->bl_handle, (int)p->n_plus_m, p->d_r, 1, &imax) !=
           CUBLAS_STATUS_SUCCESS) {
-    return -1.;
+    return SCS_LIN_SYS_PRODUCTS_FAILED;
   }
   if (imax > 0 && cudaMemcpy(&res, p->d_r + (imax - 1), sizeof(scs_float),
                              cudaMemcpyDeviceToHost) != cudaSuccess) {
-    return -1.;
+    return SCS_LIN_SYS_PRODUCTS_FAILED;
   }
   return ABS(res);
 }

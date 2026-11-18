@@ -313,12 +313,16 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
-  /* the refinement's products with K in MKL's sparse BLAS; if that cannot
-   * be set up, SCS computes them itself */
-  p->prod_ok = prod_setup(p) == 0;
-  if (!p->prod_ok) {
-    prod_free(p);
+  /* the refinement's products with K in MKL's sparse BLAS, always: if they
+   * cannot be set up, setup fails (prod_setup says why) rather than leaving
+   * them to SCS */
+  if (prod_setup(p) != 0) {
+    scs_printf("MKL Pardiso: the refinement's products with K could not be "
+               "set up\n");
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
   }
+  p->prod_ok = 1;
 
   return p;
 }
@@ -381,16 +385,31 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
  * where Pardiso runs on one thread (one_thread, see PARDISO_MIN_THREADED_NNZ
  * above): there the product runs on one thread too, around every MKL sparse
  * call on this handle (create, optimize, mv), so that the handle never
- * mixes thread counts either. [measured: see the PR]
+ * mixes thread counts either. Measured per product against SCS's own
+ * single-threaded one (November 2026, oneMKL 2026.1, AMD Zen 3 on Modal, 4
+ * threads, 46 LPs and QPs): 0.2 to 0.5 times its time on MKL's threads
+ * (co-100: 0.76 against 2.39 ms) and 0.45 to 0.93 times on one thread, so
+ * MKL's product is the faster one at every size; forcing 4 threads on the
+ * smallest systems made the product about 2 times slower than on one, which
+ * is why it follows Pardiso's thread rule.
  *
- * Reproducibility: on a fixed number of threads [measured: see the PR].
+ * Reproducibility: on a fixed number of threads the product gave the same
+ * bits in repeated runs (same measurements); a different thread count can
+ * change its last bits.
+ *
+ * Setup cost: the handle is created and analysed (mkl_sparse_optimize) at
+ * setup and again at every scs_update_lin_sys_diag_r (each scale update),
+ * whether or not the refinement turns on, since the every-25-iterations
+ * check uses the product too. That cost has not been measured on its own.
  *
  * The functions are declared here, like Pardiso's, so that no MKL header is
  * needed; the types and enum values are those of mkl_spblas.h. MKL's integer
  * is 64-bit with BLAS64 (ILP64, as for Pardiso) and in MATLAB, else 32-bit;
  * when that differs from scs_int (DLONG without BLAS64) the indices are
- * copied once, and a K too large for 32-bit indices leaves the products to
- * SCS.
+ * copied once, and a K too large for 32-bit indices makes setup fail (build
+ * with BLAS64=1 for such a K). scs_mkl_int has the width of scs_blas.h's
+ * blas_int, which is defined only with USE_LAPACK; an MKL build need not use
+ * LAPACK, so it is defined here.
  * ---------------------------------------------------------------------- */
 #if defined(MATLAB_MEX_FILE)
 #include <stddef.h>
@@ -506,18 +525,22 @@ static scs_int prod_setup(ScsLinSysWork *p) {
   p->prod_r = (scs_float *)scs_calloc(nm, sizeof(scs_float));
   p->prod_x0 = (scs_float *)scs_calloc(nm, sizeof(scs_float));
   if (!p->prod_r || !p->prod_x0) {
+    scs_printf("MKL sparse BLAS: out of memory\n");
     return -1;
   }
   if (sizeof(scs_mkl_int) != sizeof(scs_int)) {
     scs_mkl_int *ptr, *ind;
     if ((scs_int)(scs_mkl_int)nnz != nnz) {
-      return -1; /* too large for MKL's integers */
+      scs_printf("MKL sparse BLAS: K has too many nonzeros for MKL's 32-bit "
+                 "integers; build with BLAS64=1 (ILP64 MKL)\n");
+      return -1;
     }
     ptr = (scs_mkl_int *)scs_calloc(nm + 1, sizeof(scs_mkl_int));
     ind = (scs_mkl_int *)scs_calloc(nnz > 0 ? nnz : 1, sizeof(scs_mkl_int));
     p->prod_ptr = ptr;
     p->prod_ind = ind;
     if (!ptr || !ind) {
+      scs_printf("MKL sparse BLAS: out of memory\n");
       return -1;
     }
     for (k = 0; k <= nm; ++k) {
@@ -527,17 +550,23 @@ static scs_int prod_setup(ScsLinSysWork *p) {
       ind[k] = (scs_mkl_int)p->kkt->i[k];
     }
   }
-  return prod_make_handle(p);
+  if (prod_make_handle(p) != 0) {
+    scs_printf("MKL sparse BLAS: creating or analysing the handle of K "
+               "failed\n");
+    return -1;
+  }
+  return 0;
 }
 
-/* r = b - K x (x = x0 when x is SCS_NULL), r kept in prod_r */
+/* r = b - K x (x = x0 when x is SCS_NULL), r kept in prod_r. Returns
+ * ||r||_inf or SCS_LIN_SYS_PRODUCTS_FAILED. */
 scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
                                const scs_float *x) {
   scs_int i, nm = p->n_plus_m;
   scs_float res = 0.;
   int prev, st;
   if (!p->prod_ok) {
-    return -1.;
+    return SCS_LIN_SYS_PRODUCTS_FAILED; /* never: setup fails without them */
   }
   memcpy(p->prod_r, b, nm * sizeof(scs_float));
   prev = prod_threads_begin(p);
@@ -546,7 +575,7 @@ scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
                          x ? x : p->prod_x0, 1., p->prod_r);
   prod_threads_end(p, prev);
   if (st != SCS_MKL_SPARSE_STATUS_SUCCESS) {
-    return -1.;
+    return SCS_LIN_SYS_PRODUCTS_FAILED;
   }
   for (i = 0; i < nm; ++i) {
     res = MAX(res, ABS(p->prod_r[i]));

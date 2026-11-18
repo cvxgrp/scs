@@ -100,8 +100,9 @@ struct SCS_LIN_SYS_WORK {
    * symmetric SpMV, so K is stored a second time with both triangles (CSR,
    * columns sorted in each row); its values are kkt->x[full_src[k]] and
    * follow scs_update_lin_sys_diag_r. The guess x0 and the residual r stay
-   * on the GPU. products_ok = 0 when setting this up failed: then
-   * scs_lin_sys_residual returns -1 and SCS computes the products itself. */
+   * on the GPU. products_ok = 1 when K has at least CUDSS_MIN_PRODUCT_NNZ
+   * nonzeros (setup fails if the products cannot be set up then), else 0:
+   * scs_lin_sys_residual returns "not provided" and SCS computes them. */
   scs_int products_ok;
   scs_int full_nnz;        /* nonzeros of K with both triangles */
   scs_int *full_src;       /* host: index in kkt->x of each value */
