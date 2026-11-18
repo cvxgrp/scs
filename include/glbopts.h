@@ -329,7 +329,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * than zero (||rhs - K u0|| >= ||rhs||, which happens after a scale update
  * changes K and rhs) that iteration solves plainly instead. At a check while
  * on, a plain solve of the same right-hand side, made only for the decision,
- * decides whether to stay on; the iterate stays the correction-form solution.
+ * decides whether to stay on; the iterate stays the correction-form solution
+ * (unless its own residual, one more multiply per check, is clearly larger
+ * than the plain solve's: a safeguard for a factorization too inaccurate for
+ * the correction form to contract, see REFINE_DIRECT_SAFEGUARD_FACTOR).
  * That matters: a run that put the plain solve in the iterate at every check
  * mixed one inexact solve into every REFINE_CHECK_INTERVAL accurate ones and
  * took up to 31 times the iterations (QFORPLAN at 1e-6 with Accelerate);
@@ -388,6 +391,34 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * to stay on. */
 #define REFINE_DIRECT_ON_FACTOR (0.01)
 #define REFINE_DIRECT_OFF_FACTOR (0.001)
+/* REFINE_DIRECT_SAFEGUARD_FACTOR, REFINE_DIRECT_SAFEGUARD_FLOOR: at each check
+ * while the correction form is on, SCS also computes the correction-form
+ * solution's own residual (one more multiply by K per REFINE_CHECK_INTERVAL
+ * iterations while on) and replaces the iterate and the next guess with the
+ * check's plain solve when that residual is above
+ * REFINE_DIRECT_SAFEGUARD_FACTOR times the plain solve's and above
+ * REFINE_DIRECT_SAFEGUARD_FLOOR * ||rhs||_inf (or is NaN). This is for a
+ * factorization so inaccurate that the correction form does not contract:
+ * otherwise the only fallback is ||rhs - K u0|| >= ||rhs||, which lets the
+ * error of the iterates grow to the size of rhs first. With both conditions
+ * the error at a check is at most about twice a plain solve's.
+ * Why not factor 1 and no floor (fall back whenever the correction form is
+ * not more accurate): that swapped an equally accurate plain solve into the
+ * iterate where both residuals were at rounding level (1.7e-16 of ||rhs||,
+ * truss5 at 1e-6 with Accelerate, 9 times in one run) or within 30% of each
+ * other (hinf13, 2 times), and each swap perturbs the iterates as the
+ * mixing described above does: 3 of 1,240 runs changed (T, TA, A and named
+ * QPs), hinf13 from 215,625 to 582,350 iterations. With factor 2 and the
+ * floor it fired in none of them, so their iterates are bit for bit those
+ * without the safeguard. The floor is 45 (double) to 85 (single) times
+ * machine epsilon: a computed residual below it is mostly the rounding of
+ * its own computation, so comparing two of them says nothing. */
+#define REFINE_DIRECT_SAFEGUARD_FACTOR (2.0)
+#ifdef SFLOAT
+#define REFINE_DIRECT_SAFEGUARD_FLOOR (1e-5)
+#else
+#define REFINE_DIRECT_SAFEGUARD_FLOOR (1e-14)
+#endif
 /* REFINE_INDIRECT_ON_FACTOR: indirect solvers refine when the solve's error
  * is larger than the residuals SCS is driving to zero. While on, each
  * iteration costs one more multiply and one more solve. A smaller factor

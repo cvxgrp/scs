@@ -78,10 +78,9 @@ struct SCS_WORK {
   scs_int refine_on, refine_checks, refine_steps, refine_corrections;
   scs_float refine_tol;
   /* direct solvers: the solution of the previous iteration's solve (n + m),
-   * the guess of the correction form while refinement is on, valid when
-   * refine_prev_ok. Unused (NULL) in indirect builds. */
+   * the guess of the correction form, valid whenever refinement is on.
+   * Unused (NULL) in indirect builds. */
   scs_float *refine_prev;
-  scs_int refine_prev_ok;
   /* direct solvers: the linear solver computes the products with K for the
    * refinement itself (scs_lin_sys_residual and friends in linsys.h; then
    * refine_prev is unused and the solver keeps the guess), else SCS computes

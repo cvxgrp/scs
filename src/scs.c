@@ -1420,27 +1420,33 @@ static scs_int refine_iter(ScsWork *w, scs_int iter) {
 
 /* Direct solvers: u_t[:n+m], the solution of this iteration's solve, becomes
  * the guess of the next iteration's correction form (kept by the linear
- * solver when it computes the products, else in refine_prev). Called right
- * after that solve, before any other, as scs_lin_sys_keep requires. */
+ * solver when it computes the products, else in refine_prev). Called after
+ * that solve with no other solve in between, as scs_lin_sys_keep requires.
+ * Whenever refinement is on after an iteration, this has been called in it,
+ * so the guess is always valid while on. */
 static void keep_prev(ScsWork *w) {
   if (w->refine_hook) {
     scs_lin_sys_keep(w->p, w->u_t);
   } else {
     memcpy(w->refine_prev, w->u_t, (w->d->n + w->d->m) * sizeof(scs_float));
   }
-  w->refine_prev_ok = 1;
 }
 
 /* Direct solvers: ||rhs - K u||_inf for this iteration's rhs, with the linear
  * solver's product when it has one (rhs built in kkt_res), else SCS's
- * (iter_residual, r in kkt_res). u may not be kkt_res. A negative value
- * means the linear solver failed. */
-static scs_float check_residual(ScsWork *w, const scs_float *u) {
+ * (iter_residual, r in kkt_res), and ||rhs||_inf in *nrhs unless nrhs is
+ * SCS_NULL. u may not be kkt_res. A negative value means the linear solver
+ * failed. */
+static scs_float check_residual(ScsWork *w, const scs_float *u,
+                                scs_float *nrhs) {
   if (w->refine_hook) {
     iter_rhs(w, w->kkt_res);
+    if (nrhs) {
+      *nrhs = SCS(norm_inf)(w->kkt_res, w->d->n + w->d->m);
+    }
     return scs_lin_sys_residual(w->p, w->kkt_res, u);
   }
-  return iter_residual(w, u, w->kkt_res, SCS_NULL);
+  return iter_residual(w, u, w->kkt_res, nrhs);
 }
 
 /* Direct solvers: this iteration's solve in correction form from the
@@ -1493,11 +1499,14 @@ static scs_int correction_solve(ScsWork *w, scs_int *status) {
  * zero); at a check, a plain solve of the same right-hand side, into
  * scratch, decides whether to stay on (off at or below
  * REFINE_DIRECT_OFF_FACTOR * tol), and the iterate stays the correction-form
- * solution either way. Returns the status of the last solve (0: success). */
+ * solution unless its residual is clearly larger than the plain solve's (see
+ * REFINE_DIRECT_SAFEGUARD_FACTOR). Returns the status of the last solve (0:
+ * success). */
 static scs_int solve_direct(ScsWork *w, scs_int iter) {
   scs_int status = 0, corrected = 0, was_on = w->refine_on;
-  scs_float res;
-  if (was_on && w->refine_prev_ok) {
+  scs_int nm = w->d->n + w->d->m;
+  scs_float res, res_corr, nrhs;
+  if (was_on) {
     corrected = correction_solve(w, &status);
   }
   if (!corrected) {
@@ -1526,12 +1535,31 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
     if (status != 0) {
       return status;
     }
-    res = check_residual(w, w->kkt_corr);
+    res = check_residual(w, w->kkt_corr, SCS_NULL);
+    if (res < 0) {
+      return -1; /* the linear solver failed */
+    }
+    /* Safeguard, see REFINE_DIRECT_SAFEGUARD_FACTOR: the correction form's
+     * own residual (one more multiply per check while on); if it is clearly
+     * larger than the plain solve's, or NaN, the iterate and the next guess
+     * become the plain solve. */
+    res_corr = check_residual(w, w->u_t, &nrhs);
+    if (res_corr < 0) {
+      return -1; /* the linear solver failed */
+    }
+    if (res_corr != res_corr ||
+        (res == res && res_corr > REFINE_DIRECT_SAFEGUARD_FACTOR * res &&
+         res_corr > REFINE_DIRECT_SAFEGUARD_FLOOR * nrhs)) {
+      memcpy(w->u_t, w->kkt_corr, nm * sizeof(scs_float));
+      /* the plain solve was the linear solver's latest solve, as
+       * scs_lin_sys_keep requires */
+      keep_prev(w);
+    }
   } else {
-    res = check_residual(w, w->u_t);
-  }
-  if (res < 0) {
-    return -1; /* the linear solver failed (NaN iterates give NaN: off) */
+    res = check_residual(w, w->u_t, SCS_NULL);
+    if (res < 0) {
+      return -1; /* the linear solver failed (NaN iterates give NaN: off) */
+    }
   }
   w->refine_checks++;
   /* on above REFINE_DIRECT_ON_FACTOR * tol, off only at or below
@@ -1540,9 +1568,7 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
   w->refine_on = res > (was_on ? REFINE_DIRECT_OFF_FACTOR
                                : REFINE_DIRECT_ON_FACTOR) *
                            w->refine_tol;
-  if (!w->refine_on) {
-    w->refine_prev_ok = 0;
-  } else if (!corrected) {
+  if (w->refine_on && !corrected) {
     keep_prev(w);
   }
   return 0;
@@ -1586,7 +1612,6 @@ static void reset_tracking(ScsWork *w) {
   w->refine_steps = 0;
   w->refine_corrections = 0;
   w->refine_tol = -1.;
-  w->refine_prev_ok = 0;
 }
 
 static scs_int update_work(ScsWork *w, ScsSolution *sol) {
