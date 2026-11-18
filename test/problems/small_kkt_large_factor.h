@@ -82,7 +82,10 @@ static const char *small_kkt_large_factor(void) {
   d->b = (scs_float *)scs_calloc(n, sizeof(scs_float));
   d->c = (scs_float *)scs_calloc(n, sizeof(scs_float));
   for (j = 0; j < n; ++j) {
-    d->b[j] = 1. + 0.5 * sin((scs_float)j); /* any right-hand side */
+    /* any right-hand side, scaled by h^2 = 1/k^2 so that x and the objective
+     * are O(1): with b = O(1) the objective is about 1e7 and rounding in the
+     * duality gap reaches verify_solution_correct's 1e-7 tolerance */
+    d->b[j] = (1. + 0.5 * sin((scs_float)j)) / (scs_float)(k * k);
     b_max = MAX(b_max, ABS(d->b[j]));
   }
   cone->z = n; /* L x = b; L is nonsingular, so x = L^{-1} b */
