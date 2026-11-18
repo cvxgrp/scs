@@ -7,8 +7,10 @@ extern "C" {
 
 #include "csparse.h"
 #include "linsys.h"
+#include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cudss.h>
+#include <cusparse.h>
 
 /* cuDSS 0.8.0 renamed cudaDataType_t to cudssDataType_t (so CUDA_R_* enum
  * values become CUDSS_R_*) and added an offsetType parameter to
@@ -43,6 +45,18 @@ extern "C" {
 #else
 #define SCS_CUDA_INDEX CUDA_R_64I
 #endif
+#endif
+
+/* value and index types of the cuSPARSE product (scs_lin_sys_residual) */
+#ifndef SFLOAT
+#define SCS_CUSPARSE_FLOAT CUDA_R_64F
+#else
+#define SCS_CUSPARSE_FLOAT CUDA_R_32F
+#endif
+#ifndef DLONG
+#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_32I
+#else
+#define SCS_CUSPARSE_INDEX CUSPARSE_INDEX_64I
 #endif
 
 struct SCS_LIN_SYS_WORK {
@@ -80,6 +94,29 @@ struct SCS_LIN_SYS_WORK {
   /* cuDSS configuration */
   cudssConfig_t solver_config; /* cuDSS solver handle */
   cudssData_t solver_data;     /* cuDSS data handle */
+
+  /* Products with K for SCS's per-iteration refinement (scs_lin_sys_residual,
+   * scs_lin_sys_keep, scs_lin_sys_correct), on the GPU. cuSPARSE has no
+   * symmetric SpMV, so K is stored a second time with both triangles (CSR,
+   * columns sorted in each row); its values are kkt->x[full_src[k]] and
+   * follow scs_update_lin_sys_diag_r. The guess x0 and the residual r stay
+   * on the GPU. products_ok = 0 when setting this up failed: then
+   * scs_lin_sys_residual returns -1 and SCS computes the products itself. */
+  scs_int products_ok;
+  scs_int full_nnz;        /* nonzeros of K with both triangles */
+  scs_int *full_src;       /* host: index in kkt->x of each value */
+  scs_float *full_val_h;   /* host staging of the values */
+  scs_float *d_full_val;   /* device CSR of K, both triangles */
+  scs_int *d_full_row_ptr;
+  scs_int *d_full_col_ind;
+  scs_float *d_r;          /* device r = b - K x */
+  scs_float *d_x0;         /* device guess x0 (scs_lin_sys_keep) */
+  scs_float *d_xv;         /* device copy of an x given to the residual */
+  void *d_spmv_buf;        /* cuSPARSE SpMV workspace */
+  cusparseHandle_t sp_handle;
+  cublasHandle_t bl_handle;
+  cusparseSpMatDescr_t sp_k;
+  cusparseDnVecDescr_t sp_r, sp_x0, sp_xv;
 };
 
 #ifdef __cplusplus

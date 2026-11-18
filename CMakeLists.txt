@@ -619,7 +619,8 @@ if(USE_CUDSS)
 
   target_link_libraries(
     ${${PROJECT_NAME}_CUDSS}
-    PRIVATE CUDA::cudart cudss $<$<NOT:$<PLATFORM_ID:Windows>>:m>
+    PRIVATE CUDA::cudart CUDA::cublas CUDA::cusparse cudss
+            $<$<NOT:$<PLATFORM_ID:Windows>>:m>
             ${LAPACK_LINK_LIBRARIES}
             Threads::Threads)
 

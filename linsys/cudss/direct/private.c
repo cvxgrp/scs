@@ -2,6 +2,28 @@
 #include "linsys.h"
 #include <string.h>
 
+/* The smallest K (nonzeros of the stored triangle, diagonal included) whose
+ * products are computed on the GPU; below it scs_lin_sys_residual says "not
+ * provided" and SCS computes them on the CPU, from the problem data. A GPU
+ * product costs about 0.04 ms whatever the size (the copy of b, kernel
+ * launches, the amax and its scalar copy), SCS's own about 1 to 1.5 ns per
+ * nonzero. Measured per product on an NVIDIA GB10 (Grace CPU, unified
+ * memory, 33 problems): the GPU was 1.3 to 50 times slower up to 4.2e4
+ * nonzeros (0.04 against 0.0008 ms at 1.2e3) and faster from 9.0e4 on (0.64
+ * to 0.87 times up to 1.2e5, 0.12 to 0.37 times from 3.7e5; BOYD1, 9.3e5:
+ * 0.18 against 1.27 ms). In the solves, on random LPs and SOCPs with 1.3e4
+ * nonzeros at 1e-9, an iteration with the correction form on cost 1.6 times
+ * a plain one with the GPU products against 1.1 with SCS's. A discrete GPU,
+ * where copies cross PCIe, likely moves the break-even point up; not
+ * measured. Deterministic: the choice depends on the problem's size only. */
+#ifndef CUDSS_MIN_PRODUCT_NNZ
+#define CUDSS_MIN_PRODUCT_NNZ (60000)
+#endif
+
+static scs_int products_setup(ScsLinSysWork *p);
+static scs_int products_refresh(ScsLinSysWork *p);
+static void products_free(ScsLinSysWork *p);
+
 /* In case of error abort freeing p */
 #define CUDSS_CHECK_ABORT(call, p, fname)                                      \
   do {                                                                         \
@@ -65,6 +87,8 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
       cudaFreeHost(p->h_b_pinned);
     if (p->h_sol_pinned)
       cudaFreeHost(p->h_sol_pinned);
+
+    products_free(p);
 
     /* Free CPU resources */
     if (p->kkt)
@@ -271,6 +295,18 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
+  /* the refinement's products with K on the GPU for a large enough K (see
+   * CUDSS_MIN_PRODUCT_NNZ); if that cannot be set up, SCS computes them on
+   * the CPU instead */
+  if (p->kkt->p[p->n_plus_m] >= CUDSS_MIN_PRODUCT_NNZ) {
+    p->products_ok = products_setup(p) == 0;
+    if (!p->products_ok) {
+      products_free(p);
+      scs_printf("cuDSS: products with K on the GPU not available, SCS "
+                 "computes them on the CPU\n");
+    }
+  }
+
   return p;
 }
 
@@ -326,6 +362,12 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     p->kkt->x[p->diag_r_idxs[i]] = -diag_r[i];
   }
 
+  /* the copy of K with both triangles used for the products */
+  if (p->products_ok && products_refresh(p) != 0) {
+    scs_printf("scs_update_lin_sys_diag_r: Error updating K for products\n");
+    return -1;
+  }
+
   /* Copy updated values to device */
   cudaError_t custatus = cudaMemcpy(p->d_kkt_val, p->kkt->x,
                                     p->kkt->p[p->n_plus_m] * sizeof(scs_float),
@@ -360,24 +402,285 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   return 0;
 }
 
-/* Products with this solver's own copy of K for SCS's per-iteration
- * refinement (optional, see linsys.h): not provided, so SCS computes them
- * from the problem data. */
-scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
+/* ------------------------------------------------------------------------
+ * Products with K for SCS's per-iteration refinement (optional, linsys.h).
+ *
+ * r = b - K x is one cuSPARSE SpMV with K stored with both triangles, and
+ * ||r||_inf one cuBLAS amax; the guess x0 and r stay on the GPU, so the
+ * correction form x = x0 + K^{-1} r costs the copy of b to the GPU and of x
+ * back, as a plain solve does, plus the SpMV, amax and an axpy, and no other
+ * copies. SpMV uses CUSPARSE_SPMV_CSR_ALG2, which gives the same result
+ * every run (CSR_ALG1, which SCS's GPU indirect solver uses, does not), and
+ * amax and axpy are reproducible too, so these products add no run-to-run
+ * variation; the cuDSS solve itself is not reproducible run to run (see
+ * docs, "Reproducibility of the GPU solvers"). Cost: a second copy of K on
+ * the GPU (both triangles, about twice the nonzeros of the stored one) and a
+ * host copy of its values for updates of R.
+ * ---------------------------------------------------------------------- */
+#ifndef SFLOAT
+#define SCS_CUBLAS_IAMAX cublasIdamax
+#define SCS_CUBLAS_AXPY cublasDaxpy
+#else
+#define SCS_CUBLAS_IAMAX cublasIsamax
+#define SCS_CUBLAS_AXPY cublasSaxpy
+#endif
+
+static void products_free(ScsLinSysWork *p) {
+  if (p->sp_k)
+    cusparseDestroySpMat(p->sp_k);
+  if (p->sp_r)
+    cusparseDestroyDnVec(p->sp_r);
+  if (p->sp_x0)
+    cusparseDestroyDnVec(p->sp_x0);
+  if (p->sp_xv)
+    cusparseDestroyDnVec(p->sp_xv);
+  if (p->sp_handle)
+    cusparseDestroy(p->sp_handle);
+  if (p->bl_handle)
+    cublasDestroy(p->bl_handle);
+  if (p->d_full_val)
+    cudaFree(p->d_full_val);
+  if (p->d_full_row_ptr)
+    cudaFree(p->d_full_row_ptr);
+  if (p->d_full_col_ind)
+    cudaFree(p->d_full_col_ind);
+  if (p->d_r)
+    cudaFree(p->d_r);
+  if (p->d_x0)
+    cudaFree(p->d_x0);
+  if (p->d_xv)
+    cudaFree(p->d_xv);
+  if (p->d_spmv_buf)
+    cudaFree(p->d_spmv_buf);
+  if (p->full_src)
+    scs_free(p->full_src);
+  if (p->full_val_h)
+    scs_free(p->full_val_h);
+  p->sp_k = SCS_NULL;
+  p->sp_r = p->sp_x0 = p->sp_xv = SCS_NULL;
+  p->sp_handle = SCS_NULL;
+  p->bl_handle = SCS_NULL;
+  p->d_full_val = p->d_r = p->d_x0 = p->d_xv = SCS_NULL;
+  p->d_full_row_ptr = p->d_full_col_ind = SCS_NULL;
+  p->d_spmv_buf = SCS_NULL;
+  p->full_src = SCS_NULL;
+  p->full_val_h = SCS_NULL;
+}
+
+/* full_val_h = the values of K (both triangles) from kkt->x, copied to the
+ * GPU */
+static scs_int products_refresh(ScsLinSysWork *p) {
+  scs_int k;
+  for (k = 0; k < p->full_nnz; ++k) {
+    p->full_val_h[k] = p->kkt->x[p->full_src[k]];
+  }
+  return cudaMemcpy(p->d_full_val, p->full_val_h,
+                    p->full_nnz * sizeof(scs_float),
+                    cudaMemcpyHostToDevice) == cudaSuccess
+             ? 0
+             : -1;
+}
+
+/* Builds K with both triangles from kkt (the lower triangle in CSR: row r
+ * holds columns kkt->i[k] <= r), with the columns of each row in increasing
+ * order, copies it to the GPU and creates the cuSPARSE and cuBLAS objects.
+ * Returns 0 on success; on failure the caller frees what was allocated. */
+static scs_int products_setup(ScsLinSysWork *p) {
+  scs_int nm = p->n_plus_m, r, c, k, q, nnz, ok = -1;
+  const scs_int *lp = p->kkt->p, *li = p->kkt->i;
+  scs_int *colptr = SCS_NULL, *fill = SCS_NULL, *trow = SCS_NULL;
+  scs_int *tsrc = SCS_NULL, *ptr = SCS_NULL, *ind = SCS_NULL;
+  size_t vb = nm * sizeof(scs_float), buf_size = 0;
+  scs_float alpha = -1., beta = 1.;
+  colptr = (scs_int *)scs_calloc(nm + 1, sizeof(scs_int));
+  fill = (scs_int *)scs_calloc(nm + 1, sizeof(scs_int));
+  if (!colptr || !fill) {
+    goto done;
+  }
+  /* entries per column of the full matrix (per row too, by symmetry) */
+  for (r = 0; r < nm; ++r) {
+    for (k = lp[r]; k < lp[r + 1]; ++k) {
+      c = li[k];
+      colptr[c + 1]++;
+      if (c != r) {
+        colptr[r + 1]++;
+      }
+    }
+  }
+  for (r = 0; r < nm; ++r) {
+    colptr[r + 1] += colptr[r];
+  }
+  nnz = colptr[nm];
+  trow = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
+  tsrc = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
+  ptr = (scs_int *)scs_calloc(nm + 1, sizeof(scs_int));
+  ind = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
+  p->full_src = (scs_int *)scs_calloc(nnz, sizeof(scs_int));
+  p->full_val_h = (scs_float *)scs_calloc(nnz, sizeof(scs_float));
+  if (!trow || !tsrc || !ptr || !ind || !p->full_src || !p->full_val_h) {
+    goto done;
+  }
+  /* bucket the entries by column (entry (r, c) and its mirror (c, r)) */
+  memcpy(fill, colptr, nm * sizeof(scs_int));
+  for (r = 0; r < nm; ++r) {
+    for (k = lp[r]; k < lp[r + 1]; ++k) {
+      c = li[k];
+      q = fill[c]++;
+      trow[q] = r;
+      tsrc[q] = k;
+      if (c != r) {
+        q = fill[r]++;
+        trow[q] = c;
+        tsrc[q] = k;
+      }
+    }
+  }
+  /* then by row, taking the columns in increasing order: every row's
+   * columns come out sorted. The row counts are the column counts. */
+  memcpy(ptr, colptr, (nm + 1) * sizeof(scs_int));
+  memcpy(fill, colptr, nm * sizeof(scs_int));
+  for (c = 0; c < nm; ++c) {
+    for (q = colptr[c]; q < colptr[c + 1]; ++q) {
+      k = fill[trow[q]]++;
+      ind[k] = c;
+      p->full_src[k] = tsrc[q];
+    }
+  }
+  p->full_nnz = nnz;
+  if (cudaMalloc((void **)&p->d_full_val, nnz * sizeof(scs_float)) !=
+          cudaSuccess ||
+      cudaMalloc((void **)&p->d_full_row_ptr, (nm + 1) * sizeof(scs_int)) !=
+          cudaSuccess ||
+      cudaMalloc((void **)&p->d_full_col_ind, nnz * sizeof(scs_int)) !=
+          cudaSuccess ||
+      cudaMalloc((void **)&p->d_r, vb) != cudaSuccess ||
+      cudaMalloc((void **)&p->d_x0, vb) != cudaSuccess ||
+      cudaMalloc((void **)&p->d_xv, vb) != cudaSuccess) {
+    goto done;
+  }
+  if (cudaMemcpy(p->d_full_row_ptr, ptr, (nm + 1) * sizeof(scs_int),
+                 cudaMemcpyHostToDevice) != cudaSuccess ||
+      cudaMemcpy(p->d_full_col_ind, ind, nnz * sizeof(scs_int),
+                 cudaMemcpyHostToDevice) != cudaSuccess ||
+      cudaMemset(p->d_x0, 0, vb) != cudaSuccess ||
+      products_refresh(p) != 0) {
+    goto done;
+  }
+  if (cusparseCreate(&p->sp_handle) != CUSPARSE_STATUS_SUCCESS ||
+      cublasCreate(&p->bl_handle) != CUBLAS_STATUS_SUCCESS) {
+    goto done;
+  }
+  if (cusparseCreateCsr(&p->sp_k, nm, nm, nnz, p->d_full_row_ptr,
+                        p->d_full_col_ind, p->d_full_val, SCS_CUSPARSE_INDEX,
+                        SCS_CUSPARSE_INDEX, CUSPARSE_INDEX_BASE_ZERO,
+                        SCS_CUSPARSE_FLOAT) != CUSPARSE_STATUS_SUCCESS ||
+      cusparseCreateDnVec(&p->sp_r, nm, p->d_r, SCS_CUSPARSE_FLOAT) !=
+          CUSPARSE_STATUS_SUCCESS ||
+      cusparseCreateDnVec(&p->sp_x0, nm, p->d_x0, SCS_CUSPARSE_FLOAT) !=
+          CUSPARSE_STATUS_SUCCESS ||
+      cusparseCreateDnVec(&p->sp_xv, nm, p->d_xv, SCS_CUSPARSE_FLOAT) !=
+          CUSPARSE_STATUS_SUCCESS) {
+    goto done;
+  }
+  if (cusparseSpMV_bufferSize(p->sp_handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+                              &alpha, p->sp_k, p->sp_xv, &beta, p->sp_r,
+                              SCS_CUSPARSE_FLOAT, CUSPARSE_SPMV_CSR_ALG2,
+                              &buf_size) != CUSPARSE_STATUS_SUCCESS) {
+    goto done;
+  }
+  if (buf_size > 0 && cudaMalloc(&p->d_spmv_buf, buf_size) != cudaSuccess) {
+    goto done;
+  }
+  ok = 0;
+done:
+  scs_free(colptr);
+  scs_free(fill);
+  scs_free(trow);
+  scs_free(tsrc);
+  scs_free(ptr);
+  scs_free(ind);
+  return ok;
+}
+
+/* r = b - K x on the GPU (x = the guess x0 when x is SCS_NULL); r stays on
+ * the GPU in d_r. Returns ||r||_inf, or -1 if not provided or on error. */
+scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
                                const scs_float *x) {
-  (void)w;
-  (void)b;
-  (void)x;
-  return -1.;
+  size_t vb = p->n_plus_m * sizeof(scs_float);
+  scs_float alpha = -1., beta = 1., res = 0.;
+  int imax = 0;
+  if (!p->products_ok) {
+    return -1.;
+  }
+  /* d_r = b, through the pinned staging buffer of the solve */
+  memcpy(p->h_b_pinned, b, vb);
+  if (cudaMemcpy(p->d_r, p->h_b_pinned, vb, cudaMemcpyHostToDevice) !=
+      cudaSuccess) {
+    return -1.;
+  }
+  if (x) {
+    memcpy(p->h_sol_pinned, x, vb);
+    if (cudaMemcpy(p->d_xv, p->h_sol_pinned, vb, cudaMemcpyHostToDevice) !=
+        cudaSuccess) {
+      return -1.;
+    }
+  }
+  /* d_r = -K x + d_r, then the index of its largest |entry| (1-based) */
+  if (cusparseSpMV(p->sp_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha,
+                   p->sp_k, x ? p->sp_xv : p->sp_x0, &beta, p->sp_r,
+                   SCS_CUSPARSE_FLOAT, CUSPARSE_SPMV_CSR_ALG2,
+                   p->d_spmv_buf) != CUSPARSE_STATUS_SUCCESS ||
+      SCS_CUBLAS_IAMAX(p->bl_handle, (int)p->n_plus_m, p->d_r, 1, &imax) !=
+          CUBLAS_STATUS_SUCCESS) {
+    return -1.;
+  }
+  if (imax > 0 && cudaMemcpy(&res, p->d_r + (imax - 1), sizeof(scs_float),
+                             cudaMemcpyDeviceToHost) != cudaSuccess) {
+    return -1.;
+  }
+  return ABS(res);
 }
 
-void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {
-  (void)w;
+/* x0 = the solution of the latest solve, which is still in d_sol (x is that
+ * solution, so it is not read) */
+void scs_lin_sys_keep(ScsLinSysWork *p, const scs_float *x) {
   (void)x;
+  if (p->products_ok) {
+    cudaMemcpy(p->d_x0, p->d_sol, p->n_plus_m * sizeof(scs_float),
+               cudaMemcpyDeviceToDevice);
+  }
 }
 
-scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) {
-  (void)w;
-  (void)x;
-  return -1;
+/* x = x0 + K^{-1} r with r = d_r from the latest scs_lin_sys_residual, all on
+ * the GPU; one copy of x to the host */
+scs_int scs_lin_sys_correct(ScsLinSysWork *p, scs_float *x) {
+  size_t vb = p->n_plus_m * sizeof(scs_float);
+  scs_float one = 1.;
+  cudssStatus_t status;
+  if (!p->products_ok) {
+    return -1;
+  }
+  if (cudaMemcpy(p->d_b, p->d_r, vb, cudaMemcpyDeviceToDevice) !=
+      cudaSuccess) {
+    return -1;
+  }
+  status = cudssExecute(p->handle, CUDSS_PHASE_SOLVE, p->solver_config,
+                        p->solver_data, p->d_kkt_mat, p->d_sol_mat,
+                        p->d_b_mat);
+  if (status != CUDSS_STATUS_SUCCESS) {
+    scs_printf("scs_lin_sys_correct: Error during solve: %d\n", (int)status);
+    return status;
+  }
+  /* d_sol = x0 + d: one rounding, the same value as SCS's x0 + d on the
+   * host */
+  if (SCS_CUBLAS_AXPY(p->bl_handle, (int)p->n_plus_m, &one, p->d_x0, 1,
+                      p->d_sol, 1) != CUBLAS_STATUS_SUCCESS) {
+    return -1;
+  }
+  if (cudaMemcpy(p->h_sol_pinned, p->d_sol, vb, cudaMemcpyDeviceToHost) !=
+      cudaSuccess) {
+    return -1;
+  }
+  memcpy(x, p->h_sol_pinned, vb);
+  return 0;
 }
