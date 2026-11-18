@@ -76,7 +76,8 @@ to measure its error, and turns the correction form off once that error is at
 most :math:`0.001\,` *tol*; the iterate stays the correction-form solution,
 unless the correction-form solution's own residual (one more multiply by
 :math:`K` per check) is more than twice the plain solve's and above rounding
-level (:math:`10^{-14}\,\|z^k\|_\infty`). That safeguard is for a
+level (:math:`10^{-14}\,\|z^k\|_\infty` in double precision,
+:math:`10^{-5}\,\|z^k\|_\infty` in single). That safeguard is for a
 factorization so inaccurate that the correction form does not reduce the
 error; normally the correction-form residual is near rounding level and the
 safeguard changes nothing.
@@ -480,8 +481,8 @@ The contract:
 - Whether a workspace provides the products is fixed when
   :code:`scs_init_lin_sys_work` returns, by a rule stated up front (cuDSS: the
   number of nonzeros of :math:`K`; MKL Pardiso: always, except a :math:`K` too
-large for 32-bit MKL integers in a ``DLONG`` build without ``BLAS64``), never by whether
-  memory or a library happened to be available. A solver that should provide
+  large for 32-bit MKL integers in a ``DLONG`` build without ``BLAS64``), never
+  by whether memory or a library happened to be available. A solver that should provide
   them but cannot set them up makes :code:`scs_init_lin_sys_work` fail with a
   message saying why, rather than returning "not provided".
 - SCS calls :code:`scs_lin_sys_residual` once at setup, with zero vectors:

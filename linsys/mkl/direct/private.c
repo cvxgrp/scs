@@ -408,9 +408,10 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
  * is 64-bit with BLAS64 (ILP64, as for Pardiso) and in MATLAB, else 32-bit;
  * when that differs from scs_int (DLONG without BLAS64) the indices are
  * copied once; a K too large for 32-bit indices gets SCS's own products
- * (not provided, by size), while a BLAS64=1 build provides them at any size. scs_mkl_int has the width of scs_blas.h's
- * blas_int, which is defined only with USE_LAPACK; an MKL build need not use
- * LAPACK, so it is defined here.
+ * (not provided, by size), while a BLAS64=1 build provides them at any
+ * size. scs_mkl_int has the width of scs_blas.h's blas_int, which is defined
+ * only with USE_LAPACK; an MKL build need not use LAPACK, so it is defined
+ * here.
  * ---------------------------------------------------------------------- */
 #if defined(MATLAB_MEX_FILE)
 #include <stddef.h>
