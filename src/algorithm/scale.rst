@@ -282,6 +282,9 @@ the :ref:`info <info>` struct, and the final :code:`scale` in :code:`scale`.
 Per-row refinement
 ------------------
 
+This refines the scaling :math:`R`. The iterative refinement of the
+linear-system solves is a different thing, see :ref:`iterative_refinement`.
+
 The :code:`scale` parameter above moves the whole :math:`R_y` block together.
 With :code:`adaptive_diag_scale` each row :math:`i` carries its own multiplier
 :math:`f_i` as well. It starts at one and divides that row's entry of

@@ -121,6 +121,11 @@ linear system</span></a> of equations:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix} I + P &amp; A^T  \\ A &amp; -I \end{bmatrix}\begin{bmatrix} x \\ y
 \end{bmatrix} = \begin{bmatrix} \mu_x \\ -\mu_y \end{bmatrix}\end{split}\]</div>
+<p>SCS also solves this system (with the diagonal scaling <span class="math notranslate nohighlight">\(R\)</span> of
+<a class="reference internal" href="scale.html#scaling"><span class="std std-ref">Non-identity DR Scaling</span></a> in place of the identity) for the right-hand side
+<span class="math notranslate nohighlight">\((c, -b)\)</span> at the start of every solve and whenever <span class="math notranslate nohighlight">\(R\)</span> changes,
+and checks and refines the accuracy of both kinds of solve as described in
+<a class="reference internal" href="../linear_solver/index.html#iterative-refinement"><span class="std std-ref">Iterative refinement</span></a>.</p>
 <p>The second step is the Euclidean projection onto a convex <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">cone</span></a>, ie,</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{array}{ll}

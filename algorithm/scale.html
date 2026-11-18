@@ -328,6 +328,8 @@ the <a class="reference internal" href="../api/info.html#info"><span class="std 
 </section>
 <section id="per-row-refinement">
 <span id="id1"></span><h2>Per-row refinement<a class="headerlink" href="#per-row-refinement" title="Link to this heading"></a></h2>
+<p>This refines the scaling <span class="math notranslate nohighlight">\(R\)</span>. The iterative refinement of the
+linear-system solves is a different thing, see <a class="reference internal" href="../linear_solver/index.html#iterative-refinement"><span class="std std-ref">Iterative refinement</span></a>.</p>
 <p>The <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter above moves the whole <span class="math notranslate nohighlight">\(R_y\)</span> block together.
 With <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> each row <span class="math notranslate nohighlight">\(i\)</span> carries its own multiplier
 <span class="math notranslate nohighlight">\(f_i\)</span> as well. It starts at one and divides that row’s entry of
