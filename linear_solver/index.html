@@ -214,8 +214,10 @@ Intel MKL is now available for
 though it only offers limited support for non-Intel CPUs. The x86-64 manylinux
 Python wheels include it, statically linked (see <a class="reference internal" href="../install/python.html#python-install"><span class="std std-ref">Python</span></a>).</p>
 <p><strong>Threads.</strong> With a threaded MKL, Pardiso runs on MKL’s threads
-(<code class="docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code>, else <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>). Starting and synchronizing
-them costs a few tens of microseconds per call, which on a small linear system
+(<code class="docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code>, else <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>): the reordering, the
+factorization and the solve done in every iteration, which SCS asks Pardiso to
+run in parallel. Starting and synchronizing
+the threads costs a few tens of microseconds per call, which on a small linear system
 is more than the work. So SCS runs Pardiso on one thread when the factor
 Pardiso computes has fewer than 50,000 nonzeros (<code class="docutils literal notranslate"><span class="pre">PARDISO_MIN_THREADED_NNZ</span></code>
 in <code class="docutils literal notranslate"><span class="pre">linsys/mkl/direct/private.c</span></code>). The choice is made once, at setup, from
@@ -229,7 +231,9 @@ problem and the machine; in our measurements it was between about 30,000 and
 60,000 factor nonzeros. A sequential MKL, such as the one in the Python
 wheels, always runs on one thread, so there this changes nothing. On small
 problems a sequential MKL is still faster than a threaded one, because a
-threaded MKL costs more per call even on one thread.</p>
+threaded MKL costs more per call even on one thread. On several threads
+Pardiso may round differently from run to run, so two runs of the same problem
+can differ slightly in their results and iteration counts.</p>
 </section>
 <section id="apple-accelerate">
 <span id="id1"></span><h3>Apple Accelerate<a class="headerlink" href="#apple-accelerate" title="Link to this heading"></a></h3>
