@@ -300,9 +300,10 @@ runtime would be a second one beside libgomp. The default,
 :code:`mkl_static_threading=sequential`, is the wheel's configuration.
 
 Threads help most on large linear systems and large PSD blocks: in our
-measurements on 4 threads, Pardiso's per-iteration solve ran 2 to 3 times
-faster and its factorization up to about 3 times faster. SCS runs Pardiso on
-one thread for small linear systems (see the threads paragraph of
+measurements on large linear systems (oneMKL 2026.1, 4 threads), Pardiso's
+per-iteration solve ran 2 to 3 times faster and its factorization up to about
+3 times faster. SCS runs Pardiso on one thread for small linear systems (a
+factor with fewer than 50,000 nonzeros, see the threads paragraph of
 :ref:`MKL Pardiso <mkl>`), but a threaded MKL still costs more per call than a
 sequential one, so on small problems the sequential build can be faster.
 Compare the two on your problems before switching.
