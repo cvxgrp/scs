@@ -56,6 +56,99 @@ void _PARDISO(void **pt, const scs_int *maxfct, const scs_int *mnum,
 #error "MKL PARDISO requires DLONG when BLAS64 is set (pardiso_64 needs 64-bit ints)"
 #endif
 
+/* Small linear systems: Pardiso on one thread.
+ *
+ * What it does. With a threaded MKL, every Pardiso call (the symbolic phase,
+ * each numerical factorization, the solve of every iteration) runs on MKL's
+ * threads (MKL_NUM_THREADS, else OMP_NUM_THREADS). For a small system this
+ * workspace instead sets MKL's thread count to one for the calling thread
+ * around each of its Pardiso calls (MKL_Set_Num_Threads_Local) and restores
+ * the previous setting after the call. "Small" is decided once, at setup:
+ *   - when the KKT matrix has fewer than PARDISO_MIN_THREADED_NNZ nonzeros
+ *     (upper triangle, as Pardiso gets it), the symbolic phase runs on one
+ *     thread;
+ *   - if the factor it computes (iparm[17]) has fewer than
+ *     PARDISO_MIN_THREADED_NNZ nonzeros too, every later call (the
+ *     factorizations, the solves) runs on one thread as well. If not, the
+ *     handle is released and the symbolic phase is redone on MKL's threads,
+ *     and everything runs on them.
+ * One handle never mixes thread counts between its phases: Pardiso keeps the
+ * thread count of the symbolic phase in what it sets up there, and a
+ * symbolic phase on one thread followed by solves on 4 threads made each
+ * solve 6.6x slower (CONT-050). The factor is never smaller than the KKT
+ * matrix, so a system that is large by the first test is never redone.
+ * Pardiso's control parameters are the same either way, and MKL's BLAS and
+ * LAPACK (the PSD projection, Anderson acceleration) keep their threads.
+ *
+ * Why the factor nonzeros: the solve of every iteration is a forward and a
+ * backward substitution through the factor, so its work is proportional to
+ * them, while the KKT nonzeros can be 25 times fewer (CVXQP1_L: 8.0e4 in the
+ * KKT matrix, 2.1e6 in the factor, 1.9x faster per iteration on 4 threads).
+ *
+ * Measured (November 2026, oneMKL 2026.1, static gnu_thread layer, 4
+ * threads, AMD Zen 3 on Modal, 34 LP, QP and SDP problems, 3 repeats):
+ *   - one Pardiso solve costs about 25-30 microseconds more on 4 threads
+ *     than on one, so tiny problems iterated about 2x slower on 4 threads;
+ *   - the break-even point, all of Pardiso on one thread against all on 4,
+ *     lies between about 3e4 and 6e4 factor nonzeros and depends on the
+ *     problem (PRIMAL3 3.4e4: one thread 1.12x slower; QSHIP08S 4.4e4: 0.81x;
+ *     QSHIP12S 5.4e4: 1.32x), and above it threads win clearly (DTOC3 1.1e5:
+ *     one thread 1.8x slower, CONT-201 5.0e6: 3.9x);
+ *   - with the threshold at 5e4, ms per iteration with the rule against
+ *     without it: geometric mean 0.845 below the threshold (15 problems) with
+ *     MKL_DYNAMIC=FALSE and 0.968 with MKL's default MKL_DYNAMIC=TRUE (which
+ *     already runs the tiniest systems on one thread by itself), and 1.005
+ *     and 1.025 above it (19 problems, where the rule changes nothing and the
+ *     ratio is run-to-run noise). No problem was slower by more than that
+ *     noise. A threshold of 1e5 made problems between 6e4 and 1e5 6-30%
+ *     slower.
+ *   - When the symbolic phase is redone, setup takes 25-48 ms longer
+ *     (CONT-050, biggs, QSHIP12S, AUG3DQP), once per solve.
+ *
+ * Tradeoff. One fixed threshold for every machine: a system just below it
+ * might have been a little faster on threads, one just above it a little
+ * slower, and the break-even point moves with the CPU, the thread count and
+ * the MKL version.
+ *
+ * Deterministic: the choice depends on the problem data and on the ordering
+ * Pardiso computes, once at setup, never on timings or load. The parallel
+ * nested-dissection ordering (iparm[1] = 3) can depend on the thread count
+ * (ex9: 1.215e7 factor nonzeros on 4 threads, 1.228e7 on 1), so a system
+ * within about 1% of the threshold can be decided differently on another
+ * thread count.
+ *
+ * Where it does nothing: a sequential MKL (the Python wheels) and MKL on one
+ * thread. It does not remove the per-call overhead of a threaded MKL on one
+ * thread, which is higher than that of the sequential MKL, so small problems
+ * stay faster with a sequential MKL.
+ *
+ * MKL_Set_Num_Threads_Local exists in every MKL threading layer (in the
+ * sequential one it does nothing) and in mkl_rt, so the reference is strong.
+ * A weak reference, as in src/cones.c, does not pull the function out of a
+ * static MKL archive and stays NULL there. This strong reference also
+ * resolves the weak one in src/cones.c, so the MKL guard of the parallel PSD
+ * projection is active in static MKL builds too. */
+#ifndef PARDISO_MIN_THREADED_NNZ
+#define PARDISO_MIN_THREADED_NNZ (50000)
+#endif
+
+int MKL_Set_Num_Threads_Local(int nt);
+
+/* One Pardiso call of workspace p, on one MKL thread when p->one_thread */
+static void pardiso_call(ScsLinSysWork *p, scs_int phase, const scs_float *a,
+                         scs_float *b) {
+  int prev = 0;
+  if (p->one_thread) {
+    prev = MKL_Set_Num_Threads_Local(1);
+  }
+  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &phase,
+           &(p->n_plus_m), a, p->kkt->p, p->kkt->i, SCS_NULL, &(p->nrhs),
+           p->iparm, &(p->msglvl), b, SCS_NULL, &(p->error));
+  if (p->one_thread) {
+    MKL_Set_Num_Threads_Local(prev);
+  }
+}
+
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
 }
@@ -110,6 +203,8 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
+  /* small systems: Pardiso on one thread, see PARDISO_MIN_THREADED_NNZ */
+  p->one_thread = p->kkt->p[p->n_plus_m] < PARDISO_MIN_THREADED_NNZ;
 
   for (i = 0; i < 64; i++) {
     p->iparm[i] = 0; /* Setup Pardiso control parameters */
@@ -132,6 +227,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
   p->iparm[9] = 13;         /* Perturb the pivot elements with 1E-13 (default) */
   p->iparm[23] = 1;         /* Two-level scheduling for parallel factorization */
   p->iparm[24] = 1;         /* Parallel forward/backward solve */
+  p->iparm[17] = -1;        /* Report the factor nonzeros after phase 11 */
   p->iparm[34] = 1;         /* Use C-style indexing for indices */
   /* p->iparm[36] = -80; */ /* Form block sparse matrices */
 
@@ -140,10 +236,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 #endif
 
   /* Permutation and symbolic factorization */
-  scs_int phase = PARDISO_SYMBOLIC;
-  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &phase, &(p->n_plus_m),
-           p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL, &(p->nrhs), p->iparm,
-           &(p->msglvl), SCS_NULL, SCS_NULL, &(p->error));
+  pardiso_call(p, PARDISO_SYMBOLIC, p->kkt->x, SCS_NULL);
 
   if (p->error != 0) {
     scs_printf("Error during symbolic factorization: %d", (int)p->error);
@@ -151,11 +244,28 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
+  /* small systems, see PARDISO_MIN_THREADED_NNZ: the symbolic phase ran on
+   * one thread because the KKT matrix is small, but the factor is not. One
+   * handle must keep one thread count in all its phases, so release it and
+   * redo the symbolic phase on MKL's threads. */
+  if (p->one_thread && p->iparm[17] >= PARDISO_MIN_THREADED_NNZ) {
+    pardiso_call(p, PARDISO_CLEANUP, SCS_NULL, SCS_NULL);
+    for (i = 0; i < 64; i++) {
+      p->pt[i] = 0;
+    }
+    p->one_thread = 0;
+    p->iparm[17] = -1; /* report the factor nonzeros again */
+    pardiso_call(p, PARDISO_SYMBOLIC, p->kkt->x, SCS_NULL);
+    if (p->error != 0) {
+      scs_printf("Error during symbolic factorization: %d", (int)p->error);
+      scs_free_lin_sys_work(p);
+      return SCS_NULL;
+    }
+  }
+
   /* Numerical factorization */
   p->phase = PARDISO_NUMERIC;
-  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
-           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL, &(p->error));
+  pardiso_call(p, PARDISO_NUMERIC, p->kkt->x, SCS_NULL);
 
   if (p->error) {
     scs_printf("Error during numerical factorization: %d", (int)p->error);
@@ -177,9 +287,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
                           scs_float tol) {
   /* Back substitution and iterative refinement */
   p->phase = PARDISO_SOLVE;
-  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
-           &(p->nrhs), p->iparm, &(p->msglvl), b, SCS_NULL, &(p->error));
+  pardiso_call(p, PARDISO_SOLVE, p->kkt->x, b);
   if (p->error != 0) {
     scs_printf("Error during linear system solution: %d", (int)p->error);
   }
@@ -201,9 +309,7 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 
   /* Perform numerical factorization */
   p->phase = PARDISO_NUMERIC;
-  _PARDISO(p->pt, &(p->maxfct), &(p->mnum), &(p->mtype), &(p->phase),
-           &(p->n_plus_m), p->kkt->x, p->kkt->p, p->kkt->i, SCS_NULL,
-           &(p->nrhs), p->iparm, &(p->msglvl), SCS_NULL, SCS_NULL, &(p->error));
+  pardiso_call(p, PARDISO_NUMERIC, p->kkt->x, SCS_NULL);
 
   if (p->error != 0) {
     scs_printf("Error in PARDISO factorization when updating: %d.\n",

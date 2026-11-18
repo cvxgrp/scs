@@ -24,6 +24,8 @@ struct SCS_LIN_SYS_WORK {
   scs_int phase;     /* control the execution phases of the solver */
   scs_int error;     /* the error indicator (0 for no error) */
   scs_int msglvl;    /* Message level information (0 for no output) */
+  scs_int one_thread; /* Pardiso on one MKL thread (small system), see
+                        PARDISO_MIN_THREADED_NNZ in private.c */
 
   /* These are required for matrix updates */
   scs_int *diag_r_idxs; /* indices where R appears */
