@@ -68,7 +68,8 @@ struct SCS_WORK {
    * kkt_corr, the right-hand side [c; -b] and the refined candidate of the
    * solve for g (update_work_cache); kkt_corr also the plain solve that
    * decides at a check of the per-iteration refinement while it is on
-   * (solve_direct, solve_indirect) */
+   * (solve_direct, solve_indirect), and at a decision the right-hand side
+   * whose terms refine_next_on sizes, with kkt_res as its scratch */
   scs_float *kkt_res, *kkt_corr;
   /* per-iteration refinement, reset at the start of each solve (see
    * "Accuracy of each iteration's solve" in glbopts.h): whether it is on,

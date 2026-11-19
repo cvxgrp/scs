@@ -181,9 +181,26 @@ error would hold the iterates back.
 **The check.** Every 25 iterations SCS computes the residual of that
 iteration's solve, :math:`\|z^k - K u\|_\infty` with :math:`K` the matrix
 above, and compares it with *tol*, the smaller of SCS's own primal and dual
-residuals at its last convergence check (but at least :math:`10^{-12}`,
-:math:`10^{-5}` in single precision). While refinement is off, the check costs
-one multiply by :math:`K` every 25 iterations.
+residuals at its last convergence check. While refinement is off, the check
+costs one multiply by :math:`K` every 25 iterations.
+
+**Rounding level.** In double precision refinement is never on while that
+residual is at rounding level: at most four machine epsilons times
+:math:`\|\,|z^k| + |K|\,|u|\,\|_\infty`, the size of the terms the residual
+is computed from, row by row. A residual that small is mostly the rounding of
+its own computation, and refinement cannot lower it. This matters where *tol*
+goes to zero, on an infeasibility or unboundedness certificate: before 3.4.0
+the floor was absolute (*tol* at least :math:`10^{-12}`), below rounding
+level wherever those terms are large, so there refinement turned on and
+stayed on to the end. The size is computed only at a check where it can
+change the outcome (one pass over :math:`A` and :math:`P`, the cost of a
+multiply). Single precision has no such test: there refinement also lowers an
+error of the solution that the residual does not show (with conjugate
+gradients and the dense solver, which solve a smaller system), and turning
+it off at rounding level lost problems at :math:`10^{-6}`. With conjugate
+gradients refinement turns off, in both precisions, once the error is at
+most the solvers' best accuracy (:math:`10^{-12}`, :math:`10^{-6}` in single
+precision), below which they are never asked to go.
 
 **Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
@@ -287,9 +304,8 @@ problems measured.
   iterations: on 26 SDPs and QPs that stall at :math:`10^{-4}` to
   :math:`10^{-6}` (78 runs), it was on for 19% of the iterations and for most
   of the solve in 11 runs, which solved one run more and took 6% more time.
-  In single precision it tends to stay on once it turns on, because the
-  threshold to turn it off is near or below what a single-precision solve can
-  reach.
+  In single precision it tends to stay on once it turns on (see "Rounding
+  level" above).
 
 **Who computes the multiplies.** The multiplies by :math:`K` are made inside
 the linear solve (:code:`scs_solve_lin_sys`, see :ref:`new_linear_solver`).
