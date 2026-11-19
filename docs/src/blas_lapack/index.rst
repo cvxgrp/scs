@@ -95,14 +95,33 @@ Earlier versions of SCS used the MRRR routine :code:`syevr`. Compared with it,
 Complex blocks
 ~~~~~~~~~~~~~~
 SCS decomposes a complex (Hermitian) PSD block with :code:`heevd`, the complex
-counterpart of :code:`syevd`, where earlier versions used :code:`heevr`. The
-projection of a complex block of size :math:`n` then takes about :math:`6n^2`
-floating-point numbers instead of :math:`4n^2`. SDPLIB has no complex blocks.
-Timed one block at a time on an Apple M4 with the BLAS on one thread,
-:code:`heevd` was faster than :code:`heevr` on blocks of size 32 to 200 with
-exactly repeated eigenvalues (0.57 to 0.89 of the time), and slower on blocks
-of size 100 and more without them: 6% to 28% longer with OpenBLAS (sizes 100
-to 400) and 10% to 85% longer with Accelerate (sizes 100 to 800).
+counterpart of :code:`syevd`, where earlier versions used :code:`heevr`. We
+compared the two in whole solves of 28 problems with complex blocks of size 2
+to 300 (quantum fidelity, PPT relaxations, channel capacity, PhaseLift, phase
+synchronization, complex max-cut and SCS's tests), with Apple Accelerate, MKL,
+NVPL and OpenBLAS. Both solved every problem, in the same number of
+iterations, and over all of them took the same time (:code:`heevr` 0.3% less,
+shifted geometric mean). Compared with :code:`heevr`, :code:`heevd`:
+
+* **is faster with MKL, NVPL and OpenBLAS**: :code:`heevr` took 1.15 to 1.25
+  times as long in the projection per iteration, and with MKL longer at every
+  block size.
+* **is faster on blocks with nearly repeated eigenvalues**: on the PPT
+  relaxations, where about half of the eigenvalues come in pairs closer than
+  :math:`10^{-8}` relative to each other, the solves took 1.07 to 1.69 times
+  as long with :code:`heevr`, with every library.
+* **is faster on small blocks**: :code:`heevr` took 1.07 to 1.43 times as
+  long in the projection on blocks of size 64 or less, with every library.
+* **is slower on larger blocks with Accelerate**: there :code:`heevr` took
+  0.91 of the projection time on blocks of size 65 to 150 and 0.71 to 0.74
+  above. Problems with a block of size 200 to 300 took 1.2 to 1.5 times as
+  long to solve with :code:`heevd`, and all the problems together 1.1 times
+  (shifted geometric mean). With NVPL, :code:`heevr` took 0.91 of the
+  projection time on blocks larger than 150.
+* **needs more memory**: the projection of a complex block of size :math:`n`
+  takes about :math:`6n^2` floating-point numbers instead of :math:`4n^2`.
+
+SDPLIB has no complex blocks.
 
 If LAPACK does not converge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -67,8 +67,9 @@ SCS is very slow
   thread per core, can make the projection of PSD blocks of size up to about
   300 slower than one thread does (1.5 to 2.5 times on average on a 20-core
   machine in our measurements). See :ref:`blas_lapack_threads` for when to
-  put the BLAS on one thread, or on a few, and which variable to set. The x86-64 Linux Python wheels, with their default linear
-  solver, already project on one thread (sequential MKL).
+  put the BLAS on one thread, or on a few, and which variable to set. The
+  x86-64 Linux Python wheels, with their default linear solver, already
+  project on one thread (sequential MKL).
 * **Check problem scaling**: if the data has entries that vary by many orders
   of magnitude, SCS will struggle. Try to rescale your problem so that the
   entries of :math:`A`, :math:`b`, and :math:`c` are roughly of order 1.

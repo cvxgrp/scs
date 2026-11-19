@@ -1364,15 +1364,25 @@ static scs_int alloc_psd_work_arrays(ScsPsdWork *w, blas_int lwork,
  *   problems), and none was slower with MKL. On one of the GB10's slow cores
  *   (Cortex-A725) the gain was about 20% on 10 problems with NVPL, and qap8
  *   was 11-16% slower (two checks of 3 runs on a loaded machine).
- * - Speed, complex blocks (none in SDPLIB; single blocks on the M4 on one
- *   thread). On blocks without repeated eigenvalues heevd is slower than
- *   heevr from about n = 64 on: 1.06-1.28x for n = 100 to 400 with OpenBLAS
- *   0.3.34, 1.1-1.85x for n = 100 to 800 with Accelerate. Below that it is
- *   faster with Accelerate (0.67-0.98x for n = 8 to 32), and with OpenBLAS
- *   for n <= 12 and n = 32 to 48 but 1.1-1.3x slower at n = 16 to 24. On
- *   blocks with exactly repeated eigenvalues it is faster up to n = 200
- *   (0.57-0.89x for n = 32 to 200); at n = 400 0.80x with OpenBLAS and 1.08x
- *   with Accelerate.
+ * - Speed, complex blocks (none in SDPLIB). heevd rather than heevr (with
+ *   the heev fallback), because heevr did not save the 3% of solve time
+ *   that was set, before measuring, as the bar for a second routine. On 28
+ *   problems with complex blocks of n = 2 to 300 (quantum fidelity, PPT,
+ *   channel capacity, PhaseLift, phase synchronization, complex max-cut and
+ *   the test suite's) at eps 1e-4 and 1e-6, with Accelerate on an Apple M4
+ *   (1 and default threads), MKL on an AMD Zen 3 (1 and 4 threads), and
+ *   NVPL and OpenBLAS on one fast core of the GB10, both solved all 324
+ *   runs, in the same iterations, and heevr's shifted geometric mean of the
+ *   solve time (shift 1 s) was 0.997 of heevd's. heevr took more cone time
+ *   per iteration with every LAPACK: 1.07x with Accelerate, 1.15-1.21x with
+ *   MKL, 1.16x with NVPL and 1.25x with OpenBLAS; with MKL more at every
+ *   block size (1.10-1.16x above n = 150), and with every LAPACK more for
+ *   n <= 64 (1.07-1.43x). It took less only on larger blocks, with
+ *   Accelerate (0.91x for n = 65 to 150 and 0.71-0.74x above, so that the
+ *   solves with blocks of n = 200 to 300 took 0.67-0.83x as long) and with
+ *   NVPL above n = 150 (0.91x). Where about half of the eigenvalues came in
+ *   pairs closer than 1e-8 relative to each other (the PPT problems), heevr
+ *   took 1.07-1.69x as long as heevd to solve, with every LAPACK.
  * - Accuracy. syevd was as accurate or more (errors of 2-4e-15 relative to the
  *   largest entry of the projection against 3-9e-15, on blocks with exact
  *   multiplets).
