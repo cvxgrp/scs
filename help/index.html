@@ -151,12 +151,13 @@ indirect (conjugate gradient) solver avoids this factorization. See
 <li><p><strong>Try MKL Pardiso</strong> if you have Intel MKL installed. It offers a parallel
 direct solver that can be significantly faster than the default QDLDL
 for large problems. See <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a>.</p></li>
-<li><p><strong>SDPs with small PSD blocks</strong>: with some BLAS libraries, threads make the
-projection of PSD blocks of size up to about 200 slower than one thread
-does (up to 1.9 times on 4 threads in our measurements). See
-<a class="reference internal" href="../blas_lapack/index.html#blas-lapack-threads"><span class="std std-ref">Number of BLAS threads</span></a> for when to put the BLAS on one thread and which
-variable to set. The x86-64 Linux Python wheels, with their default linear
-solver, already project on one thread (sequential MKL).</p></li>
+<li><p><strong>SDPs with small PSD blocks</strong>: a multithreaded BLAS at its default, one
+thread per core, can make the projection of PSD blocks of size up to about
+300 slower than one thread does (1.5 to 2.5 times on average on a 20-core
+machine in our measurements). See <a class="reference internal" href="../blas_lapack/index.html#blas-lapack-threads"><span class="std std-ref">Number of BLAS threads</span></a> for when to
+put the BLAS on one thread, or on a few, and which variable to set. The
+x86-64 Linux Python wheels, with their default linear solver, already
+project on one thread (sequential MKL).</p></li>
 <li><p><strong>Check problem scaling</strong>: if the data has entries that vary by many orders
 of magnitude, SCS will struggle. Try to rescale your problem so that the
 entries of <span class="math notranslate nohighlight">\(A\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, and <span class="math notranslate nohighlight">\(c\)</span> are roughly of order 1.

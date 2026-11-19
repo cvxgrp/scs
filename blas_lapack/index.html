@@ -55,6 +55,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../install/index.html">Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linear_solver/index.html">Linear System Solver</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">BLAS and LAPACK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#projection-onto-the-psd-cone">Projection onto the PSD cone</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-it-costs-and-gains">What it costs and gains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complex-blocks">Complex blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#if-lapack-does-not-converge">If LAPACK does not converge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#very-large-blocks">Very large blocks</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#number-of-blas-threads">Number of BLAS threads</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#when-to-set-one-thread">When to set one thread</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#which-variable-to-set">Which variable to set</a></li>
@@ -109,8 +116,9 @@
 libraries in the following places:</p>
 <ul class="simple">
 <li><p>To compute the eigen-decomposition for the semidefinite <a class="reference internal" href="../api/cones.html#cones"><span class="std std-ref">cone</span></a>
-projection, and the eigen-decompositions and singular value decompositions
-for the <a class="reference internal" href="../api/cones.html#spectral-cones"><span class="std std-ref">spectral cones</span></a></p></li>
+projection (see <a class="reference internal" href="#blas-lapack-psd"><span class="std std-ref">below</span></a>), and the
+eigen-decompositions and singular value decompositions for the
+<a class="reference internal" href="../api/cones.html#spectral-cones"><span class="std std-ref">spectral cones</span></a></p></li>
 <li><p>To solve the linear system in <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a></p></li>
 <li><p>To form and factorize the matrix in the <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> linear
 solver</p></li>
@@ -145,40 +153,141 @@ the speed of the operations in practice. If the speed of the SDP projection
 or the acceleration step is a bottleneck you can experiment with faster
 libraries like <a class="reference external" href="https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html">MKL</a>
 or <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>.</p>
+<section id="projection-onto-the-psd-cone">
+<span id="blas-lapack-psd"></span><h2>Projection onto the PSD cone<a class="headerlink" href="#projection-onto-the-psd-cone" title="Link to this heading"></a></h2>
+<p>SCS projects each positive semidefinite (PSD) block onto the cone with a LAPACK
+eigendecomposition, and rebuilds the block from the eigenvectors of its
+positive eigenvalues with a BLAS product (<code class="code docutils literal notranslate"><span class="pre">syrk</span></code>, or <code class="code docutils literal notranslate"><span class="pre">herk</span></code> for a
+complex block). For a real block the eigendecomposition is LAPACK’s
+divide-and-conquer routine <code class="code docutils literal notranslate"><span class="pre">syevd</span></code> (for a complex block see
+<a class="reference internal" href="#blas-lapack-psd-complex"><span class="std std-ref">Complex blocks</span></a>). On most SDPs this is where most of the time
+of an iteration goes, so the LAPACK library, and the
+<a class="reference internal" href="#blas-lapack-threads"><span class="std std-ref">number of threads</span></a> it runs on, matter.</p>
+<section id="what-it-costs-and-gains">
+<h3>What it costs and gains<a class="headerlink" href="#what-it-costs-and-gains" title="Link to this heading"></a></h3>
+<p>Earlier versions of SCS used the MRRR routine <code class="code docutils literal notranslate"><span class="pre">syevr</span></code>. Compared with it,
+<code class="code docutils literal notranslate"><span class="pre">syevd</span></code>:</p>
+<ul class="simple">
+<li><p><strong>is faster</strong>: on the SDPLIB problems the projection takes 29% to 51% less
+time per iteration (geometric mean over the problems) with OpenBLAS, NVPL,
+MKL and Apple Accelerate, and a whole iteration 28% to 47% less (OpenBLAS,
+NVPL and Accelerate). It gains most on blocks with exactly repeated
+eigenvalues, which <code class="code docutils literal notranslate"><span class="pre">syevr</span></code> is slow on: <code class="docutils literal notranslate"><span class="pre">thetaG11</span></code> is projected 2.7
+to 2.9 times faster. With the BLAS on one or four threads, no problem’s
+projection took more than 2.3% longer per iteration, except <code class="docutils literal notranslate"><span class="pre">qap8</span></code> on a
+slow core of a chip with fast and slow cores (11% to 16%).</p></li>
+<li><p><strong>is as accurate or more</strong>: errors of <span class="math notranslate nohighlight">\(2\)</span> to <span class="math notranslate nohighlight">\(4 \times 10^{-15}\)</span>
+relative to the largest entry of the projection, against <span class="math notranslate nohighlight">\(3\)</span> to
+<span class="math notranslate nohighlight">\(9 \times 10^{-15}\)</span>, on blocks with repeated eigenvalues.</p></li>
+<li><p><strong>needs more memory</strong>: <code class="code docutils literal notranslate"><span class="pre">syevd</span></code>’s work array has about <span class="math notranslate nohighlight">\(2n^2\)</span>
+entries for a block of size <span class="math notranslate nohighlight">\(n\)</span>, where <code class="code docutils literal notranslate"><span class="pre">syevr</span></code> needed
+<span class="math notranslate nohighlight">\(n^2\)</span> for the eigenvectors, so the projection of a block takes about
+<span class="math notranslate nohighlight">\(3n^2\)</span> floating-point numbers instead of <span class="math notranslate nohighlight">\(2n^2\)</span>. In double
+precision that is 600 MB instead of 400 MB for a block of size 5000.</p></li>
+<li><p><strong>starts the threads of a multithreaded BLAS at smaller blocks</strong>: with the
+BLAS at its default, on all 20 cores of a chip with 10 fast and 10 slow
+cores, problems whose largest block has size 45 to 130 took up to 2.1 times
+as long in the projection as with <code class="code docutils literal notranslate"><span class="pre">syevr</span></code> (<code class="docutils literal notranslate"><span class="pre">control7</span></code>), and
+OpenBLAS kept 15 to 20 cores busy where <code class="code docutils literal notranslate"><span class="pre">syevr</span></code> kept 3 to 12. Such
+problems are faster on one thread than at the default, with either routine:
+see <a class="reference internal" href="#blas-lapack-threads"><span class="std std-ref">Number of BLAS threads</span></a>.</p></li>
+</ul>
+</section>
+<section id="complex-blocks">
+<span id="blas-lapack-psd-complex"></span><h3>Complex blocks<a class="headerlink" href="#complex-blocks" title="Link to this heading"></a></h3>
+<p>SCS decomposes a complex (Hermitian) PSD block with <code class="code docutils literal notranslate"><span class="pre">heevd</span></code>, the complex
+counterpart of <code class="code docutils literal notranslate"><span class="pre">syevd</span></code>, where earlier versions used <code class="code docutils literal notranslate"><span class="pre">heevr</span></code>. We
+compared the two in whole solves of 28 problems with complex blocks of size 2
+to 300 (quantum fidelity, PPT relaxations, channel capacity, PhaseLift, phase
+synchronization, complex max-cut and SCS’s tests), with Apple Accelerate, MKL,
+NVPL and OpenBLAS. Both solved every problem, in the same number of
+iterations, and over all of them took the same time (<code class="code docutils literal notranslate"><span class="pre">heevr</span></code> 0.3% less,
+shifted geometric mean). Compared with <code class="code docutils literal notranslate"><span class="pre">heevr</span></code>, <code class="code docutils literal notranslate"><span class="pre">heevd</span></code>:</p>
+<ul class="simple">
+<li><p><strong>is faster with MKL, NVPL and OpenBLAS</strong>: <code class="code docutils literal notranslate"><span class="pre">heevr</span></code> took 1.15 to 1.25
+times as long in the projection per iteration, and with MKL longer at every
+block size.</p></li>
+<li><p><strong>is faster on blocks with nearly repeated eigenvalues</strong>: on the PPT
+relaxations, where about half of the eigenvalues come in pairs closer than
+<span class="math notranslate nohighlight">\(10^{-8}\)</span> relative to each other, the solves took 1.07 to 1.69 times
+as long with <code class="code docutils literal notranslate"><span class="pre">heevr</span></code>, with every library.</p></li>
+<li><p><strong>is faster on small blocks</strong>: <code class="code docutils literal notranslate"><span class="pre">heevr</span></code> took 1.07 to 1.43 times as
+long in the projection on blocks of size 64 or less, with every library.</p></li>
+<li><p><strong>is slower on larger blocks with Accelerate</strong>: there <code class="code docutils literal notranslate"><span class="pre">heevr</span></code> took
+0.91 of the projection time on blocks of size 65 to 150 and 0.71 to 0.74
+above. Problems with a block of size 200 to 300 took 1.2 to 1.5 times as
+long to solve with <code class="code docutils literal notranslate"><span class="pre">heevd</span></code>, and all the problems together 1.1 times
+(shifted geometric mean). With NVPL, <code class="code docutils literal notranslate"><span class="pre">heevr</span></code> took 0.91 of the
+projection time on blocks larger than 150.</p></li>
+<li><p><strong>needs more memory</strong>: the projection of a complex block of size <span class="math notranslate nohighlight">\(n\)</span>
+takes about <span class="math notranslate nohighlight">\(6n^2\)</span> floating-point numbers instead of <span class="math notranslate nohighlight">\(4n^2\)</span>.</p></li>
+</ul>
+<p>SDPLIB has no complex blocks.</p>
+</section>
+<section id="if-lapack-does-not-converge">
+<h3>If LAPACK does not converge<a class="headerlink" href="#if-lapack-does-not-converge" title="Link to this heading"></a></h3>
+<p>When LAPACK reports that the eigendecomposition of a block did not converge,
+SCS decomposes the block again with the QR-based <code class="code docutils literal notranslate"><span class="pre">syev</span></code> (<code class="code docutils literal notranslate"><span class="pre">heev</span></code>
+for a complex block). That is slower: forced on 11 SDPLIB problems, the
+projection took 1.4 to 3.6 times as long, and the problems were solved as with
+<code class="code docutils literal notranslate"><span class="pre">syevd</span></code>. It has happened with Apple Accelerate, whose <code class="code docutils literal notranslate"><span class="pre">dsyevd</span></code> did
+not converge on one iterate of <code class="docutils literal notranslate"><span class="pre">thetaG11</span></code> (a block of size 801), and whose
+<code class="code docutils literal notranslate"><span class="pre">dsyevr</span></code> did not converge on the block of
+<a class="reference external" href="https://github.com/cvxgrp/scs/issues/531">issue #531</a>. If the QR-based
+routine fails as well, the solve stops with status <code class="docutils literal notranslate"><span class="pre">failure</span></code> and the message
+<code class="docutils literal notranslate"><span class="pre">error</span> <span class="pre">in</span> <span class="pre">project_cones</span></code>.</p>
+</section>
+<section id="very-large-blocks">
+<h3>Very large blocks<a class="headerlink" href="#very-large-blocks" title="Link to this heading"></a></h3>
+<p>LAPACK counts the entries of its work arrays in its own integers. With 32-bit
+integers, the usual case, the <span class="math notranslate nohighlight">\(1 + 6n + 2n^2\)</span> entries that
+<code class="code docutils literal notranslate"><span class="pre">syevd</span></code> needs fit up to <span class="math notranslate nohighlight">\(n = 32766\)</span>. For a larger block, the setup
+fails with a message saying so. Use a BLAS and LAPACK with 64-bit integers
+(the <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">compiler flag</span></a> <code class="code docutils literal notranslate"><span class="pre">BLAS64</span></code>) for blocks that
+large, and for blocks larger than <span class="math notranslate nohighlight">\(n = 46340\)</span> SCS’s own 64-bit
+integers as well (the compiler flag <code class="code docutils literal notranslate"><span class="pre">DLONG</span></code>): SCS indexes the entries
+of a block with numbers up to <span class="math notranslate nohighlight">\(n^2\)</span>, which then do not fit in 32 bits.</p>
+</section>
+</section>
 <section id="number-of-blas-threads">
 <span id="blas-lapack-threads"></span><h2>Number of BLAS threads<a class="headerlink" href="#number-of-blas-threads" title="Link to this heading"></a></h2>
-<p>SCS projects each PSD block with a LAPACK eigendecomposition (<code class="code docutils literal notranslate"><span class="pre">syevr</span></code>,
-or <code class="code docutils literal notranslate"><span class="pre">heevr</span></code> for a complex block) and a BLAS product (<code class="code docutils literal notranslate"><span class="pre">syrk</span></code> or
-<code class="code docutils literal notranslate"><span class="pre">herk</span></code>). A multithreaded BLAS can split these calls, and SCS’s other
-BLAS calls (see the list above), over its own threads, by default about one
-per core. Waking and synchronizing the threads has a fixed cost. In our
-measurements blocks of size up to about 200 gained nothing from threads and
-with some libraries were slower, blocks of size 500 and more gained from a few
-threads, and in between it depended on the library. The number of threads is
-set by an environment variable of the BLAS, so you can choose.</p>
+<p>The <a class="reference internal" href="#blas-lapack-psd"><span class="std std-ref">projection</span></a> of a PSD block is a LAPACK
+eigendecomposition (<code class="code docutils literal notranslate"><span class="pre">syevd</span></code> for a real block) and a BLAS product
+(<code class="code docutils literal notranslate"><span class="pre">syrk</span></code> or <code class="code docutils literal notranslate"><span class="pre">herk</span></code>). A multithreaded BLAS can split these calls,
+and SCS’s other BLAS calls (see the list above), over its own threads, by
+default about one per core. Waking and synchronizing the threads has a fixed
+cost. In our measurements the default made the projection of blocks of size
+up to 300 slower than one thread did, with both libraries; a few threads
+gained on blocks of size 500 and more, and on smaller blocks it depended on
+the library. The number of threads is set by an environment variable of the
+BLAS, so you can choose.</p>
 <section id="when-to-set-one-thread">
 <h3>When to set one thread<a class="headerlink" href="#when-to-set-one-thread" title="Link to this heading"></a></h3>
-<p>Put the BLAS on one thread for an SDP whose PSD blocks are all of size 200 or
+<p>Put the BLAS on one thread for an SDP whose PSD blocks are all of size 300 or
 less, in particular when several solves run at the same time, since each would
-start threads for every core. How much this saves depends on the library and
-on how many threads it had: on blocks of size 37 to 200 OpenBLAS on 4 threads
-was within 5% of one thread, while NVPL on 4 threads, and both libraries at
-their default, were slower (see <a class="reference internal" href="#blas-lapack-threads-measured"><span class="std std-ref">What we measured</span></a>).</p>
+start threads for every core. At their default, the two libraries we measured
+took 1.5 to 2.5 times as long as on one thread on blocks of size 37 to 300
+(geometric means, see <a class="reference internal" href="#blas-lapack-threads-measured"><span class="std std-ref">What we measured</span></a>). On 4 threads NVPL
+was slower than on one as well (1.18 to 1.28 times), while OpenBLAS was faster
+on blocks of size 37 and more (0.69 to 0.88 of the time): with OpenBLAS,
+compare one thread with a few.</p>
 <p>Use a few threads instead when</p>
 <ul class="simple">
 <li><p>the problem has PSD blocks of size 500 or more. On 4 fast cores the
-projection took 0.90 (NVPL) and 0.76 (OpenBLAS) of its time on one thread at
-size 500, and 0.68 and 0.61 at sizes 800 to 2000. The default, all 20 cores
-of that machine, was slower than one thread at size 500 (1.32 with NVPL,
-1.05 with OpenBLAS), so compare a few thread counts, and on a machine with
-fast and slow cores count only the fast ones;</p></li>
+projection took 0.85 (NVPL) and 0.47 (OpenBLAS) of its time on one thread at
+size 500, and 0.58 and 0.41 at sizes 800 to 2000. The default, all 20 cores
+of that machine, was slower than one thread at size 500 with NVPL (1.52),
+and with OpenBLAS gained less than 4 threads did (0.89 against 0.47), so
+compare a few thread counts, and on a machine with fast and slow cores count
+only the fast ones;</p></li>
 <li><p>the linear system is large and solved with MKL Pardiso, which runs on MKL’s
 threads (see the threads paragraph of <a class="reference internal" href="../linear_solver/index.html#mkl"><span class="std std-ref">MKL Pardiso</span></a>), or with the
 <a class="reference internal" href="../linear_solver/index.html#dense"><span class="std std-ref">dense direct</span></a> solver, which forms and factorizes its matrix
 with BLAS and LAPACK (not measured).</p></li>
 </ul>
 <p>A problem with several PSD blocks can instead use threads across the blocks,
-with the BLAS on one thread inside each: see <a class="reference internal" href="#blas-lapack-openmp"><span class="std std-ref">Parallel projection of PSD blocks</span></a>.</p>
+with the BLAS on one thread inside each, in a build with the parallel PSD
+projection (off by default): see <a class="reference internal" href="#blas-lapack-openmp"><span class="std std-ref">Parallel projection of PSD blocks</span></a>.</p>
 </section>
 <section id="which-variable-to-set">
 <h3>Which variable to set<a class="headerlink" href="#which-variable-to-set" title="Link to this heading"></a></h3>
@@ -219,7 +328,7 @@ thread. Not measured in the projection</p></td>
 <td><p>Nothing</p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">VECLIB_MAXIMUM_THREADS=1</span></code> did not change the time of the
 projection on an Apple M4 (82 SDPLIB problems: time at the default over
-time with the variable 0.89 to 1.11, geometric mean 1.01)</p></td>
+time with the variable 0.96 to 1.07, geometric mean 1.00)</p></td>
 </tr>
 </tbody>
 </table>
@@ -239,7 +348,7 @@ by itself, but where SCS projects the blocks one after another (a build without
 runs on all the threads. We measured that case in a build of SCS without
 OpenMP, which projects the blocks one after another: on control7 (blocks of
 size 70 and 35), NVPL with <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS=4</span></code> made the projection take
-1.93 times as long as with 1, and a whole iteration 1.42 times. For such a
+1.82 times as long as with 1, and a whole iteration 1.37 times. For such a
 problem compare <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS=1</span></code> with your thread count.</p>
 <p>To check, watch the CPU use of the process during a solve (<code class="docutils literal notranslate"><span class="pre">top</span></code>). With the
 BLAS on one thread and SCS built without OpenMP it stays near 100%; several
@@ -248,12 +357,13 @@ are running.</p>
 </section>
 <section id="what-we-measured">
 <span id="blas-lapack-threads-measured"></span><h3>What we measured<a class="headerlink" href="#what-we-measured" title="Link to this heading"></a></h3>
-<p>Time of the PSD projection per iteration on the 58 SDPLIB problems whose
-largest PSD block is of size 37 or more, relative to the BLAS on one thread
-(geometric mean, range in brackets; below 1 is faster). The machine is an
-NVIDIA GB10 with 10 fast and 10 slow ARM cores, the libraries NVPL and a
-pthreads build of OpenBLAS 0.3.31. The runs on one and on 4 threads were
-pinned to fast cores; 20 threads is the default of both libraries there.</p>
+<p>Time of the PSD projection (with <code class="code docutils literal notranslate"><span class="pre">syevd</span></code>) per iteration on the 58
+SDPLIB problems whose largest PSD block is of size 37 or more, relative to the
+BLAS on one thread (geometric mean, range in brackets; below 1 is faster). The
+machine is an NVIDIA GB10 with 10 fast and 10 slow ARM cores, the libraries
+NVPL and a pthreads build of OpenBLAS 0.3.31. The runs on one and on 4
+threads were pinned to fast cores; 20 threads is the default of both libraries
+there.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 24.0%" />
@@ -272,46 +382,46 @@ pinned to fast cores; 20 threads is the default of both libraries there.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>37 to 124 (25 problems)</p></td>
-<td><p>1.34 [1.03, 1.93]</p></td>
-<td><p>2.27 [1.20, 3.83]</p></td>
-<td><p>1.02 [0.99, 1.05]</p></td>
-<td><p>1.18 [1.01, 1.90]</p></td>
+<td><p>1.28 [1.04, 2.12]</p></td>
+<td><p>2.55 [1.26, 9.43]</p></td>
+<td><p>0.88 [0.81, 0.96]</p></td>
+<td><p>1.50 [1.07, 2.24]</p></td>
 </tr>
 <tr class="row-odd"><td><p>150 to 300 (17)</p></td>
-<td><p>1.07 [1.01, 1.15]</p></td>
-<td><p>2.45 [1.75, 6.34]</p></td>
-<td><p>0.94 [0.85, 1.01]</p></td>
-<td><p>1.55 [1.02, 2.10]</p></td>
+<td><p>1.18 [1.06, 1.33]</p></td>
+<td><p>2.16 [1.98, 2.46]</p></td>
+<td><p>0.69 [0.61, 0.79]</p></td>
+<td><p>1.52 [0.93, 2.07]</p></td>
 </tr>
 <tr class="row-even"><td><p>500 (8)</p></td>
-<td><p>0.90 [0.89, 0.93]</p></td>
-<td><p>1.32 [1.28, 1.37]</p></td>
-<td><p>0.76 [0.74, 0.79]</p></td>
-<td><p>1.05 [0.84, 1.23]</p></td>
+<td><p>0.85 [0.84, 0.86]</p></td>
+<td><p>1.52 [1.48, 1.58]</p></td>
+<td><p>0.47 [0.45, 0.49]</p></td>
+<td><p>0.89 [0.66, 0.96]</p></td>
 </tr>
 <tr class="row-odd"><td><p>800 to 2000 (8)</p></td>
-<td><p>0.68 [0.50, 0.88]</p></td>
-<td><p>0.82 [0.49, 1.10]</p></td>
-<td><p>0.61 [0.45, 0.88]</p></td>
-<td><p>0.59 [0.33, 0.89]</p></td>
+<td><p>0.58 [0.50, 0.66]</p></td>
+<td><p>0.79 [0.47, 1.14]</p></td>
+<td><p>0.41 [0.36, 0.46]</p></td>
+<td><p>0.45 [0.29, 0.69]</p></td>
 </tr>
 </tbody>
 </table>
 <ul class="simple">
-<li><p>control7 (blocks of size 70 and 35) took 0.51 ms per projection with NVPL
-on one thread, 0.98 ms on 4 and 1.74 ms on 20, and a whole iteration
-1.29 ms, 1.84 ms and 2.63 ms.</p></li>
-<li><p>On 4 threads the pthreads OpenBLAS lost little time on blocks of size up to
-200. At its default it was slower (1.18 times at sizes 37 to 124, 1.55 at
-150 to 300) and kept cores busy for nothing: 9 problems with blocks of size
-37 to 124 used 3 to 12 cores (310% to 1168% CPU) where one thread was 1% to
-34% faster, and truss8, whose blocks are of size 19 at most, used 329%.
-Those cores are taken from anything else on the machine, such as other
-solves.</p></li>
+<li><p>control7 (blocks of size 70 and 35) took 0.39 ms per projection with NVPL
+on one thread, 0.70 ms on 4 and 3.65 ms on 20, and a whole iteration
+1.14 ms, 1.56 ms and 5.10 ms.</p></li>
+<li><p>The pthreads OpenBLAS on 4 threads was faster than on one on every problem
+with blocks of size 37 or more. At its default it was slower up to size 300
+(1.50 times at sizes 37 to 124, 1.52 at 150 to 300) and kept cores busy for
+nothing: 9 problems with blocks of size 37 to 124 used 15 to 20 cores
+(1526% to 1998% CPU) where one thread was 1.07 to 2.17 times as fast, and
+truss8, whose blocks are of size 19 at most, used 337%. Those cores are
+taken from anything else on the machine, such as other solves.</p></li>
 <li><p>The 20-thread columns include the slow cores and depend on where the system
 placed the threads: the 27 problems whose blocks are all smaller than 37
-were up to 2.2 times slower there, though 4 threads changed their time by
-at most 11%. So they show what the default can cost on such a machine, not
+were up to 2.4 times slower there, though 4 threads changed their time by
+at most 10%. So they show what the default can cost on such a machine, not
 the cost of the threads alone.</p></li>
 <li><p>We did not measure x86 (MKL, or OpenBLAS on x86) or a machine with only one
 kind of core, where the sizes at which threads start to pay may differ.
@@ -433,7 +543,8 @@ only the BLAS on one thread: <code class="code docutils literal notranslate"><sp
 <tr class="row-even"><td><p>Accelerate (macOS)</p></td>
 <td><p>Keeps a pool of threads of its own, which stays almost idle</p></td>
 <td><p>Nothing. At its default settings the parallel projection was 2.3 to 3.3
-times faster than the serial one on 4 threads</p></td>
+times faster than the serial one on 4 threads (measured before SCS moved
+to <code class="code docutils literal notranslate"><span class="pre">syevd</span></code>)</p></td>
 </tr>
 </tbody>
 </table>
@@ -472,6 +583,13 @@ a projection of less than about 13 microseconds (32 on macOS) stays on one
 thread, one of 50 microseconds gets about 6 threads (4 on macOS), and one of a
 millisecond gets up to about 30 (20 on macOS). A solve uses fewer threads if
 the OpenMP thread count has been lowered since the setup.</p>
+<p>SCS estimates the time of each block from its size, with a formula fitted to
+measurements made before it moved to <code class="code docutils literal notranslate"><span class="pre">syevd</span></code>, and so did the rules
+below. <code class="code docutils literal notranslate"><span class="pre">syevd</span></code> projects small real blocks faster than the formula says:
+blocks of size 3 to 12 in a third to three quarters of the estimated time (on
+an Apple M4, with Accelerate and with OpenBLAS). A problem with many such
+blocks can then get more threads than is fastest. If that matters, compare
+the time of a solve with a lower <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>.</p>
 <p>Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when</p>
 <ul class="simple">
@@ -543,17 +661,18 @@ of memory buffers of a size fixed when it is built (by <code class="code docutil
 at least 50), and a thread holds one during a BLAS call: with more threads than
 buffers, OpenBLAS 0.3.18 and later print a warning and allocate more, and
 earlier versions fail. The OpenMP thread count bounds the number of threads.</p>
-<p>A parallel projection takes more memory: each thread after the first has its
-own eigendecomposition workspace, with matrix buffers for the largest block
-that thread projects and LAPACK work arrays of the serial sizes. The extra
-memory is therefore at most the PSD workspace of the serial projection times
-the number of threads less one. That workspace is about <span class="math notranslate nohighlight">\(2n^2\)</span> floats for
-the largest real block of size <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(2n^2\)</span> complex numbers for
-the largest complex block, plus LAPACK work arrays linear in <span class="math notranslate nohighlight">\(n\)</span>.</p>
-<p>Each block goes through the same LAPACK calls as in the serial projection, so
-with single-threaded BLAS the result is the same bit for bit, whatever the
-number of threads (unless the rounding of the BLAS depends on the memory
-alignment of its arguments, as it can with MKL).</p>
+<p>A parallel projection takes more memory: each thread has its own
+eigendecomposition workspace, sized for the blocks that thread projects, and
+none is larger than the workspace of the serial projection. The extra memory
+is therefore at most the PSD workspace of the serial projection times the
+number of threads less one, and less when only a few threads get the largest
+blocks. That workspace is about <span class="math notranslate nohighlight">\(3n^2\)</span> floats for the largest real
+block of size <span class="math notranslate nohighlight">\(n\)</span> (see <a class="reference internal" href="#blas-lapack-psd"><span class="std std-ref">above</span></a>, and
+<a class="reference internal" href="#blas-lapack-psd-complex"><span class="std std-ref">Complex blocks</span></a> for a complex block).</p>
+<p>Each block goes through the same LAPACK calls, with the same work-array sizes,
+as in the serial projection, so with single-threaded BLAS the result is the
+same bit for bit, whatever the number of threads (unless the rounding of the
+BLAS depends on the memory alignment of its arguments, as it can with MKL).</p>
 </section>
 </section>
 </section>
