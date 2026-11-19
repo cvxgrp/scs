@@ -52,3 +52,16 @@ jobs:
       run: |
         make DLONG=${{ matrix.long }} BLAS64=${{ matrix.blas64 }} mkl
         out/run_tests_mkl
+
+    # MKL Pardiso computes the refinement's multiplies with its own sparse
+    # BLAS; SCS's products take over only for a K beyond MKL's 32-bit
+    # integers (DLONG without BLAS64), far larger than any test. Built with
+    # MKL_NO_OWN_PRODUCTS=1 it uses SCS's products at every size, so that
+    # path is tested (test_lin_sys_solve and test_refine_perturbed then treat
+    # MKL as a solver without its own K).
+    - name: Build SCS MKL with SCS's products and test
+      if: matrix.long == 1 && matrix.blas64 == 0
+      run: |
+        make clean
+        make DLONG=1 MKL_NO_OWN_PRODUCTS=1 mkl
+        out/run_tests_mkl

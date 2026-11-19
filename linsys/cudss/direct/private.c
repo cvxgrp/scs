@@ -1,36 +1,25 @@
 #include "private.h"
+#include "linalg.h"
 #include "linsys.h"
 #include <limits.h>
 #include <string.h>
 
-/* The smallest K (nonzeros of the stored triangle, diagonal included) whose
- * products are computed on the GPU; below it scs_lin_sys_residual says "not
- * provided" and SCS computes them on the CPU, from the problem data. A GPU
- * product costs about 0.04 ms whatever the size (the copy of b, kernel
- * launches, the amax and its scalar copy), SCS's own about 1 to 1.5 ns per
- * nonzero. Measured per product on an NVIDIA GB10 (Grace CPU, unified
- * memory, 33 problems): the GPU was 1.3 to 50 times slower up to 4.2e4
- * nonzeros (0.04 against 0.0008 ms at 1.2e3) and faster from 9.0e4 on (0.64
- * to 0.87 times up to 1.2e5, 0.12 to 0.37 times from 3.7e5; BOYD1, 9.3e5:
- * 0.18 against 1.27 ms). In the solves, on random LPs and SOCPs with 1.3e4
- * nonzeros at 1e-9, an iteration with the correction form on cost 1.6 times
- * a plain one with the GPU products against 1.1 with SCS's. A discrete GPU,
- * where copies cross PCIe, likely moves the break-even point up; not
- * measured. Deterministic: the choice depends on the problem's size only.
- * At or above it the products are part of the solver: if they cannot be set
- * up (GPU memory for the second copy of K, a cuBLAS or cuSPARSE error, K too
- * large for the index type, see products_setup), scs_init_lin_sys_work fails
- * with a message, rather than leaving the products to SCS. Setup cost
- * (products_setup, NVIDIA GB10, random K): 3, 35 and 340 ms at 1e5, 1e6
- * and 8e6 nonzeros, 5 to 13% of cuDSS's analysis and factorization; of that
- * cusparseCreate and cublasCreate took 0.4 to 0.8 ms. */
-#ifndef CUDSS_MIN_PRODUCT_NNZ
-#define CUDSS_MIN_PRODUCT_NNZ (60000)
-#endif
+/* scs_solve_lin_sys is the shared routine (linsys/scs_matrix.h) around the
+ * plain solve. From CUDSS_MIN_PRODUCT_NNZ (glbopts.h) nonzeros in K its
+ * multiplies by K run on the GPU, with this solver's own copy of K
+ * (dev_residual and dev_correct below); below it they are SCS's products on
+ * the CPU. */
 
 static scs_int products_setup(ScsLinSysWork *p);
 static scs_int products_refresh(ScsLinSysWork *p);
 static void products_free(ScsLinSysWork *p);
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol);
+static scs_int dev_residual(ScsLinSysWork *p, const scs_float *b,
+                            const scs_float *x, scs_float *r, scs_float *nr,
+                            scs_float *nb);
+static scs_int dev_correct(ScsLinSysWork *p, const scs_float *x,
+                           const scs_float *r, scs_float *out);
 
 /* In case of error abort freeing p */
 #define CUDSS_CHECK_ABORT(call, p, fname)                                      \
@@ -97,6 +86,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
       cudaFreeHost(p->h_sol_pinned);
 
     products_free(p);
+    SCS(lin_sys_shared_free)(&p->sh);
 
     /* Free CPU resources */
     if (p->kkt)
@@ -303,8 +293,9 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     }
   }
 
-  /* the refinement's products with K on the GPU for a large enough K (see
-   * CUDSS_MIN_PRODUCT_NNZ); setup fails if they cannot be set up */
+  /* the multiplies by K of scs_solve_lin_sys on the GPU for a large enough
+   * K (see CUDSS_MIN_PRODUCT_NNZ); setup fails if they cannot be set up.
+   * Below it they are SCS's products. */
   if (p->kkt->p[p->n_plus_m] >= CUDSS_MIN_PRODUCT_NNZ) {
     if (products_setup(p) != 0) {
       scs_printf("cuDSS: K has %li nonzeros, at least CUDSS_MIN_PRODUCT_NNZ "
@@ -316,21 +307,29 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     }
     p->products_ok = 1;
   }
+  if (SCS(lin_sys_shared_init)(&p->sh, A, P, diag_r, 0, plain_solve,
+                               p->products_ok ? dev_residual : SCS_NULL,
+                               p->products_ok ? dev_correct : SCS_NULL) != 0) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
 
   return p;
 }
 
-/* Solve the linear system for a given RHS b */
-scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
-                          scs_float tol) {
+/* The plain solve of K x = b, solution stored in b (s and tol unused) */
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol) {
   size_t vec_bytes = p->n_plus_m * sizeof(scs_float);
+  (void)s;
+  (void)tol;
 
   /* Copy RHS to pinned staging buffer, then to device */
   memcpy(p->h_b_pinned, b, vec_bytes);
   cudaError_t custatus =
       cudaMemcpy(p->d_b, p->h_b_pinned, vec_bytes, cudaMemcpyHostToDevice);
   if (custatus != cudaSuccess) {
-    scs_printf("scs_solve_lin_sys: Error copying b to device: %d\n",
+    scs_printf("cuDSS plain solve: Error copying b to device: %d\n",
                (int)custatus);
     return custatus;
   }
@@ -341,7 +340,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
                    p->solver_data, p->d_kkt_mat, p->d_sol_mat, p->d_b_mat);
 
   if (status != CUDSS_STATUS_SUCCESS) {
-    scs_printf("scs_solve_lin_sys: Error during solve: %d\n", (int)status);
+    scs_printf("cuDSS plain solve: Error during solve: %d\n", (int)status);
     return status;
   }
 
@@ -349,7 +348,7 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
   custatus =
       cudaMemcpy(p->h_sol_pinned, p->d_sol, vec_bytes, cudaMemcpyDeviceToHost);
   if (custatus != cudaSuccess) {
-    scs_printf("scs_solve_lin_sys: Error copying d_sol to host: %d\n",
+    scs_printf("cuDSS plain solve: Error copying d_sol to host: %d\n",
                (int)custatus);
     return custatus;
   }
@@ -413,19 +412,21 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 }
 
 /* ------------------------------------------------------------------------
- * Products with K for SCS's per-iteration refinement (optional, linsys.h).
+ * The multiplies by K of scs_solve_lin_sys on the GPU, from
+ * CUDSS_MIN_PRODUCT_NNZ nonzeros: the residual and correct ops of the shared
+ * routine (dev_residual, dev_correct).
  *
  * r = b - K x is one cuSPARSE SpMV with K stored with both triangles, and
- * ||r||_inf one cuBLAS amax; the guess x0 and r stay on the GPU, so the
- * correction form x = x0 + K^{-1} r costs the copy of b to the GPU and of x
- * back, as a plain solve does, plus the SpMV, amax and an axpy, and no other
- * copies. SpMV uses CUSPARSE_SPMV_CSR_ALG2, which gives the same result
- * every run (CSR_ALG1, which SCS's GPU indirect solver uses, does not), and
- * amax and axpy are reproducible too, so these products add no run-to-run
- * variation; the cuDSS solve itself is not reproducible run to run (see
- * docs, "Reproducibility of the GPU solvers"). Cost: a second copy of K on
- * the GPU (both triangles, about twice the nonzeros of the stored one) and a
- * host copy of its values for updates of R.
+ * ||r||_inf one cuBLAS amax; r stays on the GPU, so the correction form
+ * x = x0 + K^{-1} r costs the copies of b and x0 to the GPU and of x back,
+ * one copy (x0's, n + m numbers) more than a plain solve, plus the SpMV,
+ * amax and an axpy. SpMV uses CUSPARSE_SPMV_CSR_ALG2, which gives the same
+ * result every run (CSR_ALG1, which SCS's GPU indirect solver uses, does
+ * not), and amax and axpy are reproducible too, so these products add no
+ * run-to-run variation; the cuDSS solve itself is not reproducible run to
+ * run (see docs, "Reproducibility of the GPU solvers"). Cost: a second copy
+ * of K on the GPU (both triangles, about twice the nonzeros of the stored
+ * one) and a host copy of its values for updates of R.
  * ---------------------------------------------------------------------- */
 #ifndef SFLOAT
 #define SCS_CUBLAS_IAMAX cublasIdamax
@@ -440,8 +441,6 @@ static void products_free(ScsLinSysWork *p) {
     cusparseDestroySpMat(p->sp_k);
   if (p->sp_r)
     cusparseDestroyDnVec(p->sp_r);
-  if (p->sp_x0)
-    cusparseDestroyDnVec(p->sp_x0);
   if (p->sp_xv)
     cusparseDestroyDnVec(p->sp_xv);
   if (p->sp_handle)
@@ -456,8 +455,6 @@ static void products_free(ScsLinSysWork *p) {
     cudaFree(p->d_full_col_ind);
   if (p->d_r)
     cudaFree(p->d_r);
-  if (p->d_x0)
-    cudaFree(p->d_x0);
   if (p->d_xv)
     cudaFree(p->d_xv);
   if (p->d_spmv_buf)
@@ -467,10 +464,10 @@ static void products_free(ScsLinSysWork *p) {
   if (p->full_val_h)
     scs_free(p->full_val_h);
   p->sp_k = SCS_NULL;
-  p->sp_r = p->sp_x0 = p->sp_xv = SCS_NULL;
+  p->sp_r = p->sp_xv = SCS_NULL;
   p->sp_handle = SCS_NULL;
   p->bl_handle = SCS_NULL;
-  p->d_full_val = p->d_r = p->d_x0 = p->d_xv = SCS_NULL;
+  p->d_full_val = p->d_r = p->d_xv = SCS_NULL;
   p->d_full_row_ptr = p->d_full_col_ind = SCS_NULL;
   p->d_spmv_buf = SCS_NULL;
   p->full_src = SCS_NULL;
@@ -591,7 +588,6 @@ static scs_int products_setup(ScsLinSysWork *p) {
       cudaMalloc((void **)&p->d_full_col_ind, nnz * sizeof(scs_int)) !=
           cudaSuccess ||
       cudaMalloc((void **)&p->d_r, vb) != cudaSuccess ||
-      cudaMalloc((void **)&p->d_x0, vb) != cudaSuccess ||
       cudaMalloc((void **)&p->d_xv, vb) != cudaSuccess) {
     PRODUCTS_FAIL("out of GPU memory (cudaMalloc failed)");
   }
@@ -599,7 +595,6 @@ static scs_int products_setup(ScsLinSysWork *p) {
                  cudaMemcpyHostToDevice) != cudaSuccess ||
       cudaMemcpy(p->d_full_col_ind, ind, nnz * sizeof(scs_int),
                  cudaMemcpyHostToDevice) != cudaSuccess ||
-      cudaMemset(p->d_x0, 0, vb) != cudaSuccess ||
       products_refresh(p) != 0) {
     PRODUCTS_FAIL("copying K to the GPU failed");
   }
@@ -614,8 +609,6 @@ static scs_int products_setup(ScsLinSysWork *p) {
                         SCS_CUSPARSE_INDEX, CUSPARSE_INDEX_BASE_ZERO,
                         SCS_CUSPARSE_FLOAT) != CUSPARSE_STATUS_SUCCESS ||
       cusparseCreateDnVec(&p->sp_r, nm, p->d_r, SCS_CUSPARSE_FLOAT) !=
-          CUSPARSE_STATUS_SUCCESS ||
-      cusparseCreateDnVec(&p->sp_x0, nm, p->d_x0, SCS_CUSPARSE_FLOAT) !=
           CUSPARSE_STATUS_SUCCESS ||
       cusparseCreateDnVec(&p->sp_xv, nm, p->d_xv, SCS_CUSPARSE_FLOAT) !=
           CUSPARSE_STATUS_SUCCESS) {
@@ -641,88 +634,95 @@ done:
   return ok;
 }
 
-/* r = b - K x on the GPU (x = the guess x0 when x is SCS_NULL); r stays on
- * the GPU in d_r. Returns ||r||_inf, SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED below
- * CUDSS_MIN_PRODUCT_NNZ, or SCS_LIN_SYS_PRODUCTS_FAILED on error. Uses d_xv,
- * d_r and the pinned staging buffers, never d_sol, so the latest solve's
- * solution stays for scs_lin_sys_keep. */
-scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
-                               const scs_float *x) {
+/* The residual op of the shared routine (ScsLinSysResidual, scs_matrix.h):
+ * d_r = b - K x on the GPU, *nr = ||r||_inf, *nb = ||b||_inf (on the host,
+ * as SCS(norm_inf)) unless nb is SCS_NULL. r stays on the GPU in d_r for
+ * dev_correct (the host r is not written), and x stays in d_xv: b is copied
+ * through the pinned staging buffer of the solve, x straight from the
+ * caller's (pageable) vector, which on the GB10 took 34 us against 109 us
+ * staged for 1.6 MB. Uses d_xv, d_r and h_b_pinned, never d_sol. Returns 0,
+ * or -1 on an error. */
+static scs_int dev_residual(ScsLinSysWork *p, const scs_float *b,
+                            const scs_float *x, scs_float *r, scs_float *nr,
+                            scs_float *nb) {
   size_t vb = p->n_plus_m * sizeof(scs_float);
   scs_float alpha = -1., beta = 1., res = 0.;
   int imax = 0;
-  if (!p->products_ok) {
-    return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
+  (void)r;
+  if (nb) {
+    *nb = SCS(norm_inf)(b, p->n_plus_m);
   }
-  /* d_r = b, through the pinned staging buffer of the solve */
   memcpy(p->h_b_pinned, b, vb);
   if (cudaMemcpy(p->d_r, p->h_b_pinned, vb, cudaMemcpyHostToDevice) !=
-      cudaSuccess) {
-    return SCS_LIN_SYS_PRODUCTS_FAILED;
-  }
-  if (x) {
-    memcpy(p->h_sol_pinned, x, vb);
-    if (cudaMemcpy(p->d_xv, p->h_sol_pinned, vb, cudaMemcpyHostToDevice) !=
-        cudaSuccess) {
-      return SCS_LIN_SYS_PRODUCTS_FAILED;
-    }
+          cudaSuccess ||
+      cudaMemcpy(p->d_xv, x, vb, cudaMemcpyHostToDevice) != cudaSuccess) {
+    scs_printf("cuDSS: copying a vector to the GPU failed\n");
+    return -1;
   }
   /* d_r = -K x + d_r, then the index of its largest |entry| (1-based) */
   if (cusparseSpMV(p->sp_handle, CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha,
-                   p->sp_k, x ? p->sp_xv : p->sp_x0, &beta, p->sp_r,
-                   SCS_CUSPARSE_FLOAT, CUSPARSE_SPMV_CSR_ALG2,
+                   p->sp_k, p->sp_xv, &beta, p->sp_r, SCS_CUSPARSE_FLOAT,
+                   CUSPARSE_SPMV_CSR_ALG2,
                    p->d_spmv_buf) != CUSPARSE_STATUS_SUCCESS ||
       SCS_CUBLAS_IAMAX(p->bl_handle, (int)p->n_plus_m, p->d_r, 1, &imax) !=
           CUBLAS_STATUS_SUCCESS) {
-    return SCS_LIN_SYS_PRODUCTS_FAILED;
+    scs_printf("cuDSS: the cuSPARSE product or the cuBLAS amax failed\n");
+    return -1;
   }
   if (imax > 0 && cudaMemcpy(&res, p->d_r + (imax - 1), sizeof(scs_float),
                              cudaMemcpyDeviceToHost) != cudaSuccess) {
-    return SCS_LIN_SYS_PRODUCTS_FAILED;
+    scs_printf("cuDSS: copying the residual's norm to the host failed\n");
+    return -1;
   }
-  return ABS(res);
+  *nr = ABS(res);
+  return 0;
 }
 
-/* x0 = the solution of the latest solve, which is still in d_sol (x is that
- * solution, so it is not read) */
-void scs_lin_sys_keep(ScsLinSysWork *p, const scs_float *x) {
-  (void)x;
-  if (p->products_ok) {
-    cudaMemcpy(p->d_x0, p->d_sol, p->n_plus_m * sizeof(scs_float),
-               cudaMemcpyDeviceToDevice);
-  }
-}
-
-/* x = x0 + K^{-1} r with r = d_r from the latest scs_lin_sys_residual, all on
- * the GPU; one copy of x to the host */
-scs_int scs_lin_sys_correct(ScsLinSysWork *p, scs_float *x) {
+/* The correct op of the shared routine (ScsLinSysCorrect, scs_matrix.h):
+ * out = x + K^{-1} r, with r = d_r and x = d_xv from the latest
+ * dev_residual (the shared routine calls this right after it, with x of the
+ * same values, so x and r are not read here; out may be the vector that call
+ * read x from, which d_xv copied), all on the GPU, x + K^{-1} r left in
+ * d_sol and copied once to the host. Returns 0, or nonzero on an error. */
+static scs_int dev_correct(ScsLinSysWork *p, const scs_float *x,
+                           const scs_float *r, scs_float *out) {
   size_t vb = p->n_plus_m * sizeof(scs_float);
   scs_float one = 1.;
   cudssStatus_t status;
-  if (!p->products_ok) {
-    return -1;
-  }
+  (void)x;
+  (void)r;
   if (cudaMemcpy(p->d_b, p->d_r, vb, cudaMemcpyDeviceToDevice) !=
       cudaSuccess) {
+    scs_printf("cuDSS correction-form solve: copying r failed\n");
     return -1;
   }
   status = cudssExecute(p->handle, CUDSS_PHASE_SOLVE, p->solver_config,
                         p->solver_data, p->d_kkt_mat, p->d_sol_mat,
                         p->d_b_mat);
   if (status != CUDSS_STATUS_SUCCESS) {
-    scs_printf("scs_lin_sys_correct: Error during solve: %d\n", (int)status);
+    scs_printf("cuDSS correction-form solve: Error during solve: %d\n",
+               (int)status);
     return status;
   }
-  /* d_sol = x0 + d: one rounding, the same value as SCS's x0 + d on the
-   * host */
-  if (SCS_CUBLAS_AXPY(p->bl_handle, (int)p->n_plus_m, &one, p->d_x0, 1,
-                      p->d_sol, 1) != CUBLAS_STATUS_SUCCESS) {
+  /* d_sol = x + d: one rounding, the same value as x + d on the host */
+  if (SCS_CUBLAS_AXPY(p->bl_handle, (int)p->n_plus_m, &one, p->d_xv, 1,
+                      p->d_sol, 1) != CUBLAS_STATUS_SUCCESS ||
+      cudaMemcpy(p->h_sol_pinned, p->d_sol, vb, cudaMemcpyDeviceToHost) !=
+          cudaSuccess) {
+    scs_printf("cuDSS correction-form solve: the cuBLAS axpy or the copy "
+               "to the host failed\n");
     return -1;
   }
-  if (cudaMemcpy(p->h_sol_pinned, p->d_sol, vb, cudaMemcpyDeviceToHost) !=
-      cudaSuccess) {
-    return -1;
-  }
-  memcpy(x, p->h_sol_pinned, vb);
+  memcpy(out, p->h_sol_pinned, vb);
   return 0;
+}
+
+/* see linsys.h: the shared routine around the plain solve, with the
+ * multiplies by K on the GPU from CUDSS_MIN_PRODUCT_NNZ nonzeros (the ops
+ * above), else SCS's on the CPU */
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol, scs_int max_refine_steps,
+                          scs_float *res) {
+  return SCS(lin_sys_shared_solve)(&p->sh, p, b, s, tol, max_refine_steps,
+                                   res);
 }

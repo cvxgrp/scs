@@ -56,6 +56,9 @@ struct SCS_LIN_SYS_WORK {
   /* reporting */
   scs_int tot_cg_its;
   const scs_float *diag_r;
+  /* the warm start, refinement and residual of scs_solve_lin_sys, with
+   * SCS's products (linsys/scs_matrix.h) */
+  ScsLinSysShared sh;
 };
 
 #ifdef __cplusplus

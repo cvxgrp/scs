@@ -25,6 +25,9 @@ struct SCS_LIN_SYS_WORK {
   scs_int *etree, *iwork, *Lnz;
   QDLDL_bool *bwork;
   scs_float *diag_p;
+  /* the warm start, refinement and residual of scs_solve_lin_sys, with
+   * SCS's products (linsys/scs_matrix.h) */
+  ScsLinSysShared sh;
 };
 
 #ifdef __cplusplus
