@@ -292,18 +292,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * src/scs.c). A plain solve (CG: from zero to CG_BEST_TOL) gives g0 and its
  * residual; if that is above
  *   tol_g = G_TOL_EPS * SCS_MACH_EPS * || |[c; -b]| + |K| |g0| ||
- * (infinity norms, absolute values entry by entry: the size of the terms the
- * residual is computed from, row by row), the solve is repeated from g0 to
- * tol_g, with at most G_REFINE_MAX_STEPS steps in all: for a direct solver
+ * (absolute values entry by entry: each row's sum of the absolute values of
+ * the terms that row of the residual is computed from, and the largest of
+ * these over the rows), the solve is repeated from g0 to tol_g, with at
+ * most G_REFINE_MAX_STEPS steps in all: for a direct solver
  * the correction form from g0 is the first, for CG a CG solve from g0 to
  * tol_g; each further step solves for the residual, computed with K, and
  * adds the correction (CG: by CG from zero to tol_g). A step is kept only if
  * it lowers the residual, the steps stop after one that does not halve it
  * (LIN_SYS_REFINE_CONTRACTION), and g0 is kept unless the result is better.
  * Cost: one multiply by K per solve for g (the residual of g0) and a pass
- * over A and P for the size of the terms; when g0 misses tol_g, a multiply
- * more and a solve and a multiply per step. For CG a step costs the CG
- * iterations that reach tol_g: in all, up to about a third of the first
+ * over A and P for the size of the terms; when g0 misses tol_g, a solve and
+ * a multiply per step, and for a direct solver one multiply more (the
+ * correction form computes the residual of g0 again). For CG a step costs
+ * the CG iterations that reach tol_g: in all, up to about a third of the first
  * solve's on random SOCPs in double precision (two thirds in single), but
  * where CG cannot reach tol_g each step runs to CG's iteration limit (up to
  * five times the first solve, on badly scaled QPs).
@@ -314,9 +316,13 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * measure rounding (the halving stop then ends them, after one solve and one
  * multiply each); higher leaves an error in g that SCS repeats in every
  * iteration. The size is taken row by row, not as ||[c; -b]|| + ||K|| ||g0||
- * (the normwise backward error): on badly scaled data that was up to 1e9
- * times larger (regress340, QDLDL), and let most solves for g stop with
- * residuals up to 1e5 machine epsilons of their terms.
+ * (the normwise backward error, which pairs K's largest row with g0's
+ * largest entry even where they do not meet): on badly scaled data that was
+ * up to 1e9 times larger (regress340, QDLDL), and let most solves for g stop
+ * with residuals up to 1e5 machine epsilons of their terms. It is one
+ * number, the largest row's, because the solve's tol bounds the largest
+ * entry of the residual: a row whose terms are much smaller than the
+ * largest row's is held to the largest row's rounding, not to its own.
  *
  * G_REFINE_MAX_STEPS: LAPACK's ITMAX (xGERFS); the halving stop usually ends
  * the steps sooner. More can only help while each step still halves the
@@ -324,9 +330,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define G_TOL_EPS (4.)
 #define G_REFINE_MAX_STEPS (5)
 /* G_FAIL_REL_RES: SCS stops with SCS_FAILED, and a message asking for a bug
- * report, when the solve for g returns an error, g is not finite, or the
- * residual of the refined g is above this fraction of the size of its terms
- * (as for tol_g): not even its leading digit is right. The fraction is at
+ * report, when the solve for g returns an error, g is not finite (or the
+ * size of its terms overflows), or the residual of the refined g is above
+ * this fraction of the size of its terms (as for tol_g): not even its
+ * leading digit is right. The fraction is at
  * most 1 for every g (g = 0 has 1); a solver solving with an R 1e12 times
  * too large gives 1.00 (test_g_accuracy). The refined g of working solvers
  * is far below it, at about tol_g (1e-15 in double precision, 5e-7 in

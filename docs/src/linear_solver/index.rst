@@ -113,11 +113,16 @@ computed from, so SCS asks for
 
 (absolute values entry by entry; :code:`G_TOL_EPS` in
 ``include/glbopts.h``), with :math:`\epsilon` the machine epsilon of the
-precision SCS is built in. Measured row by row, rather than as
+precision SCS is built in. The size is computed row by row, from the
+entries each row actually multiplies, rather than as
 :math:`\|(c, -b)\|_\infty + \|K\|_\infty \|g_0\|_\infty` (the normwise
-backward error), the size follows the terms each row actually has: on badly
-scaled problems the normwise size was up to :math:`10^9` times larger, and
-would have accepted residuals far above rounding.
+backward error), which pairs the largest row of :math:`K` with the largest
+entry of :math:`g_0` even where they do not meet: on badly scaled problems
+that was up to :math:`10^9` times larger, and would have accepted residuals
+far above rounding. It is one number, the largest row's, because the
+tolerance of the solve bounds the largest entry of the residual; so a row
+whose terms are much smaller than the largest row's is held to the largest
+row's rounding, not to its own.
 
 **The refinement.** If :math:`g_0` misses the tolerance, the solve is
 repeated with :math:`g_0` as its warm start, to the tolerance, with at most
@@ -129,9 +134,11 @@ conjugate gradients from zero to the tolerance, with them). A step is kept
 only if it lowers the residual, the steps stop after one that does not at
 least halve it, and SCS keeps :math:`g_0` unless the result is better, so
 :math:`g` never has a larger residual than the first solve. Conjugate
-gradients solves a reduced system whose own rounding can be far above that
-of :math:`K`'s residual on badly scaled data; a step solves only for the
-correction, so it is not limited by that rounding.
+gradients solves a reduced system and computes :math:`g_y` from
+:math:`g_x`, so on badly scaled data its own rounding can be far above that
+of :math:`K`'s residual: the solve started from :math:`g_0` is limited by
+that rounding, but each further step solves only for the correction, so it
+is not.
 
 **If it fails.** The solve should never fail. If the linear solver returns
 an error, :math:`g` is not finite, or the residual of the refined :math:`g`
@@ -149,10 +156,12 @@ so instead.
 **Cost.** One multiply by :math:`K` each time :math:`g` is solved for (the
 residual of :math:`g_0`) and one pass over :math:`A` and :math:`P` for the
 size of the terms, paid even when the first solve is already accurate
-enough; when it is not, one multiply more, plus one solve and one multiply
-per step. With a direct solver each solve reuses the existing factorization,
-so this is cheap next to factorizing. With the indirect solvers each step
-costs the conjugate gradient iterations that reach the tolerance. On random
+enough; when it is not, one solve and one multiply per step, and with a
+direct solver one multiply more (the correction form computes the residual
+of :math:`g_0` again). With a direct solver each solve reuses the existing
+factorization, so this is cheap next to factorizing. With the indirect
+solvers each step costs the conjugate gradient iterations that reach the
+tolerance. On random
 SOCPs the refinement took up to about 30% of the first solve's conjugate
 gradient iterations in double precision, and up to about two thirds in
 single precision. Where conjugate gradients cannot reach the tolerance

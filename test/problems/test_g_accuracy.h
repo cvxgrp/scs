@@ -44,7 +44,12 @@
  *    with the message asking to open an issue. Skipped where the linear
  *    solver measures with its own K, which follows the update (MKL Pardiso
  *    unless built with MKL_NO_OWN_PRODUCTS; cuDSS from CUDSS_MIN_PRODUCT_NNZ
- *    nonzeros: the rule each states up front).
+ *    nonzeros: the rule each states up front);
+ * 5. the linear solver updated to that R with a NaN entry, so that its g is
+ *    not finite (or it returns an error): SCS_FAILED, with the message
+ *    asking to open an issue. Skipped with 4, for MKL Pardiso (what
+ *    Pardiso does with a NaN pivot is not checked here), and for a solver
+ *    that refuses the update.
  * The messages are checked unless printing is compiled out (NO_PRINTING).
  */
 
@@ -314,6 +319,33 @@ static const char *test_g_accuracy(void) {
       } else if (!found) {
         fail = "test_g_accuracy: a broken solve for g: no message saying it "
                "is a bug and asking to open an issue";
+      }
+    }
+    if (!fail && strstr(method, "mkl")) {
+      scs_printf("test_g_accuracy: %s: the check of a g that is not finite "
+                 "is skipped\n",
+                 method);
+    } else if (!fail) {
+      /* 5. NaN in the solver's R: g0 is not finite (or the solver returns an
+       * error), and either way SCS stops asking for a bug report */
+      dr[0] = NAN;
+      if (scs_update_lin_sys_diag_r(w->p, dr) != 0) {
+        scs_printf("test_g_accuracy: %s refuses an R with a NaN entry: the "
+                   "check of a g that is not finite is skipped\n",
+                   method);
+      } else {
+        status = g_acc_solve_capture(
+            w, sol, &info, "it indicates a bug in SCS",
+            "open an issue at https://github.com/cvxgrp/scs/issues", &found);
+        scs_printf("test_g_accuracy: solver on R with a NaN entry: status "
+                   "%li\n",
+                   (long)status);
+        if (status != SCS_FAILED || info.status_val != SCS_FAILED) {
+          fail = "test_g_accuracy: a g that is not finite did not fail";
+        } else if (!found) {
+          fail = "test_g_accuracy: a g that is not finite: no message saying "
+                 "it is a bug and asking to open an issue";
+        }
       }
     }
   }

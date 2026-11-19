@@ -1499,7 +1499,7 @@ static void g_solve_failed(const char *what, scs_float res, scs_float rel) {
  * kkt_corr holds the refined candidate. Returns 0, or -1 with a message if
  * the solve failed (the caller stops with SCS_FAILED). */
 static scs_int update_work_cache(ScsWork *w) {
-  scs_int i, n = w->d->n, m = w->d->m, nm = n + m;
+  scs_int i, n = w->d->n, m = w->d->m, nm = n + m, refined = 0;
   scs_float *h = w->kkt_res, *gc = w->kkt_corr;
   scs_float res0, res, scale, tol_g;
   memcpy(h, w->d->c, n * sizeof(scs_float));
@@ -1521,8 +1521,20 @@ static scs_int update_work_cache(ScsWork *w) {
     g_solve_failed("the linear solver returned an error", 0., -1.);
     return -1;
   }
+  /* checked entry by entry, since SCS(norm_inf) may skip a NaN entry (res0
+   * and the size below would then look finite). Steps from a g0 that is not
+   * finite cannot help: every solve spreads its NaN or Inf entries. */
+  if (!all_finite(w->g, nm)) {
+    g_solve_failed("the solution is not finite (NaN or Inf)", 0., -1.);
+    return -1;
+  }
   /* the size of the terms res0 is computed from; gc is scratch here */
   scale = kkt_terms_inf(w, h, w->g, gc);
+  if (!isfinite(scale)) {
+    g_solve_failed("the size of the terms of its residual overflows", 0.,
+                   -1.);
+    return -1;
+  }
   tol_g = G_TOL_EPS * SCS_MACH_EPS * scale;
   res = res0;
   if (res0 > tol_g) {
@@ -1538,17 +1550,20 @@ static scs_int update_work_cache(ScsWork *w) {
       g_solve_failed("the linear solver returned an error", 0., -1.);
       return -1;
     }
-    /* (a NaN entry is skipped by the residual's norm, hence the check) */
+    /* (the residual's norm may skip a NaN entry, hence the check) */
     if (res < res0 && all_finite(gc, nm)) {
       memcpy(w->g, gc, nm * sizeof(scs_float));
+      refined = 1;
     } else {
       res = res0;
     }
   }
-  /* SCS(norm_inf) skips NaN entries, so g is checked entry by entry */
-  if (!all_finite(w->g, nm) || !isfinite(scale)) {
-    g_solve_failed("the solution is not finite (NaN or Inf)", 0., -1.);
-    return -1;
+  /* g is finite here: g0 was checked, and gc is kept only if finite */
+  if (!(res <= G_FAIL_REL_RES * scale) && refined) {
+    /* scale is that of g0; the test is of the refined g against the size of
+     * its own terms. Computed only here, when the test against g0's would
+     * fail, so a solve that passes pays no pass for it. */
+    scale = kkt_terms_inf(w, h, w->g, gc);
   }
   if (!(res <= G_FAIL_REL_RES * scale)) {
     g_solve_failed("its residual is far too large", res, res / scale);
