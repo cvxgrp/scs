@@ -48,14 +48,21 @@ extern "C" {
 #endif
 #endif
 
+/* SCS_BLAS_INT_MAX: the largest blas_int, which bounds the LAPACK work-array
+ * sizes (see set_up_cone_work_spaces in cones.c) */
 #ifdef MATLAB_MEX_FILE
 #include <stddef.h> /* ptrdiff_t */
+#include <stdint.h> /* PTRDIFF_MAX */
 typedef ptrdiff_t blas_int;
+#define SCS_BLAS_INT_MAX PTRDIFF_MAX
 #elif defined BLAS64
 #include <stdint.h>
 typedef int64_t blas_int;
+#define SCS_BLAS_INT_MAX INT64_MAX
 #else
+#include <limits.h> /* INT_MAX */
 typedef int blas_int;
+#define SCS_BLAS_INT_MAX INT_MAX
 #endif
 
 #ifdef __cplusplus
