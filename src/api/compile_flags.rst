@@ -10,8 +10,10 @@ the Makefile by executing, e.g., :code:`make DLONG=1`, to set the :code:`DLONG`
 flag to True.  Only some of them are available in the CMake build, see
 :ref:`below <compile_flags_cmake>`.  Note this list is not exhaustive: more
 variables of the Makefile are listed :ref:`below <compile_flags_make>` (those
-of the CUDA builds are on the :ref:`install <c_install>` page), and further
-constants are not exposed but defined in :code:`include/glbopts.h`.
+of the CUDA builds are on the :ref:`install <c_install>` page), the constants
+that are set by defining them for the compiler are listed :ref:`at the end
+<compile_flags_constants>`, and further constants are not exposed but defined
+in :code:`include/glbopts.h`.
 
 
 .. list-table::
@@ -209,3 +211,35 @@ the Makefile does not have (there, pass the definition in :code:`CFLAGS`):
      - Print debugging output from the spectral cone projections (defines :code:`SPECTRAL_DEBUG`)
      - ON/OFF
      - OFF
+
+.. _compile_flags_constants:
+
+Constants set when compiling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The constants below are defined in :code:`include/glbopts.h` and are not
+Makefile variables or CMake options. Each build has one value, which nothing
+changes at run time. To set them define them for the compiler, with the
+Makefile through :code:`CFLAGS`, e.g., :code:`make CFLAGS="-DDEFLATE_VECTORS=0"`
+(after :code:`make purge`, since :code:`make` does not rebuild objects when
+only the flags change), and with CMake through :code:`CMAKE_C_FLAGS`, e.g.,
+:code:`cmake -DCMAKE_C_FLAGS="-DDEFLATE_VECTORS=0" ..`. A negative value stops
+the compilation with an error. See the :ref:`indirect solver <indirect>` for
+how to choose them.
+
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 1
+
+   * - Name
+     - Description
+     - Permitted values
+     - Default
+   * - :code:`DEFLATE_VECTORS`
+     - CPU indirect solver only: the number of approximate eigenvectors used to deflate the CG solves (eigCG). Costs :math:`2n` numbers of memory per vector, a few vector operations of length :math:`n` per vector in each solve, and one CG iteration's matrix multiplies per vector when they are harvested. More vectors take more of the smallest eigenvalues out of the solves, which then need fewer CG iterations on ill-conditioned problems, for more memory and work. :code:`0` turns deflation off. Deflation is also off without LAPACK (:code:`USE_LAPACK=0`) and in single precision (:code:`SFLOAT=1`)
+     - :math:`\mathbf{N}`
+     - 30
+   * - :code:`EIGCG_WINDOW`
+     - CPU indirect solver only: the number of CG vectors (:math:`n` numbers each) that a harvest of eigenvectors keeps in memory while it runs. A larger window compresses the CG history less often, for more memory during the harvest. It is raised to at least three times the number of deflation vectors (90 with the default 30), and has no effect when :code:`DEFLATE_VECTORS` is :code:`0`
+     - :math:`\mathbf{N}`
+     - 60
