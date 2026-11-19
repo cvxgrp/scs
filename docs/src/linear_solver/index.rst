@@ -78,10 +78,11 @@ solve when its factorization had to perturb a pivot (``iparm[7] = 0`` with
 ``iparm[9] = 13``, see :ref:`mkl`).
 
 SCS's linear solve takes a warm start, a tolerance and a number of refinement
-steps (see :ref:`new_linear_solver`). The per-iteration refinement passes the
-previous iteration's solution as the warm start and decides when; the solve
-for :math:`(c, -b)` is refined by SCS itself, with plain solves and its own
-products (see below).
+steps (see :ref:`new_linear_solver`). With the direct solvers, the
+per-iteration refinement passes the previous iteration's solution as the warm
+start and decides when; with the indirect solvers, and for the solve for
+:math:`(c, -b)`, SCS refines with plain solves and its own products (see
+below).
 
 .. _g_refinement:
 
@@ -193,13 +194,18 @@ already solves to a tolerance tied to SCS's residuals, and its error is set by
 that tolerance rather than by the size of the right-hand side, so the
 correction form would not make it more accurate. When a check finds the
 residual above *tol*, that iteration's solve and each following one is
-followed by one refinement step: a second conjugate gradient solve of the
-same right-hand side, warm-started from the first one's solution, to the
-solvers' best accuracy (in exact arithmetic the first solution plus a solve
-for its residual). While this is on, every iteration is a check (one
-multiply by :math:`K`, of the solve before its refinement step), and it turns
-off at the first that finds the residual at most :math:`0.1\,` *tol*. This
-fires only when a conjugate gradient solve misses its tolerance.
+followed by one refinement step: one more conjugate gradient solve, from
+zero and to the solvers' best accuracy, for the residual SCS computed, added
+to the solution. While this is on, every iteration is a check (one multiply
+by :math:`K`, of the solve before its refinement step), and it turns off at
+the first that finds the residual at most :math:`0.1\,` *tol*. This fires
+only when a conjugate gradient solve misses its tolerance. The step solves
+for the residual of the whole system: a second solve of the same right-hand
+side started from the first one's solution, the same in exact arithmetic,
+works with the residual of the smaller system conjugate gradients solves,
+which cannot see all of the rounding error: in single precision it solved
+16 of 25 random SOCPs at :math:`10^{-5}` instead of 25, in 12 times the
+time.
 
 **What to expect** (direct solvers):
 
@@ -234,10 +240,12 @@ fires only when a conjugate gradient solve misses its tolerance.
   threshold to turn it off is near or below what a single-precision solve can
   reach.
 
-**Who computes the multiplies.** The multiplies by :math:`K` are made inside
-the linear solve (:code:`scs_solve_lin_sys`, see :ref:`new_linear_solver`);
-SCS keeps each iteration's solution and passes it to the next solve as its
-warm start. Per iteration SCS asks for:
+**Who computes the multiplies.** With the direct solvers the multiplies by
+:math:`K` are made inside the linear solve (:code:`scs_solve_lin_sys`, see
+:ref:`new_linear_solver`); SCS keeps each iteration's solution and passes it
+to the next solve as its warm start. With the indirect solvers SCS computes
+the residual itself, with its own products, since the refinement step solves
+for that vector. Per iteration SCS asks for:
 
 .. list-table::
    :header-rows: 1
@@ -259,9 +267,9 @@ warm start. Per iteration SCS asks for:
        residual
      - 3
    * - CG, a check or refinement on
-     - CG with its residual; while on, a second CG solve warm-started from
-       its solution
-     - 1 (and, while on, the warm start's product inside CG)
+     - CG, and SCS's residual of it; while on, a second CG solve, of that
+       residual, from zero
+     - 1
 
 By default the multiplies are SCS's own products with the problem data (the
 multiply by :math:`A^\top` runs on OpenMP's threads when SCS is built with

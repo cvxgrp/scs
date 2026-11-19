@@ -18,7 +18,7 @@
  *
  * - Direct solvers, contracting, delta = RP_DELTA_CONTRACT: each
  *   correction-form solve shrinks the error it inherits by about delta, so
- *   every direct solver solves with refinement on (refine_corrections > 0),
+ *   every direct solver solves with refinement on (refine_on_iters > 0),
  *   and the problem is solved, with a solution whose relative residuals and
  *   gap from the data are at most SOLVE_REFINE_SOL_TOL. A refinement that
  *   does not fire, or a correction form measured with K' (the solver's),
@@ -31,19 +31,19 @@
  *   iteration until SCS's safeguard replaces it by the plain solve at a
  *   check (refine_safeguards > 0). The problem cannot be solved with such a
  *   factorization; the test runs RP_DIVERGE_ITERS iterations. Measured in
- *   double precision: 33 to 49 safeguards in 10,000 iterations with QDLDL,
+ *   double precision: 29 to 49 safeguards in 10,000 iterations with QDLDL,
  *   dense, Accelerate and cuDSS below its threshold. A safeguard that never
  *   fires, or that compares the wrong residuals, gives none.
- * - CG solvers, delta = RP_DELTA_CONTRACT, RP_CG_ITERS iterations: the
- *   refinement turns on (refine_steps > 0), which shows that the residual of
- *   the CG solve reaches SCS's on/off rule. CG's refinement step is a second
- *   CG solve warm-started from the first one's solution, which solves with
- *   K' again, so it cannot remove this mismatch (in a real solve CG's K is
- *   SCS's, the same arrays) and the problem is not solved: only the steps
- *   are checked. Measured from 101 initial scales within 50 ulps of the
- *   default: refinement on from iteration 75 in every run, 425 steps in the
- *   500 iterations in double precision at 1e-6, 375 to 400 in single
- *   precision at the default tolerances.
+ * - CG solvers, delta = RP_DELTA_CONTRACT: CG solves with K', and its
+ *   refinement step solves K' d = r for the residual r that SCS computes
+ *   with K, which contracts the error by about delta like the direct
+ *   solvers' correction form, so the problem is solved with refinement on
+ *   (refine_steps > 0), to the same accuracy. A step that does not fire, or
+ *   that solves for anything but SCS's residual (a second CG solve of the
+ *   right-hand side warm-started from the first one's solution solves with
+ *   K' again and cannot remove the mismatch), leaves the error at about
+ *   delta and the solve stalls. Measured in double precision at 1e-6: 175
+ *   iterations, 101 refinement steps.
  *
  * Skipped where the linear solver measures its residuals with its own K,
  * which follows the update, so that it sees no mismatch and nothing to
@@ -54,15 +54,16 @@
  */
 
 /* RP_DELTA_CONTRACT, RP_DELTA_DIVERGE: the relative changes of R (see
- * above). RP_DIVERGE_ITERS: the iterations of the run that cannot converge,
- * enough for 33 or more safeguards. RP_CG_ITERS: the iterations of the CG
- * run, enough for refinement to turn on (it does from iteration 75) and
- * short, since that run cannot converge either (about 0.1 s natively, and
- * the suite also runs under valgrind). */
+ * above). RP_CONTRACT_ITERS: the iteration limit of the runs that converge,
+ * which take 100 to 175: about ten times that, so that a refinement that
+ * does not contract fails in a fraction of a second rather than after
+ * 100,000 iterations (the suite also runs under valgrind). RP_DIVERGE_ITERS:
+ * the iterations of the run that cannot converge, enough for 29 or more
+ * safeguards. */
 #define RP_DELTA_CONTRACT (1e-3)
 #define RP_DELTA_DIVERGE (-0.55)
+#define RP_CONTRACT_ITERS (2000)
 #define RP_DIVERGE_ITERS (10000)
-#define RP_CG_ITERS (500)
 #ifdef SFLOAT
 #define RP_EPS (0.) /* the default tolerances */
 #else
@@ -109,7 +110,7 @@ static scs_int rp_solve(scs_float delta, scs_int max_iters, ScsInfo *info,
     }
     if (scs_update_lin_sys_diag_r(w->p, dr) == 0) {
       status = scs_solve(w, sol, info, 0);
-      *corrections = w->refine_corrections;
+      *corrections = w->refine_on_iters;
       *steps = w->refine_steps;
       *safeguards = w->refine_safeguards;
       *err = solve_refine_kkt_error(d, sol);
@@ -148,25 +149,21 @@ static const char *test_refine_perturbed(void) {
     return mu_skipped;
   }
   cg = strstr(method, "indirect") != SCS_NULL;
-  status = rp_solve(RP_DELTA_CONTRACT, cg ? RP_CG_ITERS : 100000, &info,
-                    &corrections, &steps, &safeguards, &err);
+  status = rp_solve(RP_DELTA_CONTRACT, RP_CONTRACT_ITERS, &info, &corrections,
+                    &steps, &safeguards, &err);
   scs_printf("test_refine_perturbed: %s, delta %g: status %li, %li "
              "iterations, %li with refinement on, %li refinement steps, %li "
              "safeguards, error %.2e\n",
              method, (double)RP_DELTA_CONTRACT, (long)status, (long)info.iter,
              (long)corrections, (long)steps, (long)safeguards, (double)err);
-  if (cg) {
-    /* the mismatch cannot be removed by CG (see above); the safeguard is
-     * the direct solvers' */
-    mu_assert("test_refine_perturbed: CG's refinement did not turn on",
-              steps > 0);
-    return SCS_NULL;
-  }
   mu_assert("test_refine_perturbed: not solved", status == SCS_SOLVED);
   mu_assert("test_refine_perturbed: wrong solution",
             err >= 0 && err <= SOLVE_REFINE_SOL_TOL);
   mu_assert("test_refine_perturbed: refinement did not fire",
-            corrections > 0);
+            (cg ? steps : corrections) > 0);
+  if (cg) {
+    return SCS_NULL; /* the safeguard is the direct solvers' */
+  }
   status = rp_solve(RP_DELTA_DIVERGE, RP_DIVERGE_ITERS, &info, &corrections,
                     &steps, &safeguards, &err);
   scs_printf("test_refine_perturbed: %s, delta %g: status %li, %li "

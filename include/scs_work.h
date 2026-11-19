@@ -66,22 +66,22 @@ struct SCS_WORK {
   scs_float *g;                  /* g = (I + M)^{-1} h */
   /* scratch, n + m each, nothing kept in them between calls: kkt_res and
    * kkt_corr, the residual and correction of refine_g (the solve for g);
-   * kkt_corr also the plain solve that decides at a check of the direct
-   * solvers' per-iteration refinement (solve_direct), and the warm start
-   * (the first solve's solution) of the indirect solvers' refinement solve
-   * (solve_indirect) */
+   * kkt_res also the residual and correction of the indirect solvers'
+   * per-iteration refinement (solve_indirect), and kkt_corr the plain solve
+   * that decides at a check of the direct solvers' (solve_direct) */
   scs_float *kkt_res, *kkt_corr;
   /* per-iteration refinement, reset at the start of each solve (see
    * "Accuracy of each iteration's solve" in glbopts.h): whether it is on,
    * how many residual checks this solve has made, how many refinement
-   * solves (indirect solvers, solve_indirect), how many iterations solved
-   * with refinement on (direct solvers, solve_direct: the previous solution
-   * passed as the warm start; the linear solver solves plainly instead when
-   * it is no better a guess than zero, and those iterations count too) and
+   * solves (indirect solvers, solve_indirect), how many iterations were
+   * solved with refinement on (direct solvers, solve_direct: the previous
+   * solution passed as the warm start; the linear solver solves plainly
+   * instead when it is no better a guess than zero, and those iterations
+   * count too) and
    * how often the safeguard replaced that solution by the plain solve
    * (direct solvers; read by the tests), and the tol it compares with
    * (set_refine_tol, at each convergence check; -1 before the first) */
-  scs_int refine_on, refine_checks, refine_steps, refine_corrections;
+  scs_int refine_on, refine_checks, refine_steps, refine_on_iters;
   scs_int refine_safeguards;
   scs_float refine_tol;
   /* direct solvers: the previous iteration's solution (n + m) whenever

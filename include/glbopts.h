@@ -350,14 +350,18 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * tolerance tied to SCS's residuals, and its error is set by that tolerance,
  * not by the size of the right-hand side, so the correction form would not
  * make it more accurate. While on, each iteration's solve is followed by one
- * refinement step: a second CG solve of the same right-hand side,
- * warm-started from the first one's solution u, to CG_BEST_TOL; in exact
- * arithmetic that is u plus a cold CG solve of K d = rhs - K u. While on,
- * every iteration checks the residual of the first solve (one multiply),
- * and the second solve costs CG iterations and the multiply of its warm
- * start. CG fires only when a CG solve misses its tolerance (it stops early
- * or, in single precision, the residual it tracks drifts from the true
- * one).
+ * refinement step: SCS computes r = rhs - K u with its own products and adds
+ * to u a cold CG solve of K d = r, to CG_BEST_TOL. That costs one more
+ * multiply and one more CG solve per iteration. The step must solve for the
+ * residual computed in the full space: a second CG solve of rhs
+ * warm-started from u, the same in exact arithmetic, works on CG's reduced
+ * residual and recomputes y from x, so it cannot remove the rounding the
+ * full residual measures (in single precision, from the same u, it lowered
+ * the residual by 10% or more in 38% of 455,177 steps, against 96% for this
+ * step, and of 25 random SOCPs at 1e-5 it solved 16 instead of 25, in 12
+ * times the time). CG fires only when a CG solve misses its tolerance (it
+ * stops early or, in single precision, the residual it tracks drifts from
+ * the true one).
  *
  * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of

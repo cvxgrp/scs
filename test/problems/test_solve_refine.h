@@ -135,7 +135,7 @@ static scs_int solve_refine_solve(scs_float eps, const char *csv,
   if (w) {
     status = scs_solve(w, sol, info, 0);
     *checks = w->refine_checks;
-    *steps = w->refine_steps + w->refine_corrections;
+    *steps = w->refine_steps + w->refine_on_iters;
     scs_finish(w);
   }
   SCS(free_data)(d);
@@ -360,7 +360,7 @@ static scs_int solve_refine_dep_solve(ScsInfo *info, scs_int *corrections,
   w = scs_init(d, k, stgs);
   if (w) {
     status = scs_solve(w, sol, info, 0);
-    *corrections = w->refine_corrections;
+    *corrections = w->refine_on_iters;
     scs_finish(w);
     *err = solve_refine_kkt_error(d, sol);
   }

@@ -1298,6 +1298,9 @@ static void refine_g(ScsWork *w) {
     /* the candidate g + d is formed in kkt_corr and kept only if it is
      * better, so a rejected step leaves g exactly as it was */
     memcpy(w->kkt_corr, w->kkt_res, l * sizeof(scs_float));
+    /* a plain solve for the residual: no warm start, CG to its best
+     * accuracy (direct solvers ignore tol), no steps or res of its own,
+     * since this loop is the refinement and g_residual its measure */
     scs_solve_lin_sys(w->p, w->kkt_corr, SCS_NULL, CG_BEST_TOL, 0, SCS_NULL);
     SCS(add_scaled_array)(w->kkt_corr, w->g, l, 1.);
     res_new = g_residual(w, w->kkt_corr, w->kkt_res);
@@ -1329,31 +1332,62 @@ static void set_refine_tol(ScsWork *w) {
 }
 
 #if INDIRECT > 0
+/* r = rhs - K u with K = [R_x + P, A'; A, -R_y] and rhs = [R_x v_x; -R_y v_y],
+ * the right-hand side of this iteration's solve (iter_rhs), with SCS's
+ * products from the (normalized) problem data; returns ||r||_inf. rhs is
+ * rebuilt from v and diag_r (v does not change in project_lin_sys), in its
+ * own statement so that it is rounded as it is in iter_rhs. r may not alias
+ * u. The CG solvers' refinement step needs r itself, not only its norm, so
+ * SCS computes it here rather than asking scs_solve_lin_sys for res. */
+static scs_float cg_residual(const ScsWork *w, const scs_float *u,
+                             scs_float *r) {
+  scs_int i, n = w->d->n, m = w->d->m;
+  const scs_float *v = w->v, *dr = w->diag_r;
+  scs_float rhs;
+  memset(r, 0, (n + m) * sizeof(scs_float));
+  SCS(accum_by_atrans)(w->d->A, &(u[n]), r);
+  if (w->d->P) {
+    SCS(accum_by_p)(w->d->P, u, r);
+  }
+  SCS(accum_by_a)(w->d->A, u, &(r[n]));
+  for (i = 0; i < n; ++i) {
+    rhs = v[i] * dr[i];
+    r[i] = rhs - (r[i] + dr[i] * u[i]);
+  }
+  for (i = n; i < n + m; ++i) {
+    rhs = -v[i] * dr[i];
+    r[i] = rhs - (r[i] - dr[i] * u[i]);
+  }
+  return SCS(norm_inf)(r, n + m);
+}
+
 /* Indirect solvers: this iteration's solve, CG from warm_start to tol, with
  * the refinement of REFINE_CHECK_INTERVAL, REFINE_INDIRECT_ON_FACTOR and
  * REFINE_INDIRECT_OFF_FACTOR (glbopts.h). At every check, and at every
  * iteration while refinement is on (none before the first convergence
- * check, which sets tol), the solve also returns its residual
- * ||rhs - K u||_inf (scs_solve_lin_sys, linsys.h): refinement turns on above
- * REFINE_INDIRECT_ON_FACTOR * tol and stays on until the residual is at or
- * below REFINE_INDIRECT_OFF_FACTOR * tol, a gap that keeps it from
- * switching off and on again. While on, the refinement step is a second CG
- * solve of the same right-hand side, warm-started from the first one's
- * solution u, to CG_BEST_TOL: in exact arithmetic u plus a cold CG solve of
- * K d = rhs - K u, for the CG iterations of that solve and the multiply of
- * its warm start. Leaves the solution in u_t[:n+m]; returns the status of
- * the last solve. */
+ * check, which sets tol), SCS computes the solve's residual r = rhs - K u
+ * (cg_residual, one multiply): refinement turns on above
+ * REFINE_INDIRECT_ON_FACTOR * tol and stays on until ||r||_inf is at or below
+ * REFINE_INDIRECT_OFF_FACTOR * tol, a gap that keeps it from switching off and
+ * on again. While on, the refinement step adds to u a cold CG solve of
+ * K d = r, to CG_BEST_TOL: iterative refinement in the full space, where r
+ * is computed. (A second CG solve of rhs warm-started from u is the same in
+ * exact arithmetic but not in floating point: it works on CG's reduced
+ * residual and recomputes y from x, so it cannot remove the rounding that r
+ * measures; see glbopts.h for what that cost.) Leaves the solution in
+ * u_t[:n+m]; returns the status of the last solve. */
 static scs_int solve_indirect(ScsWork *w, scs_int iter,
                               const scs_float *warm_start, scs_float tol) {
   scs_int status, nm = w->d->n + w->d->m;
-  scs_int check = w->refine_tol >= 0 &&
-                  (w->refine_on || iter % REFINE_CHECK_INTERVAL == 0);
   scs_float res;
-  status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol, 0,
-                             check ? &res : SCS_NULL);
-  if (status != 0 || !check) {
+  /* the CG solve of SCS 3.3 (no refinement steps, no res: the rule below
+   * needs r itself, which cg_residual computes) */
+  status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol, 0, SCS_NULL);
+  if (status != 0 || w->refine_tol < 0 ||
+      (!w->refine_on && iter % REFINE_CHECK_INTERVAL != 0)) {
     return status;
   }
+  res = cg_residual(w, w->u_t, w->kkt_res);
   w->refine_checks++;
   w->refine_on = res > (w->refine_on ? REFINE_INDIRECT_OFF_FACTOR
                                      : REFINE_INDIRECT_ON_FACTOR) *
@@ -1361,13 +1395,12 @@ static scs_int solve_indirect(ScsWork *w, scs_int iter,
   if (!w->refine_on) {
     return 0;
   }
-  /* the step: the first solve's solution, kept in kkt_corr, warm-starts a
-   * CG solve of the same right-hand side, rebuilt in u_t */
-  memcpy(w->kkt_corr, w->u_t, nm * sizeof(scs_float));
-  iter_rhs(w, w->u_t);
-  status = scs_solve_lin_sys(w->p, w->u_t, w->kkt_corr, CG_BEST_TOL, 0,
+  /* u_t += K^{-1} r: one CG solve, cold (no warm start), to the CG solvers'
+   * best accuracy, with no refinement steps of its own (it is the step) */
+  status = scs_solve_lin_sys(w->p, w->kkt_res, SCS_NULL, CG_BEST_TOL, 0,
                              SCS_NULL);
   if (status == 0) {
+    SCS(add_scaled_array)(w->u_t, w->kkt_res, nm, 1.);
     w->refine_steps++;
   }
   return status;
@@ -1401,20 +1434,26 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
     /* ||rhs||_inf, the safeguard's floor, before the solve overwrites rhs */
     nrhs = SCS(norm_inf)(w->u_t, nm);
   }
+  /* While on, the warm start makes the solve the correction form (its own
+   * refinement, at the cost of one multiply by K); max_refine_steps 0, since
+   * a further step would cost a solve and a multiply each in every such
+   * iteration, and tol, unused without steps, -1. res only at a check: it
+   * costs a multiply. */
   status = scs_solve_lin_sys(w->p, w->u_t, was_on ? w->refine_prev : SCS_NULL,
                              -1., 0, check ? &res : SCS_NULL);
   if (status != 0) {
     return status;
   }
   if (was_on) {
-    w->refine_corrections++;
+    w->refine_on_iters++;
   }
   if (check && was_on) {
     /* the decision is made on a plain solve of this right-hand side, in
      * kkt_corr; the iterate stays the warm-started solution. (Using the
      * plain solve as the iterate instead mixes an inexact solve into the
      * accurate ones every REFINE_CHECK_INTERVAL iterations, which took up to
-     * 31 times the iterations on a badly scaled QP.) */
+     * 31 times the iterations on a badly scaled QP.) Plain: no warm start
+     * and no steps, with its res. */
     res_corr = res;
     iter_rhs(w, w->kkt_corr);
     status = scs_solve_lin_sys(w->p, w->kkt_corr, SCS_NULL, -1., 0, &res);
@@ -1458,6 +1497,7 @@ static void update_work_cache(ScsWork *w) {
   for (i = 0; i < m; ++i) {
     w->g[n + i] = -w->d->b[i];
   }
+  /* cold, CG to its best accuracy; refine_g checks and refines it */
   scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL, 0, SCS_NULL);
   refine_g(w);
 }
@@ -1484,7 +1524,7 @@ static void reset_tracking(ScsWork *w) {
   w->refine_on = 0;
   w->refine_checks = 0;
   w->refine_steps = 0;
-  w->refine_corrections = 0;
+  w->refine_on_iters = 0;
   w->refine_safeguards = 0;
   w->refine_tol = -1.;
 }
