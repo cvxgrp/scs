@@ -73,19 +73,20 @@ heuristically to improve convergence. Basically
 
     \rho_y \approx (1/\mathrm{scale}) I
 
-with two differences. First, each cone can modify this relationship slightly
-(currently only the zero cone does, which sets
-:math:`\rho_y = 1 / (1000\ \mathrm{scale})`). Second, with
-:code:`adaptive_diag_scale` each row :math:`i` has its own multiplier
-:math:`f_i`, which acts like a scale for that row alone:
+with two differences. First, an equality row gets a smaller entry,
+:math:`\rho_y = 1 / (1000\ \mathrm{scale})`: every row of the zero cone, and the
+first entry :math:`t` of a box cone with bounds (see :ref:`box_t_weight`).
+Second, with :code:`adaptive_diag_scale` each row :math:`i` has its own
+multiplier :math:`f_i`, which acts like a scale for that row alone:
 
 .. math::
 
     \rho_{y,i} = \frac{1}{\mathrm{scale}\ f_i}
 
-for a row outside the zero cone, and
-:math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a row of the zero
-cone. The multipliers start at one, so at the start of a solve on a new
+for most rows, and :math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a
+row of the zero cone and for the box cone's :math:`t` entry. The factor 1000 is
+:code:`ZERO_CONE_RY_FACTOR` (and :code:`BOX_T_RY_FACTOR`, equal to it) in
+:code:`include/glbopts.h`. The multipliers start at one, so at the start of a solve on a new
 workspace they change nothing, and they are kept in
 :math:`[10^{-3}, 10^{3}]`. How they are updated is described in
 :ref:`per_row_refinement`. So as scale increases, :math:`\rho_y` decreases
@@ -96,6 +97,34 @@ The quantity :math:`\rho_x` is determined by the :ref:`setting <settings>` value
 <settings>` value :code:`scale` but is updated adaptively using the techniques
 described in :ref:`Dynamic scale updating <updating_scale>`. Finally,  :math:`d`
 is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
+
+.. _box_t_weight:
+
+The box cone's :math:`t` entry
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The box cone is :math:`\{(t, s) \mid t l \leq s \leq t u\}`. Bounds
+:math:`l \leq a^\top x \leq u` are usually posed with :math:`t` fixed to one:
+the row of :math:`A` for :math:`t` is zero and its entry of :math:`b` is one,
+so that row is the equality :math:`s_t = \tau`, although :math:`t` is a cone
+entry. SCS therefore gives the :math:`t` entry the weight of an equality row,
+:math:`\rho_y = 1 / (1000\ \mathrm{scale})`. A box cone of size one is
+:math:`t \geq 0` alone, with no bounds, and keeps :math:`1 / \mathrm{scale}`
+like a nonnegative row.
+
+Why: weighted like an inequality row, :math:`t` can stop off one by up to the
+primal tolerance, about :math:`\epsilon (1 + \|Ax\|_\infty)`, because SCS's
+primal residual measures :math:`t - 1` against the largest entry of
+:math:`Ax`. Each bound is then met only up to :math:`|t - 1|` times the bound,
+so on problems with large bounds SCS could report solved while a bound was
+violated by more than the tolerance. With the equality weight the box
+projection, whose metric weighs :math:`t` by :math:`1 / \rho_y`, and the
+linear system both hold :math:`t` to :math:`\tau` about as tightly as an
+equality.
+
+Tradeoff: any positive weight is a valid metric, so this changes the path SCS
+takes, never the solution. On most problems with a box cone the path gets
+shorter, but a few take many more iterations.
 
 Root-plus function
 ------------------

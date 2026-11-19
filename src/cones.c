@@ -391,11 +391,36 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
      * dual free cone, this effectively decreases penalty on those entries
      * and lets them be determined almost entirely by the linear system solve
      */
-    r_y[i] = 1.0 / (1000. * scale);
+    r_y[i] = 1.0 / (ZERO_CONE_RY_FACTOR * scale);
   }
   /* Remaining cones */
   for (i = c->k->z; i < c->m; ++i) {
     r_y[i] = 1.0 / scale;
+  }
+  /* Box cone t entry: weighted like an equality row (BOX_T_RY_FACTOR in
+   * glbopts.h says why). A smaller rho_y on this entry acts in the two places
+   * rho_y enters:
+   * - The linear system. In the usual form the t row of A is zero, so the
+   *   row is decoupled from x: it gives y_t = v_t - tau b_t / rho_y, and adds
+   *   b_t^2 / rho_y to the leading coefficient of the quadratic for tau
+   *   (root_plus), as a zero-cone row with b != 0 does.
+   * - The box projection, whose metric weighs t by rho_t = 1 / rho_y
+   *   (proj_cone hands proj_box_cone the slice of r_y that starts at this
+   *   entry). Its input is t0 = 2 tau b_t - rho_y v_t, the value the linear
+   *   system hands it; the clipped rows pull t away from t0 by
+   *   sum_j r_j b_j (x_j - t0 b_j) / H, with H = rho_t + S and
+   *   S = sum_j r_j b_j^2 over them (b_j the bound row j is clipped to). A
+   *   rho_t BOX_T_RY_FACTOR times larger shrinks that pull by
+   *   (rho_t + S) / (BOX_T_RY_FACTOR rho_t + S), by up to BOX_T_RY_FACTOR when
+   *   S does not dominate, so the box rows are clipped to a t nearer tau b_t.
+   * Everything else reads the entry from diag_r (the per-row multiplier of
+   * adaptive_diag_scale divides it as it does a zero-cone row's, since the box
+   * rows are scaled independently; the linear system, root_plus, the remap of
+   * v at a scale update and warm starts), so this is the one place it is set.
+   * A box cone of size 1 is t >= 0 alone, with no bounds for t to scale: a
+   * nonnegative entry, which keeps 1 / scale. */
+  if (c->k->bsize > 1) {
+    r_y[c->k->z + c->k->l] = 1.0 / (BOX_T_RY_FACTOR * scale);
   }
 }
 
