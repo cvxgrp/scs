@@ -23,16 +23,35 @@ extern "C" {
 /* Workspace for the eigendecomposition of one matrix cone at a time (cones.c):
  * one per thread of the PSD projection. */
 typedef struct SCS_PSD_WORK ScsPsdWork;
+/* LAPACK work-array sizes of one PSD block (cones.c) */
+typedef struct SCS_PSD_LAPACK_SIZES ScsPsdLapackSizes;
 #ifdef USE_LAPACK
 struct SCS_PSD_WORK {
+  /* Xs: the block, then its eigenvectors (syevd / heevd overwrite it with
+   * them); e: the eigenvalues; Z: the result of the log-determinant and
+   * sum-of-largest-eigenvalues projections (in psd_tw[0] when there are such
+   * cones, NULL otherwise); the PSD projections put theirs in work / cwork */
   scs_float *Xs, *Z, *e, *work;
   scs_float *gamma; /* PSD diagonal-congruence factors */
-  scs_complex_float *cXs, *cZ, *cwork;
-  blas_int *isuppz, *iwork;
-  /* work-array sizes, those of psd_tw[0] in every thread (lcwork is 0 in a
-   * thread with no complex block) */
+  scs_complex_float *cXs, *cwork;
+  blas_int *iwork;
+  /* lengths of work, cwork and iwork: the largest sizes of the blocks that
+   * use this workspace, and in psd_tw[0] at least lwork_syev for the
+   * spectral cones (lcwork is 0 without a complex block) */
   blas_int lwork, lcwork, liwork;
 };
+
+struct SCS_PSD_LAPACK_SIZES {
+  blas_int lwork;  /* work (real block) or rwork (complex block) */
+  blas_int lcwork; /* complex work array, 0 for a real block */
+  blas_int liwork; /* integer work array */
+};
+#endif
+
+#ifdef SCS_FORCE_PSD_FALLBACK
+/* test-only build flag (cones.c): number of PSD projections that fell back
+ * to syev / heev */
+extern scs_int SCS(psd_fallbacks);
 #endif
 
 /* private data to help cone projection step */
@@ -59,8 +78,9 @@ struct SCS_CONE_WORK {
   scs_float box_t_warm_start;
   scs_float *r_box_inv; /* precomputed 1/r_box[j] for box cone Newton */
 
-  /* Eigendecomposition workspaces (with LAPACK), one per thread: psd_tw[0]
-   * serves every matrix cone, psd_tw[t] the PSD blocks of list t. */
+  /* Eigendecomposition workspaces (with LAPACK), one per thread: psd_tw[t]
+   * serves the PSD blocks of list t and is sized for them alone; psd_tw[0]
+   * also serves the logdet and sum-of-largest-eigenvalues cones. */
   ScsPsdWork *psd_tw;
   /* PSD blocks: block b < ssize is real block b, else complex block b - ssize,
    * at offset psd_off[b] from the first PSD entry (psd_len entries in all).
@@ -70,6 +90,9 @@ struct SCS_CONE_WORK {
    * list with all blocks in order, and 0 without PSD blocks. */
   scs_int psd_nthreads, psd_len;
   scs_int *psd_blk, *psd_tptr, *psd_off;
+  /* With LAPACK, the work-array sizes of PSD block b are psd_lsz[b] (indexed
+   * like psd_off), whichever workspace projects it (NULL without LAPACK). */
+  ScsPsdLapackSizes *psd_lsz;
 
 #ifdef USE_SPECTRAL_CONES
   /* if the projection onto the logarithmic cone should be warmstarted*/
@@ -86,6 +109,11 @@ struct SCS_CONE_WORK {
   /* workspace for singular value decompositions: */
   scs_float *s_nuc, *u_nuc, *vt_nuc, *work_nuc;
   blas_int lwork_nuc;
+
+  /* the work-array size that the logdet and sum-of-largest projections pass
+   * to syev (in psd_tw[0]->work): syev's workspace query for the largest of
+   * these cones, which does not depend on the PSD blocks or their threads */
+  blas_int lwork_syev;
 
   /* workspace that is used internally in the logdet projection (for example,
      the gradient and Hessian of the objective function in the projection

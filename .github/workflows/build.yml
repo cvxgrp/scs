@@ -56,6 +56,22 @@ jobs:
           out/run_tests_direct
           out/run_tests_indirect
           if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi
+      - name: Tests through the syev / heev fallback of the PSD projection
+        # The test-only flag SCS_FORCE_PSD_FALLBACK sends every PSD block
+        # through the fallback that runs when syevd / heevd do not converge,
+        # which no LAPACK here reaches otherwise. run_tests then prints how
+        # many blocks went through it, and the grep fails the step if that
+        # line is missing (the flag did not reach the tests) or shows none.
+        # If the flag reached the tests but not the library, they do not link.
+        if: matrix.lapack == 1 && matrix.long == 0
+        run: |
+          set -o pipefail
+          make purge
+          make test USE_LAPACK=1 OPT="-O3 -march=native -fno-math-errno -DSCS_FORCE_PSD_FALLBACK"
+          for t in direct indirect dense; do
+            out/run_tests_$t | tee out/fallback_$t.log
+            grep -E "^SCS_FORCE_PSD_FALLBACK: [1-9][0-9]* PSD blocks" out/fallback_$t.log
+          done
 
   windows:
     strategy:
@@ -142,3 +158,15 @@ jobs:
           out/run_tests_indirect
           out/run_tests_accelerate
           if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi
+      - name: Tests through the syev / heev fallback of the PSD projection
+        # As in the Linux job, with Accelerate's LAPACK, the one whose dsyevd
+        # has failed to converge in a solve (see src/cones.c)
+        if: matrix.lapack == 1 && matrix.long == 0
+        run: |
+          set -o pipefail
+          make purge
+          make test USE_LAPACK=1 OPT="-O3 -march=native -fno-math-errno -DSCS_FORCE_PSD_FALLBACK"
+          for t in direct indirect dense accelerate; do
+            out/run_tests_$t | tee out/fallback_$t.log
+            grep -E "^SCS_FORCE_PSD_FALLBACK: [1-9][0-9]* PSD blocks" out/fallback_$t.log
+          done

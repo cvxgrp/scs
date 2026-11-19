@@ -73,7 +73,7 @@ scs_int SCS(proj_sum_largest_evals)(scs_float *tX, scs_int n, scs_int k,
   scs_float *e = c->psd_tw->e;
   scs_float *Z = c->psd_tw->Z;
   scs_float *work = c->psd_tw->work;
-  blas_int lwork = c->psd_tw->lwork;
+  blas_int lwork = c->lwork_syev; /* see set_up_psd_work in cones.c */
   blas_int info = 0;
   scs_int status;
   char transN;

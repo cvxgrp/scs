@@ -44,3 +44,19 @@ jobs:
         out/run_tests_indirect
         out/run_tests_dense
         grep "psd blocks projected by" out/direct.log
+
+    - name: Parallel PSD projection through the syev / heev fallback, with spectral cones
+      # The test-only flag SCS_FORCE_PSD_FALLBACK (see build.yml) with the
+      # parallel projection: the fallback runs in several threads at once,
+      # and the spectral cones share a workspace with the PSD blocks of the
+      # first thread. The greps fail the step if the parallel projection or
+      # the fallback did not run.
+      run: |
+        set -o pipefail
+        make purge
+        make USE_OPENMP=1 USE_PARALLEL_PSD=1 USE_SPECTRAL_CONES=1 OPT="-O3 -march=native -fno-math-errno -DSCS_FORCE_PSD_FALLBACK" test
+        out/run_tests_direct | tee out/direct.log
+        out/run_tests_indirect
+        out/run_tests_dense
+        grep "psd blocks projected by" out/direct.log
+        grep -E "^SCS_FORCE_PSD_FALLBACK: [1-9][0-9]* PSD blocks" out/direct.log
