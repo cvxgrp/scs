@@ -399,19 +399,37 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * Indirect solvers (conjugate gradients, CPU and GPU). CG already solves to a
  * tolerance tied to SCS's residuals, and its error is set by that tolerance,
  * not by the size of the right-hand side, so the correction form would not
- * make it more accurate. While on, each iteration's solve is followed by one
- * refinement step: SCS computes r = rhs - K u with its own products and adds
- * to u a cold CG solve of K d = r, to CG_BEST_TOL. That costs one more
- * multiply and one more CG solve per iteration. The step must solve for the
- * residual computed in the full space: a second CG solve of rhs
- * warm-started from u, the same in exact arithmetic, works on CG's reduced
- * residual and recomputes y from x, so it cannot remove the rounding the
- * full residual measures (in single precision, from the same u, it lowered
- * the residual by 10% or more in 38% of 455,177 steps, against 96% for this
- * step, and of 25 random SOCPs at 1e-5 it solved 16 instead of 25, in 12
- * times the time). CG fires only when a CG solve misses its tolerance (it
- * stops early or, in single precision, the residual it tracks drifts from
- * the true one).
+ * make it more accurate. What goes wrong is that a solve misses its
+ * tolerance: it stops at its iteration limit, the residual it tracks drifts
+ * from the true one (in single precision), or y, which CG computes from x,
+ * carries rounding that CG's reduced system does not see. While on, each
+ * iteration's solve is one call (scs_solve_lin_sys with max_refine_steps
+ * REFINE_CG_MAX_STEPS, linsys.h) that computes the true residual
+ * r = rhs - K u in the full space (one multiply) and, while ||r||_inf is
+ * above the CG tolerance, adds a cold CG solve of K d = r to that tolerance,
+ * keeping each step only if it lowers ||r|| and stopping after one that
+ * does not halve it. So an iteration with refinement on costs one multiply,
+ * and CG iterations only where its solve missed. At a check while on, a
+ * plain CG solve of the same right-hand side from the same start, made only
+ * for the decision, decides whether to stay on, as for the direct solvers
+ * (one more CG solve per REFINE_CHECK_INTERVAL iterations while on). Before
+ * 3.4.0 every iteration while on was a check, with SCS's own residual, and
+ * was followed by a cold CG solve of r to CG_BEST_TOL whether or not the
+ * solve had missed. Against that rule (CPU CG, KKT-verified): in single
+ * precision at 1e-6, on 100 random SOCPs from two initial scales on two
+ * machines (clang on Apple silicon, GCC on ARM), 3 problems were lost and 6
+ * gained (outcomes there flip both ways with rounding), at 0.97 to 1.04
+ * times the time in shifted geometric mean (0.49 to 0.95 of the total); at
+ * 1e-5 (125 SOCPs) every run was solved by both, at 0.83 to 1.00 times the
+ * time. In double precision CG refinement did not fire on 500 random SOCPs
+ * at 1e-9 nor on badly scaled QPs and LPs at 1e-4, so nothing changed
+ * there. A step must solve for the residual in the full space: CG
+ * restarted on rhs from u, the same in exact arithmetic, works on CG's
+ * reduced residual and recomputes y from x, so it cannot remove the
+ * rounding the full residual measures (in single precision, from the same
+ * u, it lowered the residual by 10% or more in 38% of 455,177 steps, against
+ * 96% for the cold step, and of 25 random SOCPs at 1e-5 it solved 16
+ * instead of 25, in 12 times the time).
  *
  * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
@@ -486,11 +504,13 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #endif
 /* REFINE_INDIRECT_ON_FACTOR: indirect solvers refine when the solve's error
  * is larger than the residuals SCS is driving to zero. While on, each
- * iteration costs one more multiply and one more solve. A smaller factor
- * refines more: 0.1 took slightly fewer iterations at 1e-9 with QDLDL but
- * fired in 15 of the 336 runs at 1e-4 and 1e-6 instead of 9, and where
- * refinement fires it cost more (3% more linear-system time with CG). A
- * larger one leaves solves that limit accuracy unrefined. */
+ * iteration costs one more multiply, and CG solves where it missed its
+ * tolerance. A smaller factor refines more (measured with the rule before
+ * 3.4.0, a CG solve every iteration while on): 0.1 took slightly fewer
+ * iterations at 1e-9 with QDLDL but fired in 15 of the 336 runs at 1e-4 and
+ * 1e-6 instead of 9, and where refinement fires it cost more (3% more
+ * linear-system time with CG). A larger one leaves solves that limit
+ * accuracy unrefined. */
 #define REFINE_INDIRECT_ON_FACTOR (1.0)
 /* REFINE_INDIRECT_OFF_FACTOR: once on, CG refinement stays on until the
  * solve's error is at or below this fraction of tol. With an off factor of 1
@@ -526,6 +546,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #else
 #define REFINE_TOL_FLOOR (1e-12)
 #endif
+/* REFINE_CG_MAX_STEPS: while CG refinement is on, the most refinement steps
+ * an iteration's call takes (scs_solve_lin_sys's max_refine_steps). Each is
+ * a cold CG solve, to the iteration's CG tolerance, for the residual in the
+ * full space, and a multiply by K, taken only while that residual is above
+ * the tolerance; a step is kept only if it lowers the residual, and the
+ * steps stop after one that does not halve it (LIN_SYS_REFINE_CONTRACTION).
+ * In single precision at 1e-6, where refinement fires most (100 random
+ * SOCPs, GCC on ARM), 99.6% of the calls took a step (CG's tolerance, at
+ * its floor CG_BEST_TOL there, is below the rounding of the residual), 1.65
+ * steps per call, and 81% of the steps were kept. One step solved 97 of the
+ * 100 where two solved 100 (the rule before 3.4.0: 98), at 0.94 times the
+ * time of two (clang on Apple silicon); more steps add CG solves that the
+ * halving stop mostly ends. */
+#define REFINE_CG_MAX_STEPS (2)
 
 /* CUDSS_MIN_PRODUCT_NNZ: the smallest K (nonzeros of the stored triangle,
  * diagonal included) for which the cuDSS solver computes the refinement's

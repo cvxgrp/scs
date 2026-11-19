@@ -37,10 +37,11 @@
  * requires the same refinement (iterations, residual checks and refined
  * iterations) and the same objectives to 1e-6.
  *
- * "refined" below counts the refinement steps (indirect solvers) plus the
- * iterations solved with refinement on (direct solvers: with the previous
- * solution as the warm start, so in correction form unless the linear
- * solver fell back to a plain solve); a build has only one of the two.
+ * "refined" below counts the iterations solved with refinement on
+ * (refine_on_iters: direct solvers with the previous solution as the warm
+ * start, so in correction form unless the linear solver fell back to a
+ * plain solve; CG solvers with refinement steps allowed, taken where the
+ * solve missed its tolerance).
  */
 
 /* the instance (seeds 10 and 43 also pass in double precision; in single
@@ -108,9 +109,8 @@ static void solve_refine_data(ScsData *d, ScsCone *k) {
 }
 
 /* solves the instance at eps (eps <= 0: the default tolerances), logging to
- * csv unless it is SCS_NULL; returns the status, SCS's info, and the residual
- * checks and refined solves made (refinement steps plus iterations solved
- * with refinement on) */
+ * csv unless it is SCS_NULL; returns the status, SCS's info, the residual
+ * checks and the iterations solved with refinement on */
 static scs_int solve_refine_solve(scs_float eps, const char *csv,
                                   ScsInfo *info, scs_int *checks,
                                   scs_int *steps) {
@@ -135,7 +135,7 @@ static scs_int solve_refine_solve(scs_float eps, const char *csv,
   if (w) {
     status = scs_solve(w, sol, info, 0);
     *checks = w->refine_checks;
-    *steps = w->refine_steps + w->refine_on_iters;
+    *steps = w->refine_on_iters;
     scs_finish(w);
   }
   SCS(free_data)(d);
