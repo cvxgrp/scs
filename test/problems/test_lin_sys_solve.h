@@ -185,7 +185,7 @@ static scs_int lss_kkt_nnz(const ScsMatrix *A, const ScsMatrix *P) {
 static scs_int lss_own_products(scs_int kkt_nnz) {
   const char *method = scs_get_lin_sys_method();
   if (strstr(method, "mkl")) {
-#ifdef MKL_NO_OWN_PRODUCTS
+#if MKL_NO_OWN_PRODUCTS > 0
     return 0;
 #else
     return 1;

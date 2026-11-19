@@ -322,14 +322,9 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   /* the multiplies by K in MKL's sparse BLAS, except for a K too large for
    * MKL's 32-bit sparse integers (prod_setup's size rule) and in a build
-   * with MKL_NO_OWN_PRODUCTS, where they are SCS's products: if they cannot
-   * be set up, setup fails (prod_setup says why) rather than leaving them to
-   * SCS. MKL_NO_OWN_PRODUCTS (make MKL_NO_OWN_PRODUCTS=1) gives SCS's
-   * products at every size, so that this path, which otherwise arises only
-   * for K beyond 2^31 nonzeros, stays tested (CI); it costs the iterations
-   * with the correction form on 1.45 instead of 1.32 times a plain one
-   * (MKL's threaded product against SCS's, 33 LPs and QPs at 1e-9, 4
-   * threads, AMD Zen 3). */
+   * with MKL_NO_OWN_PRODUCTS (glbopts.h), where they are SCS's products: if
+   * they cannot be set up, setup fails (prod_setup says why) rather than
+   * leaving them to SCS. */
   if (prod_setup(p) != 0) {
     scs_printf("MKL Pardiso: the refinement's products with K could not be "
                "set up\n");
@@ -551,12 +546,12 @@ static void prod_free(ScsLinSysWork *p) {
 }
 
 static scs_int prod_setup(ScsLinSysWork *p) {
-  scs_int k, nm = p->n_plus_m, nnz = p->kkt->p[nm];
-#ifdef MKL_NO_OWN_PRODUCTS
-  /* SCS's products at every size (see scs_init_lin_sys_work) */
+#if MKL_NO_OWN_PRODUCTS > 0
+  /* SCS's products at every size (see MKL_NO_OWN_PRODUCTS in glbopts.h) */
   p->prod_none = 1;
   return 0;
-#endif
+#else
+  scs_int k, nm = p->n_plus_m, nnz = p->kkt->p[nm];
   if (sizeof(scs_mkl_int) != sizeof(scs_int)) {
     scs_mkl_int *ptr, *ind;
     if ((scs_int)(scs_mkl_int)nnz != nnz || (scs_int)(scs_mkl_int)nm != nm) {
@@ -589,6 +584,7 @@ static scs_int prod_setup(ScsLinSysWork *p) {
     return -1;
   }
   return 0;
+#endif
 }
 
 /* The residual op of the shared routine (ScsLinSysResidual, scs_matrix.h):

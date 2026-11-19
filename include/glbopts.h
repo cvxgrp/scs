@@ -510,6 +510,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define CUDSS_MIN_PRODUCT_NNZ (60000)
 #endif
 
+/* MKL_NO_OWN_PRODUCTS: 1 makes the MKL Pardiso solver compute the
+ * refinement's multiplies by K with SCS's products (linsys/scs_matrix.c) at
+ * every size instead of MKL's sparse BLAS, so that this path, otherwise taken
+ * only for a K beyond MKL's 32-bit sparse integers, stays tested (a CI job
+ * builds with it). It is slower: an iteration with the correction form on
+ * costs 1.45 instead of 1.32 times a plain one (33 LPs and QPs at 1e-9, 4
+ * threads, AMD Zen 3). 0, the default, uses MKL's. It is here so that the
+ * tests see the same value. Set it with make MKL_NO_OWN_PRODUCTS=1 or CMake
+ * -DCMAKE_C_FLAGS=-DMKL_NO_OWN_PRODUCTS=1; it is on only for a value above 0,
+ * as NO_PRINTING and the other switches tested with #if. */
+#ifndef MKL_NO_OWN_PRODUCTS
+#define MKL_NO_OWN_PRODUCTS (0)
+#endif
+
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
 /* Accuracy of the most accurate CG solves (the cold solve for g, and the floor
  * of the warm ones). Single precision cannot reach 1e-12: a CG asked for it

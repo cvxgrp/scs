@@ -139,7 +139,7 @@ static const char *test_refine_perturbed(void) {
     SCS(free_cone)(k);
   }
   if (
-#ifndef MKL_NO_OWN_PRODUCTS
+#if MKL_NO_OWN_PRODUCTS <= 0
       strstr(method, "mkl") ||
 #endif
       (strstr(method, "cuDSS") && nnz >= CUDSS_MIN_PRODUCT_NNZ)) {
