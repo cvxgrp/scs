@@ -72,8 +72,8 @@ void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y);
  * SCS(lin_sys_shared_init) sets up around the solver's plain solve. The
  * routine adds what linsys.h asks of the solve beyond the plain solve: the
  * warm start (direct solvers: the correction form and its comparison with
- * zero; CG: passed on to CG), the refinement steps (direct) or restarts
- * (CG), and the residual. Its multiplies by K are SCS's own products with
+ * zero; CG: passed on to CG), the refinement steps, and the residual. Its
+ * multiplies by K are SCS's own products with
  * the A, P and diag_r given to scs_init_lin_sys_work, unless the solver
  * passes a residual op with its own copy of K (MKL Pardiso), and with it,
  * optionally, a correct op that keeps the residual where the solver keeps
@@ -81,14 +81,14 @@ void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y);
  * is for solvers built with SCS's sources (linsys/scs_matrix.c).
  * ---------------------------------------------------------------------- */
 
-/* LIN_SYS_REFINE_CONTRACTION: refinement steps (direct solvers) and restarts
- * (CG) inside scs_solve_lin_sys stop after a kept one that did not reduce
- * ||b - K x||_inf to at most this fraction of the previous residual. That is
- * LAPACK's stagnation test (xGERFS): a step that does not halve the residual
- * shows that the factorization (or CG's tolerance) can do no better on this
- * system, and further steps would mostly measure rounding. Smaller stops
- * sooner; larger takes more steps that gain little, each costing a solve and
- * a multiply by K. A linear-solver rule, used only here. */
+/* LIN_SYS_REFINE_CONTRACTION: refinement steps inside scs_solve_lin_sys stop
+ * after a kept one that did not reduce ||b - K x||_inf to at most this
+ * fraction of the previous residual. That is LAPACK's stagnation test
+ * (xGERFS): a step that does not halve the residual shows that the
+ * factorization (or CG's tolerance) can do no better on this system, and
+ * further steps would mostly measure rounding. Smaller stops sooner; larger
+ * takes more steps that gain little, each costing a solve and a multiply by
+ * K. A linear-solver rule, used only here. */
 #define LIN_SYS_REFINE_CONTRACTION (0.5)
 
 /** The solver's plain solve, in place: b = K^{-1} b. Direct solvers ignore s
@@ -108,12 +108,16 @@ typedef scs_int (*ScsLinSysResidual)(ScsLinSysWork *w, const scs_float *b,
                                      const scs_float *x, scs_float *r,
                                      scs_float *nr, scs_float *nb);
 
-/** Optional, only with a residual op: out = x + K^{-1} r, where x and r are
- * those of the latest residual call (the shared routine always calls it right
- * after that residual, with the same x; out aliases neither x nor r). For a
- * solver whose vectors live elsewhere (cuDSS keeps r and x on the GPU, so it
- * neither copies r to the host nor x back). Returns 0 on success, and prints
- * why it failed otherwise. */
+/** Optional, only with a residual op (SCS(lin_sys_shared_init) fails
+ * otherwise): out = x + K^{-1} r, where r is that of the latest residual call
+ * and x has the values of that call's x. The shared routine always calls it
+ * right after that residual, but x may be another vector with the same
+ * values, and out may be the very vector that call was given as x (out
+ * aliases neither x nor r): a solver that keeps x from the residual call
+ * keeps a copy (cuDSS copies it to the GPU), not the pointer. For a solver
+ * whose vectors live elsewhere (cuDSS keeps r and x on the GPU, so it neither
+ * copies r to the host nor x back). Returns 0 on success, and prints why it
+ * failed otherwise. */
 typedef scs_int (*ScsLinSysCorrect)(ScsLinSysWork *w, const scs_float *x,
                                     const scs_float *r, scs_float *out);
 
@@ -124,8 +128,8 @@ typedef struct {
   const ScsMatrix *A, *P;
   const scs_float *diag_r;
   scs_int n, m;
-  /* 1: a CG solver (no comparison of the warm start with zero; refinement
-   * restarts CG from x), 0: a direct solver */
+  /* 1: a CG solver (the warm start is CG's starting point, with no
+   * comparison with zero), 0: a direct solver (the correction form) */
   scs_int cg;
   ScsLinSysPlainSolve solve;
   ScsLinSysResidual residual; /* SCS_NULL: SCS's products */
@@ -141,7 +145,8 @@ typedef struct {
  * scs_init_lin_sys_work, with that function's A, P and diag_r, cg = 1 for a
  * CG solver (else 0), the solver's plain solve, and its residual and correct
  * ops or SCS_NULL. Allocates three vectors of n + m. Returns 0, or -1 if out
- * of memory (with a message; then call SCS(lin_sys_shared_free)).
+ * of memory or given a correct op without a residual op (with a message;
+ * then call SCS(lin_sys_shared_free)).
  */
 scs_int SCS(lin_sys_shared_init)(ScsLinSysShared *sh, const ScsMatrix *A,
                                  const ScsMatrix *P, const scs_float *diag_r,

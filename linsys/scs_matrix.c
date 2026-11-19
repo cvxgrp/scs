@@ -232,6 +232,11 @@ scs_int SCS(lin_sys_shared_init)(ScsLinSysShared *sh, const ScsMatrix *A,
                                  ScsLinSysResidual residual,
                                  ScsLinSysCorrect correct) {
   scs_int nm = MAX(A->n + A->m, 1);
+  if (correct && !residual) {
+    /* the correct op reads the r that the residual op left */
+    scs_printf("ERROR: a linear solver's correct op needs a residual op\n");
+    return -1;
+  }
   sh->A = A;
   sh->P = P;
   sh->diag_r = diag_r;
@@ -240,7 +245,7 @@ scs_int SCS(lin_sys_shared_init)(ScsLinSysShared *sh, const ScsMatrix *A,
   sh->cg = cg;
   sh->solve = solve;
   sh->residual = residual;
-  sh->correct = residual ? correct : SCS_NULL; /* reads the residual op's r */
+  sh->correct = correct;
   sh->b0 = (scs_float *)scs_calloc(nm, sizeof(scs_float));
   sh->r = (scs_float *)scs_calloc(nm, sizeof(scs_float));
   sh->c = (scs_float *)scs_calloc(nm, sizeof(scs_float));
@@ -262,11 +267,10 @@ void SCS(lin_sys_shared_free)(ScsLinSysShared *sh) {
 
 /* r = b - K x with K = [R_x + P, A'; A, -R_y] from sh's A, P and diag_r
  * (SCS's products); returns ||r||_inf, and ||b||_inf in *nb unless nb is
- * SCS_NULL. r aliases neither b nor x. The statements and their order are
- * those of src/scs.c's per-iteration residual at 064f48a9 (iter_residual),
- * with the right-hand side read from b, so the values are the same to the
- * bit wherever that right-hand side was rounded before the subtraction (it
- * is a load here, so no compiler can fuse it into the subtraction). */
+ * SCS_NULL. r aliases neither b nor x. The right-hand side is read from b
+ * (a load), so no compiler can fuse the rounding of the product that formed
+ * it into the subtraction; the order of the products and subtractions sets
+ * the last bits of r, and so of the refined solutions. */
 static scs_float kkt_residual(const ScsLinSysShared *sh, const scs_float *b,
                               const scs_float *x, scs_float *r,
                               scs_float *nb) {
@@ -315,10 +319,10 @@ static scs_int shared_residual(ScsLinSysShared *sh, ScsLinSysWork *w,
   return 0;
 }
 
-/* out = x + K^{-1} r for the x and r of the latest shared_residual call
- * (direct solvers): the solver's correct op, else the plain solve of a copy
- * of r plus x (one rounding: the scale is 1). out aliases neither x nor
- * sh->r. Returns the status of the solve. */
+/* out = x + K^{-1} r for the x and r of the latest shared_residual call:
+ * the solver's correct op, else the plain solve of a copy of r (for CG, from
+ * zero to tol) plus x (one rounding: the scale is 1). out aliases neither x
+ * nor sh->r. Returns the status of the solve. */
 static scs_int shared_correct(ScsLinSysShared *sh, ScsLinSysWork *w,
                               const scs_float *x, scs_float *out,
                               scs_float tol) {
@@ -394,15 +398,13 @@ scs_int SCS(lin_sys_shared_solve)(ScsLinSysShared *sh, ScsLinSysWork *w,
     }
     have_nr = 1;
     for (k = 0; k < max_refine_steps && nr > tol; ++k) {
-      /* the candidate c: CG restarted on b from x, to tol (its residual is
-       * recomputed below, since the one CG tracks can drift from it); or
-       * x + K^{-1}(b - K x) with the residual of x just computed */
-      if (sh->cg) {
-        memcpy(sh->c, sh->b0, vb);
-        status = sh->solve(w, sh->c, b, tol);
-      } else {
-        status = shared_correct(sh, w, b, sh->c, tol);
-      }
+      /* the candidate c = x + K^{-1}(b - K x), with the residual of x just
+       * computed in the full space; for CG a cold CG solve of it to tol.
+       * (Restarting CG on b from x instead works on CG's reduced residual
+       * and recomputes y from x, so it cannot remove the rounding that the
+       * full residual measures: in single precision it left x unchanged in
+       * most steps.) */
+      status = shared_correct(sh, w, b, sh->c, tol);
       if (status != 0) {
         return status;
       }

@@ -12,13 +12,14 @@
  * (linsys.h) for the linear solver the test binary is built with, checked
  * against residuals the test computes itself from the problem data: the warm
  * start (direct solvers: the correction form and its fallback to a plain
- * solve; CG: its starting point), refinement (direct solvers: steps; CG:
- * restarts), and the residual res it reports, measured with the K of the
- * solver's rule. K = [R_x + P, A'; A, -R_y] with a random A (two thirds of
- * its entries, scaled so that ||K||_inf is about 10), a P with off-diagonal
- * entries and R in [0.5, 1.5], so that ||x|| is about ||b||, at two sizes:
- * about 8e4 nonzeros in K, from cuDSS's default CUDSS_MIN_PRODUCT_NNZ on (cuDSS
- * multiplies on the GPU there), and about 1e4, below it.
+ * solve; CG: its starting point), the refinement steps (for CG, cold CG
+ * solves of the residual), and the residual res it reports, measured with
+ * the K of the solver's rule. K = [R_x + P, A'; A, -R_y] with a random A
+ * (two thirds of its entries, scaled so that ||K||_inf is about 10), a P with
+ * off-diagonal entries and R in [0.5, 1.5], so that ||x|| is about ||b||, at
+ * two sizes: about 8e4 nonzeros in K, from cuDSS's default
+ * CUDSS_MIN_PRODUCT_NNZ on (cuDSS multiplies on the GPU there), and about
+ * 1e4, below it.
  *
  * Every tolerance is relative to ||b||_inf and lies between the rounding of
  * a residual (eps (||b|| + ||K|| ||x||): about 1e-14 of ||b|| in double
@@ -29,53 +30,75 @@
  *
  * Phase 1, K as given to scs_init_lin_sys_work:
  *  (a) a plain solve: res is the test's ||b - K x|| and x is accurate;
- *  (b) from a warm start near the solution (1e-2 ||x|| away): res matches
- *      and x is accurate (a correction form that drops the warm start, or
- *      takes another vector for it, is off by about 1e-1 ||b||);
+ *  (b) from a warm start near the solution (1e-2 ||x|| away): res matches,
+ *      x is accurate (a correction form that drops the warm start, or takes
+ *      another vector for it, is off by about 1e-1 ||b||), and x differs
+ *      from the plain solve's in some bit, so the warm start was used (a
+ *      direct solver whose residual op did not report ||b|| would solve
+ *      plainly every time, and the other checks would still pass);
  *  (c) direct solvers, from a warm start 1e6 ||x|| away: the solver falls
  *      back to a plain solve (res at most 100 times the plain one's; the
  *      correction form from it would be about 1e6 times worse);
  *  (d) CG solvers, from a warm start so far (LSS_CG_FAR) that the rounding
  *      of b - K s leaves CG's tracked residual far below the true one (the
- *      premise, res > 100 tol, is asserted): two restarts bring res to at
- *      most 10 tol, and below the unrestarted res;
+ *      premise, res > 100 tol, is asserted): two refinement steps bring res
+ *      to at most 10 tol, and below the unrefined res;
  *  (e) refinement (max_refine_steps 3; tol 0 for direct solvers, CG's tol
  *      for CG): never worse than the plain solve (2 res for run-to-run
  *      variation), and res matches.
  * Phase 2, after scs_update_lin_sys_diag_r with R' = R (1 + LSS_DELTA) in
  * another array: the solver factorizes (or, for CG, solves with) K' while
  * SCS's products keep measuring K, so a plain solve's residual with K is
- * about LSS_DELTA ||R x||. A solver that measures with its own K (MKL
- * Pardiso unless built with MKL_NO_OWN_PRODUCTS, cuDSS from
- * CUDSS_MIN_PRODUCT_NNZ: the rule each states up front) measures K'.
- *  (g) res is the residual with the K of the solver's rule; the two K's
+ * about LSS_DELTA ||R x||, and a refinement step x + K'^{-1}(b - K x)
+ * contracts it by about LSS_DELTA / (1 + LSS_DELTA). A solver that measures
+ * with its own K (MKL Pardiso unless built with MKL_NO_OWN_PRODUCTS, cuDSS
+ * from CUDSS_MIN_PRODUCT_NNZ: the rule each states up front) measures K'.
+ *  (f) res is the residual with the K of the solver's rule; the two K's
  *      residuals differ by at least 10 LSS_TOL ||b|| (asserted, so the rule
  *      is observable);
- *  (h) direct solvers with SCS's products: the correction form from the
+ *  (g) direct solvers with SCS's products: the correction form from the
  *      plain solution reduces the residual at least twofold (the warm start
- *      was used; a step contracts by about LSS_DELTA / (1 + LSS_DELTA)); a
- *      warm start 1e6 ||x|| away gives the plain residual (the fallback);
- *      refinement with at most 1, 2 and 5 steps gives strictly decreasing
- *      residuals, at most half and at most 1e-2 of the plain one (steps are
- *      taken, kept only when better, and max_refine_steps is honoured); tol
- *      twice the plain residual takes no step, half of it exactly one;
- *      max_refine_steps 0 takes none;
- *  (i) CG under the mismatch: restarts solve with K' again, so they cannot
- *      remove it; the residual with 5 restarts is never above that with none;
- *  (j) solvers with their own K (no mismatch to refine): tol twice the plain
+ *      was used); a warm start 1e6 ||x|| away gives the plain residual (the
+ *      fallback);
+ *  (h) solvers with SCS's products: refinement with at most 1, 2 and 5 steps
+ *      gives strictly decreasing residuals, the first above 3e-2 and at most
+ *      half of the plain one (one step was taken, not two) and the last at
+ *      most 1e-2 of it; direct solvers: tol twice the plain residual takes
+ *      no step, half of it exactly one, and max_refine_steps 0 none;
+ *  (i) solvers with their own K (no mismatch to refine): tol twice the plain
  *      residual, and refinement with tol 0, still give accurate solutions
  *      whose res matches, through the solver's own multiplies.
+ * Phase 3, solvers with SCS's products, R'' = R (1 + delta) with steps that
+ * do not contract:
+ *  (j) delta LSS_DELTA_WORSE: the first candidate is worse than the plain
+ *      solve and is not kept, so 5 steps leave the plain residual;
+ *  (k) delta LSS_DELTA_SLOW: a step shrinks the residual by only about a
+ *      third, so refinement stops after the first, and 5 steps give what 1
+ *      gives (no halving stop: about a fifth of it).
+ * Phases 2 and 3 pass scs_update_lin_sys_diag_r another array than the one
+ * given at init, which linsys.h rules out, on purpose: the shared routine
+ * keeps measuring with the init array (K) while the solver solves with the
+ * new one.
  */
 
 /* LSS_TOL: the bar of every accuracy and residual check, relative to
- * ||b||_inf (see above). LSS_DELTA: the relative change of R in phase 2,
- * far above the rounding of a residual and small enough that refinement
- * contracts fast. LSS_FAR: how far (times ||x||) the far warm start of the
- * direct solvers is. LSS_CG_TOL: the CG solvers' tolerance. LSS_CG_FAR: how
- * far the warm start of the CG restart case is: eps ||K s|| must be well
- * above 100 LSS_CG_TOL. */
+ * ||b||_inf (see above). LSS_DELTA: the relative change of R in phase 2, far
+ * above the rounding of a residual and small enough that refinement
+ * contracts fast (about 0.09 a step: 1 step gives 0.09 times the plain
+ * residual and 2 steps 0.008, either side of the bar 3e-2). LSS_DELTA_WORSE,
+ * LSS_DELTA_SLOW: those of phase 3, where a step multiplies the error in
+ * R-dominated rows by about delta / (1 + delta). -1.2: the candidate is
+ * worse (kept anyway, 5 steps would give 1.2 times the plain residual).
+ * -0.67: it is better but does not halve the residual (1 step gives 0.67
+ * times it, and so do 5; without the stop 5 steps give 0.13 times, below
+ * the bar of half of 1 step's). LSS_FAR: how far (times ||x||) the far warm
+ * start of the direct solvers is. LSS_CG_TOL: the CG solvers' tolerance.
+ * LSS_CG_FAR: how far the warm start of the CG case (d) is: eps ||K s|| must
+ * be well above 100 LSS_CG_TOL. */
 #define LSS_TOL (1e-3)
 #define LSS_DELTA (1e-1)
+#define LSS_DELTA_WORSE (-0.55)
+#define LSS_DELTA_SLOW (-0.4)
 #define LSS_FAR (1e6)
 #ifdef SFLOAT
 #define LSS_CG_TOL (1e-4)
@@ -260,6 +283,9 @@ static const char *lss_phase1(LssCase *c) {
   LSS_CALL(lss_solve(c, c->x, c->s, LSS_CG_TOL, 0, &res),
            "solve from a near warm start");
   LSS_CHECK(lss_check(c, "(b) near warm start", c->x, res, 1));
+  mu_assert("test_lin_sys_solve: the near warm start was ignored (x is the "
+            "plain solve's to the bit)",
+            memcmp(c->x, c->xp, nm * sizeof(scs_float)) != 0);
   if (!c->cg) {
     /* (c) a warm start far from the solution: the fallback */
     for (i = 0; i < nm; ++i) {
@@ -272,7 +298,7 @@ static const char *lss_phase1(LssCase *c) {
               "instead of solving plainly",
               res <= 100. * res_p);
   } else {
-    /* (d) CG restarts */
+    /* (d) CG refinement from a very far warm start */
     for (i = 0; i < nm; ++i) {
       c->s[i] = LSS_CG_FAR * rand_scs_float();
     }
@@ -283,9 +309,10 @@ static const char *lss_phase1(LssCase *c) {
               "very far warm start did not drift from the true one",
               res0 > 100. * LSS_CG_TOL);
     LSS_CALL(lss_solve(c, c->x, c->s, LSS_CG_TOL, 2, &res),
-             "CG with restarts from a very far warm start");
-    LSS_CHECK(lss_check(c, "(d) the same, with 2 restarts", c->x, res, 0));
-    mu_assert("test_lin_sys_solve: CG's restarts did not reach the tolerance",
+             "CG with refinement from a very far warm start");
+    LSS_CHECK(lss_check(c, "(d) the same, with 2 steps", c->x, res, 0));
+    mu_assert("test_lin_sys_solve: CG's refinement did not reach the "
+              "tolerance",
               res <= 10. * LSS_CG_TOL && res < res0);
   }
   /* (e) refinement: never worse */
@@ -302,10 +329,13 @@ static const char *lss_phase1(LssCase *c) {
 static const char *lss_phase2(LssCase *c) {
   scs_int i, nm = c->nm;
   scs_float res, res1, res2, res_p, ref_k, ref_k2, xn;
-  /* (g) plain: res with the K of the solver's rule */
+  /* the tol of refinement to the limit: CG needs one above 0, and stops
+   * there */
+  scs_float tol0 = c->cg ? LSS_CG_TOL : 0.;
+  /* (f) plain: res with the K of the solver's rule */
   LSS_CALL(lss_solve(c, c->xp, SCS_NULL, LSS_CG_TOL, 0, &res_p),
            "plain solve after the update");
-  LSS_CHECK(lss_check(c, "(g) plain after the update", c->xp, res_p, c->own));
+  LSS_CHECK(lss_check(c, "(f) plain after the update", c->xp, res_p, c->own));
   ref_k = lss_ref_residual(c->A, c->P, c->dr, c->b, c->xp, c->r);
   ref_k2 = lss_ref_residual(c->A, c->P, c->dr2, c->b, c->xp, c->r);
   mu_assert("test_lin_sys_solve: premise: the two K's residuals do not "
@@ -313,52 +343,52 @@ static const char *lss_phase2(LssCase *c) {
             ABS(ref_k - ref_k2) >= 10. * LSS_TOL * c->nb);
   xn = SCS(norm_inf)(c->xp, nm);
   if (c->own) {
-    /* (j) the solver's own K follows the update: nothing to refine, but
+    /* (i) the solver's own K follows the update: nothing to refine, but
      * the calls run through its multiplies */
     LSS_CALL(lss_solve(c, c->x, SCS_NULL, 2. * res_p, 5, &res),
              "own K: solve with a tol already met");
-    LSS_CHECK(lss_check(c, "(j) tol twice the plain residual", c->x, res, 1));
-    LSS_CALL(lss_solve(c, c->x, SCS_NULL, c->cg ? LSS_CG_TOL : 0., 3, &res),
+    LSS_CHECK(lss_check(c, "(i) tol twice the plain residual", c->x, res, 1));
+    LSS_CALL(lss_solve(c, c->x, SCS_NULL, tol0, 3, &res),
              "own K: refined solve");
-    LSS_CHECK(lss_check(c, "(j) refined, at most 3 steps", c->x, res, 1));
+    LSS_CHECK(lss_check(c, "(i) refined, at most 3 steps", c->x, res, 1));
     scs_printf("test_lin_sys_solve: %s measures with its own K, which "
                "follows the update: no mismatch to refine\n",
                scs_get_lin_sys_method());
     return SCS_NULL;
   }
-  if (c->cg) {
-    /* (i) CG restarts solve with K' again: never worse, no gain */
-    LSS_CALL(lss_solve(c, c->x, SCS_NULL, LSS_CG_TOL, 5, &res),
-             "CG with restarts under the mismatch");
-    LSS_CHECK(lss_check(c, "(i) CG, 5 restarts", c->x, res, 0));
-    mu_assert("test_lin_sys_solve: CG's restarts made the solve worse",
-              res <= res_p + LSS_TOL * c->nb);
-    return SCS_NULL;
+  if (!c->cg) {
+    /* (g) direct solvers with SCS's products: K' solves, K residuals */
+    LSS_CALL(lss_solve(c, c->x, c->xp, 0., 0, &res),
+             "correction form from the plain solution");
+    LSS_CHECK(lss_check(c, "(g) warm start = plain solution", c->x, res, 0));
+    mu_assert("test_lin_sys_solve: the warm start near the solution was not "
+              "used (the residual did not halve)",
+              res <= 0.5 * res_p);
+    for (i = 0; i < nm; ++i) {
+      c->s[i] = LSS_FAR * xn * rand_scs_float();
+    }
+    LSS_CALL(lss_solve(c, c->x, c->s, 0., 0, &res), "far warm start");
+    LSS_CHECK(lss_check(c, "(g) far warm start", c->x, res, 0));
+    mu_assert("test_lin_sys_solve: a far warm start was not refused",
+              res <= 2. * res_p);
   }
-  /* (h) direct solvers with SCS's products: K' solves, K residuals */
-  LSS_CALL(lss_solve(c, c->x, c->xp, 0., 0, &res),
-           "correction form from the plain solution");
-  LSS_CHECK(lss_check(c, "(h) warm start = plain solution", c->x, res, 0));
-  mu_assert("test_lin_sys_solve: the warm start near the solution was not "
-            "used (the residual did not halve)",
-            res <= 0.5 * res_p);
-  for (i = 0; i < nm; ++i) {
-    c->s[i] = LSS_FAR * xn * rand_scs_float();
-  }
-  LSS_CALL(lss_solve(c, c->x, c->s, 0., 0, &res), "far warm start");
-  LSS_CHECK(lss_check(c, "(h) far warm start", c->x, res, 0));
-  mu_assert("test_lin_sys_solve: a far warm start was not refused",
-            res <= 2. * res_p);
-  LSS_CALL(lss_solve(c, c->x, SCS_NULL, 0., 1, &res1), "1 step");
+  /* (h) refinement steps contract the mismatch */
+  LSS_CALL(lss_solve(c, c->x, SCS_NULL, tol0, 1, &res1), "1 step");
   LSS_CHECK(lss_check(c, "(h) at most 1 step", c->x, res1, 0));
-  LSS_CALL(lss_solve(c, c->x, SCS_NULL, 0., 2, &res2), "2 steps");
+  LSS_CALL(lss_solve(c, c->x, SCS_NULL, tol0, 2, &res2), "2 steps");
   LSS_CHECK(lss_check(c, "(h) at most 2 steps", c->x, res2, 0));
-  LSS_CALL(lss_solve(c, c->x, SCS_NULL, 0., 5, &res), "5 steps");
+  LSS_CALL(lss_solve(c, c->x, SCS_NULL, tol0, 5, &res), "5 steps");
   LSS_CHECK(lss_check(c, "(h) at most 5 steps", c->x, res, 0));
-  mu_assert("test_lin_sys_solve: refinement steps did not contract, or more "
-            "steps than allowed were taken",
+  mu_assert("test_lin_sys_solve: refinement steps did not contract",
             res_p > res1 && res1 > res2 && res1 <= 0.5 * res_p &&
                 res <= 1e-2 * res_p);
+  mu_assert("test_lin_sys_solve: max_refine_steps 1 took more than one step",
+            res1 > 3e-2 * res_p);
+  if (c->cg) {
+    /* CG's tol is also its accuracy, so the tol cases are the direct
+     * solvers' */
+    return SCS_NULL;
+  }
   LSS_CALL(lss_solve(c, c->x, SCS_NULL, 2. * res_p, 5, &res), "tol met");
   LSS_CHECK(lss_check(c, "(h) tol twice the plain residual", c->x, res, 0));
   mu_assert("test_lin_sys_solve: refined below a tol already met",
@@ -374,6 +404,40 @@ static const char *lss_phase2(LssCase *c) {
   return SCS_NULL;
 }
 
+/* phase 3: the solver solves with dr2 = R (1 + delta), steps that do not
+ * contract; returns an error message or SCS_NULL */
+static const char *lss_phase3(LssCase *c, scs_float delta) {
+  scs_float res, res1, res_p;
+  scs_float tol0 = c->cg ? LSS_CG_TOL : 0.;
+  LSS_CALL(lss_solve(c, c->xp, SCS_NULL, LSS_CG_TOL, 0, &res_p),
+           "plain solve, steps that do not contract");
+  LSS_CHECK(lss_check(c, delta < -0.5 ? "(j) plain" : "(k) plain", c->xp,
+                      res_p, 0));
+  LSS_CALL(lss_solve(c, c->x, SCS_NULL, tol0, 1, &res1), "1 step");
+  LSS_CHECK(lss_check(c, delta < -0.5 ? "(j) at most 1 step"
+                                      : "(k) at most 1 step",
+                      c->x, res1, 0));
+  LSS_CALL(lss_solve(c, c->x, SCS_NULL, tol0, 5, &res), "5 steps");
+  LSS_CHECK(lss_check(c, delta < -0.5 ? "(j) at most 5 steps"
+                                      : "(k) at most 5 steps",
+                      c->x, res, 0));
+  if (delta < -0.5) {
+    /* (j) LSS_TOL ||b|| for the run-to-run variation of a GPU solve */
+    mu_assert("test_lin_sys_solve: a refinement step that made the residual "
+              "larger was kept",
+              res <= res_p + LSS_TOL * c->nb);
+  } else {
+    /* (k) */
+    mu_assert("test_lin_sys_solve: premise: the first step did not lower "
+              "the residual",
+              res1 < res_p);
+    mu_assert("test_lin_sys_solve: refinement went on after a step that did "
+              "not halve the residual",
+              res >= 0.5 * res1);
+  }
+  return SCS_NULL;
+}
+
 /* both phases at one size; returns an error message or SCS_NULL */
 static const char *lss_size(scs_int n, scs_int m) {
   scs_int i;
@@ -381,6 +445,9 @@ static const char *lss_size(scs_int n, scs_int m) {
   LssCase c;
   scs_float *diag_r = (scs_float *)scs_calloc(n + m, sizeof(scs_float));
   scs_float *diag_r2 = (scs_float *)scs_calloc(n + m, sizeof(scs_float));
+  scs_float *diag_r3 = (scs_float *)scs_calloc(n + m, sizeof(scs_float));
+  scs_float delta3[2] = {LSS_DELTA_WORSE, LSS_DELTA_SLOW};
+  scs_int k;
   const char *fail = SCS_NULL;
   memset(&c, 0, sizeof(c));
   ran_start(17);
@@ -411,7 +478,9 @@ static const char *lss_size(scs_int n, scs_int m) {
     fail = lss_phase1(&c);
     if (!fail) {
       /* the solver solves with R' = R (1 + LSS_DELTA), in another array
-       * (kept alive: CG keeps the pointer); SCS's products keep diag_r */
+       * (kept alive: CG keeps the pointer); SCS's products keep diag_r. On
+       * purpose against linsys.h's rule that a new R is written into the
+       * init array (see above). */
       for (i = 0; i < c.nm; ++i) {
         diag_r2[i] = diag_r[i] * (1. + LSS_DELTA);
       }
@@ -422,12 +491,25 @@ static const char *lss_size(scs_int n, scs_int m) {
         fail = lss_phase2(&c);
       }
     }
+    for (k = 0; k < 2 && !fail && !c.own; ++k) {
+      /* phase 3, the same way: R'' = R (1 + delta) in a third array */
+      for (i = 0; i < c.nm; ++i) {
+        diag_r3[i] = diag_r[i] * (1. + delta3[k]);
+      }
+      c.dr2 = diag_r3;
+      if (scs_update_lin_sys_diag_r(c.p, diag_r3) != 0) {
+        fail = "test_lin_sys_solve: scs_update_lin_sys_diag_r failed";
+      } else {
+        fail = lss_phase3(&c, delta3[k]);
+      }
+    }
   }
   scs_free_lin_sys_work(c.p);
   lss_free_matrix(A);
   lss_free_matrix(P);
   scs_free(diag_r);
   scs_free(diag_r2);
+  scs_free(diag_r3);
   scs_free(c.b);
   scs_free(c.x);
   scs_free(c.xp);

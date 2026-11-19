@@ -78,14 +78,13 @@ void scs_free_lin_sys_work(ScsLinSysWork *w);
  *  CG solvers (conjugate gradients on the reduced system, CPU and GPU):
  *  1. CG from `s` (its first n entries; y is computed from x), or from
  *     zero, until the residual CG tracks is below `tol`.
- *  2. Refinement, if `max_refine_steps` > 0: the true residual
- *     \f$\|b - K x\|_\infty\f$ is computed (the residual CG tracks can drift
- *     from it, in single precision or from a warm start far from x), and
- *     while it is above `tol` and fewer than `max_refine_steps` restarts were
- *     made, CG is restarted on b from x, to `tol`. A restart's x replaces x
- *     only if its residual is strictly smaller (else x stays and the restarts
- *     stop); they also stop after a kept restart that did not at least halve
- *     the residual. Each restart costs CG iterations and a multiply by K.
+ *  2. Refinement, if `max_refine_steps` > 0: as for the direct solvers, with
+ *     \f$K^{-1}(b - K x)\f$ a CG solve from zero to `tol`. The residual is
+ *     computed in the full space with the multiplies below: the one CG
+ *     tracks, on the reduced system, can drift from it (in single precision
+ *     or from a warm start far from x) and has a higher rounding floor, and
+ *     y is computed from x, so restarting CG on b from x could not remove
+ *     either. Each step costs CG iterations and a multiply by K.
  *
  *  The multiplies by K (warm start, refinement, `res`) use the solver's own
  *  copy of K where it has one, by a rule fixed when `scs_init_lin_sys_work`
@@ -102,18 +101,23 @@ void scs_free_lin_sys_work(ScsLinSysWork *w);
  *               the first n), or `SCS_NULL`. Not changed; must not alias `b`.
  *  @param  tol  The accuracy asked for, as \f$\|b - K x\|_\infty\f$. CG
  *               solvers stop at it (smaller is more accurate and costs more
- *               CG iterations) and restart toward it; they need `tol` > 0.
- *               Direct solvers refine toward it, and ignore it when
- *               `max_refine_steps` is 0. Below the rounding level of the
- *               residual (about machine epsilon times
+ *               CG iterations), and their refinement steps solve to it; they
+ *               need `tol` > 0. SCS's CG solvers return x = 0 for a b with
+ *               \f$\|b\|_\infty \le 10^{-12}\f$, and the CPU one makes no
+ *               CG iteration from a residual below 1e-12, so a smaller `tol`
+ *               is not reached. Direct solvers refine toward it, and ignore
+ *               it when `max_refine_steps` is 0. Below the rounding level of
+ *               the residual (about machine epsilon times
  *               \f$\|b\|_\infty + \|K\|_\infty \|x\|_\infty\f$) a step only
  *               measures rounding, and the halving test stops it.
- *  @param  max_refine_steps  At most this many refinement steps (direct
- *               solvers) or restarts (CG solvers); 0 for none.
+ *  @param  max_refine_steps  At most this many refinement steps; 0 for none.
  *  @param  res  If not `SCS_NULL`, set to \f$\|b - K x\|_\infty\f$ for the
  *               returned x and the given b, with the multiplies above.
  *               Cost: a copy of b and a multiply by K, unless refinement
- *               computed it. Asking for it never changes x.
+ *               computed it. Asking for it never changes x. A NaN entry of
+ *               the residual may be missed by the max (as by SCS's
+ *               `norm_inf`), so a finite `*res` does not show that x is
+ *               finite.
  *  @return 0 on success; nonzero if a solve or a multiply failed (b and
  *          `*res` are then unspecified).
  *

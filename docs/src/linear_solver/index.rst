@@ -622,8 +622,9 @@ does the same in five steps:
        }
 
    with 1 in place of the first 0 for an iterative solver such as conjugate
-   gradients (its refinement then restarts it from its solution, see
-   :code:`linsys.h`). This allocates three vectors of :math:`n + m` numbers
+   gradients (its warm start is then the solver's starting point, and each
+   refinement step a solve from zero of the residual, computed in the full
+   space; see :code:`linsys.h`). This allocates three vectors of :math:`n + m` numbers
    and keeps the three pointers: SCS keeps :code:`A`, :code:`P` and
    :code:`diag_r` alive until :code:`scs_free_lin_sys_work`, leaves
    :code:`A` and :code:`P` unchanged and writes each new :math:`R` into the
@@ -643,8 +644,8 @@ does the same in five steps:
 
 With that, SCS's refinement behaves with your solver as with the bundled
 ones: the warm start (the correction form and its comparison with zero, or
-the starting point of an iterative solver), the refinement steps or
-restarts, and the residuals are the shared routine's, with SCS's own
+the starting point of an iterative solver), the refinement steps, and the
+residuals are the shared routine's, with SCS's own
 multiplies by :math:`K` from the problem data. Only your plain solve's
 accuracy and cost differ. :code:`linsys/scs_matrix.h` is not installed with
 SCS's headers, so this is for solvers compiled with SCS's sources, as every
@@ -671,10 +672,13 @@ of the second :code:`SCS_NULL`::
     static scs_int my_correct(ScsLinSysWork *w, const scs_float *x,
                               const scs_float *r, scs_float *out);
 
-It sets :code:`out` to :math:`x + K^{-1} r`, where :code:`x` and :code:`r` are
-those of the residual call the shared routine always makes just before, so
-the residual function may keep :math:`r` (and :math:`x`) where the solver
-keeps its vectors and need not write the :code:`r` it is given. cuDSS does
+It sets :code:`out` to :math:`x + K^{-1} r`, where :code:`r` is that of the
+residual call the shared routine always makes just before and :code:`x` has
+the values of that call's :code:`x`. So the residual function may keep
+:math:`r` where the solver keeps its vectors, and need not write the
+:code:`r` it is given; if it keeps :math:`x` too, it keeps a copy, not the
+pointer: :code:`x` may then be another vector with the same values, and
+:code:`out` the very vector the residual call was given as :code:`x`. cuDSS does
 this on the GPU (:code:`dev_residual` and :code:`dev_correct` in
 :code:`linsys/cudss/direct/private.c`), so that the residual never leaves
 the device. Decide whether to use your own multiplies once, in
@@ -689,19 +693,21 @@ with a message saying why.
 :code:`scs_solve_lin_sys` entirely itself, but then it must honour the whole
 of :code:`linsys.h`. :code:`res` must be the true residual of the returned
 :math:`x`, because SCS turns its refinement on and off by comparing it with
-its own residuals. A direct solver given :code:`s` should return the
+its own residuals. A direct solver given :code:`s` must return the
 correction form from it, and solve plainly when :math:`\|b - K s\|_\infty
 \ge \|b\|_\infty`. With :code:`max_refine_steps` above 0 it must take at most
-that many steps (a CG solver: restarts), keep a step only if it lowers the
-residual, and stop after one that does not halve it. A direct solver that
+that many steps :math:`x + K^{-1}(b - K x)` (a CG solver too, with the
+residual computed in the full space and solved from zero), keep a step only
+if it lowers the residual, and stop after one that does not halve it. A direct solver that
 ignores :code:`s` still gives correct answers, but SCS's refinement then
 cannot make its solves more accurate, which on badly scaled problems can keep
 SCS from reaching tight tolerances.
 
 **Tests.** :code:`test_lin_sys_solve` in the test suite checks the contract
 against residuals it computes itself: warm starts near and far from the
-solution (the correction form and its fallback), refinement and its limits,
-CG's restarts, and the residual with the :math:`K` of the solver's rule,
+solution (the correction form and its fallback), refinement and its limits
+(steps kept only when better, the halving stop, :code:`max_refine_steps`),
+and the residual with the :math:`K` of the solver's rule,
 before and after an update of :math:`R`. :code:`test_refine_perturbed` makes
 the solver factorize a different :math:`R` from the one SCS measures with, so
 that SCS's refinement fires (and, with a mismatch too large to contract, its
@@ -714,8 +720,8 @@ nonzeros).
 :code:`max_refine_steps` and :code:`res` are new, so a solver written for 3.3
 no longer compiles. Rename its solve :code:`plain_solve` (it keeps its 3.3
 meaning) and follow the steps above; the solver then behaves as the bundled
-solvers do. A solver written against the development versions between 3.3
-and 3.4, which had :code:`scs_lin_sys_residual`, :code:`scs_lin_sys_keep` and
+solvers do. A solver written against the unreleased development versions
+after 3.3, which had :code:`scs_lin_sys_residual`, :code:`scs_lin_sys_keep` and
 :code:`scs_lin_sys_correct`, deletes them; its own multiplies, if it has
 them, become a residual function as above.
 

@@ -768,9 +768,9 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
                            scs_float tol) {
   scs_int cg_its, max_iters;
-  /* the cold, high-accuracy solve is the one worth harvesting from (s ==
-   * SCS_NULL); warm-started solves, the restarts of scs_solve_lin_sys's
-   * refinement included, do not harvest */
+  /* the cold solves (s == SCS_NULL: the solve for g, and the refinement
+   * steps of scs_solve_lin_sys) are the ones worth harvesting from, the
+   * first one only (dfl_count == 0); warm-started solves do not harvest */
   p->dfl_harvest = (p->dfl_max > 0 && !s && p->dfl_count == 0);
 
   if (tol <= 0.) {

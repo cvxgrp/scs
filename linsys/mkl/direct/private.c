@@ -593,9 +593,7 @@ static scs_int prod_setup(ScsLinSysWork *p) {
 
 /* The residual op of the shared routine (ScsLinSysResidual, scs_matrix.h):
  * r = b - K x with MKL's product, *nr = ||r||_inf and *nb = ||b||_inf
- * (unless nb is SCS_NULL); the statements are those of the product hook
- * scs_lin_sys_residual at 064f48a9 and of the ||b|| its caller in src/scs.c
- * computed, so the values are the same */
+ * (unless nb is SCS_NULL) */
 static scs_int prod_residual(ScsLinSysWork *p, const scs_float *b,
                              const scs_float *x, scs_float *r, scs_float *nr,
                              scs_float *nb) {

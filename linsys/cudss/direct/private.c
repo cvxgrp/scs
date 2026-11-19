@@ -423,10 +423,10 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
  * amax and an axpy. SpMV uses CUSPARSE_SPMV_CSR_ALG2, which gives the same
  * result every run (CSR_ALG1, which SCS's GPU indirect solver uses, does
  * not), and amax and axpy are reproducible too, so these products add no
- * run-to-run variation; the cuDSS solve itself is not reproducible run to run (see
- * docs, "Reproducibility of the GPU solvers"). Cost: a second copy of K on
- * the GPU (both triangles, about twice the nonzeros of the stored one) and a
- * host copy of its values for updates of R.
+ * run-to-run variation; the cuDSS solve itself is not reproducible run to
+ * run (see docs, "Reproducibility of the GPU solvers"). Cost: a second copy
+ * of K on the GPU (both triangles, about twice the nonzeros of the stored
+ * one) and a host copy of its values for updates of R.
  * ---------------------------------------------------------------------- */
 #ifndef SFLOAT
 #define SCS_CUBLAS_IAMAX cublasIdamax
@@ -680,8 +680,9 @@ static scs_int dev_residual(ScsLinSysWork *p, const scs_float *b,
 
 /* The correct op of the shared routine (ScsLinSysCorrect, scs_matrix.h):
  * out = x + K^{-1} r, with r = d_r and x = d_xv from the latest
- * dev_residual (the shared routine calls this right after it, with the same
- * x, so x and r are not read here), all on the GPU, x + K^{-1} r left in
+ * dev_residual (the shared routine calls this right after it, with x of the
+ * same values, so x and r are not read here; out may be the vector that call
+ * read x from, which d_xv copied), all on the GPU, x + K^{-1} r left in
  * d_sol and copied once to the host. Returns 0, or nonzero on an error. */
 static scs_int dev_correct(ScsLinSysWork *p, const scs_float *x,
                            const scs_float *r, scs_float *out) {
