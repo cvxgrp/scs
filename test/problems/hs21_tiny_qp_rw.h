@@ -10,6 +10,7 @@
 /* test read / write logic */
 static const char *hs21_tiny_qp_rw(void) {
   scs_int cold_iter;
+  scs_float scale;
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -113,9 +114,18 @@ static const char *hs21_tiny_qp_rw(void) {
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
   cold_iter = info.iter;
 
-  /* test warm-starting */
+  /* test warm-starting. scs() sets up a new workspace, which starts at
+   * stgs->scale; pass the scale the cold solve ended at (info.scale, as
+   * docs/src/api/info.rst says to for a new workspace), since with
+   * adaptive_scale the cold solve may have updated it and a warm start in
+   * another metric is not the warm start this checks. A broken warm start
+   * (a cold restart at info.scale) still takes more than half the cold
+   * iterations here. */
+  scale = stgs->scale;
+  stgs->scale = info.scale;
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
+  stgs->scale = scale;
   /* relative to the cold solve: an absolute cap encodes the iteration
    * count of one particular metric and breaks whenever the scaling
    * changes, even though the warm solve is correct */
