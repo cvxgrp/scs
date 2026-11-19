@@ -413,18 +413,41 @@ builds also use :math:`0.2` for :code:`CG_TOL_FACTOR` and :math:`1.5` for
 
 Deflation keeps :math:`2n` numbers per vector in memory (:math:`60n` by
 default), and a harvest takes a further :math:`n` numbers per window entry and
-:math:`2n` per vector while it runs (:math:`150n` by default). Two environment
-variables change this for a run without recompiling. Both are read once, when
-the solver is set up (:code:`scs_init`):
+:math:`2n` per vector while it runs (:math:`150n` by default). That is much
+more than CG itself needs (a few vectors of length :math:`n`). Two constants
+in :code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
 
-* :code:`SCS_DEFLATE` sets the number of deflation vectors in place of
-  :code:`DEFLATE_VECTORS`. :code:`SCS_DEFLATE=0` turns deflation off.
-* :code:`SCS_EIGCG_WIN` sets the size of the eigCG window, the number of CG
-  vectors that a harvest keeps in memory (default 60, :code:`EIGCG_WINDOW` in
-  :code:`linsys/cpu/indirect/private.c`). The window is never smaller than
-  three times the number of deflation vectors, so with the default 30 vectors
-  it is 90 and a smaller :code:`SCS_EIGCG_WIN` has no effect unless
-  :code:`SCS_DEFLATE` is lowered as well.
+* :code:`DEFLATE_VECTORS` (default 30) is the number of deflation vectors.
+  More vectors take more of the smallest eigenvalues out of the solves, for
+  more memory and more work per solve. :code:`0` turns deflation off, which
+  gives plain preconditioned CG with no extra memory.
+* :code:`EIGCG_WINDOW` (default 60) is the size of the eigCG window, the
+  number of CG vectors that a harvest keeps in memory. A larger window
+  compresses the CG history less often, for more memory while the harvest
+  runs. The window is never smaller than three times the number of deflation
+  vectors, so with the default 30 vectors it is 90 and a smaller
+  :code:`EIGCG_WINDOW` has no effect unless :code:`DEFLATE_VECTORS` is lowered
+  as well.
+
+To change them, define them when compiling. With the Makefile, pass them in
+:code:`CFLAGS` and rebuild from scratch (:code:`make purge` first, since
+:code:`make` does not rebuild objects when only the flags change):
+
+.. code:: bash
+
+  make purge
+  make CFLAGS="-DDEFLATE_VECTORS=0"
+
+With CMake, pass them in :code:`CMAKE_C_FLAGS` when configuring:
+
+.. code:: bash
+
+  cmake -DCMAKE_C_FLAGS="-DDEFLATE_VECTORS=10 -DEIGCG_WINDOW=40" ..
+
+A negative value stops the compilation with an error. Lowering
+:code:`DEFLATE_VECTORS`, or setting it to 0, is the way to save memory with the
+indirect solver on a problem where :math:`n` is very large. See also
+:ref:`compile_flags`.
 
 The indirect method has the advantage of not requiring an expensive
 factorization but typically is slower on a per-iteration basis. In most cases
@@ -440,9 +463,8 @@ The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU. It runs conjugate gradients with the same diagonal preconditioner,
 tolerance schedule and warm start as the CPU indirect solver, but it does not
-harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` and the
-:code:`SCS_DEFLATE` and :code:`SCS_EIGCG_WIN` environment variables have no
-effect on it. Usually the direct GPU solver will be faster than this solver.
+harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` and
+:code:`EIGCG_WINDOW` have no effect on it. Usually the direct GPU solver will be faster than this solver.
 
 .. _cudss_solver:
 
