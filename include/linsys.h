@@ -83,8 +83,8 @@ void scs_free_lin_sys_work(ScsLinSysWork *w);
  *     computed in the full space with the multiplies below: the one CG
  *     tracks, on the reduced system, can drift from it (in single precision
  *     or from a warm start far from x) and has a higher rounding floor, and
- *     y is computed from x, so restarting CG on b from x could not remove
- *     either. Each step costs CG iterations and a multiply by K.
+ *     y is computed from x, so restarting CG on b from x would remove only
+ *     part of either. Each step costs CG iterations and a multiply by K.
  *
  *  The multiplies by K (warm start, refinement, `res`) use the solver's own
  *  copy of K where it has one, by a rule fixed when `scs_init_lin_sys_work`

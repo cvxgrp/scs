@@ -103,7 +103,11 @@ static scs_int rp_solve(scs_float delta, scs_int max_iters, ScsInfo *info,
   stgs->adaptive_scale = 0;
   w = scs_init(d, k, stgs);
   if (w) {
-    /* the solver's R, kept alive until scs_finish (CG keeps the pointer) */
+    /* the solver's R, kept alive until scs_finish (CG keeps the pointer).
+     * Another array than w->diag_r, on purpose against linsys.h's rule that
+     * a new R is written into the array given at init: SCS's products (the
+     * shared routine's, and the CG residual in src/scs.c) keep measuring
+     * with that array (K) while the solver solves with this one (K'). */
     dr = (scs_float *)scs_calloc(d->n + d->m, sizeof(scs_float));
     for (i = 0; i < d->n + d->m; ++i) {
       dr[i] = w->diag_r[i] * (1. + delta);

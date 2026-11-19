@@ -401,9 +401,11 @@ scs_int SCS(lin_sys_shared_solve)(ScsLinSysShared *sh, ScsLinSysWork *w,
       /* the candidate c = x + K^{-1}(b - K x), with the residual of x just
        * computed in the full space; for CG a cold CG solve of it to tol.
        * (Restarting CG on b from x instead works on CG's reduced residual
-       * and recomputes y from x, so it cannot remove the rounding that the
-       * full residual measures: in single precision it left x unchanged in
-       * most steps.) */
+       * and recomputes y from x, so it removes only part of the rounding
+       * that the full residual measures: in single precision, one step from
+       * the same x at CG_BEST_TOL in SCS's iterations, a restart's candidate
+       * left a median 0.3 to 0.93 of the residual and was no better than x
+       * in 12 to 46% of the steps, this step's 5e-4 to 0.066 and 0 to 7%.) */
       status = shared_correct(sh, w, b, sh->c, tol);
       if (status != 0) {
         return status;
