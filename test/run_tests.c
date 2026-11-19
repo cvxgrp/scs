@@ -29,6 +29,8 @@
 #include "problems/test_root_plus.h"
 #include "problems/test_soc_sizes.h"
 #include "problems/test_solve_refine.h"
+#include "problems/test_lin_sys_solve.h"
+#include "problems/test_refine_perturbed.h"
 #include "problems/test_box_cone.h"
 #include "problems/test_psd_n1.h"
 #include "problems/test_solver_options.h"
@@ -50,7 +52,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 90
+#define MU_TOTAL_TESTS 92
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -158,6 +160,8 @@ static void all_tests(void) {
   mu_run_test(test_solve_refine_idle);
   mu_run_test(test_solve_refine_csv);
   mu_run_test(test_solve_refine_correction);
+  mu_run_test(test_lin_sys_solve);
+  mu_run_test(test_refine_perturbed);
   mu_run_test(rob_gauss_cov_est);
   mu_run_test(complex_PSD);
   mu_run_test(sd_and_complex_sd);
