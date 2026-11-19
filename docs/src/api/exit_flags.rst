@@ -30,7 +30,9 @@ in the :code:`include/scs.h` file.
    * - Indeterminate (numerical errors when recovering solution) DEPRECATED
      - -3
      - :code:`SCS_INDETERMINATE`
-   * - Failed (usually a data input error)
+   * - Failed: a data input error, or an internal error such as a failed
+       linear solve (the printed message says which; an internal error asks
+       you to open an issue)
      - -4
      - :code:`SCS_FAILED`
    * - Interrupted (received SIGINT)

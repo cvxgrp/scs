@@ -47,16 +47,14 @@ badly scaled or ill-conditioned :math:`K`, and conjugate gradients stops at a
 tolerance. So SCS checks the solves it depends on, by computing their
 residuals, and when one is not accurate enough it refines it: it solves with
 :math:`K` for the residual and adds the correction to the solution that
-residual belongs to. For the :math:`(c, -b)` solve and with the indirect solvers that is an
-extra solve; for the direct solvers' per-iteration solves it takes the place
-of the plain solve (see below). Two solves are checked, each in its own way:
+residual belongs to. For the :math:`(c, -b)` solve and with the indirect
+solvers that is an extra solve; for the direct solvers' per-iteration solves
+it takes the place of the plain solve (see below). Two solves are checked, each in its own way:
 
 - the solve for the right-hand side :math:`(c, -b)`, made at the start of a
   solve and whenever :math:`R` changes and used in every iteration until the
-  next change, is checked every time it is made against a fixed relative
-  threshold (:math:`10^{-12}`, :math:`10^{-5}` in single precision), and
-  refined for at most three steps while it is above it (see
-  :ref:`g_refinement`);
+  next change, is solved to about machine precision every time it is made,
+  with at most five refinement steps (see :ref:`g_refinement`);
 - each iteration's solve is checked every 25 iterations (every iteration
   while an indirect solver is refining) against SCS's own residuals, and made
   more accurate while its error would hold the iterates back (see
@@ -80,9 +78,11 @@ solve when its factorization had to perturb a pivot (``iparm[7] = 0`` with
 SCS's linear solve takes a warm start, a tolerance and a number of refinement
 steps (see :ref:`new_linear_solver`). With the direct solvers, the
 per-iteration refinement passes the previous iteration's solution as the warm
-start and decides when; with the indirect solvers, and for the solve for
-:math:`(c, -b)`, SCS refines with plain solves and its own products (see
-below).
+start and decides when; with the indirect solvers, SCS refines each
+iteration's solve with plain solves and its own products (see below). The
+solve for :math:`(c, -b)` passes its first solution as the warm start, a
+tolerance at about machine precision and at most five steps in all, with
+every solver (see below).
 
 .. _g_refinement:
 
@@ -97,39 +97,68 @@ function in :ref:`scaling`, where it is written :math:`r`), and :math:`\tau g`
 is subtracted from that iteration's solve. An error in an iteration's own
 solve affects one iteration; an error in :math:`g` is repeated in every
 iteration rather than averaged out, and can limit the accuracy SCS reaches. So
-:math:`g` is checked every time it is computed, against a fixed small
-threshold, rather than against SCS's current residuals as each iteration's
-solve is.
+:math:`g` is solved to about machine precision every time it is computed,
+rather than as accurately as SCS's current residuals need, as each
+iteration's solve is.
 
-**The check.** After the solve, SCS computes the residual :math:`r = (c, -b) -
-K g` with its own products from the problem data, also with a linear solver
-that computes the per-iteration products itself (see "Who computes the
-multiplies" in :ref:`refinement`), and divides :math:`\|r\|_\infty` by the
-size of the terms whose rounding errors it is compared with: the largest
-:math:`\infty`-norm among :math:`(c, -b)`, :math:`R g`, :math:`A^\top g_y`,
-:math:`P g_x + A^\top g_y` and :math:`A g_x`. If this relative residual is
-above :math:`10^{-12}` (:math:`10^{-5}` in single precision, which cannot
-reach :math:`10^{-12}`; ``G_SOLVE_TOL`` in ``include/glbopts.h``), SCS refines
-:math:`g`.
+**The tolerance.** A plain solve (with conjugate gradients: from zero, to
+the solvers' best accuracy, :code:`CG_BEST_TOL`) gives :math:`g_0` and its
+residual :math:`r = (c, -b) - K g_0`. Computing :math:`r` rounds each row by
+a few machine epsilons :math:`\epsilon` of the size of the terms it is
+computed from, so SCS asks for
 
-**The refinement.** Each step solves :math:`K d = r` and computes the residual
-of :math:`g + d`. SCS keeps :math:`g + d` unless its residual is larger (or
-not finite), in which case it keeps :math:`g` and stops. It also stops once
-the residual is at most the threshold, after a step that does not at least
-halve the residual, or after three steps (``G_REFINE_MAX_STEPS``). So the
-refined :math:`g` never has a larger residual than the first solve.
+.. math::
 
-**Cost.** One multiply by :math:`K` each time :math:`g` is solved for, paid
-even when the first solve is already accurate enough, plus one solve and one
-multiply per refinement step. With a direct solver each solve reuses the
-existing factorization, so this is cheap next to factorizing. With the
-indirect solvers the solve for :math:`g` is a conjugate gradient solve
-started from zero, to the solvers' best accuracy (:code:`CG_BEST_TOL`).
-Conjugate gradients stops on the absolute residual of its reduced system,
-which on badly scaled data can leave a much larger relative residual here, so
-:math:`g` is checked and refined with them too. There each refinement step is
-another conjugate gradient solve from zero, which can take up to about as
-many conjugate gradient iterations as the solve for :math:`g` itself.
+  \|(c, -b) - K g\|_\infty \le 4 \epsilon \, \big\| |(c, -b)| + |K|\,|g_0| \big\|_\infty
+
+(absolute values entry by entry; :code:`G_TOL_EPS` in
+``include/glbopts.h``), with :math:`\epsilon` the machine epsilon of the
+precision SCS is built in. Measured row by row, rather than as
+:math:`\|(c, -b)\|_\infty + \|K\|_\infty \|g_0\|_\infty` (the normwise
+backward error), the size follows the terms each row actually has: on badly
+scaled problems the normwise size was up to :math:`10^9` times larger, and
+would have accepted residuals far above rounding.
+
+**The refinement.** If :math:`g_0` misses the tolerance, the solve is
+repeated with :math:`g_0` as its warm start, to the tolerance, with at most
+five steps in all (:code:`G_REFINE_MAX_STEPS`). For a direct solver the
+first step is the correction form from :math:`g_0`; for conjugate gradients
+it is a solve started from :math:`g_0`. Each further step computes the
+residual with :math:`K` and adds the solution of :math:`K d = r` (by
+conjugate gradients from zero to the tolerance, with them). A step is kept
+only if it lowers the residual, the steps stop after one that does not at
+least halve it, and SCS keeps :math:`g_0` unless the result is better, so
+:math:`g` never has a larger residual than the first solve. Conjugate
+gradients solves a reduced system whose own rounding can be far above that
+of :math:`K`'s residual on badly scaled data; a step solves only for the
+correction, so it is not limited by that rounding.
+
+**If it fails.** The solve should never fail. If the linear solver returns
+an error, :math:`g` is not finite, or the residual of the refined :math:`g`
+is more than half the size of its terms (:code:`G_FAIL_REL_RES`: not even
+the leading digit right; with working solvers it measured at most about
+:math:`10^{-2}` of the size, and that only where the solver could do no
+better, such as conjugate gradients at its iteration limit), SCS stops with
+status :code:`SCS_FAILED` (see :ref:`exit_flags`) and prints what failed,
+that this indicates a bug in SCS or its linear solver, and a request to open
+an issue at https://github.com/cvxgrp/scs/issues with the problem data (the
+``write_data_filename`` setting saves it). If :math:`b` or :math:`c`
+contains a NaN or infinite entry, SCS stops with :code:`SCS_FAILED` and says
+so instead.
+
+**Cost.** One multiply by :math:`K` each time :math:`g` is solved for (the
+residual of :math:`g_0`) and one pass over :math:`A` and :math:`P` for the
+size of the terms, paid even when the first solve is already accurate
+enough; when it is not, one multiply more, plus one solve and one multiply
+per step. With a direct solver each solve reuses the existing factorization,
+so this is cheap next to factorizing. With the indirect solvers each step
+costs the conjugate gradient iterations that reach the tolerance. On random
+SOCPs the refinement took up to about 30% of the first solve's conjugate
+gradient iterations in double precision, and up to about two thirds in
+single precision. Where conjugate gradients cannot reach the tolerance
+within its iteration limit (:math:`10 n`), each step runs to that limit, so
+on such problems the refinement can cost up to about five times the first
+solve.
 
 .. _refinement:
 
@@ -277,8 +306,9 @@ OpenMP, and stays deterministic: each entry is summed by one thread in a fixed
 order). MKL Pardiso computes them with MKL's threaded sparse matrix-vector
 product instead, and cuDSS from 60,000 nonzeros in :math:`K` computes them on
 the GPU, where the residual stays (the warm start is copied to the GPU). The
-decisions above are the same either way; only the cost of the multiply and
-its rounding change.
+solve for :math:`(c, -b)` makes its multiplies the same way. The decisions
+above are the same either way; only the cost of the multiply and its
+rounding change.
 
 What the solver's own multiplies buy is a cheaper iteration while the
 correction form is on. With cuDSS on 10 large LPs, QPs and SOCPs at
@@ -720,10 +750,12 @@ correction form from it, and solve plainly when :math:`\|b - K s\|_\infty
 \ge \|b\|_\infty`. With :code:`max_refine_steps` above 0 it must take at most
 that many steps :math:`x + K^{-1}(b - K x)` (a CG solver too, with the
 residual computed in the full space and solved from zero), keep a step only
-if it lowers the residual, and stop after one that does not halve it. A
-direct solver that ignores :code:`s` still gives correct answers, but SCS's
-refinement then cannot make its solves more accurate, which on badly scaled
-problems can keep SCS from reaching tight tolerances.
+if it lowers the residual, and stop after one that does not halve it. SCS
+asks for such steps to solve for :math:`(c, -b)` (see :ref:`g_refinement`),
+and stops with an error if that solve fails. A direct solver that ignores
+:code:`s` still gives correct answers, but SCS's refinement then cannot make
+its solves more accurate, which on badly scaled problems can keep SCS from
+reaching tight tolerances.
 
 **Tests.** :code:`test_lin_sys_solve` in the test suite checks the contract
 against residuals it computes itself: warm starts near and far from the
@@ -736,7 +768,10 @@ that SCS's refinement fires (and, with a mismatch too large to contract, its
 safeguard); a solver that measures with its own :math:`K` follows the update,
 sees no mismatch, and is skipped there with a message (MKL Pardiso, unless
 built with ``MKL_NO_OWN_PRODUCTS``; cuDSS from :code:`CUDSS_MIN_PRODUCT_NNZ`
-nonzeros).
+nonzeros). :code:`test_g_accuracy` checks that the solve for
+:math:`(c, -b)` reaches machine precision on a badly scaled problem, and
+that a solver given a far different :math:`R` (skipped likewise) makes SCS
+stop with :code:`SCS_FAILED` and the message asking to open an issue.
 
 **From SCS 3.3.** The solve was :code:`scs_solve_lin_sys(w, b, s, tol)`.
 :code:`max_refine_steps` and :code:`res` are new, so a solver written for 3.3
