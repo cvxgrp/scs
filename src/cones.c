@@ -972,13 +972,13 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * workspace is larger than that of the serial projection, so the extra
  * memory is at most (psd_nthreads - 1) times the serial PSD workspace, and
  * less when the large blocks go to few threads. The LAPACK calls for a block
- * pass the work-array sizes of that
- * block (psd_lsz), not the length of the arrays of the workspace: syevd and
- * heevd hand what is left of their work array to sytrd / hetrd and ormtr /
- * unmtr, which lower their block size to fit, so the blocking (and the
- * rounding) can depend on the size passed. Each block then runs the same
- * code with the same sizes on any thread, so with single-threaded BLAS the
- * iterates do not depend on the number of threads.
+ * pass the work-array sizes of that block (psd_lsz), not the length of the
+ * arrays of the workspace: syevd and heevd hand what is left of their work
+ * array to sytrd / hetrd and ormtr / unmtr, which lower their block size to
+ * fit, so the blocking (and the rounding) can depend on the size passed.
+ * Each block then runs the same code with the same sizes on any thread, so
+ * with single-threaded BLAS the iterates do not depend on the number of
+ * threads.
  *
  * The number of threads is the OpenMP thread count at setup, at most the
  * number of blocks with n > 1. A projection uses fewer threads when the
@@ -1365,10 +1365,14 @@ static scs_int alloc_psd_work_arrays(ScsPsdWork *w, blas_int lwork,
  *   (Cortex-A725) the gain was about 20% on 10 problems with NVPL, and qap8
  *   was 11-16% slower (two checks of 3 runs on a loaded machine).
  * - Speed, complex blocks (none in SDPLIB; single blocks on the M4 on one
- *   thread): heevd is faster than heevr on small blocks and on blocks with
- *   exactly repeated eigenvalues (0.57-0.89x for n = 32 to 200), but slower
- *   on blocks without: 1.06-1.28x for n = 100 to 400 with OpenBLAS 0.3.34,
- *   1.1-1.85x for n = 100 to 800 with Accelerate.
+ *   thread). On blocks without repeated eigenvalues heevd is slower than
+ *   heevr from about n = 64 on: 1.06-1.28x for n = 100 to 400 with OpenBLAS
+ *   0.3.34, 1.1-1.85x for n = 100 to 800 with Accelerate. Below that it is
+ *   faster with Accelerate (0.67-0.98x for n = 8 to 32), and with OpenBLAS
+ *   for n <= 12 and n = 32 to 48 but 1.1-1.3x slower at n = 16 to 24. On
+ *   blocks with exactly repeated eigenvalues it is faster up to n = 200
+ *   (0.57-0.89x for n = 32 to 200); at n = 400 0.80x with OpenBLAS and 1.08x
+ *   with Accelerate.
  * - Accuracy. syevd was as accurate or more (errors of 2-4e-15 relative to the
  *   largest entry of the projection against 3-9e-15, on blocks with exact
  *   multiplets).

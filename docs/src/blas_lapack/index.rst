@@ -222,44 +222,33 @@ What it costs and gains
 Earlier versions of SCS used the MRRR routine :code:`syevr` (:code:`heevr`).
 Compared with it, :code:`syevd`:
 
-* **is faster on real blocks**: on the SDPLIB problems (all real) the
-  projection took 31% to 51% less time per iteration (geometric mean over the
-  problems), and an iteration 28% to 47% less, with OpenBLAS and NVPL (on the
-  chip described below) and with Accelerate (on an Apple M4). With MKL (on an
-  AMD Zen 3, 14 of the problems) the projection took 29% to 38% less. It
-  gains most on blocks with exactly repeated eigenvalues, which
-  :code:`syevr` is slow on: 2.7 to 2.9 times faster on ``thetaG11``. With the
-  BLAS on 1 or 4 threads (on the fast cores of that chip) no problem took more
-  than 2.3% longer (``qap8`` with NVPL; with OpenBLAS on one thread this holds
-  for full solves, while a run of ``qpG11`` stopped after 75 iterations took
-  19% longer), with Accelerate none more than 1.8% (82 problems), and with MKL
-  none took longer. On one of that chip's slow cores the gain was smaller
-  (about 20% on 10 problems), and ``qap8`` took 11 to 16% longer (two checks of
-  three runs, on a loaded machine).
-* **can be slower on complex blocks**. SDPLIB has none, and complex blocks
-  were timed only one at a time, on an Apple M4 with the BLAS on one thread.
-  :code:`heevd` was faster than :code:`heevr` on small blocks and on blocks
-  with exactly repeated eigenvalues, but on blocks without, of size 100 to
-  400, it took 6% to 28% longer with OpenBLAS, and 10% to 85% longer with
-  Accelerate (sizes 100 to 800).
-* **needs more memory**: a work array of about :math:`2n^2` numbers for a
-  block of size :math:`n`, which also holds the rebuilt block, where
-  :code:`syevr` needed a separate :math:`n \times n` array for the
-  eigenvectors. The projection of a real block takes about :math:`3n^2`
-  floating-point numbers instead of :math:`2n^2`: in double precision 24 MB at
-  :math:`n = 1000`, 600 MB at :math:`n = 5000` and 1.2 GB at :math:`n = 7000`
-  (a solve with one block of size 5000 peaked at 873 MB instead of 608 MB). A
-  complex block takes about :math:`6n^2` instead of :math:`4n^2`.
+* **is faster on real blocks**: on the SDPLIB problems the projection takes
+  29% to 51% less time per iteration (geometric mean over the problems) with
+  OpenBLAS, NVPL, MKL and Apple Accelerate, and a whole iteration 28% to 47%
+  less (OpenBLAS, NVPL and Accelerate). It gains most on blocks with exactly
+  repeated eigenvalues, which :code:`syevr` is slow on: ``thetaG11`` is
+  projected 2.7 to 2.9 times faster. With the BLAS on one or four threads, no
+  problem's projection took more than 2.3% longer per iteration, except
+  ``qap8`` on a slow core of a chip with fast and slow cores (11% to 16%).
 * **is as accurate or more**: errors of :math:`2` to :math:`4 \times 10^{-15}`
   relative to the largest entry of the projection, against :math:`3` to
   :math:`9 \times 10^{-15}`, on blocks with repeated eigenvalues.
-* **starts the threads of a multithreaded BLAS at smaller blocks**. On a
-  20-core chip with 10 fast and 10 slow cores, with the BLAS on all 20, the
-  problems whose largest block had :math:`n = 45` to 130 took up to 2.1 times
-  as long in the projection as with :code:`syevr` (``control7`` with NVPL,
-  ``qap7`` 1.6 times with OpenBLAS), and OpenBLAS kept 15 to 20 cores busy
-  where :code:`syevr` used 1.4 to 12 of them. Blocks this small were faster
-  still with the BLAS on one thread, with either routine.
+* **needs more memory**: :code:`syevd`'s work array has about :math:`2n^2`
+  entries for a block of size :math:`n`, where :code:`syevr` needed
+  :math:`n^2` for the eigenvectors, so the projection of a real block takes
+  about :math:`3n^2` floating-point numbers instead of :math:`2n^2` (a complex
+  block :math:`6n^2` instead of :math:`4n^2`). In double precision that is
+  600 MB instead of 400 MB for a real block of size 5000.
+* **can be slower on complex blocks** (SDPLIB has none): on complex blocks
+  without repeated eigenvalues of size 100 and more, :code:`heevd` took 6% to
+  28% longer than :code:`heevr` with OpenBLAS (sizes 100 to 400) and 10% to
+  85% longer with Accelerate (sizes 100 to 800), timed one block at a time on
+  an Apple M4 with the BLAS on one thread.
+* **starts the threads of a multithreaded BLAS at smaller blocks**: with the
+  BLAS on all 20 cores of a chip with 10 fast and 10 slow cores, problems
+  whose largest block has size 45 to 130 took up to 2.1 times as long in the
+  projection (``control7``). Such problems are fastest with the BLAS on one
+  thread, with either routine (see below).
 
 Problems with small blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
