@@ -14,7 +14,7 @@
 
 /* A build with USE_PARALLEL_PSD and OpenMP projects the PSD blocks in parallel
  * (cones.c). Each block goes through the same LAPACK calls with the same
- * workspace sizes as in the serial projection, so with single-threaded BLAS
+ * work-array sizes as in the serial projection, so with single-threaded BLAS
  * the result is the same bit for bit, whatever the number of threads.
  * test_psd_parallel projects one vector with 1 and with 4 threads, and
  * test_psd_parallel_solve solves one problem both ways.
@@ -140,11 +140,12 @@ static scs_int psd_par_proj(ScsConeWork *c, const scs_float *v, scs_float *out,
 
 #ifdef _OPENMP
 /* 40 real blocks (four above LAPACK's blocking crossover, ~32, of different
- * sizes) and 4 complex ones: with workspaces sized per thread instead of the
- * serial sizes, the large blocks would round differently, and this mix shows
- * it. The largest block holds less than half of the work, so the parallel
- * path is used. Other cones before and after the PSD blocks check the
- * offsets. */
+ * sizes) and 4 complex ones: the workspaces are sized per thread, and if the
+ * LAPACK calls were passed the lengths of their thread's work arrays instead
+ * of the sizes of their own block, the large blocks would round differently,
+ * and this mix shows it. The largest block holds less than half of the
+ * work, so the parallel path is used. Other cones before and after the PSD
+ * blocks check the offsets. */
 static scs_int psd_par_s[] = {1,  2,  3, 5,  8, 13, 21, 1, 2,  3,  48, 5, 8, 13,
                               21, 1,  2, 3,  5, 8,  64, 21, 1, 2,  3,  5, 8, 13,
                               21, 1, 40, 3,  5, 8,  13, 36, 1, 2,  3,  5};

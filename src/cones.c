@@ -86,18 +86,14 @@ extern "C" {
 #endif
 
 /* LAPACK / BLAS Function Prototypes */
-void BLAS(syevr)(const char *jobz, const char *range, const char *uplo,
-                 blas_int *n, scs_float *a, blas_int *lda, scs_float *vl,
-                 scs_float *vu, blas_int *il, blas_int *iu, scs_float *abstol,
-                 blas_int *m, scs_float *w, scs_float *z, blas_int *ldz,
-                 blas_int *isuppz, scs_float *work, blas_int *lwork,
+/* The eigendecompositions of the PSD projection: divide and conquer, with the
+ * eigenvectors returned in place of the matrix (see proj_semi_definite_cone) */
+void BLAS(syevd)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
+                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                  blas_int *iwork, blas_int *liwork, blas_int *info);
 
-void BLASC(heevr)(const char *jobz, const char *range, const char *uplo,
-                  blas_int *n, SCS_BLAS_COMPLEX_TYPE *a, blas_int *lda,
-                  scs_float *vl, scs_float *vu, blas_int *il, blas_int *iu,
-                  scs_float *abstol, blas_int *m, scs_float *w,
-                  SCS_BLAS_COMPLEX_TYPE *z, blas_int *ldz, blas_int *isuppz,
+void BLASC(heevd)(const char *jobz, const char *uplo, blas_int *n,
+                  SCS_BLAS_COMPLEX_TYPE *a, blas_int *lda, scs_float *w,
                   SCS_BLAS_COMPLEX_TYPE *cwork, blas_int *lcwork,
                   scs_float *rwork, blas_int *lrwork, blas_int *iwork,
                   blas_int *liwork, blas_int *info);
@@ -118,8 +114,8 @@ void BLAS(scal)(const blas_int *n, const scs_float *sa, scs_float *sx,
 void BLASC(scal)(const blas_int *n, const SCS_BLAS_COMPLEX_TYPE *sa,
                  SCS_BLAS_COMPLEX_TYPE *sx, const blas_int *incx);
 
-/* Fallbacks for when the MRRR solvers (syevr / heevr) report no convergence,
- * see proj_semi_definite_cone. syev is also used by the spectral cones. */
+/* Fallbacks for when syevd / heevd report no convergence, see
+ * proj_semi_definite_cone. syev is also used by the spectral cones. */
 void BLAS(syev)(const char *jobz, const char *uplo, blas_int *n, scs_float *a,
                 blas_int *lda, scs_float *w, scs_float *work, blas_int *lwork,
                 blas_int *info);
@@ -326,8 +322,8 @@ void SCS(finish_cone)(ScsConeWork *c) {
     scs_int t, j;
     for (t = 0; t < MAX(c->psd_nthreads, 1); ++t) {
       ScsPsdWork *w = &(c->psd_tw[t]);
-      void *bufs[] = {w->Xs,  w->Z,  w->e,     w->work,   w->gamma,
-                      w->cXs, w->cZ, w->cwork, w->isuppz, w->iwork};
+      void *bufs[] = {w->Xs,  w->Z,     w->e,    w->work,
+                      w->gamma, w->cXs, w->cwork, w->iwork};
       for (j = 0; j < (scs_int)(sizeof(bufs) / sizeof(bufs[0])); ++j) {
         if (bufs[j])
           scs_free(bufs[j]);
@@ -335,6 +331,8 @@ void SCS(finish_cone)(ScsConeWork *c) {
     }
     scs_free(c->psd_tw);
   }
+  if (c->psd_lsz)
+    scs_free(c->psd_lsz);
 #endif
   if (c->psd_blk)
     scs_free(c->psd_blk);
@@ -956,7 +954,8 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * - Accelerate keeps threads of its own as well, which stayed mostly idle
  *   inside ours: at its default settings the parallel projection was 2.3 to
  *   3.3x faster than the serial one on 4 threads, and at most 17% slower
- *   than with Accelerate on one thread.
+ *   than with Accelerate on one thread (measured with syevr, before the
+ *   projection moved to syevd).
  * Neither check exists on Mach-O or Windows, and there is none for other
  * libraries, or for a BLAS other than MKL on another OpenMP runtime. There
  * the BLAS has to be put on one thread for the whole process, or the build
@@ -967,15 +966,19 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * The split over threads is fixed at setup: blocks in order of decreasing
  * estimated time (psd_block_cost) go to the least loaded thread (LPT
  * scheduling). Thread t projects its blocks (list t) with workspace
- * c->psd_tw[t], sized for its own largest block; psd_tw[0] is the workspace
- * of all the matrix cones and no other is larger, so the extra memory is at
- * most (psd_nthreads - 1) times the serial PSD workspace. Every workspace has
- * the same LAPACK work-array sizes, found for the largest blocks: syevr and
- * heevr pass the work array left after their own arrays to sytrd/hetrd, which
- * lower their block size to fit, so the blocking (and the rounding) of a
- * block larger than the crossover depends on the exact size. Each block then
- * runs the same code with the same sizes on any thread, so with
- * single-threaded BLAS the iterates do not depend on the number of threads.
+ * c->psd_tw[t], whose buffers and LAPACK work arrays are sized for the
+ * blocks of list t alone (psd_tw[0] also serves the logdet and
+ * sum-of-largest cones, which are projected after the PSD blocks). No
+ * workspace is larger than that of the serial projection, so the extra
+ * memory is at most (psd_nthreads - 1) times the serial PSD workspace, and
+ * less when the large blocks go to few threads. The LAPACK calls for a block
+ * pass the work-array sizes of that block (psd_lsz), not the length of the
+ * arrays of the workspace: syevd and heevd hand what is left of their work
+ * array to sytrd / hetrd and ormtr / unmtr, which lower their block size to
+ * fit, so the blocking (and the rounding) can depend on the size passed.
+ * Each block then runs the same code with the same sizes on any thread, so
+ * with single-threaded BLAS the iterates do not depend on the number of
+ * threads.
  *
  * The number of threads is the OpenMP thread count at setup, at most the
  * number of blocks with n > 1. A projection uses fewer threads when the
@@ -1041,7 +1044,10 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * Accelerate 1.0x at 300). At n = 1000 the two were about equal, and at 2000
  * the BLAS threads were ahead (1.7x to 1.9x against 1.2x to 1.4x). Blocks of
  * n = 1000 to 2000 were 1.3x to 2.1x faster with BLAS threads in #505
- * (OpenBLAS, MKL). */
+ * (OpenBLAS, MKL). All of this was measured with syevr. syevd starts the
+ * threads of a multithreaded BLAS at smaller blocks (see EIGENDECOMPOSITION
+ * OF THE PSD BLOCKS), which can move the crossover; it has not been measured
+ * again. */
 #ifndef PSD_PAR_BLAS_N
 #define PSD_PAR_BLAS_N (512)
 #endif
@@ -1134,7 +1140,16 @@ typedef struct {
  * relative sizes and the order of magnitude matter. n^3 alone makes small
  * blocks far too cheap: a block of n = 10 takes 1/650 of the time of one of
  * n = 300, not 1/27000. LAPACK takes a short path for n = 2 (0.2 us, but
- * 1.5 us with NVPL), and a block of n = 1 is a clamp. */
+ * 1.5 us with NVPL), and a block of n = 1 is a clamp.
+ * These times were measured with syevr / heevr, and the cubic has not been
+ * fitted to syevd / heevd. On the M4 on one thread, with Accelerate and with
+ * OpenBLAS 0.3.34, a real block now takes 0.33-0.75x of the estimate for
+ * n = 3 to 12 and 0.82-1.04x for n = 16 to 64; with Accelerate 0.55-0.85x
+ * for n = 100 to 500. A complex block takes 0.38-0.66x of it for n = 3 to 8
+ * and, with Accelerate, 1.13-1.44x for n = 48 to 400. Too high an estimate
+ * makes the threads look worth more next to PSD_PAR_THREAD_COST and
+ * PSD_PAR_LOCK_COST than they are, mostly for many small real blocks, so
+ * those may get more threads than is fastest. */
 static scs_float psd_block_cost(const ScsCone *k, scs_int b) {
   scs_float n = (scs_float)psd_block_n(k, b);
   if (b < k->ssize)
@@ -1290,37 +1305,36 @@ static scs_int set_up_psd_schedule(ScsConeWork *c, const ScsCone *k) {
 }
 
 #ifdef USE_LAPACK
-/* Buffers of a workspace for eigenvalues up to n, real matrices up to nr
- * and complex ones up to nc (none if 0) */
+/* Buffers of a workspace for eigenvalues up to n, real matrices up to nr,
+ * complex ones up to nc, and results of the spectral cones up to nz (none
+ * if 0). No buffer for the eigenvectors: syevd and heevd return them in Xs
+ * and cXs, and the PSD projections put their results in the work arrays. */
 static scs_int alloc_psd_bufs(ScsPsdWork *w, blas_int n, blas_int nr,
-                              blas_int nc) {
+                              blas_int nc, blas_int nz) {
   w->e = (scs_float *)scs_calloc(n, sizeof(scs_float));
   w->gamma = (scs_float *)scs_calloc(n, sizeof(scs_float));
-  w->isuppz = (blas_int *)scs_calloc(MAX(2, 2 * n), sizeof(blas_int));
-  if (!w->e || !w->gamma || !w->isuppz)
+  if (!w->e || !w->gamma)
     return -1;
-  if (nr > 0) {
-    w->Xs = (scs_float *)scs_calloc(nr * nr, sizeof(scs_float));
-    w->Z = (scs_float *)scs_calloc(nr * nr, sizeof(scs_float));
-    if (!w->Xs || !w->Z)
-      return -1;
-  }
-  if (nc > 0) {
-    w->cXs = (scs_complex_float *)scs_calloc(nc * nc, sizeof(scs_complex_float));
-    w->cZ = (scs_complex_float *)scs_calloc(nc * nc, sizeof(scs_complex_float));
-    if (!w->cXs || !w->cZ)
-      return -1;
-  }
+  if (nr > 0 &&
+      !(w->Xs = (scs_float *)scs_calloc((size_t)nr * nr, sizeof(scs_float))))
+    return -1;
+  if (nz > 0 &&
+      !(w->Z = (scs_float *)scs_calloc((size_t)nz * nz, sizeof(scs_float))))
+    return -1;
+  if (nc > 0 && !(w->cXs = (scs_complex_float *)scs_calloc(
+                      (size_t)nc * nc, sizeof(scs_complex_float))))
+    return -1;
   return 0;
 }
 
-/* LAPACK work arrays, the same sizes in every workspace (see above) */
+/* LAPACK work arrays of a workspace, of the given lengths */
 static scs_int alloc_psd_work_arrays(ScsPsdWork *w, blas_int lwork,
                                      blas_int liwork, blas_int lcwork) {
   w->lwork = lwork;
   w->liwork = liwork;
   w->lcwork = lcwork;
-  if (lwork > 0 && !(w->work = (scs_float *)scs_calloc(lwork, sizeof(scs_float))))
+  if (lwork > 0 &&
+      !(w->work = (scs_float *)scs_calloc(lwork, sizeof(scs_float))))
     return -1;
   if (liwork > 0 &&
       !(w->iwork = (blas_int *)scs_calloc(liwork, sizeof(blas_int))))
@@ -1331,29 +1345,229 @@ static scs_int alloc_psd_work_arrays(ScsPsdWork *w, blas_int lwork,
   return 0;
 }
 
-/* Workspaces of PSD threads 1, 2, ..., sized for each thread's largest
- * blocks, with the work-array sizes of psd_tw[0]; none on the serial path.
- * Each is at most the size of psd_tw[0], so the extra memory is at most
- * (psd_nthreads - 1) times the serial PSD workspace. */
-static scs_int set_up_psd_thread_work(ScsConeWork *c, const ScsCone *k) {
-  const ScsPsdWork *w0 = c->psd_tw;
-  scs_int t, j, b;
-  for (t = 1; t < c->psd_nthreads; ++t) {
-    blas_int nr = 0, nc = 0;
-    for (j = c->psd_tptr[t]; j < c->psd_tptr[t + 1]; ++j) {
-      b = c->psd_blk[j];
-      if (b < k->ssize)
-        nr = MAX(nr, (blas_int)k->s[b]);
-      else
-        nc = MAX(nc, (blas_int)k->cs[b - k->ssize]);
-    }
-    if (alloc_psd_bufs(&(c->psd_tw[t]), MAX(MAX(nr, nc), 1), nr > 1 ? nr : 0,
-                       nc > 1 ? nc : 0) < 0 ||
-        alloc_psd_work_arrays(&(c->psd_tw[t]), w0->lwork, w0->liwork,
-                              nc > 1 ? w0->lcwork : 0) < 0)
-      return -1;
-  }
+/*
+ * EIGENDECOMPOSITION OF THE PSD BLOCKS
+ *
+ * The projection of a PSD block is an eigendecomposition by LAPACK's syevd
+ * (heevd for a complex block): divide and conquer, with the eigenvectors
+ * returned in place of the block. SCS used syevr / heevr (MRRR) before.
+ * - Speed, real blocks. On SDPLIB, syevd took 31-51% less cone time per
+ *   iteration than syevr, and the iterations 28-47% less time in all
+ *   (geometric means: NVPL and OpenBLAS on a 20-core Arm GB10 at 1 and 4
+ *   threads on its fast cores and at 20 threads, Accelerate on an Apple M4);
+ *   with MKL on an AMD Zen 3 at 1 and 4 threads, 29-38% less cone time on 14
+ *   of the problems. The gain is largest on blocks with exactly repeated
+ *   eigenvalues, which MRRR is slow on: 2.7-2.9x on thetaG11. With the BLAS
+ *   on 1 or 4 fast cores of the GB10 no problem was more than 2.3% slower
+ *   (qap8, NVPL; OpenBLAS on one thread on full solves: a run of qpG11 capped
+ *   at 75 iterations was 19% slower), nor more than 1.8% with Accelerate (82
+ *   problems), and none was slower with MKL. On one of the GB10's slow cores
+ *   (Cortex-A725) the gain was about 20% on 10 problems with NVPL, and qap8
+ *   was 11-16% slower (two checks of 3 runs on a loaded machine).
+ * - Speed, complex blocks (none in SDPLIB). heevd rather than heevr (with
+ *   the heev fallback), because heevr did not save the 3% of solve time
+ *   that was set, before measuring, as the bar for a second routine. On 28
+ *   problems with complex blocks of n = 2 to 300 (quantum fidelity, PPT,
+ *   channel capacity, PhaseLift, phase synchronization, complex max-cut and
+ *   the test suite's) at eps 1e-4 and 1e-6, with Accelerate on an Apple M4
+ *   (1 and default threads), MKL on an AMD Zen 3 (1 and 4 threads), and
+ *   NVPL and OpenBLAS on one fast core of the GB10, both solved all 324
+ *   runs, in the same iterations, and heevr's shifted geometric mean of the
+ *   solve time (shift 1 s) was 0.997 of heevd's. heevr took more cone time
+ *   per iteration with every LAPACK: 1.07x with Accelerate, 1.15-1.21x with
+ *   MKL, 1.16x with NVPL and 1.25x with OpenBLAS; with MKL more at every
+ *   block size (1.10-1.16x above n = 150), and with every LAPACK more for
+ *   n <= 64 (1.07-1.43x). It took less only on larger blocks, with
+ *   Accelerate (0.91x for n = 65 to 150 and 0.71-0.74x above, so that the
+ *   solves with blocks of n = 200 to 300 took 0.67-0.83x as long) and with
+ *   NVPL above n = 150 (0.91x). Where about half of the eigenvalues came in
+ *   pairs closer than 1e-8 relative to each other (the PPT problems), heevr
+ *   took 1.07-1.69x as long as heevd to solve, with every LAPACK.
+ * - Accuracy. syevd was as accurate or more (errors of 2-4e-15 relative to the
+ *   largest entry of the projection against 3-9e-15, on blocks with exact
+ *   multiplets).
+ * - Memory. syevd needs a work array of 1 + 6n + 2n^2 floats (heevd: n^2 + 2n
+ *   complex numbers and 1 + 5n + 2n^2 floats), where syevr needed about 26n
+ *   and a separate n x n array for the eigenvectors, which syevd does not.
+ *   The work array also takes the result of the reconstruction (syrk / herk,
+ *   n^2 entries), so the workspace of a real block grows from about 2n^2 to
+ *   3n^2 floats, that of a complex block from 4n^2 to 6n^2: +n^2 floats per
+ *   real block, +8 MB at n = 1000, +200 MB at n = 5000 (+266 MB measured in
+ *   peak memory) and +390 MB at n = 7000 (+532 MB measured), in double.
+ * - Threads. syevd starts the threads of a multithreaded BLAS at smaller
+ *   blocks than syevr. With the BLAS on all 20 cores of the GB10 (10 fast and
+ *   10 slow), blocks of n = 45 to 130 took up to 4x longer, so that control7
+ *   took 2.1x the cone time per iteration (NVPL) and qap7 1.6x (OpenBLAS), and
+ *   OpenBLAS kept up to 20 cores busy where syevr kept 1.4 to 12. Small
+ *   blocks are fastest with the BLAS on one thread, with either routine.
+ * The fallback (#531, #532): when syevd / heevd reports no convergence (info
+ * > 0), the block is decomposed again by syev / heev (QR iteration: 1.4-3.6x
+ * the cone time of syevd when forced on 11 SDPLIB problems, which it solved
+ * as the other builds did). Apple Accelerate's dsyevd (classic LAPACK
+ * interface) failed with info = 322202 on a thetaG11 iterate (n = 801) that
+ * syev decomposes, and its dsyevr on the a*I + b*11' block of #531. The
+ * test-only build flag SCS_FORCE_PSD_FALLBACK sends every block through the
+ * fallback, so CI covers it.
+ *
+ * Work-array sizes: LAPACK's workspace query at the size of each block
+ * (psd_lsz), and at least the minimum that LAPACK documents (psd_min_sizes).
+ * Every call for a block passes these sizes, see PARALLEL PROJECTION above.
+ * With 32-bit LAPACK integers the minimum fits up to n = 32766: setup fails
+ * with a message for a larger block, before any LAPACK call (LAPACK computes
+ * the sizes in its own integers, which would overflow).
+ */
+
+/* The smallest work arrays that syevd and heevd accept for a block of size
+ * n >= 2 with eigenvectors (jobz = "V"), from the LAPACK documentation:
+ *   syevd: lwork >= 1 + 6n + 2n^2, liwork >= 3 + 5n,
+ *   heevd: lrwork >= 1 + 5n + 2n^2, lwork >= 2n + n^2 (complex numbers),
+ *          liwork >= 3 + 5n.
+ * In lw (work of a real block, rwork of a complex one), lcw (complex work, 0
+ * for a real block) and liw. In double, which holds them exactly far beyond
+ * where they overflow a blas_int. lw is the largest. */
+static void psd_min_sizes(double n, scs_int cplx, double *lw, double *lcw,
+                          double *liw) {
+  *lw = cplx ? 1. + 5. * n + 2. * n * n : 1. + 6. * n + 2. * n * n;
+  *lcw = cplx ? 2. * n + n * n : 0.;
+  *liw = 3. + 5. * n;
+}
+
+/* Whether the work arrays of a PSD block of size n >= 2 fit in a blas_int.
+ * Prints why not if they do not. */
+static scs_int psd_block_fits(scs_int n, scs_int cplx) {
+  double lw, lcw, liw;
+  psd_min_sizes((double)n, cplx, &lw, &lcw, &liw);
+  if (lw <= (double)SCS_BLAS_INT_MAX)
+    return 1;
+  scs_printf("FATAL: a %sPSD cone of size %li needs a LAPACK work array of "
+             "%.0f entries, more than LAPACK integers can count here (%.0f). "
+             "Use SCS with a BLAS and LAPACK with 64-bit integers (build "
+             "option BLAS64) for cones this large, and with 64-bit SCS "
+             "integers (DLONG) as well above size 46340.\n",
+             cplx ? "complex " : "", (long)n, lw, (double)SCS_BLAS_INT_MAX);
   return 0;
+}
+
+/* A size that LAPACK returns as a floating-point number, rounded up by one
+ * (as SCS always has: a float cannot hold every size above 2^24), or the
+ * minimum min_size when that is smaller or does not fit in a blas_int */
+static blas_int lapack_size(double queried, double min_size) {
+  double sz = queried + 1.;
+  /* also catches NaN */
+  if (!(sz >= min_size && sz <= (double)SCS_BLAS_INT_MAX))
+    sz = min_size;
+  return (blas_int)sz;
+}
+
+/* Work-array sizes of a PSD block of size n >= 2 (complex if cplx), in sz,
+ * from LAPACK's workspace query. w supplies the matrix and eigenvalue
+ * arguments, which a query does not touch: w->Xs (w->cXs for a complex
+ * block) and w->e must hold a block of size n. */
+static scs_int query_psd_block_sizes(ScsPsdWork *w, blas_int n, scs_int cplx,
+                                     ScsPsdLapackSizes *sz) {
+  blas_int neg_one = -1, info = 0, liwork_opt = 0;
+  double lw_min, lcw_min, liw_min;
+  psd_min_sizes((double)n, cplx, &lw_min, &lcw_min, &liw_min);
+  if (cplx) {
+    scs_complex_float lcwork_opt = {0.0};
+    scs_float lrwork_opt = 0.0;
+    BLASC(heevd)("V", "L", &n, SCS_BLAS_COMPLEX_CAST(w->cXs), &n, w->e,
+                 SCS_BLAS_COMPLEX_CAST(&lcwork_opt), &neg_one, &lrwork_opt,
+                 &neg_one, &liwork_opt, &neg_one, &info);
+    sz->lwork = lapack_size((double)lrwork_opt, lw_min);
+    sz->lcwork = lapack_size((double)lcwork_opt[0], lcw_min);
+  } else {
+    scs_float lwork_opt = 0.0;
+    BLAS(syevd)("V", "L", &n, w->Xs, &n, w->e, &lwork_opt, &neg_one,
+                &liwork_opt, &neg_one, &info);
+    sz->lwork = lapack_size((double)lwork_opt, lw_min);
+    sz->lcwork = 0;
+  }
+  if (info != 0) {
+    scs_printf("FATAL: %s workspace query failure, info = %li\n",
+               cplx ? "heevd" : "syevd", (long)info);
+    return -1;
+  }
+  sz->liwork = MAX(liwork_opt, (blas_int)liw_min);
+  return 0;
+}
+
+/* Sets up workspace t (c->psd_tw[t]) for the PSD blocks of list t: buffers
+ * for its largest real and complex blocks, the LAPACK work-array sizes of
+ * each of its blocks (c->psd_lsz) and work arrays for the largest of them.
+ * The workspace queries pass this workspace's buffers as the matrix and
+ * eigenvalue arguments, which a query does not touch; consecutive blocks of
+ * the same size and kind share one query, and blocks of size 1 call no
+ * LAPACK and keep zero sizes. n_spec is the largest logdet or
+ * sum-of-largest-eigenvalues cone that this workspace also serves (only
+ * workspace 0 does), or 0: it then gets the buffers of that size and the
+ * work array of the size those projections pass to syev (c->lwork_syev). */
+static scs_int set_up_psd_work(ScsConeWork *c, const ScsCone *k, scs_int t,
+                               blas_int n_spec) {
+  ScsPsdWork *w = &(c->psd_tw[t]);
+  /* the last query, real and complex */
+  ScsPsdLapackSizes last[2] = {{0, 0, 0}, {0, 0, 0}};
+  blas_int last_n[2] = {0, 0};
+  blas_int nr = 0, nc = 0, lwork = 0, liwork = 0, lcwork = 0;
+  scs_int j, j0 = 0, j1 = 0; /* list t: psd_blk[j0 .. j1 - 1] */
+  if (c->psd_nthreads > 0) {
+    j0 = c->psd_tptr[t];
+    j1 = c->psd_tptr[t + 1];
+  }
+  for (j = j0; j < j1; ++j) {
+    scs_int b = c->psd_blk[j];
+    if (b < k->ssize)
+      nr = MAX(nr, (blas_int)k->s[b]);
+    else
+      nc = MAX(nc, (blas_int)k->cs[b - k->ssize]);
+  }
+  /* a block of size 1 is a clamp and needs no buffer */
+  nr = nr > 1 ? nr : 0;
+  nc = nc > 1 ? nc : 0;
+  if (alloc_psd_bufs(w, MAX(MAX(MAX(nr, nc), n_spec), 1), MAX(nr, n_spec), nc,
+                     n_spec) < 0)
+    return -1;
+  for (j = j0; j < j1; ++j) {
+    scs_int b = c->psd_blk[j], cplx = b >= k->ssize;
+    blas_int n = (blas_int)(cplx ? k->cs[b - k->ssize] : k->s[b]);
+    if (n < 2)
+      continue;
+    if (n != last_n[cplx]) {
+      if (query_psd_block_sizes(w, n, cplx, &last[cplx]) < 0)
+        return -1;
+      last_n[cplx] = n;
+    }
+    c->psd_lsz[b] = last[cplx];
+    lwork = MAX(lwork, last[cplx].lwork);
+    liwork = MAX(liwork, last[cplx].liwork);
+    lcwork = MAX(lcwork, last[cplx].lcwork);
+  }
+#ifdef USE_SPECTRAL_CONES
+  /* The logdet and sum-of-largest projections eigendecompose with syev in
+   * this workspace's Xs, e and work. They pass c->lwork_syev, syev's own
+   * workspace query for the largest of these cones, not the length of the
+   * work array: that length depends on the PSD blocks of list 0, and so on
+   * the number of threads, which the blocking inside syev (and its rounding)
+   * then would too. Neither size bounds the other: a spectral cone can be
+   * larger than every PSD block, and syev's optimum (34n with Accelerate and
+   * netlib) is above syevd's minimum for n < 14. */
+  if (n_spec > 0) {
+    blas_int neg_one = -1, info = 0;
+    scs_float wkopt = 0.0;
+    BLAS(syev)("V", "L", &n_spec, w->Xs, &n_spec, w->e, &wkopt, &neg_one,
+               &info);
+    if (info != 0) {
+      scs_printf("FATAL: syev workspace query failure, info = %li\n",
+                 (long)info);
+      return -1;
+    }
+    /* syev's documented minimum: max(1, 3n - 1) */
+    c->lwork_syev =
+        lapack_size((double)wkopt, MAX(1., 3. * (double)n_spec - 1.));
+    lwork = MAX(lwork, c->lwork_syev);
+  }
+#endif
+  return alloc_psd_work_arrays(w, lwork, liwork, lcwork);
 }
 #endif
 
@@ -1365,39 +1579,27 @@ static scs_int set_up_psd_thread_work(ScsConeWork *c, const ScsCone *k) {
 static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
   scs_int i;
 #ifdef USE_LAPACK
-  ScsPsdWork *w0; /* the workspace of the matrix cones, and of PSD thread 0 */
-  scs_int real_mats = k->ssize > 0; /* whether Xs and Z are needed */
-  /* Max dim for eigenvalues (e) and integer work (isuppz) */
-  blas_int n_max = 1;
-  blas_int n_max_real = 1; /* Max dim for Real PSD matrix (Xs) */
-  blas_int n_max_csd = 1;  /* Max dim for Complex PSD matrix (cXs) */
+  scs_int t;
+  /* the largest logdet or sum-of-largest-eigenvalues cone, which workspace 0
+   * serves too (0 without one) */
+  blas_int n_spec = 0;
 
-  /* LAPACK Query Variables */
-  blas_int neg_one = -1, info = 0, m = 0;
-  blas_int d_i = 0;
-  scs_float d_f = 0.0, abstol = -1.0;
-  scs_float wkopt = 0.0;
-  blas_int iwkopt = 0;
-  scs_complex_float lcwork_opt = {0.0};
-  scs_float lrwork_opt = 0.0;
-  blas_int liwork_opt_c = 0;
-
-  /* Max workspace sizes across all cone types */
-  blas_int lwork_max = 0;
-  blas_int liwork_max = 0;
-  blas_int lcwork = 0;
-
-  /* Calculate Dimensions */
+  /* Fail before any allocation or LAPACK call if a PSD block's work arrays
+   * do not fit in a blas_int */
   for (i = 0; i < k->ssize; ++i) {
-    n_max = MAX(n_max, (blas_int)k->s[i]);
-    n_max_real = MAX(n_max_real, (blas_int)k->s[i]);
+    if (k->s[i] > 1 && !psd_block_fits(k->s[i], 0))
+      return -1;
   }
   for (i = 0; i < k->cssize; ++i) {
-    n_max = MAX(n_max, (blas_int)k->cs[i]);
-    n_max_csd = MAX(n_max_csd, (blas_int)k->cs[i]);
+    if (k->cs[i] > 1 && !psd_block_fits(k->cs[i], 1))
+      return -1;
   }
 
 #ifdef USE_SPECTRAL_CONES
+  /* LAPACK Query Variables */
+  blas_int neg_one = -1, info = 0;
+  scs_float wkopt = 0.0;
+
   blas_int n_max_logdet = 1;
   blas_int n_logdet_total = 0;
   blas_int n_max_sl = 1;
@@ -1429,90 +1631,25 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
       return -1;
   }
 
-  /* Update Max Real Dims based on Spectral needs */
-  real_mats = real_mats || k->dsize > 0 || k->sl_size > 0;
-  n_max = MAX(n_max, n_max_logdet);
-  n_max = MAX(n_max, n_max_sl);
-  n_max_real = MAX(n_max_real, n_max_logdet);
-  n_max_real = MAX(n_max_real, n_max_sl);
+  /* The logdet and sum-of-largest projections work in workspace 0 */
+  if (k->dsize > 0 || k->sl_size > 0)
+    n_spec = MAX(n_max_logdet, n_max_sl);
 #endif
 
-  /* Allocate the buffers: 'e' stores eigenvalues, 'isuppz' supports them
-   * (shared by Real/Complex), Xs and Z for real matrices, cXs and cZ for
-   * complex ones */
+  /* 1-2. One eigendecomposition workspace per PSD thread, each set up for
+   * the blocks of its own list with syevd's and heevd's workspace queries
+   * (see EIGENDECOMPOSITION OF THE PSD BLOCKS), and workspace 0 for the
+   * logdet and sum-of-largest cones as well. heevd's real 'rwork' array is
+   * the real 'work' array of a workspace. */
   c->psd_tw = (ScsPsdWork *)scs_calloc(MAX(c->psd_nthreads, 1),
                                        sizeof(ScsPsdWork));
-  if (!c->psd_tw)
+  c->psd_lsz = (ScsPsdLapackSizes *)scs_calloc(MAX(k->ssize + k->cssize, 1),
+                                               sizeof(ScsPsdLapackSizes));
+  if (!c->psd_tw || !c->psd_lsz)
     return -1;
-  w0 = c->psd_tw;
-  if (alloc_psd_bufs(w0, n_max, real_mats ? n_max_real : 0,
-                     k->cssize > 0 ? n_max_csd : 0) < 0)
-    return -1;
-
-  /* 1. Real PSD Workspace Query (syevr) */
-  if (real_mats) {
-    BLAS(syevr)("V", "A", "L", &n_max_real, w0->Xs, &n_max_real, &d_f, &d_f,
-                &d_i, &d_i, &abstol, &m, w0->e, w0->Z, &n_max_real, w0->isuppz,
-                &wkopt, &neg_one, &iwkopt, &neg_one, &info);
-
-    if (info != 0) {
-      scs_printf("FATAL: syevr workspace query failure, info = %li\n",
-                 (long)info);
+  for (t = 0; t < MAX(c->psd_nthreads, 1); ++t) {
+    if (set_up_psd_work(c, k, t, t == 0 ? n_spec : 0) < 0)
       return -1;
-    }
-    lwork_max = MAX(lwork_max, (blas_int)(wkopt + 1));
-    liwork_max = MAX(liwork_max, iwkopt);
-  }
-
-#ifdef USE_SPECTRAL_CONES
-  /* 1b. Spectral Workspace Query (syev)
-   *
-   * The logdet and sum-of-largest projections eigendecompose with syev, not
-   * syevr, but share the consolidated 'work' array sized above. Sizing that
-   * array from the syevr query alone shortchanges syev: both LAPACKs we
-   * measured (Apple Accelerate and netlib) report an optimum of 34n for
-   * syev against 33n for syevr, so every spectral syev call was running
-   * below its optimum. That stays above syev's *minimum* of 3n-1, so it
-   * costs block size rather than correctness, but a vendor whose optimum
-   * and minimum are closer together would push it under the minimum and
-   * syev would start failing with info = -8 deep inside a projection.
-   * Query syev too and keep whichever workspace is larger.
-   */
-  if (k->dsize > 0 || k->sl_size > 0) {
-    blas_int n_max_spectral = MAX(n_max_logdet, n_max_sl);
-
-    BLAS(syev)("V", "L", &n_max_spectral, w0->Xs, &n_max_spectral, w0->e, &wkopt,
-               &neg_one, &info);
-
-    if (info != 0) {
-      scs_printf("FATAL: syev workspace query failure, info = %li\n",
-                 (long)info);
-      return -1;
-    }
-    lwork_max = MAX(lwork_max, (blas_int)(wkopt + 1));
-  }
-#endif
-
-  /* 2. Complex PSD Workspace Query (heevr) */
-  if (k->cssize > 0) {
-    BLASC(heevr)("V", "A", "L", &n_max_csd, SCS_BLAS_COMPLEX_CAST(w0->cXs),
-                 &n_max_csd, &d_f, &d_f, &d_i, &d_i, &abstol, &m, w0->e,
-                 SCS_BLAS_COMPLEX_CAST(w0->cZ), &n_max_csd, w0->isuppz,
-                 SCS_BLAS_COMPLEX_CAST(&lcwork_opt), &neg_one, &lrwork_opt,
-                 &neg_one, &liwork_opt_c, &neg_one, &info);
-
-    if (info != 0) {
-      scs_printf("FATAL: heevr workspace query failure, info = %li\n",
-                 (long)info);
-      return -1;
-    }
-
-    lcwork = (blas_int)(lcwork_opt[0]);
-
-    /* heevr uses a real 'rwork' array. We alias this to the shared real 'work'
-     * array */
-    lwork_max = MAX(lwork_max, (blas_int)lrwork_opt);
-    liwork_max = MAX(liwork_max, liwork_opt_c);
   }
 
 #ifdef USE_SPECTRAL_CONES
@@ -1544,15 +1681,7 @@ static scs_int set_up_cone_work_spaces(ScsConeWork *c, const ScsCone *k) {
       return -1;
   }
 #endif
-
-  /* Final Consolidated Allocation
-   * w0->work aliases 'work' for syevr and 'rwork' for heevr
-   */
-  if (alloc_psd_work_arrays(w0, lwork_max, liwork_max, lcwork) < 0)
-    return -1;
-
-  /* the other PSD threads */
-  return set_up_psd_thread_work(c, k);
+  return 0;
 #else
   /* Non-LAPACK fallback check */
   if (k->ssize > 0 || k->cssize > 0) {
@@ -1624,6 +1753,33 @@ static void unpack_csd_lower(const scs_float *X, scs_int n,
   cXs[n * n - 1][0] = X[n * n - 1]; /* Last element */
   cXs[n * n - 1][1] = 0.0;
 }
+
+#ifdef SCS_FORCE_PSD_FALLBACK
+/* Test-only build flag: every syevd / heevd call of the PSD projection is
+ * treated as if it had not converged, after it has run and overwritten the
+ * block, so a test build projects every PSD block through the syev / heev
+ * fallback, which no LAPACK we test with reaches on the tests otherwise.
+ * psd_fallbacks counts the fallbacks, so that the tests can check that the
+ * flag reached the compiler. */
+scs_int SCS(psd_fallbacks) = 0;
+#endif
+
+/* Whether to decompose a block again with syev / heev after syevd / heevd
+ * returned info: when it reports no convergence (info > 0). Always, unless
+ * info < 0, under SCS_FORCE_PSD_FALLBACK. */
+static scs_int psd_fall_back(blas_int info) {
+#ifdef SCS_FORCE_PSD_FALLBACK
+  if (info < 0)
+    return 0;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+  SCS(psd_fallbacks)++;
+  return 1;
+#else
+  return info > 0;
+#endif
+}
 #endif
 
 /* Project one svec-packed block onto the PSD cone. When rho (the
@@ -1633,9 +1789,11 @@ static void unpack_csd_lower(const scs_float *X, scs_int n,
  * metric is then a diagonal congruence sandwich: with gamma_i =
  * w_ii^{-1/4}, project Gamma X Gamma and unscale. Positive homogeneity
  * of the cone makes any uniform factor in rho drop out, so the
- * historical scalar-per-block case reduces to the unscaled path. */
+ * historical scalar-per-block case reduces to the unscaled path. sz holds
+ * the LAPACK work-array sizes of the block (psd_lsz), which w has room for. */
 static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
                                        ScsPsdWork *w,
+                                       const ScsPsdLapackSizes *sz,
                                        const scs_float *rho) {
   scs_int scaled = 0;
   if (n == 0)
@@ -1650,9 +1808,9 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   blas_int nb = (blas_int)n;
   blas_int nb_p1 = (blas_int)(n + 1);
   blas_int info = 0, one_int = 1, ncols_z = 0;
+  blas_int lwork = sz->lwork, liwork = sz->liwork;
   scs_float zero = 0., one = 1., sqrt2 = SQRTF(2.0), sqrt2_inv = 1.0 / sqrt2;
-  scs_float abstol = -1.0, d_f = 0.0, sq_eig;
-  blas_int m = 0, d_i = 0;
+  scs_float sq_eig;
   scs_int first_idx = -1;
 
   /* Diagonal-congruence pre-scale (skip when the metric is uniform on
@@ -1685,22 +1843,19 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
   unpack_sd_lower(X, n, w->Xs);
   BLAS(scal)(&nb, &sqrt2, w->Xs, &nb_p1);
 
-  /* Solve Eigenproblem: Xs = Z * diag(e) * Z' */
-  BLAS(syevr)("V", "A", "L", &nb, w->Xs, &nb, &d_f, &d_f, &d_i, &d_i, &abstol,
-              &m, w->e, w->Z, &nb, w->isuppz, w->work, &w->lwork, w->iwork,
-              &w->liwork, &info);
-  if (info > 0) {
-    /* syevr's MRRR algorithm reported no convergence. Some LAPACKs (Apple
-     * Accelerate, see #531) do this on tightly clustered eigenvalues, e.g. a
-     * block a*I + b*11', which the QR-based syev handles. syevr has
-     * overwritten Xs, so unpack again and retry with syev; it leaves the
-     * eigenvectors in Xs, which then serves as Z. syev needs lwork >= 3n-1,
-     * well below syevr's minimum of 26n, so the work array is large enough. */
+  /* Solve Eigenproblem: Xs = Z * diag(e) * Z', with syevd, which returns the
+   * eigenvectors Z in Xs (see EIGENDECOMPOSITION OF THE PSD BLOCKS) */
+  BLAS(syevd)("V", "L", &nb, w->Xs, &nb, w->e, w->work, &lwork, w->iwork,
+              &liwork, &info);
+  if (psd_fall_back(info)) {
+    /* syevd reported no convergence, as Apple Accelerate's did on a thetaG11
+     * iterate. syevd has overwritten Xs, so unpack again and retry with the
+     * QR-based syev, which also returns the eigenvectors in Xs. syev needs
+     * lwork >= 3n - 1, well below syevd's minimum of 1 + 6n + 2n^2, so the
+     * work array is large enough. */
     unpack_sd_lower(X, n, w->Xs);
     BLAS(scal)(&nb, &sqrt2, w->Xs, &nb_p1);
-    BLAS(syev)("V", "L", &nb, w->Xs, &nb, w->e, w->work, &w->lwork, &info);
-    if (info == 0)
-      memcpy(w->Z, w->Xs, (size_t)n * n * sizeof(scs_float));
+    BLAS(syev)("V", "L", &nb, w->Xs, &nb, w->e, w->work, &lwork, &info);
   }
   /* info < 0: bad argument. info > 0: no convergence (from the fallback too).
    * Either way there is no eigendecomposition to project with, so fail (the
@@ -1716,7 +1871,7 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
         first_idx = i;
       }
       sq_eig = SQRTF(w->e[i]);
-      BLAS(scal)(&nb, &sq_eig, &w->Z[i * n], &one_int);
+      BLAS(scal)(&nb, &sq_eig, &w->Xs[i * n], &one_int);
     }
   }
   if (first_idx == -1) {
@@ -1724,17 +1879,18 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
     memset(X, 0, sizeof(scs_float) * get_sd_cone_size(n));
     return 0;
   }
-  /* Reconstruct Xs = Z * Z' */
+  /* Reconstruct Z * Z' (Z, scaled, in Xs) in the work array, which has room
+   * for it: lwork >= 1 + 6n + 2n^2 (psd_min_sizes) */
   ncols_z = (blas_int)(n - first_idx);
-  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &w->Z[first_idx * n], &nb,
-             &zero, w->Xs, &nb);
+  BLAS(syrk)("Lower", "NoTrans", &nb, &ncols_z, &one, &w->Xs[first_idx * n],
+             &nb, &zero, w->work, &nb);
 
   /* Rescale diagonals by 1/sqrt(2) */
-  BLAS(scal)(&nb, &sqrt2_inv, w->Xs, &nb_p1);
+  BLAS(scal)(&nb, &sqrt2_inv, w->work, &nb_p1);
 
   /* Extract lower triangular matrix back to X */
   for (i = 0; i < n; ++i) {
-    memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(w->Xs[i * (n + 1)]),
+    memcpy(&(X[i * n - ((i - 1) * i) / 2]), &(w->work[i * (n + 1)]),
            (n - i) * sizeof(scs_float));
   }
 
@@ -1759,7 +1915,8 @@ static scs_int proj_semi_definite_cone(scs_float *X, const scs_int n,
  * Projection: Complex Semi-Definite Cone
  */
 static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
-                                               ScsPsdWork *w) {
+                                               ScsPsdWork *w,
+                                               const ScsPsdLapackSizes *sz) {
   if (n == 0)
     return 0;
   if (n == 1) {
@@ -1771,9 +1928,9 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   scs_int i;
   blas_int nb = (blas_int)n;
   blas_int nb_p1 = (blas_int)(n + 1);
-  blas_int info = 0, one_int = 1, d_i = 0, ncols_z = 0;
-  scs_float zero = 0., one = 1., abstol = -1.0, d_f = 0.0;
-  blas_int m = 0;
+  blas_int info = 0, one_int = 1, ncols_z = 0;
+  blas_int lwork = sz->lwork, lcwork = sz->lcwork, liwork = sz->liwork;
+  scs_float zero = 0., one = 1.;
   scs_int first_idx = -1;
 
   /* Complex constants */
@@ -1787,23 +1944,21 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2),
               SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
 
-  /* Solve Eigenproblem. Note: w->work acts as rwork here. */
-  BLASC(heevr)("V", "A", "L", &nb, SCS_BLAS_COMPLEX_CAST(w->cXs), &nb, &d_f,
-               &d_f, &d_i, &d_i, &abstol, &m, w->e,
-               SCS_BLAS_COMPLEX_CAST(w->cZ), &nb, w->isuppz,
-               SCS_BLAS_COMPLEX_CAST(w->cwork), &w->lcwork, w->work, &w->lwork,
-               w->iwork, &w->liwork, &info);
-  if (info > 0) {
-    /* heevr reported no convergence: unpack again and retry with heev, as
-     * the real case retries with syev. heev needs lwork >= 2n-1 and
-     * rwork >= 3n-2, below heevr's minima of 2n and 24n. */
+  /* Solve Eigenproblem with heevd, which returns the eigenvectors in cXs.
+   * Note: w->work acts as rwork here. */
+  BLASC(heevd)("V", "L", &nb, SCS_BLAS_COMPLEX_CAST(w->cXs), &nb, w->e,
+               SCS_BLAS_COMPLEX_CAST(w->cwork), &lcwork, w->work, &lwork,
+               w->iwork, &liwork, &info);
+  if (psd_fall_back(info)) {
+    /* heevd reported no convergence: unpack again and retry with heev, as
+     * the real case retries with syev. heev needs lwork >= 2n - 1 complex
+     * numbers and rwork >= 3n - 2, below heevd's minima of 2n + n^2 and
+     * 1 + 5n + 2n^2. */
     unpack_csd_lower(X, n, w->cXs);
     BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2),
                 SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
     BLASC(heev)("V", "L", &nb, SCS_BLAS_COMPLEX_CAST(w->cXs), &nb, w->e,
-                SCS_BLAS_COMPLEX_CAST(w->cwork), &w->lcwork, w->work, &info);
-    if (info == 0)
-      memcpy(w->cZ, w->cXs, (size_t)n * n * sizeof(scs_complex_float));
+                SCS_BLAS_COMPLEX_CAST(w->cwork), &lcwork, w->work, &info);
   }
   /* info != 0: no eigendecomposition, so fail (see the real case) */
   if (info != 0)
@@ -1817,7 +1972,7 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
       }
       csq_eig[0] = SQRTF(w->e[i]);
       BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csq_eig),
-                  SCS_BLAS_COMPLEX_CAST(&w->cZ[i * n]), &one_int);
+                  SCS_BLAS_COMPLEX_CAST(&w->cXs[i * n]), &one_int);
     }
   }
   if (first_idx == -1) {
@@ -1826,23 +1981,24 @@ static scs_int proj_complex_semi_definite_cone(scs_float *X, const scs_int n,
     return 0;
   }
 
-  /* cXs = cZ * cZ' */
+  /* cwork = Z * Z' (Z, scaled, in cXs): the complex work array has room for
+   * it, lcwork >= 2n + n^2 (psd_min_sizes) */
   ncols_z = (blas_int)(n - first_idx);
   BLASC(herk)("Lower", "NoTrans", &nb, &ncols_z, &one,
-              SCS_BLAS_COMPLEX_CAST(&w->cZ[first_idx * n]), &nb, &zero,
-              SCS_BLAS_COMPLEX_CAST(w->cXs), &nb);
+              SCS_BLAS_COMPLEX_CAST(&w->cXs[first_idx * n]), &nb, &zero,
+              SCS_BLAS_COMPLEX_CAST(w->cwork), &nb);
 
   /* Rescale diagonals */
   BLASC(scal)(&nb, SCS_BLAS_COMPLEX_CAST(&csqrt2_inv),
-              SCS_BLAS_COMPLEX_CAST(w->cXs), &nb_p1);
+              SCS_BLAS_COMPLEX_CAST(w->cwork), &nb_p1);
 
   /* Repack into X */
   for (i = 0; i < n - 1; ++i) {
-    X[i * (2 * n - i)] = w->cXs[i * (n + 1)][0];
-    memcpy(&(X[i * (2 * n - i) + 1]), &(w->cXs[i * (n + 1) + 1]),
+    X[i * (2 * n - i)] = w->cwork[i * (n + 1)][0];
+    memcpy(&(X[i * (2 * n - i) + 1]), &(w->cwork[i * (n + 1) + 1]),
            2 * (n - i - 1) * sizeof(scs_float));
   }
-  X[n * n - 1] = w->cXs[n * n - 1][0];
+  X[n * n - 1] = w->cwork[n * n - 1][0];
   return 0;
 #else
   return -1;
@@ -2136,13 +2292,17 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
     w = &(c->psd_tw[t]);
 #endif
     for (j = c->psd_tptr[t]; j < c->psd_tptr[t + 1]; ++j) {
+      const ScsPsdLapackSizes *sz = SCS_NULL; /* none without LAPACK */
       b = c->psd_blk[j];
+#ifdef USE_LAPACK
+      sz = &(c->psd_lsz[b]);
+#endif
       if (b < k->ssize) {
-        st = proj_semi_definite_cone(&(x[c->psd_off[b]]), k->s[b], w,
+        st = proj_semi_definite_cone(&(x[c->psd_off[b]]), k->s[b], w, sz,
                                      rho ? &(rho[c->psd_off[b]]) : SCS_NULL);
       } else {
         st = proj_complex_semi_definite_cone(&(x[c->psd_off[b]]),
-                                             k->cs[b - k->ssize], w);
+                                             k->cs[b - k->ssize], w, sz);
       }
       if (st < 0)
         status = st;
