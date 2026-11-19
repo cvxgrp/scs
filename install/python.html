@@ -314,7 +314,8 @@ install from source.</p>
 <p>SCS then uses several threads for its matrix-vector products and for the
 projection onto exponential cones. The number of threads is the OpenMP thread
 count: set the environment variable <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> before starting
-Python.</p>
+Python. The same variable can also set the threads of the BLAS, see
+<a class="reference internal" href="../blas_lapack/index.html#blas-lapack-threads"><span class="std std-ref">Number of BLAS threads</span></a>.</p>
 <p>To also project the positive semidefinite (PSD) blocks of a problem in
 parallel, add the option <code class="code docutils literal notranslate"><span class="pre">use_parallel_psd</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_openmp<span class="o">=</span><span class="nb">true</span><span class="w"> </span>-Csetup-args<span class="o">=</span>-Duse_parallel_psd<span class="o">=</span><span class="nb">true</span><span class="w"> </span>.
