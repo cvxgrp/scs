@@ -487,7 +487,8 @@ static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   scs_float *tmp_m = p->tmp_m;
   ScsGpuMatrix *Ag = p->Ag;
 
-  if (CG_NORM(b, p->n + p->m) <= 1e-12) {
+  /* x = 0 if b is this small, see CG_ZERO_RHS_TOL */
+  if (CG_NORM(b, p->n + p->m) <= MIN(tol, CG_ZERO_RHS_TOL)) {
     memset(b, 0, (p->n + p->m) * sizeof(scs_float));
     return 0;
   }

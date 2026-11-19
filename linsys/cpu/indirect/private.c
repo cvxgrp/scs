@@ -584,8 +584,10 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *b,
   }
 #endif
 
-  /* check to see if we need to run CG at all */
-  if (CG_NORM(r, n) < MAX(tol, 1e-12)) {
+  /* check to see if we need to run CG at all: tol as given (the per-iteration
+   * solves' tol is at least CG_BEST_TOL, floored in src/scs.c; the solve for
+   * g asks for less) */
+  if (CG_NORM(r, n) < tol) {
     return 0;
   }
 
@@ -777,8 +779,8 @@ static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   }
 
   /* use p->tmp here, and in mat_vec, can do both since they don't overlap */
-  /* b = [rx; ry] */
-  if (CG_NORM(b, p->n + p->m) <= 1e-12) {
+  /* b = [rx; ry]; x = 0 if b is this small, see CG_ZERO_RHS_TOL */
+  if (CG_NORM(b, p->n + p->m) <= MIN(tol, CG_ZERO_RHS_TOL)) {
     memset(b, 0, (p->n + p->m) * sizeof(scs_float));
     return 0;
   }

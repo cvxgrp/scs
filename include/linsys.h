@@ -100,16 +100,17 @@ void scs_free_lin_sys_work(ScsLinSysWork *w);
  *  @param  s    Warm start, a guess of the solution (n + m entries; CG reads
  *               the first n), or `SCS_NULL`. Not changed; must not alias `b`.
  *  @param  tol  The accuracy asked for, as \f$\|b - K x\|_\infty\f$. CG
- *               solvers stop at it (smaller is more accurate and costs more
- *               CG iterations), and their refinement steps solve to it; they
- *               need `tol` > 0. SCS's CG solvers return x = 0 for a b with
- *               \f$\|b\|_\infty \le 10^{-12}\f$, and the CPU one makes no
- *               CG iteration from a residual below 1e-12, so a smaller `tol`
- *               is not reached. Direct solvers refine toward it, and ignore
- *               it when `max_refine_steps` is 0. Below the rounding level of
- *               the residual (about machine epsilon times
- *               \f$\|b\|_\infty + \|K\|_\infty \|x\|_\infty\f$) a step only
- *               measures rounding, and the halving test stops it.
+ *               solvers stop at it, also below 1e-12 (smaller is more
+ *               accurate and costs more CG iterations), and their refinement
+ *               steps solve to it; they need `tol` > 0, and return x = 0
+ *               without iterating when
+ *               \f$\|b\|_\infty \le \min(\mathrm{tol}, 10^{-12})\f$.
+ *               Direct solvers refine toward it, and ignore it when
+ *               `max_refine_steps` is 0. Below the rounding level of the
+ *               residual (a few machine epsilons times
+ *               \f$\| |b| + |K|\,|x| \|_\infty\f$, absolute values entry by
+ *               entry) a step only measures rounding, and the halving test
+ *               stops it.
  *  @param  max_refine_steps  At most this many refinement steps; 0 for none.
  *  @param  res  If not `SCS_NULL`, set to \f$\|b - K x\|_\infty\f$ for the
  *               returned x and the given b, with the multiplies above.

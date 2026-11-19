@@ -536,6 +536,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #else
 #define CG_BEST_TOL (1e-12)
 #endif
+/* CG_ZERO_RHS_TOL: a CG solve returns x = 0 without iterating when
+ * ||b||_inf is at most MIN(tol, CG_ZERO_RHS_TOL); x = 0 then meets tol, its
+ * residual being ||b||. The per-iteration solves have tol >= CG_BEST_TOL, so
+ * for them this is the 1e-12 of SCS 3.3; the MIN honours a smaller tol (the
+ * solve for g and its refinement steps). Higher returns 0 for right-hand
+ * sides that a solve would still resolve; lower runs CG on right-hand sides
+ * at rounding level. */
+#define CG_ZERO_RHS_TOL (1e-12)
 /* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
  * values give more accurate CG solves at the cost of more CG iterations.
  * With deflation making inner accuracy cheap, 0.03 measured optimal on a
