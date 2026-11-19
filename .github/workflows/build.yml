@@ -56,6 +56,18 @@ jobs:
           out/run_tests_direct
           out/run_tests_indirect
           if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi
+      - name: Tests through the syev / heev fallback of the PSD projection
+        # The test-only flag SCS_FORCE_PSD_FALLBACK sends every PSD block
+        # through the fallback that runs when syevd / heevd do not converge,
+        # which no LAPACK here reaches otherwise. The PSD projection tests fail
+        # if the flag did not reach the compiler.
+        if: matrix.lapack == 1 && matrix.long == 0
+        run: |
+          make purge
+          make test USE_LAPACK=1 OPT="-O3 -march=native -fno-math-errno -DSCS_FORCE_PSD_FALLBACK"
+          out/run_tests_direct
+          out/run_tests_indirect
+          out/run_tests_dense
 
   windows:
     strategy:
@@ -142,3 +154,14 @@ jobs:
           out/run_tests_indirect
           out/run_tests_accelerate
           if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi
+      - name: Tests through the syev / heev fallback of the PSD projection
+        # As in the Linux job, with Accelerate's LAPACK, the one whose dsyevd
+        # has failed to converge in a solve (see src/cones.c)
+        if: matrix.lapack == 1 && matrix.long == 0
+        run: |
+          make purge
+          make test USE_LAPACK=1 OPT="-O3 -march=native -fno-math-errno -DSCS_FORCE_PSD_FALLBACK"
+          out/run_tests_direct
+          out/run_tests_indirect
+          out/run_tests_dense
+          out/run_tests_accelerate
