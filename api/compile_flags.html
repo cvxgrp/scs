@@ -166,6 +166,16 @@ constants are not exposed but defined in <code class="code docutils literal notr
 <td><p>True/False</p></td>
 <td><p>1</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code></p></td>
+<td><p>cuDSS solver only: from this many nonzeros in the stored triangle of <span class="math notranslate nohighlight">\(K\)</span> the multiplies by <span class="math notranslate nohighlight">\(K\)</span> of the <a class="reference internal" href="../linear_solver/index.html#refinement"><span class="std std-ref">refinement</span></a> run on the GPU, below it on the CPU with SCS’s products; 0 runs them on the GPU at every size. Empty uses the default in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(\mathbf{N}\)</span></p></td>
+<td><p>60000</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">MKL_NO_OWN_PRODUCTS</span></code></p></td>
+<td><p>MKL Pardiso solver only: the multiplies by <span class="math notranslate nohighlight">\(K\)</span> of the <a class="reference internal" href="../linear_solver/index.html#refinement"><span class="std std-ref">refinement</span></a> are SCS’s products at every size instead of MKL’s sparse BLAS. Slower (1.45 instead of 1.32 times a plain iteration while the correction form is on); for tests of that path</p></td>
+<td><p>True/False</p></td>
+<td><p>0</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">VERBOSITY</span></code></p></td>
 <td><p>Verbosity level (for debugging)</p></td>
 <td><p><span class="math notranslate nohighlight">\(\mathbf{N}\)</span></p></td>
@@ -286,11 +296,13 @@ options, with the same default: <code class="code docutils literal notranslate">
 <code class="code docutils literal notranslate"><span class="pre">-DUSE_GPU=ON</span></code>.</p>
 <p><code class="code docutils literal notranslate"><span class="pre">CTRLC</span></code> is always enabled in a CMake build. <code class="code docutils literal notranslate"><span class="pre">NO_TIMER</span></code>,
 <code class="code docutils literal notranslate"><span class="pre">NO_VALIDATE</span></code>, <code class="code docutils literal notranslate"><span class="pre">VERBOSITY</span></code>, <code class="code docutils literal notranslate"><span class="pre">NOBLASSUFFIX</span></code>,
-<code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code>, <code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code>, <code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code> and <code class="code docutils literal notranslate"><span class="pre">USING_R</span></code>
-are not CMake options, and CMake ignores them with a warning if they are passed
-as one (<code class="code docutils literal notranslate"><span class="pre">-DNO_TIMER=ON</span></code>, say). They can be passed to the compiler
-directly, e.g., <code class="code docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-DCMAKE_C_FLAGS=&quot;-DNO_TIMER=1&quot;</span> <span class="pre">..</span></code> (for R the
-macro is <code class="code docutils literal notranslate"><span class="pre">R_LANG</span></code>, so <code class="code docutils literal notranslate"><span class="pre">-DCMAKE_C_FLAGS=&quot;-DR_LANG&quot;</span></code>).</p>
+<code class="code docutils literal notranslate"><span class="pre">BLASSUFFIX</span></code>, <code class="code docutils literal notranslate"><span class="pre">MATLAB_MEX_FILE</span></code>, <code class="code docutils literal notranslate"><span class="pre">PYTHON</span></code>, <code class="code docutils literal notranslate"><span class="pre">USING_R</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code> and <code class="code docutils literal notranslate"><span class="pre">MKL_NO_OWN_PRODUCTS</span></code> are not CMake
+options, and CMake ignores them with a warning if they are passed as one
+(<code class="code docutils literal notranslate"><span class="pre">-DNO_TIMER=ON</span></code>, say). They can be passed to the compiler directly,
+e.g., <code class="code docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-DCMAKE_C_FLAGS=&quot;-DNO_TIMER=1&quot;</span> <span class="pre">..</span></code>, which reaches the
+libraries and the tests alike (for R the macro is <code class="code docutils literal notranslate"><span class="pre">R_LANG</span></code>, so
+<code class="code docutils literal notranslate"><span class="pre">-DCMAKE_C_FLAGS=&quot;-DR_LANG&quot;</span></code>).</p>
 <p>CMake finds the BLAS and LAPACK libraries itself. To choose a particular
 library set CMake’s <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FindBLAS.html">BLA_VENDOR</a>, e.g.,
 <code class="code docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-DBLA_VENDOR=OpenBLAS</span> <span class="pre">..</span></code>. If the <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment

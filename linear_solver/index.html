@@ -72,15 +72,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#reproducibility-of-the-gpu-solvers">Reproducibility of the GPU solvers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#implementing-a-new-linear-solver">Implementing a new linear solver</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#_CPPv413ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#c.SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED"><code class="docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#c.SCS_LIN_SYS_PRODUCTS_FAILED"><code class="docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_init_lin_sys_work()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#_CPPv421scs_free_lin_sys_workP13ScsLinSysWork"><code class="docutils literal notranslate"><span class="pre">scs_free_lin_sys_work()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_solve_lin_sys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float7scs_intP9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_solve_lin_sys()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv420scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_lin_sys_residual()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv416scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_lin_sys_keep()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#_CPPv419scs_lin_sys_correctP13ScsLinSysWorkP9scs_float"><code class="docutils literal notranslate"><span class="pre">scs_lin_sys_correct()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#_CPPv422scs_get_lin_sys_methodv"><code class="docutils literal notranslate"><span class="pre">scs_get_lin_sys_method()</span></code></a></li>
 </ul>
 </li>
@@ -182,7 +177,15 @@ subsections below.</p>
 <a class="reference internal" href="../algorithm/scale.html#per-row-refinement"><span class="std std-ref">Per-row refinement</span></a>), which changes <span class="math notranslate nohighlight">\(R\)</span> itself, nor the refinement
 of the small least-squares solve inside <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>, nor the
 refinement cuDSS does inside its own solves in single precision (see
-<a class="reference internal" href="#cudss-solver"><span class="std std-ref">Sparse GPU direct method</span></a>).</p>
+<a class="reference internal" href="#cudss-solver"><span class="std std-ref">Sparse GPU direct method</span></a>), nor the two refinement steps MKL Pardiso takes inside a
+solve when its factorization had to perturb a pivot (<code class="docutils literal notranslate"><span class="pre">iparm[7]</span> <span class="pre">=</span> <span class="pre">0</span></code> with
+<code class="docutils literal notranslate"><span class="pre">iparm[9]</span> <span class="pre">=</span> <span class="pre">13</span></code>, see <a class="reference internal" href="#mkl"><span class="std std-ref">MKL Pardiso</span></a>).</p>
+<p>SCS’s linear solve takes a warm start, a tolerance and a number of refinement
+steps (see <a class="reference internal" href="#new-linear-solver"><span class="std std-ref">Implementing a new linear solver</span></a>). With the direct solvers, the
+per-iteration refinement passes the previous iteration’s solution as the warm
+start and decides when; with the indirect solvers, and for the solve for
+<span class="math notranslate nohighlight">\((c, -b)\)</span>, SCS refines with plain solves and its own products (see
+below).</p>
 <section id="the-solve-for-c-b">
 <span id="g-refinement"></span><h3>The solve for <span class="math notranslate nohighlight">\((c, -b)\)</span><a class="headerlink" href="#the-solve-for-c-b" title="Link to this heading"></a></h3>
 <p><strong>When and why.</strong> At the start of every solve, and whenever the scaling
@@ -238,8 +241,9 @@ residuals at its last convergence check (but at least <span class="math notransl
 one multiply by <span class="math notranslate nohighlight">\(K\)</span> every 25 iterations.</p>
 <p><strong>Direct solvers</strong> (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above <span class="math notranslate nohighlight">\(0.01\,\)</span> <em>tol</em>, each
-following iteration solves in <em>correction form</em>: from the previous
-iteration’s solution <span class="math notranslate nohighlight">\(u_0\)</span> it solves <span class="math notranslate nohighlight">\(K d = z^k - K u_0\)</span> and takes
+following iteration solves in <em>correction form</em>: SCS keeps the previous
+iteration’s solution <span class="math notranslate nohighlight">\(u_0\)</span> and passes it to the linear solve as its
+warm start, which solves <span class="math notranslate nohighlight">\(K d = z^k - K u_0\)</span> and takes
 <span class="math notranslate nohighlight">\(u = u_0 + d\)</span>. The error of a solve with a factorization is about
 proportional to the size of the right-hand side it is given. The iterates
 move little from one iteration to the next, so <span class="math notranslate nohighlight">\(z^k - K u_0\)</span> is
@@ -279,11 +283,18 @@ already solves to a tolerance tied to SCS’s residuals, and its error is set by
 that tolerance rather than by the size of the right-hand side, so the
 correction form would not make it more accurate. When a check finds the
 residual above <em>tol</em>, that iteration’s solve and each following one is
-followed by one refinement step (one more conjugate gradient solve, for the
-residual). While this is on, every iteration is a check (one multiply by
-<span class="math notranslate nohighlight">\(K\)</span>, of the solve before its refinement step), and it turns off at the
-first that finds the residual at most <span class="math notranslate nohighlight">\(0.1\,\)</span> <em>tol</em>. This fires only
-when a conjugate gradient solve misses its tolerance.</p>
+followed by one refinement step: one more conjugate gradient solve, from
+zero and to the solvers’ best accuracy, for the residual SCS computed, added
+to the solution. While this is on, every iteration is a check (one multiply
+by <span class="math notranslate nohighlight">\(K\)</span>, of the solve before its refinement step), and it turns off at
+the first that finds the residual at most <span class="math notranslate nohighlight">\(0.1\,\)</span> <em>tol</em>. This fires
+only when a conjugate gradient solve misses its tolerance. The step solves
+for the residual of the whole system: a second solve of the same right-hand
+side started from the first one’s solution, the same in exact arithmetic,
+works with the residual of the smaller system conjugate gradients solves,
+which cannot see all of the rounding error: in single precision it solved
+16 of 25 random SOCPs at <span class="math notranslate nohighlight">\(10^{-5}\)</span> instead of 25, in 12 times the
+time.</p>
 <p><strong>What to expect</strong> (direct solvers):</p>
 <ul class="simple">
 <li><p>At the default tolerances it rarely turns on: on 112 LPs, QPs and SDPs at
@@ -317,18 +328,59 @@ In single precision it tends to stay on once it turns on, because the
 threshold to turn it off is near or below what a single-precision solve can
 reach.</p></li>
 </ul>
-<p><strong>Who computes the multiplies.</strong> By default SCS computes the multiplies by
-<span class="math notranslate nohighlight">\(K\)</span> itself, from the problem data, on one thread. A linear solver can
-compute them with its own copy of <span class="math notranslate nohighlight">\(K\)</span> instead (see
-<a class="reference internal" href="#new-linear-solver"><span class="std std-ref">Implementing a new linear solver</span></a>): MKL Pardiso uses MKL’s threaded sparse matrix-vector
-product, and cuDSS computes them on the GPU, where the vectors stay. The
-decisions above are the same either way; only the cost of the multiply and its
-rounding change.</p>
+<p><strong>Who computes the multiplies.</strong> With the direct solvers the multiplies by
+<span class="math notranslate nohighlight">\(K\)</span> are made inside the linear solve (<code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys</span></code>, see
+<a class="reference internal" href="#new-linear-solver"><span class="std std-ref">Implementing a new linear solver</span></a>); SCS keeps each iteration’s solution and passes it
+to the next solve as its warm start. With the indirect solvers SCS computes
+the residual itself, with its own products, since the refinement step solves
+for that vector. Per iteration SCS asks for:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Iteration</p></th>
+<th class="head"><p>Solves</p></th>
+<th class="head"><p>Multiplies by <span class="math notranslate nohighlight">\(K\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Off, not a check</p></td>
+<td><p>one plain solve</p></td>
+<td><p>none</p></td>
+</tr>
+<tr class="row-odd"><td><p>Off, a check (every 25)</p></td>
+<td><p>one plain solve, with its residual</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>On, not a check</p></td>
+<td><p>one solve warm-started from the previous solution (correction form)</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>On, a check</p></td>
+<td><p>the warm-started solve with its residual, and a plain solve with its
+residual</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>CG, a check or refinement on</p></td>
+<td><p>CG, and SCS’s residual of it; while on, a second CG solve, of that
+residual, from zero</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+<p>By default the multiplies are SCS’s own products with the problem data (the
+multiply by <span class="math notranslate nohighlight">\(A^\top\)</span> runs on OpenMP’s threads when SCS is built with
+OpenMP, and stays deterministic: each entry is summed by one thread in a fixed
+order). MKL Pardiso computes them with MKL’s threaded sparse matrix-vector
+product instead, and cuDSS from 60,000 nonzeros in <span class="math notranslate nohighlight">\(K\)</span> computes them on
+the GPU, where the residual stays (the warm start is copied to the GPU). The
+decisions above are the same either way; only the cost of the multiply and
+its rounding change.</p>
 <p>What the solver’s own multiplies buy is a cheaper iteration while the
 correction form is on. With cuDSS on 10 large LPs, QPs and SOCPs at
 <span class="math notranslate nohighlight">\(10^{-8}\)</span> (NVIDIA GB10), such an iteration cost 1.19 times a plain one
 with the multiplies on the GPU, against 1.48 with SCS’s on the CPU (on BOYD1
-1.61 ms against 2.63, a plain iteration taking 1.33). With MKL Pardiso on 33
+1.61 ms against 2.63, a plain iteration taking 1.33; measured while the warm
+start stayed on the GPU, see <a class="reference internal" href="#cudss-solver"><span class="std std-ref">Sparse GPU direct method</span></a> for the cost of copying
+it). With MKL Pardiso on 33
 LPs and QPs at <span class="math notranslate nohighlight">\(10^{-9}\)</span> (4 threads, AMD Zen 3) it cost 1.32 times a plain
 one against 1.45. Whole solves changed by a few percent at most, within the
 run-to-run variation of the iteration counts, because the correction form is
@@ -415,9 +467,13 @@ setup time that has not been measured: MKL analyses <span class="math notranslat
 whether or not the correction form ever turns on, since the check every 25
 iterations uses the product too. In a build with <code class="docutils literal notranslate"><span class="pre">DLONG</span></code> but 32-bit MKL
 integers, a <span class="math notranslate nohighlight">\(K\)</span> too large for those integers (more than <span class="math notranslate nohighlight">\(2^{31}\)</span>
-stored nonzeros) gets SCS’s own products instead, as before this change;
-<code class="docutils literal notranslate"><span class="pre">BLAS64=1</span></code> (Meson’s <code class="docutils literal notranslate"><span class="pre">use_blas64</span></code>) provides MKL’s at any size. If they
-cannot be set up otherwise (out of memory), setup fails with a message.</p>
+stored nonzeros) gets SCS’s own products instead; <code class="docutils literal notranslate"><span class="pre">BLAS64=1</span></code> (Meson’s
+<code class="docutils literal notranslate"><span class="pre">use_blas64</span></code>) provides MKL’s at any size. If they cannot be set up
+otherwise (out of memory), setup fails with a message. Built with
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">mkl</span> <span class="pre">MKL_NO_OWN_PRODUCTS=1</span></code> (see <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">Compile flags</span></a>), MKL Pardiso
+uses SCS’s products at every size; that is slower (1.45 instead of 1.32
+times a plain iteration while the correction form is on), and the CI uses it
+so that this path stays tested.</p>
 </section>
 <section id="apple-accelerate">
 <span id="id2"></span><h3>Apple Accelerate<a class="headerlink" href="#apple-accelerate" title="Link to this heading"></a></h3>
@@ -529,12 +585,14 @@ matching. Single-precision builds keep one step of iterative refinement per
 solve, which about doubles the cost of a solve, because without it one problem
 in the test suite does not converge.</p>
 <p><strong>Multiplies for the refinement.</strong> When <span class="math notranslate nohighlight">\(K\)</span> has at least 60,000 nonzeros
-(<code class="docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code> in <code class="docutils literal notranslate"><span class="pre">linsys/cudss/direct/private.c</span></code>), the cuDSS
+(<code class="docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code> in <code class="docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>; set it with
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">cudss</span> <span class="pre">CUDSS_MIN_PRODUCT_NNZ=...</span></code>, see <a class="reference internal" href="../api/compile_flags.html#compile-flags"><span class="std std-ref">Compile flags</span></a>), the cuDSS
 solver computes the multiplies by <span class="math notranslate nohighlight">\(K\)</span> of the per-iteration refinement
 (see <a class="reference internal" href="#refinement"><span class="std std-ref">Accuracy of each iteration’s solve</span></a>) on the GPU: one cuSPARSE sparse matrix-vector product
-and one cuBLAS reduction, with the guess and the residual kept on the GPU, so
-an iteration in correction form copies no more vectors between the host and
-the GPU than a plain solve. cuSPARSE has no symmetric product, so <span class="math notranslate nohighlight">\(K\)</span>
+and one cuBLAS reduction. The residual stays on the GPU; the warm start, the
+previous solution that SCS keeps on the host, is copied to the GPU once per
+iteration with the correction form on, one vector of <span class="math notranslate nohighlight">\(n + m\)</span> numbers
+more than a plain solve copies. cuSPARSE has no symmetric product, so <span class="math notranslate nohighlight">\(K\)</span>
 is stored a second time with both triangles, about twice the nonzeros of the
 copy cuDSS factorizes. A call costs about 0.04 ms whatever the size, so smaller
 systems use SCS’s product on the CPU, which was faster there. On an NVIDIA
@@ -543,6 +601,12 @@ GB10, per multiply, the GPU took 0.12 to 0.37 times the CPU’s time above
 In the solves, on 10 large LPs, QPs and SOCPs at <span class="math notranslate nohighlight">\(10^{-8}\)</span>, an
 iteration with the correction form on cost 1.19 times a plain one, against
 1.48 with the multiplies on the CPU, and the time per iteration fell by 4%.
+That was measured with the warm start kept on the GPU. Copying it from the
+host, as now, added 0.02 to 0.12 ms to such a solve on the same problems (2
+to 9% of a plain solve): an estimated 0.14% of their total solve time, and at
+most 3.3% on one (UBH1, with the correction form on for 64% of its
+iterations). On a discrete GPU, where the copy crosses PCIe, it has not been
+measured.
 Setting them up (building <span class="math notranslate nohighlight">\(K\)</span> with both triangles, copying it to the
 GPU, creating the cuSPARSE and cuBLAS handles) is done at setup whether or not
 the correction form ever turns on, since the check every 25 iterations uses
@@ -575,71 +639,138 @@ residual and the gap (the gap of the GPU indirect solver by a factor of 13).</p>
 </section>
 <section id="implementing-a-new-linear-solver">
 <span id="new-linear-solver"></span><h2>Implementing a new linear solver<a class="headerlink" href="#implementing-a-new-linear-solver" title="Link to this heading"></a></h2>
-<p>In order to implement you own linear system solver, you need to implement the
-struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code> that contains the workspace your solver requires,
-and implement the functions in <code class="code docutils literal notranslate"><span class="pre">include/linsys.h</span></code> as detailed below.
-See <code class="code docutils literal notranslate"><span class="pre">linsys</span></code> directory for examples.</p>
-<p><strong>Products with the matrix (optional).</strong> The per-iteration refinement of the
-direct solvers (see <a class="reference internal" href="#refinement"><span class="std std-ref">Accuracy of each iteration’s solve</span></a>) multiplies by the matrix <span class="math notranslate nohighlight">\(K\)</span>:
-every 25 iterations to check a solve, and once per iteration while the
-correction form is on. By default SCS computes these products itself, from the
-problem data, on one thread. A solver that holds <span class="math notranslate nohighlight">\(K\)</span> anyway can compute
-them faster with its own copy, by implementing three functions:</p>
-<ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual(w,</span> <span class="pre">b,</span> <span class="pre">x)</span></code> computes <span class="math notranslate nohighlight">\(r = b - K x\)</span> with the
-solver’s current <span class="math notranslate nohighlight">\(K\)</span> (including the latest <span class="math notranslate nohighlight">\(R\)</span> from
-<code class="code docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r</span></code>), keeps <span class="math notranslate nohighlight">\(r\)</span>, and returns
-<span class="math notranslate nohighlight">\(\|r\|_\infty\)</span>. If <code class="code docutils literal notranslate"><span class="pre">x</span></code> is <code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, <span class="math notranslate nohighlight">\(x\)</span> is the
-vector stored by the last <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_keep</span></code>.</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_keep(w,</span> <span class="pre">x)</span></code> stores <span class="math notranslate nohighlight">\(x\)</span> as the guess <span class="math notranslate nohighlight">\(x_0\)</span>.
-SCS calls it with the solution of the latest solve (a
-<code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys</span></code> or <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_correct</span></code> call), unchanged,
-so a GPU solver can copy the solution it still has on the device and not
-read <code class="code docutils literal notranslate"><span class="pre">x</span></code> at all. Between that solve and this call SCS may call
-<code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code> (when it turns the correction form on, it
-checks the solve with <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual(w,</span> <span class="pre">b,</span> <span class="pre">x)</span></code> first), but no
-other solve, so the residual must not overwrite the solver’s copy of the
-solution.</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_correct(w,</span> <span class="pre">x)</span></code> returns <span class="math notranslate nohighlight">\(x = x_0 + K^{-1} r\)</span> for the
-<span class="math notranslate nohighlight">\(r\)</span> of the latest <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual(w,</span> <span class="pre">b,</span> <span class="pre">SCS_NULL)</span></code>.</p></li>
-</ul>
-<p>Every solver must define the three functions so that it links (an
-out-of-tree solver written for an earlier SCS needs the three stubs below).
-The contract:</p>
-<ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code> returns <span class="math notranslate nohighlight">\(\|r\|_\infty \ge 0\)</span>,
-<code class="code docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></code> if the workspace does not compute
-the products, or <code class="code docutils literal notranslate"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></code> on an error.</p></li>
-<li><p>Whether a workspace provides the products is fixed when
-<code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code> returns, by a rule stated up front (cuDSS: the
-number of nonzeros of <span class="math notranslate nohighlight">\(K\)</span>; MKL Pardiso: always, except a <span class="math notranslate nohighlight">\(K\)</span> too
-large for 32-bit MKL integers in a <code class="docutils literal notranslate"><span class="pre">DLONG</span></code> build without <code class="docutils literal notranslate"><span class="pre">BLAS64</span></code>), never
-by whether memory or a library happened to be available. A solver that should provide
-them but cannot set them up makes <code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code> fail with a
-message saying why, rather than returning “not provided”.</p></li>
-<li><p>SCS calls <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code> once at setup, with zero vectors:
-“not provided” makes SCS compute every product itself (and never call the
-other two functions); a failure makes SCS’s setup fail; a norm means the
-solver provides them. During a solve any negative return is a failure of
-the linear solver.</p></li>
-</ul>
-<p>A solver without the products defines:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scs_float</span> <span class="n">scs_lin_sys_residual</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span>
-                               <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="n">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">void</span> <span class="n">scs_lin_sys_keep</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{}</span>
-<span class="n">scs_int</span> <span class="n">scs_lin_sys_correct</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+<p>A linear solver implements the struct <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code>, which holds its
+workspace, and the five functions in <code class="code docutils literal notranslate"><span class="pre">include/linsys.h</span></code> (documented
+below); the <code class="code docutils literal notranslate"><span class="pre">linsys</span></code> directory has seven worked examples. Four are
+simple: set up (for instance factorize <span class="math notranslate nohighlight">\(K\)</span>), update for a new
+<span class="math notranslate nohighlight">\(R\)</span>, free, and name. The fifth, <code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys</span></code>, solves
+<span class="math notranslate nohighlight">\(K x = b\)</span> and also takes a warm start, a tolerance and a number of
+refinement steps, and reports the residual <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>:
+SCS’s <a class="reference internal" href="#iterative-refinement"><span class="std std-ref">Iterative refinement</span></a> runs through it. The solvers in
+<code class="code docutils literal notranslate"><span class="pre">linsys</span></code> write only their plain solve and get the rest from a shared
+routine (<code class="code docutils literal notranslate"><span class="pre">linsys/scs_matrix.h</span></code>). A new solver built with SCS’s sources
+does the same in five steps:</p>
+<ol class="arabic">
+<li><p><code class="code docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;scs_matrix.h&quot;</span></code> and put a <code class="code docutils literal notranslate"><span class="pre">ScsLinSysShared</span> <span class="pre">sh;</span></code>
+member in your <code class="code docutils literal notranslate"><span class="pre">ScsLinSysWork</span></code>.</p></li>
+<li><p>Write your plain solve, which overwrites <code class="code docutils literal notranslate"><span class="pre">b</span></code> with <span class="math notranslate nohighlight">\(K^{-1} b\)</span>
+and returns 0 (nonzero on failure). A direct solver ignores <code class="code docutils literal notranslate"><span class="pre">s</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">tol</span></code>; an iterative one starts from <code class="code docutils literal notranslate"><span class="pre">s</span></code> (its first <span class="math notranslate nohighlight">\(n\)</span>
+entries; from zero when it is <code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code>) and stops at
+<code class="code docutils literal notranslate"><span class="pre">tol</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">scs_int</span> <span class="n">plain_solve</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span>
+                           <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="n">scs_float</span> <span class="n">tol</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>SCS makes every decision (when to check, the thresholds, when to use the
-guess); the solver only computes, so the refinement behaves the same with
-every solver, up to the rounding of the product.
-<code class="code docutils literal notranslate"><span class="pre">test_lin_sys_products</span></code> in the test suite checks a solver’s products
-against SCS’s own. The MKL Pardiso solver (<code class="code docutils literal notranslate"><span class="pre">linsys/mkl/direct/private.c</span></code>,
-with MKL’s sparse BLAS) and the cuDSS solver
-(<code class="code docutils literal notranslate"><span class="pre">linsys/cudss/direct/private.c</span></code>, on the GPU with cuSPARSE and cuBLAS)
-are examples; the other solvers return “not provided”.</p>
+</li>
+<li><p>At the end of <code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code>, after your own setup:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">SCS</span><span class="p">(</span><span class="n">lin_sys_shared_init</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">w</span><span class="o">-&gt;</span><span class="n">sh</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">diag_r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">plain_solve</span><span class="p">,</span>
+                             <span class="n">SCS_NULL</span><span class="p">,</span> <span class="n">SCS_NULL</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">scs_free_lin_sys_work</span><span class="p">(</span><span class="n">w</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">SCS_NULL</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>with 1 in place of the first 0 for an iterative solver such as conjugate
+gradients (its warm start is then the solver’s starting point, and each
+refinement step a solve from zero of the residual, computed in the full
+space; see <code class="code docutils literal notranslate"><span class="pre">linsys.h</span></code>). This allocates three vectors of
+<span class="math notranslate nohighlight">\(n + m\)</span> numbers and keeps the three pointers: SCS keeps <code class="code docutils literal notranslate"><span class="pre">A</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">P</span></code> and <code class="code docutils literal notranslate"><span class="pre">diag_r</span></code> alive until <code class="code docutils literal notranslate"><span class="pre">scs_free_lin_sys_work</span></code>,
+leaves <code class="code docutils literal notranslate"><span class="pre">A</span></code> and <code class="code docutils literal notranslate"><span class="pre">P</span></code> unchanged and writes each new <span class="math notranslate nohighlight">\(R\)</span>
+into the same <code class="code docutils literal notranslate"><span class="pre">diag_r</span></code>, and the residuals are computed from them.</p>
+</li>
+<li><p>Implement <code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys</span></code> as one call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scs_int</span> <span class="n">scs_solve_lin_sys</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span>
+                          <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="n">scs_float</span> <span class="n">tol</span><span class="p">,</span>
+                          <span class="n">scs_int</span> <span class="n">max_refine_steps</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">SCS</span><span class="p">(</span><span class="n">lin_sys_shared_solve</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">w</span><span class="o">-&gt;</span><span class="n">sh</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span>
+                                   <span class="n">max_refine_steps</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>Call <code class="code docutils literal notranslate"><span class="pre">SCS(lin_sys_shared_free)(&amp;w-&gt;sh)</span></code> in
+<code class="code docutils literal notranslate"><span class="pre">scs_free_lin_sys_work</span></code> (it is safe on a zeroed <code class="code docutils literal notranslate"><span class="pre">sh</span></code>).</p></li>
+</ol>
+<p>With that, SCS’s refinement behaves with your solver as with the bundled
+ones: the warm start (the correction form and its comparison with zero, or
+the starting point of an iterative solver), the refinement steps, and the
+residuals are the shared routine’s, with SCS’s own
+multiplies by <span class="math notranslate nohighlight">\(K\)</span> from the problem data. Only your plain solve’s
+accuracy and cost differ. <code class="code docutils literal notranslate"><span class="pre">linsys/scs_matrix.h</span></code> is not installed with
+SCS’s headers, so this is for solvers compiled with SCS’s sources, as every
+solver outside this repository we know of is.</p>
+<p><strong>Your own multiplies (optional).</strong> A solver that holds <span class="math notranslate nohighlight">\(K\)</span> anyway can
+compute the multiplies with its own copy instead, for instance with a
+threaded sparse matrix-vector product, by passing a residual function in
+place of the first <code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code> in step 3:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">scs_int</span> <span class="n">my_residual</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span>
+                           <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">r</span><span class="p">,</span>
+                           <span class="n">scs_float</span> <span class="o">*</span><span class="n">nr</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">nb</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>It computes <span class="math notranslate nohighlight">\(r = b - K x\)</span> with your <span class="math notranslate nohighlight">\(K\)</span> (as of the last update of
+<span class="math notranslate nohighlight">\(R\)</span>) into <code class="code docutils literal notranslate"><span class="pre">r</span></code>, <span class="math notranslate nohighlight">\(\|r\|_\infty\)</span> in <code class="code docutils literal notranslate"><span class="pre">*nr</span></code> and
+<span class="math notranslate nohighlight">\(\|b\|_\infty\)</span> in <code class="code docutils literal notranslate"><span class="pre">*nb</span></code> (unless <code class="code docutils literal notranslate"><span class="pre">nb</span></code> is
+<code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code>), and returns 0 (nonzero on failure, which fails the solve
+with a message asking to open an issue). MKL Pardiso does this with MKL’s
+sparse BLAS (<code class="code docutils literal notranslate"><span class="pre">prod_residual</span></code> in <code class="code docutils literal notranslate"><span class="pre">linsys/mkl/direct/private.c</span></code>). A
+solver whose vectors live elsewhere can also pass a correct function in place
+of the second <code class="code docutils literal notranslate"><span class="pre">SCS_NULL</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">scs_int</span> <span class="n">my_correct</span><span class="p">(</span><span class="n">ScsLinSysWork</span> <span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">x</span><span class="p">,</span>
+                          <span class="n">const</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">r</span><span class="p">,</span> <span class="n">scs_float</span> <span class="o">*</span><span class="n">out</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>It sets <code class="code docutils literal notranslate"><span class="pre">out</span></code> to <span class="math notranslate nohighlight">\(x + K^{-1} r\)</span>, where <code class="code docutils literal notranslate"><span class="pre">r</span></code> is that of the
+residual call the shared routine always makes just before and <code class="code docutils literal notranslate"><span class="pre">x</span></code> has
+the values of that call’s <code class="code docutils literal notranslate"><span class="pre">x</span></code>. So the residual function may keep
+<span class="math notranslate nohighlight">\(r\)</span> where the solver keeps its vectors, and need not write the
+<code class="code docutils literal notranslate"><span class="pre">r</span></code> it is given; if it keeps <span class="math notranslate nohighlight">\(x\)</span> too, it keeps a copy, not the
+pointer: <code class="code docutils literal notranslate"><span class="pre">x</span></code> may then be another vector with the same values, and
+<code class="code docutils literal notranslate"><span class="pre">out</span></code> the very vector the residual call was given as <code class="code docutils literal notranslate"><span class="pre">x</span></code>. cuDSS does
+this on the GPU (<code class="code docutils literal notranslate"><span class="pre">dev_residual</span></code> and <code class="code docutils literal notranslate"><span class="pre">dev_correct</span></code> in
+<code class="code docutils literal notranslate"><span class="pre">linsys/cudss/direct/private.c</span></code>), so that the residual never leaves
+the device. Decide whether to use your own multiplies once, in
+<code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code>, by a rule you state up front (MKL: always,
+except a <span class="math notranslate nohighlight">\(K\)</span> too large for 32-bit MKL integers in a <code class="docutils literal notranslate"><span class="pre">DLONG</span></code> build
+without <code class="docutils literal notranslate"><span class="pre">BLAS64</span></code>; cuDSS: from <code class="code docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code> nonzeros),
+never by whether memory or a library happened to be available: if they
+should be used but cannot be set up, make <code class="code docutils literal notranslate"><span class="pre">scs_init_lin_sys_work</span></code> fail
+with a message saying why.</p>
+<p><strong>Without the shared routine.</strong> A solver may implement
+<code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys</span></code> entirely itself, but then it must honour the whole
+of <code class="code docutils literal notranslate"><span class="pre">linsys.h</span></code>. <code class="code docutils literal notranslate"><span class="pre">res</span></code> must be the true residual of the returned
+<span class="math notranslate nohighlight">\(x\)</span>, because SCS turns its refinement on and off by comparing it with
+its own residuals. A direct solver given <code class="code docutils literal notranslate"><span class="pre">s</span></code> must return the
+correction form from it, and solve plainly when <span class="math notranslate nohighlight">\(\|b - K s\|_\infty
+\ge \|b\|_\infty\)</span>. With <code class="code docutils literal notranslate"><span class="pre">max_refine_steps</span></code> above 0 it must take at most
+that many steps <span class="math notranslate nohighlight">\(x + K^{-1}(b - K x)\)</span> (a CG solver too, with the
+residual computed in the full space and solved from zero), keep a step only
+if it lowers the residual, and stop after one that does not halve it. A
+direct solver that ignores <code class="code docutils literal notranslate"><span class="pre">s</span></code> still gives correct answers, but SCS’s
+refinement then cannot make its solves more accurate, which on badly scaled
+problems can keep SCS from reaching tight tolerances.</p>
+<p><strong>Tests.</strong> <code class="code docutils literal notranslate"><span class="pre">test_lin_sys_solve</span></code> in the test suite checks the contract
+against residuals it computes itself: warm starts near and far from the
+solution (the correction form and its fallback), refinement and its limits
+(steps kept only when better, the halving stop, <code class="code docutils literal notranslate"><span class="pre">max_refine_steps</span></code>),
+and the residual with the <span class="math notranslate nohighlight">\(K\)</span> of the solver’s rule,
+before and after an update of <span class="math notranslate nohighlight">\(R\)</span>. <code class="code docutils literal notranslate"><span class="pre">test_refine_perturbed</span></code> makes
+the solver factorize a different <span class="math notranslate nohighlight">\(R\)</span> from the one SCS measures with, so
+that SCS’s refinement fires (and, with a mismatch too large to contract, its
+safeguard); a solver that measures with its own <span class="math notranslate nohighlight">\(K\)</span> follows the update,
+sees no mismatch, and is skipped there with a message (MKL Pardiso, unless
+built with <code class="docutils literal notranslate"><span class="pre">MKL_NO_OWN_PRODUCTS</span></code>; cuDSS from <code class="code docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code>
+nonzeros).</p>
+<p><strong>From SCS 3.3.</strong> The solve was <code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys(w,</span> <span class="pre">b,</span> <span class="pre">s,</span> <span class="pre">tol)</span></code>.
+<code class="code docutils literal notranslate"><span class="pre">max_refine_steps</span></code> and <code class="code docutils literal notranslate"><span class="pre">res</span></code> are new, so a solver written for 3.3
+no longer compiles. Rename its solve <code class="code docutils literal notranslate"><span class="pre">plain_solve</span></code> (it keeps its 3.3
+meaning) and follow the steps above; the solver then behaves as the bundled
+solvers do. A solver written against the unreleased development versions
+after 3.3, which had <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_residual</span></code>, <code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_keep</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">scs_lin_sys_correct</span></code>, deletes them; its own multiplies, if it has
+them, become a residual function as above.</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv413ScsLinSysWork">
 <span id="_CPPv313ScsLinSysWork"></span><span id="_CPPv213ScsLinSysWork"></span><span id="ScsLinSysWork"></span><span class="target" id="scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">SCS_LIN_SYS_WORK</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScsLinSysWork</span></span></span><a class="headerlink" href="#_CPPv413ScsLinSysWork" title="Link to this definition"></a><br /></dt>
@@ -647,36 +778,22 @@ are examples; the other solvers return “not provided”.</p>
 </dd></dl>
 
 <div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric" id="breathe-section-title-defines">Defines</p>
-<dl class="cpp macro">
-<dt class="sig sig-object cpp" id="c.SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED">
-<span class="target" id="linsys_8h_1a654cadbc9c2e587ffc5716fcb277fd1b"></span><span class="sig-name descname"><span class="n"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></span></span><a class="headerlink" href="#c.SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED" title="Link to this definition"></a><br /></dt>
-<dd><p>Returned by <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code>: this workspace does not compute the products, SCS computes them itself. </p>
-</dd></dl>
-
-<dl class="cpp macro">
-<dt class="sig sig-object cpp" id="c.SCS_LIN_SYS_PRODUCTS_FAILED">
-<span class="target" id="linsys_8h_1a2c19f3e9ad5a6d78a6454dee1e202c33"></span><span class="sig-name descname"><span class="n"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></span></span><a class="headerlink" href="#c.SCS_LIN_SYS_PRODUCTS_FAILED" title="Link to this definition"></a><br /></dt>
-<dd><p>Returned by <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code>: the product failed. </p>
-</dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float">
 <span id="_CPPv321scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="_CPPv221scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float"></span><span id="scs_init_lin_sys_work__ScsMatrixCP.ScsMatrixCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"></span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">scs_init_lin_sys_work</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">A</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../api/c.html#_CPPv49ScsMatrix" title="ScsMatrix"><span class="n"><span class="pre">ScsMatrix</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">P</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421scs_init_lin_sys_workPK9ScsMatrixPK9ScsMatrixPK9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Initialize <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1"><span class="std std-ref"><span class="pre">ScsLinSysWork</span></span></a></code> structure and perform any necessary preprocessing.</p>
+<dd><p>Initialize <code class="docutils literal notranslate"><a class="reference internal" href="#scs_8h_1a0f7cde25a6dc679e4612255a4bdbe6c1"><span class="std std-ref"><span class="pre">ScsLinSysWork</span></span></a></code> structure and perform any necessary preprocessing (for instance factorize K, see <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1ab9f119a12248c6b092dbd1af49ffd9a2"><span class="std std-ref"><span class="pre">scs_solve_lin_sys</span></span></a></code>).</p>
+<p>The solver may keep the three pointers and read the arrays in any later call: they stay valid, and A and P unchanged, until <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a5ae24bcf8738840e3ddedf42fc451a26"><span class="std std-ref"><span class="pre">scs_free_lin_sys_work</span></span></a></code>, and SCS writes every new R into this same <code class="docutils literal notranslate"><span class="pre">diag_r</span></code> array before it calls <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a3a78943fd4381d97662c78f5b2586448"><span class="std std-ref"><span class="pre">scs_update_lin_sys_diag_r</span></span></a></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>A</strong> – <code class="docutils literal notranslate"><span class="pre">A</span></code> data matrix, <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">x</span> <span class="pre">n</span></code>. </p></li>
-<li><p><strong>P</strong> – <code class="docutils literal notranslate"><span class="pre">P</span></code> data matrix, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>. </p></li>
+<li><p><strong>P</strong> – <code class="docutils literal notranslate"><span class="pre">P</span></code> data matrix, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>, upper triangle, or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>. </p></li>
 <li><p><strong>diag_r</strong> – <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> diagonal entries of length <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">+</span> <span class="pre">n</span></code>. </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Linear system solver workspace. </p>
+<dd class="field-even"><p>Linear system solver workspace, or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> on failure (with a message saying why). </p>
 </dd>
 </dl>
 </dd></dl>
@@ -693,27 +810,41 @@ are examples; the other solvers return “not provided”.</p>
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float">
-<span id="_CPPv317scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="_CPPv217scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float"></span><span id="scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float"></span><span class="target" id="linsys_8h_1a24229ab88459885462fcc7fa6759467f"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Solves the linear system as required by SCS at each iteration:      <div class="math notranslate nohighlight">
-\[\begin{split}   \begin{bmatrix}
+<dt class="sig sig-object cpp" id="_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float7scs_intP9scs_float">
+<span id="_CPPv317scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float7scs_intP9scs_float"></span><span id="_CPPv217scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float7scs_intP9scs_float"></span><span id="scs_solve_lin_sys__ScsLinSysWorkP.scs_floatP.scs_floatCP.scs_float.scs_int.scs_floatP"></span><span class="target" id="linsys_8h_1ab9f119a12248c6b092dbd1af49ffd9a2"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_solve_lin_sys</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">s</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tol</span></span>, <span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">max_refine_steps</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">res</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417scs_solve_lin_sysP13ScsLinSysWorkP9scs_floatPK9scs_float9scs_float7scs_intP9scs_float" title="Link to this definition"></a><br /></dt>
+<dd><p>Solves the linear system as required by SCS:       <div class="math notranslate nohighlight">
+\[\begin{split}   K x = b, \qquad
+   K = \begin{bmatrix}
    (R_x + P) &amp; A^\top \\
     A   &amp;  -R_y \\
-   \end{bmatrix} x = b
+   \end{bmatrix}
 \end{split}\]</div>
 </p>
-<p>for <code class="docutils literal notranslate"><span class="pre">x</span></code>, where <code class="docutils literal notranslate"><span class="pre">diag(R_x,</span> <span class="pre">R_y)</span> <span class="pre">=</span> <span class="pre">R</span></code>. Overwrites <code class="docutils literal notranslate"><span class="pre">b</span></code> with result.</p>
+<p>for <code class="docutils literal notranslate"><span class="pre">x</span></code>, where <code class="docutils literal notranslate"><span class="pre">diag(R_x,</span> <span class="pre">R_y)</span> <span class="pre">=</span> <span class="pre">R</span></code> is the one given to the last <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a3a78943fd4381d97662c78f5b2586448"><span class="std std-ref"><span class="pre">scs_update_lin_sys_diag_r</span></span></a></code> (or to <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"><span class="std std-ref"><span class="pre">scs_init_lin_sys_work</span></span></a></code>), and overwrites <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">x</span></code>. With <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> 0 and <code class="docutils literal notranslate"><span class="pre">res</span></code> <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> this is the solve of SCS 3.3 for a CG solver (conjugate gradients from <code class="docutils literal notranslate"><span class="pre">s</span></code> to <code class="docutils literal notranslate"><span class="pre">tol</span></code>), and for a direct solver given no <code class="docutils literal notranslate"><span class="pre">s</span></code> (a plain solve).</p>
+<p>Direct solvers (a factorization: QDLDL, dense, Apple Accelerate, MKL Pardiso, cuDSS):<ol class="loweralpha simple">
+<li><p>Warm start. Given <code class="docutils literal notranslate"><span class="pre">s</span></code>, the solver computes <span class="math notranslate nohighlight">\(r = b - K s\)</span> and, if <span class="math notranslate nohighlight">\(\|r\|_\infty &lt; \|b\|_\infty\)</span>, returns the correction form <span class="math notranslate nohighlight">\(x = s + K^{-1} r\)</span>, whose error is about that of a plain solve times <span class="math notranslate nohighlight">\(\|r\|_\infty / \|b\|_\infty\)</span>, for one multiply by K more. Otherwise (s is no better a guess than zero, for instance after R changed) it solves plainly, <span class="math notranslate nohighlight">\(x = K^{-1} b\)</span>.</p></li>
+<li><p>Refinement, if <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> &gt; 0: while <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span> &gt; <code class="docutils literal notranslate"><span class="pre">tol</span></code> and fewer than <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> steps were taken, the candidate <span class="math notranslate nohighlight">\(c = x + K^{-1}(b - K x)\)</span> replaces x if its residual is strictly smaller; if not, x stays and refinement stops. It also stops after a kept step that did not at least halve the residual. Each step costs a solve and a multiply by K, the first one a multiply more (the residual of x).</p></li>
+</ol>
+</p>
+<p>CG solvers (conjugate gradients on the reduced system, CPU and GPU):<ol class="loweralpha simple">
+<li><p>CG from <code class="docutils literal notranslate"><span class="pre">s</span></code> (its first n entries; y is computed from x), or from zero, until the residual CG tracks is below <code class="docutils literal notranslate"><span class="pre">tol</span></code>.</p></li>
+<li><p>Refinement, if <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> &gt; 0: as for the direct solvers, with <span class="math notranslate nohighlight">\(K^{-1}(b - K x)\)</span> a CG solve from zero to <code class="docutils literal notranslate"><span class="pre">tol</span></code>. The residual is computed in the full space with the multiplies below: the one CG tracks, on the reduced system, can drift from it (in single precision or from a warm start far from x) and has a higher rounding floor, and y is computed from x, so restarting CG on b from x would remove only part of either. Each step costs CG iterations and a multiply by K.</p></li>
+</ol>
+</p>
+<p>The multiplies by K (warm start, refinement, <code class="docutils literal notranslate"><span class="pre">res</span></code>) use the solver’s own copy of K where it has one, by a rule fixed when <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"><span class="std std-ref"><span class="pre">scs_init_lin_sys_work</span></span></a></code> returns and stated in the solver’s documentation (MKL Pardiso; cuDSS from <code class="docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code> nonzeros), else SCS’s products with the A, P and diag_r given to <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"><span class="std std-ref"><span class="pre">scs_init_lin_sys_work</span></span></a></code>. Every decision compares residuals, never timings: a call is deterministic whenever the solver’s plain solve and products are.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>w</strong> – Linear system private workspace. </p></li>
-<li><p><strong>b</strong> – Right hand side, contains solution at the end. </p></li>
-<li><p><strong>s</strong> – Contains warm-start (may be NULL). </p></li>
-<li><p><strong>tol</strong> – Tolerance required for the system solve. </p></li>
+<li><p><strong>b</strong> – Right-hand side, n + m entries; overwritten with the solution. </p></li>
+<li><p><strong>s</strong> – Warm start, a guess of the solution (n + m entries; CG reads the first n), or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>. Not changed; must not alias <code class="docutils literal notranslate"><span class="pre">b</span></code>. </p></li>
+<li><p><strong>tol</strong> – The accuracy asked for, as <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>. CG solvers stop at it (smaller is more accurate and costs more CG iterations), and their refinement steps solve to it; they need <code class="docutils literal notranslate"><span class="pre">tol</span></code> &gt; 0. SCS’s CG solvers return x = 0 for a b with <span class="math notranslate nohighlight">\(\|b\|_\infty \le 10^{-12}\)</span>, and the CPU one makes no CG iteration from a residual below 1e-12, so a smaller <code class="docutils literal notranslate"><span class="pre">tol</span></code> is not reached. Direct solvers refine toward it, and ignore it when <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> is 0. Below the rounding level of the residual (about machine epsilon times <span class="math notranslate nohighlight">\(\|b\|_\infty + \|K\|_\infty \|x\|_\infty\)</span>) a step only measures rounding, and the halving test stops it. </p></li>
+<li><p><strong>max_refine_steps</strong> – At most this many refinement steps; 0 for none. </p></li>
+<li><p><strong>res</strong> – If not <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, set to <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span> for the returned x and the given b, with the multiplies above. Cost: a copy of b and a multiply by K, unless refinement computed it. Asking for it never changes x. A NaN entry of the residual may be missed by the max (as by SCS’s <code class="docutils literal notranslate"><span class="pre">norm_inf</span></code>), so a finite <code class="docutils literal notranslate"><span class="pre">*res</span></code> does not show that x is finite. </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>status != 0 indicates failure. </p>
+<dd class="field-even"><p>0 on success; nonzero if a solve or a multiply failed (b and <code class="docutils literal notranslate"><span class="pre">*res</span></code> are then unspecified). </p>
 </dd>
 </dl>
 </dd></dl>
@@ -721,58 +852,12 @@ are examples; the other solvers return “not provided”.</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float">
 <span id="_CPPv325scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="_CPPv225scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float"></span><span id="scs_update_lin_sys_diag_r__ScsLinSysWorkP.scs_floatCP"></span><span class="target" id="linsys_8h_1a3a78943fd4381d97662c78f5b2586448"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_update_lin_sys_diag_r</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">new_diag_r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425scs_update_lin_sys_diag_rP13ScsLinSysWorkPK9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">R</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix.</p>
+<dd><p>Update the linsys workspace when <code class="docutils literal notranslate"><span class="pre">R</span></code> is changed. For example, a direct method for solving the linear system might need to update the factorization of the matrix. SCS passes the <code class="docutils literal notranslate"><span class="pre">diag_r</span></code> array given to <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"><span class="std std-ref"><span class="pre">scs_init_lin_sys_work</span></span></a></code>, with the new R written into it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>w</strong> – Linear system private workspace. </p></li>
 <li><p><strong>new_diag_r</strong> – Updated <code class="docutils literal notranslate"><span class="pre">diag_r</span></code>, diagonal entries of R. </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv420scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float">
-<span id="_CPPv320scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float"></span><span id="_CPPv220scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float"></span><span id="scs_lin_sys_residual__ScsLinSysWorkP.scs_floatCP.scs_floatCP"></span><span class="target" id="linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"></span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_lin_sys_residual</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420scs_lin_sys_residualP13ScsLinSysWorkPK9scs_floatPK9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Computes <span class="math notranslate nohighlight">\(r = b - K x\)</span> with the solver’s own copy of K (as updated by the last <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a3a78943fd4381d97662c78f5b2586448"><span class="std std-ref"><span class="pre">scs_update_lin_sys_diag_r</span></span></a></code>) and returns <span class="math notranslate nohighlight">\(\|r\|_\infty\)</span>. The solver keeps r for a following <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a2c4f985262e6d933f05387f9da083482"><span class="std std-ref"><span class="pre">scs_lin_sys_correct</span></span></a></code>. If <code class="docutils literal notranslate"><span class="pre">x</span></code> is <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, x is the vector stored by the last <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1af0111de544e9b0ad34f342e9636e7175"><span class="std std-ref"><span class="pre">scs_lin_sys_keep</span></span></a></code>. It must not change the solver’s copy of the solution of its latest solve (see <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1af0111de544e9b0ad34f342e9636e7175"><span class="std std-ref"><span class="pre">scs_lin_sys_keep</span></span></a></code>).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>w</strong> – Linear system private workspace. </p></li>
-<li><p><strong>b</strong> – Right-hand side. </p></li>
-<li><p><strong>x</strong> – Point at which the residual is evaluated, or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>. </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>, <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a654cadbc9c2e587ffc5716fcb277fd1b"><span class="std std-ref"><span class="pre">SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED</span></span></a></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a2c19f3e9ad5a6d78a6454dee1e202c33"><span class="std std-ref"><span class="pre">SCS_LIN_SYS_PRODUCTS_FAILED</span></span></a></code> (see the contract above). </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv416scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float">
-<span id="_CPPv316scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float"></span><span id="_CPPv216scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float"></span><span id="scs_lin_sys_keep__ScsLinSysWorkP.scs_floatCP"></span><span class="target" id="linsys_8h_1af0111de544e9b0ad34f342e9636e7175"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_lin_sys_keep</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416scs_lin_sys_keepP13ScsLinSysWorkPK9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Stores <code class="docutils literal notranslate"><span class="pre">x</span></code> as the guess x0 of the next correction-form solve. <code class="docutils literal notranslate"><span class="pre">x</span></code> is always the solution returned by the latest <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a24229ab88459885462fcc7fa6759467f"><span class="std std-ref"><span class="pre">scs_solve_lin_sys</span></span></a></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a2c4f985262e6d933f05387f9da083482"><span class="std std-ref"><span class="pre">scs_lin_sys_correct</span></span></a></code> call, unchanged, so a solver that keeps that solution on its side (a GPU solver) may store its own copy and not read <code class="docutils literal notranslate"><span class="pre">x</span></code>. Between that solve and this call SCS may call <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code> (with that solution or another vector as <code class="docutils literal notranslate"><span class="pre">x</span></code>, or with <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>), but no other solve: the residual must therefore leave the solver’s copy of the solution as it is. Called only if the solver provides the products.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>w</strong> – Linear system private workspace. </p></li>
-<li><p><strong>x</strong> – The solution of the latest solve. </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv419scs_lin_sys_correctP13ScsLinSysWorkP9scs_float">
-<span id="_CPPv319scs_lin_sys_correctP13ScsLinSysWorkP9scs_float"></span><span id="_CPPv219scs_lin_sys_correctP13ScsLinSysWorkP9scs_float"></span><span id="scs_lin_sys_correct__ScsLinSysWorkP.scs_floatP"></span><span class="target" id="linsys_8h_1a2c4f985262e6d933f05387f9da083482"></span><span class="n"><span class="pre">scs_int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scs_lin_sys_correct</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv413ScsLinSysWork" title="ScsLinSysWork"><span class="n"><span class="pre">ScsLinSysWork</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">scs_float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419scs_lin_sys_correctP13ScsLinSysWorkP9scs_float" title="Link to this definition"></a><br /></dt>
-<dd><p>Solves in correction form: <span class="math notranslate nohighlight">\(x = x_0 + K^{-1} r\)</span>, where r is the residual of the latest <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a80cde81bf5e3ba0087d97b8731e77b30"><span class="std std-ref"><span class="pre">scs_lin_sys_residual</span></span></a></code> call, which SCS always makes with <code class="docutils literal notranslate"><span class="pre">x</span></code> equal to <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code> (so <span class="math notranslate nohighlight">\(r = b - K x_0\)</span>) right before. The result counts as the latest solve for <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1af0111de544e9b0ad34f342e9636e7175"><span class="std std-ref"><span class="pre">scs_lin_sys_keep</span></span></a></code>. Called only if the solver provides the products.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>w</strong> – Linear system private workspace. </p></li>
-<li><p><strong>x</strong> – Output, the solution. </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
