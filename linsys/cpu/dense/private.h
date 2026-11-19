@@ -8,6 +8,7 @@ extern "C" {
 #include "glbopts.h"
 #include "linsys.h"
 #include "scs_blas.h"
+#include "scs_matrix.h"
 
 struct SCS_LIN_SYS_WORK {
   scs_int n; /* number of QP variables */
@@ -22,6 +23,10 @@ struct SCS_LIN_SYS_WORK {
   /* These are required for matrix updates */
   const ScsMatrix *P; /* does *not* own this memory */
   scs_float *diag_p;  /* Diagonal values of P */
+
+  /* the warm start, refinement and residual of scs_solve_lin_sys, with
+   * SCS's products (linsys/scs_matrix.h) */
+  ScsLinSysShared sh;
 };
 
 #ifdef __cplusplus

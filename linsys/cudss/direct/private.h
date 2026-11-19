@@ -7,6 +7,7 @@ extern "C" {
 
 #include "csparse.h"
 #include "linsys.h"
+#include "scs_matrix.h"
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <cudss.h>
@@ -47,7 +48,7 @@ extern "C" {
 #endif
 #endif
 
-/* value and index types of the cuSPARSE product (scs_lin_sys_residual) */
+/* value and index types of the cuSPARSE product (dev_residual) */
 #ifndef SFLOAT
 #define SCS_CUSPARSE_FLOAT CUDA_R_64F
 #else
@@ -95,14 +96,14 @@ struct SCS_LIN_SYS_WORK {
   cudssConfig_t solver_config; /* cuDSS solver handle */
   cudssData_t solver_data;     /* cuDSS data handle */
 
-  /* Products with K for SCS's per-iteration refinement (scs_lin_sys_residual,
-   * scs_lin_sys_keep, scs_lin_sys_correct), on the GPU. cuSPARSE has no
-   * symmetric SpMV, so K is stored a second time with both triangles (CSR,
-   * columns sorted in each row); its values are kkt->x[full_src[k]] and
-   * follow scs_update_lin_sys_diag_r. The guess x0 and the residual r stay
-   * on the GPU. products_ok = 1 when K has at least CUDSS_MIN_PRODUCT_NNZ
-   * nonzeros (setup fails if the products cannot be set up then), else 0:
-   * scs_lin_sys_residual returns "not provided" and SCS computes them. */
+  /* The multiplies by K of scs_solve_lin_sys (warm start, refinement,
+   * residual), on the GPU, with the residual there too (dev_residual and
+   * dev_correct in private.c). cuSPARSE has no symmetric SpMV, so K is
+   * stored a second time with both triangles (CSR, columns sorted in each
+   * row); its values are kkt->x[full_src[k]] and follow
+   * scs_update_lin_sys_diag_r. products_ok = 1 when K has at least
+   * CUDSS_MIN_PRODUCT_NNZ (glbopts.h) nonzeros (setup fails if the products
+   * cannot be set up then), else 0: they are SCS's products. */
   scs_int products_ok;
   scs_int full_nnz;        /* nonzeros of K with both triangles */
   scs_int *full_src;       /* host: index in kkt->x of each value */
@@ -111,13 +112,17 @@ struct SCS_LIN_SYS_WORK {
   scs_int *d_full_row_ptr;
   scs_int *d_full_col_ind;
   scs_float *d_r;          /* device r = b - K x */
-  scs_float *d_x0;         /* device guess x0 (scs_lin_sys_keep) */
-  scs_float *d_xv;         /* device copy of an x given to the residual */
+  scs_float *d_xv;         /* device copy of the x of the latest residual */
   void *d_spmv_buf;        /* cuSPARSE SpMV workspace */
   cusparseHandle_t sp_handle;
   cublasHandle_t bl_handle;
   cusparseSpMatDescr_t sp_k;
-  cusparseDnVecDescr_t sp_r, sp_x0, sp_xv;
+  cusparseDnVecDescr_t sp_r, sp_xv;
+
+  /* the warm start, refinement and residual of scs_solve_lin_sys
+   * (linsys/scs_matrix.h), with dev_residual and dev_correct when
+   * products_ok, else SCS's products on the CPU */
+  ScsLinSysShared sh;
 };
 
 #ifdef __cplusplus

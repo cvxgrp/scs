@@ -10,6 +10,7 @@ extern "C" {
 #include "gpu.h"
 #include "linalg.h"
 #include "scs.h"
+#include "scs_matrix.h"
 
 struct SCS_LIN_SYS_WORK {
   scs_int n, m; /* linear system dimensions */
@@ -43,6 +44,10 @@ struct SCS_LIN_SYS_WORK {
   scs_float *r_x_gpu;
   scs_float *inv_r_y;     /* inverse R_y */
   scs_float *inv_r_y_gpu; /* inverse R_y on GPU */
+
+  /* the warm start, refinement and residual of scs_solve_lin_sys, with
+   * SCS's products on the CPU (linsys/scs_matrix.h) */
+  ScsLinSysShared sh;
 };
 
 #ifdef __cplusplus

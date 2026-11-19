@@ -64,29 +64,34 @@ struct SCS_WORK {
   scs_float *rsk;                /* rsk [ r; s; kappa ] */
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
-  /* scratch, n + m each: residual and correction of a solve with the KKT
-   * matrix, used by refine_g (the solve for g) and the per-iteration
-   * refinement (refine_iter, solve_direct); nothing is kept in them between
-   * calls */
+  /* scratch, n + m each, nothing kept in them between calls: kkt_res and
+   * kkt_corr, the residual and correction of refine_g (the solve for g);
+   * kkt_corr also the plain solve that decides at a check of the direct
+   * solvers' per-iteration refinement (solve_direct), and the warm start
+   * (the first solve's solution) of the indirect solvers' refinement solve
+   * (solve_indirect) */
   scs_float *kkt_res, *kkt_corr;
   /* per-iteration refinement, reset at the start of each solve (see
    * "Accuracy of each iteration's solve" in glbopts.h): whether it is on,
-   * how many residual checks this solve has made, how many refinement steps
-   * (indirect solvers, refine_iter) and how many iterations solved in
-   * correction form (direct solvers, solve_direct), and the tol it compares
-   * with (set_refine_tol, at each convergence check; -1 before the first) */
+   * how many residual checks this solve has made, how many refinement
+   * solves (indirect solvers, solve_indirect), how many iterations solved
+   * with refinement on (direct solvers, solve_direct: the previous solution
+   * passed as the warm start; the linear solver solves plainly instead when
+   * it is no better a guess than zero, and those iterations count too) and
+   * how often the safeguard replaced that solution by the plain solve
+   * (direct solvers; read by the tests), and the tol it compares with
+   * (set_refine_tol, at each convergence check; -1 before the first) */
   scs_int refine_on, refine_checks, refine_steps, refine_corrections;
+  scs_int refine_safeguards;
   scs_float refine_tol;
-  /* direct solvers: the solution of the previous iteration's solve (n + m),
-   * the guess of the correction form, valid whenever refinement is on.
-   * Unused (NULL) in indirect builds. */
+  /* direct solvers: the previous iteration's solution (n + m) whenever
+   * refinement is on, passed as the warm start of the next iteration's
+   * solve. Unused (NULL) in indirect builds. */
   scs_float *refine_prev;
-  /* direct solvers: the linear solver computes the products with K for the
-   * refinement itself (scs_lin_sys_residual and friends in linsys.h; then
-   * refine_prev is unused and the solver keeps the guess), else SCS computes
-   * them from the problem data. Set once, at setup. */
-  scs_int refine_hook;
-  scs_float *lin_sys_warm_start; /* linear system warm-start (indirect only) */
+  /* indirect solvers: the warm start of each iteration's CG solve, n + m (CG
+   * reads the first n; the rest stays zero). Unused (NULL) in direct
+   * builds. */
+  scs_float *lin_sys_warm_start;
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */
   scs_float nm_b_orig, nm_c_orig; /* unnormalized NORM(b), NORM(c) */

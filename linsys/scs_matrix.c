@@ -224,6 +224,215 @@ void SCS(accum_by_p)(const ScsMatrix *P, const scs_float *x, scs_float *y) {
   }
 }
 
+/* ======================== Shared scs_solve_lin_sys ======================== */
+
+scs_int SCS(lin_sys_shared_init)(ScsLinSysShared *sh, const ScsMatrix *A,
+                                 const ScsMatrix *P, const scs_float *diag_r,
+                                 scs_int cg, ScsLinSysPlainSolve solve,
+                                 ScsLinSysResidual residual,
+                                 ScsLinSysCorrect correct) {
+  scs_int nm = MAX(A->n + A->m, 1);
+  sh->A = A;
+  sh->P = P;
+  sh->diag_r = diag_r;
+  sh->n = A->n;
+  sh->m = A->m;
+  sh->cg = cg;
+  sh->solve = solve;
+  sh->residual = residual;
+  sh->correct = residual ? correct : SCS_NULL; /* reads the residual op's r */
+  sh->b0 = (scs_float *)scs_calloc(nm, sizeof(scs_float));
+  sh->r = (scs_float *)scs_calloc(nm, sizeof(scs_float));
+  sh->c = (scs_float *)scs_calloc(nm, sizeof(scs_float));
+  if (!sh->b0 || !sh->r || !sh->c) {
+    scs_printf("ERROR: linear solver workspace memory allocation failure\n");
+    return -1;
+  }
+  return 0;
+}
+
+void SCS(lin_sys_shared_free)(ScsLinSysShared *sh) {
+  if (sh) {
+    scs_free(sh->b0);
+    scs_free(sh->r);
+    scs_free(sh->c);
+    sh->b0 = sh->r = sh->c = SCS_NULL;
+  }
+}
+
+/* r = b - K x with K = [R_x + P, A'; A, -R_y] from sh's A, P and diag_r
+ * (SCS's products); returns ||r||_inf, and ||b||_inf in *nb unless nb is
+ * SCS_NULL. r aliases neither b nor x. The statements and their order are
+ * those of src/scs.c's per-iteration residual at 064f48a9 (iter_residual),
+ * with the right-hand side read from b, so the values are the same to the
+ * bit wherever that right-hand side was rounded before the subtraction (it
+ * is a load here, so no compiler can fuse it into the subtraction). */
+static scs_float kkt_residual(const ScsLinSysShared *sh, const scs_float *b,
+                              const scs_float *x, scs_float *r,
+                              scs_float *nb) {
+  scs_int i, n = sh->n, m = sh->m;
+  const scs_float *dr = sh->diag_r;
+  scs_float rhs, nrhs = 0.;
+  memset(r, 0, (n + m) * sizeof(scs_float));
+  SCS(accum_by_atrans)(sh->A, &(x[n]), r);
+  if (sh->P) {
+    SCS(accum_by_p)(sh->P, x, r);
+  }
+  SCS(accum_by_a)(sh->A, x, &(r[n]));
+  for (i = 0; i < n; ++i) {
+    rhs = b[i];
+    nrhs = MAX(nrhs, ABS(rhs));
+    r[i] = rhs - (r[i] + dr[i] * x[i]);
+  }
+  for (i = n; i < n + m; ++i) {
+    rhs = b[i];
+    nrhs = MAX(nrhs, ABS(rhs));
+    r[i] = rhs - (r[i] - dr[i] * x[i]);
+  }
+  if (nb) {
+    *nb = nrhs;
+  }
+  return SCS(norm_inf)(r, n + m);
+}
+
+/* sh->r = b - K x (or where the solver keeps it, see ScsLinSysResidual) with
+ * the solver's product if it has one, else SCS's; *nr = ||r||_inf, *nb =
+ * ||b||_inf unless nb is SCS_NULL. Returns 0, or -1 if the solver's product
+ * failed (with a message: that is an internal error, not a property of the
+ * problem). */
+static scs_int shared_residual(ScsLinSysShared *sh, ScsLinSysWork *w,
+                               const scs_float *b, const scs_float *x,
+                               scs_float *nr, scs_float *nb) {
+  if (sh->residual) {
+    if (sh->residual(w, b, x, sh->r, nr, nb) != 0) {
+      scs_printf("ERROR: the linear solver's matrix product failed; please "
+                 "open an issue at https://github.com/cvxgrp/scs/issues\n");
+      return -1;
+    }
+    return 0;
+  }
+  *nr = kkt_residual(sh, b, x, sh->r, nb);
+  return 0;
+}
+
+/* out = x + K^{-1} r for the x and r of the latest shared_residual call
+ * (direct solvers): the solver's correct op, else the plain solve of a copy
+ * of r plus x (one rounding: the scale is 1). out aliases neither x nor
+ * sh->r. Returns the status of the solve. */
+static scs_int shared_correct(ScsLinSysShared *sh, ScsLinSysWork *w,
+                              const scs_float *x, scs_float *out,
+                              scs_float tol) {
+  scs_int status, nm = sh->n + sh->m;
+  if (sh->correct) {
+    return sh->correct(w, x, sh->r, out);
+  }
+  memcpy(out, sh->r, nm * sizeof(scs_float));
+  status = sh->solve(w, out, SCS_NULL, tol);
+  if (status == 0) {
+    SCS(add_scaled_array)(out, x, nm, 1.);
+  }
+  return status;
+}
+
+/* scs_solve_lin_sys of linsys.h. b0 is filled only when a residual of the
+ * solution will be needed (refinement or res). Every decision compares
+ * residuals, so a call is deterministic whenever the solver's plain solve
+ * and products are. */
+scs_int SCS(lin_sys_shared_solve)(ScsLinSysShared *sh, ScsLinSysWork *w,
+                                  scs_float *b, const scs_float *s,
+                                  scs_float tol, scs_int max_refine_steps,
+                                  scs_float *res) {
+  scs_int nm = sh->n + sh->m, status, k, warm = 0, have_nr = 0, stop;
+  scs_int need_b0 = max_refine_steps > 0 || res;
+  scs_float nr = -1., nb = -1., nc;
+  size_t vb = nm * sizeof(scs_float);
+  if (sh->cg) {
+    /* CG from s (its first n entries), or from zero, to tol: the solve of
+     * SCS 3.3. No comparison with zero: a poor start costs CG iterations,
+     * not accuracy. */
+    if (need_b0) {
+      memcpy(sh->b0, b, vb);
+    }
+    status = sh->solve(w, b, s, tol);
+    if (status != 0) {
+      return status;
+    }
+  } else {
+    if (s) {
+      /* correction form x = s + K^{-1}(b - K s), unless s is no better a
+       * guess than zero (||b - K s|| >= ||b||): then b is untouched and the
+       * plain solve below runs */
+      status = shared_residual(sh, w, b, s, &nr, &nb);
+      if (status != 0) {
+        return status;
+      }
+      if (nr < nb) {
+        if (need_b0) {
+          memcpy(sh->b0, b, vb);
+        }
+        status = shared_correct(sh, w, s, b, tol);
+        if (status != 0) {
+          return status;
+        }
+        warm = 1;
+      }
+    }
+    if (!warm) {
+      if (need_b0) {
+        memcpy(sh->b0, b, vb);
+      }
+      status = sh->solve(w, b, SCS_NULL, tol);
+      if (status != 0) {
+        return status;
+      }
+    }
+  }
+  if (max_refine_steps > 0) {
+    status = shared_residual(sh, w, sh->b0, b, &nr, SCS_NULL);
+    if (status != 0) {
+      return status;
+    }
+    have_nr = 1;
+    for (k = 0; k < max_refine_steps && nr > tol; ++k) {
+      /* the candidate c: CG restarted on b from x, to tol (its residual is
+       * recomputed below, since the one CG tracks can drift from it); or
+       * x + K^{-1}(b - K x) with the residual of x just computed */
+      if (sh->cg) {
+        memcpy(sh->c, sh->b0, vb);
+        status = sh->solve(w, sh->c, b, tol);
+      } else {
+        status = shared_correct(sh, w, b, sh->c, tol);
+      }
+      if (status != 0) {
+        return status;
+      }
+      status = shared_residual(sh, w, sh->b0, sh->c, &nc, SCS_NULL);
+      if (status != 0) {
+        return status;
+      }
+      if (!(nc < nr)) {
+        break; /* no better (or not finite): keep x */
+      }
+      memcpy(b, sh->c, vb);
+      stop = nc > LIN_SYS_REFINE_CONTRACTION * nr; /* not halved */
+      nr = nc;
+      if (stop) {
+        break;
+      }
+    }
+  }
+  if (res) {
+    if (!have_nr) {
+      status = shared_residual(sh, w, sh->b0, b, &nr, SCS_NULL);
+      if (status != 0) {
+        return status;
+      }
+    }
+    *res = nr;
+  }
+  return 0;
+}
+
 /* ======================== Normalization Internals ======================== */
 
 static inline scs_float apply_limit(scs_float x) {

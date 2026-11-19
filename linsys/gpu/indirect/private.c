@@ -121,6 +121,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     cublasDestroy(p->cublas_handle);
     /* Don't reset because it interferes with other GPU programs. */
     /* cudaDeviceReset(); */
+    SCS(lin_sys_shared_free)(&p->sh);
     scs_free(p);
   }
 }
@@ -213,6 +214,9 @@ static ScsMatrix *fill_p_matrix(const ScsMatrix *P) {
   SCS(cs_spfree)(P_tmp);
   return P_full;
 }
+
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol);
 
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
@@ -369,6 +373,11 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
+  if (SCS(lin_sys_shared_init)(&p->sh, A, P, diag_r, 1, plain_solve,
+                               SCS_NULL, SCS_NULL) != 0) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   return p;
 }
 
@@ -468,8 +477,8 @@ static scs_int pcg(ScsLinSysWork *pr, const scs_float *s, scs_float *bg,
  * y = R_y^{-1} (Ax - ry)
  *
  */
-scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                          scs_float tol) {
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol) {
   scs_int cg_its, max_iters;
   scs_float neg_onef = -1.0;
 
@@ -539,24 +548,11 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   return 0;
 }
 
-/* Products with this solver's own copy of K for SCS's per-iteration
- * refinement (optional, see linsys.h): not provided, so SCS computes them
- * from the problem data. */
-scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
-                               const scs_float *x) {
-  (void)w;
-  (void)b;
-  (void)x;
-  return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
-}
-
-void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {
-  (void)w;
-  (void)x;
-}
-
-scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) {
-  (void)w;
-  (void)x;
-  return -1;
+/* the warm start, refinement and residual around plain_solve, see linsys.h;
+ * the residuals are SCS's products on the CPU */
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol, scs_int max_refine_steps,
+                          scs_float *res) {
+  return SCS(lin_sys_shared_solve)(&p->sh, p, b, s, tol, max_refine_steps,
+                                   res);
 }

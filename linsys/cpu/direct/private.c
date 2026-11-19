@@ -209,6 +209,9 @@ static ScsMatrix *permute_kkt(const ScsMatrix *A, const ScsMatrix *P,
 
 /* ======================== Public API ======================== */
 
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol);
+
 const char *scs_get_lin_sys_method(void) {
   return "sparse-direct-amd-qdldl";
 }
@@ -247,15 +250,29 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
+  if (SCS(lin_sys_shared_init)(&p->sh, A, P, diag_r, 0, plain_solve,
+                               SCS_NULL, SCS_NULL) != 0) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   return p;
 }
 
-scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                          scs_float tol) {
-  /* returns solution to linear system */
-  /* Ax = b with solution stored in b */
+/* the plain solve K x = b, solution stored in b (s and tol unused) */
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol) {
+  (void)s;
+  (void)tol;
   _ldl_solve(b, p->L, p->Dinv, p->perm, p->bp);
   return 0;
+}
+
+/* the warm start, refinement and residual around plain_solve, see linsys.h */
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol, scs_int max_refine_steps,
+                          scs_float *res) {
+  return SCS(lin_sys_shared_solve)(&p->sh, p, b, s, tol, max_refine_steps,
+                                   res);
 }
 
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
@@ -291,28 +308,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p->D);
     scs_free(p->bwork);
     scs_free(p->fwork);
+    SCS(lin_sys_shared_free)(&p->sh);
     scs_free(p);
   }
-}
-
-/* Products with this solver's own copy of K for SCS's per-iteration
- * refinement (optional, see linsys.h): not provided, so SCS computes them
- * from the problem data. */
-scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
-                               const scs_float *x) {
-  (void)w;
-  (void)b;
-  (void)x;
-  return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
-}
-
-void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {
-  (void)w;
-  (void)x;
-}
-
-scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) {
-  (void)w;
-  (void)x;
-  return -1;
 }

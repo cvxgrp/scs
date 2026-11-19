@@ -7,6 +7,7 @@ extern "C" {
 
 #include "csparse.h"
 #include "linsys.h"
+#include "scs_matrix.h"
 
 struct SCS_LIN_SYS_WORK {
   ScsMatrix *kkt; /* Upper triangular KKT matrix (in CSR format) */
@@ -31,19 +32,22 @@ struct SCS_LIN_SYS_WORK {
   scs_int *diag_r_idxs; /* indices where R appears */
   scs_float *diag_p;    /* Diagonal values of P */
 
-  /* Products with K for SCS's per-iteration refinement (scs_lin_sys_residual
-   * and friends, see private.c): K in MKL's sparse BLAS, the guess x0 and
-   * the residual r. prod_ok = 1 once set up; setup fails if they cannot
-   * be. prod_none = 1 when, by the size rule in prod_setup, this solver
-   * does not provide them and SCS computes them. */
+  /* The multiplies by K of scs_solve_lin_sys (its warm start, refinement
+   * and residual, see private.c), with K in MKL's sparse BLAS. prod_ok = 1
+   * once set up; setup fails if they cannot be. prod_none = 1 when, by the
+   * size rule in prod_setup or in a build with MKL_NO_OWN_PRODUCTS, this
+   * solver does not compute them and they are SCS's products
+   * (linsys/scs_matrix.h). */
   scs_int prod_ok;
   scs_int prod_none;
   void *prod_k;          /* MKL sparse_matrix_t handle of K */
   void *prod_ind;        /* column indices in MKL's integer type, or NULL
                             when kkt->i already has that type */
   void *prod_ptr;        /* row pointers likewise */
-  scs_float *prod_r;     /* r = b - K x */
-  scs_float *prod_x0;    /* the guess x0 (scs_lin_sys_keep) */
+
+  /* the warm start, refinement and residual of scs_solve_lin_sys
+   * (linsys/scs_matrix.h), with prod_residual unless prod_none */
+  ScsLinSysShared sh;
 };
 
 #ifdef __cplusplus
